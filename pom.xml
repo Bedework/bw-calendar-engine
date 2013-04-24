@@ -1,0 +1,262 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.bedework</groupId>
+	<artifactId>bw-calendar-engine</artifactId>
+	<version>4.0.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>bw-calendar-engine</name>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!-- Maven Plugin Versions -->
+		<maven.compiler.plugin.version>2.3.2</maven.compiler.plugin.version>
+		<maven.source.plugin.version>2.1.2</maven.source.plugin.version>
+		<!-- Bedework Versions -->
+		<bw-ws.version>4.0.0-SNAPSHOT</bw-ws.version>
+		<bw-util.version>4.0.0-SNAPSHOT</bw-util.version>
+		<bw-access.version>4.0.0-SNAPSHOT</bw-access.version>
+		<bw-webdav.version>4.0.0-SNAPSHOT</bw-webdav.version>
+		<bw-caldav-util.version>4.0.0-SNAPSHOT</bw-caldav-util.version>
+		<bw-caldav-server.version>4.0.0-SNAPSHOT</bw-caldav-server.version>
+		<!-- Third Party Library Versions -->
+		<hibernate.version>3.6.9.Final</hibernate.version>
+		<hibernate-validator.version>3.1.0.GA</hibernate-validator.version>
+		<ical4j.version>1.0.4</ical4j.version>
+		<ical4j-vcard.version>0.9.6-BW-SNAPSHOT</ical4j-vcard.version>
+		<junit.version>4.8.2</junit.version>
+		<log4j.version>1.2.15</log4j.version>
+		<servlet-api.version>2.4</servlet-api.version>
+		<geronimo-kernel.version>2.2.1</geronimo-kernel.version>
+		<solr-core.version>3.6.0</solr-core.version>
+		<apache-jdkim-library.version>0.2.BEDEWORK-SNAPSHOT</apache-jdkim-library.version>
+	</properties>
+
+	<organization>
+		<name>Bedework</name>
+		<url>https://github.com/Bedework</url>
+	</organization>
+
+	<licenses>
+		<license>
+			<name>Apache License Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+		</license>
+	</licenses>
+
+	<scm>
+		<connection>scm:git:git://github.com/Bedework/bw-calendar-engine.git</connection>
+		<developerConnection>scm:git:git://github.com/Bedework/bw-calendar-engine.git</developerConnection>
+		<url>https://github.com/Bedework/bw-calendar-engine</url>
+	</scm>
+
+	<issueManagement>
+		<system>github</system>
+		<url>https://github.com/Bedework/bw-calendar-engine/issues</url>
+	</issueManagement>
+
+	<modules>
+		<module>bw-calendar-engine-annotations</module>
+		<module>bw-calendar-engine-api</module>
+		<module>bw-calendar-engine-core</module>
+		<module>bw-calendar-engine-caldav</module>
+		<module>bw-calendar-engine-services</module>
+		<module>bw-calendar-engine-facade</module>
+		<module>bw-calendar-engine-chgnote</module>
+		<module>bw-calendar-engine-dumprestore</module>
+		<module>bw-calendar-engine-ical</module>
+		<module>bw-calendar-engine-indexer</module>
+		<module>bw-calendar-engine-inoutsched</module>
+		<module>bw-calendar-engine-interfaces</module>
+		<module>bw-calendar-engine-sysevents</module>
+		<module>bw-calendar-engine-deployutil</module>
+	</modules>
+
+	<repositories>
+		<repository>
+			<id>jboss.repository</id>
+			<name>JBoss Public Repository Group</name>
+			<url>http://repository.jboss.org/nexus/content/groups/developer/</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<!-- Only needed for JBoss 5 dependencies. We should remove this when we 
+			move Bedework off of JBoss 5. -->
+		<repository>
+			<id>jboss-deprecated</id>
+			<name>JBoss Deprecated Repository</name>
+			<url>http://repository.jboss.org/nexus/content/repositories/deprecated</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>bedework.repository</id>
+			<name>Bedework Maven Repository</name>
+			<url>http://dev.bedework.org/downloads/lib/repository/</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- Bedework Project Dependencies -->
+			<dependency>
+				<groupId>org.bedework</groupId>
+				<artifactId>bw-util</artifactId>
+				<version>${bw-util.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bedework</groupId>
+				<artifactId>bw-access</artifactId>
+				<version>${bw-access.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bedework</groupId>
+				<artifactId>bw-webdav</artifactId>
+				<version>${bw-webdav.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bedework</groupId>
+				<artifactId>bw-caldav-util</artifactId>
+				<version>${bw-caldav-util.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bedework</groupId>
+				<artifactId>bw-caldav-server</artifactId>
+				<version>${bw-caldav-server.version}</version>
+			</dependency>
+			<!-- Bedework: Web Services -->
+			<dependency>
+				<groupId>org.bedework</groupId>
+				<artifactId>bw-ws-icalendar</artifactId>
+				<version>${bw-ws.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bedework</groupId>
+				<artifactId>bw-ws-tzsvr</artifactId>
+				<version>${bw-ws.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.bedework</groupId>
+				<artifactId>bw-ws-calws-soap</artifactId>
+				<version>${bw-ws.version}</version>
+			</dependency>
+			<!-- Third Party Libraries -->
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate-core</artifactId>
+				<version>${hibernate.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate-validator</artifactId>
+				<version>${hibernate-validator.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>javax.servlet</groupId>
+				<artifactId>servlet-api</artifactId>
+				<version>${servlet-api.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.james.jdkim</groupId>
+				<artifactId>apache-jdkim-library</artifactId>
+				<version>${apache-jdkim-library.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.geronimo.framework</groupId>
+				<artifactId>geronimo-kernel</artifactId>
+				<version>${geronimo-kernel.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mnode.ical4j</groupId>
+				<artifactId>ical4j</artifactId>
+				<version>${ical4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mnode.ical4j</groupId>
+				<artifactId>ical4j-vcard</artifactId>
+				<version>${ical4j-vcard.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.solr</groupId>
+				<artifactId>solr-core</artifactId>
+				<version>${solr-core.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>log4j</groupId>
+				<artifactId>log4j</artifactId>
+				<version>${log4j.version}</version>
+				<exclusions>
+					<exclusion>
+						<artifactId>jmxtools</artifactId>
+						<groupId>com.sun.jdmk</groupId>
+					</exclusion>
+					<exclusion>
+						<artifactId>jmxri</artifactId>
+						<groupId>com.sun.jmx</groupId>
+					</exclusion>
+					<exclusion>
+						<artifactId>jms</artifactId>
+						<groupId>javax.jms</groupId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<!-- Test Dependencies -->
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>${junit.version}</version>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<plugins>
+			<!-- Specify the compiler options and settings -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven.compiler.plugin.version}</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+					<showDeprecation>false</showDeprecation>
+					<showWarnings>false</showWarnings>
+				</configuration>
+			</plugin>
+			<!-- Produce source jars during the 'verify' phase -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>${maven.source.plugin.version}</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>jar</goal>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

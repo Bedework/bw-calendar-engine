@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:element name="caldata">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="syspars"/>
+        <xs:element ref="users"/>
+        <xs:element ref="timezones"/>
+        <xs:element ref="calendars"/>
+        <xs:element ref="locations"/>
+        <xs:element ref="sponsors"/>
+        <xs:element ref="organizers"/>
+        <xs:element ref="attendees"/>
+        <xs:element ref="alarms"/>
+        <xs:element ref="categories"/>
+        <xs:element ref="authusers"/>
+        <xs:element ref="events"/>
+        <xs:element ref="event-annotations"/>
+        <xs:element ref="adminGroups"/>
+        <xs:element ref="user-preferences"/>
+        <xs:element ref="cal-suites"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="syspars">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="system"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="system">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="id"/>
+        <xs:element ref="seq"/>
+        <xs:element ref="name"/>
+        <xs:element ref="tzid"/>
+        <xs:element ref="systemid"/>
+        <xs:element ref="publicCalendarRoot"/>
+        <xs:element ref="userCalendarRoot"/>
+        <xs:element ref="userDefaultCalendar"/>
+        <xs:element ref="defaultTrashCalendar"/>
+        <xs:element ref="userInbox"/>
+        <xs:element ref="userOutbox"/>
+        <xs:element ref="defaultUserViewName"/>
+        <xs:element ref="publicUser"/>
+        <xs:element ref="httpConnectionsPerUser"/>
+        <xs:element ref="httpConnectionsPerHost"/>
+        <xs:element ref="httpConnections"/>
+        <xs:element ref="maxPublicDescriptionLength"/>
+        <xs:element ref="maxUserDescriptionLength"/>
+        <xs:element ref="maxUserEntitySize"/>
+        <xs:element ref="defaultUserQuota"/>
+        <xs:element ref="userauthClass"/>
+        <xs:element ref="mailerClass"/>
+        <xs:element ref="admingroupsClass"/>
+        <xs:element ref="usergroupsClass"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="systemid" type="xs:string"/>
+  <xs:element name="publicCalendarRoot" type="xs:NCName"/>
+  <xs:element name="userCalendarRoot" type="xs:NCName"/>
+  <xs:element name="userDefaultCalendar" type="xs:NCName"/>
+  <xs:element name="defaultTrashCalendar" type="xs:NCName"/>
+  <xs:element name="userInbox" type="xs:NCName"/>
+  <xs:element name="userOutbox" type="xs:NCName"/>
+  <xs:element name="defaultUserViewName" type="xs:NCName"/>
+  <xs:element name="publicUser" type="xs:NCName"/>
+  <xs:element name="httpConnectionsPerUser" type="xs:integer"/>
+  <xs:element name="httpConnectionsPerHost" type="xs:integer"/>
+  <xs:element name="httpConnections" type="xs:integer"/>
+  <xs:element name="maxPublicDescriptionLength" type="xs:integer"/>
+  <xs:element name="maxUserDescriptionLength" type="xs:integer"/>
+  <xs:element name="maxUserEntitySize" type="xs:integer"/>
+  <xs:element name="defaultUserQuota" type="xs:integer"/>
+  <xs:element name="userauthClass" type="xs:string"/>
+  <xs:element name="mailerClass" type="xs:NCName"/>
+  <xs:element name="admingroupsClass" type="xs:string"/>
+  <xs:element name="usergroupsClass" type="xs:string"/>
+  <xs:element name="users">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="user"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="user">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="id"/>
+        <xs:element ref="seq"/>
+        <xs:element ref="account"/>
+        <xs:element minOccurs="0" ref="created"/>
+        <xs:element minOccurs="0" ref="logon"/>
+        <xs:element minOccurs="0" ref="lastAccess"/>
+        <xs:element ref="category-access"/>
+        <xs:element ref="location-access"/>
+        <xs:element ref="sponsor-access"/>
+        <xs:element ref="instanceOwner"/>
+        <xs:element ref="quota"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="created" type="xs:string"/>
+  <xs:element name="logon" type="xs:string"/>
+  <xs:element name="lastAccess" type="xs:string"/>
+  <xs:element name="category-access" type="xs:string"/>
+  <xs:element name="location-access" type="xs:string"/>
+  <xs:element name="sponsor-access" type="xs:string"/>
+  <xs:element name="instanceOwner" type="xs:boolean"/>
+  <xs:element name="quota" type="xs:integer"/>
+  <xs:element name="timezones">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="timezone"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="timezone">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="id"/>
+        <xs:element ref="seq"/>
+        <xs:element ref="owner-key"/>
+        <xs:element ref="public"/>
+        <xs:element ref="tzid"/>
+        <xs:element ref="vtimezone"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="vtimezone" type="xs:string"/>
+  <xs:element name="calendars">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="calendar"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="calendar">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="id"/>
+        <xs:element ref="seq"/>
+        <xs:element ref="owner-key"/>
+        <xs:element ref="public"/>
+        <xs:element ref="creator"/>
+        <xs:choice>
+          <xs:element ref="access"/>
+          <xs:element ref="calendar-path"/>
+        </xs:choice>
+        <xs:element ref="name"/>
+        <xs:element ref="path"/>
+        <xs:element ref="summary"/>
+        <xs:element minOccurs="0" ref="description"/>
+        <xs:element ref="calendarCollection"/>
+        <xs:element ref="calType"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="path" type="xs:string"/>
+  <xs:element name="calendarCollection" type="xs:boolean"/>
+  <xs:element name="calType" type="xs:integer"/>
+  <xs:element name="locations">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="location"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="sponsors">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="sponsor"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="organizers">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="attendees">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="alarms">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="categories">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="category"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="authusers">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="authuser"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="authuser">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="id"/>
+        <xs:element ref="userType"/>
+        <xs:element ref="preferences"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="userType" type="xs:integer"/>
+  <xs:element name="preferences">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="autoAddCategories"/>
+        <xs:element ref="autoAddLocations"/>
+        <xs:element ref="autoAddSponsors"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="autoAddCategories" type="xs:boolean"/>
+  <xs:element name="autoAddLocations" type="xs:boolean"/>
+  <xs:element name="autoAddSponsors" type="xs:boolean"/>
+  <xs:element name="events">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="event"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="event-annotations">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="event"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="adminGroups">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="adminGroup"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="adminGroup">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="description"/>
+        <xs:element ref="groupOwner"/>
+        <xs:element ref="ownerid"/>
+        <xs:element ref="id"/>
+        <xs:element ref="seq"/>
+        <xs:element ref="account"/>
+        <xs:element ref="groupMembers"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="groupOwner" type="xs:integer"/>
+  <xs:element name="ownerid" type="xs:integer"/>
+  <xs:element name="groupMembers">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="groupMemberId"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="groupMemberGroupId"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="groupMemberId" type="xs:integer"/>
+  <xs:element name="groupMemberGroupId" type="xs:integer"/>
+  <xs:element name="user-preferences">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="user-prefs"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="user-prefs">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="id"/>
+        <xs:element ref="seq"/>
+        <xs:element ref="owner-key"/>
+        <xs:element ref="public"/>
+        <xs:element ref="subscriptions"/>
+        <xs:element ref="views"/>
+        <xs:element minOccurs="0" ref="default-calendar-path"/>
+        <xs:element minOccurs="0" ref="skinName"/>
+        <xs:element minOccurs="0" ref="preferredView"/>
+        <xs:element minOccurs="0" ref="preferredViewPeriod"/>
+        <xs:element ref="workdayStart"/>
+        <xs:element ref="workdayEnd"/>
+        <xs:element ref="userMode"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="subscriptions">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="subscription"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="subscription">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="sub-id"/>
+        <xs:element ref="sub-seq"/>
+        <xs:element ref="sub-owner"/>
+        <xs:element ref="sub-name"/>
+        <xs:element ref="sub-uri"/>
+        <xs:element ref="sub-affectsFreeBusy"/>
+        <xs:element ref="sub-ignoreTransparency"/>
+        <xs:element ref="sub-display"/>
+        <xs:element minOccurs="0" ref="sub-style"/>
+        <xs:element ref="sub-internalSubscription"/>
+        <xs:element ref="sub-emailNotifications"/>
+        <xs:element ref="sub-calendarDeleted"/>
+        <xs:element ref="sub-unremoveable"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="sub-id" type="xs:integer"/>
+  <xs:element name="sub-seq" type="xs:integer"/>
+  <xs:element name="sub-owner" type="xs:integer"/>
+  <xs:element name="sub-name" type="xs:string"/>
+  <xs:element name="sub-uri" type="xs:anyURI"/>
+  <xs:element name="sub-affectsFreeBusy" type="xs:boolean"/>
+  <xs:element name="sub-ignoreTransparency" type="xs:boolean"/>
+  <xs:element name="sub-display" type="xs:boolean"/>
+  <xs:element name="sub-style" type="xs:NCName"/>
+  <xs:element name="sub-internalSubscription" type="xs:boolean"/>
+  <xs:element name="sub-emailNotifications" type="xs:boolean"/>
+  <xs:element name="sub-calendarDeleted" type="xs:boolean"/>
+  <xs:element name="sub-unremoveable" type="xs:boolean"/>
+  <xs:element name="views">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="view"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="view">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="view-id"/>
+        <xs:element ref="view-seq"/>
+        <xs:element ref="view-owner"/>
+        <xs:element ref="view-name"/>
+        <xs:element ref="view-subscriptions"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="view-id" type="xs:integer"/>
+  <xs:element name="view-seq" type="xs:integer"/>
+  <xs:element name="view-owner" type="xs:integer"/>
+  <xs:element name="view-name" type="xs:string"/>
+  <xs:element name="view-subscriptions">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="view-sub-name"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="view-sub-name" type="xs:string"/>
+  <xs:element name="default-calendar-path" type="xs:string"/>
+  <xs:element name="skinName" type="xs:NCName"/>
+  <xs:element name="preferredView" type="xs:NCName"/>
+  <xs:element name="preferredViewPeriod" type="xs:NCName"/>
+  <xs:element name="workdayStart" type="xs:integer"/>
+  <xs:element name="workdayEnd" type="xs:integer"/>
+  <xs:element name="userMode" type="xs:integer"/>
+  <xs:element name="cal-suites">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="cal-suite"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="cal-suite">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="id"/>
+        <xs:element ref="seq"/>
+        <xs:element ref="owner-key"/>
+        <xs:element ref="public"/>
+        <xs:element ref="creator"/>
+        <xs:element minOccurs="0" ref="access"/>
+        <xs:element ref="name"/>
+        <xs:element ref="group"/>
+        <xs:element ref="root-calendar"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="group" type="xs:NCName"/>
+  <xs:element name="root-calendar" type="xs:string"/>
+  <xs:element name="id" type="xs:integer"/>
+  <xs:element name="seq" type="xs:integer"/>
+  <xs:element name="name" type="xs:string"/>
+  <xs:element name="tzid" type="xs:string"/>
+  <xs:element name="account" type="xs:string"/>
+  <xs:element name="owner-key">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="account"/>
+        <xs:element ref="kind"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="kind" type="xs:integer"/>
+  <xs:element name="public" type="xs:boolean"/>
+  <xs:element name="creator" type="xs:integer"/>
+  <xs:element name="access" type="xs:string"/>
+  <xs:element name="calendar-path" type="xs:string"/>
+  <xs:element name="summary" type="xs:string"/>
+  <xs:element name="description" type="xs:string"/>
+  <xs:element name="location">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="creator"/>
+        <xs:element ref="id"/>
+        <xs:element ref="link"/>
+        <xs:element ref="owner-key"/>
+        <xs:element ref="public"/>
+        <xs:element ref="seq"/>
+        <xs:element ref="address"/>
+        <xs:element ref="subaddress"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="address" type="xs:string"/>
+  <xs:element name="subaddress" type="xs:string"/>
+  <xs:element name="sponsor">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="creator"/>
+        <xs:element ref="id"/>
+        <xs:element ref="link"/>
+        <xs:element ref="name"/>
+        <xs:element ref="owner-key"/>
+        <xs:element ref="public"/>
+        <xs:element ref="seq"/>
+        <xs:element ref="email"/>
+        <xs:element ref="phone"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="email" type="xs:string"/>
+  <xs:element name="phone" type="xs:string"/>
+  <xs:element name="category">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="creator"/>
+        <xs:element ref="description"/>
+        <xs:element ref="id"/>
+        <xs:element ref="owner-key"/>
+        <xs:element ref="public"/>
+        <xs:element ref="seq"/>
+        <xs:element ref="word"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="word" type="xs:string"/>
+  <xs:element name="event">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="id"/>
+        <xs:element ref="seq"/>
+        <xs:element ref="owner-key"/>
+        <xs:element ref="public"/>
+        <xs:element ref="creator"/>
+        <xs:element ref="calendar-path"/>
+        <xs:element ref="name"/>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="summary"/>
+          <xs:element ref="description"/>
+        </xs:sequence>
+        <xs:element ref="start-date-type"/>
+        <xs:element minOccurs="0" ref="start-tzid"/>
+        <xs:element ref="start-dtval"/>
+        <xs:element ref="start-date"/>
+        <xs:element ref="end-date-type"/>
+        <xs:element minOccurs="0" ref="end-tzid"/>
+        <xs:element ref="end-dtval"/>
+        <xs:element ref="end-date"/>
+        <xs:element ref="end-type"/>
+        <xs:element ref="duration"/>
+        <xs:element minOccurs="0" ref="link"/>
+        <xs:element ref="deleted"/>
+        <xs:element minOccurs="0" ref="status"/>
+        <xs:element minOccurs="0" ref="cost"/>
+        <xs:element ref="dtstamp"/>
+        <xs:element ref="last-mod"/>
+        <xs:element ref="create-date"/>
+        <xs:element ref="priority"/>
+        <xs:element ref="sequence"/>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="sponsor"/>
+          <xs:element ref="location"/>
+        </xs:sequence>
+        <xs:element ref="guid"/>
+        <xs:element minOccurs="0" ref="transparency"/>
+        <xs:element ref="eventCategories"/>
+        <xs:element ref="eventAttendees"/>
+        <xs:element ref="recurring"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="start-date-type" type="xs:boolean"/>
+  <xs:element name="start-tzid" type="xs:string"/>
+  <xs:element name="start-dtval" type="xs:NMTOKEN"/>
+  <xs:element name="start-date" type="xs:NMTOKEN"/>
+  <xs:element name="end-date-type" type="xs:boolean"/>
+  <xs:element name="end-tzid" type="xs:string"/>
+  <xs:element name="end-dtval" type="xs:NMTOKEN"/>
+  <xs:element name="end-date" type="xs:NMTOKEN"/>
+  <xs:element name="end-type" type="xs:NCName"/>
+  <xs:element name="duration" type="xs:NCName"/>
+  <xs:element name="deleted" type="xs:boolean"/>
+  <xs:element name="status" type="xs:NCName"/>
+  <xs:element name="cost" type="xs:string"/>
+  <xs:element name="dtstamp" type="xs:NMTOKEN"/>
+  <xs:element name="last-mod" type="xs:NMTOKEN"/>
+  <xs:element name="create-date" type="xs:NMTOKEN"/>
+  <xs:element name="priority" type="xs:integer"/>
+  <xs:element name="sequence" type="xs:integer"/>
+  <xs:element name="guid" type="xs:string"/>
+  <xs:element name="transparency" type="xs:NCName"/>
+  <xs:element name="eventCategories">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" ref="category"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="eventAttendees">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="recurring" type="xs:boolean"/>
+  <xs:element name="link" type="xs:anyURI"/>
+</xs:schema>
