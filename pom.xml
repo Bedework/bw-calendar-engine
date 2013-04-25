@@ -60,7 +60,7 @@
 		<module>bw-calendar-engine-api</module>
 		<module>bw-calendar-engine-core</module>
 		<module>bw-calendar-engine-caldav</module>
-		<module>bw-calendar-engine-services</module>
+		<module>bw-calendar-engine-impl</module>
 		<module>bw-calendar-engine-facade</module>
 		<module>bw-calendar-engine-chgnote</module>
 		<module>bw-calendar-engine-dumprestore</module>

@@ -23,7 +23,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.bedework</groupId>
-			<artifactId>bw-calendar-engine-services</artifactId>
+			<artifactId>bw-calendar-engine-impl</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<!-- Third Party Dependencies -->

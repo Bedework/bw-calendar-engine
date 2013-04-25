@@ -15,6 +15,15 @@
 			<artifactId>bw-calendar-engine-facade</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<!-- Third Party Dependencies -->
+		<dependency>
+			<groupId>org.bedework</groupId>
+			<artifactId>bw-calendar-engine-sysevents</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<!-- Third Party -->
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+		</dependency>
 	</dependencies>
 </project>

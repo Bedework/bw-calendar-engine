@@ -12,7 +12,7 @@
 		<!-- Project Dependencies -->
 		<dependency>
 			<groupId>org.bedework</groupId>
-			<artifactId>bw-calendar-engine-interfaces</artifactId>
+			<artifactId>bw-calendar-engine-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<!-- Bedework Dependencies -->
