@@ -46,6 +46,7 @@ import ietf.params.xml.ns.icalendar_2.RecurrenceIdPropType;
 import ietf.params.xml.ns.icalendar_2.RelatedToPropType;
 import ietf.params.xml.ns.icalendar_2.RepeatPropType;
 import ietf.params.xml.ns.icalendar_2.ResourcesPropType;
+import ietf.params.xml.ns.icalendar_2.SequencePropType;
 import ietf.params.xml.ns.icalendar_2.StatusPropType;
 import ietf.params.xml.ns.icalendar_2.SummaryPropType;
 import ietf.params.xml.ns.icalendar_2.TranspPropType;
@@ -185,6 +186,7 @@ public class PropertyUpdaterRegistry {
     standardPropUpdater(ContactPropType.class, "ContactPropUpdater");
 
     ignoreProp(CreatedPropType.class);
+    standardPropUpdater(SequencePropType.class, "SequencePropUpdater");
 
     standardPropUpdater(DescriptionPropType.class, "DescriptionPropUpdater");
 
@@ -235,7 +237,6 @@ public class PropertyUpdaterRegistry {
     standardPropUpdater(OrganizerPropType.class, "OrganizerPropUpdater");
     standardPropUpdater(RequestStatusPropType.class, "RequestStatusPropUpdater");
     standardPropUpdater(RrulePropType.class, "RrulePropUpdater");
-    standardPropUpdater(SequencePropType.class, "SequencePropUpdater");
     standardPropUpdater(TolerancePropType.class, "TolerancePropUpdater");
     standardPropUpdater(XBedeworkCostPropType.class, "XBedeworkCostPropUpdater");
     standardPropUpdater(XBedeworkExsynchEndtzidPropType.class, "XBedeworkExsynchEndtzidPropUpdater");
