@@ -21,8 +21,8 @@ package org.bedework.mail;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.env.CalOptionsFactory;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.mail.Message;
 
@@ -61,11 +61,11 @@ public class SimpleMailer implements MailerIntf {
   private transient Logger log;
 
   @Override
-  public void init() throws CalFacadeException {
+  public void init(final MailConfigProperties config) throws CalFacadeException {
     debug = getLog().isDebugEnabled();
+    this.config = config;
 
     Properties props = new Properties();
-    getConfig();
 
     props.put("mail." + config.getProtocol() + ".class", config.getProtocolClass());
     props.put("mail." + config.getProtocol() + ".host", config.getServerIp());
@@ -99,8 +99,6 @@ public class SimpleMailer implements MailerIntf {
     if (debug) {
       debugMsg("mailEntity called with " + cal);
     }
-
-    getConfig();
 
     if (config.getDisabled()) {
       return false;
@@ -221,8 +219,6 @@ public class SimpleMailer implements MailerIntf {
     debugMsg("Mailer called with:");
     debugMsg(val.toString());
 
-    getConfig();
-
     if (config.getDisabled()) {
       return;
     }
@@ -260,17 +256,6 @@ public class SimpleMailer implements MailerIntf {
 
       throw new CalFacadeException(t);
     }
-  }
-
-  private MailConfigProperties getConfig() throws CalFacadeException {
-    if (config == null) {
-      try {
-        config = (MailConfigProperties)CalOptionsFactory.getOptions().getGlobalProperty("module.testmail");
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
-      }
-    }
-    return config;
   }
 
   private Logger getLog() {

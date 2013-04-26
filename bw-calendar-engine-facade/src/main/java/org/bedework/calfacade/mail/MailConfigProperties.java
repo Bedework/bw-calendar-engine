@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.mail;
+package org.bedework.calfacade.mail;
 
 /** Properties for mailers.
  *

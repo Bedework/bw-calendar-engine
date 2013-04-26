@@ -21,8 +21,8 @@ package org.bedework.mail;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.env.CalOptionsFactory;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.mail.Message;
 
@@ -46,8 +46,8 @@ public class DummyMailer implements MailerIntf {
   private transient Logger log;
 
   @Override
-  public void init() throws CalFacadeException {
-    getConfig();
+  public void init(final MailConfigProperties config) throws CalFacadeException {
+    this.config = config;
   }
 
   @Override
@@ -55,7 +55,7 @@ public class DummyMailer implements MailerIntf {
                             final String originator,
                             final Collection<String>recipients,
                             final String subject) throws CalFacadeException {
-    if (getConfig().getDisabled()) {
+    if (config.getDisabled()) {
       return false;
     }
 
@@ -129,18 +129,6 @@ public class DummyMailer implements MailerIntf {
   public void post(final Message val) throws CalFacadeException {
     debugMsg("Mailer called with:");
     debugMsg(val.toString());
-  }
-
-  private MailConfigProperties getConfig() throws CalFacadeException {
-    if (config == null) {
-      try {
-        config = (MailConfigProperties)CalOptionsFactory.getOptions().
-                getGlobalProperty("module.dummymail");
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
-      }
-    }
-    return config;
   }
 
   private Logger getLog() {

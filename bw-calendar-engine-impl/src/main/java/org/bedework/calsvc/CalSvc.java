@@ -44,6 +44,7 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
+import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.security.GenKeysMBean;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -812,7 +813,8 @@ public class CalSvc extends CalSvcI {
     try {
       MailerIntf mailer = (MailerIntf)CalFacadeUtil.getObject(getSysparsHandler().get().getMailerClass(),
                                                    MailerIntf.class);
-      mailer.init();
+      mailer.init((MailConfigProperties)CalOptionsFactory.getOptions().
+                  getGlobalProperty("module.mailer"));
 
       return mailer;
     } catch (Throwable t) {
