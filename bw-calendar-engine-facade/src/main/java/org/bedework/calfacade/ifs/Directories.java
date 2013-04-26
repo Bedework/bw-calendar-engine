@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.DirectoryInfo;
+import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
@@ -155,9 +156,11 @@ public interface Directories extends Serializable {
   /** Provide the callback object
    *
    * @param cb
+   * @param caPrefixes for principals etc.
    * @throws CalFacadeException
    */
-  public void init(CallBack cb) throws CalFacadeException;
+  public void init(CallBack cb,
+                   CalAddrPrefixes caPrefixes) throws CalFacadeException;
 
   /** Get application visible directory information.
    *

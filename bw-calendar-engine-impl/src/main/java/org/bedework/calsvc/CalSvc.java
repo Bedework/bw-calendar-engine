@@ -39,6 +39,7 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
+import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.env.CalOptionsFactory;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -448,6 +449,22 @@ public class CalSvc extends CalSvcI {
 
   private transient Logger log;
 
+  private static CalAddrPrefixes caPrefixes;
+
+  private CalAddrPrefixes getCaPrefixes() throws CalFacadeException {
+    if (caPrefixes != null) {
+      return caPrefixes;
+    }
+
+    try {
+      caPrefixes = (CalAddrPrefixes)CalOptionsFactory.getOptions().getGlobalProperty("caladdrPrefixes");
+    } catch (Throwable t) {
+      return null;
+    }
+
+    return caPrefixes;
+  }
+
   /* (non-Javadoc)
    * @see org.bedework.calsvci.CalSvcI#init(org.bedework.calsvci.CalSvcIPars)
    */
@@ -472,11 +489,11 @@ public class CalSvc extends CalSvcI {
       beginTransaction();
 
       if (userGroups != null) {
-        userGroups.init(getGroupsCallBack());
+        userGroups.init(getGroupsCallBack(), getCaPrefixes());
       }
 
       if (adminGroups != null) {
-        adminGroups.init(getGroupsCallBack());
+        adminGroups.init(getGroupsCallBack(), getCaPrefixes());
       }
 
       BwSystem sys = getSysparsHandler().get();
@@ -1007,7 +1024,7 @@ public class CalSvc extends CalSvcI {
 
     try {
       userGroups = (Directories)CalFacadeUtil.getObject(getSysparsHandler().get().getUsergroupsClass(), Directories.class);
-      userGroups.init(getGroupsCallBack());
+      userGroups.init(getGroupsCallBack(), getCaPrefixes());
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -1026,7 +1043,7 @@ public class CalSvc extends CalSvcI {
 
     try {
       adminGroups = (Directories)CalFacadeUtil.getObject(getSysparsHandler().get().getAdmingroupsClass(), Directories.class);
-      adminGroups.init(getGroupsCallBack());
+      adminGroups.init(getGroupsCallBack(), getCaPrefixes());
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }

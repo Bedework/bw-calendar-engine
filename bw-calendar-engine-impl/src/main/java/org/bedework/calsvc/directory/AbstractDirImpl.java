@@ -75,7 +75,7 @@ public abstract class AbstractDirImpl implements Directories {
   protected boolean debug;
 
   private static SystemRoots sysRoots;
-  private static CalAddrPrefixes caPrefixes;
+  private CalAddrPrefixes caPrefixes;
 
   /**
    * @author douglm
@@ -166,12 +166,11 @@ public abstract class AbstractDirImpl implements Directories {
     new FlushMap<String, BwPrincipalInfo>(60 * 1000 * 5, // 5 minute
                                           0); // No size limit
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#init(org.bedework.calfacade.ifs.Directories.CallBack)
-   */
   @Override
-  public void init(final CallBack cb) throws CalFacadeException {
+  public void init(final CallBack cb,
+                   final CalAddrPrefixes caPrefixes) throws CalFacadeException {
     this.cb = cb;
+    this.caPrefixes = caPrefixes;
     debug = getLogger().isDebugEnabled();
 
     initWhoMaps(getSystemRoots().getUserPrincipalRoot(), WhoDefs.whoTypeUser);
@@ -824,16 +823,6 @@ public abstract class AbstractDirImpl implements Directories {
   }
 
   protected CalAddrPrefixes getCaPrefixes() throws CalFacadeException {
-    if (caPrefixes != null) {
-      return caPrefixes;
-    }
-
-    try {
-      caPrefixes = (CalAddrPrefixes)CalOptionsFactory.getOptions().getGlobalProperty("caladdrPrefixes");
-    } catch (Throwable t) {
-      return null;
-    }
-
     return caPrefixes;
   }
 

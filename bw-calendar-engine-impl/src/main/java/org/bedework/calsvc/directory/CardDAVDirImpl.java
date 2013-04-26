@@ -21,6 +21,7 @@ package org.bedework.calsvc.directory;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
+import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.LdapConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -55,8 +56,9 @@ public class CardDAVDirImpl extends AbstractDirImpl {
     //VCard card;
   }
   @Override
-  public void init(final CallBack cb) throws CalFacadeException {
-    super.init(cb);
+  public void init(final CallBack cb,
+                   final CalAddrPrefixes caPrefixes) throws CalFacadeException {
+    super.init(cb, caPrefixes);
   }
 
   /* ===================================================================
