@@ -54,7 +54,7 @@ public interface ResourcesI extends Serializable {
    */
   public BwResource get(String path) throws CalFacadeException;
 
-  /** Get resource content given the resource. It will be set in the resource
+  /** Retrieve resource content given the resource. It will be set in the resource
    * object
    *
    * @param  val BwResource
