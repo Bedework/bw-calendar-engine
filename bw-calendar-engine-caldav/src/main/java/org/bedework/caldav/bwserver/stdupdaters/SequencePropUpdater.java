@@ -46,7 +46,7 @@ public class SequencePropUpdater implements PropertyUpdater {
     BigInteger val = pr.getInteger();
     BigInteger evVal = null;
     if (ev.getPriority() != null) {
-      evVal = BigInteger.valueOf(ev.getPriority());
+      evVal = BigInteger.valueOf(ev.getSequence());
     }
 
     if (ui.isRemove()) {
