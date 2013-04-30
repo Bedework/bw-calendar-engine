@@ -110,7 +110,6 @@ class Filters extends CalSvcDb implements FiltersI {
    * @see org.bedework.calsvci.FiltersI#getAll()
    */
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<BwFilterDef> getAll() throws CalFacadeException {
     BwPrincipal owner = getEntityOwner(getPrincipal()); // This can affect the query if done later
 
