@@ -64,6 +64,7 @@ public class EventPropertiesImpl <T extends BwEventProperty>
     super(svci);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public void init(final String className,
                    final boolean adminCanEditAllPublic) {
@@ -81,7 +82,6 @@ public class EventPropertiesImpl <T extends BwEventProperty>
    * @see org.bedework.calsvci.EventProperties#get(java.lang.String, java.lang.String)
    */
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<T> get(final String ownerHref,
                            final String creatorHref) throws CalFacadeException {
     return coreHdlr.get(ownerHref, creatorHref);
@@ -121,6 +121,7 @@ public class EventPropertiesImpl <T extends BwEventProperty>
     return coreHdlr.get(uid);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public T getCached(final String uid) throws CalFacadeException {
     T ent = cached.get(uid);
@@ -160,7 +161,6 @@ public class EventPropertiesImpl <T extends BwEventProperty>
    * @see org.bedework.calsvci.EventProperties#find(org.bedework.calfacade.BwString, java.lang.String)
    */
   @Override
-  @SuppressWarnings("unchecked")
   public T find(final BwString val,
                 final String ownerHref) throws CalFacadeException {
     String oh;
@@ -177,7 +177,6 @@ public class EventPropertiesImpl <T extends BwEventProperty>
    * @see org.bedework.calsvci.EventProperties#add(org.bedework.calfacade.BwEventProperty)
    */
   @Override
-  @SuppressWarnings("unchecked")
   public boolean add(final T val) throws CalFacadeException {
     setupSharableEntity(val, getPrincipal().getPrincipalRef());
 
@@ -207,7 +206,6 @@ public class EventPropertiesImpl <T extends BwEventProperty>
    * @see org.bedework.calsvci.EventProperties#update(org.bedework.calfacade.BwEventProperty)
    */
   @Override
-  @SuppressWarnings("unchecked")
   public void update(final T val) throws CalFacadeException {
     if ((val.getCreatorHref() == null) ||
         (val.getOwnerHref() == null)) {
@@ -227,7 +225,6 @@ public class EventPropertiesImpl <T extends BwEventProperty>
    * @see org.bedework.calsvci.EventProperties#delete(org.bedework.calfacade.BwEventProperty)
    */
   @Override
-  @SuppressWarnings("unchecked")
   public int delete(final T val) throws CalFacadeException {
     deleteOK(val);
 
