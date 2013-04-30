@@ -150,7 +150,6 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
    * @see org.bedework.calsvci.CalSuitesI#getAll()
    */
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<BwCalSuite> getAll() throws CalFacadeException {
     Collection<BwCalSuite> css = getCal().getAllCalSuites();
 
