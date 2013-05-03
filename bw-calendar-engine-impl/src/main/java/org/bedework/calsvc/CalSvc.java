@@ -40,6 +40,9 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.configs.CalAddrPrefixes;
+import org.bedework.calfacade.configs.CardDavInfo;
+import org.bedework.calfacade.configs.DirConfigProperties;
+import org.bedework.calfacade.configs.SynchConfig;
 import org.bedework.calfacade.env.CalOptionsFactory;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -450,6 +453,8 @@ public class CalSvc extends CalSvcI {
   private transient Logger log;
 
   private static CalAddrPrefixes caPrefixes;
+  private static CardDavInfo authCdinfo;
+  private static CardDavInfo unauthCdinfo;
 
   private CalAddrPrefixes getCaPrefixes() throws CalFacadeException {
     if (caPrefixes != null) {
@@ -459,10 +464,34 @@ public class CalSvc extends CalSvcI {
     try {
       caPrefixes = (CalAddrPrefixes)CalOptionsFactory.getOptions().getGlobalProperty("caladdrPrefixes");
     } catch (Throwable t) {
+      error(t);
       return null;
     }
 
     return caPrefixes;
+  }
+
+  private CardDavInfo getCardDavInfo(final boolean auth) throws CalFacadeException {
+    try {
+      if (auth) {
+        if (authCdinfo != null) {
+          return authCdinfo;
+        }
+
+        authCdinfo = (CardDavInfo)CalOptionsFactory.getOptions().getGlobalProperty("authCardDAVInfo");
+        return authCdinfo;
+      }
+
+      if (unauthCdinfo != null) {
+        return unauthCdinfo;
+      }
+
+      unauthCdinfo = (CardDavInfo)CalOptionsFactory.getOptions().getGlobalProperty("unauthCardDAVInfo");
+      return unauthCdinfo;
+    } catch (Throwable t) {
+      error(t);
+      return null;
+    }
   }
 
   /* (non-Javadoc)
@@ -489,11 +518,17 @@ public class CalSvc extends CalSvcI {
       beginTransaction();
 
       if (userGroups != null) {
-        userGroups.init(getGroupsCallBack(), getCaPrefixes());
+        userGroups.init(getGroupsCallBack(), getCaPrefixes(),
+                        getCardDavInfo(true),
+                        getCardDavInfo(false),
+                        getUserDirProps(userGroups.getConfigName()));
       }
 
       if (adminGroups != null) {
-        adminGroups.init(getGroupsCallBack(), getCaPrefixes());
+        adminGroups.init(getGroupsCallBack(), getCaPrefixes(),
+                         getCardDavInfo(true),
+                         getCardDavInfo(false),
+                         getUserDirProps(adminGroups.getConfigName()));
       }
 
       BwSystem sys = getSysparsHandler().get();
@@ -968,8 +1003,13 @@ public class CalSvc extends CalSvcI {
   @Override
   public SynchI getSynch() throws CalFacadeException {
     if (synch == null) {
-      synch = new Synch(this);
-      handlers.add((CalSvcDb)synch);
+      try {
+        synch = new Synch(this, (SynchConfig)CalOptionsFactory.getOptions().
+                          getGlobalProperty("synch"));
+        handlers.add((CalSvcDb)synch);
+      } catch (Throwable t) {
+        throw new CalFacadeException(t);
+      }
     }
 
     return synch;
@@ -1024,12 +1064,47 @@ public class CalSvc extends CalSvcI {
 
     try {
       userGroups = (Directories)CalFacadeUtil.getObject(getSysparsHandler().get().getUsergroupsClass(), Directories.class);
-      userGroups.init(getGroupsCallBack(), getCaPrefixes());
+      userGroups.init(getGroupsCallBack(), getCaPrefixes(),
+                      getCardDavInfo(true),
+                      getCardDavInfo(false),
+                      getUserDirProps(userGroups.getConfigName()));
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
 
     return userGroups;
+  }
+
+  private DirConfigProperties adminDirProps;
+
+  private DirConfigProperties getAdminDirProps(final String name) throws CalFacadeException {
+    if (adminDirProps != null) {
+      return adminDirProps;
+    }
+
+    try {
+      adminDirProps = (DirConfigProperties)CalOptionsFactory.getOptions().getGlobalProperty(name);
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+
+    return adminDirProps;
+  }
+
+  private DirConfigProperties userDirProps;
+
+  private DirConfigProperties getUserDirProps(final String name) throws CalFacadeException {
+    if (userDirProps != null) {
+      return userDirProps;
+    }
+
+    try {
+      userDirProps = (DirConfigProperties)CalOptionsFactory.getOptions().getGlobalProperty(name);
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+
+    return userDirProps;
   }
 
   /* (non-Javadoc)
@@ -1043,7 +1118,10 @@ public class CalSvc extends CalSvcI {
 
     try {
       adminGroups = (Directories)CalFacadeUtil.getObject(getSysparsHandler().get().getAdmingroupsClass(), Directories.class);
-      adminGroups.init(getGroupsCallBack(), getCaPrefixes());
+      adminGroups.init(getGroupsCallBack(), getCaPrefixes(),
+                       getCardDavInfo(true),
+                       getCardDavInfo(false),
+                       getAdminDirProps(adminGroups.getConfigName()));
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -1323,7 +1401,7 @@ public class CalSvc extends CalSvcI {
   /* Currently this gets a local calintf only. Later we need to use a par to
    * get calintf from a table.
    */
-  public Calintf getCal() throws CalFacadeException {
+  Calintf getCal() throws CalFacadeException {
     if (cali != null) {
       return cali;
     }

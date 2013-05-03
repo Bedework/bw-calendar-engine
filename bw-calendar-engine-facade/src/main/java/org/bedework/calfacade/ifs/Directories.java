@@ -24,6 +24,8 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.configs.CalAddrPrefixes;
+import org.bedework.calfacade.configs.CardDavInfo;
+import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
@@ -157,17 +159,29 @@ public interface Directories extends Serializable {
    *
    * @param cb
    * @param caPrefixes for principals etc.
+   * @param authCdinfo
+   * @param unauthCdinfo
+   * @param dirProps
    * @throws CalFacadeException
    */
-  public void init(CallBack cb,
-                   CalAddrPrefixes caPrefixes) throws CalFacadeException;
+  void init(CallBack cb,
+            CalAddrPrefixes caPrefixes,
+            CardDavInfo authCdinfo,
+            CardDavInfo unauthCdinfo,
+            DirConfigProperties dirProps) throws CalFacadeException;
+
+  /** Return the name of the configuration properties for the module,
+   * e.g "module.user-ldap-group" or "module.dir-config"
+   * @return String
+   */
+  String getConfigName();
 
   /** Get application visible directory information.
    *
    * @return DirectoryInfo
    * @throws CalFacadeException
    */
-  public DirectoryInfo getDirectoryInfo() throws CalFacadeException;
+  DirectoryInfo getDirectoryInfo() throws CalFacadeException;
 
   /** Test for a valid principal in the directory. This may have a number of
    * uses. For example, when organizing meetings we may want to send an
@@ -181,7 +195,7 @@ public interface Directories extends Serializable {
    * @return true if it's a valid principal
    * @throws CalFacadeException
    */
-  public boolean validPrincipal(String href) throws CalFacadeException;
+  boolean validPrincipal(String href) throws CalFacadeException;
 
   /** Does the value appear to represent a valid principal?
    *
@@ -189,7 +203,7 @@ public interface Directories extends Serializable {
    * @return true if it's a (possible) principal
    * @throws CalFacadeException
    */
-  public boolean isPrincipal(String val) throws CalFacadeException;
+  boolean isPrincipal(String val) throws CalFacadeException;
 
   /** Return principal for the given href.
    *
@@ -197,14 +211,14 @@ public interface Directories extends Serializable {
    * @return Principal
    * @throws CalFacadeException
    */
-  public BwPrincipal getPrincipal(String href) throws CalFacadeException;
+  BwPrincipal getPrincipal(String href) throws CalFacadeException;
 
   /** Needed for the ischedule service
    *
    * @return the default domain for the service.
    * @throws CalFacadeException
    */
-  public String getDefaultDomain() throws CalFacadeException;
+  String getDefaultDomain() throws CalFacadeException;
 
   /** The urls should be principal urls. principalUrl can null for the current user.
    * The result is a collection of principal urls of which the given url is a
@@ -218,7 +232,7 @@ public interface Directories extends Serializable {
    * @return Collection of urls - always non-null
    * @throws CalFacadeException
    */
-  public Collection<String>getGroups(String rootUrl,
+  Collection<String>getGroups(String rootUrl,
                                      String principalUrl) throws CalFacadeException;
 
   /**
@@ -227,14 +241,14 @@ public interface Directories extends Serializable {
    * @return String principal uri
    * @throws CalFacadeException
    */
-  public String makePrincipalUri(String id,
+  String makePrincipalUri(String id,
                                  int whoType) throws CalFacadeException;
 
   /** Used by caldav to return the root of the principal hierarchy
    * @return String principal root
    * @throws CalFacadeException
    */
-  public String getPrincipalRoot() throws CalFacadeException;
+  String getPrincipalRoot() throws CalFacadeException;
 
   /** Given a uri return a calendar address.
    * This should handle actions such as turning<br/>
@@ -253,7 +267,7 @@ public interface Directories extends Serializable {
    * @return caladdr for this system or null for an invalid uri
    * @throws CalFacadeException  for errors
    */
-  public abstract String uriToCaladdr(String val) throws CalFacadeException;
+  abstract String uriToCaladdr(String val) throws CalFacadeException;
 
   /** Given a user principal return a calendar address.
    *
@@ -261,7 +275,7 @@ public interface Directories extends Serializable {
    * @return caladdr
    * @throws CalFacadeException  for errors
    */
-  public abstract String principalToCaladdr(BwPrincipal val) throws CalFacadeException;
+  abstract String principalToCaladdr(BwPrincipal val) throws CalFacadeException;
 
   /** Given a user account return a calendar address.
    * For example, we might have an account<br/>
@@ -277,7 +291,7 @@ public interface Directories extends Serializable {
    * @return caladdr for this system
    * @throws CalFacadeException  for errors
    */
-  public abstract String userToCaladdr(String val) throws CalFacadeException;
+  abstract String userToCaladdr(String val) throws CalFacadeException;
 
   /** Given a calendar address return the associated calendar account.
    * For example, we might have a calendar address<br/>
@@ -294,7 +308,7 @@ public interface Directories extends Serializable {
    * @return account or null if not caladdr for this system
    * @throws CalFacadeException  for errors
    */
-  public abstract BwPrincipal caladdrToPrincipal(String caladdr) throws CalFacadeException;
+  abstract BwPrincipal caladdrToPrincipal(String caladdr) throws CalFacadeException;
 
   /** Ensure we have something that looks like a valid calendar user address.
    * Could be a mailto: or a principal
@@ -303,7 +317,7 @@ public interface Directories extends Serializable {
    * @return String valid or null invalid.
    * @throws CalFacadeException
    */
-  public abstract String normalizeCua(String val) throws CalFacadeException;
+  abstract String normalizeCua(String val) throws CalFacadeException;
 
   /** Return some sort of directory information for the given principal.
    *
@@ -311,7 +325,7 @@ public interface Directories extends Serializable {
    * @return BwPrincipalInfo directory information.
    * @throws CalFacadeException
    */
-  public BwPrincipalInfo getDirInfo(BwPrincipal p) throws CalFacadeException;
+  BwPrincipalInfo getDirInfo(BwPrincipal p) throws CalFacadeException;
 
   /** Uses the values in pinfo to update the supplied preferences. This may be a
    * site specific operation. It allows bedework to use directory information
@@ -324,7 +338,7 @@ public interface Directories extends Serializable {
    * @return boolean true if preferences updated
    * @throws CalFacadeException
    */
-  public boolean mergePreferences(BwPreferences prefs,
+  boolean mergePreferences(BwPreferences prefs,
                                   BwPrincipalInfo pinfo) throws CalFacadeException;
 
   /** Return all groups of which the given principal is a member. Never returns null.
@@ -335,7 +349,7 @@ public interface Directories extends Serializable {
    * @return Collection    of BwGroup
    * @throws CalFacadeException
    */
-  public Collection<BwGroup> getGroups(BwPrincipal val) throws CalFacadeException;
+  Collection<BwGroup> getGroups(BwPrincipal val) throws CalFacadeException;
 
   /** Return all groups of which the given principal is a member. Never returns null.
    *
@@ -347,14 +361,14 @@ public interface Directories extends Serializable {
    * @return Collection    of BwGroup
    * @throws CalFacadeException
    */
-  public Collection<BwGroup> getAllGroups(BwPrincipal val) throws CalFacadeException;
+  Collection<BwGroup> getAllGroups(BwPrincipal val) throws CalFacadeException;
 
   /** Show whether entries can be modified with this
    * class. Some sites may use other mechanisms.
    *
    * @return boolean    true if group maintenance is implemented.
    */
-  public boolean getGroupMaintOK();
+  boolean getGroupMaintOK();
 
   /** Return all groups to which this user has some access. Never returns null.
    *
@@ -362,7 +376,7 @@ public interface Directories extends Serializable {
    * @return Collection    of BwGroup
    * @throws CalFacadeException
    */
-  public Collection<BwGroup> getAll(boolean populate) throws CalFacadeException;
+  Collection<BwGroup> getAll(boolean populate) throws CalFacadeException;
 
   /** Populate the group with a (possibly empty) Collection of members. Does not
    * populate groups which are members.
@@ -370,7 +384,7 @@ public interface Directories extends Serializable {
    * @param  group           BwGroup group object to add
    * @throws CalFacadeException
    */
-  public void getMembers(BwGroup group) throws CalFacadeException;
+  void getMembers(BwGroup group) throws CalFacadeException;
 
   /* ====================================================================
    *  The following are available if group maintenance is on.
@@ -381,7 +395,7 @@ public interface Directories extends Serializable {
    * @param  group           BwGroup group object to add
    * @exception CalFacadeException If there's a problem
    */
-  public void addGroup(BwGroup group) throws CalFacadeException;
+  void addGroup(BwGroup group) throws CalFacadeException;
 
   /** Find a group given its name
    *
@@ -389,7 +403,7 @@ public interface Directories extends Serializable {
    * @return BwGroup        group object
    * @exception CalFacadeException If there's a problem
    */
-  public BwGroup findGroup(String name) throws CalFacadeException;
+  BwGroup findGroup(String name) throws CalFacadeException;
 
   /** Add a principal to a group
    *
@@ -397,7 +411,7 @@ public interface Directories extends Serializable {
    * @param val            BwPrincipal new member
    * @exception CalFacadeException   For invalid usertype values.
    */
-  public void addMember(BwGroup group, BwPrincipal val) throws CalFacadeException;
+  void addMember(BwGroup group, BwPrincipal val) throws CalFacadeException;
 
   /** Remove a member from a group
    *
@@ -405,26 +419,32 @@ public interface Directories extends Serializable {
    * @param val            BwPrincipal new member
    * @exception CalFacadeException   For invalid usertype values.
    */
-  public void removeMember(BwGroup group, BwPrincipal val) throws CalFacadeException;
+  void removeMember(BwGroup group, BwPrincipal val) throws CalFacadeException;
 
   /** Delete a group
    *
    * @param  group           BwGroup group object to delete
    * @exception CalFacadeException If there's a problem
    */
-  public void removeGroup(BwGroup group) throws CalFacadeException;
+  void removeGroup(BwGroup group) throws CalFacadeException;
 
   /** update a group. This may have no meaning in some directories.
    *
    * @param  group           BwGroup group object to update
    * @exception CalFacadeException If there's a problem
    */
-  public void updateGroup(BwGroup group) throws CalFacadeException;
+  void updateGroup(BwGroup group) throws CalFacadeException;
 
   /**
    * @param group
    * @return Collection
    * @throws CalFacadeException
    */
-  public Collection<BwGroup> findGroupParents(BwGroup group) throws CalFacadeException;
+  Collection<BwGroup> findGroupParents(BwGroup group) throws CalFacadeException;
+
+  /**
+   * @return String used to prefix administrative group names to distinguish
+   *         them from user group names.
+   */
+  String getAdminGroupsIdPrefix();
 }

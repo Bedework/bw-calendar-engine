@@ -24,9 +24,7 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.BwUser;
-import org.bedework.calfacade.configs.DumpRestoreConfig;
 import org.bedework.calfacade.configs.SystemRoots;
-import org.bedework.calfacade.env.CalOptionsFactory;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.PrincipalInfo;
@@ -140,18 +138,11 @@ public class RestoreGlobals extends Counters {
    */
   public boolean entityError;
 
-  /** Config properties from options file.
-   */
-  public DumpRestoreConfig config;
-
   /** Map user with id of zero on to this id - fixes oversight */
   public static int mapUser0 = 1;
 
   /** System parameters object */
   private BwSystem syspars = new BwSystem();
-
-  /** System parameters object */
-  public BwSystem defaultSyspars = new BwSystem();
 
   /** Messages for subscriptions changed   // PRE3.5
    */
@@ -281,6 +272,7 @@ public class RestoreGlobals extends Counters {
   /** */
   public CalendarMap calendarsTbl = new CalendarMap();
 
+  /** */
   public CalSvcI svci;
 
   /** */
@@ -290,6 +282,22 @@ public class RestoreGlobals extends Counters {
   }
 
   private String defaultTzid;
+
+  private String timezonesUri;
+
+  /**
+   * @param val
+   */
+  public void setTimezonesUri(final String val) {
+    timezonesUri = val;
+  }
+
+  /**
+   * @return uri for tz server
+   */
+  public String getTimezonesUri() {
+    return timezonesUri;
+  }
 
   /** This must be called after syspars has been initialised.
    *
@@ -307,14 +315,11 @@ public class RestoreGlobals extends Counters {
       return;
     }
 
-    String tzserverUri = CalOptionsFactory.getOptions().
-                     getGlobalStringProperty("timezonesUri");
-
-    if (tzserverUri == null) {
+    if (getTimezonesUri() == null) {
       throw new CalFacadeException("No timezones server URI defined");
     }
 
-    Timezones.initTimezones(tzserverUri);
+    Timezones.initTimezones(getTimezonesUri());
 
     Timezones.setSystemDefaultTzid(syspars.getTzid());
   }
@@ -446,10 +451,8 @@ public class RestoreGlobals extends Counters {
   }
 
   /**
-   * @param config
    */
-  public void init(final DumpRestoreConfig config) {
-    this.config = config;
+  public void init() {
   }
 
   private Map<String, BwPrincipal> principalMap = new HashMap<String, BwPrincipal>();

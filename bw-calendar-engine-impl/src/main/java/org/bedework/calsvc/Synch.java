@@ -21,6 +21,7 @@ package org.bedework.calsvc;
 import org.bedework.caldav.server.soap.synch.SynchConnection;
 import org.bedework.caldav.server.soap.synch.SynchConnectionsMBean;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.configs.SynchConfig;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.synch.BwSynchInfo;
 import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
@@ -61,6 +62,8 @@ class Synch extends CalSvcDb implements SynchI {
   private SynchConnectionsMBean conns;
   //private ObjectFactory of = new ObjectFactory();
 
+  private SynchConfig synchConf;
+
   /** Namespace of the synch SOAP service
    */
   static final String synchNamespace = "http://www.bedework.org/synch/wsmessages";
@@ -81,8 +84,11 @@ class Synch extends CalSvcDb implements SynchI {
 
   private static volatile long lastSynchInfoRefresh;
 
-  Synch(final CalSvc svci) {
+  Synch(final CalSvc svci,
+        final SynchConfig synchConf) {
     super(svci);
+
+    this.synchConf = synchConf;
   }
 
   /* (non-Javadoc)
@@ -107,7 +113,7 @@ class Synch extends CalSvcDb implements SynchI {
   public Connection getSynchConnection() throws CalFacadeException {
     try {
       return new SConnection(getActiveSynchConnections().
-                                 getConnectionById(getSynchConnectionId()));
+                                 getConnectionById(synchConf.getConnectorId()));
     } catch (Throwable t) {
       if (debug) {
         error(t);
@@ -143,7 +149,7 @@ class Synch extends CalSvcDb implements SynchI {
     /* =============== End A - bedework ======================= */
     ConnectorInfoType ciA = new ConnectorInfoType();
 
-    ciA.setConnectorId(getSynchConnectionId());
+    ciA.setConnectorId(synchConf.getConnectorId());
 
     ArrayOfSynchProperties aosA = new ArrayOfSynchProperties();
 
@@ -192,7 +198,7 @@ class Synch extends CalSvcDb implements SynchI {
     aos.getProperty().add(makeSynchProperty("alarm-processing", "REMOVE"));
     aos.getProperty().add(makeSynchProperty("scheduling-processing", "REMOVE"));
 
-    SubscribeResponseType sresp = getPort(getSynchUri()).subscribe(
+    SubscribeResponseType sresp = getPort(synchConf.getManagerUri()).subscribe(
              getIdToken(getPrincipal().getPrincipalRef(), sc),
              subreq);
     if (sresp.getStatus() != StatusType.OK) {
@@ -222,7 +228,7 @@ class Synch extends CalSvcDb implements SynchI {
                                            new UnsubscribeRequestType(),
                                            sc.getSynchToken());
 
-    UnsubscribeResponseType usresp = getPort(getSynchUri()).unsubscribe(
+    UnsubscribeResponseType usresp = getPort(synchConf.getManagerUri()).unsubscribe(
              getIdToken(getPrincipal().getPrincipalRef(), sc),
              usreq);
     if (usresp.getStatus() != StatusType.OK) {
@@ -257,7 +263,7 @@ class Synch extends CalSvcDb implements SynchI {
                                                     new SubscriptionStatusRequestType(),
                                                     sc.getSynchToken());
 
-      SubscriptionStatusResponseType ssresp = getPort(getSynchUri()).subscriptionStatus(
+      SubscriptionStatusResponseType ssresp = getPort(synchConf.getManagerUri()).subscriptionStatus(
                getIdToken(getPrincipal().getPrincipalRef(), sc),
                ssreq);
       if (ssresp.getStatus() == StatusType.OK) {
@@ -297,7 +303,7 @@ class Synch extends CalSvcDb implements SynchI {
 
     SynchConnection sc = sconn.sc;
 
-    GetInfoResponseType girt = getPort(getSynchUri()).getInfo(
+    GetInfoResponseType girt = getPort(synchConf.getManagerUri()).getInfo(
            getIdToken(getPrincipal().getPrincipalRef(), sc),
            new GetInfoRequestType());
 
@@ -314,10 +320,6 @@ class Synch extends CalSvcDb implements SynchI {
   /* ====================================================================
    *                   private methods
    * ==================================================================== */
-
-  private String getSynchConnectionId() throws CalFacadeException {
-    return (String)getGlobalProperty(synchConnectorIdPname);
-  }
 
   private SynchConnectionsMBean getActiveSynchConnections() throws CalFacadeException {
     try {
@@ -353,7 +355,7 @@ class Synch extends CalSvcDb implements SynchI {
   private ConnectorInfoType makeCi(final BwCalendar val) throws CalFacadeException {
     ConnectorInfoType ci = new ConnectorInfoType();
 
-    ci.setConnectorId(getSynchConnectionId());
+    ci.setConnectorId(synchConf.getConnectorId());
 
     ArrayOfSynchProperties aosA = new ArrayOfSynchProperties();
 
@@ -376,9 +378,9 @@ class Synch extends CalSvcDb implements SynchI {
     return sp;
   }
 
-  private String getSynchUri() throws CalFacadeException {
-    return (String)getGlobalProperty(synchManagerUriPname);
-  }
+//  private String getSynchUri() throws CalFacadeException {
+    //return (String)getGlobalProperty(synchManagerUriPname);
+  //}
 
   SynchIdTokenType getIdToken(final String principal,
                               final SynchConnection sc) {
@@ -393,9 +395,7 @@ class Synch extends CalSvcDb implements SynchI {
 
   SynchRemoteServicePortType getPort(final String uri) throws CalFacadeException {
     try {
-      String wsdlUri = (String)getGlobalProperty("synchWsdlUri");
-
-      URL wsURL = new URL(wsdlUri);
+      URL wsURL = new URL(synchConf.getWsdlUri());
 
       SynchRemoteService ers =
         new SynchRemoteService(wsURL, synchServicename);

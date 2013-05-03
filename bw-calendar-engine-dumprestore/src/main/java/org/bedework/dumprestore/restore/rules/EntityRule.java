@@ -103,7 +103,7 @@ public class EntityRule extends RestoreRule implements Defs {
   public void begin(final String ns, final String name, final Attributes att) throws Exception {
     globals.entityError = false;
 
-    if (globals.config.getDebugEntity()) {
+    if (debug) {
       trace("About to push entity for " + name);
     }
 

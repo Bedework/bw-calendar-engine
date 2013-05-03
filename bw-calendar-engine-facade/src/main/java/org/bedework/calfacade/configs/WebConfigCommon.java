@@ -24,6 +24,10 @@ package org.bedework.calfacade.configs;
  * @version 1.0
  */
 public class WebConfigCommon extends ConfigCommon {
+  private String publicAdminUri;
+  private String publicCalendarUri;
+  private String personalCalendarUri;
+
   /* True if we should auto-create contacts. Some sites may wish to control
    * the creation of contacts to enforce consistency in their use. If this
    * is true we create a contact as we create events. If false the contact
@@ -68,10 +72,57 @@ public class WebConfigCommon extends ConfigCommon {
 
   private String submissionRoot;
 
+  private String portalPlatform;
+
   /** Constructor
    *
    */
   public WebConfigCommon() {
+  }
+
+  /** publicAdminUri.
+   *
+   * @param val
+   */
+  public void setPublicAdminUri(final String val) {
+    publicAdminUri = val;
+  }
+
+  /**
+   * @return String
+   */
+  public String getPublicAdminUri() {
+    return publicAdminUri;
+  }
+
+  /** publicAdminUri.
+   *
+   * @param val
+   */
+  public void setPublicCalendarUri(final String val) {
+    publicCalendarUri = val;
+  }
+
+  /**
+   * @return String
+   */
+  public String getPublicCalendarUri() {
+    return publicCalendarUri;
+  }
+
+  /** publicAdminUri.
+   *
+   * @param val
+   */
+  public void setPersonalCalendarUri(final String val) {
+    personalCalendarUri = val;
+  }
+
+  /**
+   * @return String
+   */
+  public String getPersonalCalendarUri() {
+    return personalCalendarUri;
   }
 
   /** True if we should auto-create contacts. Some sites may wish to control
@@ -274,12 +325,31 @@ public class WebConfigCommon extends ConfigCommon {
     return submissionRoot;
   }
 
+  /** portalPlatform.
+   *
+   * @param val
+   */
+  public void setPortalPlatform(final String val) {
+    portalPlatform = val;
+  }
+
+  /**
+   * @return String
+   */
+  public String getPortalPlatform() {
+    return portalPlatform;
+  }
+
   /** Copy this object to val.
    *
    * @param val
    */
   public void copyTo(final WebConfigCommon val) {
     super.copyTo(val);
+
+    val.setPublicAdminUri(getPublicAdminUri());
+    val.setPublicCalendarUri(getPublicCalendarUri());
+    val.setPersonalCalendarUri(getPersonalCalendarUri());
     val.setAutoCreateContacts(getAutoCreateContacts());
     val.setAutoCreateLocations(getAutoCreateLocations());
     val.setAutoDeleteContacts(getAutoDeleteContacts());
@@ -293,6 +363,7 @@ public class WebConfigCommon extends ConfigCommon {
     val.setRefreshInterval(getRefreshInterval());
     val.setCalSuite(getCalSuite());
     val.setSubmissionRoot(getSubmissionRoot());
+    val.setPortalPlatform(getPortalPlatform());
   }
 
   @Override

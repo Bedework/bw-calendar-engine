@@ -28,7 +28,6 @@ import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
-import org.bedework.calfacade.env.CalOptionsFactory;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
@@ -44,7 +43,6 @@ import org.bedework.sysevents.events.SysEvent;
 
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 import edu.rpi.cmt.security.PwEncryptionIntf;
-import edu.rpi.sss.util.OptionsI;
 import edu.rpi.sss.util.Uid;
 
 import org.apache.commons.codec.binary.Base64;
@@ -67,8 +65,6 @@ public class CalSvcDb implements Serializable {
   private CalSvc svci;
 
   private CalSvcIPars pars;
-
-  private OptionsI opts;
 
   private transient Logger log;
 
@@ -273,39 +269,6 @@ public class CalSvcDb implements Serializable {
     }
 
     return res;
-  }
-
-  /**
-   * @return Options object.
-   * @throws CalFacadeException
-   */
-  public OptionsI getOptions() throws CalFacadeException {
-    if (opts != null) {
-      return opts;
-    }
-
-    try {
-      opts = CalOptionsFactory.getOptions();
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-
-    return opts;
-  }
-
-  /**
-   * @param name
-   * @return value of named property
-   * @throws CalFacadeException
-   */
-  public Object getGlobalProperty(final String name) throws CalFacadeException {
-    try {
-      return getOptions().getGlobalProperty(name);
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
   }
 
   /* Get current parameters

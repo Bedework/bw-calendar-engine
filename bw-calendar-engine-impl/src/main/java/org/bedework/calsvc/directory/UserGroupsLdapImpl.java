@@ -20,7 +20,6 @@ package org.bedework.calsvc.directory;
 
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.LdapConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -49,12 +48,6 @@ import javax.naming.ldap.InitialLdapContext;
  * @version 1.0
  */
 public class UserGroupsLdapImpl extends AbstractDirImpl {
-  @Override
-  public void init(final CallBack cb,
-                   final CalAddrPrefixes caPrefixes) throws CalFacadeException {
-    super.init(cb, caPrefixes);
-  }
-
   /* ===================================================================
    *  The following should not change the state of the current users
    *  group.
@@ -284,7 +277,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
    * ==================================================================== */
 
   @Override
-  protected String getConfigName() {
+  public String getConfigName() {
     return "module.user-ldap-group";
   }
 
@@ -363,13 +356,13 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
     try {
       ctx = new InitialLdapContext(env, null);
-      if (props.getDebug()) {
+      if (debug) {
         trace("Logged into LDAP server, " + ctx);
       }
 
       return ctx;
     } catch(Throwable t) {
-      if (props.getDebug()) {
+      if (debug) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -411,7 +404,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
       return group;
     } catch(Throwable t) {
-      if (props.getDebug()) {
+      if (debug) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -482,7 +475,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
       return groups;
     } catch(Throwable t) {
-      if (props.getDebug()) {
+      if (debug) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -598,7 +591,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
         }
       }
     } catch(Throwable t) {
-      if (props.getDebug()) {
+      if (debug) {
         error(t);
       }
       throw new CalFacadeException(t);

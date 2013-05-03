@@ -50,8 +50,11 @@ public class RestoreRule extends Rule {
 
   private transient Logger log;
 
+  protected boolean debug;
+
   RestoreRule(final RestoreGlobals globals) {
     this.globals = globals;
+    debug = getLog().isDebugEnabled();
   }
 
   protected void push(final Object o) {

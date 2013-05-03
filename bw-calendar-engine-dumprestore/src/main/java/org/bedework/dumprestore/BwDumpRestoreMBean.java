@@ -34,89 +34,99 @@ public interface BwDumpRestoreMBean {
    *
    * @return Name
    */
-  public String getName();
+  String getName();
 
   /** Account we run under
    *
    * @param val
    */
-  public void setAccount(String val);
+  void setAccount(String val);
 
   /**
    * @return String account we use
    */
-  public String getAccount();
+  String getAccount();
 
   /**
    * @return String application namee
    */
-  public String getAppname();
+  String getAppname();
 
   /** Statement delimiter
    *
    * @param val
    */
-  public void setDelimiter(String val);
+  void setDelimiter(String val);
 
   /**
    * @return Statement delimiter
    */
-  public String getDelimiter();
+  String getDelimiter();
 
   /** Export to database?
    *
    * @param val
    */
-  public void setExport(boolean val);
+  void setExport(boolean val);
 
   /**
    * @return true for export
    */
-  public boolean getExport();
+  boolean getExport();
 
   /** Output file name - full path
    *
    * @param val
    */
-  public void setSchemaOutFile(String val);
+  void setSchemaOutFile(String val);
 
   /**
    * @return Output file name - full path
    */
-  public String getSchemaOutFile();
+  String getSchemaOutFile();
 
   /** XML data input file name - full path. Used for data restore
    *
    * @param val
    */
-  public void setDataIn(String val);
+  void setDataIn(String val);
 
   /**
    * @return XML data input file name - full path
    */
-  public String getDataIn();
+  String getDataIn();
 
   /** XML data output directory name - full path. Used for data restore
    *
    * @param val
    */
-  public void setDataOut(String val);
+  void setDataOut(String val);
 
   /**
    * @return XML data output directory name - full path
    */
-  public String getDataOut();
+  String getDataOut();
 
   /** XML data output file prefix - for data dump
    *
    * @param val
    */
-  public void setDataOutPrefix(String val);
+  void setDataOutPrefix(String val);
 
   /**
    * @return XML data output file prefix - for data dump
    */
-  public String getDataOutPrefix();
+  String getDataOutPrefix();
+
+  /**
+   * @param val
+   */
+  void setTimezonesUri(String val);
+
+  /**
+   * @return uri for tz server
+   */
+  String getTimezonesUri();
 
   /* ========================================================================
    * Operations
@@ -126,7 +136,7 @@ public interface BwDumpRestoreMBean {
    *
    * @return true if it looks ok to us
    */
-  public boolean testSchemaValid();
+  boolean testSchemaValid();
 
   /** Create or dump new schema. If export and drop set will try to drop tables.
    * Export and create will create a schema in the db and export, drop, create
@@ -137,59 +147,59 @@ public interface BwDumpRestoreMBean {
    *
    * @return Completion message
    */
-  public String schema();
+  String schema();
 
   /** Starts a restore of the data from the DataIn path. Will not restore if
    * there appears to be any data already in the db.
    *
    * @return Completion message
    */
-  public String restoreData();
+  String restoreData();
 
   /** Returns status of the restore.
    *
    * @return Completion messages and stats
    */
-  public List<String> restoreStatus();
+  List<String> restoreStatus();
 
   /** Scan the system data looking for external subscriptions. When complete
    * the data can be used by checkExternalSubs
    *
    * @return Completion messages and stats
    */
-  public String fetchExternalSubs();
+  String fetchExternalSubs();
 
   /** Check external subscriptions discovered during the dump or restore. This will
    * restore the subscription if necessary.
    *
    * @return Completion message
    */
-  public String checkExternalSubs();
+  String checkExternalSubs();
 
   /** Returns status of the external subscriptions check.
    *
    * @return Completion messages and stats
    */
-  public List<String> checkSubsStatus();
+  List<String> checkSubsStatus();
 
   /** Starts a dump of the data to a file in the DataOut directory.
    *
    * @return Completion message
    */
-  public String dumpData();
+  String dumpData();
 
   /** Returns status of the dump.
    *
    * @return Completion messages and stats
    */
-  public List<String> dumpStatus();
+  List<String> dumpStatus();
 
   /** Try to drop all the tables. May get errors for a partial db or for an updated
    * db.
    *
    * @return Completion message
    */
-  public String dropTables();
+  String dropTables();
 
   /* ========================================================================
    * Lifecycle
@@ -198,26 +208,26 @@ public interface BwDumpRestoreMBean {
   /** Lifecycle
    *
    */
-  public void create();
+  void create();
 
   /** Lifecycle
    *
    */
-  public void start();
+  void start();
 
   /** Lifecycle
    *
    */
-  public void stop();
+  void stop();
 
   /** Lifecycle
    *
    * @return true if started
    */
-  public boolean isStarted();
+  boolean isStarted();
 
   /** Lifecycle
    *
    */
-  public void destroy();
+  void destroy();
 }

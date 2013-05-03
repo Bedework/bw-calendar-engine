@@ -40,7 +40,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
    * ==================================================================== */
 
   @Override
-  protected String getConfigName() {
+  public String getConfigName() {
     /* Use the same config as the default groups - we're only after principal info
      */
     return "module.dir-config";
@@ -73,7 +73,6 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<BwGroup> getGroups(final BwPrincipal val) throws CalFacadeException {
     return new TreeSet<BwGroup>(cb.getGroups(val, false));
   }
@@ -106,7 +105,6 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<BwGroup> getAll(final boolean populate) throws CalFacadeException {
     Collection<BwGroup> gs = cb.getAll(true);
 
@@ -124,6 +122,11 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   @Override
   public void getMembers(final BwGroup group) throws CalFacadeException {
     group.setGroupMembers(cb.getMembers(group, true));
+  }
+
+  @Override
+  public String getAdminGroupsIdPrefix() {
+    return "agrp_";
   }
 
   /* ====================================================================
@@ -230,7 +233,6 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<BwGroup> findGroupParents(final BwGroup group) throws CalFacadeException {
     return cb.findGroupParents(group, true);
   }

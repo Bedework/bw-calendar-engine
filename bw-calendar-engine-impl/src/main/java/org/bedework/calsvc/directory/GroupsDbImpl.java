@@ -37,7 +37,6 @@ public class GroupsDbImpl extends AbstractDirImpl {
    * @see org.bedework.calfacade.ifs.Groups#getGroups(org.bedework.calfacade.BwPrincipal)
    */
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<BwGroup> getGroups(final BwPrincipal val) throws CalFacadeException {
     return new TreeSet<BwGroup>(cb.getGroups(val, false));
   }
@@ -69,7 +68,6 @@ public class GroupsDbImpl extends AbstractDirImpl {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<BwGroup> getAll(final boolean populate) throws CalFacadeException {
     Collection<BwGroup> gs = cb.getAll(false);
 
@@ -85,7 +83,6 @@ public class GroupsDbImpl extends AbstractDirImpl {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public void getMembers(final BwGroup group) throws CalFacadeException {
     group.setGroupMembers(cb.getMembers(group, false));
   }
@@ -173,7 +170,7 @@ public class GroupsDbImpl extends AbstractDirImpl {
    * ==================================================================== */
 
   @Override
-  protected String getConfigName() {
+  public String getConfigName() {
     return "module.dir-config";
   }
 

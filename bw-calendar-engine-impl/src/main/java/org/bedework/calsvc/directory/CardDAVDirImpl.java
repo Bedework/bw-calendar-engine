@@ -21,7 +21,6 @@ package org.bedework.calsvc.directory;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
-import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.LdapConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -54,11 +53,6 @@ public class CardDAVDirImpl extends AbstractDirImpl {
     String calAddr;
     long timestamp;
     //VCard card;
-  }
-  @Override
-  public void init(final CallBack cb,
-                   final CalAddrPrefixes caPrefixes) throws CalFacadeException {
-    super.init(cb, caPrefixes);
   }
 
   /* ===================================================================
@@ -296,7 +290,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
    * ==================================================================== */
 
   @Override
-  protected String getConfigName() {
+  public String getConfigName() {
     return "module.user-ldap-group";
   }
 
@@ -375,13 +369,13 @@ public class CardDAVDirImpl extends AbstractDirImpl {
 
     try {
       ctx = new InitialLdapContext(env, null);
-      if (props.getDebug()) {
+      if (debug) {
         trace("Logged into LDAP server, " + ctx);
       }
 
       return ctx;
     } catch(Throwable t) {
-      if (props.getDebug()) {
+      if (debug) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -423,7 +417,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
 
       return group;
     } catch(Throwable t) {
-      if (props.getDebug()) {
+      if (debug) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -487,7 +481,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
 
       return groups;
     } catch(Throwable t) {
-      if (props.getDebug()) {
+      if (debug) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -603,7 +597,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
         }
       }
     } catch(Throwable t) {
-      if (props.getDebug()) {
+      if (debug) {
         error(t);
       }
       throw new CalFacadeException(t);

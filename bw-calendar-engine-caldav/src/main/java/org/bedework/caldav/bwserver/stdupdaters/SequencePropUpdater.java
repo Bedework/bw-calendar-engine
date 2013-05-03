@@ -25,12 +25,8 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.util.ChangeTableEntry;
 
 import edu.rpi.cct.webdav.servlet.shared.WebdavException;
-import edu.rpi.sss.util.Util;
 
-import ietf.params.xml.ns.icalendar_2.PriorityPropType;
 import ietf.params.xml.ns.icalendar_2.SequencePropType;
-
-import java.math.BigInteger;
 
 /**
  * @author douglm
@@ -43,44 +39,40 @@ public class SequencePropUpdater implements PropertyUpdater {
     SequencePropType pr = (SequencePropType)ui.getProp();
     ChangeTableEntry cte = ui.getCte();
 
-    BigInteger val = pr.getInteger();
-    BigInteger evVal = null;
-    if (ev.getPriority() != null) {
-      evVal = BigInteger.valueOf(ev.getSequence());
-    }
+    int val = pr.getInteger().intValue();
+    int evVal = ev.getSequence();
 
     if (ui.isRemove()) {
-      if (evVal == null) {
+      if (evVal == 0) {
         return new UpdateResult("Entity has no " + ui.getPropName() +
                                 " property - cannot remove");
       }
-      val = null;
+
+      val = 0;
     } else if (ui.isAdd()) {
-      if (evVal != null) {
+      if (evVal != 0) {
         return new UpdateResult("Entity already has " + ui.getPropName() +
                                 " property - cannot add");
       }
     } else if (!ui.isChange()) {
       return new UpdateResult("No update specified for " + ui.getPropName());
     } else {
-      if (!val.equals(evVal)) {
+      if (val != evVal) {
         return new UpdateResult("Values don't match for update to " +
                                 ui.getPropName());
       }
 
-      val = ((PriorityPropType)ui.getUpdprop()).getInteger();
+      val = ((SequencePropType)ui.getUpdprop()).getInteger().intValue();
     }
 
-    if (val != null) {
-      int ival = val.intValue();
-      if (ival < 0) {
-        return new UpdateResult("Value for " + ui.getPropName() +
-                                " must be >= 0 ");
-      }
+    if (val < 0) {
+      return new UpdateResult("Value for " + ui.getPropName() +
+                              " must be >= 0 ");
     }
-    if (Util.cmpObjval(val, evVal) != 0) {
+
+    if (val != evVal) {
       cte.setChanged(evVal, val);
-      ev.setSequence(val.intValue());
+      ev.setSequence(val);
     }
 
     return UpdateResult.getOkResult();

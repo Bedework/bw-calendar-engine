@@ -99,6 +99,8 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
 
   private String dataOutPrefix;
 
+  private String timezonesUri;
+
   private List<ExternalSubInfo> externalSubs;
 
   private String curSvciOwner;
@@ -137,6 +139,7 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
         info("Restore file: " + getDataIn());
 
         restorer.setFilename(getDataIn());
+        restorer.setTimezonesUri(timezonesUri);
 
         restorer.open();
 
@@ -462,6 +465,16 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
   @Override
   public String getDataOutPrefix() {
     return dataOutPrefix;
+  }
+
+  @Override
+  public void setTimezonesUri(final String val) {
+    timezonesUri = val;
+  }
+
+  @Override
+  public String getTimezonesUri() {
+    return timezonesUri;
   }
 
   @Override

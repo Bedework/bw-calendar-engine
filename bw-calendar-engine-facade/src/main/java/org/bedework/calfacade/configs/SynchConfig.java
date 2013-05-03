@@ -20,59 +20,62 @@ package org.bedework.calfacade.configs;
 
 import java.io.Serializable;
 
-/** This class defines the various properties we need to make a connection
- * and retrieve a group and user information via ldap.
+/** Information to access carddav
  *
  * @author Mike Douglass
  */
-public class DirConfigProperties implements Serializable {
-  private String moduleType;
+public class SynchConfig implements Serializable {
+  private String wsdlUri;
 
-  private String domains;
-  private String defaultDomain;
+  private String managerUri;
 
-  /** Used by configuration tools
+  private String connectorId;
+
+  /** Set the wsdlUri
    *
-   * @param val
+   * @param val    String
    */
-  public void setModuleType(final String val)  {
-    moduleType  = val;
+  public void setWsdlUri(final String val) {
+    wsdlUri = val;
   }
 
-  /**
+  /** get the wsdlUri
+   *
    * @return String
    */
-  public String getModuleType()  {
-    return moduleType;
+  public String getWsdlUri() {
+    return wsdlUri;
   }
 
-  /**
-   * @param val
-   */
-  public void setDomains(final String val)  {
-    domains = val;
-  }
-
-  /** Comma separated list of domains - '*' should be treated as a wildcard
+  /** Set the managerUri
    *
-   * @return String val
+   * @param val    String
    */
-  public String getDomains()  {
-    return domains;
+  public void setManagerUri(final String val) {
+    managerUri = val;
   }
 
-  /**
-   * @param val
-   */
-  public void setDefaultDomain(final String val)  {
-    defaultDomain = val;
-  }
-
-  /**
+  /** get the managerUri
    *
-   * @return String val
+   * @return String
    */
-  public String getDefaultDomain()  {
-    return defaultDomain;
+  public String getManagerUri() {
+    return managerUri;
+  }
+
+  /** Set the connectorId
+   *
+   * @param val    String
+   */
+  public void setConnectorId(final String val) {
+    connectorId = val;
+  }
+
+  /** Get the connectorId
+   *
+   * @return String
+   */
+  public String getConnectorId() {
+    return connectorId;
   }
 }

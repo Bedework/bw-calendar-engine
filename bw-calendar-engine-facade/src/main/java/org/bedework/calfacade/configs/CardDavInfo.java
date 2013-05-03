@@ -20,59 +20,80 @@ package org.bedework.calfacade.configs;
 
 import java.io.Serializable;
 
-/** This class defines the various properties we need to make a connection
- * and retrieve a group and user information via ldap.
+/** Information to access carddav
  *
  * @author Mike Douglass
  */
-public class DirConfigProperties implements Serializable {
-  private String moduleType;
+public class CardDavInfo implements Serializable {
+  private boolean auth;
 
-  private String domains;
-  private String defaultDomain;
+  private String host;
 
-  /** Used by configuration tools
+  private int port;
+
+  private String contextPath;
+
+  /** Require auth?
    *
-   * @param val
+   * @param val    boolean
    */
-  public void setModuleType(final String val)  {
-    moduleType  = val;
+  public void setAuth(final boolean val) {
+    auth = val;
   }
 
-  /**
+  /** Require auth?
+   *
+   * @return boolean
+   */
+  public boolean getAuth() {
+    return auth;
+  }
+
+  /** Set the host
+   *
+   * @param val    String
+   */
+  public void setHost(final String val) {
+    host = val;
+  }
+
+  /** get the host
+   *
    * @return String
    */
-  public String getModuleType()  {
-    return moduleType;
+  public String getHost() {
+    return host;
   }
 
-  /**
-   * @param val
-   */
-  public void setDomains(final String val)  {
-    domains = val;
-  }
-
-  /** Comma separated list of domains - '*' should be treated as a wildcard
+  /** Set the port
    *
-   * @return String val
+   * @param val    int
    */
-  public String getDomains()  {
-    return domains;
+  public void setPort(final int val) {
+    port = val;
   }
 
-  /**
-   * @param val
-   */
-  public void setDefaultDomain(final String val)  {
-    defaultDomain = val;
-  }
-
-  /**
+  /** get the v
    *
-   * @return String val
+   * @return int
    */
-  public String getDefaultDomain()  {
-    return defaultDomain;
+  public int getport() {
+    return port;
+  }
+
+  /** Set the contextPath
+   *
+   * @param val    String
+   */
+  public void setContextPath(final String val) {
+    contextPath = val;
+  }
+
+  /** Get the contextPath
+   *
+   * @return String
+   */
+  public String getContextPath() {
+    return contextPath;
   }
 }

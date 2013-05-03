@@ -26,9 +26,9 @@ import org.bedework.calfacade.BwPrincipalInfo.IntPrincipalProperty;
 import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.configs.CalAddrPrefixes;
+import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.SystemRoots;
-import org.bedework.calfacade.env.CalOptionsFactory;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calsvci.CalSvcFactoryDefault;
@@ -38,7 +38,6 @@ import edu.rpi.cmt.access.WhoDefs;
 import edu.rpi.sss.util.DavUtil;
 import edu.rpi.sss.util.DavUtil.DavChild;
 import edu.rpi.sss.util.FlushMap;
-import edu.rpi.sss.util.OptionsI;
 import edu.rpi.sss.util.Util;
 import edu.rpi.sss.util.http.BasicHttpClient;
 import edu.rpi.sss.util.xml.tagdefs.CarddavTags;
@@ -76,6 +75,9 @@ public abstract class AbstractDirImpl implements Directories {
 
   private static SystemRoots sysRoots;
   private CalAddrPrefixes caPrefixes;
+  private CardDavInfo authCdinfo;
+  private CardDavInfo unauthCdinfo;
+  private DirConfigProperties dirProps;
 
   /**
    * @author douglm
@@ -106,7 +108,6 @@ public abstract class AbstractDirImpl implements Directories {
 
   private static Collection<CAPrefixInfo> caPrefixInfo;
 
-  private DirConfigProperties props;
 
   /** */
   private static class DomainMatcher implements Serializable {
@@ -168,10 +169,19 @@ public abstract class AbstractDirImpl implements Directories {
 
   @Override
   public void init(final CallBack cb,
-                   final CalAddrPrefixes caPrefixes) throws CalFacadeException {
+                   final CalAddrPrefixes caPrefixes,
+                   final CardDavInfo authCdinfo,
+                   final CardDavInfo unauthCdinfo,
+                   final DirConfigProperties dirProps) throws CalFacadeException {
     this.cb = cb;
     this.caPrefixes = caPrefixes;
+    this.authCdinfo = authCdinfo;
+    this.unauthCdinfo = unauthCdinfo;
+    this.dirProps = dirProps;
+
     debug = getLogger().isDebugEnabled();
+
+    setDomains();
 
     initWhoMaps(getSystemRoots().getUserPrincipalRoot(), WhoDefs.whoTypeUser);
     initWhoMaps(getSystemRoots().getGroupPrincipalRoot(), WhoDefs.whoTypeGroup);
@@ -251,7 +261,7 @@ public abstract class AbstractDirImpl implements Directories {
 
     CardDavInfo cdi = getCardDavInfo(false);
 
-    if ((cdi == null) || (cdi.host == null)) {
+    if ((cdi == null) || (cdi.getHost() == null)) {
       return null;
     }
 
@@ -260,10 +270,10 @@ public abstract class AbstractDirImpl implements Directories {
     pi = new BwPrincipalInfo();
 
     try {
-      cdc = new BasicHttpClient(cdi.host, cdi.port, null,
+      cdc = new BasicHttpClient(cdi.getHost(), cdi.getport(), null,
                               15 * 1000);
 
-      pi.setPropertiesFromVCard(getCard(cdc, cdi.contextPath, p));
+      pi.setPropertiesFromVCard(getCard(cdc, cdi.getContextPath(), p));
     } catch (Throwable t) {
       if (getLogger().isDebugEnabled()) {
         error(t);
@@ -749,15 +759,14 @@ public abstract class AbstractDirImpl implements Directories {
     return defaultDomain;
   }
 
+  @Override
+  public String getAdminGroupsIdPrefix() {
+    return null;
+  }
+
   /* ====================================================================
    *  Protected methods.
    * ==================================================================== */
-
-  /** Return the name of the configuration properties for the module,
-   * e.g "module.user-ldap-group" or "module.dir-config"
-   * @return String
-   */
-  protected abstract String getConfigName();
 
   /** See if the given principal href is in our table. Allows us to short circuit
    * the validation process.
@@ -778,38 +787,7 @@ public abstract class AbstractDirImpl implements Directories {
   }
 
   protected DirConfigProperties getProps() throws CalFacadeException {
-    if (props != null) {
-      return props;
-    }
-
-    try {
-      props = (DirConfigProperties)CalOptionsFactory.getOptions().getGlobalProperty(getConfigName());
-
-      String prDomains = props.getDomains();
-
-      /* Convert domains list to a Collection */
-      if (prDomains.equals("*")) {
-        anyDomain = true;
-      } else if ((prDomains.indexOf(",") < 0) &&
-                 !prDomains.startsWith("*")) {
-        onlyDomain = new DomainMatcher(prDomains);
-      } else {
-        domains = new ArrayList<DomainMatcher>();
-
-        for (String domain: props.getDomains().split(",")) {
-          domains.add(new DomainMatcher(domain));
-        }
-      }
-
-      defaultDomain = props.getDefaultDomain();
-      if ((defaultDomain == null) && (onlyDomain != null)) {
-        defaultDomain = prDomains;
-      }
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-
-    return props;
+    return dirProps;
   }
 
   protected SystemRoots getSystemRoots() throws CalFacadeException {
@@ -858,37 +836,12 @@ public abstract class AbstractDirImpl implements Directories {
     capInfo.add(new CAPrefixInfo(prefix, type));
   }
 
-
-  /** */
-  public static class CardDavInfo {
-    /** */
-    public String host;
-    /** */
-    public int port;
-    /** */
-    public String contextPath;
-  }
-
   protected CardDavInfo getCardDavInfo(final boolean auth) throws CalFacadeException {
-    CardDavInfo cdi = new CardDavInfo();
-
-    try {
-      OptionsI opts = CalOptionsFactory.getOptions();
-      if (auth) {
-        cdi.host = (String)opts.getGlobalProperty("personalCardDAVHost");
-        cdi.port = Integer.valueOf((String)opts.getGlobalProperty("personalCardDAVPort"));
-        cdi.contextPath = (String)opts.getGlobalProperty("personalCardDAVContext");
-      } else {
-        cdi.host = (String)opts.getGlobalProperty("publicCardDAVHost");
-        cdi.port = Integer.valueOf((String)opts.getGlobalProperty("publicCardDAVPort"));
-        cdi.contextPath = (String)opts.getGlobalProperty("publicCardDAVContext");
-      }
-    } catch (Throwable t) {
-      error(t);
-      return null;
+    if (auth) {
+      return authCdinfo;
     }
 
-    return cdi;
+    return unauthCdinfo;
   }
 
   /* Get a logger for messages
@@ -916,6 +869,28 @@ public abstract class AbstractDirImpl implements Directories {
   /* ====================================================================
    *  Private methods.
    * ==================================================================== */
+
+  private void setDomains() {
+    String prDomains = dirProps.getDomains();
+
+    if (prDomains.equals("*")) {
+      anyDomain = true;
+    } else if ((prDomains.indexOf(",") < 0) &&
+               !prDomains.startsWith("*")) {
+      onlyDomain = new DomainMatcher(prDomains);
+    } else {
+      domains = new ArrayList<DomainMatcher>();
+
+      for (String domain: dirProps.getDomains().split(",")) {
+        domains.add(new DomainMatcher(domain));
+      }
+    }
+
+    defaultDomain = dirProps.getDefaultDomain();
+    if ((defaultDomain == null) && (onlyDomain != null)) {
+      defaultDomain = prDomains;
+    }
+  }
 
   /** Get the vcard for the given principal
    *
