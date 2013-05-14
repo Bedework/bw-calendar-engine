@@ -20,7 +20,6 @@ package org.bedework.inoutsched;
 
 import org.bedework.calsvc.scheduling.hosts.BwHosts;
 
-import edu.rpi.cmt.config.ConfigurationType;
 import edu.rpi.cmt.jmx.ConfBase;
 
 /** JMX bean for bedework scheduling
@@ -30,8 +29,6 @@ import edu.rpi.cmt.jmx.ConfBase;
  */
 public class BwInoutSched extends ConfBase
         implements BwInoutSchedMBean {
-  private static volatile String hostsConfigDir;
-
   private static BwHosts isched;
 
   private class ProcessorThread extends Thread {
@@ -112,11 +109,6 @@ public class BwInoutSched extends ConfBase
      * jboss service definition
      */
     return getServiceName();
-  }
-
-  @Override
-  public ConfigurationType getConfigObject() {
-    return isched.getConfigObject();
   }
 
   /* ========================================================================

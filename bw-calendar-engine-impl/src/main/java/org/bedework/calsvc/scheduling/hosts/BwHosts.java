@@ -21,7 +21,6 @@ package org.bedework.calsvc.scheduling.hosts;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import edu.rpi.cmt.config.ConfigurationStore;
-import edu.rpi.cmt.config.ConfigurationType;
 import edu.rpi.cmt.jmx.ConfBase;
 import edu.rpi.sss.util.Util;
 
@@ -52,11 +51,6 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
   public BwHosts() {
     super("org.bedework.ischedule:service=Conf");
     setConfigPname(datauriPname);
-  }
-
-  @Override
-  public ConfigurationType getConfigObject() {
-    return null;
   }
 
   /* ================================= Operations =========================== */
@@ -332,16 +326,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
     try {
       /* Try to load it */
 
-      ConfigurationType config = cfs.getConfig(configName);
-
-      if (config == null) {
-        return null;
-      }
-
-      HostInfo cfg =
-          (HostInfo)makeObject(HostInfo.class.getCanonicalName());
-
-      cfg.setConfig(config);
+      HostInfo cfg = (HostInfo)cfs.getConfig(configName);
 
       return cfg;
     } catch (Throwable t) {

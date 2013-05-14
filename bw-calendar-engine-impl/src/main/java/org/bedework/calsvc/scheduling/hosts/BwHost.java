@@ -19,7 +19,6 @@
 package org.bedework.calsvc.scheduling.hosts;
 
 import edu.rpi.cmt.config.ConfigurationStore;
-import edu.rpi.cmt.config.ConfigurationType;
 import edu.rpi.cmt.jmx.ConfBase;
 
 import java.util.Arrays;
@@ -44,11 +43,6 @@ public class BwHost extends ConfBase implements BwHostMBean {
     this.info = info;
     setConfigName(info.getHostname());
     setStore(configStore);
-  }
-
-  @Override
-  public ConfigurationType getConfigObject() {
-    return info.getConfig();
   }
 
   /**

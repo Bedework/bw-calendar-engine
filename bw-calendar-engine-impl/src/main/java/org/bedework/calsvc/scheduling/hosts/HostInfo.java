@@ -20,13 +20,12 @@ package org.bedework.calsvc.scheduling.hosts;
 
 import org.bedework.caldav.server.sysinterface.Host;
 
+import edu.rpi.cmt.config.ConfInfo;
 import edu.rpi.cmt.config.ConfigBase;
 import edu.rpi.sss.util.ToString;
 
 import java.util.Comparator;
 import java.util.List;
-
-import javax.xml.namespace.QName;
 
 /** This class provides information about a host. This should eventually come
  * from some form of dns-like lookup based on the CUA.
@@ -62,54 +61,47 @@ import javax.xml.namespace.QName;
  *
  * @author Mike Douglass       douglm - rpi.edu
  */
+@ConfInfo(elementName = "bwhost")
 public class HostInfo extends ConfigBase<HostInfo>
         implements Host, Comparator<HostInfo> {
-  /** */
-  public final static QName confElement = new QName(ns, "bwhost");
+  private String hostname;
 
-  private static final QName hostname = new QName(ns, "hostname");
+  private int port;
 
-  private static final QName port = new QName(ns, "port");
+  private boolean secure;
 
-  private static final QName secure = new QName(ns, "secure");
-
-  private static final QName localService = new QName(ns, "localService");
+  private boolean localService;
 
   /* Hosts come in different flavors */
 
-  private static final QName caldavUrl = new QName(ns, "caldavUrl");
-  private static final QName caldavPrincipal = new QName(ns, "caldavPrincipal");
-  private static final QName caldavCredentials = new QName(ns, "caldavCredentials");
+  private String caldavUrl;
+  private String caldavPrincipal;
+  private String caldavCredentials;
 
-  private static final QName iScheduleUrl = new QName(ns, "iScheduleUrl");
-  private static final QName iSchedulePrincipal = new QName(ns, "iSchedulePrincipal");
-  private static final QName iScheduleCredentials = new QName(ns, "iScheduleCredentials");
-  private static final QName dkimPublicKey = new QName(ns, "dkimPublicKey");
-  private static final QName iScheduleUsePublicKey = new QName(ns, "iScheduleUsePublicKey");
+  private String iScheduleUrl;
+  private String iSchedulePrincipal;
+  private String iScheduleCredentials;
+  List<String> dkimPublicKeys;
+  private boolean iScheduleUsePublicKey;
 
-  private static final QName fbUrl = new QName(ns, "fbUrl");
+  private String fbUrl;
 
   /* derived values */
 
-  private static final QName supportsBedework = new QName(ns, "supportsBedework");
+  private boolean supportsBedework;
 
-  private static final QName supportsCaldav = new QName(ns, "supportsCaldav");
+  private boolean supportsCaldav;
 
-  private static final QName supportsISchedule = new QName(ns, "supportsISchedule");
+  private boolean supportsISchedule;
 
-  private static final QName supportsFreebusy = new QName(ns, "supportsFreebusy");
-
-  @Override
-  public QName getConfElement() {
-    return confElement;
-  }
+  private boolean supportsFreebusy;
 
   /** Set the hostname
    *
    *  @param val     hostname
    */
   public void setHostname(final String val) {
-    setProperty(hostname, val);
+    hostname = val;
   }
 
   /**
@@ -118,29 +110,29 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public String getHostname() {
-    return getPropertyValue(hostname);
+    return hostname;
   }
 
   /**
    * @param val
    */
-  public void setPort(final Integer val) {
-    setIntegerProperty(port, val);
+  public void setPort(final int val) {
+    port = val;
   }
 
   /**
    * @return int
    */
   @Override
-  public Integer getPort() {
-    return getIntegerPropertyValue(port);
+  public int getPort() {
+    return port;
   }
 
   /**
    * @param val
    */
   public void setSecure(final boolean val) {
-    setBooleanProperty(secure, val);
+    secure = val;
   }
 
   /**
@@ -148,7 +140,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public boolean getSecure() {
-    return getBooleanPropertyValue(secure);
+    return secure;
   }
 
   /** Set localService flag
@@ -156,7 +148,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    *  @param val    boolean localService
    */
   public void setLocalService(final boolean val) {
-    setBooleanProperty(localService, val);
+    localService = val;
   }
 
   /**
@@ -165,7 +157,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public boolean getLocalService() {
-    return getBooleanPropertyValue(localService);
+    return localService;
   }
 
   /**
@@ -173,7 +165,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    *  @param val    String
    */
   public void setCaldavUrl(final String val) {
-    setProperty(caldavUrl, val);
+    caldavUrl = val;
   }
 
   /**
@@ -182,7 +174,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public String getCaldavUrl() {
-    return getPropertyValue(caldavUrl);
+    return caldavUrl;
   }
 
   /**
@@ -190,7 +182,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    *  @param val    String
    */
   public void setCaldavPrincipal(final String val) {
-    setProperty(caldavPrincipal, val);
+    caldavPrincipal = val;
   }
 
   /**
@@ -199,7 +191,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public String getCaldavPrincipal() {
-    return getPropertyValue(caldavPrincipal);
+    return caldavPrincipal;
   }
 
   /**
@@ -207,7 +199,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    *  @param val    String
    */
   public void setCaldavCredentials(final String val) {
-    setProperty(caldavCredentials, val);
+    caldavCredentials = val;
   }
 
   /**
@@ -216,7 +208,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public String getCaldavCredentials() {
-    return getPropertyValue(caldavCredentials);
+    return caldavCredentials;
   }
 
   /**
@@ -224,7 +216,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    *  @param val    String
    */
   public void setIScheduleUrl(final String val) {
-    setProperty(iScheduleUrl, val);
+    iScheduleUrl = val;
   }
 
   /**
@@ -233,7 +225,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public String getIScheduleUrl() {
-    return getPropertyValue(iScheduleUrl);
+    return iScheduleUrl;
   }
 
   /**
@@ -241,7 +233,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    *  @param val    String
    */
   public void setISchedulePrincipal(final String val) {
-    setProperty(iSchedulePrincipal, val);
+    iSchedulePrincipal = val;
   }
 
   /**
@@ -250,7 +242,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public String getISchedulePrincipal() {
-    return getPropertyValue(iSchedulePrincipal);
+    return iSchedulePrincipal;
   }
 
   /**
@@ -258,7 +250,26 @@ public class HostInfo extends ConfigBase<HostInfo>
    *  @param val    String
    */
   public void setIScheduleCredentials(final String val) {
-    setProperty(iScheduleCredentials, val);
+    iScheduleCredentials = val;
+  }
+
+  /** Set the dkim public keys
+   *
+   * @param selector
+   * @param val
+   */
+  public void setDkimPublicKeys(final List<String> val) {
+    dkimPublicKeys = val;
+  }
+
+  /**
+   *
+   * @return String val
+   */
+  @Override
+  @ConfInfo(collectionElementName = "dkimPublicKey")
+  public List<String> getDkimPublicKeys() {
+    return dkimPublicKeys;
   }
 
   /**
@@ -267,7 +278,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public String getIScheduleCredentials() {
-    return getPropertyValue(iScheduleCredentials);
+    return iScheduleCredentials;
   }
 
   /** Add a dkim public key
@@ -277,7 +288,8 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   public void addDkimPublicKey(final String selector,
                                final String val) {
-    addProperty(dkimPublicKey, selector + "=" + val);
+    setDkimPublicKeys(addListProperty(getDkimPublicKeys(),
+                                      selector, val));
   }
 
   /** Get a dkim public key
@@ -286,16 +298,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    * @return value or null
    */
   public String getDkimPublicKey(final String selector) {
-    List<String> ps = getDkimPublicKeys();
-
-    String key = selector + "=";
-    for (String p: ps) {
-      if (p.startsWith(key)) {
-        return p.substring(key.length());
-      }
-    }
-
-    return null;
+    return getProperty(getDkimPublicKeys(), selector);
   }
 
   /** Remove a dkim public key
@@ -303,17 +306,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    * @param selector
    */
   public void removeDkimPublicKey(final String selector) {
-    try {
-      String v = getDkimPublicKey(selector);
-
-      if (v == null) {
-        return;
-      }
-
-      getConfig().removeProperty(dkimPublicKey, selector + "=" + v);
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
-    }
+    removeProperty(getDkimPublicKeys(), selector);
   }
 
   /** Set a dkim public key
@@ -333,23 +326,10 @@ public class HostInfo extends ConfigBase<HostInfo>
 
   /**
    *
-   * @return String val
-   */
-  @Override
-  public List<String> getDkimPublicKeys() {
-    try {
-      return getConfig().getAll(dkimPublicKey);
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
-    }
-  }
-
-  /**
-   *
    *  @param val    boolean
    */
   public void setIScheduleUsePublicKey(final boolean val) {
-    setBooleanProperty(iScheduleUsePublicKey, val);
+    iScheduleUsePublicKey = val;
   }
 
   /** True if we delivered our public key for use for dkim
@@ -358,7 +338,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public boolean getIScheduleUsePublicKey() {
-    return getBooleanPropertyValue(iScheduleUsePublicKey);
+    return iScheduleUsePublicKey;
   }
 
   /**
@@ -366,7 +346,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    *  @param val    String
    */
   public void setFbUrl(final String val) {
-    setProperty(fbUrl, val);
+    fbUrl = val;
   }
 
   /**
@@ -375,14 +355,14 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public String getFbUrl() {
-    return getPropertyValue(fbUrl);
+    return fbUrl;
   }
 
   /**
    *  @param  val    boolean true if supports Bedework
    */
   public void setSupportsBedework(final boolean val) {
-    setBooleanProperty(supportsBedework, val);
+    supportsBedework = val;
   }
 
   /**
@@ -390,14 +370,14 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public boolean getSupportsBedework() {
-    return getBooleanPropertyValue(supportsBedework);
+    return supportsBedework;
   }
 
   /**
    *  @param  val    boolean true if supports CalDAV
    */
   public void setSupportsCaldav(final boolean val) {
-    setBooleanProperty(supportsCaldav, val);
+    supportsCaldav = val;
   }
 
   /**
@@ -405,14 +385,14 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public boolean getSupportsCaldav() {
-    return getBooleanPropertyValue(supportsCaldav);
+    return supportsCaldav;
   }
 
   /**
    *  @param  val    boolean true if supports iSchedule
    */
   public void setSupportsISchedule(final boolean val) {
-    setBooleanProperty(supportsISchedule, val);
+    supportsISchedule = val;
   }
 
   /**
@@ -420,14 +400,14 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public boolean getSupportsISchedule() {
-    return getBooleanPropertyValue(supportsISchedule);
+    return supportsISchedule;
   }
 
   /**
    *  @param  val    boolean true if supports Freebusy
    */
   public void setSupportsFreebusy(final boolean val) {
-    setBooleanProperty(supportsFreebusy, val);
+    supportsFreebusy = val;
   }
 
   /**
@@ -435,7 +415,7 @@ public class HostInfo extends ConfigBase<HostInfo>
    */
   @Override
   public boolean getSupportsFreebusy() {
-    return getBooleanPropertyValue(supportsFreebusy);
+    return supportsFreebusy;
   }
 
   /** Add our stuff to the StringBuilder
