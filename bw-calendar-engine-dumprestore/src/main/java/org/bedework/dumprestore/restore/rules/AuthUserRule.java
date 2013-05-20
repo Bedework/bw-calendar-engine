@@ -77,10 +77,6 @@ public class AuthUserRule extends EntityRule {
     globals.counts[globals.authusers]++;
 
     try {
-      if (!globals.onlyUsersMap.check(au.getUserHref())) {
-        return;
-      }
-
       globals.rintf.restoreAuthUser(au);
     } catch (Throwable t) {
       error("Error restoring " + au);

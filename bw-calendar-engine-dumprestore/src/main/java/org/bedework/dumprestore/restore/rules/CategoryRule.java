@@ -52,10 +52,6 @@ public class CategoryRule extends EntityRule {
     }
 
     try {
-      if (!globals.onlyUsersMap.check(entity)) {
-        return;
-      }
-
       globals.rintf.restoreCategory(entity);
     } catch (Throwable t) {
       warn("Unable to restore " + entity);

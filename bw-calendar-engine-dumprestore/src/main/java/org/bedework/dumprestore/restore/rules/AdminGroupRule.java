@@ -64,10 +64,6 @@ public class AdminGroupRule extends EntityRule {
       globals.principalsTbl.put(entity);
 
       if (globals.rintf != null) {
-        if (!globals.onlyUsersMap.check(entity.getGroupOwnerHref())) {
-          entity.setGroupOwnerHref(globals.getPublicUser().getPrincipalRef());
-        }
-
         globals.rintf.restoreAdminGroup(entity);
 
         /* Save members. */

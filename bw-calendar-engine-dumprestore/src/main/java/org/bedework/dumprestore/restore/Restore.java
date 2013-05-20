@@ -21,7 +21,6 @@ package org.bedework.dumprestore.restore;
 import org.bedework.calfacade.BwAuthUser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
@@ -153,14 +152,6 @@ public class Restore implements Defs {
   }
 
   private void createNewSystem() throws Throwable {
-    // Save the system settings.
-
-    BwSystem sys = globals.getSyspars();
-
-    sys.setRootUsers(rootId);
-
-    globals.restoreSyspars(sys);
-
     // Create the public user.
 
     BwPrincipal pu = BwPrincipal.makeUserPrincipal();

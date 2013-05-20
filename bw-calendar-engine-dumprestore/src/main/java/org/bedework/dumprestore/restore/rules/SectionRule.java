@@ -83,11 +83,6 @@ public class SectionRule extends RestoreRule {
 
             grp.addGroupMember(p);
 
-            if ((p.getKind() != WhoDefs.whoTypeUser) &&
-                !globals.onlyUsersMap.check(p.getPrincipalRef())) {
-              continue;
-            }
-
             globals.rintf.addAdminGroupMember(grp, p);
           }
         }

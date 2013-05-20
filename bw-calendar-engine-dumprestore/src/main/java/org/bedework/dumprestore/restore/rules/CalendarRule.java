@@ -20,7 +20,7 @@
 package org.bedework.dumprestore.restore.rules;
 
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwSystem;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
@@ -60,7 +60,7 @@ public class CalendarRule extends EntityRule {
     if (globals.skipSpecialCals &&
         (entity.getCalType() == BwCalendar.calTypeFolder)) {
       // might need to fix if from 3.0
-      BwSystem sys = globals.getSyspars();
+      SystemProperties sys = globals.getSyspars();
       String calpath = entity.getPath();
       String[] pes = calpath.split("/");
       int pathLength = pes.length - 1;  // First element is empty string
@@ -75,21 +75,14 @@ public class CalendarRule extends EntityRule {
                               " calname = " + calname);
         }
 
-        if (calname.equals(sys.getDefaultTrashCalendar())) {
-          entity.setCalType(BwCalendar.calTypeTrash);
-          special = true;
-        } else if (calname.equals(sys.getDeletedCalendar())) {
-          entity.setCalType(BwCalendar.calTypeDeleted);
-          special = true;
-        } else if (calname.equals(sys.getBusyCalendar())) {
-          entity.setCalType(BwCalendar.calTypeBusy);
-          special = true;
-        } else if (calname.equals(sys.getUserInbox())) {
+        if (calname.equals(sys.getUserInbox())) {
           entity.setCalType(BwCalendar.calTypeInbox);
         } else if (calname.equals(sys.getUserOutbox())) {
           entity.setCalType(BwCalendar.calTypeOutbox);
         } else if (calname.equals(sys.getDefaultNotificationsName())) {
           entity.setCalType(BwCalendar.calTypeNotifications);
+        } else {
+          entity.setCalType(BwCalendar.calTypeCalendarCollection);
         }
       }
     }
@@ -110,10 +103,6 @@ public class CalendarRule extends EntityRule {
         /* If the parent is null then this should be one of the root calendars,
          */
         String parentPath = entity.getColPath();
-        if (!globals.onlyUsersMap.check(entity)) {
-          return;
-        }
-
         if (parentPath == null) {
           // Ensure root
           globals.rintf.saveRootCalendar(entity);

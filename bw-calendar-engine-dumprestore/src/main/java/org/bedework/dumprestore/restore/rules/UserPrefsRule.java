@@ -41,10 +41,6 @@ public class UserPrefsRule extends EntityRule {
     globals.counts[globals.userPrefs]++;
 
     try {
-      if (!globals.onlyUsersMap.check(entity)) {
-        return;
-      }
-
       globals.rintf.restoreUserPrefs(entity);
     } catch (Throwable t) {
       throw new Exception(t);

@@ -53,10 +53,6 @@ public class LocationRule extends EntityRule {
     }
 
     try {
-      if (!globals.onlyUsersMap.check(entity)) {
-        return;
-      }
-
       globals.rintf.restoreLocation(entity);
     } catch (Throwable t) {
       warn("Unable to restore " + entity + " with owner " + entity.getOwnerHref());

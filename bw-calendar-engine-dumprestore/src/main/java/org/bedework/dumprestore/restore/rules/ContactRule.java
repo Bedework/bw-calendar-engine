@@ -48,10 +48,6 @@ public class ContactRule extends EntityRule {
     fixSharableEntity(entity, "Contact");
 
     try {
-      if (!globals.onlyUsersMap.check(entity)) {
-        return;
-      }
-
       globals.rintf.restoreContact(entity);
     } catch (Throwable t) {
       warn("Unable to restore " + entity);

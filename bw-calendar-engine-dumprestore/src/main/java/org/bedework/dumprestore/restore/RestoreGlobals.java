@@ -24,13 +24,13 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.BwUser;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.configs.SystemRoots;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.RestoreIntf;
 import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.ExternalSubInfo;
@@ -142,7 +142,7 @@ public class RestoreGlobals extends Counters {
   public static int mapUser0 = 1;
 
   /** System parameters object */
-  private BwSystem syspars = new BwSystem();
+  private SystemProperties syspars;
 
   /** Messages for subscriptions changed   // PRE3.5
    */
@@ -348,7 +348,7 @@ public class RestoreGlobals extends Counters {
    * @param val
    * @throws Throwable
    */
-  public void setSyspars(final BwSystem val) throws Throwable {
+  public void setSyspars(final SystemProperties val) throws Throwable {
     syspars = val;
     setTimezones();
   }
@@ -356,7 +356,7 @@ public class RestoreGlobals extends Counters {
   /**
    * @return BwSystem
    */
-  public BwSystem getSyspars() {
+  public SystemProperties getSyspars() {
     return syspars;
   }
 
@@ -451,6 +451,7 @@ public class RestoreGlobals extends Counters {
   }
 
   /**
+   * @param config
    */
   public void init() {
   }
@@ -608,21 +609,6 @@ public class RestoreGlobals extends Counters {
     return id;
   }
 
-  /** Called as first part of a restore or create.
-   *
-   * @param val
-   * @throws Throwable
-   */
-  public void restoreSyspars(final BwSystem val) throws Throwable {
-    setSyspars(val);
-
-    svci = getSvci(val);
-    rintf = svci.getRestoreHandler();
-    rintf.setLogger(new RLogger(this));
-
-    rintf.restoreSyspars(val);
-  }
-
   /**
    * @param val
    * @return BwPrincipal
@@ -687,8 +673,8 @@ public class RestoreGlobals extends Counters {
     }
 
     @Override
-    public BwSystem getSyspars() throws CalFacadeException {
-      return getSyspars();
+    public SystemProperties getSyspars() throws CalFacadeException {
+      return syspars;
     }
 
     /* (non-Javadoc)
@@ -702,13 +688,6 @@ public class RestoreGlobals extends Counters {
         throw new AccessException(t);
       }
     }
-  }
-
-  private CalSvcI getSvci(final BwSystem sysInfo) throws Throwable {
-    CalSvcIPars pars = CalSvcIPars.getRestorePars(adminUserAccount, sysInfo);
-    CalSvcI svci = new CalSvcFactoryDefault().getSvc(pars);
-
-    return svci;
   }
 
   /**
