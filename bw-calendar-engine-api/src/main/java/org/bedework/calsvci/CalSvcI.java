@@ -30,6 +30,7 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
@@ -72,6 +73,13 @@ public abstract class CalSvcI implements Serializable {
    * @throws CalFacadeException
    */
   public abstract void init(CalSvcIPars pars) throws CalFacadeException;
+
+  /** Return properties about the system.
+   *
+   * @return SystemProperties object - never null.
+   * @throws CalFacadeException
+   */
+  public abstract SystemProperties getSystemProperties() throws CalFacadeException;
 
   /** Set the calendar suite we are running as. Must be running as an
    * unauthenticated user.
@@ -600,12 +608,6 @@ public abstract class CalSvcI implements Serializable {
   /* ====================================================================
    *                   Timezones
    * ==================================================================== */
-
-  /**
-   * @return uri used to locate timezones service.
-   * @throws CalFacadeException
-   */
-  public abstract String getTimezonesUri() throws CalFacadeException;
 
   /** Update the system after changes to timezones. This is a lengthy process
    * so the method allows the caller to specify how many updates are to take place

@@ -18,7 +18,6 @@
 */
 package org.bedework.calsvci;
 
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.configs.DbConfig;
 
 import edu.rpi.sss.util.ToString;
@@ -69,8 +68,6 @@ public class CalSvcIPars implements Serializable {
   private boolean timezonesByReference;
 
   private boolean forRestore;
-
-  private BwSystem sysInfo;
 
   /** True if this is a web application
    */
@@ -142,8 +139,7 @@ public class CalSvcIPars implements Serializable {
    * @param account
    * @return CalSvcIPars
    */
-  public static CalSvcIPars getRestorePars(final String account,
-                                           final BwSystem sysInfo) {
+  public static CalSvcIPars getRestorePars(final String account) {
     CalSvcIPars p = new CalSvcIPars(account,
                                     null,   // calsuite
                                     true,   // publicAdmin,
@@ -156,7 +152,6 @@ public class CalSvcIPars implements Serializable {
                                     null); // dbpars
 
     p.forRestore = true;
-    p.sysInfo = sysInfo;
 
     return p;
   }
@@ -178,7 +173,6 @@ public class CalSvcIPars implements Serializable {
                      final String clientId,
                      final boolean allowSuperUser,
                      final DbConfig dbPars,
-                     final boolean timezonesByReference,
                      final boolean service) {
     CalSvcIPars pars = new CalSvcIPars(authUser,
                                        runAsUser,
@@ -192,7 +186,6 @@ public class CalSvcIPars implements Serializable {
                                        true,    // sessionless
                                        dbPars);
 
-    pars.setTimezonesByReference(timezonesByReference);
     pars.setClientId(clientId);
 
     return pars;
@@ -342,20 +335,6 @@ public class CalSvcIPars implements Serializable {
   }
 
   /**
-   * @param val boolean true if we are not including the full tz specification..
-   */
-  public void setTimezonesByReference(final boolean val) {
-    timezonesByReference = val;
-  }
-
-  /**
-   * @return true if we are not including the full tz specification
-   */
-  public boolean getTimezonesByReference() {
-    return timezonesByReference;
-  }
-
-  /**
    * @param val boolean true if this is a web client..
    */
   public void setWebMode(final boolean val) {
@@ -374,13 +353,6 @@ public class CalSvcIPars implements Serializable {
    */
   public boolean getForRestore() {
     return forRestore;
-  }
-
-  /**
-   * @return system parameters
-   */
-  public BwSystem getSysInfo() {
-    return sysInfo;
   }
 
   /**
@@ -411,7 +383,6 @@ public class CalSvcIPars implements Serializable {
     ts.append("adminCanEditAllPublicSponsors()", getAdminCanEditAllPublicContacts());
     ts.append("sessionless", getSessionsless());
     ts.append("forRestore", getForRestore());
-    ts.append("sysInfo", getSysInfo());
 
     return ts.toString();
   }
@@ -430,10 +401,8 @@ public class CalSvcIPars implements Serializable {
                                        getSessionsless(),
                                        getDbPars());
 
-    pars.setTimezonesByReference(getTimezonesByReference());
     pars.setClientId(getClientId());
     pars.forRestore = getForRestore();
-    pars.sysInfo = getSysInfo();
 
     return pars;
   }
