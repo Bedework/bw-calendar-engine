@@ -24,8 +24,6 @@ import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.dumprestore.restore.PrincipalHref;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
-import edu.rpi.cmt.access.WhoDefs;
-
 import org.xml.sax.Attributes;
 
 import java.util.ArrayList;
