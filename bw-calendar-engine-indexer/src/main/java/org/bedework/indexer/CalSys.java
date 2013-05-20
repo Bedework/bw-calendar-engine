@@ -20,9 +20,9 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
@@ -58,7 +58,7 @@ public abstract class CalSys {
 
   private String publicCalendarRoot;
 
-  private BwSystem syspars;
+  private SystemProperties syspars;
 
   private int batchSize = 5;
 
@@ -219,12 +219,12 @@ public abstract class CalSys {
     return publicCalendarRoot;
   }
 
-  protected BwSystem getSyspars() throws CalFacadeException {
+  protected SystemProperties getSyspars() throws CalFacadeException {
     CalSvcI svci = null;
     if (syspars == null) {
       try {
         svci = getAdminSvci();
-        syspars = svci.getSysparsHandler().get();
+        syspars = svci.getSystemProperties();
       } finally {
         if (svci != null) {
           try {

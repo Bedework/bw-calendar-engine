@@ -18,7 +18,7 @@
 */
 package org.bedework.indexer.crawler;
 
-import org.bedework.calfacade.BwSystem;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvc.indexing.BwIndexLuceneDefs;
 import org.bedework.calsvc.indexing.BwIndexer;
@@ -76,7 +76,7 @@ public class Crawl extends CalSys {
 
   private boolean useSolr;
 
-  private BwSystem sys;
+  private SystemProperties sys;
 
   /**
    * @param adminAccount
@@ -106,7 +106,7 @@ public class Crawl extends CalSys {
     try {
       svci = getAdminSvci();
 
-      sys = svci.getSysparsHandler().get();
+      sys = svci.getSystemProperties();
 
       useSolr = sys.getUseSolr();
     } finally {

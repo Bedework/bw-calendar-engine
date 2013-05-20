@@ -31,8 +31,6 @@ import org.bedework.caldav.server.sysinterface.CalPrincipalInfo;
 import org.bedework.caldav.server.sysinterface.RetrievalMode;
 import org.bedework.caldav.server.sysinterface.SysIntf;
 import org.bedework.caldav.server.sysinterface.SysIntf.SynchReportData.SynchReportDataItem;
-import org.bedework.caldav.server.sysinterface.SystemProperties;
-import org.bedework.caldav.util.CalDAVConfig;
 import org.bedework.caldav.util.TimeRange;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.caldav.util.notifications.NotificationType;
@@ -51,12 +49,12 @@ import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.configs.DbConfig;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
@@ -127,8 +125,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.xml.namespace.QName;
 
 /** Bedework implementation of SysIntf.
@@ -156,63 +156,52 @@ public class BwSysIntfImpl implements SysIntf {
 
   private UrlHandler urlHandler;
 
-  private SystemProperties sysProperties = new SystemProperties();
+  private SystemProperties sysProperties;
 
   private long reqInTime;
 
-  private CalDAVConfig conf;
+  private boolean calWs;
 
-  private BwSystem syspars;
+  private SystemProperties syspars;
 
   @Override
   public void init(final HttpServletRequest req,
                    final String account,
                    final boolean service,
-                   final CalDAVConfig conf) throws WebdavException {
+                   final boolean calWs) throws WebdavException {
     try {
-      this.conf = conf;
+      this.calWs = calWs;
       debug = getLogger().isDebugEnabled();
 
       principalInfo = null; // In case we reinit
 
-      urlHandler = new UrlHandler(req, !conf.getCalWS());
+      urlHandler = new UrlHandler(req, !calWs);
+
+      HttpSession session = req.getSession();
+      ServletContext sc = session.getServletContext();
+
+      String appName = sc.getInitParameter("bwappname");
+
+      if ((appName == null) || (appName.length() == 0)) {
+        throw new WebdavException("bwappname is not set in web.xml");
+      }
+
+      /* Find the mbean and get the config */
+
+//      ObjectName mbeanName = new ObjectName(CalDAVConf.getServiceName(appName));
 
       // Call to set up ThreadLocal variables
 
       getSvci(account,
               CalDavHeaders.getRunAs(req),
               service,
-              CalDavHeaders.getClientId(req),
-              conf);
+              CalDavHeaders.getClientId(req));
+
+      sysProperties = svci.getSystemProperties();
       svci.postNotification(new HttpEvent(SysCode.CALDAV_IN));
       reqInTime = System.currentTimeMillis();
 
       currentPrincipal = svci.getUsersHandler().getUser(account);
-
-      BwSystem sys = getSysPars();
-
-      if (sys != null) {
-        sysProperties.setMaxUserEntitySize(sys.getMaxUserEntitySize());
-        sysProperties.setMaxInstances(sys.getMaxInstances());
-
-        sysProperties.setDefaultFBPeriod(sys.getDefaultFBPeriod());
-
-        if (svci.getSuperUser()) {
-          sysProperties.setMaxFBPeriod(0);
-        } else {
-          sysProperties.setMaxFBPeriod(sys.getMaxFBPeriod());
-        }
-
-        sysProperties.setDefaultWebCalPeriod(sys.getDefaultWebCalPeriod());
-
-        if (svci.getSuperUser()) {
-          sysProperties.setMaxWebCalPeriod(0);
-        } else {
-          sysProperties.setMaxWebCalPeriod(sys.getMaxWebCalPeriod());
-        }
-
-        sysProperties.setAdminContact(sys.getAdminContact());
-      }
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
@@ -247,7 +236,7 @@ public class BwSysIntfImpl implements SysIntf {
     }
 
     /* This must be a collection which is either a user home or below. */
-    BwSystem sys = getSysPars();
+    SystemProperties sys = getSysPars();
 
     String uhome = sys.getUserCalendarRoot();
 
@@ -279,7 +268,7 @@ public class BwSysIntfImpl implements SysIntf {
    */
   @Override
   public String getDefaultContentType() throws WebdavException {
-    if (conf.getCalWS()) {
+    if (calWs) {
       return XcalTags.mimetype;
     }
 
@@ -403,11 +392,6 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  @Override
-  public boolean getDirectoryBrowsingDisallowed() throws WebdavException {
-    return getSysPars().getDirectoryBrowsingDisallowed();
-  }
-
   /* (non-Javadoc)
    * @see org.bedework.caldav.server.SysIntf#caladdrToUser(java.lang.String)
    */
@@ -495,7 +479,7 @@ public class BwSysIntfImpl implements SysIntf {
       }
 
       // SCHEDULE - just get home path and get default cal from user prefs.
-      BwSystem sys = getSysPars();
+      SystemProperties sys = getSysPars();
       BwCalendar cal = getSvci().getCalendarsHandler().getHome(p, true);
       if (cal == null) {
         return null;
@@ -2090,17 +2074,6 @@ public class BwSysIntfImpl implements SysIntf {
   }
 
   @Override
-  public int getMaxUserEntitySize() throws WebdavException {
-    try {
-      return getSysPars().getMaxUserEntitySize();
-    } catch (WebdavException wde) {
-      throw wde;
-    } catch (Throwable t) {
-      throw new WebdavException(t);
-    }
-  }
-
-  @Override
   public void rollback() {
     try {
       svci.rollbackTransaction();
@@ -2211,8 +2184,7 @@ public class BwSysIntfImpl implements SysIntf {
   private CalSvcI getSvci(final String account,
                           final String runAs,
                           final boolean service,
-                          final String clientId,
-                          final CalDAVConfig conf) throws WebdavException {
+                          final String clientId) throws WebdavException {
     try {
       /* account is what we authenticated with.
        * user, if non-null, is the user calendar we want to access.
@@ -2234,7 +2206,6 @@ public class BwSysIntfImpl implements SysIntf {
                                                    clientIdent,
                                                    possibleSuperUser,   // allow SuperUser
                                          dbconf,
-                                         conf.getTimezonesByReference(),
                                          service);
       svci = new CalSvcFactoryDefault().getSvc(pars);
 
@@ -2501,10 +2472,10 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  private BwSystem getSysPars() throws WebdavException {
+  private SystemProperties getSysPars() throws WebdavException {
     try {
       if (syspars == null) {
-        syspars = getSvci().getSysparsHandler().get();
+        syspars = getSvci().getSystemProperties();
       }
     } catch (Throwable t) {
       throw new WebdavException(t);
