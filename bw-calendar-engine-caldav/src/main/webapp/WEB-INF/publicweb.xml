@@ -5,7 +5,7 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
          http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
          version="2.4">
-  <display-name>Bedework public caldav</display-name>
+  <display-name>Bedework public (unauthenticated) caldav</display-name>
 
   <context-param>
     <param-name>bwappname</param-name>
@@ -21,14 +21,64 @@
     <servlet-class>
       org.bedework.caldav.server.CaldavBWServlet
     </servlet-class>
+
     <init-param>
       <param-name>application</param-name>
       <param-value>servlet</param-value>
     </init-param>
+    
+    <!-- Bedework parameters -->
     <init-param>
+      <!-- True for a CalWS-SOAP service. False for CalDAV -->
+      <param-name>calws</param-name>
+      <param-value>false</param-value>
+    </init-param>
+    
+    <init-param>
+      <!-- Only applies if debug on - causes responses to be wrapped. -->
       <param-name>dumpContent</param-name>
       <param-value>true</param-value>
     </init-param>
+    
+    <init-param>
+      <!-- Only applies if debug on - causes responses to be wrapped. -->
+      <param-name>sysintfImpl</param-name>
+      <param-value>org.bedework.caldav.bwserver.BwSysIntfImpl</param-value>
+    </init-param>
+
+    <init-param>
+      <!-- Comment out or delete for no ischedule service -->
+      <param-name>ischeduleURI</param-name>
+      <param-value>/ischedule</param-value>
+    </init-param>
+
+    <init-param>
+      <!-- Comment out or delete for no freebusy url service -->
+      <param-name>fburlServiceURI</param-name>
+      <param-value>/fbsvc</param-value>
+    </init-param>
+
+    <init-param>
+      <!-- Comment out or delete for no web calendar service -->
+      <param-name>webcalServiceURI</param-name>
+      <param-value>/webcal</param-value>
+    </init-param>
+
+    <init-param>
+      <!-- The bedework end of the synch service. This is a web
+               service called by the synch engine to get information out of
+               bedework and to update events and status.
+               
+               This path should probably be restricted to a given host only.
+               
+               Coming up on a separate port might help to lock it down.
+               
+               Comment out or delete for no synch service 
+               -->
+      <param-name>synchWsURI</param-name>
+      <param-value>/synchws/</param-value>
+    </init-param>
+    
     <load-on-startup>1</load-on-startup>
   </servlet>
 
