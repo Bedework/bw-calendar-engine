@@ -97,10 +97,6 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
   protected BwPrincipalInfo principalInfo;
 
-  /* ...................................................................
-              Non-db fields
-     .................................................................... */
-
   /* groups of which this user is a member */
   protected Collection<BwGroup> groups;
 
