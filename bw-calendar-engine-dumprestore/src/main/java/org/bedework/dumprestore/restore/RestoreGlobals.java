@@ -22,7 +22,6 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.configs.SystemRoots;
