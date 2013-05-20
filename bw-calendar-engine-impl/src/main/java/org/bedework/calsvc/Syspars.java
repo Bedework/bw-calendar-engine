@@ -36,8 +36,6 @@ import java.util.Locale;
  * @author Mike Douglass       douglm - rpi.edu
  */
 class Syspars extends CalSvcDb implements SysparsI {
-  private String systemName;
-
   private static BwSystem syspars;
 
   private static boolean restoring;
@@ -49,18 +47,8 @@ class Syspars extends CalSvcDb implements SysparsI {
 
   private Collection<String> rootUsers;
 
-  Syspars(final CalSvc svci,
-          final String systemName) {
+  Syspars(final CalSvc svci) {
     super(svci);
-    this.systemName = systemName;
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SysparsI#getSystemName()
-   */
-  @Override
-  public String getSystemName() {
-    return systemName;
   }
 
   /* (non-Javadoc)
@@ -79,7 +67,7 @@ class Syspars extends CalSvcDb implements SysparsI {
       }
 
       if (syspars == null) {
-        syspars = get(getSystemName());
+        syspars = get("bedework");
       }
 
       return syspars;
@@ -102,10 +90,6 @@ class Syspars extends CalSvcDb implements SysparsI {
       trace("Read system parameters: " + sys);
     }
 
-    if (name.equals(getSystemName())) {
-      syspars = sys;
-    }
-
     return sys;
   }
 
@@ -125,14 +109,6 @@ class Syspars extends CalSvcDb implements SysparsI {
   }
 
   /* (non-Javadoc)
-   * @see org.bedework.calsvci.SysparsI#getSysid()
-   */
-  @Override
-  public String getSysid() throws CalFacadeException {
-    return get().getSystemid();
-  }
-
-  /* (non-Javadoc)
    * @see org.bedework.calsvci.SysparsI#getSupportedLocales()
    */
   @Override
@@ -143,7 +119,7 @@ class Syspars extends CalSvcDb implements SysparsI {
 
     supportedLocales = new ArrayList<Locale>();
 
-    String ll = get().getLocaleList();
+    String ll = getSvc().getSystemProperties().getLocaleList();
 
     if (ll == null) {
       supportedLocales.add(BwLocale.getLocale());
@@ -178,87 +154,6 @@ class Syspars extends CalSvcDb implements SysparsI {
   }
 
   /* (non-Javadoc)
-   * @see org.bedework.calsvci.SysparsI#addLocale(java.util.Locale)
-   */
-  @Override
-  public void addLocale(final Locale loc) throws CalFacadeException {
-    Collection<Locale> locs = getSupportedLocales();
-
-    if (locs.contains(loc)) {
-      return;
-    }
-
-    String ll = get().getLocaleList();
-    StringBuilder sb;
-    if (ll == null) {
-      sb = new StringBuilder();
-    } else {
-      sb = new StringBuilder(ll);
-      sb.append(",");
-    }
-
-    sb.append(loc.getLanguage());
-
-    String country = loc.getCountry();
-
-    if ((country != null) && (country.length() != 0)) {
-      sb.append("_");
-      sb.append(country);
-
-      String variant = loc.getVariant();
-
-      if ((variant != null) && (variant.length() != 0)) {
-        sb.append("_");
-        sb.append(variant);
-      }
-    }
-
-    get().setLocaleList(sb.toString());
-    update(get());
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SysparsI#removeLocale(java.util.Locale)
-   */
-  @Override
-  public void removeLocale(final Locale loc) throws CalFacadeException {
-    Collection<Locale> locs = getSupportedLocales();
-
-    if (!locs.contains(loc)) {
-      return;
-    }
-
-    locs.remove(loc);
-
-    if (locs.isEmpty()) {
-      get().setLocaleList(null);
-      update(get());
-      return;
-    }
-
-    StringBuilder sb = new StringBuilder();
-    for (Locale l: locs) {
-      if (sb.length() == 0) {
-        sb.append(",");
-      }
-
-      sb.append("(");
-      sb.append(l.getLanguage());
-      sb.append(",");
-      sb.append(l.getCountry());
-
-      if (l.getVariant() != null) {
-        sb.append(",");
-        sb.append(l.getVariant());
-      }
-      sb.append(")");
-    }
-
-    get().setLocaleList(sb.toString());
-    update(get());
-  }
-
-  /* (non-Javadoc)
    * @see org.bedework.calsvci.SysparsI#getRootUsers()
    */
   @Override
@@ -269,7 +164,7 @@ class Syspars extends CalSvcDb implements SysparsI {
 
     rootUsers = new ArrayList<String>();
 
-    String rus = get().getRootUsers();
+    String rus = getSvc().getSystemProperties().getRootUsers();
 
     if (rus == null) {
       return rootUsers;
@@ -294,64 +189,6 @@ class Syspars extends CalSvcDb implements SysparsI {
     }
 
     return rootUsers;
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SysparsI#addRootUser(java.lang.String)
-   */
-  @Override
-  public void addRootUser(final String val) throws CalFacadeException {
-    Collection<String> rus = getRootUsers();
-
-    if (rus.contains(val)) {
-      return;
-    }
-
-    String srus = get().getRootUsers();
-    StringBuilder sb;
-    if (srus == null) {
-      sb = new StringBuilder();
-    } else {
-      sb = new StringBuilder(srus);
-      sb.append(",");
-    }
-
-    sb.append(val);
-
-    get().setRootUsers(sb.toString());
-    update(get());
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SysparsI#removeRootUser(java.lang.String)
-   */
-  @Override
-  public void removeRootUser(final String val) throws CalFacadeException {
-    Collection<String> rus = getRootUsers();
-
-    if (!rus.contains(val)) {
-      return;
-    }
-
-    rus.remove(val);
-
-    if (rus.isEmpty()) {
-      get().setRootUsers(null);
-      update(get());
-      return;
-    }
-
-    StringBuilder sb = new StringBuilder();
-    for (String r: rus) {
-      if (sb.length() == 0) {
-        sb.append(",");
-      }
-
-      sb.append(r);
-    }
-
-    get().setRootUsers(sb.toString());
-    update(get());
   }
 
   /* (non-Javadoc)

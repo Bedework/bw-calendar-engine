@@ -21,7 +21,7 @@ package org.bedework.calcore;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwSystem;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.sysevents.NotificationsHandlerFactory;
@@ -39,7 +39,7 @@ import java.util.Properties;
 * @author Mike Douglass   douglm@rpi.edu
 */
 public abstract class CalintfBase implements Calintf {
-  private BwSystem syspars;
+  private SystemProperties syspars;
 
   protected PrincipalInfo principalInfo;
 
@@ -84,7 +84,7 @@ public abstract class CalintfBase implements Calintf {
   }
 
   @Override
-  public void init(final BwSystem syspars,
+  public void init(final SystemProperties syspars,
                    final PrincipalInfo PrincipalInfo,
                    final String url,
                    final boolean publicAdmin,
@@ -120,19 +120,13 @@ public abstract class CalintfBase implements Calintf {
     return principalInfo;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.Calintf#setSyspars(org.bedework.calfacade.BwSystem)
-   */
   @Override
-  public void setSyspars(final BwSystem val) throws CalFacadeException {
+  public void setSyspars(final SystemProperties val) throws CalFacadeException {
     syspars = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.Calintf#getSyspars()
-   */
   @Override
-  public BwSystem getSyspars() throws CalFacadeException {
+  public SystemProperties getSyspars() throws CalFacadeException {
     return syspars;
   }
 

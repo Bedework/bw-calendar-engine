@@ -30,8 +30,8 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
@@ -294,7 +294,7 @@ public class InRequest extends InProcessor {
 
     // Recurring event - do the above per recurrence
 
-    BwSystem syspars = svci.getSysparsHandler().get();
+    SystemProperties syspars = svci.getSystemProperties();
     int maxYears = syspars.getMaxYears();
     int maxInstances = syspars.getMaxInstances();
 
@@ -715,7 +715,7 @@ public class InRequest extends InProcessor {
   }
 
   private Collection<Recurrence> getRecurrences(final EventInfo ei) throws CalFacadeException {
-    BwSystem syspars = getSvc().getSysparsHandler().get();
+    SystemProperties syspars = getSvc().getSystemProperties();
     int maxYears = syspars.getMaxYears();
     int maxInstances = syspars.getMaxInstances();
 

@@ -22,8 +22,9 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwSystem;
+import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.DirectoryInfo;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calsvci.CalSvcI;
@@ -189,7 +190,7 @@ class Users extends CalSvcDb implements UsersI {
     user.setLocationAccess(Access.getDefaultPersonalAccess());
     user.setContactAccess(Access.getDefaultPersonalAccess());
 
-    user.setQuota(getSvc().getSysparsHandler().get().getDefaultUserQuota());
+    ((BwUser)user).setQuota(getSvc().getSystemProperties().getDefaultUserQuota());
 
     user.setPrincipalRef(Util.buildPath(true, userPrincipalRoot, "/", account));
 
@@ -293,7 +294,7 @@ class Users extends CalSvcDb implements UsersI {
 
   private void initPrincipal(final BwPrincipal principal,
                              final CalSvc svc) throws CalFacadeException {
-    BwSystem sys = getSvc().getSysparsHandler().get();
+    SystemProperties sys = getSvc().getSystemProperties();
 
     // Add preferences
     BwPreferences prefs = new BwPreferences();
@@ -345,7 +346,7 @@ class Users extends CalSvcDb implements UsersI {
 
   private String getPublicUserAccount() throws CalFacadeException {
     if (publicUserAccount == null) {
-      publicUserAccount = getSvc().getSysparsHandler().get().getPublicUser();
+      publicUserAccount = getSvc().getSystemProperties().getPublicUser();
     }
 
     return publicUserAccount;

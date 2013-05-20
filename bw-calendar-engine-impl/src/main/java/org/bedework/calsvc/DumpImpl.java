@@ -31,8 +31,8 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.BwUser;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.configs.SystemRoots;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -63,8 +63,6 @@ import java.util.Map;
  */
 @SuppressWarnings("unchecked")
 public class DumpImpl extends CalSvcDb implements DumpIntf {
-  private BwSystem syspars;
-
   DumpPrincipalInfo pinfo;
 
   private SystemRoots sysRoots;
@@ -100,13 +98,13 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
 
   @Override
   public Iterator getCalendars() throws CalFacadeException {
-    getIntSyspars();
-
     Collection<BwCalendar> cols = new ArrayList<BwCalendar>();
 
-    cols.add(getCal().getCalendar(Util.buildPath(true, "/", syspars.getPublicCalendarRoot()),
+    cols.add(getCal().getCalendar(Util.buildPath(true, "/",
+                                                 getSyspars().getPublicCalendarRoot()),
                               PrivilegeDefs.privAny, false));
-    cols.add(getCal().getCalendar(Util.buildPath(true, "/", syspars.getUserCalendarRoot()),
+    cols.add(getCal().getCalendar(Util.buildPath(true, "/",
+                                                 getSyspars().getUserCalendarRoot()),
                               PrivilegeDefs.privAny, false));
 
     return cols.iterator();
@@ -202,16 +200,6 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     return getObjectCollection(className).iterator();
   }
 
-  private BwSystem getIntSyspars() throws CalFacadeException {
-    if (syspars != null) {
-      return syspars;
-    }
-
-    syspars = getSvc().getSysparsHandler().get();
-
-    return syspars;
-  }
-
   private void getAdminMembers(final BwGroup group) throws CalFacadeException {
     group.setGroupMembers(getCal().getMembers(group, true));
   }
@@ -285,9 +273,9 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     }
 
     @Override
-    public BwSystem getSyspars() throws CalFacadeException {
+    public SystemProperties getSyspars() throws CalFacadeException {
       //return svci.getSysparsHandler().get();
-      return dump.getIntSyspars();
+      return dump.getSyspars();
     }
 
     void setPrincipal(final BwPrincipal principal) {

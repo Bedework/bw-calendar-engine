@@ -21,7 +21,7 @@ package org.bedework.calcore;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwSystem;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessUtilI;
@@ -51,7 +51,7 @@ public abstract class CalintfHelper
      * @return BwSystem object
      * @throws CalFacadeException
      */
-    public BwSystem getSyspars() throws CalFacadeException;
+    public SystemProperties getSyspars() throws CalFacadeException;
 
     /**
      * @return PrincipalInfo object
@@ -105,7 +105,7 @@ public abstract class CalintfHelper
    */
   public abstract void endTransaction() throws CalFacadeException;
 
-  protected BwSystem getSyspars() throws CalFacadeException {
+  protected SystemProperties getSyspars() throws CalFacadeException {
     return cb.getSyspars();
   }
 

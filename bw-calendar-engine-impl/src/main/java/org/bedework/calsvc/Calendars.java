@@ -402,7 +402,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     int pathLength = ss.length - 1;  // First element is empty string
 
     return (pathLength == 2) &&
-           (ss[1].equals(getSvc().getSysparsHandler().get().getUserCalendarRoot()));
+           (ss[1].equals(getSvc().getSystemProperties().getUserCalendarRoot()));
   }
 
   /* (non-Javadoc)

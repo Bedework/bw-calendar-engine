@@ -28,10 +28,10 @@ import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.CacheStats;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwLastMod;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -416,18 +416,12 @@ public class CoreCalendars extends CalintfHelperHib
                                                      final boolean create,
                                                      final int access) throws CalFacadeException {
     String name;
-    BwSystem sys = getSyspars();
+    SystemProperties sys = getSyspars();
 
-    if (calType == BwCalendar.calTypeBusy) {
-      name = sys.getBusyCalendar();
-    } else if (calType == BwCalendar.calTypeDeleted) {
-      name = sys.getDeletedCalendar();
-    } else if (calType == BwCalendar.calTypeInbox) {
+    if (calType == BwCalendar.calTypeInbox) {
       name = sys.getUserInbox();
     } else if (calType == BwCalendar.calTypeOutbox) {
       name = sys.getUserOutbox();
-    } else if (calType == BwCalendar.calTypeTrash) {
-      name = sys.getDefaultTrashCalendar();
     } else if (calType == BwCalendar.calTypeNotifications) {
       name = sys.getDefaultNotificationsName();
     } else if (calType == BwCalendar.calTypeEventList) {
@@ -1140,27 +1134,15 @@ public class CoreCalendars extends CalintfHelperHib
                                     final BwCalendar parent) throws CalFacadeException {
     // XXX This should be accessible to all implementations.
     if (!special) {
-      BwSystem sys = getSyspars();
+      SystemProperties sys = getSyspars();
 
       /* Ensure the name isn't reserved */
-
-      if (name.equals(sys.getBusyCalendar())) {
-        throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
-      }
-
-      if (name.equals(sys.getDeletedCalendar())) {
-        throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
-      }
 
       if (name.equals(sys.getUserInbox())) {
         throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
       }
 
       if (name.equals(sys.getUserOutbox())) {
-        throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
-      }
-
-      if (name.equals(sys.getDefaultTrashCalendar())) {
         throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
       }
 

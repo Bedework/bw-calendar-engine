@@ -478,8 +478,8 @@ public abstract class AbstractDirImpl implements Directories {
    * @see org.bedework.calfacade.ifs.Directories#getGroups(java.lang.String, java.lang.String)
    */
   @Override
-  public Collection<String>getGroups(final String rootUrl,
-                                     final String principalUrl) throws CalFacadeException {
+  public Collection<String> getGroups(final String rootUrl,
+                                      final String principalUrl) throws CalFacadeException {
     Collection<String> urls = new TreeSet<String>();
 
     if (principalUrl == null) {

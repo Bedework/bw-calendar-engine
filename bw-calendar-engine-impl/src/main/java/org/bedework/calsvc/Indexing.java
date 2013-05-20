@@ -189,7 +189,7 @@ class Indexing extends CalSvcDb implements IndexingI {
 
       if (indexer == null) {
         indexer = BwIndexerFactory.getIndexer(publick, principal, writeable,
-                                              getSvc().getSysparsHandler().get());
+                                              getSvc().getSystemProperties());
         if (publick) {
           publicIndexer = indexer;
         } else {

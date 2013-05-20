@@ -118,7 +118,6 @@ public class CoreEventProperties <T extends BwEventProperty>
         "delete from org.bedework.calfacade.svc.prefs.BwAuthUserPrefsLocation " +
                "where locationid=:id");
 
-
     keyFields = new ClassString("word",
                                 "uid",
                                 "uid");

@@ -22,7 +22,6 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -304,9 +303,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
   private String getResourcesPath(final BwCalSuite suite,
                                   final ResourceClass cl) throws CalFacadeException {
     if (cl == ResourceClass.global) {
-      BwSystem sys = getSvc().getSysparsHandler().get();
-
-      return sys.getGlobalResourcesPath();
+      return getSvc().getSystemProperties().getGlobalResourcesPath();
     }
 
     BwPrincipal eventsOwner = getPrincipal(suite.getGroup().getOwnerHref());

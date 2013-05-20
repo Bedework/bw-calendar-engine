@@ -18,7 +18,7 @@
 */
 package org.bedework.calsvc.indexing;
 
-import org.bedework.calfacade.BwSystem;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import edu.rpi.cct.misc.indexing.IndexLuceneImpl;
@@ -51,7 +51,7 @@ public class BwIndexerFactory {
   public static BwIndexer getIndexer(final boolean publick,
                                      final String principal,
                                      final boolean writeable,
-                                     final BwSystem syspars) throws CalFacadeException {
+                                     final SystemProperties syspars) throws CalFacadeException {
     if (publick && syspars.getUseSolr()) {
       try {
         return new BwIndexSolrImpl(syspars.getSolrURL(), writeable,
@@ -87,7 +87,7 @@ public class BwIndexerFactory {
   public static BwIndexer getIndexer(final boolean publick,
                                      final String principal,
                                      final boolean writeable,
-                                     final BwSystem syspars,
+                                     final SystemProperties syspars,
                                      final String indexRoot,
                                      final String adminPath) throws CalFacadeException {
     try {

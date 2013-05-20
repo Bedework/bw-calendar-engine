@@ -24,10 +24,10 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
@@ -400,7 +400,7 @@ public class CalSvcDb implements Serializable {
       return;
     }
 
-    val.setUid(guidPrefix + getSvc().getSysparsHandler().getSysid());
+    val.setUid(guidPrefix + getSvc().getSystemProperties().getSystemid());
   }
 
   /* This checks to see if the current user has owner access based on the
@@ -485,8 +485,8 @@ public class CalSvcDb implements Serializable {
     return owner;
   }
 
-  protected BwSystem getSyspars() throws CalFacadeException {
-    return getSvc().getSysparsHandler().get();
+  protected SystemProperties getSyspars() throws CalFacadeException {
+    return getSvc().getSystemProperties();
   }
 
   protected BwCalendar unwrap(final BwCalendar val) throws CalFacadeException {

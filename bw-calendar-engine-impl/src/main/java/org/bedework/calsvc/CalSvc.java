@@ -33,7 +33,6 @@ import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.CacheStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
@@ -43,6 +42,7 @@ import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.SynchConfig;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.env.CalOptionsFactory;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -100,7 +100,6 @@ import edu.rpi.cmt.access.PrivilegeSet;
 import edu.rpi.cmt.jmx.MBeanUtil;
 import edu.rpi.cmt.security.PwEncryptionIntf;
 import edu.rpi.cmt.timezones.Timezones;
-import edu.rpi.sss.util.OptionsI;
 import edu.rpi.sss.util.Util;
 
 import net.fortuna.ical4j.model.property.DtStamp;
@@ -124,11 +123,13 @@ import java.util.TreeSet;
  * @author Mike Douglass       douglm@rpi.edu
  */
 public class CalSvc extends CalSvcI {
-  private String systemName;
+  //private String systemName;
 
   private CalSvcIPars pars;
 
   private boolean debug;
+
+  private Configurations configs;
 
   private boolean open;
 
@@ -222,219 +223,6 @@ public class CalSvc extends CalSvcI {
 
   private transient Directories.CallBack gcb;
 
-  /**
-   * @author douglm
-   *
-   */
-  private static final class SvciPrincipalInfo extends PrincipalInfo {
-    private CalSvc svci;
-
-    private static class StackedState {
-      BwPrincipal principal;
-      boolean superUser;
-      String calendarHomePath;
-      PrivilegeSet maxAllowedPrivs;
-    }
-
-    private Deque<StackedState> stack = new ArrayDeque<StackedState>();
-
-    SvciPrincipalInfo(final CalSvc svci,
-                      final BwPrincipal principal,
-                      final BwPrincipal authPrincipal,
-                      final PrivilegeSet maxAllowedPrivs) {
-      super(principal, authPrincipal, maxAllowedPrivs);
-      this.svci = svci;
-    }
-
-    void setSuperUser(final boolean val) {
-      superUser = val;
-    }
-
-    /* (non-Javadoc)
-     * @see org.bedework.calfacade.util.AccessUtilI.CallBack#getPrincipal(java.lang.String)
-     */
-    @Override
-    public AccessPrincipal getPrincipal(final String href) throws CalFacadeException {
-      return svci.getUsersHandler().getPrincipal(href);
-    }
-
-    @Override
-    public BwSystem getSyspars() throws CalFacadeException {
-      return svci.getSysparsHandler().get();
-    }
-
-    void setPrincipal(final BwPrincipal principal) {
-      this.principal = principal;
-      calendarHomePath = null;
-    }
-
-    void pushPrincipal(final BwPrincipal principal) {
-      StackedState ss = new StackedState();
-      ss.principal = this.principal;
-      ss.superUser = superUser;
-      ss.calendarHomePath = calendarHomePath;
-      ss.maxAllowedPrivs = maxAllowedPrivs;
-
-      stack.push(ss);
-
-      setPrincipal(principal);
-      superUser = false;
-      maxAllowedPrivs = null;
-    }
-
-    void popPrincipal() throws CalFacadeException {
-      StackedState ss = stack.pop();
-
-      if (ss == null) {
-        throw new CalFacadeException("Nothing to pop");
-      }
-
-      setPrincipal(ss.principal);
-      calendarHomePath = ss.calendarHomePath;
-      superUser = ss.superUser;
-      maxAllowedPrivs = ss.maxAllowedPrivs;
-    }
-
-    /* (non-Javadoc)
-     * @see edu.rpi.cmt.access.Access.AccessCb#makeHref(java.lang.String, int)
-     */
-    @Override
-    public String makeHref(final String id, final int whoType) throws AccessException {
-      try {
-        return svci.getDirectories().makePrincipalUri(id, whoType);
-      } catch (Throwable t) {
-        throw new AccessException(t);
-      }
-    }
-  }
-
-  /** Class used by UseAuth to do calls into CalSvci
-   *
-   */
-  public static class UserAuthCallBack extends UserAuth.CallBack {
-    CalSvc svci;
-
-    UserAuthCallBack(final CalSvc svci) {
-      this.svci = svci;
-    }
-
-    @Override
-    public BwPrincipal getPrincipal(final String account) throws CalFacadeException {
-      return svci.getUsersHandler().getUser(account);
-    }
-
-    @Override
-    public UserAuth getUserAuth() throws CalFacadeException {
-      return svci.getUserAuth();
-    }
-
-    /** Delete the entry
-     *
-     * @param val
-     * @throws CalFacadeException
-     */
-    @Override
-    public void delete(final BwAuthUser val) throws CalFacadeException {
-      svci.getCal().delete(val);
-    }
-
-    /** Save a new entry or update an existing entry
-     *
-     * @param val
-     * @throws CalFacadeException
-     */
-    @Override
-    public void saveOrUpdate(final BwAuthUser val) throws CalFacadeException {
-      svci.getCal().saveOrUpdate(val);
-    }
-
-    @Override
-    public BwAuthUser getAuthUser(final String href) throws CalFacadeException {
-      return svci.getCal().getAuthUser(href);
-    }
-
-    @Override
-    public List<BwAuthUser> getAll() throws CalFacadeException {
-      return svci.getCal().getAll();
-    }
-  }
-
-  /** Class used by groups implementations for calls into CalSvci
-   *
-   */
-  public static class GroupsCallBack extends Directories.CallBack {
-    CalSvc svci;
-
-    GroupsCallBack(final CalSvc svci) {
-      this.svci = svci;
-    }
-
-    @Override
-    public String getSysid() throws CalFacadeException {
-      return svci.getSysparsHandler().getSysid();
-    }
-
-    @Override
-    public BwPrincipal getCurrentUser() throws CalFacadeException {
-      return svci.getPrincipal();
-    }
-
-    @Override
-    public BwGroup findGroup(final String account,
-                             final boolean admin) throws CalFacadeException {
-      return svci.getCal().findGroup(account, admin);
-    }
-
-    @Override
-    public Collection<BwGroup> findGroupParents(final BwGroup group,
-                                                final boolean admin) throws CalFacadeException {
-      return svci.getCal().findGroupParents(group, admin);
-    }
-
-    @Override
-    public void updateGroup(final BwGroup group,
-                            final boolean admin) throws CalFacadeException {
-      svci.getCal().updateGroup(group, admin);
-    }
-
-    @Override
-    public void removeGroup(final BwGroup group,
-                            final boolean admin) throws CalFacadeException {
-      svci.getCal().removeGroup(group, admin);
-    }
-
-    @Override
-    public void addMember(final BwGroup group,
-                          final BwPrincipal val,
-                          final boolean admin) throws CalFacadeException {
-      svci.getCal().addMember(group, val, admin);
-    }
-
-    @Override
-    public void removeMember(final BwGroup group,
-                             final BwPrincipal val,
-                             final boolean admin) throws CalFacadeException {
-      svci.getCal().removeMember(group, val, admin);
-    }
-
-    @Override
-    public Collection<BwPrincipal> getMembers(final BwGroup group,
-                                              final boolean admin) throws CalFacadeException {
-      return svci.getCal().getMembers(group, admin);
-    }
-
-    @Override
-    public Collection<BwGroup> getAll(final boolean admin) throws CalFacadeException {
-      return svci.getCal().getAllGroups(admin);
-    }
-
-    @Override
-    public Collection<BwGroup> getGroups(final BwPrincipal val,
-                                         final boolean admin) throws CalFacadeException {
-      return svci.getCal().getGroups(val, admin);
-    }
-  }
-
   /** The user groups object.
    */
   private Directories userGroups;
@@ -444,11 +232,6 @@ public class CalSvc extends CalSvcI {
   private Directories adminGroups;
 
   private IcalCallback icalcb;
-
-  /* These are only relevant for the public admin client.
-   */
-  //private boolean adminAutoDeleteSponsors;
-  //private boolean adminAutoDeleteLocations;
 
   private transient Logger log;
 
@@ -511,11 +294,10 @@ public class CalSvc extends CalSvcI {
     debug = getLogger().isDebugEnabled();
 
     try {
-      OptionsI opts = CalOptionsFactory.getOptions();
-      systemName = (String)opts.getGlobalProperty("systemName");
-
       open();
       beginTransaction();
+
+      configs = new Configurations(!principalInfo.getAuthPrincipal().getUnauthenticated());
 
       if (userGroups != null) {
         userGroups.init(getGroupsCallBack(), getCaPrefixes(),
@@ -531,10 +313,10 @@ public class CalSvc extends CalSvcI {
                          getUserDirProps(adminGroups.getConfigName()));
       }
 
-      BwSystem sys = getSysparsHandler().get();
+      SystemProperties sp = configs.getSystemProperties();
 
       if (tzserverUri == null) {
-        tzserverUri = CalOptionsFactory.getOptions().getGlobalStringProperty("timezonesUri");
+        tzserverUri = sp.getTzServeruri();
 
         if (tzserverUri == null) {
           throw new CalFacadeException("No timezones server URI defined");
@@ -542,7 +324,7 @@ public class CalSvc extends CalSvcI {
 
         Timezones.initTimezones(tzserverUri);
 
-        Timezones.setSystemDefaultTzid(sys.getTzid());
+        Timezones.setSystemDefaultTzid(sp.getTzid());
       }
 
       /* Some checks on parameter validity
@@ -576,7 +358,7 @@ public class CalSvc extends CalSvcI {
       if ((pars.getPublicAdmin() || pars.getAllowSuperUser()) &&
           (pars.getAuthUser() != null)) {
         ((SvciPrincipalInfo)principalInfo).setSuperUser(
-                getSysparsHandler().isRootUser(principalInfo.getAuthPrincipal()));
+             getSysparsHandler().isRootUser(principalInfo.getAuthPrincipal()));
       }
 
       postNotification(
@@ -598,6 +380,11 @@ public class CalSvc extends CalSvcI {
         close();
       } catch (Throwable t2) {}
     }
+  }
+
+  @Override
+  public SystemProperties getSystemProperties() throws CalFacadeException {
+    return configs.getSystemProperties();
   }
 
   @Override
@@ -845,7 +632,7 @@ public class CalSvc extends CalSvcI {
   @Override
   public SysparsI getSysparsHandler() throws CalFacadeException {
     if (sysparsHandler == null) {
-      sysparsHandler = new Syspars(this, systemName);
+      sysparsHandler = new Syspars(this);
       handlers.add((CalSvcDb)sysparsHandler);
     }
 
@@ -863,7 +650,7 @@ public class CalSvc extends CalSvcI {
     }*/
 
     try {
-      MailerIntf mailer = (MailerIntf)CalFacadeUtil.getObject(getSysparsHandler().get().getMailerClass(),
+      MailerIntf mailer = (MailerIntf)CalFacadeUtil.getObject(getSystemProperties().getMailerClass(),
                                                    MailerIntf.class);
       mailer.init((MailConfigProperties)CalOptionsFactory.getOptions().
                   getGlobalProperty("module.mailer"));
@@ -1063,7 +850,7 @@ public class CalSvc extends CalSvcI {
     }
 
     try {
-      userGroups = (Directories)CalFacadeUtil.getObject(getSysparsHandler().get().getUsergroupsClass(), Directories.class);
+      userGroups = (Directories)CalFacadeUtil.getObject(getSystemProperties().getUsergroupsClass(), Directories.class);
       userGroups.init(getGroupsCallBack(), getCaPrefixes(),
                       getCardDavInfo(true),
                       getCardDavInfo(false),
@@ -1117,7 +904,7 @@ public class CalSvc extends CalSvcI {
     }
 
     try {
-      adminGroups = (Directories)CalFacadeUtil.getObject(getSysparsHandler().get().getAdmingroupsClass(), Directories.class);
+      adminGroups = (Directories)CalFacadeUtil.getObject(getSystemProperties().getAdmingroupsClass(), Directories.class);
       adminGroups.init(getGroupsCallBack(), getCaPrefixes(),
                        getCardDavInfo(true),
                        getCardDavInfo(false),
@@ -1197,7 +984,7 @@ public class CalSvc extends CalSvcI {
       return userAuth;
     }
 
-    userAuth = (UserAuth)CalFacadeUtil.getObject(getSysparsHandler().get().getUserauthClass(),
+    userAuth = (UserAuth)CalFacadeUtil.getObject(getSystemProperties().getUserauthClass(),
                                                  UserAuth.class);
 
     userAuth.initialise(getUserAuthCallBack());
@@ -1213,7 +1000,7 @@ public class CalSvc extends CalSvcI {
       return max;
     }
 
-    return getSysparsHandler().get().getMaxUserEntitySize();
+    return getSystemProperties().getMaxUserEntitySize();
   }
 
   @Override
@@ -1366,15 +1153,6 @@ public class CalSvc extends CalSvcI {
    * ==================================================================== */
 
   @Override
-  public String getTimezonesUri() throws CalFacadeException {
-    if (tzserverUri == null) {
-      throw new CalFacadeException("No timezones server URI defined");
-    }
-
-    return tzserverUri;
-  }
-
-  @Override
   public UpdateFromTimeZonesInfo updateFromTimeZones(final int limit,
                                                      final boolean checkOnly,
                                                      final UpdateFromTimeZonesInfo info
@@ -1463,7 +1241,6 @@ public class CalSvc extends CalSvcI {
         PrivilegeSet maxAllowedPrivs = null;
 
         if (pars.getForRestore()) {
-          ((Syspars)getSysparsHandler()).setForRestore(pars.getSysInfo());
           currentPrincipal = getDirectories().caladdrToPrincipal(pars.getAuthUser());
           authPrincipal = currentPrincipal;
         } else if (authenticatedUser == null) {
@@ -1519,7 +1296,7 @@ public class CalSvc extends CalSvcI {
                                               authPrincipal,
                                               maxAllowedPrivs);
 
-        cali.init(getSysparsHandler().get(),
+        cali.init(getSystemProperties(),
                   principalInfo,
                   null,
                   pars.getPublicAdmin(),
@@ -1578,6 +1355,7 @@ public class CalSvc extends CalSvcI {
             user.setPrincipalInfo(getDirectories().getDirInfo(user));
             ((SvciPrincipalInfo)principalInfo).setPrincipal(user);
           }
+
           */
         }
 
@@ -1791,7 +1569,7 @@ public class CalSvc extends CalSvcI {
 
     @Override
     public boolean getTimezonesByReference() throws CalFacadeException {
-      return pars.getTimezonesByReference();
+      return configs.getSystemProperties().getTimezonesByReference();
     }
   }
 
