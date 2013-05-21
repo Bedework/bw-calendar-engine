@@ -20,6 +20,7 @@ package org.bedework.calfacade.configs;
 
 import org.bedework.caldav.server.sysinterface.CalDAVSystemProperties;
 
+import edu.rpi.cmt.config.ConfInfo;
 import edu.rpi.cmt.jmx.MBeanInfo;
 
 /** These are the system properties that the server needs to know about, either
@@ -30,6 +31,7 @@ import edu.rpi.cmt.jmx.MBeanInfo;
  * @author douglm
  *
  */
+@ConfInfo(elementName = "system-properties")
 public interface SystemProperties extends CalDAVSystemProperties {
   /** Set the default tzid
   *
@@ -70,97 +72,6 @@ public interface SystemProperties extends CalDAVSystemProperties {
  @MBeanInfo("Systm identifier - used for uids etc.")
  String getSystemid();
 
-  /** Set the public Calendar Root
-   *
-   * @param val    String
-   */
-  void setPublicCalendarRoot(final String val);
-
-  /** Get the publicCalendarRoot
-   *
-   * @return String   publicCalendarRoot
-   */
-  @MBeanInfo("public Calendar Root - do not change")
-  String getPublicCalendarRoot();
-
-  /** Set the user Calendar Root
-   *
-   * @param val    String
-   */
-  void setUserCalendarRoot(final String val);
-
-  /** Get the userCalendarRoot
-   *
-   * @return String   userCalendarRoot
-   */
-  @MBeanInfo("user Calendar Root - do not change")
-  String getUserCalendarRoot();
-
-  /** Set the user default calendar
-   *
-   * @param val    String
-   */
-  void setUserDefaultCalendar(final String val);
-
-  /** Get the userDefaultCalendar
-   *
-   * @return String   userDefaultCalendar
-   */
-  @MBeanInfo("userDefaultCalendar - do not change")
-  String getUserDefaultCalendar();
-
-  /** Set the defaultNotificationsName
-   *
-   * @param val
-   */
-  void setDefaultNotificationsName(final String val);
-
-  /** Get the defaultNotificationsName
-   *
-   * @return flag
-   */
-  @MBeanInfo("name of notifications collection - do not change")
-  String getDefaultNotificationsName();
-
-  /** Set the defaultReferencesName
-   *
-   * @param val
-   */
-  public void setDefaultReferencesName(final String val);
-
-  /** Get the defaultReferencesName
-   *
-   * @return flag
-   */
-  @MBeanInfo("name of default references collection - do not change")
-  public String getDefaultReferencesName();
-
-  /** Set the user inbox name
-   *
-   * @param val    String
-   */
-   void setUserInbox(final String val);
-
-  /** Get the user inbox name
-   *
-   * @return String   user inbox
-   */
-  @MBeanInfo("user inbox name - do not change")
-  String getUserInbox();
-
-  /** Set the user outbox
-   *
-   * @param val    String
-   */
-  void setUserOutbox(final String val);
-
-  /** Get the user outbox
-   *
-   * @return String   user outbox
-   */
-  @MBeanInfo("user outbox - do not change")
-  String getUserOutbox();
-
   /** Set the defaultChangesNotifications
    *
    * @param val
@@ -188,19 +99,6 @@ public interface SystemProperties extends CalDAVSystemProperties {
   @MBeanInfo("root users list. This is a comma separated list of accounts that" +
   		" have superuser status")
   String getRootUsers();
-
-  /** Set the public user
-   *
-   * @param val    String
-   */
-  void setPublicUser(final String val);
-
-  /**
-   *
-   * @return String
-   */
-  @MBeanInfo("Account name for public entities - one not in the directory")
-  String getPublicUser();
 
   /** Set the user default view name
    *
@@ -354,19 +252,6 @@ public interface SystemProperties extends CalDAVSystemProperties {
   @MBeanInfo("usergroups class")
   String getUsergroupsClass();
 
-  /** Set the path to the root for indexes
-   *
-   * @param val    String index root
-   */
-  void setIndexRoot(final String val);
-
-  /** Get the path to the root for indexes
-   *
-   * @return String
-   */
-  @MBeanInfo("path to the root for non-solr indexes")
-  String getIndexRoot();
-
   /** Set the use solr flag
    *
    * @param val
@@ -463,21 +348,8 @@ public interface SystemProperties extends CalDAVSystemProperties {
   @MBeanInfo("The url for event reg service")
   String getEventregUrl();
 
-  /** Set the global resources path
-   *
-   * @param val
-   */
-  void setGlobalResourcesPath(final String val);
-
-  /** Get the global resources path
-   *
-   * @return token
-   */
-  @MBeanInfo("The global resources path")
-  String getGlobalResourcesPath();
-
   /**
-   * @return
+   * @return copy of this
    */
   SystemProperties cloneIt();
 }

@@ -24,7 +24,6 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.PropertiesEntity;
 
 import edu.rpi.sss.util.ToString;
-import edu.rpi.sss.util.xml.tagdefs.BedeworkServerTags;
 import edu.rpi.sss.util.xml.tagdefs.NamespaceAbbrevs;
 
 import java.util.Collection;
@@ -47,30 +46,7 @@ public class BwSystem extends BwDbentity<BwSystem>
   /* A name for the system */
   private String name;
 
-  /* Default calendar names */
-  private String publicCalendarRoot;
-  private String userCalendarRoot;
-
   static final String bedeworkContextsPname = "bedework:contexts";
-
-  static final String bedeworkGlobalResourcesPath = "bedework:global-resources";
-
-  static final String eventregAdminTokenPname = "Eventreg:admin-token";
-
-  static final String eventregUrlPname = "Eventreg:url";
-
-  static final QName useSolrPname = new QName(null, "use-solr");
-
-  static final String solrURLPname = "solr-url";
-
-  static final String solrCoreAdminPname = "solr-core-admin";
-
-  static final String solrDefaultCorePname = "solr-default-core";
-
-  static final String defaultNotificationsName = "default-notifications";
-
-  static final QName defaultReferencesName = new QName(BedeworkServerTags.bedeworkCaldavNamespace,
-                                                       "references");
 
   private Set<BwProperty> properties;
 
@@ -88,38 +64,6 @@ public class BwSystem extends BwDbentity<BwSystem>
    */
   public String getName() {
     return name;
-  }
-
-  /** Set the public Calendar Root
-   *
-   * @param val    String
-   */
-  public void setPublicCalendarRoot(final String val) {
-    publicCalendarRoot = val;
-  }
-
-  /** Get the publicCalendarRoot
-   *
-   * @return String   publicCalendarRoot
-   */
-  public String getPublicCalendarRoot() {
-    return publicCalendarRoot;
-  }
-
-  /** Set the user Calendar Root
-   *
-   * @param val    String
-   */
-  public void setUserCalendarRoot(final String val) {
-    userCalendarRoot = val;
-  }
-
-  /** Get the userCalendarRoot
-   *
-   * @return String   userCalendarRoot
-   */
-  public String getUserCalendarRoot() {
-    return userCalendarRoot;
   }
 
   /* ====================================================================
@@ -416,16 +360,6 @@ public class BwSystem extends BwDbentity<BwSystem>
     ts.newLine();
     ts.append("name", getName());
 
-    ts.newLine();
-    ts.append("publicCalendarRoot", getPublicCalendarRoot());
-    ts.append("userCalendarRoot", getUserCalendarRoot());
-
-    ts.newLine();
-
-    ts.newLine();
-
-    ts.newLine();
-
     ts.append("properties", getProperties());
 
     return ts.toString();
@@ -436,9 +370,6 @@ public class BwSystem extends BwDbentity<BwSystem>
     BwSystem clone = new BwSystem();
 
     clone.setName(getName());
-
-    clone.setPublicCalendarRoot(getPublicCalendarRoot());
-    clone.setUserCalendarRoot(getUserCalendarRoot());
 
     for (BwProperty p: getProperties()) {
       clone.addProperty(p);

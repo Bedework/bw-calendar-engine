@@ -19,7 +19,7 @@
 package org.bedework.calfacade.svc;
 
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import edu.rpi.cmt.access.Access.AccessCb;
@@ -141,5 +141,5 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
    * @return system parameters
    * @throws CalFacadeException
    */
-  public abstract SystemProperties getSyspars() throws CalFacadeException;
+  public abstract BasicSystemProperties getSyspars() throws CalFacadeException;
 }

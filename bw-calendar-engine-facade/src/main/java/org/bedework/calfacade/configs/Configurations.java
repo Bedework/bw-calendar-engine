@@ -26,11 +26,17 @@ import java.io.Serializable;
  *
  * @author Mike Douglass   douglm  rpi.edu
  */
-public abstract class SystemConfig implements Serializable {
-  /** The system root paths - mostly for principals. These MUST end in "/"
-   *
-   * @return a read only set of system roots.
+public abstract class Configurations implements Serializable {
+  /**
+   * @return basic system properties
    * @throws CalFacadeException
    */
-  public abstract SystemRoots getSystemRoots() throws CalFacadeException;
+  public abstract BasicSystemProperties getBasicSystemProperties() throws CalFacadeException;
+
+  /**
+   * @param auth
+   * @return appropriate system properties
+   * @throws CalFacadeException
+   */
+  public abstract SystemProperties getSystemProperties(final boolean auth) throws CalFacadeException;
 }
