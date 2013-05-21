@@ -30,6 +30,7 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
@@ -73,6 +74,13 @@ public abstract class CalSvcI implements Serializable {
    * @throws CalFacadeException
    */
   public abstract void init(CalSvcIPars pars) throws CalFacadeException;
+
+  /** Return basic properties about the system.
+   *
+   * @return BasicSystemProperties object - never null.
+   * @throws CalFacadeException
+   */
+  public abstract BasicSystemProperties getBasicSystemProperties() throws CalFacadeException;
 
   /** Return properties about the system.
    *
@@ -119,7 +127,7 @@ public abstract class CalSvcI implements Serializable {
    * @param domain
    * @param service
    * @return key, empty key object or null.
-   * @throws WebdavException
+   * @throws CalFacadeException
    */
   public abstract byte[] getPublicKey(final String domain,
                                       final String service) throws CalFacadeException;
@@ -513,7 +521,7 @@ public abstract class CalSvcI implements Serializable {
 
   /** Remove any refs to this object
    *
-   * @param col
+   * @param val
    * @throws CalFacadeException
    */
   public abstract void removeFromAllPrefs(final BwShareableDbentity val) throws CalFacadeException;

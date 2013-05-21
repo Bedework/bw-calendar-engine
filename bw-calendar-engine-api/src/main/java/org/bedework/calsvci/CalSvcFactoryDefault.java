@@ -18,7 +18,7 @@
 */
 package org.bedework.calsvci;
 
-import org.bedework.calfacade.configs.SystemConfig;
+import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 /** Default svc factory - just gets an instance of the default class.
@@ -32,7 +32,9 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
       "org.bedework.calcore.hibernate.SchemaBuilderImpl";
 
   private static final String systemConfigClass =
-      "org.bedework.calsvc.SystemConfigImpl";
+      "org.bedework.calsvc.jmx.ConfigurationsImpl";
+
+  private static Configurations conf;
 
   @Override
   public CalSvcI getSvc(final CalSvcIPars pars) throws CalFacadeException {
@@ -51,13 +53,25 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
   }
 
   @Override
-  public SystemConfig getSystemConfig() throws CalFacadeException {
-    return (SystemConfig)loadInstance(systemConfigClass,
-                                       SystemConfig.class);
+  public Configurations getSystemConfig() throws CalFacadeException {
+    if (conf != null) {
+      return conf;
+    }
+
+    synchronized (this) {
+      if (conf != null) {
+        return conf;
+      }
+
+      conf = (Configurations)loadInstance(systemConfigClass,
+                                          Configurations.class);
+
+      return conf;
+    }
   }
 
-  private Object loadInstance(final String cname,
-                              final Class interfaceClass) throws CalFacadeException {
+  private static Object loadInstance(final String cname,
+                                     final Class interfaceClass) {
     try {
       ClassLoader loader = Thread.currentThread().getContextClassLoader();
       Class cl = loader.loadClass(cname);
@@ -79,12 +93,9 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
       }
 
       return o;
-    } catch (CalFacadeException ce) {
-      ce.printStackTrace();
-      throw ce;
     } catch (Throwable t) {
       t.printStackTrace();
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 }

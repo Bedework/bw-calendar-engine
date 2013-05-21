@@ -65,8 +65,6 @@ public class CalSvcIPars implements Serializable {
    */
   private boolean sessionless;
 
-  private boolean timezonesByReference;
-
   private boolean forRestore;
 
   /** True if this is a web application

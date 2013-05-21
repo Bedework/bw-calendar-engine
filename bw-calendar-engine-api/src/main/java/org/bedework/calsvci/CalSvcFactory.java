@@ -19,7 +19,7 @@
 
 package org.bedework.calsvci;
 
-import org.bedework.calfacade.configs.SystemConfig;
+import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
@@ -47,5 +47,5 @@ public interface CalSvcFactory extends Serializable {
    * @return a system config class.
    * @throws CalFacadeException
    */
-  public SystemConfig getSystemConfig() throws CalFacadeException;
+  public Configurations getSystemConfig() throws CalFacadeException;
 }
