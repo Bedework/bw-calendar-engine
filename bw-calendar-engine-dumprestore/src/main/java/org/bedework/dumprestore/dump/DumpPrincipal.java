@@ -227,7 +227,7 @@ public class DumpPrincipal {
    * @throws CalFacadeException
    */
   public void getConfigProperties(final String[] args) throws CalFacadeException {
-    globals.init(new CalSvcFactoryDefault().getSystemConfig().getSystemRoots());
+    globals.init(new CalSvcFactoryDefault().getSystemConfig().getBasicSystemProperties());
   }
 
   protected Logger getLog() {

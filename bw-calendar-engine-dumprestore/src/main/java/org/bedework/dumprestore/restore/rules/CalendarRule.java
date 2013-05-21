@@ -20,7 +20,7 @@
 package org.bedework.dumprestore.restore.rules;
 
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
@@ -60,7 +60,7 @@ public class CalendarRule extends EntityRule {
     if (globals.skipSpecialCals &&
         (entity.getCalType() == BwCalendar.calTypeFolder)) {
       // might need to fix if from 3.0
-      SystemProperties sys = globals.getSyspars();
+      BasicSystemProperties sys = globals.getBasicSyspars();
       String calpath = entity.getPath();
       String[] pes = calpath.split("/");
       int pathLength = pes.length - 1;  // First element is empty string

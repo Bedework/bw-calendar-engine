@@ -156,7 +156,7 @@ public class Restore implements Defs {
 
     BwPrincipal pu = BwPrincipal.makeUserPrincipal();
 
-    pu.setAccount(globals.getSyspars().getPublicUser());
+    pu.setAccount(globals.getBasicSyspars().getPublicUser());
     globals.setPrincipalHref(pu);
 
     globals.rintf.restorePrincipal(pu);
@@ -214,7 +214,7 @@ public class Restore implements Defs {
 
     makeCal(null, pu,
             BwCalendar.calTypeFolder,
-            globals.getSyspars().getPublicCalendarRoot(),
+            globals.getBasicSyspars().getPublicCalendarRoot(),
             new String(new Acl(aces).encode()));
 
     // Create the user root.
@@ -227,7 +227,7 @@ public class Restore implements Defs {
 
     BwCalendar userRoot = makeCal(null, pu,
                                   BwCalendar.calTypeFolder,
-                                  globals.getSyspars().getUserCalendarRoot(),
+                                  globals.getBasicSyspars().getUserCalendarRoot(),
                                   new String(new Acl(aces).encode()));
 
     makeUserHome(userRoot, pu);
@@ -244,7 +244,7 @@ public class Restore implements Defs {
                                   null);
     makeCal(userHome, user,
             BwCalendar.calTypeCalendarCollection,
-            globals.getSyspars().getUserDefaultCalendar(),
+            globals.getBasicSyspars().getUserDefaultCalendar(),
             null);
   }
 
@@ -303,8 +303,6 @@ public class Restore implements Defs {
         rootId = args.next();
       } else if (args.ifMatch("-skipspecialcals")) {
         globals.skipSpecialCals = true;
-      } else if (args.ifMatch("-indexroot", 1)) {
-        globals.getSyspars().setIndexRoot(args.next());
       } else if (args.ifMatch("-f", 1)) {
         filename = args.next();
       } else if (args.ifMatch("-onlyusers", 1)) {

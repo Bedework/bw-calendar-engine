@@ -46,7 +46,7 @@
  */
 package org.bedework.dumprestore.dump;
 
-import org.bedework.calfacade.configs.SystemRoots;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.DumpIntf;
@@ -66,7 +66,7 @@ import java.util.List;
  */
 public class DumpGlobals extends Counters {
   /** Used to build hrefs */
-  public SystemRoots sysRoots;
+  public BasicSystemProperties sysRoots;
 
   /** Use this to output xml */
   public XmlEmit xml;
@@ -122,7 +122,7 @@ public class DumpGlobals extends Counters {
    * @param config
    * @param sysRoots
    */
-  public void init(final SystemRoots sysRoots) {
+  public void init(final BasicSystemProperties sysRoots) {
     this.sysRoots = sysRoots;
   }
 }

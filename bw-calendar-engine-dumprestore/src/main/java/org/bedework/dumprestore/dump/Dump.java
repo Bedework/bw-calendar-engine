@@ -175,7 +175,7 @@ public class Dump implements Defs {
    * @throws Throwable
    */
   public void getConfigProperties(final String[] args) throws Throwable {
-    globals.init(new CalSvcFactoryDefault().getSystemConfig().getSystemRoots());
+    globals.init(new CalSvcFactoryDefault().getSystemConfig().getBasicSystemProperties());
   }
 
   protected Logger getLog() {

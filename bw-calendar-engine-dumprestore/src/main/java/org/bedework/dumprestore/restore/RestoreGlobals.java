@@ -23,8 +23,9 @@ import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwUser;
+import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.SystemProperties;
-import org.bedework.calfacade.configs.SystemRoots;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.PrincipalInfo;
@@ -139,9 +140,8 @@ public class RestoreGlobals extends Counters {
 
   /** Map user with id of zero on to this id - fixes oversight */
   public static int mapUser0 = 1;
-
-  /** System parameters object */
   private SystemProperties syspars;
+  private static BasicSystemProperties basicProps;
 
   /** Messages for subscriptions changed   // PRE3.5
    */
@@ -344,19 +344,17 @@ public class RestoreGlobals extends Counters {
   public BwPrincipal currentUser;
 
   /**
-   * @param val
-   * @throws Throwable
-   */
-  public void setSyspars(final SystemProperties val) throws Throwable {
-    syspars = val;
-    setTimezones();
-  }
-
-  /**
-   * @return BwSystem
+   * @return system params
    */
   public SystemProperties getSyspars() {
     return syspars;
+  }
+
+  /**
+   * @return basic system params
+   */
+  public static BasicSystemProperties getBasicSyspars() {
+    return basicProps;
   }
 
   private Collection<String> rootUsers;
@@ -451,8 +449,12 @@ public class RestoreGlobals extends Counters {
 
   /**
    * @param config
+   * @throws Throwable
    */
-  public void init() {
+  public void init() throws Throwable {
+    Configurations conf = new CalSvcFactoryDefault().getSystemConfig();
+    basicProps = conf.getBasicSystemProperties();
+    syspars = conf.getSystemProperties(true);
   }
 
   private Map<String, BwPrincipal> principalMap = new HashMap<String, BwPrincipal>();
@@ -460,19 +462,7 @@ public class RestoreGlobals extends Counters {
   private long lastFlush = System.currentTimeMillis();
   private static final long flushInt = 1000 * 30 * 5; // 5 minutes
 
-  private static SystemRoots sysRoots;
-
-  //private static int principalRootLen;
-  //private static int userPrincipalRootLen;
-  //private static int groupPrincipalRootLen;
-
-  private static void setRoots() throws Throwable {
-    if (sysRoots != null) {
-      return;
-    }
-
-    sysRoots = new CalSvcFactoryDefault().getSystemConfig().getSystemRoots();
-  }
+  private static BasicSystemProperties sysProps;
 
   private BwPrincipal mappedPrincipal(final String val) {
     long now = System.currentTimeMillis();
@@ -491,9 +481,7 @@ public class RestoreGlobals extends Counters {
    * @throws Throwable
    */
   public static String getUserPrincipalRoot() throws Throwable {
-    setRoots();
-
-    return sysRoots.getUserPrincipalRoot();
+    return getBasicSyspars().getUserPrincipalRoot();
   }
 
   /**
@@ -501,9 +489,7 @@ public class RestoreGlobals extends Counters {
    * @throws Throwable
    */
   public static String getGroupPrincipalRoot() throws Throwable {
-    setRoots();
-
-    return sysRoots.getGroupPrincipalRoot();
+    return getBasicSyspars().getGroupPrincipalRoot();
   }
 
   /**
@@ -511,9 +497,7 @@ public class RestoreGlobals extends Counters {
    * @throws Throwable
    */
   public static String getBwadmingroupPrincipalRoot() throws Throwable {
-    setRoots();
-
-    return sysRoots.getBwadmingroupPrincipalRoot();
+    return getBasicSyspars().getBwadmingroupPrincipalRoot();
   }
 
   /**
@@ -620,9 +604,7 @@ public class RestoreGlobals extends Counters {
       return p;
     }
 
-    setRoots();
-
-    if (!val.startsWith(sysRoots.getPrincipalRoot())) {
+    if (!val.startsWith(getBasicSyspars().getPrincipalRoot())) {
       return null;
     }
 
@@ -672,8 +654,8 @@ public class RestoreGlobals extends Counters {
     }
 
     @Override
-    public SystemProperties getSyspars() throws CalFacadeException {
-      return syspars;
+    public BasicSystemProperties getSyspars() throws CalFacadeException {
+      return getBasicSyspars();
     }
 
     /* (non-Javadoc)
