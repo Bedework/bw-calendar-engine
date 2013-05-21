@@ -256,7 +256,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val
    */
-  void setUseSolr(final Boolean val);
+  void setUseSolr(final boolean val);
 
   /** Get the use solr flag
    *
