@@ -22,6 +22,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -59,6 +60,7 @@ public abstract class CalSys {
   private String publicCalendarRoot;
 
   private SystemProperties syspars;
+  private BasicSystemProperties basicSyspars;
 
   private int batchSize = 5;
 
@@ -197,7 +199,7 @@ public abstract class CalSys {
 
   protected String getIndexRoot() throws CalFacadeException {
     if (indexRoot == null) {
-      indexRoot = getSyspars().getIndexRoot();
+      indexRoot = getBasicSyspars().getIndexRoot();
     }
 
     return indexRoot;
@@ -205,7 +207,7 @@ public abstract class CalSys {
 
   protected String getUserCalendarRoot() throws CalFacadeException {
     if (userCalendarRoot == null) {
-      userCalendarRoot = getSyspars().getUserCalendarRoot();
+      userCalendarRoot = getBasicSyspars().getUserCalendarRoot();
     }
 
     return userCalendarRoot;
@@ -213,7 +215,7 @@ public abstract class CalSys {
 
   protected String getPublicCalendarRoot() throws CalFacadeException {
     if (publicCalendarRoot == null) {
-      publicCalendarRoot = getSyspars().getPublicCalendarRoot();
+      publicCalendarRoot = getBasicSyspars().getPublicCalendarRoot();
     }
 
     return publicCalendarRoot;
@@ -236,6 +238,25 @@ public abstract class CalSys {
     }
 
     return syspars;
+  }
+
+  protected BasicSystemProperties getBasicSyspars() throws CalFacadeException {
+    CalSvcI svci = null;
+    if (basicSyspars == null) {
+      try {
+        svci = getAdminSvci();
+        basicSyspars = svci.getBasicSystemProperties();
+      } finally {
+        if (svci != null) {
+          try {
+            close(svci);
+          } finally {
+          }
+        }
+      }
+    }
+
+    return basicSyspars;
   }
 
   protected boolean hasAccess(final BwCalendar col) throws CalFacadeException {
