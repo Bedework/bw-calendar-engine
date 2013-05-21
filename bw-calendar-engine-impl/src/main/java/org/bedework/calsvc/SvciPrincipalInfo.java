@@ -19,7 +19,7 @@
 package org.bedework.calsvc;
 
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 
@@ -67,8 +67,8 @@ final class SvciPrincipalInfo extends PrincipalInfo {
   }
 
   @Override
-  public SystemProperties getSyspars() throws CalFacadeException {
-    return svci.getSystemProperties();
+  public BasicSystemProperties getSyspars() throws CalFacadeException {
+    return svci.getBasicSystemProperties();
   }
 
   void setPrincipal(final BwPrincipal principal) {

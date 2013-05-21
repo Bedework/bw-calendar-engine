@@ -63,8 +63,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
   Calendars(final CalSvc svci) throws CalFacadeException {
     super(svci);
 
-    publicCalendarRootPath = Util.buildPath(true, "/", getSyspars().getPublicCalendarRoot());
-    //userCalendarRootPath = "/" + getSyspars().getUserCalendarRoot();
+    publicCalendarRootPath = Util.buildPath(true, "/", getBasicSyspars().getPublicCalendarRoot());
+    //userCalendarRootPath = "/" + getBasicSyspars().getUserCalendarRoot();
   }
 
   /* (non-Javadoc)
@@ -402,7 +402,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     int pathLength = ss.length - 1;  // First element is empty string
 
     return (pathLength == 2) &&
-           (ss[1].equals(getSvc().getSystemProperties().getUserCalendarRoot()));
+           (ss[1].equals(getBasicSyspars().getUserCalendarRoot()));
   }
 
   /* (non-Javadoc)

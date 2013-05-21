@@ -24,7 +24,6 @@ import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.DirectoryInfo;
-import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calsvci.CalSvcI;
@@ -294,8 +293,6 @@ class Users extends CalSvcDb implements UsersI {
 
   private void initPrincipal(final BwPrincipal principal,
                              final CalSvc svc) throws CalFacadeException {
-    SystemProperties sys = getSvc().getSystemProperties();
-
     // Add preferences
     BwPreferences prefs = new BwPreferences();
 
@@ -305,13 +302,13 @@ class Users extends CalSvcDb implements UsersI {
       Util.buildPath(true,
                      getSvc().getPrincipalInfo().getCalendarHomePath(principal),
                      "/",
-                     sys.getUserDefaultCalendar()));
+                     getBasicSyspars().getUserDefaultCalendar()));
 
     // Add a default view for the calendar home
 
     BwView view = new BwView();
 
-    view.setName(sys.getDefaultUserViewName());
+    view.setName(getSyspars().getDefaultUserViewName());
 
     // Add default subscription to the user root.
     view.addCollectionPath(svc.getPrincipalInfo().getCalendarHomePath(principal));
@@ -320,7 +317,7 @@ class Users extends CalSvcDb implements UsersI {
     prefs.setPreferredView(view.getName());
 
     prefs.setPreferredViewPeriod("week");
-    prefs.setHour24(sys.getDefaultUserHour24());
+    prefs.setHour24(getSyspars().getDefaultUserHour24());
 
     prefs.setScheduleAutoRespond(principal.getKind() == WhoDefs.whoTypeResource);
 
@@ -346,7 +343,7 @@ class Users extends CalSvcDb implements UsersI {
 
   private String getPublicUserAccount() throws CalFacadeException {
     if (publicUserAccount == null) {
-      publicUserAccount = getSvc().getSystemProperties().getPublicUser();
+      publicUserAccount = getBasicSyspars().getPublicUser();
     }
 
     return publicUserAccount;

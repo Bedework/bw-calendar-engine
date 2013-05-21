@@ -39,6 +39,7 @@ import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.StartEndComponent;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeDupNameException;
@@ -47,6 +48,7 @@ import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calfacade.util.NotificationsInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.sysevents.NotificationException;
@@ -196,6 +198,8 @@ import java.util.TreeSet;
  * @author Mike Douglass   douglm  - rpi.edu
  */
 public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
+  public SystemProperties sysprops;
+
   /** Constructor
    *
    * @param chcb
@@ -736,8 +740,8 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
        whole period?
      */
 
-    RecurPeriods rp = RecurUtil.getPeriods(val, cb.getSyspars().getMaxYears(),
-                                           cb.getSyspars().getMaxInstances());
+    RecurPeriods rp = RecurUtil.getPeriods(val, getSysprops().getMaxYears(),
+                                           getSysprops().getMaxInstances());
 
     if (rp.instances.isEmpty()) {
       // No instances for an alleged recurring event.
@@ -770,7 +774,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       throwException(new CalFacadeException(t));
     } */
 
-    int maxInstances = cb.getSyspars().getMaxInstances();
+    int maxInstances = getSysprops().getMaxInstances();
 
     boolean dateOnly = val.getDtstart().getDateType();
 
@@ -2399,8 +2403,8 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
        whole period?
      */
 
-    RecurPeriods rp = RecurUtil.getPeriods(val, cb.getSyspars().getMaxYears(),
-                                           cb.getSyspars().getMaxInstances());
+    RecurPeriods rp = RecurUtil.getPeriods(val, getSysprops().getMaxYears(),
+                                           getSysprops().getMaxInstances());
 
     if (rp.instances.isEmpty()) {
       // No instances for an alleged recurring event.
@@ -2418,7 +2422,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       throwException(new CalFacadeException(t));
     } */
 
-    int maxInstances = cb.getSyspars().getMaxInstances();
+    int maxInstances = getSysprops().getMaxInstances();
 
     boolean dateOnly = val.getDtstart().getDateType();
 
@@ -3624,5 +3628,13 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
         put(rid, ev);
       }
     }
+  }
+
+  private SystemProperties getSysprops() throws CalFacadeException {
+    if (sysprops == null) {
+      sysprops = new CalSvcFactoryDefault().getSystemConfig().getSystemProperties(currentMode == guestMode);
+    }
+
+    return sysprops;
   }
 }

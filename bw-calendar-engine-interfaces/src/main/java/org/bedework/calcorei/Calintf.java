@@ -34,7 +34,7 @@ import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
-import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -86,7 +86,7 @@ public interface Calintf
    * @param sessionless true if this is a sessionless client
    * @throws CalFacadeException
    */
-  public void init(SystemProperties syspars,
+  public void init(BasicSystemProperties syspars,
                    PrincipalInfo principalInfo,
                    String url,
                    boolean publicAdmin,
@@ -210,14 +210,14 @@ public interface Calintf
    * @param val SystemProperties object
    * @throws CalFacadeException if not admin
    */
-  public void setSyspars(SystemProperties val) throws CalFacadeException;
+  public void setSyspars(BasicSystemProperties val) throws CalFacadeException;
 
   /** Get the current system pars
    *
    * @return SystemProperties object
    * @throws CalFacadeException if not admin
    */
-  public SystemProperties getSyspars() throws CalFacadeException;
+  public BasicSystemProperties getSyspars() throws CalFacadeException;
 
   /* ====================================================================
    *                   Notifications

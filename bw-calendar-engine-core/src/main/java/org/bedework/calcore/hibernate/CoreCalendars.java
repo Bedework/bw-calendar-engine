@@ -31,7 +31,7 @@ import org.bedework.calfacade.BwStats.CacheStats;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwLastMod;
-import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -416,7 +416,7 @@ public class CoreCalendars extends CalintfHelperHib
                                                      final boolean create,
                                                      final int access) throws CalFacadeException {
     String name;
-    SystemProperties sys = getSyspars();
+    BasicSystemProperties sys = getSyspars();
 
     if (calType == BwCalendar.calTypeInbox) {
       name = sys.getUserInbox();
@@ -1134,7 +1134,7 @@ public class CoreCalendars extends CalintfHelperHib
                                     final BwCalendar parent) throws CalFacadeException {
     // XXX This should be accessible to all implementations.
     if (!special) {
-      SystemProperties sys = getSyspars();
+      BasicSystemProperties sys = getSyspars();
 
       /* Ensure the name isn't reserved */
 

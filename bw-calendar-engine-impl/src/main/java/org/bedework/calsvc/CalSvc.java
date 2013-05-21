@@ -38,8 +38,10 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.configs.CardDavInfo;
+import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.SynchConfig;
 import org.bedework.calfacade.configs.SystemProperties;
@@ -62,6 +64,7 @@ import org.bedework.calsvc.scheduling.Scheduling;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.AdminI;
 import org.bedework.calsvci.CalSuitesI;
+import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI;
@@ -294,10 +297,10 @@ public class CalSvc extends CalSvcI {
     debug = getLogger().isDebugEnabled();
 
     try {
+      configs = new CalSvcFactoryDefault().getSystemConfig();
+
       open();
       beginTransaction();
-
-      configs = new Configurations(!principalInfo.getAuthPrincipal().getUnauthenticated());
 
       if (userGroups != null) {
         userGroups.init(getGroupsCallBack(), getCaPrefixes(),
@@ -313,7 +316,7 @@ public class CalSvc extends CalSvcI {
                          getUserDirProps(adminGroups.getConfigName()));
       }
 
-      SystemProperties sp = configs.getSystemProperties();
+      SystemProperties sp = getSystemProperties();
 
       if (tzserverUri == null) {
         tzserverUri = sp.getTzServeruri();
@@ -383,8 +386,13 @@ public class CalSvc extends CalSvcI {
   }
 
   @Override
+  public BasicSystemProperties getBasicSystemProperties() throws CalFacadeException {
+    return configs.getBasicSystemProperties();
+  }
+
+  @Override
   public SystemProperties getSystemProperties() throws CalFacadeException {
-    return configs.getSystemProperties();
+    return configs.getSystemProperties(!principalInfo.getAuthPrincipal().getUnauthenticated());
   }
 
   @Override
@@ -1296,7 +1304,7 @@ public class CalSvc extends CalSvcI {
                                               authPrincipal,
                                               maxAllowedPrivs);
 
-        cali.init(getSystemProperties(),
+        cali.init(getBasicSystemProperties(),
                   principalInfo,
                   null,
                   pars.getPublicAdmin(),
@@ -1569,7 +1577,7 @@ public class CalSvc extends CalSvcI {
 
     @Override
     public boolean getTimezonesByReference() throws CalFacadeException {
-      return configs.getSystemProperties().getTimezonesByReference();
+      return getSystemProperties().getTimezonesByReference();
     }
   }
 

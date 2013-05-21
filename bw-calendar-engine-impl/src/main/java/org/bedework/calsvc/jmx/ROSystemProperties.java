@@ -20,37 +20,24 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.SystemProperties;
 
-import edu.rpi.cmt.jmx.ConfBase;
-import edu.rpi.cmt.jmx.ConfigHolder;
-
 /**
  * @author douglm
  *
  */
-public class SystemConf extends ConfBase<SystemPropertiesImpl>
-        implements SystemConfMBean, ConfigHolder<SystemPropertiesImpl> {
-  /** Name of the property holding the location of the config data */
-  public static final String datauriPname = "org.bedework.bwengine.datauri";
+public final class ROSystemProperties implements SystemProperties {
+  /* Wrapper to make System properties read only. */
 
-  /**
-   * @param name
-   */
-  public SystemConf(final String name) {
-    super(getServiceName(name));
+  private SystemProperties cfg;
 
-    setConfigName(name);
-
-    setConfigPname(datauriPname);
-
-    //TzServerUtil.setTzConfigHolder(this);
+  private SystemProperties getConfig() {
+    return cfg;
   }
 
   /**
-   * @param name
-   * @return service name for the mbean with this name
+   * @param cfg
    */
-  public static String getServiceName(final String name) {
-    return "org.bedework.bwengine:service=" + name;
+  ROSystemProperties(final SystemProperties cfg) {
+    this.cfg = cfg;
   }
 
   /* ========================================================================
@@ -59,7 +46,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setTzid(final String val) {
-    getConfig().setTzid(val);
+    throw new RuntimeException("Immutable"); // getConfig().setTzid(val);
   }
 
   @Override
@@ -69,7 +56,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setTzServeruri(final String val) {
-    getConfig().setTzServeruri(val);
+    throw new RuntimeException("Immutable"); // getConfig().setTzServeruri(val);
   }
 
   @Override
@@ -79,7 +66,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setSystemid(final String val) {
-    getConfig().setSystemid(val);
+    throw new RuntimeException("Immutable"); // getConfig().setSystemid(val);
   }
 
   @Override
@@ -89,7 +76,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setDefaultChangesNotifications(final boolean val) {
-    getConfig().setDefaultChangesNotifications(val);
+    throw new RuntimeException("Immutable"); // getConfig().setDefaultChangesNotifications(val);
   }
 
   @Override
@@ -99,7 +86,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setRootUsers(final String val) {
-    getConfig().setRootUsers(val);
+    throw new RuntimeException("Immutable"); // getConfig().setRootUsers(val);
   }
 
   @Override
@@ -109,7 +96,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setDefaultUserViewName(final String val) {
-    getConfig().setDefaultUserViewName(val);
+    throw new RuntimeException("Immutable"); // getConfig().setDefaultUserViewName(val);
   }
 
   @Override
@@ -119,7 +106,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setDefaultUserHour24(final boolean val) {
-    getConfig().setDefaultUserHour24(val);
+    throw new RuntimeException("Immutable"); // getConfig().setDefaultUserHour24(val);
   }
 
   @Override
@@ -129,7 +116,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setMaxPublicDescriptionLength(final int val) {
-    getConfig().setMaxPublicDescriptionLength(val);
+    throw new RuntimeException("Immutable"); // getConfig().setMaxPublicDescriptionLength(val);
   }
 
   @Override
@@ -139,7 +126,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setMaxUserDescriptionLength(final int val) {
-    getConfig().setMaxUserDescriptionLength(val);
+    throw new RuntimeException("Immutable"); // getConfig().setMaxUserDescriptionLength(val);
   }
 
   @Override
@@ -149,7 +136,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setMaxUserEntitySize(final Integer val) {
-    getConfig().setMaxUserEntitySize(val);
+    throw new RuntimeException("Immutable"); // getConfig().setMaxUserEntitySize(val);
   }
 
   @Override
@@ -159,7 +146,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setDefaultUserQuota(final long val) {
-    getConfig().setDefaultUserQuota(val);
+    throw new RuntimeException("Immutable"); // getConfig().setDefaultUserQuota(val);
   }
 
   @Override
@@ -169,7 +156,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setMaxInstances(final Integer val) {
-    getConfig().setMaxInstances(val);
+    throw new RuntimeException("Immutable"); // getConfig().setMaxInstances(val);
   }
 
   @Override
@@ -179,7 +166,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setMaxAttendeesPerInstance(final Integer val) {
-    getConfig().setMaxAttendeesPerInstance(val);
+    throw new RuntimeException("Immutable"); // getConfig().setMaxAttendeesPerInstance(val);
   }
 
   @Override
@@ -189,7 +176,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setMinDateTime(final String val) {
-    getConfig().setMinDateTime(val);
+    throw new RuntimeException("Immutable"); // getConfig().setMinDateTime(val);
   }
 
   @Override
@@ -199,7 +186,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setMaxDateTime(final String val) {
-    getConfig().setMaxDateTime(val);
+    throw new RuntimeException("Immutable"); // getConfig().setMaxDateTime(val);
   }
 
   @Override
@@ -209,7 +196,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setDefaultFBPeriod(final Integer val) {
-    getConfig().setDefaultFBPeriod(val);
+    throw new RuntimeException("Immutable"); // getConfig().setDefaultFBPeriod(val);
   }
 
   @Override
@@ -219,7 +206,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setMaxFBPeriod(final Integer val) {
-    getConfig().setMaxFBPeriod(val);
+    throw new RuntimeException("Immutable"); // getConfig().setMaxFBPeriod(val);
   }
 
   @Override
@@ -229,7 +216,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setDefaultWebCalPeriod(final Integer val) {
-    getConfig().setDefaultWebCalPeriod(val);
+    throw new RuntimeException("Immutable"); // getConfig().setDefaultWebCalPeriod(val);
   }
 
   @Override
@@ -239,7 +226,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setMaxWebCalPeriod(final Integer val) {
-    getConfig().setMaxWebCalPeriod(val);
+    throw new RuntimeException("Immutable"); // getConfig().setMaxWebCalPeriod(val);
   }
 
   @Override
@@ -249,7 +236,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setAdminContact(final String val) {
-    getConfig().setAdminContact(val);
+    throw new RuntimeException("Immutable"); // getConfig().setAdminContact(val);
   }
 
   @Override
@@ -259,7 +246,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setIscheduleURI(final String val) {
-    getConfig().setIscheduleURI(val);
+    throw new RuntimeException("Immutable"); // getConfig().setIscheduleURI(val);
   }
 
   @Override
@@ -269,7 +256,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setFburlServiceURI(final String val) {
-    getConfig().setFburlServiceURI(val);
+    throw new RuntimeException("Immutable"); // getConfig().setFburlServiceURI(val);
   }
 
   @Override
@@ -283,7 +270,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
    */
   @Override
   public void setWebcalServiceURI(final String val) {
-    getConfig().setWebcalServiceURI(val);
+    throw new RuntimeException("Immutable"); // getConfig().setWebcalServiceURI(val);
   }
 
   /** get the web calendar service uri - null for no web calendar service
@@ -301,7 +288,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
    */
   @Override
   public void setCalSoapWsURI(final String val) {
-    getConfig().setCalSoapWsURI(val);
+    throw new RuntimeException("Immutable"); // getConfig().setCalSoapWsURI(val);
   }
 
   /** Get the calws soap web service uri - null for no service
@@ -319,7 +306,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
    */
   @Override
   public void setCalSoapWsWSDLURI(final String val) {
-    getConfig().setCalSoapWsWSDLURI(val);
+    throw new RuntimeException("Immutable"); // getConfig().setCalSoapWsWSDLURI(val);
   }
 
   @Override
@@ -329,7 +316,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setTimezonesByReference(final boolean val) {
-    getConfig().setTimezonesByReference(val);
+    throw new RuntimeException("Immutable"); // getConfig().setTimezonesByReference(val);
   }
 
   @Override
@@ -339,7 +326,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setDirectoryBrowsingDisallowed(final boolean val) {
-    getConfig().setDirectoryBrowsingDisallowed(val);
+    throw new RuntimeException("Immutable"); // getConfig().setDirectoryBrowsingDisallowed(val);
   }
 
   @Override
@@ -349,7 +336,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setMaxYears(final int val) {
-    getConfig().setMaxYears(val);
+    throw new RuntimeException("Immutable"); // getConfig().setMaxYears(val);
   }
 
   @Override
@@ -359,7 +346,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setUserauthClass(final String val) {
-    getConfig().setUserauthClass(val);
+    throw new RuntimeException("Immutable"); // getConfig().setUserauthClass(val);
   }
 
   @Override
@@ -369,7 +356,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setMailerClass(final String val) {
-    getConfig().setMailerClass(val);
+    throw new RuntimeException("Immutable"); // getConfig().setMailerClass(val);
   }
 
   /**
@@ -387,7 +374,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
    */
   @Override
   public void setAdmingroupsClass(final String val) {
-    getConfig().setAdmingroupsClass(val);
+    throw new RuntimeException("Immutable"); // getConfig().setAdmingroupsClass(val);
   }
 
   @Override
@@ -397,7 +384,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setUsergroupsClass(final String val) {
-    getConfig().setUsergroupsClass(val);
+    throw new RuntimeException("Immutable"); // getConfig().setUsergroupsClass(val);
   }
 
   @Override
@@ -407,7 +394,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setUseSolr(final boolean val) {
-    getConfig().setUseSolr(val);
+    throw new RuntimeException("Immutable"); // getConfig().setUseSolr(val);
   }
 
   @Override
@@ -417,7 +404,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setSolrURL(final String val) {
-    getConfig().setSolrURL(val);
+    throw new RuntimeException("Immutable"); // getConfig().setSolrURL(val);
   }
 
   @Override
@@ -427,7 +414,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setSolrCoreAdmin(final String val) {
-    getConfig().setSolrCoreAdmin(val);
+    throw new RuntimeException("Immutable"); // getConfig().setSolrCoreAdmin(val);
   }
 
   @Override
@@ -437,7 +424,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setSolrDefaultCore(final String val) {
-    getConfig().setSolrDefaultCore(val);
+    throw new RuntimeException("Immutable"); // getConfig().setSolrDefaultCore(val);
   }
 
   @Override
@@ -447,7 +434,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setLocaleList(final String val) {
-    getConfig().setLocaleList(val);
+    throw new RuntimeException("Immutable"); // getConfig().setLocaleList(val);
   }
 
   @Override
@@ -457,7 +444,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setEventregAdminToken(final String val) {
-    getConfig().setEventregAdminToken(val);
+    throw new RuntimeException("Immutable"); // getConfig().setEventregAdminToken(val);
   }
 
   @Override
@@ -467,7 +454,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public void setEventregUrl(final String val) {
-    getConfig().setEventregUrl(val);
+    throw new RuntimeException("Immutable"); // getConfig().setEventregUrl(val);
   }
 
   @Override
@@ -475,33 +462,8 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
     return getConfig().getEventregUrl();
   }
 
-  /* ========================================================================
-   * Operations
-   * ======================================================================== */
-
-  @Override
-  public String loadConfig() {
-    return loadConfig(SystemPropertiesImpl.class);
-  }
-
-  /** Save the configuration.
-   *
-   */
-  @Override
-  public void putConfig() {
-    saveConfig();
-  }
-
   @Override
   public SystemProperties cloneIt() {
-    return null;
+    return this;
   }
-
-  /* ====================================================================
-   *                   Private methods
-   * ==================================================================== */
-
-  /* ========================================================================
-   * Lifecycle
-   * ======================================================================== */
 }

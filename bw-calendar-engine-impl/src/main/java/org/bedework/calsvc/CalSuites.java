@@ -303,7 +303,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
   private String getResourcesPath(final BwCalSuite suite,
                                   final ResourceClass cl) throws CalFacadeException {
     if (cl == ResourceClass.global) {
-      return getSvc().getSystemProperties().getGlobalResourcesPath();
+      return getBasicSyspars().getGlobalResourcesPath();
     }
 
     BwPrincipal eventsOwner = getPrincipal(suite.getGroup().getOwnerHref());

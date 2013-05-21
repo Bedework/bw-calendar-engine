@@ -32,8 +32,7 @@ import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwUser;
-import org.bedework.calfacade.configs.SystemProperties;
-import org.bedework.calfacade.configs.SystemRoots;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwView;
@@ -65,7 +64,7 @@ import java.util.Map;
 public class DumpImpl extends CalSvcDb implements DumpIntf {
   DumpPrincipalInfo pinfo;
 
-  private SystemRoots sysRoots;
+  private BasicSystemProperties sysRoots;
 
   /* *
    * @param sysRoots
@@ -101,10 +100,10 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     Collection<BwCalendar> cols = new ArrayList<BwCalendar>();
 
     cols.add(getCal().getCalendar(Util.buildPath(true, "/",
-                                                 getSyspars().getPublicCalendarRoot()),
+                                                 getBasicSyspars().getPublicCalendarRoot()),
                               PrivilegeDefs.privAny, false));
     cols.add(getCal().getCalendar(Util.buildPath(true, "/",
-                                                 getSyspars().getUserCalendarRoot()),
+                                                 getBasicSyspars().getUserCalendarRoot()),
                               PrivilegeDefs.privAny, false));
 
     return cols.iterator();
@@ -273,9 +272,9 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     }
 
     @Override
-    public SystemProperties getSyspars() throws CalFacadeException {
+    public BasicSystemProperties getSyspars() throws CalFacadeException {
       //return svci.getSysparsHandler().get();
-      return dump.getSyspars();
+      return dump.getBasicSyspars();
     }
 
     void setPrincipal(final BwPrincipal principal) {

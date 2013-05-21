@@ -38,20 +38,9 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   /* The system id */
   private String systemid;
 
-  /* Default calendar names */
-  private String publicCalendarRoot;
-  private String userCalendarRoot;
-  private String userDefaultCalendar;
-  private String defaultNotificationsName;
-  private String defaultReferencesName;
-  private String userInbox;
-  private String userOutbox;
-
   private boolean defaultChangesNotifications;
 
   private String rootUsers;
-
-  private String publicUser;
 
   private String defaultUserViewName;
 
@@ -106,8 +95,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private boolean directoryBrowsingDisallowed;
 
-  private String indexRoot;
-
   private boolean useSolr;
 
   private String solrURL;
@@ -120,8 +107,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private String eventregAdminToken;
   private String eventregUrl;
-
-  private String globalResourcesPath;
 
   @Override
   public void setTzid(final String val) {
@@ -154,76 +139,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setPublicCalendarRoot(final String val) {
-    publicCalendarRoot = val;
-  }
-
-  @Override
-  public String getPublicCalendarRoot() {
-    return publicCalendarRoot;
-  }
-
-  @Override
-  public void setUserCalendarRoot(final String val) {
-    userCalendarRoot = val;
-  }
-
-  @Override
-  public String getUserCalendarRoot() {
-    return userCalendarRoot;
-  }
-
-  @Override
-  public void setUserDefaultCalendar(final String val) {
-    userDefaultCalendar = val;
-  }
-
-  @Override
-  public String getUserDefaultCalendar() {
-    return userDefaultCalendar;
-  }
-
-  @Override
-  public void setDefaultNotificationsName(final String val) {
-    defaultNotificationsName = val;
-  }
-
-  @Override
-  public String getDefaultNotificationsName() {
-    return defaultNotificationsName;
-  }
-
-  @Override
-  public void setUserInbox(final String val) {
-    userInbox = val;
-  }
-
-  @Override
-  public String getUserInbox() {
-    return userInbox;
-  }
-
-  @Override
-  public void setUserOutbox(final String val) {
-    userOutbox = val;
-  }
-
-  @Override
-  public String getUserOutbox() {
-    return userOutbox;
-  }
-
-  @Override
-  public void setDefaultReferencesName(final String val) {
-    defaultReferencesName = val;
-  }
-
-  @Override
-  public String getDefaultReferencesName() {
-    return defaultReferencesName;
-  }
-
-  @Override
   public void setDefaultChangesNotifications(final boolean val) {
     defaultChangesNotifications = val;
   }
@@ -241,16 +156,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   @Override
   public String getRootUsers() {
     return rootUsers;
-  }
-
-  @Override
-  public void setPublicUser(final String val) {
-    publicUser = val;
-  }
-
-  @Override
-  public String getPublicUser() {
-    return publicUser;
   }
 
   @Override
@@ -664,17 +569,7 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setIndexRoot(final String val) {
-    indexRoot = val;
-  }
-
-  @Override
-  public String getIndexRoot() {
-    return indexRoot;
-  }
-
-  @Override
-  public void setUseSolr(final Boolean val) {
+  public void setUseSolr(final boolean val) {
     useSolr = val;
   }
 
@@ -743,16 +638,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     return eventregUrl;
   }
 
-  @Override
-  public void setGlobalResourcesPath(final String val) {
-    globalResourcesPath = val;
-  }
-
-  @Override
-  public String getGlobalResourcesPath() {
-    return globalResourcesPath;
-  }
-
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */
@@ -771,18 +656,9 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     ts.append("systemid", getSystemid());
 
     ts.newLine();
-    ts.append("publicCalendarRoot", getPublicCalendarRoot());
-    ts.append("userCalendarRoot", getUserCalendarRoot());
-
-    ts.newLine();
-    ts.append("userDefaultCalendar", getUserDefaultCalendar());
-    ts.append("defaultNotificationsName", getDefaultNotificationsName());
-    ts.append("userInbox", getUserInbox());
-    ts.append("userOutbox", getUserOutbox());
 
     ts.newLine();
     ts.append("defaultUserViewName", getDefaultUserViewName());
-    ts.append("publicUser", getPublicUser());
 
     ts.newLine();
     ts.append("maxPublicDescriptionLength", getMaxPublicDescriptionLength());
@@ -803,7 +679,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     ts.append("usergroupsClass", getUsergroupsClass());
 
     ts.newLine();
-    ts.append("indexRoot", getIndexRoot());
 
     ts.newLine();
     ts.append("localeList", getLocaleList());
@@ -822,17 +697,8 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     clone.setTzid(getTzid());
     clone.setSystemid(getSystemid());
 
-    clone.setPublicCalendarRoot(getPublicCalendarRoot());
-    clone.setUserCalendarRoot(getUserCalendarRoot());
-    clone.setUserDefaultCalendar(getUserDefaultCalendar());
-    clone.setUserInbox(getUserInbox());
-    clone.setUserOutbox(getUserOutbox());
-
     clone.setDefaultUserViewName(getDefaultUserViewName());
-    clone.setDefaultNotificationsName(getDefaultNotificationsName());
-    clone.setDefaultReferencesName(getDefaultReferencesName());
     clone.setDefaultUserHour24(getDefaultUserHour24());
-    clone.setPublicUser(getPublicUser());
 
     clone.setDefaultChangesNotifications(getDefaultChangesNotifications());
 
@@ -849,14 +715,12 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     clone.setAdmingroupsClass(getAdmingroupsClass());
     clone.setUsergroupsClass(getUsergroupsClass());
 
-    clone.setIndexRoot(getIndexRoot());
     clone.setLocaleList(getLocaleList());
     clone.setRootUsers(getRootUsers());
 
     clone.setLocaleList(getLocaleList());
     clone.setEventregAdminToken(getEventregAdminToken());
     clone.setEventregUrl(getEventregUrl());
-    clone.setGlobalResourcesPath(getGlobalResourcesPath());
 
     return clone;
   }

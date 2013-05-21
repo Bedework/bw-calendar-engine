@@ -25,10 +25,10 @@ import org.bedework.calfacade.BwPrincipalInfo.BooleanPrincipalProperty;
 import org.bedework.calfacade.BwPrincipalInfo.IntPrincipalProperty;
 import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.DirectoryInfo;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.DirConfigProperties;
-import org.bedework.calfacade.configs.SystemRoots;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calsvci.CalSvcFactoryDefault;
@@ -73,7 +73,7 @@ import javax.xml.namespace.QName;
 public abstract class AbstractDirImpl implements Directories {
   protected boolean debug;
 
-  private static SystemRoots sysRoots;
+  private static BasicSystemProperties sysRoots;
   private CalAddrPrefixes caPrefixes;
   private CardDavInfo authCdinfo;
   private CardDavInfo unauthCdinfo;
@@ -197,7 +197,7 @@ public abstract class AbstractDirImpl implements Directories {
   @Override
   public DirectoryInfo getDirectoryInfo() throws CalFacadeException {
     DirectoryInfo info = new DirectoryInfo();
-    SystemRoots sr = getSystemRoots();
+    BasicSystemProperties sr = getSystemRoots();
 
     info.setPrincipalRoot(sr.getPrincipalRoot());
     info.setUserPrincipalRoot(sr.getUserPrincipalRoot());
@@ -790,12 +790,12 @@ public abstract class AbstractDirImpl implements Directories {
     return dirProps;
   }
 
-  protected SystemRoots getSystemRoots() throws CalFacadeException {
+  protected BasicSystemProperties getSystemRoots() throws CalFacadeException {
     if (sysRoots != null) {
       return sysRoots;
     }
 
-    sysRoots = new CalSvcFactoryDefault().getSystemConfig().getSystemRoots();
+    sysRoots = new CalSvcFactoryDefault().getSystemConfig().getBasicSystemProperties();
 
     return sysRoots;
   }

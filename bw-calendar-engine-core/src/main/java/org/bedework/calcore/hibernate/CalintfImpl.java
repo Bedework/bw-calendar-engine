@@ -60,7 +60,7 @@ import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
-import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
@@ -187,7 +187,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
    * ==================================================================== */
 
   @Override
-  public void init(final SystemProperties syspars,
+  public void init(final BasicSystemProperties syspars,
                    final PrincipalInfo principalInfo,
                    final String url,
                    final boolean publicAdmin,
@@ -293,7 +293,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     }
 
     @Override
-    public SystemProperties getSyspars() throws CalFacadeException {
+    public BasicSystemProperties getSyspars() throws CalFacadeException {
       return intf.getSyspars();
     }
 

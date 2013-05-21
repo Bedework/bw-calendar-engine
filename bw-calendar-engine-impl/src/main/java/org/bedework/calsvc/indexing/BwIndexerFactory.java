@@ -18,8 +18,10 @@
 */
 package org.bedework.calsvc.indexing;
 
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calsvci.CalSvcFactoryDefault;
 
 import edu.rpi.cct.misc.indexing.IndexLuceneImpl;
 import edu.rpi.sss.util.Util;
@@ -34,6 +36,8 @@ import java.io.File;
  *
  */
 public class BwIndexerFactory {
+  private static BasicSystemProperties basicProps;
+
   /* No instantiation
    */
   private BwIndexerFactory() {
@@ -66,7 +70,7 @@ public class BwIndexerFactory {
 
     return getIndexer(publick, principal, writeable,
                       syspars,
-                      getIndexPath(syspars.getIndexRoot(),
+                      getIndexPath(getBasicProps().getIndexRoot(),
                                    BwIndexLuceneDefs.currentIndexname),
                       null);
   }
@@ -102,12 +106,12 @@ public class BwIndexerFactory {
       }
 
       if (publick) {
-        suffix = syspars.getPublicCalendarRoot();
+        suffix = getBasicProps().getPublicCalendarRoot();
       } else if (principal == null) {
         throw new CalFacadeException(CalFacadeException.notIndexPrincipal,
                                      "null");
       } else {
-        suffix = Util.buildPath(true, "/", syspars.getUserCalendarRoot(), "/", principal);
+        suffix = Util.buildPath(true, "/", getBasicProps().getUserCalendarRoot(), "/", principal);
       }
 
       String path = getIndexPath(indexRoot, suffix);
@@ -150,5 +154,13 @@ public class BwIndexerFactory {
     }
 
     return Util.buildPath(true, dataPrefix, "/", p);
+  }
+
+  private static BasicSystemProperties getBasicProps() throws CalFacadeException {
+    if (basicProps == null) {
+      basicProps = new CalSvcFactoryDefault().getSystemConfig().getBasicSystemProperties();
+    }
+
+    return basicProps;
   }
 }
