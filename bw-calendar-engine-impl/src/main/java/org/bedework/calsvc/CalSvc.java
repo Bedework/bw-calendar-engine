@@ -242,21 +242,6 @@ public class CalSvc extends CalSvcI {
   private static CardDavInfo authCdinfo;
   private static CardDavInfo unauthCdinfo;
 
-  private CalAddrPrefixes getCaPrefixes() throws CalFacadeException {
-    if (caPrefixes != null) {
-      return caPrefixes;
-    }
-
-    try {
-      caPrefixes = (CalAddrPrefixes)CalOptionsFactory.getOptions().getGlobalProperty("caladdrPrefixes");
-    } catch (Throwable t) {
-      error(t);
-      return null;
-    }
-
-    return caPrefixes;
-  }
-
   private CardDavInfo getCardDavInfo(final boolean auth) throws CalFacadeException {
     try {
       if (auth) {
@@ -303,14 +288,16 @@ public class CalSvc extends CalSvcI {
       beginTransaction();
 
       if (userGroups != null) {
-        userGroups.init(getGroupsCallBack(), getCaPrefixes(),
+        userGroups.init(getGroupsCallBack(),
+                        getBasicSystemProperties().getCalAddrPrefixes(),
                         getCardDavInfo(true),
                         getCardDavInfo(false),
                         getUserDirProps(userGroups.getConfigName()));
       }
 
       if (adminGroups != null) {
-        adminGroups.init(getGroupsCallBack(), getCaPrefixes(),
+        adminGroups.init(getGroupsCallBack(),
+                         getBasicSystemProperties().getCalAddrPrefixes(),
                          getCardDavInfo(true),
                          getCardDavInfo(false),
                          getUserDirProps(adminGroups.getConfigName()));
@@ -859,7 +846,8 @@ public class CalSvc extends CalSvcI {
 
     try {
       userGroups = (Directories)CalFacadeUtil.getObject(getSystemProperties().getUsergroupsClass(), Directories.class);
-      userGroups.init(getGroupsCallBack(), getCaPrefixes(),
+      userGroups.init(getGroupsCallBack(),
+                      getBasicSystemProperties().getCalAddrPrefixes(),
                       getCardDavInfo(true),
                       getCardDavInfo(false),
                       getUserDirProps(userGroups.getConfigName()));
@@ -913,7 +901,8 @@ public class CalSvc extends CalSvcI {
 
     try {
       adminGroups = (Directories)CalFacadeUtil.getObject(getSystemProperties().getAdmingroupsClass(), Directories.class);
-      adminGroups.init(getGroupsCallBack(), getCaPrefixes(),
+      adminGroups.init(getGroupsCallBack(),
+                       getBasicSystemProperties().getCalAddrPrefixes(),
                        getCardDavInfo(true),
                        getCardDavInfo(false),
                        getAdminDirProps(adminGroups.getConfigName()));
@@ -933,7 +922,7 @@ public class CalSvc extends CalSvcI {
     if (categoriesHandler == null) {
       categoriesHandler = new EventPropertiesImpl<BwCategory>(this);
       categoriesHandler.init(BwCategory.class.getName(),
-                    pars.getAdminCanEditAllPublicCategories());
+                             pars.getAdminCanEditAllPublicCategories());
       handlers.add((CalSvcDb)categoriesHandler);
     }
 
@@ -965,7 +954,7 @@ public class CalSvc extends CalSvcI {
     if (contactsHandler == null) {
       contactsHandler = new EventPropertiesImpl<BwContact>(this);
       contactsHandler.init(BwContact.class.getName(),
-                  pars.getAdminCanEditAllPublicContacts());
+                           pars.getAdminCanEditAllPublicContacts());
       handlers.add((CalSvcDb)contactsHandler);
     }
 

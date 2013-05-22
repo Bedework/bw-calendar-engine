@@ -19,6 +19,7 @@
 package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.configs.CalAddrPrefixes;
 
 import edu.rpi.cmt.config.ConfInfo;
 import edu.rpi.cmt.config.ConfigBase;
@@ -60,6 +61,8 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
   private String publicUser;
 
   private String globalResourcesPath;
+
+  private CalAddrPrefixes calAddrPrefixes;
 
   @Override
   public void setPrincipalRoot(final String val) {
@@ -246,9 +249,18 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
   }
 
   @Override
-  @MBeanInfo("The global resources path")
   public String getGlobalResourcesPath() {
     return globalResourcesPath;
+  }
+
+  @Override
+  public void setCalAddrPrefixes(final CalAddrPrefixes val) {
+    calAddrPrefixes = val;
+  }
+
+  @Override
+  public CalAddrPrefixes getCalAddrPrefixes() {
+    return calAddrPrefixes;
   }
 
   @Override
@@ -270,6 +282,8 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
 
     ts.newLine();
     ts.append("publicUser", getPublicUser());
+
+    ts.append("calAddrPrefixes", getCalAddrPrefixes());
 
     ts.newLine();
     ts.append("indexRoot", getIndexRoot());
@@ -295,10 +309,11 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
     clone.setDefaultReferencesName(getDefaultReferencesName());
     clone.setPublicUser(getPublicUser());
 
-
     clone.setIndexRoot(getIndexRoot());
 
     clone.setGlobalResourcesPath(getGlobalResourcesPath());
+
+    clone.setCalAddrPrefixes(getCalAddrPrefixes());
 
     return clone;
   }

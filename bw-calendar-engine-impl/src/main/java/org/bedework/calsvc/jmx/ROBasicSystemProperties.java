@@ -19,6 +19,7 @@
 package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.configs.CalAddrPrefixes;
 
 /**
  * @author douglm
@@ -222,5 +223,20 @@ public final class ROBasicSystemProperties implements BasicSystemProperties {
   @Override
   public String getGlobalResourcesPath() {
     return getConfig().getGlobalResourcesPath();
+  }
+
+  @Override
+  public void setCalAddrPrefixes(final CalAddrPrefixes val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public CalAddrPrefixes getCalAddrPrefixes() {
+    return getConfig().getCalAddrPrefixes();
+  }
+
+  @Override
+  public String toString() {
+    return getConfig().toString();
   }
 }
