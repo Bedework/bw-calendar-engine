@@ -18,64 +18,58 @@
 */
 package org.bedework.calfacade.configs;
 
+import edu.rpi.cmt.config.ConfInfo;
+import edu.rpi.cmt.jmx.MBeanInfo;
+
 import java.io.Serializable;
 
-/** Information to access carddav
+/** Information to access the synch engine
  *
  * @author Mike Douglass
  */
-public class SynchConfig implements Serializable {
-  private String wsdlUri;
-
-  private String managerUri;
-
-  private String connectorId;
-
+@ConfInfo(elementName = "synch")
+public interface SynchConfig extends Serializable {
   /** Set the wsdlUri
    *
    * @param val    String
    */
-  public void setWsdlUri(final String val) {
-    wsdlUri = val;
-  }
+  void setWsdlUri(String val);
 
   /** get the wsdlUri
    *
    * @return String
    */
-  public String getWsdlUri() {
-    return wsdlUri;
-  }
+  @MBeanInfo("wsdlUri.")
+  String getWsdlUri();
 
   /** Set the managerUri
    *
    * @param val    String
    */
-  public void setManagerUri(final String val) {
-    managerUri = val;
-  }
+  void setManagerUri(String val);
 
   /** get the managerUri
    *
    * @return String
    */
-  public String getManagerUri() {
-    return managerUri;
-  }
+  @MBeanInfo("Manager uri.")
+  String getManagerUri();
 
-  /** Set the connectorId
+  /** Set the connectorId. This must match the bedework connector id in the
+   * synch engine config.
+   *
+   * <p>It identifies which connection we are using for communication with the
+   * synch engine.
    *
    * @param val    String
    */
-  public void setConnectorId(final String val) {
-    connectorId = val;
-  }
+  void setConnectorId(String val);
 
   /** Get the connectorId
    *
    * @return String
    */
-  public String getConnectorId() {
-    return connectorId;
-  }
+  @MBeanInfo("Identifies which connection we are using for communication with the" +
+  		" synch engine.")
+  String getConnectorId();
 }

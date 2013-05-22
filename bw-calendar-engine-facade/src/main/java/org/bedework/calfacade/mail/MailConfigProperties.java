@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,144 +18,96 @@
 */
 package org.bedework.calfacade.mail;
 
+import edu.rpi.cmt.config.ConfInfo;
+import edu.rpi.cmt.jmx.MBeanInfo;
+
 /** Properties for mailers.
  *
  * @author douglm
  *
  */
-public class MailConfigProperties {
-  private String moduleType;
-
-  private String protocol;
-
-  private String protocolClass;
-
-  private String serverIp;
-
-  private String serverPort;
-
-  private String from;
-
-  private String subject;
-
-  private boolean disabled;
-
-  /** Used by configuration tools
-   *
-   * @param val
-   */
-  public void setModuleType(String val)  {
-    moduleType  = val;
-  }
-
-  /**
-   * @return String
-   */
-  public String getModuleType()  {
-    return moduleType;
-  }
-
+@ConfInfo(elementName = "mailer")
+public interface MailConfigProperties {
   /** valid protocol for which an implementation exists, e.g "imap", "smtp"
    *
    * @param val
    */
-  public void setProtocol(String val)  {
-    protocol  = val;
-  }
+  void setProtocol(String val);
 
   /**
    * @return String
    */
-  public String getProtocol()  {
-    return protocol;
-  }
+  @MBeanInfo("valid protocol for which an implementation exists, e.g \"imap\", \"smtp\".")
+  String getProtocol();
 
   /** Implementation for the selected protocol
    *
    * @param val
    */
-  public void setProtocolClass(String val)  {
-    protocolClass  = val;
-  }
+  void setProtocolClass(String val);
 
   /**
    * @return String
    */
-  public String getProtocolClass()  {
-    return protocolClass;
-  }
+  @MBeanInfo("Implementation for the selected protocol.")
+  String getProtocolClass();
 
   /** Where we send it.
    *
    * @param val
    */
-  public void setServerIp(String val)  {
-    serverIp  = val;
-  }
+  void setServerUri(String val);
 
   /**
    * @return String
    */
-  public String getServerIp()  {
-    return serverIp;
-  }
+  @MBeanInfo("Location of server.")
+  String getServerUri();
 
   /**
    * @param val
    */
-  public void setServerPort(String val)  {
-    serverPort  = val;
-  }
+  void setServerPort(String val);
 
   /**
    * @return String
    */
-  public String getServerPort()  {
-    return serverPort;
-  }
+  @MBeanInfo("The server port.")
+  String getServerPort();
 
   /** Address we use when none supplied
    *
    * @param val
    */
-  public void setFrom(String val)  {
-    from = val;
-  }
+  void setFrom(String val);
 
   /**
    * @return String
    */
-  public String getFrom()  {
-    return from;
-  }
+  @MBeanInfo("Address we use when none supplied.")
+  String getFrom();
 
   /** Subject we use when none supplied
    *
    * @param val
    */
-  public void setSubject(String val)  {
-    subject = val;
-  }
+  void setSubject(String val);
 
   /**
    * @return String
    */
-  public String getSubject()  {
-    return subject;
-  }
+  @MBeanInfo("Subject we use when none supplied.")
+  String getSubject();
 
-  /** Allow mailer to be disabled
+  /** Allows mailer to be disabled
    *
    * @param val
    */
-  public void setDisabled(boolean val)  {
-    disabled = val;
-  }
+  void setDisabled(boolean val);
 
   /**
    * @return boolean
    */
-  public boolean getDisabled()  {
-    return disabled;
-  }
+  @MBeanInfo("Allows mailer to be disabled - mail will be discarded.")
+  boolean getDisabled();
 }

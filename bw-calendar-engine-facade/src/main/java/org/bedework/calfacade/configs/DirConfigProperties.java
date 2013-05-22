@@ -18,61 +18,50 @@
 */
 package org.bedework.calfacade.configs;
 
+import edu.rpi.cmt.jmx.MBeanInfo;
+
 import java.io.Serializable;
 
-/** This class defines the various properties we need to make a connection
- * and retrieve a group and user information via ldap.
+/** This interface defines the various common directory interface properties.
  *
  * @author Mike Douglass
  */
-public class DirConfigProperties implements Serializable {
-  private String moduleType;
-
-  private String domains;
-  private String defaultDomain;
-
-  /** Used by configuration tools
+public interface DirConfigProperties extends Serializable {
+  /** Mbean class name
    *
-   * @param val
+   * @param val    String
    */
-  public void setModuleType(final String val)  {
-    moduleType  = val;
-  }
+  void setMbeanClassName(final String val);
 
-  /**
+  /** Class name
+   *
    * @return String
    */
-  public String getModuleType()  {
-    return moduleType;
-  }
+  @MBeanInfo("The mbean class.")
+  String getMbeanClassName();
 
   /**
    * @param val
    */
-  public void setDomains(final String val)  {
-    domains = val;
-  }
+  public void setDomains(final String val);
 
   /** Comma separated list of domains - '*' should be treated as a wildcard
    *
    * @return String val
    */
-  public String getDomains()  {
-    return domains;
-  }
+  @MBeanInfo("Comma separated list of domains - '*' should be treated as a wildcard.")
+  public String getDomains();
 
   /**
    * @param val
    */
-  public void setDefaultDomain(final String val)  {
-    defaultDomain = val;
-  }
+  public void setDefaultDomain(final String val);
 
   /**
    *
    * @return String val
    */
-  public String getDefaultDomain()  {
-    return defaultDomain;
-  }
+  @MBeanInfo("defaultDomain can be left unspecified for no default or a single" +
+  		" exactly specified domain.")
+  public String getDefaultDomain();
 }

@@ -37,7 +37,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
   *
   * @param val    String
   */
- void setTzid(final String val);
+ void setTzid(String val);
 
  /** Get the default tzid.
   *
@@ -50,7 +50,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
   *
   * @param val    String
   */
- void setTzServeruri(final String val);
+ void setTzServeruri(String val);
 
  /** Get the timezones server uri
   *
@@ -63,7 +63,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
   *
   * @param val    String
   */
- void setSystemid(final String val);
+ void setSystemid(String val);
 
  /** Get the default systemid.
   *
@@ -76,7 +76,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val
    */
-  void setDefaultChangesNotifications(final boolean val);
+  void setDefaultChangesNotifications(boolean val);
 
   /** Get the defaultChangesNotifications
    *
@@ -90,7 +90,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    String list of accounts
    */
-  void setRootUsers(final String val);
+  void setRootUsers(String val);
 
   /** Get the root users
    *
@@ -104,7 +104,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    String
    */
-  void setDefaultUserViewName(final String val);
+  void setDefaultUserViewName(String val);
 
   /** Get the user default view name
    *
@@ -116,7 +116,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
   /**
    * @param val
    */
-  void setDefaultUserHour24(final boolean val);
+  void setDefaultUserHour24(boolean val);
 
   /**
    * @return bool
@@ -128,7 +128,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    int max
    */
-  public void setMaxPublicDescriptionLength(final int val);
+  public void setMaxPublicDescriptionLength(int val);
 
   /**
    *
@@ -141,7 +141,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    int max
    */
-  void setMaxUserDescriptionLength(final int val);
+  void setMaxUserDescriptionLength(int val);
 
   /**
    *
@@ -154,7 +154,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    long default
    */
-  void setDefaultUserQuota(final long val);
+  void setDefaultUserQuota(long val);
 
   /**
    *
@@ -167,7 +167,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    String
    */
-  void setCalSoapWsWSDLURI(final String val);
+  void setCalSoapWsWSDLURI(String val);
 
   /** Get the calws soap web service WSDL uri - null for no service
    *
@@ -179,7 +179,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
   /**
    * @param val boolean true if we are not including the full tz specification..
    */
-  void setTimezonesByReference(final boolean val);
+  void setTimezonesByReference(boolean val);
 
   /**
    * @return true if we are not including the full tz specification
@@ -191,7 +191,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    int max
    */
-  void setMaxYears(final int val);
+  void setMaxYears(int val);
 
   /** Get the max time span in years for a recurring event
    *
@@ -204,7 +204,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    String userauth class
    */
-  void setUserauthClass(final String val);
+  void setUserauthClass(String val);
 
   /**
    *
@@ -217,7 +217,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    String mailer class
    */
-  void setMailerClass(final String val);
+  void setMailerClass(String val);
 
   /**
    *
@@ -230,7 +230,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    String admingroups class
    */
-  void setAdmingroupsClass(final String val);
+  void setAdmingroupsClass(String val);
 
   /**
    *
@@ -243,7 +243,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    String usergroups class
    */
-  void setUsergroupsClass(final String val);
+  void setUsergroupsClass(String val);
 
   /**
    *
@@ -256,7 +256,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val
    */
-  void setUseSolr(final boolean val);
+  void setUseSolr(boolean val);
 
   /** Get the use solr flag
    *
@@ -269,7 +269,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val
    */
-  void setSolrURL(final String val);
+  void setSolrURL(String val);
 
   /** Get the solr url
    *
@@ -282,7 +282,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val
    */
-  void setSolrCoreAdmin(final String val);
+  void setSolrCoreAdmin(String val);
 
   /** Get the solr Root
    *
@@ -295,7 +295,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val
    */
-  void setSolrDefaultCore(final String val);
+  void setSolrDefaultCore(String val);
 
   /** Get the solr DefaultCore
    *
@@ -312,7 +312,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val    String supported locales
    */
-  void setLocaleList(final String val);
+  void setLocaleList(String val);
 
   /** Get the supported locales
    *
@@ -326,7 +326,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val
    */
-  void setEventregAdminToken(final String val);
+  void setEventregAdminToken(String val);
 
   /** Get the token for event reg admins
    *
@@ -339,7 +339,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
    *
    * @param val
    */
-  void setEventregUrl(final String val);
+  void setEventregUrl(String val);
 
   /** Get the url for event reg service
    *

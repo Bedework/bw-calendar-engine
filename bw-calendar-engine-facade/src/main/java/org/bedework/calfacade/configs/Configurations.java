@@ -19,6 +19,7 @@
 package org.bedework.calfacade.configs;
 
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.mail.MailConfigProperties;
 
 import java.io.Serializable;
 
@@ -26,17 +27,36 @@ import java.io.Serializable;
  *
  * @author Mike Douglass   douglm  rpi.edu
  */
-public abstract class Configurations implements Serializable {
+public interface Configurations extends Serializable {
   /**
    * @return basic system properties
    * @throws CalFacadeException
    */
-  public abstract BasicSystemProperties getBasicSystemProperties() throws CalFacadeException;
+  BasicSystemProperties getBasicSystemProperties() throws CalFacadeException;
 
   /**
    * @param auth
    * @return appropriate system properties
    * @throws CalFacadeException
    */
-  public abstract SystemProperties getSystemProperties(final boolean auth) throws CalFacadeException;
+  SystemProperties getSystemProperties(boolean auth) throws CalFacadeException;
+
+  /**
+   * @return mailer properties
+   * @throws CalFacadeException
+   */
+  MailConfigProperties getMailConfigProperties() throws CalFacadeException;
+
+  /**
+   * @return synch properties
+   * @throws CalFacadeException
+   */
+  SynchConfig getSynchConfig() throws CalFacadeException;
+
+  /**
+   * @param name
+   * @return directory interface properties
+   * @throws CalFacadeException
+   */
+  DirConfigProperties getDirConfig(String name) throws CalFacadeException;
 }
