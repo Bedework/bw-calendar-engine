@@ -39,18 +39,14 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.Configurations;
-import org.bedework.calfacade.configs.DirConfigProperties;
-import org.bedework.calfacade.configs.SynchConfig;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.env.CalOptionsFactory;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
-import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.security.GenKeysMBean;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -238,7 +234,6 @@ public class CalSvc extends CalSvcI {
 
   private transient Logger log;
 
-  private static CalAddrPrefixes caPrefixes;
   private static CardDavInfo authCdinfo;
   private static CardDavInfo unauthCdinfo;
 
@@ -292,7 +287,7 @@ public class CalSvc extends CalSvcI {
                         getBasicSystemProperties().getCalAddrPrefixes(),
                         getCardDavInfo(true),
                         getCardDavInfo(false),
-                        getUserDirProps(userGroups.getConfigName()));
+                        configs.getDirConfig(userGroups.getConfigName()));
       }
 
       if (adminGroups != null) {
@@ -300,7 +295,7 @@ public class CalSvc extends CalSvcI {
                          getBasicSystemProperties().getCalAddrPrefixes(),
                          getCardDavInfo(true),
                          getCardDavInfo(false),
-                         getUserDirProps(adminGroups.getConfigName()));
+                         configs.getDirConfig(adminGroups.getConfigName()));
       }
 
       SystemProperties sp = getSystemProperties();
@@ -647,8 +642,7 @@ public class CalSvc extends CalSvcI {
     try {
       MailerIntf mailer = (MailerIntf)CalFacadeUtil.getObject(getSystemProperties().getMailerClass(),
                                                    MailerIntf.class);
-      mailer.init((MailConfigProperties)CalOptionsFactory.getOptions().
-                  getGlobalProperty("module.mailer"));
+      mailer.init(configs.getMailConfigProperties());
 
       return mailer;
     } catch (Throwable t) {
@@ -786,8 +780,7 @@ public class CalSvc extends CalSvcI {
   public SynchI getSynch() throws CalFacadeException {
     if (synch == null) {
       try {
-        synch = new Synch(this, (SynchConfig)CalOptionsFactory.getOptions().
-                          getGlobalProperty("synch"));
+        synch = new Synch(this, configs.getSynchConfig());
         handlers.add((CalSvcDb)synch);
       } catch (Throwable t) {
         throw new CalFacadeException(t);
@@ -850,44 +843,12 @@ public class CalSvc extends CalSvcI {
                       getBasicSystemProperties().getCalAddrPrefixes(),
                       getCardDavInfo(true),
                       getCardDavInfo(false),
-                      getUserDirProps(userGroups.getConfigName()));
+                      configs.getDirConfig(userGroups.getConfigName()));
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
 
     return userGroups;
-  }
-
-  private DirConfigProperties adminDirProps;
-
-  private DirConfigProperties getAdminDirProps(final String name) throws CalFacadeException {
-    if (adminDirProps != null) {
-      return adminDirProps;
-    }
-
-    try {
-      adminDirProps = (DirConfigProperties)CalOptionsFactory.getOptions().getGlobalProperty(name);
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-
-    return adminDirProps;
-  }
-
-  private DirConfigProperties userDirProps;
-
-  private DirConfigProperties getUserDirProps(final String name) throws CalFacadeException {
-    if (userDirProps != null) {
-      return userDirProps;
-    }
-
-    try {
-      userDirProps = (DirConfigProperties)CalOptionsFactory.getOptions().getGlobalProperty(name);
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-
-    return userDirProps;
   }
 
   /* (non-Javadoc)
@@ -905,7 +866,7 @@ public class CalSvc extends CalSvcI {
                        getBasicSystemProperties().getCalAddrPrefixes(),
                        getCardDavInfo(true),
                        getCardDavInfo(false),
-                       getAdminDirProps(adminGroups.getConfigName()));
+                       configs.getDirConfig(adminGroups.getConfigName()));
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }

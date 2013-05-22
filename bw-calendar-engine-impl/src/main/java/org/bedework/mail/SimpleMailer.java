@@ -68,7 +68,7 @@ public class SimpleMailer implements MailerIntf {
     Properties props = new Properties();
 
     props.put("mail." + config.getProtocol() + ".class", config.getProtocolClass());
-    props.put("mail." + config.getProtocol() + ".host", config.getServerIp());
+    props.put("mail." + config.getProtocol() + ".host", config.getServerUri());
     if (config.getServerPort() != null) {
       props.put("mail." + config.getProtocol() + ".port",
                 config.getServerPort());
