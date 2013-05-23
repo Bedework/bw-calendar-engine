@@ -18,8 +18,6 @@
 */
 package org.bedework.calsvci;
 
-import org.bedework.calfacade.configs.DbConfig;
-
 import edu.rpi.sss.util.ToString;
 
 import java.io.Serializable;
@@ -71,8 +69,6 @@ public class CalSvcIPars implements Serializable {
    */
   private boolean webMode;
 
-  private DbConfig dbPars;
-
   /** Constructor for this object.
    *
    * @param authUser    String authenticated user of the application
@@ -85,7 +81,6 @@ public class CalSvcIPars implements Serializable {
    * @param adminCanEditAllPublicLocations
    * @param adminCanEditAllPublicContacts
    * @param sessionless true if this is a sessionless client
-   * @param dbPars
    */
   public CalSvcIPars(final String authUser,
                      final String user,
@@ -99,13 +94,12 @@ public class CalSvcIPars implements Serializable {
                      final boolean adminCanEditAllPublicLocations,
                      final boolean adminCanEditAllPublicContacts,
 
-                     final boolean sessionless,
-                     final DbConfig dbPars) {
+                     final boolean sessionless) {
     this(authUser, calSuite, publicAdmin, allowSuperUser, service,
          adminCanEditAllPublicCategories,
          adminCanEditAllPublicLocations,
          adminCanEditAllPublicContacts,
-         sessionless, dbPars);
+         sessionless);
 
     this.user = user;
   }
@@ -128,8 +122,7 @@ public class CalSvcIPars implements Serializable {
                            false,  // adminCanEditAllPublicCategories
                            false,  // adminCanEditAllPublicLocations
                            false,  // adminCanEditAllPublicSponsors
-                           false,  // sessionless
-                           null); // dbpars
+                           false); // sessionless
   }
 
   /** Return new pars for a system restore
@@ -143,11 +136,10 @@ public class CalSvcIPars implements Serializable {
                                     true,   // publicAdmin,
                                     true,   // superUser,
                                     true,   // service
-                                    true,  // adminCanEditAllPublicCategories
-                                    true,  // adminCanEditAllPublicLocations
-                                    true,  // adminCanEditAllPublicSponsors
-                                    false,    // sessionless
-                                    null); // dbpars
+                                    true,   // adminCanEditAllPublicCategories
+                                    true,   // adminCanEditAllPublicLocations
+                                    true,   // adminCanEditAllPublicSponsors
+                                    false); // sessionless
 
     p.forRestore = true;
 
@@ -170,7 +162,6 @@ public class CalSvcIPars implements Serializable {
                      final String runAsUser,
                      final String clientId,
                      final boolean allowSuperUser,
-                     final DbConfig dbPars,
                      final boolean service) {
     CalSvcIPars pars = new CalSvcIPars(authUser,
                                        runAsUser,
@@ -181,8 +172,7 @@ public class CalSvcIPars implements Serializable {
                                        false,  // adminCanEditAllPublicCategories
                                        false,  // adminCanEditAllPublicLocations
                                        false,  // adminCanEditAllPublicSponsors
-                                       true,    // sessionless
-                                       dbPars);
+                                       true);  // sessionless
 
     pars.setClientId(clientId);
 
@@ -200,7 +190,6 @@ public class CalSvcIPars implements Serializable {
    * @param adminCanEditAllPublicLocations
    * @param adminCanEditAllPublicContacts
    * @param sessionless true if this is a sessionless client
-   * @param dbPars
    */
   public CalSvcIPars(final String authUser,
                      final String calSuite,
@@ -213,8 +202,7 @@ public class CalSvcIPars implements Serializable {
                      final boolean adminCanEditAllPublicLocations,
                      final boolean adminCanEditAllPublicContacts,
 
-                     final boolean sessionless,
-                     final DbConfig dbPars) {
+                     final boolean sessionless) {
     this.authUser = authUser;
     this.calSuite = calSuite;
     this.publicAdmin = publicAdmin;
@@ -224,7 +212,6 @@ public class CalSvcIPars implements Serializable {
     this.adminCanEditAllPublicLocations = adminCanEditAllPublicLocations;
     this.adminCanEditAllPublicContacts = adminCanEditAllPublicContacts;
     this.sessionless = sessionless;
-    this.dbPars = dbPars;
   }
 
   /**
@@ -354,13 +341,6 @@ public class CalSvcIPars implements Serializable {
   }
 
   /**
-   * @return DbConfig
-   */
-  public DbConfig getDbPars() {
-    return dbPars;
-  }
-
-  /**
    * @return boolean true for guest
    */
   public boolean isGuest() {
@@ -396,8 +376,7 @@ public class CalSvcIPars implements Serializable {
                                        getAdminCanEditAllPublicCategories(),
                                        getAdminCanEditAllPublicLocations(),
                                        getAdminCanEditAllPublicContacts(),
-                                       getSessionsless(),
-                                       getDbPars());
+                                       getSessionsless());
 
     pars.setClientId(getClientId());
     pars.forRestore = getForRestore();
