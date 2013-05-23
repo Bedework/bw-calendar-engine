@@ -297,8 +297,7 @@ public class DumpPrincipal {
                                        true,  // adminCanEditAllPublicCategories
                                        true,  // adminCanEditAllPublicLocations
                                        true,  // adminCanEditAllPublicSponsors
-                                       false,    // sessionless
-                                       null); // dbpars
+                                       false);    // sessionless
     CalSvcI svci = new CalSvcFactoryDefault().getSvc(pars);
 
     return svci;
