@@ -278,7 +278,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
   @Override
   public String getConfigName() {
-    return "module.user-ldap-group";
+    return "user-ldap-group";
   }
 
   /* ====================================================================

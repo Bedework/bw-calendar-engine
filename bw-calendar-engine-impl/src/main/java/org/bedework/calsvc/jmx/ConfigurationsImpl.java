@@ -19,6 +19,7 @@
 package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.SynchConfig;
@@ -48,15 +49,23 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   private static String authSystemPropsNamePart = "authSystem";
 
+  private static String unauthCardDavInfoNamePart = "unauthCardDav";
+
+  private static String authCardDavInfoNamePart = "authCardDav";
+
   private static BasicSystemProperties basicProps;
 
-  private SystemProperties authSysProperties;
+  private static SystemProperties authSysProperties;
 
-  private SystemProperties unAuthSysProperties;
+  private static SystemProperties unAuthSysProperties;
 
-  private MailConfigProperties mailProps;
+  private static MailConfigProperties mailProps;
 
-  private SynchConfig synchProps;
+  private static SynchConfig synchProps;
+
+  private static CardDavInfo unauthCardDavInfo;
+
+  private static CardDavInfo authCardDavInfo;
 
   private Map<String, DirConfigProperties> dirConfigs = new HashMap<String, DirConfigProperties>();
 
@@ -112,6 +121,15 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
     return dirConfigs.get(name);
   }
 
+  @Override
+  public CardDavInfo getCardDavInfo(final boolean auth) throws CalFacadeException {
+    if (auth) {
+      return authCardDavInfo;
+    }
+
+    return unauthCardDavInfo;
+  }
+
   /**
    * @return name for unauthenticated system properties mbean
    * @throws CalFacadeException
@@ -147,28 +165,46 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
       loadConfig(BasicSystemPropertiesImpl.class);
       basicProps = new ROBasicSystemProperties(cfg);
+      saveConfig();
 
       /* ------------- System properties -------------------- */
       SystemConf conf = new SystemConf(unauthSystemPropsNamePart);
       register(getUnauthSyspropsName(), conf);
       conf.loadConfig();
+      conf.saveConfig();
 
       conf = new SystemConf(authSystemPropsNamePart);
       register(getAuthSyspropsName(), conf);
       conf.loadConfig();
+      conf.saveConfig();
 
       /* ------------- Mailer properties -------------------- */
       MailerConf mc = new MailerConf();
       register(new ObjectName(mc.getServiceName()), mc);
       mailProps = mc.getConfig();
+      mc.saveConfig();
 
       /* ------------- Synch properties -------------------- */
       SynchConf sc = new SynchConf();
       register(new ObjectName(sc.getServiceName()), sc);
       synchProps = sc.getConfig();
+      sc.saveConfig();
 
       /* ------------- Directory interface properties -------------------- */
       loadDirConfigs();
+
+      /* ------------- System properties -------------------- */
+      CardDavInfoConf ci = new CardDavInfoConf(unauthCardDavInfoNamePart);
+      register(new ObjectName(ci.getServiceName()), ci);
+      ci.loadConfig();
+      ci.saveConfig();
+      unauthCardDavInfo = ci.getConfig();
+
+      ci = new CardDavInfoConf(authCardDavInfoNamePart);
+      register(new ObjectName(ci.getServiceName()), ci);
+      ci.loadConfig();
+      ci.saveConfig();
+      authCardDavInfo = ci.getConfig();
 
       configured = true;
     } catch (Throwable t) {

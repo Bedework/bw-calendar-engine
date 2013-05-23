@@ -171,7 +171,7 @@ public class GroupsDbImpl extends AbstractDirImpl {
 
   @Override
   public String getConfigName() {
-    return "module.dir-config";
+    return "dir-config";
   }
 
   /* ====================================================================

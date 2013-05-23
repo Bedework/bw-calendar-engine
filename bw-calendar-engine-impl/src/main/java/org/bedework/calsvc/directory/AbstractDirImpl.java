@@ -28,6 +28,7 @@ import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.configs.CardDavInfo;
+import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
@@ -169,15 +170,12 @@ public abstract class AbstractDirImpl implements Directories {
 
   @Override
   public void init(final CallBack cb,
-                   final CalAddrPrefixes caPrefixes,
-                   final CardDavInfo authCdinfo,
-                   final CardDavInfo unauthCdinfo,
-                   final DirConfigProperties dirProps) throws CalFacadeException {
+                   final Configurations configs) throws CalFacadeException {
     this.cb = cb;
-    this.caPrefixes = caPrefixes;
-    this.authCdinfo = authCdinfo;
-    this.unauthCdinfo = unauthCdinfo;
-    this.dirProps = dirProps;
+    this.caPrefixes = configs.getBasicSystemProperties().getCalAddrPrefixes();
+    this.authCdinfo = configs.getCardDavInfo(true);
+    this.unauthCdinfo = configs.getCardDavInfo(false);;
+    this.dirProps = configs.getDirConfig(getConfigName());
 
     debug = getLogger().isDebugEnabled();
 
@@ -270,7 +268,7 @@ public abstract class AbstractDirImpl implements Directories {
     pi = new BwPrincipalInfo();
 
     try {
-      cdc = new BasicHttpClient(cdi.getHost(), cdi.getport(), null,
+      cdc = new BasicHttpClient(cdi.getHost(), cdi.getPort(), null,
                               15 * 1000);
 
       pi.setPropertiesFromVCard(getCard(cdc, cdi.getContextPath(), p));

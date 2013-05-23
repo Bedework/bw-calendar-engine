@@ -43,7 +43,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   public String getConfigName() {
     /* Use the same config as the default groups - we're only after principal info
      */
-    return "module.dir-config";
+    return "dir-config";
   }
 
   /* ===================================================================

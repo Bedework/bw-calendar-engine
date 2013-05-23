@@ -39,10 +39,8 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.SystemProperties;
-import org.bedework.calfacade.env.CalOptionsFactory;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
@@ -234,32 +232,6 @@ public class CalSvc extends CalSvcI {
 
   private transient Logger log;
 
-  private static CardDavInfo authCdinfo;
-  private static CardDavInfo unauthCdinfo;
-
-  private CardDavInfo getCardDavInfo(final boolean auth) throws CalFacadeException {
-    try {
-      if (auth) {
-        if (authCdinfo != null) {
-          return authCdinfo;
-        }
-
-        authCdinfo = (CardDavInfo)CalOptionsFactory.getOptions().getGlobalProperty("authCardDAVInfo");
-        return authCdinfo;
-      }
-
-      if (unauthCdinfo != null) {
-        return unauthCdinfo;
-      }
-
-      unauthCdinfo = (CardDavInfo)CalOptionsFactory.getOptions().getGlobalProperty("unauthCardDAVInfo");
-      return unauthCdinfo;
-    } catch (Throwable t) {
-      error(t);
-      return null;
-    }
-  }
-
   /* (non-Javadoc)
    * @see org.bedework.calsvci.CalSvcI#init(org.bedework.calsvci.CalSvcIPars)
    */
@@ -284,18 +256,12 @@ public class CalSvc extends CalSvcI {
 
       if (userGroups != null) {
         userGroups.init(getGroupsCallBack(),
-                        getBasicSystemProperties().getCalAddrPrefixes(),
-                        getCardDavInfo(true),
-                        getCardDavInfo(false),
-                        configs.getDirConfig(userGroups.getConfigName()));
+                        configs);
       }
 
       if (adminGroups != null) {
         adminGroups.init(getGroupsCallBack(),
-                         getBasicSystemProperties().getCalAddrPrefixes(),
-                         getCardDavInfo(true),
-                         getCardDavInfo(false),
-                         configs.getDirConfig(adminGroups.getConfigName()));
+                         configs);
       }
 
       SystemProperties sp = getSystemProperties();
@@ -840,10 +806,7 @@ public class CalSvc extends CalSvcI {
     try {
       userGroups = (Directories)CalFacadeUtil.getObject(getSystemProperties().getUsergroupsClass(), Directories.class);
       userGroups.init(getGroupsCallBack(),
-                      getBasicSystemProperties().getCalAddrPrefixes(),
-                      getCardDavInfo(true),
-                      getCardDavInfo(false),
-                      configs.getDirConfig(userGroups.getConfigName()));
+                      configs);
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -863,10 +826,7 @@ public class CalSvc extends CalSvcI {
     try {
       adminGroups = (Directories)CalFacadeUtil.getObject(getSystemProperties().getAdmingroupsClass(), Directories.class);
       adminGroups.init(getGroupsCallBack(),
-                       getBasicSystemProperties().getCalAddrPrefixes(),
-                       getCardDavInfo(true),
-                       getCardDavInfo(false),
-                       configs.getDirConfig(adminGroups.getConfigName()));
+                       configs);
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -1147,13 +1107,6 @@ public class CalSvc extends CalSvcI {
 
       try {
         Properties props = new Properties();
-        if (pars.getDbPars() != null) {
-          if (pars.getDbPars().getCachePrefix() != null) {
-            props.setProperty("cachePrefix", pars.getDbPars().getCachePrefix());
-            props.setProperty("cachingOn",
-                              String.valueOf(pars.getDbPars().getCachingOn()));
-          }
-        }
 
         cali.initDb(props);
         cali.open(pars.getWebMode(),
