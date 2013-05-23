@@ -59,4 +59,11 @@ public interface Configurations extends Serializable {
    * @throws CalFacadeException
    */
   DirConfigProperties getDirConfig(String name) throws CalFacadeException;
+
+  /**
+   * @param auth
+   * @return appropriate carddav info
+   * @throws CalFacadeException
+   */
+  CardDavInfo getCardDavInfo(boolean auth) throws CalFacadeException;
 }

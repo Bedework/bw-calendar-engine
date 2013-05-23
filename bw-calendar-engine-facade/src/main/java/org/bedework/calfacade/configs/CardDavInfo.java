@@ -18,82 +18,61 @@
 */
 package org.bedework.calfacade.configs;
 
+import edu.rpi.cmt.config.ConfInfo;
+
 import java.io.Serializable;
 
 /** Information to access carddav
  *
  * @author Mike Douglass
  */
-public class CardDavInfo implements Serializable {
-  private boolean auth;
-
-  private String host;
-
-  private int port;
-
-  private String contextPath;
-
+@ConfInfo(elementName = "carddav-info")
+public interface CardDavInfo extends Serializable {
   /** Require auth?
    *
    * @param val    boolean
    */
-  public void setAuth(final boolean val) {
-    auth = val;
-  }
+  public void setAuth(final boolean val);
 
   /** Require auth?
    *
    * @return boolean
    */
-  public boolean getAuth() {
-    return auth;
-  }
+  public boolean getAuth();
 
   /** Set the host
    *
    * @param val    String
    */
-  public void setHost(final String val) {
-    host = val;
-  }
+  public void setHost(final String val);
 
   /** get the host
    *
    * @return String
    */
-  public String getHost() {
-    return host;
-  }
+  public String getHost();
 
   /** Set the port
    *
    * @param val    int
    */
-  public void setPort(final int val) {
-    port = val;
-  }
+  public void setPort(final int val);
 
   /** get the v
    *
    * @return int
    */
-  public int getport() {
-    return port;
-  }
+  public int getPort();
 
   /** Set the contextPath
    *
    * @param val    String
    */
-  public void setContextPath(final String val) {
-    contextPath = val;
-  }
+  public void setContextPath(final String val);
 
   /** Get the contextPath
    *
    * @return String
    */
-  public String getContextPath() {
-    return contextPath;
-  }
+  public String getContextPath();
 }
