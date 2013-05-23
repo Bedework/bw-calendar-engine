@@ -32,7 +32,6 @@ import org.apache.log4j.Logger;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 /** Base Implementation of CalIntf which throws exceptions for most methods.
 *
@@ -66,20 +65,16 @@ public abstract class CalintfBase implements Calintf {
 
   private transient Logger log;
 
-  protected Properties props;
-
   protected List<SysEventBase> queuedNotifications = new ArrayList<SysEventBase>();
 
   /* ====================================================================
    *                   initialisation
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.Calintf#initDb(java.util.Properties)
+  /** Constructor
+   *
    */
-  @Override
-  public void initDb(final Properties props) throws CalFacadeException {
-    this.props = props;
+  public CalintfBase() {
     debug = getLogger().isDebugEnabled();
   }
 

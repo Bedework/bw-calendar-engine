@@ -49,7 +49,6 @@ import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 
 /** This is the low level interface to the calendar database.
  *
@@ -70,13 +69,6 @@ import java.util.Properties;
  */
 public interface Calintf
     extends CoreCalendarsI, CoreEventsI, CoreFilterDefsI, CoreUserAuthI {
-  /** Must be called before any db interactions.
-   *
-   * @param props       Properties used to control the underlying implementation
-   * @throws CalFacadeException
-   */
-  void initDb(Properties props) throws CalFacadeException;
-
   /** Must be called to initialize the new object.
    *
    * @param syspars
@@ -411,7 +403,7 @@ public interface Calintf
 
   /** Fetch the preferences for the given principal.
    *
-   * @param principal
+   * @param principalHref
    * @return the preferences for the principal
    * @throws CalFacadeException
    */

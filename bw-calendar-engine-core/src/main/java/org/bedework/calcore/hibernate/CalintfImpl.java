@@ -91,11 +91,13 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.Statistics;
 
+import java.io.StringReader;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -130,6 +132,8 @@ import java.util.TreeSet;
  * @author Mike Douglass   douglm@rpi.edu
  */
 public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
+  private static CoreConfigurations configs = CoreConfigurations.getConfigs();
+
   private static BwStats stats = new BwStats();
 
   private static CalintfInfo info = new CalintfInfo(
@@ -185,6 +189,12 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   /* ====================================================================
    *                   initialisation
    * ==================================================================== */
+
+  /** Constructor
+   *
+   */
+  public CalintfImpl() {
+  }
 
   @Override
   public void init(final BasicSystemProperties syspars,
@@ -1843,19 +1853,23 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
        * application resource hibernate.cfg.xml together with some run time values
        */
       try {
+        DbConfig dbConf = configs.getDbConfig();
         Configuration conf = new Configuration();
 
-        if (props != null) {
-          String cachePrefix = props.getProperty("cachePrefix");
-          if (cachePrefix != null) {
-            conf.setProperty("hibernate.cache.use_second_level_cache",
-                             props.getProperty("cachingOn"));
-            conf.setProperty("hibernate.cache.region_prefix",
-                             cachePrefix);
-          }
+        StringBuilder sb = new StringBuilder();
+
+        @SuppressWarnings("unchecked")
+        List<String> ps = dbConf.getHibernateProperties();
+
+        for (String p: ps) {
+          sb.append(p);
+          sb.append("\n");
         }
 
-        conf.configure();
+        Properties hprops = new Properties();
+        hprops.load(new StringReader(sb.toString()));
+
+        conf.addProperties(hprops).configure();
 
         sessionFactory = conf.buildSessionFactory();
 

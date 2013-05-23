@@ -87,8 +87,6 @@ import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase;
 
 import edu.rpi.cmt.access.Access;
-import edu.rpi.cmt.access.AccessException;
-import edu.rpi.cmt.access.AccessPrincipal;
 import edu.rpi.cmt.access.Ace;
 import edu.rpi.cmt.access.AceWho;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
@@ -105,12 +103,9 @@ import org.apache.log4j.Logger;
 import org.hibernate.exception.ConstraintViolationException;
 
 import java.sql.Timestamp;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -1106,9 +1101,6 @@ public class CalSvc extends CalSvcI {
       cali = CalintfFactory.getIntf(CalintfFactory.hibernateClass);
 
       try {
-        Properties props = new Properties();
-
-        cali.initDb(props);
         cali.open(pars.getWebMode(),
                   pars.getForRestore()); // Just for the user interactions
         cali.beginTransaction();
