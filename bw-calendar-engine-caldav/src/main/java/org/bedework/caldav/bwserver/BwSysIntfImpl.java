@@ -53,7 +53,7 @@ import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
-import org.bedework.calfacade.configs.DbConfig;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -162,7 +162,7 @@ public class BwSysIntfImpl implements SysIntf {
 
   private boolean calWs;
 
-  private SystemProperties syspars;
+  private BasicSystemProperties syspars;
 
   @Override
   public void init(final HttpServletRequest req,
@@ -236,9 +236,8 @@ public class BwSysIntfImpl implements SysIntf {
     }
 
     /* This must be a collection which is either a user home or below. */
-    SystemProperties sys = getSysPars();
 
-    String uhome = sys.getUserCalendarRoot();
+    String uhome = getSysPars().getUserCalendarRoot();
 
     if (uhome.endsWith("/")) {
       uhome = uhome.substring(0, uhome.length() - 1);
@@ -253,7 +252,7 @@ public class BwSysIntfImpl implements SysIntf {
     // First element should be "" for the leading "/"
 
     if ((els.length < 3) ||
-        !"".equals(els[0]) ||
+        (!"".equals(els[0])) ||
         (els[1] == null) ||
         (els[2] == null) ||
         (els[2].length() == 0)) {
@@ -479,7 +478,7 @@ public class BwSysIntfImpl implements SysIntf {
       }
 
       // SCHEDULE - just get home path and get default cal from user prefs.
-      SystemProperties sys = getSysPars();
+      BasicSystemProperties sys = getSysPars();
       BwCalendar cal = getSvci().getCalendarsHandler().getHome(p, true);
       if (cal == null) {
         return null;
@@ -2189,7 +2188,6 @@ public class BwSysIntfImpl implements SysIntf {
       /* account is what we authenticated with.
        * user, if non-null, is the user calendar we want to access.
        */
-      DbConfig dbconf = new DbConfig();
 
       boolean possibleSuperUser = "root".equals(account) || // allow SuperUser
                                   "admin".equals(account);
@@ -2205,7 +2203,6 @@ public class BwSysIntfImpl implements SysIntf {
                                                    runAsUser,
                                                    clientIdent,
                                                    possibleSuperUser,   // allow SuperUser
-                                         dbconf,
                                          service);
       svci = new CalSvcFactoryDefault().getSvc(pars);
 
@@ -2425,12 +2422,12 @@ public class BwSysIntfImpl implements SysIntf {
      * ==================================================================== */
 
     @Override
-	public boolean hasNext() {
+  public boolean hasNext() {
       return getIcIterator().hasNext();
     }
 
     @Override
-	public WdEntity next() {
+  public WdEntity next() {
       Object o = getIcIterator().next();
 
       if (!(o instanceof EventInfo)) {
@@ -2447,7 +2444,7 @@ public class BwSysIntfImpl implements SysIntf {
     }
 
     @Override
-	public void remove() {
+  public void remove() {
       throw new UnsupportedOperationException();
     }
 
@@ -2472,10 +2469,10 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  private SystemProperties getSysPars() throws WebdavException {
+  private BasicSystemProperties getSysPars() throws WebdavException {
     try {
       if (syspars == null) {
-        syspars = getSvci().getSystemProperties();
+        syspars = getSvci().getBasicSystemProperties();
       }
     } catch (Throwable t) {
       throw new WebdavException(t);
