@@ -29,7 +29,7 @@ import edu.rpi.cmt.jmx.ConfBase;
 public class MailerConf extends ConfBase<MailConfigPropertiesImpl>
         implements MailerConfMBean {
   /** Name of the property holding the location of the config data */
-  public static final String datauriPname = "org.bedework.bwengine.datauri";
+  public static final String confuriPname = "org.bedework.bwengine.confuri";
 
   /**
    * @param name
@@ -39,7 +39,7 @@ public class MailerConf extends ConfBase<MailConfigPropertiesImpl>
 
     setConfigName("mailer");
 
-    setConfigPname(datauriPname);
+    setConfigPname(confuriPname);
   }
 
   /**

@@ -30,7 +30,7 @@ import edu.rpi.cmt.jmx.ConfigHolder;
 public class SystemConf extends ConfBase<SystemPropertiesImpl>
         implements SystemConfMBean, ConfigHolder<SystemPropertiesImpl> {
   /** Name of the property holding the location of the config data */
-  public static final String datauriPname = "org.bedework.bwengine.datauri";
+  public static final String confuriPname = "org.bedework.bwengine.confuri";
 
   /**
    * @param name
@@ -40,7 +40,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
     setConfigName(name);
 
-    setConfigPname(datauriPname);
+    setConfigPname(confuriPname);
 
     //TzServerUtil.setTzConfigHolder(this);
   }

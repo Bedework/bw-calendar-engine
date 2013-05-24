@@ -78,7 +78,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
     /* This class acts as the mbean for the basic properties */
 
     setConfigName(basicPropsNamePart);
-    setConfigPname(SystemConf.datauriPname);
+    setConfigPname(SystemConf.confuriPname);
 
     try {
       checkMbeansInstalled();

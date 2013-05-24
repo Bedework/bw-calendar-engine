@@ -27,7 +27,7 @@ import edu.rpi.cmt.jmx.ConfBase;
 public class SynchConf extends ConfBase<SynchConfigImpl>
         implements SynchConfMBean {
   /** Name of the property holding the location of the config data */
-  public static final String datauriPname = "org.bedework.bwengine.datauri";
+  public static final String confuriPname = "org.bedework.bwengine.confuri";
 
   /**
    * @param name
@@ -37,7 +37,7 @@ public class SynchConf extends ConfBase<SynchConfigImpl>
 
     setConfigName("synch");
 
-    setConfigPname(datauriPname);
+    setConfigPname(confuriPname);
   }
 
   /**

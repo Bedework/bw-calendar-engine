@@ -32,7 +32,7 @@ import javax.management.ObjectName;
 @SuppressWarnings("rawtypes")
 public final class CoreConfigurations extends ConfBase {
   /* Name of the property holding the location of the config data */
-  static final String datauriPname = "org.bedework.bwcore.datauri";
+  static final String confuriPname = "org.bedework.bwcore.confuri";
 
   private static volatile Object lock = new Object();
 
@@ -70,7 +70,7 @@ public final class CoreConfigurations extends ConfBase {
     super("org.bedework.bwengine.core:service=Conf");
 
     try {
-      setConfigPname(datauriPname);
+      setConfigPname(confuriPname);
 
       loadConfigs();
     } catch (CalFacadeException cfe) {
