@@ -24,7 +24,6 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
-import org.bedework.calsvci.SchemaBuilder;
 import org.bedework.dumprestore.dump.Dump;
 import org.bedework.dumprestore.restore.Restore;
 import org.bedework.indexer.BwIndexerMBean;
@@ -39,7 +38,6 @@ import org.apache.geronimo.gbean.GBeanLifecycle;
 import org.apache.log4j.Logger;
 
 import java.util.List;
-import java.util.Properties;
 
 /**
  * @author douglm
@@ -85,13 +83,6 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
   private String account;
 
   private String appname = "dumpres";
-
-  private String delimiter;
-
-  /* Be safe - default to false */
-  private boolean export;
-
-  private String schemaOutFile;
 
   private String dataIn;
 
@@ -408,36 +399,6 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
   }
 
   @Override
-  public void setDelimiter(final String val) {
-    delimiter = val;
-  }
-
-  @Override
-  public String getDelimiter() {
-    return delimiter;
-  }
-
-  @Override
-  public void setExport(final boolean val) {
-    export = val;
-  }
-
-  @Override
-  public boolean getExport() {
-    return export;
-  }
-
-  @Override
-  public void setSchemaOutFile(final String val) {
-    schemaOutFile = val;
-  }
-
-  @Override
-  public String getSchemaOutFile() {
-    return schemaOutFile;
-  }
-
-  @Override
   public void setDataIn(final String val) {
     dataIn = val;
   }
@@ -475,32 +436,6 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
   @Override
   public String getTimezonesUri() {
     return timezonesUri;
-  }
-
-  @Override
-  public boolean testSchemaValid() {
-    return true;
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.BwDumpRestoreMBean#schema()
-   */
-  @Override
-  public String schema() {
-    String result = "Export complete: check logs";
-
-    try {
-      SchemaBuilder sb = new CalSvcFactoryDefault().getSchemaBuilder();
-
-      sb.execute(getProps(), getSchemaOutFile(), getExport(), getDelimiter());
-    } catch (Throwable t) {
-      error(t);
-      result = "Exception: " + t.getLocalizedMessage();
-    } finally {
-      export = false;
-    }
-
-    return result;
   }
 
   @Override
@@ -602,11 +537,6 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
     return dump.infoLines;
   }
 
-  @Override
-  public String dropTables() {
-    return "Not implemented";
-  }
-
   /* ========================================================================
    * Lifecycle
    * ======================================================================== */
@@ -653,10 +583,6 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
-
-  private Properties getProps() {
-    return new Properties();  // use hib properties when we maintian them - see carddav
-  }
 
   private BwIndexerMBean indexer;
 

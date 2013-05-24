@@ -52,39 +52,6 @@ public interface BwDumpRestoreMBean {
    */
   String getAppname();
 
-  /** Statement delimiter
-   *
-   * @param val
-   */
-  void setDelimiter(String val);
-
-  /**
-   * @return Statement delimiter
-   */
-  String getDelimiter();
-
-  /** Export to database?
-   *
-   * @param val
-   */
-  void setExport(boolean val);
-
-  /**
-   * @return true for export
-   */
-  boolean getExport();
-
-  /** Output file name - full path
-   *
-   * @param val
-   */
-  void setSchemaOutFile(String val);
-
-  /**
-   * @return Output file name - full path
-   */
-  String getSchemaOutFile();
-
   /** XML data input file name - full path. Used for data restore
    *
    * @param val
@@ -132,23 +99,6 @@ public interface BwDumpRestoreMBean {
    * Operations
    * ======================================================================== */
 
-  /** Return true if the schema appears to be valid
-   *
-   * @return true if it looks ok to us
-   */
-  boolean testSchemaValid();
-
-  /** Create or dump new schema. If export and drop set will try to drop tables.
-   * Export and create will create a schema in the db and export, drop, create
-   * will drop tables, and try to create  anew schema.
-   *
-   * The export, create and drop flags will all be reset to false after this,
-   * whatever the result. This avoids accidental damage to the db.
-   *
-   * @return Completion message
-   */
-  String schema();
-
   /** Starts a restore of the data from the DataIn path. Will not restore if
    * there appears to be any data already in the db.
    *
@@ -193,13 +143,6 @@ public interface BwDumpRestoreMBean {
    * @return Completion messages and stats
    */
   List<String> dumpStatus();
-
-  /** Try to drop all the tables. May get errors for a partial db or for an updated
-   * db.
-   *
-   * @return Completion message
-   */
-  String dropTables();
 
   /* ========================================================================
    * Lifecycle
