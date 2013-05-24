@@ -24,6 +24,9 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
+import org.bedework.calsvci.CalSvcFactoryDefault;
+import org.bedework.calsvci.CalSvcI;
+import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.InfoLines;
@@ -66,6 +69,8 @@ public class Restore implements Defs {
 
   private RestoreGlobals globals;
 
+  private String adminUserAccount = "admin";
+
   /* True if we are creating a clean system */
   private boolean newSystem;
 
@@ -80,6 +85,7 @@ public class Restore implements Defs {
    */
   public Restore() throws Throwable {
     globals = new RestoreGlobals();
+    globals.svci = getSvci();
   }
 
   /** ===================================================================
@@ -111,6 +117,8 @@ public class Restore implements Defs {
    * @throws Throwable
    */
   public void open() throws Throwable {
+    globals.svci.open();
+    globals.rintf = globals.svci.getRestoreHandler();
   }
 
   /**
@@ -436,6 +444,13 @@ public class Restore implements Defs {
     }
 
     System.exit(4);
+  }
+
+  private CalSvcI getSvci() throws Throwable {
+    CalSvcIPars pars = CalSvcIPars.getRestorePars(adminUserAccount);
+    CalSvcI svci = new CalSvcFactoryDefault().getSvc(pars);
+
+    return svci;
   }
 
   /**
