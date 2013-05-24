@@ -28,7 +28,7 @@ import edu.rpi.sss.util.ToString;
  * @param <T>
  */
 @ConfInfo(elementName = "bwcore-dbconfig")
-public abstract class DbConfig<T extends DbConfig>
+public class DbConfig<T extends DbConfig>
         extends HibernateConfigBase<T> {
 
   /** Add our stuff

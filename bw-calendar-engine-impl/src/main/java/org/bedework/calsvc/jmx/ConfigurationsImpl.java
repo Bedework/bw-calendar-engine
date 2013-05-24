@@ -181,14 +181,14 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       /* ------------- Mailer properties -------------------- */
       MailerConf mc = new MailerConf();
       register(new ObjectName(mc.getServiceName()), mc);
+      mc.loadConfig();
       mailProps = mc.getConfig();
-      mc.saveConfig();
 
       /* ------------- Synch properties -------------------- */
       SynchConf sc = new SynchConf();
       register(new ObjectName(sc.getServiceName()), sc);
+      sc.loadConfig();
       synchProps = sc.getConfig();
-      sc.saveConfig();
 
       /* ------------- Directory interface properties -------------------- */
       loadDirConfigs();

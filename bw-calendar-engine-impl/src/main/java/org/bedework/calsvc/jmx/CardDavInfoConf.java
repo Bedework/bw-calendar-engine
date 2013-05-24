@@ -47,7 +47,7 @@ public class CardDavInfoConf extends ConfBase<CardDavInfoImpl>
    * @return service name for the mbean with this name
    */
   public static String getServiceName(final String name) {
-    return "org.bedework.bwengine:service=carddavInfo:Type=" + name;
+    return "org.bedework.bwengine:service=carddavInfo,Type=" + name;
   }
 
   /* ========================================================================

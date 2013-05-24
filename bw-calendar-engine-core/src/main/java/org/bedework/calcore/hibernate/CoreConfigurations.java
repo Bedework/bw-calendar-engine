@@ -92,8 +92,8 @@ public final class CoreConfigurations extends ConfBase {
     /* ------------- Db properties -------------------- */
     DbConf dc = new DbConf();
     register(new ObjectName(dc.getServiceName()), dc);
+    dc.loadConfig();
     dbConfig = dc.getConfig();
-    dc.saveConfig();
   }
 
   void stop() {

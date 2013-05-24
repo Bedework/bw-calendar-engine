@@ -131,6 +131,8 @@ public class CalSvc extends CalSvcI {
    */
   private boolean creating;
 
+  private boolean authenticated;
+
   /* Information about current user */
   private PrincipalInfo principalInfo;
 
@@ -335,7 +337,7 @@ public class CalSvc extends CalSvcI {
 
   @Override
   public SystemProperties getSystemProperties() throws CalFacadeException {
-    return configs.getSystemProperties(!principalInfo.getAuthPrincipal().getUnauthenticated());
+    return configs.getSystemProperties(authenticated);
   }
 
   @Override
@@ -1144,9 +1146,11 @@ public class CalSvc extends CalSvcI {
         PrivilegeSet maxAllowedPrivs = null;
 
         if (pars.getForRestore()) {
+          authenticated = true;
           currentPrincipal = getDirectories().caladdrToPrincipal(pars.getAuthUser());
           authPrincipal = currentPrincipal;
         } else if (authenticatedUser == null) {
+          authenticated = false;
           // Unauthenticated use
           currentPrincipal = users.getUser(runAsUser);
           if (currentPrincipal == null) {
@@ -1158,6 +1162,7 @@ public class CalSvc extends CalSvcI {
           authPrincipal = currentPrincipal;
           maxAllowedPrivs = PrivilegeSet.readOnlyPrivileges;
         } else {
+          authenticated = true;
           currentPrincipal = users.getUser(authenticatedUser);
           if (currentPrincipal == null) {
             /* Add the user to the database. Presumably this is first logon
