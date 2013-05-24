@@ -1221,61 +1221,14 @@ class Events extends CalSvcDb implements EventsI {
   private Set<EventInfo> postProcess(final Collection<CoreEventInfo> ceis)
           throws CalFacadeException {
     TreeSet<EventInfo> eis = new TreeSet<EventInfo>();
-    Collection<CoreEventInfo> deleted = null;
-
-    /* XXX possibly not a great idea. We should probably retrieve the
-     * deleted events at the same time as we retrieve the desired set.
-     *
-     * This way we get too many.
-     */
-    if (!isGuest() && !isPublicAdmin()) {
-      BwCalendar cal = getCal().getSpecialCalendar(getPrincipal(), BwCalendar.calTypeDeleted,
-                                                   false,
-                                                   PrivilegeDefs.privRead).cal;
-
-      if (cal == null) {
-        // Not supported or never deleted anything
-        deleted = new ArrayList<CoreEventInfo>();
-      } else {
-        deleted = getCal().getDeletedProxies(cal);
-      }
-    }
-
-    //traceDeleted(deleted);
 
     for (CoreEventInfo cei: ceis) {
- //     if (!deleted.contains(cei)) {
-      if (!isDeleted(deleted, cei)) {
-        eis.add(postProcess(cei));
-      }
+      eis.add(postProcess(cei));
     }
 
     implantEntities(eis);
 
     return eis;
-  }
-
-  /* See if the event is in the deletedProxies set.
-   */
-  private boolean isDeleted(final Collection<CoreEventInfo> deletedProxies,
-                            final CoreEventInfo tryCei) {
-    if ((deletedProxies == null) || deletedProxies.isEmpty()) {
-      return false;
-    }
-
-    BwEvent tryEv = tryCei.getEvent();
-
-    for (CoreEventInfo cei: deletedProxies) {
-      BwEvent delEvent = cei.getEvent();
-      if (delEvent instanceof BwEventProxy) {
-        delEvent = ((BwEventProxy)delEvent).getTarget();
-      }
-      if (delEvent.equals(tryEv)) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   private void setDefaultAlarms(final EventInfo ei,
