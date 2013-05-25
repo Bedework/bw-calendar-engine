@@ -40,7 +40,7 @@ import javax.management.ObjectName;
  */
 public class BwHosts extends ConfBase implements BwHostsMBean {
   /* Name of the property holding the location of the config data */
-  private static final String datauriPname = "org.bedework.hosts.datauri";
+  private static final String confuriPname = "org.bedework.hosts.confuri";
 
   private static List<HostInfo> hostInfos = new ArrayList<HostInfo>();
 
@@ -50,7 +50,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
    */
   public BwHosts() {
     super("org.bedework.ischedule:service=Conf");
-    setConfigPname(datauriPname);
+    setConfigPname(confuriPname);
   }
 
   /* ================================= Operations =========================== */
