@@ -51,6 +51,8 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
   private String publicCalendarRoot;
   private String userCalendarRoot;
   private String userDefaultCalendar;
+  private String userDefaultTasksCalendar;
+  private String userDefaultPollsCalendar;
   private String defaultNotificationsName;
   private String defaultReferencesName;
   private String userInbox;
@@ -172,9 +174,31 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
   }
 
   @Override
-  @MBeanInfo("userDefaultCalendar - do not change")
+  @MBeanInfo("user default events calendar - do not change")
   public String getUserDefaultCalendar() {
     return userDefaultCalendar;
+  }
+
+  @Override
+  public void setUserDefaultTasksCalendar(final String val) {
+    userDefaultTasksCalendar = val;
+  }
+
+  @Override
+  @MBeanInfo("user default tasks calendar - do not change")
+  public String getUserDefaultTasksCalendar() {
+    return userDefaultTasksCalendar;
+  }
+
+  @Override
+  public void setUserDefaultPollsCalendar(final String val) {
+    userDefaultPollsCalendar = val;
+  }
+
+  @Override
+  @MBeanInfo("user default polls calendar - do not change")
+  public String getUserDefaultPollsCalendar() {
+    return userDefaultPollsCalendar;
   }
 
   @Override

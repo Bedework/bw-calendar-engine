@@ -158,6 +158,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   /** <em>List of events</em>  */
   public final static int calTypeEventList = 11;
 
+  /** <em>List of events</em>  */
+  public final static int calTypePoll = 12;
+
   /** There are limitations on what may be placed in each type of collection,
    *  e.g folders cannot hold entities, guids must be unique in calendars etc.
    *
@@ -192,6 +195,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     /** Only calendar entities here */
     public boolean onlyCalEntities;
 
+    /** Scheduling allowed here */
+    public boolean scheduling;
+
     /**
      * @param collectionType
      * @param special
@@ -202,6 +208,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
      * @param allowFreeBusy
      * @param canAlias
      * @param onlyCalEntities
+     * @param scheduling
      */
     public CollectionInfo(final int collectionType,
                           final boolean special,
@@ -211,7 +218,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
                           final boolean allowAnnotations,
                           final boolean allowFreeBusy,
                           final boolean canAlias,
-                          final boolean onlyCalEntities) {
+                          final boolean onlyCalEntities,
+                          final boolean scheduling) {
       this.collectionType = collectionType;
       this.special = special;
       this.childrenAllowed = childrenAllowed;
@@ -220,6 +228,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
       this.allowAnnotations = allowAnnotations;
       this.allowFreeBusy = allowFreeBusy;
       this.canAlias = canAlias;
+      this.onlyCalEntities = onlyCalEntities;
+      this.scheduling = scheduling;
     }
   }
 
@@ -228,30 +238,32 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /** The info */
   private static final CollectionInfo[] collectionInfo = {
-    new CollectionInfo(calTypeFolder,               f, T, f, f, f, T, T, f),
-    new CollectionInfo(calTypeCalendarCollection,   f, T, T, T, T, T, T, T),
-    new CollectionInfo(calTypeTrash,                T, f, T, f, T, f, f, f),
-    new CollectionInfo(calTypeDeleted,              T, f, T, f, T, f, f, f),
-    new CollectionInfo(calTypeBusy,                 T, f, T, T, T, T, f, T),
-    new CollectionInfo(calTypeInbox,                T, f, T, f, f, f, f, T),
-    new CollectionInfo(calTypeOutbox,               T, f, T, f, f, f, f, T),
-    new CollectionInfo(calTypeAlias,                f, f, f, f, f, T, T, f),
-    new CollectionInfo(calTypeExtSub,               f, T, T, T, f, T, T, T),
-    new CollectionInfo(calTypeResourceCollection,   f, T, f, f, f, f, f, f),
-    new CollectionInfo(calTypeNotifications,        T, f, f, f, f, f, f, f),
-    new CollectionInfo(calTypeEventList,            T, f, T, T, T, T, f, T),
+    new CollectionInfo(calTypeFolder,               f, T, f, f, f, T, T, f, f),
+    new CollectionInfo(calTypeCalendarCollection,   f, T, T, T, T, T, T, T, T),
+    new CollectionInfo(calTypeTrash,                T, f, T, f, T, f, f, f, f),
+    new CollectionInfo(calTypeDeleted,              T, f, T, f, T, f, f, f, f),
+    new CollectionInfo(calTypeBusy,                 T, f, T, T, T, T, f, T, f),
+    new CollectionInfo(calTypeInbox,                T, f, T, f, f, f, f, T, f),
+    new CollectionInfo(calTypeOutbox,               T, f, T, f, f, f, f, T, f),
+    new CollectionInfo(calTypeAlias,                f, f, f, f, f, T, T, f, f),
+    new CollectionInfo(calTypeExtSub,               f, T, T, T, f, T, T, T, f),
+    new CollectionInfo(calTypeResourceCollection,   f, T, f, f, f, f, f, f, f),
+    new CollectionInfo(calTypeNotifications,        T, f, f, f, f, f, f, f, f),
+    new CollectionInfo(calTypeEventList,            T, f, T, T, T, T, f, T, f),
+    new CollectionInfo(calTypePoll,                 f, T, T, T, T, T, T, T, T),
   };
-  /*                             ^                  1  2  3  4  5  6  7  8
-   *                             |                  |  |  |  |  |  |  |  |
-   *           collectionType ---+                  |  |  |  |  |  |  |  |
-   *                  special 1 --------------------+  |  |  |  |  |  |  |
-   *          childrenAllowed 2 ----------------------+|  |  |  |  |  |  |
-   *          entitiesAllowed 3 --------------------------+  |  |  |  |  |
-   *                uniqueKey 4 -----------------------------+  |  |  |  |
-   *         allowAnnotations 5 --------------------------------+  |  |  |
-   *            allowFreeBusy 6 -----------------------------------+  |  |
-   *                 canAlias 7 --------------------------------------+  |
-   *          onlyCalEntities 8 -----------------------------------------+
+  /*                             ^                  1  2  3  4  5  6  7  8  9
+   *                             |                  |  |  |  |  |  |  |  |  |
+   *           collectionType ---+                  |  |  |  |  |  |  |  |  |
+   *                  special 1 --------------------+  |  |  |  |  |  |  |  |
+   *          childrenAllowed 2 ----------------------+|  |  |  |  |  |  |  |
+   *          entitiesAllowed 3 --------------------------+  |  |  |  |  |  |
+   *                uniqueKey 4 -----------------------------+  |  |  |  |  |
+   *         allowAnnotations 5 --------------------------------+  |  |  |  |
+   *            allowFreeBusy 6 -----------------------------------+  |  |  |
+   *                 canAlias 7 --------------------------------------+  |  |
+   *          onlyCalEntities 8 -----------------------------------------+  |
+   *               scheduling 9 --------------------------------------------+
    */
 
 
@@ -307,6 +319,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /* Non - db field */
   private List<String> supportedComponents;
+
+  /* Non - db field */
+  private List<String> vpollSupportedComponents;
 
   /** Constructor
    */
@@ -981,6 +996,37 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return supportedComponents;
   }
 
+  /**
+   * @return the supported vpoll components
+   */
+  @NoDump
+  public List<String> getVpollSupportedComponents() {
+    if (vpollSupportedComponents == null) {
+      vpollSupportedComponents = new ArrayList<String>();
+
+      if ((getCalType() != calTypeCalendarCollection) &&
+          (getCalType() != calTypeInbox) &&
+          (getCalType() != calTypeOutbox)) {
+        return vpollSupportedComponents;
+      }
+
+      String slist = getQproperty(CaldavTags.vpollSupportedComponentSet);
+
+      if (slist == null) {
+        vpollSupportedComponents.add("VEVENT");
+        vpollSupportedComponents.add("VTODO");
+        vpollSupportedComponents.add("VAVAILABILITY");
+      } else {
+        String[] ss = slist.split(",");
+        for (String s: ss) {
+          vpollSupportedComponents.add(s);
+        }
+      }
+    }
+
+    return vpollSupportedComponents;
+  }
+
   /** Set the calendar color property
    *
    * @param val
@@ -1224,7 +1270,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     Set<BwProperty> bwprops = getProperties(eventListProperty);
 
     /* Put them in a list so I can get indexed elements */
-    List<BwProperty> props = new ArrayList();
+    List<BwProperty> props = new ArrayList<BwProperty>();
 
     if (bwprops != null) {
       props.addAll(bwprops);

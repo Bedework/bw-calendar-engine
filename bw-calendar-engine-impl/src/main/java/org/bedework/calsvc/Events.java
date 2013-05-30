@@ -186,14 +186,11 @@ class Events extends CalSvcDb implements EventsI {
 
       BwPreferences prefs = getSvc().getPrefsHandler().get();
       if (prefs != null) {
-        Set<String> catuids = prefs.getDefaultCategoryUids();
+        Collection<BwCategory> cats = getSvc().getCategoriesHandler().
+            getCached(prefs.getDefaultCategoryUids());
 
-        for (String uid: catuids) {
-          BwCategory cat = getSvc().getCategoriesHandler().get(uid);
-
-          if (cat != null) {
-            event.addCategory(cat);
-          }
+        for (BwCategory cat: cats) {
+          event.addCategory(cat);
         }
       }
 
@@ -212,13 +209,40 @@ class Events extends CalSvcDb implements EventsI {
       } else {
         setupSharableEntity(event, getPrincipal().getPrincipalRef());
 
-        if (ei.getNumAvailables() > 0) {
-          for (EventInfo aei: ei.getAvailable()) {
+        boolean avail = event.getEntityType() == IcalDefs.entityTypeVavailability;
+
+        if (avail && (ei.getNumContainedItems() > 0)) {
+          for (EventInfo aei: ei.getContainedItems()) {
             BwEvent av = aei.getEvent();
             av.setParent(event);
 
             setupSharableEntity(av,
                                 getPrincipal().getPrincipalRef());
+          }
+        } else if (ei.getNumContainedItems() > 0){
+          // vpoll
+          Set<Integer> pids = new TreeSet<Integer>();
+
+          for (EventInfo vei: ei.getContainedItems()) {
+            BwEvent v = vei.getEvent();
+
+            setupSharableEntity(v,
+                                getPrincipal().getPrincipalRef());
+            v.setDtstamps(getCurrentTimestamp());
+            v.setPollCandidate(true);
+
+            Integer pid = v.getPollItemId();
+            if (pid == null) {
+              throw new CalFacadeException("XXX - no poll item id");
+            }
+
+            if (pids.contains(pid)) {
+              throw new CalFacadeException("XXX - duplicate poll item id " + pid);
+            }
+
+            String name = event.getUid() + "-" + pid + ".ics";
+            v.setName(name);
+            event.addPollItemName(name);
           }
         }
       }
@@ -308,10 +332,22 @@ class Events extends CalSvcDb implements EventsI {
         uer = getCal().addEvent(event, overrides, scheduling, rollbackOnError);
       }
 
-      if (ei.getNumAvailables() != 0) {
-        for (EventInfo oei: ei.getAvailable()) {
+      boolean avail = event.getEntityType() == IcalDefs.entityTypeVavailability;
+
+      if (avail && (ei.getNumContainedItems() > 0)) {
+        for (EventInfo oei: ei.getContainedItems()) {
           oei.getEvent().setName(event.getName());
           UpdateEventResult auer = getCal().addEvent(oei.getEvent(), null,
+                                                     scheduling, rollbackOnError);
+          if (auer.errorCode != null) {
+            //?
+          }
+        }
+      } else if (ei.getNumContainedItems() > 0){
+        for (EventInfo vei: ei.getContainedItems()) {
+          BwEvent v = vei.getEvent();
+
+          UpdateEventResult auer = getCal().addEvent(v, null,
                                                      scheduling, rollbackOnError);
           if (auer.errorCode != null) {
             //?
@@ -384,7 +420,7 @@ class Events extends CalSvcDb implements EventsI {
 
       BwCalendar cal = getCols().get(event.getColPath());
 
-      if (cal.getCalType() == BwCalendar.calTypeCalendarCollection) {
+      if (cal.getCollectionInfo().scheduling) {
         organizerSchedulingObject = event.getOrganizerSchedulingObject();
         attendeeSchedulingObject = event.getAttendeeSchedulingObject();
       }
@@ -407,7 +443,7 @@ class Events extends CalSvcDb implements EventsI {
         for (EventInfo oei: ei.getOverrides()) {
           setScheduleState(oei.getEvent());
 
-          if ((cal.getCalType() == BwCalendar.calTypeCalendarCollection) &&
+          if (cal.getCollectionInfo().scheduling &&
                oei.getEvent().getAttendeeSchedulingObject()) {
             schedulingObject = true;
             attendeeSchedulingObject = true;
@@ -933,7 +969,7 @@ class Events extends CalSvcDb implements EventsI {
       return true;
     }
 
-    for (EventInfo aei: ei.getAvailable()) {
+    for (EventInfo aei: ei.getContainedItems()) {
       if (!getCal().deleteEvent(aei.getEvent(),
                                 scheduling,
                                 true).eventDeleted) {
@@ -1126,7 +1162,8 @@ class Events extends CalSvcDb implements EventsI {
     ev.setAttendeeSchedulingObject(false);
 
     if ((ev.getEntityType() != IcalDefs.entityTypeEvent) &&
-        (ev.getEntityType() != IcalDefs.entityTypeTodo)) {
+        (ev.getEntityType() != IcalDefs.entityTypeTodo) &&
+        (ev.getEntityType() != IcalDefs.entityTypeVpoll)) {
       // Not a possible scheduling entity
       return;
     }
@@ -1202,12 +1239,12 @@ class Events extends CalSvcDb implements EventsI {
 
     EventInfo ei = new EventInfo(ev, overrides);
 
-    /* Reconstruct if an available object. */
-    if (cei.getNumAvailables() > 0) {
-      for (CoreEventInfo acei: cei.getAvailable()) {
-        BwEvent av = acei.getEvent();
+    /* Reconstruct if any contained items. */
+    if (cei.getNumContainedItems() > 0) {
+      for (CoreEventInfo ccei: cei.getContainedItems()) {
+        BwEvent cv = ccei.getEvent();
 
-        ei.addAvailable(new EventInfo(av));
+        ei.addContainedItem(new EventInfo(cv));
       }
     }
 

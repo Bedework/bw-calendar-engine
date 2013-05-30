@@ -34,6 +34,7 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.component.VAlarm;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.component.VToDo;
 import net.fortuna.ical4j.model.parameter.Related;
 import net.fortuna.ical4j.model.property.Action;
@@ -80,6 +81,8 @@ public class VAlarmUtil extends IcalUtil {
         als = ((VEvent)val).getAlarms();
       } else if (val instanceof VToDo) {
         als = ((VToDo)val).getAlarms();
+      } else if (val instanceof VPoll) {
+        als = ((VPoll)val).getAlarms();
       } else {
         return;
       }

@@ -37,10 +37,16 @@
 			<artifactId>bw-caldav-server</artifactId>
 		</dependency>
 		<!-- Third Party Dependencies -->
+      <dependency>
+        <groupId>net.fortuna.ical4j</groupId>
+        <artifactId>ical4j</artifactId>
+      </dependency>
+      <!-- 
 		<dependency>
 			<groupId>org.mnode.ical4j</groupId>
 			<artifactId>ical4j</artifactId>
 		</dependency>
+     -->
 		<dependency>
 			<groupId>org.mnode.ical4j</groupId>
 			<artifactId>ical4j-vcard</artifactId>

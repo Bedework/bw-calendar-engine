@@ -426,6 +426,8 @@ public class CoreCalendars extends CalintfHelperHib
       name = sys.getDefaultNotificationsName();
     } else if (calType == BwCalendar.calTypeEventList) {
       name = sys.getDefaultReferencesName();
+    } else if (calType == BwCalendar.calTypePoll) {
+      name = sys.getUserDefaultPollsCalendar();
     } else {
       // Not supported
       return null;

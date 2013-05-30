@@ -463,6 +463,36 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
+  public void setVpollMaxItems(final Integer val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public Integer getVpollMaxItems() {
+    return getConfig().getVpollMaxItems();
+  }
+
+  @Override
+  public void setVpollMaxActive(final Integer val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public Integer getVpollMaxActive() {
+    return getConfig().getVpollMaxActive();
+  }
+
+  @Override
+  public void setVpollMaxVoters(final Integer val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public Integer getVpollMaxVoters() {
+    return getConfig().getVpollMaxVoters();
+  }
+
+  @Override
   public SystemProperties cloneIt() {
     return this;
   }

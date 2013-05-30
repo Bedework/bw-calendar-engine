@@ -206,7 +206,7 @@ public class ChangeTable implements Serializable {
 
     // Presumably an unknown property - assume multi?
 
-    ent = new ChangeTableEntry(this, true, uc, true, true);
+    ent = new ChangeTableEntry(this, true, uc);
     map.put(uc, ent);
     return ent;
   }
@@ -291,19 +291,22 @@ public class ChangeTable implements Serializable {
         break;
 
       case IcalDefs.entityTypeVavailability:
-        // XXX Fake this one for the moment
-        if (!ent.getEventProperty()) {
+        if (!ent.getVavailabilityProperty()) {
           continue;
         }
         break;
 
       case IcalDefs.entityTypeAvailable:
-        // XXX Fake this one for the moment
-        if (!ent.getEventProperty()) {
+        if (!ent.getAvailableProperty()) {
           continue;
         }
         break;
 
+      case IcalDefs.entityTypeVpoll:
+        if (!ent.getVpollProperty()) {
+          continue;
+        }
+        break;
 
       default:
         warn("Unsupported entity type: " + ev.getEntityType());
@@ -311,6 +314,15 @@ public class ChangeTable implements Serializable {
       }
 
       switch (ent.getIndex()) {
+      case ACCEPT_RESPONSE:
+        if (ev.getPollAcceptResponse() != null) {
+          ent.setDeleted(ev.getPollAcceptResponse());
+          if (update) {
+            ev.setPollAcceptResponse(null);
+          }
+        }
+        break;
+
       case CLASS:
         if (ev.getClassification() != null) {
           ent.setDeleted(ev.getClassification());
@@ -394,6 +406,33 @@ public class ChangeTable implements Serializable {
         }
         break;
 
+      case POLL_ITEM_ID:
+        if (ev.getPollItemId() != null) {
+          ent.setDeleted(ev.getPollItemId());
+          if (update) {
+            ev.setPollItemId(null);
+          }
+        }
+        break;
+
+      case POLL_MODE:
+        if (ev.getPollMode() != null) {
+          ent.setDeleted(ev.getPollMode());
+          if (update) {
+            ev.setPollMode(null);
+          }
+        }
+        break;
+
+      case POLL_PROPERTIES:
+        if (ev.getPollProperties() != null) {
+          ent.setDeleted(ev.getPollProperties());
+          if (update) {
+            ev.setPollProperties(null);
+          }
+        }
+        break;
+
       case PRIORITY:
         if (ev.getPriority() != null) {
           ent.setDeleted(ev.getPriority());
@@ -470,6 +509,97 @@ public class ChangeTable implements Serializable {
             ev.setTransparency(null);
           }
         }
+        break;
+
+      case ACTION:
+        break;
+      case BUSYTYPE:
+        break;
+      case COLLECTION:
+        break;
+      case COST:
+        break;
+      case DELETED:
+        break;
+      case DUE:
+        break;
+      case END_TYPE:
+        break;
+      case FREEBUSY:
+        break;
+      case HREF:
+        break;
+      case LANG:
+        break;
+      case REPEAT:
+        break;
+      case TRIGGER:
+        break;
+      case UNKNOWN_PROPERTY:
+        break;
+      case VALARM:
+        break;
+      case XBEDEWORK_COST:
+        break;
+
+        // following are multi
+      case ATTACH:
+        break;
+      case ATTENDEE:
+        break;
+      case CATEGORIES:
+        break;
+      case COMMENT:
+        break;
+      case CONTACT:
+        break;
+      case EXDATE:
+        break;
+      case EXRULE:
+        break;
+      case RDATE:
+        break;
+      case REQUEST_STATUS:
+        break;
+      case RESOURCES:
+        break;
+      case RRULE:
+        break;
+      case XPROP:
+        break;
+
+        // following are Timezones - ignored
+      case TZID:
+        break;
+      case TZIDPAR:
+        break;
+      case TZNAME:
+        break;
+      case TZOFFSETFROM:
+        break;
+      case TZOFFSETTO:
+        break;
+      case TZURL:
+        break;
+
+        // following are ignored
+      case CALSCALE:
+        break;
+      case CREATOR:
+        break;
+      case CTAG:
+        break;
+      case ENTITY_TYPE:
+        break;
+      case ETAG:
+        break;
+      case METHOD:
+        break;
+      case OWNER:
+        break;
+      case PRODID:
+        break;
+      case VERSION:
         break;
       }
     }
@@ -613,6 +743,116 @@ public class ChangeTable implements Serializable {
             ev.setRrules((Set)ent.getAddedValues());
           }
         }
+        break;
+      case ACCEPT_RESPONSE:
+        break;
+      case ACTION:
+        break;
+      case BUSYTYPE:
+        break;
+      case CALSCALE:
+        break;
+      case CLASS:
+        break;
+      case COLLECTION:
+        break;
+      case COMPLETED:
+        break;
+      case COST:
+        break;
+      case CREATED:
+        break;
+      case CREATOR:
+        break;
+      case CTAG:
+        break;
+      case DELETED:
+        break;
+      case DESCRIPTION:
+        break;
+      case DTEND:
+        break;
+      case DTSTAMP:
+        break;
+      case DTSTART:
+        break;
+      case DUE:
+        break;
+      case DURATION:
+        break;
+      case END_TYPE:
+        break;
+      case ENTITY_TYPE:
+        break;
+      case ETAG:
+        break;
+      case FREEBUSY:
+        break;
+      case GEO:
+        break;
+      case HREF:
+        break;
+      case LANG:
+        break;
+      case LAST_MODIFIED:
+        break;
+      case LOCATION:
+        break;
+      case METHOD:
+        break;
+      case ORGANIZER:
+        break;
+      case OWNER:
+        break;
+      case PERCENT_COMPLETE:
+        break;
+      case POLL_ITEM_ID:
+        break;
+      case POLL_MODE:
+        break;
+      case POLL_PROPERTIES:
+        break;
+      case PRIORITY:
+        break;
+      case PRODID:
+        break;
+      case RECURRENCE_ID:
+        break;
+      case REPEAT:
+        break;
+      case SEQUENCE:
+        break;
+      case STATUS:
+        break;
+      case SUMMARY:
+        break;
+      case TRANSP:
+        break;
+      case TRIGGER:
+        break;
+      case TZID:
+        break;
+      case TZIDPAR:
+        break;
+      case TZNAME:
+        break;
+      case TZOFFSETFROM:
+        break;
+      case TZOFFSETTO:
+        break;
+      case TZURL:
+        break;
+      case UID:
+        break;
+      case UNKNOWN_PROPERTY:
+        break;
+      case URL:
+        break;
+      case VERSION:
+        break;
+      case XBEDEWORK_COST:
+        break;
+      default:
         break;
       }
     }

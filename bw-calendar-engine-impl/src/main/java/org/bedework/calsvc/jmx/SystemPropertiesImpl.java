@@ -108,6 +108,10 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   private String eventregAdminToken;
   private String eventregUrl;
 
+  private Integer vpollMaxItems;
+  private Integer vpollMaxActive;
+  private Integer vpollMaxVoters;
+
   @Override
   public void setTzid(final String val) {
     tzid = val;
@@ -638,6 +642,36 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     return eventregUrl;
   }
 
+  @Override
+  public void setVpollMaxItems(final Integer val) {
+    vpollMaxItems = val;
+  }
+
+  @Override
+  public Integer getVpollMaxItems() {
+    return vpollMaxItems;
+  }
+
+  @Override
+  public void setVpollMaxActive(final Integer val) {
+    vpollMaxActive = val;
+  }
+
+  @Override
+  public Integer getVpollMaxActive() {
+    return vpollMaxActive;
+  }
+
+  @Override
+  public void setVpollMaxVoters(final Integer val) {
+    vpollMaxVoters = val;
+  }
+
+  @Override
+  public Integer getVpollMaxVoters() {
+    return vpollMaxVoters;
+  }
+
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */
@@ -686,6 +720,11 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     ts.newLine();
     ts.append("rootUsers", getRootUsers());
 
+    ts.newLine();
+    ts.append("vpollMaxItems", getVpollMaxItems());
+    ts.append("vpollMaxActive", getVpollMaxActive());
+    ts.append("vpollMaxVoters", getVpollMaxVoters());
+
     return ts.toString();
   }
 
@@ -721,6 +760,11 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     clone.setLocaleList(getLocaleList());
     clone.setEventregAdminToken(getEventregAdminToken());
     clone.setEventregUrl(getEventregUrl());
+
+    clone.setVpollMaxItems(getVpollMaxItems());
+    clone.setVpollMaxActive(getVpollMaxActive());
+    clone.setVpollMaxVoters(getVpollMaxVoters());
+
 
     return clone;
   }

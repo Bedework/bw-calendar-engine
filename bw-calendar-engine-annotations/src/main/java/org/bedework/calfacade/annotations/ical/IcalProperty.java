@@ -67,4 +67,6 @@ public @interface IcalProperty {
   boolean vavailabilityProperty() default false;
   /** */
   boolean availableProperty() default false;
+  /** */
+  boolean vpollProperty() default false;
 }

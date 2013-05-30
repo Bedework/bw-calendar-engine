@@ -20,6 +20,10 @@
 			<artifactId>bw-calendar-engine-sysevents</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-caldav-util</artifactId>
+      </dependency>
 		<!-- Third Party -->
 		<dependency>
 			<groupId>org.hibernate</groupId>

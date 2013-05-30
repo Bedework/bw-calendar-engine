@@ -63,6 +63,7 @@ import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.parameter.ScheduleStatus;
 import net.fortuna.ical4j.model.parameter.SentBy;
+import net.fortuna.ical4j.model.parameter.StayInformed;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Attendee;
@@ -74,6 +75,7 @@ import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.Repeat;
 import net.fortuna.ical4j.model.property.Trigger;
 import net.fortuna.ical4j.model.property.Uid;
+import net.fortuna.ical4j.model.property.Voter;
 import net.fortuna.ical4j.model.property.XProperty;
 
 import org.apache.log4j.Logger;
@@ -438,11 +440,61 @@ public class IcalUtil {
    */
   public static BwAttendee getAttendee(final IcalCallback cb,
                                        final Attendee attProp) throws Throwable {
+    ParameterList pars = attProp.getParameters();
+
+    BwAttendee att = initAttendeeVoter(cb, attProp.getValue(),
+                                       pars);
+
+    att.setPartstat(getOptStr(pars, "PARTSTAT"));
+    if (att.getPartstat() == null) {
+      att.setPartstat(IcalDefs.partstatValNeedsAction);
+    }
+
+    att.setRole(getOptStr(pars, "ROLE"));
+
+    return att;
+  }
+
+  /**
+   * @param cb          IcalCallback object
+   * @param vProp
+   * @return BwAttendee
+   * @throws Throwable
+   */
+  public static BwAttendee getVoter(final IcalCallback cb,
+                                    final Voter vProp) throws Throwable {
+    ParameterList pars = vProp.getParameters();
+
+    BwAttendee att = initAttendeeVoter(cb, vProp.getValue(),
+                                       pars);
+
+    att.setType(BwAttendee.typeVoter);
+    att.setPartstat(getOptStr(pars, "PARTSTAT"));
+    if (att.getPartstat() == null) {
+      att.setPartstat(IcalDefs.partstatValNeedsAction);
+    }
+
+    Parameter par = pars.getParameter("STAY-INFORMED");
+    if (par != null) {
+      att.setStayInformed(((StayInformed)par).getStayInformed().booleanValue());
+    }
+
+    return att;
+  }
+
+  /**
+   * @param cb          IcalCallback object
+   * @param val
+   * @param pars
+   * @return BwAttendee
+   * @throws Throwable
+   */
+  public static BwAttendee initAttendeeVoter(final IcalCallback cb,
+                                             final String val,
+                                             final ParameterList pars) throws Throwable {
     BwAttendee att = new BwAttendee();
 
-    att.setAttendeeUri(cb.getCaladdr(attProp.getValue()));
-
-    ParameterList pars = attProp.getParameters();
+    att.setAttendeeUri(cb.getCaladdr(val));
 
     att.setCn(getOptStr(pars, "CN"));
     att.setCuType(getOptStr(pars, "CUTYPE"));
@@ -451,11 +503,6 @@ public class IcalUtil {
     att.setDir(getOptStr(pars, "DIR"));
     att.setLanguage(getOptStr(pars, "LANGUAGE"));
     att.setMember(getOptStr(pars, "MEMBER"));
-    att.setPartstat(getOptStr(pars, "PARTSTAT"));
-    if (att.getPartstat() == null) {
-      att.setPartstat(IcalDefs.partstatValNeedsAction);
-    }
-    att.setRole(getOptStr(pars, "ROLE"));
     att.setScheduleStatus(getOptStr(pars, "SCHEDULE-STATUS"));
     att.setSentBy(getOptStr(pars, "SENT-BY"));
 
@@ -774,19 +821,21 @@ public class IcalUtil {
     BwEvent ev = ei.getEvent();
     ChangeTable chg = ei.getChangeset(userHref);
     boolean scheduleReply = ev.getScheduleMethod() == ScheduleMethods.methodTypeReply;
+    boolean todo = ev.getEntityType() == IcalDefs.entityTypeTodo;
+    boolean vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
+
     // No dates valid for reply
 
     try {
       if (dtStart == null) {
-        if (!scheduleReply &&
-           (ev.getEntityType() != IcalDefs.entityTypeTodo)) {
+        if (!scheduleReply && !todo && !vpoll) {
           throw new CalFacadeException("org.bedework.error.nostartdate");
         }
 
-        /* A todo can have no date and time. set start to now, end to
+        /* A todo or vpoll can have no date and time. set start to now, end to
          * many years from now and the noStart flag.
          *
-         * Such an entry has to appear only on the current day.
+         * A todo without dates has to appear only on the current day.
          */
         if (dtEnd != null) {
           dtStart = new DtStart(dtEnd.getParameters(), dtEnd.getValue());
@@ -813,8 +862,7 @@ public class IcalUtil {
 
       if (dtEnd != null) {
         endType = StartEndComponent.endTypeDate;
-      } else if (scheduleReply ||
-                 (ev.getEntityType() == IcalDefs.entityTypeTodo)) {
+      } else if (scheduleReply || todo || vpoll) {
         Dur years = new Dur(520); // about 10 years
         Date now = new Date(new java.util.Date().getTime());
         dtEnd = new DtEnd(new Date(years.getTime(now)));
@@ -855,8 +903,7 @@ public class IcalUtil {
                                             ev.getDtstart().getDateType(),
                                             dur));
       } else if (!scheduleReply &&
-                 (endType == StartEndComponent.endTypeNone) &&
-                 (ev.getEntityType() != IcalDefs.entityTypeTodo)) {
+                 (endType == StartEndComponent.endTypeNone) && !todo) {
         /* No duration and no end specified.
          * Set the end values to the start values + 1 for dates
          */

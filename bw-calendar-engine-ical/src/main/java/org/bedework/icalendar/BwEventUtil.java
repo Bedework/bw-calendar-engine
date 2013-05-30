@@ -61,11 +61,13 @@ import net.fortuna.ical4j.model.component.VAvailability;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VFreeBusy;
 import net.fortuna.ical4j.model.component.VJournal;
+import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.component.VToDo;
 import net.fortuna.ical4j.model.parameter.AltRep;
 import net.fortuna.ical4j.model.parameter.FbType;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.parameter.XParameter;
+import net.fortuna.ical4j.model.property.AcceptResponse;
 import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.BusyType;
@@ -91,6 +93,9 @@ import net.fortuna.ical4j.model.property.LastModified;
 import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.PercentComplete;
+import net.fortuna.ical4j.model.property.PollItemId;
+import net.fortuna.ical4j.model.property.PollMode;
+import net.fortuna.ical4j.model.property.PollProperties;
 import net.fortuna.ical4j.model.property.Priority;
 import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
@@ -104,6 +109,7 @@ import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Transp;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Url;
+import net.fortuna.ical4j.model.property.Voter;
 import net.fortuna.ical4j.model.property.XProperty;
 
 import java.util.Collection;
@@ -172,7 +178,6 @@ public class BwEventUtil extends IcalUtil {
     }
 
     boolean debug = getLog().isDebugEnabled();
-    @SuppressWarnings("unchecked")
     Holder<Boolean> hasXparams = new Holder<Boolean>(Boolean.FALSE);
 
     int methodType = ical.getMethodType();
@@ -206,6 +211,8 @@ public class BwEventUtil extends IcalUtil {
         entityType = IcalDefs.entityTypeVavailability;
       } else if (val instanceof Available) {
         entityType = IcalDefs.entityTypeAvailable;
+      } else if (val instanceof VPoll) {
+        entityType = IcalDefs.entityTypeVpoll;
       } else {
         throw new CalFacadeException("org.bedework.invalid.component.type",
                                      val.getName());
@@ -455,7 +462,14 @@ public class BwEventUtil extends IcalUtil {
 
         chg.present(prop.getName());
 
-        if (prop instanceof Attach) {
+        if (prop instanceof AcceptResponse) {
+          /* ------------------- Poll mode -------------------- */
+
+          String sval = ((AcceptResponse)prop).getValue();
+          if (chg.changed(prop.getName(), ev.getPollAcceptResponse(), sval)) {
+            ev.setPollAcceptResponse(sval);
+          }
+        } else if (prop instanceof Attach) {
           /* ------------------- Attachment -------------------- */
 
           chg.addValue(prop.getName(), getAttachment((Attach)prop));
@@ -726,6 +740,27 @@ public class BwEventUtil extends IcalUtil {
           if (chg.changed(prop.getName(), ev.getPercentComplete(), ival)) {
             ev.setPercentComplete(ival);
           }
+        } else if (prop instanceof PollItemId) {
+          /* ------------------- Poll item id -------------------- */
+
+          Integer ival = new Integer(((PollItemId)prop).getPollitemid());
+          if (chg.changed(prop.getName(), ev.getPollItemId(), ival)) {
+            ev.setPollItemId(ival);
+          }
+        } else if (prop instanceof PollMode) {
+          /* ------------------- Poll mode -------------------- */
+
+          String sval = ((PollMode)prop).getValue();
+          if (chg.changed(prop.getName(), ev.getPollMode(), sval)) {
+            ev.setPollMode(sval);
+          }
+        } else if (prop instanceof PollProperties) {
+          /* ------------------- Poll mode -------------------- */
+
+          String sval = ((PollProperties)prop).getValue();
+          if (chg.changed(prop.getName(), ev.getPollProperties(), sval)) {
+            ev.setPollProperties(sval);
+          }
         } else if (prop instanceof Priority) {
           /* ------------------- Priority -------------------- */
 
@@ -822,6 +857,43 @@ public class BwEventUtil extends IcalUtil {
           if (chg.changed(prop.getName(), ev.getLink(), pval)) {
             ev.setLink(pval);
           }
+        } else if (prop instanceof Voter) {
+          /* ------------------- Voter -------------------- */
+
+          if (methodType == ScheduleMethods.methodTypePublish) {
+            if (cb.getStrictness() == IcalCallback.conformanceStrict) {
+              throw new CalFacadeException(CalFacadeException.attendeesInPublish);
+            }
+
+            if (cb.getStrictness() == IcalCallback.conformanceWarn) {
+              //warn("Had attendees for PUBLISH");
+            }
+          }
+
+          Voter vPr = (Voter)prop;
+
+          if (evinfo.getNewEvent() || !mergeAttendees) {
+            chg.addValue(prop.getName(), getVoter(cb, vPr));
+          } else {
+            String pUri = cb.getCaladdr(vPr.getValue());
+
+            if (pUri.equals(attUri)) {
+              /* Only update for our own attendee
+               * We're doing a PUT and this must be the attendee updating their
+               * response. We don't allow them to change other voters
+               * whatever the PUT content says.
+               */
+              chg.addValue(prop.getName(), getVoter(cb, vPr));
+            } else {
+              // Use the value we currently have
+              for (BwAttendee att: ev.getAttendees()) {
+                if (pUri.equals(att.getAttendeeUri())) {
+                  chg.addValue(prop.getName(), att.clone());
+                  break;
+                }
+              }
+            }
+          }
         } else if (prop instanceof XProperty) {
           /* ------------------------- x-property --------------------------- */
 
@@ -850,6 +922,9 @@ public class BwEventUtil extends IcalUtil {
         processAvailable(cb, cal, ical, (VAvailability)val, evinfo);
       } else if (!(val instanceof Available)) {
         VAlarmUtil.processComponentAlarms(cb, val, ev, currentPrincipal, chg);
+        if (val instanceof VPoll) {
+          processCandidates(cb, cal, ical, (VPoll)val, evinfo);
+        }
       }
 
       processTimezones(ev, ical, chg);
@@ -995,8 +1070,39 @@ public class BwEventUtil extends IcalUtil {
                                    false);
         availi.getEvent().setOwnerHref(vavail.getEvent().getOwnerHref());
 
-        vavail.addAvailable(availi);
+        vavail.addContainedItem(availi);
         vavail.getEvent().addAvailableUid(availi.getEvent().getUid());
+      }
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  private static void processCandidates(final IcalCallback cb,
+                                        final BwCalendar cal,
+                                        final Icalendar ical,
+                                        final VPoll val,
+                                        final EventInfo vpoll) throws CalFacadeException {
+
+    try {
+      ComponentList cands = val.getCandidates();
+
+      if ((cands == null) || cands.isEmpty()) {
+        return;
+      }
+
+      Iterator it = cands.iterator();
+
+      while (it.hasNext()) {
+        Object o = it.next();
+
+        EventInfo cand = toEvent(cb, cal, ical, (Component)o, true,
+                                 false);
+        cand.getEvent().setOwnerHref(vpoll.getEvent().getOwnerHref());
+
+        vpoll.addContainedItem(cand);
       }
     } catch (CalFacadeException cfe) {
       throw cfe;

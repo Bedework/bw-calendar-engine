@@ -47,15 +47,6 @@ public class ChangeTableEntry {
   /** Immutable: Name of the property */
   private String name;
 
-  /** Immutable: True if it's an event property */
-  private boolean eventProperty;
-
-  /** Immutable: True if it's a todo property */
-  private boolean todoProperty;
-
-  /** Immutable: True if it's a freebusy property */
-  private boolean freebusyProperty;
-
   private Object oldVal;
   private Object newVal;
 
@@ -103,95 +94,54 @@ public class ChangeTableEntry {
    * @param chg
    * @param multiValued
    * @param index
-   * @param eventProperty
-   * @param todoProperty
-   * @param freebusyProperty
    */
   public ChangeTableEntry(final ChangeTable chg,
-                          final boolean multiValued, final PropertyInfoIndex index,
-                          final boolean eventProperty,
-                          final boolean todoProperty,
-                          final boolean freebusyProperty) {
+                          final boolean multiValued,
+                          final PropertyInfoIndex index) {
     this.chg = chg;
     this.multiValued = multiValued;
     this.index = index;
     name = index.getPname();
-    this.eventProperty = eventProperty;
-    this.todoProperty = todoProperty;
-    this.freebusyProperty = freebusyProperty;
+  }
+
+  /**
+   * @param multiValued
+   * @param index
+   */
+  public ChangeTableEntry(final boolean multiValued,
+                          final PropertyInfoIndex index) {
+    this(null, multiValued, index);
   }
 
   /**
    * @param chg
    * @param multiValued
    * @param name
-   * @param eventProperty
-   * @param todoProperty
+d   * @param todoProperty
    */
   public ChangeTableEntry(final ChangeTable chg,
-                          final boolean multiValued, final String name,
-                          final boolean eventProperty,
-                          final boolean todoProperty) {
+                          final boolean multiValued,
+                          final String name) {
     this.chg = chg;
     this.multiValued = multiValued;
     index = PropertyInfoIndex.UNKNOWN_PROPERTY;
     this.name = name;
-    this.eventProperty = eventProperty;
-    this.todoProperty = todoProperty;
   }
 
   /**
    * @param chg
    * @param index
-   * @param eventProperty
-   * @param todoProperty
-   * @param freebusyProperty
    */
   public ChangeTableEntry(final ChangeTable chg,
-                          final PropertyInfoIndex index, final boolean eventProperty,
-                          final boolean todoProperty,
-                          final boolean freebusyProperty) {
-    this(chg, false, index, eventProperty, todoProperty, freebusyProperty);
+                          final PropertyInfoIndex index) {
+    this(chg, false, index);
   }
 
-  /** Factory method
-   *
-   * @param multiValued
+  /**
    * @param index
-   * @return ChangeTableEntry
    */
-  private static ChangeTableEntry EventTodoEntry(final boolean multiValued,
-                                                final PropertyInfoIndex index) {
-    return new ChangeTableEntry(null, multiValued, index, true, true, false);
-  }
-
-  /** Factory method
-   *
-   * @param multiValued
-   * @param index
-   * @return ChangeTableEntry
-   */
-  private static ChangeTableEntry EventTodoFbEntry(final boolean multiValued,
-                                                  final PropertyInfoIndex index) {
-    return new ChangeTableEntry(null, multiValued, index, true, true, true);
-  }
-
-  /** Factory method
-   *
-   * @param index
-   * @return ChangeTableEntry
-   */
-  private static ChangeTableEntry EventTodoEntry(final PropertyInfoIndex index) {
-    return new ChangeTableEntry(null, index, true, true, false);
-  }
-
-  /** Factory method
-   *
-   * @param index
-   * @return ChangeTableEntry
-   */
-  private static ChangeTableEntry EventTodoFbEntry(final PropertyInfoIndex index) {
-    return new ChangeTableEntry(null, index, true, true, true);
+  public ChangeTableEntry(final PropertyInfoIndex index) {
+    this(null, false, index);
   }
 
   /** Return a new entry based on this entry.
@@ -200,9 +150,7 @@ public class ChangeTableEntry {
    * @return ChangeTableEntry
    */
   public ChangeTableEntry newEntry(final ChangeTable chg) {
-    ChangeTableEntry cte = new ChangeTableEntry(chg, multiValued, index,
-                                                eventProperty, todoProperty,
-                                                freebusyProperty);
+    ChangeTableEntry cte = new ChangeTableEntry(chg, multiValued, index);
     // TODO - fix for lists
     cte.listField = listField;
 
@@ -307,21 +255,85 @@ public class ChangeTableEntry {
    * @return true if it's an event property
    */
   public boolean getEventProperty() {
-    return eventProperty;
+    return index.getEventProperty(); //eventProperty;
   }
 
   /**
    * @return true if it's a todo property
    */
   public boolean getTodoProperty() {
-    return todoProperty;
+    return index.getTodoProperty();  //todoProperty;
   }
 
   /**
    * @return true if it's a freebusy property
    */
   public boolean getFreebusyProperty() {
-    return freebusyProperty;
+    return index.getFreeBusyProperty();  //freebusyProperty;
+  }
+
+  /** True if it's a vcalendar property
+   *
+   * @return boolean
+   */
+  public boolean getVcalendarProperty() {
+    return index.getVcalendarProperty();
+  }
+
+  /** True if it's a journal property
+   *
+   * @return boolean
+   */
+  public boolean getJournalProperty() {
+    return index.getJournalProperty();
+  }
+
+  /** True if it's a freebusy property
+   *
+   * @return boolean
+   */
+  public boolean getFreeBusyProperty() {
+    return index.getFreeBusyProperty();
+  }
+
+  /** True if it's a timezone property
+   *
+   * @return boolean
+   */
+  public boolean getTimezoneProperty() {
+    return index.getTimezoneProperty();
+  }
+
+  /** True if it's an alarm property
+   *
+   * @return boolean
+   */
+  public boolean getAlarmProperty() {
+    return index.getAlarmProperty();
+  }
+
+  /** True if it's a vavailability property
+   *
+   * @return boolean
+   */
+  public boolean getVavailabilityProperty() {
+    return index.getVavailabilityProperty();
+  }
+
+  /** True if it's an available property
+   *
+   * @return boolean
+   */
+  public boolean getAvailableProperty() {
+    return index.getAvailableProperty();
+  }
+
+  /** True if it's a vpoll property
+   *
+   * @return boolean
+   */
+  public boolean getVpollProperty() {
+    return index.getVpollProperty();
   }
 
   /** Mark a property as changed if old != new and save old and new values
@@ -699,127 +711,125 @@ public class ChangeTableEntry {
 
     /* Event, Todo and freebusy */
 
-    put(ChangeTableEntry.EventTodoFbEntry(PropertyInfoIndex.DTSTAMP));
+    put(new ChangeTableEntry(PropertyInfoIndex.DTSTAMP));
 
-    put(ChangeTableEntry.EventTodoFbEntry(PropertyInfoIndex.DTSTART));
+    put(new ChangeTableEntry(PropertyInfoIndex.DTSTART));
 
-    put(ChangeTableEntry.EventTodoFbEntry(PropertyInfoIndex.DURATION));
+    put(new ChangeTableEntry(PropertyInfoIndex.DURATION));
 
-    put(ChangeTableEntry.EventTodoFbEntry(PropertyInfoIndex.ORGANIZER));
+    put(new ChangeTableEntry(PropertyInfoIndex.ORGANIZER));
 
-    put(ChangeTableEntry.EventTodoFbEntry(PropertyInfoIndex.UID));
+    put(new ChangeTableEntry(PropertyInfoIndex.UID));
 
-    put(ChangeTableEntry.EventTodoFbEntry(PropertyInfoIndex.URL));
+    put(new ChangeTableEntry(PropertyInfoIndex.URL));
 
     /* Event and Todo */
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.CLASS));
+    put(new ChangeTableEntry(PropertyInfoIndex.CLASS));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.CREATED));
+    put(new ChangeTableEntry(PropertyInfoIndex.CREATED));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.DESCRIPTION));
+    put(new ChangeTableEntry(PropertyInfoIndex.DESCRIPTION));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.GEO));
+    put(new ChangeTableEntry(PropertyInfoIndex.GEO));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.LAST_MODIFIED));
+    put(new ChangeTableEntry(PropertyInfoIndex.LAST_MODIFIED));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.LOCATION));
+    put(new ChangeTableEntry(PropertyInfoIndex.LOCATION));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.PRIORITY));
+    put(new ChangeTableEntry(PropertyInfoIndex.PRIORITY));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.RECURRENCE_ID));
+    put(new ChangeTableEntry(PropertyInfoIndex.RECURRENCE_ID));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.SEQUENCE));
+    put(new ChangeTableEntry(PropertyInfoIndex.SEQUENCE));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.STATUS));
+    put(new ChangeTableEntry(PropertyInfoIndex.STATUS));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.SUMMARY));
+    put(new ChangeTableEntry(PropertyInfoIndex.SUMMARY));
 
     /* Event + fb */
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.DTEND, true, false, true));
+    put(new ChangeTableEntry(PropertyInfoIndex.DTEND));
 
     /* Event only */
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.TRANSP, true, false, false));
+    put(new ChangeTableEntry(PropertyInfoIndex.TRANSP));
 
     /* Todo only */
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.COMPLETED, false, true, false));
+    put(new ChangeTableEntry(PropertyInfoIndex.COMPLETED));
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.DUE, false, true, false));
+    put(new ChangeTableEntry(PropertyInfoIndex.DUE));
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.PERCENT_COMPLETE, false, true, false));
+    put(new ChangeTableEntry(PropertyInfoIndex.PERCENT_COMPLETE));
 
     /* ---------------------------- Multi valued --------------- */
 
     // TODO - this should be dealt with by annotations.
-    ChangeTableEntry xpropEntry = ChangeTableEntry.EventTodoFbEntry(true,
-                                                                    PropertyInfoIndex.XPROP);
+    ChangeTableEntry xpropEntry = new ChangeTableEntry(true, PropertyInfoIndex.XPROP);
     xpropEntry.listField = true;
     put(xpropEntry);
 
     /* Event, Todo and Freebusy */
 
-    put(ChangeTableEntry.EventTodoFbEntry(true, PropertyInfoIndex.ATTENDEE));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.ATTENDEE));
 
-    put(ChangeTableEntry.EventTodoFbEntry(true, PropertyInfoIndex.COMMENT));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.COMMENT));
 
-    put(ChangeTableEntry.EventTodoFbEntry(true, PropertyInfoIndex.CONTACT));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.CONTACT));
 
-    put(ChangeTableEntry.EventTodoFbEntry(true, PropertyInfoIndex.REQUEST_STATUS));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.REQUEST_STATUS));
 
     /* Event and Todo */
 
-    put(ChangeTableEntry.EventTodoEntry(true, PropertyInfoIndex.ATTACH));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.ATTACH));
 
-    put(ChangeTableEntry.EventTodoEntry(true, PropertyInfoIndex.CATEGORIES));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.CATEGORIES));
 
-    put(ChangeTableEntry.EventTodoEntry(true, PropertyInfoIndex.RELATED_TO));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.RELATED_TO));
 
-    put(ChangeTableEntry.EventTodoEntry(true, PropertyInfoIndex.RESOURCES));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.RESOURCES));
 
-    put(ChangeTableEntry.EventTodoEntry(true, PropertyInfoIndex.VALARM));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.VALARM));
 
     /* -------------Recurrence (also multi valued) --------------- */
 
-    put(ChangeTableEntry.EventTodoEntry(true, PropertyInfoIndex.EXDATE));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.EXDATE));
 
-    put(ChangeTableEntry.EventTodoEntry(true, PropertyInfoIndex.EXRULE));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.EXRULE));
 
-    put(ChangeTableEntry.EventTodoEntry(true, PropertyInfoIndex.RDATE));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.RDATE));
 
-    put(ChangeTableEntry.EventTodoEntry(true, PropertyInfoIndex.RRULE));
+    put(new ChangeTableEntry(true, PropertyInfoIndex.RRULE));
 
     /* -------------- Other non-event, non-todo ---------------- */
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.FREEBUSY, false, false, true));
+    put(new ChangeTableEntry(null, PropertyInfoIndex.FREEBUSY));
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.TZID, false, false, false));
+    put(new ChangeTableEntry(null, PropertyInfoIndex.TZID));
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.TZNAME, false, false, false));
+    put(new ChangeTableEntry(null, PropertyInfoIndex.TZNAME));
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.TZOFFSETFROM, false, false, false));
+    put(new ChangeTableEntry(null, PropertyInfoIndex.TZOFFSETFROM));
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.TZOFFSETTO, false, false, false));
+    put(new ChangeTableEntry(null, PropertyInfoIndex.TZOFFSETTO));
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.TZURL, false, false, false));
+    put(new ChangeTableEntry(null, PropertyInfoIndex.TZURL));
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.ACTION, false, false, false));
+    put(new ChangeTableEntry(null, PropertyInfoIndex.ACTION));
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.REPEAT, false, false, false));
+    put(new ChangeTableEntry(null, PropertyInfoIndex.REPEAT));
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.TRIGGER, false, false, false));
+    put(new ChangeTableEntry(null, PropertyInfoIndex.TRIGGER));
 
     /* ----------------------------- Non-ical ---------------- */
 
-    put(new ChangeTableEntry(null, PropertyInfoIndex.COLLECTION,
-                             true, true, true));
+    put(new ChangeTableEntry(PropertyInfoIndex.COLLECTION));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.COST));
+    put(new ChangeTableEntry(PropertyInfoIndex.COST));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.DELETED));
+    put(new ChangeTableEntry(PropertyInfoIndex.DELETED));
 
-    put(ChangeTableEntry.EventTodoEntry(PropertyInfoIndex.END_TYPE));
+    put(new ChangeTableEntry(PropertyInfoIndex.END_TYPE));
   }
 
   private static void put(final ChangeTableEntry ent) {

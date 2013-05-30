@@ -417,7 +417,18 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     /** */
     pfiAttendeeSchedulingObject,
     /** */
-    pfiCtoken;
+    pfiCtoken,
+
+    /** */
+    pfiPollItemId,
+    /** */
+    pfiPollMode,
+    /** */
+    pfiPollProperties,
+    /** */
+    pfiPollAcceptResponse,
+    /** */
+    pfiPollCandidate;
   }
 
   private int entityType = IcalDefs.entityTypeEvent;
@@ -644,6 +655,22 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   /** List of BwFreeBusyComponent
    */
   private List<BwFreeBusyComponent> freeBusyPeriods;
+
+  /* ====================================================================
+   *                      VPoll or VPoll related fields
+   * ==================================================================== */
+
+  private Integer pollItemId;
+
+  private String pollAccceptResponse;
+
+  private String pollMode;
+
+  private String pollProperties;
+
+  private Set<String> pollItemNames;
+
+  private boolean pollCandidate;
 
   /* ====================================================================
    *                      VAvailability fields
@@ -1473,7 +1500,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   /** Return a clone of the Set
    *
-   * @return Set of BwAlarm
+   * @return Set of request status
    */
   @NoProxy
   public Set<BwRequestStatus> cloneRequestStatuses() {
@@ -3067,6 +3094,140 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   }
 
   /* ====================================================================
+   *                   VPoll methods
+   * ==================================================================== */
+
+  /** Set the event's poll item id
+   *
+   * @param val    Integer id
+   */
+  @IcalProperty(pindex = PropertyInfoIndex.POLL_ITEM_ID,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true
+                )
+  public void setPollItemId(final Integer val) {
+    pollItemId = val;
+  }
+
+  /** Get the event's poll item id
+   *
+   *  @return String   event's poll item id
+   */
+  public Integer getPollItemId() {
+    return pollItemId;
+  }
+
+  /** Set the poll mode
+   *
+   * @param val    Integer id
+   */
+  @IcalProperty(pindex = PropertyInfoIndex.POLL_MODE,
+                vpollProperty = true
+                )
+  public void setPollMode(final String val) {
+    pollMode = val;
+  }
+
+  /** Get the poll mode
+   *
+   *  @return String   poll mode
+   */
+  public String getPollMode() {
+    return pollMode;
+  }
+
+  /** Set the poll properties
+   *
+   * @param val    list of interesting properties
+   */
+  @IcalProperty(pindex = PropertyInfoIndex.POLL_PROPERTIES,
+                vpollProperty = true
+                )
+  public void setPollProperties(final String val) {
+    pollProperties = val;
+  }
+
+  /** Get the poll properties
+   *
+   *  @return String   list of interesting properties
+   */
+  public String getPollProperties() {
+    return pollProperties;
+  }
+
+  /** Set the acceptable poll component types in the reponse
+   *
+   * @param val    list of acceptable poll component types in the reponse
+   */
+  @IcalProperty(pindex = PropertyInfoIndex.ACCEPT_RESPONSE,
+                vpollProperty = true
+                )
+  public void setPollAcceptResponse(final String val) {
+    pollAccceptResponse = val;
+  }
+
+  /** Get the acceptable poll component types in the reponse
+   *
+   *  @return String   list of acceptable poll component types in the reponse
+   */
+  public String getPollAcceptResponse() {
+    return pollAccceptResponse;
+  }
+
+  /** Set the vpoll item names
+   *
+   * @param val    Set<String>
+   */
+  @NoProxy
+  public void setPollItemNames(final Set<String> val) {
+    pollItemNames = val;
+  }
+
+  /** Get the vpoll item names
+   *
+   * @return Set<String>   names
+   */
+  @NoProxy
+  public Set<String> getPollItemNames() {
+    return pollItemNames;
+  }
+
+  /** Add vpoll item href
+   *
+   * @param val
+   */
+  @NoProxy
+  public void addPollItemName(final String val) {
+    Set<String> pins = getPollItemNames();
+
+    if (pins == null) {
+      pins = new TreeSet<String>();
+      setPollItemNames(pins);
+    }
+
+    if (!pins.contains(val)) {
+      pins.add(val);
+    }
+  }
+
+  /**
+   *
+   * @param val    true for a poll candidate
+   */
+  public void setPollCandidate(final boolean val) {
+    pollCandidate = val;
+  }
+
+  /**
+   *
+   *  @return true for a poll candidate
+   */
+  public boolean getPollCandidate() {
+    return pollCandidate;
+  }
+
+  /* ====================================================================
    *                   Available methods
    * ==================================================================== */
 
@@ -3828,6 +3989,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getRelatedTo() != null) {
       ts.append("relatedTo", getRelatedTo());
     }
+
+    ts.append("pollItemId", getPollItemId());
+    ts.append("pollMode", getPollMode());
+    ts.append("pollProperties", getPollProperties());
+    ts.append("pollAcceptResponse", getPollAcceptResponse());
+    ts.append("pollItemNames", getPollItemNames());
+    ts.append("pollCandidate", getPollCandidate());
   }
 
   /** Copy this objects fields into the parameter
@@ -3948,6 +4116,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (rt != null) {
       ev.setRelatedTo((BwRelatedTo)rt.clone());
     }
+
+    ev.setPollItemId(getPollItemId());
+    ev.setPollMode(getPollMode());
+    ev.setPollProperties(getPollProperties());
+    ev.setPollAcceptResponse(getPollAcceptResponse());
+    ev.setPollItemNames(getPollItemNames());
+    ev.setPollCandidate(getPollCandidate());
   }
 
   /**

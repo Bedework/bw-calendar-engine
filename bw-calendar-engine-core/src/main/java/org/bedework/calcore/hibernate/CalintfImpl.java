@@ -1178,7 +1178,6 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<BwFilterDef> getAllFilterDefs(final BwPrincipal owner) throws CalFacadeException {
     return filterDefs.getAllFilterDefs(owner);
   }

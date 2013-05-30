@@ -57,6 +57,7 @@ import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.VAvailability;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VFreeBusy;
+import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.component.VToDo;
 import net.fortuna.ical4j.model.property.ExRule;
@@ -816,6 +817,7 @@ public class IcalTranslator implements Serializable {
           ic.addTimeZone(doTimeZone((VTimeZone)comp));
         } else if ((comp instanceof VEvent) ||
                    (comp instanceof VToDo) ||
+                   (comp instanceof VPoll) ||
                    (comp instanceof VAvailability)) {
           EventInfo ei = BwEventUtil.toEvent(cb, col, ic, comp, diff,
                                              mergeAttendees);
@@ -1032,8 +1034,8 @@ public class IcalTranslator implements Serializable {
       }
     }
 
-    if (val.getNumAvailables() > 0) {
-      for (EventInfo aei: val.getAvailable()) {
+    if (val.getNumContainedItems() > 0) {
+      for (EventInfo aei: val.getContainedItems()) {
         ev = aei.getEvent();
         el = ToXEvent.toComponent(ev, true, bc);
 

@@ -475,6 +475,36 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
     return getConfig().getEventregUrl();
   }
 
+  @Override
+  public void setVpollMaxItems(final Integer val) {
+    getConfig().setVpollMaxItems(val);
+  }
+
+  @Override
+  public Integer getVpollMaxItems() {
+    return getConfig().getVpollMaxItems();
+  }
+
+  @Override
+  public void setVpollMaxActive(final Integer val) {
+    getConfig().setVpollMaxActive(val);
+  }
+
+  @Override
+  public Integer getVpollMaxActive() {
+    return getConfig().getVpollMaxActive();
+  }
+
+  @Override
+  public void setVpollMaxVoters(final Integer val) {
+    getConfig().setVpollMaxVoters(val);
+  }
+
+  @Override
+  public Integer getVpollMaxVoters() {
+    return getConfig().getVpollMaxVoters();
+  }
+
   /* ========================================================================
    * Operations
    * ======================================================================== */

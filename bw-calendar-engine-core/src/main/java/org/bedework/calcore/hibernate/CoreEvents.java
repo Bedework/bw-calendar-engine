@@ -358,7 +358,17 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
             throwException(CalFacadeException.badResponse);
           }
 
-          cei.addAvailable(aceis.iterator().next());
+          cei.addContainedItem(aceis.iterator().next());
+        }
+        ts.add(cei);
+      } else if (master.getEntityType() == IcalDefs.entityTypeVpoll) {
+        for (String name : master.getPollItemNames()) {
+          CoreEventInfo vcei = getEvent(colPath, name, recurRetrieval);
+          if (vcei == null) {
+            throwException(CalFacadeException.badResponse);
+          }
+
+          cei.addContainedItem(vcei);
         }
         ts.add(cei);
       } else if (!master.testRecurring()) {
@@ -619,7 +629,17 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
                          privRead, false);
           }
 
-          cei.addAvailable(acei);
+          cei.addContainedItem(acei);
+        }
+      } else if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
+        // Retrieve the candidates
+        for (String cname : ev.getPollItemNames()) {
+          CoreEventInfo vcei = getEvent(colPath, cname, recurRetrieval);
+          if (vcei == null) {
+            throwException(CalFacadeException.badResponse);
+          }
+
+          cei.addContainedItem(vcei);
         }
       } else {
         ev = cei.getEvent();
@@ -694,7 +714,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
      *
      * It also ensures our guid allocation is working OK
      */
-    if (collInf.uniqueKey) {
+    if (!val.getPollCandidate() && collInf.uniqueKey) {
       String name = calendarGuidExists(val, false, true);
       if (name == null) {
         name = calendarGuidExists(val, true, true);
@@ -3382,7 +3402,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
         CoreEventInfo vavail = vavails.get(ev.getUid());
 
         if (vavail != null) {
-          vavail.addAvailable(cei);
+          vavail.addContainedItem(cei);
         } else {
           unclaimed.add(cei);
         }
@@ -3404,7 +3424,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       CoreEventInfo vavail = vavails.get(cei.getEvent().getUid());
 
       if (vavail != null) {
-        vavail.addAvailable(cei);
+        vavail.addContainedItem(cei);
         continue;
       }
 

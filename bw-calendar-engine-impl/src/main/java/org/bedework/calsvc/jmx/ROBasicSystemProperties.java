@@ -21,6 +21,8 @@ package org.bedework.calsvc.jmx;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CalAddrPrefixes;
 
+import edu.rpi.cmt.jmx.MBeanInfo;
+
 /**
  * @author douglm
  *
@@ -137,7 +139,7 @@ public final class ROBasicSystemProperties implements BasicSystemProperties {
 
   @Override
   public void setUserCalendarRoot(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setUserCalendarRoot(val);
+    throw new RuntimeException("Immutable");
   }
 
   @Override
@@ -147,12 +149,34 @@ public final class ROBasicSystemProperties implements BasicSystemProperties {
 
   @Override
   public void setUserDefaultCalendar(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setUserDefaultCalendar(val);
+    throw new RuntimeException("Immutable");
   }
 
   @Override
   public String getUserDefaultCalendar() {
     return getConfig().getUserDefaultCalendar();
+  }
+
+  @Override
+  public void setUserDefaultTasksCalendar(final String val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  @MBeanInfo("user default tasks calendar - do not change")
+  public String getUserDefaultTasksCalendar() {
+    return getConfig().getUserDefaultTasksCalendar();
+  }
+
+  @Override
+  public void setUserDefaultPollsCalendar(final String val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  @MBeanInfo("user default polls calendar - do not change")
+  public String getUserDefaultPollsCalendar() {
+    return getConfig().getUserDefaultPollsCalendar();
   }
 
   @Override

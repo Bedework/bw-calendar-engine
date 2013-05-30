@@ -177,10 +177,11 @@ public class EventInfo
    */
   //private Map<String, EventInfo> overrideMap;
 
-  /** Collection of EventInfo representing AVAILABLE components
-   * Only for entityTypeVavailability
+  /* Collection of EventInfo representing contained items. For
+   * entityTypeVavailability this would be AVAILABLE components. For Vpoll it
+   * will be candidates.
    */
-  private Collection<EventInfo> available;
+  private Set<EventInfo> containedItems;
 
   /* This object contains information giving the current users access rights to
    * the entity.
@@ -697,53 +698,6 @@ public class EventInfo
     return oei;
   }
 
-  /* ====================================================================
-   *                   Availability methods
-   * ==================================================================== */
-
-  /** set the available times
-   *
-   * @param val     Collection    of EventInfo all marked as entityTypeAvailable
-   */
-  public void setAvailable(final Collection<EventInfo> val) {
-    available = val;
-  }
-
-  /** Get the available times
-   *
-   * @return Collection    of BwEvent
-   */
-  public Collection<EventInfo> getAvailable() {
-    return available;
-  }
-
-  /** Add an available component
-   *
-   * @param val
-   */
-  public void addAvailable(final EventInfo val) {
-    Collection<EventInfo> avl = getAvailable();
-
-    if (avl == null) {
-      avl = new ArrayList<EventInfo>();
-      setAvailable(avl);
-    }
-
-    avl.add(val);
-  }
-
-  /**
-   * @return int number of available objects.
-   */
-  public int getNumAvailables() {
-    Collection<EventInfo> as = getAvailable();
-    if (as == null) {
-      return 0;
-    }
-
-    return as.size();
-  }
-
   /** An attendee we need to send a reply to
    *
    *  @param val     uri
@@ -772,6 +726,53 @@ public class EventInfo
    */
   public String getInboxEventName() {
     return inboxEventName;
+  }
+
+  /* ====================================================================
+   *                   Contained item methods
+   * ==================================================================== */
+
+  /** set the contained items
+   *
+   * @param val     Collection    of EventInfo
+   */
+  public void setContainedItems(final Set<EventInfo> val) {
+    containedItems = val;
+  }
+
+  /** Get the contained items
+   *
+   * @return Collection    of EventInfo
+   */
+  public Set<EventInfo> getContainedItems() {
+    return containedItems;
+  }
+
+  /** Add a contained item
+   *
+   * @param val
+   */
+  public void addContainedItem(final EventInfo val) {
+    Set<EventInfo> cis = getContainedItems();
+
+    if (cis == null) {
+      cis = new TreeSet<EventInfo>();
+      setContainedItems(cis);
+    }
+
+    cis.add(val);
+  }
+
+  /**
+   * @return int number of contained items.
+   */
+  public int getNumContainedItems() {
+    Set<EventInfo> cis = getContainedItems();
+    if (cis == null) {
+      return 0;
+    }
+
+    return cis.size();
   }
 
   /* ====================================================================

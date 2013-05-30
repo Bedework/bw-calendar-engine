@@ -61,12 +61,14 @@ import net.fortuna.ical4j.model.component.VAvailability;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VFreeBusy;
 import net.fortuna.ical4j.model.component.VJournal;
+import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.component.VToDo;
 import net.fortuna.ical4j.model.parameter.AltRep;
 import net.fortuna.ical4j.model.parameter.FbType;
 import net.fortuna.ical4j.model.parameter.RelType;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.parameter.XParameter;
+import net.fortuna.ical4j.model.property.AcceptResponse;
 import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.BusyType;
 import net.fortuna.ical4j.model.property.Categories;
@@ -88,6 +90,9 @@ import net.fortuna.ical4j.model.property.FreeBusy;
 import net.fortuna.ical4j.model.property.LastModified;
 import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.PercentComplete;
+import net.fortuna.ical4j.model.property.PollItemId;
+import net.fortuna.ical4j.model.property.PollMode;
+import net.fortuna.ical4j.model.property.PollProperties;
 import net.fortuna.ical4j.model.property.Priority;
 import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
@@ -115,7 +120,7 @@ import java.util.List;
 public class VEventUtil extends IcalUtil {
 
   /** Make an Icalendar component from a BwEvent object. This may produce a
-   * VEvent, VTodo or VJournal.
+   * VEvent, VTodo, VJournal or VPoll.
    *
    * @param ei
    * @param isOverride - true if event object is an override
@@ -179,6 +184,7 @@ public class VEventUtil extends IcalUtil {
       boolean freeBusy = false;
       boolean vavail = false;
       boolean todo = false;
+      boolean vpoll = false;
 
       int entityType = val.getEntityType();
       if (entityType == IcalDefs.entityTypeEvent) {
@@ -196,6 +202,9 @@ public class VEventUtil extends IcalUtil {
         vavail = true;
       } else if (entityType == IcalDefs.entityTypeAvailable) {
         comp = new Available(pl);
+      } else if (entityType == IcalDefs.entityTypeVpoll) {
+        comp = new VPoll(pl);
+        vpoll = true;
       } else {
         throw new CalFacadeException("org.bedework.invalid.entity.type",
                                      String.valueOf(entityType));
@@ -251,7 +260,7 @@ public class VEventUtil extends IcalUtil {
       }
 
       /* ------------------- Attendees -------------------- */
-      if (val.getNumAttendees() > 0) {
+      if (!vpoll && (val.getNumAttendees() > 0)) {
         for (BwAttendee att: val.getAttendees()) {
           prop = setAttendee(att);
           mergeXparams(prop, xcomp);
@@ -292,8 +301,7 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Completed -------------------- */
 
-      if ((entityType == IcalDefs.entityTypeTodo) &&
-          (val.getCompleted() != null)) {
+      if ((todo || vpoll) && (val.getCompleted() != null)) {
         prop = new Completed(new DateTime(val.getCompleted()));
         pl.add(prop);
       }
@@ -377,7 +385,7 @@ public class VEventUtil extends IcalUtil {
       /* ------------------- ExDate --below------------ */
       /* ------------------- ExRule --below------------- */
 
-      if (entityType == IcalDefs.entityTypeFreeAndBusy) {
+      if (freeBusy) {
         Collection<BwFreeBusyComponent> fbps = val.getFreeBusyPeriods();
 
         if (fbps != null) {
@@ -413,9 +421,11 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Geo -------------------- */
 
-      BwGeo geo = val.getGeo();
-      if (geo != null) {
-        pl.add(geo);
+      if (!vpoll) {
+        BwGeo geo = val.getGeo();
+        if (geo != null) {
+          pl.add(geo);
+        }
       }
 
       /* ------------------- LastModified -------------------- */
@@ -428,11 +438,13 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Location -------------------- */
 
-      BwLocation loc = val.getLocation();
-      if (loc != null) {
-        prop = new Location(loc.getAddress().getValue());
+      if (!vpoll) {
+        BwLocation loc = val.getLocation();
+        if (loc != null) {
+          prop = new Location(loc.getAddress().getValue());
 
-        pl.add(langProp(uidProp(prop, loc.getUid()), loc.getAddress()));
+          pl.add(langProp(uidProp(prop, loc.getUid()), loc.getAddress()));
+        }
       }
 
       /* ------------------- Organizer -------------------- */
@@ -446,9 +458,11 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- PercentComplete -------------------- */
 
-      Integer pc = val.getPercentComplete();
-      if (pc != null) {
-        pl.add(new PercentComplete(pc.intValue()));
+      if (todo) {
+        Integer pc = val.getPercentComplete();
+        if (pc != null) {
+          pl.add(new PercentComplete(pc.intValue()));
+        }
       }
 
       /* ------------------- Priority -------------------- */
@@ -555,7 +569,7 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Transp -------------------- */
 
-      if (!todo) {
+      if (!todo && !vpoll) {
         strval = val.getPeruserTransparency(currentPrincipal);
 
         if ((strval != null) && (strval.length() > 0)) {
@@ -598,16 +612,16 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Overrides -------------------- */
 
-      if (!isInstance && !isOverride && val.testRecurring()) {
+      if (!vpoll && !isInstance && !isOverride && val.testRecurring()) {
         doRecurring(val, pl);
       }
 
       /* ------------------- Available -------------------- */
 
       if (vavail) {
-        if (ei.getNumAvailables() > 0) {
+        if (ei.getNumContainedItems() > 0) {
           VAvailability va = (VAvailability)comp;
-          for (EventInfo aei: ei.getAvailable()) {
+          for (EventInfo aei: ei.getContainedItems()) {
             va.getAvailable().add(toIcalComponent(aei, false, tzreg,
                                                   uriGen, currentPrincipal));
           }
@@ -618,6 +632,40 @@ public class VEventUtil extends IcalUtil {
         String s = val.getBusyTypeString();
         if (s != null) {
           pl.add(new BusyType(s));
+        }
+      }
+
+      /* ------------------- Vpoll -------------------- */
+
+      if (!vpoll && (val.getPollItemId() != null)) {
+        pl.add(new PollItemId(val.getPollItemId()));
+      }
+
+      if (vpoll) {
+        strval = val.getPollAcceptResponse();
+
+        if ((strval != null) && (strval.length() > 0)) {
+          pl.add(new AcceptResponse(strval));
+        }
+
+        strval = val.getPollMode();
+
+        if ((strval != null) && (strval.length() > 0)) {
+          pl.add(new PollMode(strval));
+        }
+
+        strval = val.getPollProperties();
+
+        if ((strval != null) && (strval.length() > 0)) {
+          pl.add(new PollProperties(strval));
+        }
+
+        if (ei.getNumContainedItems() > 0) {
+          VPoll vp = (VPoll)comp;
+          for (EventInfo aei: ei.getContainedItems()) {
+            vp.getCandidates().add(toIcalComponent(aei, false, tzreg,
+                                                   uriGen, currentPrincipal));
+          }
         }
       }
 

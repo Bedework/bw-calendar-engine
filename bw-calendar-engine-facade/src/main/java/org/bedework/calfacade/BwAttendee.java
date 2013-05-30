@@ -33,6 +33,14 @@ import edu.rpi.sss.util.Util;
  */
 public class BwAttendee extends BwDbentity<BwAttendee>
          implements BwCloneable, Differable<BwAttendee> {
+  /** The default type of entity */
+  public final static int typeAttendee = 0;
+
+  /** Could be a voter */
+  public final static int typeVoter = 1;
+
+  private int type;
+
   /* Params fields */
 
   private String cn;
@@ -105,6 +113,9 @@ public class BwAttendee extends BwDbentity<BwAttendee>
 
   private String scheduleStatus;
 
+  private int response;
+  private boolean stayInformed;
+
   /* Non-db values */
 
   /** Constructor
@@ -116,6 +127,22 @@ public class BwAttendee extends BwDbentity<BwAttendee>
   /* ====================================================================
    *                      Bean methods
    * ==================================================================== */
+
+  /** Set the type
+   *
+   *  @param  val
+   */
+  public void setType(final int val) {
+    type = val;
+  }
+
+  /** Get the type
+   *
+   *  @return int
+   */
+  public int getType() {
+    return type;
+  }
 
   /** Set the cn
    *
@@ -371,11 +398,44 @@ public class BwAttendee extends BwDbentity<BwAttendee>
     return scheduleStatus;
   }
 
+  /** Set the response - voter only
+   *
+   *  @param  val
+   */
+  public void setResponse(final int val) {
+    response = val;
+  }
+
+  /** Get the type
+   *
+   *  @return int
+   */
+  public int getResponse() {
+    return response;
+  }
+
+  /**
+   *
+   *  @param  val
+   */
+  public void setStayInformed(final boolean val) {
+    stayInformed = val;
+  }
+
+  /**
+   *
+   *  @return boolean
+   */
+  public boolean getStayInformed() {
+    return stayInformed;
+  }
+
   /** Copy this objects values into the parameter
    *
    * @param val
    */
   public void copyTo(final BwAttendee val) {
+    val.setType(getType());
     val.setCn(getCn());
     val.setCuType(getCuType());
     val.setDelegatedFrom(getDelegatedFrom());
@@ -392,6 +452,9 @@ public class BwAttendee extends BwDbentity<BwAttendee>
     val.setScheduleAgent(getScheduleAgent());
     val.setScheduleStatus(getScheduleStatus());
     val.setDtstamp(getDtstamp());
+
+    val.setResponse(getResponse());
+    val.setStayInformed(getStayInformed());
   }
 
   /** Only true if something changes the status of, or information about, the
@@ -432,19 +495,29 @@ public class BwAttendee extends BwDbentity<BwAttendee>
 
   @Override
   public boolean differsFrom(final BwAttendee val) {
-    return (Util.compareStrings(val.getPartstat(), getPartstat()) != 0) ||
-           (Util.compareStrings(val.getCn(), getCn()) != 0) ||
-           (Util.compareStrings(val.getCuType(), getCuType()) != 0) ||
-           (Util.compareStrings(val.getDelegatedFrom(), getDelegatedFrom()) != 0) ||
-           (Util.compareStrings(val.getDelegatedTo(), getDelegatedTo()) != 0) ||
-           (Util.compareStrings(val.getDir(), getDir()) != 0) ||
-           (Util.compareStrings(val.getLanguage(), getLanguage()) != 0) ||
-           (Util.compareStrings(val.getMember(), getMember()) != 0) ||
-           (Util.cmpBoolval(val.getRsvp(), getRsvp()) != 0) ||
-           (Util.compareStrings(val.getRole(), getRole()) != 0) ||
-           (Util.compareStrings(val.getSentBy(), getSentBy()) != 0) ||
-           (Util.compareStrings(val.getAttendeeUri(), getAttendeeUri()) != 0) ||
-           (Util.cmpIntval(val.getScheduleAgent(), getScheduleAgent()) != 0);
+    if ((Util.cmpIntval(val.getType(), getType()) != 0) ||
+        (Util.compareStrings(val.getPartstat(), getPartstat()) != 0) ||
+        (Util.compareStrings(val.getCn(), getCn()) != 0) ||
+        (Util.compareStrings(val.getCuType(), getCuType()) != 0) ||
+        (Util.compareStrings(val.getDelegatedFrom(), getDelegatedFrom()) != 0) ||
+        (Util.compareStrings(val.getDelegatedTo(), getDelegatedTo()) != 0) ||
+        (Util.compareStrings(val.getDir(), getDir()) != 0) ||
+        (Util.compareStrings(val.getLanguage(), getLanguage()) != 0) ||
+        (Util.compareStrings(val.getMember(), getMember()) != 0) ||
+        (Util.cmpBoolval(val.getRsvp(), getRsvp()) != 0) ||
+        (Util.compareStrings(val.getRole(), getRole()) != 0) ||
+        (Util.compareStrings(val.getSentBy(), getSentBy()) != 0) ||
+        (Util.compareStrings(val.getAttendeeUri(), getAttendeeUri()) != 0) ||
+        (Util.cmpIntval(val.getScheduleAgent(), getScheduleAgent()) != 0)) {
+      return true;
+    }
+
+    if (val.getType() != typeVoter) {
+      return false;
+    }
+
+    return (Util.cmpIntval(val.getResponse(), getResponse()) != 0) ||
+        (Util.cmpBoolval(val.getStayInformed(), getStayInformed()) != 0);
   }
 
   /* ====================================================================
@@ -471,6 +544,7 @@ public class BwAttendee extends BwDbentity<BwAttendee>
 
     toStringSegment(ts);
 
+    ts.append("type", getType());
     ts.append("cn", getCn());
     ts.append("cuType", getCuType());
     ts.append("delegatedFrom", getDelegatedFrom());
@@ -495,6 +569,12 @@ public class BwAttendee extends BwDbentity<BwAttendee>
     ts.newLine();
     ts.append("scheduleAgent", getScheduleAgent());
     ts.append("scheduleStatus", getScheduleStatus());
+
+    if (getType() == typeVoter) {
+      ts.newLine();
+      ts.append("response", getResponse());
+      ts.append("stayInformed", getStayInformed());
+    }
 
     return ts.toString();
   }

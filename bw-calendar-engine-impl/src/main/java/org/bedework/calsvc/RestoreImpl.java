@@ -459,6 +459,9 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   private void handleException(final Throwable t, final String msg) {
+    if (log == null) {
+      return;
+    }
     log.error(msg, t);
   }
 
@@ -471,11 +474,17 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
 
   @Override
   protected void warn(final String msg) {
+    if (log == null) {
+      return;
+    }
     log.warn(msg);
   }
 
   @Override
   protected void error(final String msg) {
+    if (log == null) {
+      return;
+    }
     log.error(msg);
   }
 }

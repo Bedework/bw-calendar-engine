@@ -164,6 +164,10 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
       return CalDAVCollection.calTypeNotifications;
     }
 
+    if (calType == BwCalendar.calTypePoll) {
+      return CalDAVCollection.calTypeCalendarCollection;
+    }
+
     return CalDAVCollection.calTypeUnknown;
   }
 
@@ -236,6 +240,11 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   @Override
   public List<String> getSupportedComponents() throws WebdavException {
     return getCol().getSupportedComponents();
+  }
+
+  @Override
+  public List<String> getVpollSupportedComponents() throws WebdavException {
+    return getCol().getVpollSupportedComponents();
   }
 
   /* ====================================================================

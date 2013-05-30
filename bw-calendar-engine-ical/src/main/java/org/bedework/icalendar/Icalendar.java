@@ -302,6 +302,8 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
         setComponentType(IcalComponentType.freebusy);
       } else if (ev.getEntityType() == IcalDefs.entityTypeVavailability) {
         setComponentType(IcalComponentType.vavailability);
+      } else if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
+        setComponentType(IcalComponentType.vpoll);
       } else {
         throw new RuntimeException("org.bedework.bad.entitytype");
       }
@@ -463,6 +465,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   /* (non-Javadoc)
    * @see net.fortuna.ical4j.model.TimeZoneRegistry#register(net.fortuna.ical4j.model.TimeZone)
    */
+  @Override
   public void register(final TimeZone timezone) {
     try {
       TimeZone tz = Timezones.getTz(timezone.getID());
@@ -481,6 +484,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
     }
   }
 
+  @Override
   public void register(final TimeZone timezone, final boolean update) {
     register(timezone);
   }
@@ -488,6 +492,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   /* (non-Javadoc)
    * @see net.fortuna.ical4j.model.TimeZoneRegistry#clear()
    */
+  @Override
   public void clear() {
     if (localTzs != null) {
       localTzs.clear();
@@ -497,6 +502,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   /* (non-Javadoc)
    * @see net.fortuna.ical4j.model.TimeZoneRegistry#getTimeZone(java.lang.String)
    */
+  @Override
   public TimeZone getTimeZone(final String id) {
     try {
       TimeZone tz = Timezones.getTz(id);

@@ -22,7 +22,7 @@
 		<!-- Third Party Library Versions -->
 		<hibernate.version>3.6.9.Final</hibernate.version>
 		<hibernate-validator.version>3.1.0.GA</hibernate-validator.version>
-		<ical4j.version>1.0.4</ical4j.version>
+		<ical4j.version>1.0-BW-SNAPSHOT</ical4j.version>
 		<ical4j-vcard.version>0.9.6-BW-SNAPSHOT</ical4j-vcard.version>
 		<junit.version>4.8.2</junit.version>
 		<log4j.version>1.2.15</log4j.version>
@@ -183,7 +183,7 @@
 				<version>${geronimo-kernel.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.mnode.ical4j</groupId>
+        <groupId>net.fortuna.ical4j</groupId>
 				<artifactId>ical4j</artifactId>
 				<version>${ical4j.version}</version>
 			</dependency>

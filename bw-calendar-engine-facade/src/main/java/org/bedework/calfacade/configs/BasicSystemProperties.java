@@ -157,18 +157,44 @@ public interface BasicSystemProperties extends Serializable {
   @MBeanInfo("user Calendar Root - do not change")
   String getUserCalendarRoot();
 
-  /** Set the user default calendar
+  /** Set the user default events calendar
    *
    * @param val    String
    */
   void setUserDefaultCalendar(String val);
 
-  /** Get the userDefaultCalendar
+  /** Get the user default events calendar
    *
    * @return String   userDefaultCalendar
    */
-  @MBeanInfo("userDefaultCalendar - do not change")
+  @MBeanInfo("user default events calendar - do not change")
   String getUserDefaultCalendar();
+
+  /** Set the user default tasks calendar
+   *
+   * @param val    String
+   */
+  void setUserDefaultTasksCalendar(String val);
+
+  /** Get the user default tasks calendar
+   *
+   * @return String
+   */
+  @MBeanInfo("user default tasks calendar - do not change")
+  String getUserDefaultTasksCalendar();
+
+  /** Set the user default polls calendar
+   *
+   * @param val    String
+   */
+  void setUserDefaultPollsCalendar(String val);
+
+  /** Get the user default polls calendar
+   *
+   * @return String
+   */
+  @MBeanInfo("user default polls calendar - do not change")
+  String getUserDefaultPollsCalendar();
 
   /** Set the defaultNotificationsName
    *

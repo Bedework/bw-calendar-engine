@@ -24,9 +24,9 @@ import org.bedework.calfacade.BwEvent;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Set;
 import java.util.TreeSet;
 
 /** This class provides information about an event for a specific user and
@@ -56,11 +56,11 @@ public class CoreEventInfo implements Comparable, Comparator, Serializable {
    */
   private Collection<CoreEventInfo> instances;
 
-  /** If the event is a vavailability event this will hold all the available
-   * objects for that event in the form of
-   * CoreEventInfo objects.
+  /* Collection of EventInfo representing contained items. For
+   * entityTypeVavailability this would be AVAILABLE components. For Vpoll it
+   * will be candidates.
    */
-  private Collection<CoreEventInfo> available;
+  private Set<CoreEventInfo> containedItems;
 
   /** Constructor
    *
@@ -189,56 +189,57 @@ public class CoreEventInfo implements Comparable, Comparator, Serializable {
   }
 
   /* ====================================================================
-   *                   Availability methods
+   *                   Contained item methods
    * ==================================================================== */
 
-  /** set the available times
+  /** set the contained items
    *
-   * @param val     Collection    of CoreEventInfo all marked as entityTypeAvailable
+   * @param val     Collection    of CoreEventInfo
    */
-  public void setAvailable(final Collection<CoreEventInfo> val) {
-    available = val;
+  public void setContainedItems(final Set<CoreEventInfo> val) {
+    containedItems = val;
   }
 
-  /** Get the available times
+  /** Get the contained items
    *
    * @return Collection    of CoreEventInfo
    */
-  public Collection<CoreEventInfo> getAvailable() {
-    return available;
+  public Set<CoreEventInfo> getContainedItems() {
+    return containedItems;
   }
 
-  /** Add an available component
+  /** Add a contained item
    *
    * @param val
    */
-  public void addAvailable(final CoreEventInfo val) {
-    Collection<CoreEventInfo> avl = getAvailable();
+  public void addContainedItem(final CoreEventInfo val) {
+    Set<CoreEventInfo> cis = getContainedItems();
 
-    if (avl == null) {
-      avl = new ArrayList<CoreEventInfo>();
-      setAvailable(avl);
+    if (cis == null) {
+      cis = new TreeSet<CoreEventInfo>();
+      setContainedItems(cis);
     }
 
-    avl.add(val);
+    cis.add(val);
   }
 
   /**
-   * @return int number of available objects.
+   * @return int number of contained items.
    */
-  public int getNumAvailables() {
-    Collection<CoreEventInfo> as = getAvailable();
-    if (as == null) {
+  public int getNumContainedItems() {
+    Set<CoreEventInfo> cis = getContainedItems();
+    if (cis == null) {
       return 0;
     }
 
-    return as.size();
+    return cis.size();
   }
 
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */
 
+  @Override
   public int compare(final Object o1, final Object o2) {
     if (!(o1 instanceof CoreEventInfo)) {
       return -1;
@@ -258,6 +259,7 @@ public class CoreEventInfo implements Comparable, Comparator, Serializable {
     return e1.getEvent().compare(e1.getEvent(), e2.getEvent());
   }
 
+  @Override
   public int compareTo(final Object o2) {
     return compare(this, o2);
   }
