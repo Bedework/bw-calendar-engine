@@ -119,6 +119,7 @@ public class Restore implements Defs {
   public void open() throws Throwable {
     globals.svci.open();
     globals.rintf = globals.svci.getRestoreHandler();
+    globals.rintf.setLogger(new RLogger(globals));
   }
 
   /**
@@ -164,7 +165,7 @@ public class Restore implements Defs {
 
     BwPrincipal pu = BwPrincipal.makeUserPrincipal();
 
-    pu.setAccount(globals.getBasicSyspars().getPublicUser());
+    pu.setAccount(RestoreGlobals.getBasicSyspars().getPublicUser());
     globals.setPrincipalHref(pu);
 
     globals.rintf.restorePrincipal(pu);
@@ -222,7 +223,7 @@ public class Restore implements Defs {
 
     makeCal(null, pu,
             BwCalendar.calTypeFolder,
-            globals.getBasicSyspars().getPublicCalendarRoot(),
+            RestoreGlobals.getBasicSyspars().getPublicCalendarRoot(),
             new String(new Acl(aces).encode()));
 
     // Create the user root.
@@ -235,7 +236,7 @@ public class Restore implements Defs {
 
     BwCalendar userRoot = makeCal(null, pu,
                                   BwCalendar.calTypeFolder,
-                                  globals.getBasicSyspars().getUserCalendarRoot(),
+                                  RestoreGlobals.getBasicSyspars().getUserCalendarRoot(),
                                   new String(new Acl(aces).encode()));
 
     makeUserHome(userRoot, pu);
@@ -252,7 +253,7 @@ public class Restore implements Defs {
                                   null);
     makeCal(userHome, user,
             BwCalendar.calTypeCalendarCollection,
-            globals.getBasicSyspars().getUserDefaultCalendar(),
+            RestoreGlobals.getBasicSyspars().getUserDefaultCalendar(),
             null);
   }
 

@@ -19,6 +19,7 @@
 
 package org.bedework.dumprestore.restore.rules;
 
+import org.bedework.calfacade.BwSystem;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
 import org.xml.sax.Attributes;
@@ -45,11 +46,17 @@ public class SysparsRule extends EntityRule {
 
     /* Use the global object. */
     pop();
-    push(globals.getSyspars());
+    push(new BwSystem());
   }
 
   @Override
   public void end(final String ns, final String name) throws Exception {
-    pop();
+    BwSystem ent = (BwSystem)pop();
+
+    try {
+      globals.rintf.restoreSyspars(ent);
+    } catch (Throwable t) {
+      throw new Exception(t);
+    }
   }
 }

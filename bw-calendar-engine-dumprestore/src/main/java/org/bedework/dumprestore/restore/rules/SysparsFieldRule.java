@@ -20,6 +20,7 @@
 package org.bedework.dumprestore.restore.rules;
 
 import org.bedework.calfacade.BwProperty;
+import org.bedework.calfacade.BwSystem;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
 import java.util.ArrayList;
@@ -55,9 +56,10 @@ public class SysparsFieldRule extends EntityFieldRule {
       return;
     }
 
-    //BwSystem ent = (BwSystem)top();
+    BwSystem ent = (BwSystem)top();
 
     if (name.equals("name")) {
+      ent.setName(stringFld());
     } else if (name.equals("tzid")) {
     } else if (name.equals("systemid")) {
     } else if (name.equals("principalRoot")) {
