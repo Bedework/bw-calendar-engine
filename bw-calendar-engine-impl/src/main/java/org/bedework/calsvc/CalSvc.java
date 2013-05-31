@@ -1170,6 +1170,9 @@ public class CalSvc extends CalSvcI {
             getLogger().debug("Add new user " + authenticatedUser);
 
             currentPrincipal = addUser(authenticatedUser);
+            if (currentPrincipal == null) {
+              error("Failed to find user after adding: " + authenticatedUser);
+            }
           }
 
           authPrincipal = currentPrincipal;

@@ -956,8 +956,10 @@ public class InRequest extends InProcessor {
           break;
 
         case CATEGORIES:
-          for (BwCategory cat: inEv.getCategories()) {
-            chg.addValue(Property.CATEGORIES, cat);
+          if (!Util.isEmpty(inEv.getCategories())) {
+            for (BwCategory cat: inEv.getCategories()) {
+              chg.addValue(Property.CATEGORIES, cat);
+            }
           }
           break;
 

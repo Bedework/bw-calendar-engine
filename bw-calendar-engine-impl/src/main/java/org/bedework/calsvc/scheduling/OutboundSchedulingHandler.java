@@ -192,7 +192,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     BwEvent ev = ei.getEvent();
 
     if (senderEi.getReplyUpdate()) {
-      // Flag as a trivial update to atendee status
+      // Flag as a trivial update to attendee status
       ev.addXproperty(new BwXproperty(BwXproperty.bedeworkSchedulingReplyUpdate,
                                       null, "true"));
     }
@@ -218,6 +218,12 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
 
     ev.setScheduleState(BwEvent.scheduleStateNotProcessed);
     ev.setColPath(inboxPath);
+
+    if (ei.getNumContainedItems() > 0) {
+      for (EventInfo cei: ei.getContainedItems()) {
+        cei.getEvent().setColPath(inboxPath);
+      }
+    }
 
     /* Before we add this we should see if there is an earlier one we can
      * discard. As attendees update their status we get many requests sent to

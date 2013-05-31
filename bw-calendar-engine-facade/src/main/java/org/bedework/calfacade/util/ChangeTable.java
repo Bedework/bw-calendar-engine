@@ -565,6 +565,8 @@ public class ChangeTable implements Serializable {
         break;
       case RRULE:
         break;
+      case VOTER:
+        break;
       case XPROP:
         break;
 
@@ -615,7 +617,7 @@ public class ChangeTable implements Serializable {
       }
 
       /* These can be present but we still need to delete members. */
-      if (!ent.getEventProperty()) {
+      if (!ent.getEventProperty() && !ent.getVpollProperty()) {
         continue;
       }
 
@@ -630,6 +632,10 @@ public class ChangeTable implements Serializable {
         break;
 
       case ATTENDEE:
+        if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
+          // Skip so as not to disturb the attendees property - we deal with it as VOTER
+          break;
+        }
         originalVals = ev.getAttendees();
 
 /*        diff(ent, originalVals);
@@ -744,6 +750,19 @@ public class ChangeTable implements Serializable {
           }
         }
         break;
+
+      case VOTER:
+        if (ev.getEntityType() != IcalDefs.entityTypeVpoll) {
+          // Skip so as not to disturb the attendees property
+          break;
+        }
+        originalVals = ev.getAttendees();
+
+        if (checkMulti(ent, originalVals, update)) {
+          ev.setAttendees((Set)ent.getAddedValues());
+        }
+        break;
+
       case ACCEPT_RESPONSE:
         break;
       case ACTION:

@@ -72,6 +72,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
@@ -223,6 +224,11 @@ class Events extends CalSvcDb implements EventsI {
           // vpoll
           Set<Integer> pids = new TreeSet<Integer>();
 
+          if (!Util.isEmpty(event.getPollItemNames())) {
+            event.getPollItemNames().clear();
+          }
+
+          String nameBase = UUID.randomUUID().toString();
           for (EventInfo vei: ei.getContainedItems()) {
             BwEvent v = vei.getEvent();
 
@@ -240,7 +246,7 @@ class Events extends CalSvcDb implements EventsI {
               throw new CalFacadeException("XXX - duplicate poll item id " + pid);
             }
 
-            String name = event.getUid() + "-" + pid + ".ics";
+            String name = nameBase + "-" + pid + ".ics";
             v.setName(name);
             event.addPollItemName(name);
           }

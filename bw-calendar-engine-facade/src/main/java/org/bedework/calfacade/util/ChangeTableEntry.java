@@ -709,32 +709,43 @@ d   * @param todoProperty
   private static void initMap() {
     /* ---------------------------- Single valued --------------- */
 
-    /* Event, Todo and freebusy */
+    put(new ChangeTableEntry(PropertyInfoIndex.ACCEPT_RESPONSE));
+
+    put(new ChangeTableEntry(PropertyInfoIndex.BUSYTYPE));
+
+    put(new ChangeTableEntry(PropertyInfoIndex.CLASS));
+
+    put(new ChangeTableEntry(PropertyInfoIndex.COMPLETED));
+
+    put(new ChangeTableEntry(PropertyInfoIndex.CREATED));
+
+    put(new ChangeTableEntry(PropertyInfoIndex.DESCRIPTION));
+
+    put(new ChangeTableEntry(PropertyInfoIndex.DTEND));
 
     put(new ChangeTableEntry(PropertyInfoIndex.DTSTAMP));
 
     put(new ChangeTableEntry(PropertyInfoIndex.DTSTART));
 
+    put(new ChangeTableEntry(PropertyInfoIndex.DUE));
+
     put(new ChangeTableEntry(PropertyInfoIndex.DURATION));
-
-    put(new ChangeTableEntry(PropertyInfoIndex.ORGANIZER));
-
-    put(new ChangeTableEntry(PropertyInfoIndex.UID));
-
-    put(new ChangeTableEntry(PropertyInfoIndex.URL));
-
-    /* Event and Todo */
-    put(new ChangeTableEntry(PropertyInfoIndex.CLASS));
-
-    put(new ChangeTableEntry(PropertyInfoIndex.CREATED));
-
-    put(new ChangeTableEntry(PropertyInfoIndex.DESCRIPTION));
 
     put(new ChangeTableEntry(PropertyInfoIndex.GEO));
 
     put(new ChangeTableEntry(PropertyInfoIndex.LAST_MODIFIED));
 
     put(new ChangeTableEntry(PropertyInfoIndex.LOCATION));
+
+    put(new ChangeTableEntry(PropertyInfoIndex.ORGANIZER));
+
+    put(new ChangeTableEntry(PropertyInfoIndex.PERCENT_COMPLETE));
+
+    put(new ChangeTableEntry(PropertyInfoIndex.POLL_ITEM_ID));
+
+    put(new ChangeTableEntry(PropertyInfoIndex.POLL_MODE));
+
+    put(new ChangeTableEntry(PropertyInfoIndex.POLL_PROPERTIES));
 
     put(new ChangeTableEntry(PropertyInfoIndex.PRIORITY));
 
@@ -746,21 +757,11 @@ d   * @param todoProperty
 
     put(new ChangeTableEntry(PropertyInfoIndex.SUMMARY));
 
-    /* Event + fb */
-
-    put(new ChangeTableEntry(PropertyInfoIndex.DTEND));
-
-    /* Event only */
-
     put(new ChangeTableEntry(PropertyInfoIndex.TRANSP));
 
-    /* Todo only */
+    put(new ChangeTableEntry(PropertyInfoIndex.UID));
 
-    put(new ChangeTableEntry(PropertyInfoIndex.COMPLETED));
-
-    put(new ChangeTableEntry(PropertyInfoIndex.DUE));
-
-    put(new ChangeTableEntry(PropertyInfoIndex.PERCENT_COMPLETE));
+    put(new ChangeTableEntry(PropertyInfoIndex.URL));
 
     /* ---------------------------- Multi valued --------------- */
 
@@ -814,6 +815,8 @@ d   * @param todoProperty
     put(new ChangeTableEntry(null, PropertyInfoIndex.TZOFFSETTO));
 
     put(new ChangeTableEntry(null, PropertyInfoIndex.TZURL));
+
+    put(new ChangeTableEntry(true, PropertyInfoIndex.VOTER));
 
     put(new ChangeTableEntry(null, PropertyInfoIndex.ACTION));
 

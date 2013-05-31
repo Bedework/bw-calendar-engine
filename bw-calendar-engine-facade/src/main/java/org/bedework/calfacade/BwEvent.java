@@ -4121,7 +4121,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     ev.setPollMode(getPollMode());
     ev.setPollProperties(getPollProperties());
     ev.setPollAcceptResponse(getPollAcceptResponse());
-    ev.setPollItemNames(getPollItemNames());
+
+    if (!Util.isEmpty(getPollItemNames())) {
+      for (String s: getPollItemNames()) {
+        ev.addPollItemName(s);
+      }
+    }
+
     ev.setPollCandidate(getPollCandidate());
   }
 

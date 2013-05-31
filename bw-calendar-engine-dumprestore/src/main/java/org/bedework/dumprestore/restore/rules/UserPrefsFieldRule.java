@@ -95,10 +95,8 @@ public class UserPrefsFieldRule extends EntityFieldRule {
 
       if (name.equals("email")) {
         p.setEmail(stringFld());
-      } else if (name.equals("default-calendar-path")) {  // PRE3.5
-        p.setDefaultCalendarPath(Util.buildPath(true, stringFld()));
       } else if (name.equals("defaultCalendarPath")) {
-        p.setDefaultCalendarPath(stringFld());
+        p.setDefaultCalendarPath(Util.buildPath(true, stringFld()));
       } else if (name.equals("skinName")) {
         p.setSkinName(stringFld());
       } else if (name.equals("skinStyle")) {

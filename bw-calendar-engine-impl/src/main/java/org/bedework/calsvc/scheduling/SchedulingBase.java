@@ -177,7 +177,16 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
 
     if (!ev.getRecurring()) {
       setChangeInfo(newEv, changeInfo);
-      return new EventInfo(newEv);
+      EventInfo nei = new EventInfo(newEv);
+
+      if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
+        // Copy the candidates - note VPOLL cannot be recurring.
+        for (EventInfo cei: ei.getContainedItems()) {
+          nei.addContainedItem(copyEventInfo(cei, significantChangesOnly, owner));
+        }
+      }
+
+      return nei;
     }
 
     if (cancel) {
