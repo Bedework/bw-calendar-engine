@@ -328,9 +328,6 @@ public abstract class AbstractDirImpl implements Directories {
     return changed;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#isPrincipal(java.lang.String)
-   */
   @Override
   public boolean isPrincipal(final String val) throws CalFacadeException {
     if (val == null) {
@@ -386,6 +383,23 @@ public abstract class AbstractDirImpl implements Directories {
     /* It's one of our principal hierarchies */
 
     return false;
+  }
+
+  @Override
+  public String accountFromPrincipal(final String val) throws CalFacadeException {
+    String userProot = fromWho.get(WhoDefs.whoTypeUser);
+
+    if (!val.startsWith(userProot) || !val.endsWith("/")) {
+      return null;
+    }
+
+    String acc = val.substring(userProot.length(), val.length() - 1);
+
+    if (acc.indexOf("/") > 0) {
+      return null;
+    }
+
+    return acc;
   }
 
   /* (non-Javadoc)

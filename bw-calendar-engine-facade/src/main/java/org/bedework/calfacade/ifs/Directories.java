@@ -197,6 +197,14 @@ public interface Directories extends Serializable {
    */
   boolean isPrincipal(String val) throws CalFacadeException;
 
+  /** If this is a valid user principal return the account.
+   *
+   * @param val
+   * @return account or null if not valid user principal
+   * @throws CalFacadeException
+   */
+  String accountFromPrincipal(String val) throws CalFacadeException;
+
   /** Return principal for the given href.
    *
    * @param href
