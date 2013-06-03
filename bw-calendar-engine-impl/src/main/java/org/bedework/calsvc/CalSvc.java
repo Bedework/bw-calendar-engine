@@ -90,7 +90,6 @@ import edu.rpi.cmt.access.Access;
 import edu.rpi.cmt.access.Ace;
 import edu.rpi.cmt.access.AceWho;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.access.PrivilegeDefs;
 import edu.rpi.cmt.access.PrivilegeSet;
 import edu.rpi.cmt.jmx.MBeanUtil;
 import edu.rpi.cmt.security.PwEncryptionIntf;
@@ -295,11 +294,11 @@ public class CalSvc extends CalSvcI {
         //        if (pars.getCaldav() && !pars.isGuest()) {
         if (!pars.isGuest()) {
           /* Ensure scheduling resources exist */
-          getCal().getSpecialCalendar(getPrincipal(), BwCalendar.calTypeInbox,
-                                      true, PrivilegeDefs.privAny);
+//          getCal().getSpecialCalendar(getPrincipal(), BwCalendar.calTypeInbox,
+  //                                    true, PrivilegeDefs.privAny);
 
-          getCal().getSpecialCalendar(getPrincipal(), BwCalendar.calTypeOutbox,
-                                      true, PrivilegeDefs.privAny);
+    //      getCal().getSpecialCalendar(getPrincipal(), BwCalendar.calTypeOutbox,
+      //                                true, PrivilegeDefs.privAny);
         }
       }
 

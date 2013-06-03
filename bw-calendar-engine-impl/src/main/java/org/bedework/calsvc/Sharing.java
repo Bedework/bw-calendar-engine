@@ -235,7 +235,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     /* We must have at least read access to the shared collection */
 
-    BwCalendar sharerCol = getCols().get(reply.getHostUrl());
+    BwCalendar sharerCol = getCols().get(Util.buildPath(true, reply.getHostUrl()));
 
     if (sharerCol == null) {
       // Bad hosturl

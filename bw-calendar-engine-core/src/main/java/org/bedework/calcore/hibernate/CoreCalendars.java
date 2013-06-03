@@ -45,6 +45,7 @@ import edu.rpi.cmt.access.Access;
 import edu.rpi.cmt.access.Ace;
 import edu.rpi.cmt.access.AceWho;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
+import edu.rpi.cmt.access.PrivilegeDefs;
 import edu.rpi.sss.util.Util;
 
 import java.io.Serializable;
@@ -387,6 +388,12 @@ public class CoreCalendars extends CalintfHelperHib
         col.setCreatorHref(userRoot.getCreatorHref());
         col.setAccess(Access.getDefaultPublicAccess());
       } else {
+        GetSpecialCalendarResult gscr = getIfSpecial(getPrincipal(), path);
+
+        if (gscr != null) {
+          return gscr.cal;
+        }
+
         return null;
       }
     }
@@ -410,11 +417,53 @@ public class CoreCalendars extends CalintfHelperHib
     return col;
   }
 
+  private GetSpecialCalendarResult getIfSpecial(final BwPrincipal owner,
+                                                final String path) throws CalFacadeException {
+    String pathTo = cb.getPrincipalInfo().getCalendarHomePath(owner);
+
+    BasicSystemProperties sys = getSyspars();
+
+    if (Util.buildPath(true, pathTo, "/", sys.getUserInbox()).equals(path)) {
+      return getSpecialCalendar(owner, BwCalendar.calTypeInbox,
+                                true, false, PrivilegeDefs.privAny);
+    }
+
+    if (Util.buildPath(true, pathTo, "/", sys.getUserOutbox()).equals(path)) {
+      return getSpecialCalendar(owner, BwCalendar.calTypeOutbox,
+                                true, false, PrivilegeDefs.privAny);
+    }
+
+    if (Util.buildPath(true, pathTo, "/", sys.getDefaultNotificationsName()).equals(path)) {
+      return getSpecialCalendar(owner, BwCalendar.calTypeNotifications,
+                                true, false, PrivilegeDefs.privAny);
+    }
+
+    if (Util.buildPath(true, pathTo, "/", sys.getDefaultReferencesName()).equals(path)) {
+      return getSpecialCalendar(owner, BwCalendar.calTypeEventList,
+                                true, false, PrivilegeDefs.privAny);
+    }
+
+    if (Util.buildPath(true, pathTo, "/", sys.getUserDefaultPollsCalendar()).equals(path)) {
+      return getSpecialCalendar(owner, BwCalendar.calTypePoll,
+                                true, false, PrivilegeDefs.privAny);
+    }
+
+    return null;
+  }
+
   @Override
   public GetSpecialCalendarResult getSpecialCalendar(final BwPrincipal owner,
                                                      final int calType,
                                                      final boolean create,
                                                      final int access) throws CalFacadeException {
+    return getSpecialCalendar(owner, calType, create, true, access);
+  }
+
+  private GetSpecialCalendarResult getSpecialCalendar(final BwPrincipal owner,
+                                                      final int calType,
+                                                      final boolean create,
+                                                      final boolean tryFetch,
+                                                      final int access) throws CalFacadeException {
     String name;
     BasicSystemProperties sys = getSyspars();
 
@@ -443,11 +492,13 @@ public class CoreCalendars extends CalintfHelperHib
       return gscr;
     }
 
-    gscr.cal = getCalendar(Util.buildPath(true, pathTo, "/", name),
-                           access, false);
+    if (tryFetch){
+      gscr.cal = getCalendar(Util.buildPath(true, pathTo, "/", name),
+                             access, false);
 
-    if ((gscr.cal != null) || !create) {
-      return gscr;
+      if ((gscr.cal != null) || !create) {
+        return gscr;
+      }
     }
 
     /*

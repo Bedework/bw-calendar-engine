@@ -72,7 +72,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
@@ -220,36 +219,6 @@ class Events extends CalSvcDb implements EventsI {
             setupSharableEntity(av,
                                 getPrincipal().getPrincipalRef());
           }
-        } else if (ei.getNumContainedItems() > 0){
-          // vpoll
-          Set<Integer> pids = new TreeSet<Integer>();
-
-          if (!Util.isEmpty(event.getPollItemNames())) {
-            event.getPollItemNames().clear();
-          }
-
-          String nameBase = UUID.randomUUID().toString();
-          for (EventInfo vei: ei.getContainedItems()) {
-            BwEvent v = vei.getEvent();
-
-            setupSharableEntity(v,
-                                getPrincipal().getPrincipalRef());
-            v.setDtstamps(getCurrentTimestamp());
-            v.setPollCandidate(true);
-
-            Integer pid = v.getPollItemId();
-            if (pid == null) {
-              throw new CalFacadeException("XXX - no poll item id");
-            }
-
-            if (pids.contains(pid)) {
-              throw new CalFacadeException("XXX - duplicate poll item id " + pid);
-            }
-
-            String name = nameBase + "-" + pid + ".ics";
-            v.setName(name);
-            event.addPollItemName(name);
-          }
         }
       }
 
@@ -295,7 +264,7 @@ class Events extends CalSvcDb implements EventsI {
 
       boolean schedulingObject = false;
 
-      if ((cal.getCalType() == BwCalendar.calTypeCalendarCollection) &&
+      if (cal.getCollectionInfo().scheduling &&
           (event.getOrganizerSchedulingObject() ||
            event.getAttendeeSchedulingObject())) {
         schedulingObject = true;
@@ -314,7 +283,7 @@ class Events extends CalSvcDb implements EventsI {
 
           ovei.setDtstamps(getCurrentTimestamp());
 
-          if ((cal.getCalType() == BwCalendar.calTypeCalendarCollection) &&
+          if (cal.getCollectionInfo().scheduling &&
               (ovei.getOrganizerSchedulingObject() ||
                ovei.getAttendeeSchedulingObject())) {
             schedulingObject = true;
@@ -349,16 +318,6 @@ class Events extends CalSvcDb implements EventsI {
             //?
           }
         }
-      } else if (ei.getNumContainedItems() > 0){
-        for (EventInfo vei: ei.getContainedItems()) {
-          BwEvent v = vei.getEvent();
-
-          UpdateEventResult auer = getCal().addEvent(v, null,
-                                                     scheduling, rollbackOnError);
-          if (auer.errorCode != null) {
-            //?
-          }
-        }
       }
 
       updResult.failedOverrides = uer.failedOverrides;
@@ -369,7 +328,7 @@ class Events extends CalSvcDb implements EventsI {
           updResult.reply = true;
         }
 
-        if ((cal.getCalType() == BwCalendar.calTypeCalendarCollection) &&
+        if (cal.getCollectionInfo().scheduling &&
             schedulingObject) {
           SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
 
@@ -933,7 +892,7 @@ class Events extends CalSvcDb implements EventsI {
 
       if (sendSchedulingMessage &&
           event.getSchedulingObject() &&
-          (cal.getCalType() == BwCalendar.calTypeCalendarCollection)) {
+          (cal.getCollectionInfo().scheduling)) {
         // Should we also only do this if it affects freebusy?
 
         /* According to CalDAV we're supposed to do this before we delete the

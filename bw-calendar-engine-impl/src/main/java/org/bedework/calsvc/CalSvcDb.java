@@ -263,7 +263,7 @@ public class CalSvcDb implements Serializable {
       // Root
       res.coll = null;
     } else {
-      res.coll = getCols().get(path.substring(0, pos));
+      res.coll = getCols().get(path.substring(0, pos + 1));
       if (res.coll == null) {
         throw new CalFacadeException(CalFacadeException.collectionNotFound);
       }

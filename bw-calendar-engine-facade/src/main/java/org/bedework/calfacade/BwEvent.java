@@ -668,7 +668,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   private String pollProperties;
 
-  private Set<String> pollItemNames;
+  private Set<String> pollItems;
 
   private boolean pollCandidate;
 
@@ -3175,13 +3175,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return pollAccceptResponse;
   }
 
-  /** Set the vpoll item names
+  /** Set the vpoll items
    *
    * @param val    Set<String>
    */
   @NoProxy
-  public void setPollItemNames(final Set<String> val) {
-    pollItemNames = val;
+  public void setPollItems(final Set<String> val) {
+    pollItems = val;
   }
 
   /** Get the vpoll item names
@@ -3189,8 +3189,8 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @return Set<String>   names
    */
   @NoProxy
-  public Set<String> getPollItemNames() {
-    return pollItemNames;
+  public Set<String> getPollItems() {
+    return pollItems;
   }
 
   /** Add vpoll item href
@@ -3198,16 +3198,16 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val
    */
   @NoProxy
-  public void addPollItemName(final String val) {
-    Set<String> pins = getPollItemNames();
+  public void addPollItem(final String val) {
+    Set<String> pis = getPollItems();
 
-    if (pins == null) {
-      pins = new TreeSet<String>();
-      setPollItemNames(pins);
+    if (pis == null) {
+      pis = new TreeSet<String>();
+      setPollItems(pis);
     }
 
-    if (!pins.contains(val)) {
-      pins.add(val);
+    if (!pis.contains(val)) {
+      pis.add(val);
     }
   }
 
@@ -3991,11 +3991,14 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
 
     ts.append("pollItemId", getPollItemId());
-    ts.append("pollMode", getPollMode());
-    ts.append("pollProperties", getPollProperties());
-    ts.append("pollAcceptResponse", getPollAcceptResponse());
-    ts.append("pollItemNames", getPollItemNames());
     ts.append("pollCandidate", getPollCandidate());
+
+    if (getEntityType() == IcalDefs.entityTypeVpoll) {
+      ts.append("pollMode", getPollMode());
+      ts.append("pollProperties", getPollProperties());
+      ts.append("pollAcceptResponse", getPollAcceptResponse());
+      ts.append("pollItems", getPollItems());
+    }
   }
 
   /** Copy this objects fields into the parameter
@@ -4122,9 +4125,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     ev.setPollProperties(getPollProperties());
     ev.setPollAcceptResponse(getPollAcceptResponse());
 
-    if (!Util.isEmpty(getPollItemNames())) {
-      for (String s: getPollItemNames()) {
-        ev.addPollItemName(s);
+    if (!Util.isEmpty(getPollItems())) {
+      for (String s: getPollItems()) {
+        ev.addPollItem(s);
       }
     }
 

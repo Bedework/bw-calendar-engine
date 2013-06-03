@@ -19,7 +19,6 @@
 package org.bedework.calsvc.scheduling;
 
 import org.bedework.calfacade.BwAttendee;
-import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
@@ -178,13 +177,6 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
     if (!ev.getRecurring()) {
       setChangeInfo(newEv, changeInfo);
       EventInfo nei = new EventInfo(newEv);
-
-      if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
-        // Copy the candidates - note VPOLL cannot be recurring.
-        for (EventInfo cei: ei.getContainedItems()) {
-          nei.addContainedItem(copyEventInfo(cei, significantChangesOnly, owner));
-        }
-      }
 
       return nei;
     }
@@ -461,7 +453,7 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
   @Override
   public String addEvent(final EventInfo ei,
                          final String namePrefix,
-                         final int calType,
+                         final boolean toInoutBox,
                          final boolean noInvites) throws CalFacadeException {
     BwEvent ev = ei.getEvent();
     String prefix = namePrefix;
@@ -471,8 +463,7 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
 
       try {
         getSvc().getEventsHandler().add(ei, noInvites,
-                                        (calType == BwCalendar.calTypeInbox) ||
-                                        (calType == BwCalendar.calTypeOutbox),
+                                        toInoutBox,
                                         false);
 
         return null;

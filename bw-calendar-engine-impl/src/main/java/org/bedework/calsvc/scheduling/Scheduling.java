@@ -56,7 +56,7 @@ public class Scheduling extends ImplicitSchedulingHandler {
   public EventInfo getStoredMeeting(final BwEvent ev) throws CalFacadeException {
     RecurringRetrievalMode rrm = new RecurringRetrievalMode(Rmode.overrides);
 
-    BwCalendar preferred = getSvc().getCalendarsHandler().getPreferred();
+    BwCalendar preferred = getSvc().getCalendarsHandler().getPreferred(ev.getEntityType());
     if (preferred == null) {
       throw new CalFacadeException(CalFacadeException.schedulingNoCalendar);
     }
@@ -77,7 +77,7 @@ public class Scheduling extends ImplicitSchedulingHandler {
       // Skip anything other than a calendar collection
       BwCalendar evcal = getSvc().getCalendarsHandler().get(e.getColPath());
 
-      if (evcal.getCalType() != BwCalendar.calTypeCalendarCollection) {
+      if (!evcal.getCollectionInfo().scheduling) {
         continue;
       }
 

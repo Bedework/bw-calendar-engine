@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -76,13 +76,13 @@ public interface SchedulingIntf extends SchedulingI {
    *
    * @param ei
    * @param namePrefix
-   * @param calType
+   * @param toInoutBox true if this is going to the inbox or outbox
    * @param noInvites
    * @return null if added, error code otherwise
    * @throws CalFacadeException
    */
   String addEvent(EventInfo ei,
                   String namePrefix,
-                  int calType,
+                  boolean toInoutBox,
                   boolean noInvites) throws CalFacadeException;
 }

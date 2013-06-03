@@ -212,8 +212,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         throw new CalFacadeException(CalFacadeException.collectionNotFound, to);
       }
 
-      if (collTo.getCalType() == BwCalendar.calTypeCalendarCollection) {
-        // Not allowed into a calendar collection.
+      if (collTo.getCalType() != BwCalendar.calTypeFolder) {
+        // Only allowed into a folder.
         throw new CalFacadeException(CalFacadeException.badRequest, to);
       }
 

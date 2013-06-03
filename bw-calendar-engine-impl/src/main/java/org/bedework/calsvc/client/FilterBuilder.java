@@ -330,6 +330,7 @@ public class FilterBuilder {
       // Leaf node
       if (!explicitSelection &&
           (cal.getCalType() !=  BwCalendar.calTypeCalendarCollection) &&
+          (cal.getCalType() !=  BwCalendar.calTypePoll) &&
           (cal.getCalType() !=  BwCalendar.calTypeExtSub)) {
         return null;
       }

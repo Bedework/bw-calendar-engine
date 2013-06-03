@@ -114,6 +114,8 @@ import net.fortuna.ical4j.model.property.XProperty;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.xml.ws.Holder;
 
@@ -157,6 +159,7 @@ public class BwEventUtil extends IcalUtil {
    * @param val         VEvent object
    * @param diff        True if we should assume we are updating existing events.
    * @param mergeAttendees True if we should only update our own attendee.
+   * @param vPollCandidate true if this is a vpollcandidate object.
    * @return EventInfo  object representing new entry or updated entry
    * @throws CalFacadeException
    */
@@ -1094,15 +1097,37 @@ public class BwEventUtil extends IcalUtil {
       }
 
       Iterator it = cands.iterator();
+      Set<Integer> pids = new TreeSet<Integer>();
+      BwEvent event = vpoll.getEvent();
+
+      if (!Util.isEmpty(event.getPollItems())) {
+        event.getPollItems().clear();
+      }
 
       while (it.hasNext()) {
-        Object o = it.next();
+        Component comp = (Component)it.next();
 
-        EventInfo cand = toEvent(cb, cal, ical, (Component)o, true,
-                                 false);
-        cand.getEvent().setOwnerHref(vpoll.getEvent().getOwnerHref());
+        event.addPollItem(comp.toString());
 
-        vpoll.addContainedItem(cand);
+        Property p = comp.getProperty(Property.POLL_ITEM_ID);
+
+        if (p == null) {
+          throw new CalFacadeException("XXX - no poll item id");
+        }
+
+        int pid = ((PollItemId)p).getPollitemid();
+
+        if (pids.contains(pid)) {
+          throw new CalFacadeException("XXX - duplicate poll item id " + pid);
+        }
+
+        pids.add(pid);
+
+//        EventInfo cand = toEvent(cb, cal, ical, (Component)o, true,
+//                                 false);
+//        cand.getEvent().setOwnerHref(vpoll.getEvent().getOwnerHref());
+
+//        vpoll.addContainedItem(cand);
       }
     } catch (CalFacadeException cfe) {
       throw cfe;

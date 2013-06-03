@@ -168,6 +168,14 @@ public interface CalendarsI extends Serializable {
    */
   public BwCalendar getPreferred() throws CalFacadeException;
 
+  /** Get the default calendar for the current user for the given entity type.
+   *
+   * @param entityType
+   * @return BwCalendar null for unknown calendar
+   * @throws CalFacadeException
+   */
+  public BwCalendar getPreferred(int entityType) throws CalFacadeException;
+
   /** Add a calendar object
    *
    * <p>The new calendar object will be added to the db. If the indicated parent

@@ -361,16 +361,6 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
           cei.addContainedItem(aceis.iterator().next());
         }
         ts.add(cei);
-      } else if (master.getEntityType() == IcalDefs.entityTypeVpoll) {
-        for (String name : master.getPollItemNames()) {
-          CoreEventInfo vcei = getEvent(colPath, name, recurRetrieval);
-          if (vcei == null) {
-            throwException(CalFacadeException.badResponse);
-          }
-
-          cei.addContainedItem(vcei);
-        }
-        ts.add(cei);
       } else if (!master.testRecurring()) {
         ts.add(cei);
       } else if (rid == null) {
@@ -630,16 +620,6 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
           }
 
           cei.addContainedItem(acei);
-        }
-      } else if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
-        // Retrieve the candidates
-        for (String cname : ev.getPollItemNames()) {
-          CoreEventInfo vcei = getEvent(colPath, cname, recurRetrieval);
-          if (vcei == null) {
-            throwException(CalFacadeException.badResponse);
-          }
-
-          cei.addContainedItem(vcei);
         }
       } else {
         ev = cei.getEvent();

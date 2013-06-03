@@ -56,7 +56,7 @@ public abstract class OutBoxHandler extends SchedulingBase {
 
     String ecode = addEvent(outEi,
                             "Out-" + Uid.getUid() + "-" + event.getDtstamp(),
-                            BwCalendar.calTypeOutbox,
+                            true,
                             true);
 
     if (ecode != null) {

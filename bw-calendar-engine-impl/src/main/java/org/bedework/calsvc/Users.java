@@ -176,8 +176,13 @@ class Users extends CalSvcDb implements UsersI {
 
   BwPrincipal initUserObject(final String val) throws CalFacadeException {
     String account = val;
-    if (account.endsWith("/")) {
-      account = account.substring(0, account.length() - 1);
+
+    if (getSvc().getDirectories().isPrincipal(val)) {
+      account = getSvc().getDirectories().accountFromPrincipal(val);
+    }
+
+    if (account == null) {
+      throw new CalFacadeException("Badd user account " + val);
     }
 
     setRoots(getSvc());
