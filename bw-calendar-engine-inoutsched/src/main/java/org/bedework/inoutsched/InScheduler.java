@@ -31,12 +31,12 @@ import org.bedework.calsvci.CalSvcI;
 import org.bedework.icalendar.Icalendar;
 import org.bedework.inoutsched.processors.InCancel;
 import org.bedework.inoutsched.processors.InProcessor;
+import org.bedework.inoutsched.processors.InProcessor.ProcessResult;
 import org.bedework.inoutsched.processors.InRefresh;
 import org.bedework.inoutsched.processors.InReply;
 import org.bedework.inoutsched.processors.InRequest;
 import org.bedework.inoutsched.processors.SchedAttendeeUpdate;
 import org.bedework.inoutsched.processors.SchedProcessor;
-import org.bedework.inoutsched.processors.InProcessor.ProcessResult;
 import org.bedework.inoutsched.processors.SchedProcessor.SchedProcResult;
 import org.bedework.sysevents.events.EntityQueuedEvent;
 import org.bedework.sysevents.events.ScheduleUpdateEvent;
@@ -63,6 +63,7 @@ public class InScheduler extends AbstractScheduler {
   /* (non-Javadoc)
    * @see org.bedework.inoutsched.ScheduleMesssageHandler#processMessage(org.bedework.sysevents.events.SysEvent)
    */
+  @Override
   public ProcessMessageResult processMessage(final SysEvent msg) {
     if (msg instanceof EntityQueuedEvent) {
       return processEntityQueuedEvent((EntityQueuedEvent)msg);
@@ -157,10 +158,6 @@ public class InScheduler extends AbstractScheduler {
   }
 
   private ProcessMessageResult processEntityQueuedEvent(final EntityQueuedEvent msg) {
-    /* These are events that are placed in the inbox. We try to get away from
-     * this as much as possible. However, inbound events from other systems
-     * probably still end up in the inbox.
-     */
     CalSvcI svci = null;
 
     try {

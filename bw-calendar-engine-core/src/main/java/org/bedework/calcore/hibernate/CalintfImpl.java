@@ -455,10 +455,11 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   @Override
   public void beginTransaction() throws CalFacadeException {
     checkOpen();
-//    sess.close();
+
     if (debug) {
       debug("Begin transaction for " + objTimestamp);
     }
+
     sess.beginTransaction();
 
     if (events != null) {

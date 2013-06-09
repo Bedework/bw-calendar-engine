@@ -90,7 +90,6 @@ import net.fortuna.ical4j.model.property.FreeBusy;
 import net.fortuna.ical4j.model.property.LastModified;
 import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.PercentComplete;
-import net.fortuna.ical4j.model.property.PollItemId;
 import net.fortuna.ical4j.model.property.PollMode;
 import net.fortuna.ical4j.model.property.PollProperties;
 import net.fortuna.ical4j.model.property.Priority;
@@ -637,9 +636,9 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Vpoll -------------------- */
 
-      if (!vpoll && (val.getPollItemId() != null)) {
-        pl.add(new PollItemId(val.getPollItemId()));
-      }
+      //if (!vpoll && (val.getPollItemId() != null)) {
+      //  pl.add(new PollItemId(val.getPollItemId()));
+     // }
 
       if (vpoll) {
         strval = val.getPollAcceptResponse();
@@ -660,12 +659,18 @@ public class VEventUtil extends IcalUtil {
           pl.add(new PollProperties(strval));
         }
 
-        if (ei.getNumContainedItems() > 0) {
-          VPoll vp = (VPoll)comp;
-          for (EventInfo aei: ei.getContainedItems()) {
-            vp.getCandidates().add(toIcalComponent(aei, false, tzreg,
-                                                   uriGen, currentPrincipal));
+        if (val.getNumAttendees() > 0) {
+          for (BwAttendee att: val.getAttendees()) {
+            prop = setVoter(att);
+            mergeXparams(prop, xcomp);
+            pl.add(prop);
           }
+        }
+
+        Calendar vcal = parseVpollCandidates(val);
+
+        for (Object o: vcal.getComponents()) {
+          ((VPoll)comp).getCandidates().add((Component)o);
         }
       }
 

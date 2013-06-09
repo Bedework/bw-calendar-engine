@@ -475,18 +475,29 @@ public class BwAttendee extends BwDbentity<BwAttendee>
    * @return true for significant change
    */
   public boolean changedBy(final BwAttendee val, final boolean checkPartStat) {
-    return ((checkPartStat &&
-             (Util.compareStrings(val.getPartstat(), getPartstat()) != 0))) ||
-           (Util.compareStrings(val.getCn(), getCn()) != 0) ||
-           (Util.compareStrings(val.getCuType(), getCuType()) != 0) ||
-           (Util.compareStrings(val.getDelegatedFrom(), getDelegatedFrom()) != 0) ||
-           (Util.compareStrings(val.getDelegatedTo(), getDelegatedTo()) != 0) ||
-           (Util.compareStrings(val.getDir(), getDir()) != 0) ||
-           (Util.compareStrings(val.getLanguage(), getLanguage()) != 0) ||
-           (Util.compareStrings(val.getMember(), getMember()) != 0) ||
-           (Util.compareStrings(val.getRole(), getRole()) != 0) ||
-           (Util.compareStrings(val.getSentBy(), getSentBy()) != 0) ||
-           (Util.compareStrings(val.getAttendeeUri(), getAttendeeUri()) != 0);
+    boolean changed =
+        (Util.compareStrings(val.getCn(), getCn()) != 0) ||
+        (Util.compareStrings(val.getCuType(), getCuType()) != 0) ||
+        (Util.compareStrings(val.getDelegatedFrom(), getDelegatedFrom()) != 0) ||
+        (Util.compareStrings(val.getDelegatedTo(), getDelegatedTo()) != 0) ||
+        (Util.compareStrings(val.getDir(), getDir()) != 0) ||
+        (Util.compareStrings(val.getLanguage(), getLanguage()) != 0) ||
+        (Util.compareStrings(val.getMember(), getMember()) != 0) ||
+        (Util.compareStrings(val.getRole(), getRole()) != 0) ||
+        (Util.compareStrings(val.getSentBy(), getSentBy()) != 0) ||
+        (Util.compareStrings(val.getAttendeeUri(), getAttendeeUri()) != 0);
+
+    if (changed) {
+      return true;
+    }
+
+    if (getType() == typeAttendee){
+      return checkPartStat &&
+             (Util.compareStrings(val.getPartstat(), getPartstat()) != 0);
+    }
+
+    return (Util.cmpIntval(val.getResponse(), getResponse()) != 0) ||
+        (Util.cmpBoolval(val.getStayInformed(), getStayInformed()) != 0);
   }
 
   /* ====================================================================
@@ -496,7 +507,6 @@ public class BwAttendee extends BwDbentity<BwAttendee>
   @Override
   public boolean differsFrom(final BwAttendee val) {
     if ((Util.cmpIntval(val.getType(), getType()) != 0) ||
-        (Util.compareStrings(val.getPartstat(), getPartstat()) != 0) ||
         (Util.compareStrings(val.getCn(), getCn()) != 0) ||
         (Util.compareStrings(val.getCuType(), getCuType()) != 0) ||
         (Util.compareStrings(val.getDelegatedFrom(), getDelegatedFrom()) != 0) ||
@@ -513,7 +523,7 @@ public class BwAttendee extends BwDbentity<BwAttendee>
     }
 
     if (val.getType() != typeVoter) {
-      return false;
+      return Util.compareStrings(val.getPartstat(), getPartstat()) != 0;
     }
 
     return (Util.cmpIntval(val.getResponse(), getResponse()) != 0) ||

@@ -517,7 +517,8 @@ class Events extends CalSvcDb implements EventsI {
                                      "Cannot change organizer");
       }
 
-      if (cte.getIndex().equals(PropertyInfoIndex.ATTENDEE)) {
+      if (cte.getIndex().equals(PropertyInfoIndex.ATTENDEE) ||
+          cte.getIndex().equals(PropertyInfoIndex.VOTER)) {
         updResult.addedAttendees = cte.getAddedValues();
         updResult.deletedAttendees = cte.getRemovedValues();
 

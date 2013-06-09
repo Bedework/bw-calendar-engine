@@ -50,7 +50,8 @@ public class DataCounts {
     addDl("entities updated", SysCode.ENTITY_UPDATED);
     addDl("entities tombstoned", SysCode.ENTITY_TOMBSTONED);
     addDl("entities deleted", SysCode.ENTITY_DELETED);
-
+    addDl("logins", SysCode.USER_LOGIN);
+    addDl("svc logins", SysCode.SERVICE_USER_LOGIN);
   }
 
   /**

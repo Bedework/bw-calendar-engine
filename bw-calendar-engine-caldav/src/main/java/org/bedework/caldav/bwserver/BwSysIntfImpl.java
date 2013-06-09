@@ -484,14 +484,16 @@ public class BwSysIntfImpl implements SysIntf {
         return null;
       }
 
-      String userHomePath = cal.getPath() + "/";
+      String userHomePath = Util.buildPath(true, cal.getPath());
 
-      //String userHomePath = "/" + sys.getUserCalendarRoot() +
-      //                      "/" + account + "/";
-      String defaultCalendarPath = userHomePath + sys.getUserDefaultCalendar();
-      String inboxPath = userHomePath + sys.getUserInbox() + "/";
-      String outboxPath = userHomePath + sys.getUserOutbox() + "/";
-      String notificationsPath = userHomePath + sys.getDefaultNotificationsName() + "/";
+      String defaultCalendarPath = Util.buildPath(true, userHomePath +
+                                                  sys.getUserDefaultCalendar());
+      String inboxPath = Util.buildPath(true, userHomePath, "/",
+                                        sys.getUserInbox());;
+      String outboxPath = Util.buildPath(true, userHomePath, "/",
+                                         sys.getUserOutbox());
+      String notificationsPath = Util.buildPath(true, userHomePath, "/",
+                                                sys.getDefaultNotificationsName());
 
       principalInfo = new CalPrincipalInfo(p,
                                            userHomePath,

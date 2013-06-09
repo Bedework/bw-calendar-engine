@@ -18,51 +18,13 @@
 */
 package org.bedework.sysevents.events;
 
-/** Outbound http event.
- * @author douglm
+/** An event that contains a millisecs value.
  *
+ * @author Mike Douglass
  */
-public class HttpOutEvent extends HttpEvent implements MillisecsEvent {
-  private static final long serialVersionUID = 1L;
-
-  long millis;
-
+public interface MillisecsEvent {
   /**
-   * @param code
-   * @param millis - time request took
+   * @return millis
    */
-  public HttpOutEvent(final SysCode code,
-                      final long millis) {
-    super(code);
-
-    this.millis = millis;
-  }
-
-  @Override
-  public long getMillis() {
-    return millis;
-  }
-
-  /** Add our stuff to the StringBuilder
-   *
-   * @param sb    StringBuilder for result
-   */
-  @Override
-  public void toStringSegment(final StringBuilder sb) {
-    super.toStringSegment(sb);
-
-    sb.append(", millis=");
-    sb.append(getMillis());
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder("HttpOutEvent{");
-
-    toStringSegment(sb);
-
-    sb.append("}");
-
-    return sb.toString();
-  }
+  long getMillis();
 }

@@ -123,6 +123,10 @@ public abstract class CalSys {
     if (principal != null) {
       if (principal.startsWith(userPrincipalPrefix)) {
         account = principal.substring(userPrincipalPrefix.length());
+
+        if (account.endsWith("/")) {
+          account = account.substring(0, account.length() - 1);
+        }
       }
 
       publicAdmin = false;

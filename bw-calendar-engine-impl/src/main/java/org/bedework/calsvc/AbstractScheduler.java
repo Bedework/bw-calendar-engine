@@ -54,7 +54,7 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
      */
     CalSvcIPars runAsPars = CalSvcIPars.getServicePars(principalHref,//principal.getAccount(),
                                                        false,   // publicAdmin
-                                                       "/principals/users/root".equals(principalHref));  // allow SuperUser
+                                                       "/principals/users/root/".equals(principalHref));  // allow SuperUser
 
     svci = new CalSvcFactoryDefault().getSvc(runAsPars);
     setSvc(svci);

@@ -222,7 +222,7 @@ class Users extends CalSvcDb implements UsersI {
 
     try {
       getSvc().postNotification(SysEvent.makePrincipalEvent(SysEvent.SysCode.NEW_USER,
-                                                            user));
+                                                            user, 0));
     } catch (NotificationException ne) {
       throw new CalFacadeException(ne);
     }

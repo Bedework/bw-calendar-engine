@@ -121,6 +121,9 @@ public interface SysEventBase extends Serializable {
     /** Stats */
     STATS(info, priv),
 
+    /** Timed events */
+    TIMED_EVENT(info, priv),
+
     /* ========= Users =========== */
 
     /** A user was added to the system */

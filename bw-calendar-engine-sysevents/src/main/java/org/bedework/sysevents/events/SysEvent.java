@@ -81,6 +81,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
    * (non-Javadoc)
    * @see org.bedework.sysevents.events.SysEventBase#getSysCode()
    */
+  @Override
   public SysCode getSysCode() {
     return sysCode;
   }
@@ -151,13 +152,28 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
   /**
    * @param code
    * @param val
+   * @param millisecs - time for stats - e.g. time to process login
    * @return SysEvent
    * @throws NotificationException
    */
   public static SysEvent makePrincipalEvent(final SysCode code,
-                                            final AccessPrincipal val)
-                                                                      throws NotificationException {
-    SysEvent sysev = new PrincipalEvent(code, val.getPrincipalRef());
+                                            final AccessPrincipal val,
+                                            final long millisecs) throws NotificationException {
+    SysEvent sysev = new PrincipalEvent(code, val.getPrincipalRef(), millisecs);
+
+    return sysev;
+  }
+
+  /**
+   * @param label
+   * @param millisecs - time for stats
+   * @return SysEvent
+   * @throws NotificationException
+   */
+  public static SysEvent makeTimedEvent(final String label,
+                                        final long millisecs) throws NotificationException {
+    SysEvent sysev = new TimedEvent(SysEvent.SysCode.TIMED_EVENT,
+                                    label, millisecs);
 
     return sysev;
   }
@@ -390,6 +406,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
    * ====================================================================
    */
 
+  @Override
   public int compareTo(final SysEvent val) {
     return (sysCode.compareTo(val.sysCode));
   }

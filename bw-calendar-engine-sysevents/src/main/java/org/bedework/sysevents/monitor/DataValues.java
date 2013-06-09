@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,11 +18,12 @@
 */
 package org.bedework.sysevents.monitor;
 
-import org.bedework.sysevents.events.HttpOutEvent;
+import org.bedework.sysevents.events.MillisecsEvent;
 import org.bedework.sysevents.events.StatsEvent;
-import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.StatsEvent.StatType;
+import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
+import org.bedework.sysevents.events.TimedEvent;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,9 +36,7 @@ import java.util.Map;
 public class DataValues {
   private Map<SysCode, DataAvg> dvMap = new HashMap<SysCode, DataAvg>();
 
-  private DataAvg respTime;
-
-  private DataAvg calDavRespTime;
+  private Map<String, DataAvg> timedValuesMap = new HashMap<String, DataAvg>();
 
   private Map<String, DataAvg> statMap = new HashMap<String, DataAvg>();
 
@@ -46,8 +45,10 @@ public class DataValues {
   public DataValues() {
     super();
 
-    respTime = addDv("Avg web response time", SysCode.WEB_OUT);
-    calDavRespTime = addDv("Avg CalDAV response time", SysCode.CALDAV_OUT);
+    addDv("Avg web response time", SysCode.WEB_OUT);
+    addDv("Avg CalDAV response time", SysCode.CALDAV_OUT);
+    addDv("Avg login time", SysCode.USER_LOGIN);
+    addDv("Avg service login time", SysCode.SERVICE_USER_LOGIN);
   }
 
   /**
@@ -55,13 +56,30 @@ public class DataValues {
    */
   public void update(final SysEvent ev) {
     SysCode sc = ev.getSysCode();
-    if (sc == SysCode.WEB_OUT) {
-      respTime.inc(((HttpOutEvent)ev).getMillis());
+
+    if (ev instanceof TimedEvent) {
+      TimedEvent te = (TimedEvent)ev;
+      String lbl = te.getLabel();
+
+      DataAvg dv = timedValuesMap.get(lbl);
+
+      if (dv == null) {
+        dv = new DataAvg(lbl, ev.getSysCode());
+
+        timedValuesMap.put(lbl, dv);
+      }
+
+      dv.inc(te.getMillis());
+
       return;
     }
 
-    if (sc == SysCode.CALDAV_OUT) {
-      calDavRespTime.inc(((HttpOutEvent)ev).getMillis());
+    if (ev instanceof MillisecsEvent) {
+      DataAvg dv = dvMap.get(sc);
+
+      if (dv != null) {
+        dv.inc(((MillisecsEvent)ev).getMillis());
+      }
       return;
     }
 
@@ -92,16 +110,24 @@ public class DataValues {
    * @param vals
    */
   public void getValues(final List<String> vals) {
-    vals.add(respTime.toString());
-    vals.add(calDavRespTime.toString());
+    for (DataAvg da: dvMap.values()) {
+      vals.add(da.toString());
+    }
   }
 
   /**
    * @param stats
    */
   public void getStats(final List<MonitorStat> stats) {
-    stats.add(respTime.getStat());
-    stats.add(calDavRespTime.getStat());
+    for (DataAvg da: dvMap.values()) {
+      stats.add(da.getStat());
+    }
+
+    for (DataAvg da: timedValuesMap.values()) {
+      long val = (long)(da.getValue() / da.getCount());
+      stats.add(new MonitorStat(da.getName(), (long)da.getCount(),
+                                String.valueOf(val)));
+    }
 
     for (DataAvg da: statMap.values()) {
       long val = (long)(da.getValue() / da.getCount());

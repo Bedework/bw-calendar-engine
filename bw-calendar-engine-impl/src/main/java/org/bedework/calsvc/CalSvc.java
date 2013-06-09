@@ -243,6 +243,7 @@ public class CalSvc extends CalSvcI {
     this.creating = creating;
 
     debug = getLogger().isDebugEnabled();
+    long start = System.currentTimeMillis();
 
     try {
       configs = new CalSvcFactoryDefault().getSystemConfig();
@@ -310,7 +311,8 @@ public class CalSvc extends CalSvcI {
 
       postNotification(
         SysEvent.makePrincipalEvent(SysEvent.SysCode.USER_SVCINIT,
-                                                      getPrincipal()));
+                                                      getPrincipal(),
+                                                      System.currentTimeMillis() - start));
     } catch (CalFacadeException cfe) {
       rollbackTransaction();
       cfe.printStackTrace();
@@ -1098,42 +1100,83 @@ public class CalSvc extends CalSvcI {
       return cali;
     }
 
-    synchronized (synchlock) {
+    long start = System.currentTimeMillis();
+
+    try {
+      long beforeGetIntf = System.currentTimeMillis() - start;
+
       cali = CalintfFactory.getIntf(CalintfFactory.hibernateClass);
 
-      try {
-        cali.open(pars.getWebMode(),
-                  pars.getForRestore()); // Just for the user interactions
-        cali.beginTransaction();
+      postNotification(
+                       SysEvent.makeTimedEvent("Login: about to obtain calintf",
+                                               beforeGetIntf));
+      postNotification(
+                       SysEvent.makeTimedEvent("Login: calintf obtained",
+                                               System.currentTimeMillis() - start));
 
-        String runAsUser = pars.getUser();
+      cali.open(pars.getWebMode(),
+                pars.getForRestore()); // Just for the user interactions
 
-        if (pars.getCalSuite() != null) {
-          BwCalSuite cs = cali.getCalSuite(pars.getCalSuite());
+      postNotification(
+                       SysEvent.makeTimedEvent("Login: intf opened",
+                                               System.currentTimeMillis() - start));
 
-          if (cs == null) {
-            error("******************************************************");
-            error("Unable to fetch calendar suite " + pars.getCalSuite());
-            error("Is the database correctly initialised?");
-            error("******************************************************");
-            throw new CalFacadeException(CalFacadeException.unknownCalsuite,
-                pars.getCalSuite());
-          }
+      cali.beginTransaction();
 
-          getCalSuitesHandler().set(new BwCalSuiteWrapper(cs));
-          /* For administrative use we use the account of the admin group the user
-           * is a direct member of
-           *
-           * For public clients we use the calendar suite owning group.
-           */
-          if (!pars.getPublicAdmin()) {
-            runAsUser = cs.getGroup().getOwnerHref();
-          }
+      postNotification(
+                       SysEvent.makeTimedEvent("Login: transaction started",
+                                               System.currentTimeMillis() - start));
+
+      String runAsUser = pars.getUser();
+
+      if (pars.getCalSuite() != null) {
+        BwCalSuite cs = cali.getCalSuite(pars.getCalSuite());
+
+        if (cs == null) {
+          error("******************************************************");
+          error("Unable to fetch calendar suite " + pars.getCalSuite());
+          error("Is the database correctly initialised?");
+          error("******************************************************");
+          throw new CalFacadeException(CalFacadeException.unknownCalsuite,
+                                       pars.getCalSuite());
         }
 
-        /* Get ourselves a user object */
-        String authenticatedUser = pars.getAuthUser();
+        getCalSuitesHandler().set(new BwCalSuiteWrapper(cs));
+        /* For administrative use we use the account of the admin group the user
+         * is a direct member of
+         *
+         * For public clients we use the calendar suite owning group.
+         */
+        if (!pars.getPublicAdmin()) {
+          runAsUser = cs.getGroup().getOwnerHref();
+        }
+      }
 
+      postNotification(
+                       SysEvent.makeTimedEvent("Login: before get dirs",
+                                               System.currentTimeMillis() - start));
+
+      Directories dir = getDirectories();
+
+      /* Get ourselves a user object */
+      String authenticatedUser = pars.getAuthUser();
+
+      if (authenticatedUser != null) {
+        if (dir.isPrincipal(authenticatedUser)) {
+          authenticatedUser = dir.accountFromPrincipal(authenticatedUser);
+        }
+
+        if (authenticatedUser.endsWith("/")) {
+          getLogger().warn("Authenticated user " + authenticatedUser +
+              " ends with \"/\"");
+        }
+      }
+
+      postNotification(
+                       SysEvent.makeTimedEvent("Login: before user fetch",
+                                               System.currentTimeMillis() - start));
+
+      synchronized (synchlock) {
         Users users = (Users)getUsersHandler();
 
         if (runAsUser == null) {
@@ -1146,7 +1189,7 @@ public class CalSvc extends CalSvcI {
 
         if (pars.getForRestore()) {
           authenticated = true;
-          currentPrincipal = getDirectories().caladdrToPrincipal(pars.getAuthUser());
+          currentPrincipal = dir.caladdrToPrincipal(pars.getAuthUser());
           authPrincipal = currentPrincipal;
         } else if (authenticatedUser == null) {
           authenticated = false;
@@ -1178,11 +1221,11 @@ public class CalSvc extends CalSvcI {
 
           if (authenticatedUser.equals(runAsUser)) {
             getLogger().debug("Authenticated user " + authenticatedUser +
-                              " logged on");
+                " logged on");
           } else {
             currentPrincipal = users.getUser(runAsUser);
             if (currentPrincipal == null) {
-//              throw new CalFacadeException("User " + runAsUser + " does not exist.");
+              //              throw new CalFacadeException("User " + runAsUser + " does not exist.");
               /* Add the user to the database. Presumably this is first logon
                */
               getLogger().debug("Add new run-as-user " + runAsUser);
@@ -1194,10 +1237,17 @@ public class CalSvc extends CalSvcI {
                               " logged on - running as " + runAsUser);
           }
 
-          currentPrincipal.setGroups(getDirectories().getAllGroups(currentPrincipal));
+          currentPrincipal.setGroups(dir.getAllGroups(currentPrincipal));
+          postNotification(
+                           SysEvent.makeTimedEvent("Login: after get Groups",
+                                                   System.currentTimeMillis() - start));
 
           if (!pars.getService()) {
-            currentPrincipal.setPrincipalInfo(getDirectories().getDirInfo(currentPrincipal));
+            currentPrincipal.setPrincipalInfo(dir.getDirInfo(currentPrincipal));
+
+            postNotification(
+                             SysEvent.makeTimedEvent("Login: got Dirinfo",
+                                                     System.currentTimeMillis() - start));
           }
         }
 
@@ -1215,14 +1265,16 @@ public class CalSvc extends CalSvcI {
         if (!currentPrincipal.getUnauthenticated()) {
           if (pars.getService()) {
             postNotification(
-                 SysEvent.makePrincipalEvent(SysEvent.SysCode.SERVICE_USER_LOGIN,
-                                             currentPrincipal));
+                             SysEvent.makePrincipalEvent(SysEvent.SysCode.SERVICE_USER_LOGIN,
+                                                         currentPrincipal,
+                                                         System.currentTimeMillis() - start));
           } else if (!creating) {
             users.logon(currentPrincipal);
 
             postNotification(
-                   SysEvent.makePrincipalEvent(SysEvent.SysCode.USER_LOGIN,
-                                               currentPrincipal));
+                             SysEvent.makePrincipalEvent(SysEvent.SysCode.USER_LOGIN,
+                                                         currentPrincipal,
+                                                         System.currentTimeMillis() - start));
           }
         } else {
           // If we have a runAsUser it's a public client. Pretend we authenticated
@@ -1232,7 +1284,7 @@ public class CalSvc extends CalSvcI {
         if (pars.getPublicAdmin() || pars.isGuest()) {
           if (debug) {
             trace("PublicAdmin: " + pars.getPublicAdmin() + " user: "
-                  + runAsUser);
+                + runAsUser);
           }
 
           /* We may be running as a different user. The preferences we want to see
@@ -1266,17 +1318,19 @@ public class CalSvc extends CalSvcI {
             ((SvciPrincipalInfo)principalInfo).setPrincipal(user);
           }
 
-          */
+           */
         }
 
         return cali;
-      } catch (CalFacadeException cfe) {
-        error(cfe);
-        throw cfe;
-      } catch (Throwable t) {
-        error(t);
-        throw new CalFacadeException(t);
-      } finally {
+      }
+    } catch (CalFacadeException cfe) {
+      error(cfe);
+      throw cfe;
+    } catch (Throwable t) {
+      error(t);
+      throw new CalFacadeException(t);
+    } finally {
+      if (cali != null) {
         cali.endTransaction();
         cali.close();
         //cali.flushAll();

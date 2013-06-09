@@ -37,6 +37,9 @@ import org.bedework.calfacade.util.ChangeTable;
 import edu.rpi.cmt.calendar.IcalDefs;
 import edu.rpi.cmt.calendar.ScheduleMethods;
 
+import net.fortuna.ical4j.data.CalendarParserImpl;
+import net.fortuna.ical4j.data.ParserException;
+import net.fortuna.ical4j.data.UnfoldingReader;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
@@ -59,6 +62,7 @@ import net.fortuna.ical4j.model.parameter.FmtType;
 import net.fortuna.ical4j.model.parameter.Language;
 import net.fortuna.ical4j.model.parameter.Member;
 import net.fortuna.ical4j.model.parameter.PartStat;
+import net.fortuna.ical4j.model.parameter.Response;
 import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.parameter.ScheduleStatus;
@@ -80,6 +84,7 @@ import net.fortuna.ical4j.model.property.XProperty;
 
 import org.apache.log4j.Logger;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -89,6 +94,10 @@ import java.util.TreeSet;
 /** Class to provide utility methods for ical4j classes
  *
  * @author Mike Douglass   douglm@rpi.edu
+ */
+/**
+ * @author douglm
+ *
  */
 public class IcalUtil {
   /**
@@ -371,16 +380,9 @@ public class IcalUtil {
 
     ParameterList pars = prop.getParameters();
 
-    if (val.getRsvp()) {
-      pars.add(Rsvp.TRUE);
-    }
+    setAttendeeVoter(val, pars);
 
-    String temp = val.getCn();
-    if (temp != null) {
-      pars.add(new Cn(temp));
-    }
-
-    temp = val.getPartstat();
+    String temp = val.getPartstat();
     if (temp == null) {
       temp = IcalDefs.partstatValNeedsAction;
     }
@@ -388,6 +390,79 @@ public class IcalUtil {
     if ((temp != null) && !temp.equals(IcalDefs.partstatValNeedsAction)) {
       // Not default value.
       pars.add(new PartStat(temp));
+    }
+
+    return prop;
+  }
+
+  /** make a voter
+   *
+   * @param val
+   * @return Voter
+   * @throws Throwable
+   */
+  public static Voter setVoter(final BwAttendee val) throws Throwable {
+    Voter prop = new Voter(val.getAttendeeUri());
+
+    ParameterList pars = prop.getParameters();
+
+    setAttendeeVoter(val, pars);
+
+    pars.add(new Response(val.getResponse()));
+
+    return prop;
+  }
+
+  /**
+   * @param poll
+   * @return Parsed components.
+   * @throws Throwable
+   */
+  public static Calendar parseVpollCandidates(final BwEvent poll) throws Throwable {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("BEGIN:VCALENDAR\n");
+    sb.append("PRODID://Bedework.org//BedeWork V3.9//EN\n");
+    sb.append("VERSION:2.0\n");
+
+    for (String s: poll.getPollItems()) {
+      sb.append(s);
+    }
+
+    sb.append("END:VCALENDAR\n");
+
+    try {
+      StringReader sr = new StringReader(sb.toString());
+
+      Icalendar ic = new Icalendar();
+
+      CalendarBuilder bldr = new CalendarBuilder(new CalendarParserImpl(), ic);
+
+      UnfoldingReader ufrdr = new UnfoldingReader(sr, true);
+
+      return bldr.build(ufrdr);
+    } catch (ParserException pe) {
+      throw new IcalMalformedException(pe.getMessage());
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  /** make an attendee
+   *
+   * @param val
+   * @return Attendee
+   * @throws Throwable
+   */
+  private static void setAttendeeVoter(final BwAttendee val,
+                                       final ParameterList pars) throws Throwable {
+    if (val.getRsvp()) {
+      pars.add(Rsvp.TRUE);
+    }
+
+    String temp = val.getCn();
+    if (temp != null) {
+      pars.add(new Cn(temp));
     }
 
     temp = val.getScheduleStatus();
@@ -428,8 +503,6 @@ public class IcalUtil {
     if (temp != null) {
       pars.add(new SentBy(temp));
     }
-
-    return prop;
   }
 
   /**
@@ -469,12 +542,13 @@ public class IcalUtil {
                                        pars);
 
     att.setType(BwAttendee.typeVoter);
-    att.setPartstat(getOptStr(pars, "PARTSTAT"));
-    if (att.getPartstat() == null) {
-      att.setPartstat(IcalDefs.partstatValNeedsAction);
+
+    Parameter par = pars.getParameter("RESPONSE");
+    if (par != null) {
+      att.setResponse(((Response)par).getResponse());
     }
 
-    Parameter par = pars.getParameter("STAY-INFORMED");
+    par = pars.getParameter("STAY-INFORMED");
     if (par != null) {
       att.setStayInformed(((StayInformed)par).getStayInformed().booleanValue());
     }

@@ -18,39 +18,38 @@
 */
 package org.bedework.sysevents.events;
 
-/** An event caused by the change in state of some principal, e.g new user,
- * login, logout etc.
+/** An event for some timed activity. The label identifies the event
  *
  * @author Mike Douglass
  */
-public class PrincipalEvent extends SysEvent implements MillisecsEvent {
+public class TimedEvent extends SysEvent implements MillisecsEvent {
   private static final long serialVersionUID = 1L;
 
-  private String principalHref;
+  private String label;
 
   private long millis;
 
   /** Constructor
    *
    * @param code
-   * @param principalHref
+   * @param label
    * @param millis - time for stats - e.g. time to process login
    */
-  public PrincipalEvent(final SysCode code,
-                        final String principalHref,
-                        final long millis) {
+  public TimedEvent(final SysCode code,
+                    final String label,
+                    final long millis) {
     super(code);
 
-    this.principalHref = principalHref;
+    this.label = label;
     this.millis = millis;
   }
 
   /**
    *
-   * @return principal href
+   * @return label
    */
-  public String getPrincipalHref() {
-    return principalHref;
+  public String getLabel() {
+    return label;
   }
 
   @Override
@@ -63,12 +62,12 @@ public class PrincipalEvent extends SysEvent implements MillisecsEvent {
    */
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("PrincipalEvent{");
+    StringBuilder sb = new StringBuilder("TimedEvent{");
 
     super.toStringSegment(sb);
 
     sb.append(",\n principalHref=");
-    sb.append(getPrincipalHref());
+    sb.append(getLabel());
 
     sb.append("}");
 
