@@ -66,10 +66,12 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
     this.rid = rid;
   }
 
+  @Override
   public String getNotification() {
     return notification;
   }
 
+  @Override
   public String getTargetPrincipalHref() {
     return targetPrincipalHref;
   }
@@ -112,14 +114,5 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
     if (getRecurrenceId() != null) {
       ts.append("rid", getRecurrenceId());
     }
-  }
-
-  @Override
-  public String toString() {
-    ToString ts = new ToString(this);
-
-    toStringSegment(ts);
-
-    return ts.toString();
   }
 }

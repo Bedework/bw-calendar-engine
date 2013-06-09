@@ -18,6 +18,8 @@
 */
 package org.bedework.sysevents.events;
 
+import edu.rpi.sss.util.ToString;
+
 /** An event for some timed activity. The label identifies the event
  *
  * @author Mike Douglass
@@ -57,20 +59,11 @@ public class TimedEvent extends SysEvent implements MillisecsEvent {
     return millis;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
   @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder("TimedEvent{");
+  public void toStringSegment(final ToString ts) {
+    super.toStringSegment(ts);
 
-    super.toStringSegment(sb);
-
-    sb.append(",\n principalHref=");
-    sb.append(getLabel());
-
-    sb.append("}");
-
-    return sb.toString();
+    ts.append("label", getLabel());
+    ts.append("millis", getMillis());
   }
 }

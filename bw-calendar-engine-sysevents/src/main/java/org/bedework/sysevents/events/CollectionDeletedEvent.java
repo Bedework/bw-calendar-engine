@@ -57,23 +57,14 @@ public class CollectionDeletedEvent extends OwnedHrefEvent {
     return publick;
   }
 
-  /** Add our stuff to the ToString builder
-   *
-   * @param ts    for result
-   */
-  @Override
-  public void toStringSegment(final ToString ts) {
-    super.toStringSegment(ts);
+  /** Add our stuff to the ToString object
+  *
+  * @param ts for result
+  */
+ @Override
+ public void toStringSegment(final ToString ts) {
+   super.toStringSegment(ts);
 
     ts.append("publick", getPublick());
-  }
-
-  @Override
-  public String toString() {
-    ToString ts = new ToString(this);
-
-    toStringSegment(ts);
-
-    return ts.toString();
   }
 }

@@ -72,18 +72,15 @@ public class EntityMovedEvent extends OwnedHrefEvent {
     return oldShared;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
+  /** Add our stuff to the ToString object
+   *
+   * @param ts for result
    */
   @Override
-  public String toString() {
-    ToString ts = new ToString(this);
-
+  public void toStringSegment(final ToString ts) {
     super.toStringSegment(ts);
 
     ts.append("oldHref", getOldHref());
     ts.append("oldShared", getOldShared());
-
-    return ts.toString();
   }
 }

@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,6 +17,8 @@
     under the License.
 */
 package org.bedework.sysevents.events;
+
+import edu.rpi.sss.util.ToString;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -115,31 +117,14 @@ public class StatsEvent extends NamedEvent {
     return statTypes.get(name);
   }
 
-  /** Add our stuff to the StringBuilder
-   *
-   * @param sb    StringBuilder for result
-   */
   @Override
-  public void toStringSegment(final StringBuilder sb) {
-    super.toStringSegment(sb);
+  public void toStringSegment(final ToString ts) {
+    super.toStringSegment(ts);
 
     if (strValue == null) {
-      sb.append(", longValue=");
-      sb.append(getLongValue());
+      ts.append("longValue", getLongValue());
     } else {
-      sb.append(", strValue=");
-      sb.append(getStrValue());
+      ts.append("strValue", getStrValue());
     }
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder("StatsEvent{");
-
-    toStringSegment(sb);
-
-    sb.append("}");
-
-    return sb.toString();
   }
 }

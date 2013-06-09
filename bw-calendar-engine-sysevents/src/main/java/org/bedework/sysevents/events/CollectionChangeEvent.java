@@ -18,6 +18,8 @@
 */
 package org.bedework.sysevents.events;
 
+import edu.rpi.sss.util.ToString;
+
 /** A calendar (collection) change event. The fields define what changed together
  * with the syscode.<ul>
  * <li>colPath defines the collection</li>
@@ -50,29 +52,14 @@ public class CollectionChangeEvent extends SysEvent {
     return colPath;
   }
 
-  /** Add our stuff to the StringBuilder
+  /** Add our stuff to the ToString object
    *
-   * @param sb    StringBuilder for result
+   * @param ts for result
    */
-  @Override
-  public void toStringSegment(final StringBuilder sb) {
-    super.toStringSegment(sb);
+ @Override
+ public void toStringSegment(final ToString ts) {
+   super.toStringSegment(ts);
 
-    sb.append(", colPath=");
-    sb.append(getColPath());
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder("CollectionChangeEvent{");
-
-    toStringSegment(sb);
-
-    sb.append("}");
-
-    return sb.toString();
+    ts.append("colPath", getColPath());
   }
 }

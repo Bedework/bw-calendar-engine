@@ -18,6 +18,8 @@
 */
 package org.bedework.sysevents.events;
 
+import edu.rpi.sss.util.ToString;
+
 /** An event caused by the change in state of some principal, e.g new user,
  * login, logout etc.
  *
@@ -58,20 +60,10 @@ public class PrincipalEvent extends SysEvent implements MillisecsEvent {
     return millis;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
   @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder("PrincipalEvent{");
+  public void toStringSegment(final ToString ts) {
+    super.toStringSegment(ts);
 
-    super.toStringSegment(sb);
-
-    sb.append(",\n principalHref=");
-    sb.append(getPrincipalHref());
-
-    sb.append("}");
-
-    return sb.toString();
+    ts.append("principalHref", getPrincipalHref());
   }
 }

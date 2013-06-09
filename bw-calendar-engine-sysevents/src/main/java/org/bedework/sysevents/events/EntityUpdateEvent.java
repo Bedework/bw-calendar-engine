@@ -63,10 +63,12 @@ public class EntityUpdateEvent extends OwnedHrefEvent implements NotificationEve
     this.rid = rid;
   }
 
+  @Override
   public String getNotification() {
     return notification;
   }
 
+  @Override
   public String getTargetPrincipalHref() {
     return targetPrincipalHref;
   }
@@ -101,14 +103,5 @@ public class EntityUpdateEvent extends OwnedHrefEvent implements NotificationEve
     if (getRecurrenceId() != null) {
       ts.append("recurrenceId", getRecurrenceId());
     }
-  }
-
-  @Override
-  public String toString() {
-    ToString ts = new ToString(this);
-
-    toStringSegment(ts);
-
-    return ts.toString();
   }
 }

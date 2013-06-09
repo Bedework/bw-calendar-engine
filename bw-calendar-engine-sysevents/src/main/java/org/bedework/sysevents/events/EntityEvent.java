@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,6 +17,8 @@
     under the License.
 */
 package org.bedework.sysevents.events;
+
+import edu.rpi.sss.util.ToString;
 
 /** Signal an event concerning an entity
  * @author douglm
@@ -84,37 +86,20 @@ public class EntityEvent extends NamedEvent {
     return colPath;
   }
 
-  /** Add our stuff to the StringBuilder
+  /** Add our stuff to the ToString object
    *
-   * @param sb    StringBuilder for result
+   * @param ts for result
    */
   @Override
-  public void toStringSegment(final StringBuilder sb) {
-    super.toStringSegment(sb);
+  public void toStringSegment(final ToString ts) {
+    super.toStringSegment(ts);
 
-    sb.append(", ownerHref=");
-    sb.append(getOwnerHref());
+    ts.append("ownerHref", getOwnerHref());
 
-    sb.append(", uid=");
-    sb.append(getUid());
+    ts.append("uid", getUid());
 
-    if (getRecurrenceId() != null) {
-      sb.append(", recurrenceId=");
-      sb.append(getRecurrenceId());
-    }
-    sb.append(", colPath=");
-    sb.append(getColPath());
-  }
+    ts.append("recurrenceId", getRecurrenceId());
 
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder("EntityChangeEvent{");
-
-    toStringSegment(sb);
-
-
-    sb.append("}");
-
-    return sb.toString();
+    ts.append("colPath", getColPath());
   }
 }

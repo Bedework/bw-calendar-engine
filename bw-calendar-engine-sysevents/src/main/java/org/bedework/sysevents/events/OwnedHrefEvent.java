@@ -101,13 +101,4 @@ public class OwnedHrefEvent extends SysEvent {
     ts.append("href", getHref());
     ts.append("shared", getShared());
   }
-
-  @Override
-  public String toString() {
-    ToString ts = new ToString(this);
-
-    toStringSegment(ts);
-
-    return ts.toString();
-  }
 }

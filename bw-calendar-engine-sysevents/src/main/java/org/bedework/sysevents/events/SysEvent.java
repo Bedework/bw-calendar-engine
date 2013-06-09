@@ -378,6 +378,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
    * @param code
    * @param ownerHref
    * @param name
+   * @param uid
    * @param rid
    * @param inBox
    * @return SysEvent
@@ -385,9 +386,10 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
   public static SysEvent makeEntityQueuedEvent(final SysCode code,
                                                final String ownerHref,
                                                final String name,
+                                               final String uid,
                                                final String rid,
                                                final boolean inBox) {
-    SysEvent sysev = new EntityQueuedEvent(code, ownerHref, name, rid, inBox);
+    SysEvent sysev = new EntityQueuedEvent(code, ownerHref, name, uid, rid, inBox);
 
     return sysev;
   }
@@ -414,23 +416,6 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
   @Override
   public int hashCode() {
     return sysCode.hashCode();
-  }
-
-  /**
-   * Add our stuff to the StringBuilder
-   *
-   * @param sb
-   *          StringBuilder for result
-   */
-  public void toStringSegment(final StringBuilder sb) {
-    sb.append("sysCode=");
-    sb.append(getSysCode());
-    sb.append(", dtstamp=");
-    sb.append(getDtstamp());
-    sb.append(", sequence=");
-    sb.append(getSequence());
-    sb.append(", indexable=");
-    sb.append(getIndexable());
   }
 
   /** Add our stuff to the ToString object

@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,6 +17,8 @@
     under the License.
 */
 package org.bedework.sysevents.events;
+
+import edu.rpi.sss.util.ToString;
 
 /** Signal queuing of an entity in an inbox or outbox
  *
@@ -27,6 +29,7 @@ public class EntityQueuedEvent extends NamedEvent {
   private static final long serialVersionUID = 1L;
 
   private String ownerHref;
+  private String uid;
   private String rid;
   private boolean inBox;
 
@@ -34,17 +37,20 @@ public class EntityQueuedEvent extends NamedEvent {
    * @param code
    * @param ownerHref
    * @param name
+   * @param uid
    * @param rid
    * @param inBox
    */
   public EntityQueuedEvent(final SysCode code,
                            final String ownerHref,
                            final String name,
+                           final String uid,
                            final String rid,
                            final boolean inBox) {
     super(code, name);
 
     this.ownerHref = ownerHref;
+    this.uid = uid;
     this.rid = rid;
     this.inBox = inBox;
   }
@@ -55,6 +61,13 @@ public class EntityQueuedEvent extends NamedEvent {
    */
   public String getOwnerHref() {
     return ownerHref;
+  }
+
+  /**
+   * @return String
+   */
+  public String getUid() {
+    return uid;
   }
 
   /**
@@ -73,27 +86,13 @@ public class EntityQueuedEvent extends NamedEvent {
   }
 
   @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder("EntityQueuedEvent{");
+  public void toStringSegment(final ToString ts) {
+    super.toStringSegment(ts);
 
-    super.toStringSegment(sb);
-
-    try {
-      sb.append(",\n ownerHref=");
-      sb.append(getOwnerHref());
-
-      if (getRecurrenceId() != null) {
-        sb.append(", recurrenceId=");
-        sb.append(getRecurrenceId());
-      }
-      sb.append(", inBox=");
-      sb.append(getInBox());
-    } catch (Throwable t) {
-      sb.append(t);
-    }
-
-    sb.append("}");
-
-    return sb.toString();
+    ts.newLine();
+    ts.append("ownerHref", getOwnerHref());
+    ts.append("uid", getUid());
+    ts.append("recurrenceId", getRecurrenceId());
+    ts.append("inBox", getInBox());
   }
 }

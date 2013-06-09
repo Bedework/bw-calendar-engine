@@ -284,6 +284,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     addAutoScheduleMessage(true,
                            attPrincipal.getPrincipalRef(),
                            ev.getName(),
+                           ev.getUid(),
                            ev.getRecurrenceId());
 
     return null;

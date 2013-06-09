@@ -30,9 +30,7 @@ import org.bedework.calsvc.indexing.BwIndexer;
 import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.sysevents.events.CollectionChangeEvent;
 import org.bedework.sysevents.events.CollectionDeletedEvent;
-import org.bedework.sysevents.events.CollectionMoveEvent;
 import org.bedework.sysevents.events.EntityDeletedEvent;
-import org.bedework.sysevents.events.EntityMoveEvent;
 import org.bedework.sysevents.events.EntityUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
 
@@ -108,10 +106,6 @@ public class MessageProcessor extends CalSys {
           return;
         }
 
-        if (msg instanceof CollectionMoveEvent) {
-          return;
-        }
-
         if (msg instanceof EntityUpdateEvent) {
           entitiesUpdated++;
           doEntityChange((EntityUpdateEvent)msg);
@@ -121,10 +115,6 @@ public class MessageProcessor extends CalSys {
         if (msg instanceof EntityDeletedEvent) {
           entitiesDeleted++;
           doEntityDelete((EntityDeletedEvent)msg);
-          return;
-        }
-
-        if (msg instanceof EntityMoveEvent) {
           return;
         }
 

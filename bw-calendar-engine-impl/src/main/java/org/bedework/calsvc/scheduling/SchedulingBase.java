@@ -66,18 +66,21 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
   * @param inBox
   * @param principalHref
   * @param eventName
+  * @param uid
   * @param rid
   * @throws CalFacadeException
   */
   protected void addAutoScheduleMessage(final boolean inBox,
                                         final String principalHref,
                                         final String eventName,
+                                        final String uid,
                                         final String rid) throws CalFacadeException {
     try {
       postNotification(
                SysEvent.makeEntityQueuedEvent(SysEvent.SysCode.SCHEDULE_QUEUED,
                                               principalHref,
                                               eventName,
+                                              uid,
                                               rid, inBox));
     } catch (Throwable t) {
       error(t);

@@ -18,6 +18,8 @@
 */
 package org.bedework.sysevents.events;
 
+import edu.rpi.sss.util.ToString;
+
 /** Outbound http event.
  * @author douglm
  *
@@ -43,26 +45,14 @@ public class HttpOutEvent extends HttpEvent implements MillisecsEvent {
     return millis;
   }
 
-  /** Add our stuff to the StringBuilder
+  /** Add our stuff to the ToString object
    *
-   * @param sb    StringBuilder for result
+   * @param ts for result
    */
   @Override
-  public void toStringSegment(final StringBuilder sb) {
-    super.toStringSegment(sb);
+  public void toStringSegment(final ToString ts) {
+    super.toStringSegment(ts);
 
-    sb.append(", millis=");
-    sb.append(getMillis());
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder("HttpOutEvent{");
-
-    toStringSegment(sb);
-
-    sb.append("}");
-
-    return sb.toString();
+    ts.append("millis", getMillis());
   }
 }
