@@ -326,7 +326,7 @@ public class FilterBuilder {
     }
 
     /* This covers most - calendar collection, inbox, outbox, external alias etc */
-    if (cal.getCollectionInfo().entitiesAllowed) {
+    if (cal.getCollectionInfo().onlyCalEntities) {
       // Leaf node
       if (!explicitSelection &&
           (cal.getCalType() !=  BwCalendar.calTypeCalendarCollection) &&
@@ -658,7 +658,7 @@ public class FilterBuilder {
     }
 
     String path = col.getPath();
-    boolean leaf = col.getCollectionInfo().entitiesAllowed;
+    boolean leaf = col.getCollectionInfo().onlyCalEntities;
 
     ci.updateFilter(fltr);
 

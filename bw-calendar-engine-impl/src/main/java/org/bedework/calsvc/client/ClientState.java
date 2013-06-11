@@ -185,7 +185,7 @@ public class ClientState extends CalSvcDb implements ClientStateI {
         vfilter += col.getFilterExpr() + ")";
       }
 
-      if (col.getCollectionInfo().entitiesAllowed ||
+      if (col.getCollectionInfo().onlyCalEntities ||
           (col.getCalType() == BwCalendar.calTypeFolder)) {
         // reached an end point
         vpathTarget = col.getPath();

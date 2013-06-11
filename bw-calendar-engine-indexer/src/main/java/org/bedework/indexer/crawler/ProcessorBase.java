@@ -218,8 +218,8 @@ public abstract class ProcessorBase extends CalSys implements Processor {
         batchIndex += childCols.size();
       }
 
-      if ((col.getCalType() != BwCalendar.calTypeCalendarCollection) &&
-          (col.getCalType() != BwCalendar.calTypeExtSub)) {
+      if (!col.getCollectionInfo().onlyCalEntities ||
+          !col.getCollectionInfo().indexable) {
         return;
       }
 

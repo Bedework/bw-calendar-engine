@@ -186,7 +186,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
    */
   @Override
   public boolean entitiesAllowed() throws WebdavException {
-    return getCol().getCollectionInfo().entitiesAllowed;
+    return getCol().getCollectionInfo().onlyCalEntities;
   }
 
   /* (non-Javadoc)

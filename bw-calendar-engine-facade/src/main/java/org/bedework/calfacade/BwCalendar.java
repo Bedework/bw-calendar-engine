@@ -177,8 +177,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     /** Children allowed in this collection */
     public boolean childrenAllowed;
 
-    /** Store entities in this type */
-    public boolean entitiesAllowed;
+    /** Objects in here can be indexed */
+    public boolean indexable;
 
     /** Guid + recurrence must be unique */
     public boolean uniqueKey;
@@ -205,18 +205,19 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
      * @param collectionType
      * @param special
      * @param childrenAllowed
-     * @param entitiesAllowed
+     * @param indexable
      * @param uniqueKey
      * @param allowAnnotations
      * @param allowFreeBusy
      * @param canAlias
      * @param onlyCalEntities
      * @param scheduling
+     * @param shareable
      */
     public CollectionInfo(final int collectionType,
                           final boolean special,
                           final boolean childrenAllowed,
-                          final boolean entitiesAllowed,
+                          final boolean indexable,
                           final boolean uniqueKey,
                           final boolean allowAnnotations,
                           final boolean allowFreeBusy,
@@ -227,7 +228,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
       this.collectionType = collectionType;
       this.special = special;
       this.childrenAllowed = childrenAllowed;
-      this.entitiesAllowed = entitiesAllowed;
+      this.indexable = indexable;
       this.uniqueKey = uniqueKey;
       this.allowAnnotations = allowAnnotations;
       this.allowFreeBusy = allowFreeBusy;
@@ -239,14 +240,15 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   private static final boolean f = false;
+  private static final boolean o = false; // flag obsolete entries
   private static final boolean T = true;
 
   /** The info */
   private static final CollectionInfo[] collectionInfo = {
     new CollectionInfo(calTypeFolder,             f, T, f, f, f, T, T, f, f, f),
     new CollectionInfo(calTypeCalendarCollection, f, T, T, T, T, T, T, T, T, T),
-    new CollectionInfo(calTypeTrash,              T, f, T, f, T, f, f, f, f, f),
-    new CollectionInfo(calTypeDeleted,            T, f, T, f, T, f, f, f, f, f),
+    new CollectionInfo(calTypeTrash,              o, o, o, o, o, o, o, o, o, o),
+    new CollectionInfo(calTypeDeleted,            o, o, o, o, o, o, o, o, o, o),
     new CollectionInfo(calTypeBusy,               T, f, T, T, T, T, f, T, f, f),
     new CollectionInfo(calTypeInbox,              T, f, T, f, f, f, f, T, f, f),
     new CollectionInfo(calTypeOutbox,             T, f, T, f, f, f, f, T, f, f),
@@ -257,18 +259,18 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     new CollectionInfo(calTypeEventList,          T, f, T, T, T, T, f, T, f, f),
     new CollectionInfo(calTypePoll,               f, T, T, T, T, T, T, T, T, T),
   };
-  /*                             ^                1  2  3  4  5  6  7  8  9
-   *                             |                |  |  |  |  |  |  |  |  |
-   *           collectionType ---+                |  |  |  |  |  |  |  |  |
-   *                  special  1 -----------------+  |  |  |  |  |  |  |  |
-   *          childrenAllowed  2 -------------------+|  |  |  |  |  |  |  |
-   *          entitiesAllowed  3 -----------------------+  |  |  |  |  |  |
-   *                uniqueKey  4 --------------------------+  |  |  |  |  |
-   *         allowAnnotations  5 -----------------------------+  |  |  |  |
-   *            allowFreeBusy  6 --------------------------------+  |  |  |
-   *                 canAlias  7 -----------------------------------+  |  |
-   *          onlyCalEntities  8 --------------------------------------+  |
-   *               scheduling  9 -----------------------------------------+
+  /*                             ^                1  2  3  4  5  6  7  8  9 10
+   *                             |                |  |  |  |  |  |  |  |  |  |
+   *           collectionType ---+                |  |  |  |  |  |  |  |  |  |
+   *                  special  1 -----------------+  |  |  |  |  |  |  |  |  |
+   *          childrenAllowed  2 -------------------+|  |  |  |  |  |  |  |  |
+   *                indexable  3 -----------------------+  |  |  |  |  |  |  |
+   *                uniqueKey  4 --------------------------+  |  |  |  |  |  |
+   *         allowAnnotations  5 -----------------------------+  |  |  |  |  |
+   *            allowFreeBusy  6 --------------------------------+  |  |  |  |
+   *                 canAlias  7 -----------------------------------+  |  |  |
+   *          onlyCalEntities  8 --------------------------------------+  |  |
+   *               scheduling  9 -----------------------------------------+  |
    *                shareable 10 --------------------------------------------+
    */
 
@@ -1357,7 +1359,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    */
   @NoDump
   public boolean getCalendarCollection() {
-    return collectionInfo[getCalType()].entitiesAllowed;
+    return collectionInfo[getCalType()].onlyCalEntities;
   }
 
   /** true if this is a special collection
