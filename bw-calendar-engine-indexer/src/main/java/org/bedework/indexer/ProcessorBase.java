@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.indexer.crawler;
+package org.bedework.indexer;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
@@ -24,13 +24,11 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvc.indexing.BwIndexer;
 import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.indexer.CalSys;
-import org.bedework.indexer.EntityIndexerThread;
 import org.bedework.indexer.IndexStats.StatType;
-import org.bedework.indexer.ThreadPool;
+
+import edu.rpi.sss.util.Util;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /** Provide a number of useful common methods for processors.
@@ -53,8 +51,6 @@ public abstract class ProcessorBase extends CalSys implements Processor {
   private List<String> prefixedSkipPaths;
 
   protected CrawlStatus status;
-
-  private ThreadPool tpool;
 
   protected String indexRootPath;
 
@@ -90,7 +86,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
       prefixedSkipPaths = new ArrayList<String>();
 
       for (String sp: skipPaths) {
-        String fixed = fixColPath(sp);
+        String fixed = Util.buildPath(true, sp);
 
         if (fixed.startsWith("*")) {
           prefixedSkipPaths.add(fixed.substring(1));
@@ -122,20 +118,6 @@ public abstract class ProcessorBase extends CalSys implements Processor {
     return status;
   }
 
-  /**
-   * @param val
-   */
-  public void setThreadPool(final ThreadPool val) {
-    tpool = val;
-  }
-
-  /**
-   * @return ThreadPool
-   */
-  public ThreadPool getThreadPool() {
-    return tpool;
-  }
-
   @Override
   public String getCurrentPath() throws CalFacadeException {
     return currentPath;
@@ -146,7 +128,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
       return false;
     }
 
-    String fixed = fixColPath(path);
+    String fixed = Util.buildPath(true, path);
 
     if (unprefixedSkipPaths.contains(fixed)) {
       return true;
@@ -170,9 +152,10 @@ public abstract class ProcessorBase extends CalSys implements Processor {
     }
 
     if (debug) {
-      debugMsg("indexCollections(" + path + ")");
+      debugMsg("indexCollection(" + path + ")");
     }
-    status.currentStatus = "indexCollections(" + path + ")";
+
+    status.currentStatus = "indexCollection(" + path + ")";
 
     status.stats.inc(StatType.collections);
 
@@ -197,25 +180,27 @@ public abstract class ProcessorBase extends CalSys implements Processor {
         return;
       }
 
-      BwIndexer indexer = getIndexer();
+      BwIndexer indexer =
+          BwIndexerFactory.getIndexer(publick, principal,
+                                      true, getSyspars(),
+                                      indexRootPath,
+                                      null);
 
       indexer.indexEntity(col);
       close();
 
-      int batchIndex = 0;
+      Refs refs = null;
 
       for (;;) {
-        Collection<String> childCols = getChildCollections(path, batchIndex);
+        refs = getChildCollections(path, refs);
 
-        if (childCols == null) {
+        if (refs == null) {
           break;
         }
 
-        for (String cpath: childCols) {
+        for (String cpath: refs.refs) {
           indexCollection(cpath);
         }
-
-        batchIndex += childCols.size();
       }
 
       if (!col.getCollectionInfo().onlyCalEntities ||
@@ -223,62 +208,33 @@ public abstract class ProcessorBase extends CalSys implements Processor {
         return;
       }
 
-      batchIndex = 0;
-
+      refs = null;
       svci = getSvci();
 
       for (;;) {
-        Collection<String> childEnts = getChildEntities(path, batchIndex);
+        refs = getChildEntities(path, refs);
 
-        if (childEnts == null) {
+        if (refs == null) {
           break;
         }
 
-        EntityIndexerThread eit = tpool.getProcessor();
+        EntityProcessor ep = new EntityProcessor(status,
+                                                 name + ":Entity",
+                                                 adminAccount,
+                                                 principal,
+                                                 entityDelay,
+                                                 path,
+                                                 refs.refs,
+                                                 indexRootPath);
 
-        eit.setPathNames(//publick,
-                         principal, path, childEnts);
+        IndexerThread eit = getEntityThread(ep);
 
-        /* This disables the multi-thread processing. To enable it we need to
-         * call start(). However, even single-threaded we seem to be stressing
-         * the system currently.
-         */
-        eit.run();
-
-        batchIndex += childEnts.size();
+        eit.start();
       }
     } catch (Throwable t) {
       error(t);
     } finally {
       close();
     }
-  }
-
-  @Override
-  public BwIndexer getIndexer() throws CalFacadeException {
-    if (!publick && (principal == null)) {
-      /* Not down to the user collections yet */
-      if (debug) {
-        debugMsg("No indexer");
-      }
-      return null;
-    }
-
-    return BwIndexerFactory.getIndexer(publick, principal,
-                                       true, getSyspars(),
-                                       indexRootPath,
-                                       null);
-  }
-
-  @Override
-  public void putIndexer(final BwIndexer val) throws CalFacadeException {
-  }
-
-  protected String fixColPath(final String val) {
-    if (val.endsWith("/")) {
-      return val;
-    }
-
-    return val + "/";
   }
 }

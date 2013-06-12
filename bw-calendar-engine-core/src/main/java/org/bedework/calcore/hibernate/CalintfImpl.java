@@ -1144,6 +1144,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   public Iterator<BwEventAnnotation> getEventAnnotations() throws CalFacadeException {
     sess.createQuery(getEventAnnotationsQuery);
 
+    @SuppressWarnings("unchecked")
     Collection<BwEventAnnotation> anns = sess.getList();
 
     return anns.iterator();
@@ -1154,6 +1155,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       " where recurrenceId<>null " +
        " and target=:target";
 
+  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) throws CalFacadeException {
     sess.createQuery(getEventOverridesQuery);
@@ -1236,6 +1238,28 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     return (BwPrincipal)sess.getUnique();
   }
 
+  private static String getPrincipalHrefsQuery =
+      "select u.principalRef from " + BwUser.class.getName() +
+        " u order by u.principalRef";
+
+  @Override
+  public List<String> getPrincipalHrefs(final int start,
+                                        final int count) throws CalFacadeException {
+    sess.createQuery(getPrincipalHrefsQuery);
+
+    sess.setFirstResult(start);
+    sess.setMaxResults(count);
+
+    @SuppressWarnings("unchecked")
+    List<String> res = sess.getList();
+
+    if (Util.isEmpty(res)) {
+      return null;
+    }
+
+    return res;
+  }
+
   private static final String getOwnerPreferencesQuery =
       "from " + BwPreferences.class.getName() + " p " +
         "where p.ownerHref=:ownerHref";
@@ -1286,6 +1310,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       sess.createQuery(q);
       sess.setString("uid", uid);
 
+      @SuppressWarnings("unchecked")
       List<BwAuthUserPrefs> prefs = sess.getList();
 
       if (!Util.isEmpty(prefs)) {
@@ -1358,6 +1383,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
    * @return Collection
    * @throws CalFacadeException
    */
+  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwGroup> findGroupParents(final BwGroup group,
                                        final boolean admin) throws CalFacadeException {
@@ -1524,6 +1550,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
           "where g.id = ge.memberId and " +
           "ge.grp=:gr and ge.memberIsGroup=true";
 
+  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwPrincipal> getMembers(final BwGroup group,
                                             final boolean admin) throws CalFacadeException {
@@ -1559,6 +1586,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       "from " + BwGroup.class.getName() + " g " +
         "order by g.account";
 
+  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwGroup> getAllGroups(final boolean admin) throws CalFacadeException {
     if (admin) {
@@ -1584,6 +1612,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       "select g.grp from org.bedework.calfacade.BwGroupEntry g " +
         "where g.memberId=:entId and g.memberIsGroup=:isgroup";
 
+  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwGroup> getGroups(final BwPrincipal val,
                                        final boolean admin) throws CalFacadeException {
@@ -1659,6 +1688,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   private static final String getAllCalSuitesQuery =
       "from " + BwCalSuite.class.getName();
 
+  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwCalSuite> getAllCalSuites() throws CalFacadeException {
     sess.createQuery(getAllCalSuitesQuery);
@@ -1677,6 +1707,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
    * @return EventProperties
    * @throws CalFacadeException
    */
+  @SuppressWarnings("unchecked")
   @Override
   public <T extends BwEventProperty> CoreEventPropertiesI<T>  getEvPropsHandler(final Class<T> cl)
         throws CalFacadeException {
@@ -1782,6 +1813,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       " and (r.lastmod>:lastmod" +
       " or (r.lastmod=:lastmod and r.sequence>:seq))";
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<BwResource> getAllResources(final String path,
                                           final boolean forSynch,

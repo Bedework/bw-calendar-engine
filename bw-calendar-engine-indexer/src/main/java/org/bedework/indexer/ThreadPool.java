@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,11 +20,12 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 
+import edu.rpi.sss.util.ToString;
+
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Stack;
 
 /** Pool of runnable thread processes.
  *
@@ -33,21 +34,30 @@ import java.util.Stack;
  */
 public class ThreadPool {
   protected boolean debug;
+  private String name;
+
+  private int maxThreads;
 
   private Logger log;
 
   private ThreadGroup tgroup;
 
-  private Stack<EntityIndexerThread> idleProcessors = new Stack<EntityIndexerThread>();
-  private Collection<EntityIndexerThread> allProcessors = new ArrayList<EntityIndexerThread>();
+  private Collection<IndexerThread> running = new ArrayList<IndexerThread>();
   private int numWaiting;
 
+  private int totalThreads;
+
   /**
-   * @param tgroup
+   * @param name
+   * @param maxThreads
    */
-  public ThreadPool(final ThreadGroup tgroup) {
+  public ThreadPool(final String name,
+                    final int maxThreads) {
     debug = getLogger().isDebugEnabled();
-    this.tgroup = tgroup;
+    tgroup = new ThreadGroup(name);
+
+    this.name = name;
+    this.maxThreads = maxThreads;
   }
 
   /**
@@ -57,14 +67,20 @@ public class ThreadPool {
     return tgroup;
   }
 
-  /** Add a processor to be used for handling entities. The supplied
-   * processor will be run on a separate thread.
+  /** Flag the completion of a processor.
    *
    * @param val
    */
-  public void addEntityThreadProcessor(final EntityIndexerThread val) {
-    idleProcessors.push(val);
-    allProcessors.add(val);
+  public void completed(final IndexerThread val) {
+    synchronized (running) {
+      if (!running.contains(val)) {
+        error("Thread " + val.getName() + " was not in running set.");
+      } else {
+        running.remove(val);
+      }
+
+      running.notify();
+    }
   }
 
   /**
@@ -72,97 +88,101 @@ public class ThreadPool {
    */
   public void waitForProcessors() throws CalFacadeException {
     try {
-      synchronized (idleProcessors) {
+      synchronized (running) {
         while (numWaiting > 0) {
           if (debug) {
             debugMsg("Number waiting is " + numWaiting + ". Waiting till zero");
           }
 
-          idleProcessors.wait();
+          running.wait();
         }
       }
 
-      for (EntityIndexerThread eit: allProcessors) {
-        synchronized(eit) {
-          while (eit.getRunning()) {
-            if (debug) {
-              debugMsg("Waiting for thread termination");
-            }
-
-            eit.wait();
+      synchronized (running) {
+        while (running.size() > 0) {
+          if (debug) {
+            debugMsg("Number running is " + running.size() + ". Waiting till zero");
           }
-        }
 
-        if (debug) {
-          debugMsg("All threads terminated");
+          running.wait();
         }
+      }
+
+      if (debug) {
+        debugMsg("All threads terminated");
       }
     } catch (Throwable t) {
       if (debug) {
         debugMsg("Exception waiting for processor: " + t);
       }
       throw new CalFacadeException(t);
-    }
-  }
-
-  /** Put a processor back in the pool
-   *
-   * @param val
-   */
-  protected void putProcessor(final EntityIndexerThread val) {
-    if (debug) {
-      debugMsg("about to putProcessor: queue length: " + numWaiting);
-    }
-
-    synchronized (idleProcessors) {
-      if (debug) {
-        debugMsg("putProcessor: queue length: " + numWaiting);
-      }
-
-      idleProcessors.push(val);
-
-      if (numWaiting > 0) {
-        idleProcessors.notify();
-      }
     }
   }
 
   /**
-   * @return an available processor
+   * @param proc
+   * @return a thread
    * @throws CalFacadeException
    */
-  public EntityIndexerThread getProcessor() throws CalFacadeException {
+  public IndexerThread getThread(final Processor proc) throws CalFacadeException {
     try {
-      synchronized (idleProcessors) {
-        while (idleProcessors.empty()) {
+      synchronized (running) {
+        while (running.size() >= maxThreads) {
           numWaiting++;
           if (debug) {
-            debugMsg("Waiting for processor. Queue length: " + numWaiting);
+            debugMsg("Waiting for thread. Queue length: " + numWaiting);
           }
 
-          idleProcessors.wait();
+          running.wait();
           numWaiting--;
         }
 
-        return idleProcessors.pop();
+        IndexerThread it = new IndexerThread(name + "-" + totalThreads, this,  proc);
+        running.add(it);
+        totalThreads++;
+
+        return it;
       }
     } catch (Throwable t) {
       if (debug) {
         debugMsg("Exception waiting for processor: " + t);
       }
       throw new CalFacadeException(t);
+    }
+  }
+
+  /**
+   *
+   */
+  public void checkThreads() {
+    int active = tgroup.activeCount();
+
+    if (active == 0) {
+      return;
+    }
+
+    error("Still " + active + " active " + name + " threads");
+
+    Thread[] activeThreads = new Thread[active];
+
+    int ret = tgroup.enumerate(activeThreads);
+
+    for (int i = 0; i < ret; i++) {
+      error("Thread " + activeThreads[i].getName() +
+            " is still active");
     }
   }
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("ThreadPool{");
+    ToString ts = new ToString(this);
 
-    sb.append("name=");
-    sb.append(tgroup.getName());
-    sb.append("}");
+    ts.append("name", name);
+    ts.append("running", running.size());
+    ts.append("waiting", numWaiting);
+    ts.append("total", totalThreads);
 
-    return sb.toString();
+    return ts.toString();
   }
 
   /**
@@ -178,5 +198,9 @@ public class ThreadPool {
 
   protected void debugMsg(final String msg) {
     getLogger().debug(msg);
+  }
+
+  protected void error(final String msg) {
+    getLogger().error(msg);
   }
 }

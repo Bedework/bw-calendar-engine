@@ -36,7 +36,7 @@ public class IndexStats {
   /** */
   public enum StatType {
     /** */
-    users,
+    principals,
 
     /** */
     collections,

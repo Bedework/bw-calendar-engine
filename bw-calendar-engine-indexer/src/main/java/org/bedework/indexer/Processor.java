@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.indexer.crawler;
+package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 
@@ -38,10 +38,9 @@ import org.bedework.calfacade.exc.CalFacadeException;
 public interface Processor {
   /** Start crawling
    *
-   * @param rootPath  sub-tree root path
    * @throws CalFacadeException
    */
-  public void start(String rootPath) throws CalFacadeException;
+  public void start() throws CalFacadeException;
 
   /** Wait for any processes to stop.
    *
@@ -71,10 +70,9 @@ public interface Processor {
   /** Do whatever this processor is supposed to do. usually called from a
    * Thread object.
    *
-   * @param rootPath  sub-tree root path
    * @throws CalFacadeException
    */
-  public void process(String rootPath) throws CalFacadeException;
+  public void process() throws CalFacadeException;
 
   /**
    * @return path we are currently processing.

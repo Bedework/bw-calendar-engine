@@ -27,7 +27,6 @@ import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calsvc.indexing.BwIndexer;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
@@ -62,7 +61,11 @@ public abstract class CalSys {
   private SystemProperties syspars;
   private BasicSystemProperties basicSyspars;
 
-  private int batchSize = 5;
+  private int collectionBatchSize = 10;
+
+  private int entityBatchSize = 50;
+
+  private int principalBatchSize = 10;
 
   private CalSvcI svci;
 
@@ -70,6 +73,8 @@ public abstract class CalSys {
   private String curAccount;
   private boolean curPublicAdmin;
 
+  protected static ThreadPool entityThreadPool;
+  protected static ThreadPool principalThreadPool;
 
   /**
    * @param name
@@ -86,24 +91,43 @@ public abstract class CalSys {
     debug = getLogger().isDebugEnabled();
   }
 
+  protected void setThreadPools(final int maxEntityThreads,
+                                final int maxPrincipalThreads) {
+    entityThreadPool = new ThreadPool("Entity", maxEntityThreads);
+    principalThreadPool = new ThreadPool("Principal", maxPrincipalThreads);
+  }
+
+  /**
+   *
+   */
+  public void checkThreads() {
+    entityThreadPool.checkThreads();
+    principalThreadPool.checkThreads();
+  }
+
+  /**
+   * @throws CalFacadeException
+   *
+   */
+  public void join() throws CalFacadeException {
+    entityThreadPool.waitForProcessors();
+    principalThreadPool.waitForProcessors();
+  }
+
+  protected IndexerThread getEntityThread(final Processor proc) throws CalFacadeException {
+    return entityThreadPool.getThread(proc);
+  }
+
+  protected IndexerThread getPrincipalThread(final Processor proc) throws CalFacadeException {
+    return principalThreadPool.getThread(proc);
+  }
+
   /**
    * @param principal
    */
   public void setCurrentPrincipal(final String principal) {
     this.principal = principal;
   }
-
-  /**
-   * @param val
-   * @throws CalFacadeException
-   */
-  public abstract void putIndexer(BwIndexer val) throws CalFacadeException;
-
-  /**
-   * @return an indexer
-   * @throws CalFacadeException
-   */
-  public abstract BwIndexer getIndexer() throws CalFacadeException;
 
   /** Get an svci object and return it. Also embed it in this object.
    *
@@ -321,17 +345,77 @@ public abstract class CalSys {
     return "account=" + adminAccount;
   }
 
+  /**
+   *
+   */
+  public static class Refs {
+    /** Where we are in the list */
+    public int index;
+
+    /** How many to request */
+    public int batchSize;
+
+    /** List of references - names or hrefs depending on context */
+    public Collection<String> refs;
+  }
+
+  /** Get the next batch of principal hrefs.
+   *
+   * @param refs - null on first call.
+   * @return next batch of hrefs or null for no more.
+   * @throws CalFacadeException
+   */
+  protected Refs getPrincipalHrefs(final Refs refs) throws CalFacadeException {
+    CalSvcI svci = getAdminSvci();
+    Refs r = refs;
+
+    if (r == null) {
+      r = new Refs();
+      r.batchSize = principalBatchSize;
+    }
+
+    try {
+      r.refs = svci.getUsersHandler().getPrincipalHrefs(r.index, r.batchSize);
+
+      if (debug) {
+        if (r.refs == null) {
+          debugMsg("getPrincipalHrefs(" + r.index + ") found none");
+        } else {
+          debugMsg("getPrincipalHrefs(" + r.index + ") found " +
+                   r.refs.size());
+        }
+      }
+
+      if (r.refs == null) {
+        return null;
+      }
+
+      r.index += r.refs.size();
+
+      return r;
+    } finally {
+      close(svci);
+    }
+  }
+
   /** Get the next batch of child collection paths.
    *
    * @param path
-   * @param batchIndex  >= 0
-   * @return next batch of child collection paths.
+   * @param refs - null on first call.
+   * @return next batch of hrefs or null for no more.
    * @throws CalFacadeException
    */
-  protected Collection<String> getChildCollections(final String path,
-                                                   int batchIndex) throws CalFacadeException {
+  protected Refs getChildCollections(final String path,
+                                     final Refs refs) throws CalFacadeException {
     if (debug) {
       debugMsg("getChildCollections(" + path + ")");
+    }
+
+    Refs r = refs;
+
+    if (r == null) {
+      r = new Refs();
+      r.batchSize = collectionBatchSize;
     }
 
     CalSvcI svci = getAdminSvci();
@@ -350,25 +434,23 @@ public abstract class CalSys {
         throw new CalFacadeAccessException();
       }
 
-      Collection<String> paths = svci.getAdminHandler().getChildCollections(path,
-                                                                    batchIndex,
-                                                                    batchSize);
+      r.refs = svci.getAdminHandler().getChildCollections(path, r.index, r.batchSize);
 
       if (debug) {
-        if (paths == null) {
+        if (r.refs == null) {
           debugMsg("getChildCollections(" + path + ") found none");
         } else {
-          debugMsg("getChildCollections(" + path + ") found " + paths.size());
+          debugMsg("getChildCollections(" + path + ") found " + r.refs.size());
         }
       }
 
-      if (paths == null) {
+      if (r.refs == null) {
         return null;
       }
 
-      batchIndex += paths.size();
+      r.index += r.refs.size();
 
-      return paths;
+      return r;
     } finally {
       close(svci);
     }
@@ -377,17 +459,24 @@ public abstract class CalSys {
   /** Get the next batch of child entity names.
    *
    * @param path
-   * @param batchIndex >= 0
-   * @return next batch of child entity names.
+   * @param refs - null on first call.
+   * @return next batch of hrefs or null for no more.
    * @throws CalFacadeException
    */
-  protected Collection<String> getChildEntities(final String path,
-                                                int batchIndex) throws CalFacadeException {
+  protected Refs getChildEntities(final String path,
+                                  final Refs refs) throws CalFacadeException {
     if (debug) {
       debugMsg("getChildEntities(" + path + ")");
     }
 
     CalSvcI svci = getAdminSvci();
+
+    Refs r = refs;
+
+    if (r == null) {
+      r = new Refs();
+      r.batchSize = entityBatchSize;
+    }
 
     try {
       BwCalendar col = svci.getCalendarsHandler().get(path);
@@ -396,25 +485,23 @@ public abstract class CalSys {
         throw new CalFacadeAccessException();
       }
 
-      Collection<String> names = svci.getAdminHandler().getChildEntities(path,
-                                                                    batchIndex,
-                                                                    batchSize);
+      r.refs = svci.getAdminHandler().getChildEntities(path, r.index, r.batchSize);
 
       if (debug) {
-        if (names == null) {
+        if (r.refs == null) {
           debugMsg("getChildEntities(" + path + ") found none");
         } else {
-          debugMsg("getChildEntities(" + path + ") found " + names.size());
+          debugMsg("getChildEntities(" + path + ") found " + r.refs.size());
         }
       }
 
-      if (names == null) {
+      if (r.refs == null) {
         return null;
       }
 
-      batchIndex += names.size();
+      r.index += r.refs.size();
 
-      return names;
+      return r;
     } finally {
       close(svci);
     }

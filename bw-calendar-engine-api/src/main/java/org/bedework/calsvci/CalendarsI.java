@@ -49,6 +49,14 @@ public interface CalendarsI extends Serializable {
    */
   public BwCalendar getPublicCalendars() throws CalFacadeException;
 
+  /** Returns root path of calendars owned by the current user. For
+   * unauthenticated this will be the public calendar root.
+   *
+   * @return String principal home.
+   * @throws CalFacadeException
+   */
+  public String getHomePath() throws CalFacadeException;
+
   /** Returns root of calendars owned by the current user.
    *
    * <p>For authenticated, personal access this always returns the user

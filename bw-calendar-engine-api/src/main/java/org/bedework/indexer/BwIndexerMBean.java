@@ -39,22 +39,22 @@ public interface BwIndexerMBean {
   /**
    * @param val thread limit
    */
-  public void setMaxPublicThreads(final int val);
+  public void setMaxEntityThreads(final int val);
 
   /**
    * @return thread limit
    */
-  public int getMaxPublicThreads();
+  public int getMaxEntityThreads();
 
   /**
    * @param val thread limit
    */
-  public void setMaxUserThreads(final int val);
+  public void setMaxPrincipalThreads(final int val);
 
   /**
    * @return thread limit
    */
-  public int getMaxUserThreads();
+  public int getMaxPrincipalThreads();
 
   /** True if we do public
    *

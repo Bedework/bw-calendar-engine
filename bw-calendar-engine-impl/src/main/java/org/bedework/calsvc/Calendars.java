@@ -78,20 +78,18 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                 PrivilegeDefs.privRead, true);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#getHome()
-   */
   @Override
-  public BwCalendar getHome() throws CalFacadeException {
-    String path;
-
+  public String getHomePath() throws CalFacadeException {
     if (isGuest() || isPublicAdmin()) {
-      path = publicCalendarRootPath;
-    } else {
-      path = getSvc().getPrincipalInfo().getCalendarHomePath();
+      return publicCalendarRootPath;
     }
 
-    return getCal().getCalendar(path, PrivilegeDefs.privRead, true);
+    return getSvc().getPrincipalInfo().getCalendarHomePath();
+  }
+
+  @Override
+  public BwCalendar getHome() throws CalFacadeException {
+    return getCal().getCalendar(getHomePath(), PrivilegeDefs.privRead, true);
   }
 
   /* (non-Javadoc)

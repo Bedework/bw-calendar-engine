@@ -262,15 +262,6 @@ public class MessageProcessor extends CalSys {
     }
   }
 
-  @Override
-  public void putIndexer(final BwIndexer val) throws CalFacadeException {
-  }
-
-  @Override
-  public BwIndexer getIndexer() throws CalFacadeException {
-    return null;
-  }
-
   /*
    * ====================================================================
    * Private methods

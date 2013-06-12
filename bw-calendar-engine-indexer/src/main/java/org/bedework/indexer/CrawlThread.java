@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.indexer.crawler;
+package org.bedework.indexer;
 
 import org.apache.log4j.Logger;
 
@@ -27,21 +27,17 @@ import org.apache.log4j.Logger;
  */
 public class CrawlThread extends Thread {
   private Processor proc;
-  private String rootPath;
 
   CrawlThread(final String name,
-              final ThreadGroup tgroup,
-              final Processor proc,
-              final String rootPath) {
-    super(tgroup, name);
+              final Processor proc) {
+    super(name);
     this.proc = proc;
-    this.rootPath = rootPath;
   }
 
   @Override
   public void run() {
     try {
-      proc.process(rootPath);
+      proc.process();
     } catch (Throwable t) {
       Logger.getLogger(this.getClass()).error(this, t);
     } finally {

@@ -16,11 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.indexer.crawler;
+package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.indexer.EntityIndexerThread;
-import org.bedework.indexer.ThreadPool;
 
 import java.util.List;
 
@@ -31,8 +29,6 @@ import java.util.List;
  */
 public abstract class Crawler extends ProcessorBase {
   private CrawlThread thr;
-
-  private ThreadGroup tgroup;
 
   /** if principal is null then we are at the root.
    *
@@ -66,90 +62,35 @@ public abstract class Crawler extends ProcessorBase {
                  final long batchDelay,
                  final long entityDelay,
                  final List<String> skipPaths,
-                 final String indexRootPath,
-                 final ThreadGroup tgroup,
-                 final int entityThreads) throws CalFacadeException {
+                 final String indexRootPath) throws CalFacadeException {
     super(name, adminAccount, publick, principal, batchDelay, entityDelay,
           skipPaths, indexRootPath);
 
     setStatus(status);
-    this.tgroup = tgroup;
-
-    ThreadPool tpool = new ThreadPool(tgroup);
-    setThreadPool(tpool);
-
-    for (int i = 0; i < entityThreads; i++) {
-      String n = name + " thread " + i;
-
-      ProcessorBase p = getProcessorObject(i);
-      tpool.addEntityThreadProcessor(new EntityIndexerThread(n, tpool,
-                                                             status.stats,
-                                                             p));
-    }
-  }
-
-  /**
-   * @param index - identifiy the object
-   * @return ProcessorBase
-   * @throws CalFacadeException
-   */
-  public abstract ProcessorBase getProcessorObject(int index) throws CalFacadeException;
-
-  /** Constructor for an entity thread processor. These handle the entities
-   * found within a collection.
-   *
-   * @param name
-   * @param adminAccount
-   * @param publick
-   * @param principal - the principal we are processing or null.
-   * @param batchDelay
-   * @param entityDelay
-   * @param skipPaths - paths to skip
-   * @param indexRootPath - where we build the index
-   * @throws CalFacadeException
-   */
-  public Crawler(final String name,
-                 final String adminAccount,
-                 final boolean publick,
-                 final String principal,
-                 final long batchDelay,
-                 final long entityDelay,
-                 final List<String> skipPaths,
-                 final String indexRootPath) throws CalFacadeException {
-    super(name, adminAccount, publick,
-          principal, batchDelay, entityDelay, skipPaths, indexRootPath);
   }
 
   @Override
-  public void start(final String rootPath) {
+  public void start() {
     try {
-      thr = new CrawlThread(name, tgroup, this, rootPath);
-      thr.run();
+      thr = new CrawlThread(name, this);
+      thr.start();
     } catch (Throwable t) {
-      getStatus().currentStatus = "Failed with exception " + t.getLocalizedMessage();
+      getStatus().currentStatus = "Start failed with exception " + t.getLocalizedMessage();
       error(t);
     }
   }
 
   @Override
   public void join() throws CalFacadeException {
-    if (thr == null) {
-      return;
-    }
-
     try {
-      getThreadPool().waitForProcessors();
-
-      if (debug) {
-        debugMsg(name + ": Wait for termination");
-      }
       thr.join();
-      if (debug) {
-        debugMsg(name +": Termination");
-      }
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      getStatus().currentStatus = "Join failed with exception " + t.getLocalizedMessage();
+      error(t);
     }
+
+    /* Wait for the remaining threads */
+    super.join();
   }
 
   @Override

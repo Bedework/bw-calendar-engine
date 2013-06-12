@@ -18,7 +18,6 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.indexer.crawler.CrawlStatus;
 
 import org.apache.geronimo.gbean.GBeanInfo;
 import org.apache.geronimo.gbean.GBeanInfoBuilder;
@@ -26,7 +25,6 @@ import org.apache.geronimo.gbean.GBeanLifecycle;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author douglm
@@ -81,9 +79,6 @@ public class BwIndexer extends BwIndexApp implements BwIndexerMBean, GBeanLifecy
 
   private class CrawlThread extends Thread {
     boolean showedTrace;
-    CrawlStatus userStatus;
-    CrawlStatus publicStatus;
-    CrawlStatus status;
 
     /**
      * @param name - for the thread
@@ -94,21 +89,7 @@ public class BwIndexer extends BwIndexApp implements BwIndexerMBean, GBeanLifecy
     @Override
     public void run() {
       try {
-        userStatus = new CrawlStatus();
-        publicStatus = new CrawlStatus();
-        status = new CrawlStatus();
-
-        long start = System.currentTimeMillis();
-
-        crawl(userStatus, publicStatus, status);
-
-        long millis = System.currentTimeMillis() - start;
-        status.infoLines.add("Indexing took " +
-          String.format("%d min, %d sec",
-                        TimeUnit.MILLISECONDS.toMinutes(millis),
-                        TimeUnit.MILLISECONDS.toSeconds(millis) -
-                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis))
-                  ));
+        crawl();
       } catch (InterruptedException ie) {
       } catch (Throwable t) {
         if (!showedTrace) {
@@ -117,8 +98,6 @@ public class BwIndexer extends BwIndexApp implements BwIndexerMBean, GBeanLifecy
         } else {
           error(t.getMessage());
         }
-//      } finally {
-  //      close();
       }
     }
   }
@@ -134,23 +113,22 @@ public class BwIndexer extends BwIndexApp implements BwIndexerMBean, GBeanLifecy
       return res;
     }
 
-    outputStatus("user", crawler.userStatus, res);
-    outputStatus("public", crawler.publicStatus, res);
-    outputStatus("overall", crawler.status, res);
+    List<CrawlStatus> sts = getStatus();
+
+    if (sts != null) {
+      for (CrawlStatus st: sts) {
+        outputStatus(st, res);
+      }
+    }
 
     return res;
   }
 
-  private void outputStatus(final String name,
-                            final CrawlStatus status,
+  private void outputStatus(final CrawlStatus status,
                             final List<String> res) {
     outLine(res, "--------------------------------------");
-    if (status == null) {
-      outLine(res, "No " + name + " rebuild status");
-      return;
-    }
 
-    outLine(res, name + " rebuild status");
+    outLine(res, status.name);
 
     outLine(res, "current status: " + status.currentStatus);
 

@@ -22,6 +22,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
+import java.util.List;
 
 /** Interface for handling bedework user objects.
  *
@@ -93,4 +94,14 @@ public interface UsersI extends Serializable {
    * @throws CalFacadeException
    */
   public BwPrincipal getPublicUser() throws CalFacadeException;
+
+  /** Get a partial list of principal hrefs.
+   *
+   * @param start         Position to start
+   * @param count         Number we want
+   * @return list of hrefs - null for no more
+   * @throws CalFacadeException
+   */
+  List<String> getPrincipalHrefs(int start,
+                                 int count) throws CalFacadeException;
 }

@@ -16,9 +16,8 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.indexer.crawler;
+package org.bedework.indexer;
 
-import org.bedework.indexer.IndexStats;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +27,9 @@ import java.util.List;
  */
 public class CrawlStatus {
   /** */
+  public String name;
+
+  /** */
   public String currentStatus;
 
   /** */
@@ -35,4 +37,12 @@ public class CrawlStatus {
 
   /** Generated when complete */
   public List<String> infoLines = new ArrayList<String>();
+
+  /**
+   * @param name
+   */
+  public CrawlStatus(final String name) {
+    this.name = name;
+    stats = new IndexStats(name);
+  }
 }

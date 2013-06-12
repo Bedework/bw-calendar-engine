@@ -23,6 +23,7 @@ import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.indexing.BwIndexer;
+import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.indexer.IndexStats.StatType;
 
@@ -35,82 +36,68 @@ import java.util.Collection;
  * @author Mike Douglass
  *
  */
-public class EntityIndexerThread extends Thread {
-  private ThreadPool tpool;
-  private IndexStats stats;
-  private CalSys sys;
-
-  private Collection<String> childEntNames;
+public class EntityProcessor extends Crawler {
+  private Collection<String> entityNames;
   private String path;
-
-  private boolean running;
-
-  private transient Logger log;
-
-  private boolean debug;
 
   private int maxErrors = 10;
   private int errors;
 
-  /**
+  /** Index a bunch of entities given the names.
+   * @param status
    * @param name
-   * @param tpool
-   * @param stats
-   * @param sys
+   * @param adminAccount
+   * @param principal - the principal we are processing or null.
+   * @param entityDelay delay in millisecs between entities (unused)
+   * @param path for collection
+   * @param entityNames
+   * @param indexRootPath - where we build the index
    * @throws CalFacadeException
    */
-  public EntityIndexerThread(final String name,
-                             final ThreadPool tpool,
-                             final IndexStats stats,
-                             final CalSys sys) throws CalFacadeException {
-    super(tpool.getThreadGroup(), name);
-    this.sys = sys;
-    this.tpool = tpool;
-    this.stats = stats;
-  }
-
-  /**
-   * @param principal
-   * @param path for collection
-   * @param val
-   */
-  public void setPathNames(//final boolean publick,
-                           final String principal,
-                           final String path,
-                           final Collection<String> val) {
-    sys.setCurrentPrincipal(principal);
+  public EntityProcessor(final CrawlStatus status,
+                         final String name,
+                         final String adminAccount,
+                         final String principal,
+                         final long entityDelay,
+                         final String path,
+                         final Collection<String> entityNames,
+                         final String indexRootPath) throws CalFacadeException {
+    super(status, name, adminAccount, principal == null,
+          principal, 0, entityDelay, null, indexRootPath);
     this.path = path;
-    childEntNames = val;
+    this.entityNames = entityNames;
   }
 
   /* (non-Javadoc)
    * @see java.lang.Thread#run()
    */
   @Override
-  public void run() {
+  public void process() throws CalFacadeException {
     try {
       RecurringRetrievalMode rrm = new RecurringRetrievalMode(Rmode.overrides);
 
-      setRunning(true);
-
       CalSvcI svci = null;
-      BwIndexer indexer = sys.getIndexer();
+      BwIndexer indexer = BwIndexerFactory.getIndexer(principal == null,
+                                                      principal,
+                                                      true, getSyspars(),
+                                                      indexRootPath,
+                                                      null);
 
       try {
-        svci = sys.getSvci();
+        svci = getSvci();
 
-        for (String name: childEntNames) {
+        for (String name: entityNames) {
           try {
             if (debug) {
               debugMsg("Indexing collection " + path +
                        " entity " + name);
             }
 
-            stats.inc(StatType.entities);
+            status.stats.inc(StatType.entities);
             EventInfo ent = svci.getEventsHandler().get(path, name, rrm);
 
             if (ent == null) {
-              stats.inc(StatType.unreachableEntities);
+              status.stats.inc(StatType.unreachableEntities);
               continue;
             }
             indexer.indexEntity(ent);
@@ -127,58 +114,11 @@ public class EntityIndexerThread extends Thread {
         }
       } finally {
         if (svci != null) {
-          sys.close();
+          close();
         }
-
-        sys.putIndexer(indexer);
       }
     } catch (Throwable t) {
       Logger.getLogger(this.getClass()).error(t);
-    } finally {
-      setRunning(false);
-      // Make ourself available again.
-      tpool.putProcessor(this);
     }
-  }
-
-  private synchronized void setRunning(final boolean val) {
-    running = val;
-
-    if (val == false) {
-      notify(); // Flag processes waiting for a thread
-    }
-  }
-
-  /** This is synchronized by the caller
-   * @return running
-   */
-  public boolean getRunning() {
-    return running;
-  }
-
-  protected void info(final String msg) {
-    getLogger().info(msg);
-  }
-
-  protected void debugMsg(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(t);
-  }
-
-  protected void error(final String msg) {
-    getLogger().error(msg);
-  }
-
-  /* Get a logger for messages
-   */
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
   }
 }

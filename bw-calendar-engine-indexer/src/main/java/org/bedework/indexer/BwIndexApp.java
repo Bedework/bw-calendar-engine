@@ -18,8 +18,6 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.indexer.crawler.Crawl;
-import org.bedework.indexer.crawler.CrawlStatus;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
@@ -47,14 +45,16 @@ public class BwIndexApp extends JmsSysEventListener {
 
   private boolean doListen;
 
-  private int publicThreads = 10;
+  private int maxEntityThreads = 10;
 
-  private int userThreads = 10;
+  private int maxPrincipalThreads = 10;
 
   private boolean doPublic = true;
   private boolean doUser = true;
 
   private long messageCount;
+
+  private Crawl crawler;
 
   private MessageProcessor msgProc;
 
@@ -78,29 +78,29 @@ public class BwIndexApp extends JmsSysEventListener {
   /**
    * @param val thread limit
    */
-  public void setMaxPublicThreads(final int val) {
-    publicThreads = val;
+  public void setMaxEntityThreads(final int val) {
+    maxEntityThreads = val;
   }
 
   /**
    * @return thread limit
    */
-  public int getMaxPublicThreads() {
-    return publicThreads;
+  public int getMaxEntityThreads() {
+    return maxEntityThreads;
   }
 
   /**
    * @param val thread limit
    */
-  public void setMaxUserThreads(final int val) {
-    userThreads = val;
+  public void setMaxPrincipalThreads(final int val) {
+    maxPrincipalThreads = val;
   }
 
   /**
    * @return thread limit
    */
-  public int getMaxUserThreads() {
-    return userThreads;
+  public int getMaxPrincipalThreads() {
+    return maxPrincipalThreads;
   }
 
   /** True if we do public
@@ -205,58 +205,32 @@ public class BwIndexApp extends JmsSysEventListener {
     indexBuildLocationPrefix = val;
   }
 
-  void crawl(final CrawlStatus userStatus,
-             final CrawlStatus publicStatus,
-             final CrawlStatus status) throws Throwable {
+  void crawl() throws Throwable {
     if (account == null) {
       account = System.getProperty("user.name");
     }
 
-    int pThreads = publicThreads;
-    int uThreads = userThreads;
+    crawler = new Crawl(account, // admin account
+                        indexBuildLocationPrefix,
+                        skipPaths,
+                        getMaxEntityThreads(),
+                        getMaxPrincipalThreads(),
+                        doPublic,
+                        doUser);
 
-    if (!doPublic) {
-      pThreads = 0;
-    }
+    crawler.crawl();
 
-    if (!doUser) {
-      uThreads = 0;
-    }
-
-    Crawl crawler = new Crawl(account, // admin account
-                              indexBuildLocationPrefix,
-                              skipPaths,
-                              pThreads,
-                              uThreads);
-
-    crawler.crawl(userStatus, publicStatus, status);
-
-    if (doPublic) {
-      checkThreads("public", crawler.getPublicThreads());
-    }
-
-    if (doUser) {
-      checkThreads("user", crawler.getUserThreads());
-    }
+    crawler.checkThreads();
   }
 
-  void checkThreads(final String name, final ThreadGroup tg) {
-    int active = tg.activeCount();
-
-    if (active == 0) {
-      return;
+  /**
+   * @return status or null
+   */
+  public List<CrawlStatus> getStatus() {
+    if (crawler == null) {
+      return null;
     }
-
-    error("Still " + active + " active " + name + " threads");
-
-    Thread[] activeThreads = new Thread[active];
-
-    int ret = tg.enumerate(activeThreads);
-
-    for (int i = 0; i < ret; i++) {
-      error("Thread " + activeThreads[i].getName() +
-            " is still active");
-    }
+    return crawler.getStatus();
   }
 
   void listen() throws Throwable {
@@ -264,8 +238,8 @@ public class BwIndexApp extends JmsSysEventListener {
 
     msgProc = new MessageProcessor(account, // admin account
                                    skipPaths,
-                                   publicThreads,
-                                   userThreads);
+                                   getMaxEntityThreads(),
+                                   getMaxPrincipalThreads());
 
     process(false);
   }
@@ -349,11 +323,7 @@ public class BwIndexApp extends JmsSysEventListener {
       if (capp.doCrawl) {
         capp.info("Start crawl of data");
 
-        CrawlStatus userStatus = new CrawlStatus();
-        CrawlStatus publicStatus = new CrawlStatus();
-        CrawlStatus status = new CrawlStatus();
-
-        capp.crawl(userStatus, publicStatus, status);
+        capp.crawl();
 
         capp.info("End crawl of data");
       }

@@ -401,6 +401,16 @@ public interface Calintf
    */
   BwPrincipal getPrincipal(final String href) throws CalFacadeException;
 
+  /** Get a partial list of principal hrefs.
+   *
+   * @param start         Position to start
+   * @param count         Number we want
+   * @return list of hrefs - null for no more
+   * @throws CalFacadeException
+   */
+  List<String> getPrincipalHrefs(final int start,
+                                 final int count) throws CalFacadeException;
+
   /** Fetch the preferences for the given principal.
    *
    * @param principalHref

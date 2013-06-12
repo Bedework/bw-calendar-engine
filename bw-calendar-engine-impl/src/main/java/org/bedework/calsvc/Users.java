@@ -39,6 +39,7 @@ import edu.rpi.sss.util.Util;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** This acts as an interface to the database for user objects.
@@ -340,6 +341,12 @@ class Users extends CalSvcDb implements UsersI {
     }
 
     return publicUser;
+  }
+
+  @Override
+  public List<String> getPrincipalHrefs(final int start,
+                                        final int count) throws CalFacadeException {
+    return getCal().getPrincipalHrefs(start, count);
   }
 
   /* ====================================================================

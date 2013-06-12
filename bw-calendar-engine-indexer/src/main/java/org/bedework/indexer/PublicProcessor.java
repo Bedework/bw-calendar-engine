@@ -16,9 +16,11 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.indexer.crawler;
+package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
+
+import edu.rpi.sss.util.Util;
 
 import java.util.List;
 
@@ -58,52 +60,15 @@ public class PublicProcessor extends Crawler {
                          final long batchDelay,
                          final long entityDelay,
                          final List<String> skipPaths,
-                         final String indexRootPath,
-                         final ThreadGroup tgroup,
-                         final int entityThreads) throws CalFacadeException {
+                         final String indexRootPath) throws CalFacadeException {
     super(status, name, adminAccount, true, null, batchDelay, entityDelay,
           skipPaths,
-          indexRootPath,
-          tgroup, entityThreads);
+          indexRootPath);
   }
 
   @Override
-  public ProcessorBase getProcessorObject(final int index) throws CalFacadeException {
-    ProcessorBase p = new PublicProcessor(name + " thread " + index,
-                                          adminAccount,
-                                          batchDelay,
-                                          entityDelay,
-                                          getSkipPaths(), indexRootPath);
-
-    p.setStatus(getStatus());
-    p.setThreadPool(getThreadPool());
-
-    return p;
-  }
-
-  /** Constructor for an entity thread processor. These handle the entities
-   * found within a collection.
-   *
-   * @param name
-   * @param adminAccount
-   * @param batchDelay
-   * @param entityDelay
-   * @param skipPaths - paths to skip
-   * @param indexRootPath - where we build the index
-   * @throws CalFacadeException
-   */
-  public PublicProcessor(final String name,
-                         final String adminAccount,
-                         final long batchDelay,
-                         final long entityDelay,
-                         final List<String> skipPaths,
-                         final String indexRootPath) throws CalFacadeException {
-    super(name, adminAccount, true,
-          null, batchDelay, entityDelay, skipPaths, indexRootPath);
-  }
-
-  @Override
-  public void process(final String rootPath) throws CalFacadeException {
-    indexCollection(rootPath);
+  public void process() throws CalFacadeException {
+    /* First index the public collection(s) */
+    indexCollection(Util.buildPath(true, "/", getPublicCalendarRoot()));
   }
 }

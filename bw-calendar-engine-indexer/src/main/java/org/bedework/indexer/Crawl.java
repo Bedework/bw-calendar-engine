@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.indexer.crawler;
+package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -24,14 +24,13 @@ import org.bedework.calsvc.indexing.BwIndexLuceneDefs;
 import org.bedework.calsvc.indexing.BwIndexer;
 import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.indexer.CalSys;
-import org.bedework.indexer.IndexStats;
 
 import edu.rpi.sss.util.DateTimeUtil;
-import edu.rpi.sss.util.Util;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /** A class to crawl the entire data structure reindexing as it proceeds.
  *
@@ -58,18 +57,12 @@ import java.util.List;
 public class Crawl extends CalSys {
   private String indexBuildLocation;
 
-  //private String indexBuildLocationPrefix;
+  private List<CrawlStatus> statuses = new ArrayList<CrawlStatus>();
 
   protected long batchDelay;
   protected long entityDelay;
 
   private List<String> skipPaths;
-  private int maxPublicThreads;
-  private int maxUserThreads;
-
-  private ThreadGroup publicThreads = new ThreadGroup("Public threads");
-
-  private ThreadGroup userThreads = new ThreadGroup("User threads");
 
   private boolean doPublic;
   private boolean doUser;
@@ -82,25 +75,28 @@ public class Crawl extends CalSys {
    * @param adminAccount
    * @param indexBuildLocationPrefix - if non null prefix the system path with this
    * @param skipPaths - paths to skip
-   * @param maxPublicThreads
-   * @param maxUserThreads
+   * @param maxEntityThreads
+   * @param maxPrincipalThreads
+   * @param doPublic
+   * @param doUser
    * @throws CalFacadeException
    */
   public Crawl(final String adminAccount,
                final String indexBuildLocationPrefix,
                final List<String> skipPaths,
-               final int maxPublicThreads,
-               final int maxUserThreads) throws CalFacadeException {
+               final int maxEntityThreads,
+               final int maxPrincipalThreads,
+               final boolean doPublic,
+               final boolean doUser) throws CalFacadeException {
     super("Crawler", adminAccount,
           //true,
           null);
 
     this.skipPaths = skipPaths;
-    this.maxPublicThreads = maxPublicThreads;
-    this.maxUserThreads = maxUserThreads;
+    this.doPublic = doPublic;
+    this.doUser = doUser;
 
-    doPublic = maxPublicThreads > 0;
-    doUser = maxUserThreads > 0;
+    setThreadPools(maxEntityThreads, maxPrincipalThreads);
 
     CalSvcI svci = null;
     try {
@@ -128,18 +124,20 @@ public class Crawl extends CalSys {
   }
 
   /**
-   * @param userStatus - status of user reindexer
-   * @param publicStatus - status of public reindexer
-   * @param status - overall status
    * @throws CalFacadeException
    */
-  public void crawl(final CrawlStatus userStatus,
-                    final CrawlStatus publicStatus,
-                    final CrawlStatus status) throws CalFacadeException {
-    Indexes idxs = newIndexes(status);
+  public void crawl() throws CalFacadeException {
+    long start = System.currentTimeMillis();
 
-    userStatus.stats = new IndexStats("Statistics for User");
-    publicStatus.stats = new IndexStats("Statistics for Public");
+    CrawlStatus prstats = new CrawlStatus("Statistics for Principals");
+    statuses.add(prstats);
+
+    CrawlStatus pubstats = new CrawlStatus("Statistics for Public");
+    statuses.add(pubstats);
+
+    CrawlStatus status = new CrawlStatus("Overall status");
+    statuses.add(status);
+    Indexes idxs = newIndexes(status);
 
     /* Now we can reindex into the new directory */
 
@@ -151,48 +149,59 @@ public class Crawl extends CalSys {
       return;
     }
 
-    UserProcessor uproc = null;
-    PublicProcessor pproc = null;
+    PrincipalsProcessor prProc = null;
+    PublicProcessor pubProc = null;
 
     if (doUser) {
-      uproc = new UserProcessor(userStatus,
-                                "User",
-                                adminAccount, // admin account
-                                2000,   // batchDelay,
-                                100,    // entityDelay,
-                                skipPaths,
-                                idxs.userIndex,
-                                userThreads,
-                                maxUserThreads);
-      uproc.start(Util.buildPath(true, "/", getUserCalendarRoot()));
+      prProc = new PrincipalsProcessor(prstats,
+                                       "Principals",
+                                       adminAccount, // admin account
+                                       2000,   // batchDelay,
+                                       100,    // entityDelay,
+                                       skipPaths,
+                                       idxs.userIndex);
+      prProc.start();
     }
 
     if (doPublic) {
-      pproc = new PublicProcessor(publicStatus,
-                                  "Public",
-                                  adminAccount, // admin account
-                                  2000,   // batchDelay,
-                                  100,    // entityDelay,
-                                  skipPaths,
-                                  idxs.publicIndex,
-                                  publicThreads,
-                                  maxPublicThreads);
-      pproc.start(Util.buildPath(true, "/", getPublicCalendarRoot()));
+      pubProc = new PublicProcessor(pubstats,
+                                    "Public",
+                                    adminAccount, // admin account
+                                    2000,   // batchDelay,
+                                    100,    // entityDelay,
+                                    skipPaths,
+                                    idxs.publicIndex);
+      pubProc.start();
     }
 
     if (doUser) {
       setStatus(status, "Wait for user indexing to complete");
-      uproc.join();
+      prProc.join();
       setStatus(status, "User indexing completed");
     }
 
     if (doPublic) {
       setStatus(status, "Wait for public indexing to complete");
-      pproc.join();
+      pubProc.join();
       setStatus(status, "Public indexing completed");
     }
 
     endIndexing(status, idxs);
+
+    long millis = System.currentTimeMillis() - start;
+    status.infoLines.add("Indexing took " +
+      String.format("%d min, %d sec",
+                    TimeUnit.MILLISECONDS.toMinutes(millis),
+                    TimeUnit.MILLISECONDS.toSeconds(millis) -
+                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis))
+              ));
+  }
+
+  /**
+   * @return status or null
+   */
+  public List<CrawlStatus> getStatus() {
+    return statuses;
   }
 
   private Indexes newIndexes(final CrawlStatus cr) throws CalFacadeException {
@@ -310,29 +319,6 @@ public class Crawl extends CalSys {
   private void outErr(final CrawlStatus cr, final String msg) {
     cr.infoLines.add(msg + "\n");
     error(msg);
-  }
-
-  /**
-   * @return public thread group
-   */
-  public ThreadGroup getPublicThreads() {
-    return publicThreads;
-  }
-
-  /**
-   * @return user thread group
-   */
-  public ThreadGroup getUserThreads() {
-    return userThreads;
-  }
-
-  @Override
-  public void putIndexer(final BwIndexer val) throws CalFacadeException {
-  }
-
-  @Override
-  public BwIndexer getIndexer() throws CalFacadeException {
-    return null;
   }
 
   private boolean exists(final String path) throws CalFacadeException {
