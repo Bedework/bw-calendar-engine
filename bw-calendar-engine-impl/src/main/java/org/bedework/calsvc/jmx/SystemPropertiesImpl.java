@@ -95,13 +95,13 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private boolean directoryBrowsingDisallowed;
 
-  private boolean useSolr;
-
   private String solrURL;
 
   private String solrCoreAdmin;
 
-  private String solrDefaultCore;
+  private String solrPublicCore;
+
+  private String solrUserCore;
 
   private String localeList;
 
@@ -573,16 +573,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setUseSolr(final boolean val) {
-    useSolr = val;
-  }
-
-  @Override
-  public boolean getUseSolr() {
-    return useSolr;
-  }
-
-  @Override
   public void setSolrURL(final String val) {
     solrURL = val;
   }
@@ -603,13 +593,23 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setSolrDefaultCore(final String val) {
-    solrDefaultCore = val;
+  public void setSolrPublicCore(final String val) {
+    solrPublicCore = val;
   }
 
   @Override
-  public String getSolrDefaultCore() {
-    return solrDefaultCore;
+  public String getSolrPublicCore() {
+    return solrPublicCore;
+  }
+
+  @Override
+  public void setSolrUserCore(final String val) {
+    solrUserCore = val;
+  }
+
+  @Override
+  public String getSolrUserCore() {
+    return solrUserCore;
   }
 
   @Override
@@ -714,6 +714,11 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
     ts.newLine();
 
+    ts.append("solrURL", getSolrURL());
+    ts.append("solrCoreAdmin", getSolrCoreAdmin());
+    ts.append("solrPublicCore", getSolrPublicCore());
+    ts.append("solrUserCore", getSolrUserCore());
+
     ts.newLine();
     ts.append("localeList", getLocaleList());
 
@@ -756,6 +761,11 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
     clone.setLocaleList(getLocaleList());
     clone.setRootUsers(getRootUsers());
+
+    clone.setSolrURL(getSolrURL());
+    clone.setSolrCoreAdmin(getSolrCoreAdmin());
+    clone.setSolrPublicCore(getSolrPublicCore());
+    clone.setSolrUserCore(getSolrUserCore());
 
     clone.setLocaleList(getLocaleList());
     clone.setEventregAdminToken(getEventregAdminToken());

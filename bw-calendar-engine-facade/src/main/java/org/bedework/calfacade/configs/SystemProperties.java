@@ -252,19 +252,6 @@ public interface SystemProperties extends CalDAVSystemProperties {
   @MBeanInfo("usergroups class")
   String getUsergroupsClass();
 
-  /** Set the use solr flag
-   *
-   * @param val
-   */
-  void setUseSolr(boolean val);
-
-  /** Get the use solr flag
-   *
-   * @return flag
-   */
-  @MBeanInfo("use solr")
-  boolean getUseSolr();
-
   /** Set the solr url
    *
    * @param val
@@ -291,18 +278,31 @@ public interface SystemProperties extends CalDAVSystemProperties {
   @MBeanInfo("solr Root")
   String getSolrCoreAdmin();
 
-  /** Set the solr DefaultCore
+  /** Set the solr public core
    *
    * @param val
    */
-  void setSolrDefaultCore(String val);
+  void setSolrPublicCore(String val);
 
-  /** Get the solr DefaultCore
+  /** Get the solr public core
    *
-   * @return DefaultCore
+   * @return public core
    */
-  @MBeanInfo("solr DefaultCore")
-  String getSolrDefaultCore();
+  @MBeanInfo("solr public core")
+  String getSolrPublicCore();
+
+  /** Set the solr user core
+   *
+   * @param val
+   */
+  void setSolrUserCore(String val);
+
+  /** Get the solr user core
+   *
+   * @return user core
+   */
+  @MBeanInfo("solr user core")
+  String getSolrUserCore();
 
   /** Set the supported locales list. This is maintained by getSupportedLocales and
    * setSupportedLocales and is a comma separated list of locales in the usual

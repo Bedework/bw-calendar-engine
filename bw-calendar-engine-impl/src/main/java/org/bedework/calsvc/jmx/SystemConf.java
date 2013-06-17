@@ -406,16 +406,6 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setUseSolr(final boolean val) {
-    getConfig().setUseSolr(val);
-  }
-
-  @Override
-  public boolean getUseSolr() {
-    return getConfig().getUseSolr();
-  }
-
-  @Override
   public void setSolrURL(final String val) {
     getConfig().setSolrURL(val);
   }
@@ -436,13 +426,23 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setSolrDefaultCore(final String val) {
-    getConfig().setSolrDefaultCore(val);
+  public void setSolrPublicCore(final String val) {
+    getConfig().setSolrPublicCore(val);
   }
 
   @Override
-  public String getSolrDefaultCore() {
-    return getConfig().getSolrDefaultCore();
+  public String getSolrPublicCore() {
+    return getConfig().getSolrPublicCore();
+  }
+
+  @Override
+  public void setSolrUserCore(final String val) {
+    getConfig().setSolrUserCore(val);
+  }
+
+  @Override
+  public String getSolrUserCore() {
+    return getConfig().getSolrUserCore();
   }
 
   @Override

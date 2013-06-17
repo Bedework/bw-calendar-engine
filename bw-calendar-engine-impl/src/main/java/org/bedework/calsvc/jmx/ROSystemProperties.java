@@ -393,16 +393,6 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
-  public void setUseSolr(final boolean val) {
-    throw new RuntimeException("Immutable"); // getConfig().setUseSolr(val);
-  }
-
-  @Override
-  public boolean getUseSolr() {
-    return getConfig().getUseSolr();
-  }
-
-  @Override
   public void setSolrURL(final String val) {
     throw new RuntimeException("Immutable"); // getConfig().setSolrURL(val);
   }
@@ -423,18 +413,28 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
-  public void setSolrDefaultCore(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setSolrDefaultCore(val);
+  public void setSolrPublicCore(final String val) {
+    throw new RuntimeException("Immutable");
   }
 
   @Override
-  public String getSolrDefaultCore() {
-    return getConfig().getSolrDefaultCore();
+  public String getSolrPublicCore() {
+    return getConfig().getSolrPublicCore();
+  }
+
+  @Override
+  public void setSolrUserCore(final String val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public String getSolrUserCore() {
+    return getConfig().getSolrUserCore();
   }
 
   @Override
   public void setLocaleList(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setLocaleList(val);
+    throw new RuntimeException("Immutable");
   }
 
   @Override
