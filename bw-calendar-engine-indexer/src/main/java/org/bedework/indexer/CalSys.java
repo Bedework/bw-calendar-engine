@@ -52,10 +52,6 @@ public abstract class CalSys {
 
   private Logger log;
 
-  private String indexRoot;
-
-  private String userCalendarRoot;
-
   private String publicCalendarRoot;
 
   private SystemProperties syspars;
@@ -223,22 +219,6 @@ public abstract class CalSys {
       svci.close();
     } catch (Throwable t) {
     }
-  }
-
-  protected String getIndexRoot() throws CalFacadeException {
-    if (indexRoot == null) {
-      indexRoot = getBasicSyspars().getIndexRoot();
-    }
-
-    return indexRoot;
-  }
-
-  protected String getUserCalendarRoot() throws CalFacadeException {
-    if (userCalendarRoot == null) {
-      userCalendarRoot = getBasicSyspars().getUserCalendarRoot();
-    }
-
-    return userCalendarRoot;
   }
 
   protected String getPublicCalendarRoot() throws CalFacadeException {

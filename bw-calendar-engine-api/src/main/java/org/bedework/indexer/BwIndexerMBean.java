@@ -144,6 +144,17 @@ public interface BwIndexerMBean {
    */
   public String rebuildIndex();
 
+  /**
+   * @return list of indexes maintained by indexer.
+   */
+  public String listIndexes();
+
+  /* *
+   * @return list of purged indexes.
+   * @throws Throwable
+   * /
+  public String purgeIndexes(); NOT YET */
+
   /** Lifecycle
    *
    */

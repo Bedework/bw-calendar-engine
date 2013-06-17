@@ -23,6 +23,7 @@ import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
 
 import edu.rpi.sss.util.Args;
+import edu.rpi.sss.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -205,7 +206,81 @@ public class BwIndexApp extends JmsSysEventListener {
     indexBuildLocationPrefix = val;
   }
 
+  /**
+   * @return list of indexes maintained by indexer.
+   * @throws Throwable
+   */
+  public String listIndexes() {
+    try {
+      List<String> is = getCrawler().listIndexes();
+
+      if (Util.isEmpty(is)) {
+        return "No indexes found";
+      }
+
+      StringBuilder res = new StringBuilder("Indexes");
+
+      res.append("------------------------\n");
+
+      for (String i: is) {
+        res.append(i);
+        res.append("\n");
+      }
+
+      return res.toString();
+    } catch (Throwable t) {
+      error(t);
+
+      return t.getLocalizedMessage();
+    }
+  }
+
+  /**
+   * @return list of purged indexes.
+   * @throws Throwable
+   */
+  public String purgeIndexes() {
+    try {
+      List<String> is = getCrawler().purgeIndexes();
+
+      if (Util.isEmpty(is)) {
+        return "No indexes purged";
+      }
+
+      StringBuilder res = new StringBuilder("Purged indexes");
+
+      res.append("------------------------\n");
+
+      for (String i: is) {
+        res.append(i);
+        res.append("\n");
+      }
+
+      return res.toString();
+    } catch (Throwable t) {
+      error(t);
+
+      return t.getLocalizedMessage();
+    }
+  }
+
   void crawl() throws Throwable {
+    if (account == null) {
+      account = System.getProperty("user.name");
+    }
+
+    Crawl c = getCrawler();
+
+    c.crawl();
+
+    c.checkThreads();
+  }
+
+  private Crawl getCrawler() throws Throwable {
+    if (crawler != null) {
+      return crawler;
+    }
+
     if (account == null) {
       account = System.getProperty("user.name");
     }
@@ -218,9 +293,7 @@ public class BwIndexApp extends JmsSysEventListener {
                         doPublic,
                         doUser);
 
-    crawler.crawl();
-
-    crawler.checkThreads();
+    return crawler;
   }
 
   /**

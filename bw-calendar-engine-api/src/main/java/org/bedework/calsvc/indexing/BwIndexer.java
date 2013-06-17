@@ -26,6 +26,7 @@ import edu.rpi.cct.misc.indexing.Index;
 import edu.rpi.cct.misc.indexing.SearchLimits;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 
 import javax.xml.ws.Holder;
@@ -45,21 +46,21 @@ public interface BwIndexer extends Serializable {
    *                                -1 means indeterminate
    * @throws CalFacadeException
    */
-  public int search(String query, SearchLimits limits) throws CalFacadeException;
+  int search(String query, SearchLimits limits) throws CalFacadeException;
 
   /** Called to unindex a record
    *
    * @param   rec      The record to unindex
    * @throws CalFacadeException
    */
-  public void unindexEntity(Object rec) throws CalFacadeException;
+  void unindexEntity(Object rec) throws CalFacadeException;
 
   /** Called to index a record
    *
    * @param rec
    * @throws CalFacadeException
    */
-  public void indexEntity(Object rec) throws CalFacadeException;
+  void indexEntity(Object rec) throws CalFacadeException;
 
   /** Called to retrieve record keys from the result.
    *
@@ -68,46 +69,62 @@ public interface BwIndexer extends Serializable {
    * @return  int      Actual number of records
    * @throws CalFacadeException
    */
-  public int getKeys(int n, Index.Key[] keys) throws CalFacadeException;
-
+  int getKeys(int n, Index.Key[] keys) throws CalFacadeException;
 
   /** Set to > 1 to enable batching
    *
    * @param val
    */
-  public void setBatchSize(int val);
+  void setBatchSize(int val);
 
   /** Called at the end of a batch of updates.
    *
    * @throws CalFacadeException
    */
-  public void endBwBatch() throws CalFacadeException;
+  void endBwBatch() throws CalFacadeException;
 
   /** Flush any batched entities.
    * @throws CalFacadeException
    */
-  public void flush() throws CalFacadeException;
+  void flush() throws CalFacadeException;
 
   /** Indicate if we should try to clean locks. (lucene)
    *
    * @param val
    */
-  public void setCleanLocks(boolean val);
+  void setCleanLocks(boolean val);
 
   /** create a new index and start using it.
    *
-   * @param name
+   * @param name basis for new name - in solr the core
+   * @return name of created index.
    * @throws CalFacadeException
    */
-  public void newIndex(String name) throws CalFacadeException;
+  String newIndex(String name) throws CalFacadeException;
+
+  /** List all indexes maintained by server
+   *
+   * @return names of indexes.
+   * @throws CalFacadeException
+   */
+  List<String> listIndexes() throws CalFacadeException;
+
+  /** Purge non-current indexes maintained by server.
+   *
+   * @param preserve - list of indexes to preserve
+   * @return names of indexes removed.
+   * @throws CalFacadeException
+   */
+  List<String> purgeIndexes(List<String> preserve) throws CalFacadeException;
 
   /** create a new index and start using it.
    *
    * @param index   swap this with the other
    * @param other
+   * @return 0 for OK or HTTP status from indexer
    * @throws CalFacadeException
    */
-  public void swapIndex(String index, String other) throws CalFacadeException;
+  int swapIndex(String index, String other) throws CalFacadeException;
 
   /** If true the fetchEvents method can be used to retrieve events that are
    * adequate for display at least. They are rebuilt from th indexed data and
@@ -119,7 +136,7 @@ public interface BwIndexer extends Serializable {
    * @return true if this interface will support the fetching of events
    * @throws CalFacadeException
    */
-  public boolean isFetchEnabled() throws CalFacadeException;
+  boolean isFetchEnabled() throws CalFacadeException;
 
   /** if fetching is enabled will return a List of EventInfo. List will be
    * empty if the end of the range has been reached.
@@ -136,10 +153,10 @@ public interface BwIndexer extends Serializable {
    * @return possibly empty list or null for end of range
    * @throws CalFacadeException
    */
-  public Set<EventInfo> fetch(FilterBase filter,
-                              String start,
-                              String end,
-                              Holder<Integer> found,
-                              int pos,
-                              int count) throws CalFacadeException;
+  Set<EventInfo> fetch(FilterBase filter,
+                       String start,
+                       String end,
+                       Holder<Integer> found,
+                       int pos,
+                       int count) throws CalFacadeException;
 }

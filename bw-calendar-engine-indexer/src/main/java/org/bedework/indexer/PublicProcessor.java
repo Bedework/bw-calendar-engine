@@ -61,7 +61,7 @@ public class PublicProcessor extends Crawler {
                          final long entityDelay,
                          final List<String> skipPaths,
                          final String indexRootPath) throws CalFacadeException {
-    super(status, name, adminAccount, true, null, batchDelay, entityDelay,
+    super(status, name, adminAccount, null, batchDelay, entityDelay,
           skipPaths,
           indexRootPath);
   }

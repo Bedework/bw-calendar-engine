@@ -54,7 +54,7 @@ public class PrincipalsProcessor extends Crawler {
                              final List<String> skipPaths,
                              final String indexRootPath) throws CalFacadeException {
     super(status,
-          name, adminAccount, false, null, batchDelay, entityDelay,
+          name, adminAccount, null, batchDelay, entityDelay,
           skipPaths, indexRootPath);
   }
 

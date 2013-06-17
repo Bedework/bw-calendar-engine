@@ -71,9 +71,11 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -114,6 +116,9 @@ public class BwIndexSolrImpl implements BwIndexer {
 
   private String solrURL;
 
+  private boolean publick;
+  private String principal;
+
   private int maxYears;
   private int maxInstances;
 
@@ -124,6 +129,8 @@ public class BwIndexSolrImpl implements BwIndexer {
 
   /** Constructor
    *
+   * @param publick - if false we add an owner term to the searches
+   * @param principal - who we are searching for
    * @param solrURL - Path for the index files - must exist
    * @param writeable
    * @param maxYears
@@ -132,7 +139,9 @@ public class BwIndexSolrImpl implements BwIndexer {
    * @param coreAdminPath  - path for administration of cores
    * @throws IndexException
    */
-  public BwIndexSolrImpl(final String solrURL,
+  public BwIndexSolrImpl(final boolean publick,
+                         final String principal,
+                         final String solrURL,
                          final boolean writeable,
                          final int maxYears,
                          final int maxInstances,
@@ -140,6 +149,8 @@ public class BwIndexSolrImpl implements BwIndexer {
                          final String coreAdminPath) throws IndexException {
     debug = getLog().isDebugEnabled();
 
+    this.publick = publick;
+    this.principal = principal;
     this.solrURL = solrURL;
     this.maxYears = maxYears;
     this.maxInstances = maxInstances;
@@ -318,7 +329,12 @@ public class BwIndexSolrImpl implements BwIndexer {
   @Override
   public int search(final String query,
                     final SearchLimits limits) throws CalFacadeException {
-    curQuery = query;
+    if (publick) {
+      curQuery = query;
+    } else {
+      curQuery = "owner:\"" + principal + "\" AND (" + query + ")";
+    }
+
     curLimits = limits;
 
     String from = null;
@@ -329,7 +345,7 @@ public class BwIndexSolrImpl implements BwIndexer {
       to = curLimits.toDate;
     }
 
-    SolrDocumentList sdl = search(query, from, to, 0, 0);
+    SolrDocumentList sdl = search(curQuery, from, to, 0, 0);
 
     if (sdl == null) {
       return 0;
@@ -347,16 +363,17 @@ public class BwIndexSolrImpl implements BwIndexer {
   }
 
   @Override
-  public void newIndex(final String name) throws CalFacadeException {
+  public String newIndex(final String name) throws CalFacadeException {
     /* See http://wiki.apache.org/solr/CoreAdmin#CREATE
      * for a description of this.
      *
      * We'll create a data directory with the same name as the new core.
      */
 
+    String newName = name + "-" + DateTimeUtil.isoDateTime();
     String encName;
     try {
-      encName = URLEncoder.encode(name,
+      encName = URLEncoder.encode(newName,
                                   HTTP.DEFAULT_CONTENT_CHARSET);
     } catch (UnsupportedEncodingException Uee) {
       throw new CalFacadeException(Uee);
@@ -365,14 +382,28 @@ public class BwIndexSolrImpl implements BwIndexer {
 
     StringBuilder sb = new StringBuilder("?action=CREATE&name=");
     sb.append(encName);
-    sb.append("&instanceDir=bwpublic");
-    sb.append("&dataDir=");
+    sb.append("&instanceDir=");
+    sb.append(name);
+    sb.append("/&dataDir=");
     sb.append(encName);
     sb.append("/data");
+//    sb.append("/&config=../");
+//    sb.append(name);
+//    sb.append("/conf/solrconfig.xml");
+//    sb.append("&schema=../");
+//    sb.append(name);
+//    sb.append("/conf/schema.xml");
+
+//    loadOnStartup="true"
+//    transient="false"
 
     try {
       InputStream str = getServer().callForStream(sb.toString(),
                                                   true); // coreAdmin
+
+      if (str == null) {
+        return null;
+      }
 
       XMLResponseParser parser = new XMLResponseParser();
 
@@ -384,25 +415,124 @@ public class BwIndexSolrImpl implements BwIndexer {
       if (debug) {
 
       }
+
+      return newName;
     } finally {
       getServer().close();
     }
   }
 
   @Override
-  public void swapIndex(final String index,
-                        final String other) throws CalFacadeException {
+  public List<String> listIndexes() throws CalFacadeException {
+    try {
+      InputStream str = getServer().callForStream("?action=STATUS",
+                                                  true); // coreAdmin
+
+      if (str == null) {
+        return null;
+      }
+
+      XMLResponseParser parser = new XMLResponseParser();
+
+      NamedList<Object> resp = parser.processResponse(new InputStreamReader(str));
+
+      @SuppressWarnings("unchecked")
+      NamedList<Object> st = (NamedList<Object>)resp.get("status");
+
+      List<String> res = new ArrayList<String>();
+
+      for (Map.Entry<String, Object> entry: st) {
+        res.add(entry.getKey());
+      }
+
+      if (debug) {
+
+      }
+
+      return res;
+    } finally {
+      getServer().close();
+    }
+  }
+
+  @Override
+  public List<String> purgeIndexes(final List<String> preserve) throws CalFacadeException {
+    try {
+      List<String> indexes = listIndexes();
+      List<String> purged = new ArrayList<String>();
+
+      if (Util.isEmpty(indexes)) {
+        return purged;
+      }
+
+      for (String idx: indexes) {
+        if (preserve.contains(idx)) {
+          continue;
+        }
+
+        unloadIndex(idx);
+
+        purged.add(idx);
+      }
+
+      return purged;
+    } finally {
+      getServer().close();
+    }
+  }
+
+  private void unloadIndex(final String name) throws CalFacadeException {
+//    try {
+      /*InputStream str =*/ getServer().callForStream("?action=UNLOAD&core=" +
+          name + "&deleteIndex=true",
+          true); // coreAdmin
+
+      /*
+      if (str == null) {
+        return null;
+      }
+
+      XMLResponseParser parser = new XMLResponseParser();
+
+      NamedList<Object> resp = parser.processResponse(new InputStreamReader(str));
+
+      @SuppressWarnings("unchecked")
+      NamedList<Object> st = (NamedList<Object>)resp.get("status");
+
+      List<String> res = new ArrayList<String>();
+
+      for (Map.Entry<String, Object> entry: st) {
+        res.add(entry.getKey());
+      }
+
+      if (debug) {
+
+      }
+
+      return res;
+    } finally {
+      getServer().close();
+    }*/
+  }
+
+  @Override
+  public int swapIndex(final String index,
+                       final String other) throws CalFacadeException {
     /* See http://wiki.apache.org/solr/CoreAdmin#SWAP
      * for a description of this.
      */
 
     StringBuilder sb = new StringBuilder("?action=SWAP&core=");
     sb.append(index);
-    sb.append("&other=bwpublic");
+    sb.append("&other=");
+    sb.append(other);
 
     try {
       InputStream str = getServer().callForStream(sb.toString(),
                                                   true); // coreAdmin
+      if (str != null) {
+        return getServer().status;
+      }
 
       XMLResponseParser parser = new XMLResponseParser();
 
@@ -413,6 +543,8 @@ public class BwIndexSolrImpl implements BwIndexer {
       if (debug) {
 
       }
+
+      return 0;
     } finally {
       getServer().close();
     }
@@ -444,7 +576,8 @@ public class BwIndexSolrImpl implements BwIndexer {
     int tries = 0;
     Set<EventInfo> res = new ConcurrentSkipListSet<EventInfo>();
 
-    String query = "itemType:" + BwIndexLuceneDefs.itemTypeEvent;
+    StringBuilder query = new StringBuilder("itemType:");
+    query.append(BwIndexLuceneDefs.itemTypeEvent);
 
     if (filter != null) {
       StringBuilder sb = new StringBuilder();
@@ -452,8 +585,15 @@ public class BwIndexSolrImpl implements BwIndexer {
       makeQuery(sb, filter);
 
       if (sb.length() > 0) {
-        query += " AND (" + sb.toString() + ")";
+        query.append(" AND (");
+        query.append(sb);
+        query.append(")");
       }
+    }
+
+    if (!publick) {
+      query.insert(0, "owner:\"" + principal + "\" AND (");
+      query.append(")");
     }
 
     while ((count < 0) || (fetched < count)) {
@@ -463,11 +603,18 @@ public class BwIndexSolrImpl implements BwIndexer {
         break;
       }
 
-      SolrDocumentList sdl = search(query,
+      SolrDocumentList sdl = search(query.toString(),
                                     start,
                                     end,
                                     ourPos,
                                     ourCount);
+      if (sdl == null) {
+        if (found != null) {
+          found.value = 0;
+        }
+
+        break;
+      }
 
       if (found != null) {
         found.value = (int)sdl.getNumFound();
@@ -633,6 +780,7 @@ public class BwIndexSolrImpl implements BwIndexer {
 
     if (!Util.isEmpty(xpnames)) {
       for (String xpname: xpnames) {
+        @SuppressWarnings("unchecked")
         Collection<String> xvals = (Collection)sd.getFieldValues(interestingXprops.get(xpname));
 
         if (!Util.isEmpty(xvals)) {
@@ -746,6 +894,9 @@ public class BwIndexSolrImpl implements BwIndexer {
 
     try {
       InputStream str = getServer().query(sb.toString(), pos, count);
+      if (str == null) {
+        return null;
+      }
 
       XMLResponseParser parser = new XMLResponseParser();
 
@@ -1360,9 +1511,7 @@ public class BwIndexSolrImpl implements BwIndexer {
 
     public int postUpdate(final String xmlUpdate) throws CalFacadeException {
       try {
-        doPost(xmlUpdate, "update", "application/xml");
-
-        return response.getStatusLine().getStatusCode();
+        return doPost(xmlUpdate, "update", "application/xml");
       } catch (CalFacadeException cfe) {
         throw cfe;
       } catch (Throwable t) {
@@ -1445,9 +1594,9 @@ public class BwIndexSolrImpl implements BwIndexer {
       }
     }
 
-    private void doPost(final String body,
-                        final String path,
-                        final String contentType) throws CalFacadeException {
+    private int doPost(final String body,
+                       final String path,
+                       final String contentType) throws CalFacadeException {
       try {
         HttpClient client = new DefaultHttpClient();
         String fullPath = getUrl(false, path);
@@ -1462,6 +1611,8 @@ public class BwIndexSolrImpl implements BwIndexer {
 
         response = client.execute(poster);
         status = response.getStatusLine().getStatusCode();
+
+        return status;
       } catch (CalFacadeException cfe) {
         throw cfe;
       } catch (UnknownHostException uhe) {

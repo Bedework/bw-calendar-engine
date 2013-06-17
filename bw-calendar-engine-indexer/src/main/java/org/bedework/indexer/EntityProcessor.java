@@ -62,7 +62,7 @@ public class EntityProcessor extends Crawler {
                          final String path,
                          final Collection<String> entityNames,
                          final String indexRootPath) throws CalFacadeException {
-    super(status, name, adminAccount, principal == null,
+    super(status, name, adminAccount,
           principal, 0, entityDelay, null, indexRootPath);
     this.path = path;
     this.entityNames = entityNames;
@@ -77,8 +77,7 @@ public class EntityProcessor extends Crawler {
       RecurringRetrievalMode rrm = new RecurringRetrievalMode(Rmode.overrides);
 
       CalSvcI svci = null;
-      BwIndexer indexer = BwIndexerFactory.getIndexer(principal == null,
-                                                      principal,
+      BwIndexer indexer = BwIndexerFactory.getIndexer(principal,
                                                       true, getSyspars(),
                                                       indexRootPath,
                                                       null);

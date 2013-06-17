@@ -57,13 +57,12 @@ public abstract class Crawler extends ProcessorBase {
   public Crawler(final CrawlStatus status,
                  final String name,
                  final String adminAccount,
-                 final boolean publick,
                  final String principal,
                  final long batchDelay,
                  final long entityDelay,
                  final List<String> skipPaths,
                  final String indexRootPath) throws CalFacadeException {
-    super(name, adminAccount, publick, principal, batchDelay, entityDelay,
+    super(name, adminAccount, principal, batchDelay, entityDelay,
           skipPaths, indexRootPath);
 
     setStatus(status);

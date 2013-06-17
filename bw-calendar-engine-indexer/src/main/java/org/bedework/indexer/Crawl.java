@@ -20,14 +20,10 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvc.indexing.BwIndexLuceneDefs;
 import org.bedework.calsvc.indexing.BwIndexer;
 import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvci.CalSvcI;
 
-import edu.rpi.sss.util.DateTimeUtil;
-
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -55,8 +51,6 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class Crawl extends CalSys {
-  private String indexBuildLocation;
-
   private List<CrawlStatus> statuses = new ArrayList<CrawlStatus>();
 
   protected long batchDelay;
@@ -66,8 +60,6 @@ public class Crawl extends CalSys {
 
   private boolean doPublic;
   private boolean doUser;
-
-  private boolean useSolr;
 
   private SystemProperties sys;
 
@@ -103,17 +95,8 @@ public class Crawl extends CalSys {
       svci = getAdminSvci();
 
       sys = svci.getSystemProperties();
-
-      useSolr = sys.getUseSolr();
     } finally {
       close(svci);
-    }
-
-    if (indexBuildLocationPrefix == null) {
-      indexBuildLocation = getIndexRoot();
-    } else {
-      indexBuildLocation = getPath(indexBuildLocationPrefix,
-                                   getIndexRoot());
     }
   }
 
@@ -140,14 +123,6 @@ public class Crawl extends CalSys {
     Indexes idxs = newIndexes(status);
 
     /* Now we can reindex into the new directory */
-
-    /* We can skip public or user only if we are using solr for indexing.
-     */
-    if ((!doPublic || !doUser) && !useSolr) {
-      setStatus(status, "Partial indexing is only valid when using solr");
-
-      return;
-    }
 
     PrincipalsProcessor prProc = null;
     PublicProcessor pubProc = null;
@@ -204,44 +179,71 @@ public class Crawl extends CalSys {
     return statuses;
   }
 
+  /**
+   * @return list of indexes maintained by indexer.
+   * @throws CalFacadeException
+   */
+  public List<String> listIndexes() throws CalFacadeException {
+    BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, false, sys,
+                                                sys.getSolrPublicCore(),
+                                                sys.getSolrCoreAdmin());
+
+    return idx.listIndexes();
+  }
+
+  /** Purge non-current indexes maintained by server.
+   *
+   * @return names of indexes removed.
+   * @throws CalFacadeException
+   */
+  public List<String> purgeIndexes() throws CalFacadeException {
+    List<String> preserve = new ArrayList<String>();
+
+    preserve.add(sys.getSolrPublicCore());
+    preserve.add(sys.getSolrUserCore());
+
+    BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, false, sys,
+                                                sys.getSolrPublicCore(),
+                                                sys.getSolrCoreAdmin());
+
+    return idx.purgeIndexes(preserve);
+  }
+
   private Indexes newIndexes(final CrawlStatus cr) throws CalFacadeException {
     Indexes idxs = new Indexes();
 
     if (doUser) {
-      /* First set up a new directory - see if new exists - if so delete */
-      idxs.userIndex = getPath(indexBuildLocation,
-                               BwIndexLuceneDefs.newIndexname);
+      // Switch user indexes.
 
-      boolean newExisted = exists(idxs.userIndex);
-
-      setStatus(cr, "Build directories at " + idxs.userIndex);
-
-      if (newExisted) {
-        remove(idxs.userIndex);
+      if (sys.getSolrUserCore() == null) {
+        outErr(cr, "No user index core defined in system properties");
+        throw new CalFacadeException("No user index core defined in system properties");
       }
 
-      create(idxs.userIndex);
-    }
+      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true, sys,
+                                                  idxs.userIndex,
+                                                  sys.getSolrCoreAdmin());
 
-    if (!useSolr) {
-      idxs.publicIndex = idxs.userIndex;
-      return idxs;
+      idxs.userIndex = idx.newIndex(sys.getSolrUserCore());
+
+      setStatus(cr, "Switched solr core to " + idxs.userIndex);
     }
 
     if (doPublic) {
       // Switch public indexes.
 
-      String defName = sys.getSolrDefaultCore();
+      if (sys.getSolrPublicCore() == null) {
+        outErr(cr, "No public index core defined in system properties");
+        throw new CalFacadeException("No public index core defined in system properties");
+      }
 
-      idxs.publicIndex = defName + "-" + DateTimeUtil.isoDateTime();
-
-      setStatus(cr, "Switch solr core to " + idxs.publicIndex);
-
-      BwIndexer idx = BwIndexerFactory.getIndexer(true, adminAccount, true, sys,
+      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true, sys,
                                                   idxs.publicIndex,
                                                   sys.getSolrCoreAdmin());
 
-      idx.newIndex(idxs.publicIndex);
+      idxs.publicIndex = idx.newIndex(sys.getSolrPublicCore());
+
+      setStatus(cr, "Switched solr core to " + idxs.publicIndex);
     }
 
     return idxs;
@@ -253,56 +255,19 @@ public class Crawl extends CalSys {
      */
 
     if (doUser) {
-      /* Rename directories */
-      String oldPath = getPath(indexBuildLocation,
-                               BwIndexLuceneDefs.oldIndexname);
+      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true, sys,
+                                                  idxs.userIndex,
+                                                  sys.getSolrCoreAdmin());
 
-      boolean oldExisted = exists(oldPath);
-
-      if (oldExisted) {
-        remove(oldPath);
-      }
-
-      String currentPath = getPath(indexBuildLocation,
-                                   BwIndexLuceneDefs.currentIndexname);
-
-      boolean currentExisted = exists(currentPath);
-
-      if (currentExisted) {
-        setStatus(cr, "About to rename directories from " + currentPath +
-                    "  to " + oldPath);
-
-        if (!rename(currentPath, oldPath)) {
-          setStatus(cr, "Unable to rename current index at " + currentPath +
-                     "  to " + oldPath);
-
-          return;
-        }
-      }
-
-      setStatus(cr, "About to rename directories from " + idxs.userIndex +
-                  "  to " + currentPath);
-
-      if (!rename(idxs.userIndex, currentPath)) {
-        outErr(cr, "Unable to rename new index at " + idxs.userIndex +
-                   "  to " + currentPath +
-                   " attempting to rename old back to current");
-        if (!rename(oldPath, currentPath)) {
-          /* Now  we have no index at all. */
-          outErr(cr, "Unable to restore current index to " + currentPath +
-                     "  from " + oldPath);
-        }
-
-        return;
-      }
+      idx.swapIndex(idxs.userIndex, sys.getSolrUserCore());
     }
 
-    if (doPublic && useSolr) {
-      BwIndexer idx = BwIndexerFactory.getIndexer(true, adminAccount, true, sys,
+    if (doPublic) {
+      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true, sys,
                                                   idxs.publicIndex,
                                                   sys.getSolrCoreAdmin());
 
-      idx.swapIndex(idxs.publicIndex, sys.getSolrDefaultCore());
+      idx.swapIndex(idxs.publicIndex, sys.getSolrPublicCore());
     }
   }
 
@@ -319,52 +284,5 @@ public class Crawl extends CalSys {
   private void outErr(final CrawlStatus cr, final String msg) {
     cr.infoLines.add(msg + "\n");
     error(msg);
-  }
-
-  private boolean exists(final String path) throws CalFacadeException {
-    try {
-      return new File(path).exists();
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  private boolean remove(final String path) throws CalFacadeException {
-    /* Rename rather than delete */
-    try {
-      String renameTo = path + "-" + DateTimeUtil.isoDateTime();
-      return new File(path).renameTo(new File(renameTo));
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  private boolean create(final String path) throws CalFacadeException {
-    try {
-      return new File(path).exists();
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  private boolean rename(final String oldPath,
-                         final String newPath) throws CalFacadeException {
-    try {
-      return new File(oldPath).renameTo(new File(newPath));
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  private String getPath(final String prefix, final String suffix) {
-    StringBuilder sb = new StringBuilder(prefix);
-
-    if (!prefix.endsWith("/")) {
-      sb.append("/");
-    }
-
-    sb.append(suffix);
-
-    return sb.toString();
   }
 }

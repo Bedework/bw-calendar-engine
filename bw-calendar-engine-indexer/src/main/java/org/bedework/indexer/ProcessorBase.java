@@ -40,8 +40,6 @@ public abstract class ProcessorBase extends CalSys implements Processor {
   protected long batchDelay;
   protected long entityDelay;
 
-  private boolean publick;
-
   private String currentPath;
 
   private List<String> skipPaths;
@@ -67,7 +65,6 @@ public abstract class ProcessorBase extends CalSys implements Processor {
    */
   public ProcessorBase(final String name,
                        final String adminAccount,
-                       final boolean publick,
                        final String principal,
                        final long batchDelay,
                        final long entityDelay,
@@ -75,7 +72,6 @@ public abstract class ProcessorBase extends CalSys implements Processor {
                        final String indexRootPath) throws CalFacadeException {
     super(name, adminAccount, principal);
 
-    this.publick = publick;
     this.batchDelay = batchDelay;
     this.entityDelay = entityDelay;
     this.indexRootPath = indexRootPath;
@@ -181,7 +177,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
       }
 
       BwIndexer indexer =
-          BwIndexerFactory.getIndexer(publick, principal,
+          BwIndexerFactory.getIndexer(principal,
                                       true, getSyspars(),
                                       indexRootPath,
                                       null);

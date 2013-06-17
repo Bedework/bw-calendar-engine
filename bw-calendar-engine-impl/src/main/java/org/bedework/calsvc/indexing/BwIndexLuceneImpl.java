@@ -48,6 +48,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -237,13 +238,23 @@ public class BwIndexLuceneImpl extends IndexLuceneImpl implements BwIndexer {
   }
 
   @Override
-  public void newIndex(final String name) throws CalFacadeException {
+  public String newIndex(final String name) throws CalFacadeException {
     throw new RuntimeException("unimplemented");
   }
 
   @Override
-  public void swapIndex(final String index,
-                        final String other) throws CalFacadeException {
+  public List<String> listIndexes() throws CalFacadeException {
+    return null;
+  }
+
+  @Override
+  public List<String> purgeIndexes(final List<String> preserve) throws CalFacadeException {
+    return null;
+  }
+
+  @Override
+  public int swapIndex(final String index,
+                       final String other) throws CalFacadeException {
     throw new RuntimeException("unimplemented");
   }
 

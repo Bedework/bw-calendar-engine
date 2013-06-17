@@ -170,6 +170,7 @@ public class CoreEventProperties <T extends BwEventProperty>
   public void endTransaction() throws CalFacadeException {
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Collection<T> get(final String ownerHref,
                            final String creatorHref) throws CalFacadeException {
@@ -205,6 +206,7 @@ public class CoreEventProperties <T extends BwEventProperty>
     return (Collection<T>)access.checkAccess(sess.getList(), privRead, true);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public T get(final String uid) throws CalFacadeException {
     HibSession sess = getSess();
@@ -220,6 +222,7 @@ public class CoreEventProperties <T extends BwEventProperty>
     return check((T)sess.getUnique());
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public T find(final BwString val,
                 final String ownerHref) throws CalFacadeException {
@@ -235,6 +238,7 @@ public class CoreEventProperties <T extends BwEventProperty>
 
     findQuery(true, val, ownerHref);
 
+    @SuppressWarnings("unchecked")
     Collection<Long> counts = sess.getList();
     if (counts.iterator().next() > 1) {
       sess.rollback();
@@ -246,6 +250,7 @@ public class CoreEventProperties <T extends BwEventProperty>
   public void deleteProp(final T val) throws CalFacadeException {
     HibSession sess = getSess();
 
+    @SuppressWarnings("unchecked")
     BwEventProperty v = (T)sess.merge(val);
 
     sess.createQuery(delPrefsQuery.get(className));
@@ -274,6 +279,7 @@ public class CoreEventProperties <T extends BwEventProperty>
     return refs;
   }
 
+  @SuppressWarnings("unchecked")
   private List<EventPropertiesReference> getRefs(final T val,
                                                 final String query)
                                                             throws CalFacadeException {
@@ -320,6 +326,7 @@ public class CoreEventProperties <T extends BwEventProperty>
     sess.setEntity("ent", val);
 
     /* May get multiple counts back for events and annotations. */
+    @SuppressWarnings("unchecked")
     Collection<Long> counts = sess.getList();
 
     long total = 0;
@@ -343,13 +350,15 @@ public class CoreEventProperties <T extends BwEventProperty>
       return null;
     }
 
-    /*
-    if (!access.checkAccess(ent, privRead, true).accessAllowed) {
-      return null;
+    if (ent.getPublick()) {
+      return ent;
     }
-    */
 
-    return ent;
+    if (this.getPrincipal().getPrincipalRef().equals(ent.getOwnerHref())) {
+      return ent;
+    }
+
+    return null;
   }
 
   private void findQuery(final boolean count,
