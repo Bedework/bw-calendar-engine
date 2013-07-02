@@ -186,6 +186,9 @@ public class BwIndexLuceneDefs {
   public static final String itemTypeCalendar = "calendar";
 
   /** */
+  public static final String itemTypeCategory = "category";
+
+  /** */
   public static final String itemTypeEvent = "event";
 
   /** */

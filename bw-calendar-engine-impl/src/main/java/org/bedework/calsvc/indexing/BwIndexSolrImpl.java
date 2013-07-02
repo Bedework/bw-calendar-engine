@@ -29,6 +29,7 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCategoryFilter;
@@ -85,6 +86,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
+import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeCalendar;
+import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeCategory;
+import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeEvent;
+
 /**
  * @author Mike Douglass douglm - rpi.edu
  *
@@ -124,6 +129,7 @@ public class BwIndexSolrImpl implements BwIndexer {
 
   private String targetIndex;
   private String coreAdminPath;
+  private boolean writeable;
 
   /* Used to batch index */
 
@@ -132,9 +138,9 @@ public class BwIndexSolrImpl implements BwIndexer {
    * @param publick - if false we add an owner term to the searches
    * @param principal - who we are searching for
    * @param solrURL - Path for the index files - must exist
-   * @param writeable
-   * @param maxYears
-   * @param maxInstances
+   * @param writeable - true for an updatable index
+   * @param maxYears - max years for recurrences
+   * @param maxInstances - max instances for recurrences
    * @param indexName - null for default
    * @param coreAdminPath  - path for administration of cores
    * @throws IndexException
@@ -152,6 +158,7 @@ public class BwIndexSolrImpl implements BwIndexer {
     this.publick = publick;
     this.principal = principal;
     this.solrURL = solrURL;
+    this.writeable = writeable;
     this.maxYears = maxYears;
     this.maxInstances = maxInstances;
 
@@ -332,7 +339,7 @@ public class BwIndexSolrImpl implements BwIndexer {
     if (publick) {
       curQuery = query;
     } else {
-      curQuery = "owner:\"" + principal + "\" AND (" + query + ")";
+      curQuery = "{!term f=owner}\"" + principal + "\" AND (" + query + ")";
     }
 
     curLimits = limits;
@@ -555,6 +562,94 @@ public class BwIndexSolrImpl implements BwIndexer {
     return true;
   }
 
+  @Override
+  public BwCategory fetchCat(final String field,
+                             final String val)
+          throws CalFacadeException {
+    StringBuilder query = new StringBuilder();
+
+    if (!publick) {
+      query.append("{!term f=owner}\"");
+      query.append(principal);
+      query.append("\" AND ");
+    }
+
+    query.append("itemType:");
+    query.append(itemTypeCategory);
+
+    query.append("AND ");
+    query.append(field);
+    query.append(":\"");
+    query.append(val);
+    query.append("\"");
+
+    List<BwCategory> res = new ArrayList<>();
+
+    SolrDocumentList sdl = search(query.toString(),
+                                  null,
+                                  null,
+                                  0,
+                                  2);
+    if (Util.isEmpty(sdl)) {
+      return null;
+    }
+
+    if (sdl.size() > 1) {
+      error("Multiple categories with field " + field +
+            " value " + val);
+      return null;
+    }
+
+    return makeCat(sdl.get(0));
+  }
+
+  @Override
+  public List<BwCategory> fetchAllCats() throws CalFacadeException {
+    StringBuilder query = new StringBuilder();
+
+    if (!publick) {
+      query.append("{!term f=owner}\"");
+      query.append(principal);
+      query.append("\" AND ");
+    }
+
+    query.append("itemType:");
+    query.append(itemTypeCategory);
+
+    int tries = 0;
+    int ourPos = 0;
+    int ourCount = maxFetchCount;
+
+    List<BwCategory> res = new ArrayList<>();
+
+    for (;;) {
+      if (tries > absoluteMaxTries) {
+        // huge count or we screwed up
+        warn("Solr indexer: too many tries");
+        break;
+      }
+
+      SolrDocumentList sdl = search(query.toString(),
+                                    null,
+                                    null,
+                                    ourPos,
+                                    ourCount);
+      if (Util.isEmpty(sdl)) {
+        break;
+      }
+
+      for (SolrDocument sd: sdl) {
+        BwCategory cat = makeCat(sd);
+        res.add(cat);
+        ourPos++;
+      }
+
+      tries++;
+    }
+
+    return res;
+  }
+
   private static final int maxFetchCount = 100;
   private static final int absoluteMaxTries = 1000;
 
@@ -577,7 +672,7 @@ public class BwIndexSolrImpl implements BwIndexer {
     Set<EventInfo> res = new ConcurrentSkipListSet<EventInfo>();
 
     StringBuilder query = new StringBuilder("itemType:");
-    query.append(BwIndexLuceneDefs.itemTypeEvent);
+    query.append(itemTypeEvent);
 
     if (filter != null) {
       StringBuilder sb = new StringBuilder();
@@ -592,11 +687,13 @@ public class BwIndexSolrImpl implements BwIndexer {
     }
 
     if (!publick) {
-      query.insert(0, "owner:\"" + principal + "\" AND (");
+      query.insert(0, "{!term f=owner}\"" + principal + "\" AND (");
       query.append(")");
     }
 
-    while ((count < 0) || (fetched < count)) {
+    int toFetch = count;
+
+    while ((toFetch < 0) || (fetched < toFetch)) {
       if (tries > absoluteMaxTries) {
         // huge count or we screwed up
         warn("Solr indexer: too many tries");
@@ -616,8 +713,12 @@ public class BwIndexSolrImpl implements BwIndexer {
         break;
       }
 
+      if (toFetch < 0) {
+        toFetch = (int)sdl.getNumFound();
+      }
+
       if (found != null) {
-        found.value = (int)sdl.getNumFound();
+        found.value = toFetch;
       }
 
       if (Util.isEmpty(sdl)) {
@@ -630,6 +731,8 @@ public class BwIndexSolrImpl implements BwIndexer {
         fetched++;
         ourPos++;
       }
+
+      tries++;
     }
 
     return res;
@@ -712,6 +815,28 @@ public class BwIndexSolrImpl implements BwIndexer {
     }*/
   }
 
+  private BwCategory makeCat(final SolrDocument sd) throws CalFacadeException {
+    String itemType = getString(sd, "itemType");
+
+    if ((itemType == null) ||
+            !itemType.equals(itemTypeCategory)) {
+      return null;
+    }
+
+    BwCategory cat = new BwCategory();
+
+    cat.setWord(new BwString(null,
+                             (String)sd.getFirstValue("word")));
+    cat.setDescription(new BwString(null,
+                                    (String) sd.getFirstValue(
+                                            "descriptiuon")));
+    cat.setCreatorHref(getString(sd, "creator"));
+    cat.setOwnerHref(getString(sd, "owner"));
+    cat.setUid(getString(sd, "uid"));
+
+    return cat;
+  }
+
   private EventInfo makeEvent(final SolrDocument sd) throws CalFacadeException {
     BwEvent ev = new BwEventObj();
     EventInfo ei = new  EventInfo(ev);
@@ -727,7 +852,7 @@ public class BwIndexSolrImpl implements BwIndexer {
     String itemType = getString(sd, "itemType");
 
     if ((itemType == null) ||
-        !itemType.equals(BwIndexLuceneDefs.itemTypeEvent)) {
+        !itemType.equals(itemTypeEvent)) {
       return null;
     }
 
@@ -751,6 +876,7 @@ public class BwIndexSolrImpl implements BwIndexer {
     ev.setDtstamp(ev.getLastmod());
     ev.setCreatorHref(getString(sd, "creator"));
     ev.setOwnerHref(getString(sd, "owner"));
+    ev.setAccess(getString(sd, "acl"));
     ev.setSummary(getString(sd, "summary"));
     ev.setDescription(getString(sd, "description"));
 
@@ -945,9 +1071,11 @@ public class BwIndexSolrImpl implements BwIndexer {
       throw new CalFacadeException("org.bedework.index.noitemkey");
     }
 
-    if (itemType.equals(BwIndexLuceneDefs.itemTypeCalendar)) {
-      bwkey.setCalendarKey(kval);
-    } else if (itemType.equals(BwIndexLuceneDefs.itemTypeEvent)) {
+    if (itemType.equals(itemTypeCalendar)) {
+      bwkey.setKey1(kval);
+    } else if (itemType.equals(itemTypeCategory)) {
+      bwkey.setKey1(kval);
+    } else if (itemType.equals(itemTypeEvent)) {
       try {
         bwkey.setEventKey(kval);
       } catch (IndexException ie) {
@@ -972,6 +1100,10 @@ public class BwIndexSolrImpl implements BwIndexer {
       return ((BwCalendar)rec).getPath();
     }
 
+    if (rec instanceof BwCategory) {
+      return keyConverter.makeCategoryKey(((BwCategory) rec).getUid());
+    }
+
     if (rec instanceof BwEvent) {
       BwEvent ev = (BwEvent)rec;
 
@@ -986,9 +1118,15 @@ public class BwIndexSolrImpl implements BwIndexer {
                              rec.getClass().getName());
   }
 
-  private void index(final XmlEmit xml, final Object rec) throws CalFacadeException {
+  private void index(final XmlEmit xml,
+                     final Object rec) throws CalFacadeException {
     if (rec instanceof BwCalendar) {
       makeDoc(xml, rec, null, null, null);
+      return;
+    }
+
+    if (rec instanceof BwCategory) {
+      makeDoc(xml, (BwCategory)rec);
       return;
     }
 
@@ -1090,10 +1228,17 @@ public class BwIndexSolrImpl implements BwIndexer {
   private void unindex(final XmlEmit xml, final Object rec) throws CalFacadeException {
     try {
       if (rec instanceof BwCalendar) {
-        BwCalendar cal = (BwCalendar)rec;
+        BwCalendar col = (BwCalendar)rec;
 
-        String key = makeKeyVal(cal);
-        makeId(xml, key);
+        makeId(xml, makeKeyVal(col));
+
+        return;
+      }
+
+      if (rec instanceof BwCategory) {
+        BwCategory cat = (BwCategory)rec;
+
+        makeId(xml, makeKeyVal(cat));
 
         return;
       }
@@ -1198,12 +1343,35 @@ public class BwIndexSolrImpl implements BwIndexer {
   }
 
   private void makeDoc(final XmlEmit xml,
+                       final BwCategory cat) throws CalFacadeException {
+    try {
+      xml.openTag(solrTagDoc);
+
+      makeField(xml, "key", makeKeyVal(cat));
+      makeField(xml, "itemType", itemTypeCategory);
+      makeField(xml, "uid", cat.getUid());
+      makeField(xml, "creator", cat.getCreatorHref());
+      makeField(xml, "owner", cat.getOwnerHref());
+      makeField(xml, "word", cat.getWord());
+      makeField(xml, "description", cat.getDescription());
+
+      xml.closeTag(solrTagDoc);
+
+      batchCurSize++;
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  private void makeDoc(final XmlEmit xml,
                        final Object rec,
                        final BwDateTime start,
                        final BwDateTime end,
                        final String recurid) throws CalFacadeException {
     try {
-      BwCalendar cal = null;
+      BwCalendar col = null;
       EventInfo ei = null;
       BwEvent ev = null;
 
@@ -1219,22 +1387,24 @@ public class BwIndexSolrImpl implements BwIndexer {
       String owner = null;
       String summary = null;
       String itemType;
+      String acl;
 
       if (rec instanceof BwCalendar) {
-        cal = (BwCalendar)rec;
+        col = (BwCalendar)rec;
 
-        key = makeKeyVal(cal);
-        itemType = BwIndexLuceneDefs.itemTypeCalendar;
+        key = makeKeyVal(col);
+        itemType = itemTypeCalendar;
 
-        name = cal.getName();
-        colPath = cal.getColPath();
-        cats = cal.getCategories();
-        created = cal.getCreated();
-        creator = cal.getCreatorHref();
-        description = cal.getDescription();
-        lastmod = cal.getLastmod().getTimestamp();
-        owner = cal.getOwnerHref();
-        summary = cal.getSummary();
+        name = col.getName();
+        colPath = col.getColPath();
+        cats = col.getCategories();
+        created = col.getCreated();
+        creator = col.getCreatorHref();
+        description = col.getDescription();
+        lastmod = col.getLastmod().getTimestamp();
+        owner = col.getOwnerHref();
+        summary = col.getSummary();
+        acl = col.getAccess();
       } else if (rec instanceof EventInfo) {
         ei = (EventInfo)rec;
         ev = ei.getEvent();
@@ -1245,7 +1415,7 @@ public class BwIndexSolrImpl implements BwIndexer {
                                         ev.getUid(),
                                         recurid);
 
-        itemType = BwIndexLuceneDefs.itemTypeEvent;
+        itemType = itemTypeEvent;
 
         /*
         if (ev instanceof BwEventProxy) {
@@ -1266,6 +1436,7 @@ public class BwIndexSolrImpl implements BwIndexer {
         lastmod = ev.getLastmod();
         owner = ev.getOwnerHref();
         summary = ev.getSummary();
+        acl = ev.getAccess();
 
         if (start == null) {
           warn("No start for " + ev);
@@ -1303,8 +1474,9 @@ public class BwIndexSolrImpl implements BwIndexer {
       makeField(xml, "owner", owner);
       makeField(xml, "summary", summary);
       makeField(xml, "description", description);
+      makeField(xml, "acl", acl);
 
-      if (cal != null) {
+      if (col != null) {
         // Doing collection - we're done
         xml.closeTag(solrTagDoc);
         return;
@@ -1428,6 +1600,23 @@ public class BwIndexSolrImpl implements BwIndexer {
       xml.openTagNoNewline(solrTagId);
       xml.value(val);
       xml.closeTagNoblanks(solrTagId);
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void makeField(final XmlEmit xml,
+                         final String name,
+                         final BwString val) throws CalFacadeException {
+    if (val == null) {
+      return;
+    }
+
+    try {
+      // XXX Need to handle languages.
+      xml.openTagNoNewline(solrTagField, "name", name);
+      xml.value(val.getValue());
+      xml.closeTagNoblanks(solrTagField);
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }

@@ -264,6 +264,17 @@ public class BwIndexLuceneImpl extends IndexLuceneImpl implements BwIndexer {
   }
 
   @Override
+  public BwCategory fetchCat(String field, String val)
+          throws CalFacadeException {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
+  public List<BwCategory> fetchAllCats() throws CalFacadeException {
+    return null;
+  }
+
+  @Override
   public Set<EventInfo> fetch(final FilterBase filter,
                               final String start,
                               final String end,
@@ -300,7 +311,7 @@ public class BwIndexLuceneImpl extends IndexLuceneImpl implements BwIndexer {
     }
 
     if (itemType.equals(BwIndexLuceneDefs.itemTypeCalendar)) {
-      bwkey.setCalendarKey(doc.get(BwIndexLuceneDefs.keyCalendar.getName()));
+      bwkey.setKey1(doc.get(BwIndexLuceneDefs.keyCalendar.getName()));
     } else if (itemType.equals(BwIndexLuceneDefs.itemTypeEvent)) {
       bwkey.setEventKey(doc.get(BwIndexLuceneDefs.keyEvent.getName()));
     } else {

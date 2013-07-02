@@ -67,8 +67,7 @@ public class BwIndexKey extends Index.Key {
    * @param path
    */
   public BwIndexKey(final String path) {
-    itemType = BwIndexLuceneDefs.itemTypeCalendar;
-    key1 = path;
+    this(BwIndexLuceneDefs.itemTypeCalendar, path);
   }
 
   /** Constructor for an event key
@@ -82,6 +81,17 @@ public class BwIndexKey extends Index.Key {
     key1 = path;
     key2 = uid;
     key3 = rid;
+  }
+
+  /** Constructor for a single valued key
+   *
+   * @param itemType - type of indexed item
+   * @param k the key
+   */
+  public BwIndexKey(final String itemType,
+                    final String k) {
+    this.itemType = itemType;
+    key1 = k;
   }
 
   /** Constructor for an event key
@@ -130,11 +140,11 @@ public class BwIndexKey extends Index.Key {
     score = val;
   }
 
-  /** Set the key for a calendar (the path)
+  /** Set the key for a calendar (the path) orcategory (the uid)
    *
    * @param key1
    */
-  public void setCalendarKey(final String key1) {
+  public void setKey1(final String key1) {
     this.key1 = key1;
   }
 
@@ -161,7 +171,15 @@ public class BwIndexKey extends Index.Key {
       return key1;  // Path
     }
 
+    if (itemType.equals(BwIndexLuceneDefs.itemTypeCategory)) {
+      return makeCategoryKey(key1);
+    }
+
     return makeEventKey(key1, key2, key3);
+  }
+
+  public String makeCategoryKey(final String key1) {
+    return "cat:" + key1;
   }
 
   /** Encode an event key
@@ -211,6 +229,10 @@ public class BwIndexKey extends Index.Key {
         return svci.getCalendarsHandler().get(key1);
       }
 
+      if (itemType.equals(BwIndexLuceneDefs.itemTypeCategory)) {
+        return svci.getCategoriesHandler().get(key1);
+      }
+
       if (itemType.equals(BwIndexLuceneDefs.itemTypeEvent)) {
         BwCalendar cal = svci.getCalendarsHandler().get(key1);
         if (cal == null) {
@@ -254,7 +276,7 @@ public class BwIndexKey extends Index.Key {
         }
 
         ObjectFilter<String> filter = new ObjectFilter<String>(null,
-            PropertyIndex.PropertyInfoIndex.UID);
+                                                               PropertyIndex.PropertyInfoIndex.UID);
         filter.setEntity(key2);
         filter.setExact(true);
         filter.setCaseless(false);
@@ -262,7 +284,7 @@ public class BwIndexKey extends Index.Key {
         Collection<EventInfo> evis = evhandler.getEvents(cal, filter,
                                                          dtStart, dtEnd,
                                                          null, // retrieveList
-                                           new RecurringRetrievalMode());
+                                                         new RecurringRetrievalMode());
 
         /* Filter out the overridden events as they are indexed separately.
          * We should really have a flag for this - for the moment check the
