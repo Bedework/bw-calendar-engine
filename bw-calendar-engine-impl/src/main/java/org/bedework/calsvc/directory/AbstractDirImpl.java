@@ -908,7 +908,7 @@ public abstract class AbstractDirImpl implements Directories {
    *
   * @param p - who we want card for
   * @return card or null
-  * @throws DavioException
+  * @throws CalFacadeException
   */
  private String getCard(final BasicHttpClient cl,
                         final String context,
