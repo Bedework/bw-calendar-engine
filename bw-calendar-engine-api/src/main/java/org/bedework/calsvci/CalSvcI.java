@@ -18,7 +18,6 @@
 */
 package org.bedework.calsvci;
 
-import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
@@ -92,7 +91,7 @@ public abstract class CalSvcI implements Serializable {
   /** Set the calendar suite we are running as. Must be running as an
    * unauthenticated user.
    *
-   * @param name
+   * @param name unique name for the suite
    * @throws CalFacadeException
    */
   public abstract void setCalSuite(String name) throws CalFacadeException;
@@ -450,10 +449,10 @@ public abstract class CalSvcI implements Serializable {
 
   /** Return the categories maintenance object.
    *
-   * @return EventProperties
+   * @return Categories object
    * @throws CalFacadeException
    */
-  public abstract EventProperties<BwCategory> getCategoriesHandler()
+  public abstract Categories getCategoriesHandler()
         throws CalFacadeException;
 
   /** Return the locations maintenance object.
@@ -638,15 +637,4 @@ public abstract class CalSvcI implements Serializable {
                                                      boolean checkOnly,
                                                      UpdateFromTimeZonesInfo info
                                                      ) throws CalFacadeException;
-
-  /* ====================================================================
-   *                   ClientState
-   * ==================================================================== */
-
-  /** Get the current client state object
-   *
-   * @return ClientState object
-   * @throws CalFacadeException
-   */
-  public abstract ClientStateI getClientState() throws CalFacadeException;
 }

@@ -53,7 +53,6 @@ import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper;
 import org.bedework.calfacade.util.CalFacadeUtil;
-import org.bedework.calsvc.client.ClientState;
 import org.bedework.calsvc.scheduling.Scheduling;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.AdminI;
@@ -62,7 +61,7 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI;
-import org.bedework.calsvci.ClientStateI;
+import org.bedework.calsvci.Categories;
 import org.bedework.calsvci.DumpIntf;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.calsvci.EventsI;
@@ -97,7 +96,6 @@ import edu.rpi.cmt.timezones.Timezones;
 import edu.rpi.sss.util.Util;
 
 import net.fortuna.ical4j.model.property.DtStamp;
-
 import org.apache.log4j.Logger;
 import org.hibernate.exception.ConstraintViolationException;
 
@@ -182,7 +180,7 @@ public class CalSvc extends CalSvcI {
 
   private ViewsI viewsHandler;
 
-  private EventProperties<BwCategory> categoriesHandler;
+  private Categories categoriesHandler;
 
   private EventProperties<BwLocation> locationsHandler;
 
@@ -191,8 +189,6 @@ public class CalSvc extends CalSvcI {
   private Collection<CalSvcDb> handlers = new ArrayList<CalSvcDb>();
 
   /* ....................... ... ..................................... */
-
-  private ClientState clientState;
 
   /** Core calendar interface
    */
@@ -564,9 +560,7 @@ public class CalSvc extends CalSvcI {
   class SvcSimpleFilterParser extends SimpleFilterParser {
     @Override
     public BwCategory getCategoryByName(final String name) throws CalFacadeException {
-      BwString s = new BwString(null, name);
-      return getCategoriesHandler().find(s,
-                                         getUsersHandler().getPublicUser().getPrincipalRef());
+      return getCategoriesHandler().find(new BwString(null, name));
     }
 
     @Override
@@ -836,12 +830,10 @@ public class CalSvc extends CalSvcI {
    * @see org.bedework.calsvci.CalSvcI#getCategoriesHandler()
    */
   @Override
-  public EventProperties<BwCategory> getCategoriesHandler()
-          throws CalFacadeException {
+  public Categories getCategoriesHandler() throws CalFacadeException {
     if (categoriesHandler == null) {
-      categoriesHandler = new EventPropertiesImpl<BwCategory>(this);
-      categoriesHandler.init(BwCategory.class.getName(),
-                             pars.getAdminCanEditAllPublicCategories());
+      categoriesHandler = new CategoriesImpl(this);
+      categoriesHandler.init(pars.getAdminCanEditAllPublicCategories());
       handlers.add((CalSvcDb)categoriesHandler);
     }
 
@@ -941,23 +933,6 @@ public class CalSvc extends CalSvcI {
   public BwGroup findGroup(final String account,
                            final boolean admin) throws CalFacadeException {
     return getCal().findGroup(account, admin);
-  }
-
-  /* ====================================================================
-   *                   ClientState
-   * ==================================================================== */
-
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getClientState()
-   */
-  @Override
-  public ClientStateI getClientState() throws CalFacadeException {
-    if (clientState == null) {
-      clientState = new ClientState(this);
-      handlers.add(clientState);
-    }
-
-    return clientState;
   }
 
   /* ====================================================================
@@ -1467,8 +1442,7 @@ public class CalSvc extends CalSvcI {
 
     @Override
     public BwCategory findCategory(final BwString val) throws CalFacadeException {
-      return getCategoriesHandler().find(val,
-                                                     getOwner().getPrincipalRef());
+      return getCategoriesHandler().find(val);
     }
 
     @Override

@@ -36,7 +36,6 @@ public class IndexerThread extends Thread {
   /**
    * @param name
    * @param tpool
-   * @param stats
    * @param proc
    * @throws CalFacadeException
    */
@@ -56,7 +55,7 @@ public class IndexerThread extends Thread {
     try {
       proc.process();
     } catch (Throwable t) {
-      Logger.getLogger(this.getClass()).error(t);
+      error(t);
     } finally {
       tpool.completed(this);
     }

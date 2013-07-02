@@ -195,6 +195,8 @@ public abstract class CalSys {
     }
 
     close(svci);
+
+    svci = null;
   }
 
   /**
@@ -209,10 +211,6 @@ public abstract class CalSys {
     try {
       svci.endTransaction();
     } catch (Throwable t) {
-      try {
-        svci.close();
-      } catch (Throwable t1) {
-      }
     }
 
     try {

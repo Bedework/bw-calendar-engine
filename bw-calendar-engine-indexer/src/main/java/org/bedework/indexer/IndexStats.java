@@ -45,6 +45,9 @@ public class IndexStats {
     entities,
 
     /** */
+    categories,
+
+    /** */
     unreachableEntities
   }
 
@@ -83,10 +86,19 @@ public class IndexStats {
   }
 
   /**
-   * @param st
+   * @param st - type of count
    */
   public synchronized void inc(final StatType st) {
     counts[st.ordinal()]++;
+  }
+
+  /**
+   * @param st - type of count
+   * @param val - value to add
+   */
+  public synchronized void inc(final StatType st,
+                               final long val) {
+    counts[st.ordinal()] += val;
   }
 
   private final String blanks = "                                    ";

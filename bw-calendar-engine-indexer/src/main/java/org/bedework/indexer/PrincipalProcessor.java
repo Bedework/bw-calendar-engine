@@ -68,10 +68,11 @@ public class PrincipalProcessor extends Crawler {
       svc = getSvci();
 
       indexCollection(svc.getCalendarsHandler().getHomePath());
+
+      status.stats.inc(IndexStats.StatType.categories,
+                       svc.getCategoriesHandler().reindex());
     } finally {
-      if (svc != null) {
-        svc.close();
-      }
+      close();
     }
   }
 }

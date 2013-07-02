@@ -55,7 +55,6 @@ public abstract class ProcessorBase extends CalSys implements Processor {
   /**
    * @param name
    * @param adminAccount
-   * @param publick
    * @param principal
    * @param batchDelay - delay between batches - milliseconds
    * @param entityDelay - delay between entities - milliseconds
@@ -183,7 +182,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
                                       null);
 
       indexer.indexEntity(col);
-      close();
+//      close();
 
       Refs refs = null;
 
@@ -229,8 +228,8 @@ public abstract class ProcessorBase extends CalSys implements Processor {
       }
     } catch (Throwable t) {
       error(t);
-    } finally {
-      close();
+//    } finally {
+  //    close();
     }
   }
 }

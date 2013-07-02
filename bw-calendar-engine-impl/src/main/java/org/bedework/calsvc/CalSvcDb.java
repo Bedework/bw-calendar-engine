@@ -304,6 +304,15 @@ public class CalSvcDb implements Serializable {
     return svci.getPrincipal().getPrincipalRef();
   }
 
+  protected String getOwnerHref() throws CalFacadeException {
+    if (getSvc().getPars().getPublicAdmin() ||
+            getPrincipal().getUnauthenticated()) {
+      return getUsers().getPublicUser().getPrincipalRef();
+    }
+
+    return getPrincipal().getPrincipalRef();
+  }
+
   protected BwPrincipal getPrincipal(final String href) throws CalFacadeException {
     return svci.getUsersHandler().getPrincipal(href);
   }

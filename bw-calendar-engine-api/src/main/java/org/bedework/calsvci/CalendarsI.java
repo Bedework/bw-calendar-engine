@@ -140,17 +140,6 @@ public interface CalendarsI extends Serializable {
    */
   public BwCalendar get(String path) throws CalFacadeException;
 
-  /** Returned by getSpecialCalendar
-   */
-  public static class GetSpecialCalendarResult {
-    /** True if calendar was created
-     */
-    public boolean created;
-    /**
-     */
-    public BwCalendar cal;
-  }
-
   /** Get a special calendar (e.g. Trash) for the current user. If it does not
    * exist and is supported by the target system it will be created.
    *

@@ -19,6 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calsvci.CalSvcI;
 
 import edu.rpi.sss.util.Util;
 
@@ -50,8 +51,6 @@ public class PublicProcessor extends Crawler {
    * @param entityDelay
    * @param skipPaths - paths to skip
    * @param indexRootPath - where we build the index
-   * @param tgroup
-   * @param entityThreads - number of threads this process can use
    * @throws CalFacadeException
    */
   public PublicProcessor(final CrawlStatus status,
@@ -68,7 +67,18 @@ public class PublicProcessor extends Crawler {
 
   @Override
   public void process() throws CalFacadeException {
-    /* First index the public collection(s) */
-    indexCollection(Util.buildPath(true, "/", getPublicCalendarRoot()));
+    CalSvcI svc = null;
+
+    try {
+      svc = getSvci();
+
+      /* First index the public collection(s) */
+      indexCollection(Util.buildPath(false, "/", getPublicCalendarRoot()));
+
+      status.stats.inc(IndexStats.StatType.categories,
+                       getSvci().getCategoriesHandler().reindex());
+    } finally {
+      close();
+    }
   }
 }

@@ -48,6 +48,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
+import org.bedework.calsvci.Categories;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.calsvci.EventProperties.EnsureEntityExistsResult;
 import org.bedework.calsvci.EventsI;
@@ -186,8 +187,8 @@ class Events extends CalSvcDb implements EventsI {
 
       BwPreferences prefs = getSvc().getPrefsHandler().get();
       if (prefs != null) {
-        Collection<BwCategory> cats = getSvc().getCategoriesHandler().
-            getCached(prefs.getDefaultCategoryUids());
+        List<BwCategory> cats = getSvc().getCategoriesHandler().
+            get(prefs.getDefaultCategoryUids());
 
         for (BwCategory cat: cats) {
           event.addCategory(cat);
@@ -225,6 +226,10 @@ class Events extends CalSvcDb implements EventsI {
       updateEntities(updResult, event);
 
       BwCalendar cal = getCols().get(event.getColPath());
+      if (cal == null) {
+        throw new CalFacadeException(CalFacadeException.collectionNotFound);
+      }
+
       BwCalendar undereffedCal = cal;
 
       if (cal.getAlias()) {
@@ -953,7 +958,7 @@ class Events extends CalSvcDb implements EventsI {
       return;
     }
 
-    EventProperties<BwCategory> cats = getSvc().getCategoriesHandler();
+    Categories cats = getSvc().getCategoriesHandler();
     EventProperties<BwLocation> locs = getSvc().getLocationsHandler();
 
     for (EventInfo ei: events) {
@@ -963,7 +968,7 @@ class Events extends CalSvcDb implements EventsI {
 
       if (catUids != null) {
         for (String uid: catUids) {
-          BwCategory cat = cats.getCached(uid);
+          BwCategory cat = cats.get(uid);
 
           if (cat != null) {
             ev.addCategory(cat);
@@ -1008,7 +1013,7 @@ class Events extends CalSvcDb implements EventsI {
       return;
     }
 
-    EventProperties<BwCategory> cats = getSvc().getCategoriesHandler();
+    Categories cats = getSvc().getCategoriesHandler();
     EventProperties<BwLocation> locs = getSvc().getLocationsHandler();
 
     BwEvent ev = event.getEvent();
@@ -1017,7 +1022,7 @@ class Events extends CalSvcDb implements EventsI {
 
     if (catUids != null) {
       for (String uid: catUids) {
-        BwCategory cat = cats.getCached(uid);
+        BwCategory cat = cats.get(uid);
 
         if (cat != null) {
           ev.addCategory(cat);

@@ -91,6 +91,8 @@ public interface IcalCallback extends Serializable {
   String getCaladdr(String val) throws CalFacadeException;
 
   /** Look for the given category for this user. Return null for not found.
+   * This returns a persistent object and is only for use when
+   * reconstructing events from a calendar input stream.
    *
    * @param val
    * @return Category object

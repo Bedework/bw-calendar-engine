@@ -19,17 +19,16 @@
 package org.bedework.calsvc.indexing;
 
 import org.bedework.caldav.util.filter.FilterBase;
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
-
 import edu.rpi.cct.misc.indexing.Index;
 import edu.rpi.cct.misc.indexing.SearchLimits;
 
+import javax.xml.ws.Holder;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
-
-import javax.xml.ws.Holder;
 
 /**
  * @author douglm
@@ -57,7 +56,7 @@ public interface BwIndexer extends Serializable {
 
   /** Called to index a record
    *
-   * @param rec
+   * @param rec an indexable object
    * @throws CalFacadeException
    */
   void indexEntity(Object rec) throws CalFacadeException;
@@ -73,7 +72,7 @@ public interface BwIndexer extends Serializable {
 
   /** Set to > 1 to enable batching
    *
-   * @param val
+   * @param val batch size
    */
   void setBatchSize(int val);
 
@@ -90,7 +89,7 @@ public interface BwIndexer extends Serializable {
 
   /** Indicate if we should try to clean locks. (lucene)
    *
-   * @param val
+   * @param val true/false
    */
   void setCleanLocks(boolean val);
 
@@ -120,7 +119,7 @@ public interface BwIndexer extends Serializable {
   /** create a new index and start using it.
    *
    * @param index   swap this with the other
-   * @param other
+   * @param other   new index
    * @return 0 for OK or HTTP status from indexer
    * @throws CalFacadeException
    */
@@ -137,6 +136,23 @@ public interface BwIndexer extends Serializable {
    * @throws CalFacadeException
    */
   boolean isFetchEnabled() throws CalFacadeException;
+
+  /** Find a category owned by the current user which has a named
+   * field which matches the value.
+   *
+   * @param field e.g. "uid", "word"
+   * @param val - expected full value
+   * @return null or detached category object
+   * @throws CalFacadeException
+   */
+  BwCategory fetchCat(String field, String val) throws CalFacadeException;
+
+  /**
+   *
+   * @return possibly empty list
+   * @throws CalFacadeException
+   */
+  List<BwCategory> fetchAllCats() throws CalFacadeException;
 
   /** if fetching is enabled will return a List of EventInfo. List will be
    * empty if the end of the range has been reached.
