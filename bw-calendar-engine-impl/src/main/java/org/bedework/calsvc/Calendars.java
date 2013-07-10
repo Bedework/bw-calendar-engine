@@ -352,6 +352,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     val = getCal().add(val, parentPath);
+    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false,
+                                                val,
+                                                null,
+                                                null,
+                                                null);
 
     SynchI synch = getSvc().getSynch();
 
@@ -394,7 +399,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
      */
     if (!val.getCalendarCollection() && isPublicAdmin()) {
       /* Remove from preferences */
-      getSvc().getPrefsHandler().updateAdminPrefs(true, val, null, null, null);
+      ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true,
+                                                                 val,
+                                                                 null,
+                                                                 null,
+                                                                 null);
     }
 
     if (val.getPwNeedsEncrypt()) {
@@ -509,7 +518,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     /* Remove from preferences */
-    getSvc().getPrefsHandler().updateAdminPrefs(true, val, null, null, null);
+    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true,
+                                                               val,
+                                                               null,
+                                                               null,
+                                                               null);
 
     /* If it' an alias we just delete it - otherwise we might need to empty it.
      */

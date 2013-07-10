@@ -32,18 +32,6 @@ import java.util.Collection;
  *
  */
 public interface IndexingI extends Serializable {
-  /** Convenience method to limit to now onwards.
-   *
-   * @return SearchLimits
-   */
-  public SearchLimits fromToday();
-
-  /** Convenience method to limit to before now.
-   *
-   * @return SearchLimits
-   */
-  public SearchLimits beforeToday();
-
   /** Called to search an index. If publick is false use the principal to
    * identify the index.
    *
@@ -51,7 +39,7 @@ public interface IndexingI extends Serializable {
    * searching another users entries - or we should get an accurate count of
    * entries this user has access to.
    *
-   * @param publick
+   * @param publick true for public index
    * @param principal ignored if publick is true
    * @param   query    Query string
    * @param   limits   limits or null
@@ -59,10 +47,10 @@ public interface IndexingI extends Serializable {
    *                                -1 means indeterminate
    * @throws CalFacadeException
    */
-  public int search(boolean publick,
-                    String principal,
-                    String query,
-                    SearchLimits limits) throws CalFacadeException;
+  int search(boolean publick,
+             String principal,
+             String query,
+             SearchLimits limits) throws CalFacadeException;
 
   /** Called to retrieve results after a search of the index.
    *
@@ -72,9 +60,9 @@ public interface IndexingI extends Serializable {
    * @return  Collection of BwIndexSearchResultEntry
    * @throws CalFacadeException
    */
-  public Collection<BwIndexSearchResultEntry> getSearchResult(int start,
-                                                              int num,
-                                                              SearchLimits limits)
+  Collection<BwIndexSearchResultEntry> getSearchResult(int start,
+                                                       int num,
+                                                       SearchLimits limits)
         throws CalFacadeException;
 
   /**
@@ -83,6 +71,6 @@ public interface IndexingI extends Serializable {
    * @return the indexer
    * @throws CalFacadeException
    */
-  public BwIndexer getIndexer(final boolean publick,
-                              String principal) throws CalFacadeException;
+  BwIndexer getIndexer(boolean publick,
+                       String principal) throws CalFacadeException;
 }

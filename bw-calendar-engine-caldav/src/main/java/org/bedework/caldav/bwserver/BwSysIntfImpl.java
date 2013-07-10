@@ -1555,7 +1555,7 @@ public class BwSysIntfImpl implements SysIntf {
   /** Attempt to get calendar referenced by the alias. For an internal alias
    * the result will also be set in the aliasTarget property of the parameter.
    *
-   * @param val
+   * @param col
    * @param resolveSubAlias - if true and the alias points to an alias, resolve
    *                  down to a non-alias.
    * @return BwCalendar
@@ -2499,12 +2499,12 @@ public class BwSysIntfImpl implements SysIntf {
      * ==================================================================== */
 
     @Override
-  public boolean hasNext() {
+	public boolean hasNext() {
       return getIcIterator().hasNext();
     }
 
     @Override
-  public WdEntity next() {
+	public WdEntity next() {
       Object o = getIcIterator().next();
 
       if (!(o instanceof EventInfo)) {
@@ -2521,7 +2521,7 @@ public class BwSysIntfImpl implements SysIntf {
     }
 
     @Override
-  public void remove() {
+	public void remove() {
       throw new UnsupportedOperationException();
     }
 

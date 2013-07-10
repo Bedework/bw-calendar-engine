@@ -18,7 +18,12 @@
  */
 package org.bedework.calsvc.jmx;
 
+import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calsvci.CalSvcFactoryDefault;
+import org.bedework.calsvci.CalSvcI;
+import org.bedework.calsvci.CalSvcIPars;
 
 import edu.rpi.cmt.jmx.ConfBase;
 import edu.rpi.cmt.jmx.ConfigHolder;
@@ -31,6 +36,8 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
         implements SystemConfMBean, ConfigHolder<SystemPropertiesImpl> {
   /** Name of the property holding the location of the config data */
   public static final String confuriPname = "org.bedework.bwengine.confuri";
+
+  private CalSvcI svci;
 
   /**
    * @param name
@@ -476,38 +483,74 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setVpollMaxItems(final Integer val) {
-    getConfig().setVpollMaxItems(val);
+  public void setDbStatsEnabled(final boolean enable) {
+    try {
+      getSvci();
+
+      if (svci != null) {
+        svci.setDbStatsEnabled(enable);
+      }
+    } catch (Throwable t) {
+      error(t);
+    } finally {
+      closeSvci();
+    }
   }
 
   @Override
-  public Integer getVpollMaxItems() {
-    return getConfig().getVpollMaxItems();
-  }
+  public boolean getDbStatsEnabled() {
+    try {
+      getSvci();
 
-  @Override
-  public void setVpollMaxActive(final Integer val) {
-    getConfig().setVpollMaxActive(val);
-  }
+      if (svci == null) {
+        return false;
+      }
 
-  @Override
-  public Integer getVpollMaxActive() {
-    return getConfig().getVpollMaxActive();
-  }
-
-  @Override
-  public void setVpollMaxVoters(final Integer val) {
-    getConfig().setVpollMaxVoters(val);
-  }
-
-  @Override
-  public Integer getVpollMaxVoters() {
-    return getConfig().getVpollMaxVoters();
+      return svci.getDbStatsEnabled();
+    } catch (Throwable t) {
+      error(t);
+      return false;
+    } finally {
+      closeSvci();
+    }
   }
 
   /* ========================================================================
    * Operations
    * ======================================================================== */
+
+  @Override
+  public BwStats getStats()  {
+    try {
+      getSvci();
+
+      if (svci == null) {
+        return null;
+      }
+
+      return svci.getStats();
+    } catch (Throwable t) {
+      error(t);
+      return null;
+    } finally {
+      closeSvci();
+    }
+  }
+
+  @Override
+  public void dumpDbStats() {
+    try {
+      getSvci();
+
+      if (svci != null) {
+        svci.dumpDbStats();
+      }
+    } catch (Throwable t) {
+      error(t);
+    } finally {
+      closeSvci();
+    }
+  }
 
   @Override
   public String loadConfig() {
@@ -530,6 +573,63 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
+
+  /** Get an svci object and return it. Also embed it in this object.
+   *
+   * @return svci object
+   * @throws org.bedework.calfacade.exc.CalFacadeException
+   */
+  private CalSvcI getSvci() throws CalFacadeException {
+    if ((svci != null) && svci.isOpen()) {
+      return svci;
+    }
+
+    boolean publicAdmin = false;
+
+    /* Extract a root user */
+
+    if (getRootUsers() == null) {
+      return null;
+    }
+
+    String rootUsers[] = getRootUsers().split(",");
+
+    if ((rootUsers.length == 0) || (rootUsers[0] == null)) {
+      return null;
+    }
+
+    CalSvcIPars pars = CalSvcIPars.getServicePars(rootUsers[0],
+                                                  true,   // publicAdmin
+                                                  true);   // Allow super user
+    svci = new CalSvcFactoryDefault().getSvc(pars);
+
+    svci.open();
+    svci.beginTransaction();
+
+    return svci;
+  }
+
+  /**
+   */
+  private void closeSvci() {
+    if ((svci == null) || !svci.isOpen()) {
+      return;
+    }
+
+    try {
+      svci.endTransaction();
+    } catch (Throwable t) {
+      try {
+        svci.close();
+      } catch (Throwable t1) {
+      }
+    }
+
+    try {
+      svci.close();
+    } catch (Throwable t) {
+    }
+  }
 
   /* ========================================================================
    * Lifecycle

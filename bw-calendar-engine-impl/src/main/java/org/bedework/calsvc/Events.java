@@ -188,7 +188,7 @@ class Events extends CalSvcDb implements EventsI {
       BwPreferences prefs = getSvc().getPrefsHandler().get();
       if (prefs != null) {
         List<BwCategory> cats = getSvc().getCategoriesHandler().
-            get(prefs.getDefaultCategoryUids());
+                get(prefs.getDefaultCategoryUids());
 
         for (BwCategory cat: cats) {
           event.addCategory(cat);
@@ -197,7 +197,7 @@ class Events extends CalSvcDb implements EventsI {
 
       assignGuid(event); // Or just validate?
 
-      validate(event);
+      BwCalendar cal = validate(event);
 
       Collection<BwEventProxy> overrides = ei.getOverrideProxies();
       BwEventProxy proxy = null;
@@ -224,11 +224,6 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       updateEntities(updResult, event);
-
-      BwCalendar cal = getCols().get(event.getColPath());
-      if (cal == null) {
-        throw new CalFacadeException(CalFacadeException.collectionNotFound);
-      }
 
       BwCalendar undereffedCal = cal;
 
@@ -382,13 +377,11 @@ class Events extends CalSvcDb implements EventsI {
       BwEvent event = ei.getEvent();
       event.setDtstamps(getCurrentTimestamp());
 
-      validate(event);
+      BwCalendar cal = validate(event);
       adjustEntities(ei);
 
       boolean organizerSchedulingObject = false;
       boolean attendeeSchedulingObject = false;
-
-      BwCalendar cal = getCols().get(event.getColPath());
 
       if (cal.getCollectionInfo().scheduling) {
         organizerSchedulingObject = event.getOrganizerSchedulingObject();
@@ -425,6 +418,10 @@ class Events extends CalSvcDb implements EventsI {
                            organizerSchedulingObject,
                            attendeeSchedulingObject)) {
             changed = true;
+          }
+
+          if (schedulingObject) {
+            oei.getEvent().updateStag(getCurrentTimestamp());
           }
 
           doReschedule = doReschedule || oei.getUpdResult().doReschedule;
@@ -1093,7 +1090,7 @@ class Events extends CalSvcDb implements EventsI {
     }
   }
 
-  private void validate(final BwEvent ev) throws CalFacadeException {
+  private BwCalendar validate(final BwEvent ev) throws CalFacadeException {
     if (ev.getColPath() == null) {
       throw new CalFacadeException(CalFacadeException.noEventCalendar);
     }
@@ -1124,6 +1121,31 @@ class Events extends CalSvcDb implements EventsI {
     }
 
     setScheduleState(ev);
+
+    BwCalendar col = getCols().get(ev.getColPath());
+    if (col == null) {
+      throw new CalFacadeException(CalFacadeException.collectionNotFound);
+    }
+
+    if (getPars().getPublicAdmin()) {
+      Preferences prefs = (Preferences)getSvc().getPrefsHandler();
+
+      Collection<BwCategory> evcats = ev.getCategories();
+
+      if (evcats != null) {
+        for (BwCategory cat: evcats) {
+          prefs.updateAdminPrefs(false, null, cat, null, null);
+        }
+      }
+
+      prefs.updateAdminPrefs(false,
+                             col,
+                             null,
+                             ev.getLocation(),
+                             ev.getContact());
+    }
+
+    return col;
   }
 
   /* Flag this as an attendee scheduling object or an organizer scheduling object

@@ -183,7 +183,7 @@ class Users extends CalSvcDb implements UsersI {
     }
 
     if (account == null) {
-      throw new CalFacadeException("Badd user account " + val);
+      throw new CalFacadeException("Bad user account " + val);
     }
 
     setRoots(getSvc());

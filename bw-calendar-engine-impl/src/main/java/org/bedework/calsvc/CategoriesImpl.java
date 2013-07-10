@@ -206,6 +206,7 @@ public class CategoriesImpl
     }
 
     getCal().saveOrUpdate(val);
+    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false, val);
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
 
@@ -230,6 +231,7 @@ public class CategoriesImpl
     }
 
     getCal().saveOrUpdate(val);
+    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false, val);
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
 
@@ -251,7 +253,7 @@ public class CategoriesImpl
     }
 
     /* Remove from preferences */
-    getSvc().getPrefsHandler().updateAdminPrefs(true, val);
+    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true, val);
 
     coreHdlr.deleteProp(val);
 

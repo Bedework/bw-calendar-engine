@@ -171,13 +171,13 @@ public interface SchedulingI extends Serializable {
    * @return BwEvent
    * @throws CalFacadeException
    */
-  public BwEvent getFreeBusy(final Collection<BwCalendar> fbset,
-                             final BwPrincipal who,
-                             final BwDateTime start,
-                             final BwDateTime end,
-                             final BwOrganizer org,
-                             final String uid,
-                             final String exceptUid)
+  BwEvent getFreeBusy(final Collection<BwCalendar> fbset,
+                      final BwPrincipal who,
+                      final BwDateTime start,
+                      final BwDateTime end,
+                      final BwOrganizer org,
+                      final String uid,
+                      final String exceptUid)
           throws CalFacadeException;
 
   /** Used for user interface. Result of dividing VFREEBUSY into equal sized

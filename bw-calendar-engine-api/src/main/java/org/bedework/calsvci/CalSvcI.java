@@ -275,14 +275,6 @@ public abstract class CalSvcI implements Serializable {
    */
   public abstract IcalCallback getIcalCallback();
 
-  /** Return true if we believe a refresh is required. After a return of
-   * true this method will return false until somebody updates the db.
-   *
-   * @return boolean    time to refresh
-   * @throws CalFacadeException
-   */
-  public abstract boolean refreshNeeded() throws CalFacadeException;
-
   /* ====================================================================
    *                   Factory methods
    * ==================================================================== */

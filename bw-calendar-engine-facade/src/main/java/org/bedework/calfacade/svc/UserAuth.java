@@ -150,10 +150,10 @@ public interface UserAuth extends Serializable {
    * noPrivileges.
    *
    * @param  userid        String user id
-   * @return AuthUserVO    users entry
+   * @return BwAuthUser    users entry
    * @throws CalFacadeException
    */
-  public BwAuthUser getUser(String userid) throws CalFacadeException;
+  BwAuthUser getUser(String userid) throws CalFacadeException;
 
   /** Return a collection of all authorised users
    *

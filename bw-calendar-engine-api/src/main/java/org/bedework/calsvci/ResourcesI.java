@@ -43,8 +43,8 @@ public interface ResourcesI extends Serializable {
    * @param  val       resource with attached content
    * @throws CalFacadeException for errors including duplicate name
    */
-  public void save(String path,
-                   BwResource val) throws CalFacadeException;
+  void save(String path,
+            BwResource val) throws CalFacadeException;
 
   /** Get a resource given the path - does not get content
    *
@@ -52,7 +52,7 @@ public interface ResourcesI extends Serializable {
    * @return BwResource null for unknown resource
    * @throws CalFacadeException
    */
-  public BwResource get(String path) throws CalFacadeException;
+  BwResource get(String path) throws CalFacadeException;
 
   /** Retrieve resource content given the resource. It will be set in the resource
    * object
@@ -60,7 +60,7 @@ public interface ResourcesI extends Serializable {
    * @param  val BwResource
    * @throws CalFacadeException
    */
-  public void getContent(BwResource val) throws CalFacadeException;
+  void getContent(BwResource val) throws CalFacadeException;
 
   /** Get resources to which this user has access - content is not fetched.
    *
@@ -68,7 +68,7 @@ public interface ResourcesI extends Serializable {
    * @return List     of BwResource
    * @throws CalFacadeException
    */
-  public List<BwResource> getAll(String path) throws CalFacadeException;
+  List<BwResource> getAll(String path) throws CalFacadeException;
 
   /** Update a resource.
    *
@@ -76,15 +76,15 @@ public interface ResourcesI extends Serializable {
    * @param updateContent if true we also update the content
    * @throws CalFacadeException for errors including duplicate name
    */
-  public void update(BwResource val,
-                     boolean updateContent) throws CalFacadeException;
+  void update(BwResource val,
+              boolean updateContent) throws CalFacadeException;
 
   /** Delete a resource and content given the path
    *
    * @param  path     String path to resource
    * @throws CalFacadeException
    */
-  public void delete(String path) throws CalFacadeException;
+  void delete(String path) throws CalFacadeException;
 
   /** Move or copy the given resource to the destination collection.
    *
@@ -96,9 +96,9 @@ public interface ResourcesI extends Serializable {
    * @return true if destination created (i.e. not updated)
    * @throws CalFacadeException
    */
-  public boolean copyMove(BwResource val,
-                          String to,
-                          String name,
-                          boolean copy,
-                          boolean overwrite) throws CalFacadeException;
+  boolean copyMove(BwResource val,
+                   String to,
+                   String name,
+                   boolean copy,
+                   boolean overwrite) throws CalFacadeException;
 }

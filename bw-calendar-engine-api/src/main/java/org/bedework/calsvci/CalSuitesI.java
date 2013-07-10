@@ -43,10 +43,10 @@ public interface CalSuitesI extends Serializable {
    * @return BwCalSuiteWrapper for new object
    * @throws CalFacadeException
    */
-  public BwCalSuiteWrapper add(String name,
-                               String adminGroupName,
-                               String rootCollectionPath,
-                               String submissionsPath) throws CalFacadeException;
+  BwCalSuiteWrapper add(String name,
+                        String adminGroupName,
+                        String rootCollectionPath,
+                        String submissionsPath) throws CalFacadeException;
 
   /** Set the current calendar suite.
    *
@@ -68,7 +68,7 @@ public interface CalSuitesI extends Serializable {
    * @return BwCalSuiteWrapper null for unknown calendar suite
    * @throws CalFacadeException
    */
-  public BwCalSuiteWrapper get(String name) throws CalFacadeException;
+  BwCalSuiteWrapper get(String name) throws CalFacadeException;
 
   /** Get a calendar suite given the 'owning' group
    *
@@ -95,17 +95,17 @@ public interface CalSuitesI extends Serializable {
    * @param submissionsPath
    * @throws CalFacadeException
    */
-  public void update(BwCalSuiteWrapper cs,
-                     String adminGroupName,
-                     String rootCollectionPath,
-                     String submissionsPath) throws CalFacadeException;
+  void update(BwCalSuiteWrapper cs,
+              String adminGroupName,
+              String rootCollectionPath,
+              String submissionsPath) throws CalFacadeException;
 
   /** Delete a calendar suite object
    *
    * @param  val     BwCalSuiteWrapper object
    * @throws CalFacadeException
    */
-  public void delete(BwCalSuiteWrapper val) throws CalFacadeException;
+  void delete(BwCalSuiteWrapper val) throws CalFacadeException;
 
   /** Define class of resource
    */

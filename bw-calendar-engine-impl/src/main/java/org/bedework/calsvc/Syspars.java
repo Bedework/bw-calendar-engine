@@ -22,14 +22,12 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.locale.BwLocale;
 import org.bedework.calsvci.SysparsI;
 
 import edu.rpi.cmt.access.WhoDefs;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Locale;
 
 /** This acts as an interface to the database for system parameters.
  *
@@ -42,8 +40,6 @@ class Syspars extends CalSvcDb implements SysparsI {
 
   private static long lastRefresh;
   private static long refreshInterval = 1000 * 60 * 5; // 5 mins
-
-  private Collection<Locale>supportedLocales;
 
   private Collection<String> rootUsers;
 
@@ -106,51 +102,6 @@ class Syspars extends CalSvcDb implements SysparsI {
 
     syspars = null; // Force refresh
     restoring = false;
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SysparsI#getSupportedLocales()
-   */
-  @Override
-  public Collection<Locale> getSupportedLocales() throws CalFacadeException {
-    if (supportedLocales != null) {
-      return supportedLocales;
-    }
-
-    supportedLocales = new ArrayList<Locale>();
-
-    String ll = getSvc().getSystemProperties().getLocaleList();
-
-    if (ll == null) {
-      supportedLocales.add(BwLocale.getLocale());
-      return supportedLocales;
-    }
-
-    try {
-      int pos = 0;
-
-      while (pos < ll.length()) {
-        int nextPos = ll.indexOf(",", pos);
-        if (nextPos < 0) {
-          supportedLocales.add(BwLocale.makeLocale(ll.substring(pos)));
-          break;
-        }
-
-        supportedLocales.add(BwLocale.makeLocale(ll.substring(pos, nextPos)));
-        pos = nextPos + 1;
-      }
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(CalFacadeException.badSystemLocaleList,
-                                   ll);
-    }
-
-    if (supportedLocales.isEmpty()) {
-      supportedLocales.add(BwLocale.getLocale());
-    }
-
-    return supportedLocales;
   }
 
   /* (non-Javadoc)

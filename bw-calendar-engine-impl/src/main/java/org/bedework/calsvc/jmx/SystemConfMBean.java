@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc.jmx;
 
+import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.configs.SystemProperties;
 
 import edu.rpi.cmt.jmx.ConfBaseMBean;
@@ -31,6 +32,19 @@ public interface SystemConfMBean extends ConfBaseMBean, SystemProperties {
   /* ========================================================================
    * Attributes
    * ======================================================================== */
+  /** Enable/disable db statistics
+   *
+   * @param enable       boolean true to turn on db statistics collection
+   */
+  void setDbStatsEnabled(@MBeanInfo("true for enable.")
+                         boolean enable);
+
+  /**
+   *
+   * @return boolean true if statistics collection enabled
+   */
+  @MBeanInfo("Enable/disable db stats collection.")
+  boolean getDbStatsEnabled();
 
   /**
    * @return SystemProperties object
@@ -41,6 +55,19 @@ public interface SystemConfMBean extends ConfBaseMBean, SystemProperties {
   /* ========================================================================
    * Operations
    * ======================================================================== */
+
+  /** Get the current stats
+   *
+   * @return BwStats object
+   */
+  @MBeanInfo("Display the stats.")
+  BwStats getStats();
+
+  /** Dump db statistics
+   *
+   */
+  @MBeanInfo("Dump the stats in the log.")
+  void dumpDbStats();
 
   /* * Get the current stats
    *

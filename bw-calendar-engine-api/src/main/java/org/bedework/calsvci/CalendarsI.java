@@ -47,7 +47,7 @@ public interface CalendarsI extends Serializable {
    * @return BwCalendar   root with all children attached
    * @throws CalFacadeException
    */
-  public BwCalendar getPublicCalendars() throws CalFacadeException;
+  BwCalendar getPublicCalendars() throws CalFacadeException;
 
   /** Returns root path of calendars owned by the current user. For
    * unauthenticated this will be the public calendar root.
@@ -55,7 +55,7 @@ public interface CalendarsI extends Serializable {
    * @return String principal home.
    * @throws CalFacadeException
    */
-  public String getHomePath() throws CalFacadeException;
+  String getHomePath() throws CalFacadeException;
 
   /** Returns root of calendars owned by the current user.
    *
@@ -66,7 +66,7 @@ public interface CalendarsI extends Serializable {
    * @return BwCalendar   user home.
    * @throws CalFacadeException
    */
-  public BwCalendar getHome() throws CalFacadeException;
+  BwCalendar getHome() throws CalFacadeException;
 
   /** Returns root of calendars owned by the given principal.
    *
@@ -79,8 +79,8 @@ public interface CalendarsI extends Serializable {
    * @return BwCalendar   user home.
    * @throws CalFacadeException
    */
-  public BwCalendar getHome(BwPrincipal principal,
-                            boolean freeBusy) throws CalFacadeException;
+  BwCalendar getHome(BwPrincipal principal,
+                     boolean freeBusy) throws CalFacadeException;
 
   /** A virtual path might be for example "/user/adgrp_Eng/Lectures/Lectures"
    * which has two two components<ul>
@@ -96,7 +96,7 @@ public interface CalendarsI extends Serializable {
    * @return collection of collection objects - null for bad vpath
    * @throws CalFacadeException
    */
-  public Collection<BwCalendar> decomposeVirtualPath(String vpath) throws CalFacadeException;
+  Collection<BwCalendar> decomposeVirtualPath(String vpath) throws CalFacadeException;
 
   /** Returns children of the given calendar to which the current user has
    * some access.
@@ -105,7 +105,7 @@ public interface CalendarsI extends Serializable {
    * @return Collection   of BwCalendar
    * @throws CalFacadeException
    */
-  public Collection<BwCalendar> getChildren(BwCalendar cal) throws CalFacadeException;
+  Collection<BwCalendar> getChildren(BwCalendar cal) throws CalFacadeException;
 
   /** Return a list of calendars in which calendar objects can be
    * placed by the current user.
@@ -118,7 +118,7 @@ public interface CalendarsI extends Serializable {
    * @return Set   of BwCalendar
    * @throws CalFacadeException
    */
-  public Set<BwCalendar> getAddContentCollections(boolean includeAliases)
+  Set<BwCalendar> getAddContentCollections(boolean includeAliases)
           throws CalFacadeException;
 
   /** Check to see if a collection is empty. A collection is not empty if it
@@ -128,7 +128,7 @@ public interface CalendarsI extends Serializable {
    * @return boolean true if the calendar is empty
    * @throws CalFacadeException
    */
-  public boolean isEmpty(BwCalendar val) throws CalFacadeException;
+  boolean isEmpty(BwCalendar val) throws CalFacadeException;
 
   /** Get a calendar given the path. If the path is that of a 'special'
    * calendar, for example the deleted calendar, it may not exist if it has
@@ -138,7 +138,7 @@ public interface CalendarsI extends Serializable {
    * @return BwCalendar null for unknown calendar
    * @throws CalFacadeException
    */
-  public BwCalendar get(String path) throws CalFacadeException;
+  BwCalendar get(String path) throws CalFacadeException;
 
   /** Get a special calendar (e.g. Trash) for the current user. If it does not
    * exist and is supported by the target system it will be created.
@@ -148,30 +148,22 @@ public interface CalendarsI extends Serializable {
    * @return BwCalendar null for unknown calendar
    * @throws CalFacadeException
    */
-  public BwCalendar getSpecial(int calType,
-                               boolean create) throws CalFacadeException;
+  BwCalendar getSpecial(int calType,
+                        boolean create) throws CalFacadeException;
 
   /** set the default calendar for the current user.
    *
    * @param  val    BwCalendar
    * @throws CalFacadeException
    */
-  public void setPreferred(BwCalendar  val) throws CalFacadeException;
+  void setPreferred(BwCalendar  val) throws CalFacadeException;
 
   /** Get the default calendar for the current user.
    *
    * @return BwCalendar null for unknown calendar
    * @throws CalFacadeException
    */
-  public BwCalendar getPreferred() throws CalFacadeException;
-
-  /** Get the default calendar for the current user for the given entity type.
-   *
-   * @param entityType
-   * @return BwCalendar null for unknown calendar
-   * @throws CalFacadeException
-   */
-  public BwCalendar getPreferred(int entityType) throws CalFacadeException;
+  BwCalendar getPreferred() throws CalFacadeException;
 
   /** Add a calendar object
    *
@@ -191,8 +183,8 @@ public interface CalendarsI extends Serializable {
    * @return BwCalendar object as added. Parameter val MUST be discarded
    * @throws CalFacadeException
    */
-  public BwCalendar add(BwCalendar val,
-                        String parentPath) throws CalFacadeException;
+  BwCalendar add(BwCalendar val,
+                 String parentPath) throws CalFacadeException;
 
   /** Change the name (path segment) of a calendar object.
    *
@@ -227,8 +219,8 @@ public interface CalendarsI extends Serializable {
    *                  false if it didn't exist
    * @throws CalFacadeException for in use or marked as default calendar
    */
-  public boolean delete(BwCalendar val,
-                        boolean emptyIt) throws CalFacadeException;
+  boolean delete(BwCalendar val,
+                 boolean emptyIt) throws CalFacadeException;
 
   /** Return true if cal != null and it represents a (local) user root
    *

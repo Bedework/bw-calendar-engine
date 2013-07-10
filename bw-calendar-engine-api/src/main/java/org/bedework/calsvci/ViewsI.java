@@ -38,8 +38,8 @@ public interface ViewsI extends Serializable {
    * @return boolean false view not added, true - added.
    * @throws CalFacadeException
    */
-  public boolean add(BwView val,
-                     boolean makeDefault) throws CalFacadeException;
+  boolean add(BwView val,
+              boolean makeDefault) throws CalFacadeException;
 
   /** Remove the view for the owner of the object.
    *
@@ -47,7 +47,7 @@ public interface ViewsI extends Serializable {
    * @return boolean false - view not found.
    * @throws CalFacadeException
    */
-  public boolean remove(BwView val) throws CalFacadeException;
+  boolean remove(BwView val) throws CalFacadeException;
 
   /** Find the named view.
    *
@@ -55,7 +55,7 @@ public interface ViewsI extends Serializable {
    * @return BwView  null view not found.
    * @throws CalFacadeException
    */
-  public BwView find(String val) throws CalFacadeException;
+  BwView find(String val) throws CalFacadeException;
 
   /** Add a collection path to the named view.
    *
@@ -64,8 +64,8 @@ public interface ViewsI extends Serializable {
    * @return boolean false view not found, true - collection path added.
    * @throws CalFacadeException
    */
-  public boolean addCollection(String name,
-                               String path) throws CalFacadeException;
+  boolean addCollection(String name,
+                        String path) throws CalFacadeException;
 
   /** Remove a collection path from the named view.
    *
@@ -74,7 +74,7 @@ public interface ViewsI extends Serializable {
    * @return boolean false view not found, true - collection path removed.
    * @throws CalFacadeException
    */
-  public boolean removeCollection(String name,
+  boolean removeCollection(String name,
                                   String path) throws CalFacadeException;
 
   /** Return the collection of views - named collections of collections
@@ -82,7 +82,7 @@ public interface ViewsI extends Serializable {
    * @return collection of views
    * @throws CalFacadeException
    */
-  public Collection<BwView> getAll() throws CalFacadeException;
+  Collection<BwView> getAll() throws CalFacadeException;
 
   /** Return the collection of views - named collections of collections
    *
@@ -90,5 +90,5 @@ public interface ViewsI extends Serializable {
    * @return collection of views
    * @throws CalFacadeException
    */
-  public Collection<BwView> getAll(BwPrincipal pr) throws CalFacadeException;
+  Collection<BwView> getAll(BwPrincipal pr) throws CalFacadeException;
 }

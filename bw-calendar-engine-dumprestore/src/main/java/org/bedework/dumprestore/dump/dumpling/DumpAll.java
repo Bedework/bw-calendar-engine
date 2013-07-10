@@ -67,8 +67,7 @@ public class DumpAll extends Dumpling {
                          String.valueOf(BwVersion.bedeworkMajorVersion));
     globals.xml.property(new QName(minorVersionTag),
                          String.valueOf(BwVersion.bedeworkMinorVersion));
-    if ((BwVersion.bedeworkPatchLevel != null) ||
-        (BwVersion.bedeworkUpdateVersion != 0)) {
+    if (BwVersion.bedeworkUpdateVersion != 0) {
       globals.xml.property(new QName(updateVersionTag),
                            String.valueOf(BwVersion.bedeworkUpdateVersion));
     }

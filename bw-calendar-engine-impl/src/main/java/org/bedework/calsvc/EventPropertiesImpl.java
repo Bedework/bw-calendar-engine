@@ -196,6 +196,7 @@ public class EventPropertiesImpl <T extends BwEventProperty>
     }
 
     getCal().saveOrUpdate(val);
+    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false, val);
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
 
@@ -217,6 +218,7 @@ public class EventPropertiesImpl <T extends BwEventProperty>
     }
 
     getCal().saveOrUpdate(val);
+    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false, val);
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
   }
@@ -235,7 +237,7 @@ public class EventPropertiesImpl <T extends BwEventProperty>
     }
 
     /* Remove from preferences */
-    getSvc().getPrefsHandler().updateAdminPrefs(true, val);
+    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true, val);
 
     coreHdlr.deleteProp(val);
 

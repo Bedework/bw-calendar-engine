@@ -137,7 +137,6 @@ class Preferences extends CalSvcDb implements PreferencesI {
   /* (non-Javadoc)
    * @see org.bedework.calsvci.PreferencesI#updateAdminPrefs(boolean, org.bedework.calfacade.BwEventProperty)
    */
-  @Override
   public void updateAdminPrefs(final boolean remove,
                                final BwEventProperty ent) throws CalFacadeException {
     if (ent instanceof BwCategory) {
@@ -152,7 +151,6 @@ class Preferences extends CalSvcDb implements PreferencesI {
   /* (non-Javadoc)
    * @see org.bedework.calsvci.PreferencesI#updateAdminPrefs(boolean, org.bedework.calfacade.BwCalendar, org.bedework.calfacade.BwCategory, org.bedework.calfacade.BwLocation, org.bedework.calfacade.BwContact)
    */
-  @Override
   public void updateAdminPrefs(final boolean remove,
                                final BwCalendar cal,
                                final BwCategory cat,
@@ -224,107 +222,6 @@ class Preferences extends CalSvcDb implements PreferencesI {
         getSvc().getUserAuth().updateUser(au);
       }
     }
-  }
-
-  /** Set false to inhibit lastLocale stuff */
-  public static boolean tryLastLocale = true;
-
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.PreferencesI#getUserLocale(java.util.Collection, java.util.Locale)
-   */
-  @Override
-  public Locale getUserLocale(final Collection<Locale> locales,
-                              final Locale locale) throws CalFacadeException {
-    Collection<Locale> sysLocales = getSvc().getSysparsHandler().getSupportedLocales();
-
-    if (locale != null) {
-      /* See if it's acceptable */
-      Locale l = BwLocale.matchLocales(sysLocales, locale);
-      if (l != null) {
-        if (debug) {
-          trace("Setting locale to " + l);
-        }
-        return l;
-      }
-    }
-
-    /* See if the user expressed a preference */
-    Collection<BwProperty> properties = get().getProperties();
-    String preferredLocaleStr = null;
-    String lastLocaleStr = null;
-
-    if (properties != null) {
-      for (BwProperty prop: properties) {
-        if (preferredLocaleStr == null) {
-          if (prop.getName().equals(BwPreferences.propertyPreferredLocale)) {
-            preferredLocaleStr = prop.getValue();
-            if (!tryLastLocale) {
-              break;
-            }
-          }
-        }
-
-        if (tryLastLocale) {
-          if (lastLocaleStr == null) {
-            if (prop.getName().equals(BwPreferences.propertyLastLocale)) {
-              lastLocaleStr = prop.getValue();
-            }
-          }
-        }
-
-        if ((preferredLocaleStr != null) &&
-            (lastLocaleStr != null)) {
-          break;
-        }
-      }
-    }
-
-    if (preferredLocaleStr != null) {
-      Locale l = BwLocale.matchLocales(sysLocales,
-                                       BwLocale.makeLocale(preferredLocaleStr));
-      if (l != null) {
-        if (debug) {
-          trace("Setting locale to " + l);
-        }
-        return l;
-      }
-    }
-
-    if (lastLocaleStr != null) {
-      Locale l = BwLocale.matchLocales(sysLocales,
-                                       BwLocale.makeLocale(lastLocaleStr));
-      if (l != null) {
-        if (debug) {
-          trace("Setting locale to " + l);
-        }
-        return l;
-      }
-    }
-
-    /* See if the supplied list has a match in the supported locales */
-
-    if (locales != null) {
-      // We had an ACCEPT-LANGUAGE header
-
-      for (Locale l: locales) {
-        l = BwLocale.matchLocales(sysLocales, l);
-        if (l != null) {
-          if (debug) {
-            trace("Setting locale to " + l);
-          }
-          return l;
-        }
-      }
-    }
-
-    /* Use the first from supported locales -
-     * there's always at least one in the collection */
-    Locale l = sysLocales.iterator().next();
-
-    if (debug) {
-      trace("Setting locale to " + l);
-    }
-    return l;
   }
 
   /* (non-Javadoc)

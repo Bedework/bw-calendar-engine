@@ -24,7 +24,6 @@ import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Locale;
 
 /** Interface for handling bedework system parameters.
  *
@@ -37,7 +36,7 @@ public interface SysparsI extends Serializable {
    * @return BwSystem object
    * @throws CalFacadeException if not admin
    */
-  public BwSystem get() throws CalFacadeException;
+  BwSystem get() throws CalFacadeException;
 
   /** Get the system pars given name - will update cache object if the name is
    * the current system name.
@@ -46,28 +45,21 @@ public interface SysparsI extends Serializable {
    * @return BwSystem object
    * @throws CalFacadeException if not admin
    */
-  public BwSystem get(String name) throws CalFacadeException;
+  BwSystem get(String name) throws CalFacadeException;
 
   /** Update the system pars
    *
    * @param val BwSystem object
    * @throws CalFacadeException if not admin
    */
-  public void update(BwSystem val) throws CalFacadeException;
-
-  /** Get the locales supported by bedework.
-   *
-   * @return Collection of locale
-   * @throws CalFacadeException
-   */
-  public Collection<Locale> getSupportedLocales() throws CalFacadeException;
+  void update(BwSystem val) throws CalFacadeException;
 
   /** Get the list of root accounts.
    *
    * @return Collection of String
    * @throws CalFacadeException
    */
-  public Collection<String> getRootUsers() throws CalFacadeException;
+  Collection<String> getRootUsers() throws CalFacadeException;
 
   /** See if this is a calendar super user
    *
@@ -75,5 +67,5 @@ public interface SysparsI extends Serializable {
    * @return boolean true for a super user
    * @throws CalFacadeException
    */
-  public boolean isRootUser(BwPrincipal val) throws CalFacadeException;
+  boolean isRootUser(BwPrincipal val) throws CalFacadeException;
 }

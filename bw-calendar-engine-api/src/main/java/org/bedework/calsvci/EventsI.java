@@ -128,8 +128,8 @@ public interface EventsI extends Serializable {
    * @return true if event deleted
    * @throws CalFacadeException
    */
-  public boolean delete(EventInfo ei,
-                        boolean sendSchedulingMessage) throws CalFacadeException;
+  boolean delete(EventInfo ei,
+                 boolean sendSchedulingMessage) throws CalFacadeException;
 
   /** Add an event and ensure its location and contact exist. The calendar path
    * must be set in the event.
@@ -200,7 +200,7 @@ public interface EventsI extends Serializable {
    * @param event
    * @throws CalFacadeException
    */
-  public void markDeleted(BwEvent event) throws CalFacadeException;
+  void markDeleted(BwEvent event) throws CalFacadeException;
 
   /** Return calendars which contain guid and recurrence id
    *

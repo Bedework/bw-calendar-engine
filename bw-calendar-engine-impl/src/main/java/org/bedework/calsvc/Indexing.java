@@ -31,7 +31,6 @@ import org.bedework.calsvci.IndexingI;
 import edu.rpi.cct.misc.indexing.Index;
 import edu.rpi.cct.misc.indexing.IndexException;
 import edu.rpi.cct.misc.indexing.SearchLimits;
-import edu.rpi.sss.util.DateTimeUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,30 +56,6 @@ class Indexing extends CalSvcDb implements IndexingI {
 
   Indexing(final CalSvc svci) throws CalFacadeException {
     super(svci);
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.IndexingI#fromToday()
-   */
-  @Override
-  public SearchLimits fromToday() {
-    SearchLimits lim = new SearchLimits();
-
-    lim.fromDate = DateTimeUtil.isoDate(new java.util.Date());
-
-    return lim;
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.IndexingI#beforeToday()
-   */
-  @Override
-  public SearchLimits beforeToday() {
-    SearchLimits lim = new SearchLimits();
-
-    lim.toDate = DateTimeUtil.isoDate(DateTimeUtil.yesterday());
-
-    return lim;
   }
 
   /* (non-Javadoc)

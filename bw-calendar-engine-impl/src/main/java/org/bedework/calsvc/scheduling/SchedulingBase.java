@@ -456,7 +456,7 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
   @Override
   public String addEvent(final EventInfo ei,
                          final String namePrefix,
-                         final boolean toInoutBox,
+                         final int calType,
                          final boolean noInvites) throws CalFacadeException {
     BwEvent ev = ei.getEvent();
     String prefix = namePrefix;
@@ -466,7 +466,8 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
 
       try {
         getSvc().getEventsHandler().add(ei, noInvites,
-                                        toInoutBox,
+                                        (calType == BwCalendar.calTypeInbox) ||
+                                        (calType == BwCalendar.calTypeOutbox),
                                         false);
 
         return null;

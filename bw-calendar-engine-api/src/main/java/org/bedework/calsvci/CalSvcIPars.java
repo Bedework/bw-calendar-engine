@@ -152,8 +152,6 @@ public class CalSvcIPars implements Serializable {
    * @param runAsUser   String user to run as
    * @param clientId    The application we're acting for.
    * @param allowSuperUser  true to allow superuser mode in non-admin mode
-   * @param dbPars
-   * @param timezonesByReference true if we are not including the full tz specification
    * @param service - true if this is a service call - e.g. iSchedule -
    *                rather than a real user.
    * @return CalSvcIPars

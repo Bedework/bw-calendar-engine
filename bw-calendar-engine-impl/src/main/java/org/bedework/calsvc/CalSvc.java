@@ -537,12 +537,6 @@ public class CalSvc extends CalSvcI {
     return icalcb;
   }
 
-  @Override
-  public boolean refreshNeeded() throws CalFacadeException {
-    /* See if the events were updated */
-    return false;
-  }
-
   /* ====================================================================
    *                   Factory methods
    * ==================================================================== */
@@ -950,6 +944,17 @@ public class CalSvc extends CalSvcI {
       ent = ((BwCalSuiteWrapper)ent).fetchEntity();
     }
     getCal().changeAccess(ent, aces, replaceAll);
+
+    if (ent instanceof BwCalendar) {
+      ((Preferences)getPrefsHandler()).updateAdminPrefs(false,
+                                         (BwCalendar)ent,
+                                         null,
+                                         null,
+                                         null);
+    } else if (ent instanceof BwEventProperty) {
+      ((Preferences)getPrefsHandler()).updateAdminPrefs(false,
+                                                        (BwEventProperty)ent);
+    }
   }
 
   /* (non-Javadoc)

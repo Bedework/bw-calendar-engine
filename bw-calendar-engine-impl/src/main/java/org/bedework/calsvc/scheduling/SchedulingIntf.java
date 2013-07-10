@@ -76,13 +76,13 @@ public interface SchedulingIntf extends SchedulingI {
    *
    * @param ei
    * @param namePrefix
-   * @param toInoutBox true if this is going to the inbox or outbox
+   * @param calType
    * @param noInvites
    * @return null if added, error code otherwise
    * @throws CalFacadeException
    */
   String addEvent(EventInfo ei,
                   String namePrefix,
-                  boolean toInoutBox,
+                  int calType,
                   boolean noInvites) throws CalFacadeException;
 }
