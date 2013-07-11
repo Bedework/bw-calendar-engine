@@ -227,7 +227,7 @@ class Events extends CalSvcDb implements EventsI {
 
       BwCalendar undereffedCal = cal;
 
-      if (cal.getAlias()) {
+      if (cal.getInternalAlias()) {
         /* Resolve the alias and put the event in it's proper place */
 
         //XXX This is probably OK for non-public admin
@@ -243,7 +243,7 @@ class Events extends CalSvcDb implements EventsI {
               event.addCategory(cat);
             }
 
-            if (!cal.getAlias()) {
+            if (!cal.getInternalAlias()) {
               break;
             }
 

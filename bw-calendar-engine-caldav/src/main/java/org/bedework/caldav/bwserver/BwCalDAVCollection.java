@@ -93,7 +93,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
    */
   @Override
   public BwCalDAVCollection resolveAlias(final boolean resolveSubAlias) throws WebdavException {
-    if (!col.getAlias()) {
+    if (!col.getInternalAlias()) {
       return this;
     }
 

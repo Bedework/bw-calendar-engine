@@ -41,6 +41,7 @@ import org.bedework.caldav.util.sharing.ShareType;
 import org.bedework.caldav.util.sharing.UserType;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCalendar.EventListEntry;
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
@@ -49,6 +50,7 @@ import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.ScheduleResult;
@@ -103,17 +105,15 @@ import edu.rpi.sss.util.xml.tagdefs.CaldavTags;
 import edu.rpi.sss.util.xml.tagdefs.WebdavTags;
 import edu.rpi.sss.util.xml.tagdefs.XcalTags;
 
+import ietf.params.xml.ns.caldav.ExpandType;
+import ietf.params.xml.ns.caldav.LimitRecurrenceSetType;
+import ietf.params.xml.ns.icalendar_2.IcalendarType;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.component.VFreeBusy;
-
 import org.apache.log4j.Logger;
 import org.oasis_open.docs.ws_calendar.ns.soap.ComponentSelectionType;
-
-import ietf.params.xml.ns.caldav.ExpandType;
-import ietf.params.xml.ns.caldav.LimitRecurrenceSetType;
-import ietf.params.xml.ns.icalendar_2.IcalendarType;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -228,7 +228,7 @@ public class BwSysIntfImpl implements SysIntf {
 
     BwCalendar leaf = bwcol;
 
-    while (leaf.getAlias()) {
+    while (leaf.getInternalAlias()) {
       leaf = resolveAlias(leaf, false);
 
       if ((leaf == null) ||  // bad alias
