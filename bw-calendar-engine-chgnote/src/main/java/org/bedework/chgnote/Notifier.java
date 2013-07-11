@@ -274,11 +274,22 @@ public class Notifier extends AbstractScheduler {
             continue;
           }
 
-          for (UpdatedType u: rc.getUpdated()) {
-            storedRc.addUpdate(u);
+          if (!Util.isEmpty(rc.getUpdated())) {
+            /* TODO Clear everything except updates for the moment.
+              The spec doesn't allow for create + updates - hopefully we
+              can change that.
+               */
+            storedRc.setDeleted(null);
+            storedRc.setCreated(null);
+            storedRc.setCollectionChanges(null);
+
+            for (UpdatedType u: rc.getUpdated()) {
+              storedRc.addUpdate(u);
+            }
+
+            getNotes().update(storedNote);
+            processed = true;
           }
-          getNotes().update(storedNote);
-          processed = true;
         } finally {
           popPrincipal();
         }
