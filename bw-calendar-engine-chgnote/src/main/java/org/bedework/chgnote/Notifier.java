@@ -226,8 +226,40 @@ public class Notifier extends AbstractScheduler {
             }
           }
 
+          /* Add to collection or update or merge this one into a
+             stored one.
+
+            1. If no notification is present add the new one to the
+               notification collection
+
+            2. If the new notification is a create discard the old and
+               create a new one (somehow we left an old create in the
+               collection)
+
+            3. If the new notification is a deletion and a create is
+               present throw them all away. User doesn't need to
+               know an event was created then deleted
+
+            4. If the new notification is a deletion and updates are
+               present discard the updates.
+
+            5. If the new notification is updates and a create is present
+               discard the new (to the end user it just looks like a
+               new event - they don't care that it changed - events
+               will typically change a lot just after being added
+               often due to implicit scheduling).
+
+            6. If the new notification is updates and a deletion is
+               present (should not occur - means we missed a create),
+               discard the old and add the new.
+
+            7. If the new notification is updates (only valid choice left)
+               merge into the updates.
+
+           */
+
           if (storedNote == null) {
-            // Just save this one
+            // Choice 1 - Just save this one
             rc.setName(getEncodedUuid());
             getNotes().add(note);
             processed = true;
@@ -239,12 +271,10 @@ public class Notifier extends AbstractScheduler {
             continue;
           }
 
-          // Merge this one into the stored one and update
-
           ResourceChangeType storedRc = (ResourceChangeType)storedNote.getNotification();
 
           if (rc.getCreated() != null) {
-            // Update the old one
+            // Choice 2 above - update the old one
             storedRc.setCollectionChanges(null);
             storedRc.setDeleted(null);
             storedRc.setCreated(rc.getCreated());
@@ -255,30 +285,30 @@ public class Notifier extends AbstractScheduler {
           }
 
           if (rc.getDeleted() != null) {
+            if (storedRc.getCreated() != null) {
+              // Choice 3 above - discard both
+              getNotes().remove(storedNote);
+              processed = true;
+              continue;
+            }
+
+            // Choice 4 above - discard updates
             storedRc.setCollectionChanges(null);
             storedRc.setDeleted(rc.getDeleted());
+            storedRc.clearUpdated();
 
             getNotes().update(storedNote);
             processed = true;
             continue;
           }
 
-          if (rc.getCollectionChanges() != null) {
-            storedRc.setDeleted(null);
-            storedRc.setCreated(null);
-            storedRc.clearUpdated();
-            storedRc.setCollectionChanges(rc.getCollectionChanges());
-
-            getNotes().update(storedNote);
-            processed = true;
+          if (storedRc.getCreated() != null) {
+            // Choice 5 above - discard new updates
             continue;
           }
 
           if (!Util.isEmpty(rc.getUpdated())) {
-            /* TODO Clear everything except updates for the moment.
-              The spec doesn't allow for create + updates - hopefully we
-              can change that.
-               */
+            // Choices 6 and 7 above
             storedRc.setDeleted(null);
             storedRc.setCreated(null);
             storedRc.setCollectionChanges(null);
@@ -294,6 +324,7 @@ public class Notifier extends AbstractScheduler {
           popPrincipal();
         }
       }
+
       if (processed) {
         return ProcessMessageResult.PROCESSED;
       }
