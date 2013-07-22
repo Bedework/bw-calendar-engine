@@ -66,7 +66,7 @@ public interface IndexingI extends Serializable {
         throws CalFacadeException;
 
   /**
-   * @param publick
+   * @param publick true for public index
    * @param principal
    * @return the indexer
    * @throws CalFacadeException

@@ -580,6 +580,10 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
    * @throws org.bedework.calfacade.exc.CalFacadeException
    */
   private CalSvcI getSvci() throws CalFacadeException {
+    if (getConfig() == null) {
+      return null;
+    }
+
     if ((svci != null) && svci.isOpen()) {
       return svci;
     }

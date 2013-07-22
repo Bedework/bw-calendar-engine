@@ -47,5 +47,5 @@ public interface CalSvcFactory extends Serializable {
    * @return a system config class.
    * @throws CalFacadeException
    */
-  public Configurations getSystemConfig() throws CalFacadeException;
+  Configurations getSystemConfig() throws CalFacadeException;
 }

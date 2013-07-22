@@ -18,18 +18,11 @@
 */
 package org.bedework.calsvci;
 
-import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwCategory;
-import org.bedework.calfacade.BwContact;
-import org.bedework.calfacade.BwEventProperty;
-import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Locale;
 
 /** Interface for handling bedework user preferences.
  *
