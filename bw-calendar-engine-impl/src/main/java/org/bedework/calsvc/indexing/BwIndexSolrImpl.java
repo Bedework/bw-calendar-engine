@@ -42,6 +42,8 @@ import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import edu.rpi.cct.misc.indexing.Index;
 import edu.rpi.cct.misc.indexing.IndexException;
 import edu.rpi.cct.misc.indexing.SearchLimits;
+import edu.rpi.cmt.access.Acl;
+import edu.rpi.cmt.access.PrivilegeDefs;
 import edu.rpi.cmt.calendar.IcalDefs;
 import edu.rpi.sss.util.DateTimeUtil;
 import edu.rpi.sss.util.Util;
@@ -659,7 +661,8 @@ public class BwIndexSolrImpl implements BwIndexer {
                               final String end,
                               final Holder<Integer> found,
                               final int pos,
-                              final int count) throws CalFacadeException {
+                              final int count,
+                              final AccessChecker accessCheck) throws CalFacadeException {
     int ourPos = pos;
     int ourCount = count;
 
@@ -669,7 +672,7 @@ public class BwIndexSolrImpl implements BwIndexer {
 
     int fetched = 0;
     int tries = 0;
-    Set<EventInfo> res = new ConcurrentSkipListSet<EventInfo>();
+    Set<EventInfo> res = new ConcurrentSkipListSet<>();
 
     StringBuilder query = new StringBuilder("itemType:");
     query.append(itemTypeEvent);
@@ -735,7 +738,20 @@ public class BwIndexSolrImpl implements BwIndexer {
       tries++;
     }
 
-    return res;
+    Set<EventInfo> checked = new ConcurrentSkipListSet<>();
+
+    for (EventInfo ei: res) {
+      Acl.CurrentAccess ca = accessCheck.checkAccess(ei.getEvent(),
+                                     PrivilegeDefs.privAny, true);
+
+      if ((ca == null) || !ca.getAccessAllowed()) {
+        continue;
+      }
+
+      checked.add(ei);
+    }
+
+    return checked;
   }
 
   /* ========================================================================
@@ -829,7 +845,7 @@ public class BwIndexSolrImpl implements BwIndexer {
                              (String)sd.getFirstValue("word")));
     cat.setDescription(new BwString(null,
                                     (String) sd.getFirstValue(
-                                            "descriptiuon")));
+                                            "description")));
     cat.setCreatorHref(getString(sd, "creator"));
     cat.setOwnerHref(getString(sd, "owner"));
     cat.setUid(getString(sd, "uid"));

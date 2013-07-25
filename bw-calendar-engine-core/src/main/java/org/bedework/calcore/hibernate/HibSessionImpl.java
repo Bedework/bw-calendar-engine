@@ -30,7 +30,7 @@ import edu.rpi.sss.util.Util;
 
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
@@ -880,7 +880,8 @@ public class HibSessionImpl implements HibSession {
 
     try {
       if (!val.unsaved()) {
-        sess.lock(val, LockMode.NONE);
+//        sess.lock(val, LockMode.NONE);
+        sess.buildLockRequest(LockOptions.NONE).lock(val);
       }
     } catch (Throwable t) {
       handleException(t);
@@ -899,7 +900,8 @@ public class HibSessionImpl implements HibSession {
     }
 
     try {
-      sess.lock(o, LockMode.READ);
+//      sess.lock(o, LockMode.READ);
+      sess.buildLockRequest(LockOptions.READ).lock(o);
     } catch (Throwable t) {
       handleException(t);
     }
@@ -917,7 +919,8 @@ public class HibSessionImpl implements HibSession {
     }
 
     try {
-      sess.lock(o, LockMode.UPGRADE);
+//      sess.lock(o, LockMode.UPGRADE);
+      sess.buildLockRequest(LockOptions.UPGRADE).lock(o);
     } catch (Throwable t) {
       handleException(t);
     }

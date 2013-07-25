@@ -969,15 +969,6 @@ public class CalSvc extends CalSvcI {
     getCal().defaultAccess(ent, who);
   }
 
-  @Override
-  public Collection<? extends BwShareableDbentity<? extends Object>>
-             checkAccess(final Collection<? extends BwShareableDbentity<? extends Object>> ents,
-                                    final int desiredAccess,
-                                    final boolean alwaysReturn)
-                 throws CalFacadeException {
-    return getCal().checkAccess(ents, desiredAccess, alwaysReturn);
-  }
-
   /* (non-Javadoc)
    * @see org.bedework.calsvci.CalSvcI#checkAccess(org.bedework.calfacade.base.BwShareableDbentity, int, boolean)
    */

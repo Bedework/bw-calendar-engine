@@ -559,20 +559,6 @@ public abstract class CalSvcI implements Serializable {
   public abstract void defaultAccess(BwShareableDbentity ent,
                                      AceWho who) throws CalFacadeException;
 
-  /** Return a Collection of the objects after checking access
-   *
-   * @param ents          Collection of BwShareableDbentity
-   * @param desiredAccess access we want
-   * @param alwaysReturn boolean flag behaviour on no access
-   * @return Collection   of checked objects
-   * @throws CalFacadeException for no access or other failure
-   */
-  public abstract Collection<? extends BwShareableDbentity<? extends Object>>
-  checkAccess(Collection<? extends BwShareableDbentity<? extends Object>> ents,
-                         int desiredAccess,
-                         boolean alwaysReturn)
-                             throws CalFacadeException;
-
   /** Check the access for the given entity. Returns the current access
    * or null or optionally throws a no access exception.
    *

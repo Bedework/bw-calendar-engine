@@ -236,6 +236,22 @@ public class BwCategory extends BwEventProperty<BwCategory>
            getDescription().length();
   }
 
+  public boolean updateFrom(final BwCategory cat) {
+    boolean changed = false;
+
+    if (!getWord().equals(cat.getWord())) {
+      setWord(cat.getWord());
+      changed = true;
+    }
+
+    if (!getDescription().equals(cat.getDescription())) {
+      setDescription(cat.getDescription());
+      changed = true;
+    }
+
+    return changed;
+  }
+
   /* ====================================================================
    *                        Object methods
    * ==================================================================== */

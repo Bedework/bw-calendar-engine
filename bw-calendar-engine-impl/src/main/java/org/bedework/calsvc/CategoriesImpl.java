@@ -183,7 +183,7 @@ public class CategoriesImpl
 
   @Override
   public BwCategory find(final BwString val) throws CalFacadeException {
-    return coreHdlr.find(val, getOwnerHref());
+    return getIndexer().fetchCat("word", val.getValue());
   }
 
   @Override

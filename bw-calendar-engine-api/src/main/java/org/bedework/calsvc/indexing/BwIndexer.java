@@ -20,15 +20,19 @@ package org.bedework.calsvc.indexing;
 
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
+
 import edu.rpi.cct.misc.indexing.Index;
 import edu.rpi.cct.misc.indexing.SearchLimits;
+import edu.rpi.cmt.access.Acl;
 
-import javax.xml.ws.Holder;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+
+import javax.xml.ws.Holder;
 
 /**
  * @author douglm
@@ -154,6 +158,22 @@ public interface BwIndexer extends Serializable {
    */
   List<BwCategory> fetchAllCats() throws CalFacadeException;
 
+  interface AccessChecker extends Serializable {
+    /** Check the access for the given entity. Returns the current access
+     * or null or optionally throws a no access exception.
+     *
+     * @param ent
+     * @param desiredAccess
+     * @param returnResult
+     * @return CurrentAccess
+     * @throws CalFacadeException if returnResult false and no access
+     */
+    Acl.CurrentAccess checkAccess(BwShareableDbentity ent,
+                                  int desiredAccess,
+                                  boolean returnResult)
+            throws CalFacadeException;
+  }
+
   /** if fetching is enabled will return a List of EventInfo. List will be
    * empty if the end of the range has been reached.
    *
@@ -174,5 +194,6 @@ public interface BwIndexer extends Serializable {
                        String end,
                        Holder<Integer> found,
                        int pos,
-                       int count) throws CalFacadeException;
+                       int count,
+                       AccessChecker accessCheck) throws CalFacadeException;
 }

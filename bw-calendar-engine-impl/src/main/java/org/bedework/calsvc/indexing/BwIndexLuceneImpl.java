@@ -280,7 +280,8 @@ public class BwIndexLuceneImpl extends IndexLuceneImpl implements BwIndexer {
                               final String end,
                               final Holder<Integer> found,
                               final int pos,
-                              final int count) throws CalFacadeException {
+                              final int count,
+                              final AccessChecker accessCheck) throws CalFacadeException {
     return null;
   }
 
