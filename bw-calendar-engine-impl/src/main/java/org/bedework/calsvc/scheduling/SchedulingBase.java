@@ -19,6 +19,7 @@
 package org.bedework.calsvc.scheduling;
 
 import org.bedework.calfacade.BwAttendee;
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;

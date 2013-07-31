@@ -268,7 +268,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
 
     /* Add it and post to the autoscheduler */
     String ecode = addEvent(ei, "In-" + Uid.getUid() + "-" + evDtstamp,
-                            true,
+                            BwCalendar.calTypeInbox,
                             true);
 
     if (ecode != null) {

@@ -27,7 +27,6 @@ import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwShareableDbentity;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
@@ -37,7 +36,6 @@ import org.bedework.calsvci.SynchI;
 
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.cmt.calendar.IcalDefs;
 import edu.rpi.sss.util.Util;
 
 import java.net.URI;
@@ -310,30 +308,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
   @Override
   public BwCalendar getPreferred() throws CalFacadeException {
     return get(getSvc().getPrefsHandler().get().getDefaultCalendarPath());
-  }
-
-  @Override
-  public BwCalendar getPreferred(final int entityType) throws CalFacadeException {
-    if (entityType == IcalDefs.entityTypeEvent) {
-      return get(getSvc().getPrefsHandler().get().getDefaultCalendarPath());
-    }
-
-    BasicSystemProperties sprops = getSvc().getBasicSystemProperties();
-    String name = null;
-
-    if (entityType == IcalDefs.entityTypeTodo) {
-      name = sprops.getUserDefaultTasksCalendar();
-    } else if (entityType == IcalDefs.entityTypeVpoll) {
-      name = sprops.getUserDefaultPollsCalendar();
-    }
-
-    if (name == null) {
-      return get(getSvc().getPrefsHandler().get().getDefaultCalendarPath());
-    }
-
-    return get(Util.buildPath(true,
-                              getSvc().getPrincipalInfo().getCalendarHomePath(),
-                              "/", name));
   }
 
   /* (non-Javadoc)

@@ -127,7 +127,7 @@ public class InRequest extends InProcessor {
           trace("InSchedule add for " + owner);
         }
 
-        BwCalendar prefSched = getSvc().getCalendarsHandler().getPreferred(ev.getEntityType());
+        BwCalendar prefSched = getSvc().getCalendarsHandler().getPreferred();
         if (prefSched == null) {
           // SCHED - status = no default collection
           if (debug) {
@@ -193,7 +193,7 @@ public class InRequest extends InProcessor {
       String namePrefix = ourCopy.getEvent().getUid();
 
       pr.sr.errorCode = sched.addEvent(ourCopy, namePrefix,
-                                       false,
+                                       BwCalendar.calTypeCalendarCollection,
                                        noInvites);
       if (pr.sr.errorCode != null) {
         if (debug) {
