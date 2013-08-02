@@ -1278,7 +1278,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     Set<BwProperty> bwprops = getProperties(eventListProperty);
 
     /* Put them in a list so I can get indexed elements */
-    List<BwProperty> props = new ArrayList<BwProperty>();
+    List<BwProperty> props = new ArrayList<>();
 
     if (bwprops != null) {
       props.addAll(bwprops);

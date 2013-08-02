@@ -18,6 +18,7 @@
 */
 package org.bedework.calfacade.mail;
 
+import edu.rpi.cmt.config.ConfInfo;
 import edu.rpi.cmt.config.ConfigBase;
 
 /** Properties for mailers.
@@ -25,6 +26,8 @@ import edu.rpi.cmt.config.ConfigBase;
  * @author douglm
  *
  */
+@ConfInfo(elementName = "mailer",
+          type = "org.bedework.calfacade.mail.MailConfigProperties")
 public class MailConfigPropertiesImpl extends ConfigBase<MailConfigPropertiesImpl>
         implements MailConfigProperties {
   private String protocol;

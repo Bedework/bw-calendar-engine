@@ -21,8 +21,6 @@ package org.bedework.calsvc.jmx;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CalAddrPrefixes;
 
-import edu.rpi.cmt.jmx.MBeanInfo;
-
 /**
  * @author douglm
  *
@@ -163,7 +161,6 @@ public final class ROBasicSystemProperties implements BasicSystemProperties {
   }
 
   @Override
-  @MBeanInfo("user default tasks calendar - do not change")
   public String getUserDefaultTasksCalendar() {
     return getConfig().getUserDefaultTasksCalendar();
   }
@@ -174,7 +171,6 @@ public final class ROBasicSystemProperties implements BasicSystemProperties {
   }
 
   @Override
-  @MBeanInfo("user default polls calendar - do not change")
   public String getUserDefaultPollsCalendar() {
     return getConfig().getUserDefaultPollsCalendar();
   }

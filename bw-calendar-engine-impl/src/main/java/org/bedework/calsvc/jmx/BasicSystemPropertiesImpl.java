@@ -34,7 +34,8 @@ import edu.rpi.sss.util.ToString;
  *
  * @author Mike Douglass
  */
-@ConfInfo(elementName = "basic-properties")
+@ConfInfo(elementName = "basic-properties",
+          type = "org.bedework.calfacade.configs.BasicSystemProperties")
 public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesImpl>
         implements BasicSystemProperties {
   /* Principals */

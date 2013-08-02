@@ -20,12 +20,15 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.SynchConfig;
 
+import edu.rpi.cmt.config.ConfInfo;
 import edu.rpi.cmt.config.ConfigBase;
 
 /** Information to access the synch engine
  *
  * @author Mike Douglass
  */
+@ConfInfo(elementName = "synch",
+          type = "org.bedework.calfacade.configs.SynchConfig")
 public class SynchConfigImpl extends ConfigBase<SynchConfigImpl>
         implements SynchConfig {
   private String wsdlUri;

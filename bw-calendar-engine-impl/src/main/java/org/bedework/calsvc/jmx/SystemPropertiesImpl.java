@@ -20,6 +20,7 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.SystemProperties;
 
+import edu.rpi.cmt.config.ConfInfo;
 import edu.rpi.cmt.config.ConfigBase;
 import edu.rpi.sss.util.ToString;
 
@@ -29,6 +30,8 @@ import edu.rpi.sss.util.ToString;
  * @author douglm
  *
  */
+@ConfInfo(elementName = "system-properties",
+          type = "org.bedework.calfacade.configs.SystemProperties")
 public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
         implements SystemProperties {
   /* Default time zone */

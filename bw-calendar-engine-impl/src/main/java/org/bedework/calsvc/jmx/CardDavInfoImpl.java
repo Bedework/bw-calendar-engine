@@ -20,12 +20,15 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.CardDavInfo;
 
+import edu.rpi.cmt.config.ConfInfo;
 import edu.rpi.cmt.config.ConfigBase;
 
 /** Information to access carddav
  *
  * @author Mike Douglass
  */
+@ConfInfo(elementName = "carddav-info",
+          type = "org.bedework.calfacade.configs.CardDavInfo")
 public class CardDavInfoImpl extends ConfigBase<CardDavInfoImpl>
         implements CardDavInfo {
   private boolean auth;

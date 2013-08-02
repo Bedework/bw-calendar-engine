@@ -29,7 +29,8 @@ import edu.rpi.sss.util.ToString;
  *
  * @author Mike Douglass
  */
-@ConfInfo(elementName = "dir-config")
+@ConfInfo(elementName = "dir-config",
+          type = "org.bedework.calfacade.configs.DirConfigProperties")
 public class DirConfigPropertiesImpl extends ConfigBase<DirConfigPropertiesImpl>
         implements DirConfigProperties {
   private String mbeanClassName;

@@ -20,11 +20,15 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.LdapConfigProperties;
 
+import edu.rpi.cmt.config.ConfInfo;
+
 /** This class defines the various properties we need to make a connection
  * and retrieve a group and user information via ldap.
  *
  * @author Mike Douglass
  */
+@ConfInfo(elementName = "dir-config",
+          type = "org.bedework.calfacade.configs.LdapConfigProperties")
 public class LdapConfigPropertiesImpl extends DirConfigPropertiesImpl
         implements LdapConfigProperties {
   private String initialContextFactory = "com.sun.jndi.ldap.LdapCtxFactory";
