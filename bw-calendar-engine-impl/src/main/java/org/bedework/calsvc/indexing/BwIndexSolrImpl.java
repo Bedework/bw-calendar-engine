@@ -842,7 +842,7 @@ public class BwIndexSolrImpl implements BwIndexer {
     BwCategory cat = new BwCategory();
 
     cat.setWord(new BwString(null,
-                             (String)sd.getFirstValue("word")));
+                             (String)sd.getFirstValue("category")));
     cat.setDescription(new BwString(null,
                                     (String) sd.getFirstValue(
                                             "description")));
@@ -1368,7 +1368,7 @@ public class BwIndexSolrImpl implements BwIndexer {
       makeField(xml, "uid", cat.getUid());
       makeField(xml, "creator", cat.getCreatorHref());
       makeField(xml, "owner", cat.getOwnerHref());
-      makeField(xml, "word", cat.getWord());
+      makeField(xml, "category", cat.getWord());
       makeField(xml, "description", cat.getDescription());
 
       xml.closeTag(solrTagDoc);
