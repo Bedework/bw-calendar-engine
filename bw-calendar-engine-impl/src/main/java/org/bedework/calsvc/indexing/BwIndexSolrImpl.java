@@ -579,7 +579,7 @@ public class BwIndexSolrImpl implements BwIndexer {
     query.append("itemType:");
     query.append(itemTypeCategory);
 
-    query.append("AND ");
+    query.append(" AND ");
     query.append(field);
     query.append(":\"");
     query.append(val);
@@ -1368,6 +1368,13 @@ public class BwIndexSolrImpl implements BwIndexer {
       makeField(xml, "uid", cat.getUid());
       makeField(xml, "creator", cat.getCreatorHref());
       makeField(xml, "owner", cat.getOwnerHref());
+
+      /* Manufacture a name and path for the time being - it's a required field */
+      makeField(xml, "name", cat.getWord().getValue());
+      makeField(xml, "path", Util.buildPath(false,
+                                            cat.getOwnerHref(), "/",
+                                            cat.getWord().getValue()));
+
       makeField(xml, "category", cat.getWord());
       makeField(xml, "description", cat.getDescription());
 

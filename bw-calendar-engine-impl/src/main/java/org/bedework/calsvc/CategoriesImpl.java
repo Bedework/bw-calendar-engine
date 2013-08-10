@@ -273,13 +273,23 @@ public class CategoriesImpl
 
   @Override
   public int reindex() throws CalFacadeException {
-    Collection<BwCategory> cats = coreHdlr.get(getOwnerHref(), null);
+    BwPrincipal owner;
+    if (!isPublicAdmin()) {
+      owner = getPrincipal();
+    } else {
+      owner = getPublicUser();
+    }
+
+    Collection<BwCategory> cats = coreHdlr.get(owner.getPrincipalRef(),
+                                               null);
     if (Util.isEmpty(cats)) {
       return 0;
     }
 
+    BwIndexer idx = getIndexer();
+
     for (BwCategory cat: cats) {
-      getIndexer().indexEntity(cat);
+      idx.indexEntity(cat);
     }
 
     return cats.size();
@@ -311,7 +321,7 @@ public class CategoriesImpl
       return idx;
     }
 
-    idx = getSvc().getIndexingHandler().getIndexer(ownerHref == null,
+    idx = getSvc().getIndexingHandler().getIndexer(isGuest() || isPublicAdmin(),
                                                    href);
 
     indexers.put(href, idx);
