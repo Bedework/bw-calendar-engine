@@ -52,11 +52,13 @@ public class CategoriesImpl
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          2000);  // max size
 
-  /* We'll cache the indexers we use.
+  /* We'll cache the indexers we use. Use a map for non-public
    */
-  private static FlushMap<String, BwIndexer> indexers =
+  private static FlushMap<String, BwIndexer> userIndexers =
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          200);  // max size
+
+  private static BwIndexer publicIndexer;
 
   private CoreEventPropertiesI<BwCategory> coreHdlr;
 
@@ -315,16 +317,27 @@ public class CategoriesImpl
   private BwIndexer getIndexer(String ownerHref) throws CalFacadeException {
     String href = checkHref(ownerHref);
 
-    BwIndexer idx = indexers.get(href);
+    boolean publick = isGuest() || isPublicAdmin();
+
+    if (publick) {
+      if (publicIndexer == null) {
+        publicIndexer = getSvc().getIndexingHandler().getIndexer(true,
+                                                                 href);
+      }
+
+      return publicIndexer;
+    }
+
+    BwIndexer idx = userIndexers.get(href);
 
     if (idx != null) {
       return idx;
     }
 
-    idx = getSvc().getIndexingHandler().getIndexer(isGuest() || isPublicAdmin(),
+    idx = getSvc().getIndexingHandler().getIndexer(false,
                                                    href);
 
-    indexers.put(href, idx);
+    userIndexers.put(href, idx);
 
     return idx;
   }
