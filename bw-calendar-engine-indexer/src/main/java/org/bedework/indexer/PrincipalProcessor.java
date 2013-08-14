@@ -69,8 +69,13 @@ public class PrincipalProcessor extends Crawler {
 
       indexCollection(svc.getCalendarsHandler().getHomePath());
 
-      status.stats.inc(IndexStats.StatType.categories,
-                       svc.getCategoriesHandler().reindex());
+      /* Skip the public owner here as categories would get indexed twice */
+
+
+      if (!principal.equals(svc.getUsersHandler().getPublicUser().getPrincipalRef())) {
+        status.stats.inc(IndexStats.StatType.categories,
+                         svc.getCategoriesHandler().reindex());
+      }
     } finally {
       close();
     }

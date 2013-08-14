@@ -19,7 +19,6 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.CalSvcI;
 
 import edu.rpi.sss.util.Util;
 
@@ -67,11 +66,7 @@ public class PublicProcessor extends Crawler {
 
   @Override
   public void process() throws CalFacadeException {
-    CalSvcI svc = null;
-
     try {
-      svc = getSvci();
-
       /* First index the public collection(s) */
       indexCollection(Util.buildPath(false, "/", getPublicCalendarRoot()));
 
