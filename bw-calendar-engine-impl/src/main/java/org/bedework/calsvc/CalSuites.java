@@ -361,7 +361,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
   /** Set submissions collection if supplied
    *
    * @param cs
-   * @param submissions path
+   * @param submissionsPath path
    * @throws CalFacadeException
    */
   private void setSubmissionsCol(final BwCalSuite cs,

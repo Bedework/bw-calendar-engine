@@ -55,6 +55,7 @@ import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
@@ -158,6 +159,8 @@ public class BwSysIntfImpl implements SysIntf {
 
   private UrlHandler urlHandler;
 
+  private AuthProperties authProperties;
+
   private SystemProperties sysProperties;
 
   private long reqInTime;
@@ -199,6 +202,7 @@ public class BwSysIntfImpl implements SysIntf {
               service,
               CalDavHeaders.getClientId(req));
 
+      authProperties = svci.getAuthProperties();
       sysProperties = svci.getSystemProperties();
       svci.postNotification(new HttpEvent(SysCode.CALDAV_IN));
       reqInTime = System.currentTimeMillis();
@@ -209,9 +213,11 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.sysinterface.SysIntf#getSystemProperties()
-   */
+  @Override
+  public AuthProperties getAuthProperties() throws WebdavException {
+    return authProperties;
+  }
+
   @Override
   public SystemProperties getSystemProperties() throws WebdavException {
     return sysProperties;

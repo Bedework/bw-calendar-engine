@@ -160,7 +160,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
       byte[] inBuffer = new byte[1000];
       long clen = 0;
       int chunkSize;
-      int maxSize = intf.getSystemProperties().getMaxUserEntitySize();
+      int maxSize = intf.getAuthProperties().getMaxUserEntitySize();
 
       long oldSize = r.getContentLength();
 

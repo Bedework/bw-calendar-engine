@@ -75,16 +75,6 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
-  public void setDefaultChangesNotifications(final boolean val) {
-    throw new RuntimeException("Immutable"); // getConfig().setDefaultChangesNotifications(val);
-  }
-
-  @Override
-  public boolean getDefaultChangesNotifications() {
-    return getConfig().getDefaultChangesNotifications();
-  }
-
-  @Override
   public void setRootUsers(final String val) {
     throw new RuntimeException("Immutable"); // getConfig().setRootUsers(val);
   }
@@ -92,146 +82,6 @@ public final class ROSystemProperties implements SystemProperties {
   @Override
   public String getRootUsers() {
     return getConfig().getRootUsers();
-  }
-
-  @Override
-  public void setDefaultUserViewName(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setDefaultUserViewName(val);
-  }
-
-  @Override
-  public String getDefaultUserViewName() {
-    return getConfig().getDefaultUserViewName();
-  }
-
-  @Override
-  public void setDefaultUserHour24(final boolean val) {
-    throw new RuntimeException("Immutable"); // getConfig().setDefaultUserHour24(val);
-  }
-
-  @Override
-  public boolean getDefaultUserHour24() {
-    return getConfig().getDefaultUserHour24();
-  }
-
-  @Override
-  public void setMaxPublicDescriptionLength(final int val) {
-    throw new RuntimeException("Immutable"); // getConfig().setMaxPublicDescriptionLength(val);
-  }
-
-  @Override
-  public int getMaxPublicDescriptionLength() {
-    return getConfig().getMaxPublicDescriptionLength();
-  }
-
-  @Override
-  public void setMaxUserDescriptionLength(final int val) {
-    throw new RuntimeException("Immutable"); // getConfig().setMaxUserDescriptionLength(val);
-  }
-
-  @Override
-  public int getMaxUserDescriptionLength() {
-    return getConfig().getMaxUserDescriptionLength();
-  }
-
-  @Override
-  public void setMaxUserEntitySize(final Integer val) {
-    throw new RuntimeException("Immutable"); // getConfig().setMaxUserEntitySize(val);
-  }
-
-  @Override
-  public Integer getMaxUserEntitySize() {
-    return getConfig().getMaxUserEntitySize();
-  }
-
-  @Override
-  public void setDefaultUserQuota(final long val) {
-    throw new RuntimeException("Immutable"); // getConfig().setDefaultUserQuota(val);
-  }
-
-  @Override
-  public long getDefaultUserQuota() {
-    return getConfig().getDefaultUserQuota();
-  }
-
-  @Override
-  public void setMaxInstances(final Integer val) {
-    throw new RuntimeException("Immutable"); // getConfig().setMaxInstances(val);
-  }
-
-  @Override
-  public Integer getMaxInstances() {
-    return getConfig().getMaxInstances();
-  }
-
-  @Override
-  public void setMaxAttendeesPerInstance(final Integer val) {
-    throw new RuntimeException("Immutable"); // getConfig().setMaxAttendeesPerInstance(val);
-  }
-
-  @Override
-  public Integer getMaxAttendeesPerInstance() {
-    return getConfig().getMaxAttendeesPerInstance();
-  }
-
-  @Override
-  public void setMinDateTime(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setMinDateTime(val);
-  }
-
-  @Override
-  public String getMinDateTime() {
-    return getConfig().getMinDateTime();
-  }
-
-  @Override
-  public void setMaxDateTime(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setMaxDateTime(val);
-  }
-
-  @Override
-  public String getMaxDateTime() {
-    return getConfig().getMaxDateTime();
-  }
-
-  @Override
-  public void setDefaultFBPeriod(final Integer val) {
-    throw new RuntimeException("Immutable"); // getConfig().setDefaultFBPeriod(val);
-  }
-
-  @Override
-  public Integer getDefaultFBPeriod() {
-    return getConfig().getDefaultFBPeriod();
-  }
-
-  @Override
-  public void setMaxFBPeriod(final Integer val) {
-    throw new RuntimeException("Immutable"); // getConfig().setMaxFBPeriod(val);
-  }
-
-  @Override
-  public Integer getMaxFBPeriod() {
-    return getConfig().getMaxFBPeriod();
-  }
-
-  @Override
-  public void setDefaultWebCalPeriod(final Integer val) {
-    throw new RuntimeException("Immutable"); // getConfig().setDefaultWebCalPeriod(val);
-  }
-
-  @Override
-  public Integer getDefaultWebCalPeriod() {
-    return getConfig().getDefaultWebCalPeriod();
-  }
-
-  @Override
-  public void setMaxWebCalPeriod(final Integer val) {
-    throw new RuntimeException("Immutable"); // getConfig().setMaxWebCalPeriod(val);
-  }
-
-  @Override
-  public Integer getMaxWebCalPeriod() {
-    return getConfig().getMaxWebCalPeriod();
   }
 
   @Override
@@ -325,26 +175,6 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
-  public void setDirectoryBrowsingDisallowed(final boolean val) {
-    throw new RuntimeException("Immutable"); // getConfig().setDirectoryBrowsingDisallowed(val);
-  }
-
-  @Override
-  public boolean getDirectoryBrowsingDisallowed() {
-    return getConfig().getDirectoryBrowsingDisallowed();
-  }
-
-  @Override
-  public void setMaxYears(final int val) {
-    throw new RuntimeException("Immutable"); // getConfig().setMaxYears(val);
-  }
-
-  @Override
-  public int getMaxYears() {
-    return getConfig().getMaxYears();
-  }
-
-  @Override
   public void setUserauthClass(final String val) {
     throw new RuntimeException("Immutable"); // getConfig().setUserauthClass(val);
   }
@@ -393,13 +223,23 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
-  public void setSolrURL(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setSolrURL(val);
+  public void setIndexerURL(final String val) {
+    throw new RuntimeException("Immutable");
   }
 
   @Override
-  public String getSolrURL() {
-    return getConfig().getSolrURL();
+  public String getIndexerURL() {
+    return getConfig().getIndexerURL();
+  }
+
+  @Override
+  public void setIndexerConfig(final String val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public String getIndexerConfig() {
+    return getConfig().getIndexerConfig();
   }
 
   @Override
@@ -413,23 +253,23 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
-  public void setSolrPublicCore(final String val) {
+  public void setPublicIndexName(final String val) {
     throw new RuntimeException("Immutable");
   }
 
   @Override
-  public String getSolrPublicCore() {
-    return getConfig().getSolrPublicCore();
+  public String getPublicIndexName() {
+    return getConfig().getPublicIndexName();
   }
 
   @Override
-  public void setSolrUserCore(final String val) {
+  public void setUserIndexName(final String val) {
     throw new RuntimeException("Immutable");
   }
 
   @Override
-  public String getSolrUserCore() {
-    return getConfig().getSolrUserCore();
+  public String getUserIndexName() {
+    return getConfig().getUserIndexName();
   }
 
   @Override

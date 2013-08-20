@@ -448,13 +448,12 @@ public class RestoreGlobals extends Counters {
   }
 
   /**
-   * @param config
    * @throws Throwable
    */
   public void init() throws Throwable {
     Configurations conf = new CalSvcFactoryDefault().getSystemConfig();
     basicProps = conf.getBasicSystemProperties();
-    syspars = conf.getSystemProperties(true);
+    syspars = conf.getSystemProperties();
   }
 
   private Map<String, BwPrincipal> principalMap = new HashMap<String, BwPrincipal>();

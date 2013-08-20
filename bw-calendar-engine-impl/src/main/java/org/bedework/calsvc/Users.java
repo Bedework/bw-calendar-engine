@@ -195,7 +195,7 @@ class Users extends CalSvcDb implements UsersI {
     user.setLocationAccess(Access.getDefaultPersonalAccess());
     user.setContactAccess(Access.getDefaultPersonalAccess());
 
-    ((BwUser)user).setQuota(getSvc().getSystemProperties().getDefaultUserQuota());
+    ((BwUser)user).setQuota(getSvc().getAuthProperties().getDefaultUserQuota());
 
     user.setPrincipalRef(Util.buildPath(true, userPrincipalRoot, "/", account));
 
@@ -314,7 +314,7 @@ class Users extends CalSvcDb implements UsersI {
 
     BwView view = new BwView();
 
-    view.setName(getSyspars().getDefaultUserViewName());
+    view.setName(getAuthpars().getDefaultUserViewName());
 
     // Add default subscription to the user root.
     view.addCollectionPath(svc.getPrincipalInfo().getCalendarHomePath(principal));
@@ -323,7 +323,7 @@ class Users extends CalSvcDb implements UsersI {
     prefs.setPreferredView(view.getName());
 
     prefs.setPreferredViewPeriod("week");
-    prefs.setHour24(getSyspars().getDefaultUserHour24());
+    prefs.setHour24(getAuthpars().getDefaultUserHour24());
 
     prefs.setScheduleAutoRespond(principal.getKind() == WhoDefs.whoTypeResource);
 

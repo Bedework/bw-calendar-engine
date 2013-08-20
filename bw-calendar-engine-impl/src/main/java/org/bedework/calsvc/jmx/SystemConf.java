@@ -95,16 +95,6 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setDefaultChangesNotifications(final boolean val) {
-    getConfig().setDefaultChangesNotifications(val);
-  }
-
-  @Override
-  public boolean getDefaultChangesNotifications() {
-    return getConfig().getDefaultChangesNotifications();
-  }
-
-  @Override
   public void setRootUsers(final String val) {
     getConfig().setRootUsers(val);
   }
@@ -112,146 +102,6 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   @Override
   public String getRootUsers() {
     return getConfig().getRootUsers();
-  }
-
-  @Override
-  public void setDefaultUserViewName(final String val) {
-    getConfig().setDefaultUserViewName(val);
-  }
-
-  @Override
-  public String getDefaultUserViewName() {
-    return getConfig().getDefaultUserViewName();
-  }
-
-  @Override
-  public void setDefaultUserHour24(final boolean val) {
-    getConfig().setDefaultUserHour24(val);
-  }
-
-  @Override
-  public boolean getDefaultUserHour24() {
-    return getConfig().getDefaultUserHour24();
-  }
-
-  @Override
-  public void setMaxPublicDescriptionLength(final int val) {
-    getConfig().setMaxPublicDescriptionLength(val);
-  }
-
-  @Override
-  public int getMaxPublicDescriptionLength() {
-    return getConfig().getMaxPublicDescriptionLength();
-  }
-
-  @Override
-  public void setMaxUserDescriptionLength(final int val) {
-    getConfig().setMaxUserDescriptionLength(val);
-  }
-
-  @Override
-  public int getMaxUserDescriptionLength() {
-    return getConfig().getMaxUserDescriptionLength();
-  }
-
-  @Override
-  public void setMaxUserEntitySize(final Integer val) {
-    getConfig().setMaxUserEntitySize(val);
-  }
-
-  @Override
-  public Integer getMaxUserEntitySize() {
-    return getConfig().getMaxUserEntitySize();
-  }
-
-  @Override
-  public void setDefaultUserQuota(final long val) {
-    getConfig().setDefaultUserQuota(val);
-  }
-
-  @Override
-  public long getDefaultUserQuota() {
-    return getConfig().getDefaultUserQuota();
-  }
-
-  @Override
-  public void setMaxInstances(final Integer val) {
-    getConfig().setMaxInstances(val);
-  }
-
-  @Override
-  public Integer getMaxInstances() {
-    return getConfig().getMaxInstances();
-  }
-
-  @Override
-  public void setMaxAttendeesPerInstance(final Integer val) {
-    getConfig().setMaxAttendeesPerInstance(val);
-  }
-
-  @Override
-  public Integer getMaxAttendeesPerInstance() {
-    return getConfig().getMaxAttendeesPerInstance();
-  }
-
-  @Override
-  public void setMinDateTime(final String val) {
-    getConfig().setMinDateTime(val);
-  }
-
-  @Override
-  public String getMinDateTime() {
-    return getConfig().getMinDateTime();
-  }
-
-  @Override
-  public void setMaxDateTime(final String val) {
-    getConfig().setMaxDateTime(val);
-  }
-
-  @Override
-  public String getMaxDateTime() {
-    return getConfig().getMaxDateTime();
-  }
-
-  @Override
-  public void setDefaultFBPeriod(final Integer val) {
-    getConfig().setDefaultFBPeriod(val);
-  }
-
-  @Override
-  public Integer getDefaultFBPeriod() {
-    return getConfig().getDefaultFBPeriod();
-  }
-
-  @Override
-  public void setMaxFBPeriod(final Integer val) {
-    getConfig().setMaxFBPeriod(val);
-  }
-
-  @Override
-  public Integer getMaxFBPeriod() {
-    return getConfig().getMaxFBPeriod();
-  }
-
-  @Override
-  public void setDefaultWebCalPeriod(final Integer val) {
-    getConfig().setDefaultWebCalPeriod(val);
-  }
-
-  @Override
-  public Integer getDefaultWebCalPeriod() {
-    return getConfig().getDefaultWebCalPeriod();
-  }
-
-  @Override
-  public void setMaxWebCalPeriod(final Integer val) {
-    getConfig().setMaxWebCalPeriod(val);
-  }
-
-  @Override
-  public Integer getMaxWebCalPeriod() {
-    return getConfig().getMaxWebCalPeriod();
   }
 
   @Override
@@ -345,26 +195,6 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setDirectoryBrowsingDisallowed(final boolean val) {
-    getConfig().setDirectoryBrowsingDisallowed(val);
-  }
-
-  @Override
-  public boolean getDirectoryBrowsingDisallowed() {
-    return getConfig().getDirectoryBrowsingDisallowed();
-  }
-
-  @Override
-  public void setMaxYears(final int val) {
-    getConfig().setMaxYears(val);
-  }
-
-  @Override
-  public int getMaxYears() {
-    return getConfig().getMaxYears();
-  }
-
-  @Override
   public void setUserauthClass(final String val) {
     getConfig().setUserauthClass(val);
   }
@@ -413,13 +243,23 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setSolrURL(final String val) {
-    getConfig().setSolrURL(val);
+  public void setIndexerURL(final String val) {
+    getConfig().setIndexerURL(val);
   }
 
   @Override
-  public String getSolrURL() {
-    return getConfig().getSolrURL();
+  public String getIndexerURL() {
+    return getConfig().getIndexerURL();
+  }
+
+  @Override
+  public void setIndexerConfig(final String val) {
+    getConfig().setIndexerConfig(val);
+  }
+
+  @Override
+  public String getIndexerConfig() {
+    return getConfig().getIndexerConfig();
   }
 
   @Override
@@ -433,23 +273,23 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setSolrPublicCore(final String val) {
-    getConfig().setSolrPublicCore(val);
+  public void setPublicIndexName(final String val) {
+    getConfig().setPublicIndexName(val);
   }
 
   @Override
-  public String getSolrPublicCore() {
-    return getConfig().getSolrPublicCore();
+  public String getPublicIndexName() {
+    return getConfig().getPublicIndexName();
   }
 
   @Override
-  public void setSolrUserCore(final String val) {
-    getConfig().setSolrUserCore(val);
+  public void setUserIndexName(final String val) {
+    getConfig().setUserIndexName(val);
   }
 
   @Override
-  public String getSolrUserCore() {
-    return getConfig().getSolrUserCore();
+  public String getUserIndexName() {
+    return getConfig().getUserIndexName();
   }
 
   @Override

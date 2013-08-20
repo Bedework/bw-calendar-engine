@@ -347,6 +347,8 @@ public class MessageProcessor extends CalSys {
 
       if (indexer == null) {
         indexer = BwIndexerFactory.getIndexer(publick, principal, true,
+                                              getAuthpars(true),
+                                              getAuthpars(false),
                                               getSyspars());
         if (publick) {
           publicIndexer = indexer;

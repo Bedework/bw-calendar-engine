@@ -39,6 +39,7 @@ import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.StartEndComponent;
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
@@ -199,6 +200,8 @@ import java.util.TreeSet;
  */
 public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
   public SystemProperties sysprops;
+
+  public AuthProperties authprops;
 
   /** Constructor
    *
@@ -740,8 +743,8 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
        whole period?
      */
 
-    RecurPeriods rp = RecurUtil.getPeriods(val, getSysprops().getMaxYears(),
-                                           getSysprops().getMaxInstances());
+    RecurPeriods rp = RecurUtil.getPeriods(val, getAuthprops().getMaxYears(),
+                                           getAuthprops().getMaxInstances());
 
     if (rp.instances.isEmpty()) {
       // No instances for an alleged recurring event.
@@ -774,7 +777,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       throwException(new CalFacadeException(t));
     } */
 
-    int maxInstances = getSysprops().getMaxInstances();
+    int maxInstances = getAuthprops().getMaxInstances();
 
     boolean dateOnly = val.getDtstart().getDateType();
 
@@ -2403,8 +2406,8 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
        whole period?
      */
 
-    RecurPeriods rp = RecurUtil.getPeriods(val, getSysprops().getMaxYears(),
-                                           getSysprops().getMaxInstances());
+    RecurPeriods rp = RecurUtil.getPeriods(val, getAuthprops().getMaxYears(),
+                                           getAuthprops().getMaxInstances());
 
     if (rp.instances.isEmpty()) {
       // No instances for an alleged recurring event.
@@ -2422,7 +2425,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       throwException(new CalFacadeException(t));
     } */
 
-    int maxInstances = getSysprops().getMaxInstances();
+    int maxInstances = getAuthprops().getMaxInstances();
 
     boolean dateOnly = val.getDtstart().getDateType();
 

@@ -22,6 +22,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
@@ -54,6 +55,8 @@ public abstract class CalSys {
 
   private String publicCalendarRoot;
 
+  private AuthProperties authpars;
+  private AuthProperties unauthpars;
   private SystemProperties syspars;
   private BasicSystemProperties basicSyspars;
 
@@ -225,6 +228,37 @@ public abstract class CalSys {
     }
 
     return publicCalendarRoot;
+  }
+
+  protected AuthProperties getAuthpars(boolean auth) throws CalFacadeException {
+    CalSvcI svci = null;
+    AuthProperties apars;
+    if (auth) {
+      apars = authpars;
+    } else {
+      apars = unauthpars;
+    }
+
+    if (apars == null) {
+      try {
+        svci = getAdminSvci();
+        apars = svci.getAuthProperties(auth);
+        if (auth) {
+          authpars = apars;
+        } else {
+          unauthpars = apars;
+        }
+      } finally {
+        if (svci != null) {
+          try {
+            close(svci);
+          } finally {
+          }
+        }
+      }
+    }
+
+    return apars;
   }
 
   protected SystemProperties getSyspars() throws CalFacadeException {

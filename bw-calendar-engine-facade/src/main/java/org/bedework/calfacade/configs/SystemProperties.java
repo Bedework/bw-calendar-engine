@@ -72,19 +72,6 @@ public interface SystemProperties extends CalDAVSystemProperties {
  @MBeanInfo("Systm identifier - used for uids etc.")
  String getSystemid();
 
-  /** Set the defaultChangesNotifications
-   *
-   * @param val
-   */
-  void setDefaultChangesNotifications(boolean val);
-
-  /** Get the defaultChangesNotifications
-   *
-   * @return flag
-   */
-  @MBeanInfo("default for change notifications")
-  boolean getDefaultChangesNotifications();
-
   /** Set the root users list. This is a comma separated list of accounts that
    * have superuser status.
    *
@@ -99,69 +86,6 @@ public interface SystemProperties extends CalDAVSystemProperties {
   @MBeanInfo("root users list. This is a comma separated list of accounts that" +
   		" have superuser status")
   String getRootUsers();
-
-  /** Set the user default view name
-   *
-   * @param val    String
-   */
-  void setDefaultUserViewName(String val);
-
-  /** Get the user default view name
-   *
-   * @return String   default view name
-   */
-  @MBeanInfo("user default view name")
-  String getDefaultUserViewName();
-
-  /**
-   * @param val
-   */
-  void setDefaultUserHour24(boolean val);
-
-  /**
-   * @return bool
-   */
-  @MBeanInfo("true for default to 24hr display.")
-  boolean getDefaultUserHour24();
-
-  /** Set the max description length for public events
-   *
-   * @param val    int max
-   */
-  public void setMaxPublicDescriptionLength(int val);
-
-  /**
-   *
-   * @return int
-   */
-  @MBeanInfo("max description length for public events.")
-  int getMaxPublicDescriptionLength();
-
-  /** Set the max description length for user events
-   *
-   * @param val    int max
-   */
-  void setMaxUserDescriptionLength(int val);
-
-  /**
-   *
-   * @return int
-   */
-  @MBeanInfo("max description length for user events.")
-  public int getMaxUserDescriptionLength();
-
-  /** Set the default quota for users. Probably an estimate
-   *
-   * @param val    long default
-   */
-  void setDefaultUserQuota(long val);
-
-  /**
-   *
-   * @return long
-   */
-  @MBeanInfo("Default quota for users. Probably an estimate")
-  long getDefaultUserQuota();
 
   /** Set the calws soap web service WSDL uri - null for no service
    *
@@ -186,19 +110,6 @@ public interface SystemProperties extends CalDAVSystemProperties {
    */
   @MBeanInfo("true if we are NOT including the full tz specification in iCalendar output")
   boolean getTimezonesByReference();
-
-  /** Set the max time span in years for a recurring event
-   *
-   * @param val    int max
-   */
-  void setMaxYears(int val);
-
-  /** Get the max time span in years for a recurring event
-   *
-   * @return int
-   */
-  @MBeanInfo("Max time span in years for a recurring event")
-  int getMaxYears();
 
   /** Set the userauth class
    *
@@ -252,57 +163,70 @@ public interface SystemProperties extends CalDAVSystemProperties {
   @MBeanInfo("usergroups class")
   String getUsergroupsClass();
 
-  /** Set the solr url
+  /** Set the indexer url
    *
    * @param val
    */
-  void setSolrURL(String val);
+  void setIndexerURL(String val);
 
-  /** Get the solr url
+  /** Get the indexer url
    *
    * @return flag
    */
-  @MBeanInfo("solr url")
-  String getSolrURL();
+  @MBeanInfo("indexer url")
+  String getIndexerURL();
 
-  /** Set the solr root
+  /** Set the indexer config location
+   *
+   * @param val
+   */
+  void setIndexerConfig(String val);
+
+  /** Get the indexer config location
+   *
+   * @return location
+   */
+  @MBeanInfo("indexer config location")
+  String getIndexerConfig();
+
+  /** Set the solr admin root
    *
    * @param val
    */
   void setSolrCoreAdmin(String val);
 
-  /** Get the solr Root
+  /** Get the solr admin Root
    *
    * @return Root
    */
-  @MBeanInfo("solr Root")
+  @MBeanInfo("solr core admin")
   String getSolrCoreAdmin();
 
   /** Set the solr public core
    *
    * @param val
    */
-  void setSolrPublicCore(String val);
+  void setPublicIndexName(String val);
 
-  /** Get the solr public core
+  /** Get the public index name
    *
    * @return public core
    */
-  @MBeanInfo("solr public core")
-  String getSolrPublicCore();
+  @MBeanInfo("public index name")
+  String getPublicIndexName();
 
-  /** Set the solr user core
+  /** Set the user index name
    *
    * @param val
    */
-  void setSolrUserCore(String val);
+  void setUserIndexName(String val);
 
-  /** Get the solr user core
+  /** Get the user index name
    *
    * @return user core
    */
-  @MBeanInfo("solr user core")
-  String getSolrUserCore();
+  @MBeanInfo("user index name")
+  String getUserIndexName();
 
   /** Set the supported locales list. This is maintained by getSupportedLocales and
    * setSupportedLocales and is a comma separated list of locales in the usual

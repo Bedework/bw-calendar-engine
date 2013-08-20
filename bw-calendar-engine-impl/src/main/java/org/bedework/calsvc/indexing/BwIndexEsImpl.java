@@ -31,8 +31,6 @@ import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
-import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCategoryFilter;
 import org.bedework.calfacade.filter.BwCollectionFilter;
@@ -52,12 +50,12 @@ import edu.rpi.sss.util.Util;
 import edu.rpi.sss.util.xml.XmlEmit;
 
 import net.fortuna.ical4j.model.Period;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
@@ -83,7 +81,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.servlet.http.HttpServletResponse;
@@ -94,11 +91,12 @@ import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeCalendar;
 import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeCategory;
 import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeEvent;
 
-/**
+/** Implementation of indexer for ElasticSearch
+ *
  * @author Mike Douglass douglm - rpi.edu
  *
  */
-public class BwIndexSolrImpl implements BwIndexer {
+public class BwIndexEsImpl implements BwIndexer {
   private transient Logger log;
 
   private boolean debug;
@@ -123,16 +121,16 @@ public class BwIndexSolrImpl implements BwIndexer {
   //private static final QName solrTagCommit = new QName(null, "commit");
 //  private static final QName solrTagOptimize = new QName(null, "optimize");
 
+  private String solrURL;
+
   private boolean publick;
   private String principal;
 
-  private String targetIndex;
-  private String coreAdminPath;
-  private boolean writeable;
+  private int maxYears;
+  private int maxInstances;
 
-  private AuthProperties authpars;
-  private AuthProperties unauthpars;
-  private SystemProperties syspars;
+  private String targetIndex;
+  private boolean writeable;
 
   /* Used to batch index */
 
@@ -140,44 +138,33 @@ public class BwIndexSolrImpl implements BwIndexer {
    *
    * @param publick - if false we add an owner term to the searches
    * @param principal - who we are searching for
+   * @param serverURL - URL of the server
    * @param writeable - true for an updatable index
-   * @param authpars - for authenticated limits
-   * @param unauthpars - for public limits
-   * @param syspars - for system config info
-   * @param noAdmin - for no administration
-   * @param indexName - explicitly specified
-   * @throws IndexException
+   * @param maxYears - max years for recurrences
+   * @param maxInstances - max instances for recurrences
+   * @param indexName - null for default
+   * @throws edu.rpi.cct.misc.indexing.IndexException
    */
-  public BwIndexSolrImpl(final boolean publick,
-                         final String principal,
-                         final boolean writeable,
-                         final AuthProperties authpars,
-                         final AuthProperties unauthpars,
-                         final SystemProperties syspars,
-                         final boolean noAdmin,
-                         final String indexName) throws IndexException {
+  public BwIndexEsImpl(final boolean publick,
+                       final String principal,
+                       final String serverURL,
+                       final boolean writeable,
+                       final int maxYears,
+                       final int maxInstances,
+                       final String indexName) throws IndexException {
     debug = getLog().isDebugEnabled();
 
     this.publick = publick;
     this.principal = principal;
-    this.syspars = syspars;
-    this.authpars = authpars;
-    this.unauthpars = unauthpars;
+    this.solrURL = solrURL;
     this.writeable = writeable;
+    this.maxYears = maxYears;
+    this.maxInstances = maxInstances;
 
     if (indexName == null) {
-      if (publick) {
-        targetIndex = syspars.getPublicIndexName();
-      } else {
-        targetIndex = syspars.getUserIndexName();
-      }
-      targetIndex = Util.buildPath(true, targetIndex);
+      targetIndex = "";
     } else {
-      targetIndex = Util.buildPath(true, indexName);
-    }
-
-    if (!noAdmin) {
-      coreAdminPath = Util.buildPath(false, syspars.getSolrCoreAdmin());
+      targetIndex = indexName + "/";
     }
   }
 
@@ -375,13 +362,13 @@ public class BwIndexSolrImpl implements BwIndexer {
 
   @Override
   public String newIndex(final String name) throws CalFacadeException {
-    /* See http://wiki.apache.org/solr/CoreAdmin#CREATE
-     * for a description of this.
-     *
-     * We'll create a data directory with the same name as the new core.
-     */
-
     String newName = name + "-" + DateTimeUtil.isoDateTime();
+    targetIndex = newName;
+
+    EsServer server = getServer();
+
+    server.setIndexName(newName);
+
     String encName;
     try {
       encName = URLEncoder.encode(newName,
@@ -391,7 +378,10 @@ public class BwIndexSolrImpl implements BwIndexer {
     }
 
 
-    StringBuilder sb = new StringBuilder("?action=CREATE&name=");
+    StringBuilder sb = new StringBuilder("{\"settings\" : {\n" +
+                                         "        \"number_of_shards\" : 1,\n" +
+                                         "    }\n" +
+                                         "}");
     sb.append(encName);
     sb.append("&instanceDir=");
     sb.append(name);
@@ -409,8 +399,7 @@ public class BwIndexSolrImpl implements BwIndexer {
 //    transient="false"
 
     try {
-      InputStream str = getServer().callForStream(sb.toString(),
-                                                  true); // coreAdmin
+      InputStream str = getServer().callForStream(sb.toString());
 
       if (str == null) {
         return null;
@@ -436,8 +425,7 @@ public class BwIndexSolrImpl implements BwIndexer {
   @Override
   public List<String> listIndexes() throws CalFacadeException {
     try {
-      InputStream str = getServer().callForStream("?action=STATUS",
-                                                  true); // coreAdmin
+      InputStream str = getServer().callForStream("?action=STATUS");
 
       if (str == null) {
         return null;
@@ -495,8 +483,7 @@ public class BwIndexSolrImpl implements BwIndexer {
   private void unloadIndex(final String name) throws CalFacadeException {
 //    try {
       /*InputStream str =*/ getServer().callForStream("?action=UNLOAD&core=" +
-          name + "&deleteIndex=true",
-          true); // coreAdmin
+          name + "&deleteIndex=true");
 
       /*
       if (str == null) {
@@ -539,8 +526,7 @@ public class BwIndexSolrImpl implements BwIndexer {
     sb.append(other);
 
     try {
-      InputStream str = getServer().callForStream(sb.toString(),
-                                                  true); // coreAdmin
+      InputStream str = getServer().callForStream(sb.toString()); // coreAdmin
       if (str != null) {
         return getServer().status;
       }
@@ -879,7 +865,7 @@ public class BwIndexSolrImpl implements BwIndexer {
 
     Collection<Object> vals = sd.getFieldValues("category_uid");
     if (vals != null) {
-      Set<String> catUids = new TreeSet<String>();
+      List<String> catUids = new ArrayList<String>();
 
       for (Object o: vals) {
         catUids.add((String)o);
@@ -1019,7 +1005,7 @@ public class BwIndexSolrImpl implements BwIndexer {
       needAnd = true;
 
       sb.append(" end_utc:[");
-      sb.append(toSolrDate(start));
+      sb.append(start);
       sb.append(" TO *]");
     }
 
@@ -1032,7 +1018,7 @@ public class BwIndexSolrImpl implements BwIndexer {
       needAnd = true;
 
       sb.append(" start_utc:[* TO ");
-      sb.append(toSolrDate(end));
+      sb.append(end);
       sb.append("]");
     }
 
@@ -1057,7 +1043,7 @@ public class BwIndexSolrImpl implements BwIndexer {
    * @param key   Possible Index.Key object for reuse
    * @param sd    The retrieved document
    * @return Index.Key  new or reused object
-   * @throws CalFacadeException
+   * @throws org.bedework.calfacade.exc.CalFacadeException
    */
   private Index.Key makeKey(final Index.Key key,
                             final SolrDocument sd) throws CalFacadeException {
@@ -1111,7 +1097,7 @@ public class BwIndexSolrImpl implements BwIndexer {
    *
    * @param   rec      The record
    * @return  String   String which uniquely identifies the record
-   * @throws IndexException
+   * @throws edu.rpi.cct.misc.indexing.IndexException
    */
   private String makeKeyVal(final Object rec) throws IndexException {
     if (rec instanceof BwCalendar) {
@@ -1168,17 +1154,6 @@ public class BwIndexSolrImpl implements BwIndexer {
     }
 
     /* Emit all instances that aren't overridden. */
-
-    int maxYears;
-    int maxInstances;
-
-    if (ev.getPublick()) {
-      maxYears = unauthpars.getMaxYears();
-      maxInstances = unauthpars.getMaxInstances();
-    } else {
-      maxYears = authpars.getMaxYears();
-      maxInstances = authpars.getMaxInstances();
-    }
 
     RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
 
@@ -1309,17 +1284,6 @@ public class BwIndexSolrImpl implements BwIndexer {
       makeId(xml, key);
 
       /* Delete all instances. */
-
-      int maxYears;
-      int maxInstances;
-
-      if (ev.getPublick()) {
-        maxYears = unauthpars.getMaxYears();
-        maxInstances = unauthpars.getMaxInstances();
-      } else {
-        maxYears = authpars.getMaxYears();
-        maxInstances = authpars.getMaxInstances();
-      }
 
       RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
 
@@ -1515,8 +1479,8 @@ public class BwIndexSolrImpl implements BwIndexer {
 
       indexCategories(xml, cats);
 
-      makeField(xml, "created", toSolrDate(created));
-      makeField(xml, "last_modified", toSolrDate(lastmod));
+      makeField(xml, "created", created);
+      makeField(xml, "last_modified", lastmod);
       makeField(xml, "creator", creator);
       makeField(xml, "owner", owner);
       makeField(xml, "summary", summary);
@@ -1601,40 +1565,10 @@ public class BwIndexSolrImpl implements BwIndexer {
   private void indexDate(final XmlEmit xml,
                          final String prefix,
                          final BwDateTime dt) throws CalFacadeException {
-    makeField(xml, prefix + "utc", toSolrDate(dt.getDate()));
+    makeField(xml, prefix + "utc", dt.getDate());
     makeField(xml, prefix + "local", dt.getDtval());
     makeField(xml, prefix + "tzid", dt.getTzid());
     makeField(xml, prefix + "floating", String.valueOf(dt.getFloating()));
-  }
-
-  private String toSolrDate(final String val) {
-    if (val == null) {
-      return null;
-    }
-
-    // Make into form 1995-12-31T23:59:59Z
-    // from 19951231T235959Z
-    //      0   4 6    1 3
-    StringBuilder sb = new StringBuilder();
-
-    sb.append(val.substring(0, 4));
-    sb.append("-");
-    sb.append(val.substring(4, 6));
-    sb.append("-");
-
-    if (val.length() == 8) {
-      sb.append(val.substring(6));
-      sb.append("T00:00:00.00Z");
-    } else {
-      sb.append(val.substring(6, 11));
-      sb.append(":");
-      sb.append(val.substring(11, 13));
-      sb.append(":");
-      sb.append(val.substring(13, 15));
-      sb.append(".000Z");
-    }
-
-    return sb.toString();
   }
 
   private void makeId(final XmlEmit xml,
@@ -1697,7 +1631,7 @@ public class BwIndexSolrImpl implements BwIndexer {
     }
   }
 
-  SolrServer server;
+  EsServer server;
 
   private int indexAndCommit(final String indexInfo) throws CalFacadeException {
     try {
@@ -1707,10 +1641,9 @@ public class BwIndexSolrImpl implements BwIndexer {
     }
   }
 
-  private SolrServer getServer() {
+  private EsServer getServer() {
     if (server == null) {
-      server = new SolrServer(syspars.getIndexerURL(),
-                              targetIndex, coreAdminPath, getLog());
+      server = new EsServer(solrURL, targetIndex, getLog());
     }
 
     return server;
@@ -1718,32 +1651,33 @@ public class BwIndexSolrImpl implements BwIndexer {
 
   /** CLass to allow us to call the server
    */
-  private static class SolrServer {
+  private static class EsServer {
     private transient Logger log;
 
     private boolean debug;
 
     private String serverUri;
     private String targetIndex;
-    private String coreAdminPath;
-
-    //private static JAXBContext jc;
 
     private HttpPost poster;
     private HttpGet getter;
+    private HttpPut putter;
+
     int status;
     HttpResponse response;
 
-    SolrServer(final String uri,
-               final String targetIndex,
-               final String coreAdminPath,
-               final Logger log) {
+    EsServer(final String uri,
+             final String targetIndex,
+             final Logger log) {
       serverUri = slashIt(uri);
       this.targetIndex = slashIt(targetIndex);
-      this.coreAdminPath = coreAdminPath; // No slash
       this.log = log;
 
       debug = log.isDebugEnabled();
+    }
+
+    public void setIndexName(String name) {
+      targetIndex = slashIt(name);
     }
 
     public int postUpdate(final String xmlUpdate) throws CalFacadeException {
@@ -1792,10 +1726,9 @@ public class BwIndexSolrImpl implements BwIndexer {
       }
     }
 
-    public InputStream callForStream(final String req,
-                                     final boolean coreAdmin) throws CalFacadeException {
+    public InputStream callForStream(final String req) throws CalFacadeException {
       try {
-        doCall(req, coreAdmin, null);
+        doCall(req, null);
 
         if (status != HttpServletResponse.SC_OK) {
           return null;
@@ -1836,7 +1769,7 @@ public class BwIndexSolrImpl implements BwIndexer {
                        final String contentType) throws CalFacadeException {
       try {
         HttpClient client = new DefaultHttpClient();
-        String fullPath = getUrl(false, path);
+        String fullPath = getUrl(path);
 
         //if (debug) {
         //  log.debug("Solr-post: path: " + fullPath + " body: " + body);
@@ -1859,13 +1792,40 @@ public class BwIndexSolrImpl implements BwIndexer {
       }
     }
 
+    private int doPut(final String body,
+                      final String path,
+                      final String contentType) throws CalFacadeException {
+      try {
+        HttpClient client = new DefaultHttpClient();
+        String fullPath = getUrl(path);
+
+        //if (debug) {
+        //  log.debug("Solr-post: path: " + fullPath + " body: " + body);
+        //}
+
+        putter = new HttpPut(fullPath);
+
+        putter.setEntity(new StringEntity(body, contentType, "UTF-8"));
+
+        response = client.execute(putter);
+        status = response.getStatusLine().getStatusCode();
+
+        return status;
+      } catch (CalFacadeException cfe) {
+        throw cfe;
+      } catch (UnknownHostException uhe) {
+        throw new CalFacadeException(uhe);
+      } catch (Throwable t) {
+        throw new CalFacadeException(t);
+      }
+    }
+
     private void doCall(final String req,
-                        final boolean coreAdmin,
                         final String etag) throws CalFacadeException {
       try {
         HttpClient client = new DefaultHttpClient();
 
-        getter = new HttpGet(getUrl(coreAdmin, req));
+        getter = new HttpGet(getUrl(req));
 
         if (etag != null) {
           getter.addHeader(new BasicHeader("If-None-Match", etag));
@@ -1894,19 +1854,14 @@ public class BwIndexSolrImpl implements BwIndexer {
       return s + "/";
     }
 
-    private String getUrl(final boolean coreAdmin,
-                          final String req) throws CalFacadeException {
+    private String getUrl(final String req) throws CalFacadeException {
       if (serverUri == null) {
         throw new CalFacadeException("No server URI defined");
       }
 
       StringBuilder sb = new StringBuilder(serverUri);
 
-      if (coreAdmin) {
-        sb.append(coreAdminPath);
-      } else {
-        sb.append(targetIndex);
-      }
+      sb.append(targetIndex);
 
       sb.append(req);
 

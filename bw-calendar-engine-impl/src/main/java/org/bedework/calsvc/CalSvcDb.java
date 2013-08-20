@@ -27,6 +27,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
@@ -497,6 +498,10 @@ public class CalSvcDb implements Serializable {
 
   protected BasicSystemProperties getBasicSyspars() throws CalFacadeException {
     return getSvc().getBasicSystemProperties();
+  }
+
+  protected AuthProperties getAuthpars() throws CalFacadeException {
+    return getSvc().getAuthProperties();
   }
 
   protected SystemProperties getSyspars() throws CalFacadeException {

@@ -39,6 +39,7 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.SystemProperties;
@@ -334,8 +335,18 @@ public class CalSvc extends CalSvcI {
   }
 
   @Override
+  public AuthProperties getAuthProperties() throws CalFacadeException {
+    return configs.getAuthProperties(authenticated);
+  }
+
+  @Override
+  public AuthProperties getAuthProperties(boolean auth) throws CalFacadeException {
+    return configs.getAuthProperties(auth);
+  }
+
+  @Override
   public SystemProperties getSystemProperties() throws CalFacadeException {
-    return configs.getSystemProperties(authenticated);
+    return configs.getSystemProperties();
   }
 
   @Override
@@ -903,7 +914,7 @@ public class CalSvc extends CalSvcI {
       return max;
     }
 
-    return getSystemProperties().getMaxUserEntitySize();
+    return getAuthProperties().getMaxUserEntitySize();
   }
 
   @Override

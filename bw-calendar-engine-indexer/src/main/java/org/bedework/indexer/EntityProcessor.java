@@ -78,9 +78,11 @@ public class EntityProcessor extends Crawler {
 
       CalSvcI svci = null;
       BwIndexer indexer = BwIndexerFactory.getIndexer(principal,
-                                                      true, getSyspars(),
-                                                      indexRootPath,
-                                                      null);
+                                                      true,
+                                                      getAuthpars(true),
+                                                      getAuthpars(false),
+                                                      getSyspars(),
+                                                      indexRootPath);
 
       try {
         svci = getSvci();

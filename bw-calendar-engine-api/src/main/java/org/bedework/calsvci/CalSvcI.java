@@ -29,6 +29,7 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -80,6 +81,21 @@ public abstract class CalSvcI implements Serializable {
    * @throws CalFacadeException
    */
   public abstract BasicSystemProperties getBasicSystemProperties() throws CalFacadeException;
+
+  /** Return properties about the system that depend on authentication state.
+   *
+   * @return AuthProperties object - never null.
+   * @throws CalFacadeException
+   */
+  public abstract AuthProperties getAuthProperties() throws CalFacadeException;
+
+  /** Return properties about the system that depend on authentication state.
+   *
+   * @param auth - true for auth proiperties false for unauth
+   * @return AuthProperties object - never null.
+   * @throws CalFacadeException
+   */
+  public abstract AuthProperties getAuthProperties(boolean auth) throws CalFacadeException;
 
   /** Return properties about the system.
    *

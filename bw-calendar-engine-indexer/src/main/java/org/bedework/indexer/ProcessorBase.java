@@ -177,9 +177,11 @@ public abstract class ProcessorBase extends CalSys implements Processor {
 
       BwIndexer indexer =
           BwIndexerFactory.getIndexer(principal,
-                                      true, getSyspars(),
-                                      indexRootPath,
-                                      null);
+                                      true,
+                                      getAuthpars(true),
+                                      getAuthpars(false),
+                                      getSyspars(),
+                                      indexRootPath);
 
       indexer.indexEntity(col);
 //      close();

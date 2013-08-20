@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc.jmx;
 
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.Configurations;
@@ -45,9 +46,11 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   private static String basicPropsNamePart = "basicSystem";
 
-  private static String unauthSystemPropsNamePart = "unauthSystem";
+  private static String unauthPropsNamePart = "unauthSystem";
 
-  private static String authSystemPropsNamePart = "authSystem";
+  private static String authPropsNamePart = "authSystem";
+
+  private static String systemPropsNamePart = "system";
 
   private static String unauthCardDavInfoNamePart = "unauthCardDav";
 
@@ -55,9 +58,11 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   private static BasicSystemProperties basicProps;
 
-  private static SystemProperties authSysProperties;
+  private static AuthProperties authProperties;
 
-  private static SystemProperties unAuthSysProperties;
+  private static AuthProperties unAuthProperties;
+
+  private static SystemProperties sysProperties;
 
   private static MailConfigProperties mailProps;
 
@@ -83,9 +88,11 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
     try {
       checkMbeansInstalled();
 
-      authSysProperties = new ROSystemProperties(getSystemProps(true));
+      authProperties = new ROAuthProperties(getAuthProps(true));
 
-      unAuthSysProperties = new ROSystemProperties(getSystemProps(false));
+      unAuthProperties = new ROAuthProperties(getAuthProps(false));
+
+      sysProperties = new ROSystemProperties(getSystemProps());
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
@@ -99,11 +106,16 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   }
 
   @Override
-  public SystemProperties getSystemProperties(final boolean auth) throws CalFacadeException {
+  public AuthProperties getAuthProperties(final boolean auth) throws CalFacadeException {
     if (auth) {
-      return authSysProperties;
+      return authProperties;
     }
-    return unAuthSysProperties;
+    return unAuthProperties;
+  }
+
+  @Override
+  public SystemProperties getSystemProperties() throws CalFacadeException {
+    return sysProperties;
   }
 
   @Override
@@ -131,24 +143,36 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   }
 
   /**
-   * @return name for unauthenticated system properties mbean
+   * @return name for unauthenticated properties mbean
    * @throws CalFacadeException
    */
-  public static ObjectName getUnauthSyspropsName() throws CalFacadeException {
+  public static ObjectName getUnauthpropsName() throws CalFacadeException {
     try {
-      return new ObjectName(SystemConf.getServiceName(unauthSystemPropsNamePart));
+      return new ObjectName(SystemConf.getServiceName(unauthPropsNamePart));
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   /**
-   * @return name for autenticated system properties mbean
+   * @return name for authenticated properties mbean
    * @throws CalFacadeException
    */
-  public static ObjectName getAuthSyspropsName() throws CalFacadeException {
+  public static ObjectName getAuthpropsName() throws CalFacadeException {
     try {
-      return new ObjectName(SystemConf.getServiceName(authSystemPropsNamePart));
+      return new ObjectName(SystemConf.getServiceName(authPropsNamePart));
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  /**
+   * @return name for system properties mbean
+   * @throws CalFacadeException
+   */
+  public static ObjectName getSyspropsName() throws CalFacadeException {
+    try {
+      return new ObjectName(SystemConf.getServiceName(systemPropsNamePart));
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -167,16 +191,22 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       basicProps = new ROBasicSystemProperties(cfg);
       saveConfig();
 
-      /* ------------- System properties -------------------- */
-      SystemConf conf = new SystemConf(unauthSystemPropsNamePart);
-      register(getUnauthSyspropsName(), conf);
+      /* ------------- Auth properties -------------------- */
+      AuthConf conf = new AuthConf(unauthPropsNamePart);
+      register(getUnauthpropsName(), conf);
       conf.loadConfig();
       conf.saveConfig();
 
-      conf = new SystemConf(authSystemPropsNamePart);
-      register(getAuthSyspropsName(), conf);
+      conf = new AuthConf(authPropsNamePart);
+      register(getAuthpropsName(), conf);
       conf.loadConfig();
       conf.saveConfig();
+
+      /* ------------- System properties -------------------- */
+      SystemConf sconf = new SystemConf(systemPropsNamePart);
+      register(getSyspropsName(), sconf);
+      sconf.loadConfig();
+      sconf.saveConfig();
 
       /* ------------- Mailer properties -------------------- */
       MailerConf mc = new MailerConf();
@@ -253,15 +283,27 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
     }
   }
 
-  private SystemProperties getSystemProps(final boolean auth) throws CalFacadeException {
+  private AuthProperties getAuthProps(final boolean auth) throws CalFacadeException {
     try {
       ObjectName mbeanName;
 
       if (!auth) {
-        mbeanName = getUnauthSyspropsName();
+        mbeanName = getUnauthpropsName();
       } else {
-        mbeanName = getAuthSyspropsName();
+        mbeanName = getAuthpropsName();
       }
+
+      return (AuthProperties)getManagementContext().getAttribute(mbeanName, "Config");
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  private SystemProperties getSystemProps() throws CalFacadeException {
+    try {
+      ObjectName mbeanName = getSyspropsName();
 
       return (SystemProperties)getManagementContext().getAttribute(mbeanName, "Config");
     } catch (CalFacadeException cfe) {

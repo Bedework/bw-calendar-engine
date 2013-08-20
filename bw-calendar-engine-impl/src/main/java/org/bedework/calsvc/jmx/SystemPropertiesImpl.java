@@ -41,41 +41,12 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   /* The system id */
   private String systemid;
 
-  private boolean defaultChangesNotifications;
-
   private String rootUsers;
-
-  private String defaultUserViewName;
-
-  private boolean defaultUserHour24 = true;
-
-  private int maxPublicDescriptionLength;
-  private int maxUserDescriptionLength;
-  private Integer maxUserEntitySize;
-  private long defaultUserQuota;
-
-  private Integer maxInstances;
-
-  private int maxYears;
 
   private String userauthClass;
   private String mailerClass;
   private String admingroupsClass;
   private String usergroupsClass;
-
-  private Integer maxAttendeesPerInstance;
-
-  private String minDateTime;
-
-  private String maxDateTime;
-
-  private Integer defaultFBPeriod = 31;
-
-  private Integer maxFBPeriod = 32 * 3;
-
-  private Integer defaultWebCalPeriod = 31;
-
-  private Integer maxWebCalPeriod = 32 * 3;
 
   private String adminContact;
 
@@ -98,13 +69,15 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private boolean directoryBrowsingDisallowed;
 
-  private String solrURL;
+  private String indexerURL;
+
+  private String indexerConfig;
 
   private String solrCoreAdmin;
 
-  private String solrPublicCore;
+  private String publicIndexName;
 
-  private String solrUserCore;
+  private String userIndexName;
 
   private String localeList;
 
@@ -146,16 +119,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setDefaultChangesNotifications(final boolean val) {
-    defaultChangesNotifications = val;
-  }
-
-  @Override
-  public boolean getDefaultChangesNotifications() {
-    return defaultChangesNotifications;
-  }
-
-  @Override
   public void setRootUsers(final String val) {
     rootUsers = val;
   }
@@ -163,200 +126,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   @Override
   public String getRootUsers() {
     return rootUsers;
-  }
-
-  @Override
-  public void setDefaultUserViewName(final String val) {
-    defaultUserViewName = val;
-  }
-
-  @Override
-  public String getDefaultUserViewName() {
-    return defaultUserViewName;
-  }
-
-  @Override
-  public void setDefaultUserHour24(final boolean val) {
-    defaultUserHour24 = val;
-  }
-
-  @Override
-  public boolean getDefaultUserHour24() {
-    return defaultUserHour24;
-  }
-
-  @Override
-  public void setMaxPublicDescriptionLength(final int val) {
-    maxPublicDescriptionLength = val;
-  }
-
-  @Override
-  public int getMaxPublicDescriptionLength() {
-    return maxPublicDescriptionLength;
-  }
-
-  /** Set the max description length for user events
-   *
-   * @param val    int max
-   */
-  @Override
-  public void setMaxUserDescriptionLength(final int val) {
-    maxUserDescriptionLength = val;
-  }
-
-  /**
-   *
-   * @return int
-   */
-  @Override
-  public int getMaxUserDescriptionLength() {
-    return maxUserDescriptionLength;
-  }
-
-  @Override
-  public void setMaxUserEntitySize(final Integer val) {
-    maxUserEntitySize = val;
-  }
-
-  @Override
-  public Integer getMaxUserEntitySize() {
-    return maxUserEntitySize;
-  }
-
-  @Override
-  public void setDefaultUserQuota(final long val) {
-    defaultUserQuota = val;
-  }
-
-  @Override
-  public long getDefaultUserQuota() {
-    return defaultUserQuota;
-  }
-
-  @Override
-  public void setMaxInstances(final Integer val) {
-    maxInstances = val;
-  }
-
-  @Override
-  public Integer getMaxInstances() {
-    return maxInstances;
-  }
-
-  @Override
-  public void setMaxAttendeesPerInstance(final Integer val) {
-    maxAttendeesPerInstance = val;
-  }
-
-  @Override
-  public Integer getMaxAttendeesPerInstance() {
-    return maxAttendeesPerInstance;
-  }
-
-  /**
-   * @param val    minimum date time allowed - null for no limit
-   */
-  @Override
-  public void setMinDateTime(final String val) {
-    minDateTime = val;
-  }
-
-  /**
-   *
-   * @return String   minimum date time allowed - null for no limit
-   */
-  @Override
-  public String getMinDateTime() {
-    return minDateTime;
-  }
-
-  /**
-   * @param val    maximum date time allowed - null for no limit
-   */
-  @Override
-  public void setMaxDateTime(final String val) {
-    maxDateTime = val;
-  }
-
-  /**
-   *
-   * @return String   maximum date time allowed - null for no limit
-   */
-  @Override
-  public String getMaxDateTime() {
-    return maxDateTime;
-  }
-
-  /** Set the c if not specified
-   *
-   * @param val
-   */
-  @Override
-  public void setDefaultFBPeriod(final Integer val) {
-    defaultFBPeriod = val;
-  }
-
-  /** get the default freebusy fetch period if not specified
-   *
-   * @return Integer days
-   */
-  @Override
-  public Integer getDefaultFBPeriod() {
-    return defaultFBPeriod;
-  }
-
-  /** Set the maximum freebusy fetch period
-   *
-   * @param val
-   */
-  @Override
-  public void setMaxFBPeriod(final Integer val) {
-    maxFBPeriod = val;
-  }
-
-  /** get the maximum freebusy fetch period
-   *
-   * @return Integer days
-   */
-  @Override
-  public Integer getMaxFBPeriod() {
-    return maxFBPeriod;
-  }
-
-  /** Set the default webcal fetch period if not specified
-   *
-   * @param val
-   */
-  @Override
-  public void setDefaultWebCalPeriod(final Integer val) {
-    defaultWebCalPeriod = val;
-  }
-
-  /** Get the default webcal fetch period if not specified
-   *
-   * @return Integer days
-   */
-  @Override
-  public Integer getDefaultWebCalPeriod() {
-    return defaultWebCalPeriod;
-  }
-
-  /** Set the maximum webcal fetch period
-   *
-   * @param val
-   */
-  @Override
-  public void setMaxWebCalPeriod(final Integer val) {
-    maxWebCalPeriod = val;
-  }
-
-  /** Set the maximum webcal fetch period
-   *
-   * @return Integer days
-   */
-  @Override
-  public Integer getMaxWebCalPeriod() {
-    return maxWebCalPeriod;
   }
 
   /** Set the administrator contact property
@@ -483,26 +252,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     return timezonesByReference;
   }
 
-  @Override
-  public void setDirectoryBrowsingDisallowed(final boolean val) {
-    directoryBrowsingDisallowed = val;
-  }
-
-  @Override
-  public boolean getDirectoryBrowsingDisallowed() {
-    return directoryBrowsingDisallowed;
-  }
-
-  @Override
-  public void setMaxYears(final int val) {
-    maxYears = val;
-  }
-
-  @Override
-  public int getMaxYears() {
-    return maxYears;
-  }
-
   /** Set the userauth class
    *
    * @param val    String userauth class
@@ -576,13 +325,23 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setSolrURL(final String val) {
-    solrURL = val;
+  public void setIndexerURL(final String val) {
+    indexerURL = val;
   }
 
   @Override
-  public String getSolrURL() {
-    return solrURL;
+  public String getIndexerURL() {
+    return indexerURL;
+  }
+
+  @Override
+  public void setIndexerConfig(final String val) {
+    indexerConfig = val;
+  }
+
+  @Override
+  public String getIndexerConfig() {
+    return indexerConfig;
   }
 
   @Override
@@ -596,23 +355,23 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setSolrPublicCore(final String val) {
-    solrPublicCore = val;
+  public void setPublicIndexName(final String val) {
+    publicIndexName = val;
   }
 
   @Override
-  public String getSolrPublicCore() {
-    return solrPublicCore;
+  public String getPublicIndexName() {
+    return publicIndexName;
   }
 
   @Override
-  public void setSolrUserCore(final String val) {
-    solrUserCore = val;
+  public void setUserIndexName(final String val) {
+    userIndexName = val;
   }
 
   @Override
-  public String getSolrUserCore() {
-    return solrUserCore;
+  public String getUserIndexName() {
+    return userIndexName;
   }
 
   @Override
@@ -684,27 +443,12 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     ToString ts = new ToString(this);
 
     ts.newLine();
-    ts.append("directoryBrowsingDisallowed", getDirectoryBrowsingDisallowed());
-
-    ts.newLine();
     ts.append("name", getName());
     ts.append("tzid", getTzid());
     ts.append("tzServeruri", getTzServeruri());
     ts.append("systemid", getSystemid());
 
     ts.newLine();
-
-    ts.newLine();
-    ts.append("defaultUserViewName", getDefaultUserViewName());
-
-    ts.newLine();
-    ts.append("maxPublicDescriptionLength", getMaxPublicDescriptionLength());
-    ts.append("maxUserDescriptionLength", getMaxUserDescriptionLength());
-    ts.append("maxUserEntitySize", getMaxUserEntitySize());
-    ts.append("defaultUserQuota", getDefaultUserQuota());
-
-    ts.append("maxInstances", getMaxInstances());
-    ts.append("maxYears", getMaxYears());
 
     ts.newLine();
     ts.append("userauthClass", getUserauthClass());
@@ -717,10 +461,11 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
     ts.newLine();
 
-    ts.append("solrURL", getSolrURL());
+    ts.append("indexerURL", getIndexerURL());
+    ts.append("indexerConfig", getIndexerConfig());
     ts.append("solrCoreAdmin", getSolrCoreAdmin());
-    ts.append("solrPublicCore", getSolrPublicCore());
-    ts.append("solrUserCore", getSolrUserCore());
+    ts.append("publicIndexName", getPublicIndexName());
+    ts.append("userIndexName", getUserIndexName());
 
     ts.newLine();
     ts.append("localeList", getLocaleList());
@@ -744,19 +489,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     clone.setTzid(getTzid());
     clone.setSystemid(getSystemid());
 
-    clone.setDefaultUserViewName(getDefaultUserViewName());
-    clone.setDefaultUserHour24(getDefaultUserHour24());
-
-    clone.setDefaultChangesNotifications(getDefaultChangesNotifications());
-
-    clone.setMaxPublicDescriptionLength(getMaxPublicDescriptionLength());
-    clone.setMaxUserDescriptionLength(getMaxUserDescriptionLength());
-    clone.setMaxUserEntitySize(getMaxUserEntitySize());
-    clone.setDefaultUserQuota(getDefaultUserQuota());
-
-    clone.setMaxInstances(getMaxInstances());
-    clone.setMaxYears(getMaxYears());
-
     clone.setUserauthClass(getUserauthClass());
     clone.setMailerClass(getMailerClass());
     clone.setAdmingroupsClass(getAdmingroupsClass());
@@ -765,10 +497,11 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     clone.setLocaleList(getLocaleList());
     clone.setRootUsers(getRootUsers());
 
-    clone.setSolrURL(getSolrURL());
+    clone.setIndexerURL(getIndexerURL());
+    clone.setIndexerConfig(getIndexerConfig());
     clone.setSolrCoreAdmin(getSolrCoreAdmin());
-    clone.setSolrPublicCore(getSolrPublicCore());
-    clone.setSolrUserCore(getSolrUserCore());
+    clone.setPublicIndexName(getPublicIndexName());
+    clone.setUserIndexName(getUserIndexName());
 
     clone.setLocaleList(getLocaleList());
     clone.setEventregAdminToken(getEventregAdminToken());

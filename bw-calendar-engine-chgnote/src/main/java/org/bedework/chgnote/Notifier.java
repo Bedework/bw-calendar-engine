@@ -376,7 +376,7 @@ public class Notifier extends AbstractScheduler {
 
     ci.shared = true;
 
-    boolean defaultEnabled = getSyspars().getDefaultChangesNotifications();
+    boolean defaultEnabled = getAuthpars().getDefaultChangesNotifications();
 
     if (notificationsEnabled(col, defaultEnabled)) {
       ci.addSharee(col.getOwnerHref());

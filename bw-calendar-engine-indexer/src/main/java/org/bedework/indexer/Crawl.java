@@ -18,6 +18,7 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvc.indexing.BwIndexer;
@@ -62,6 +63,8 @@ public class Crawl extends CalSys {
   private boolean doUser;
 
   private SystemProperties sys;
+  private AuthProperties authProps;
+  private AuthProperties unauthProps;
 
   /**
    * @param adminAccount
@@ -95,6 +98,8 @@ public class Crawl extends CalSys {
       svci = getAdminSvci();
 
       sys = svci.getSystemProperties();
+      authProps = svci.getAuthProperties(true);
+      unauthProps = svci.getAuthProperties(false);
     } finally {
       close(svci);
     }
@@ -184,9 +189,9 @@ public class Crawl extends CalSys {
    * @throws CalFacadeException
    */
   public List<String> listIndexes() throws CalFacadeException {
-    BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, false, sys,
-                                                sys.getSolrPublicCore(),
-                                                sys.getSolrCoreAdmin());
+    BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, false,
+                                                authProps, unauthProps,
+                                                sys, null);
 
     return idx.listIndexes();
   }
@@ -197,14 +202,14 @@ public class Crawl extends CalSys {
    * @throws CalFacadeException
    */
   public List<String> purgeIndexes() throws CalFacadeException {
-    List<String> preserve = new ArrayList<String>();
+    List<String> preserve = new ArrayList<>();
 
-    preserve.add(sys.getSolrPublicCore());
-    preserve.add(sys.getSolrUserCore());
+    preserve.add(sys.getPublicIndexName());
+    preserve.add(sys.getUserIndexName());
 
-    BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, false, sys,
-                                                sys.getSolrPublicCore(),
-                                                sys.getSolrCoreAdmin());
+    BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, false,
+                                                authProps, unauthProps,
+                                                sys, null);
 
     return idx.purgeIndexes(preserve);
   }
@@ -215,16 +220,17 @@ public class Crawl extends CalSys {
     if (doUser) {
       // Switch user indexes.
 
-      if (sys.getSolrUserCore() == null) {
+      if (sys.getUserIndexName() == null) {
         outErr(cr, "No user index core defined in system properties");
         throw new CalFacadeException("No user index core defined in system properties");
       }
 
-      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true, sys,
-                                                  idxs.userIndex,
-                                                  sys.getSolrCoreAdmin());
+      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
+                                                  authProps, unauthProps,
+                                                  sys,
+                                                  idxs.userIndex);
 
-      idxs.userIndex = idx.newIndex(sys.getSolrUserCore());
+      idxs.userIndex = idx.newIndex(sys.getUserIndexName());
 
       setStatus(cr, "Switched solr core to " + idxs.userIndex);
     }
@@ -232,16 +238,17 @@ public class Crawl extends CalSys {
     if (doPublic) {
       // Switch public indexes.
 
-      if (sys.getSolrPublicCore() == null) {
+      if (sys.getPublicIndexName() == null) {
         outErr(cr, "No public index core defined in system properties");
         throw new CalFacadeException("No public index core defined in system properties");
       }
 
-      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true, sys,
-                                                  idxs.publicIndex,
-                                                  sys.getSolrCoreAdmin());
+      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
+                                                  authProps, unauthProps,
+                                                  sys,
+                                                  idxs.publicIndex);
 
-      idxs.publicIndex = idx.newIndex(sys.getSolrPublicCore());
+      idxs.publicIndex = idx.newIndex(sys.getPublicIndexName());
 
       setStatus(cr, "Switched solr core to " + idxs.publicIndex);
     }
@@ -255,19 +262,21 @@ public class Crawl extends CalSys {
      */
 
     if (doUser) {
-      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true, sys,
-                                                  idxs.userIndex,
-                                                  sys.getSolrCoreAdmin());
+      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
+                                                  authProps, unauthProps,
+                                                  sys,
+                                                  idxs.userIndex);
 
-      idx.swapIndex(idxs.userIndex, sys.getSolrUserCore());
+      idx.swapIndex(idxs.userIndex, sys.getUserIndexName());
     }
 
     if (doPublic) {
-      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true, sys,
-                                                  idxs.publicIndex,
-                                                  sys.getSolrCoreAdmin());
+      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
+                                                  authProps, unauthProps,
+                                                  sys,
+                                                  idxs.publicIndex);
 
-      idx.swapIndex(idxs.publicIndex, sys.getSolrPublicCore());
+      idx.swapIndex(idxs.publicIndex, sys.getPublicIndexName());
     }
   }
 
