@@ -31,6 +31,8 @@ import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.configs.AuthProperties;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCategoryFilter;
 import org.bedework.calfacade.filter.BwCollectionFilter;
@@ -47,49 +49,65 @@ import edu.rpi.cmt.access.PrivilegeDefs;
 import edu.rpi.cmt.calendar.IcalDefs;
 import edu.rpi.sss.util.DateTimeUtil;
 import edu.rpi.sss.util.Util;
-import edu.rpi.sss.util.xml.XmlEmit;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.fortuna.ical4j.model.Period;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HTTP;
 import org.apache.log4j.Logger;
-import org.apache.solr.client.solrj.impl.XMLResponseParser;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
-import org.apache.solr.common.util.NamedList;
-import org.apache.solr.common.util.SimpleOrderedMap;
+import org.elasticsearch.ElasticSearchException;
+import org.elasticsearch.action.ActionFuture;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
+import org.elasticsearch.action.admin.indices.alias.get.IndicesGetAliasesRequestBuilder;
+import org.elasticsearch.action.admin.indices.alias.get.IndicesGetAliasesResponse;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.status.IndicesStatusRequestBuilder;
+import org.elasticsearch.action.admin.indices.status.IndicesStatusResponse;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
+import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.client.IndicesAdminClient;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.index.query.AndFilterBuilder;
+import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.OrFilterBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeFilterBuilder;
+import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHitField;
+import org.elasticsearch.search.SearchHits;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
-import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeCalendar;
-import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeCategory;
-import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeEvent;
+import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeCalendar;
+import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeCategory;
+import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeEvent;
 
 /** Implementation of indexer for ElasticSearch
  *
@@ -103,34 +121,36 @@ public class BwIndexEsImpl implements BwIndexer {
 
   private BwIndexKey keyConverter = new BwIndexKey();
 
-  private String curQuery;
-  private SearchLimits curLimits;
+  /* For paged queries */
+  private QueryBuilder curQuery;
+  private FilterBuilder curFilter;
 
-  private StringWriter xmlWtr = null;
   private int batchMaxSize = 0;
   private int batchCurSize = 0;
-  private XmlEmit batch;
 
   private Object batchLock = new Object();
 
-  private static final QName solrTagAdd = new QName(null, "add");
-  private static final QName solrTagDelete = new QName(null, "delete");
-  private static final QName solrTagDoc = new QName(null, "doc");
-  private static final QName solrTagField = new QName(null, "field");
-  private static final QName solrTagId = new QName(null, "id");
-  //private static final QName solrTagCommit = new QName(null, "commit");
-//  private static final QName solrTagOptimize = new QName(null, "optimize");
+  // Types of entity we index
+  private static final String docTypeEvent = "event";
+  private static final String docTypeCollection = "collection";
+  private static final String docTypeCategory = "category";
 
-  private String solrURL;
+  private ObjectMapper om;
 
   private boolean publick;
   private String principal;
 
-  private int maxYears;
-  private int maxInstances;
+  private String host;
+  private int port = 9300;
+
+  private static Client theClient;
 
   private String targetIndex;
   private boolean writeable;
+
+  private AuthProperties authpars;
+  private AuthProperties unauthpars;
+  private SystemProperties syspars;
 
   /* Used to batch index */
 
@@ -138,33 +158,66 @@ public class BwIndexEsImpl implements BwIndexer {
    *
    * @param publick - if false we add an owner term to the searches
    * @param principal - who we are searching for
-   * @param serverURL - URL of the server
    * @param writeable - true for an updatable index
-   * @param maxYears - max years for recurrences
-   * @param maxInstances - max instances for recurrences
-   * @param indexName - null for default
-   * @throws edu.rpi.cct.misc.indexing.IndexException
+   * @param authpars - for authenticated limits
+   * @param unauthpars - for public limits
+   * @param syspars - for system config info
+   * @param noAdmin - for no administration
+   * @param indexName - explicitly specified
+   * @throws IndexException
    */
   public BwIndexEsImpl(final boolean publick,
                        final String principal,
-                       final String serverURL,
                        final boolean writeable,
-                       final int maxYears,
-                       final int maxInstances,
+                       final AuthProperties authpars,
+                       final AuthProperties unauthpars,
+                       final SystemProperties syspars,
+                       final boolean noAdmin,
                        final String indexName) throws IndexException {
     debug = getLog().isDebugEnabled();
 
     this.publick = publick;
     this.principal = principal;
-    this.solrURL = solrURL;
+    this.syspars = syspars;
+    this.authpars = authpars;
+    this.unauthpars = unauthpars;
     this.writeable = writeable;
-    this.maxYears = maxYears;
-    this.maxInstances = maxInstances;
+
+    String url = syspars.getIndexerURL();
+
+    if (url == null) {
+      host = "localhost";
+    } else {
+      int pos = url.indexOf(":");
+
+      if (pos < 0) {
+        host = url;
+      } else {
+        host = url.substring(0, pos);
+        if (pos < url.length()) {
+          port = Integer.valueOf(url.substring(pos + 1));
+        }
+      }
+    }
+
+    om = new ObjectMapper();
+
+    /* Don't use dates in json - still issues with timezones ironically */
+    //DateFormat df = new SimpleDateFormat("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
+
+    //om.setDateFormat(df);
+
+    om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     if (indexName == null) {
-      targetIndex = "";
+      if (publick) {
+        targetIndex = syspars.getPublicIndexName();
+      } else {
+        targetIndex = syspars.getUserIndexName();
+      }
+      targetIndex = Util.buildPath(false, targetIndex);
     } else {
-      targetIndex = indexName + "/";
+      targetIndex = Util.buildPath(false, indexName);
     }
   }
 
@@ -175,9 +228,12 @@ public class BwIndexEsImpl implements BwIndexer {
   public void setBatchSize(final int val) {
     batchMaxSize = val;
     batchCurSize = 0;
+
+    /* XXX later
     if (batchMaxSize > 1) {
       batch = new XmlEmit();
     }
+    */
   }
 
   /* (non-Javadoc)
@@ -194,42 +250,39 @@ public class BwIndexEsImpl implements BwIndexer {
   public void flush() throws CalFacadeException {
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvc.indexing.BwIndexer#getKeys(int, edu.rpi.cct.misc.indexing.Index.Key[])
-   */
   @Override
-  public int getKeys(final int n, final Index.Key[] keys) throws CalFacadeException {
-    String from = null;
-    String to = null;
+  public long getKeys(final long n,
+                      final Index.Key[] keys) throws CalFacadeException {
+    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
-    if (curLimits !=null) {
-      from = curLimits.fromDate;
-      to = curLimits.toDate;
+    SearchResponse resp = srb.setSearchType(SearchType.COUNT)
+            .setScroll(new TimeValue(60000))
+            .setQuery(curQuery)
+            .setFilter(curFilter).execute().actionGet();
+
+    if (resp.status() != RestStatus.OK) {
+      if (debug) {
+        debug("Search returned status " + resp.status());
+      }
     }
 
-    SolrDocumentList sdl = search(curQuery, from,
-                                  to,
-                                  n, keys.length);
+    SearchHits hits = resp.getHits();
 
-    if (sdl == null) {
+    if ((hits.getHits() == null) ||
+            (hits.getHits().length == 0)) {
       return 0;
     }
 
-    int num = sdl.size();
+    int num = hits.getHits().length;
     if (keys.length < num) {
       // Bad result?
       num = keys.length;
     }
 
     for (int i = 0; i < num; i++) {
-      SolrDocument sd = sdl.get(i);
+      SearchHit hit = hits.getAt(i);
 
-      if (sd == null) {
-        // Shouldn't happen?
-        continue;
-      }
-
-      keys[i] = makeKey(keys[i], sd);
+      keys[i] = makeKey(keys[i], hit);
     }
 
     return num;
@@ -241,6 +294,7 @@ public class BwIndexEsImpl implements BwIndexer {
   @Override
   public void indexEntity(final Object rec) throws CalFacadeException {
     try {
+      /* XXX later with batch
       XmlEmit xml;
 
       if (batchMaxSize > 0) {
@@ -265,35 +319,26 @@ public class BwIndexEsImpl implements BwIndexer {
 
         return;
       }
+      */
 
       // Unbatched
 
-      xml = new XmlEmit();
-      xmlWtr = new StringWriter();
-      xml.startEmit(xmlWtr);
+      XContentBuilder builder = newBuilder();
 
-      /* Delete it first - we have issues with null fields. Also watch for
-       * a non-recurring event being converted to a recurring event */
-      xml.openTag(solrTagDelete);
+      builder.startObject();
 
-      unindex(xml, rec);
+      index(builder, rec);
 
-      xml.closeTag(solrTagDelete);
+      builder.endObject();
 
-      indexAndCommit(xmlWtr.toString());
-
-      xml = new XmlEmit();
-      xmlWtr = new StringWriter();
-      xml.startEmit(xmlWtr);
-      xml.openTag(solrTagAdd);
-
-      index(xml, rec);
-
-      xml.closeTag(solrTagAdd);
-
-      indexAndCommit(xmlWtr.toString());
-    } catch (IOException e) {
-      throw new CalFacadeException(e);
+      UpdateRequestBuilder req = getClient().prepareUpdate(targetIndex,
+                                                    getType(rec),
+                                                    makeKeyVal(rec));
+      UpdateResponse resp = req.setDoc(builder)
+              .setDocAsUpsert(true)
+              .execute().actionGet();
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
     }
   }
 
@@ -302,54 +347,47 @@ public class BwIndexEsImpl implements BwIndexer {
    */
   @Override
   public void unindexEntity(final Object rec) throws CalFacadeException {
-    try {
+    //try {
       // Always unbatched
 
-      XmlEmit xml = new XmlEmit();
-      xmlWtr = new StringWriter();
-      xml.startEmit(xmlWtr);
+      List<TypeId> tids = makeKeys(rec);
 
-      xml.openTag(solrTagDelete);
+      // XXX Should use a batch for large number
+      for (TypeId tid: tids) {
+        DeleteResponse resp = getClient().prepareDelete(targetIndex,
+                                                        tid.type,
+                                                        tid.id).execute().actionGet();
 
-      unindex(xml, rec);
-
-      xml.closeTag(solrTagDelete);
-
-      indexAndCommit(xmlWtr.toString());
-    } catch (IOException e) {
-      throw new CalFacadeException(e);
-    }
+        // XXX process response
+      }
+    //} catch (IOException e) {
+     //throw new CalFacadeException(e);
+    //}
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvc.indexing.BwIndexer#search(java.lang.String, edu.rpi.cct.misc.indexing.SearchLimits)
-   */
   @Override
-  public int search(final String query,
-                    final SearchLimits limits) throws CalFacadeException {
-    if (publick) {
-      curQuery = query;
-    } else {
-      curQuery = "{!term f=owner}\"" + principal + "\" AND (" + query + ")";
+  public long search(final String query,
+                     final SearchLimits limits) throws CalFacadeException {
+    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+
+    curQuery = QueryBuilders.queryString(query);
+    srb.setQuery(curQuery);
+
+    curFilter = addPrincipal(null);
+
+    curFilter = addDateRangeFilter(curFilter, limits);
+
+    SearchResponse resp = srb.setSearchType(SearchType.COUNT)
+            .setScroll(new TimeValue(60000))
+            .setFilter(curFilter).execute().actionGet();
+
+    if (resp.status() != RestStatus.OK) {
+      if (debug) {
+        debug("Search returned status " + resp.status());
+      }
     }
 
-    curLimits = limits;
-
-    String from = null;
-    String to = null;
-
-    if (curLimits !=null) {
-      from = curLimits.fromDate;
-      to = curLimits.toDate;
-    }
-
-    SolrDocumentList sdl = search(curQuery, from, to, 0, 0);
-
-    if (sdl == null) {
-      return 0;
-    }
-
-    return (int)sdl.getNumFound();
+    return resp.getHits().getTotalHits();
   }
 
   /* (non-Javadoc)
@@ -362,101 +400,56 @@ public class BwIndexEsImpl implements BwIndexer {
 
   @Override
   public String newIndex(final String name) throws CalFacadeException {
-    String newName = name + "-" + DateTimeUtil.isoDateTime();
-    targetIndex = newName;
-
-    EsServer server = getServer();
-
-    server.setIndexName(newName);
-
-    String encName;
+    CreateIndexResponse resp = null;
     try {
-      encName = URLEncoder.encode(newName,
-                                  HTTP.DEFAULT_CONTENT_CHARSET);
-    } catch (UnsupportedEncodingException Uee) {
-      throw new CalFacadeException(Uee);
-    }
+      String newName = name + newIndexSuffix();
+      targetIndex = newName;
 
+      IndicesAdminClient idx = getAdminIdx();
 
-    StringBuilder sb = new StringBuilder("{\"settings\" : {\n" +
-                                         "        \"number_of_shards\" : 1,\n" +
-                                         "    }\n" +
-                                         "}");
-    sb.append(encName);
-    sb.append("&instanceDir=");
-    sb.append(name);
-    sb.append("/&dataDir=");
-    sb.append(encName);
-    sb.append("/data");
-//    sb.append("/&config=../");
-//    sb.append(name);
-//    sb.append("/conf/solrconfig.xml");
-//    sb.append("&schema=../");
-//    sb.append(name);
-//    sb.append("/conf/schema.xml");
+      CreateIndexRequestBuilder cirb = idx.prepareCreate(newName);
+      CreateIndexRequest cir = cirb.request();
 
-//    loadOnStartup="true"
-//    transient="false"
+      File f = new File(syspars.getIndexerConfig());
 
-    try {
-      InputStream str = getServer().callForStream(sb.toString());
+      cir.source(new FileReader(f).toString().getBytes());
 
-      if (str == null) {
-        return null;
-      }
+      ActionFuture<CreateIndexResponse> af = idx.create(cir);
 
-      XMLResponseParser parser = new XMLResponseParser();
-
-      NamedList<Object> resp = parser.processResponse(new InputStreamReader(str));
-
-      SimpleOrderedMap sol = (SimpleOrderedMap)resp.get("responseHeader");
-
-      int status = (Integer)sol.get("status");
-      if (debug) {
-
-      }
+      resp = af.actionGet();
 
       return newName;
-    } finally {
-      getServer().close();
+    } catch (ElasticSearchException ese) {
+      // Failed somehow
+      error(ese);
+      return null;
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
     }
   }
 
   @Override
   public List<String> listIndexes() throws CalFacadeException {
+    List<String> res = new ArrayList<String>();
+
     try {
-      InputStream str = getServer().callForStream("?action=STATUS");
+      IndicesAdminClient idx = getAdminIdx();
 
-      if (str == null) {
-        return null;
-      }
+      IndicesStatusRequestBuilder isrb= idx.prepareStatus(Strings.EMPTY_ARRAY);
 
-      XMLResponseParser parser = new XMLResponseParser();
+      ActionFuture<IndicesStatusResponse> sr = idx.status(isrb.request());
+      IndicesStatusResponse sresp  = sr.actionGet();
 
-      NamedList<Object> resp = parser.processResponse(new InputStreamReader(str));
-
-      @SuppressWarnings("unchecked")
-      NamedList<Object> st = (NamedList<Object>)resp.get("status");
-
-      List<String> res = new ArrayList<String>();
-
-      for (Map.Entry<String, Object> entry: st) {
-        res.add(entry.getKey());
-      }
-
-      if (debug) {
-
-      }
-
-      return res;
-    } finally {
-      getServer().close();
+      return new ArrayList<String>(sresp.getIndices().keySet());
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
     }
   }
 
   @Override
   public List<String> purgeIndexes(final List<String> preserve) throws CalFacadeException {
-    try {
       List<String> indexes = listIndexes();
       List<String> purged = new ArrayList<String>();
 
@@ -475,75 +468,57 @@ public class BwIndexEsImpl implements BwIndexer {
       }
 
       return purged;
-    } finally {
-      getServer().close();
-    }
   }
 
   private void unloadIndex(final String name) throws CalFacadeException {
-//    try {
-      /*InputStream str =*/ getServer().callForStream("?action=UNLOAD&core=" +
-          name + "&deleteIndex=true");
-
-      /*
-      if (str == null) {
-        return null;
-      }
-
-      XMLResponseParser parser = new XMLResponseParser();
-
-      NamedList<Object> resp = parser.processResponse(new InputStreamReader(str));
-
-      @SuppressWarnings("unchecked")
-      NamedList<Object> st = (NamedList<Object>)resp.get("status");
-
-      List<String> res = new ArrayList<String>();
-
-      for (Map.Entry<String, Object> entry: st) {
-        res.add(entry.getKey());
-      }
-
-      if (debug) {
-
-      }
-
-      return res;
-    } finally {
-      getServer().close();
-    }*/
   }
 
   @Override
   public int swapIndex(final String index,
                        final String other) throws CalFacadeException {
-    /* See http://wiki.apache.org/solr/CoreAdmin#SWAP
-     * for a description of this.
-     */
-
-    StringBuilder sb = new StringBuilder("?action=SWAP&core=");
-    sb.append(index);
-    sb.append("&other=");
-    sb.append(other);
-
+    IndicesAliasesResponse resp = null;
     try {
-      InputStream str = getServer().callForStream(sb.toString()); // coreAdmin
-      if (str != null) {
-        return getServer().status;
+      /* Other is the alias name - index is the index we were just indexing into
+       */
+
+      IndicesAdminClient idx = getAdminIdx();
+
+      List<String> indices = listIndexes();
+
+      IndicesGetAliasesRequestBuilder igarb = idx.prepareGetAliases(
+              other);
+
+      ActionFuture<IndicesGetAliasesResponse> getAliasesAf = idx.getAliases(
+              igarb.request());
+      IndicesGetAliasesResponse garesp = getAliasesAf.actionGet();
+
+      Map<String, List<AliasMetaData>> aliasesmeta = garesp.getAliases();
+
+      IndicesAliasesRequestBuilder iarb = idx.prepareAliases();
+
+      for (String indexName: aliasesmeta.keySet()) {
+        for (AliasMetaData amd: aliasesmeta.get(indexName)) {
+          if(amd.getAlias().equals(other)) {
+            iarb.removeAlias(indexName, other);
+          }
+        }
       }
 
-      XMLResponseParser parser = new XMLResponseParser();
+      iarb.addAlias(index, other);
 
-      NamedList<Object> resp = parser.processResponse(new InputStreamReader(str));
+      ActionFuture<IndicesAliasesResponse> af = idx.aliases(iarb.request());
 
-      SolrDocumentList sdl = (SolrDocumentList)resp.get("response");
-
-      if (debug) {
-
-      }
+      resp = af.actionGet();
 
       return 0;
-    } finally {
-      getServer().close();
+    } catch (ElasticSearchException ese) {
+      // Failed somehow
+      error(ese);
+      return -1;
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
     }
   }
 
@@ -556,55 +531,41 @@ public class BwIndexEsImpl implements BwIndexer {
   public BwCategory fetchCat(final String field,
                              final String val)
           throws CalFacadeException {
-    StringBuilder query = new StringBuilder();
+    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
-    if (!publick) {
-      query.append("{!term f=owner}\"");
-      query.append(principal);
-      query.append("\" AND ");
-    }
+    FilterBuilder fb = addPrincipal(addTerm(null, field, val));
 
-    query.append("itemType:");
-    query.append(itemTypeCategory);
+    srb.setTypes(docTypeCategory);
 
-    query.append(" AND ");
-    query.append(field);
-    query.append(":\"");
-    query.append(val);
-    query.append("\"");
+    SearchResponse response = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
+            .setFilter(fb)
+            .setFrom(0).setSize(60).setExplain(true)
+            .execute()
+            .actionGet();
 
-    List<BwCategory> res = new ArrayList<>();
+    SearchHits hits = response.getHits();
 
-    SolrDocumentList sdl = search(query.toString(),
-                                  null,
-                                  null,
-                                  0,
-                                  2);
-    if (Util.isEmpty(sdl)) {
+    //Break condition: No hits are returned
+    if (hits.hits().length == 0) {
       return null;
     }
 
-    if (sdl.size() > 1) {
+    if (hits.getTotalHits() != 1) {
       error("Multiple categories with field " + field +
-            " value " + val);
+                    " value " + val);
       return null;
     }
 
-    return makeCat(sdl.get(0));
+    return makeCat(hits.hits()[0]);
   }
 
   @Override
   public List<BwCategory> fetchAllCats() throws CalFacadeException {
-    StringBuilder query = new StringBuilder();
+    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
-    if (!publick) {
-      query.append("{!term f=owner}\"");
-      query.append(principal);
-      query.append("\" AND ");
-    }
+    srb.setTypes(docTypeCategory);
 
-    query.append("itemType:");
-    query.append(itemTypeCategory);
+    FilterBuilder fb = addPrincipal(null);
 
     int tries = 0;
     int ourPos = 0;
@@ -612,24 +573,42 @@ public class BwIndexEsImpl implements BwIndexer {
 
     List<BwCategory> res = new ArrayList<>();
 
+    SearchResponse scrollResp = srb.setSearchType(SearchType.SCAN)
+            .setScroll(new TimeValue(60000))
+            .setFilter(fb)
+            .setSize(ourCount).execute().actionGet(); //ourCount hits per shard will be returned for each scroll
+
+    if (scrollResp.status() != RestStatus.OK) {
+      if (debug) {
+        debug("Search returned status " + scrollResp.status());
+      }
+    }
+
     for (;;) {
       if (tries > absoluteMaxTries) {
         // huge count or we screwed up
-        warn("Solr indexer: too many tries");
+        warn("Indexer: too many tries");
         break;
       }
 
-      SolrDocumentList sdl = search(query.toString(),
-                                    null,
-                                    null,
-                                    ourPos,
-                                    ourCount);
-      if (Util.isEmpty(sdl)) {
+      scrollResp = getClient().prepareSearchScroll(scrollResp.getScrollId())
+              .setScroll(new TimeValue(600000)).execute().actionGet();
+      if (scrollResp.status() != RestStatus.OK) {
+        if (debug) {
+          debug("Search returned status " + scrollResp.status());
+        }
+      }
+
+      SearchHits hits = scrollResp.getHits();
+
+      //Break condition: No hits are returned
+      if (hits.hits().length == 0) {
         break;
       }
 
-      for (SolrDocument sd: sdl) {
-        BwCategory cat = makeCat(sd);
+      for (SearchHit hit : hits) {
+        //Handle the hit...
+        BwCategory cat = makeCat(hit);
         res.add(cat);
         ourPos++;
       }
@@ -647,11 +626,11 @@ public class BwIndexEsImpl implements BwIndexer {
   public Set<EventInfo> fetch(final FilterBase filter,
                               final String start,
                               final String end,
-                              final Holder<Integer> found,
-                              final int pos,
+                              final Holder<Long> found,
+                              final long pos,
                               final int count,
                               final AccessChecker accessCheck) throws CalFacadeException {
-    int ourPos = pos;
+    long ourPos = pos;
     int ourCount = count;
 
     if ((ourCount < 0) | (ourCount > maxFetchCount)) {
@@ -662,62 +641,66 @@ public class BwIndexEsImpl implements BwIndexer {
     int tries = 0;
     Set<EventInfo> res = new ConcurrentSkipListSet<>();
 
-    StringBuilder query = new StringBuilder("itemType:");
-    query.append(itemTypeEvent);
+    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+
+    srb.setTypes(docTypeEvent);
+
+    FilterBuilder fb = null;
 
     if (filter != null) {
-      StringBuilder sb = new StringBuilder();
+      fb = makeFilter(filter);
+    }
 
-      makeQuery(sb, filter);
+    fb = addPrincipal(fb);
 
-      if (sb.length() > 0) {
-        query.append(" AND (");
-        query.append(sb);
-        query.append(")");
+    long toFetch = count;
+
+    SearchResponse scrollResp = srb.setSearchType(SearchType.SCAN)
+            .setScroll(new TimeValue(60000))
+            .setFilter(fb)
+            .setSize(ourCount).execute().actionGet(); //ourCount hits per shard will be returned for each scroll
+
+    if (scrollResp.status() != RestStatus.OK) {
+      if (debug) {
+        debug("Search returned status " + scrollResp.status());
       }
     }
 
-    if (!publick) {
-      query.insert(0, "{!term f=owner}\"" + principal + "\" AND (");
-      query.append(")");
-    }
-
-    int toFetch = count;
+    //Scroll until no hits are returned
 
     while ((toFetch < 0) || (fetched < toFetch)) {
       if (tries > absoluteMaxTries) {
         // huge count or we screwed up
-        warn("Solr indexer: too many tries");
+        warn("Indexer: too many tries");
         break;
       }
 
-      SolrDocumentList sdl = search(query.toString(),
-                                    start,
-                                    end,
-                                    ourPos,
-                                    ourCount);
-      if (sdl == null) {
-        if (found != null) {
-          found.value = 0;
+      scrollResp = getClient().prepareSearchScroll(scrollResp.getScrollId())
+              .setScroll(new TimeValue(600000)).execute().actionGet();
+      if (scrollResp.status() != RestStatus.OK) {
+        if (debug) {
+          debug("Search returned status " + scrollResp.status());
         }
-
-        break;
       }
+
+      SearchHits hits = scrollResp.getHits();
 
       if (toFetch < 0) {
-        toFetch = (int)sdl.getNumFound();
+        toFetch = hits.getTotalHits();
       }
 
       if (found != null) {
         found.value = toFetch;
       }
 
-      if (Util.isEmpty(sdl)) {
+      //Break condition: No hits are returned
+      if (hits.hits().length == 0) {
         break;
       }
 
-      for (SolrDocument sd: sdl) {
-        EventInfo ei = makeEvent(sd);
+      for (SearchHit hit : hits) {
+        //Handle the hit...
+        EventInfo ei = makeEvent(hit);
         res.add(ei);
         fetched++;
         ourPos++;
@@ -746,66 +729,55 @@ public class BwIndexEsImpl implements BwIndexer {
    *                   private methods
    * ======================================================================== */
 
-  private void makeQuery(final StringBuilder sb,
-                         final FilterBase f) throws CalFacadeException {
-    if ((f instanceof AndFilter) ||
-        (f instanceof OrFilter)) {
-      sb.append("(");
-      boolean first = true;
-      boolean ands = f instanceof AndFilter;
+  private FilterBuilder makeFilter(final FilterBase f) throws CalFacadeException {
+    if (f instanceof AndFilter) {
+      AndFilterBuilder fb = new AndFilterBuilder();
 
       for (FilterBase flt: f.getChildren()) {
-        if (!first) {
-          if (ands) {
-            sb.append(" AND ");
-          } else {
-            sb.append(" OR ");
-          }
-        }
-
-        first = false;
-        makeQuery(sb, flt);
+        fb.add(makeFilter(flt));
       }
 
-      sb.append(")");
+      return fb;
+    }
 
-      return;
+    if (f instanceof OrFilter) {
+      OrFilterBuilder fb = new OrFilterBuilder();
+
+      for (FilterBase flt: f.getChildren()) {
+        fb.add(makeFilter(flt));
+      }
+
+      return fb;
     }
 
     if (!(f instanceof PropertyFilter)) {
-      return;
+      return null;
     }
 
     if (f instanceof PresenceFilter) {
-      return;
+      return null;
     }
 
     if (f instanceof BwCreatorFilter) {
-      String cre = ((BwCreatorFilter)f).getEntity();
-
-      sb.append("creator:");
-      sb.append(cre);
-
-      return;
+      return FilterBuilders.termFilter("creator",
+                                       ((BwCreatorFilter)f)
+                                               .getEntity());
     }
 
     if (f instanceof BwCategoryFilter) {
       BwCategory cat = ((BwCategoryFilter)f).getEntity();
-
-      sb.append("category_uid:");
-      sb.append(cat.getUid());
-
-      return;
+      return FilterBuilders.termFilter("category_uid",
+                                       cat.getUid());
     }
 
     if (f instanceof BwCollectionFilter) {
       BwCalendar col = ((BwCollectionFilter)f).getEntity();
 
-      sb.append("path:");
-      sb.append(col.getPath());
-
-      return;
+      return FilterBuilders.termFilter("path",
+                                       col.getPath());
     }
+
+    return null;
 
     /*
     if (f instanceof TimeRangeFilter) {
@@ -819,31 +791,85 @@ public class BwIndexEsImpl implements BwIndexer {
     }*/
   }
 
-  private BwCategory makeCat(final SolrDocument sd) throws CalFacadeException {
-    String itemType = getString(sd, "itemType");
+  /** Called to make or fill in a Key object.
+   *
+   * @param key   Possible Index.Key object for reuse
+   * @param hit    The retrieved document
+   * @return Index.Key  new or reused object
+   * @throws CalFacadeException
+   */
+  private Index.Key makeKey(final Index.Key key,
+                            final SearchHit hit) throws CalFacadeException {
+    Map<String, SearchHitField> fields = hit.fields();
 
-    if ((itemType == null) ||
-            !itemType.equals(itemTypeCategory)) {
-      return null;
+    BwIndexKey bwkey;
+
+    if ((key == null) || (!(key instanceof BwIndexKey))) {
+      bwkey = new BwIndexKey();
+    } else {
+      bwkey = (BwIndexKey)key;
     }
+
+    Float score = (Float)getFirstValue(fields, "score");
+
+    if (score != null) {
+      bwkey.setScore(score);
+    }
+
+    String itemType = getString(fields, "itemType");
+
+    if (itemType == null) {
+      throw new CalFacadeException("org.bedework.index.noitemtype");
+    }
+
+    bwkey.setItemType(itemType);
+
+    String kval = getString(fields, "key");
+
+    if (kval == null) {
+      throw new CalFacadeException("org.bedework.index.noitemkey");
+    }
+
+    if (itemType.equals(itemTypeCalendar)) {
+      bwkey.setKey1(kval);
+    } else if (itemType.equals(itemTypeCategory)) {
+      bwkey.setKey1(kval);
+    } else if (itemType.equals(itemTypeEvent)) {
+      try {
+        bwkey.setEventKey(kval);
+      } catch (IndexException ie) {
+        throw new CalFacadeException(ie);
+      }
+    } else {
+      throw new CalFacadeException(IndexException.unknownRecordType,
+                                   itemType);
+    }
+
+    return bwkey;
+  }
+
+  private BwCategory makeCat(final SearchHit hit) throws CalFacadeException {
+    Map<String, SearchHitField> fields = hit.fields();
 
     BwCategory cat = new BwCategory();
 
     cat.setWord(new BwString(null,
-                             (String)sd.getFirstValue("category")));
+                             getString(fields, "category")));
     cat.setDescription(new BwString(null,
-                                    (String) sd.getFirstValue(
-                                            "description")));
-    cat.setCreatorHref(getString(sd, "creator"));
-    cat.setOwnerHref(getString(sd, "owner"));
-    cat.setUid(getString(sd, "uid"));
+                                    getString(fields,
+                                              "description")));
+    cat.setCreatorHref(getString(fields, "creator"));
+    cat.setOwnerHref(getString(fields, "owner"));
+    cat.setUid(getString(fields, "uid"));
 
     return cat;
   }
 
-  private EventInfo makeEvent(final SolrDocument sd) throws CalFacadeException {
+  private EventInfo makeEvent(final SearchHit hit) throws CalFacadeException {
     BwEvent ev = new BwEventObj();
     EventInfo ei = new  EventInfo(ev);
+
+    Map<String, SearchHitField> fields = hit.fields();
 
     /*
     Float score = (Float)sd.getFirstValue("score");
@@ -853,18 +879,11 @@ public class BwIndexEsImpl implements BwIndexer {
     }
     */
 
-    String itemType = getString(sd, "itemType");
+    ev.setName(getString(fields, "name"));
+    ev.setColPath(getString(fields, "path"));
 
-    if ((itemType == null) ||
-        !itemType.equals(itemTypeEvent)) {
-      return null;
-    }
-
-    ev.setName((String)sd.getFirstValue("name"));
-    ev.setColPath((String)sd.getFirstValue("path"));
-
-    Collection<Object> vals = sd.getFieldValues("category_uid");
-    if (vals != null) {
+    Collection<Object> vals = getFieldValues(fields, "category_uid");
+    if (!Util.isEmpty(vals)) {
       List<String> catUids = new ArrayList<String>();
 
       for (Object o: vals) {
@@ -874,44 +893,44 @@ public class BwIndexEsImpl implements BwIndexer {
       ev.setCategoryUids(catUids);
     }
 
-    ev.setCreated(fromSolrDate(sd, "created"));
+    ev.setCreated(getString(fields, "created"));
 
-    ev.setLastmod(fromSolrDate(sd, "last_modified"));
+    ev.setLastmod(getString(fields, "last_modified"));
     ev.setDtstamp(ev.getLastmod());
-    ev.setCreatorHref(getString(sd, "creator"));
-    ev.setOwnerHref(getString(sd, "owner"));
-    ev.setAccess(getString(sd, "acl"));
-    ev.setSummary(getString(sd, "summary"));
-    ev.setDescription(getString(sd, "description"));
+    ev.setCreatorHref(getString(fields, "creator"));
+    ev.setOwnerHref(getString(fields, "owner"));
+    ev.setAccess(getString(fields, "acl"));
+    ev.setSummary(getString(fields, "summary"));
+    ev.setDescription(getString(fields, "description"));
 
     /* comment */
     /* contact */
     /* location - lat/long */
     /* resources */
 
-    ev.setDtstart(unindexDate(sd, "start_"));
-    ev.setDtend(unindexDate(sd, "end_"));
+    ev.setDtstart(unindexDate(fields, "start_"));
+    ev.setDtend(unindexDate(fields, "end_"));
 
-    ev.setDuration(getString(sd, "duration"));
-    ev.setNoStart((Boolean)sd.getFirstValue("start_present"));
-    ev.setEndType(getString(sd, "end_type").charAt(0));
+    ev.setDuration(getString(fields, "duration"));
+    ev.setNoStart((Boolean)getFirstValue(fields, "start_present"));
+    ev.setEndType(getString(fields, "end_type").charAt(0));
 
-    ev.setUid(getString(sd, "uid"));
+    ev.setUid(getString(fields, "uid"));
 
-    ev.setRecurrenceId(getString(sd, "recurrenceid"));
+    ev.setRecurrenceId(getString(fields, "recurrenceid"));
 
-    ev.setEntityType(makeEntityType(getString(sd, "eventType")));
+    ev.setEntityType(makeEntityType(getString(fields, "eventType")));
 
-    ev.setStatus(getString(sd, "status"));
+    ev.setStatus(getString(fields, "status"));
 
-    ev.setLocationUid(getString(sd, "location_uid"));
+    ev.setLocationUid(getString(fields, "location_uid"));
 
     Set<String> xpnames = interestingXprops.keySet();
 
     if (!Util.isEmpty(xpnames)) {
       for (String xpname: xpnames) {
         @SuppressWarnings("unchecked")
-        Collection<String> xvals = (Collection)sd.getFieldValues(interestingXprops.get(xpname));
+        Collection<String> xvals = (Collection)getFieldValues(fields, interestingXprops.get(xpname));
 
         if (!Util.isEmpty(xvals)) {
           for (String xval: xvals) {
@@ -930,6 +949,33 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     return ei;
+  }
+
+  private List<Object> getFieldValues(final Map<String, SearchHitField> fields,
+                                      final String name) {
+    SearchHitField shf = fields.get(name);
+
+    if (shf == null) {
+      return null;
+    }
+
+    return shf.getValues();
+  }
+
+  private Object getFirstValue(final Map<String, SearchHitField> fields,
+                               final String name) {
+    List<Object> vals = getFieldValues(fields, name);
+
+    if (Util.isEmpty(vals)) {
+      return null;
+    }
+
+    return vals.get(0);
+  }
+
+  private String getString(final Map<String, SearchHitField> fields,
+                           final String name) {
+    return (String)getFirstValue(fields, name);
   }
 
   private static Map<String, Integer> entitytypeMap =
@@ -955,149 +1001,94 @@ public class BwIndexEsImpl implements BwIndexer {
     return i;
   }
 
-  private String getString(final SolrDocument sd,
-                           final String name) {
-    return (String)sd.getFirstValue(name);
-  }
-
-  private BwDateTime unindexDate(final SolrDocument sd,
+  private BwDateTime unindexDate(final Map<String, SearchHitField> fields,
                                  final String prefix) throws CalFacadeException {
-    String utc = fromSolrDate(sd, prefix + "utc");
-    String local = getString(sd, prefix + "local");
-    String tzid = getString(sd, prefix + "tzid");
-    Boolean floating = (Boolean)sd.getFirstValue(prefix + "floating");
+    String utc = getString(fields, prefix + "utc");
+    String local = getString(fields, prefix + "local");
+    String tzid = getString(fields, prefix + "tzid");
+    Boolean floating = (Boolean)getFirstValue(fields, prefix + "floating");
 
     boolean dateType = (local != null) && (local.length() == 8);
 
-    return BwDateTime.makeBwDateTime(dateType, local, utc, tzid, floating);
+    return BwDateTime.makeBwDateTime(dateType, local, utc, tzid,
+                                     floating);
   }
 
-  private String fromSolrDate(final SolrDocument sd,
-                              final String name) {
-    Date dt = (Date)sd.getFirstValue(name);
-    if (dt == null) {
-      return null;
+  private FilterBuilder addDateRangeFilter(final FilterBuilder filter,
+                                           final SearchLimits limits) throws CalFacadeException {
+    if (limits == null) {
+      return filter;
     }
 
-    return DateTimeUtil.isoDateTimeUTC(dt);
+    return addDateRangeFilter(filter, limits.fromDate, limits.toDate);
   }
 
-  private SolrDocumentList search(final String query,
-                                  final String start,
-                                  final String end,
-                                  final int pos,
-                                  final int count) throws CalFacadeException {
-    StringBuilder sb = new StringBuilder();
-    boolean needAnd = false;
-
-
-    if (query != null) {
-      sb.append(query);
-      needAnd = true;
+  private FilterBuilder addDateRangeFilter(final FilterBuilder filter,
+                                           final String start,
+                                           final String end) throws CalFacadeException {
+    if ((start == null) && (end == null)) {
+      return filter;
     }
+
+    AndFilterBuilder afb = new AndFilterBuilder(filter);
 
     if (start != null) {
       // End of events must be on or after the start of the range
-      if (needAnd) {
-        sb.append(" AND ");
-      }
+      RangeFilterBuilder rfb = new RangeFilterBuilder("end_utc");
 
-      needAnd = true;
-
-      sb.append(" end_utc:[");
-      sb.append(start);
-      sb.append(" TO *]");
+      rfb.gte(start);
+      afb.add(rfb);
     }
 
     if (end != null) {
       // Start of events must be before the end of the range
-      if (needAnd) {
-        sb.append(" AND ");
-      }
+      RangeFilterBuilder rfb = new RangeFilterBuilder("start_utc");
 
-      needAnd = true;
-
-      sb.append(" start_utc:[* TO ");
-      sb.append(end);
-      sb.append("]");
+      rfb.lt(end);
+      afb.add(rfb);
     }
 
-    try {
-      InputStream str = getServer().query(sb.toString(), pos, count);
-      if (str == null) {
-        return null;
-      }
-
-      XMLResponseParser parser = new XMLResponseParser();
-
-      NamedList<Object> resp = parser.processResponse(new InputStreamReader(str));
-
-      return (SolrDocumentList)resp.get("response");
-    } finally {
-      getServer().close();
-    }
+    return afb;
   }
 
-  /** Called to make or fill in a Key object.
-   *
-   * @param key   Possible Index.Key object for reuse
-   * @param sd    The retrieved document
-   * @return Index.Key  new or reused object
-   * @throws org.bedework.calfacade.exc.CalFacadeException
-   */
-  private Index.Key makeKey(final Index.Key key,
-                            final SolrDocument sd) throws CalFacadeException {
-    BwIndexKey bwkey;
+  private FilterBuilder addTerm(final FilterBuilder filter,
+                                final String name,
+                                final String val) throws CalFacadeException {
+    FilterBuilder fb = FilterBuilders.termFilter(name, val);
 
-    if ((key == null) || (!(key instanceof BwIndexKey))) {
-      bwkey = new BwIndexKey();
-    } else {
-      bwkey = (BwIndexKey)key;
+    if (filter == null) {
+      return fb;
     }
 
-    Float score = (Float)sd.getFirstValue("score");
+    AndFilterBuilder afb = new AndFilterBuilder(filter);
 
-    if (score != null) {
-      bwkey.setScore(score);
+    afb.add(fb);
+
+    return afb;
+  }
+
+  private FilterBuilder addPrincipal(final FilterBuilder filter) throws CalFacadeException {
+    if (publick) {
+      return filter;
     }
 
-    String itemType = (String)sd.getFirstValue("itemType");
+    FilterBuilder fb = FilterBuilders.termFilter("owner", principal);
 
-    if (itemType == null) {
-      throw new CalFacadeException("org.bedework.index.noitemtype");
+    if (filter == null) {
+      return fb;
     }
 
-    bwkey.setItemType(itemType);
+    AndFilterBuilder afb = new AndFilterBuilder(filter);
+    afb.add(fb);
 
-    String kval = (String)sd.getFirstValue("key");
-
-    if (kval == null) {
-      throw new CalFacadeException("org.bedework.index.noitemkey");
-    }
-
-    if (itemType.equals(itemTypeCalendar)) {
-      bwkey.setKey1(kval);
-    } else if (itemType.equals(itemTypeCategory)) {
-      bwkey.setKey1(kval);
-    } else if (itemType.equals(itemTypeEvent)) {
-      try {
-        bwkey.setEventKey(kval);
-      } catch (IndexException ie) {
-        throw new CalFacadeException(ie);
-      }
-    } else {
-      throw new CalFacadeException(IndexException.unknownRecordType,
-                               itemType);
-    }
-
-    return bwkey;
+    return afb;
   }
 
   /** Called to make a key value for a record.
    *
    * @param   rec      The record
    * @return  String   String which uniquely identifies the record
-   * @throws edu.rpi.cct.misc.indexing.IndexException
+   * @throws IndexException
    */
   private String makeKeyVal(final Object rec) throws IndexException {
     if (rec instanceof BwCalendar) {
@@ -1122,15 +1113,15 @@ public class BwIndexEsImpl implements BwIndexer {
                              rec.getClass().getName());
   }
 
-  private void index(final XmlEmit xml,
+  private void index(final XContentBuilder builder,
                      final Object rec) throws CalFacadeException {
     if (rec instanceof BwCalendar) {
-      makeDoc(xml, rec, null, null, null);
+      makeDoc(builder, rec, null, null, null);
       return;
     }
 
     if (rec instanceof BwCategory) {
-      makeDoc(xml, (BwCategory)rec);
+      makeDoc(builder, (BwCategory)rec);
       return;
     }
 
@@ -1139,120 +1130,151 @@ public class BwIndexEsImpl implements BwIndexer {
                                rec.getClass().getName()));
     }
 
-    /* If it's not recurring or an override index it */
+    try {
+      /* If it's not recurring or an override index it */
 
-    EventInfo ei = (EventInfo)rec;
-    BwEvent ev = ei.getEvent();
+      EventInfo ei = (EventInfo)rec;
+      BwEvent ev = ei.getEvent();
 
-    if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
-      makeDoc(xml,
-              rec,
-              ev.getDtstart(),
-              ev.getDtend(),
-              ev.getRecurrenceId());
-      return;
-    }
-
-    /* Emit all instances that aren't overridden. */
-
-    RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
-
-    if (rp.instances.isEmpty()) {
-      // No instances for an alleged recurring event.
-      return;
-      //throw new CalFacadeException(CalFacadeException.noRecurrenceInstances);
-    }
-
-    String stzid = ev.getDtstart().getTzid();
-
-    int instanceCt = maxInstances;
-
-    boolean dateOnly = ev.getDtstart().getDateType();
-
-    /* First build a table of overrides so we can skip these later
-     */
-    Map<String, String> overrides = new HashMap<String, String>();
-
-    /*
-    if (!Util.isEmpty(ei.getOverrideProxies())) {
-      for (BwEvent ov: ei.getOverrideProxies()) {
-        overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
-      }
-    }
-    */
-    if (!Util.isEmpty(ei.getOverrides())) {
-      for (EventInfo oei: ei.getOverrides()) {
-        BwEvent ov = oei.getEvent();
-        overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
-        makeDoc(xml,
-                oei,
-                ov.getDtstart(),
-                ov.getDtend(),
-                ov.getRecurrenceId());
-
-      }
-    }
-
-    for (Period p: rp.instances) {
-      String dtval = p.getStart().toString();
-      if (dateOnly) {
-        dtval = dtval.substring(0, 8);
+      if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
+        makeDoc(builder,
+                rec,
+                ev.getDtstart(),
+                ev.getDtend(),
+                ev.getRecurrenceId());
+        return;
       }
 
-      BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+      /* Emit all instances that aren't overridden. */
 
-      if (overrides.get(rstart.getDate()) != null) {
-        // Overrides indexed separately - skip this instance.
-        continue;
+      int maxYears;
+      int maxInstances;
+
+      if (ev.getPublick()) {
+        maxYears = unauthpars.getMaxYears();
+        maxInstances = unauthpars.getMaxInstances();
+      } else {
+        maxYears = authpars.getMaxYears();
+        maxInstances = authpars.getMaxInstances();
       }
 
-      String recurrenceId = rstart.getDate();
+      RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
 
-      dtval = p.getEnd().toString();
-      if (dateOnly) {
-        dtval = dtval.substring(0, 8);
+      if (rp.instances.isEmpty()) {
+        // No instances for an alleged recurring event.
+        return;
+        //throw new CalFacadeException(CalFacadeException.noRecurrenceInstances);
       }
 
-      BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+      String stzid = ev.getDtstart().getTzid();
 
-      makeDoc(xml,
-              rec,
-              rstart,
-              rend,
-              recurrenceId);
+      int instanceCt = maxInstances;
 
-      instanceCt--;
-      if (instanceCt == 0) {
-        // That's all you're getting from me
-        break;
+      boolean dateOnly = ev.getDtstart().getDateType();
+
+      /* First build a table of overrides so we can skip these later
+       */
+      Map<String, String> overrides = new HashMap<String, String>();
+
+      /*
+      if (!Util.isEmpty(ei.getOverrideProxies())) {
+        for (BwEvent ov: ei.getOverrideProxies()) {
+          overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
+        }
       }
+      */
+      if (!Util.isEmpty(ei.getOverrides())) {
+        for (EventInfo oei: ei.getOverrides()) {
+          BwEvent ov = oei.getEvent();
+          overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
+          makeDoc(builder,
+                  oei,
+                  ov.getDtstart(),
+                  ov.getDtend(),
+                  ov.getRecurrenceId());
+
+        }
+      }
+
+      for (Period p: rp.instances) {
+        String dtval = p.getStart().toString();
+        if (dateOnly) {
+          dtval = dtval.substring(0, 8);
+        }
+
+        BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+
+        if (overrides.get(rstart.getDate()) != null) {
+          // Overrides indexed separately - skip this instance.
+          continue;
+        }
+
+        String recurrenceId = rstart.getDate();
+
+        dtval = p.getEnd().toString();
+        if (dateOnly) {
+          dtval = dtval.substring(0, 8);
+        }
+
+        BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+
+        makeDoc(builder,
+                rec,
+                rstart,
+                rend,
+                recurrenceId);
+
+        instanceCt--;
+        if (instanceCt == 0) {
+          // That's all you're getting from me
+          break;
+        }
+      }
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
     }
   }
 
-  private void unindex(final XmlEmit xml, final Object rec) throws CalFacadeException {
+  private static class TypeId {
+    String type;
+    String id;
+
+    TypeId(String type,
+            String id) {
+      this.type = type;
+      this.id = id;
+    }
+  }
+
+  private List<TypeId> makeKeys(final Object rec) throws CalFacadeException {
     try {
+      List<TypeId> res = new ArrayList<>();
+
       if (rec instanceof BwCalendar) {
         BwCalendar col = (BwCalendar)rec;
 
-        makeId(xml, makeKeyVal(col));
+        res.add(new TypeId(docTypeCollection, makeKeyVal(col)));
 
-        return;
+        return res;
       }
 
       if (rec instanceof BwCategory) {
         BwCategory cat = (BwCategory)rec;
 
-        makeId(xml, makeKeyVal(cat));
+        res.add(new TypeId(docTypeCategory,
+                           makeKeyVal(makeKeyVal(cat))));
 
-        return;
+        return res;
       }
 
       if (rec instanceof BwIndexKey) {
         BwIndexKey ik = (BwIndexKey)rec;
 
-        makeId(xml, ik.getKey());
+        res.add(new TypeId(docTypeEvent, makeKeyVal(ik.getKey())));
 
-        return;
+        return res;
       }
 
       if (!(rec instanceof EventInfo)) {
@@ -1266,30 +1288,39 @@ public class BwIndexEsImpl implements BwIndexer {
       BwEvent ev = ei.getEvent();
 
       if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
-        String key = keyConverter.makeEventKey(ev.getColPath(),
-                                               ev.getUid(),
-                                               ev.getRecurrenceId());
+        res.add(new TypeId(docTypeEvent,
+                           makeKeyVal(keyConverter.makeEventKey(ev.getColPath(),
+                                                     ev.getUid(),
+                                                     ev.getRecurrenceId()))));
 
-        makeId(xml, key);
-
-        return;
+        return res;
       }
 
       /* Delete any possible non-recurring version */
 
-      String key = keyConverter.makeEventKey(ev.getColPath(),
-                                             ev.getUid(),
-                                             null);
-
-      makeId(xml, key);
+      res.add(new TypeId(docTypeEvent,
+                         makeKeyVal(keyConverter.makeEventKey(ev.getColPath(),
+                                                   ev.getUid(),
+                                                   null))));
 
       /* Delete all instances. */
+
+      int maxYears;
+      int maxInstances;
+
+      if (ev.getPublick()) {
+        maxYears = unauthpars.getMaxYears();
+        maxInstances = unauthpars.getMaxInstances();
+      } else {
+        maxYears = authpars.getMaxYears();
+        maxInstances = authpars.getMaxInstances();
+      }
 
       RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
 
       if (rp.instances.isEmpty()) {
         // No instances for an alleged recurring event.
-        return;
+        return res;
         //throw new CalFacadeException(CalFacadeException.noRecurrenceInstances);
       }
 
@@ -1314,11 +1345,10 @@ public class BwIndexEsImpl implements BwIndexer {
           dtval = dtval.substring(0, 8);
         }
 
-        key = keyConverter.makeEventKey(ev.getColPath(),
-                                               ev.getUid(),
-                                               recurrenceId);
-
-        makeId(xml, key);
+        res.add(new TypeId(docTypeEvent,
+                           makeKeyVal(keyConverter.makeEventKey(ev.getColPath(),
+                                                     ev.getUid(),
+                                                     recurrenceId))));
 
         instanceCt--;
         if (instanceCt == 0) {
@@ -1326,6 +1356,8 @@ public class BwIndexEsImpl implements BwIndexer {
           break;
         }
       }
+
+      return res;
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
@@ -1346,27 +1378,27 @@ public class BwIndexEsImpl implements BwIndexer {
     interestingXprops.put(BwXproperty.bedeworkEventRegEnd, "eventreg_end");
   }
 
-  private void makeDoc(final XmlEmit xml,
+  private void makeDoc(final XContentBuilder builder,
                        final BwCategory cat) throws CalFacadeException {
     try {
-      xml.openTag(solrTagDoc);
+      builder.startObject(docTypeCategory);
 
-      makeField(xml, "key", makeKeyVal(cat));
-      makeField(xml, "itemType", itemTypeCategory);
-      makeField(xml, "uid", cat.getUid());
-      makeField(xml, "creator", cat.getCreatorHref());
-      makeField(xml, "owner", cat.getOwnerHref());
+      makeField(builder, "key", makeKeyVal(cat));
+      makeField(builder, "itemType", itemTypeCategory);
+      makeField(builder, "uid", cat.getUid());
+      makeField(builder, "creator", cat.getCreatorHref());
+      makeField(builder, "owner", cat.getOwnerHref());
 
       /* Manufacture a name and path for the time being - it's a required field */
-      makeField(xml, "name", cat.getWord().getValue());
-      makeField(xml, "path", Util.buildPath(false,
+      makeField(builder, "name", cat.getWord().getValue());
+      makeField(builder, "path", Util.buildPath(false,
                                             cat.getOwnerHref(), "/",
                                             cat.getWord().getValue()));
 
-      makeField(xml, "category", cat.getWord());
-      makeField(xml, "description", cat.getDescription());
+      makeField(builder, "category", cat.getWord());
+      makeField(builder, "description", cat.getDescription());
 
-      xml.closeTag(solrTagDoc);
+      builder.endObject();
 
       batchCurSize++;
     } catch (CalFacadeException cfe) {
@@ -1376,7 +1408,7 @@ public class BwIndexEsImpl implements BwIndexer {
     }
   }
 
-  private void makeDoc(final XmlEmit xml,
+  private void makeDoc(final XContentBuilder builder,
                        final Object rec,
                        final BwDateTime start,
                        final BwDateTime end,
@@ -1389,6 +1421,7 @@ public class BwIndexEsImpl implements BwIndexer {
       String colPath = null;
       Collection <BwCategory> cats = null;
 
+      String docType;
       String key = null;
       String name = null;
       String created = null;
@@ -1401,6 +1434,7 @@ public class BwIndexEsImpl implements BwIndexer {
       String acl;
 
       if (rec instanceof BwCalendar) {
+        docType = docTypeCollection;
         col = (BwCalendar)rec;
 
         key = makeKeyVal(col);
@@ -1417,6 +1451,8 @@ public class BwIndexEsImpl implements BwIndexer {
         summary = col.getSummary();
         acl = col.getAccess();
       } else if (rec instanceof EventInfo) {
+        docType = docTypeEvent;
+
         ei = (EventInfo)rec;
         ev = ei.getEvent();
 
@@ -1465,31 +1501,33 @@ public class BwIndexEsImpl implements BwIndexer {
 
       /* Start doc and do common collection/event fields */
 
-      xml.openTag(solrTagDoc);
+      builder.startObject(docType);
 
-      makeField(xml, "key", key);
-      makeField(xml, "itemType", itemType);
+      makeField(builder, "key", key);
+      makeField(builder, "itemType", itemType);
 
       if (colPath == null) {
         colPath = "";
       }
 
-      makeField(xml, "name", name);
-      makeField(xml, "path", colPath);
+      makeField(builder, "name", name);
+      makeField(builder, "path", colPath);
 
-      indexCategories(xml, cats);
+      indexCategories(builder, cats);
 
-      makeField(xml, "created", created);
-      makeField(xml, "last_modified", lastmod);
-      makeField(xml, "creator", creator);
-      makeField(xml, "owner", owner);
-      makeField(xml, "summary", summary);
-      makeField(xml, "description", description);
-      makeField(xml, "acl", acl);
+      makeField(builder, "created", created);
+      makeField(builder, "last_modified", lastmod);
+      makeField(builder, "creator", creator);
+      makeField(builder, "owner", owner);
+      makeField(builder, "summary", summary);
+      makeField(builder, "description", description);
+      makeField(builder, "acl", acl);
 
       if (col != null) {
         // Doing collection - we're done
-        xml.closeTag(solrTagDoc);
+
+        builder.endObject();
+
         return;
       }
 
@@ -1498,25 +1536,25 @@ public class BwIndexEsImpl implements BwIndexer {
       /* location - lat/long */
       /* resources */
 
-      indexDate(xml, "start_", start);
-      indexDate(xml, "end_", end);
+      indexDate(builder, "start_", start);
+      indexDate(builder, "end_", end);
 
-      makeField(xml, "start_present", String.valueOf(ev.getNoStart()));
-      makeField(xml, "end_type", String.valueOf(ev.getEndType()));
+      makeField(builder, "start_present", String.valueOf(ev.getNoStart()));
+      makeField(builder, "end_type", String.valueOf(ev.getEndType()));
 
-      makeField(xml, "duration", ev.getDuration());
-      makeField(xml, "uid", ev.getUid());
-      makeField(xml, "status", ev.getStatus());
+      makeField(builder, "duration", ev.getDuration());
+      makeField(builder, "uid", ev.getUid());
+      makeField(builder, "status", ev.getStatus());
 
       if (recurid != null) {
-        makeField(xml, "recurrenceid", recurid);
+        makeField(builder, "recurrenceid", recurid);
       }
 
-      makeField(xml, "eventType", IcalDefs.entityTypeNames[ev.getEntityType()]);
+      makeField(builder, "eventType", IcalDefs.entityTypeNames[ev.getEntityType()]);
 
       BwLocation loc = ev.getLocation();
       if (loc != null) {
-        makeField(xml, "location_uid", loc.getUid());
+        makeField(builder, "location_uid", loc.getUid());
 
         String s = null;
 
@@ -1533,7 +1571,7 @@ public class BwIndexEsImpl implements BwIndexer {
         }
 
         if (s != null) {
-          makeField(xml, "location_str", s);
+          makeField(builder, "location_str", s);
         }
       }
 
@@ -1547,12 +1585,12 @@ public class BwIndexEsImpl implements BwIndexer {
               pars = "";
             }
 
-            makeField(xml, solrname, pars + "\t" + xp.getValue());
+            makeField(builder, solrname, pars + "\t" + xp.getValue());
           }
         }
       }
 
-      xml.closeTag(solrTagDoc);
+      builder.endObject();
 
       batchCurSize++;
     } catch (CalFacadeException cfe) {
@@ -1562,31 +1600,29 @@ public class BwIndexEsImpl implements BwIndexer {
     }
   }
 
-  private void indexDate(final XmlEmit xml,
+  private void indexDate(final XContentBuilder builder,
                          final String prefix,
                          final BwDateTime dt) throws CalFacadeException {
-    makeField(xml, prefix + "utc", dt.getDate());
-    makeField(xml, prefix + "local", dt.getDtval());
-    makeField(xml, prefix + "tzid", dt.getTzid());
-    makeField(xml, prefix + "floating", String.valueOf(dt.getFloating()));
+    makeField(builder, prefix + "utc", dt.getDate());
+    makeField(builder, prefix + "local", dt.getDtval());
+    makeField(builder, prefix + "tzid", dt.getTzid());
+    makeField(builder, prefix + "floating", String.valueOf(dt.getFloating()));
   }
 
-  private void makeId(final XmlEmit xml,
+  private void makeId(final XContentBuilder builder,
                       final String val) throws CalFacadeException {
     if (val == null) {
       return;
     }
 
     try {
-      xml.openTagNoNewline(solrTagId);
-      xml.value(val);
-      xml.closeTagNoblanks(solrTagId);
+      builder.field("_id", val);
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }
   }
 
-  private void makeField(final XmlEmit xml,
+  private void makeField(final XContentBuilder builder,
                          final String name,
                          final BwString val) throws CalFacadeException {
     if (val == null) {
@@ -1595,15 +1631,13 @@ public class BwIndexEsImpl implements BwIndexer {
 
     try {
       // XXX Need to handle languages.
-      xml.openTagNoNewline(solrTagField, "name", name);
-      xml.value(val.getValue());
-      xml.closeTagNoblanks(solrTagField);
+      builder.field(name, val.getValue());
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }
   }
 
-  private void makeField(final XmlEmit xml,
+  private void makeField(final XContentBuilder builder,
                          final String name,
                          final String val) throws CalFacadeException {
     if (val == null) {
@@ -1611,262 +1645,92 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     try {
-      xml.openTagNoNewline(solrTagField, "name", name);
-      xml.value(val);
-      xml.closeTagNoblanks(solrTagField);
+      builder.field(name, val);
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }
   }
 
-  private void indexCategories(final XmlEmit xml,
+  private void indexCategories(final XContentBuilder builder,
                                final Collection <BwCategory> cats) throws CalFacadeException {
     if (cats == null) {
       return;
     }
 
     for (BwCategory cat: cats) {
-      makeField(xml, "category", cat.getWord().getValue());
-      makeField(xml, "category_uid", cat.getUid());
+      makeField(builder, "category", cat.getWord().getValue());
+      makeField(builder, "category_uid", cat.getUid());
     }
   }
 
-  EsServer server;
+  private Client getClient() throws CalFacadeException {
+    if (theClient != null) {
+      return theClient;
+    }
 
-  private int indexAndCommit(final String indexInfo) throws CalFacadeException {
+    TransportClient tClient = new TransportClient();
+
+    tClient = tClient.addTransportAddress(
+            new InetSocketTransportAddress(host, port));
+
+    theClient = tClient;
+
+    return theClient;
+  }
+
+  private IndicesAdminClient getAdminIdx() throws CalFacadeException {
+    return getClient().admin().indices();
+  }
+
+  private XContentBuilder newBuilder() throws CalFacadeException {
     try {
-      return getServer().postUpdate(indexInfo);
-    } finally {
-      getServer().close();
+      XContentBuilder builder = XContentFactory.jsonBuilder();
+
+      if (debug) {
+        builder = builder.prettyPrint();
+      }
+
+      return builder;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
     }
   }
 
-  private EsServer getServer() {
-    if (server == null) {
-      server = new EsServer(solrURL, targetIndex, getLog());
+  private String getType(Object rec) throws CalFacadeException {
+    if (rec instanceof BwCategory) {
+      return docTypeCategory;
     }
 
-    return server;
+    if (rec instanceof BwCalendar) {
+      return docTypeCollection;
+    }
+
+    if (rec instanceof BwEvent) {
+      return docTypeEvent;
+    }
+
+    throw new CalFacadeException("Unhandled type " + rec.getClass());
   }
 
-  /** CLass to allow us to call the server
-   */
-  private static class EsServer {
-    private transient Logger log;
+  private String newIndexSuffix() {
+    // ES only allows lower case letters in names
+    StringBuilder suffix = new StringBuilder("p");
 
-    private boolean debug;
+    char[] ch = DateTimeUtil.isoDateTime().toCharArray();
 
-    private String serverUri;
-    private String targetIndex;
-
-    private HttpPost poster;
-    private HttpGet getter;
-    private HttpPut putter;
-
-    int status;
-    HttpResponse response;
-
-    EsServer(final String uri,
-             final String targetIndex,
-             final Logger log) {
-      serverUri = slashIt(uri);
-      this.targetIndex = slashIt(targetIndex);
-      this.log = log;
-
-      debug = log.isDebugEnabled();
+    for (int i = 0; i < 8; i++) {
+      suffix.append(ch[i]);
+//      suffix.append((char)(ch[i] - '0' + 'a'));
     }
 
-    public void setIndexName(String name) {
-      targetIndex = slashIt(name);
+    suffix.append('t');
+
+    for (int i = 9; i < 15; i++) {
+      suffix.append(ch[i]);
+//      suffix.append((char)(ch[i] - '0' + 'a'));
     }
 
-    public int postUpdate(final String xmlUpdate) throws CalFacadeException {
-      try {
-        return doPost(xmlUpdate, "update", "application/xml");
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
-      }
-    }
-
-    public InputStream query(final String query,
-                             final int from,
-                             final int count) throws CalFacadeException {
-      try {
-        /* Note we do these queries with POST - GET is subject to header length
-         * limitations which can be exceeded.
-         */
-        StringBuilder sb = new StringBuilder("q=");
-
-        sb.append(URLEncoder.encode(query,
-                                    HTTP.DEFAULT_CONTENT_CHARSET));
-
-        sb.append("&start=");
-        sb.append(from);
-
-        sb.append("&rows=");
-        sb.append(count);
-
-        sb.append("&fl=*+score");
-
-        doPost(sb.toString(), "select", "application/x-www-form-urlencoded");
-
-        if (status != HttpServletResponse.SC_OK) {
-          return null;
-        }
-
-        HttpEntity ent = response.getEntity();
-
-        return ent.getContent();
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
-      }
-    }
-
-    public InputStream callForStream(final String req) throws CalFacadeException {
-      try {
-        doCall(req, null);
-
-        if (status != HttpServletResponse.SC_OK) {
-          return null;
-        }
-
-        HttpEntity ent = response.getEntity();
-
-        return ent.getContent();
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
-      }
-    }
-
-    public void close() throws CalFacadeException {
-      try {
-        if (response == null) {
-          return;
-        }
-
-        HttpEntity ent = response.getEntity();
-
-        if (ent != null) {
-          InputStream is = ent.getContent();
-          is.close();
-        }
-
-        getter = null;
-        response = null;
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
-      }
-    }
-
-    private int doPost(final String body,
-                       final String path,
-                       final String contentType) throws CalFacadeException {
-      try {
-        HttpClient client = new DefaultHttpClient();
-        String fullPath = getUrl(path);
-
-        //if (debug) {
-        //  log.debug("Solr-post: path: " + fullPath + " body: " + body);
-        //}
-
-        poster = new HttpPost(fullPath);
-
-        poster.setEntity(new StringEntity(body, contentType, "UTF-8"));
-
-        response = client.execute(poster);
-        status = response.getStatusLine().getStatusCode();
-
-        return status;
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (UnknownHostException uhe) {
-        throw new CalFacadeException(uhe);
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
-      }
-    }
-
-    private int doPut(final String body,
-                      final String path,
-                      final String contentType) throws CalFacadeException {
-      try {
-        HttpClient client = new DefaultHttpClient();
-        String fullPath = getUrl(path);
-
-        //if (debug) {
-        //  log.debug("Solr-post: path: " + fullPath + " body: " + body);
-        //}
-
-        putter = new HttpPut(fullPath);
-
-        putter.setEntity(new StringEntity(body, contentType, "UTF-8"));
-
-        response = client.execute(putter);
-        status = response.getStatusLine().getStatusCode();
-
-        return status;
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (UnknownHostException uhe) {
-        throw new CalFacadeException(uhe);
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
-      }
-    }
-
-    private void doCall(final String req,
-                        final String etag) throws CalFacadeException {
-      try {
-        HttpClient client = new DefaultHttpClient();
-
-        getter = new HttpGet(getUrl(req));
-
-        if (etag != null) {
-          getter.addHeader(new BasicHeader("If-None-Match", etag));
-        }
-
-        response = client.execute(getter);
-        status = response.getStatusLine().getStatusCode();
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-     } catch (UnknownHostException uhe) {
-        throw new CalFacadeException(uhe);
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
-      }
-    }
-
-    private String slashIt(final String s) {
-      if (s.endsWith("/")) {
-        return s;
-      }
-
-      if (s.length() == 0) {
-        return s;
-      }
-
-      return s + "/";
-    }
-
-    private String getUrl(final String req) throws CalFacadeException {
-      if (serverUri == null) {
-        throw new CalFacadeException("No server URI defined");
-      }
-
-      StringBuilder sb = new StringBuilder(serverUri);
-
-      sb.append(targetIndex);
-
-      sb.append(req);
-
-      return sb.toString();
-    }
+    return suffix.toString();
   }
 
   protected Logger getLog() {
@@ -1881,11 +1745,19 @@ public class BwIndexEsImpl implements BwIndexer {
     getLog().info(msg);
   }
 
+  protected void debug(final String msg) {
+    getLog().debug(msg);
+  }
+
   protected void warn(final String msg) {
     getLog().warn(msg);
   }
 
   protected void error(final String msg) {
     getLog().error(msg);
+  }
+
+  protected void error(final Throwable t) {
+    getLog().error(this, t);
   }
 }

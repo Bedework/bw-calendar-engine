@@ -22,6 +22,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calsvc.indexing.BwIndexer;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -180,9 +181,10 @@ public interface Categories extends Serializable {
 
   /** Reindex current users categories
    *
+   * @param indexer to use for this operation
    * @return number of entities reindexed
    * @throws CalFacadeException
    */
-  int reindex() throws CalFacadeException;
+  int reindex(BwIndexer indexer) throws CalFacadeException;
 }
 

@@ -90,9 +90,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
-import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeCalendar;
-import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeCategory;
-import static org.bedework.calsvc.indexing.BwIndexLuceneDefs.itemTypeEvent;
+import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeCalendar;
+import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeCategory;
+import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeEvent;
 
 /**
  * @author Mike Douglass douglm - rpi.edu
@@ -207,11 +207,9 @@ public class BwIndexSolrImpl implements BwIndexer {
   public void flush() throws CalFacadeException {
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvc.indexing.BwIndexer#getKeys(int, edu.rpi.cct.misc.indexing.Index.Key[])
-   */
   @Override
-  public int getKeys(final int n, final Index.Key[] keys) throws CalFacadeException {
+  public long getKeys(final long n,
+                      final Index.Key[] keys) throws CalFacadeException {
     String from = null;
     String to = null;
 
@@ -334,11 +332,8 @@ public class BwIndexSolrImpl implements BwIndexer {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvc.indexing.BwIndexer#search(java.lang.String, edu.rpi.cct.misc.indexing.SearchLimits)
-   */
   @Override
-  public int search(final String query,
+  public long search(final String query,
                     final SearchLimits limits) throws CalFacadeException {
     if (publick) {
       curQuery = query;
@@ -362,7 +357,7 @@ public class BwIndexSolrImpl implements BwIndexer {
       return 0;
     }
 
-    return (int)sdl.getNumFound();
+    return sdl.getNumFound();
   }
 
   /* (non-Javadoc)
@@ -661,12 +656,12 @@ public class BwIndexSolrImpl implements BwIndexer {
   public Set<EventInfo> fetch(final FilterBase filter,
                               final String start,
                               final String end,
-                              final Holder<Integer> found,
-                              final int pos,
+                              final Holder<Long> found,
+                              final long pos,
                               final int count,
                               final AccessChecker accessCheck) throws CalFacadeException {
-    int ourPos = pos;
-    int ourCount = count;
+    long ourPos = pos;
+    long ourCount = count;
 
     if ((ourCount < 0) | (ourCount > maxFetchCount)) {
       ourCount = maxFetchCount;
@@ -696,7 +691,7 @@ public class BwIndexSolrImpl implements BwIndexer {
       query.append(")");
     }
 
-    int toFetch = count;
+    long toFetch = count;
 
     while ((toFetch < 0) || (fetched < toFetch)) {
       if (tries > absoluteMaxTries) {
@@ -712,7 +707,7 @@ public class BwIndexSolrImpl implements BwIndexer {
                                     ourCount);
       if (sdl == null) {
         if (found != null) {
-          found.value = 0;
+          found.value = Long.valueOf(0);
         }
 
         break;
@@ -999,8 +994,8 @@ public class BwIndexSolrImpl implements BwIndexer {
   private SolrDocumentList search(final String query,
                                   final String start,
                                   final String end,
-                                  final int pos,
-                                  final int count) throws CalFacadeException {
+                                  final long pos,
+                                  final long count) throws CalFacadeException {
     StringBuilder sb = new StringBuilder();
     boolean needAnd = false;
 

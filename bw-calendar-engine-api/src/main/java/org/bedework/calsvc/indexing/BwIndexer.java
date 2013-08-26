@@ -49,7 +49,7 @@ public interface BwIndexer extends Serializable {
    *                                -1 means indeterminate
    * @throws CalFacadeException
    */
-  int search(String query, SearchLimits limits) throws CalFacadeException;
+  long search(String query, SearchLimits limits) throws CalFacadeException;
 
   /** Called to unindex a record
    *
@@ -72,7 +72,7 @@ public interface BwIndexer extends Serializable {
    * @return  int      Actual number of records
    * @throws CalFacadeException
    */
-  int getKeys(int n, Index.Key[] keys) throws CalFacadeException;
+  long getKeys(long n, Index.Key[] keys) throws CalFacadeException;
 
   /** Set to > 1 to enable batching
    *
@@ -192,8 +192,8 @@ public interface BwIndexer extends Serializable {
   Set<EventInfo> fetch(FilterBase filter,
                        String start,
                        String end,
-                       Holder<Integer> found,
-                       int pos,
+                       Holder<Long> found,
+                       long pos,
                        int count,
                        AccessChecker accessCheck) throws CalFacadeException;
 }

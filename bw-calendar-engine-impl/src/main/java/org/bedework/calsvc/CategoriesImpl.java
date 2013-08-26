@@ -274,7 +274,7 @@ public class CategoriesImpl
   }
 
   @Override
-  public int reindex() throws CalFacadeException {
+  public int reindex(BwIndexer indexer) throws CalFacadeException {
     BwPrincipal owner;
     if (!isPublicAdmin()) {
       owner = getPrincipal();
@@ -288,10 +288,8 @@ public class CategoriesImpl
       return 0;
     }
 
-    BwIndexer idx = getIndexer();
-
     for (BwCategory cat: cats) {
-      idx.indexEntity(cat);
+      indexer.indexEntity(cat);
     }
 
     return cats.size();

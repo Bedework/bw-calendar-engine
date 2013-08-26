@@ -47,10 +47,10 @@ public interface IndexingI extends Serializable {
    *                                -1 means indeterminate
    * @throws CalFacadeException
    */
-  int search(boolean publick,
-             String principal,
-             String query,
-             SearchLimits limits) throws CalFacadeException;
+  long search(boolean publick,
+              String principal,
+              String query,
+              SearchLimits limits) throws CalFacadeException;
 
   /** Called to retrieve results after a search of the index.
    *
@@ -60,7 +60,7 @@ public interface IndexingI extends Serializable {
    * @return  Collection of BwIndexSearchResultEntry
    * @throws CalFacadeException
    */
-  Collection<BwIndexSearchResultEntry> getSearchResult(int start,
+  Collection<BwIndexSearchResultEntry> getSearchResult(long start,
                                                        int num,
                                                        SearchLimits limits)
         throws CalFacadeException;

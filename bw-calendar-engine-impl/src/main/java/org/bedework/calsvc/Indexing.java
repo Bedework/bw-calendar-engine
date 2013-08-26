@@ -58,25 +58,19 @@ class Indexing extends CalSvcDb implements IndexingI {
     super(svci);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.IndexingI#search(boolean, java.lang.String, java.lang.String, edu.rpi.cct.misc.indexing.SearchLimits)
-   */
   @Override
-  public int search(final boolean publick,
-                    final String principal,
-                    final String query,
-                    final SearchLimits limits) throws CalFacadeException {
+  public long search(final boolean publick,
+                     final String principal,
+                     final String query,
+                     final SearchLimits limits) throws CalFacadeException {
     searchIndexer = getIndexer(publick, principal);
 
     return searchIndexer.search(query, limits);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.IndexingI#getSearchResult(int, int)
-   */
   @Override
-  public Collection<BwIndexSearchResultEntry> getSearchResult(final int start,
-                                                              int num,
+  public Collection<BwIndexSearchResultEntry> getSearchResult(final long start,
+                                                              final int num,
                                                               final SearchLimits limits)
                                                               throws CalFacadeException {
     Collection<BwIndexSearchResultEntry> res =
@@ -86,12 +80,9 @@ class Indexing extends CalSvcDb implements IndexingI {
       return res;
     }
 
-    if (num > 100) {
-      num = 100;
-    }
-    Index.Key[] keys = new Index.Key[num];
+    Index.Key[] keys = new Index.Key[Math.max(num, 100)];
 
-    num = searchIndexer.getKeys(start, keys);
+    long actual = searchIndexer.getKeys(start, keys);
 
     BwDateTime dtStart = null;
     BwDateTime dtEnd = null;
@@ -107,7 +98,7 @@ class Indexing extends CalSvcDb implements IndexingI {
       }
     }*/
 
-    for (int i = 0; i < num; i++) {
+    for (int i = 0; i < actual; i++) {
       BwIndexKey key = (BwIndexKey)keys[i];
 
       Object sres;

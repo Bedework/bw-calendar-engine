@@ -51,7 +51,7 @@ public class BwIndexerFactory {
                                      final SystemProperties syspars) throws CalFacadeException {
     try {
       if (publick) {
-          return new BwIndexSolrImpl(true,
+          return new BwIndexEsImpl(true,
                                      principal,
                                      writeable,
                                      authpars, unauthpars, syspars,
@@ -59,7 +59,7 @@ public class BwIndexerFactory {
                                      null); // No explicit name
       }
 
-      return new BwIndexSolrImpl(false,
+      return new BwIndexEsImpl(false,
                                  principal,
                                  writeable,
                                  authpars, unauthpars, syspars,
@@ -90,7 +90,7 @@ public class BwIndexerFactory {
                                      final SystemProperties syspars,
                                      final String indexRoot) throws CalFacadeException {
     try {
-      return new BwIndexSolrImpl(true,
+      return new BwIndexEsImpl(true,
                                  principal,
                                  writeable,
                                  authpars, unauthpars, syspars,
