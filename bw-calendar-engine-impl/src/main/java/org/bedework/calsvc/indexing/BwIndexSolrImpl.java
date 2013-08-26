@@ -1752,8 +1752,8 @@ public class BwIndexSolrImpl implements BwIndexer {
     }
 
     public InputStream query(final String query,
-                             final int from,
-                             final int count) throws CalFacadeException {
+                             final long from,
+                             final long count) throws CalFacadeException {
       try {
         /* Note we do these queries with POST - GET is subject to header length
          * limitations which can be exceeded.

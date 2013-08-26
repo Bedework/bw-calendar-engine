@@ -19,6 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calsvc.indexing.*;
 import org.bedework.calsvci.CalSvcI;
 
 import java.util.List;
@@ -73,8 +74,16 @@ public class PrincipalProcessor extends Crawler {
 
 
       if (!principal.equals(svc.getUsersHandler().getPublicUser().getPrincipalRef())) {
+        org.bedework.calsvc.indexing.BwIndexer indexer =
+                BwIndexerFactory.getIndexer(principal,
+                                            true,
+                                            getAuthpars(true),
+                                            getAuthpars(false),
+                                            getSyspars(),
+                                            indexRootPath);
+
         status.stats.inc(IndexStats.StatType.categories,
-                         svc.getCategoriesHandler().reindex());
+                         svc.getCategoriesHandler().reindex(indexer));
       }
     } finally {
       close();

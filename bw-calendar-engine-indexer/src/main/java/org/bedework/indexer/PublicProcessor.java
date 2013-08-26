@@ -19,6 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calsvc.indexing.BwIndexerFactory;
 
 import edu.rpi.sss.util.Util;
 
@@ -70,8 +71,16 @@ public class PublicProcessor extends Crawler {
       /* First index the public collection(s) */
       indexCollection(Util.buildPath(false, "/", getPublicCalendarRoot()));
 
+      org.bedework.calsvc.indexing.BwIndexer indexer =
+              BwIndexerFactory.getIndexer(principal,
+                                          true,
+                                          getAuthpars(true),
+                                          getAuthpars(false),
+                                          getSyspars(),
+                                          indexRootPath);
+
       status.stats.inc(IndexStats.StatType.categories,
-                       getSvci().getCategoriesHandler().reindex());
+                       getSvci().getCategoriesHandler().reindex(indexer));
     } finally {
       close();
     }

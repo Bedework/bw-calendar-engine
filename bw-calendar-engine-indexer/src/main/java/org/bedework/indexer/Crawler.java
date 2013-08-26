@@ -44,14 +44,11 @@ public abstract class Crawler extends ProcessorBase {
    * @param status
    * @param name
    * @param adminAccount
-   * @param publick
    * @param principal - the principal we are processing or null.
    * @param batchDelay
    * @param entityDelay
    * @param skipPaths - paths to skip
    * @param indexRootPath - where we build the index
-   * @param tgroup
-   * @param entityThreads - number of threads this process can use
    * @throws CalFacadeException
    */
   public Crawler(final CrawlStatus status,

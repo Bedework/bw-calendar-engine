@@ -810,31 +810,32 @@ public class BwIndexEsImpl implements BwIndexer {
       bwkey = (BwIndexKey)key;
     }
 
-    Float score = (Float)getFirstValue(fields, "score");
+    Float score = hit.getScore();
 
     if (score != null) {
       bwkey.setScore(score);
     }
 
-    String itemType = getString(fields, "itemType");
+    String dtype = hit.getType();
 
-    if (itemType == null) {
+    if (dtype == null) {
       throw new CalFacadeException("org.bedework.index.noitemtype");
     }
 
-    bwkey.setItemType(itemType);
-
-    String kval = getString(fields, "key");
+    String kval = hit.getId();
 
     if (kval == null) {
       throw new CalFacadeException("org.bedework.index.noitemkey");
     }
 
-    if (itemType.equals(itemTypeCalendar)) {
+    if (dtype.equals(docTypeCollection)) {
+      bwkey.setItemType(itemTypeCalendar);
       bwkey.setKey1(kval);
-    } else if (itemType.equals(itemTypeCategory)) {
+    } else if (dtype.equals(docTypeCategory)) {
+      bwkey.setItemType(itemTypeCategory);
       bwkey.setKey1(kval);
-    } else if (itemType.equals(itemTypeEvent)) {
+    } else if (dtype.equals(docTypeEvent)) {
+      bwkey.setItemType(itemTypeEvent);
       try {
         bwkey.setEventKey(kval);
       } catch (IndexException ie) {
@@ -842,14 +843,15 @@ public class BwIndexEsImpl implements BwIndexer {
       }
     } else {
       throw new CalFacadeException(IndexException.unknownRecordType,
-                                   itemType);
+                                   dtype);
     }
 
     return bwkey;
   }
 
   private BwCategory makeCat(final SearchHit hit) throws CalFacadeException {
-    Map<String, SearchHitField> fields = hit.fields();
+    Map<String, Object> sflds = hit.sourceAsMap();
+    Map<String, Object> fields = (Map<String, Object>)sflds.get(docTypeCategory);
 
     BwCategory cat = new BwCategory();
 
@@ -869,7 +871,8 @@ public class BwIndexEsImpl implements BwIndexer {
     BwEvent ev = new BwEventObj();
     EventInfo ei = new  EventInfo(ev);
 
-    Map<String, SearchHitField> fields = hit.fields();
+    Map<String, Object> sflds = hit.sourceAsMap();
+    Map<String, Object> fields = (Map<String, Object>)sflds.get(docTypeEvent);
 
     /*
     Float score = (Float)sd.getFirstValue("score");
@@ -951,21 +954,37 @@ public class BwIndexEsImpl implements BwIndexer {
     return ei;
   }
 
-  private List<Object> getFieldValues(final Map<String, SearchHitField> fields,
+  private List<Object> getFieldValues(final Map<String, Object> fields,
                                       final String name) {
-    SearchHitField shf = fields.get(name);
+    Object val = fields.get(name);
 
-    if (shf == null) {
+    if (val == null) {
       return null;
     }
 
-    return shf.getValues();
+    if (val instanceof List) {
+      return (List)val;
+    }
+
+    List<Object> vals = new ArrayList<>();
+    vals.add(val);
+
+    return vals;
   }
 
-  private Object getFirstValue(final Map<String, SearchHitField> fields,
+  private Object getFirstValue(final Map<String, Object> fields,
                                final String name) {
-    List<Object> vals = getFieldValues(fields, name);
+    Object val = fields.get(name);
 
+    if (val == null) {
+      return null;
+    }
+
+    if (!(val instanceof List)) {
+      return val;
+    }
+
+    List vals = (List)val;
     if (Util.isEmpty(vals)) {
       return null;
     }
@@ -973,7 +992,7 @@ public class BwIndexEsImpl implements BwIndexer {
     return vals.get(0);
   }
 
-  private String getString(final Map<String, SearchHitField> fields,
+  private String getString(final Map<String, Object> fields,
                            final String name) {
     return (String)getFirstValue(fields, name);
   }
@@ -1001,7 +1020,7 @@ public class BwIndexEsImpl implements BwIndexer {
     return i;
   }
 
-  private BwDateTime unindexDate(final Map<String, SearchHitField> fields,
+  private BwDateTime unindexDate(final Map<String, Object> fields,
                                  final String prefix) throws CalFacadeException {
     String utc = getString(fields, prefix + "utc");
     String local = getString(fields, prefix + "local");
