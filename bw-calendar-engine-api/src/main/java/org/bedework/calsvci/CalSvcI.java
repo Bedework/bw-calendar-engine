@@ -31,6 +31,7 @@ import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
@@ -103,6 +104,13 @@ public abstract class CalSvcI implements Serializable {
    * @throws CalFacadeException
    */
   public abstract SystemProperties getSystemProperties() throws CalFacadeException;
+
+  /** Return properties for indexing.
+   *
+   * @return IndexProperties object - never null.
+   * @throws CalFacadeException
+   */
+  public abstract IndexProperties getIndexProperties() throws CalFacadeException;
 
   /** Set the calendar suite we are running as. Must be running as an
    * unauthenticated user.

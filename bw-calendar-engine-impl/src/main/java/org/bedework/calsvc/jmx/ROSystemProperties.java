@@ -223,56 +223,6 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
-  public void setIndexerURL(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getIndexerURL() {
-    return getConfig().getIndexerURL();
-  }
-
-  @Override
-  public void setIndexerConfig(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getIndexerConfig() {
-    return getConfig().getIndexerConfig();
-  }
-
-  @Override
-  public void setSolrCoreAdmin(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setSolrCoreAdmin(val);
-  }
-
-  @Override
-  public String getSolrCoreAdmin() {
-    return getConfig().getSolrCoreAdmin();
-  }
-
-  @Override
-  public void setPublicIndexName(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getPublicIndexName() {
-    return getConfig().getPublicIndexName();
-  }
-
-  @Override
-  public void setUserIndexName(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getUserIndexName() {
-    return getConfig().getUserIndexName();
-  }
-
-  @Override
   public void setLocaleList(final String val) {
     throw new RuntimeException("Immutable");
   }

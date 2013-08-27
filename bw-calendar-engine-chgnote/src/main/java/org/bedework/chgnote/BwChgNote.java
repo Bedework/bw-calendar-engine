@@ -113,7 +113,7 @@ public class BwChgNote
   */
 
   /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexerMBean#isStarted()
+   * @see org.bedework.indexer.BwIndexCtlMBean#isStarted()
    */
   @Override
   public boolean isStarted() {
@@ -121,7 +121,7 @@ public class BwChgNote
   }
 
   /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexerMBean#start()
+   * @see org.bedework.indexer.BwIndexCtlMBean#start()
    */
   @Override
   public synchronized void start() {
@@ -147,7 +147,7 @@ public class BwChgNote
   }
 
   /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexerMBean#stop()
+   * @see org.bedework.indexer.BwIndexCtlMBean#stop()
    */
   @Override
   public synchronized void stop() {

@@ -42,6 +42,7 @@ import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
+import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -347,6 +348,11 @@ public class CalSvc extends CalSvcI {
   @Override
   public SystemProperties getSystemProperties() throws CalFacadeException {
     return configs.getSystemProperties();
+  }
+
+  @Override
+  public IndexProperties getIndexProperties() throws CalFacadeException {
+    return configs.getIndexProperties();
   }
 
   @Override

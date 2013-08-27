@@ -19,7 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvc.indexing.BwIndexer;
 import org.bedework.calsvc.indexing.BwIndexerFactory;
@@ -52,52 +52,36 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class Crawl extends CalSys {
+  private IndexProperties props;
+
   private List<CrawlStatus> statuses = new ArrayList<CrawlStatus>();
 
   protected long batchDelay;
   protected long entityDelay;
 
-  private List<String> skipPaths;
-
-  private boolean doPublic;
-  private boolean doUser;
-
-  private SystemProperties sys;
+  private IndexProperties idxProps;
   private AuthProperties authProps;
   private AuthProperties unauthProps;
 
   /**
-   * @param adminAccount
-   * @param indexBuildLocationPrefix - if non null prefix the system path with this
-   * @param skipPaths - paths to skip
-   * @param maxEntityThreads
-   * @param maxPrincipalThreads
-   * @param doPublic
-   * @param doUser
+   * @param props - our config
    * @throws CalFacadeException
    */
-  public Crawl(final String adminAccount,
-               final String indexBuildLocationPrefix,
-               final List<String> skipPaths,
-               final int maxEntityThreads,
-               final int maxPrincipalThreads,
-               final boolean doPublic,
-               final boolean doUser) throws CalFacadeException {
-    super("Crawler", adminAccount,
+  public Crawl(final IndexProperties props) throws CalFacadeException {
+    super("Crawler", props.getAccount(),
           //true,
           null);
 
-    this.skipPaths = skipPaths;
-    this.doPublic = doPublic;
-    this.doUser = doUser;
+    this.props = props;
 
-    setThreadPools(maxEntityThreads, maxPrincipalThreads);
+    setThreadPools(props.getMaxEntityThreads(),
+                   props.getMaxPrincipalThreads());
 
     CalSvcI svci = null;
     try {
       svci = getAdminSvci();
 
-      sys = svci.getSystemProperties();
+      idxProps = svci.getIndexProperties();
       authProps = svci.getAuthProperties(true);
       unauthProps = svci.getAuthProperties(false);
     } finally {
@@ -132,35 +116,35 @@ public class Crawl extends CalSys {
     PrincipalsProcessor prProc = null;
     PublicProcessor pubProc = null;
 
-    if (doUser) {
+    if (props.getIndexUsers()) {
       prProc = new PrincipalsProcessor(prstats,
                                        "Principals",
                                        adminAccount, // admin account
                                        2000,   // batchDelay,
                                        100,    // entityDelay,
-                                       skipPaths,
+                                       props.getSkipPathsList(),
                                        idxs.userIndex);
       prProc.start();
     }
 
-    if (doPublic) {
+    if (props.getIndexPublic()) {
       pubProc = new PublicProcessor(pubstats,
                                     "Public",
                                     adminAccount, // admin account
                                     2000,   // batchDelay,
                                     100,    // entityDelay,
-                                    skipPaths,
+                                    props.getSkipPathsList(),
                                     idxs.publicIndex);
       pubProc.start();
     }
 
-    if (doUser) {
+    if (props.getIndexUsers()) {
       setStatus(status, "Wait for user indexing to complete");
       prProc.join();
       setStatus(status, "User indexing completed");
     }
 
-    if (doPublic) {
+    if (props.getIndexPublic()) {
       setStatus(status, "Wait for public indexing to complete");
       pubProc.join();
       setStatus(status, "Public indexing completed");
@@ -191,7 +175,7 @@ public class Crawl extends CalSys {
   public List<String> listIndexes() throws CalFacadeException {
     BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, false,
                                                 authProps, unauthProps,
-                                                sys, null);
+                                                idxProps, null);
 
     return idx.listIndexes();
   }
@@ -204,12 +188,12 @@ public class Crawl extends CalSys {
   public List<String> purgeIndexes() throws CalFacadeException {
     List<String> preserve = new ArrayList<>();
 
-    preserve.add(sys.getPublicIndexName());
-    preserve.add(sys.getUserIndexName());
+    preserve.add(props.getPublicIndexName());
+    preserve.add(props.getUserIndexName());
 
     BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, false,
                                                 authProps, unauthProps,
-                                                sys, null);
+                                                idxProps, null);
 
     return idx.purgeIndexes(preserve);
   }
@@ -217,38 +201,38 @@ public class Crawl extends CalSys {
   private Indexes newIndexes(final CrawlStatus cr) throws CalFacadeException {
     Indexes idxs = new Indexes();
 
-    if (doUser) {
+    if (props.getIndexUsers()) {
       // Switch user indexes.
 
-      if (sys.getUserIndexName() == null) {
+      if (props.getUserIndexName() == null) {
         outErr(cr, "No user index core defined in system properties");
         throw new CalFacadeException("No user index core defined in system properties");
       }
 
       BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
                                                   authProps, unauthProps,
-                                                  sys,
+                                                  idxProps,
                                                   idxs.userIndex);
 
-      idxs.userIndex = idx.newIndex(sys.getUserIndexName());
+      idxs.userIndex = idx.newIndex(props.getUserIndexName());
 
       setStatus(cr, "Switched solr core to " + idxs.userIndex);
     }
 
-    if (doPublic) {
+    if (props.getIndexPublic()) {
       // Switch public indexes.
 
-      if (sys.getPublicIndexName() == null) {
+      if (props.getPublicIndexName() == null) {
         outErr(cr, "No public index core defined in system properties");
         throw new CalFacadeException("No public index core defined in system properties");
       }
 
       BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
                                                   authProps, unauthProps,
-                                                  sys,
+                                                  idxProps,
                                                   idxs.publicIndex);
 
-      idxs.publicIndex = idx.newIndex(sys.getPublicIndexName());
+      idxs.publicIndex = idx.newIndex(props.getPublicIndexName());
 
       setStatus(cr, "Switched solr core to " + idxs.publicIndex);
     }
@@ -261,22 +245,22 @@ public class Crawl extends CalSys {
     /* If it's lucene both public and user are the same.
      */
 
-    if (doUser) {
+    if (props.getIndexUsers()) {
       BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
                                                   authProps, unauthProps,
-                                                  sys,
+                                                  idxProps,
                                                   idxs.userIndex);
 
-      idx.swapIndex(idxs.userIndex, sys.getUserIndexName());
+      idx.swapIndex(idxs.userIndex, props.getUserIndexName());
     }
 
-    if (doPublic) {
+    if (props.getIndexPublic()) {
       BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
                                                   authProps, unauthProps,
-                                                  sys,
+                                                  idxProps,
                                                   idxs.publicIndex);
 
-      idx.swapIndex(idxs.publicIndex, sys.getPublicIndexName());
+      idx.swapIndex(idxs.publicIndex, props.getPublicIndexName());
     }
   }
 

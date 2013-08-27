@@ -19,7 +19,7 @@
 package org.bedework.calsvc.indexing;
 
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 /** Create an instance of an indexer for bedework.
@@ -40,7 +40,7 @@ public class BwIndexerFactory {
    * @param writeable true if the caller can update the index
    * @param authpars - for authenticated limits
    * @param unauthpars - for public limits
-   * @param syspars
+   * @param idxpars
    * @throws CalFacadeException
    */
   public static BwIndexer getIndexer(final boolean publick,
@@ -48,13 +48,13 @@ public class BwIndexerFactory {
                                      final boolean writeable,
                                      final AuthProperties authpars,
                                      final AuthProperties unauthpars,
-                                     final SystemProperties syspars) throws CalFacadeException {
+                                     final IndexProperties idxpars) throws CalFacadeException {
     try {
       if (publick) {
           return new BwIndexEsImpl(true,
                                      principal,
                                      writeable,
-                                     authpars, unauthpars, syspars,
+                                     authpars, unauthpars, idxpars,
                                      true,  // No admin
                                      null); // No explicit name
       }
@@ -62,7 +62,7 @@ public class BwIndexerFactory {
       return new BwIndexEsImpl(false,
                                  principal,
                                  writeable,
-                                 authpars, unauthpars, syspars,
+                                 authpars, unauthpars, idxpars,
                                  true,  // No admin
                                  null); // No explicit name
     } catch (Throwable t) {
@@ -78,7 +78,7 @@ public class BwIndexerFactory {
    * @param writeable true if the caller can update the index
    * @param authpars - for authenticated limits
    * @param unauthpars - for public limits
-   * @param syspars
+   * @param idxpars
    * @param indexRoot
    * @return indexer
    * @throws CalFacadeException
@@ -87,13 +87,13 @@ public class BwIndexerFactory {
                                      final boolean writeable,
                                      final AuthProperties authpars,
                                      final AuthProperties unauthpars,
-                                     final SystemProperties syspars,
+                                     final IndexProperties idxpars,
                                      final String indexRoot) throws CalFacadeException {
     try {
       return new BwIndexEsImpl(true,
                                  principal,
                                  writeable,
-                                 authpars, unauthpars, syspars,
+                                 authpars, unauthpars, idxpars,
                                  false,  // Admin
                                  indexRoot); // Explicit name
     } catch (Throwable t) {

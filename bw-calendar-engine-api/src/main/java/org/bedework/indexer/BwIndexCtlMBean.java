@@ -18,77 +18,18 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.configs.IndexProperties;
+
+import edu.rpi.cmt.jmx.ConfBaseMBean;
+import edu.rpi.cmt.jmx.MBeanInfo;
+
 import java.util.List;
 
 /**
  * @author douglm
  *
  */
-public interface BwIndexerMBean {
-  /** Account we run under
-   *
-   * @param val
-   */
-  public void setAccount(String val);
-
-  /**
-   * @return String account we use
-   */
-  public String getAccount();
-
-  /**
-   * @param val thread limit
-   */
-  public void setMaxEntityThreads(final int val);
-
-  /**
-   * @return thread limit
-   */
-  public int getMaxEntityThreads();
-
-  /**
-   * @param val thread limit
-   */
-  public void setMaxPrincipalThreads(final int val);
-
-  /**
-   * @return thread limit
-   */
-  public int getMaxPrincipalThreads();
-
-  /** True if we do public
-   *
-   * @param val
-   */
-  public void setIndexPublic(final boolean val);
-
-  /**
-   * @return true if we do public
-   */
-  public boolean getIndexPublic();
-
-  /** True if we do users
-   *
-   * @param val
-   */
-  public void setIndexUsers(final boolean val);
-
-  /**
-   * @return true if we do users
-   */
-  public boolean getIndexUsers();
-
-  /** True if we just discard messages.
-   *
-   * @param val
-   */
-  public void setDiscardMessages(final boolean val);
-
-  /**
-   * @return true if we just discard messages
-   */
-  public boolean getDiscardMessages();
-
+public interface BwIndexCtlMBean extends ConfBaseMBean, IndexProperties {
   /**
    * @return number of messages processed
    */
@@ -114,29 +55,11 @@ public interface BwIndexerMBean {
    */
   public long getEntitiesDeleted();
 
-  /** Paths to skip - ":" separated
-   *
-   * @param val
-   */
-  public void setSkipPaths(String val);
-
-  /**
-   * @return Paths to skip - ":" separated
-   */
-  public String getSkipPaths();
-
   /** Get the current status of the reindexing process
    *
    * @return messages as a list
    */
   public List<String> rebuildStatus();
-
-  /** Name apparently must be the same as the name attribute in the
-   * jboss service definition
-   *
-   * @return Name
-   */
-  public String getName();
 
   /** Crawl the data and create indexes - listener should have been stopped.
    *
@@ -155,12 +78,12 @@ public interface BwIndexerMBean {
    * /
   public String purgeIndexes(); NOT YET */
 
-  /** Lifecycle
+  /** Start the indexer
    *
    */
   public void start();
 
-  /** Lifecycle
+  /** Stop the indexer
    *
    */
   public void stop();
@@ -171,4 +94,10 @@ public interface BwIndexerMBean {
    */
   public boolean isStarted();
 
+  /** (Re)load the configuration
+   *
+   * @return status
+   */
+  @MBeanInfo("(Re)load the configuration")
+  String loadConfig();
 }

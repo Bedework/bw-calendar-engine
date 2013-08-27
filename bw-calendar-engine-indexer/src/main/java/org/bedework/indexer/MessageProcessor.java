@@ -21,6 +21,7 @@ package org.bedework.indexer;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.base.BwOwnedDbentity;
+import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
@@ -73,18 +74,11 @@ public class MessageProcessor extends CalSys {
   private int maxRetryCt = 10;
 
   /**
-   * @param adminAccount
-   * @param skipPaths
-   *          - paths to skip
-   * @param maxPublicThreads
-   * @param maxUserThreads
+   * @param props
    * @throws CalFacadeException
    */
-  public MessageProcessor(final String adminAccount,
-                          final Collection<String> skipPaths,
-                          final int maxPublicThreads, final int maxUserThreads)
-                                                                               throws CalFacadeException {
-    super("MessageProcessor", adminAccount, null);
+  public MessageProcessor(final IndexProperties props) throws CalFacadeException {
+    super("MessageProcessor", props.getAccount(), null);
 
     debug = getLog().isDebugEnabled();
   }
@@ -349,7 +343,7 @@ public class MessageProcessor extends CalSys {
         indexer = BwIndexerFactory.getIndexer(publick, principal, true,
                                               getAuthpars(true),
                                               getAuthpars(false),
-                                              getSyspars());
+                                              getIdxpars());
         if (publick) {
           publicIndexer = indexer;
         } else {

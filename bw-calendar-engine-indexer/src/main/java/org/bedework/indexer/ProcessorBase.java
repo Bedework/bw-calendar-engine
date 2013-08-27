@@ -180,7 +180,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
                                       true,
                                       getAuthpars(true),
                                       getAuthpars(false),
-                                      getSyspars(),
+                                      getIdxpars(),
                                       indexRootPath);
 
       indexer.indexEntity(col);

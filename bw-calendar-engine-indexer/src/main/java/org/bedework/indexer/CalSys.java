@@ -24,7 +24,7 @@ import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
@@ -57,7 +57,7 @@ public abstract class CalSys {
 
   private AuthProperties authpars;
   private AuthProperties unauthpars;
-  private SystemProperties syspars;
+  private IndexProperties idxpars;
   private BasicSystemProperties basicSyspars;
 
   private int collectionBatchSize = 10;
@@ -261,12 +261,12 @@ public abstract class CalSys {
     return apars;
   }
 
-  protected SystemProperties getSyspars() throws CalFacadeException {
+  protected IndexProperties getIdxpars() throws CalFacadeException {
     CalSvcI svci = null;
-    if (syspars == null) {
+    if (idxpars == null) {
       try {
         svci = getAdminSvci();
-        syspars = svci.getSystemProperties();
+        idxpars = svci.getIndexProperties();
       } finally {
         if (svci != null) {
           try {
@@ -277,7 +277,7 @@ public abstract class CalSys {
       }
     }
 
-    return syspars;
+    return idxpars;
   }
 
   protected BasicSystemProperties getBasicSyspars() throws CalFacadeException {

@@ -32,7 +32,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCategoryFilter;
 import org.bedework.calfacade.filter.BwCollectionFilter;
@@ -76,6 +76,7 @@ import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -87,6 +88,8 @@ import org.elasticsearch.index.query.OrFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeFilterBuilder;
+import org.elasticsearch.node.Node;
+import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
@@ -143,6 +146,7 @@ public class BwIndexEsImpl implements BwIndexer {
   private String host;
   private int port = 9300;
 
+  private static Node theNode; /* For embedded use */
   private static Client theClient;
 
   private String targetIndex;
@@ -150,7 +154,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
   private AuthProperties authpars;
   private AuthProperties unauthpars;
-  private SystemProperties syspars;
+  private IndexProperties idxpars;
 
   /* Used to batch index */
 
@@ -161,7 +165,7 @@ public class BwIndexEsImpl implements BwIndexer {
    * @param writeable - true for an updatable index
    * @param authpars - for authenticated limits
    * @param unauthpars - for public limits
-   * @param syspars - for system config info
+   * @param idxpars - for system config info
    * @param noAdmin - for no administration
    * @param indexName - explicitly specified
    * @throws IndexException
@@ -171,19 +175,19 @@ public class BwIndexEsImpl implements BwIndexer {
                        final boolean writeable,
                        final AuthProperties authpars,
                        final AuthProperties unauthpars,
-                       final SystemProperties syspars,
+                       final IndexProperties idxpars,
                        final boolean noAdmin,
                        final String indexName) throws IndexException {
     debug = getLog().isDebugEnabled();
 
     this.publick = publick;
     this.principal = principal;
-    this.syspars = syspars;
+    this.idxpars = idxpars;
     this.authpars = authpars;
     this.unauthpars = unauthpars;
     this.writeable = writeable;
 
-    String url = syspars.getIndexerURL();
+    String url = idxpars.getIndexerURL();
 
     if (url == null) {
       host = "localhost";
@@ -211,9 +215,9 @@ public class BwIndexEsImpl implements BwIndexer {
 
     if (indexName == null) {
       if (publick) {
-        targetIndex = syspars.getPublicIndexName();
+        targetIndex = idxpars.getPublicIndexName();
       } else {
-        targetIndex = syspars.getUserIndexName();
+        targetIndex = idxpars.getUserIndexName();
       }
       targetIndex = Util.buildPath(false, targetIndex);
     } else {
@@ -410,7 +414,7 @@ public class BwIndexEsImpl implements BwIndexer {
       CreateIndexRequestBuilder cirb = idx.prepareCreate(newName);
       CreateIndexRequest cir = cirb.request();
 
-      File f = new File(syspars.getIndexerConfig());
+      File f = new File(idxpars.getIndexerConfig());
 
       cir.source(new FileReader(f).toString().getBytes());
 
@@ -1687,6 +1691,43 @@ public class BwIndexEsImpl implements BwIndexer {
       return theClient;
     }
 
+    if (idxpars.getEmbeddedIndexer()) {
+      /* Start up a node and get a client from it.
+       */
+      ImmutableSettings.Builder settings =
+              ImmutableSettings.settingsBuilder();
+
+      if (idxpars.getNodeName() != null) {
+        settings.put("node.name", idxpars.getNodeName());
+      }
+
+      settings.put("path.data", idxpars.getDataDir());
+
+      if (idxpars.getHttpEnabled()) {
+        warn("*************************************************************");
+        warn("*************************************************************");
+        warn("*************************************************************");
+        warn("http is enabled for the indexer. This may be a security risk.");
+        warn("*************************************************************");
+        warn("*************************************************************");
+        warn("*************************************************************");
+      }
+      settings.put("http.enabled", idxpars.getHttpEnabled());
+      NodeBuilder nbld = NodeBuilder.nodeBuilder()
+              .settings(settings);
+
+      if (idxpars.getClusterName() != null) {
+        nbld.clusterName(idxpars.getClusterName());
+      }
+
+      theNode = nbld.data(true).local(true).node();
+
+      theClient = theNode.client();
+
+      return theClient;
+    }
+
+    /* Not embedded - use the URL */
     TransportClient tClient = new TransportClient();
 
     tClient = tClient.addTransportAddress(
@@ -1732,7 +1773,7 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   private String newIndexSuffix() {
-    // ES only allows lower case letters in names
+    // ES only allows lower case letters in names (and digits)
     StringBuilder suffix = new StringBuilder("p");
 
     char[] ch = DateTimeUtil.isoDateTime().toCharArray();

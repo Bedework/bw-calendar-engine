@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -64,16 +64,12 @@ public class BwSysevLogger extends LogListener implements BwSysevLoggerMBean {
   }
   */
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexerMBean#isStarted()
-   */
+  @Override
   public boolean isStarted() {
     return (processor != null) && processor.isAlive();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexerMBean#start()
-   */
+  @Override
   public synchronized void start() {
     if (processor != null) {
       error("Already started");
@@ -88,9 +84,7 @@ public class BwSysevLogger extends LogListener implements BwSysevLoggerMBean {
     processor.start();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexerMBean#stop()
-   */
+  @Override
   public synchronized void stop() {
     if (processor == null) {
       error("Already stopped");

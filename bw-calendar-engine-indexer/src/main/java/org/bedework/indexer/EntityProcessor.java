@@ -81,7 +81,7 @@ public class EntityProcessor extends Crawler {
                                                       true,
                                                       getAuthpars(true),
                                                       getAuthpars(false),
-                                                      getSyspars(),
+                                                      getIdxpars(),
                                                       indexRootPath);
 
       try {

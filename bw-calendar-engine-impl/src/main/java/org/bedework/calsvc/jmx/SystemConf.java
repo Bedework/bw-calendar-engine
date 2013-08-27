@@ -243,56 +243,6 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setIndexerURL(final String val) {
-    getConfig().setIndexerURL(val);
-  }
-
-  @Override
-  public String getIndexerURL() {
-    return getConfig().getIndexerURL();
-  }
-
-  @Override
-  public void setIndexerConfig(final String val) {
-    getConfig().setIndexerConfig(val);
-  }
-
-  @Override
-  public String getIndexerConfig() {
-    return getConfig().getIndexerConfig();
-  }
-
-  @Override
-  public void setSolrCoreAdmin(final String val) {
-    getConfig().setSolrCoreAdmin(val);
-  }
-
-  @Override
-  public String getSolrCoreAdmin() {
-    return getConfig().getSolrCoreAdmin();
-  }
-
-  @Override
-  public void setPublicIndexName(final String val) {
-    getConfig().setPublicIndexName(val);
-  }
-
-  @Override
-  public String getPublicIndexName() {
-    return getConfig().getPublicIndexName();
-  }
-
-  @Override
-  public void setUserIndexName(final String val) {
-    getConfig().setUserIndexName(val);
-  }
-
-  @Override
-  public String getUserIndexName() {
-    return getConfig().getUserIndexName();
-  }
-
-  @Override
   public void setLocaleList(final String val) {
     getConfig().setLocaleList(val);
   }

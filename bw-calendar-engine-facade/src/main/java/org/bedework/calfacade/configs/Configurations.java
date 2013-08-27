@@ -36,16 +36,22 @@ public interface Configurations extends Serializable {
 
   /**
    * @param auth
-   * @return appropriate system properties
+   * @return appropriate properties
    * @throws CalFacadeException
    */
   AuthProperties getAuthProperties(boolean auth) throws CalFacadeException;
 
   /**
-   * @return appropriate system properties
+   * @return system properties
    * @throws CalFacadeException
    */
   SystemProperties getSystemProperties() throws CalFacadeException;
+
+  /**
+   * @return indexing properties
+   * @throws CalFacadeException
+   */
+  IndexProperties getIndexProperties() throws CalFacadeException;
 
   /**
    * @return mailer properties

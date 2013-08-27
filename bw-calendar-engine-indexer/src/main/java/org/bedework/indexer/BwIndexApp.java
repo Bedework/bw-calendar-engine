@@ -18,14 +18,13 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
 
-import edu.rpi.sss.util.Args;
 import edu.rpi.sss.util.Util;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /** The crawler program for the bedework calendar system.
@@ -34,24 +33,13 @@ import java.util.List;
  *
  */
 public class BwIndexApp extends JmsSysEventListener {
-  protected String account;
-
-  protected List<String> skipPaths = new ArrayList<String>();
+  private IndexProperties props;
 
   private String indexBuildLocationPrefix;
-
-  private boolean discardMessages;
 
   private boolean doCrawl;
 
   private boolean doListen;
-
-  private int maxEntityThreads = 10;
-
-  private int maxPrincipalThreads = 10;
-
-  private boolean doPublic = true;
-  private boolean doUser = true;
 
   private long messageCount;
 
@@ -59,93 +47,8 @@ public class BwIndexApp extends JmsSysEventListener {
 
   private MessageProcessor msgProc;
 
-  BwIndexApp() {
-  }
-
-  /**
-   * @param val
-   */
-  public void setAccount(final String val) {
-    account = val;
-  }
-
-  /**
-   * @return String account we use
-   */
-  public String getAccount() {
-    return account;
-  }
-
-  /**
-   * @param val thread limit
-   */
-  public void setMaxEntityThreads(final int val) {
-    maxEntityThreads = val;
-  }
-
-  /**
-   * @return thread limit
-   */
-  public int getMaxEntityThreads() {
-    return maxEntityThreads;
-  }
-
-  /**
-   * @param val thread limit
-   */
-  public void setMaxPrincipalThreads(final int val) {
-    maxPrincipalThreads = val;
-  }
-
-  /**
-   * @return thread limit
-   */
-  public int getMaxPrincipalThreads() {
-    return maxPrincipalThreads;
-  }
-
-  /** True if we do public
-   *
-   * @param val
-   */
-  public void setIndexPublic(final boolean val) {
-    doPublic = val;
-  }
-
-  /**
-   * @return true if we do public
-   */
-  public boolean getIndexPublic() {
-    return doPublic;
-  }
-
-  /** True if we do users
-   *
-   * @param val
-   */
-  public void setIndexUsers(final boolean val) {
-    doUser = val;
-  }
-
-  /**
-   * @return true if we do users
-   */
-  public boolean getIndexUsers() {
-    return doUser;
-  }
-
-  /**
-   * @param val
-   */
-  public void setDiscardMessages(final boolean val) {
-    discardMessages = val;
-  }
-
-  /**
-   * @return true if we just discard messages
-   */
-  public boolean getDiscardMessages() {
-    return discardMessages;
+  BwIndexApp(final IndexProperties props) {
+    this.props = props;
   }
 
   /**
@@ -265,10 +168,6 @@ public class BwIndexApp extends JmsSysEventListener {
   }
 
   void crawl() throws Throwable {
-    if (account == null) {
-      account = System.getProperty("user.name");
-    }
-
     Crawl c = getCrawler();
 
     c.crawl();
@@ -281,17 +180,7 @@ public class BwIndexApp extends JmsSysEventListener {
       return crawler;
     }
 
-    if (account == null) {
-      account = System.getProperty("user.name");
-    }
-
-    crawler = new Crawl(account, // admin account
-                        indexBuildLocationPrefix,
-                        skipPaths,
-                        getMaxEntityThreads(),
-                        getMaxPrincipalThreads(),
-                        doPublic,
-                        doUser);
+    crawler = new Crawl(props);
 
     return crawler;
   }
@@ -309,10 +198,7 @@ public class BwIndexApp extends JmsSysEventListener {
   void listen() throws Throwable {
     open(crawlerQueueName);
 
-    msgProc = new MessageProcessor(account, // admin account
-                                   skipPaths,
-                                   getMaxEntityThreads(),
-                                   getMaxPrincipalThreads());
+    msgProc = new MessageProcessor(props);
 
     process(false);
   }
@@ -329,7 +215,7 @@ public class BwIndexApp extends JmsSysEventListener {
     try {
       messageCount++;
 
-      if (discardMessages) {
+      if (props.getDiscardMessages()) {
         return;
       }
 
@@ -337,81 +223,5 @@ public class BwIndexApp extends JmsSysEventListener {
     } catch (Throwable t) {
       throw new NotificationException(t);
     }
-  }
-
-  boolean processArgs(final Args args) throws Throwable {
-    if (args == null) {
-      return true;
-    }
-
-    while (args.more()) {
-      if (args.ifMatch("")) {
-        continue;
-      }
-
-      if (args.ifMatch("-user")) {
-        account = args.next();
-      } else if (args.ifMatch("-appname")) {
-        args.next(); // Not used at the moment
-      } else if (args.ifMatch("-crawl")) {
-        doCrawl = true;
-      } else if (args.ifMatch("-indexlocprefix")) {
-        indexBuildLocationPrefix = args.next();
-      } else if (args.ifMatch("-listen")) {
-        doListen = true;
-      } else if (args.ifMatch("-skip")) {
-        skipPaths.add(args.next());
-      } else {
-        error("Illegal argument: " + args.current());
-        usage();
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  void usage() {
-    System.out.println("Usage:");
-    System.out.println("args   -user <admin-account>");
-    System.out.println("       -crawl ");
-    System.out.println("       -indexlocprefix <prefix> ");
-    System.out.println("           prefix to apply to system index root ");
-    System.out.println("       -listen ");
-    System.out.println("       -skip <path-to-skip>");
-    System.out.println("");
-  }
-
-  /**
-   * @param args
-   */
-  public static void main(final String[] args) {
-    try {
-      BwIndexApp capp = new BwIndexApp();
-
-      if (!capp.processArgs(new Args(args))) {
-        return;
-      }
-
-      if (capp.doCrawl) {
-        capp.info("Start crawl of data");
-
-        capp.crawl();
-
-        capp.info("End crawl of data");
-      }
-
-      if (capp.doListen) {
-        capp.info("Start listening");
-
-        capp.listen();
-
-        capp.info("Shut down listener");
-      }
-    } catch (Throwable t) {
-      t.printStackTrace();
-    }
-
-    System.exit(0);
   }
 }

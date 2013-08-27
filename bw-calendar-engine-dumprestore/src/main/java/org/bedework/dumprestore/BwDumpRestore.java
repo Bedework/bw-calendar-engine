@@ -26,7 +26,7 @@ import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
 import org.bedework.dumprestore.dump.Dump;
 import org.bedework.dumprestore.restore.Restore;
-import org.bedework.indexer.BwIndexerMBean;
+import org.bedework.indexer.BwIndexCtlMBean;
 
 import edu.rpi.cmt.jmx.MBeanUtil;
 import edu.rpi.sss.util.Args;
@@ -366,9 +366,6 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
    * Attributes
    * ======================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.BwDumpRestoreMBean#getName()
-   */
   @Override
   public String getName() {
     /* This apparently must be the same as the name attribute in the
@@ -377,17 +374,11 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
     return "org.bedework:service=DumpRestore";
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.BwDumpRestoreMBean#setAccount(java.lang.String)
-   */
   @Override
   public void setAccount(final String val) {
     account = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.BwDumpRestoreMBean#getAccount()
-   */
   @Override
   public String getAccount() {
     return account;
@@ -541,41 +532,26 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
    * Lifecycle
    * ======================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.BwDumpRestoreMBean#create()
-   */
   @Override
   public void create() {
     // An opportunity to initialise
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexerMBean#start()
-   */
   @Override
   public void start() {
     started = true;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexerMBean#stop()
-   */
   @Override
   public void stop() {
     started = false;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexerMBean#isStarted()
-   */
   @Override
   public boolean isStarted() {
     return started;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.BwDumpRestoreMBean#destroy()
-   */
   @Override
   public void destroy() {
   }
@@ -584,12 +560,12 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
    *                   Private methods
    * ==================================================================== */
 
-  private BwIndexerMBean indexer;
+  private BwIndexCtlMBean indexer;
 
   private boolean disableIndexer() throws CalFacadeException {
     try {
       if (indexer == null) {
-        indexer = (BwIndexerMBean)MBeanUtil.getMBean(BwIndexerMBean.class,
+        indexer = (BwIndexCtlMBean)MBeanUtil.getMBean(BwIndexCtlMBean.class,
                                                      "org.bedework:service=Indexer");
       }
 

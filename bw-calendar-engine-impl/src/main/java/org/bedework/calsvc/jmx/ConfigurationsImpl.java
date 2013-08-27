@@ -23,10 +23,12 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.DirConfigProperties;
+import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.configs.SynchConfig;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
+import org.bedework.indexer.BwIndexCtlMBean;
 
 import edu.rpi.cmt.config.ConfigurationStore;
 import edu.rpi.cmt.jmx.ConfBase;

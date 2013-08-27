@@ -32,7 +32,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCategoryFilter;
 import org.bedework.calfacade.filter.BwCollectionFilter;
@@ -132,7 +132,7 @@ public class BwIndexSolrImpl implements BwIndexer {
 
   private AuthProperties authpars;
   private AuthProperties unauthpars;
-  private SystemProperties syspars;
+  private IndexProperties idxpars;
 
   /* Used to batch index */
 
@@ -153,23 +153,23 @@ public class BwIndexSolrImpl implements BwIndexer {
                          final boolean writeable,
                          final AuthProperties authpars,
                          final AuthProperties unauthpars,
-                         final SystemProperties syspars,
+                         final IndexProperties idxpars,
                          final boolean noAdmin,
                          final String indexName) throws IndexException {
     debug = getLog().isDebugEnabled();
 
     this.publick = publick;
     this.principal = principal;
-    this.syspars = syspars;
+    this.idxpars = idxpars;
     this.authpars = authpars;
     this.unauthpars = unauthpars;
     this.writeable = writeable;
 
     if (indexName == null) {
       if (publick) {
-        targetIndex = syspars.getPublicIndexName();
+        targetIndex = idxpars.getPublicIndexName();
       } else {
-        targetIndex = syspars.getUserIndexName();
+        targetIndex = idxpars.getUserIndexName();
       }
       targetIndex = Util.buildPath(true, targetIndex);
     } else {
@@ -177,7 +177,7 @@ public class BwIndexSolrImpl implements BwIndexer {
     }
 
     if (!noAdmin) {
-      coreAdminPath = Util.buildPath(false, syspars.getSolrCoreAdmin());
+      coreAdminPath = Util.buildPath(false, idxpars.getSolrCoreAdmin());
     }
   }
 
@@ -1704,7 +1704,7 @@ public class BwIndexSolrImpl implements BwIndexer {
 
   private SolrServer getServer() {
     if (server == null) {
-      server = new SolrServer(syspars.getIndexerURL(),
+      server = new SolrServer(idxpars.getIndexerURL(),
                               targetIndex, coreAdminPath, getLog());
     }
 

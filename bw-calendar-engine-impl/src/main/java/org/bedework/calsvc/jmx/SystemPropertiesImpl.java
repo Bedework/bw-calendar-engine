@@ -69,16 +69,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private boolean directoryBrowsingDisallowed;
 
-  private String indexerURL;
-
-  private String indexerConfig;
-
-  private String solrCoreAdmin;
-
-  private String publicIndexName;
-
-  private String userIndexName;
-
   private String localeList;
 
   private String eventregAdminToken;
@@ -325,56 +315,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   }
 
   @Override
-  public void setIndexerURL(final String val) {
-    indexerURL = val;
-  }
-
-  @Override
-  public String getIndexerURL() {
-    return indexerURL;
-  }
-
-  @Override
-  public void setIndexerConfig(final String val) {
-    indexerConfig = val;
-  }
-
-  @Override
-  public String getIndexerConfig() {
-    return indexerConfig;
-  }
-
-  @Override
-  public void setSolrCoreAdmin(final String val) {
-    solrCoreAdmin = val;
-  }
-
-  @Override
-  public String getSolrCoreAdmin() {
-    return solrCoreAdmin;
-  }
-
-  @Override
-  public void setPublicIndexName(final String val) {
-    publicIndexName = val;
-  }
-
-  @Override
-  public String getPublicIndexName() {
-    return publicIndexName;
-  }
-
-  @Override
-  public void setUserIndexName(final String val) {
-    userIndexName = val;
-  }
-
-  @Override
-  public String getUserIndexName() {
-    return userIndexName;
-  }
-
-  @Override
   public void setLocaleList(final String val) {
     localeList = val;
   }
@@ -460,14 +400,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     ts.append("usergroupsClass", getUsergroupsClass());
 
     ts.newLine();
-
-    ts.append("indexerURL", getIndexerURL());
-    ts.append("indexerConfig", getIndexerConfig());
-    ts.append("solrCoreAdmin", getSolrCoreAdmin());
-    ts.append("publicIndexName", getPublicIndexName());
-    ts.append("userIndexName", getUserIndexName());
-
-    ts.newLine();
     ts.append("localeList", getLocaleList());
 
     ts.newLine();
@@ -496,12 +428,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
     clone.setLocaleList(getLocaleList());
     clone.setRootUsers(getRootUsers());
-
-    clone.setIndexerURL(getIndexerURL());
-    clone.setIndexerConfig(getIndexerConfig());
-    clone.setSolrCoreAdmin(getSolrCoreAdmin());
-    clone.setPublicIndexName(getPublicIndexName());
-    clone.setUserIndexName(getUserIndexName());
 
     clone.setLocaleList(getLocaleList());
     clone.setEventregAdminToken(getEventregAdminToken());

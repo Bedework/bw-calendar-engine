@@ -19,7 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvc.indexing.*;
+import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvci.CalSvcI;
 
 import java.util.List;
@@ -79,7 +79,7 @@ public class PrincipalProcessor extends Crawler {
                                             true,
                                             getAuthpars(true),
                                             getAuthpars(false),
-                                            getSyspars(),
+                                            getIdxpars(),
                                             indexRootPath);
 
         status.stats.inc(IndexStats.StatType.categories,

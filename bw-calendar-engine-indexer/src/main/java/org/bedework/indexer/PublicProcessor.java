@@ -76,7 +76,7 @@ public class PublicProcessor extends Crawler {
                                           true,
                                           getAuthpars(true),
                                           getAuthpars(false),
-                                          getSyspars(),
+                                          getIdxpars(),
                                           indexRootPath);
 
       status.stats.inc(IndexStats.StatType.categories,
