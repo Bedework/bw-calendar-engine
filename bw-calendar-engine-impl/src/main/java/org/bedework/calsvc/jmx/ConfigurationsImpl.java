@@ -74,7 +74,14 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   private static CardDavInfo authCardDavInfo;
 
-  private Map<String, DirConfigProperties> dirConfigs = new HashMap<String, DirConfigProperties>();
+  private static BwIndexCtlMBean indexCtl;
+
+  private static IndexProperties indexProperties;
+
+  private Map<String, DirConfigProperties> dirConfigs = new HashMap<>();
+
+  private static final String indexerCtlClass =
+          "org.bedework.indexer.BwIndexCtl";
 
   /**
    * @throws CalFacadeException
@@ -118,6 +125,11 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   @Override
   public SystemProperties getSystemProperties() throws CalFacadeException {
     return sysProperties;
+  }
+
+  @Override
+  public IndexProperties getIndexProperties() throws CalFacadeException {
+    return indexProperties;
   }
 
   @Override
@@ -225,7 +237,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       /* ------------- Directory interface properties -------------------- */
       loadDirConfigs();
 
-      /* ------------- System properties -------------------- */
+      /* ------------- Carddav -------------------- */
       CardDavInfoConf ci = new CardDavInfoConf(unauthCardDavInfoNamePart);
       register(new ObjectName(ci.getServiceName()), ci);
       ci.loadConfig();
@@ -237,6 +249,19 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       ci.loadConfig();
       ci.saveConfig();
       authCardDavInfo = ci.getConfig();
+
+      /* ------------- Indexer properties -------------------- */
+      Object idx = loadInstance(indexerCtlClass);
+      indexCtl = (BwIndexCtlMBean)idx;
+
+      ConfBase idxConf = (ConfBase)idx;
+      register(new ObjectName(idxConf.getServiceName()), indexCtl);
+      indexCtl.loadConfig();
+      idxConf.saveConfig();
+      indexProperties = (IndexProperties)idxConf.getConfig();
+
+      /* Start the indexer */
+      indexCtl.start();
 
       configured = true;
     } catch (Throwable t) {
@@ -300,6 +325,28 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       throw cfe;
     } catch (Throwable t) {
       throw new CalFacadeException(t);
+    }
+  }
+
+  private static Object loadInstance(final String cname) {
+    try {
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      Class cl = loader.loadClass(cname);
+
+      if (cl == null) {
+        throw new CalFacadeException("Class " + cname + " not found");
+      }
+
+      Object o = cl.newInstance();
+
+      if (o == null) {
+        throw new CalFacadeException("Unable to instantiate class " + cname);
+      }
+
+      return o;
+    } catch (Throwable t) {
+      t.printStackTrace();
+      throw new RuntimeException(t);
     }
   }
 
