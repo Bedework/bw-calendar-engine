@@ -117,7 +117,7 @@ public class BwIndexKey extends Index.Key {
     this.score = score;
   }
 
-  /** Set the item type with a value defined in BwIndexLuceneDefs
+  /** Set the item type with a value defined in BwIndexDefs
    *
    * @param val
    */
@@ -126,7 +126,7 @@ public class BwIndexKey extends Index.Key {
   }
 
   /**
-   * @return String item type as defined in BwIndexLuceneDefs
+   * @return String item type as defined in BwIndexDefs
    */
   public String getItemType() {
     return itemType;
@@ -140,7 +140,7 @@ public class BwIndexKey extends Index.Key {
     score = val;
   }
 
-  /** Set the key for a calendar (the path) orcategory (the uid)
+  /** Set the key for a calendar (the path) or category (the uid)
    *
    * @param key1
    */
@@ -179,7 +179,8 @@ public class BwIndexKey extends Index.Key {
   }
 
   public String makeCategoryKey(final String key1) {
-    return "cat:" + key1;
+    // Key is just the uid
+    return key1;
   }
 
   /** Encode an event key

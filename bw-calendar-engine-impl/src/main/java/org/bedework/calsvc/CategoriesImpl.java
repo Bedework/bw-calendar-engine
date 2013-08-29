@@ -99,6 +99,11 @@ public class CategoriesImpl
       cached.put(ownerHref, cats);
     }
 
+    /* Add them to the uid cache */
+    for (BwCategory cat: cats) {
+      cachedByUid.put(cat.getUid(), cat);
+    }
+
     if (creatorHref == null) {
       return cats;
     }

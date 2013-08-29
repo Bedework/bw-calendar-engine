@@ -56,6 +56,9 @@ import net.fortuna.ical4j.model.Period;
 import org.apache.log4j.Logger;
 import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.action.ActionFuture;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequestBuilder;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
 import org.elasticsearch.action.admin.indices.alias.get.IndicesGetAliasesRequestBuilder;
@@ -66,6 +69,8 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.status.IndicesStatusRequestBuilder;
 import org.elasticsearch.action.admin.indices.status.IndicesStatusResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.get.GetRequestBuilder;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
@@ -76,6 +81,7 @@ import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
@@ -92,11 +98,9 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchHits;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -148,6 +152,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
   private static Node theNode; /* For embedded use */
   private static Client theClient;
+  private static volatile Object clientSyncher = new Object();
 
   private String targetIndex;
   private boolean writeable;
@@ -412,11 +417,14 @@ public class BwIndexEsImpl implements BwIndexer {
       IndicesAdminClient idx = getAdminIdx();
 
       CreateIndexRequestBuilder cirb = idx.prepareCreate(newName);
-      CreateIndexRequest cir = cirb.request();
 
       File f = new File(idxpars.getIndexerConfig());
 
-      cir.source(new FileReader(f).toString().getBytes());
+      byte[] sbBytes = Streams.copyToByteArray(f);
+
+      cirb.setSource(sbBytes);
+
+      CreateIndexRequest cir = cirb.request();
 
       ActionFuture<CreateIndexResponse> af = idx.create(cir);
 
@@ -430,6 +438,7 @@ public class BwIndexEsImpl implements BwIndexer {
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
+      error(t);
       throw new CalFacadeException(t);
     }
   }
@@ -535,6 +544,20 @@ public class BwIndexEsImpl implements BwIndexer {
   public BwCategory fetchCat(final String field,
                              final String val)
           throws CalFacadeException {
+    if (field.equals("uid")) {
+      GetRequestBuilder grb = getClient().prepareGet(targetIndex,
+                                                     docTypeCategory,
+                                                     val);
+
+      GetResponse gr = grb.execute().actionGet();
+
+      if (!gr.isExists()) {
+        return null;
+      }
+
+      return makeCat(gr.getSourceAsMap());
+    }
+
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
     FilterBuilder fb = addPrincipal(addTerm(null, field, val));
@@ -804,8 +827,6 @@ public class BwIndexEsImpl implements BwIndexer {
    */
   private Index.Key makeKey(final Index.Key key,
                             final SearchHit hit) throws CalFacadeException {
-    Map<String, SearchHitField> fields = hit.fields();
-
     BwIndexKey bwkey;
 
     if ((key == null) || (!(key instanceof BwIndexKey))) {
@@ -854,9 +875,12 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   private BwCategory makeCat(final SearchHit hit) throws CalFacadeException {
-    Map<String, Object> sflds = hit.sourceAsMap();
-    Map<String, Object> fields = (Map<String, Object>)sflds.get(docTypeCategory);
+    Map<String, Object> fields = hit.sourceAsMap();
 
+    return makeCat(fields);
+  }
+
+  private BwCategory makeCat(final Map<String, Object> fields) throws CalFacadeException {
     BwCategory cat = new BwCategory();
 
     cat.setWord(new BwString(null,
@@ -875,8 +899,7 @@ public class BwIndexEsImpl implements BwIndexer {
     BwEvent ev = new BwEventObj();
     EventInfo ei = new  EventInfo(ev);
 
-    Map<String, Object> sflds = hit.sourceAsMap();
-    Map<String, Object> fields = (Map<String, Object>)sflds.get(docTypeEvent);
+    Map<String, Object> fields = hit.sourceAsMap();
 
     /*
     Float score = (Float)sd.getFirstValue("score");
@@ -919,7 +942,7 @@ public class BwIndexEsImpl implements BwIndexer {
     ev.setDtend(unindexDate(fields, "end_"));
 
     ev.setDuration(getString(fields, "duration"));
-    ev.setNoStart((Boolean)getFirstValue(fields, "start_present"));
+    ev.setNoStart(Boolean.parseBoolean(getString(fields, "start_present")));
     ev.setEndType(getString(fields, "end_type").charAt(0));
 
     ev.setUid(getString(fields, "uid"));
@@ -1029,7 +1052,8 @@ public class BwIndexEsImpl implements BwIndexer {
     String utc = getString(fields, prefix + "utc");
     String local = getString(fields, prefix + "local");
     String tzid = getString(fields, prefix + "tzid");
-    Boolean floating = (Boolean)getFirstValue(fields, prefix + "floating");
+    boolean floating = Boolean.parseBoolean(getString(fields,
+                                                      prefix + "floating"));
 
     boolean dateType = (local != null) && (local.length() == 8);
 
@@ -1122,9 +1146,14 @@ public class BwIndexEsImpl implements BwIndexer {
       return keyConverter.makeCategoryKey(((BwCategory) rec).getUid());
     }
 
+    BwEvent ev = null;
     if (rec instanceof BwEvent) {
-      BwEvent ev = (BwEvent)rec;
+      ev = (BwEvent)rec;
+    } else if (rec instanceof EventInfo) {
+      ev = ((EventInfo)rec).getEvent();
+    }
 
+    if (ev != null) {
       String path = ev.getColPath();
       String guid = ev.getUid();
       String recurid = ev.getRecurrenceId();
@@ -1404,9 +1433,7 @@ public class BwIndexEsImpl implements BwIndexer {
   private void makeDoc(final XContentBuilder builder,
                        final BwCategory cat) throws CalFacadeException {
     try {
-      builder.startObject(docTypeCategory);
-
-      makeField(builder, "key", makeKeyVal(cat));
+      //makeField(builder, "key", makeKeyVal(cat));
       makeField(builder, "itemType", itemTypeCategory);
       makeField(builder, "uid", cat.getUid());
       makeField(builder, "creator", cat.getCreatorHref());
@@ -1420,8 +1447,6 @@ public class BwIndexEsImpl implements BwIndexer {
 
       makeField(builder, "category", cat.getWord());
       makeField(builder, "description", cat.getDescription());
-
-      builder.endObject();
 
       batchCurSize++;
     } catch (CalFacadeException cfe) {
@@ -1444,7 +1469,6 @@ public class BwIndexEsImpl implements BwIndexer {
       String colPath = null;
       Collection <BwCategory> cats = null;
 
-      String docType;
       String key = null;
       String name = null;
       String created = null;
@@ -1457,7 +1481,6 @@ public class BwIndexEsImpl implements BwIndexer {
       String acl;
 
       if (rec instanceof BwCalendar) {
-        docType = docTypeCollection;
         col = (BwCalendar)rec;
 
         key = makeKeyVal(col);
@@ -1474,8 +1497,6 @@ public class BwIndexEsImpl implements BwIndexer {
         summary = col.getSummary();
         acl = col.getAccess();
       } else if (rec instanceof EventInfo) {
-        docType = docTypeEvent;
-
         ei = (EventInfo)rec;
         ev = ei.getEvent();
 
@@ -1524,8 +1545,6 @@ public class BwIndexEsImpl implements BwIndexer {
 
       /* Start doc and do common collection/event fields */
 
-      builder.startObject(docType);
-
       makeField(builder, "key", key);
       makeField(builder, "itemType", itemType);
 
@@ -1548,8 +1567,6 @@ public class BwIndexEsImpl implements BwIndexer {
 
       if (col != null) {
         // Doing collection - we're done
-
-        builder.endObject();
 
         return;
       }
@@ -1612,8 +1629,6 @@ public class BwIndexEsImpl implements BwIndexer {
           }
         }
       }
-
-      builder.endObject();
 
       batchCurSize++;
     } catch (CalFacadeException cfe) {
@@ -1691,51 +1706,90 @@ public class BwIndexEsImpl implements BwIndexer {
       return theClient;
     }
 
-    if (idxpars.getEmbeddedIndexer()) {
-      /* Start up a node and get a client from it.
-       */
-      ImmutableSettings.Builder settings =
-              ImmutableSettings.settingsBuilder();
+    synchronized (clientSyncher) {
+      if (idxpars.getEmbeddedIndexer()) {
+        /* Start up a node and get a client from it.
+         */
+        ImmutableSettings.Builder settings =
+                ImmutableSettings.settingsBuilder();
 
-      if (idxpars.getNodeName() != null) {
-        settings.put("node.name", idxpars.getNodeName());
+        if (idxpars.getNodeName() != null) {
+          settings.put("node.name", idxpars.getNodeName());
+        }
+
+        settings.put("path.data", idxpars.getDataDir());
+
+        if (idxpars.getHttpEnabled()) {
+          warn("*************************************************************");
+          warn("*************************************************************");
+          warn("*************************************************************");
+          warn("http is enabled for the indexer. This may be a security risk.");
+          warn("*************************************************************");
+          warn("*************************************************************");
+          warn("*************************************************************");
+        }
+        settings.put("http.enabled", idxpars.getHttpEnabled());
+        NodeBuilder nbld = NodeBuilder.nodeBuilder()
+                .settings(settings);
+
+        if (idxpars.getClusterName() != null) {
+          nbld.clusterName(idxpars.getClusterName());
+        }
+
+        theNode = nbld.data(true).local(true).node();
+
+        theClient = theNode.client();
+      } else {
+        /* Not embedded - use the URL */
+        TransportClient tClient = new TransportClient();
+
+        tClient = tClient.addTransportAddress(
+                new InetSocketTransportAddress(host, port));
+
+        theClient = tClient;
       }
 
-      settings.put("path.data", idxpars.getDataDir());
+      /* Ensure status is at least yellow */
 
-      if (idxpars.getHttpEnabled()) {
-        warn("*************************************************************");
-        warn("*************************************************************");
-        warn("*************************************************************");
-        warn("http is enabled for the indexer. This may be a security risk.");
-        warn("*************************************************************");
-        warn("*************************************************************");
-        warn("*************************************************************");
+      int tries = 0;
+      int yellowTries = 0;
+
+      for (;;) {
+        ClusterHealthRequestBuilder chrb = theClient.admin().cluster().prepareHealth();
+
+        ClusterHealthResponse chr = chrb.execute().actionGet();
+
+        if (chr.getStatus() == ClusterHealthStatus.GREEN) {
+          break;
+        }
+
+        if (chr.getStatus() == ClusterHealthStatus.YELLOW) {
+          yellowTries++;
+
+          if (yellowTries > 60) {
+            warn("Going ahead anyway on YELLOW status");
+          }
+
+          break;
+        }
+
+        tries++;
+
+        if (tries % 5 == 0) {
+          warn("Cluster status for " + chr.getClusterName() +
+                       " is still " + chr.getStatus() +
+                       " after " + tries + " tries");
+        }
+
+        try {
+          Thread.sleep(1000);
+        } catch(InterruptedException ex) {
+          throw new CalFacadeException("Interrupted out of getClient");
+        }
       }
-      settings.put("http.enabled", idxpars.getHttpEnabled());
-      NodeBuilder nbld = NodeBuilder.nodeBuilder()
-              .settings(settings);
-
-      if (idxpars.getClusterName() != null) {
-        nbld.clusterName(idxpars.getClusterName());
-      }
-
-      theNode = nbld.data(true).local(true).node();
-
-      theClient = theNode.client();
 
       return theClient;
     }
-
-    /* Not embedded - use the URL */
-    TransportClient tClient = new TransportClient();
-
-    tClient = tClient.addTransportAddress(
-            new InetSocketTransportAddress(host, port));
-
-    theClient = tClient;
-
-    return theClient;
   }
 
   private IndicesAdminClient getAdminIdx() throws CalFacadeException {
@@ -1765,7 +1819,7 @@ public class BwIndexEsImpl implements BwIndexer {
       return docTypeCollection;
     }
 
-    if (rec instanceof BwEvent) {
+    if (rec instanceof EventInfo) {
       return docTypeEvent;
     }
 
