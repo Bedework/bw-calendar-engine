@@ -108,6 +108,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.xml.ws.Holder;
@@ -914,7 +915,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
     Collection<Object> vals = getFieldValues(fields, "category_uid");
     if (!Util.isEmpty(vals)) {
-      List<String> catUids = new ArrayList<String>();
+      Set<String> catUids = new TreeSet<>();
 
       for (Object o: vals) {
         catUids.add((String)o);

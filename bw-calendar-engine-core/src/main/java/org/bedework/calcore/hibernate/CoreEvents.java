@@ -3633,9 +3633,17 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     }
   }
 
+  private AuthProperties getAuthprops() throws CalFacadeException {
+    if (authprops == null) {
+      authprops = new CalSvcFactoryDefault().getSystemConfig().getAuthProperties(currentMode == guestMode);
+    }
+
+    return authprops;
+  }
+
   private SystemProperties getSysprops() throws CalFacadeException {
     if (sysprops == null) {
-      sysprops = new CalSvcFactoryDefault().getSystemConfig().getSystemProperties(currentMode == guestMode);
+      sysprops = new CalSvcFactoryDefault().getSystemConfig().getSystemProperties();
     }
 
     return sysprops;

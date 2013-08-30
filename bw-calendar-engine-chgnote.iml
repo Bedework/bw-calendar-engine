@@ -81,6 +81,19 @@
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents" />
     <orderEntry type="library" name="Maven: javax.jms:jms:1.1" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-ical" />
+    <orderEntry type="library" name="Maven: org.elasticsearch:elasticsearch:0.90.3" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-common:4.4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-codecs:4.4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-queries:4.4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-memory:4.4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-highlighter:4.4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-queryparser:4.4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-sandbox:4.4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-suggest:4.4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-join:4.4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-grouping:4.3.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-spatial:4.4.0" level="project" />
+    <orderEntry type="library" name="Maven: com.spatial4j:spatial4j:0.3" level="project" />
     <orderEntry type="library" name="Maven: javax.servlet:servlet-api:2.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.solr:solr-core:4.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.solr:solr-solrj:4.3.0" level="project" />
@@ -88,18 +101,8 @@
     <orderEntry type="library" name="Maven: org.noggit:noggit:0.5" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpmime:4.2.3" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.codehaus.woodstox:wstx-asl:3.2.7" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-codecs:4.3.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-common:4.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-kuromoji:4.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-phonetic:4.3.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-highlighter:4.3.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-memory:4.3.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-queries:4.3.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-queryparser:4.3.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-spatial:4.3.0" level="project" />
-    <orderEntry type="library" name="Maven: com.spatial4j:spatial4j:0.3" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-suggest:4.3.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-grouping:4.3.0" level="project" />
     <orderEntry type="library" name="Maven: commons-cli:commons-cli:1.2" level="project" />
     <orderEntry type="library" name="Maven: commons-fileupload:commons-fileupload:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.restlet.jee:org.restlet:2.1.1" level="project" />
