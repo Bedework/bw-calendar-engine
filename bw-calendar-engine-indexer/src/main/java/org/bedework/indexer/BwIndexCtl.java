@@ -111,7 +111,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
 
   /**
    * @param name
-   * @return service name for the mbean with this name
+   * @return object name value for the mbean with this name
    */
   public static String getServiceName(final String name) {
     return "org.bedework.bwengine:service=" + name;

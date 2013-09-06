@@ -32,6 +32,8 @@ import org.bedework.indexer.BwIndexCtlMBean;
 
 import edu.rpi.cmt.config.ConfigurationStore;
 import edu.rpi.cmt.jmx.ConfBase;
+import edu.rpi.sss.util.http.service.HttpConfig;
+import edu.rpi.sss.util.http.service.HttpOut;
 
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +77,8 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   private static CardDavInfo authCardDavInfo;
 
   private static BwIndexCtlMBean indexCtl;
+
+  private static HttpConfig httpConfig;
 
   private static IndexProperties indexProperties;
 
@@ -125,6 +129,11 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   @Override
   public SystemProperties getSystemProperties() throws CalFacadeException {
     return sysProperties;
+  }
+
+  @Override
+  public HttpConfig getHttpConfig() throws CalFacadeException {
+    return httpConfig;
   }
 
   @Override
@@ -227,6 +236,14 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       register(new ObjectName(mc.getServiceName()), mc);
       mc.loadConfig();
       mailProps = mc.getConfig();
+
+      /* ------------- Http properties -------------------- */
+      HttpOut ho = new HttpOut("org.bedework.bwengine.confuri",
+                               "org.bedework.bwengine",
+                               "httpConfig");
+      register(new ObjectName(ho.getServiceName()), ho);
+      ho.loadConfig();
+      httpConfig = ho.getConfig();
 
       /* ------------- Synch properties -------------------- */
       SynchConf sc = new SynchConf();

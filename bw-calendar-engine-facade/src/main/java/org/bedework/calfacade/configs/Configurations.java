@@ -21,6 +21,8 @@ package org.bedework.calfacade.configs;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
 
+import edu.rpi.sss.util.http.service.HttpConfig;
+
 import java.io.Serializable;
 
 /** Provides access to some of the basic configuration for the system.
@@ -46,6 +48,12 @@ public interface Configurations extends Serializable {
    * @throws CalFacadeException
    */
   SystemProperties getSystemProperties() throws CalFacadeException;
+
+  /**
+   * @return http properties
+   * @throws CalFacadeException
+   */
+  HttpConfig getHttpConfig() throws CalFacadeException;
 
   /**
    * @return indexing properties
