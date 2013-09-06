@@ -1415,7 +1415,7 @@ public class CoreCalendars extends CalintfHelperHib
       if (code.equals(SysEvent.SysCode.COLLECTION_DELETED)) {
         postNotification(
            SysEvent.makeCollectionDeletedEvent(code,
-                                               currentPrincipal(),
+                                               authenticatedPrincipal(),
                                                val.getOwnerHref(),
                                                val.getPath(),
                                                val.getShared(),
@@ -1423,7 +1423,7 @@ public class CoreCalendars extends CalintfHelperHib
       } else {
         postNotification(
            SysEvent.makeCollectionUpdateEvent(code,
-                                              currentPrincipal(),
+                                              authenticatedPrincipal(),
                                               val.getOwnerHref(),
                                               val.getPath(),
                                               val.getShared()));
@@ -1439,7 +1439,7 @@ public class CoreCalendars extends CalintfHelperHib
     try {
       postNotification(
          SysEvent.makeCollectionMovedEvent(code,
-                                           currentPrincipal(),
+                                           authenticatedPrincipal(),
                                            val.getOwnerHref(),
                                            val.getPath(),
                                            val.getShared(),

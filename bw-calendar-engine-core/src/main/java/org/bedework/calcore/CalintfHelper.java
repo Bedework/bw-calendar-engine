@@ -108,9 +108,30 @@ public abstract class CalintfHelper
   protected BasicSystemProperties getSyspars() throws CalFacadeException {
     return cb.getSyspars();
   }
+  protected BwPrincipal getAuthenticatedPrincipal() throws CalFacadeException {
+    if (cb == null) {
+      return null;
+    }
+
+    return cb.getPrincipalInfo().getAuthPrincipal();
+  }
 
   protected BwPrincipal getPrincipal() throws CalFacadeException {
+    if (cb == null) {
+      return null;
+    }
+
     return cb.getPrincipalInfo().getPrincipal();
+  }
+
+  protected String authenticatedPrincipal() throws CalFacadeException {
+    BwPrincipal p = getAuthenticatedPrincipal();
+
+    if (p == null) {
+      return null;
+    }
+
+    return p.getPrincipalRef();
   }
 
   protected String currentPrincipal() throws CalFacadeException {

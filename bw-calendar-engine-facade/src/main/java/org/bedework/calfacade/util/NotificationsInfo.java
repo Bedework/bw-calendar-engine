@@ -30,12 +30,15 @@ import org.bedework.caldav.util.notifications.RecurrenceType;
 import org.bedework.caldav.util.notifications.ResourceChangeType;
 import org.bedework.caldav.util.notifications.UpdatedType;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import edu.rpi.cmt.calendar.IcalDefs;
+import edu.rpi.cmt.calendar.PropertyIndex;
 import edu.rpi.sss.util.DateTimeUtil;
 import edu.rpi.sss.util.Util;
 
+import java.util.Collection;
 
 /** Generate change notification messages from event and other information.
  * Output is an XML object following the Apple extensions.
@@ -87,7 +90,6 @@ public class NotificationsInfo {
   /**
    * @param currentAuth
    * @param ev
-   * @param userHref
    * @return Info for single updated event.
    * @throws CalFacadeException
    */
@@ -242,14 +244,36 @@ public class NotificationsInfo {
       if (!cte.getChanged()) {
         continue;
       }
-      ChangedPropertyType cp = new ChangedPropertyType();
 
-      cp.setName(cte.getIndex().getPname());
+      if (cte.getIndex() == PropertyIndex.PropertyInfoIndex.XPROP) {
+        /* Reflected a a set of removes and adds. */
+        if (!Util.isEmpty(cte.getAddedValues())) {
+          for (BwXproperty xp: ((Collection<BwXproperty>)cte.getRemovedValues())) {
+            ChangedPropertyType cp = new ChangedPropertyType();
+            cp.setName(xp.getName());
 
-      cp.setDataFrom(getDataFrom(cte));
-      cp.setDataTo(getDataTo(cte));
+            cp.setDataFrom(String.valueOf(xp));
 
-      c.getChangedProperty().add(cp);
+            c.getChangedProperty().add(cp);
+          }
+          for (BwXproperty xp: ((Collection<BwXproperty>)cte.getAddedValues())) {
+            ChangedPropertyType cp = new ChangedPropertyType();
+            cp.setName(xp.getName());
+
+            cp.setDataTo(String.valueOf(xp));
+
+            c.getChangedProperty().add(cp);
+          }
+        }
+      } else {
+        ChangedPropertyType cp = new ChangedPropertyType();
+        cp.setName(cte.getIndex().getPname());
+
+        cp.setDataFrom(getDataFrom(cte));
+        cp.setDataTo(getDataTo(cte));
+
+        c.getChangedProperty().add(cp);
+      }
     }
 
     r.getChanges().add(c);

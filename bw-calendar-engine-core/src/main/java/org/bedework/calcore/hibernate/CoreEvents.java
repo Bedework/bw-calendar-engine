@@ -3486,7 +3486,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
           code.equals(SysEvent.SysCode.ENTITY_TOMBSTONED)) {
         postNotification(
            SysEvent.makeEntityDeletedEvent(code,
-                                           currentPrincipal(),
+                                           authenticatedPrincipal(),
                                            val.getOwnerHref(),
                                            getHref(val),
                                            shared,
@@ -3498,7 +3498,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       } else {
         postNotification(
            SysEvent.makeEntityUpdateEvent(code,
-                                          currentPrincipal(),
+                                          authenticatedPrincipal(),
                                           val.getOwnerHref(),
                                           getHref(val),
                                           shared,
@@ -3526,7 +3526,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
           code.equals(SysEvent.SysCode.ENTITY_TOMBSTONED)) {
         postNotification(
            SysEvent.makeEntityDeletedEvent(code,
-                                           currentPrincipal(),
+                                           authenticatedPrincipal(),
                                            val.getOwnerHref(),
                                            getHref(val),
                                            shared,
@@ -3538,7 +3538,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       } else {
         postNotification(
            SysEvent.makeEntityUpdateEvent(code,
-                                          currentPrincipal(),
+                                          authenticatedPrincipal(),
                                           val.getOwnerHref(),
                                           getHref(val),
                                           shared,
@@ -3557,15 +3557,15 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     try {
       if (code.equals(SysEvent.SysCode.ENTITY_DELETED) ||
           code.equals(SysEvent.SysCode.ENTITY_TOMBSTONED)) {
-        return NotificationsInfo.deleted(currentPrincipal(), val);
+        return NotificationsInfo.deleted(authenticatedPrincipal(), val);
       }
 
       if (code.equals(SysEvent.SysCode.ENTITY_UPDATED)) {
-        return NotificationsInfo.updated(currentPrincipal(), val);
+        return NotificationsInfo.updated(authenticatedPrincipal(), val);
       }
 
       if (code.equals(SysEvent.SysCode.ENTITY_ADDED)) {
-        return NotificationsInfo.added(currentPrincipal(), val);
+        return NotificationsInfo.added(authenticatedPrincipal(), val);
       }
 
       return null;
