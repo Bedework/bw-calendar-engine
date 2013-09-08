@@ -27,6 +27,7 @@ import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper;
 import org.bedework.calsvci.CalSuitesI;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cmt.access.Access;
 import edu.rpi.cmt.access.AccessException;
@@ -37,7 +38,6 @@ import edu.rpi.cmt.access.Acl.CurrentAccess;
 import edu.rpi.cmt.access.Privilege;
 import edu.rpi.cmt.access.PrivilegeDefs;
 import edu.rpi.cmt.access.WhoDefs;
-import edu.rpi.sss.util.Util;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -207,7 +207,9 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
                                 final String name,
                                 final ResourceClass cl) throws CalFacadeException {
     try {
-      BwResource r = getRess().get(Util.buildPath(false, getResourcesPath(suite, cl),
+      BwResource r = getRess().get(Util.buildPath(false,
+                                                  getResourcesPath(
+                                                          suite, cl),
                                                   "/",
                                                   name));
       if (r != null) {

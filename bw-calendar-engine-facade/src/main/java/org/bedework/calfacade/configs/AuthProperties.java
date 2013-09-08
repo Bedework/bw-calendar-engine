@@ -20,8 +20,8 @@ package org.bedework.calfacade.configs;
 
 import org.bedework.caldav.server.sysinterface.CalDAVAuthProperties;
 
-import edu.rpi.cmt.config.ConfInfo;
-import edu.rpi.cmt.jmx.MBeanInfo;
+import org.bedework.util.config.ConfInfo;
+import org.bedework.util.jmx.MBeanInfo;
 
 /** These are the system properties that the calendar engine needs to
  * know about, either because it needs to apply these limits or just

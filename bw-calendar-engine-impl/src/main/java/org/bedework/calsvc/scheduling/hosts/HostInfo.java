@@ -19,10 +19,9 @@
 package org.bedework.calsvc.scheduling.hosts;
 
 import org.bedework.caldav.server.sysinterface.Host;
-
-import edu.rpi.cmt.config.ConfInfo;
-import edu.rpi.cmt.config.ConfigBase;
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.config.ConfInfo;
+import org.bedework.util.config.ConfigBase;
+import org.bedework.util.misc.ToString;
 
 import java.util.Comparator;
 import java.util.List;

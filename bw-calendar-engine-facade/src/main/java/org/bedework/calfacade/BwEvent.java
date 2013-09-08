@@ -32,12 +32,11 @@ import org.bedework.calfacade.base.EventEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.ChangeTable;
-
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
-import edu.rpi.sss.util.ToString;
-import edu.rpi.sss.util.Util;
-import edu.rpi.sss.util.Util.AdjustCollectionResult;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
+import org.bedework.util.misc.Util.AdjustCollectionResult;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
@@ -3862,7 +3861,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   /** Add our stuff to the StringBuilder
    *
-   * @param sb    StringBuilder for result
+   * @param ts    StringBuilder for result
    */
   @Override
   @NoProxy

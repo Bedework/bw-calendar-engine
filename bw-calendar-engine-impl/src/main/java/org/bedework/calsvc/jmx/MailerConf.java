@@ -20,7 +20,7 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.mail.MailConfigPropertiesImpl;
 
-import edu.rpi.cmt.jmx.ConfBase;
+import org.bedework.util.jmx.ConfBase;
 
 /**
  * @author douglm

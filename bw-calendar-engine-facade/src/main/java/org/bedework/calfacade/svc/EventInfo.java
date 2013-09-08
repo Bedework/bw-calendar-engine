@@ -28,10 +28,10 @@ import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.ChangeTable;
+import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.sss.util.ToString;
-import edu.rpi.sss.util.Util;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -630,7 +630,8 @@ public class EventInfo
         proxy.removeAlarm(a);
       }
 
-      if (Util.isEmpty(proxy.getXproperties(BwXproperty.peruserPropTransp)) &&
+      if (Util.isEmpty(proxy.getXproperties(
+              BwXproperty.peruserPropTransp)) &&
           Util.isEmpty(proxy.getAlarms())) {
         /* No more peruser data - add to remove list */
         proxies.add(proxy);

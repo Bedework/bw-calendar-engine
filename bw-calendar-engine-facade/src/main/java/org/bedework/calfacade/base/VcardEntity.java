@@ -23,7 +23,7 @@ import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.annotations.NoWrap;
 import org.bedework.calfacade.exc.CalFacadeException;
 
-import edu.rpi.sss.util.xml.XmlEmit;
+import org.bedework.util.xml.XmlEmit;
 
 import org.apache.log4j.Logger;
 

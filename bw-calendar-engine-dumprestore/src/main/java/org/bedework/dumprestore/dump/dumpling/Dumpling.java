@@ -27,8 +27,7 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.dump.DumpGlobals;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
 
@@ -96,7 +95,8 @@ public class Dumpling<T extends DumpEntity> implements Defs {
 
         if (r.getContent() == null) {
           error("No content for resource " +
-                Util.buildPath(false, r.getColPath(), "/", r.getName()));
+                Util.buildPath(false, r.getColPath(), "/",
+                               r.getName()));
         }
       }
 

@@ -21,12 +21,10 @@ package org.bedework.calfacade.util;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwFreeBusyComponent;
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import edu.rpi.cmt.timezones.Timezones;
+import org.bedework.util.timezones.Timezones;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
-
 import org.apache.log4j.Logger;
 
 import java.util.TreeSet;
@@ -64,7 +62,8 @@ public class EventPeriods {
     endTzid = end.getTzid();
 
     try {
-      dtstart = new DateTime(Timezones.getUtc(start.getDtval(), startTzid));
+      dtstart = new DateTime(Timezones.getUtc(start.getDtval(),
+                                              startTzid));
       dtend = new DateTime(Timezones.getUtc(end.getDtval(), endTzid));
     } catch (Throwable t) {
       throw new CalFacadeException(t);

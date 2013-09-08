@@ -27,16 +27,13 @@ import org.bedework.caldav.util.filter.PresenceFilter;
 import org.bedework.caldav.util.filter.parse.Filters;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
-import edu.rpi.sss.util.Util;
-
-import net.fortuna.ical4j.model.DateTime;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.Util;
 
 import ietf.params.xml.ns.caldav.ParamFilterType;
 import ietf.params.xml.ns.caldav.TextMatchType;
+import net.fortuna.ical4j.model.DateTime;
+import org.apache.log4j.Logger;
 
 import java.io.StreamTokenizer;
 import java.io.StringReader;

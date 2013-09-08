@@ -25,6 +25,11 @@
 			<artifactId>bw-calendar-engine-impl</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+    <!-- Bedework Dependencies -->
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-misc</artifactId>
+    </dependency>
 		<!-- Third Party Dependencies -->
 		<dependency>
 			<groupId>org.apache.geronimo.framework</groupId>

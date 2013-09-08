@@ -18,8 +18,8 @@
 */
 package org.bedework.calfacade.mail;
 
-import edu.rpi.cmt.config.ConfInfo;
-import edu.rpi.cmt.config.ConfigBase;
+import org.bedework.util.config.ConfInfo;
+import org.bedework.util.config.ConfigBase;
 
 /** Properties for mailers.
  *

@@ -20,7 +20,7 @@ package org.bedework.inoutsched;
 
 import org.bedework.calsvc.scheduling.hosts.BwHosts;
 
-import edu.rpi.cmt.jmx.ConfBase;
+import org.bedework.util.jmx.ConfBase;
 
 /** JMX bean for bedework scheduling
  *

@@ -29,10 +29,9 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
-
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.ScheduleMethods;
-import edu.rpi.cmt.timezones.Timezones;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.timezones.Timezones;
 
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;

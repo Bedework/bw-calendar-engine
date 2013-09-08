@@ -26,9 +26,8 @@ import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
 import java.util.Collection;

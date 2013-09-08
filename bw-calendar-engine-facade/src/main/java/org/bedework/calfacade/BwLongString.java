@@ -20,8 +20,7 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.base.BwStringBase;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 import java.util.Collection;
 

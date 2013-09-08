@@ -87,16 +87,16 @@ import org.bedework.icalendar.IcalCallback;
 import org.bedework.icalendar.URIgen;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase;
+import org.bedework.util.jmx.MBeanUtil;
+import org.bedework.util.misc.Util;
+import org.bedework.util.security.PwEncryptionIntf;
+import org.bedework.util.timezones.Timezones;
 
 import edu.rpi.cmt.access.Access;
 import edu.rpi.cmt.access.Ace;
 import edu.rpi.cmt.access.AceWho;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 import edu.rpi.cmt.access.PrivilegeSet;
-import edu.rpi.cmt.jmx.MBeanUtil;
-import edu.rpi.cmt.security.PwEncryptionIntf;
-import edu.rpi.cmt.timezones.Timezones;
-import edu.rpi.sss.util.Util;
 
 import net.fortuna.ical4j.model.property.DtStamp;
 import org.apache.log4j.Logger;
@@ -1634,7 +1634,7 @@ public class CalSvc extends CalSvcI {
     }
 
     try {
-      String pwEncryptClass = "edu.rpi.cmt.security.PwEncryptionDefault";
+      String pwEncryptClass = "org.bedework.util.security.PwEncryptionDefault";
       //String pwEncryptClass = getSysparsHandler().get().getPwEncryptClass();
 
       pwEncrypt = (PwEncryptionIntf)CalFacadeUtil.getObject(pwEncryptClass,

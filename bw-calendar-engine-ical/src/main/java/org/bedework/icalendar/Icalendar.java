@@ -22,10 +22,10 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.svc.EventInfo;
 
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.IcalDefs.IcalComponentType;
-import edu.rpi.cmt.calendar.ScheduleMethods;
-import edu.rpi.cmt.timezones.Timezones;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.IcalDefs.IcalComponentType;
+import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.timezones.Timezones;
 
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;

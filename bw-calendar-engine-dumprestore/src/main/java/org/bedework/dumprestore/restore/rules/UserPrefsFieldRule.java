@@ -21,8 +21,7 @@ package org.bedework.dumprestore.restore.rules;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.dumprestore.restore.RestoreGlobals;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import org.xml.sax.Attributes;
 

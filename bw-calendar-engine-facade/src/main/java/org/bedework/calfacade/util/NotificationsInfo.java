@@ -32,11 +32,10 @@ import org.bedework.caldav.util.notifications.UpdatedType;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.PropertyIndex;
-import edu.rpi.sss.util.DateTimeUtil;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex;
+import org.bedework.util.misc.Util;
+import org.bedework.util.timezones.DateTimeUtil;
 
 import java.util.Collection;
 

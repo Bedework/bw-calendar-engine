@@ -9,8 +9,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="bw-util" />
+    <orderEntry type="module" module-name="bw-util-calendar" />
     <orderEntry type="module" module-name="bw-ws-icalendar" />
+    <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="module" module-name="bw-ws-tzsvr" />
     <orderEntry type="module" module-name="bw-ws-calws-soap" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.1.1" level="project" />
@@ -39,6 +40,7 @@
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.15" level="project" />
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
+    <orderEntry type="module" module-name="bw-util-xml" />
     <orderEntry type="library" name="Maven: org.mnode.ical4j:ical4j-vcard:0.9.6-BW-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.mnode.ical4j:ical4j:1.0.4" level="project" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.3" level="project" />

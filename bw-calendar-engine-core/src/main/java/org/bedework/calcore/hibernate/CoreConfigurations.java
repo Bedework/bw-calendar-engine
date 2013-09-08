@@ -20,7 +20,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 
-import edu.rpi.cmt.jmx.ConfBase;
+import org.bedework.util.jmx.ConfBase;
 
 import org.apache.log4j.Logger;
 

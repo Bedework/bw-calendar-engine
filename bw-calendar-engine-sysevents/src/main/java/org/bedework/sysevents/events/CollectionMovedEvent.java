@@ -18,7 +18,7 @@
 */
 package org.bedework.sysevents.events;
 
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 /** A collection change event. The fields define what changed together
  * with the syscode.<ul>

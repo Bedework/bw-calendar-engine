@@ -31,11 +31,10 @@ import org.bedework.calfacade.base.SummaryEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.BwDateTimeUtil;
 import org.bedework.calfacade.util.CalFacadeUtil;
-
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
-import edu.rpi.sss.util.DateTimeUtil;
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.ToString;
+import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.property.Duration;

@@ -26,8 +26,7 @@ import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
-
-import edu.rpi.cmt.calendar.IcalDefs;
+import org.bedework.util.calendar.IcalDefs;
 
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Period;

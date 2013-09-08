@@ -18,8 +18,8 @@
 */
 package org.bedework.calcore.hibernate;
 
-import edu.rpi.cmt.jmx.ConfBaseMBean;
-import edu.rpi.cmt.jmx.MBeanInfo;
+import org.bedework.util.jmx.ConfBaseMBean;
+import org.bedework.util.jmx.MBeanInfo;
 
 import java.util.List;
 

@@ -29,10 +29,9 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.EventsI;
-
-import edu.rpi.cct.misc.indexing.Index;
-import edu.rpi.cct.misc.indexing.IndexException;
-import edu.rpi.cmt.calendar.PropertyIndex;
+import org.bedework.util.calendar.PropertyIndex;
+import org.bedework.util.indexing.Index;
+import org.bedework.util.indexing.IndexException;
 
 import java.io.CharArrayWriter;
 import java.util.ArrayList;

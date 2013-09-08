@@ -23,8 +23,7 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.dumprestore.restore.RestoreGlobals;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import org.xml.sax.Attributes;
 

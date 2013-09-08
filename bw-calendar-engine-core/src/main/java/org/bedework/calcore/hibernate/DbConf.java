@@ -18,8 +18,8 @@
 */
 package org.bedework.calcore.hibernate;
 
-import edu.rpi.cmt.jmx.ConfBase;
-import edu.rpi.cmt.jmx.InfoLines;
+import org.bedework.util.jmx.ConfBase;
+import org.bedework.util.jmx.InfoLines;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;

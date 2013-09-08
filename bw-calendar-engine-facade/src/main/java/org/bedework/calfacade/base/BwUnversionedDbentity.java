@@ -20,8 +20,7 @@ package org.bedework.calfacade.base;
 
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.annotations.NoWrap;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 import java.io.Serializable;
 

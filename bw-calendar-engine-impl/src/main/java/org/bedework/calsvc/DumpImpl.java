@@ -38,13 +38,13 @@ import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calsvci.DumpIntf;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cmt.access.AccessException;
 import edu.rpi.cmt.access.AccessPrincipal;
 import edu.rpi.cmt.access.PrivilegeDefs;
 import edu.rpi.cmt.access.PrivilegeSet;
 import edu.rpi.cmt.access.WhoDefs;
-import edu.rpi.sss.util.Util;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -100,7 +100,8 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     Collection<BwCalendar> cols = new ArrayList<BwCalendar>();
 
     cols.add(getCal().getCalendar(Util.buildPath(true, "/",
-                                                 getBasicSyspars().getPublicCalendarRoot()),
+                                                 getBasicSyspars()
+                                                         .getPublicCalendarRoot()),
                               PrivilegeDefs.privAny, false));
     cols.add(getCal().getCalendar(Util.buildPath(true, "/",
                                                  getBasicSyspars().getUserCalendarRoot()),

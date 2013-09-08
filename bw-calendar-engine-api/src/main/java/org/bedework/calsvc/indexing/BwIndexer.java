@@ -23,9 +23,9 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.util.indexing.Index;
+import org.bedework.util.indexing.SearchLimits;
 
-import edu.rpi.cct.misc.indexing.Index;
-import edu.rpi.cct.misc.indexing.SearchLimits;
 import edu.rpi.cmt.access.Acl;
 
 import java.io.Serializable;

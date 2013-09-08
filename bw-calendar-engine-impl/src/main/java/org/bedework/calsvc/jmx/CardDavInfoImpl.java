@@ -20,8 +20,8 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.CardDavInfo;
 
-import edu.rpi.cmt.config.ConfInfo;
-import edu.rpi.cmt.config.ConfigBase;
+import org.bedework.util.config.ConfInfo;
+import org.bedework.util.config.ConfigBase;
 
 /** Information to access carddav
  *

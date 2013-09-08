@@ -19,8 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 import org.apache.log4j.Logger;
 

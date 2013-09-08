@@ -21,8 +21,7 @@ package org.bedework.calsvci;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.svc.EventInfo;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 /** The changed entity may be an event, a resource or a collection. If it is
  * deleted then it will be marked as tombstoned.

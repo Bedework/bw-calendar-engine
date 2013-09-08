@@ -25,8 +25,7 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;

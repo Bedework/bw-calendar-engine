@@ -18,7 +18,7 @@
 */
 package org.bedework.inoutsched;
 
-import edu.rpi.cmt.jmx.ConfBaseMBean;
+import org.bedework.util.jmx.ConfBaseMBean;
 
 /**
  * @author douglm

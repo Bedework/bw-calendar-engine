@@ -24,7 +24,7 @@ import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.ArrayList;
 import java.util.List;

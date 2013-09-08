@@ -20,8 +20,7 @@ package org.bedework.calsvc.scheduling.hosts;
 
 import org.bedework.caldav.server.IscheduleMessage;
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;

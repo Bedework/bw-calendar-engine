@@ -20,9 +20,8 @@ package org.bedework.icalendar;
 
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwXproperty;
-
-import edu.rpi.cmt.timezones.Timezones;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
+import org.bedework.util.timezones.Timezones;
 
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;

@@ -23,8 +23,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
-
-import edu.rpi.sss.util.Uid;
+import org.bedework.util.misc.Uid;
 
 import java.util.Set;
 

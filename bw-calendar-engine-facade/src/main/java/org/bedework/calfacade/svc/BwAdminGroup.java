@@ -20,8 +20,7 @@ package org.bedework.calfacade.svc;
 
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.annotations.Dump;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 /** An object representing a calendar admin group.
  *

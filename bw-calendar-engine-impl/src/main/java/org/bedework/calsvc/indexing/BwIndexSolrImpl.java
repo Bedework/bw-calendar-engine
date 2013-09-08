@@ -40,19 +40,18 @@ import org.bedework.calfacade.filter.BwCreatorFilter;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.RecurPeriods;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.indexing.Index;
+import org.bedework.util.indexing.IndexException;
+import org.bedework.util.indexing.SearchLimits;
+import org.bedework.util.misc.Util;
+import org.bedework.util.timezones.DateTimeUtil;
+import org.bedework.util.xml.XmlEmit;
 
-import edu.rpi.cct.misc.indexing.Index;
-import edu.rpi.cct.misc.indexing.IndexException;
-import edu.rpi.cct.misc.indexing.SearchLimits;
 import edu.rpi.cmt.access.Acl;
 import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.sss.util.DateTimeUtil;
-import edu.rpi.sss.util.Util;
-import edu.rpi.sss.util.xml.XmlEmit;
 
 import net.fortuna.ical4j.model.Period;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;

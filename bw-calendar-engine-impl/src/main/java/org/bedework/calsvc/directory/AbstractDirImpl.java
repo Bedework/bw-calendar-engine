@@ -33,15 +33,15 @@ import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calsvci.CalSvcFactoryDefault;
+import org.bedework.util.caching.FlushMap;
+import org.bedework.util.dav.DavUtil;
+import org.bedework.util.dav.DavUtil.DavChild;
+import org.bedework.util.http.BasicHttpClient;
+import org.bedework.util.misc.Util;
+import org.bedework.util.xml.tagdefs.CarddavTags;
 
 import edu.rpi.cmt.access.AccessPrincipal;
 import edu.rpi.cmt.access.WhoDefs;
-import edu.rpi.sss.util.DavUtil;
-import edu.rpi.sss.util.DavUtil.DavChild;
-import edu.rpi.sss.util.FlushMap;
-import edu.rpi.sss.util.Util;
-import edu.rpi.sss.util.http.BasicHttpClient;
-import edu.rpi.sss.util.xml.tagdefs.CarddavTags;
 
 import org.apache.log4j.Logger;
 

@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,8 +19,7 @@
 package org.bedework.calfacade.svc;
 
 import org.bedework.calfacade.BwEvent;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -71,7 +70,8 @@ class EventOverride
       return res;
     }
 
-    return Util.compareStrings(ev1.getRecurrenceId(), ev2.getRecurrenceId());
+    return Util.compareStrings(ev1.getRecurrenceId(),
+                               ev2.getRecurrenceId());
   }
 
   @Override

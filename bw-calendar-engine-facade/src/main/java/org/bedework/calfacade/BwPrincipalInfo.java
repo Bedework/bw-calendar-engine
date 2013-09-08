@@ -20,8 +20,7 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.vcard.Property;
 import net.fortuna.ical4j.vcard.VCard;

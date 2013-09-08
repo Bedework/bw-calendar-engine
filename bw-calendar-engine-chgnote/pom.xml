@@ -25,6 +25,15 @@
 			<artifactId>bw-calendar-engine-sysevents</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+    <!-- Bedework Dependencies -->
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-caching</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-misc</artifactId>
+    </dependency>
 		<!-- Third Party Dependencies -->
 		<dependency>
 			<groupId>org.apache.geronimo.framework</groupId>

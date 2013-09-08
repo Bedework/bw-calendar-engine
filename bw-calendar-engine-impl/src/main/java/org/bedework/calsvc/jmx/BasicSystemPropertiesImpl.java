@@ -20,11 +20,10 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CalAddrPrefixes;
-
-import edu.rpi.cmt.config.ConfInfo;
-import edu.rpi.cmt.config.ConfigBase;
-import edu.rpi.cmt.jmx.MBeanInfo;
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.config.ConfInfo;
+import org.bedework.util.config.ConfigBase;
+import org.bedework.util.jmx.MBeanInfo;
+import org.bedework.util.misc.ToString;
 
 /** Provides access to some of the basic configuration for the system. Most of
  * these values should not be changed. While their values do leak out into the

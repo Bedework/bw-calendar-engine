@@ -20,7 +20,7 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.LdapConfigProperties;
 
-import edu.rpi.cmt.config.ConfInfo;
+import org.bedework.util.config.ConfInfo;
 
 /** This class defines the various properties we need to make a connection
  * and retrieve a group and user information via ldap.

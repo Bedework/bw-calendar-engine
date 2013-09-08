@@ -30,6 +30,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cmt.access.Access;
 import edu.rpi.cmt.access.AccessPrincipal;
@@ -38,7 +39,6 @@ import edu.rpi.cmt.access.AceWho;
 import edu.rpi.cmt.access.Acl;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 import edu.rpi.cmt.access.PrivilegeSet;
-import edu.rpi.sss.util.Util;
 
 import org.apache.log4j.Logger;
 
@@ -307,7 +307,8 @@ public class AccessUtil implements AccessUtilI {
             ca = new CurrentAccess();
 
             ca = Acl.defaultNonOwnerAccess;
-          } else if (path.equals(Util.buildPath(true, cb.getUserHomePath(),
+          } else if (path.equals(Util.buildPath(true,
+                                                cb.getUserHomePath(),
                                                 "/",
                                                 owner.getAccount()))) {
             // Accessing user home directory

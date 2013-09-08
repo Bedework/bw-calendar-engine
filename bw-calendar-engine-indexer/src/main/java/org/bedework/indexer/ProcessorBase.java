@@ -25,8 +25,7 @@ import org.bedework.calsvc.indexing.BwIndexer;
 import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.indexer.IndexStats.StatType;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
 import java.util.List;

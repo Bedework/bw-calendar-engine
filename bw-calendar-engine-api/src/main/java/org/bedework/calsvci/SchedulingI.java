@@ -29,8 +29,7 @@ import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.Granulator.EventPeriod;
-
-import edu.rpi.cmt.calendar.ScheduleStates;
+import org.bedework.util.calendar.ScheduleStates;
 
 import java.io.Serializable;
 import java.util.ArrayList;

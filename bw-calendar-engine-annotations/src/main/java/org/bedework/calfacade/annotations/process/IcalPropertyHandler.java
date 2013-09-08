@@ -20,7 +20,7 @@ package org.bedework.calfacade.annotations.process;
 
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -474,7 +474,7 @@ public class IcalPropertyHandler {
   }
 
   private void startPinfo(final AnnotationProcessorEnvironment env) throws Throwable {
-    imports.add("edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex");
+    imports.add("org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex");
     imports.add("java.io.Serializable");
     imports.add("java.util.HashMap");
 

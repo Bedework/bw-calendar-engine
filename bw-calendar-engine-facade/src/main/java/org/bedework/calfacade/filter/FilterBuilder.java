@@ -32,7 +32,7 @@ import org.bedework.calfacade.exc.CalFacadeSubscriptionLoopException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import org.apache.log4j.Logger;
 

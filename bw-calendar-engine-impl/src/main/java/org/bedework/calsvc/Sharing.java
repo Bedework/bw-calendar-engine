@@ -36,6 +36,10 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.SharingI;
+import org.bedework.util.misc.Uid;
+import org.bedework.util.misc.Util;
+import org.bedework.util.xml.tagdefs.AppleServerTags;
+import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import edu.rpi.cct.webdav.servlet.shared.WebdavException;
 import edu.rpi.cmt.access.AccessException;
@@ -45,10 +49,6 @@ import edu.rpi.cmt.access.Acl;
 import edu.rpi.cmt.access.Privilege;
 import edu.rpi.cmt.access.Privileges;
 import edu.rpi.cmt.access.WhoDefs;
-import edu.rpi.sss.util.Uid;
-import edu.rpi.sss.util.Util;
-import edu.rpi.sss.util.xml.tagdefs.AppleServerTags;
-import edu.rpi.sss.util.xml.tagdefs.NamespaceAbbrevs;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.DtStamp;

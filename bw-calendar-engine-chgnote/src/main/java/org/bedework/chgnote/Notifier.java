@@ -37,10 +37,9 @@ import org.bedework.sysevents.events.NotificationEvent;
 import org.bedework.sysevents.events.OwnedHrefEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
-
-import edu.rpi.sss.util.FlushMap;
-import edu.rpi.sss.util.Util;
-import edu.rpi.sss.util.xml.tagdefs.AppleServerTags;
+import org.bedework.util.caching.FlushMap;
+import org.bedework.util.misc.Util;
+import org.bedework.util.xml.tagdefs.AppleServerTags;
 
 import java.util.List;
 import java.util.Map;

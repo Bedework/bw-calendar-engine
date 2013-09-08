@@ -23,10 +23,9 @@ import org.bedework.calfacade.base.BwTimeRange;
 import org.bedework.calfacade.exc.CalFacadeBadDateException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.locale.BwLocale;
-
-import edu.rpi.cmt.timezones.Timezones;
-import edu.rpi.cmt.timezones.TimezonesException;
-import edu.rpi.sss.util.DateTimeUtil;
+import org.bedework.util.timezones.DateTimeUtil;
+import org.bedework.util.timezones.Timezones;
+import org.bedework.util.timezones.TimezonesException;
 
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;

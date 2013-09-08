@@ -20,7 +20,7 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.IndexProperties;
 
-import edu.rpi.cmt.jmx.ConfBase;
+import org.bedework.util.jmx.ConfBase;
 
 import java.util.ArrayList;
 import java.util.List;

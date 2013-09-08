@@ -30,11 +30,11 @@ import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.UsersI;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cmt.access.Access;
 import edu.rpi.cmt.access.PrivilegeDefs;
 import edu.rpi.cmt.access.WhoDefs;
-import edu.rpi.sss.util.Util;
 
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -197,7 +197,8 @@ class Users extends CalSvcDb implements UsersI {
 
     ((BwUser)user).setQuota(getSvc().getAuthProperties().getDefaultUserQuota());
 
-    user.setPrincipalRef(Util.buildPath(true, userPrincipalRoot, "/", account));
+    user.setPrincipalRef(Util.buildPath(true, userPrincipalRoot, "/",
+                                        account));
 
     return user;
   }

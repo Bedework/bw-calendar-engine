@@ -30,8 +30,7 @@ import org.bedework.calfacade.svc.prefs.CategoryPref;
 import org.bedework.calfacade.svc.prefs.ContactPref;
 import org.bedework.calfacade.svc.prefs.LocationPref;
 import org.bedework.dumprestore.restore.RestoreGlobals;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 /**
  * @author Mike Douglass   douglm@rpi.edu

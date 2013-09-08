@@ -24,15 +24,13 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.scheduling.hosts.Response.ResponseElement;
 import org.bedework.icalendar.IcalTranslator;
 import org.bedework.icalendar.Icalendar;
-
-import edu.rpi.sss.util.http.BasicHttpClient;
-import edu.rpi.sss.util.xml.XmlUtil;
-import edu.rpi.sss.util.xml.tagdefs.CaldavTags;
-import edu.rpi.sss.util.xml.tagdefs.IscheduleTags;
-import edu.rpi.sss.util.xml.tagdefs.WebdavTags;
+import org.bedework.util.http.BasicHttpClient;
+import org.bedework.util.xml.XmlUtil;
+import org.bedework.util.xml.tagdefs.CaldavTags;
+import org.bedework.util.xml.tagdefs.IscheduleTags;
+import org.bedework.util.xml.tagdefs.WebdavTags;
 
 import net.fortuna.ical4j.model.Calendar;
-
 import org.apache.http.Header;
 import org.apache.http.NoHttpResponseException;
 import org.apache.log4j.Logger;

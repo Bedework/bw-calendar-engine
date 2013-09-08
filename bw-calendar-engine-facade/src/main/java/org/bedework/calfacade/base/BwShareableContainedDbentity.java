@@ -19,9 +19,8 @@
 package org.bedework.calfacade.base;
 
 import org.bedework.calfacade.annotations.ical.IcalProperty;
-
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.ToString;
 
 /** Base class for shareable database entities that live within a container,
  * i.e. a calendar

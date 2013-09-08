@@ -20,8 +20,8 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.SynchConfig;
 
-import edu.rpi.cmt.jmx.ConfBaseMBean;
-import edu.rpi.cmt.jmx.MBeanInfo;
+import org.bedework.util.jmx.ConfBaseMBean;
+import org.bedework.util.jmx.MBeanInfo;
 
 /** Synch config
  *

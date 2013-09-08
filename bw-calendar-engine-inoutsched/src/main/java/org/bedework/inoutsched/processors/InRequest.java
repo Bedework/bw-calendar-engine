@@ -44,11 +44,10 @@ import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.Recurrence;
-
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
-import edu.rpi.cmt.calendar.ScheduleMethods;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.Property;
@@ -214,7 +213,8 @@ public class InRequest extends InProcessor {
     }
 
     pr.attendeeAccepting =
-      !Util.isEmpty(ev.getXproperties(BwXproperty.bedeworkSchedulingReplyUpdate));
+      !Util.isEmpty(ev.getXproperties(
+              BwXproperty.bedeworkSchedulingReplyUpdate));
 
     return pr;
   }

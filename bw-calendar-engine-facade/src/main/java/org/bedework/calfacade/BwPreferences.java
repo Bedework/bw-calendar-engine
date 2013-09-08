@@ -25,9 +25,8 @@ import org.bedework.calfacade.base.PropertiesEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.util.CalFacadeUtil;
-
-import edu.rpi.sss.util.ToString;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
 
 import java.util.Collection;
 import java.util.Set;

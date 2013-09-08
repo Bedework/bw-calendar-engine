@@ -27,20 +27,14 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
-import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.locale.BwLocale;
 import org.bedework.calfacade.svc.prefs.BwCommonUserPrefs;
 import org.bedework.calfacade.svc.prefs.CalendarPref;
 import org.bedework.calfacade.svc.prefs.CategoryPref;
 import org.bedework.calfacade.svc.prefs.ContactPref;
 import org.bedework.calfacade.svc.prefs.LocationPref;
 import org.bedework.calsvci.PreferencesI;
-
-import edu.rpi.sss.util.Util;
-
-import java.util.Collection;
-import java.util.Locale;
+import org.bedework.util.misc.Util;
 
 /** This acts as an interface to the database for user preferences.
  *
@@ -232,7 +226,9 @@ class Preferences extends CalSvcDb implements PreferencesI {
     String path = get().getAttachmentsPath();
 
     if (path == null) {
-      path = Util.buildPath(true, getSvc().getCalendarsHandler().getHome().getPath(),
+      path = Util.buildPath(true,
+                            getSvc().getCalendarsHandler().getHome()
+                                    .getPath(),
                             "/",
                             "attachments");
       get().setAttachmentsPath(path);

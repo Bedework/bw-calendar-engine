@@ -22,8 +22,7 @@ import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import java.util.List;
 

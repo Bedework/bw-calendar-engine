@@ -22,8 +22,7 @@ import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 /** Value object to represent an authorised calendar user - that is a user
  * with some special privilege. This could also be represented by users

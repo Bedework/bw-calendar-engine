@@ -22,9 +22,8 @@ import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.util.CalFacadeUtil;
-
-import edu.rpi.sss.util.ToString;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
 
 import java.util.Collection;
 

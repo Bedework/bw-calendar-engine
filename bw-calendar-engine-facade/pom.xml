@@ -20,9 +20,25 @@
 			<groupId>org.bedework</groupId>
 			<artifactId>bw-access</artifactId>
 		</dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-calendar</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-http</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-timezones</artifactId>
+    </dependency>
 		<dependency>
 			<groupId>org.bedework</groupId>
-			<artifactId>bw-util</artifactId>
+			<artifactId>bw-util-misc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.bedework</groupId>
@@ -41,7 +57,7 @@
         <groupId>net.fortuna.ical4j</groupId>
         <artifactId>ical4j</artifactId>
       </dependency>
-      <!-- 
+      <!--
 		<dependency>
 			<groupId>org.mnode.ical4j</groupId>
 			<artifactId>ical4j</artifactId>
@@ -106,7 +122,7 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>

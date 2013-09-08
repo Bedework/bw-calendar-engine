@@ -22,10 +22,9 @@ import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.XcalUtil;
-import edu.rpi.sss.util.xml.tagdefs.XcalTags;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.XcalUtil;
+import org.bedework.util.xml.tagdefs.XcalTags;
 
 import ietf.params.xml.ns.icalendar_2.ActionPropType;
 import ietf.params.xml.ns.icalendar_2.ArrayOfParameters;

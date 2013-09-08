@@ -44,9 +44,9 @@ import org.bedework.calfacade.util.Granulator.EventPeriod;
 import org.bedework.calfacade.util.Granulator.GetPeriodsPars;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvci.CalendarsI;
+import org.bedework.util.calendar.IcalDefs;
 
 import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.cmt.calendar.IcalDefs;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;

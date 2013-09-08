@@ -41,8 +41,7 @@ import org.bedework.inoutsched.processors.SchedProcessor.SchedProcResult;
 import org.bedework.sysevents.events.EntityQueuedEvent;
 import org.bedework.sysevents.events.ScheduleUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import java.util.Collection;
 

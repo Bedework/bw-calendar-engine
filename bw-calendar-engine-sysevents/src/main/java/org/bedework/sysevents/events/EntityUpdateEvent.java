@@ -18,7 +18,7 @@
 */
 package org.bedework.sysevents.events;
 
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 /** Signal an update to an entity. The changes provided are an XML string which
  * follows the Apple spec for notifications adn may be null.

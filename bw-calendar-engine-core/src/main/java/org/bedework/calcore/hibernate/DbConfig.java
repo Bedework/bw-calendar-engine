@@ -18,9 +18,9 @@
  */
 package org.bedework.calcore.hibernate;
 
-import edu.rpi.cmt.config.ConfInfo;
-import edu.rpi.cmt.config.HibernateConfigBase;
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.config.ConfInfo;
+import org.bedework.util.config.HibernateConfigBase;
+import org.bedework.util.misc.ToString;
 
 /** Class defining the configuration for the database.
  *
@@ -33,8 +33,7 @@ public class DbConfig<T extends DbConfig>
 
   /** Add our stuff
    *
-   * @param tst
-   * @param indent
+   * @param ts
    */
   @Override
   public void toStringSegment(final ToString ts) {

@@ -21,8 +21,7 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.util.CalFacadeUtil;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 /** Represent an attachment.
  *

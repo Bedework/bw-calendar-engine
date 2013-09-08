@@ -19,10 +19,9 @@
 package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.AuthProperties;
-
-import edu.rpi.cmt.config.ConfInfo;
-import edu.rpi.cmt.config.ConfigBase;
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.config.ConfInfo;
+import org.bedework.util.config.ConfigBase;
+import org.bedework.util.misc.ToString;
 
 /** These are the system properties that the server needs to know about, either
  * because it needs to apply these limits or just to report them to clients.

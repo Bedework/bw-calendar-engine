@@ -42,10 +42,10 @@ import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.UsersI;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.util.misc.Uid;
+import org.bedework.util.security.PwEncryptionIntf;
 
 import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.security.PwEncryptionIntf;
-import edu.rpi.sss.util.Uid;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;

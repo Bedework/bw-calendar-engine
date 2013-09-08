@@ -21,9 +21,9 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
+import org.bedework.util.misc.ToString;
 
 import edu.rpi.cmt.access.WhoDefs;
-import edu.rpi.sss.util.ToString;
 
 /** Value object to represent a calendar user.
  *

@@ -35,10 +35,9 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvci.EventsI;
-
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.ScheduleMethods;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.misc.Util;
 
 import java.util.Collection;
 import java.util.List;

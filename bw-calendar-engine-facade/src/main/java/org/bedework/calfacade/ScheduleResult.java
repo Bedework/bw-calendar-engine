@@ -18,7 +18,7 @@
 */
 package org.bedework.calfacade;
 
-import edu.rpi.cmt.calendar.ScheduleStates;
+import org.bedework.util.calendar.ScheduleStates;
 
 import java.util.HashMap;
 import java.util.Map;

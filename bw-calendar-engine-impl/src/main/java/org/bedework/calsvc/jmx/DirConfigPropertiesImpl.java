@@ -19,10 +19,9 @@
 package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.DirConfigProperties;
-
-import edu.rpi.cmt.config.ConfInfo;
-import edu.rpi.cmt.config.ConfigBase;
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.config.ConfInfo;
+import org.bedework.util.config.ConfigBase;
+import org.bedework.util.misc.ToString;
 
 /** This interface defines the various common directory interface properties.
  * and retrieve a group and user information via ldap.

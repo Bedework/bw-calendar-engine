@@ -81,6 +81,16 @@ import org.bedework.icalendar.VFreeUtil;
 import org.bedework.sysevents.events.HttpEvent;
 import org.bedework.sysevents.events.HttpOutEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.IcalDefs.IcalComponentType;
+import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.calendar.XcalUtil;
+import org.bedework.util.misc.Util;
+import org.bedework.util.xml.XmlEmit;
+import org.bedework.util.xml.XmlUtil;
+import org.bedework.util.xml.tagdefs.CaldavTags;
+import org.bedework.util.xml.tagdefs.WebdavTags;
+import org.bedework.util.xml.tagdefs.XcalTags;
 
 import edu.rpi.cct.webdav.servlet.shared.PrincipalPropertySearch;
 import edu.rpi.cct.webdav.servlet.shared.UrlHandler;
@@ -95,16 +105,6 @@ import edu.rpi.cmt.access.AccessPrincipal;
 import edu.rpi.cmt.access.Acl;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 import edu.rpi.cmt.access.WhoDefs;
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.IcalDefs.IcalComponentType;
-import edu.rpi.cmt.calendar.ScheduleMethods;
-import edu.rpi.cmt.calendar.XcalUtil;
-import edu.rpi.sss.util.Util;
-import edu.rpi.sss.util.xml.XmlEmit;
-import edu.rpi.sss.util.xml.XmlUtil;
-import edu.rpi.sss.util.xml.tagdefs.CaldavTags;
-import edu.rpi.sss.util.xml.tagdefs.WebdavTags;
-import edu.rpi.sss.util.xml.tagdefs.XcalTags;
 
 import ietf.params.xml.ns.caldav.ExpandType;
 import ietf.params.xml.ns.caldav.LimitRecurrenceSetType;
@@ -2341,7 +2341,8 @@ public class BwSysIntfImpl implements SysIntf {
         /* expand with time range */
         ExpandType ex = rm.getExpand();
 
-        DateTime s = new DateTime(XcalUtil.getIcalFormatDateTime(ex.getStart()));
+        DateTime s = new DateTime(XcalUtil.getIcalFormatDateTime(
+                ex.getStart()));
         DateTime e = new DateTime(XcalUtil.getIcalFormatDateTime(ex.getEnd()));
         return new RecurringRetrievalMode(Rmode.expanded,
                                           getBwDt(s),

@@ -74,18 +74,17 @@ import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsLocation;
 import org.bedework.calfacade.util.Granulator.EventPeriod;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cmt.access.Ace;
 import edu.rpi.cmt.access.AceWho;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 import edu.rpi.cmt.access.PrivilegeDefs;
 import edu.rpi.cmt.access.WhoDefs;
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.sss.util.Util;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
-
 import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;

@@ -21,8 +21,7 @@ package org.bedework.calfacade.synch;
 import org.bedework.synch.wsmessages.ArrayOfSynchConnectorInfo;
 import org.bedework.synch.wsmessages.SynchConnectorInfoType;
 import org.bedework.synch.wsmessages.SynchInfoType;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 import java.util.ArrayList;
 import java.util.List;

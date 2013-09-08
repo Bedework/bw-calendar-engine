@@ -22,9 +22,8 @@ import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.PropertiesEntity;
-
-import edu.rpi.sss.util.ToString;
-import edu.rpi.sss.util.xml.tagdefs.NamespaceAbbrevs;
+import org.bedework.util.misc.ToString;
+import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import java.util.Collection;
 import java.util.Comparator;

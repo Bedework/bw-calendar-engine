@@ -19,10 +19,9 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.IndexProperties;
-
-import edu.rpi.cmt.config.ConfInfo;
-import edu.rpi.cmt.config.ConfigBase;
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.config.ConfInfo;
+import org.bedework.util.config.ConfigBase;
+import org.bedework.util.misc.ToString;
 
 import java.util.ArrayList;
 import java.util.List;

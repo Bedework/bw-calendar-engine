@@ -20,8 +20,7 @@ package org.bedework.calfacade.filter;
 
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.EventInfo;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
 import java.util.Collection;

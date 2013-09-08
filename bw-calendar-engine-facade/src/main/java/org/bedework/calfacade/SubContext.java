@@ -19,8 +19,7 @@
 package org.bedework.calfacade;
 
 import org.bedework.calfacade.util.CalFacadeUtil;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 /** Provide information about a sub-context of the public calendar.
  *

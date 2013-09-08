@@ -23,8 +23,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwShareableDbentity;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 /** This object represents a calendar suite in bedework. The calendar suites all
  * share common data but have their own set of preferences associated with a

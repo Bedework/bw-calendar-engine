@@ -18,7 +18,7 @@
 */
 package org.bedework.calsvci;
 
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 import java.io.Serializable;
 

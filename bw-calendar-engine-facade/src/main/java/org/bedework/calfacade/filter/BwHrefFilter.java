@@ -20,7 +20,7 @@ package org.bedework.calfacade.filter;
 
 import org.bedework.caldav.util.filter.ObjectFilter;
 
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 /** A filter that selects events that have a given href
  *

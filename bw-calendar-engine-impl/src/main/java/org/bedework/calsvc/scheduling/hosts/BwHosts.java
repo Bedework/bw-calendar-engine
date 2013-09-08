@@ -19,10 +19,9 @@
 package org.bedework.calsvc.scheduling.hosts;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import edu.rpi.cmt.config.ConfigurationStore;
-import edu.rpi.cmt.jmx.ConfBase;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.config.ConfigurationStore;
+import org.bedework.util.jmx.ConfBase;
+import org.bedework.util.misc.Util;
 
 import org.apache.james.jdkim.DKIMVerifier;
 

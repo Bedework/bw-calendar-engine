@@ -35,12 +35,12 @@ import org.bedework.calsvci.RestoreIntf;
 import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.InfoLines;
+import org.bedework.util.misc.Util;
+import org.bedework.util.timezones.Timezones;
 
 import edu.rpi.cmt.access.AccessException;
 import edu.rpi.cmt.access.AccessPrincipal;
 import edu.rpi.cmt.access.WhoDefs;
-import edu.rpi.cmt.timezones.Timezones;
-import edu.rpi.sss.util.Util;
 
 import org.apache.commons.digester.Digester;
 
@@ -552,7 +552,8 @@ public class RestoreGlobals extends Counters {
     }
 
     if (p instanceof BwUser) {
-      p.setPrincipalRef(Util.buildPath(true, getUserPrincipalRoot(), "/", p.getAccount()));
+      p.setPrincipalRef(Util.buildPath(true, getUserPrincipalRoot(),
+                                       "/", p.getAccount()));
       return;
     }
 

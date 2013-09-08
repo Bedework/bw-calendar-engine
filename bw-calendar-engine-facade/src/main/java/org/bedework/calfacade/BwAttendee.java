@@ -21,10 +21,9 @@ package org.bedework.calfacade;
 import org.bedework.calfacade.base.BwCloneable;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.Differable;
-
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.sss.util.ToString;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
 
 /** Represent an attendee. An attendee entry is associated with a single event
  * and gives the participation status of the attendee for that event.

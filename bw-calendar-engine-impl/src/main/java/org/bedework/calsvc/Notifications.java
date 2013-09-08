@@ -27,8 +27,7 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.NotificationsI;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import java.io.InputStream;
 import java.sql.Blob;
@@ -138,8 +137,10 @@ class Notifications extends CalSvcDb implements NotificationsI {
       }
 
       BwResource noteRsrc =
-          getSvc().getResourcesHandler().get(Util.buildPath(false, ncol.getPath(),
-                                                            "/", val.getName()));
+          getSvc().getResourcesHandler().get(Util.buildPath(false,
+                                                            ncol.getPath(),
+                                                            "/",
+                                                            val.getName()));
 
       if (noteRsrc == null) {
         return false;

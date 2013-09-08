@@ -29,11 +29,10 @@ import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.indexer.BwIndexCtlMBean;
-
-import edu.rpi.cmt.config.ConfigurationStore;
-import edu.rpi.cmt.jmx.ConfBase;
-import edu.rpi.sss.util.http.service.HttpConfig;
-import edu.rpi.sss.util.http.service.HttpOut;
+import org.bedework.util.config.ConfigurationStore;
+import org.bedework.util.http.service.HttpConfig;
+import org.bedework.util.http.service.HttpOut;
+import org.bedework.util.jmx.ConfBase;
 
 import java.util.HashMap;
 import java.util.List;

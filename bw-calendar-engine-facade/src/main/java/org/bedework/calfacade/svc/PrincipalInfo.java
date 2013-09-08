@@ -21,12 +21,12 @@ package org.bedework.calfacade.svc;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cmt.access.Access.AccessCb;
 import edu.rpi.cmt.access.AccessPrincipal;
 import edu.rpi.cmt.access.PrivilegeSet;
 import edu.rpi.cmt.access.WhoDefs;
-import edu.rpi.sss.util.Util;
 
 import java.io.Serializable;
 
@@ -109,7 +109,8 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
    */
   public String getCalendarHomePath(final BwPrincipal pr) throws CalFacadeException {
     if (pr.getKind() == WhoDefs.whoTypeUser) {
-      return Util.buildPath(true, getUserHomePath(), "/", pr.getAccount());
+      return Util.buildPath(true, getUserHomePath(), "/",
+                            pr.getAccount());
     }
 
     // GROUP - need a group home?

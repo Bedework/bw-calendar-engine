@@ -21,8 +21,7 @@ package org.bedework.dumprestore.restore.rules;
 import org.bedework.calfacade.BwAuthUser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.dumprestore.restore.RestoreGlobals;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 /** Build an OwnerUidKey then retrieve and store the object..
  *

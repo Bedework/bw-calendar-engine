@@ -18,7 +18,7 @@
 */
 package org.bedework.sysevents.events;
 
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 /** An event for some timed activity. The label identifies the event
  *

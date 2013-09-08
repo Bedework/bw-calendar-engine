@@ -27,10 +27,9 @@ import org.bedework.calsvc.indexing.BwIndexer;
 import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvci.BwIndexSearchResultEntry;
 import org.bedework.calsvci.IndexingI;
-
-import edu.rpi.cct.misc.indexing.Index;
-import edu.rpi.cct.misc.indexing.IndexException;
-import edu.rpi.cct.misc.indexing.SearchLimits;
+import org.bedework.util.indexing.Index;
+import org.bedework.util.indexing.IndexException;
+import org.bedework.util.indexing.SearchLimits;
 
 import java.util.ArrayList;
 import java.util.Collection;

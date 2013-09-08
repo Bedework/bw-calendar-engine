@@ -31,9 +31,8 @@ import org.bedework.calsvc.scheduling.hosts.IscheduleClient;
 import org.bedework.calsvc.scheduling.hosts.Response;
 import org.bedework.calsvc.scheduling.hosts.Response.ResponseElement;
 import org.bedework.icalendar.IcalTranslator;
-
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.ScheduleStates;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.ScheduleStates;
 
 import java.security.PrivateKey;
 import java.util.ArrayList;

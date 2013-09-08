@@ -34,8 +34,7 @@ import org.bedework.sysevents.events.CollectionDeletedEvent;
 import org.bedework.sysevents.events.EntityDeletedEvent;
 import org.bedework.sysevents.events.EntityUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
 

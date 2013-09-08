@@ -20,8 +20,7 @@ package org.bedework.calsvci;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvc.indexing.BwIndexer;
-
-import edu.rpi.cct.misc.indexing.SearchLimits;
+import org.bedework.util.indexing.SearchLimits;
 
 import java.io.Serializable;
 import java.util.Collection;

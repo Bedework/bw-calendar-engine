@@ -22,9 +22,8 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.annotations.NoWrap;
-
-import edu.rpi.sss.util.DateTimeUtil;
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
+import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.LastModified;

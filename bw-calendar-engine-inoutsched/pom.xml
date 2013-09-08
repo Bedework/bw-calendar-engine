@@ -8,7 +8,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>bw-calendar-engine-inoutsched</artifactId>
-	
+
 	<dependencies>
 		<!-- Project Dependencies -->
 		<dependency>
@@ -26,6 +26,19 @@
 			<artifactId>bw-calendar-engine-impl</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+    <!-- Bedework Dependencies -->
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-calendar</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-misc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-timezones</artifactId>
+    </dependency>
 		<!-- Third Party Dependencies -->
 		<dependency>
 			<groupId>org.apache.geronimo.framework</groupId>

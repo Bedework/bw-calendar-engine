@@ -20,10 +20,9 @@ package org.bedework.calfacade.util;
 
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.base.Differable;
-
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
-import edu.rpi.sss.util.ToString;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
 import java.util.Collection;

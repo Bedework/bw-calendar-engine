@@ -21,7 +21,7 @@ package org.bedework.caldav.bwserver.stdupdaters;
 
 import org.bedework.caldav.bwserver.ParameterUpdater;
 
-import edu.rpi.sss.util.xml.tagdefs.XcalTags;
+import org.bedework.util.xml.tagdefs.XcalTags;
 
 import ietf.params.xml.ns.icalendar_2.ArrayOfParameters;
 import ietf.params.xml.ns.icalendar_2.BaseParameterType;

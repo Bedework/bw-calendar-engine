@@ -18,7 +18,7 @@
 */
 package org.bedework.sysevents.events;
 
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 /** System event with a name
  * @author douglm

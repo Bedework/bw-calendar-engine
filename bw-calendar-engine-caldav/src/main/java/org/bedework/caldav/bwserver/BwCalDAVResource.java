@@ -24,13 +24,13 @@ import org.bedework.caldav.util.notifications.NotificationType.NotificationInfo;
 import org.bedework.caldav.util.notifications.parse.Parser;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
+import org.bedework.util.misc.Util;
+import org.bedework.util.xml.tagdefs.CaldavTags;
+import org.bedework.util.xml.tagdefs.WebdavTags;
 
 import edu.rpi.cct.webdav.servlet.shared.WebdavException;
 import edu.rpi.cct.webdav.servlet.shared.WebdavForbidden;
 import edu.rpi.cmt.access.AccessPrincipal;
-import edu.rpi.sss.util.Util;
-import edu.rpi.sss.util.xml.tagdefs.CaldavTags;
-import edu.rpi.sss.util.xml.tagdefs.WebdavTags;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -375,7 +375,8 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
    */
   @Override
   public String getPath() throws WebdavException {
-    return Util.buildPath(false, getRsrc().getColPath(), "/", getRsrc().getName());
+    return Util.buildPath(false, getRsrc().getColPath(), "/",
+                          getRsrc().getName());
   }
 
   /* (non-Javadoc)

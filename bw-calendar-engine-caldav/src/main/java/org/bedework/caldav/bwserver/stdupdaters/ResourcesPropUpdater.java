@@ -21,9 +21,9 @@ package org.bedework.caldav.bwserver.stdupdaters;
 
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cct.webdav.servlet.shared.WebdavException;
-import edu.rpi.sss.util.Util;
 
 import java.util.Set;
 

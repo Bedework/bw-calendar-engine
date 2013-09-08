@@ -13,7 +13,7 @@
   </context-param>
 
   <listener>
-    <listener-class>edu.rpi.sss.util.jsp.SessionListener</listener-class>
+    <listener-class>org.bedework.util.struts.SessionListener</listener-class>
   </listener>
 
   <!-- Need this to fush a static table maintained by the servlet -->
@@ -26,25 +26,25 @@
     <servlet-class>
       org.bedework.caldav.server.CaldavBWServlet
     </servlet-class>
-    
+
     <init-param>
       <param-name>application</param-name>
       <param-value>servlet</param-value>
     </init-param>
-    
+
     <!-- Bedework parameters -->
     <init-param>
       <!-- True for a CalWS-SOAP service. False for CalDAV -->
       <param-name>calws</param-name>
       <param-value>true</param-value>
     </init-param>
-    
+
     <init-param>
       <!-- Only applies if debug on - causes responses to be wrapped. -->
       <param-name>dumpContent</param-name>
       <param-value>true</param-value>
     </init-param>
-    
+
     <load-on-startup>1</load-on-startup>
   </servlet>
 

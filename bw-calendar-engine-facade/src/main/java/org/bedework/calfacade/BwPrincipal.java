@@ -22,10 +22,10 @@ import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.util.misc.ToString;
 
 import edu.rpi.cmt.access.AccessPrincipal;
 import edu.rpi.cmt.access.WhoDefs;
-import edu.rpi.sss.util.ToString;
 
 import java.sql.Timestamp;
 import java.util.Collection;

@@ -19,8 +19,7 @@
 package org.bedework.calsvc.scheduling.hosts;
 
 import org.bedework.calfacade.svc.EventInfo;
-
-import edu.rpi.sss.util.http.BasicHttpClient;
+import org.bedework.util.http.BasicHttpClient;
 
 import java.io.Serializable;
 import java.util.ArrayList;

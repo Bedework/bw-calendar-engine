@@ -34,8 +34,7 @@ import org.bedework.calfacade.BwVersion;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.dumprestore.dump.DumpGlobals;
-
-import edu.rpi.sss.util.DateTimeUtil;
+import org.bedework.util.timezones.DateTimeUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;

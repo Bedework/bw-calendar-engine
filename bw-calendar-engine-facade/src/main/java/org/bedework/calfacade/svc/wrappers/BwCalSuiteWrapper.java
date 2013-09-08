@@ -22,9 +22,9 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.wrappers.EntityWrapper;
+import org.bedework.util.misc.ToString;
 
 import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.sss.util.ToString;
 
 /** This object represents a calendar suite in bedework. The calendar suites all
  * share common data but have their own set of preferences associated with a

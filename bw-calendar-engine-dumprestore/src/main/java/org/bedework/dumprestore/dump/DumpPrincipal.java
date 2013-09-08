@@ -27,8 +27,7 @@ import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.InfoLines;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
 

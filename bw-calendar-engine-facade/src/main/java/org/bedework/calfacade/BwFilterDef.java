@@ -25,8 +25,7 @@ import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.DescriptionEntity;
 import org.bedework.calfacade.base.DisplayNameEntity;
 import org.bedework.calfacade.util.CalFacadeUtil;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 import java.util.Collection;
 import java.util.Comparator;

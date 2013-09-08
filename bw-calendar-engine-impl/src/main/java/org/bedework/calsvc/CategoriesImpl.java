@@ -27,9 +27,10 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvc.indexing.BwIndexer;
 import org.bedework.calsvci.Categories;
+import org.bedework.util.caching.FlushMap;
+import org.bedework.util.misc.Util;
+
 import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.sss.util.FlushMap;
-import edu.rpi.sss.util.Util;
 
 import java.util.ArrayList;
 import java.util.Collection;

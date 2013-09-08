@@ -18,7 +18,7 @@
 */
 package org.bedework.calfacade.security;
 
-import edu.rpi.cmt.security.pki.PKITools;
+import org.bedework.util.security.pki.PKITools;
 
 import org.apache.log4j.Logger;
 

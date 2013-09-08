@@ -54,7 +54,7 @@ import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.InfoLines;
 
-import edu.rpi.sss.util.xml.XmlEmit;
+import org.bedework.util.xml.XmlEmit;
 
 import java.io.Writer;
 import java.util.ArrayList;

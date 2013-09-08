@@ -21,8 +21,7 @@ package org.bedework.calfacade.filter;
 import org.bedework.caldav.util.filter.ObjectFilter;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.base.CategorisedEntity;
-
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 /** A filter that selects events that have a certain category
  *

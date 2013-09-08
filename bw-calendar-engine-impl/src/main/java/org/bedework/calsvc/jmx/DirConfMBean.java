@@ -20,7 +20,7 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.DirConfigProperties;
 
-import edu.rpi.cmt.jmx.ConfBaseMBean;
+import org.bedework.util.jmx.ConfBaseMBean;
 
 /** Configure a connector for the Bedework synch engine service
  *

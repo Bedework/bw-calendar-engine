@@ -40,13 +40,13 @@ import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cmt.access.Access;
 import edu.rpi.cmt.access.Ace;
 import edu.rpi.cmt.access.AceWho;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.sss.util.Util;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -222,7 +222,8 @@ public class CoreCalendars extends CalintfHelperHib
     super(chcb);
     super.init(cb, access, currentMode, sessionless);
 
-    userCalendarRootPath = Util.buildPath(true, "/", getSyspars().getUserCalendarRoot());
+    userCalendarRootPath = Util.buildPath(true, "/", getSyspars()
+            .getUserCalendarRoot());
     //groupCalendarRootPath = userCalendarRootPath + "/" + "groups";
 
     colCache = new CollectionCache(this, chcb.getStats());

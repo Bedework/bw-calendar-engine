@@ -34,12 +34,12 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvc.scheduling.hosts.BwHosts;
 import org.bedework.icalendar.Icalendar;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.ScheduleStates;
+import org.bedework.util.misc.Uid;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.ScheduleStates;
-import edu.rpi.sss.util.Uid;
-import edu.rpi.sss.util.Util;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -19,8 +19,7 @@
 package org.bedework.dumprestore.restore;
 
 import org.bedework.calfacade.BwPrincipal;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 /**
  * @author Mike Douglass

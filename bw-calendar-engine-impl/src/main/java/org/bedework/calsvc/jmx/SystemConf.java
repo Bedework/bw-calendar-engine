@@ -25,8 +25,8 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
 
-import edu.rpi.cmt.jmx.ConfBase;
-import edu.rpi.cmt.jmx.ConfigHolder;
+import org.bedework.util.jmx.ConfBase;
+import org.bedework.util.jmx.ConfigHolder;
 
 /**
  * @author douglm

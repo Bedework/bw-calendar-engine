@@ -30,12 +30,10 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.BwDateTimeUtil;
 import org.bedework.dumprestore.restore.RestoreGlobals;
-
-import edu.rpi.cmt.calendar.IcalDefs;
+import org.bedework.util.calendar.IcalDefs;
 
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.property.DtEnd;
-
 import org.xml.sax.Attributes;
 
 import java.util.Date;

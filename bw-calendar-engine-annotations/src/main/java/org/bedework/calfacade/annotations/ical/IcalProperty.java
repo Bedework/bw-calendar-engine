@@ -18,7 +18,7 @@
 */
 package org.bedework.calfacade.annotations.ical;
 
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

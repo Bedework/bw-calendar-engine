@@ -20,8 +20,8 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.AuthProperties;
 
-import edu.rpi.cmt.jmx.ConfBase;
-import edu.rpi.cmt.jmx.ConfigHolder;
+import org.bedework.util.jmx.ConfBase;
+import org.bedework.util.jmx.ConfigHolder;
 
 /**
  * @author douglm

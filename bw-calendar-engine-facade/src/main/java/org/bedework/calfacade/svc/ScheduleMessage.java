@@ -20,8 +20,7 @@ package org.bedework.calfacade.svc;
 
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.base.BwDbentity;
-
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.misc.ToString;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.LastModified;

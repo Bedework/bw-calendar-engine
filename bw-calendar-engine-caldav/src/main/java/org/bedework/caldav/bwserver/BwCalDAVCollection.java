@@ -20,11 +20,11 @@ package org.bedework.caldav.bwserver;
 
 import org.bedework.caldav.server.CalDAVCollection;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.util.misc.Util;
+import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import edu.rpi.cct.webdav.servlet.shared.WebdavException;
 import edu.rpi.cmt.access.AccessPrincipal;
-import edu.rpi.sss.util.Util;
-import edu.rpi.sss.util.xml.tagdefs.NamespaceAbbrevs;
 
 import java.util.List;
 

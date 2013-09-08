@@ -23,8 +23,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.dumprestore.restore.PrincipalHref;
 import org.bedework.dumprestore.restore.RestoreGlobals;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import org.xml.sax.Attributes;
 

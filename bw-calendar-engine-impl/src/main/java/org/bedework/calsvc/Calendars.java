@@ -33,10 +33,10 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.SynchI;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.sss.util.Util;
 
 import java.net.URI;
 import java.net.URLDecoder;
@@ -63,7 +63,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
   Calendars(final CalSvc svci) throws CalFacadeException {
     super(svci);
 
-    publicCalendarRootPath = Util.buildPath(true, "/", getBasicSyspars().getPublicCalendarRoot());
+    publicCalendarRootPath = Util.buildPath(true, "/",
+                                            getBasicSyspars()
+                                                    .getPublicCalendarRoot());
     //userCalendarRootPath = "/" + getBasicSyspars().getUserCalendarRoot();
   }
 

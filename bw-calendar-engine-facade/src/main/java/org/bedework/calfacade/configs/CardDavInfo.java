@@ -18,7 +18,7 @@
 */
 package org.bedework.calfacade.configs;
 
-import edu.rpi.cmt.config.ConfInfo;
+import org.bedework.util.config.ConfInfo;
 
 import java.io.Serializable;
 

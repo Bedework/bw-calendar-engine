@@ -21,10 +21,10 @@ package org.bedework.caldav.bwserver.stdupdaters;
 
 import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwAlarm;
+import org.bedework.util.calendar.XcalUtil;
+import org.bedework.util.xml.tagdefs.XcalTags;
 
 import edu.rpi.cct.webdav.servlet.shared.WebdavException;
-import edu.rpi.cmt.calendar.XcalUtil;
-import edu.rpi.sss.util.xml.tagdefs.XcalTags;
 
 import ietf.params.xml.ns.icalendar_2.RelatedParamType;
 import ietf.params.xml.ns.icalendar_2.TriggerPropType;
@@ -68,7 +68,8 @@ public class TriggerPropUpdater extends AlarmPropUpdater {
     pr = (TriggerPropType)ui.getUpdprop();
 
     if (pr.getDateTime() != null) {
-      alarm.setTrigger(XcalUtil.getIcalFormatDateTime(pr.getDateTime()));
+      alarm.setTrigger(XcalUtil.getIcalFormatDateTime(
+              pr.getDateTime()));
       alarm.setTriggerDateTime(true);
     } else {
       alarm.setTrigger(pr.getDuration());

@@ -21,7 +21,7 @@ package org.bedework.calfacade.configs;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
 
-import edu.rpi.sss.util.http.service.HttpConfig;
+import org.bedework.util.http.service.HttpConfig;
 
 import java.io.Serializable;
 

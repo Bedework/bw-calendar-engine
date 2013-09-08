@@ -28,12 +28,10 @@ import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.dumprestore.restore.RestoreGlobals;
-
-import edu.rpi.cmt.timezones.Timezones;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
+import org.bedework.util.timezones.Timezones;
 
 import net.fortuna.ical4j.model.TimeZone;
-
 import org.xml.sax.Attributes;
 
 import java.math.BigDecimal;

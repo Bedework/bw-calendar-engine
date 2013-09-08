@@ -30,8 +30,7 @@ import org.bedework.calsvci.CalSvcI;
 import org.bedework.icalendar.IcalTranslator;
 import org.bedework.sysevents.events.EntityQueuedEvent;
 import org.bedework.sysevents.events.SysEvent;
-
-import edu.rpi.sss.util.Util;
+import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.Calendar;
 

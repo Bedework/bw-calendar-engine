@@ -55,11 +55,11 @@ import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.StatsEvent;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.Util;
 
 import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
-import edu.rpi.sss.util.Util;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;

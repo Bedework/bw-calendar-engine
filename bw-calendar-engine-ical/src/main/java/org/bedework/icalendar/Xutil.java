@@ -22,12 +22,7 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.BwXproperty.Xpar;
 import org.bedework.calfacade.base.BwStringBase;
-
-import edu.rpi.cmt.calendar.XcalUtil;
-
-import net.fortuna.ical4j.model.NumberList;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.calendar.XcalUtil;
 
 import ietf.params.xml.ns.icalendar_2.AltrepParamType;
 import ietf.params.xml.ns.icalendar_2.ArrayOfParameters;
@@ -45,6 +40,8 @@ import ietf.params.xml.ns.icalendar_2.XBedeworkMaxTicketsPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkRegistrationEndPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkRegistrationStartPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkUidParamType;
+import net.fortuna.ical4j.model.NumberList;
+import org.apache.log4j.Logger;
 
 import java.math.BigInteger;
 import java.util.Arrays;
