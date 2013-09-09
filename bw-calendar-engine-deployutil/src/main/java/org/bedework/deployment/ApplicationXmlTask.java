@@ -45,7 +45,7 @@ import java.util.Properties;
  *
  * <p>Body is a fileset giving jar files to add.
  *
- * @author douglm @ rpi.edu
+ * @author douglm @ bedework.edu
  */
 public class ApplicationXmlTask extends MatchingTask {
   private List<FileSet> filesets = new LinkedList<FileSet>();

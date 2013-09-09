@@ -35,7 +35,7 @@ import java.util.List;
 
 /** Application to dump calendar data.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  * @version 3.1
  */
 public class Dump implements Defs {

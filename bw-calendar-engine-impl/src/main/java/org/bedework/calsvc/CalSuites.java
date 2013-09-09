@@ -46,7 +46,7 @@ import java.util.TreeSet;
 
 /** This acts as an interface to the database for calendar suites.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 class CalSuites extends CalSvcDb implements CalSuitesI {
   private BwCalSuiteWrapper currentCalSuite;

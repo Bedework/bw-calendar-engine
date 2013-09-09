@@ -46,7 +46,7 @@ import java.util.TreeSet;
  *
  * <p>This class allows us to handle thread, or user, specific information.
  *
- * @author Mike Douglass       douglm @ rpi.edu
+ * @author Mike Douglass       douglm @ bedework.edu
  */
 public class EventInfo
       implements Comparable<EventInfo>, Comparator<EventInfo>, Serializable {

@@ -18,6 +18,7 @@
 */
 package org.bedework.calfacade;
 
+import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.annotations.NoWrap;
@@ -39,9 +40,6 @@ import org.bedework.util.xml.tagdefs.AppleServerTags;
 import org.bedework.util.xml.tagdefs.BedeworkServerTags;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
-import org.bedework.access.Acl.CurrentAccess;
 
 import java.net.URLEncoder;
 import java.sql.Timestamp;
@@ -83,7 +81,7 @@ import javax.xml.namespace.QName;
  * XXX We suffix the name and path also to avoid some ugly clashes related to
  * lastmod
  *
- *  @author Mike Douglass douglm - rpi.edu
+ *  @author Mike Douglass douglm - bedework.edu
  *  @version 1.0
  */
 @Wrapper(quotas = true)
@@ -1345,10 +1343,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /**
    * @return valid quoted etag
-   * @throws WebdavException
    */
   @NoDump
-  public String getEtag() throws WebdavException {
+  public String getEtag() {
     return "\"" + getLastmod().getTagValue() +
            "\"";
   }

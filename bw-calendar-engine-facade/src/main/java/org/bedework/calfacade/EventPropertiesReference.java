@@ -24,7 +24,7 @@ import java.io.Serializable;
 
 /** Class to represent a reference to an event property.
  *
- * @author Mike Douglass   douglm - rpi.edu
+ * @author Mike Douglass   douglm - bedework.edu
  *
  */
 public class EventPropertiesReference implements Serializable {

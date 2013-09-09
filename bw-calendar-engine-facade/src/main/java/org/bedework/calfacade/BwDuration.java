@@ -28,7 +28,7 @@ import java.io.Serializable;
 
 /** Class representing a duration.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  *  @version 1.0
  */
 public class BwDuration implements Serializable {

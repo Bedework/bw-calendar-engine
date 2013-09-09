@@ -30,7 +30,7 @@ import java.util.List;
 
 /** Implementation of UserAuthI that handles Bedwork DB tables for authorisation.
  *
- * @author Mike Douglass    douglm@rpi.edu
+ * @author Mike Douglass    douglm@bedework.edu
  * @version 1.0
  */
 public class CoreUserAuthImpl extends CalintfHelperHib implements CoreUserAuthI {

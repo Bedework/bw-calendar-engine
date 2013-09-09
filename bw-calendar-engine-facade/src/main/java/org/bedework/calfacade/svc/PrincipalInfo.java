@@ -32,7 +32,7 @@ import java.io.Serializable;
 
 /** Provide information about the current principal and given principals.
  *
- * @author Mike Douglass   douglm  rpi.edu
+ * @author Mike Douglass   douglm  bedework.edu
  */
 public abstract class PrincipalInfo implements AccessCb, Serializable {
   protected boolean superUser;

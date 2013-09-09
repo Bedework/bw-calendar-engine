@@ -25,7 +25,7 @@ import org.bedework.util.misc.Util;
 
 /** Build an OwnerUidKey then retrieve and store the object..
  *
- * @author Mike Douglass   douglm @ rpi.edu
+ * @author Mike Douglass   douglm @ bedework.edu
  * @version 1.0
  */
 public class CollectionPathRule extends StringKeyRule {

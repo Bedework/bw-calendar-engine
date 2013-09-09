@@ -57,7 +57,7 @@ import java.util.Map;
 /** Class which implements the functions needed to dump the
  * calendar using a jdbc connection.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  * @version 1.0
  */
 @SuppressWarnings("unchecked")

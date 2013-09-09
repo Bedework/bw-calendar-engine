@@ -32,7 +32,7 @@ import java.util.Collection;
  * <p>Each has a single field which together with the owner makes a unique
  * key and all operations on those classes are the same.
  *
- * @author Mike Douglass   douglm - rpi.edu
+ * @author Mike Douglass   douglm - bedework.edu
  *
  * @param <T> type of property, Location, Sponsor etc.
  */

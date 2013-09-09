@@ -29,7 +29,7 @@ package org.bedework.dumprestore;
  *
  * <p>Restore the users, save the subscriptions and then do them at the end.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  * @version 1.0
  */
 public interface Defs {

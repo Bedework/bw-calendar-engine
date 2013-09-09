@@ -22,7 +22,7 @@ import org.apache.tools.ant.Task;
 
 /** Base task that contains text.
  *
- * @author douglm @ rpi.edu
+ * @author douglm @ bedework.edu
  */
 public class ContainedTextTask extends Task {
   private String text;

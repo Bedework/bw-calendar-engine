@@ -38,7 +38,7 @@ import java.util.Collection;
  * <p>Methods may throw an unimplemented exception if functions are not
  * available.
  *
- * @author Mike Douglass douglm@rpi.edu
+ * @author Mike Douglass douglm@bedework.edu
  * @version 3.3.2
  */
 public interface Directories extends Serializable {

@@ -36,7 +36,7 @@ import java.util.Collection;
 
 /** This acts as an interface to the database for index searching.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 class Indexing extends CalSvcDb implements IndexingI {
   transient private BwIndexer publicIndexer;

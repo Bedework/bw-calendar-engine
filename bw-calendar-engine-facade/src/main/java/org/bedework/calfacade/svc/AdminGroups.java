@@ -39,7 +39,7 @@ import org.bedework.calfacade.ifs.Directories;
  *
  * <p>If a user is not a member of any group they own the events.
  *
- * @author Mike Douglass douglm@rpi.edu
+ * @author Mike Douglass douglm@bedework.edu
  * @version 2.2
  */
 public interface AdminGroups extends Directories {

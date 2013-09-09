@@ -23,7 +23,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 
 /** Default svc factory - just gets an instance of the default class.
  *
- * @author Mike Douglass       douglm@rpi.edu
+ * @author Mike Douglass       douglm@bedework.edu
  */
 public class CalSvcFactoryDefault implements CalSvcFactory {
   private static final String defaultSvciClass = "org.bedework.calsvc.CalSvc";

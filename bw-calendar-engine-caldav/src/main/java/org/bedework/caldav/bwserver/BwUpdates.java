@@ -39,8 +39,7 @@ import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.calendar.XcalUtil.TzGetter;
 import org.bedework.util.timezones.Timezones;
 import org.bedework.util.xml.tagdefs.XcalTags;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.AvailableType;
 import ietf.params.xml.ns.icalendar_2.BaseComponentType;
@@ -82,7 +81,7 @@ import javax.xml.namespace.QName;
 
 /** Bedework implementation of SysIntf.
  *
- * @author Mike Douglass douglm at rpi.edu
+ * @author Mike Douglass douglm at bedework.edu
  */
 public class BwUpdates {
   private boolean debug;

@@ -56,7 +56,7 @@ import javax.xml.ws.BindingProvider;
 
 /** Handles interactions with the synch engine from within bedework.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 class Synch extends CalSvcDb implements SynchI {
   private SynchConnectionsMBean conns;

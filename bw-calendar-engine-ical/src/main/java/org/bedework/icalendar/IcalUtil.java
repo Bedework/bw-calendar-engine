@@ -92,7 +92,7 @@ import java.util.TreeSet;
 
 /** Class to provide utility methods for ical4j classes
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  */
 /**
  * @author douglm

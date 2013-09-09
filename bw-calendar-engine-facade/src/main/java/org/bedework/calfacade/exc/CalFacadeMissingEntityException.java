@@ -22,7 +22,7 @@ package org.bedework.calfacade.exc;
 
 /** Something doesn't exist
  *
- * @author Mike Douglass douglm@rpi.edu
+ * @author Mike Douglass douglm@bedework.edu
  */
 public class CalFacadeMissingEntityException extends CalFacadeException {
   /**

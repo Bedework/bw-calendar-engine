@@ -30,7 +30,7 @@ import org.bedework.access.Acl.CurrentAccess;
  * share common data but have their own set of preferences associated with a
  * run-as user.
  *
- *  @author Mike Douglass douglm@rpi.edu
+ *  @author Mike Douglass douglm@bedework.edu
  *  @version 1.0
  */
 public class BwCalSuiteWrapper extends BwCalSuite

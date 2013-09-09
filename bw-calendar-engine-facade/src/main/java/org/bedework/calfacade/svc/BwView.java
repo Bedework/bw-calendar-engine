@@ -29,7 +29,7 @@ import java.util.List;
 /** A view in Bedework. This is a named collection of collections used to
  * provide different views of the events.
  *
- * @author Mike Douglass douglm  rpi.edu
+ * @author Mike Douglass douglm  bedework.edu
  */
 @Dump(elementName="view", keyFields={"owner", "name"})
 public class BwView extends BwDbentity<BwView> {

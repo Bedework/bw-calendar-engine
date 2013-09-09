@@ -44,7 +44,7 @@ import javax.xml.namespace.QName;
  * set to the serialized value of the QName for the notification. The stored
  * resource will be the XML for the notification.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 class Notifications extends CalSvcDb implements NotificationsI {
   /** Constructor

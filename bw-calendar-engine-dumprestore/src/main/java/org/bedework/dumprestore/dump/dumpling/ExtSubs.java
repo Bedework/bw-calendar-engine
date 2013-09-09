@@ -32,7 +32,7 @@ import java.util.Iterator;
 
 /** Get all external subscriptions for checking.
  *
- * @author Mike Douglass   douglm  rpi.edu
+ * @author Mike Douglass   douglm  bedework.edu
  * @version 1.0
  *
  */

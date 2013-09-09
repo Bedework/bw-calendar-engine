@@ -47,8 +47,7 @@ import org.bedework.util.misc.Uid;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.AppleServerTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.DtStamp;

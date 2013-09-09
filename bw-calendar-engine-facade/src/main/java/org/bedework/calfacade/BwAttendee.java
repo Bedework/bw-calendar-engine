@@ -28,7 +28,7 @@ import org.bedework.util.misc.Util;
 /** Represent an attendee. An attendee entry is associated with a single event
  * and gives the participation status of the attendee for that event.
  *
- *  @author Mike Douglass   douglm - rpi.edu
+ *  @author Mike Douglass   douglm - bedework.edu
  */
 public class BwAttendee extends BwDbentity<BwAttendee>
          implements BwCloneable, Differable<BwAttendee> {

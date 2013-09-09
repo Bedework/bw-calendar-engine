@@ -28,7 +28,7 @@ import org.bedework.util.misc.ToString;
  * with some special privilege. This could also be represented by users
  * with roles.
  *
- *   @author Mike Douglass douglm@rpi.edu
+ *   @author Mike Douglass douglm@bedework.edu
  *  @version 1.0
  */
 @Dump(elementName="authuser", keyFields={"user"})

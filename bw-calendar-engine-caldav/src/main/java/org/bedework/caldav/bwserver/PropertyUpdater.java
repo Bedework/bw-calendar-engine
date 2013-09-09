@@ -25,8 +25,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.icalendar.IcalCallback;
 import org.bedework.util.calendar.XcalUtil.TzGetter;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.BasePropertyType;
 

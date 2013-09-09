@@ -25,8 +25,7 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.misc.Util;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.DateDatetimePropertyType;
 import ietf.params.xml.ns.icalendar_2.TzidParamType;

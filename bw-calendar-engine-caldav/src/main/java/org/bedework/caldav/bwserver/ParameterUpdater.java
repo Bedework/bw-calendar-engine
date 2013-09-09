@@ -20,8 +20,7 @@ package org.bedework.caldav.bwserver;
 
 import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.svc.EventInfo;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.BaseParameterType;
 

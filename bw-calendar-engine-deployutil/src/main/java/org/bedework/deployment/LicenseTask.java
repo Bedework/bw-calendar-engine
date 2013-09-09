@@ -60,7 +60,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
  *
  * <p>Body is ant
  *
- * @author douglm @ rpi.edu
+ * @author douglm @ bedework.edu
  */
 public class LicenseTask extends Task {
   private static final String defaultLicenseInfoURL =

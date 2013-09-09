@@ -49,8 +49,7 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import net.fortuna.ical4j.model.DateTime;
 import org.apache.log4j.Logger;
@@ -95,7 +94,7 @@ import java.util.List;
  *
  * <p>where the filters and subscriptions are a bunch of parenthesised tests.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  */
 public class Filters implements Serializable {
   private transient Logger log;

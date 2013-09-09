@@ -33,7 +33,7 @@ import org.bedework.util.misc.ToString;
  * the moment this generally points at the root of the calendar system but in a
  * hosted environment it would point to the root for the hosted organization.
  *
- *  @author Mike Douglass douglm@rpi.edu
+ *  @author Mike Douglass douglm@bedework.edu
  *  @version 1.0
  */
 @Dump(elementName="cal-suite", keyFields={"name"})

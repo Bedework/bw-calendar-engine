@@ -48,7 +48,7 @@ import java.util.Collection;
 
 /** Class used as basis for a number of helper classes.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  */
 public abstract class CalintfHelperHib extends CalintfHelper
           implements CalintfDefs, PrivilegeDefs, Serializable {

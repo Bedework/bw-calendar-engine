@@ -43,7 +43,7 @@ import java.util.Collection;
  * take place within the core implementation.
  *
  *
- * @author Mike Douglass   douglm  rpi.edu
+ * @author Mike Douglass   douglm  bedework.edu
  */
 public interface AccessUtilI extends PrivilegeDefs, Serializable {
   /**

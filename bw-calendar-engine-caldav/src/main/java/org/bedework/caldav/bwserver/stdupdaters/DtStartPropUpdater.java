@@ -26,8 +26,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.DtstartPropType;
 

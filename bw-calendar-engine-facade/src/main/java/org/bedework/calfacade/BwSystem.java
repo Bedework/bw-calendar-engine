@@ -36,7 +36,7 @@ import javax.xml.namespace.QName;
  * database. These settings may be changed by the super user but most should
  * not be changed after system initialisation.
  *
- * @author Mike Douglass       douglm@rpi.edu
+ * @author Mike Douglass       douglm@bedework.edu
  */
 @Dump(elementName="system")
 @NoDump({"byteSize"})

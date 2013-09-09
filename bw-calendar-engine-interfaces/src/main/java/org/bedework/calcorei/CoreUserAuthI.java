@@ -26,7 +26,7 @@ import java.util.List;
 
 /** Handle db interactions for user authorisation.
  *
- * @author Mike Douglass    douglm@rpi.edu
+ * @author Mike Douglass    douglm@bedework.edu
  * @version 1.0
  */
 public interface CoreUserAuthI {

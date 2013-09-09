@@ -23,8 +23,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 /**
  * @author douglm

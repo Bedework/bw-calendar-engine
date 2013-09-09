@@ -27,7 +27,7 @@ import java.io.Serializable;
 /** A table allowing us to retrieve group members which
  * may themselves be groups.
  *
- *   @author Mike Douglass douglm@rpi.edu
+ *   @author Mike Douglass douglm@bedework.edu
  *  @version 1.0
  */
 public class BwGroupEntry implements Serializable {

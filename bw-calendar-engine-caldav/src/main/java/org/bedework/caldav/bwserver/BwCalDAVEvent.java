@@ -18,6 +18,7 @@
 */
 package org.bedework.caldav.bwserver;
 
+import org.bedework.access.AccessPrincipal;
 import org.bedework.caldav.server.CalDAVEvent;
 import org.bedework.caldav.server.Organizer;
 import org.bedework.calfacade.BwAttendee;
@@ -33,9 +34,7 @@ import org.bedework.util.xml.tagdefs.AppleServerTags;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.ICalTags;
 import org.bedework.util.xml.tagdefs.WebdavTags;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
-import org.bedework.access.AccessPrincipal;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import java.util.Collection;
 import java.util.List;
@@ -84,7 +83,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdEntity#isAlias()
+   * @see edu.bedework.cct.webdav.servlet.shared.WdEntity#isAlias()
    */
   @Override
   public boolean isAlias() throws WebdavException {
@@ -97,7 +96,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdEntity#resolveAlias(boolean)
+   * @see edu.bedework.cct.webdav.servlet.shared.WdEntity#resolveAlias(boolean)
    */
   @Override
   public BwCalDAVEvent resolveAlias(final boolean resolveSubAlias) throws WebdavException {
@@ -646,7 +645,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
    * ==================================================================== */
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#setName(java.lang.String)
+   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#setName(java.lang.String)
    */
   @Override
   public void setName(final String val) throws WebdavException {
@@ -654,7 +653,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#getName()
+   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#getName()
    */
   @Override
   public String getName() throws WebdavException {
@@ -662,7 +661,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdEntity#setDisplayName(java.lang.String)
+   * @see edu.bedework.cct.webdav.servlet.shared.WdEntity#setDisplayName(java.lang.String)
    */
   @Override
   public void setDisplayName(final String val) throws WebdavException {
@@ -670,7 +669,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#getDisplayName()
+   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#getDisplayName()
    */
   @Override
   public String getDisplayName() throws WebdavException {
@@ -678,7 +677,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#setPath(java.lang.String)
+   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#setPath(java.lang.String)
    */
   @Override
   public void setPath(final String val) throws WebdavException {
@@ -686,7 +685,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#getPath()
+   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#getPath()
    */
   @Override
   public String getPath() throws WebdavException {
@@ -694,7 +693,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#setParentPath(java.lang.String)
+   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#setParentPath(java.lang.String)
    */
   @Override
   public void setParentPath(final String val) throws WebdavException {
@@ -702,7 +701,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#getParentPath()
+   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#getParentPath()
    */
   @Override
   public String getParentPath() throws WebdavException {
@@ -710,7 +709,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#setOwner(AccessPrincipal)
+   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#setOwner(AccessPrincipal)
    */
   @Override
   public void setOwner(final AccessPrincipal val) throws WebdavException {
@@ -718,7 +717,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#getOwner()
+   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#getOwner()
    */
   @Override
   public AccessPrincipal getOwner() throws WebdavException {
@@ -759,7 +758,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#setDescription(java.lang.String)
+   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#setDescription(java.lang.String)
    */
   @Override
   public void setDescription(final String val) throws WebdavException {
@@ -767,7 +766,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#getDescription()
+   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#getDescription()
    */
   @Override
   public String getDescription() throws WebdavException {

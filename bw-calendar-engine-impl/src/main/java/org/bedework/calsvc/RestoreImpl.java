@@ -48,7 +48,7 @@ import java.util.Collection;
 
 /** Allow the restore process to work.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  * @version 1.0
  */
 class RestoreImpl extends CalSvcDb implements RestoreIntf {

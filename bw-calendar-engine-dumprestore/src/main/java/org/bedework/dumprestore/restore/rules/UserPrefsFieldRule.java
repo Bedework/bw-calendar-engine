@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * @author Mike Douglass   douglm rpi.edu
+ * @author Mike Douglass   douglm bedework.edu
  * @version 1.0
  */
 public class UserPrefsFieldRule extends EntityFieldRule {

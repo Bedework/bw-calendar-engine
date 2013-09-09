@@ -56,7 +56,7 @@ import java.util.List;
 
 /** Application to restore from an XML calendar dump..
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  * @version 3.1
  */
 public class Restore implements Defs {

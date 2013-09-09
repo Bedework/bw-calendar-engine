@@ -28,7 +28,7 @@ import java.util.Comparator;
  * uid and recurrence id as the ordering factors. We need this so we can
  * locate an override even if the date has been changed.
  *
- * @author Mike Douglass       douglm @ rpi.edu
+ * @author Mike Douglass       douglm @ bedework.edu
  */
 class EventOverride
       implements Comparable<EventOverride>, Comparator<EventOverride>, Serializable {

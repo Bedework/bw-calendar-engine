@@ -31,8 +31,7 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 /** A filter that wraps CalDAV object filter.
  *

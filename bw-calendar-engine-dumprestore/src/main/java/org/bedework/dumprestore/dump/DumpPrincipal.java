@@ -78,7 +78,7 @@ import java.util.List;
  * users to optionally include the shared calendars - though this could result
  * in a vary large dump.
  *
- * @author Mike Douglass   douglm @ rpi.edu
+ * @author Mike Douglass   douglm @ bedework.edu
  * @version 4.0
  */
 public class DumpPrincipal {

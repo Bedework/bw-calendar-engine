@@ -29,7 +29,7 @@ import java.util.Collection;
  * absolutely correct. We don't lock, just increment and decrement but
  * they work well enough to get an idea of how we're performing.
  *
- * @author Mike Douglass       douglm@rpi.edu
+ * @author Mike Douglass       douglm@bedework.edu
  */
 public class BwStats implements Serializable {
   /** Class to hold a statistics. We build a collection of these.

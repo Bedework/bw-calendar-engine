@@ -128,7 +128,7 @@ import java.util.TreeSet;
  * allow update of events owned by the current user but must display all
  * public categories for use.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  */
 public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   private static CoreConfigurations configs = CoreConfigurations.getConfigs();

@@ -112,7 +112,7 @@ import java.util.TreeSet;
 /** This is an implementation of the service level interface to the calendar
  * suite.
  *
- * @author Mike Douglass       douglm@rpi.edu
+ * @author Mike Douglass       douglm@bedework.edu
  */
 public class CalSvc extends CalSvcI {
   //private String systemName;

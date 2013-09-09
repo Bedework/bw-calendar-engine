@@ -62,7 +62,7 @@ import java.util.TreeSet;
  * This could lead to an alarm storm if there is a long down time.
  *
  *  @version 1.0
- *  @author Mike Douglass   douglm . rpi.edu
+ *  @author Mike Douglass   douglm . bedework.edu
  */
 @Dump(elementName="alarm", keyFields={"event"})
 public class BwAlarm extends BwOwnedDbentity<BwAlarm>

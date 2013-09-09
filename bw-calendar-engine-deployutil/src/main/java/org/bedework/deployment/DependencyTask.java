@@ -48,7 +48,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 /** Ant task to define a dependency. Allows a fairly seamless migration towards
  * maven.
  *
- * @author douglm @ rpi.edu
+ * @author douglm @ bedework.edu
  */
 public class DependencyTask extends Task implements TaskContainer {
 //  private static final String defaultLicenseInfoURL =

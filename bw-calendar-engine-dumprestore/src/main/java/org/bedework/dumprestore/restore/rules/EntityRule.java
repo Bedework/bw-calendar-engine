@@ -50,7 +50,7 @@ import org.xml.sax.Attributes;
 import java.util.HashMap;
 
 /**
- * @author Mike Douglass   douglm @ rpi.edu
+ * @author Mike Douglass   douglm @ bedework.edu
  * @version 1.0
  */
 public class EntityRule extends RestoreRule implements Defs {

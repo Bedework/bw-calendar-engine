@@ -25,8 +25,8 @@ import org.apache.log4j.Logger;
 
 /**
  * This is the implementation of a notifications handler.
- * 
- * @author Mike Douglass douglm - rpi.edu
+ *
+ * @author Mike Douglass douglm - bedework.edu
  */
 class NotificationsHandlerImpl extends NotificationsHandler {
   private transient Logger log;

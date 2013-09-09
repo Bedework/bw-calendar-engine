@@ -43,7 +43,7 @@ import java.util.Map;
 /** This class represent directory style information for the principal. It will be
  * retrieved from a pluggable class.
  *
- *  @author Mike Douglass douglm rpi.edu
+ *  @author Mike Douglass douglm bedework.edu
  *  @version 1.0
  */
 /**

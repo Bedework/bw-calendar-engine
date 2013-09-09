@@ -30,7 +30,7 @@ import java.util.Iterator;
  *
  * UID generation copied from hibernate.
  *
- * @author Mike Douglass     douglm - rpi.edu
+ * @author Mike Douglass     douglm - bedework.edu
  *  @version 1.0
  */
 public class CalFacadeUtil implements Serializable {

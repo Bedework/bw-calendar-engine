@@ -35,7 +35,7 @@ import java.util.List;
 
 /** Base Implementation of CalIntf which throws exceptions for most methods.
 *
-* @author Mike Douglass   douglm@rpi.edu
+* @author Mike Douglass   douglm@bedework.edu
 */
 public abstract class CalintfBase implements Calintf {
   private BasicSystemProperties syspars;

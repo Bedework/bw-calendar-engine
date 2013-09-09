@@ -58,7 +58,7 @@ import java.util.List;
  * <p>To avoid any need to rebuild the db the host info shown here doesn't match
  * up to the column names in the db. At some point we'll fix that.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 @ConfInfo(elementName = "bwhost")
 public class HostInfo extends ConfigBase<HostInfo>

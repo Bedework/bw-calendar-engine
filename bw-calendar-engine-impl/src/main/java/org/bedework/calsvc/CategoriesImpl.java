@@ -38,7 +38,7 @@ import java.util.List;
 
 /** Class which handles manipulation of Categories.
  *
- * @author Mike Douglass   douglm - rpi.edu
+ * @author Mike Douglass   douglm - bedework.edu
  */
 public class CategoriesImpl
         extends CalSvcDb implements Categories, PrivilegeDefs {

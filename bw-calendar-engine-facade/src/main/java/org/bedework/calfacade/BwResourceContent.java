@@ -37,7 +37,7 @@ import java.sql.Blob;
  * image. The actual content is stored in a BwResourceContent object to allow us
  * to put off retrieval of content - or maybe even store outside of the db.
  *
- *  @author Mike Douglass   douglm - rpi.edu
+ *  @author Mike Douglass   douglm - bedework.edu
  */
 @Dump(elementName="resourceContent", keyFields={"colPath", "name", "encodedContent"})
 public class BwResourceContent extends BwDbentity<BwResourceContent> {

@@ -38,7 +38,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * @author Mike Douglass douglm @ rpi.edu
+ * @author Mike Douglass douglm @ bedework.edu
  *
  */
 public class BwIndexKey extends Index.Key {

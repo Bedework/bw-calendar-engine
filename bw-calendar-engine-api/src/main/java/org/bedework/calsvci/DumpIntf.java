@@ -71,7 +71,7 @@ import java.util.Iterator;
  * <li>BwUserInfo</li>
  * </ul>
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  * @version 1.0
  */
 public interface DumpIntf {

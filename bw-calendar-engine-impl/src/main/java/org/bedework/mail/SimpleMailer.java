@@ -49,7 +49,7 @@ import javax.mail.internet.MimeMessage;
  * We do not consider many issues such as spam prevention, efficiency in
  * mailing to large lists, etc.
  *
- * @author  Mike Douglass douglm@rpi.edu
+ * @author  Mike Douglass douglm@bedework.edu
  */
 public class SimpleMailer implements MailerIntf {
   private boolean debug;

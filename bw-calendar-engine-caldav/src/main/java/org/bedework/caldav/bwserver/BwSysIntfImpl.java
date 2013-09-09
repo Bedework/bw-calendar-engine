@@ -18,6 +18,10 @@
 */
 package org.bedework.caldav.bwserver;
 
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.Acl;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.WhoDefs;
 import org.bedework.caldav.server.CalDAVCollection;
 import org.bedework.caldav.server.CalDAVEvent;
 import org.bedework.caldav.server.CalDAVResource;
@@ -91,20 +95,15 @@ import org.bedework.util.xml.XmlUtil;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.WebdavTags;
 import org.bedework.util.xml.tagdefs.XcalTags;
-
-import edu.rpi.cct.webdav.servlet.shared.PrincipalPropertySearch;
-import edu.rpi.cct.webdav.servlet.shared.UrlHandler;
-import edu.rpi.cct.webdav.servlet.shared.WdEntity;
-import edu.rpi.cct.webdav.servlet.shared.WebdavBadRequest;
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
-import edu.rpi.cct.webdav.servlet.shared.WebdavForbidden;
-import edu.rpi.cct.webdav.servlet.shared.WebdavNotFound;
-import edu.rpi.cct.webdav.servlet.shared.WebdavNsNode.PropertyTagEntry;
-import edu.rpi.cct.webdav.servlet.shared.WebdavProperty;
-import org.bedework.access.AccessPrincipal;
-import org.bedework.access.Acl;
-import org.bedework.access.Acl.CurrentAccess;
-import org.bedework.access.WhoDefs;
+import org.bedework.webdav.servlet.shared.PrincipalPropertySearch;
+import org.bedework.webdav.servlet.shared.UrlHandler;
+import org.bedework.webdav.servlet.shared.WdEntity;
+import org.bedework.webdav.servlet.shared.WebdavBadRequest;
+import org.bedework.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavForbidden;
+import org.bedework.webdav.servlet.shared.WebdavNotFound;
+import org.bedework.webdav.servlet.shared.WebdavNsNode.PropertyTagEntry;
+import org.bedework.webdav.servlet.shared.WebdavProperty;
 
 import ietf.params.xml.ns.caldav.ExpandType;
 import ietf.params.xml.ns.caldav.LimitRecurrenceSetType;
@@ -136,7 +135,7 @@ import javax.xml.namespace.QName;
 
 /** Bedework implementation of SysIntf.
  *
- * @author Mike Douglass douglm at rpi.edu
+ * @author Mike Douglass douglm at bedework.edu
  */
 public class BwSysIntfImpl implements SysIntf {
   private boolean debug;

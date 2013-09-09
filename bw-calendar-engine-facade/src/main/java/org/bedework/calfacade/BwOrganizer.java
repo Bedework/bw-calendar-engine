@@ -31,7 +31,7 @@ import java.io.Serializable;
 
 /** Represent an organizer
  *
- *  @author Mike Douglass   douglm@rpi.edu
+ *  @author Mike Douglass   douglm@bedework.edu
  */
 @Dump(elementName="organizer", keyFields={"organizerUri"})
 public class BwOrganizer extends DumpEntity<BwOrganizer>

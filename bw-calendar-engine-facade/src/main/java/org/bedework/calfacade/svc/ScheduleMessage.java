@@ -34,7 +34,7 @@ import net.fortuna.ical4j.model.property.LastModified;
  * <p>Outbox messages are message to be sent to a remote address, either through
  * iSchedule or some other process like iMip.
  *
- * @author Mike Douglass douglm  rpi.edu
+ * @author Mike Douglass douglm  bedework.edu
  */
 @Dump(elementName="autoSchedule", keyFields={"timestamp", "sequence"})
 public class ScheduleMessage extends BwDbentity<ScheduleMessage> {

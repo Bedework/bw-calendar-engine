@@ -30,7 +30,7 @@ import org.bedework.icalendar.IcalTranslator.SkipThis;
 
 /** Retrieve an owner and leave on the stack.
  *
- * @author Mike Douglass   douglm @ rpi.edu
+ * @author Mike Douglass   douglm @ bedework.edu
  * @version 1.0
  */
 public class OwnerRule extends CreatorRule {

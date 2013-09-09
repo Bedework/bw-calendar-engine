@@ -32,7 +32,7 @@ import java.util.Collection;
 
 /** This acts as an interface to the database for filters.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 class Filters extends CalSvcDb implements FiltersI {
   /** Constructor

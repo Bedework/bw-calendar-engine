@@ -59,7 +59,7 @@ import java.util.Collection;
  * update itself correctly when the users email is changed. We present the
  * new address to the system as well as the old one.
  *
- * @author Mike Douglass douglm@rpi.edu
+ * @author Mike Douglass douglm@bedework.edu
  */
 public interface MailerIntf extends Serializable {
   /**

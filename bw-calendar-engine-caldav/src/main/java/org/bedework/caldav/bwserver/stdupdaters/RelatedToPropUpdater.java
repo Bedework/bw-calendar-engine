@@ -27,8 +27,7 @@ import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.XcalTags;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.RelatedToPropType;
 import ietf.params.xml.ns.icalendar_2.ReltypeParamType;

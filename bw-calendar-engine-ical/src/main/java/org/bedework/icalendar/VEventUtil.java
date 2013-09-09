@@ -77,7 +77,7 @@ import java.util.List;
 
 /** Class to provide utility methods for translating to VEvent ical4j classes
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  */
 public class VEventUtil extends IcalUtil {
 

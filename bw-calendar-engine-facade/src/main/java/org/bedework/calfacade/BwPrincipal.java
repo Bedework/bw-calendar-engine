@@ -47,7 +47,7 @@ import java.util.TreeSet;
  * of administrative groups as well as the functions we need for departmental
  * sites.
  *
- *   @author Mike Douglass douglm@rpi.edu
+ *   @author Mike Douglass douglm@bedework.edu
  *  @version 1.0
  */
 @Dump(firstFields = {"account","principalRef"})

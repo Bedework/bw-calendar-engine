@@ -44,7 +44,7 @@ import javax.naming.ldap.InitialLdapContext;
 /** An implementation of Groups which stores the groups in an external ldap
  * directory.
  *
- * @author Mike Douglass douglm@rpi.edu
+ * @author Mike Douglass douglm@bedework.edu
  * @version 1.0
  */
 public class UserGroupsLdapImpl extends AbstractDirImpl {

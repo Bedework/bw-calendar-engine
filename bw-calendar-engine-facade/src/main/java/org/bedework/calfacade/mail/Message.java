@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -27,7 +27,7 @@ import java.util.Collection;
  * restatement of the javax.mail.Message class. Serializability is
  * important if we want to queue the message..
  *
- * @author Mike Douglass douglm@rpi.edu
+ * @author Mike Douglass douglm@bedework.edu
  */
 public class Message implements Serializable {
   /** Who is it from

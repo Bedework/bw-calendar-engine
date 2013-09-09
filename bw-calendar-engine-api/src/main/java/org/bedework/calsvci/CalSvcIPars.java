@@ -24,7 +24,7 @@ import java.io.Serializable;
 
 /** These are global parameters used by the CalSvc interface.
  *
- * @author Mike Douglass       douglm@rpi.edu
+ * @author Mike Douglass       douglm@bedework.edu
  */
 public class CalSvcIPars implements Serializable {
   /** The authenticated user - null for guest

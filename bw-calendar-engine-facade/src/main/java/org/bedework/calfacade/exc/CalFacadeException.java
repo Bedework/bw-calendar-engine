@@ -20,7 +20,7 @@ package org.bedework.calfacade.exc;
 
 /** Exception somewhere in the calendar facade
  *
- * @author Mike Douglass douglm@rpi.edu
+ * @author Mike Douglass douglm@bedework.edu
  */
 public class CalFacadeException extends Exception {
   /* Property names used as message value. These should be used to

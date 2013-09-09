@@ -31,7 +31,7 @@ import java.util.TreeSet;
 
 /** Value object to represent a calendar group.
  *
- *   @author Mike Douglass douglm@rpi.edu
+ *   @author Mike Douglass douglm@bedework.edu
  *  @version 1.0
  */
 @Dump(elementName="group", keyFields={"account"})

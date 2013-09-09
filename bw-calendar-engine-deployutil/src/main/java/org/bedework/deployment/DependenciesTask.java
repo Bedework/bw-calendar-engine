@@ -30,7 +30,7 @@ import java.util.List;
 /** Ant task to define a set of dependencies. Allows a fairly seamless migration towards
  * maven.
  *
- * @author douglm @ rpi.edu
+ * @author douglm @ bedework.edu
  */
 public class DependenciesTask extends Task implements TaskContainer {
   private List<Task> children = new ArrayList<Task>();

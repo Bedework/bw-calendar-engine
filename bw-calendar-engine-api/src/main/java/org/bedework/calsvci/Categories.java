@@ -35,7 +35,7 @@ import java.util.List;
  * There are methods to retrieve only the cached objects for the many cases where
  * speed is important.
  *
- * @author Mike Douglass   douglm - rpi.edu
+ * @author Mike Douglass   douglm - bedework.edu
  *
  */
 public interface Categories extends Serializable {

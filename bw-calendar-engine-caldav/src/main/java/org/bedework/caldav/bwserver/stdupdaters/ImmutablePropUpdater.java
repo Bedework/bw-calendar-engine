@@ -21,8 +21,7 @@ package org.bedework.caldav.bwserver.stdupdaters;
 
 import org.bedework.caldav.bwserver.PropertyUpdater;
 import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 /** Immutable properties
  *

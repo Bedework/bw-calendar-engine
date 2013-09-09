@@ -49,7 +49,7 @@ import java.util.TreeSet;
 
 /** This acts as an interface to the database for calendars.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 class Calendars extends CalSvcDb implements CalendarsI {
   private String publicCalendarRootPath;

@@ -27,7 +27,7 @@ import java.io.Serializable;
 
 /** Provides access to some of the basic configuration for the system.
  *
- * @author Mike Douglass   douglm  rpi.edu
+ * @author Mike Douglass   douglm  bedework.edu
  */
 public interface Configurations extends Serializable {
   /**

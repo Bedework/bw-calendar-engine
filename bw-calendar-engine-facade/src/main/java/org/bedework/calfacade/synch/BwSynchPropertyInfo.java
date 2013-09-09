@@ -23,7 +23,7 @@ import org.bedework.util.misc.ToString;
 
 /** Information about connector properties
  *
- *  @author Mike Douglass douglm  rpi.edu
+ *  @author Mike Douglass douglm  bedework.edu
  *  @version 1.0
  */
 public class BwSynchPropertyInfo extends SynchPropertyInfoType {

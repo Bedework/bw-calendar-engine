@@ -94,7 +94,7 @@ import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeCategory;
 import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeEvent;
 
 /**
- * @author Mike Douglass douglm - rpi.edu
+ * @author Mike Douglass douglm - bedework.edu
  *
  */
 public class BwIndexSolrImpl implements BwIndexer {

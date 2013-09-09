@@ -36,7 +36,7 @@ import java.util.Set;
 /** This is the events section of the low level interface to the calendar
  * database.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  */
 public interface CoreEventsI extends Serializable {
 

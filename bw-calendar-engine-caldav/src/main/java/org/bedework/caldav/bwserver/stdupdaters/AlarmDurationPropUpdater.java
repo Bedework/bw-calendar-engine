@@ -21,8 +21,7 @@ package org.bedework.caldav.bwserver.stdupdaters;
 
 import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwAlarm;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.DurationPropType;
 

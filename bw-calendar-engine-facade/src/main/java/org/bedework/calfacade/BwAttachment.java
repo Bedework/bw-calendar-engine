@@ -25,7 +25,7 @@ import org.bedework.util.misc.ToString;
 
 /** Represent an attachment.
  *
- *  @author Mike Douglass   douglm - rpi.edu
+ *  @author Mike Douglass   douglm - bedework.edu
  */
 public class BwAttachment extends BwDbentity<BwAttachment> {
   /* Params fields */

@@ -24,7 +24,7 @@ import java.util.Properties;
 
 /** Interface which defines a schema builder.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  * @version 1.0
  */
 public interface SchemaBuilder {

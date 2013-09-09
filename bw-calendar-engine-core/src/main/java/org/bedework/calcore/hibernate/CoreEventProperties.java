@@ -35,7 +35,7 @@ import java.util.List;
 
 /** Implementation of core event properties interface.
  *
- * @author Mike Douglass    douglm@rpi.edu
+ * @author Mike Douglass    douglm@bedework.edu
  * @version 1.0
  * @param <T> type of property, Location, contact etc.
  */

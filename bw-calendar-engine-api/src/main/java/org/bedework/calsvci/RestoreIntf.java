@@ -38,7 +38,7 @@ import org.bedework.calfacade.svc.EventInfo;
  * calendar database. The methods need to be called in the order defined
  * below.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  * @version 1.0
  */
 public interface RestoreIntf {

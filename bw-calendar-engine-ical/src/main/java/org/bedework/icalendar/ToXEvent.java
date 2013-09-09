@@ -52,7 +52,7 @@ import javax.xml.bind.JAXBElement;
 
 /** Class to provide utility methods for translating to XML icalendar classes
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  */
 public class ToXEvent extends Xutil {
   /** Make a BaseComponentType component from a BwEvent object. This may produce a

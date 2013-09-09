@@ -44,7 +44,7 @@ import java.util.Map;
 
 /** This acts as an interface to the database for user objects.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 class Users extends CalSvcDb implements UsersI {
   /* The account that owns public entities

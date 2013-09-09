@@ -50,7 +50,7 @@ import java.io.Serializable;
 /** A class just to allow me to delete all entries referring to a given entity
  * Hibernate doesn't seem to allow this any other way (though 3.1 might)
  *
- *  @author Mike Douglass douglm@rpi.edu
+ *  @author Mike Douglass douglm@bedework.edu
  *  @version 1.0
  */
 public class BwAuthUserPrefsCategory implements Serializable {

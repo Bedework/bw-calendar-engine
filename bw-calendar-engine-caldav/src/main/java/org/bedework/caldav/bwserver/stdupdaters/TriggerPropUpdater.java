@@ -23,8 +23,7 @@ import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.xml.tagdefs.XcalTags;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavException;
+import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.RelatedParamType;
 import ietf.params.xml.ns.icalendar_2.TriggerPropType;
