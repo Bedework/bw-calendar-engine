@@ -27,7 +27,7 @@ import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.PrivilegeDefs;
 
 import org.apache.log4j.Logger;
 
@@ -35,7 +35,7 @@ import java.io.Serializable;
 
 /** Class used as basis for a number of helper classes.
  *
- * @author Mike Douglass   douglm  rpi.edu
+ * @author Mike Douglass   douglm  bedework.edu
  */
 public abstract class CalintfHelper
         implements CalintfDefs, PrivilegeDefs, Serializable {

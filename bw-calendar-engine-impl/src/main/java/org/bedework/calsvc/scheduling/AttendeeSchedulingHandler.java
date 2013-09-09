@@ -35,7 +35,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.PrivilegeDefs;
 
 import java.util.TreeSet;
 

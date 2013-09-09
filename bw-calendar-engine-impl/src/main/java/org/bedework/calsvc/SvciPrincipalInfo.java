@@ -23,9 +23,9 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 
-import edu.rpi.cmt.access.AccessException;
-import edu.rpi.cmt.access.AccessPrincipal;
-import edu.rpi.cmt.access.PrivilegeSet;
+import org.bedework.access.AccessException;
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.PrivilegeSet;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -104,7 +104,7 @@ final class SvciPrincipalInfo extends PrincipalInfo {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cmt.access.Access.AccessCb#makeHref(java.lang.String, int)
+   * @see Access.AccessCb#makeHref(java.lang.String, int)
    */
   @Override
   public String makeHref(final String id, final int whoType) throws AccessException {

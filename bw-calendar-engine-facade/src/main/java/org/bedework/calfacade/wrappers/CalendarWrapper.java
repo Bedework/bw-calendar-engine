@@ -26,8 +26,8 @@ import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.AccessUtilI;
 
-import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeDefs;
 
 import java.sql.Timestamp;
 import java.util.HashMap;

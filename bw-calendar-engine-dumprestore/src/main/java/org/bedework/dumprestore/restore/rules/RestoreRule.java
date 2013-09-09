@@ -26,7 +26,7 @@ import org.apache.commons.digester.Rule;
 import org.apache.log4j.Logger;
 
 /**
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  * @version 1.0
  */
 public class RestoreRule extends Rule {

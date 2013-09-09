@@ -33,7 +33,7 @@ import java.util.Collection;
 /** Allow the translation process to retrieve objects and information it might
  * need from the system.
  *
- * @author Mike Douglass douglm@rpi.edu
+ * @author Mike Douglass douglm@bedework.edu
  * @version 1.0
  */
 public interface IcalCallback extends Serializable {

@@ -29,15 +29,15 @@ import org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper;
 import org.bedework.calsvci.CalSuitesI;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.Access;
-import edu.rpi.cmt.access.AccessException;
-import edu.rpi.cmt.access.Ace;
-import edu.rpi.cmt.access.AceWho;
-import edu.rpi.cmt.access.Acl;
-import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.access.Privilege;
-import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.Access;
+import org.bedework.access.AccessException;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.Privilege;
+import org.bedework.access.PrivilegeDefs;
+import org.bedework.access.WhoDefs;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -35,7 +35,7 @@ import org.bedework.util.xml.tagdefs.ICalTags;
 import org.bedework.util.xml.tagdefs.WebdavTags;
 
 import edu.rpi.cct.webdav.servlet.shared.WebdavException;
-import edu.rpi.cmt.access.AccessPrincipal;
+import org.bedework.access.AccessPrincipal;
 
 import java.util.Collection;
 import java.util.List;
@@ -710,7 +710,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#setOwner(edu.rpi.cmt.access.AccessPrincipal)
+   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#setOwner(AccessPrincipal)
    */
   @Override
   public void setOwner(final AccessPrincipal val) throws WebdavException {

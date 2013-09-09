@@ -92,11 +92,11 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.security.PwEncryptionIntf;
 import org.bedework.util.timezones.Timezones;
 
-import edu.rpi.cmt.access.Access;
-import edu.rpi.cmt.access.Ace;
-import edu.rpi.cmt.access.AceWho;
-import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.access.PrivilegeSet;
+import org.bedework.access.Access;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeSet;
 
 import net.fortuna.ical4j.model.property.DtStamp;
 import org.apache.log4j.Logger;
@@ -976,7 +976,7 @@ public class CalSvc extends CalSvcI {
   }
 
   /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#defaultAccess(org.bedework.calfacade.base.BwShareableDbentity, edu.rpi.cmt.access.AceWho)
+   * @see org.bedework.calsvci.CalSvcI#defaultAccess(org.bedework.calfacade.base.BwShareableDbentity, AceWho)
    */
   @Override
   public void defaultAccess(BwShareableDbentity ent,

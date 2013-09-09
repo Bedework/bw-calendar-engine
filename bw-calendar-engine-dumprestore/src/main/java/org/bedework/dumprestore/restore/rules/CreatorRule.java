@@ -24,7 +24,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.dumprestore.restore.PrincipalHref;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.WhoDefs;
 
 import org.xml.sax.Attributes;
 

@@ -26,7 +26,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.indexing.Index;
 import org.bedework.util.indexing.SearchLimits;
 
-import edu.rpi.cmt.access.Acl;
+import org.bedework.access.Acl;
 
 import java.io.Serializable;
 import java.util.List;

@@ -42,9 +42,9 @@ import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.icalendar.IcalCallback;
 import org.bedework.sysevents.events.SysEventBase;
 
-import edu.rpi.cmt.access.Ace;
-import edu.rpi.cmt.access.AceWho;
-import edu.rpi.cmt.access.Acl.CurrentAccess;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl.CurrentAccess;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -66,7 +66,7 @@ import java.util.Collection;
  * <p>Calls for collections of event objects may include filters to specify
  * which type of entity is desired.
  *
- * @author Mike Douglass       douglm@rpi.edu
+ * @author Mike Douglass       douglm@bedework.edu
  */
 public abstract class CalSvcI implements Serializable {
   /** (Re)initialise the object for a particular use.

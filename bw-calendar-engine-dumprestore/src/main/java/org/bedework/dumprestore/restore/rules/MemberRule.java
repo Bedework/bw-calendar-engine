@@ -31,7 +31,7 @@ import java.util.ArrayList;
 
 /** Retrieve a member and add to the group.
  *
- * @author Mike Douglass   douglm @ rpi.edu
+ * @author Mike Douglass   douglm @ bedework.edu
  * @version 1.0
  */
 public class MemberRule extends RestoreRule {

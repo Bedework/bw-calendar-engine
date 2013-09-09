@@ -77,7 +77,7 @@ import javax.xml.ws.Holder;
 
 /** Class to provide utility methods for translating to BwEvent from ical4j classes
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  */
 public class BwEventUtil extends IcalUtil {
   /** We are going to try to construct a BwEvent object from a VEvent. This

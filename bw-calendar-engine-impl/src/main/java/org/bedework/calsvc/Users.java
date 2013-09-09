@@ -32,9 +32,9 @@ import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.Access;
-import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.Access;
+import org.bedework.access.PrivilegeDefs;
+import org.bedework.access.WhoDefs;
 
 import java.sql.Timestamp;
 import java.util.Collection;

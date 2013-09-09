@@ -29,7 +29,7 @@ import java.util.TreeSet;
 
 /** This acts as an interface to the database for views.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 class Views extends CalSvcDb implements ViewsI {
   Views(final CalSvc svci) {

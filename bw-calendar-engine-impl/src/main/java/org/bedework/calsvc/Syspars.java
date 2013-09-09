@@ -24,14 +24,14 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.SysparsI;
 
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.WhoDefs;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 /** This acts as an interface to the database for system parameters.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 class Syspars extends CalSvcDb implements SysparsI {
   private static BwSystem syspars;

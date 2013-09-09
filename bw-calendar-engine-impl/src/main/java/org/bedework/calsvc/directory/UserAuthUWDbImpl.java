@@ -30,7 +30,7 @@ import java.util.Collection;
 
 /** Implementation of UserAuth that handles Bedwork DB tables for authorisation.
  *
- * @author Mike Douglass    douglm@rpi.edu
+ * @author Mike Douglass    douglm@bedework.edu
  * @version 1.0
  */
 public class UserAuthUWDbImpl implements UserAuth {

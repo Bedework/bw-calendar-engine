@@ -52,7 +52,7 @@ import java.util.TreeSet;
 
 /** Some help with recurrences.
  *
- * @author Mike Douglass     douglm - rpi.edu
+ * @author Mike Douglass     douglm - bedework.edu
  *  @version 1.0
  */
 public class RecurUtil {

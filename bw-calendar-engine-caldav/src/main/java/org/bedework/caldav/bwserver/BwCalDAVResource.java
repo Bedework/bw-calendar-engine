@@ -18,6 +18,7 @@
 */
 package org.bedework.caldav.bwserver;
 
+import org.bedework.access.AccessPrincipal;
 import org.bedework.caldav.server.CalDAVResource;
 import org.bedework.caldav.util.notifications.NotificationType;
 import org.bedework.caldav.util.notifications.NotificationType.NotificationInfo;
@@ -30,7 +31,6 @@ import org.bedework.util.xml.tagdefs.WebdavTags;
 
 import edu.rpi.cct.webdav.servlet.shared.WebdavException;
 import edu.rpi.cct.webdav.servlet.shared.WebdavForbidden;
-import edu.rpi.cmt.access.AccessPrincipal;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -396,7 +396,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#setOwner(edu.rpi.cmt.access.AccessPrincipal)
+   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#setOwner(AccessPrincipal)
    */
   @Override
   public void setOwner(final AccessPrincipal val) throws WebdavException {

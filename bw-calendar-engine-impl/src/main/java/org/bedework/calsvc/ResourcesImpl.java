@@ -24,13 +24,13 @@ import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.ResourcesI;
 
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.PrivilegeDefs;
 
 import java.util.List;
 
 /** This acts as an interface to the database for resources.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 class ResourcesImpl extends CalSvcDb implements ResourcesI {
   /* Used for resource manipulation */

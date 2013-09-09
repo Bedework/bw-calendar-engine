@@ -31,7 +31,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.PrivilegeDefs;
 
 /** Rather than have a single class steering calls to a number of smaller classes
  * we will build up a full implementation by progressively implementing abstract

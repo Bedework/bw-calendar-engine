@@ -21,7 +21,7 @@ package org.bedework.sysevents.events;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.util.misc.ToString;
 
-import edu.rpi.cmt.access.AccessPrincipal;
+import org.bedework.access.AccessPrincipal;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.LastModified;

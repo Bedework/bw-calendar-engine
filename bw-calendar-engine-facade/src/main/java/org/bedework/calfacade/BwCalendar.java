@@ -41,7 +41,7 @@ import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import edu.rpi.cct.webdav.servlet.shared.WebdavException;
-import edu.rpi.cmt.access.Acl.CurrentAccess;
+import org.bedework.access.Acl.CurrentAccess;
 
 import java.net.URLEncoder;
 import java.sql.Timestamp;

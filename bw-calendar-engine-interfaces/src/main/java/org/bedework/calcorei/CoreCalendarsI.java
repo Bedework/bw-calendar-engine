@@ -23,8 +23,8 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
 
-import edu.rpi.cmt.access.Ace;
-import edu.rpi.cmt.access.AceWho;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
 
 import java.io.Serializable;
 import java.util.Collection;

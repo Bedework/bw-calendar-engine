@@ -18,6 +18,13 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.access.AccessException;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl;
+import org.bedework.access.Privilege;
+import org.bedework.access.Privileges;
+import org.bedework.access.WhoDefs;
 import org.bedework.caldav.util.notifications.NotificationType;
 import org.bedework.caldav.util.sharing.AccessType;
 import org.bedework.caldav.util.sharing.InviteNotificationType;
@@ -42,13 +49,6 @@ import org.bedework.util.xml.tagdefs.AppleServerTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import edu.rpi.cct.webdav.servlet.shared.WebdavException;
-import edu.rpi.cmt.access.AccessException;
-import edu.rpi.cmt.access.Ace;
-import edu.rpi.cmt.access.AceWho;
-import edu.rpi.cmt.access.Acl;
-import edu.rpi.cmt.access.Privilege;
-import edu.rpi.cmt.access.Privileges;
-import edu.rpi.cmt.access.WhoDefs;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.DtStamp;

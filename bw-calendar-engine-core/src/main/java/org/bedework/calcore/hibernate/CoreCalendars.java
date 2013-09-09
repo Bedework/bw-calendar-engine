@@ -42,11 +42,11 @@ import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.Access;
-import edu.rpi.cmt.access.Ace;
-import edu.rpi.cmt.access.AceWho;
-import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.Access;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeDefs;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -692,7 +692,7 @@ public class CoreCalendars extends CalintfHelperHib
   }
 
   /* (non-Javadoc)
-   * @see org.bedework.calcorei.CalendarsI#defaultAccess(org.bedework.calfacade.BwCalendar, edu.rpi.cmt.access.AceWho)
+   * @see org.bedework.calcorei.CalendarsI#defaultAccess(org.bedework.calfacade.BwCalendar, AceWho)
    */
   @Override
   public void defaultAccess(final BwCalendar cal,

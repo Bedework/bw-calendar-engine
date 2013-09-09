@@ -28,7 +28,7 @@ import java.util.List;
 
 /** Information about a synch connector
  *
- *  @author Mike Douglass douglm@rpi.edu
+ *  @author Mike Douglass douglm@bedework.edu
  *  @version 1.0
  */
 public class BwSynchConnectorInfo extends SynchConnectorInfoType {

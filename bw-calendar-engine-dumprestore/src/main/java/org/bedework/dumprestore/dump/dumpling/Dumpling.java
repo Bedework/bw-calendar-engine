@@ -38,7 +38,7 @@ import javax.xml.namespace.QName;
 
 /** Helper classes for the calendar data dump utility.
  *
- * @author Mike Douglass   douglm  rpi.edu
+ * @author Mike Douglass   douglm  bedework.edu
  * @version 1.0
  *
  * @param <T> class we are dumping

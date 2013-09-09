@@ -59,7 +59,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.Acl.CurrentAccess;
+import org.bedework.access.Acl.CurrentAccess;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;

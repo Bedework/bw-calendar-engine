@@ -47,8 +47,8 @@ import org.bedework.util.indexing.SearchLimits;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 
-import edu.rpi.cmt.access.Acl;
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.Acl;
+import org.bedework.access.PrivilegeDefs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -119,7 +119,7 @@ import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeEvent;
 
 /** Implementation of indexer for ElasticSearch
  *
- * @author Mike Douglass douglm - rpi.edu
+ * @author Mike Douglass douglm - bedework.edu
  *
  */
 public class BwIndexEsImpl implements BwIndexer {

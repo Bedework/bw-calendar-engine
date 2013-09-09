@@ -77,11 +77,11 @@ import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.Ace;
-import edu.rpi.cmt.access.AceWho;
-import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeDefs;
+import org.bedework.access.WhoDefs;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;

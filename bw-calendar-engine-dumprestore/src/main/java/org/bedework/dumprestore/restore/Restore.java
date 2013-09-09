@@ -34,13 +34,13 @@ import org.bedework.dumprestore.restore.rules.RestoreRuleSet;
 import org.bedework.util.args.Args;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.Ace;
-import edu.rpi.cmt.access.AceWho;
-import edu.rpi.cmt.access.Acl;
-import edu.rpi.cmt.access.Privilege;
-import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.cmt.access.Privileges;
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl;
+import org.bedework.access.Privilege;
+import org.bedework.access.PrivilegeDefs;
+import org.bedework.access.Privileges;
+import org.bedework.access.WhoDefs;
 
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RegexMatcher;

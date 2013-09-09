@@ -40,8 +40,8 @@ import org.bedework.util.http.BasicHttpClient;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.CarddavTags;
 
-import edu.rpi.cmt.access.AccessPrincipal;
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.WhoDefs;
 
 import org.apache.log4j.Logger;
 
@@ -68,7 +68,7 @@ import javax.xml.namespace.QName;
  * might have a user account "jim" or a ticket "TKT12345". These could be mapped
  * on to "/principals/users/jim" and "/principals/tickets/12345".
  *
- * @author Mike Douglass douglm@rpi.edu
+ * @author Mike Douglass douglm@bedework.edu
  * @version 1.0
  */
 public abstract class AbstractDirImpl implements Directories {

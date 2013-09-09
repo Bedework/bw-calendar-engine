@@ -22,7 +22,7 @@ package org.bedework.deployment;
 /** Ant task to define a dependency. Allows a fairly seamless migration towards
  * maven.
  *
- * @author douglm @ rpi.edu
+ * @author douglm @ bedework.edu
  */
 public class ScopeTask extends ContainedTextTask {
 }

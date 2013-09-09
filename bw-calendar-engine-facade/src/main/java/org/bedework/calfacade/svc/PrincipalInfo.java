@@ -23,10 +23,10 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.Access.AccessCb;
-import edu.rpi.cmt.access.AccessPrincipal;
-import edu.rpi.cmt.access.PrivilegeSet;
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.Access.AccessCb;
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.PrivilegeSet;
+import org.bedework.access.WhoDefs;
 
 import java.io.Serializable;
 

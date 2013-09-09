@@ -62,8 +62,8 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
-import edu.rpi.cmt.access.AccessPrincipal;
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.PrivilegeDefs;
 
 import net.fortuna.ical4j.model.Component;
 
@@ -79,7 +79,7 @@ import javax.xml.namespace.QName;
 
 /** This acts as an interface to the database for subscriptions.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 class Events extends CalSvcDb implements EventsI {
   Events(final CalSvc svci) {

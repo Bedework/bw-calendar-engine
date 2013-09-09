@@ -41,7 +41,7 @@ import net.fortuna.ical4j.model.property.Uid;
 import java.util.Collection;
 
 /**
- *   @author Mike Douglass   douglm @ rpi.edu
+ *   @author Mike Douglass   douglm @ bedework.edu
  */
 public class VFreeUtil extends IcalUtil {
 

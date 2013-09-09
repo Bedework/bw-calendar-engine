@@ -33,7 +33,7 @@ import org.bedework.dumprestore.restore.RestoreGlobals;
 import org.bedework.util.misc.Util;
 
 /**
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  * @version 1.0
  */
 public class AuthUserFieldRule extends EntityFieldRule {

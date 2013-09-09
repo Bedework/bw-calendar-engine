@@ -31,7 +31,7 @@ import java.util.TreeSet;
 /** An implementation of AdminGroups which stores the groups in the calendar
  * database.
  *
- * @author Mike Douglass douglm@rpi.edu
+ * @author Mike Douglass douglm@bedework.edu
  * @version 1.0
  */
 public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {

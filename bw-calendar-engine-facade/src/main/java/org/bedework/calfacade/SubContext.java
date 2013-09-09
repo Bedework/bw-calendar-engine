@@ -23,7 +23,7 @@ import org.bedework.util.misc.ToString;
 
 /** Provide information about a sub-context of the public calendar.
  *
- * @author Mike Douglass       douglm@rpi.edu
+ * @author Mike Douglass       douglm@bedework.edu
  */
 public class SubContext implements Comparable<SubContext> {
   private BwProperty prop;

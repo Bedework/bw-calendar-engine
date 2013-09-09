@@ -34,7 +34,7 @@ import java.util.TreeSet;
 
 /** Account preferences for Bedework. These affect the user view of calendars.
  *
- *  @author Mike Douglass douglm rpi.edu
+ *  @author Mike Douglass douglm bedework.edu
  *  @version 1.0
  */
 @Dump(elementName="preferences", keyFields={"ownerHref"}, firstFields={"ownerHref"})

@@ -45,7 +45,7 @@ import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.security.PwEncryptionIntf;
 
-import edu.rpi.cmt.access.Acl.CurrentAccess;
+import org.bedework.access.Acl.CurrentAccess;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -59,7 +59,7 @@ import java.util.UUID;
 /** This acts as an interface to the database for more client oriented
  * bedework objects. CalIntf is a more general calendar specific interface.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass       douglm - bedework.edu
  */
 public class CalSvcDb implements Serializable {
   protected boolean debug;

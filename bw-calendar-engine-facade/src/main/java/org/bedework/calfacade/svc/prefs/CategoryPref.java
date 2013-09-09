@@ -22,7 +22,7 @@ import org.bedework.calfacade.annotations.Dump;
 
 /** Represent user category preferences - a list of category uids
  *
- *  @author Mike Douglass douglm - rpi.edu
+ *  @author Mike Douglass douglm - bedework.edu
  *  @version 1.0
  */
 @Dump(elementName="category-pref")

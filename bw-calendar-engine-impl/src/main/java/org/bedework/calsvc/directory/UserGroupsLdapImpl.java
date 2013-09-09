@@ -25,7 +25,7 @@ import org.bedework.calfacade.configs.LdapConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeUnimplementedException;
 
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.WhoDefs;
 
 import java.net.URI;
 import java.util.ArrayList;

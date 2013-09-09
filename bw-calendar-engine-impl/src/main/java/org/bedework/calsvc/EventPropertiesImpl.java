@@ -30,7 +30,7 @@ import org.bedework.calsvci.EventProperties;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.PrivilegeDefs;
 
 import java.util.ArrayList;
 import java.util.Collection;

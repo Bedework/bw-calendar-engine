@@ -49,7 +49,7 @@ import java.util.Iterator;
 
 /** Class to provide utility methods for translating to BwFreeBusy from ical4j classes
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  */
 public class BwFreeBusyUtil extends IcalUtil {
   /**

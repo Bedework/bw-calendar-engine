@@ -21,10 +21,10 @@ package org.bedework.dumprestore.restore.rules;
 import org.bedework.dumprestore.restore.PrincipalHref;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.WhoDefs;
 
 /**
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  * @version 1.0
  */
 public class PrincipalFieldRule extends EntityFieldRule {

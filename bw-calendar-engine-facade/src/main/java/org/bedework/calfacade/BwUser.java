@@ -23,7 +23,7 @@ import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.util.misc.ToString;
 
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.WhoDefs;
 
 /** Value object to represent a calendar user.
  *

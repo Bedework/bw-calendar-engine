@@ -21,7 +21,7 @@ package org.bedework.calcorei;
 
 import org.bedework.calfacade.BwEvent;
 
-import edu.rpi.cmt.access.Acl.CurrentAccess;
+import org.bedework.access.Acl.CurrentAccess;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -34,7 +34,7 @@ import java.util.TreeSet;
  *
  * <p>This class allows us to handle thread, or user, specific information.
  *
- * @author Mike Douglass       douglm @ rpi.edu
+ * @author Mike Douglass       douglm @ bedework.edu
  */
 public class CoreEventInfo implements Comparable, Comparator, Serializable {
   protected BwEvent event;

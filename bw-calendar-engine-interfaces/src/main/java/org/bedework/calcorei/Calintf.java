@@ -41,9 +41,9 @@ import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.sysevents.events.SysEventBase;
 
-import edu.rpi.cmt.access.Ace;
-import edu.rpi.cmt.access.AceWho;
-import edu.rpi.cmt.access.Acl.CurrentAccess;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl.CurrentAccess;
 
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -65,7 +65,7 @@ import java.util.List;
  * <p>The UserAuth object returned by getUserAuth usually represents the
  * authenticated user and determines the rights that user has.
  *
- * @author Mike Douglass   douglm@rpi.edu
+ * @author Mike Douglass   douglm@bedework.edu
  */
 public interface Calintf
     extends CoreCalendarsI, CoreEventsI, CoreFilterDefsI, CoreUserAuthI {

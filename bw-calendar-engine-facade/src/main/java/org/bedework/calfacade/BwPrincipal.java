@@ -24,8 +24,8 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
 
-import edu.rpi.cmt.access.AccessPrincipal;
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.WhoDefs;
 
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -390,7 +390,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cmt.access.AccessPrincipal#setGroupNames(java.util.Collection)
+   * @see AccessPrincipal#setGroupNames(java.util.Collection)
    */
   @Override
   public void setGroupNames(final Collection<String> val) {
@@ -398,7 +398,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cmt.access.AccessPrincipal#getGroupNames()
+   * @see AccessPrincipal#getGroupNames()
    */
   @Override
   @NoDump

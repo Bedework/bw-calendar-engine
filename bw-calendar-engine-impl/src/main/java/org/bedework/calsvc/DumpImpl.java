@@ -40,11 +40,11 @@ import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calsvci.DumpIntf;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.AccessException;
-import edu.rpi.cmt.access.AccessPrincipal;
-import edu.rpi.cmt.access.PrivilegeDefs;
-import edu.rpi.cmt.access.PrivilegeSet;
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.AccessException;
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.PrivilegeDefs;
+import org.bedework.access.PrivilegeSet;
+import org.bedework.access.WhoDefs;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -311,7 +311,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     }
 
     /* (non-Javadoc)
-     * @see edu.rpi.cmt.access.Access.AccessCb#makeHref(java.lang.String, int)
+     * @see Access.AccessCb#makeHref(java.lang.String, int)
      */
     @Override
     public String makeHref(final String id, final int whoType) throws AccessException {

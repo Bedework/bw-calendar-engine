@@ -32,13 +32,13 @@ import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.Access;
-import edu.rpi.cmt.access.AccessPrincipal;
-import edu.rpi.cmt.access.Ace;
-import edu.rpi.cmt.access.AceWho;
-import edu.rpi.cmt.access.Acl;
-import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.access.PrivilegeSet;
+import org.bedework.access.Access;
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeSet;
 
 import org.apache.log4j.Logger;
 
@@ -181,7 +181,7 @@ public class AccessUtil implements AccessUtilI {
   }
 
   /* (non-Javadoc)
-   * @see org.bedework.calcorei.AccessUtilI#defaultAccess(org.bedework.calfacade.base.BwShareableDbentity, edu.rpi.cmt.access.AceWho)
+   * @see org.bedework.calcorei.AccessUtilI#defaultAccess(org.bedework.calfacade.base.BwShareableDbentity, AceWho)
    */
   @Override
   public void defaultAccess(final BwShareableDbentity<?> ent,

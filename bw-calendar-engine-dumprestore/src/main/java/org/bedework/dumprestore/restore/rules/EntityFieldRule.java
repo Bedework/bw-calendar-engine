@@ -38,7 +38,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 /**
- * @author Mike Douglass   douglm rpi.edu
+ * @author Mike Douglass   douglm bedework.edu
  * @version 1.0
  */
 public abstract class EntityFieldRule extends RestoreRule {

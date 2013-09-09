@@ -35,8 +35,8 @@ import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.SynchI;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeDefs;
 
 import java.net.URI;
 import java.net.URLDecoder;

@@ -31,7 +31,7 @@ import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.Acl.CurrentAccess;
+import org.bedework.access.Acl.CurrentAccess;
 
 import java.io.Serializable;
 import java.util.ArrayList;

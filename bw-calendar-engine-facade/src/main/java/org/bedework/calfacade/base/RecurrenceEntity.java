@@ -25,7 +25,7 @@ import java.io.Serializable;
 import java.util.Set;
 
 /**
- * @author Mike Douglass douglm - rpi.edu
+ * @author Mike Douglass douglm - bedework.edu
  *
  */
 public interface RecurrenceEntity extends Serializable {

@@ -101,10 +101,10 @@ import edu.rpi.cct.webdav.servlet.shared.WebdavForbidden;
 import edu.rpi.cct.webdav.servlet.shared.WebdavNotFound;
 import edu.rpi.cct.webdav.servlet.shared.WebdavNsNode.PropertyTagEntry;
 import edu.rpi.cct.webdav.servlet.shared.WebdavProperty;
-import edu.rpi.cmt.access.AccessPrincipal;
-import edu.rpi.cmt.access.Acl;
-import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.Acl;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.WhoDefs;
 
 import ietf.params.xml.ns.caldav.ExpandType;
 import ietf.params.xml.ns.caldav.LimitRecurrenceSetType;
@@ -462,7 +462,7 @@ public class BwSysIntfImpl implements SysIntf {
   }
 
   /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#getCalPrincipalInfo(edu.rpi.cmt.access.AccessPrincipal)
+   * @see org.bedework.caldav.server.SysIntf#getCalPrincipalInfo(AccessPrincipal)
    */
   @Override
   public CalPrincipalInfo getCalPrincipalInfo(final AccessPrincipal principal) throws WebdavException {
@@ -1339,7 +1339,7 @@ public class BwSysIntfImpl implements SysIntf {
   }
 
   /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#updateAccess(org.bedework.caldav.server.CalDAVCollection, edu.rpi.cmt.access.Acl)
+   * @see org.bedework.caldav.server.SysIntf#updateAccess(org.bedework.caldav.server.CalDAVCollection, Acl)
    */
   @Override
   public void updateAccess(final CalDAVCollection col,

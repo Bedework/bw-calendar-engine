@@ -24,7 +24,7 @@ import org.bedework.calfacade.BwGroupEntry;
 /** A table allowing us to retrieve administrative grp members which
  * may themselves be groups.
  *
- *   @author Mike Douglass douglm@rpi.edu
+ *   @author Mike Douglass douglm@bedework.edu
  *  @version 1.0
  */
 public class BwAdminGroupEntry extends BwGroupEntry {

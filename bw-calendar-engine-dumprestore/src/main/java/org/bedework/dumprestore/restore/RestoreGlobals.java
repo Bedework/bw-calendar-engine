@@ -38,9 +38,9 @@ import org.bedework.dumprestore.InfoLines;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.Timezones;
 
-import edu.rpi.cmt.access.AccessException;
-import edu.rpi.cmt.access.AccessPrincipal;
-import edu.rpi.cmt.access.WhoDefs;
+import org.bedework.access.AccessException;
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.WhoDefs;
 
 import org.apache.commons.digester.Digester;
 
@@ -54,7 +54,7 @@ import java.util.TreeSet;
 
 /** Globals for the restore phase
  *
- * @author Mike Douglass   douglm   rpi.edu
+ * @author Mike Douglass   douglm   bedework.edu
  * @version 1.0
  */
 public class RestoreGlobals extends Counters {
@@ -659,7 +659,7 @@ public class RestoreGlobals extends Counters {
     }
 
     /* (non-Javadoc)
-     * @see edu.rpi.cmt.access.Access.AccessCb#makeHref(java.lang.String, int)
+     * @see Access.AccessCb#makeHref(java.lang.String, int)
      */
     @Override
     public String makeHref(final String id, final int whoType) throws AccessException {

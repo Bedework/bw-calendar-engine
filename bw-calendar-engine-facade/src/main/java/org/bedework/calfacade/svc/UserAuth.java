@@ -36,7 +36,7 @@ import java.util.List;
  * rights. The underlying implementation may choose to use a database and
  * remove those entries for which there are no special rights.
  *
- * @author Mike Douglass douglm@rpi.edu
+ * @author Mike Douglass douglm@bedework.edu
  * @version 2.2
  */
 public interface UserAuth extends Serializable {

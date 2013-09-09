@@ -39,7 +39,7 @@ import org.bedework.util.calendar.ScheduleStates;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.misc.Util;
 
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.PrivilegeDefs;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -48,8 +48,8 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.xml.XmlEmit;
 
-import edu.rpi.cmt.access.Acl;
-import edu.rpi.cmt.access.PrivilegeDefs;
+import org.bedework.access.Acl;
+import org.bedework.access.PrivilegeDefs;
 
 import net.fortuna.ical4j.model.Period;
 import org.apache.http.HttpEntity;

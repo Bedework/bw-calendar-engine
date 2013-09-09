@@ -18,13 +18,13 @@
 */
 package org.bedework.caldav.bwserver;
 
+import org.bedework.access.AccessPrincipal;
 import org.bedework.caldav.server.CalDAVCollection;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import edu.rpi.cct.webdav.servlet.shared.WebdavException;
-import edu.rpi.cmt.access.AccessPrincipal;
 
 import java.util.List;
 
@@ -328,7 +328,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   /* (non-Javadoc)
-   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#setOwner(edu.rpi.cmt.access.AccessPrincipal)
+   * @see edu.rpi.cct.webdav.servlet.shared.WdCollection#setOwner(AccessPrincipal)
    */
   @Override
   public void setOwner(final AccessPrincipal val) throws WebdavException {
