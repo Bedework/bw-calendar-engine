@@ -79,7 +79,7 @@ import javax.xml.namespace.QName;
 
 /** This acts as an interface to the database for subscriptions.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 class Events extends CalSvcDb implements EventsI {
   Events(final CalSvc svci) {
@@ -983,7 +983,7 @@ class Events extends CalSvcDb implements EventsI {
    *                   private methods
    * ==================================================================== */
 
-  /** Ensure that all references to entites are up to date, for example, ensure
+  /** Ensure that all references to entities are up to date, for example, ensure
    * that the list of category uids matches the actual list of categories.
    *
    * @param event

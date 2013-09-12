@@ -119,7 +119,7 @@ import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeEvent;
 
 /** Implementation of indexer for ElasticSearch
  *
- * @author Mike Douglass douglm - bedework.edu
+ * @author Mike Douglass douglm - rpi.edu
  *
  */
 public class BwIndexEsImpl implements BwIndexer {
@@ -265,7 +265,7 @@ public class BwIndexEsImpl implements BwIndexer {
                       final Index.Key[] keys) throws CalFacadeException {
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
-    SearchResponse resp = srb.setSearchType(SearchType.COUNT)
+    SearchResponse resp = srb.setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
             .setQuery(curQuery)
             .setFilter(curFilter).execute().actionGet();
@@ -387,7 +387,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
     curFilter = addDateRangeFilter(curFilter, limits);
 
-    SearchResponse resp = srb.setSearchType(SearchType.COUNT)
+    SearchResponse resp = srb.setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
             .setFilter(curFilter).execute().actionGet();
 
