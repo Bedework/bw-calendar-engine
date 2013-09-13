@@ -69,7 +69,6 @@ import org.bedework.calsvci.DumpIntf;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.calsvci.EventsI;
 import org.bedework.calsvci.FiltersI;
-import org.bedework.calsvci.IndexingI;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.PreferencesI;
 import org.bedework.calsvci.ResourcesI;
@@ -83,6 +82,7 @@ import org.bedework.calsvci.SysparsI;
 import org.bedework.calsvci.TimeZonesStoreI;
 import org.bedework.calsvci.UsersI;
 import org.bedework.calsvci.ViewsI;
+import org.bedework.calsvci.indexing.BwIndexer;
 import org.bedework.icalendar.IcalCallback;
 import org.bedework.icalendar.URIgen;
 import org.bedework.sysevents.events.SysEvent;
@@ -112,7 +112,7 @@ import java.util.TreeSet;
 /** This is an implementation of the service level interface to the calendar
  * suite.
  *
- * @author Mike Douglass       douglm@bedework.edu
+ * @author Mike Douglass       douglm rpi.edu
  */
 public class CalSvc extends CalSvcI {
   //private String systemName;
@@ -166,8 +166,6 @@ public class CalSvc extends CalSvcI {
   private SysparsI sysparsHandler;
 
   private CalSuitesI calSuitesHandler;
-
-  private IndexingI indexingHandler;
 
   private NotificationsI notificationsHandler;
 
@@ -690,17 +688,31 @@ public class CalSvc extends CalSvcI {
     return calSuitesHandler;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getIndexingHandler()
-   */
   @Override
-  public IndexingI getIndexingHandler() throws CalFacadeException {
-    if (indexingHandler == null) {
-      indexingHandler = new Indexing(this);
-      handlers.add((CalSvcDb)indexingHandler);
+  public BwIndexer getIndexer(final boolean publick,
+                              final String principal) throws CalFacadeException {
+    String pref = principal;
+
+    if (pref == null) {
+      pref = getPrincipal().getPrincipalRef();
     }
 
-    return indexingHandler;
+    return BwIndexerFactory.getIndexer(this, publick, pref,
+                                       pars.isGuest());
+  }
+
+  @Override
+  public BwIndexer getIndexer(final String principal,
+                              final String indexRoot) throws CalFacadeException {
+    String pref = principal;
+
+    if (pref == null) {
+      pref = getPrincipal().getPrincipalRef();
+    }
+
+    return BwIndexerFactory.getIndexer(this, pref,
+                                       pars.isGuest(),
+                                       indexRoot);
   }
 
   @Override

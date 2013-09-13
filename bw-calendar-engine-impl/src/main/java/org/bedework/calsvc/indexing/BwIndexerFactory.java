@@ -35,69 +35,47 @@ public class BwIndexerFactory {
 
   /** Factory method to get current indexer
    *
+   * @param svci
    * @param publick
    * @param principal - who we are searching for
    * @param writeable true if the caller can update the index
-   * @param authpars - for authenticated limits
-   * @param unauthpars - for public limits
-   * @param idxpars
    * @throws CalFacadeException
    */
-  public static BwIndexer getIndexer(final boolean publick,
+  public static BwIndexer getIndexer(final CalSvc svci,
+                                     final boolean publick,
                                      final String principal,
-                                     final boolean writeable,
-                                     final AuthProperties authpars,
-                                     final AuthProperties unauthpars,
-                                     final IndexProperties idxpars) throws CalFacadeException {
-    try {
-      if (publick) {
-          return new BwIndexEsImpl(true,
-                                     principal,
-                                     writeable,
-                                     authpars, unauthpars, idxpars,
-                                     true,  // No admin
-                                     null); // No explicit name
-      }
-
-      return new BwIndexEsImpl(false,
-                                 principal,
-                                 writeable,
-                                 authpars, unauthpars, idxpars,
-                                 true,  // No admin
-                                 null); // No explicit name
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+                                     final boolean writeable) throws CalFacadeException {
+    if (publick) {
+      return new BwIndexEsImpl(svci, true,
+                               principal,
+                               writeable,
+                               null); // No explicit name
     }
+
+    return new BwIndexEsImpl(svci, false,
+                             principal,
+                             writeable,
+                             null); // No explicit name
   }
 
   /** Factory method allowing us to specify the system root. This should only
    * be called from the crawler which will be indexing into an alternative
    * index.
    *
+   * @param svci
    * @param principal
    * @param writeable true if the caller can update the index
-   * @param authpars - for authenticated limits
-   * @param unauthpars - for public limits
-   * @param idxpars
    * @param indexRoot
    * @return indexer
    * @throws CalFacadeException
    */
-  public static BwIndexer getIndexer(final String principal,
+  public static BwIndexer getIndexer(final CalSvc svci,
+                                     final String principal,
                                      final boolean writeable,
-                                     final AuthProperties authpars,
-                                     final AuthProperties unauthpars,
-                                     final IndexProperties idxpars,
                                      final String indexRoot) throws CalFacadeException {
-    try {
-      return new BwIndexEsImpl(true,
-                                 principal,
-                                 writeable,
-                                 authpars, unauthpars, idxpars,
-                                 false,  // Admin
-                                 indexRoot); // Explicit name
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    return new BwIndexEsImpl(svci, true,
+                             principal,
+                             writeable,
+                             indexRoot); // Explicit name
   }
 }

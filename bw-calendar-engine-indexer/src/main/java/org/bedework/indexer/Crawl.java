@@ -21,9 +21,8 @@ package org.bedework.indexer;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvc.indexing.BwIndexer;
-import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvci.CalSvcI;
+import org.bedework.calsvci.indexing.BwIndexer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -173,9 +172,7 @@ public class Crawl extends CalSys {
    * @throws CalFacadeException
    */
   public List<String> listIndexes() throws CalFacadeException {
-    BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, false,
-                                                authProps, unauthProps,
-                                                idxProps, null);
+    BwIndexer idx = getSvci().getIndexer(adminAccount, null);
 
     return idx.listIndexes();
   }
@@ -191,9 +188,7 @@ public class Crawl extends CalSys {
     preserve.add(props.getPublicIndexName());
     preserve.add(props.getUserIndexName());
 
-    BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, false,
-                                                authProps, unauthProps,
-                                                idxProps, null);
+    BwIndexer idx = getSvci().getIndexer(adminAccount, null);
 
     return idx.purgeIndexes(preserve);
   }
@@ -209,9 +204,7 @@ public class Crawl extends CalSys {
         throw new CalFacadeException("No user index core defined in system properties");
       }
 
-      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
-                                                  authProps, unauthProps,
-                                                  idxProps,
+      BwIndexer idx = getSvci().getIndexer(adminAccount,
                                                   idxs.userIndex);
 
       idxs.userIndex = idx.newIndex(props.getUserIndexName());
@@ -227,10 +220,8 @@ public class Crawl extends CalSys {
         throw new CalFacadeException("No public index core defined in system properties");
       }
 
-      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
-                                                  authProps, unauthProps,
-                                                  idxProps,
-                                                  idxs.publicIndex);
+      BwIndexer idx = getSvci().getIndexer(adminAccount,
+                                           idxs.publicIndex);
 
       idxs.publicIndex = idx.newIndex(props.getPublicIndexName());
 
@@ -246,19 +237,15 @@ public class Crawl extends CalSys {
      */
 
     if (props.getIndexUsers()) {
-      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
-                                                  authProps, unauthProps,
-                                                  idxProps,
-                                                  idxs.userIndex);
+      BwIndexer idx = getSvci().getIndexer(adminAccount,
+                                           idxs.userIndex);
 
       idx.swapIndex(idxs.userIndex, props.getUserIndexName());
     }
 
     if (props.getIndexPublic()) {
-      BwIndexer idx = BwIndexerFactory.getIndexer(adminAccount, true,
-                                                  authProps, unauthProps,
-                                                  idxProps,
-                                                  idxs.publicIndex);
+      BwIndexer idx = getSvci().getIndexer(adminAccount,
+                                           idxs.publicIndex);
 
       idx.swapIndex(idxs.publicIndex, props.getPublicIndexName());
     }

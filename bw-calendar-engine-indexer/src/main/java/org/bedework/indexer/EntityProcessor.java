@@ -22,9 +22,8 @@ import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calsvc.indexing.BwIndexer;
-import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvci.CalSvcI;
+import org.bedework.calsvci.indexing.BwIndexer;
 import org.bedework.indexer.IndexStats.StatType;
 
 import org.apache.log4j.Logger;
@@ -77,12 +76,8 @@ public class EntityProcessor extends Crawler {
       RecurringRetrievalMode rrm = new RecurringRetrievalMode(Rmode.overrides);
 
       CalSvcI svci = null;
-      BwIndexer indexer = BwIndexerFactory.getIndexer(principal,
-                                                      true,
-                                                      getAuthpars(true),
-                                                      getAuthpars(false),
-                                                      getIdxpars(),
-                                                      indexRootPath);
+      BwIndexer indexer = getSvci().getIndexer(principal,
+                                               indexRootPath);
 
       try {
         svci = getSvci();

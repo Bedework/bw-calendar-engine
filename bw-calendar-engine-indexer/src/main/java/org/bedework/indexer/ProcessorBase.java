@@ -21,9 +21,8 @@ package org.bedework.indexer;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvc.indexing.BwIndexer;
-import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvci.CalSvcI;
+import org.bedework.calsvci.indexing.BwIndexer;
 import org.bedework.indexer.IndexStats.StatType;
 import org.bedework.util.misc.Util;
 
@@ -174,13 +173,8 @@ public abstract class ProcessorBase extends CalSys implements Processor {
         return;
       }
 
-      BwIndexer indexer =
-          BwIndexerFactory.getIndexer(principal,
-                                      true,
-                                      getAuthpars(true),
-                                      getAuthpars(false),
-                                      getIdxpars(),
-                                      indexRootPath);
+      BwIndexer indexer =getSvci().getIndexer(principal,
+                                              indexRootPath);
 
       indexer.indexEntity(col);
 //      close();

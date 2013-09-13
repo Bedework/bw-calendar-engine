@@ -16,8 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calsvc.indexing;
+package org.bedework.calsvci.indexing;
 
+import org.bedework.access.Acl;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.base.BwShareableDbentity;
@@ -25,8 +26,6 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.indexing.Index;
 import org.bedework.util.indexing.SearchLimits;
-
-import org.bedework.access.Acl;
 
 import java.io.Serializable;
 import java.util.List;
@@ -39,17 +38,47 @@ import javax.xml.ws.Holder;
  *
  */
 public interface BwIndexer extends Serializable {
+  // Types of entity we index
+  static final String docTypeEvent = "event";
+  static final String docTypeCollection = "collection";
+  static final String docTypeCategory = "category";
+
   /** Called to find entries that match the search string. This string may
    * be a simple sequence of keywords or some sort of query the syntax of
    * which is determined by the underlying implementation.
    *
    * @param   query        Query string
+   * @param   filter        Query string
    * @param   limits       Search limits to apply or null
-   * @return  int          Number found. 0 means none found,
-   *                                -1 means indeterminate
+   * @return  SearchResult - never null
    * @throws CalFacadeException
    */
-  long search(String query, SearchLimits limits) throws CalFacadeException;
+  SearchResult search(String query,
+                      String filter,
+                      SearchLimits limits) throws CalFacadeException;
+
+  /** Called to retrieve results after a search of the index. Updates
+   * the SearchResult object
+   *
+   * @param  sres     result of previous search
+   * @param start
+   * @param num
+   * @throws CalFacadeException
+   */
+  void getSearchResult(SearchResult sres,
+                       long start,
+                       int num) throws CalFacadeException;
+
+  /** Called to retrieve record keys from the result.
+   *
+   * @param   sres     result of previous search
+   * @param   n        Starting index
+   * @param   keys     Array for the record keys
+   * @return  int      Actual number of records
+   * @throws CalFacadeException
+   */
+  long getKeys(SearchResult sres,
+               long n, Index.Key[] keys) throws CalFacadeException;
 
   /** Called to unindex a record
    *
@@ -64,15 +93,6 @@ public interface BwIndexer extends Serializable {
    * @throws CalFacadeException
    */
   void indexEntity(Object rec) throws CalFacadeException;
-
-  /** Called to retrieve record keys from the result.
-   *
-   * @param   n        Starting index
-   * @param   keys     Array for the record keys
-   * @return  int      Actual number of records
-   * @throws CalFacadeException
-   */
-  long getKeys(long n, Index.Key[] keys) throws CalFacadeException;
 
   /** Set to > 1 to enable batching
    *

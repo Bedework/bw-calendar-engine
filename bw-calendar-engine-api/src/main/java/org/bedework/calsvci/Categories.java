@@ -22,7 +22,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvc.indexing.BwIndexer;
+import org.bedework.calsvci.indexing.BwIndexer;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -35,7 +35,7 @@ import java.util.List;
  * There are methods to retrieve only the cached objects for the many cases where
  * speed is important.
  *
- * @author Mike Douglass   douglm - bedework.edu
+ * @author Mike Douglass   douglm - rpi.edu
  *
  */
 public interface Categories extends Serializable {

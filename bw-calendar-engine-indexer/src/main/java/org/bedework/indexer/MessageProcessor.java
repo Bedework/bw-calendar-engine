@@ -27,8 +27,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.indexing.BwIndexDefs;
 import org.bedework.calsvc.indexing.BwIndexKey;
-import org.bedework.calsvc.indexing.BwIndexer;
-import org.bedework.calsvc.indexing.BwIndexerFactory;
+import org.bedework.calsvci.indexing.BwIndexer;
 import org.bedework.sysevents.events.CollectionChangeEvent;
 import org.bedework.sysevents.events.CollectionDeletedEvent;
 import org.bedework.sysevents.events.EntityDeletedEvent;
@@ -339,10 +338,7 @@ public class MessageProcessor extends CalSys {
       }
 
       if (indexer == null) {
-        indexer = BwIndexerFactory.getIndexer(publick, principal, true,
-                                              getAuthpars(true),
-                                              getAuthpars(false),
-                                              getIdxpars());
+        indexer = getSvci().getIndexer(publick, principal);
         if (publick) {
           publicIndexer = indexer;
         } else {

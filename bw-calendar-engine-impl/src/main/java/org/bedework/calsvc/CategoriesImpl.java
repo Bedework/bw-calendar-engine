@@ -25,7 +25,7 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvc.indexing.BwIndexer;
+import org.bedework.calsvci.indexing.BwIndexer;
 import org.bedework.calsvci.Categories;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
@@ -38,7 +38,7 @@ import java.util.List;
 
 /** Class which handles manipulation of Categories.
  *
- * @author Mike Douglass   douglm - bedework.edu
+ * @author Mike Douglass   douglm - rpi.edu
  */
 public class CategoriesImpl
         extends CalSvcDb implements Categories, PrivilegeDefs {
@@ -325,8 +325,8 @@ public class CategoriesImpl
 
     if (publick) {
       if (publicIndexer == null) {
-        publicIndexer = getSvc().getIndexingHandler().getIndexer(true,
-                                                                 href);
+        publicIndexer = getSvc().getIndexer(true,
+                                            href);
       }
 
       return publicIndexer;
@@ -338,8 +338,8 @@ public class CategoriesImpl
       return idx;
     }
 
-    idx = getSvc().getIndexingHandler().getIndexer(false,
-                                                   href);
+    idx = getSvc().getIndexer(false,
+                              href);
 
     userIndexers.put(href, idx);
 

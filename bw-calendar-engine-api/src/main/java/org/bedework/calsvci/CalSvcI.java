@@ -39,6 +39,7 @@ import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
+import org.bedework.calsvci.indexing.BwIndexer;
 import org.bedework.icalendar.IcalCallback;
 import org.bedework.sysevents.events.SysEventBase;
 
@@ -66,7 +67,7 @@ import java.util.Collection;
  * <p>Calls for collections of event objects may include filters to specify
  * which type of entity is desired.
  *
- * @author Mike Douglass       douglm@bedework.edu
+ * @author Mike Douglass       douglm rpi.edu
  */
 public abstract class CalSvcI implements Serializable {
   /** (Re)initialise the object for a particular use.
@@ -380,12 +381,24 @@ public abstract class CalSvcI implements Serializable {
    */
   public abstract CalSuitesI getCalSuitesHandler() throws CalFacadeException;
 
-  /** Obtain an object which handles indexing
-   *
-   * @return IndexingI handler
+  /**
+   * @param publick true for public index
+   * @param principal
+   * @return the indexer
    * @throws CalFacadeException
    */
-  public abstract IndexingI getIndexingHandler() throws CalFacadeException;
+  public abstract BwIndexer getIndexer(final boolean publick,
+                                       String principal) throws CalFacadeException;
+
+  /** Method which allows us to specify the index root.
+   *
+   * @param principal
+   * @param indexRoot
+   * @return the indexer
+   * @throws CalFacadeException
+   */
+  public abstract BwIndexer getIndexer(String principal,
+                                       final String indexRoot) throws CalFacadeException;
 
   /** Obtain an object which handles notifications
    *

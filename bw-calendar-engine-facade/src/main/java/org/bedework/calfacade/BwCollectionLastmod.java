@@ -68,6 +68,23 @@ public class BwCollectionLastmod extends BwLastMod<BwCalendar, BwCollectionLastm
     }
   }
 
+  /** Constructor to set last mod
+   * @param dbEntity
+   * @param timestamp
+   */
+  public BwCollectionLastmod(final BwCalendar dbEntity,
+                             final String timestamp) {
+    super(dbEntity);
+
+    if (dbEntity != null) {
+      setPath(dbEntity.getPath());
+    } else {
+      setPath(null);
+    }
+
+    setTimestamp(timestamp);
+  }
+
   /**
    * @param val
    */

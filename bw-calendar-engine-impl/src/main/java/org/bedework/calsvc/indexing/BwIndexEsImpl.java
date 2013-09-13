@@ -25,6 +25,7 @@ import org.bedework.caldav.util.filter.PresenceFilter;
 import org.bedework.caldav.util.filter.PropertyFilter;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
@@ -32,12 +33,19 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.configs.AuthProperties;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCategoryFilter;
 import org.bedework.calfacade.filter.BwCollectionFilter;
 import org.bedework.calfacade.filter.BwCreatorFilter;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calsvc.CalSvc;
+import org.bedework.calsvc.CalSvcDb;
+import org.bedework.calsvci.Categories;
+import org.bedework.calsvci.indexing.BwIndexer;
+import org.bedework.calsvci.indexing.SearchResult;
+import org.bedework.calsvci.indexing.SearchResultEntry;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.IcalDefs;
@@ -122,26 +130,17 @@ import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeEvent;
  * @author Mike Douglass douglm - rpi.edu
  *
  */
-public class BwIndexEsImpl implements BwIndexer {
+public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   private transient Logger log;
 
   private boolean debug;
 
   private BwIndexKey keyConverter = new BwIndexKey();
 
-  /* For paged queries */
-  private QueryBuilder curQuery;
-  private FilterBuilder curFilter;
-
   private int batchMaxSize = 0;
   private int batchCurSize = 0;
 
   private Object batchLock = new Object();
-
-  // Types of entity we index
-  private static final String docTypeEvent = "event";
-  private static final String docTypeCollection = "collection";
-  private static final String docTypeCategory = "category";
 
   private ObjectMapper om;
 
@@ -161,37 +160,36 @@ public class BwIndexEsImpl implements BwIndexer {
   private AuthProperties authpars;
   private AuthProperties unauthpars;
   private IndexProperties idxpars;
+  private BasicSystemProperties basicSysprops;
 
   /* Used to batch index */
 
   /** Constructor
    *
+   * @param svci
    * @param publick - if false we add an owner term to the searches
    * @param principal - who we are searching for
    * @param writeable - true for an updatable index
-   * @param authpars - for authenticated limits
-   * @param unauthpars - for public limits
-   * @param idxpars - for system config info
-   * @param noAdmin - for no administration
    * @param indexName - explicitly specified
-   * @throws IndexException
+   * @throws CalFacadeException
    */
-  public BwIndexEsImpl(final boolean publick,
+  public BwIndexEsImpl(final CalSvc svci,
+                       final boolean publick,
                        final String principal,
                        final boolean writeable,
-                       final AuthProperties authpars,
-                       final AuthProperties unauthpars,
-                       final IndexProperties idxpars,
-                       final boolean noAdmin,
-                       final String indexName) throws IndexException {
+                       final String indexName) throws CalFacadeException {
+    super(svci);
+
     debug = getLog().isDebugEnabled();
 
     this.publick = publick;
     this.principal = principal;
-    this.idxpars = idxpars;
-    this.authpars = authpars;
-    this.unauthpars = unauthpars;
     this.writeable = writeable;
+
+    idxpars = svci.getIndexProperties();
+    authpars = svci.getAuthProperties(true);
+    unauthpars = svci.getAuthProperties(false);
+    basicSysprops = svci.getBasicSystemProperties();
 
     String url = idxpars.getIndexerURL();
 
@@ -260,15 +258,173 @@ public class BwIndexEsImpl implements BwIndexer {
   public void flush() throws CalFacadeException {
   }
 
+  private class EsSearchResult implements SearchResult {
+    private BwIndexer indexer;
+
+    private long found;
+
+    private long start;
+    private int pageSize;
+
+    /* For paged queries */
+    private SearchLimits limits;
+    private QueryBuilder curQuery;
+    private FilterBuilder curFilter;
+
+    private List<SearchResultEntry> searchResult;
+
+    EsSearchResult(BwIndexer indexer) {
+      this.indexer = indexer;
+    }
+
+    private void setFound(final long found) {
+      this.found = found;
+    }
+
+    @Override
+    public BwIndexer getIndexer() {
+      return indexer;
+    }
+
+    @Override
+    public long getFound() {
+      return found;
+    }
+
+    @Override
+    public long getStart() {
+      return start;
+    }
+
+    @Override
+    public int getPageSize() {
+      return pageSize;
+    }
+
+    @Override
+    public SearchLimits getLimits() {
+      return limits;
+    }
+
+    @Override
+    public Set<String> getFacetNames() {
+      return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public List<SearchResultEntry> getSearchResult() {
+      return searchResult;
+    }
+  }
+
   @Override
-  public long getKeys(final long n,
-                      final Index.Key[] keys) throws CalFacadeException {
+  public SearchResult search(final String query,
+                             final String filter,
+                             final SearchLimits limits) throws CalFacadeException {
+    EsSearchResult res = new EsSearchResult(this);
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
-    SearchResponse resp = srb.setSearchType(SearchType.SCAN)
-            .setScroll(new TimeValue(60000))
-            .setQuery(curQuery)
-            .setFilter(curFilter).execute().actionGet();
+    res.limits = limits;
+    res.curQuery = QueryBuilders.queryString(query);
+    srb.setQuery(res.curQuery);
+
+    res.curFilter = addPrincipal(null);
+
+    res.curFilter = addDateRangeFilter(res.curFilter, limits);
+
+    SearchResponse resp = srb.setSearchType(SearchType.COUNT)
+            .setFilter(res.curFilter).execute().actionGet();
+
+    if (resp.status() != RestStatus.OK) {
+      if (debug) {
+        debug("Search returned status " + resp.status());
+      }
+    }
+
+    res.setFound(resp.getHits().getTotalHits());
+
+    return res;
+  }
+
+  @Override
+  public void getSearchResult(final SearchResult sres,
+                              final long start,
+                              final int num)
+          throws CalFacadeException {
+    EsSearchResult res = (EsSearchResult)sres;
+
+    res.start = start;
+    res.pageSize = num;
+    res.searchResult = new ArrayList<>();
+
+    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+
+    SearchResponse resp = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
+            .setQuery(res.curQuery)
+            .setFilter(res.curFilter).execute().actionGet();
+
+    if (resp.status() != RestStatus.OK) {
+      if (debug) {
+        debug("Search returned status " + resp.status());
+      }
+    }
+
+    SearchHits hits = resp.getHits();
+
+    if ((hits.getHits() == null) ||
+            (hits.getHits().length == 0)) {
+      return;
+    }
+
+    //Break condition: No hits are returned
+    if (hits.hits().length == 0) {
+      return;
+    }
+
+    for (SearchHit hit : hits) {
+      String dtype = hit.getType();
+
+      if (dtype == null) {
+        throw new CalFacadeException("org.bedework.index.noitemtype");
+      }
+
+      String kval = hit.getId();
+
+      if (kval == null) {
+        throw new CalFacadeException("org.bedework.index.noitemkey");
+      }
+
+      Map<String, Object> fields = hit.sourceAsMap();
+
+      Object entity;
+      if (dtype.equals(docTypeCollection)) {
+        entity = makeCollection(fields);
+      } else if (dtype.equals(docTypeCategory)) {
+        entity = makeCat(fields);
+      } else if (dtype.equals(docTypeEvent)) {
+        entity = makeEvent(fields);
+      } else {
+        throw new CalFacadeException(IndexException.unknownRecordType,
+                                     dtype);
+      }
+
+      res.searchResult.add(new SearchResultEntry(entity,
+                                                 dtype,
+                                                 hit.getScore()));
+    }
+  }
+
+  @Override
+  public long getKeys(final SearchResult sres,
+                      final long n,
+                      final Index.Key[] keys) throws CalFacadeException {
+    EsSearchResult res = (EsSearchResult)sres;
+    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+
+    SearchResponse resp = srb.setSearchType(SearchType.QUERY_AND_FETCH)
+//            .setScroll(new TimeValue(60000))
+            .setQuery(res.curQuery)
+            .setFilter(res.curFilter).execute().actionGet();
 
     if (resp.status() != RestStatus.OK) {
       if (debug) {
@@ -373,31 +529,6 @@ public class BwIndexEsImpl implements BwIndexer {
     //} catch (IOException e) {
      //throw new CalFacadeException(e);
     //}
-  }
-
-  @Override
-  public long search(final String query,
-                     final SearchLimits limits) throws CalFacadeException {
-    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
-
-    curQuery = QueryBuilders.queryString(query);
-    srb.setQuery(curQuery);
-
-    curFilter = addPrincipal(null);
-
-    curFilter = addDateRangeFilter(curFilter, limits);
-
-    SearchResponse resp = srb.setSearchType(SearchType.SCAN)
-            .setScroll(new TimeValue(60000))
-            .setFilter(curFilter).execute().actionGet();
-
-    if (resp.status() != RestStatus.OK) {
-      if (debug) {
-        debug("Search returned status " + resp.status());
-      }
-    }
-
-    return resp.getHits().getTotalHits();
   }
 
   /* (non-Javadoc)
@@ -584,7 +715,7 @@ public class BwIndexEsImpl implements BwIndexer {
       return null;
     }
 
-    return makeCat(hits.hits()[0]);
+    return makeCat(hits.hits()[0].sourceAsMap());
   }
 
   @Override
@@ -636,7 +767,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
       for (SearchHit hit : hits) {
         //Handle the hit...
-        BwCategory cat = makeCat(hit);
+        BwCategory cat = makeCat(hit.sourceAsMap());
         res.add(cat);
         ourPos++;
       }
@@ -658,7 +789,6 @@ public class BwIndexEsImpl implements BwIndexer {
                               final long pos,
                               final int count,
                               final AccessChecker accessCheck) throws CalFacadeException {
-    long ourPos = pos;
     int ourCount = count;
 
     if ((ourCount < 0) | (ourCount > maxFetchCount)) {
@@ -728,10 +858,9 @@ public class BwIndexEsImpl implements BwIndexer {
 
       for (SearchHit hit : hits) {
         //Handle the hit...
-        EventInfo ei = makeEvent(hit);
+        EventInfo ei = makeEvent(hit.sourceAsMap());
         res.add(ei);
         fetched++;
-        ourPos++;
       }
 
       tries++;
@@ -875,12 +1004,6 @@ public class BwIndexEsImpl implements BwIndexer {
     return bwkey;
   }
 
-  private BwCategory makeCat(final SearchHit hit) throws CalFacadeException {
-    Map<String, Object> fields = hit.sourceAsMap();
-
-    return makeCat(fields);
-  }
-
   private BwCategory makeCat(final Map<String, Object> fields) throws CalFacadeException {
     BwCategory cat = new BwCategory();
 
@@ -896,11 +1019,41 @@ public class BwIndexEsImpl implements BwIndexer {
     return cat;
   }
 
-  private EventInfo makeEvent(final SearchHit hit) throws CalFacadeException {
+  private BwCalendar makeCollection(final Map<String, Object> fields) throws CalFacadeException {
+    BwCalendar col = new BwCalendar();
+
+    col.setName(getString(fields, "name"));
+    col.setColPath(getString(fields, "path"));
+
+    Categories cats = getSvc().getCategoriesHandler();
+
+    Collection<Object> vals = getFieldValues(fields, "category_uid");
+    if (!Util.isEmpty(vals)) {
+      for (Object o: vals) {
+        BwCategory cat = cats.get((String)o);
+
+        if (o != null) {
+          col.addCategory(cat);
+        }
+      }
+    }
+
+    col.setCreated(getString(fields, "created"));
+    col.setLastmod(new BwCollectionLastmod(col,
+                                           getString(fields,
+                                                     "last_modified")));
+    col.setCreatorHref(getString(fields, "creator"));
+    col.setOwnerHref(getString(fields, "owner"));
+    col.setSummary(getString(fields, "summary"));
+    col.setDescription(getString(fields, "description"));
+    col.setAccess(getString(fields, "acl"));
+
+    return col;
+  }
+
+  private EventInfo makeEvent(final Map<String, Object> fields) throws CalFacadeException {
     BwEvent ev = new BwEventObj();
     EventInfo ei = new  EventInfo(ev);
-
-    Map<String, Object> fields = hit.sourceAsMap();
 
     /*
     Float score = (Float)sd.getFirstValue("score");
@@ -1442,9 +1595,31 @@ public class BwIndexEsImpl implements BwIndexer {
 
       /* Manufacture a name and path for the time being - it's a required field */
       makeField(builder, "name", cat.getWord().getValue());
-      makeField(builder, "path", Util.buildPath(false,
-                                            cat.getOwnerHref(), "/",
-                                            cat.getWord().getValue()));
+
+      String path;
+
+      if (cat.getPublick()) {
+        path = Util.buildPath(false,
+                              "/public/categories/",
+                              cat.getWord().getValue());
+      } else {
+        String acc;
+
+        if (getPrincipal().getKind() == Ace.whoTypeUser) {
+          acc = getPrincipal().getAccount();
+        } else {
+          acc = getPrincipalHref();
+        }
+
+        path = Util.buildPath(false,
+                              basicSysprops.getUserCalendarRoot(),
+                              "/",
+                              acc,
+                              "/categories/",
+                              cat.getWord().getValue());
+      }
+
+      makeField(builder, "path", path);
 
       makeField(builder, "category", cat.getWord());
       makeField(builder, "description", cat.getDescription());
