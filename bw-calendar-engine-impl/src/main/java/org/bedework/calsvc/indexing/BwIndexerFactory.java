@@ -18,9 +18,9 @@
 */
 package org.bedework.calsvc.indexing;
 
-import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calsvc.CalSvc;
+import org.bedework.calsvci.indexing.BwIndexer;
 
 /** Create an instance of an indexer for bedework.
  *

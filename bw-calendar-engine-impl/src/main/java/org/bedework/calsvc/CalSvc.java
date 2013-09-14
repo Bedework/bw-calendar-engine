@@ -18,6 +18,11 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.access.Access;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeSet;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfFactory;
 import org.bedework.calfacade.BwAuthUser;
@@ -56,6 +61,7 @@ import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvc.scheduling.Scheduling;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.AdminI;
@@ -91,12 +97,6 @@ import org.bedework.util.jmx.MBeanUtil;
 import org.bedework.util.misc.Util;
 import org.bedework.util.security.PwEncryptionIntf;
 import org.bedework.util.timezones.Timezones;
-
-import org.bedework.access.Access;
-import org.bedework.access.Ace;
-import org.bedework.access.AceWho;
-import org.bedework.access.Acl.CurrentAccess;
-import org.bedework.access.PrivilegeSet;
 
 import net.fortuna.ical4j.model.property.DtStamp;
 import org.apache.log4j.Logger;

@@ -18,6 +18,9 @@
 */
 package org.bedework.calsvc.indexing;
 
+import org.bedework.access.Ace;
+import org.bedework.access.Acl;
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.caldav.util.filter.AndFilter;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.caldav.util.filter.OrFilter;
@@ -54,9 +57,6 @@ import org.bedework.util.indexing.IndexException;
 import org.bedework.util.indexing.SearchLimits;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
-
-import org.bedework.access.Acl;
-import org.bedework.access.PrivilegeDefs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
