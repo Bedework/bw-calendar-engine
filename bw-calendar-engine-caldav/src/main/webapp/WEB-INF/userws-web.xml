@@ -13,7 +13,7 @@
   </context-param>
 
   <listener>
-    <listener-class>org.bedework.util.struts.SessionListener</listener-class>
+    <listener-class>org.bedework.util.servlet.SessionListener</listener-class>
   </listener>
 
   <!-- Need this to fush a static table maintained by the servlet -->

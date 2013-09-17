@@ -27,7 +27,6 @@ import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
 import org.bedework.dumprestore.dump.Dump;
 import org.bedework.dumprestore.restore.Restore;
 import org.bedework.indexer.BwIndexCtlMBean;
-import org.bedework.util.args.Args;
 import org.bedework.util.jmx.MBeanUtil;
 import org.bedework.util.timezones.DateTimeUtil;
 
@@ -119,11 +118,7 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
 
         Restore restorer = new Restore();
 
-        String[] args = new String[] {"-appname",
-                                      appname
-        };
-
-        restorer.getConfigProperties(new Args(args));
+        restorer.getConfigProperties(appname);
 
         infoLines.addLn("Restore file: " + getDataIn());
         info("Restore file: " + getDataIn());
@@ -565,7 +560,7 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
     try {
       if (indexer == null) {
         indexer = (BwIndexCtlMBean)MBeanUtil.getMBean(BwIndexCtlMBean.class,
-                                                     "org.bedework:service=Indexer");
+                                                     "org.bedework.bwengine:service=indexing");
       }
 
       indexer.setDiscardMessages(true);
