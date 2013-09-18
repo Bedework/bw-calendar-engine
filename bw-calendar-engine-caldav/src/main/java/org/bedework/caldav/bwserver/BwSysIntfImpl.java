@@ -1869,6 +1869,23 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
+  @Override
+  public String toJcal(final CalDAVEvent ev,
+                       final boolean incSchedMethod,
+                       final IcalendarType pattern) throws WebdavException {
+    try {
+      int meth = ScheduleMethods.methodTypeNone;
+
+      if (incSchedMethod) {
+        meth = getEvent(ev).getScheduleMethod();
+      }
+
+      return trans.toJcal(getEvinfo(ev), meth, pattern);
+    } catch (Throwable t) {
+      throw new WebdavException(t);
+    }
+  }
+
   /* (non-Javadoc)
    * @see org.bedework.caldav.server.sysinterface.SysIntf#toIcalString(net.fortuna.ical4j.model.Calendar)
    */
@@ -1919,6 +1936,8 @@ public class BwSysIntfImpl implements SysIntf {
         } else {
           xml.cdataValue(toIcalString(ical));
         }
+      } else if (ctype.equals("application/calendar+json")) {
+        trans.writeJcal(bwevs, meth, wtr);
       } else if (ctype.equals(XcalTags.mimetype)) {
         XmlEmit x;
         if (xml == null) {

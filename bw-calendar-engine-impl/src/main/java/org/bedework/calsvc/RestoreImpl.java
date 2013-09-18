@@ -382,7 +382,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   public BwCategory getCategory(final String uid) throws Throwable {
     startTransaction();
 
-    return getSvc().getCategoriesHandler().get(uid);
+    return getSvc().getCategoriesHandler().getPersistent(uid);
   }
 
   /* (non-Javadoc)

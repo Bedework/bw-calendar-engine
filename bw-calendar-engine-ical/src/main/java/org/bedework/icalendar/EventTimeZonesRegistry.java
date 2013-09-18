@@ -126,7 +126,12 @@ public class EventTimeZonesRegistry implements TimeZoneRegistry {
    * @return tz spec or null.
    */
   @SuppressWarnings("deprecation")
-  public static String findTzValue(final BwEvent ev, final String tzId) {
+  public static String findTzValue(final BwEvent ev,
+                                   final String tzId) {
+    if (ev == null) {
+      return null;
+    }
+
     Collection<BwXproperty> xps = ev.getXproperties();
     if (Util.isEmpty(xps)) {
       // Try the old way

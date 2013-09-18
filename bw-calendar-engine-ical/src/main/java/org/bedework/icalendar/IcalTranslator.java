@@ -124,7 +124,7 @@ public class IcalTranslator implements Serializable {
     public boolean simpleContact = true;
   }
 
-  protected static final String prodId = "//Bedework.org//BedeWork V" +
+  public static final String prodId = "//Bedework.org//BedeWork V" +
                                          BwVersion.bedeworkVersion + "//EN";
 
   protected transient Logger log;
@@ -263,6 +263,31 @@ public class IcalTranslator implements Serializable {
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
+  }
+
+  /** Write a collection of calendar data as json
+   *
+   * @param vals
+   * @param methodType    int value fromIcalendar
+   * @param wtr for output
+   * @throws CalFacadeException
+   */
+  public void writeJcal(final Collection<EventInfo> vals,
+                        final int methodType,
+                        final Writer wtr) throws CalFacadeException {
+
+    String currentPrincipal = null;
+    BwPrincipal principal = cb.getPrincipal();
+
+    if (principal != null) {
+      currentPrincipal = principal.getPrincipalRef();
+    }
+
+    JcalHandler.outJcal(wtr,
+                        vals, methodType, null,
+                        cb.getURIgen(),
+                        currentPrincipal,
+                        new EventTimeZonesRegistry(this, null));
   }
 
   /** Write a collection of calendar data as xml
@@ -1076,6 +1101,32 @@ public class IcalTranslator implements Serializable {
     }
 
     return null;
+  }
+
+  /**
+   * @param val
+   * @param methodType
+   * @param pattern
+   * @return JSON jcal
+   * @throws CalFacadeException
+   */
+  public String toJcal(final EventInfo val,
+                       final int methodType,
+                       final IcalendarType pattern) throws CalFacadeException {
+    String currentPrincipal = null;
+    BwPrincipal principal = cb.getPrincipal();
+
+    if (principal != null) {
+      currentPrincipal = principal.getPrincipalRef();
+    }
+
+    List<EventInfo> eis = new ArrayList<>();
+
+    eis.add(val);
+    return JcalHandler.toJcal(eis, methodType, pattern,
+                              cb.getURIgen(),
+                              currentPrincipal,
+                              new EventTimeZonesRegistry(this, val.getEvent()));
   }
 
   /* ====================================================================
