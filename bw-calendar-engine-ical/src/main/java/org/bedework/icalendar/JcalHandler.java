@@ -29,7 +29,19 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import ietf.params.xml.ns.icalendar_2.IcalendarType;
 import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.component.Available;
+import net.fortuna.ical4j.model.component.VAvailability;
+import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.component.VFreeBusy;
+import net.fortuna.ical4j.model.component.VJournal;
+import net.fortuna.ical4j.model.component.VPoll;
+import net.fortuna.ical4j.model.component.VToDo;
+import net.fortuna.ical4j.model.property.Method;
+import net.fortuna.ical4j.model.property.ProdId;
+import net.fortuna.ical4j.model.property.Version;
+import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -75,6 +87,10 @@ public class JcalHandler implements Serializable {
     try {
       JsonGenerator jgen = jsonFactory.createJsonGenerator(wtr);
 
+      if (Logger.getLogger(JcalHandler.class).isDebugEnabled()) {
+        jgen.useDefaultPrettyPrinter();
+      }
+
       jgen.writeStartArray();
 
       calendarProps(jgen, methodType);
@@ -90,16 +106,16 @@ public class JcalHandler implements Serializable {
                                             currentPrincipal);
         }
 
-        outEv(jgen, comp);
+        outComp(jgen, comp);
 
         if (ei.getNumOverrides() > 0) {
           for (EventInfo oei: ei.getOverrides()) {
             ev = oei.getEvent();
-            outEv(jgen, VEventUtil.toIcalComponent(oei,
-                                                   true,
-                                                   tzreg,
-                                                   uriGen,
-                                                   currentPrincipal));
+            outComp(jgen, VEventUtil.toIcalComponent(oei,
+                                                     true,
+                                                     tzreg,
+                                                     uriGen,
+                                                     currentPrincipal));
           }
         }
       }
@@ -114,7 +130,7 @@ public class JcalHandler implements Serializable {
     }
   }
 
-  private static void outEv(final JsonGenerator jgen,
+  private static void outComp(final JsonGenerator jgen,
                               final Component comp) throws CalFacadeException {
     try {
       jgen.writeStartArray();
@@ -127,6 +143,30 @@ public class JcalHandler implements Serializable {
       }
 
       jgen.writeEndArray(); // End event properties
+
+      /* Output subcomponents
+       */
+      jgen.writeStartArray();
+
+      ComponentList cl = null;
+      if (comp instanceof VEvent) {
+        cl = ((VEvent)comp).getAlarms();
+      } else if (comp instanceof VToDo) {
+        cl = ((VToDo)comp).getAlarms();
+      } else if (comp instanceof VJournal) {
+      } else if (comp instanceof VFreeBusy) {
+      } else if (comp instanceof VAvailability) {
+        cl = ((VAvailability)comp).getAvailable();
+      } else if (comp instanceof Available) {
+      } else if (comp instanceof VPoll) {
+        cl = ((VToDo)comp).getAlarms();
+      }
+
+      for (Object o: cl) {
+        outComp(jgen, (Component)o);
+      }
+
+      jgen.writeEndArray(); // end subcomponents
 
       jgen.writeEndArray(); // end event
     } catch (Throwable t) {
@@ -141,16 +181,13 @@ public class JcalHandler implements Serializable {
 
       jgen.writeStartArray();
 
-      jgen.writeFieldName("prodid");
-      jgen.writeString(IcalTranslator.prodId);
-
-      jgen.writeFieldName("version");
-      jgen.writeString("2.0");
+      JsonProperty.addFields(jgen, new ProdId(IcalTranslator.prodId));
+      JsonProperty.addFields(jgen, new Version());
 
       if ((methodType > ScheduleMethods.methodTypeNone) &&
               (methodType < ScheduleMethods.methodTypeUnknown)) {
-        jgen.writeFieldName("method");
-        jgen.writeString(ScheduleMethods.methods[methodType]);
+        JsonProperty.addFields(jgen, new Method(
+                ScheduleMethods.methods[methodType]));
       }
 
       jgen.writeEndArray();

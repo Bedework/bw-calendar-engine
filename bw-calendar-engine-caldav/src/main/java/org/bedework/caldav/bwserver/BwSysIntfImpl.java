@@ -1925,6 +1925,7 @@ public class BwSysIntfImpl implements SysIntf {
       String ctype = contentType;
       if ((ctype == null) ||
           (!ctype.equals("text/calendar") &&
+           !ctype.equals("application/calendar+json") &&
            !ctype.equals(XcalTags.mimetype))) {
         ctype = getDefaultContentType();
       }

@@ -60,6 +60,8 @@ public class JsonProperty implements Serializable {
 
       jgen.writeString(getType(prop));
 
+      outValue(jgen, prop);
+
       jgen.writeEndArray();
     } catch (CalFacadeException cfe) {
       throw cfe;
