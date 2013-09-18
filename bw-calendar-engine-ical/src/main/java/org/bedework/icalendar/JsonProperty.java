@@ -20,10 +20,14 @@ package org.bedework.icalendar;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.PropertyIndex;
+import org.bedework.util.calendar.XcalUtil;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import net.fortuna.ical4j.model.CategoryList;
+import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.NumberList;
+import net.fortuna.ical4j.model.Period;
+import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.WeekDay;
@@ -32,8 +36,10 @@ import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Categories;
 import net.fortuna.ical4j.model.property.DateListProperty;
 import net.fortuna.ical4j.model.property.DateProperty;
+import net.fortuna.ical4j.model.property.ExDate;
 import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.Geo;
+import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.RequestStatus;
 import net.fortuna.ical4j.model.property.Trigger;
@@ -233,8 +239,15 @@ public class JsonProperty implements Serializable {
 
   static {
     valMap.put("categories", new CategoriesValueEmitter());
+    valMap.put("created", new DateTimeValueEmitter());
+    valMap.put("dtend", new DateTimeValueEmitter());
+    valMap.put("dtstamp", new DateTimeValueEmitter());
+    valMap.put("dtstart", new DateTimeValueEmitter());
+    valMap.put("exdate", new ExdateValueEmitter());
     valMap.put("exrule", new RecurValueEmitter());
     valMap.put("geo", new GeoValueEmitter());
+    valMap.put("last-modified", new DateTimeValueEmitter());
+    valMap.put("rdate", new RdateValueEmitter());
     valMap.put("request-status", new ReqStatValueEmitter());
     valMap.put("rrule", new RecurValueEmitter());
   }
@@ -243,6 +256,67 @@ public class JsonProperty implements Serializable {
     public void emitValue(JsonGenerator jgen,
                           Property prop) throws Throwable {
       jgen.writeString(prop.getValue());
+    }
+  }
+
+  private static class DateTimeValueEmitter extends PropertyValueEmitter {
+    public void emitValue(JsonGenerator jgen,
+                          Property prop) throws Throwable {
+
+      jgen.writeString(XcalUtil.getXmlFormatDateTime(prop.getValue()));
+    }
+  }
+
+  private static class ExdateValueEmitter extends PropertyValueEmitter {
+    public void emitValue(JsonGenerator jgen,
+                          Property prop) throws Throwable {
+      ExDate p = (ExDate)prop;
+
+      jgen.writeStartArray();
+      DateList dl = p.getDates();
+      for (Object o: dl) {
+        jgen.writeString(XcalUtil.getXmlFormatDateTime(o.toString()));
+      }
+
+      jgen.writeEndArray();
+    }
+  }
+
+  private static class RdateValueEmitter extends PropertyValueEmitter {
+    public void emitValue(JsonGenerator jgen,
+                          Property prop) throws Throwable {
+      RDate p = (RDate)prop;
+
+      jgen.writeStartArray();
+
+      DateList dl = p.getDates();
+
+      if (dl != null) {
+        for (Object o: dl) {
+          jgen.writeString(XcalUtil.getXmlFormatDateTime(o.toString()));
+        }
+      } else {
+        PeriodList pl = p.getPeriods();
+
+        for (Object o: dl) {
+          Period per = (Period)o;
+
+          StringBuilder sb = new StringBuilder(XcalUtil.getXmlFormatDateTime(
+                  per.getStart().toString()));
+          sb.append("/");
+
+          if (per.getDuration() != null) {
+            sb.append(per.getDuration());
+          } else {
+            sb.append(XcalUtil.getXmlFormatDateTime(
+                    per.getEnd().toString()));
+          }
+
+          jgen.writeString(sb.toString());
+        }
+      }
+
+      jgen.writeEndArray();
     }
   }
 

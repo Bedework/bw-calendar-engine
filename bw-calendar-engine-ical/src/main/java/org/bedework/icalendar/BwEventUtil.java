@@ -115,7 +115,6 @@ public class BwEventUtil extends IcalUtil {
    * @param val         VEvent object
    * @param diff        True if we should assume we are updating existing events.
    * @param mergeAttendees True if we should only update our own attendee.
-   * @param vPollCandidate true if this is a vpollcandidate object.
    * @return EventInfo  object representing new entry or updated entry
    * @throws CalFacadeException
    */
