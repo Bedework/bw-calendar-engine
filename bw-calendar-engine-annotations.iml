@@ -41,9 +41,6 @@
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
     <orderEntry type="module" module-name="bw-util-xml" />
-    <orderEntry type="library" name="Maven: org.mnode.ical4j:ical4j-vcard:0.9.6-BW-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.mnode.ical4j:ical4j:1.0.4" level="project" />
-    <orderEntry type="library" name="Maven: commons-io:commons-io:2.3" level="project" />
     <orderEntry type="library" name="Maven: com.sun:tools:1.4.2" level="project" />
   </component>
 </module>

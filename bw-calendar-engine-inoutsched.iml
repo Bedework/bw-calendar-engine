@@ -43,9 +43,6 @@
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
     <orderEntry type="module" module-name="bw-util-xml" />
-    <orderEntry type="library" name="Maven: org.mnode.ical4j:ical4j-vcard:0.9.6-BW-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.mnode.ical4j:ical4j:1.0.4" level="project" />
-    <orderEntry type="library" name="Maven: commons-io:commons-io:2.3" level="project" />
     <orderEntry type="library" name="Maven: com.sun:tools:1.4.2" level="project" />
     <orderEntry type="module" module-name="bw-access" />
     <orderEntry type="module" module-name="bw-util-caching" />
@@ -78,6 +75,8 @@
     <orderEntry type="library" name="Maven: org.apache.james:apache-mime4j-dom:0.7" level="project" />
     <orderEntry type="library" name="Maven: dnsjava:dnsjava:2.1.1" level="project" />
     <orderEntry type="module" module-name="bw-caldav-server" />
+    <orderEntry type="library" name="Maven: org.mnode.ical4j:ical4j-vcard:0.9.6-BW-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: commons-io:commons-io:2.3" level="project" />
     <orderEntry type="library" name="Maven: org.hibernate:hibernate-core:3.6.9.Final" level="project" />
     <orderEntry type="library" name="Maven: commons-collections:commons-collections:3.1" level="project" />
     <orderEntry type="library" name="Maven: dom4j:dom4j:1.6.1" level="project" />
