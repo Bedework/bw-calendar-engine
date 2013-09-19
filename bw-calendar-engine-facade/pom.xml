@@ -66,7 +66,13 @@
 		<dependency>
 			<groupId>org.mnode.ical4j</groupId>
 			<artifactId>ical4j-vcard</artifactId>
-		</dependency>
+      <exclusions>
+        <exclusion>
+          <artifactId>ical4j</artifactId>
+          <groupId>org.mnode.ical4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
