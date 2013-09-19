@@ -32,5 +32,12 @@
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-timezones</artifactId>
     </dependency>
+
+    <!-- Third Party Libraries -->
+    <dependency>
+      <groupId>net.fortuna.ical4j</groupId>
+      <artifactId>ical4j</artifactId>
+      <version>${ical4j.version}</version>
+    </dependency>
 	</dependencies>
 </project>
