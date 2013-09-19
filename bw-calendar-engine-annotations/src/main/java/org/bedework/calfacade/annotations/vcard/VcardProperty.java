@@ -18,8 +18,6 @@
 */
 package org.bedework.calfacade.annotations.vcard;
 
-import net.fortuna.ical4j.vcard.Property;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -36,8 +34,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface VcardProperty {
-  /** Property name */
-  Property.Id id();
+  /** Property name       - getting ical4j conflicts with this
+  Property.Id id();*/
 
   /** used in db queries - better extracted from the schema? */
   String dbFieldName() default "";
