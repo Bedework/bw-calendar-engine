@@ -27,6 +27,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.icalendar.Icalendar.TimeZoneInfo;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.JsonCalendarBuilder;
 import org.bedework.util.calendar.PropertyIndex.DataType;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -753,6 +754,11 @@ public class IcalTranslator implements Serializable {
       if ((contentType != null) &&
           contentType.equals("application/calendar+xml")) {
         XmlCalendarBuilder bldr = new XmlCalendarBuilder(ic);
+
+        cal = bldr.build(rdr);
+      } else if ((contentType != null) &&
+              contentType.equals("application/calendar+json")) {
+        JsonCalendarBuilder bldr = new JsonCalendarBuilder(ic);
 
         cal = bldr.build(rdr);
       } else {

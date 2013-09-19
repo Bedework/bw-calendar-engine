@@ -380,6 +380,8 @@ public class JsonProperty implements Serializable {
         r = ((ExRule)prop).getRecur();
       }
 
+      jgen.writeStartObject();
+
       outField(jgen, "freq", r.getFrequency());
       outField(jgen, "wkst", r.getWeekStartDay());
       if (r.getUntil() != null) {
@@ -396,6 +398,8 @@ public class JsonProperty implements Serializable {
       outField(jgen, "byminute", r.getMinuteList());
       outField(jgen, "bysecond", r.getSecondList());
       outField(jgen, "bysetpos", r.getSetPosList());
+
+      jgen.writeEndObject();
     }
   }
 

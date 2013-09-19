@@ -95,6 +95,8 @@ public class JcalHandler implements Serializable {
 
       calendarProps(jgen, methodType);
 
+      jgen.writeStartArray(); // for components
+
       for (EventInfo ei: vals) {
         BwEvent ev = ei.getEvent();
 
@@ -119,6 +121,8 @@ public class JcalHandler implements Serializable {
           }
         }
       }
+
+      jgen.writeEndArray(); // for components
 
       jgen.writeEndArray();
 
@@ -182,7 +186,7 @@ public class JcalHandler implements Serializable {
       jgen.writeStartArray();
 
       JsonProperty.addFields(jgen, new ProdId(IcalTranslator.prodId));
-      JsonProperty.addFields(jgen, new Version());
+      JsonProperty.addFields(jgen, Version.VERSION_2_0);
 
       if ((methodType > ScheduleMethods.methodTypeNone) &&
               (methodType < ScheduleMethods.methodTypeUnknown)) {

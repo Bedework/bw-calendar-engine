@@ -1970,6 +1970,16 @@ public class BwSysIntfImpl implements SysIntf {
     getSvci(); // Ensure open
     boolean rollback = true;
 
+      /* (CALDAV:supported-calendar-data) */
+    if (!contentType.equals("text/calendar") &&
+            !contentType.equals("application/calendar+json")) {
+      if (debug) {
+        debugMsg("Bad content type: " + contentType);
+      }
+      throw new WebdavForbidden(CaldavTags.supportedCalendarData,
+                                "Bad content type: " + contentType);
+    }
+
     try {
       BwCalendar bwcol = null;
       if (col != null) {
@@ -2001,6 +2011,9 @@ public class BwSysIntfImpl implements SysIntf {
     } catch (WebdavException wde) {
       throw wde;
     } catch (IcalMalformedException ime) {
+      if (debug) {
+        error(ime);
+      }
       throw new WebdavForbidden(CaldavTags.validCalendarData,
                                 ime.getMessage());
     } catch (Throwable t) {
