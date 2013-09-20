@@ -773,6 +773,9 @@ public class IcalTranslator implements Serializable {
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (ParserException pe) {
+      if (debug) {
+        error(pe);
+      }
       throw new IcalMalformedException(pe.getMessage());
     } catch (Throwable t) {
       throw new CalFacadeException(t);
@@ -1380,6 +1383,10 @@ public class IcalTranslator implements Serializable {
 
   private void debugMsg(final String msg) {
     getLog().debug(msg);
+  }
+
+  protected void error(final Throwable t) {
+    getLog().error(this, t);
   }
 }
 

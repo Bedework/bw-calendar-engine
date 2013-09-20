@@ -2011,9 +2011,6 @@ public class BwSysIntfImpl implements SysIntf {
     } catch (WebdavException wde) {
       throw wde;
     } catch (IcalMalformedException ime) {
-      if (debug) {
-        error(ime);
-      }
       throw new WebdavForbidden(CaldavTags.validCalendarData,
                                 ime.getMessage());
     } catch (Throwable t) {
