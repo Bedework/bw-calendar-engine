@@ -46,19 +46,6 @@ public interface SystemProperties extends CalDAVSystemProperties {
  @MBeanInfo("Default timezone identifier")
  String getTzid();
 
- /** Set the timezones server uri
-  *
-  * @param val    String
-  */
- void setTzServeruri(String val);
-
- /** Get the timezones server uri
-  *
-  * @return String   tzid
-  */
- @MBeanInfo("the timezones server uri")
- String getTzServeruri();
-
  /** Set the default systemid
   *
   * @param val    String
@@ -99,17 +86,6 @@ public interface SystemProperties extends CalDAVSystemProperties {
    */
   @MBeanInfo("Calws soap web service WSDL uri - null for no service")
   String getCalSoapWsWSDLURI();
-
-  /**
-   * @param val boolean true if we are not including the full tz specification..
-   */
-  void setTimezonesByReference(boolean val);
-
-  /**
-   * @return true if we are not including the full tz specification
-   */
-  @MBeanInfo("true if we are NOT including the full tz specification in iCalendar output")
-  boolean getTimezonesByReference();
 
   /** Set the userauth class
    *
