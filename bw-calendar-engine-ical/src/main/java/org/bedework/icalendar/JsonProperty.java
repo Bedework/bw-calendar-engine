@@ -250,6 +250,8 @@ public class JsonProperty implements Serializable {
     valMap.put("rdate", new RdateValueEmitter());
     valMap.put("request-status", new ReqStatValueEmitter());
     valMap.put("rrule", new RecurValueEmitter());
+    valMap.put("tzoffsetfrom", new UtcOffsetValueEmitter());
+    valMap.put("tzoffsetto", new UtcOffsetValueEmitter());
   }
 
   private static class SingleValueEmitter extends PropertyValueEmitter {
@@ -264,6 +266,14 @@ public class JsonProperty implements Serializable {
                           Property prop) throws Throwable {
 
       jgen.writeString(XcalUtil.getXmlFormatDateTime(prop.getValue()));
+    }
+  }
+
+  private static class UtcOffsetValueEmitter extends PropertyValueEmitter {
+    public void emitValue(JsonGenerator jgen,
+                          Property prop) throws Throwable {
+
+      jgen.writeString(XcalUtil.getXmlFormatUtcOffset(prop.getValue()));
     }
   }
 

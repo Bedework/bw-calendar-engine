@@ -270,7 +270,7 @@ public class BwSysIntfImpl implements SysIntf {
   }
 
   /* (non-Javadoc)
-   * @see org.bedework.caldav.server.sysinterface.SysIntf#getDefaultContentType()
+   * @see org.bedework.caldav.server.sysinterface.SysIntf#getAcceptContentType()
    */
   @Override
   public String getDefaultContentType() throws WebdavException {
@@ -1947,7 +1947,11 @@ public class BwSysIntfImpl implements SysIntf {
           xml.cdataValue(toIcalString(ical, "text/calendar"));
         }
       } else if (ctype.equals("application/calendar+json")) {
-        trans.writeJcal(bwevs, meth, wtr);
+        if (xml == null) {
+          trans.writeJcal(bwevs, meth, wtr);
+        } else {
+          trans.writeJcal(bwevs, meth, xml.getWriter());
+        }
       } else if (ctype.equals(XcalTags.mimetype)) {
         XmlEmit x;
         if (xml == null) {
