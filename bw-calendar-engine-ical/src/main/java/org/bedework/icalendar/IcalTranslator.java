@@ -1169,8 +1169,10 @@ public class IcalTranslator implements Serializable {
 
     EventTimeZonesRegistry tzreg = new EventTimeZonesRegistry(this, ev);
 
-    /* Add referenced timezones to the calendar */
-    addIcalTimezones(cal, ev, added, tzreg);
+    if (!cb.getTimezonesByReference()) {
+      /* Add referenced timezones to the calendar */
+      addIcalTimezones(cal, ev, added, tzreg);
+    }
 
     if (!ev.getSuppressed()) {
       /* Add it to the calendar */
