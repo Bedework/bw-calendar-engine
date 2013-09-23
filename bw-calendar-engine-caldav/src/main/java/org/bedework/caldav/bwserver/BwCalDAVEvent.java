@@ -28,6 +28,7 @@ import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.icalendar.IcalTranslator;
+import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.tagdefs.AppleServerTags;
@@ -632,9 +633,19 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   @Override
-  public String toIcalString(final int methodType) throws WebdavException {
+  public String toIcalString(final int methodType,
+                             final String contentType) throws WebdavException {
     try {
-      return IcalTranslator.toIcalString(methodType, getEv());
+      if (contentType.equals("text/calendar")) {
+        return IcalTranslator.toIcalString(methodType, getEv());
+      }
+
+      if (contentType.equals("application/calendar+json")) {
+        return intf.toJcal(this,
+                           methodType != ScheduleMethods.methodTypeNone, null);
+      }
+
+      throw new WebdavException("Unhandled content type" + contentType);
     } catch (Throwable t) {
       throw new WebdavException(t);
     }

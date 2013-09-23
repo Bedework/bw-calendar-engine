@@ -1138,6 +1138,18 @@ public class IcalTranslator implements Serializable {
                               new EventTimeZonesRegistry(this, val.getEvent()));
   }
 
+  /**
+   * @param val
+   * @param pattern
+   * @return JSON jcal
+   * @throws CalFacadeException
+   */
+  public static String toJcal(final Calendar val,
+                              final IcalendarType pattern) throws CalFacadeException {
+    return JcalHandler.toJcal(val, pattern,
+                              null);
+  }
+
   /* ====================================================================
                       Private methods
      ==================================================================== */

@@ -28,6 +28,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import ietf.params.xml.ns.icalendar_2.IcalendarType;
+import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Property;
@@ -63,7 +64,6 @@ public class JcalHandler implements Serializable {
     jsonFactory.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
   }
 
-
   public static String toJcal(final Collection<EventInfo> vals,
                               final int methodType,
                               final IcalendarType pattern,
@@ -75,6 +75,61 @@ public class JcalHandler implements Serializable {
     outJcal(sw, vals, methodType, pattern, uriGen, currentPrincipal, tzreg);
 
     return sw.toString();
+  }
+
+  public static String toJcal(final Calendar cal,
+                              final IcalendarType pattern,
+                              final EventTimeZonesRegistry tzreg) throws CalFacadeException {
+    StringWriter sw = new StringWriter();
+
+    outJcal(sw, cal, pattern, tzreg);
+
+    return sw.toString();
+  }
+
+  public static void outJcal(final Writer wtr,
+                             final Calendar cal,
+                             final IcalendarType pattern,
+                             final EventTimeZonesRegistry tzreg) throws CalFacadeException {
+    try {
+      JsonGenerator jgen = jsonFactory.createJsonGenerator(wtr);
+
+      if (Logger.getLogger(JcalHandler.class).isDebugEnabled()) {
+        jgen.useDefaultPrettyPrinter();
+      }
+
+      jgen.writeStartArray();
+
+      jgen.writeString("vcalendar");
+      jgen.writeStartArray();
+
+      for (Object o: cal.getProperties()) {
+        JsonProperty.addFields(jgen, (Property)o);
+      }
+
+      jgen.writeEndArray(); // End event properties
+
+      /* Output subcomponents
+       */
+      jgen.writeStartArray();
+
+      jgen.writeStartArray(); // for components
+
+      for (Object o: cal.getComponents()) {
+        Component comp = (Component)o;
+        outComp(jgen, comp);
+      }
+
+      jgen.writeEndArray(); // for components
+
+      jgen.writeEndArray();
+
+      jgen.flush();
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
   }
 
   public static void outJcal(final Writer wtr,
@@ -166,8 +221,10 @@ public class JcalHandler implements Serializable {
         cl = ((VToDo)comp).getAlarms();
       }
 
-      for (Object o: cl) {
-        outComp(jgen, (Component)o);
+      if (cl != null) {
+        for (Object o: cl) {
+          outComp(jgen, (Component)o);
+        }
       }
 
       jgen.writeEndArray(); // end subcomponents

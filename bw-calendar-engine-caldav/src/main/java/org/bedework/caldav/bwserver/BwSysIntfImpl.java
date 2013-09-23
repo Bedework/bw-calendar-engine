@@ -1890,9 +1890,18 @@ public class BwSysIntfImpl implements SysIntf {
    * @see org.bedework.caldav.server.sysinterface.SysIntf#toIcalString(net.fortuna.ical4j.model.Calendar)
    */
   @Override
-  public String toIcalString(final Calendar cal) throws WebdavException {
+  public String toIcalString(final Calendar cal,
+                             final String contentType) throws WebdavException {
     try {
-      return IcalTranslator.toIcalString(cal);
+      if (contentType.equals("text/calendar")) {
+        return IcalTranslator.toIcalString(cal);
+      }
+
+      if (contentType.equals("application/calendar+json")) {
+        return IcalTranslator.toJcal(cal, null);
+      }
+
+      throw new WebdavException("Unhandled content type" + contentType);
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
@@ -1935,7 +1944,7 @@ public class BwSysIntfImpl implements SysIntf {
         if (xml == null) {
           IcalTranslator.writeCalendar(ical, wtr);
         } else {
-          xml.cdataValue(toIcalString(ical));
+          xml.cdataValue(toIcalString(ical, "text/calendar"));
         }
       } else if (ctype.equals("application/calendar+json")) {
         trans.writeJcal(bwevs, meth, wtr);
