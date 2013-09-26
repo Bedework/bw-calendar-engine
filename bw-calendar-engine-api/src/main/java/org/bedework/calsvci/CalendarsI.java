@@ -158,12 +158,13 @@ public interface CalendarsI extends Serializable {
    */
   void setPreferred(BwCalendar  val) throws CalFacadeException;
 
-  /** Get the default calendar for the current user.
+  /** Get the default calendar for the current user for the given entity type.
    *
-   * @return BwCalendar null for unknown calendar
+   * @param entityType
+   * @return path or null for unknown calendar
    * @throws CalFacadeException
    */
-  BwCalendar getPreferred() throws CalFacadeException;
+  String getPreferred(String entityType) throws CalFacadeException;
 
   /** Add a calendar object
    *

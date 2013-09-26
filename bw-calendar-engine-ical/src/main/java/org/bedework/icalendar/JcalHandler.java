@@ -218,7 +218,7 @@ public class JcalHandler implements Serializable {
         cl = ((VAvailability)comp).getAvailable();
       } else if (comp instanceof Available) {
       } else if (comp instanceof VPoll) {
-        cl = ((VToDo)comp).getAlarms();
+        cl = ((VPoll)comp).getCandidates();
       }
 
       if (cl != null) {

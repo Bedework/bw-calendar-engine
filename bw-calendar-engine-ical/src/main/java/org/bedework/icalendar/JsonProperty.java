@@ -39,6 +39,8 @@ import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.ExDate;
 import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.Geo;
+import net.fortuna.ical4j.model.property.PollItemId;
+import net.fortuna.ical4j.model.property.PollWinner;
 import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.RequestStatus;
@@ -247,6 +249,8 @@ public class JsonProperty implements Serializable {
     valMap.put("exrule", new RecurValueEmitter());
     valMap.put("geo", new GeoValueEmitter());
     valMap.put("last-modified", new DateTimeValueEmitter());
+    valMap.put("poll-item-id", new PollItemidValueEmitter());
+    valMap.put("poll-winner", new PollWinnerValueEmitter());
     valMap.put("rdate", new RdateValueEmitter());
     valMap.put("request-status", new ReqStatValueEmitter());
     valMap.put("rrule", new RecurValueEmitter());
@@ -274,6 +278,24 @@ public class JsonProperty implements Serializable {
                           Property prop) throws Throwable {
 
       jgen.writeString(XcalUtil.getXmlFormatUtcOffset(prop.getValue()));
+    }
+  }
+
+  private static class PollItemidValueEmitter extends PropertyValueEmitter {
+    public void emitValue(JsonGenerator jgen,
+                          Property prop) throws Throwable {
+      PollItemId p = (PollItemId)prop;
+
+      jgen.writeNumber(p.getPollitemid());
+    }
+  }
+
+  private static class PollWinnerValueEmitter extends PropertyValueEmitter {
+    public void emitValue(JsonGenerator jgen,
+                          Property prop) throws Throwable {
+      PollWinner p = (PollWinner)prop;
+
+      jgen.writeNumber(p.getPollwinner());
     }
   }
 

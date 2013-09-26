@@ -54,6 +54,7 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
   private String userDefaultTasksCalendar;
   private String userDefaultPollsCalendar;
   private String defaultNotificationsName;
+  private String defaultAttachmentsName;
   private String defaultReferencesName;
   private String userInbox;
   private String userOutbox;
@@ -210,6 +211,17 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
   @MBeanInfo("name of notifications collection - do not change")
   public String getDefaultNotificationsName() {
     return defaultNotificationsName;
+  }
+
+  @Override
+  public void setDefaultAttachmentsName(final String val) {
+    defaultAttachmentsName = val;
+  }
+
+  @Override
+  @MBeanInfo("name of attachments collection - do not change")
+  public String getDefaultAttachmentsName() {
+    return defaultAttachmentsName;
   }
 
   @Override

@@ -467,6 +467,7 @@ public class CoreCalendars extends CalintfHelperHib
                                                       final int access) throws CalFacadeException {
     String name;
     BasicSystemProperties sys = getSyspars();
+    int ctype = calType;
 
     if (calType == BwCalendar.calTypeInbox) {
       name = sys.getUserInbox();
@@ -478,6 +479,13 @@ public class CoreCalendars extends CalintfHelperHib
       name = sys.getDefaultReferencesName();
     } else if (calType == BwCalendar.calTypePoll) {
       name = sys.getUserDefaultPollsCalendar();
+    } else if (calType == BwCalendar.calTypeAttachments) {
+      name = sys.getDefaultAttachmentsName();
+    } else if (calType == BwCalendar.calTypeCalendarCollection) {
+      name = sys.getUserDefaultCalendar();
+    } else if (calType == BwCalendar.calTypeTasks) {
+      name = sys.getUserDefaultTasksCalendar();
+      ctype = BwCalendar.calTypeCalendarCollection;
     } else {
       // Not supported
       return null;
@@ -514,7 +522,7 @@ public class CoreCalendars extends CalintfHelperHib
     gscr.cal.setName(name);
     gscr.cal.setCreatorHref(owner.getPrincipalRef());
     gscr.cal.setOwnerHref(owner.getPrincipalRef());
-    gscr.cal.setCalType(calType);
+    gscr.cal.setCalType(ctype);
 
     /* I think we're allowing privNone here because we don't mind if the
      * calendar gets created even if the caller has no access.

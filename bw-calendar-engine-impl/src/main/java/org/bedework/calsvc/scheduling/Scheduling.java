@@ -25,6 +25,7 @@ import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
+import org.bedework.util.calendar.IcalDefs;
 
 import java.util.Collection;
 
@@ -56,12 +57,13 @@ public class Scheduling extends ImplicitSchedulingHandler {
   public EventInfo getStoredMeeting(final BwEvent ev) throws CalFacadeException {
     RecurringRetrievalMode rrm = new RecurringRetrievalMode(Rmode.overrides);
 
-    BwCalendar preferred = getSvc().getCalendarsHandler().getPreferred();
+    String preferred = getSvc().getCalendarsHandler().
+            getPreferred(IcalDefs.entityTypeIcalNames[ev.getEntityType()]);
     if (preferred == null) {
       throw new CalFacadeException(CalFacadeException.schedulingNoCalendar);
     }
 
-    Collection<EventInfo> evs = getSvc().getEventsHandler().get(preferred.getPath(),
+    Collection<EventInfo> evs = getSvc().getEventsHandler().get(preferred,
                                                                 ev.getUid(),
                                                                 null,
                                                                 rrm, true);

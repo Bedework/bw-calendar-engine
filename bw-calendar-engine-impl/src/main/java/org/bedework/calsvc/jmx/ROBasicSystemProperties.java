@@ -186,6 +186,16 @@ public final class ROBasicSystemProperties implements BasicSystemProperties {
   }
 
   @Override
+  public void setDefaultAttachmentsName(final String val) {
+    throw new RuntimeException("Immutable"); // getConfig().setDefaultNotificationsName(val);
+  }
+
+  @Override
+  public String getDefaultAttachmentsName() {
+    return getConfig().getDefaultAttachmentsName();
+  }
+
+  @Override
   public void setDefaultReferencesName(final String val) {
     throw new RuntimeException("Immutable"); // getConfig().setDefaultReferencesName(val);
   }

@@ -159,6 +159,7 @@ public interface EventsI extends Serializable {
    * @param noInvites    True for don't send invitations.
    * @param scheduling   True if this is to be added to an inbox - affects required
    *                     access.
+   * @param autoCreateCollection - true if we should add a missing collection
    * @param rollbackOnError
    * @return UpdateResult Counts of changes.
    * @throws CalFacadeException
@@ -166,6 +167,7 @@ public interface EventsI extends Serializable {
   public UpdateResult add(EventInfo ei,
                           boolean noInvites,
                           boolean scheduling,
+                          boolean autoCreateCollection,
                           boolean rollbackOnError) throws CalFacadeException;
 
   /** Update an event. Any changeset should be embedded in the event info object.

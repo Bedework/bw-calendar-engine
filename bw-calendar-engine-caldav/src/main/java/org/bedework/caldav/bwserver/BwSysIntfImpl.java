@@ -834,6 +834,7 @@ public class BwSysIntfImpl implements SysIntf {
       Collection<BwEventProxy> bwevs =
              getSvci().getEventsHandler().add(ei, noInvites,
                                               false,  // scheduling - inbox
+                                              false,  // autocreate
                                               rollbackOnError).failedOverrides;
 
       if (bwevs == null) {

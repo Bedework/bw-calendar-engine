@@ -126,7 +126,8 @@ public class InRequest extends InProcessor {
           trace("InSchedule add for " + owner);
         }
 
-        BwCalendar prefSched = getSvc().getCalendarsHandler().getPreferred();
+        String prefSched = getSvc().getCalendarsHandler().
+                getPreferred(IcalDefs.entityTypeIcalNames[ev.getEntityType()]);
         if (prefSched == null) {
           // SCHED - status = no default collection
           if (debug) {
@@ -138,8 +139,6 @@ public class InRequest extends InProcessor {
           pr.removeInboxEntry = true;
           return pr;
         }
-
-        colPath = prefSched.getPath();
 
         ourCopy = newAttendeeCopy(getSvc(), prefSched, ei, uri);
         if (ourCopy == null) {
@@ -537,14 +536,14 @@ public class InRequest extends InProcessor {
   /** Add the event to newCol from the incoming request
    *
    * @param svci
-   * @param newCol
+   * @param newCol - path for new copy
    * @param inEi
    * @param attUri - our attendee uri
    * @return event added or null if not added
    * @throws CalFacadeException
    */
   private EventInfo newAttendeeCopy(final CalSvcI svci,
-                                   final BwCalendar newCol,
+                                   final String newCol,
                                    final EventInfo inEi,
                                    final String attUri) throws CalFacadeException {
     SchedulingIntf sched = (SchedulingIntf)svci.getScheduler();
@@ -554,9 +553,7 @@ public class InRequest extends InProcessor {
     BwEvent calEv = calEi.getEvent();
     //String ridStr = calEv.getRecurrenceId();
 
-    String colPath = newCol.getPath();
-
-    if (!initAttendeeCopy(svci, colPath, calEv, attUri)) {
+    if (!initAttendeeCopy(svci, newCol, calEv, attUri)) {
       return null;
     }
 
@@ -565,7 +562,7 @@ public class InRequest extends InProcessor {
     }
 
     for (EventInfo ei: calEi.getOverrides()) {
-      if (!initAttendeeCopy(svci, colPath, ei.getEvent(), attUri)) {
+      if (!initAttendeeCopy(svci, newCol, ei.getEvent(), attUri)) {
         return null;
       }
     }

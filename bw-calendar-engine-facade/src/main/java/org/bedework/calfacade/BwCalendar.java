@@ -156,8 +156,14 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   /** <em>List of events</em>  */
   public final static int calTypeEventList = 11;
 
-  /** <em>List of events</em>  */
+  /** <em>Vpoll entities</em>  */
   public final static int calTypePoll = 12;
+
+  /** <em>managed attachments</em>  */
+  public final static int calTypeAttachments = 13;
+
+  /** <em>Tasks</em>  */
+  public final static int calTypeTasks = 14;
 
   /** There are limitations on what may be placed in each type of collection,
    *  e.g folders cannot hold entities, guids must be unique in calendars etc.
@@ -243,33 +249,35 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /** The info */
   private static final CollectionInfo[] collectionInfo = {
-    new CollectionInfo(calTypeFolder,             f, T, f, f, f, T, T, f, f, f),
-    new CollectionInfo(calTypeCalendarCollection, f, T, T, T, T, T, T, T, T, T),
-    new CollectionInfo(calTypeTrash,              o, o, o, o, o, o, o, o, o, o),
-    new CollectionInfo(calTypeDeleted,            o, o, o, o, o, o, o, o, o, o),
-    new CollectionInfo(calTypeBusy,               T, f, T, T, T, T, f, T, f, f),
-    new CollectionInfo(calTypeInbox,              T, f, T, f, f, f, f, T, f, f),
-    new CollectionInfo(calTypeOutbox,             T, f, T, f, f, f, f, T, f, f),
-    new CollectionInfo(calTypeAlias,              f, f, f, f, f, T, T, f, f, f),
-    new CollectionInfo(calTypeExtSub,             f, T, T, T, f, T, T, T, f, f),
-    new CollectionInfo(calTypeResourceCollection, f, T, f, f, f, f, f, f, f, f),
-    new CollectionInfo(calTypeNotifications,      T, f, f, f, f, f, f, f, f, f),
-    new CollectionInfo(calTypeEventList,          T, f, T, T, T, T, f, T, f, f),
-    new CollectionInfo(calTypePoll,               f, T, T, T, T, T, T, T, T, T),
+    ci(calTypeFolder,             f, T, f, f, f, T, T, f, f, f),
+    ci(calTypeCalendarCollection, f, T, T, T, T, T, T, T, T, T),
+    ci(calTypeTrash,              o, o, o, o, o, o, o, o, o, o),
+    ci(calTypeDeleted,            o, o, o, o, o, o, o, o, o, o),
+    ci(calTypeBusy,               T, f, T, T, T, T, f, T, f, f),
+    ci(calTypeInbox,              T, f, T, f, f, f, f, T, f, f),
+    ci(calTypeOutbox,             T, f, T, f, f, f, f, T, f, f),
+    ci(calTypeAlias,              f, f, f, f, f, T, T, f, f, f),
+    ci(calTypeExtSub,             f, T, T, T, f, T, T, T, f, f),
+    ci(calTypeResourceCollection, f, T, f, f, f, f, f, f, f, f),
+    ci(calTypeNotifications,      T, f, f, f, f, f, f, f, f, f),
+    ci(calTypeEventList,          T, f, T, T, T, T, f, T, f, f),
+    ci(calTypePoll,               f, T, T, T, T, T, T, T, T, T),
+    ci(calTypeAttachments,        T, f, T, f, f, f, f, f, f, f),
+    ci(calTypeTasks,              f, T, T, T, T, T, T, T, T, T),
   };
-  /*                             ^                1  2  3  4  5  6  7  8  9 10
-   *                             |                |  |  |  |  |  |  |  |  |  |
-   *           collectionType ---+                |  |  |  |  |  |  |  |  |  |
-   *                  special  1 -----------------+  |  |  |  |  |  |  |  |  |
-   *          childrenAllowed  2 -------------------+|  |  |  |  |  |  |  |  |
-   *                indexable  3 -----------------------+  |  |  |  |  |  |  |
-   *                uniqueKey  4 --------------------------+  |  |  |  |  |  |
-   *         allowAnnotations  5 -----------------------------+  |  |  |  |  |
-   *            allowFreeBusy  6 --------------------------------+  |  |  |  |
-   *                 canAlias  7 -----------------------------------+  |  |  |
-   *          onlyCalEntities  8 --------------------------------------+  |  |
-   *               scheduling  9 -----------------------------------------+  |
-   *                shareable 10 --------------------------------------------+
+  /*                  ^           1  2  3  4  5  6  7  8  9 10
+                      |           |  |  |  |  |  |  |  |  |  |
+    collectionType ---+           |  |  |  |  |  |  |  |  |  |
+           special  1 ------------+  |  |  |  |  |  |  |  |  |
+   childrenAllowed  2 --------------+|  |  |  |  |  |  |  |  |
+         indexable  3 ------------------+  |  |  |  |  |  |  |
+         uniqueKey  4 ---------------------+  |  |  |  |  |  |
+  allowAnnotations  5 ------------------------+  |  |  |  |  |
+     allowFreeBusy  6 ---------------------------+  |  |  |  |
+          canAlias  7 ------------------------------+  |  |  |
+   onlyCalEntities  8 ---------------------------------+  |  |
+        scheduling  9 ------------------------------------+  |
+         shareable 10 ---------------------------------------+
    */
 
 
@@ -1849,4 +1857,29 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     //cal.setSeq(getSeq()); // Add to constructor
     return cal;
   }
-}
+
+  private static CollectionInfo ci(final int collectionType,
+                                   final boolean special,
+                                   final boolean childrenAllowed,
+                                   final boolean indexable,
+                                   final boolean uniqueKey,
+                                   final boolean allowAnnotations,
+                                   final boolean allowFreeBusy,
+                                   final boolean canAlias,
+                                   final boolean onlyCalEntities,
+                                   final boolean scheduling,
+                                   final boolean shareable) {
+    return new CollectionInfo(collectionType,
+                              special,
+                              childrenAllowed,
+                              indexable,
+                              uniqueKey,
+                              allowAnnotations,
+                              allowFreeBusy,
+                              canAlias,
+                              onlyCalEntities,
+                              scheduling,
+                              shareable);
+  }
+
+  }

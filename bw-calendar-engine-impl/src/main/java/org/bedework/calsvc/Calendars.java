@@ -18,6 +18,8 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPreferences;
@@ -35,8 +37,7 @@ import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.SynchI;
 import org.bedework.util.misc.Util;
 
-import org.bedework.access.Acl.CurrentAccess;
-import org.bedework.access.PrivilegeDefs;
+import net.fortuna.ical4j.model.Component;
 
 import java.net.URI;
 import java.net.URLDecoder;
@@ -308,8 +309,29 @@ class Calendars extends CalSvcDb implements CalendarsI {
    * @see org.bedework.calsvci.CalendarsI#getPreferred()
    */
   @Override
-  public BwCalendar getPreferred() throws CalFacadeException {
-    return get(getSvc().getPrefsHandler().get().getDefaultCalendarPath());
+  public String getPreferred(final String entityType) throws CalFacadeException {
+    if (entityType.equals(Component.VEVENT)) {
+      String path = getSvc().getPrefsHandler().get().getDefaultCalendarPath();
+
+      if (path != null) {
+        return path;
+      }
+
+      return Util.buildPath(true, getHomePath(), "/",
+                            getBasicSyspars().getUserDefaultCalendar());
+    }
+
+    if (entityType.equals(Component.VTODO)) {
+      return Util.buildPath(true, getHomePath(), "/",
+                            getBasicSyspars().getUserDefaultTasksCalendar());
+    }
+
+    if (entityType.equals(Component.VPOLL)) {
+      return Util.buildPath(true, getHomePath(), "/",
+                            getBasicSyspars().getUserDefaultPollsCalendar());
+    }
+
+    return null;
   }
 
   /* (non-Javadoc)

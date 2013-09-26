@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.InternalEventKey;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
@@ -175,6 +176,7 @@ class Events extends CalSvcDb implements EventsI {
   public UpdateResult add(final EventInfo ei,
                           final boolean noInvites,
                           final boolean scheduling,
+                          final boolean autoCreateCollection,
                           final boolean rollbackOnError) throws CalFacadeException {
     try {
       UpdateResult updResult = ei.getUpdResult();
@@ -197,7 +199,7 @@ class Events extends CalSvcDb implements EventsI {
 
       assignGuid(event); // Or just validate?
 
-      BwCalendar cal = validate(event);
+      BwCalendar cal = validate(event, autoCreateCollection);
 
       Collection<BwEventProxy> overrides = ei.getOverrideProxies();
       BwEventProxy proxy = null;
@@ -377,7 +379,7 @@ class Events extends CalSvcDb implements EventsI {
       BwEvent event = ei.getEvent();
       event.setDtstamps(getCurrentTimestamp());
 
-      BwCalendar cal = validate(event);
+      BwCalendar cal = validate(event,false);
       adjustEntities(ei);
 
       boolean organizerSchedulingObject = false;
@@ -600,7 +602,7 @@ class Events extends CalSvcDb implements EventsI {
     proxy.setOwnerHref(getPrincipal().getPrincipalRef());
     proxy.setDeleted(true);
     proxy.setColPath(cal.getPath());
-    add(new EventInfo(proxy), true, false, false);
+    add(new EventInfo(proxy), true, false, false, false);
   }
 
   /* (non-Javadoc)
@@ -709,7 +711,7 @@ class Events extends CalSvcDb implements EventsI {
         newEvent.setColPath(to.getPath());
         newEvent.updateStag(getCurrentTimestamp());
 
-        add(newEi, true, false, true);
+        add(newEi, true, false, false, true);
       }
 
       if (destEi != null) {
@@ -1090,7 +1092,8 @@ class Events extends CalSvcDb implements EventsI {
     }
   }
 
-  private BwCalendar validate(final BwEvent ev) throws CalFacadeException {
+  private BwCalendar validate(final BwEvent ev,
+                              final boolean autoCreateCollection) throws CalFacadeException {
     if (ev.getColPath() == null) {
       throw new CalFacadeException(CalFacadeException.noEventCalendar);
     }
@@ -1122,13 +1125,10 @@ class Events extends CalSvcDb implements EventsI {
 
     setScheduleState(ev);
 
-    BwCalendar col = getCols().get(ev.getColPath());
-    if (col == null) {
-      throw new CalFacadeException(CalFacadeException.collectionNotFound);
-    }
+    Preferences prefs = null;
 
     if (getPars().getPublicAdmin()) {
-      Preferences prefs = (Preferences)getSvc().getPrefsHandler();
+      prefs = (Preferences)getSvc().getPrefsHandler();
 
       Collection<BwCategory> evcats = ev.getCategories();
 
@@ -1139,13 +1139,50 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       prefs.updateAdminPrefs(false,
-                             col,
+                             null,
                              null,
                              ev.getLocation(),
                              ev.getContact());
     }
 
-    return col;
+    BwCalendar col = getCols().get(ev.getColPath());
+    if (col != null) {
+      if (prefs != null) {
+        prefs.updateAdminPrefs(false,
+                               col,
+                               null, null, null);
+      }
+
+      return col;
+    }
+
+    if (!autoCreateCollection) {
+      throw new CalFacadeException(CalFacadeException.collectionNotFound);
+    }
+
+    // TODO - need a configurable default display name
+
+    // TODO - this all needs a rework
+
+    String entityType = IcalDefs.entityTypeIcalNames[ev.getEntityType()];
+    int calType;
+
+    if (entityType.equals(Component.VEVENT)) {
+      calType = BwCalendar.calTypeCalendarCollection;
+    } else if (entityType.equals(Component.VTODO)) {
+      calType = BwCalendar.calTypeTasks;
+    } else if (entityType.equals(Component.VPOLL)) {
+      calType = BwCalendar.calTypePoll;
+    } else {
+      return null;
+    }
+
+    CoreCalendarsI.GetSpecialCalendarResult gscr =
+            getCal().getSpecialCalendar(getPrincipal(), calType,
+                                        true,
+                                        PrivilegeDefs.privAny);
+
+    return gscr.cal;
   }
 
   /* Flag this as an attendee scheduling object or an organizer scheduling object

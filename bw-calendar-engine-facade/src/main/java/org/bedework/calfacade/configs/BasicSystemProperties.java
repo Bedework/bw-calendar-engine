@@ -196,18 +196,31 @@ public interface BasicSystemProperties extends Serializable {
   @MBeanInfo("user default polls calendar - do not change")
   String getUserDefaultPollsCalendar();
 
-  /** Set the defaultNotificationsName
+  /** Set the default notifications collection name
    *
    * @param val
    */
   void setDefaultNotificationsName(String val);
 
-  /** Get the defaultNotificationsName
+  /** Get the default notifications name
    *
-   * @return flag
+   * @return name
    */
   @MBeanInfo("name of notifications collection - do not change")
   String getDefaultNotificationsName();
+
+  /** Set the default managed attachments collection name
+   *
+   * @param val
+   */
+  void setDefaultAttachmentsName(String val);
+
+  /** Get the default attachments name
+   *
+   * @return name
+   */
+  @MBeanInfo("name of attachments collection - do not change")
+  String getDefaultAttachmentsName();
 
   /** Set the defaultReferencesName
    *

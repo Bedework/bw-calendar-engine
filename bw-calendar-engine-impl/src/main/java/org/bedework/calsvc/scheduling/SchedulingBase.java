@@ -468,6 +468,7 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
         getSvc().getEventsHandler().add(ei, noInvites,
                                         (calType == BwCalendar.calTypeInbox) ||
                                         (calType == BwCalendar.calTypeOutbox),
+                                        true,
                                         false);
 
         return null;
