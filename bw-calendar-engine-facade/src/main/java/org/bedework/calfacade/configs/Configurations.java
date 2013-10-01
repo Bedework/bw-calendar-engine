@@ -56,6 +56,12 @@ public interface Configurations extends Serializable {
   HttpConfig getHttpConfig() throws CalFacadeException;
 
   /**
+   * @return dump/restore properties
+   * @throws CalFacadeException
+   */
+  DumpRestoreProperties getDumpRestoreProperties() throws CalFacadeException;
+
+  /**
    * @return indexing properties
    * @throws CalFacadeException
    */

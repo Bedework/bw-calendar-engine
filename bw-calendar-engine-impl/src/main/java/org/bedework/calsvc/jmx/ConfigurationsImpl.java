@@ -23,6 +23,7 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.DirConfigProperties;
+import org.bedework.calfacade.configs.DumpRestoreProperties;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.configs.SynchConfig;
 import org.bedework.calfacade.configs.SystemProperties;
@@ -33,6 +34,7 @@ import org.bedework.util.config.ConfigurationStore;
 import org.bedework.util.http.service.HttpConfig;
 import org.bedework.util.http.service.HttpOut;
 import org.bedework.util.jmx.ConfBase;
+import org.bedework.util.servlet.io.PooledBuffers;
 
 import java.util.HashMap;
 import java.util.List;
@@ -75,16 +77,31 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   private static CardDavInfo authCardDavInfo;
 
-  private static BwIndexCtlMBean indexCtl;
-
   private static HttpConfig httpConfig;
 
-  private static IndexProperties indexProperties;
+  private static PooledBuffers pooledBuffers;
 
   private Map<String, DirConfigProperties> dirConfigs = new HashMap<>();
 
+  private static final String dumpRestoreClass =
+          "org.bedework.dumprestore.BwDumpRestore";
+
+  private static ConfBase dumpRestore;
+
+  private static DumpRestoreProperties dumpRestoreProperties;
+
   private static final String indexerCtlClass =
           "org.bedework.indexer.BwIndexCtl";
+
+  private static BwIndexCtlMBean indexCtl;
+
+  private static IndexProperties indexProperties;
+
+  private static final String chgnoteClass =
+          "org.bedework.chgnote.BwChgNote";
+
+  private static final String inoutClass =
+          "org.bedework.inoutsched.BwInoutSched";
 
   /**
    * @throws CalFacadeException
@@ -113,6 +130,11 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   }
 
   @Override
+  public String loadConfig() {
+    return null;
+  }
+
+  @Override
   public BasicSystemProperties getBasicSystemProperties() throws CalFacadeException {
     return basicProps;
   }
@@ -133,6 +155,11 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   @Override
   public HttpConfig getHttpConfig() throws CalFacadeException {
     return httpConfig;
+  }
+
+  @Override
+  public DumpRestoreProperties getDumpRestoreProperties() throws CalFacadeException {
+    return dumpRestoreProperties;
   }
 
   @Override
@@ -244,6 +271,20 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       ho.loadConfig();
       httpConfig = ho.getConfig();
 
+      /* ------------- Change notifications  -------------------- */
+      Object chg = loadInstance(chgnoteClass);
+
+      register(new ObjectName(((ConfBase)chg).getServiceName()), chg);
+
+      /* ------------- InoutSched -------------------- */
+      Object ios = loadInstance(inoutClass);
+
+      register(new ObjectName(((ConfBase)ios).getServiceName()), ios);
+
+      /* ------------- Pooled buffers -------------------- */
+      PooledBuffers pb = new PooledBuffers();
+      register(new ObjectName(pb.getServiceName()), pb);
+
       /* ------------- Synch properties -------------------- */
       SynchConf sc = new SynchConf();
       register(new ObjectName(sc.getServiceName()), sc);
@@ -265,6 +306,15 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       ci.loadConfig();
       ci.saveConfig();
       authCardDavInfo = ci.getConfig();
+
+      /* ------------- DumpRestore properties -------------------- */
+      Object dr = loadInstance(dumpRestoreClass);
+      dumpRestore = (ConfBase)dr;
+
+      register(new ObjectName(dumpRestore.getServiceName()), dumpRestore);
+      dumpRestore.loadConfig();
+      dumpRestore.saveConfig();
+      dumpRestoreProperties = (DumpRestoreProperties)dumpRestore.getConfig();
 
       /* ------------- Indexer properties -------------------- */
       Object idx = loadInstance(indexerCtlClass);

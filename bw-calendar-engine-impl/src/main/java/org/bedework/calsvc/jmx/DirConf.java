@@ -43,6 +43,11 @@ public class DirConf<X extends DirConfigPropertiesImpl> extends ConfBase<X>
     this.cfg = cfg;
   }
 
+  @Override
+  public String loadConfig() {
+    return null;
+  }
+
   /* ========================================================================
    * Conf properties
    * ======================================================================== */

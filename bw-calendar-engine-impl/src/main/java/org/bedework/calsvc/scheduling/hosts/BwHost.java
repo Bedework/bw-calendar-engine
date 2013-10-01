@@ -45,6 +45,11 @@ public class BwHost extends ConfBase implements BwHostMBean {
     setStore(configStore);
   }
 
+  @Override
+  public String loadConfig() {
+    return null;
+  }
+
   /**
    * @return the host info
    */

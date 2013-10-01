@@ -18,6 +18,7 @@
 */
 package org.bedework.dumprestore;
 
+import org.bedework.calfacade.configs.DumpRestoreProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcFactoryDefault;
@@ -27,13 +28,9 @@ import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
 import org.bedework.dumprestore.dump.Dump;
 import org.bedework.dumprestore.restore.Restore;
 import org.bedework.indexer.BwIndexCtlMBean;
+import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.MBeanUtil;
 import org.bedework.util.timezones.DateTimeUtil;
-
-import org.apache.geronimo.gbean.GBeanInfo;
-import org.apache.geronimo.gbean.GBeanInfoBuilder;
-import org.apache.geronimo.gbean.GBeanLifecycle;
-import org.apache.log4j.Logger;
 
 import java.util.List;
 
@@ -41,54 +38,10 @@ import java.util.List;
  * @author douglm
  *
  */
-public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
-  /** Geronimo gbean info
-   */
-  public static final GBeanInfo GBEAN_INFO;
-  static {
-    GBeanInfoBuilder infoB =
-        GBeanInfoBuilder.createStatic("DumpRestore", BwDumpRestore.class);
-    infoB.addAttribute("account", String.class, true);
-    infoB.addAttribute("skipPaths", String.class, true);
-
-    infoB.addAttribute("Create", "boolean", true);
-
-    /* Statement delimiter */
-    infoB.addAttribute("Delimiter", String.class, true);
-
-    /* Export to database? - false for safety - set true in console */
-    infoB.addAttribute("Export", "boolean", true);
-
-    /* Schema Output file name - full path, folders must exist */
-    infoB.addAttribute("SchemaOutFile", String.class, true);
-
-    /* XML data input file name - full path. Used for data restore */
-    infoB.addAttribute("DataIn", String.class, true);
-
-    /* XML data output directory - full path. Used for data dump */
-    infoB.addAttribute("DataOut", String.class, true);
-
-    /* XML data output file prefix - for data dump */
-    infoB.addAttribute("DataOutPrefix", String.class, true);
-
-    GBEAN_INFO = infoB.getBeanInfo();
-  }
-
-  private transient Logger log;
-
-  private boolean started;
-
-  private String account;
-
-  private String appname = "dumpres";
-
-  private String dataIn;
-
-  private String dataOut;
-
-  private String dataOutPrefix;
-
-  private String timezonesUri;
+public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
+        implements BwDumpRestoreMBean {
+  /* Name of the property holding the location of the config data */
+  public static final String confuriPname = "org.bedework.bwengine.confuri";
 
   private List<ExternalSubInfo> externalSubs;
 
@@ -118,13 +71,12 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
 
         Restore restorer = new Restore();
 
-        restorer.getConfigProperties(appname);
+        restorer.getConfigProperties();
 
         infoLines.addLn("Restore file: " + getDataIn());
         info("Restore file: " + getDataIn());
 
         restorer.setFilename(getDataIn());
-        restorer.setTimezonesUri(timezonesUri);
 
         restorer.open();
 
@@ -184,11 +136,7 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
 
         Dump d = new Dump(infoLines);
 
-        String[] args = new String[] {"-appname",
-                                      appname
-        };
-
-        d.getConfigProperties(args);
+        d.getConfigProperties();
 
         if (dumpAll) {
           infoLines.addLn("Started dump of data");
@@ -273,7 +221,8 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
         int failedCt = 0;
 
         if (debug) {
-          trace("About to process " + externalSubs.size() + " external subs");
+          debug("About to process " + externalSubs
+                  .size() + " external subs");
         }
 
         int ct = 0;
@@ -356,71 +305,77 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
 
   private SubsThread subs;
 
+  private final static String nm = "dumprestore";
+
+  /**
+   */
+  public BwDumpRestore() {
+    super(getServiceName(nm));
+
+    setConfigName(nm);
+
+    setConfigPname(confuriPname);
+  }
+
+  /**
+   * @param name
+   * @return object name value for the mbean with this name
+   */
+  public static String getServiceName(final String name) {
+    return "org.bedework.bwengine:service=" + name;
+  }
+
   /* ========================================================================
    * Attributes
    * ======================================================================== */
 
   @Override
-  public String getName() {
-    /* This apparently must be the same as the name attribute in the
-     * jboss service definition
-     */
-    return "org.bedework:service=DumpRestore";
-  }
-
-  @Override
   public void setAccount(final String val) {
-    account = val;
+    getConfig().setAccount(val);
   }
 
   @Override
   public String getAccount() {
-    return account;
-  }
-
-  @Override
-  public String getAppname() {
-    return appname;
+    return getConfig().getAccount();
   }
 
   @Override
   public void setDataIn(final String val) {
-    dataIn = val;
+    getConfig().setDataIn(val);
   }
 
   @Override
   public String getDataIn() {
-    return dataIn;
+    return getConfig().getDataIn();
   }
 
   @Override
   public void setDataOut(final String val) {
-    dataOut = val;
+    getConfig().setDataOut(val);
   }
 
   @Override
   public String getDataOut() {
-    return dataOut;
+    return getConfig().getDataOut();
   }
 
   @Override
   public void setDataOutPrefix(final String val) {
-    dataOutPrefix = val;
+    getConfig().setDataOutPrefix(val);
   }
 
   @Override
   public String getDataOutPrefix() {
-    return dataOutPrefix;
+    return getConfig().getDataOutPrefix();
+  }
+
+  public DumpRestoreProperties cloneIt() {
+    return getConfig().cloneIt();
   }
 
   @Override
-  public void setTimezonesUri(final String val) {
-    timezonesUri = val;
-  }
-
-  @Override
-  public String getTimezonesUri() {
-    return timezonesUri;
+  public String loadConfig() {
+    return loadConfig(DumpRestorePropertiesImpl.class);
   }
 
   @Override
@@ -522,34 +477,6 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
     return dump.infoLines;
   }
 
-  /* ========================================================================
-   * Lifecycle
-   * ======================================================================== */
-
-  @Override
-  public void create() {
-    // An opportunity to initialise
-  }
-
-  @Override
-  public void start() {
-    started = true;
-  }
-
-  @Override
-  public void stop() {
-    started = false;
-  }
-
-  @Override
-  public boolean isStarted() {
-    return started;
-  }
-
-  @Override
-  public void destroy() {
-  }
-
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
@@ -638,61 +565,5 @@ public class BwDumpRestore implements BwDumpRestoreMBean, GBeanLifecycle {
       svci.close();
     } catch (Throwable t) {
     }
-  }
-
-  /* ========================================================================
-   * Geronimo lifecycle methods
-   * ======================================================================== */
-
-  /**
-   * @return gbean info
-   */
-  public static GBeanInfo getGBeanInfo() {
-    return GBEAN_INFO;
-  }
-
-  @Override
-  public void doFail() {
-    stop();
-  }
-
-  @Override
-  public void doStart() throws Exception {
-    start();
-  }
-
-  @Override
-  public void doStop() throws Exception {
-    stop();
-  }
-
-  /* ====================================================================
-   *                   Protected methods
-   * ==================================================================== */
-
-  protected void info(final String msg) {
-    getLogger().info(msg);
-  }
-
-  protected void trace(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(this, t);
-  }
-
-  protected void error(final String msg) {
-    getLogger().error(msg);
-  }
-
-  /* Get a logger for messages
-   */
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
   }
 }

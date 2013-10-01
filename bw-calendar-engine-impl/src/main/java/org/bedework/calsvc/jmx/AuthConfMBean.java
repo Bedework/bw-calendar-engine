@@ -41,11 +41,4 @@ public interface AuthConfMBean extends ConfBaseMBean, AuthProperties {
   /* ========================================================================
    * Operations
    * ======================================================================== */
-
-  /** (Re)load the configuration
-   *
-   * @return status
-   */
-  @MBeanInfo("(Re)load the configuration")
-  String loadConfig();
 }

@@ -67,7 +67,12 @@ public class BwInoutSched extends ConfBase
    *
    */
   public BwInoutSched() {
-    super("org.bedework:service=BwInoutSched");
+    super("org.bedework.bwengine:service=BwInoutSched");
+  }
+
+  @Override
+  public String loadConfig() {
+    return null;
   }
 
   @Override

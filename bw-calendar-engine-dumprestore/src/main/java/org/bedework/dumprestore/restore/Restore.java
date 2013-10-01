@@ -61,8 +61,6 @@ import java.util.List;
 public class Restore implements Defs {
   private transient Logger log;
 
-  private String appName;
-
   /* File we restore from */
   private String filename;
 
@@ -96,20 +94,6 @@ public class Restore implements Defs {
    */
   public void setFilename(final String val) {
     filename = val;
-  }
-
-  /**
-   * @param val
-   */
-  public void setTimezonesUri(final String val) {
-    globals.setTimezonesUri(val);
-  }
-
-  /**
-   * @return uri for tz server
-   */
-  public String getTimezonesUri() {
-    return globals.getTimezonesUri();
   }
 
   /**
@@ -293,21 +277,9 @@ public class Restore implements Defs {
   }
 
   /**
-   * @param appName
    * @throws Throwable
    */
-  public void getConfigProperties(String appName) throws Throwable {
-    /* Look for the appname - the configured name for this applications
-     *  and initSyspars arg
-     */
-
-    this.appName = appName;
-
-    if (appName == null) {
-      error("Missing required argument -appname");
-      throw new Exception("Invalid args");
-    }
-
+  public void getConfigProperties() throws Throwable {
     globals.init();
   }
 

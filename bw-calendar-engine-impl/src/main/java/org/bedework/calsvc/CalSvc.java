@@ -121,7 +121,15 @@ public class CalSvc extends CalSvcI {
 
   private boolean debug;
 
-  private Configurations configs;
+  private static Configurations configs;
+
+  static {
+    try {
+      configs = new CalSvcFactoryDefault().getSystemConfig();
+    } catch (Throwable t) {
+      t.printStackTrace();
+    }
+  }
 
   private boolean open;
 
@@ -243,7 +251,10 @@ public class CalSvc extends CalSvcI {
     long start = System.currentTimeMillis();
 
     try {
-      configs = new CalSvcFactoryDefault().getSystemConfig();
+      if (configs == null) {
+        // Try again - failed at static init?
+        configs = new CalSvcFactoryDefault().getSystemConfig();
+      }
 
       open();
       beginTransaction();

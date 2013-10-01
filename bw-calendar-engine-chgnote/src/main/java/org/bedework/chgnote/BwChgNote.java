@@ -18,27 +18,16 @@
 */
 package org.bedework.chgnote;
 
-import org.apache.geronimo.gbean.GBeanInfo;
-import org.apache.geronimo.gbean.GBeanInfoBuilder;
-import org.apache.geronimo.gbean.GBeanLifecycle;
-import org.apache.log4j.Logger;
+import org.bedework.util.jmx.ConfBase;
 
 /**
  * @author douglm
  *
  */
-public class BwChgNote
-        implements BwChgNoteMBean, GBeanLifecycle {
-
-  /** Geronimo gbean info
-   */
-  public static final GBeanInfo GBEAN_INFO;
-  static {
-    GBeanInfoBuilder infoB =
-        GBeanInfoBuilder.createStatic("BwChgNote", BwChgNote.class);
-
-    GBEAN_INFO = infoB.getBeanInfo();
-  }
+public class BwChgNote extends ConfBase
+        implements BwChgNoteMBean {
+  /* Name of the property holding the location of the config data */
+  public static final String confuriPname = "org.bedework.engine.confuri";
 
   private class ProcessorThread extends Thread {
     private ChgProc cp;
@@ -64,13 +53,38 @@ public class BwChgNote
     }
   }
 
-  private transient Logger log;
-
   private ProcessorThread processor;
 
   private int retryLimit = 10;
 
   private MesssageCounts counts = new MesssageCounts("Notification processing counts");
+
+  private final static String nm = "ChangeNotifications";
+
+  public BwChgNote() {
+    super(getServiceName(nm));
+
+    setConfigName(nm);
+
+    setConfigPname(confuriPname);
+  }
+
+  /**
+   * @param name
+   * @return object name value for the mbean with this name
+   */
+  public static String getServiceName(final String name) {
+    return "org.bedework.engine:service=" + name;
+  }
+
+  @Override
+  public String loadConfig() {
+    return "No config to load";
+  }
+
+  /* ========================================================================
+   * Attributes
+   * ======================================================================== */
 
   @Override
   public void setRetryLimit(final int val) {
@@ -92,37 +106,10 @@ public class BwChgNote
   }
 
   @Override
-  public String getName() {
-    /* This apparently must be the same as the name attribute in the
-     * jboss service definition
-     */
-    return "org.bedework:service=BwChgNote";
-  }
-
-  /* an example say's we need this  - we'll see
-  public MBeanInfo getMBeanInfo() throws Exception {
-    InitialContext ic = new InitialContext();
-    RMIAdaptor server = (RMIAdaptor) ic.lookup("jmx/rmi/RMIAdaptor");
-
-    ObjectName name = new ObjectName(MBEAN_OBJ_NAME);
-
-    // Get the MBeanInfo for this MBean
-    MBeanInfo info = server.getMBeanInfo(name);
-    return info;
-  }
-  */
-
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexCtlMBean#isStarted()
-   */
-  @Override
   public boolean isStarted() {
     return (processor != null) && processor.isAlive();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexCtlMBean#start()
-   */
   @Override
   public synchronized void start() {
     if (processor != null) {
@@ -131,11 +118,11 @@ public class BwChgNote
     }
 
     info("************************************************************");
-    info(" * Starting " + getName());
+    info(" * Starting " + nm);
     info("************************************************************");
 
     try {
-      processor = new ProcessorThread(getName(),
+      processor = new ProcessorThread(nm,
                                         new ChgProc(counts,
                                                     retryLimit));
     } catch (Throwable t) {
@@ -146,9 +133,6 @@ public class BwChgNote
     processor.start();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexCtlMBean#stop()
-   */
   @Override
   public synchronized void stop() {
     if (processor == null) {
@@ -157,78 +141,22 @@ public class BwChgNote
     }
 
     info("************************************************************");
-    info(" * Stopping " + getName());
+    info(" * Stopping " + nm);
     info("************************************************************");
 
-    stopProc(processor);
-
-    info("************************************************************");
-    info(" * " + getName() + " terminated");
-    info("************************************************************");
-
-    processor = null;
-  }
-
-  /* ========================================================================
-   * Geronimo lifecycle methods
-   * ======================================================================== */
-
-  /**
-   * @return gbean info
-   */
-  public static GBeanInfo getGBeanInfo() {
-    return GBEAN_INFO;
-  }
-
-  @Override
-  public void doFail() {
-    stop();
-  }
-
-  @Override
-  public void doStart() throws Exception {
-    start();
-  }
-
-  @Override
-  public void doStop() throws Exception {
-    stop();
-  }
-
-  private void stopProc(final ProcessorThread p) {
-    if (p == null) {
-      return;
-    }
-
-    p.interrupt();
+    processor.interrupt();
     try {
-      p.join();
+      processor.join();
     } catch (InterruptedException ie) {
     } catch (Throwable t) {
       error("Error waiting for processor termination");
       error(t);
     }
-  }
 
-  /* Get a logger for messages
-   */
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
+    info("************************************************************");
+    info(" * " + nm + " terminated");
+    info("************************************************************");
 
-    return log;
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(this, t);
-  }
-
-  protected void error(final String msg) {
-    getLogger().error(msg);
-  }
-
-  protected void info(final String msg) {
-    getLogger().info(msg);
+    processor = null;
   }
 }

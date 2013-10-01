@@ -52,6 +52,11 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
     setConfigPname(confuriPname);
   }
 
+  @Override
+  public String loadConfig() {
+    return null;
+  }
+
   /* ================================= Operations =========================== */
 
   @Override

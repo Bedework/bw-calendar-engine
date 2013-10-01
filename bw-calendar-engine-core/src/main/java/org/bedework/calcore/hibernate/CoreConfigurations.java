@@ -80,6 +80,11 @@ public final class CoreConfigurations extends ConfBase {
     }
   }
 
+  @Override
+  public String loadConfig() {
+    return null;
+  }
+
   /**
    * @return db config.
    * @throws CalFacadeException

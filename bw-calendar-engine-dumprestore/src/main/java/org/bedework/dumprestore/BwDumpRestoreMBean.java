@@ -18,83 +18,18 @@
 */
 package org.bedework.dumprestore;
 
+import org.bedework.calfacade.configs.DumpRestoreProperties;
+import org.bedework.util.jmx.ConfBaseMBean;
+import org.bedework.util.jmx.MBeanInfo;
+
 import java.util.List;
 
 /** Run the dump/restore and/or the schema initialization as an mbean
  *
  * @author douglm
  */
-public interface BwDumpRestoreMBean {
-  /* ========================================================================
-   * Attributes
-   * ======================================================================== */
-
-  /** Name apparently must be the same as the name attribute in the
-   * jboss service definition
-   *
-   * @return Name
-   */
-  String getName();
-
-  /** Account we run under
-   *
-   * @param val
-   */
-  void setAccount(String val);
-
-  /**
-   * @return String account we use
-   */
-  String getAccount();
-
-  /**
-   * @return String application namee
-   */
-  String getAppname();
-
-  /** XML data input file name - full path. Used for data restore
-   *
-   * @param val
-   */
-  void setDataIn(String val);
-
-  /**
-   * @return XML data input file name - full path
-   */
-  String getDataIn();
-
-  /** XML data output directory name - full path. Used for data restore
-   *
-   * @param val
-   */
-  void setDataOut(String val);
-
-  /**
-   * @return XML data output directory name - full path
-   */
-  String getDataOut();
-
-  /** XML data output file prefix - for data dump
-   *
-   * @param val
-   */
-  void setDataOutPrefix(String val);
-
-  /**
-   * @return XML data output file prefix - for data dump
-   */
-  String getDataOutPrefix();
-
-  /**
-   * @param val
-   */
-  void setTimezonesUri(String val);
-
-  /**
-   * @return uri for tz server
-   */
-  String getTimezonesUri();
-
+public interface BwDumpRestoreMBean extends ConfBaseMBean,
+        DumpRestoreProperties {
   /* ========================================================================
    * Operations
    * ======================================================================== */
@@ -104,12 +39,14 @@ public interface BwDumpRestoreMBean {
    *
    * @return Completion message
    */
+  @MBeanInfo("Restores the data from the DataIn path")
   String restoreData();
 
   /** Returns status of the restore.
    *
    * @return Completion messages and stats
    */
+  @MBeanInfo("Show state of current restore")
   List<String> restoreStatus();
 
   /** Scan the system data looking for external subscriptions. When complete
@@ -117,6 +54,7 @@ public interface BwDumpRestoreMBean {
    *
    * @return Completion messages and stats
    */
+  @MBeanInfo("Fetch external subscriptions for a check")
   String fetchExternalSubs();
 
   /** Check external subscriptions discovered during the dump or restore. This will
@@ -124,53 +62,27 @@ public interface BwDumpRestoreMBean {
    *
    * @return Completion message
    */
+  @MBeanInfo("check external subscriptions")
   String checkExternalSubs();
 
   /** Returns status of the external subscriptions check.
    *
    * @return Completion messages and stats
    */
+  @MBeanInfo("Show status of external subscriptions check")
   List<String> checkSubsStatus();
 
   /** Starts a dump of the data to a file in the DataOut directory.
    *
    * @return Completion message
    */
+  @MBeanInfo("Dumps the data to a file in the DataOut directory")
   String dumpData();
 
   /** Returns status of the dump.
    *
    * @return Completion messages and stats
    */
+  @MBeanInfo("Show status of current data dump")
   List<String> dumpStatus();
-
-  /* ========================================================================
-   * Lifecycle
-   * ======================================================================== */
-
-  /** Lifecycle
-   *
-   */
-  void create();
-
-  /** Lifecycle
-   *
-   */
-  void start();
-
-  /** Lifecycle
-   *
-   */
-  void stop();
-
-  /** Lifecycle
-   *
-   * @return true if started
-   */
-  boolean isStarted();
-
-  /** Lifecycle
-   *
-   */
-  void destroy();
 }

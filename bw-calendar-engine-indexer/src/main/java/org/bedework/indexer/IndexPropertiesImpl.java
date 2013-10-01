@@ -32,8 +32,8 @@ import java.util.List;
  * @author douglm
  *
  */
-@ConfInfo(elementName = "system-properties",
-          type = "org.bedework.calfacade.configs.SystemProperties")
+@ConfInfo(elementName = "index-properties",
+          type = "org.bedework.calfacade.configs.IndexProperties")
 public class IndexPropertiesImpl
         extends ConfigBase<IndexPropertiesImpl>
         implements IndexProperties {

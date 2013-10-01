@@ -68,7 +68,17 @@
 		<dependency>
 			<groupId>org.apache.james.jdkim</groupId>
 			<artifactId>apache-jdkim-library</artifactId>
-		</dependency>
+      <exclusions>
+        <exclusion>
+          <artifactId>geronimo-activation_1.1_spec</artifactId>
+          <groupId>org.apache.geronimo.specs</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>geronimo-javamail_1.4_mail</artifactId>
+          <groupId>org.apache.geronimo.javamail</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>org.elasticsearch</groupId>
       <artifactId>elasticsearch</artifactId>

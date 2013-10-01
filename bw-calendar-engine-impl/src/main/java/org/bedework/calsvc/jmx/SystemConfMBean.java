@@ -76,10 +76,4 @@ public interface SystemConfMBean extends ConfBaseMBean, SystemProperties {
   @MBeanInfo("Provide some statistics.")
   List<Stat> getStats();*/
 
-  /** (Re)load the configuration
-   *
-   * @return status
-   */
-  @MBeanInfo("(Re)load the configuration")
-  String loadConfig();
 }

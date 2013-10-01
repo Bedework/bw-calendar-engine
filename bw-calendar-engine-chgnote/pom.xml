@@ -36,10 +36,6 @@
     </dependency>
 		<!-- Third Party Dependencies -->
 		<dependency>
-			<groupId>org.apache.geronimo.framework</groupId>
-			<artifactId>geronimo-kernel</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 		</dependency>

@@ -54,7 +54,7 @@ import java.util.TreeSet;
 
 /** Globals for the restore phase
  *
- * @author Mike Douglass   douglm   bedework.edu
+ * @author Mike Douglass   douglm   rpi.edu
  * @version 1.0
  */
 public class RestoreGlobals extends Counters {
@@ -282,45 +282,28 @@ public class RestoreGlobals extends Counters {
 
   private String defaultTzid;
 
-  private String timezonesUri;
-
-  /**
-   * @param val
-   */
-  public void setTimezonesUri(final String val) {
-    timezonesUri = val;
-  }
-
-  /**
-   * @return uri for tz server
-   */
-  public String getTimezonesUri() {
-    return timezonesUri;
-  }
-
   /** This must be called after syspars has been initialised.
    *
    * @throws Throwable
    */
   public void setTimezones() throws Throwable {
-    if (syspars.getTzid() == null) {
-      // Not enough info yet
-      return;
-    }
-
-    if ((defaultTzid != null) &&
-       (defaultTzid.equals(syspars.getTzid()))) {
+    if (defaultTzid != null) {
       // Already set
       return;
     }
 
-    if (getTimezonesUri() == null) {
-      throw new CalFacadeException("No timezones server URI defined");
+    if (syspars.getTzServeruri() == null) {
+      throw new CalFacadeException("No timezones server URI defined in syspars");
+    }
+    if (syspars.getTzid() == null) {
+      throw new CalFacadeException("No default TZid defined in syspars");
     }
 
-    Timezones.initTimezones(getTimezonesUri());
+    Timezones.initTimezones(syspars.getTzServeruri());
 
     Timezones.setSystemDefaultTzid(syspars.getTzid());
+
+    defaultTzid = syspars.getTzid();
   }
 
   /**

@@ -18,12 +18,14 @@
 */
 package org.bedework.chgnote;
 
+import org.bedework.util.jmx.ConfBaseMBean;
+import org.bedework.util.jmx.MBeanInfo;
 
 /** MBean for chnage notification processing.
  *
  * @author douglm
  */
-public interface BwChgNoteMBean {
+public interface BwChgNoteMBean extends ConfBaseMBean {
   /** Set the number of times we retry an incoming message when we get stale state
    * exceptions.
    *
@@ -34,34 +36,33 @@ public interface BwChgNoteMBean {
   /**
    * @return current limit
    */
+  @MBeanInfo("number of times we retry an incoming message when we get stale state" +
+                     " exceptions")
   public int getRetryLimit();
 
   /**
    * @return some counts
    */
+  @MBeanInfo("Some counts")
   public MesssageCounts getCounts();
-
-  /** Name apparently must be the same as the name attribute in the
-   * jboss service definition
-   *
-   * @return Name
-   */
-  public String getName();
 
   /** Lifecycle
    *
    */
+  @MBeanInfo("Start processing change notifications")
   public void start();
 
   /** Lifecycle
    *
    */
+  @MBeanInfo("Stop processing change notifications")
   public void stop();
 
   /** Lifecycle
    *
    * @return true if started
    */
+  @MBeanInfo("Are we processing change notifications")
   public boolean isStarted();
 
 }
