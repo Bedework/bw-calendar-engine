@@ -149,7 +149,7 @@ public class ESQueryFilter {
       // End of events must be on or after the start of the range
       RangeFilterBuilder rfb = new RangeFilterBuilder("end_utc");
 
-      rfb.gte(start);
+      rfb.gte(dateTimeUTC(start));
 
       if (fb == null) {
         fb = rfb;
@@ -166,7 +166,7 @@ public class ESQueryFilter {
       // Start of events must be before the end of the range
       RangeFilterBuilder rfb = new RangeFilterBuilder("start_utc");
 
-      rfb.lt(end);
+      rfb.lt(dateTimeUTC(end));
 
       if (fb == null) {
         fb = rfb;
@@ -182,6 +182,50 @@ public class ESQueryFilter {
     }
 
     return fb;
+  }
+
+  private String dateTimeUTC(final String dt) {
+    if (dt.length() == 16) {
+      return dt;
+    }
+
+    if (dt.length() == 15) {
+      return dt + "Z";
+    }
+
+    if (dt.length() == 8) {
+      return dt + "T000000Z";
+    }
+
+    return dt; // It's probably a bad date
+  }
+
+  private FilterBuilder doTimeRange(final TimeRangeFilter trf,
+                                    final boolean dateTimeField,
+                                    final String fld,
+                                    final String subfld) {
+    TimeRange tr = trf.getEntity();
+
+    RangeFilterBuilder rfb = FilterBuilders.rangeFilter(fld);
+
+    if (tr.getEnd() == null) {
+      rfb.gte(tr.getStart().toString());
+
+      return rfb;
+    }
+
+    if (tr.getStart() == null) {
+      rfb.lt(tr.getEnd().toString());
+
+      return rfb;
+    }
+
+    rfb.from(tr.getStart().toString());
+    rfb.to(tr.getEnd().toString());
+    rfb.includeLower(true);
+    rfb.includeUpper(false);
+
+    return rfb;
   }
 
   private FilterBuilder addTerm(final FilterBuilder filter,
