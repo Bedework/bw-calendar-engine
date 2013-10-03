@@ -18,7 +18,7 @@
 */
 package org.bedework.calfacade;
 
-import org.bedework.calfacade.base.BwShareableDbentity;
+import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.util.misc.Uid;
 
 /** Base for those classes that can be a property of an event and are all
@@ -32,7 +32,8 @@ import org.bedework.util.misc.Uid;
  *
  * @param <T>
  */
-public abstract class BwEventProperty<T> extends BwShareableDbentity<T> {
+public abstract class BwEventProperty<T> extends
+        BwShareableContainedDbentity<T> {
   private String uid;
 
   /** Constructor

@@ -95,13 +95,9 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.OrFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.RangeFilterBuilder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.rest.RestStatus;
@@ -121,6 +117,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.xml.ws.Holder;
 
+import static org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeCalendar;
 import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeCategory;
 import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeEvent;
@@ -328,9 +325,27 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     res.curQuery = QueryBuilders.queryString(query);
     srb.setQuery(res.curQuery);
 
-    res.curFilter = addPrincipal(null);
+    FilterBase f = null;
 
-    res.curFilter = addDateRangeFilter(res.curFilter, limits);
+    if (filter != null) {
+      ParseResult pr = getSvc().getFilterParser().parse(filter);
+
+      if (!pr.ok) {
+        if (pr.cfe != null) {
+          throw pr.cfe;
+        } else {
+          throw new CalFacadeException("bad expression", filter);
+        }
+      }
+
+      f = pr.filter;
+    }
+
+    ESQueryFilter ef = getFilters();
+
+    res.curFilter = ef.buildFilter(f);
+
+    res.curFilter = ef.addDateRangeFilter(res.curFilter, limits);
 
     SearchResponse resp = srb.setSearchType(SearchType.COUNT)
             .setFilter(res.curFilter).execute().actionGet();
@@ -692,12 +707,10 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
-    FilterBuilder fb = addPrincipal(addTerm(null, field, val));
-
     srb.setTypes(docTypeCategory);
 
     SearchResponse response = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setFilter(fb)
+            .setFilter(getFilters().buildFilter(field, val))
             .setFrom(0).setSize(60).setExplain(true)
             .execute()
             .actionGet();
@@ -724,8 +737,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     srb.setTypes(docTypeCategory);
 
-    FilterBuilder fb = addPrincipal(null);
-
     int tries = 0;
     int ourPos = 0;
     int ourCount = maxFetchCount;
@@ -734,7 +745,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     SearchResponse scrollResp = srb.setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
-            .setFilter(fb)
+            .setFilter(getFilters().buildFilter(null))
             .setSize(ourCount).execute().actionGet(); //ourCount hits per shard will be returned for each scroll
 
     if (scrollResp.status() != RestStatus.OK) {
@@ -803,19 +814,11 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     srb.setTypes(docTypeEvent);
 
-    FilterBuilder fb = null;
-
-    if (filter != null) {
-      fb = makeFilter(filter);
-    }
-
-    fb = addPrincipal(fb);
-
     long toFetch = count;
 
     SearchResponse scrollResp = srb.setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
-            .setFilter(fb)
+            .setFilter(getFilters().buildFilter(filter))
             .setSize(ourCount).execute().actionGet(); //ourCount hits per shard will be returned for each scroll
 
     if (scrollResp.status() != RestStatus.OK) {
@@ -886,68 +889,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
    *                   private methods
    * ======================================================================== */
 
-  private FilterBuilder makeFilter(final FilterBase f) throws CalFacadeException {
-    if (f instanceof AndFilter) {
-      AndFilterBuilder fb = new AndFilterBuilder();
-
-      for (FilterBase flt: f.getChildren()) {
-        fb.add(makeFilter(flt));
-      }
-
-      return fb;
-    }
-
-    if (f instanceof OrFilter) {
-      OrFilterBuilder fb = new OrFilterBuilder();
-
-      for (FilterBase flt: f.getChildren()) {
-        fb.add(makeFilter(flt));
-      }
-
-      return fb;
-    }
-
-    if (!(f instanceof PropertyFilter)) {
-      return null;
-    }
-
-    if (f instanceof PresenceFilter) {
-      return null;
-    }
-
-    if (f instanceof BwCreatorFilter) {
-      return FilterBuilders.termFilter("creator",
-                                       ((BwCreatorFilter)f)
-                                               .getEntity());
-    }
-
-    if (f instanceof BwCategoryFilter) {
-      BwCategory cat = ((BwCategoryFilter)f).getEntity();
-      return FilterBuilders.termFilter("category_uid",
-                                       cat.getUid());
-    }
-
-    if (f instanceof BwCollectionFilter) {
-      BwCalendar col = ((BwCollectionFilter)f).getEntity();
-
-      return FilterBuilders.termFilter("path",
-                                       col.getPath());
-    }
-
-    return null;
-
-    /*
-    if (f instanceof TimeRangeFilter) {
-      addThisJoin(pi);
-      return;
-    }
-
-    if (f instanceof BwObjectFilter) {
-      addThisJoin(pi);
-      return;
-    }*/
-  }
-
   /** Called to make or fill in a Key object.
    *
    * @param key   Possible Index.Key object for reuse
@@ -1015,6 +956,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     cat.setCreatorHref(getString(fields, "creator"));
     cat.setOwnerHref(getString(fields, "owner"));
     cat.setUid(getString(fields, "uid"));
+
+    cat.setColPath(getString(fields, "colPath"));
 
     return cat;
   }
@@ -1213,76 +1156,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     return BwDateTime.makeBwDateTime(dateType, local, utc, tzid,
                                      floating);
-  }
-
-  private FilterBuilder addDateRangeFilter(final FilterBuilder filter,
-                                           final SearchLimits limits) throws CalFacadeException {
-    if (limits == null) {
-      return filter;
-    }
-
-    return addDateRangeFilter(filter, limits.fromDate, limits.toDate);
-  }
-
-  private FilterBuilder addDateRangeFilter(final FilterBuilder filter,
-                                           final String start,
-                                           final String end) throws CalFacadeException {
-    if ((start == null) && (end == null)) {
-      return filter;
-    }
-
-    AndFilterBuilder afb = new AndFilterBuilder(filter);
-
-    if (start != null) {
-      // End of events must be on or after the start of the range
-      RangeFilterBuilder rfb = new RangeFilterBuilder("end_utc");
-
-      rfb.gte(start);
-      afb.add(rfb);
-    }
-
-    if (end != null) {
-      // Start of events must be before the end of the range
-      RangeFilterBuilder rfb = new RangeFilterBuilder("start_utc");
-
-      rfb.lt(end);
-      afb.add(rfb);
-    }
-
-    return afb;
-  }
-
-  private FilterBuilder addTerm(final FilterBuilder filter,
-                                final String name,
-                                final String val) throws CalFacadeException {
-    FilterBuilder fb = FilterBuilders.termFilter(name, val);
-
-    if (filter == null) {
-      return fb;
-    }
-
-    AndFilterBuilder afb = new AndFilterBuilder(filter);
-
-    afb.add(fb);
-
-    return afb;
-  }
-
-  private FilterBuilder addPrincipal(final FilterBuilder filter) throws CalFacadeException {
-    if (publick) {
-      return filter;
-    }
-
-    FilterBuilder fb = FilterBuilders.termFilter("owner", principal);
-
-    if (filter == null) {
-      return fb;
-    }
-
-    AndFilterBuilder afb = new AndFilterBuilder(filter);
-    afb.add(fb);
-
-    return afb;
   }
 
   /** Called to make a key value for a record.
@@ -1584,6 +1457,36 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     interestingXprops.put(BwXproperty.bedeworkEventRegEnd, "eventreg_end");
   }
 
+  private void setColPath(final BwCategory cat) throws CalFacadeException {
+    if (cat.getColPath() != null) {
+      return;
+    }
+
+    String path;
+
+    if (cat.getPublick()) {
+      path = Util.buildPath(true,
+                            "/public/categories/");
+    } else {
+      String homeDir;
+
+      if (getPrincipal().getKind() == Ace.whoTypeUser) {
+        homeDir = basicSysprops.getUserCalendarRoot();
+      } else {
+        homeDir = Util.pathElement(1, getPrincipalHref());
+      }
+
+      path = Util.buildPath(true,
+                            "/",
+                            homeDir,
+                            "/",
+                            getPrincipal().getAccount(),
+                            "/categories/");
+    }
+
+    cat.setColPath(path);
+  }
+
   private void makeDoc(final XContentBuilder builder,
                        final BwCategory cat) throws CalFacadeException {
     try {
@@ -1596,30 +1499,14 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       /* Manufacture a name and path for the time being - it's a required field */
       makeField(builder, "name", cat.getWord().getValue());
 
-      String path;
+      setColPath(cat);
 
-      if (cat.getPublick()) {
-        path = Util.buildPath(false,
-                              "/public/categories/",
-                              cat.getWord().getValue());
-      } else {
-        String acc;
+      makeField(builder, "colPath", cat.getColPath());
 
-        if (getPrincipal().getKind() == Ace.whoTypeUser) {
-          acc = getPrincipal().getAccount();
-        } else {
-          acc = getPrincipalHref();
-        }
-
-        path = Util.buildPath(false,
-                              basicSysprops.getUserCalendarRoot(),
-                              "/",
-                              acc,
-                              "/categories/",
-                              cat.getWord().getValue());
-      }
-
-      makeField(builder, "path", path);
+      makeField(builder, "path", Util.buildPath(false,
+                                                cat.getColPath(),
+                                                cat.getWord()
+                                                        .getValue()));
 
       makeField(builder, "category", cat.getWord());
       makeField(builder, "description", cat.getDescription());
@@ -2000,6 +1887,10 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
 
     throw new CalFacadeException("Unhandled type " + rec.getClass());
+  }
+
+  private ESQueryFilter getFilters() {
+    return new ESQueryFilter(publick, principal);
   }
 
   private String newIndexSuffix() {

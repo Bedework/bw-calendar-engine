@@ -27,7 +27,7 @@ package org.bedework.calsvc.indexing;
  *
  * <p>In any case, this class defines the names of all the fields we index.
  *
- * @author Mike Douglass douglm  bedework.edu
+ * @author Mike Douglass douglm  rpi.edu
  *
  */
 public class BwIndexDefs {
