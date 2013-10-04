@@ -530,7 +530,8 @@ public abstract class SimpleFilterParser {
                                 final int oper,
                                 final TimeRange timeRange,
                                 final TextMatchType match,
-                                final Collection<ParamFilterType> paramFilters) throws CalFacadeException {
+                                    final Collection<ParamFilterType> paramFilters)
+          throws CalFacadeException {
     FilterBase filter = null;
     final boolean exact = (oper != like) && (oper != notLike);
 
@@ -547,23 +548,40 @@ public abstract class SimpleFilterParser {
       filter = ObjectFilter.makeFilter(null, pi, timeRange);
     } else if (match != null) {
       if (pi.equals(PropertyInfoIndex.CATEGORIES)) {
-        BwCategory cat = getCategoryByName(match.getValue());
+        String val = match.getValue();
 
-        if (cat == null) {
-          throw new CalFacadeException(CalFacadeException.filterBadProperty,
-                  "category name: " + match.getValue());
+        if (val.startsWith("/")) {
+          // Assume a path match
+          ObjectFilter<String> f = new ObjectFilter<>(null, pi);
+          f.setEntity(val);
+
+          f.setCaseless(false);
+
+          f.setExact(exact);
+          f.setNot(match.getNegateCondition().equals("yes"));
+
+          filter = f;
+        } else {
+          // Try for name
+
+          BwCategory cat = getCategoryByName(val);
+
+          if (cat == null) {
+            throw new CalFacadeException(CalFacadeException.filterBadProperty,
+                    "category name: " + match.getValue());
+          }
+
+          ObjectFilter<BwCategory> f = new BwCategoryFilter(null);
+
+          f.setEntity(cat);
+
+          f.setExact(exact);
+          f.setNot(match.getNegateCondition().equals("yes"));
+
+          filter = f;
         }
-
-        ObjectFilter<BwCategory> f = new BwCategoryFilter(null);
-
-        f.setEntity(cat);
-
-        f.setExact(exact);
-        f.setNot(match.getNegateCondition().equals("yes"));
-
-        filter = f;
       } else {
-        ObjectFilter<String> f = new ObjectFilter<String>(null, pi);
+        ObjectFilter<String> f = new ObjectFilter<>(null, pi);
         f.setEntity(match.getValue());
 
         f.setCaseless(Filters.caseless(match));

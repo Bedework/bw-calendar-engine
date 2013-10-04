@@ -576,7 +576,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
   @Override
   public List<String> listIndexes() throws CalFacadeException {
-    List<String> res = new ArrayList<String>();
+    List<String> res = new ArrayList<>();
 
     try {
       IndicesAdminClient idx = getAdminIdx();
@@ -586,7 +586,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       ActionFuture<IndicesStatusResponse> sr = idx.status(isrb.request());
       IndicesStatusResponse sresp  = sr.actionGet();
 
-      return new ArrayList<String>(sresp.getIndices().keySet());
+      return new ArrayList<>(sresp.getIndices().keySet());
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -595,7 +595,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   @Override
   public List<String> purgeIndexes(final List<String> preserve) throws CalFacadeException {
       List<String> indexes = listIndexes();
-      List<String> purged = new ArrayList<String>();
+      List<String> purged = new ArrayList<>();
 
       if (Util.isEmpty(indexes)) {
         return purged;
@@ -626,8 +626,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
        */
 
       IndicesAdminClient idx = getAdminIdx();
-
-      List<String> indices = listIndexes();
 
       IndicesGetAliasesRequestBuilder igarb = idx.prepareGetAliases(
               other);
@@ -933,7 +931,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     BwCategory cat = new BwCategory();
 
     cat.setWord(new BwString(null,
-                             getString(fields, "category")));
+                             getString(fields, "value")));
     cat.setDescription(new BwString(null,
                                     getString(fields,
                                               "description")));
@@ -941,6 +939,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     cat.setOwnerHref(getString(fields, "owner"));
     cat.setUid(getString(fields, "uid"));
 
+    cat.setName(getString(fields, "name"));
     cat.setColPath(getString(fields, "colPath"));
 
     return cat;
@@ -1452,10 +1451,23 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
 
     String path;
+    String extra = cat.getWordVal();
+    String name;
+
+    int pos = extra.lastIndexOf("/");
+
+    if (pos < 0) {
+      name = extra;
+      extra = "";
+    } else {
+      name = extra.substring(pos + 1);
+      extra = extra.substring(0, pos);
+    }
 
     if (cat.getPublick()) {
       path = Util.buildPath(true,
-                            "/public/categories/");
+                            "/public/categories/",
+                            extra);
     } else {
       String homeDir;
 
@@ -1470,10 +1482,12 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
                             homeDir,
                             "/",
                             getPrincipal().getAccount(),
-                            "/categories/");
+                            "/categories/",
+                            extra);
     }
 
     cat.setColPath(path);
+    cat.setName(name);
   }
 
   /* Return the type for the indexer */
@@ -1484,17 +1498,21 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       makeField(builder, "creator", cat.getCreatorHref());
       makeField(builder, "owner", cat.getOwnerHref());
 
-      /* Manufacture a name and path for the time being - it's a required field */
-      makeField(builder, "name", cat.getWord().getValue());
+      /* We don't have real collections. It's been the practice to
+         create "/" delimited names to emulate a hierarchy. Look out
+         for these and try to create a real path based on them.
+       */
+
+      makeField(builder, "value", cat.getWord().getValue());
 
       setColPath(cat);
 
+      makeField(builder, "name", cat.getName());
       makeField(builder, "colPath", cat.getColPath());
 
-      makeField(builder, "path", Util.buildPath(false,
+      makeField(builder, "category_path", Util.buildPath(false,
                                                 cat.getColPath(),
-                                                cat.getWord()
-                                                        .getValue()));
+                                                cat.getName()));
 
       makeField(builder, "category", cat.getWord());
       makeField(builder, "description", cat.getDescription());
@@ -1752,8 +1770,12 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
 
     for (BwCategory cat: cats) {
+      setColPath(cat);
       makeField(builder, "category", cat.getWord().getValue());
       makeField(builder, "category_uid", cat.getUid());
+      makeField(builder, "category_path", Util.buildPath(false,
+                                                         cat.getColPath(),
+                                                         cat.getName()));
     }
   }
 

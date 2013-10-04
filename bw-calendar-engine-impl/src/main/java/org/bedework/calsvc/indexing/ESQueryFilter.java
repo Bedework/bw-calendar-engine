@@ -336,6 +336,12 @@ public class ESQueryFilter {
                                        cat.getUid());
     }
 
+    if (pi.equals(PropertyIndex.PropertyInfoIndex.CATEGORIES)) {
+      // Path match for category
+      return FilterBuilders.termFilter("category_path",
+                                       ((ObjectFilter)pf).getEntity());
+    }
+
     if (pf instanceof BwCollectionFilter) {
       BwCalendar col = ((BwCollectionFilter)pf).getEntity();
 

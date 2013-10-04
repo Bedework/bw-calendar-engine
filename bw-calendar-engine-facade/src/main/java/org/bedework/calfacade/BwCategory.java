@@ -40,6 +40,10 @@ public class BwCategory extends BwEventProperty<BwCategory>
   private BwString word;
   private BwString description;
 
+  /* Not persisted in the db */
+
+  private String name;
+
   /** Constructor
    */
   public BwCategory() {
@@ -101,6 +105,22 @@ public class BwCategory extends BwEventProperty<BwCategory>
   public void deleteDescription() {
     addDeletedEntity(getDescription());
     setDescription(null);
+  }
+
+  /** Set the category's name (indexer)
+   *
+   * @param val    String name
+   */
+  public void setName(final String val) {
+    name = val;
+  }
+
+  /** Get the category's name
+   *
+   *  @return name
+   */
+  public String getName() {
+    return name;
   }
 
   /* ====================================================================
