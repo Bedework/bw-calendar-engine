@@ -18,24 +18,11 @@
 */
 package org.bedework.calsvc.indexing;
 
-import org.bedework.caldav.util.filter.ObjectFilter;
-import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwDateTime;
-import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.BwEventAnnotation;
-import org.bedework.calfacade.BwEventProxy;
-import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
-import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.EventsI;
-import org.bedework.util.calendar.PropertyIndex;
+import org.bedework.calsvci.indexing.BwIndexer;
 import org.bedework.util.indexing.Index;
 import org.bedework.util.indexing.IndexException;
 
 import java.io.CharArrayWriter;
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * @author Mike Douglass douglm @ rpi.edu
@@ -66,31 +53,8 @@ public class BwIndexKey extends Index.Key {
    * @param path
    */
   public BwIndexKey(final String path) {
-    this(BwIndexDefs.itemTypeCalendar, path);
-  }
-
-  /** Constructor for an event key
-   *
-   * @param path
-   * @param uid
-   * @param rid
-   */
-  public BwIndexKey(final String path, final String uid, final String rid) {
-    itemType = BwIndexDefs.itemTypeEvent;
+    itemType = BwIndexer.docTypeCollection;
     key1 = path;
-    key2 = uid;
-    key3 = rid;
-  }
-
-  /** Constructor for a single valued key
-   *
-   * @param itemType - type of indexed item
-   * @param k the key
-   */
-  public BwIndexKey(final String itemType,
-                    final String k) {
-    this.itemType = itemType;
-    key1 = k;
   }
 
   /** Constructor for an event key
@@ -166,11 +130,11 @@ public class BwIndexKey extends Index.Key {
    * @throws IndexException
    */
   public String getKey() throws IndexException {
-    if (itemType.equals(BwIndexDefs.itemTypeCalendar)) {
+    if (itemType.equals(BwIndexer.docTypeCollection)) {
       return key1;  // Path
     }
 
-    if (itemType.equals(BwIndexDefs.itemTypeCategory)) {
+    if (itemType.equals(BwIndexer.docTypeCategory)) {
       return makeCategoryKey(key1);
     }
 
@@ -202,125 +166,10 @@ public class BwIndexKey extends Index.Key {
 
   /** Will return either a BwCalendar or a Collection of EventInfo.
    *
-   * @see edu.rpi.cct.misc.indexing.Index.Key#getRecord()
    */
   @Override
   public Object getRecord() throws IndexException {
     throw new RuntimeException("org.bedework.wrong.method");
-  }
-
-  /** Will return either a BwCalendar or a Collection of EventInfo.
-   *
-   * @param svci
-   * @param dtStart
-   * @param dtEnd
-   * @return BwCalendar or a Collection of EventInfo
-   * @throws IndexException
-   */
-  public Object getRecord(final CalSvcI svci,
-                          final BwDateTime dtStart,
-                          final BwDateTime dtEnd) throws IndexException {
-    try {
-      if (itemType == null) {
-        throw new IndexException("org.bedework.index.nullkeyitemtype");
-      }
-
-      if (itemType.equals(BwIndexDefs.itemTypeCalendar)) {
-        return svci.getCalendarsHandler().get(key1);
-      }
-
-      if (itemType.equals(BwIndexDefs.itemTypeCategory)) {
-        return svci.getCategoriesHandler().get(key1);
-      }
-
-      if (itemType.equals(BwIndexDefs.itemTypeEvent)) {
-        BwCalendar cal = svci.getCalendarsHandler().get(key1);
-        if (cal == null) {
-          return null;
-        }
-
-        EventsI evhandler = svci.getEventsHandler();
-        if (((dtStart == null) && (dtEnd == null)) ||
-            (key3 != null)) {
-          Collection<EventInfo> evis = evhandler.get(key1, key2, key3,
-                                                     new RecurringRetrievalMode(),
-                                                     false);
-
-          if (key3 == null) {
-            return evis;
-          }
-
-          if ((dtStart == null) && (dtEnd == null)) {
-            return evis;
-          }
-
-          Collection<EventInfo> resEvis = new ArrayList<EventInfo>();
-          String start = null;
-          String end = null;
-
-          if (dtStart != null) {
-            start = dtStart.getDate();
-          }
-
-          if (dtEnd != null) {
-            end = dtEnd.getDate();
-          }
-
-          for (EventInfo ei: evis) {
-            if (ei.getEvent().inDateTimeRange(start, end)) {
-              resEvis.add(ei);
-            }
-          }
-
-          return resEvis;
-        }
-
-        ObjectFilter<String> filter = new ObjectFilter<String>(null,
-            PropertyIndex.PropertyInfoIndex.UID);
-        filter.setEntity(key2);
-        filter.setExact(true);
-        filter.setCaseless(false);
-
-        Collection<EventInfo> evis = evhandler.getEvents(cal, filter,
-                                                         dtStart, dtEnd,
-                                                         null, // retrieveList
-                                           new RecurringRetrievalMode());
-
-        /* Filter out the overridden events as they are indexed separately.
-         * We should really have a flag for this - for the moment check the
-         * annotation for any instance.
-         */
-
-        Collection<EventInfo> resEvis = new ArrayList<EventInfo>();
-
-        for (EventInfo ei: evis) {
-          BwEvent ev = ei.getEvent();
-
-          if (!(ev instanceof BwEventProxy)) {
-            resEvis.add(ei);
-            continue;
-          }
-
-          BwEventAnnotation ann = ((BwEventProxy)ev).getRef();
-
-          if (ann.unsaved()) {
-            // This is an instance that is not overrriden
-            resEvis.add(ei);
-          }
-        }
-
-        return resEvis;
-      }
-
-      throw new IndexException(IndexException.unknownRecordType,
-                               itemType);
-    } catch (IndexException ie) {
-      throw ie;
-    } catch (CalFacadeAccessException cae) {
-      return null;
-    } catch (Throwable t) {
-      throw new IndexException(t);
-    }
   }
 
   /* ====================================================================
@@ -369,55 +218,6 @@ public class BwIndexKey extends Index.Key {
 
     pos -= n;
   }
-
-  /* * Get current position
-   *
-   * @return int position
-   * /
-  public int getPos() {
-    return pos;
-  }
-
-  /* * Set current position
-   *
-   * @param val  int position
-   * /
-  public void setPos(final int val) {
-    pos = val;
-  }
-
-  /* * Get number of chars remaining
-   *
-   * @return int number of chars remaining
-   * /
-  public int remaining() {
-    if (encoded == null) {
-      return 0;
-    }
-    return encoded.length - pos;
-  }
-
-  /* * Test for more
-   *
-   * @return boolean true for more
-   * /
-  public boolean hasMore() {
-    return remaining() > 0;
-  }
-
-  /* * Test for no more
-   *
-   * @return boolean true for no more
-   * /
-  public boolean empty() {
-    return (encoded == null) || (encoded.length == 0);
-  }
-
-  /* * Rewind to the start
-   * /
-  private void rewind() {
-    pos = 0;
-  }*/
 
   /** Return the value of a blank terminated length. On success current pos
    * has been incremented.

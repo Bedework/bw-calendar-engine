@@ -94,7 +94,7 @@ import java.util.List;
  *
  * <p>where the filters and subscriptions are a bunch of parenthesised tests.
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm rpi.edu
  */
 public class Filters implements Serializable {
   private transient Logger log;
@@ -443,10 +443,16 @@ public class Filters implements Serializable {
               both = new OrFilter();
             }
 
-            both.addChild(new BwObjectFilter(null,
-                  EntityTypeFilter.vavailabilityFilter(null, not)));
-            both.addChild(new BwObjectFilter(null,
-                  EntityTypeFilter.availableFilter(null, not)));
+            try {
+              both.addChild(EntityTypeFilter.makeEntityTypeFilter(null,
+                                                                  "vavailability",
+                                                                  false));
+              both.addChild(EntityTypeFilter.makeEntityTypeFilter(null,
+                                                                  "available",
+                                                                  false));
+            } catch (Throwable t) {
+              throw new CalFacadeException(t);
+            }
 
             return both;
           }

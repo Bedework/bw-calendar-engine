@@ -32,6 +32,7 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
   private String targetPrincipalHref;
 
   private boolean publick;
+  private String type;
   private String uid;
   private String rid;
 
@@ -42,6 +43,7 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
    * @param href
    * @param shared
    * @param publick
+   * @param type of entity
    * @param uid
    * @param rid
    * @param notification
@@ -53,6 +55,7 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
                             final String href,
                             final boolean shared,
                             final boolean publick,
+                            final String type,
                             final String uid,
                             final String rid,
                             final String notification,
@@ -62,6 +65,7 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
     this.notification = notification;
     this.targetPrincipalHref = targetPrincipalHref;
     this.publick = publick;
+    this.type = type;
     this.uid = uid;
     this.rid = rid;
   }
@@ -82,6 +86,14 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
    */
   public boolean getPublick() {
     return publick;
+  }
+
+  /** Get the type of entity
+   *
+   * @return String   type
+   */
+  public String getType() {
+    return type;
   }
 
   /** Get the uid

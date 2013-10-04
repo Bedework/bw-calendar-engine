@@ -39,9 +39,10 @@ import javax.xml.ws.Holder;
  */
 public interface BwIndexer extends Serializable {
   // Types of entity we index
-  static final String docTypeEvent = "event";
   static final String docTypeCollection = "collection";
   static final String docTypeCategory = "category";
+
+  /* Other types are those defined in IcalDefs.entityTypeNames */
 
   /** Called to find entries that match the search string. This string may
    * be a simple sequence of keywords or some sort of query the syntax of

@@ -167,8 +167,16 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     Collection<EventInfo> events = new TreeSet<EventInfo>();
     /* Only events and freebusy for freebusy reports. */
     FilterBase filter = new OrFilter();
-    filter.addChild(EntityTypeFilter.eventFilter(null, false));
-    filter.addChild(EntityTypeFilter.freebusyFilter(null, false));
+    try {
+      filter.addChild(EntityTypeFilter.makeEntityTypeFilter(null,
+                                                            "event",
+                                                            false));
+      filter.addChild(EntityTypeFilter.makeEntityTypeFilter(null,
+                                                            "freeAndBusy",
+                                                            false));
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
 
     String userHref = who.getPrincipalRef();
 

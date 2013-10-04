@@ -25,7 +25,6 @@ import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calsvc.indexing.BwIndexDefs;
 import org.bedework.calsvc.indexing.BwIndexKey;
 import org.bedework.calsvci.indexing.BwIndexer;
 import org.bedework.sysevents.events.CollectionChangeEvent;
@@ -226,7 +225,7 @@ public class MessageProcessor extends CalSys {
 
   private void doEntityDelete(final EntityDeletedEvent ede)
        throws CalFacadeException {
-    RemovalKey rk = new RemovalKey(BwIndexDefs.itemTypeEventMaster,
+    RemovalKey rk = new RemovalKey(ede.getType(),
                                    ede.getPublick(),
                                    ede.getOwnerHref(),
                                    getParentPath(ede.getHref()),

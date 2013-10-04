@@ -128,7 +128,7 @@ import java.util.TreeSet;
  * allow update of events owned by the current user but must display all
  * public categories for use.
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm rpi.edu
  */
 public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   private static CoreConfigurations configs = CoreConfigurations.getConfigs();
@@ -1919,8 +1919,16 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
           throws CalFacadeException {
     /* Only events and freebusy for freebusy reports. */
     FilterBase filter = new OrFilter();
-    filter.addChild(EntityTypeFilter.eventFilter(null, false));
-    filter.addChild(EntityTypeFilter.freebusyFilter(null, false));
+    try {
+      filter.addChild(EntityTypeFilter.makeEntityTypeFilter(null,
+                                                            "event",
+                                                            false));
+      filter.addChild(EntityTypeFilter.makeEntityTypeFilter(null,
+                                                            "freeAndBusy",
+                                                            false));
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
 
     RecurringRetrievalMode rrm = new RecurringRetrievalMode(
                         Rmode.expanded, start, end);

@@ -259,6 +259,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
    * @param href
    * @param shared
    * @param publick
+   * @param type of entity
    * @param uid
    * @param rid
    * @param notification - as the event won't be around
@@ -272,6 +273,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
                                                 final String href,
                                                 final boolean shared,
                                                 final boolean publick,
+                                                final String type,
                                                 final String uid,
                                                 final String rid,
                                                 final String notification,
@@ -281,7 +283,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
         new EntityDeletedEvent(code,
                                authPrincipalHref,
                                ownerHref,
-                               href, shared, publick, uid, rid,
+                               href, shared, publick, type, uid, rid,
                                notification,
                                targetPrincipalHref);
     return sysev;

@@ -621,23 +621,11 @@ public abstract class SimpleFilterParser {
   }
 
   private FilterBase entityFilter(final String val) throws CalFacadeException {
-    if ("event".equals(val)) {
-      return EntityTypeFilter.eventFilter(null, false);
+    try {
+      return EntityTypeFilter.makeEntityTypeFilter(null, val, false);
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
     }
-
-    if ("task".equals(val)) {
-      return EntityTypeFilter.todoFilter(null, false);
-    }
-
-    if ("journal".equals(val)) {
-      return EntityTypeFilter.journalFilter(null, false);
-    }
-
-    if ("freebusy".equals(val)) {
-      return EntityTypeFilter.freebusyFilter(null, false);
-    }
-
-    return null;
   }
 
   private TimeRange getTimeRange() throws CalFacadeException {

@@ -118,9 +118,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import javax.xml.ws.Holder;
 
 import static org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
-import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeCalendar;
-import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeCategory;
-import static org.bedework.calsvc.indexing.BwIndexDefs.itemTypeEvent;
 
 /** Implementation of indexer for ElasticSearch
  *
@@ -226,9 +223,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvc.indexing.BwIndexer#setBatchSize(int)
-   */
   @Override
   public void setBatchSize(final int val) {
     batchMaxSize = val;
@@ -241,16 +235,10 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     */
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvc.indexing.BwIndexer#endBwBatch()
-   */
   @Override
   public void endBwBatch() throws CalFacadeException {
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvc.indexing.BwIndexer#flush()
-   */
   @Override
   public void flush() throws CalFacadeException {
   }
@@ -416,7 +404,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         entity = makeCollection(fields);
       } else if (dtype.equals(docTypeCategory)) {
         entity = makeCat(fields);
-      } else if (dtype.equals(docTypeEvent)) {
+      } else if (IcalDefs.entityTypes.contains(dtype)) {
         entity = makeEvent(fields);
       } else {
         throw new CalFacadeException(IndexException.unknownRecordType,
@@ -469,9 +457,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     return num;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvc.indexing.BwIndexer#indexEntity(java.lang.Object)
-   */
   @Override
   public void indexEntity(final Object rec) throws CalFacadeException {
     try {
@@ -508,13 +493,18 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       builder.startObject();
 
-      index(builder, rec);
+      String type = index(builder, rec);
+
+      if (type == null) {
+        // Bad record?
+        return;
+      }
 
       builder.endObject();
 
       UpdateRequestBuilder req = getClient().prepareUpdate(targetIndex,
-                                                    getType(rec),
-                                                    makeKeyVal(rec));
+                                                           type,
+                                                           makeKeyVal(rec));
       UpdateResponse resp = req.setDoc(builder)
               .setDocAsUpsert(true)
               .execute().actionGet();
@@ -523,9 +513,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvc.indexing.BwIndexer#unindexEntity(java.lang.Object)
-   */
   @Override
   public void unindexEntity(final Object rec) throws CalFacadeException {
     //try {
@@ -546,9 +533,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     //}
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvc.indexing.BwIndexer#setCleanLocks(boolean)
-   */
   @Override
   public void setCleanLocks(final boolean val) {
     throw new RuntimeException("unimplemented");
@@ -812,7 +796,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
-    srb.setTypes(docTypeEvent);
+    srb.setTypes(IcalDefs.entityTypeNames[IcalDefs.entityTypeEvent],
+                 IcalDefs.entityTypeNames[IcalDefs.entityTypeTodo]);
 
     long toFetch = count;
 
@@ -924,14 +909,13 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       throw new CalFacadeException("org.bedework.index.noitemkey");
     }
 
+    bwkey.setItemType(dtype);
+
     if (dtype.equals(docTypeCollection)) {
-      bwkey.setItemType(itemTypeCalendar);
       bwkey.setKey1(kval);
     } else if (dtype.equals(docTypeCategory)) {
-      bwkey.setItemType(itemTypeCategory);
       bwkey.setKey1(kval);
-    } else if (dtype.equals(docTypeEvent)) {
-      bwkey.setItemType(itemTypeEvent);
+    } else if (IcalDefs.entityTypes.contains(dtype)) {
       try {
         bwkey.setEventKey(kval);
       } catch (IndexException ie) {
@@ -1192,16 +1176,15 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
                              rec.getClass().getName());
   }
 
-  private void index(final XContentBuilder builder,
-                     final Object rec) throws CalFacadeException {
+  /* Return the type for the indexer */
+  private String index(final XContentBuilder builder,
+                       final Object rec) throws CalFacadeException {
     if (rec instanceof BwCalendar) {
-      makeDoc(builder, rec, null, null, null);
-      return;
+      return makeDoc(builder, rec, null, null, null);
     }
 
     if (rec instanceof BwCategory) {
-      makeDoc(builder, (BwCategory)rec);
-      return;
+      return makeDoc(builder, (BwCategory)rec);
     }
 
     if (!(rec instanceof EventInfo)) {
@@ -1216,18 +1199,18 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       BwEvent ev = ei.getEvent();
 
       if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
-        makeDoc(builder,
-                rec,
-                ev.getDtstart(),
-                ev.getDtend(),
-                ev.getRecurrenceId());
-        return;
+        return makeDoc(builder,
+                       rec,
+                       ev.getDtstart(),
+                       ev.getDtend(),
+                       ev.getRecurrenceId());
       }
 
       /* Emit all instances that aren't overridden. */
 
       int maxYears;
       int maxInstances;
+      String itemType = null;
 
       if (ev.getPublick()) {
         maxYears = unauthpars.getMaxYears();
@@ -1241,7 +1224,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       if (rp.instances.isEmpty()) {
         // No instances for an alleged recurring event.
-        return;
+        return null;
         //throw new CalFacadeException(CalFacadeException.noRecurrenceInstances);
       }
 
@@ -1253,7 +1236,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       /* First build a table of overrides so we can skip these later
        */
-      Map<String, String> overrides = new HashMap<String, String>();
+      Map<String, String> overrides = new HashMap<>();
 
       /*
       if (!Util.isEmpty(ei.getOverrideProxies())) {
@@ -1266,11 +1249,11 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         for (EventInfo oei: ei.getOverrides()) {
           BwEvent ov = oei.getEvent();
           overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
-          makeDoc(builder,
-                  oei,
-                  ov.getDtstart(),
-                  ov.getDtend(),
-                  ov.getRecurrenceId());
+          itemType = makeDoc(builder,
+                             oei,
+                             ov.getDtstart(),
+                             ov.getDtend(),
+                             ov.getRecurrenceId());
 
         }
       }
@@ -1297,11 +1280,11 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
         BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
-        makeDoc(builder,
-                rec,
-                rstart,
-                rend,
-                recurrenceId);
+        itemType = makeDoc(builder,
+                           rec,
+                           rstart,
+                           rend,
+                           recurrenceId);
 
         instanceCt--;
         if (instanceCt == 0) {
@@ -1309,6 +1292,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
           break;
         }
       }
+
+      return itemType;
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
@@ -1349,9 +1334,12 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       }
 
       if (rec instanceof BwIndexKey) {
+        /* Only used for deletion. The only key needed here is the
+           path of the entity (+ the recurrence id for an instance)
+         */
         BwIndexKey ik = (BwIndexKey)rec;
 
-        res.add(new TypeId(docTypeEvent, makeKeyVal(ik.getKey())));
+        res.add(new TypeId(ik.getItemType(), makeKeyVal(ik.getKey())));
 
         return res;
       }
@@ -1365,9 +1353,10 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       EventInfo ei = (EventInfo)rec;
       BwEvent ev = ei.getEvent();
+      String type = IcalDefs.entityTypeNames[ev.getEntityType()];
 
       if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
-        res.add(new TypeId(docTypeEvent,
+        res.add(new TypeId(type,
                            makeKeyVal(keyConverter.makeEventKey(ev.getColPath(),
                                                      ev.getUid(),
                                                      ev.getRecurrenceId()))));
@@ -1377,7 +1366,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       /* Delete any possible non-recurring version */
 
-      res.add(new TypeId(docTypeEvent,
+      res.add(new TypeId(type,
                          makeKeyVal(keyConverter.makeEventKey(ev.getColPath(),
                                                    ev.getUid(),
                                                    null))));
@@ -1424,7 +1413,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
           dtval = dtval.substring(0, 8);
         }
 
-        res.add(new TypeId(docTypeEvent,
+        res.add(new TypeId(type,
                            makeKeyVal(keyConverter.makeEventKey(ev.getColPath(),
                                                      ev.getUid(),
                                                      recurrenceId))));
@@ -1487,11 +1476,10 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     cat.setColPath(path);
   }
 
-  private void makeDoc(final XContentBuilder builder,
-                       final BwCategory cat) throws CalFacadeException {
+  /* Return the type for the indexer */
+  private String makeDoc(final XContentBuilder builder,
+                         final BwCategory cat) throws CalFacadeException {
     try {
-      //makeField(builder, "key", makeKeyVal(cat));
-      makeField(builder, "itemType", itemTypeCategory);
       makeField(builder, "uid", cat.getUid());
       makeField(builder, "creator", cat.getCreatorHref());
       makeField(builder, "owner", cat.getOwnerHref());
@@ -1512,6 +1500,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       makeField(builder, "description", cat.getDescription());
 
       batchCurSize++;
+
+      return docTypeCategory;
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
@@ -1519,11 +1509,12 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
   }
 
-  private void makeDoc(final XContentBuilder builder,
-                       final Object rec,
-                       final BwDateTime start,
-                       final BwDateTime end,
-                       final String recurid) throws CalFacadeException {
+  /* Return the type for the indexer */
+  private String makeDoc(final XContentBuilder builder,
+                         final Object rec,
+                         final BwDateTime start,
+                         final BwDateTime end,
+                         final String recurid) throws CalFacadeException {
     try {
       BwCalendar col = null;
       EventInfo ei = null;
@@ -1547,7 +1538,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         col = (BwCalendar)rec;
 
         key = makeKeyVal(col);
-        itemType = itemTypeCalendar;
+        itemType = docTypeCollection;
 
         name = col.getName();
         colPath = col.getColPath();
@@ -1569,7 +1560,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
                                         ev.getUid(),
                                         recurid);
 
-        itemType = itemTypeEvent;
+        itemType = IcalDefs.fromEntityType(ev.getEntityType());
 
         /*
         if (ev instanceof BwEventProxy) {
@@ -1594,12 +1585,12 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
         if (start == null) {
           warn("No start for " + ev);
-          return;
+          return null;
         }
 
         if (end == null) {
           warn("No end for " + ev);
-          return;
+          return null;
         }
       } else {
         throw new IndexException(IndexException.unknownRecordType,
@@ -1631,7 +1622,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       if (col != null) {
         // Doing collection - we're done
 
-        return;
+        return itemType;
       }
 
       /* comment */
@@ -1694,6 +1685,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       }
 
       batchCurSize++;
+
+      return itemType;
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
@@ -1871,22 +1864,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
-  }
-
-  private String getType(Object rec) throws CalFacadeException {
-    if (rec instanceof BwCategory) {
-      return docTypeCategory;
-    }
-
-    if (rec instanceof BwCalendar) {
-      return docTypeCollection;
-    }
-
-    if (rec instanceof EventInfo) {
-      return docTypeEvent;
-    }
-
-    throw new CalFacadeException("Unhandled type " + rec.getClass());
   }
 
   private ESQueryFilter getFilters() {

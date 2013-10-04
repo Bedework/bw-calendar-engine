@@ -196,7 +196,7 @@ import java.util.TreeSet;
  * <p>In addition CalDAV allows us to restrict the result to only those overrides
  * which affect the time range either to include or exclude instances.
  *
- * @author Mike Douglass   douglm  - bedework.edu
+ * @author Mike Douglass   douglm  - rpi.edu
  */
 public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
   public SystemProperties sysprops;
@@ -3491,6 +3491,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
                                            getHref(val),
                                            shared,
                                            val.getPublick(),
+                                           IcalDefs.fromEntityType(val.getEntityType()),
                                            val.getUid(),
                                            val.getRecurrenceId(),
                                            note,
@@ -3531,6 +3532,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
                                            getHref(val),
                                            shared,
                                            val.getPublick(),
+                                           IcalDefs.fromEntityType(val.getEntityType()),
                                            val.getUid(),
                                            recurrenceId,
                                            note,

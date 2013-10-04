@@ -20,6 +20,7 @@ package org.bedework.calsvc.indexing;
 
 import org.bedework.caldav.util.TimeRange;
 import org.bedework.caldav.util.filter.AndFilter;
+import org.bedework.caldav.util.filter.EntityTypeFilter;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.caldav.util.filter.ObjectFilter;
 import org.bedework.caldav.util.filter.OrFilter;
@@ -36,8 +37,8 @@ import org.bedework.calfacade.filter.BwCollectionFilter;
 import org.bedework.calfacade.filter.BwCreatorFilter;
 import org.bedework.calfacade.filter.BwHrefFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
-
-import edu.rpi.cct.misc.indexing.SearchLimits;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.indexing.SearchLimits;
 
 import org.apache.log4j.Logger;
 import org.elasticsearch.index.query.AndFilterBuilder;
@@ -342,6 +343,13 @@ public class ESQueryFilter {
                                        col.getPath());
     }
 
+    if (pf instanceof EntityTypeFilter) {
+      EntityTypeFilter etf = (EntityTypeFilter)pf;
+
+      return FilterBuilders.termFilter("_type",
+                                       IcalDefs.entityTypeNames[etf.getEntity()]);
+    }
+
     if (pf instanceof ObjectFilter) {
       return doObject((ObjectFilter)pf, fieldName, null);
     }
@@ -469,34 +477,6 @@ public class ESQueryFilter {
 
     warn("Fuzzy search for " + of);
     return "";
-  }
-
-  private FilterBuilder doTimeRange(final TimeRangeFilter trf,
-                                    final boolean dateTimeField,
-                                    final String fld,
-                                    final String subfld) {
-    TimeRange tr = trf.getEntity();
-
-    RangeFilterBuilder rfb = FilterBuilders.rangeFilter(fld);
-
-    if (tr.getEnd() == null) {
-      rfb.gte(tr.getStart().toString());
-
-      return rfb;
-    }
-
-    if (tr.getStart() == null) {
-      rfb.lt(tr.getEnd().toString());
-
-      return rfb;
-    }
-
-    rfb.from(tr.getStart().toString());
-    rfb.to(tr.getEnd().toString());
-    rfb.includeLower(true);
-    rfb.includeUpper(false);
-
-    return rfb;
   }
 
   private FilterBuilder addPrincipal(final FilterBuilder filter) throws CalFacadeException {
