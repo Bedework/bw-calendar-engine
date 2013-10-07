@@ -335,8 +335,14 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     res.curFilter = ef.addDateRangeFilter(res.curFilter, limits);
 
-    SearchResponse resp = srb.setSearchType(SearchType.COUNT)
-            .setFilter(res.curFilter).execute().actionGet();
+    srb.setSearchType(SearchType.COUNT)
+            .setFilter(res.curFilter);
+
+    if (debug) {
+      debug("srb=" + srb);
+    }
+
+    SearchResponse resp = srb.execute().actionGet();
 
     if (resp.status() != RestStatus.OK) {
       if (debug) {

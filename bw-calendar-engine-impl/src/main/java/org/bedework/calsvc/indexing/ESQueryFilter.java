@@ -38,6 +38,7 @@ import org.bedework.calfacade.filter.BwCreatorFilter;
 import org.bedework.calfacade.filter.BwHrefFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.indexing.SearchLimits;
 
 import org.apache.log4j.Logger;
@@ -291,6 +292,12 @@ public class ESQueryFilter {
 
     PropertyFilter pf = (PropertyFilter)f;
 
+    if (pf.getPropertyIndex() == PropertyInfoIndex.CATEGORY_PATH) {
+      // Special case this one.
+      return FilterBuilders.termFilter("category_path",
+                                       ((ObjectFilter)pf).getEntity());
+    }
+
     BwIcalPropertyInfo.BwIcalPropertyInfoEntry pi =
             BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
 
@@ -334,12 +341,6 @@ public class ESQueryFilter {
       BwCategory cat = ((BwCategoryFilter)pf).getEntity();
       return FilterBuilders.termFilter("category_uid",
                                        cat.getUid());
-    }
-
-    if (pi.equals(PropertyIndex.PropertyInfoIndex.CATEGORIES)) {
-      // Path match for category
-      return FilterBuilders.termFilter("category_path",
-                                       ((ObjectFilter)pf).getEntity());
     }
 
     if (pf instanceof BwCollectionFilter) {
