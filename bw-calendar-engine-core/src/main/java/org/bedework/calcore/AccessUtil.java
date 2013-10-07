@@ -389,94 +389,96 @@ public class AccessUtil implements AccessUtilI {
    * The calendar/container access might be cached in the pathInfoTable.
    */
   private char[] getAclChars(final BwShareableDbentity<?> ent) throws CalFacadeException {
-    if (ent instanceof BwEventProperty) {
-      /* This is a way of making other objects sort of shareable.
-       * The objects are locations, sponsors and categories.
-       *
-       * We store the default access in the owner principal and manipulate that to give
-       * us some degree of sharing.
-       *
-       * In effect, the owner becomes the container for the object.
-       */
+    if ((!(ent instanceof BwEventProperty)) &&
+        (ent instanceof BwShareableContainedDbentity)) {
+      BwCalendar container;
 
-      String aclString = null;
-      String entAccess = ent.getAccess();
-      BwPrincipal owner = (BwPrincipal)cb.getPrincipal(ent.getOwnerHref());
-
-      if (ent instanceof BwCategory) {
-        aclString = owner.getCategoryAccess();
-      } else if (ent instanceof BwLocation) {
-        aclString = owner.getLocationAccess();
-      } else if (ent instanceof BwContact) {
-        aclString = owner.getContactAccess();
+      if (ent instanceof BwCalendar) {
+        container = (BwCalendar)ent;
+      } else {
+        container = getParent((BwShareableContainedDbentity<?>)ent);
       }
 
-      if (aclString == null) {
-        if (entAccess == null) {
-          if (ent.getPublick()) {
-            return Access.getDefaultPublicAccess().toCharArray();
-          }
-          return Access.getDefaultPersonalAccess().toCharArray();
-        }
-        return entAccess.toCharArray();
-      }
+      String path = container.getPath();
 
-      if (entAccess == null) {
-        return aclString.toCharArray();
-      }
+      CalendarWrapper wcol = (CalendarWrapper)container;
 
-      try {
-        Acl acl = Acl.decode(entAccess.toCharArray());
-        acl = acl.merge(aclString.toCharArray(), "/owner");
-
-        return acl.getEncoded();
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
-      }
-    }
-
-    BwCalendar container;
-
-    if (ent instanceof BwCalendar) {
-      container = (BwCalendar)ent;
-    } else {
-      container = getParent((BwShareableContainedDbentity<?>)ent);
-    }
-
-    String path = container.getPath();
-
-    CalendarWrapper wcol = (CalendarWrapper)container;
-
-    String aclStr;
-    char[] aclChars = null;
+      String aclStr;
+      char[] aclChars = null;
 
       /* Get access for the parent first if we have one */
-    BwCalendar parent = getParent(wcol);
+      BwCalendar parent = getParent(wcol);
 
-    if (parent != null) {
-      aclStr = new String(merged(getAclChars(parent),
-                                 parent.getPath(),
-                                 wcol.getAccess()));
-    } else if (wcol.getAccess() != null) {
-      aclStr = new String(wcol.getAccess());
-    } else {
-      // At root
-      throw new CalFacadeException("Collections must have default access set at root");
-    }
+      if (parent != null) {
+        aclStr = new String(merged(getAclChars(parent),
+                                   parent.getPath(),
+                                   wcol.getAccess()));
+      } else if (wcol.getAccess() != null) {
+        aclStr = new String(wcol.getAccess());
+      } else {
+        // At root
+        throw new CalFacadeException("Collections must have default access set at root");
+      }
 
-    if (aclStr != null) {
-      aclChars = aclStr.toCharArray();
-    }
+      if (aclStr != null) {
+        aclChars = aclStr.toCharArray();
+      }
 
-    if (ent instanceof BwCalendar) {
-      return aclChars;
-    }
+      if (ent instanceof BwCalendar) {
+        return aclChars;
+      }
 
       /* Create a merged access string from the entity access and the
        * container access
        */
 
-    return merged(aclChars, path, ent.getAccess());
+      return merged(aclChars, path, ent.getAccess());
+    }
+
+    /* This is a way of making other objects sort of shareable.
+     * The objects are locations, sponsors and categories.
+     * (also calsuite)
+     *
+     * We store the default access in the owner principal and manipulate that to give
+     * us some degree of sharing.
+     *
+     * In effect, the owner becomes the container for the object.
+     */
+
+    String aclString = null;
+    String entAccess = ent.getAccess();
+    BwPrincipal owner = (BwPrincipal)cb.getPrincipal(ent.getOwnerHref());
+
+    if (ent instanceof BwCategory) {
+      aclString = owner.getCategoryAccess();
+    } else if (ent instanceof BwLocation) {
+      aclString = owner.getLocationAccess();
+    } else if (ent instanceof BwContact) {
+      aclString = owner.getContactAccess();
+    }
+
+    if (aclString == null) {
+      if (entAccess == null) {
+        if (ent.getPublick()) {
+          return Access.getDefaultPublicAccess().toCharArray();
+        }
+        return Access.getDefaultPersonalAccess().toCharArray();
+      }
+      return entAccess.toCharArray();
+    }
+
+    if (entAccess == null) {
+      return aclString.toCharArray();
+    }
+
+    try {
+      Acl acl = Acl.decode(entAccess.toCharArray());
+      acl = acl.merge(aclString.toCharArray(), "/owner");
+
+      return acl.getEncoded();
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
   }
 
   private char[] merged(final char[] parentAccess,
