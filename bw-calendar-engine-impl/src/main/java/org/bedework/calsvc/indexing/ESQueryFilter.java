@@ -78,14 +78,6 @@ public class ESQueryFilter {
                                    final String val) throws CalFacadeException {
     FilterBuilder fb = addPrincipal(addTerm(null, field, val));
 
-    if (debug) {
-      if (fb == null) {
-        debug("Null FilterBuilder");
-      } else {
-        debug(fb.toString());
-      }
-    }
-
     return fb;
   }
 
@@ -94,14 +86,6 @@ public class ESQueryFilter {
 
     if (!queryLimited) {
       fb = addPrincipal(fb);
-    }
-
-    if (debug) {
-      if (fb == null) {
-        debug("Null FilterBuilder");
-      } else {
-        debug(fb.toString());
-      }
     }
 
     return fb;
@@ -126,14 +110,6 @@ public class ESQueryFilter {
     FilterBuilder fb = addDateRangeFilter(filter,
                                           limits.fromDate,
                                           limits.toDate);
-
-    if (debug) {
-      if (fb == null) {
-        debug("Null FilterBuilder");
-      } else {
-        debug(fb.toString());
-      }
-    }
 
     return fb;
   }
