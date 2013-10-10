@@ -138,9 +138,9 @@ public class ESQueryFilter {
     return fb;
   }
 
-  private FilterBuilder addDateRangeFilter(final FilterBuilder filter,
-                                           final String start,
-                                           final String end) throws CalFacadeException {
+  public FilterBuilder addDateRangeFilter(final FilterBuilder filter,
+                                          final String start,
+                                          final String end) throws CalFacadeException {
     if ((start == null) && (end == null)) {
       return filter;
     }

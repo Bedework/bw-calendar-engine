@@ -798,6 +798,12 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     int tries = 0;
     Set<EventInfo> res = new ConcurrentSkipListSet<>();
 
+    ESQueryFilter ef = getFilters();
+
+    FilterBuilder f = ef.buildFilter(filter);
+
+    f = ef.addDateRangeFilter(f, start, end);
+
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
     srb.setTypes(IcalDefs.entityTypeNames[IcalDefs.entityTypeEvent],
@@ -805,10 +811,16 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     long toFetch = count;
 
-    SearchResponse scrollResp = srb.setSearchType(SearchType.SCAN)
+    srb.setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
-            .setFilter(getFilters().buildFilter(filter))
-            .setSize(ourCount).execute().actionGet(); //ourCount hits per shard will be returned for each scroll
+            .setFilter(f)
+            .setSize(ourCount);
+    if (debug) {
+      debug("srb: " + srb);
+    }
+
+    SearchResponse scrollResp = srb.execute().actionGet();
+    //ourCount hits per shard will be returned for each scroll
 
     if (scrollResp.status() != RestStatus.OK) {
       if (debug) {
