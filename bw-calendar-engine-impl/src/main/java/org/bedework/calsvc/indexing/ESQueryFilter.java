@@ -84,6 +84,10 @@ public class ESQueryFilter {
   public FilterBuilder buildFilter(final FilterBase f) throws CalFacadeException {
     FilterBuilder fb = makeFilter(f);
 
+    if (fb instanceof TermOrTerms) {
+      fb = ((TermOrTerms)fb).makeFb();
+    }
+
     if (!queryLimited) {
       fb = addPrincipal(fb);
     }
@@ -222,29 +226,160 @@ public class ESQueryFilter {
     return afb;
   }
 
+  private class TermOrTerms extends BaseFilterBuilder {
+    String fldName;
+    Object value;
+    private String exec;
+    boolean isTerms;
+
+    TermOrTerms(final String fldName,
+                final Object value) {
+      this.fldName = fldName;
+      this.value = value;
+    }
+
+    TermOrTerms anding(final boolean anding) {
+      if (anding) {
+        exec = "and";
+      } else {
+        exec = "or";
+      }
+
+      return this;
+    }
+
+    FilterBuilder makeFb() {
+      if (!isTerms) {
+        return FilterBuilders.termFilter(fldName, value);
+      }
+
+      return FilterBuilders.termsFilter(fldName,
+                                        (Iterable <?>)value).execution(exec);
+    }
+
+    void addValue(final Object val) {
+      if (value == null) {
+        value = val;
+      } else if (value instanceof Collection) {
+        ((Collection)value).add(val);
+      } else {
+        List vals = new ArrayList();
+
+        vals.add(value);
+        vals.add(val);
+
+        value = vals;
+        isTerms = true;
+      }
+    }
+
+    @Override
+    public XContentBuilder toXContent(final XContentBuilder builder,
+                                      final Params params)
+            throws IOException {
+      return null;
+    }
+
+    @Override
+    protected void doXContent(final XContentBuilder builder,
+                              final Params params)
+            throws IOException {
+    }
+  }
+
+  private List<FilterBuilder> makeFilters(final List<FilterBase> fs,
+                                          final boolean anding) throws CalFacadeException {
+    List<FilterBuilder> fbs = new ArrayList<>();
+
+    /* We'll try to compact the filters - if we have a whole bunch of
+          "term" {"category_uid": "abcd"} for example we can turn it into
+          "terms" {"category_uid": ["abcd", "pqrs"]}
+     */
+    TermOrTerms lastFb = null;
+
+    for (FilterBase f: fs) {
+      FilterBuilder fb = makeFilter(f);
+
+      if (lastFb == null) {
+        if (!(fb instanceof TermOrTerms)) {
+          fbs.add(fb);
+          continue;
+        }
+
+        lastFb = (TermOrTerms)fb;
+      } else if (!(fb instanceof TermOrTerms)) {
+        fbs.add(fb);
+      } else {
+        /* Can we combine them? */
+        TermOrTerms thisFb = (TermOrTerms)fb;
+
+        if (!lastFb.fldName.equals(thisFb.fldName)) {
+          fbs.add(lastFb);
+          lastFb = thisFb;
+        } else {
+          lastFb = lastFb.anding(anding);
+
+          if (thisFb.isTerms) {
+            for (Object o: (Collection)thisFb.value) {
+              lastFb.addValue(o);
+            }
+          } else {
+            lastFb.addValue(thisFb.value);
+          }
+        }
+      }
+    }
+
+    if (lastFb != null) {
+      fbs.add(lastFb);
+    }
+
+    return fbs;
+  }
+
   private FilterBuilder makeFilter(final FilterBase f) throws CalFacadeException {
     if (f == null) {
       return null;
     }
 
     if (f instanceof AndFilter) {
-      AndFilterBuilder fb = new AndFilterBuilder();
+      List<FilterBuilder> fbs = makeFilters(f.getChildren(), true);
 
-      for (FilterBase flt: f.getChildren()) {
-        fb.add(makeFilter(flt));
+      if (fbs.size() == 1) {
+        return fbs.get(0);
       }
 
-      return fb;
+      AndFilterBuilder afb = new AndFilterBuilder();
+
+      for (FilterBuilder fb: fbs) {
+        if (fb instanceof TermOrTerms) {
+          afb.add(((TermOrTerms)fb).makeFb());
+        } else {
+          afb.add(fb);
+        }
+      }
+
+      return afb;
     }
 
     if (f instanceof OrFilter) {
-      OrFilterBuilder fb = new OrFilterBuilder();
+      List<FilterBuilder> fbs = makeFilters(f.getChildren(), false);
 
-      for (FilterBase flt: f.getChildren()) {
-        fb.add(makeFilter(flt));
+      if (fbs.size() == 1) {
+        return fbs.get(0);
       }
 
-      return fb;
+      OrFilterBuilder ofb = new OrFilterBuilder();
+
+      for (FilterBuilder fb: fbs) {
+        if (fb instanceof TermOrTerms) {
+          ofb.add(((TermOrTerms)fb).makeFb());
+        } else {
+          ofb.add(fb);
+        }
+      }
+
+      return ofb;
     }
 
     if (f instanceof BwHrefFilter) {
@@ -270,8 +405,8 @@ public class ESQueryFilter {
 
     if (pf.getPropertyIndex() == PropertyInfoIndex.CATEGORY_PATH) {
       // Special case this one.
-      return FilterBuilders.termFilter("category_path",
-                                       ((ObjectFilter)pf).getEntity());
+      return new TermOrTerms("category_path",
+                             ((ObjectFilter)pf).getEntity());
     }
 
     BwIcalPropertyInfo.BwIcalPropertyInfoEntry pi =
@@ -308,29 +443,27 @@ public class ESQueryFilter {
     }
 
     if (pf instanceof BwCreatorFilter) {
-      return FilterBuilders.termFilter("creator",
-                                       ((BwCreatorFilter)pf)
-                                               .getEntity());
+      return new TermOrTerms("creator",
+                             ((BwCreatorFilter)pf).getEntity());
     }
 
     if (pf instanceof BwCategoryFilter) {
       BwCategory cat = ((BwCategoryFilter)pf).getEntity();
-      return FilterBuilders.termFilter("category_uid",
-                                       cat.getUid());
+      return new TermOrTerms("category_uid", cat.getUid());
     }
 
     if (pf instanceof BwCollectionFilter) {
       BwCalendar col = ((BwCollectionFilter)pf).getEntity();
 
-      return FilterBuilders.termFilter("path",
-                                       col.getPath());
+      return new TermOrTerms("path",
+                             col.getPath());
     }
 
     if (pf instanceof EntityTypeFilter) {
       EntityTypeFilter etf = (EntityTypeFilter)pf;
 
-      return FilterBuilders.termFilter("_type",
-                                       IcalDefs.entityTypeNames[etf.getEntity()]);
+      return new TermOrTerms("_type",
+                             IcalDefs.entityTypeNames[etf.getEntity()]);
     }
 
     if (pf instanceof ObjectFilter) {
