@@ -166,6 +166,30 @@ public class ESQueryFilter {
     return fb;
   }
 
+  /**
+   *
+   * @param filter - null or filter to AND with new term
+   * @param name
+   * @param val
+   * @return TermFilterBuilder or AndFilterBuilder
+   * @throws CalFacadeException
+   */
+  public FilterBuilder addTerm(final FilterBuilder filter,
+                               final String name,
+                               final String val) throws CalFacadeException {
+    FilterBuilder fb = FilterBuilders.termFilter(name, val);
+
+    if (filter == null) {
+      return fb;
+    }
+
+    AndFilterBuilder afb = new AndFilterBuilder(filter);
+
+    afb.add(fb);
+
+    return afb;
+  }
+
   private String dateTimeUTC(final String dt) {
     if (dt.length() == 16) {
       return dt;
@@ -208,22 +232,6 @@ public class ESQueryFilter {
     rfb.includeUpper(false);
 
     return rfb;
-  }
-
-  private FilterBuilder addTerm(final FilterBuilder filter,
-                                final String name,
-                                final String val) throws CalFacadeException {
-    FilterBuilder fb = FilterBuilders.termFilter(name, val);
-
-    if (filter == null) {
-      return fb;
-    }
-
-    AndFilterBuilder afb = new AndFilterBuilder(filter);
-
-    afb.add(fb);
-
-    return afb;
   }
 
   private class TermOrTerms extends BaseFilterBuilder {

@@ -77,6 +77,8 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.status.IndicesStatusRequestBuilder;
 import org.elasticsearch.action.admin.indices.status.IndicesStatusResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -495,25 +497,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       // Unbatched
 
-      XContentBuilder builder = newBuilder();
-
-      builder.startObject();
-
-      String type = index(builder, rec);
-
-      if (type == null) {
-        // Bad record?
-        return;
-      }
-
-      builder.endObject();
-
-      UpdateRequestBuilder req = getClient().prepareUpdate(targetIndex,
-                                                           type,
-                                                           makeKeyVal(rec));
-      UpdateResponse resp = req.setDoc(builder)
-              .setDocAsUpsert(true)
-              .execute().actionGet();
+      UpdateResponse resp = index(rec);
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -1193,41 +1177,74 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
                              rec.getClass().getName());
   }
 
-  /* Return the type for the indexer */
-  private String index(final XContentBuilder builder,
-                       final Object rec) throws CalFacadeException {
+  /* Return the response after indexing */
+  private UpdateResponse index(final Object rec) throws CalFacadeException {
+    try {
+      String type = null;
+      XContentBuilder builder = newBuilder();
+
+      builder.startObject();
+
     if (rec instanceof BwCalendar) {
-      return makeDoc(builder, rec, null, null, null);
+        type = makeDoc(builder, rec, null, null, null);
     }
 
     if (rec instanceof BwCategory) {
-      return makeDoc(builder, (BwCategory)rec);
+        type = makeDoc(builder, (BwCategory)rec);
     }
 
-    if (!(rec instanceof EventInfo)) {
-      throw new CalFacadeException(new IndexException(IndexException.unknownRecordType,
-                               rec.getClass().getName()));
-    }
+      builder.endObject();
 
-    try {
+      if (type != null) {
+        return indexDoc(builder, type, rec, makeKeyVal(rec));
+      }
+
+      if (!(rec instanceof EventInfo)) {
+        throw new CalFacadeException(new IndexException(IndexException.unknownRecordType,
+                                                        rec.getClass().getName()));
+      }
+
       /* If it's not recurring or an override index it */
 
       EventInfo ei = (EventInfo)rec;
       BwEvent ev = ei.getEvent();
 
       if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
-        return makeDoc(builder,
+        builder = newBuilder();
+
+        builder.startObject();
+        type = makeDoc(builder,
                        rec,
                        ev.getDtstart(),
                        ev.getDtend(),
                        ev.getRecurrenceId());
+
+        builder.endObject();
+
+        return indexDoc(builder, type, rec, makeKeyVal(rec));
       }
+
+      /* Delete all instances of this event: we'll do a delete by query
+       * We need to find all with the same path and uid.
+       */
+
+      String itemType = IcalDefs.fromEntityType(ev.getEntityType());
+
+      DeleteByQueryRequestBuilder delQreq = getClient().prepareDeleteByQuery(
+              targetIndex).setTypes(itemType);
+
+      ESQueryFilter esq= getFilters();
+      FilterBuilder fb = esq.addTerm(null, "colPath", ev.getColPath());
+      fb = esq.addTerm(fb, "uid", ev.getUid());
+      delQreq.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(),
+                                                   fb));
+      DeleteByQueryResponse delResp = delQreq.execute()
+              .actionGet();
 
       /* Emit all instances that aren't overridden. */
 
       int maxYears;
       int maxInstances;
-      String itemType = null;
 
       if (ev.getPublick()) {
         maxYears = unauthpars.getMaxYears();
@@ -1262,16 +1279,24 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         }
       }
       */
+      UpdateResponse uresp = null;
+
       if (!Util.isEmpty(ei.getOverrides())) {
         for (EventInfo oei: ei.getOverrides()) {
           BwEvent ov = oei.getEvent();
           overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
-          itemType = makeDoc(builder,
-                             oei,
-                             ov.getDtstart(),
-                             ov.getDtend(),
-                             ov.getRecurrenceId());
+          builder = newBuilder();
 
+          builder.startObject();
+          makeDoc(builder,
+                  oei,
+                  ov.getDtstart(),
+                  ov.getDtend(),
+                  ov.getRecurrenceId());
+
+          builder.endObject();
+
+          uresp = indexDoc(builder, itemType, ov, makeKeyVal(ov));
         }
       }
 
@@ -1297,11 +1322,21 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
         BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
-        itemType = makeDoc(builder,
-                           rec,
-                           rstart,
-                           rend,
-                           recurrenceId);
+        builder = newBuilder();
+
+        builder.startObject();
+        makeDoc(builder,
+                rec,
+                rstart,
+                rend,
+                recurrenceId);
+
+        builder.endObject();
+
+        uresp = indexDoc(builder, itemType, rec,
+                         keyConverter.makeEventKey(ev.getColPath(),
+                                                   ev.getUid(),
+                                                   recurrenceId));
 
         instanceCt--;
         if (instanceCt == 0) {
@@ -1310,12 +1345,24 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         }
       }
 
-      return itemType;
+      return uresp;
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
+  }
+
+  private UpdateResponse indexDoc(final XContentBuilder builder,
+                                  final String type,
+                                  final Object rec,
+                                  final String id) throws Throwable {
+    UpdateRequestBuilder req = getClient().prepareUpdate(targetIndex,
+                                                         type, id);
+
+    return req.setDoc(builder)
+            .setDocAsUpsert(true)
+            .execute().actionGet();
   }
 
   private static class TypeId {
