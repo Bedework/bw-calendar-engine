@@ -3572,6 +3572,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
       return null;
     } catch (Throwable t) {
+      error(t);
       return null;
     }
   }

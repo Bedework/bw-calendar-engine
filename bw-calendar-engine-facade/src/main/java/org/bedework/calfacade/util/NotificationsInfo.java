@@ -266,7 +266,13 @@ public class NotificationsInfo {
         }
       } else {
         ChangedPropertyType cp = new ChangedPropertyType();
-        cp.setName(cte.getIndex().getPname());
+
+        String name = cte.getIndex().getPname();
+
+        if (name == null) {
+          name = cte.getName();
+        }
+        cp.setName(name);
 
         cp.setDataFrom(getDataFrom(cte));
         cp.setDataTo(getDataTo(cte));

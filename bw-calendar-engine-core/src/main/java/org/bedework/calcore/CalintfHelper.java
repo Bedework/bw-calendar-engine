@@ -191,4 +191,8 @@ public abstract class CalintfHelper
   protected void trace(final String msg) {
     getLogger().debug(msg);
   }
+
+  protected void error(final Throwable t) {
+    getLogger().error(t.getLocalizedMessage(), t);
+  }
 }
