@@ -39,7 +39,6 @@ import org.bedework.calfacade.filter.BwHrefFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.indexing.SearchLimits;
 
 import org.apache.log4j.Logger;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -106,19 +105,6 @@ public class ESQueryFilter {
    */
   public boolean getQueryLimited() {
     return queryLimited;
-  }
-
-  public FilterBuilder addDateRangeFilter(final FilterBuilder filter,
-                                          final SearchLimits limits) throws CalFacadeException {
-    if (limits == null) {
-      return filter;
-    }
-
-    FilterBuilder fb = addDateRangeFilter(filter,
-                                          limits.fromDate,
-                                          limits.toDate);
-
-    return fb;
   }
 
   public FilterBuilder addDateRangeFilter(final FilterBuilder filter,

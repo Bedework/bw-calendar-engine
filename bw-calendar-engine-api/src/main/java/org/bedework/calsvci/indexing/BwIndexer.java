@@ -25,7 +25,6 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.indexing.Index;
-import org.bedework.util.indexing.SearchLimits;
 
 import java.io.Serializable;
 import java.util.List;
@@ -48,26 +47,28 @@ public interface BwIndexer extends Serializable {
    * be a simple sequence of keywords or some sort of query the syntax of
    * which is determined by the underlying implementation.
    *
-   * @param   query        Query string
-   * @param   filter        Query string
-   * @param   limits       Search limits to apply or null
+   * @param query        Query string
+   * @param filter       parsed filter
+   * @param start - if non-null limit to this and after
+   * @param end - if non-null limit to before this
    * @return  SearchResult - never null
    * @throws CalFacadeException
    */
   SearchResult search(String query,
-                      String filter,
-                      SearchLimits limits) throws CalFacadeException;
+                      FilterBase filter,
+                      String start,
+                      String end) throws CalFacadeException;
 
   /** Called to retrieve results after a search of the index. Updates
    * the SearchResult object
    *
    * @param  sres     result of previous search
-   * @param start
+   * @param pageNum
    * @param num
    * @throws CalFacadeException
    */
   void getSearchResult(SearchResult sres,
-                       long start,
+                       long pageNum,
                        int num) throws CalFacadeException;
 
   /** Called to retrieve record keys from the result.
@@ -202,8 +203,8 @@ public interface BwIndexer extends Serializable {
    * an unresolved location uid.
    *
    * @param filter
-   * @param start
-   * @param end
+   * @param start - if non-null limit to this and after
+   * @param end - if non-null limit to before this
    * @param found - if non null the value will be total found by search
    * @param pos
    * @param count < 0 for no limit

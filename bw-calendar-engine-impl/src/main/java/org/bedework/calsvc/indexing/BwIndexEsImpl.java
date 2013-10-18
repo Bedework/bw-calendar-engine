@@ -21,11 +21,7 @@ package org.bedework.calsvc.indexing;
 import org.bedework.access.Ace;
 import org.bedework.access.Acl;
 import org.bedework.access.PrivilegeDefs;
-import org.bedework.caldav.util.filter.AndFilter;
 import org.bedework.caldav.util.filter.FilterBase;
-import org.bedework.caldav.util.filter.OrFilter;
-import org.bedework.caldav.util.filter.PresenceFilter;
-import org.bedework.caldav.util.filter.PropertyFilter;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwCollectionLastmod;
@@ -39,9 +35,6 @@ import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.filter.BwCategoryFilter;
-import org.bedework.calfacade.filter.BwCollectionFilter;
-import org.bedework.calfacade.filter.BwCreatorFilter;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvc.CalSvcDb;
@@ -54,7 +47,6 @@ import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.indexing.Index;
 import org.bedework.util.indexing.IndexException;
-import org.bedework.util.indexing.SearchLimits;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 
@@ -118,8 +110,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.xml.ws.Holder;
-
-import static org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 
 /** Implementation of indexer for ElasticSearch
  *
@@ -250,13 +240,15 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     private long found;
 
-    private long start;
+    private long pageNum;
     private int pageSize;
 
-    /* For paged queries */
-    private SearchLimits limits;
+    /* For paged queries - we need these values */
+    private String start;
+    private String end;
     private QueryBuilder curQuery;
     private FilterBuilder curFilter;
+    private int from; // from index in search
 
     private List<SearchResultEntry> searchResult;
 
@@ -279,8 +271,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
 
     @Override
-    public long getStart() {
-      return start;
+    public long getPageNum() {
+      return pageNum;
     }
 
     @Override
@@ -289,13 +281,18 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
 
     @Override
-    public SearchLimits getLimits() {
-      return limits;
+    public String getStart() {
+      return start;
+    }
+
+    @Override
+    public String getEnd() {
+      return end;
     }
 
     @Override
     public Set<String> getFacetNames() {
-      return null;  //To change body of implemented methods use File | Settings | File Templates.
+      return null;
     }
 
     @Override
@@ -306,42 +303,28 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
   @Override
   public SearchResult search(final String query,
-                             final String filter,
-                             final SearchLimits limits) throws CalFacadeException {
+                             final FilterBase filter,
+                             final String start,
+                             final String end) throws CalFacadeException {
     EsSearchResult res = new EsSearchResult(this);
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
-    res.limits = limits;
+    res.start = start;
+    res.end = end;
     res.curQuery = QueryBuilders.queryString(query);
     srb.setQuery(res.curQuery);
 
-    FilterBase f = null;
-
-    if (filter != null) {
-      ParseResult pr = getSvc().getFilterParser().parse(filter);
-
-      if (!pr.ok) {
-        if (pr.cfe != null) {
-          throw pr.cfe;
-        } else {
-          throw new CalFacadeException("bad expression", filter);
-        }
-      }
-
-      f = pr.filter;
-    }
-
     ESQueryFilter ef = getFilters();
 
-    res.curFilter = ef.buildFilter(f);
+    res.curFilter = ef.buildFilter(filter);
 
-    res.curFilter = ef.addDateRangeFilter(res.curFilter, limits);
+    res.curFilter = ef.addDateRangeFilter(res.curFilter, start, end);
 
     srb.setSearchType(SearchType.COUNT)
             .setFilter(res.curFilter);
 
     if (debug) {
-      debug("srb=" + srb);
+      debug("search-srb=" + srb);
     }
 
     SearchResponse resp = srb.execute().actionGet();
@@ -359,12 +342,12 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
   @Override
   public void getSearchResult(final SearchResult sres,
-                              final long start,
+                              final long pageNum,
                               final int num)
           throws CalFacadeException {
     EsSearchResult res = (EsSearchResult)sres;
 
-    res.start = start;
+    res.pageNum = pageNum;
     res.pageSize = num;
     res.searchResult = new ArrayList<>();
 
@@ -372,7 +355,9 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     SearchResponse resp = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
             .setQuery(res.curQuery)
-            .setFilter(res.curFilter).execute().actionGet();
+            .setFilter(res.curFilter)
+            .setFrom(res.from)
+            .setSize(res.pageSize).execute().actionGet();
 
     if (resp.status() != RestStatus.OK) {
       if (debug) {
@@ -393,6 +378,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
 
     for (SearchHit hit : hits) {
+      res.from++;
       String dtype = hit.getType();
 
       if (dtype == null) {
@@ -795,63 +781,43 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     long toFetch = count;
 
-    srb.setSearchType(SearchType.SCAN)
-            .setScroll(new TimeValue(60000))
+    srb.setSearchType(SearchType.QUERY_THEN_FETCH)
             .setFilter(f)
-            .setSize(ourCount);
+            .setFrom((int)pos)
+            .setSize(count);
     if (debug) {
-      debug("srb: " + srb);
+      debug("fetch-srb: " + srb);
     }
 
-    SearchResponse scrollResp = srb.execute().actionGet();
-    //ourCount hits per shard will be returned for each scroll
+    SearchResponse resp = srb.execute().actionGet();
 
-    if (scrollResp.status() != RestStatus.OK) {
+    if (resp.status() != RestStatus.OK) {
       if (debug) {
-        debug("Search returned status " + scrollResp.status());
+        debug("Fetch returned status " + resp.status());
       }
     }
 
-    //Scroll until no hits are returned
+    SearchHits hits = resp.getHits();
 
-    while ((toFetch < 0) || (fetched < toFetch)) {
-      if (tries > absoluteMaxTries) {
-        // huge count or we screwed up
-        warn("Indexer: too many tries");
-        break;
-      }
+    if (found != null) {
+      found.value = hits.getTotalHits();
+    }
 
-      scrollResp = getClient().prepareSearchScroll(scrollResp.getScrollId())
-              .setScroll(new TimeValue(600000)).execute().actionGet();
-      if (scrollResp.status() != RestStatus.OK) {
-        if (debug) {
-          debug("Search returned status " + scrollResp.status());
-        }
-      }
+    if ((hits.getHits() == null) ||
+            (hits.getHits().length == 0)) {
+      return res;
+    }
 
-      SearchHits hits = scrollResp.getHits();
+    //Break condition: No hits are returned
+    if (hits.hits().length == 0) {
+      return res;
+    }
 
-      if (toFetch < 0) {
-        toFetch = hits.getTotalHits();
-      }
-
-      if (found != null) {
-        found.value = toFetch;
-      }
-
-      //Break condition: No hits are returned
-      if (hits.hits().length == 0) {
-        break;
-      }
-
-      for (SearchHit hit : hits) {
-        //Handle the hit...
-        EventInfo ei = makeEvent(hit.sourceAsMap());
-        res.add(ei);
-        fetched++;
-      }
-
-      tries++;
+    for (SearchHit hit : hits) {
+      //Handle the hit...
+      EventInfo ei = makeEvent(hit.sourceAsMap());
+      res.add(ei);
+      fetched++;
     }
 
     Set<EventInfo> checked = new ConcurrentSkipListSet<>();

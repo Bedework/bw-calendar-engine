@@ -1,7 +1,5 @@
 package org.bedework.calsvci.indexing;
 
-import org.bedework.util.indexing.SearchLimits;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
@@ -22,9 +20,9 @@ public interface SearchResult extends Serializable {
   long getFound();
 
   /**
-   * @return for a paged request the start index
+   * @return for a paged request the page index
    */
-  long getStart();
+  long getPageNum();
 
   /**
    *
@@ -34,9 +32,15 @@ public interface SearchResult extends Serializable {
 
   /**
    *
-   * @return limits applied to original search - possibly null.
+   * @return start date limit applied to original search - possibly null.
    */
-  SearchLimits getLimits();
+  String getStart();
+
+  /**
+   *
+   * @return end date limit applied to original search - possibly null.
+   */
+  String getEnd();
 
   /**
    * @return names of returned facets - possibly null
