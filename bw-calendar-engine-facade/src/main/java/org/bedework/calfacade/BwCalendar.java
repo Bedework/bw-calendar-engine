@@ -81,7 +81,7 @@ import javax.xml.namespace.QName;
  * XXX We suffix the name and path also to avoid some ugly clashes related to
  * lastmod
  *
- *  @author Mike Douglass douglm - bedework.edu
+ *  @author Mike Douglass douglm - rpi.edu
  *  @version 1.0
  */
 @Wrapper(quotas = true)
@@ -333,6 +333,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /* Non - db field */
   private List<String> supportedComponents;
+
+  /* Non - db field */
+  private Collection<BwCalendar> children;
 
   /* Non - db field */
   private List<String> vpollSupportedComponents;
@@ -1489,6 +1492,24 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     }
 
     return null;
+  }
+
+  /**
+   *
+   * @param val Collection of children objects
+   */
+  public void setChildren(Collection<BwCalendar>  val) {
+    children = val;
+  }
+
+  /**
+   *
+   * @return Collection of children objects
+   */
+  @NoProxy
+  @NoDump
+  public Collection<BwCalendar> getChildren() {
+    return children;
   }
 
   /**
