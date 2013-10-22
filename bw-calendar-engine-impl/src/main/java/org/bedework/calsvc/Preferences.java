@@ -75,9 +75,14 @@ class Preferences extends CalSvcDb implements PreferencesI {
    */
   @Override
   public BwPreferences get() throws CalFacadeException {
-    if ((prefs != null) &&
-        (prefs.getOwnerHref().equals(getPrincipal().getPrincipalRef()))) {
-      return prefs;
+    if (prefs != null) {
+      if (prefs.getOwnerHref() == null) {
+        if (getPrincipal().getUnauthenticated()) {
+          return prefs;
+        }
+      } else if (prefs.getOwnerHref().equals(getPrincipal().getPrincipalRef())) {
+        return prefs;
+      }
     }
 
     prefs = fetch();
