@@ -74,7 +74,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
 
   @Override
   public Collection<BwGroup> getGroups(final BwPrincipal val) throws CalFacadeException {
-    return new TreeSet<BwGroup>(cb.getGroups(val, false));
+    return new TreeSet<BwGroup>(cb.getGroups(val, true));
   }
 
   @Override
