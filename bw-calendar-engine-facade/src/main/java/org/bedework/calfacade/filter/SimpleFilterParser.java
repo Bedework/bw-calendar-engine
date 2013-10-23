@@ -323,6 +323,8 @@ public abstract class SimpleFilterParser {
       return false;
     }
 
+    tkn = checkLop(tkn);
+
     if ((tkn != '&') && (tkn != '|')) {
       tokenizer.pushBack();
       if (topLOp()) {
@@ -381,6 +383,32 @@ public abstract class SimpleFilterParser {
     } else {
       push(orOperator);
     }
+  }
+
+  private int checkLop(final int tkn) {
+    if (tkn == '&') {
+      return tkn;
+    }
+
+    if (tkn == '|') {
+      return tkn;
+    }
+
+    if (tkn != StreamTokenizer.TT_WORD) {
+      return tkn;
+    }
+
+    String pname = tokenizer.sval;
+
+    if (pname.equalsIgnoreCase("and")) {
+      return '&';
+    }
+
+    if (pname.equalsIgnoreCase("or")) {
+      return '|';
+    }
+
+    return tkn;
   }
 
   private void doPropertyComparison() throws CalFacadeException {
