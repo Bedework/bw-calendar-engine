@@ -40,7 +40,11 @@ public class LogListener extends JmsSysEventListener {
       return;
     }
 
-    info(ev.toString());
+    try {
+      getLogger().info(ev.toString());
+    } catch (Throwable t) {
+      throw new NotificationException(t);
+    }
   }
 
   void listen() throws Throwable {
