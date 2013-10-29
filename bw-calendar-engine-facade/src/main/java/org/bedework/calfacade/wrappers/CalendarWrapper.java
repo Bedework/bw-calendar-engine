@@ -785,6 +785,13 @@ public class CalendarWrapper extends BwCalendar
 
   @Override
   public Object clone() {
-    return entity.clone();
+    CalendarWrapper cw = new CalendarWrapper((BwCalendar)entity.clone(),
+                                             accessUtil);
+
+    cw.currentAccess = currentAccess;
+    cw.caMap = caMap;
+    cw.lastDesiredAccess = lastDesiredAccess;
+
+    return cw;
   }
 }
