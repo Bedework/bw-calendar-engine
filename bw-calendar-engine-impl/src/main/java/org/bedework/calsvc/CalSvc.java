@@ -1268,7 +1268,8 @@ public class CalSvc extends CalSvcI {
                                               authPrincipal,
                                               maxAllowedPrivs);
 
-        cali.init(getBasicSystemProperties(),
+        cali.init(pars.getLogId(),
+                  getBasicSystemProperties(),
                   principalInfo,
                   null,
                   pars.getPublicAdmin(),

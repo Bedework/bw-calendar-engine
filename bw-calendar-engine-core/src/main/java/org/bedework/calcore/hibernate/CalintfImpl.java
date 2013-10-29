@@ -196,12 +196,13 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   }
 
   @Override
-  public void init(final BasicSystemProperties syspars,
+  public void init(final String logId,
+                   final BasicSystemProperties syspars,
                    final PrincipalInfo principalInfo,
                    final String url,
                    final boolean publicAdmin,
                    final boolean sessionless) throws CalFacadeException {
-    super.init(syspars, principalInfo, url, publicAdmin, sessionless);
+    super.init(logId, syspars, principalInfo, url, publicAdmin, sessionless);
 
     try {
       access = new AccessUtil();
@@ -387,14 +388,14 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
     if (sess == null) {
       if (debug) {
-        debug("New hibernate session for " + objTimestamp);
+        debug("New hibernate session for " + getTraceId());
       }
       sess = new HibSessionImpl();
       sess.init(getSessionFactory(), getLogger());
       if (webMode) {
         sess.setFlushMode(FlushMode.MANUAL);
       } else if (debug) {
-        debug("Open session for " + objTimestamp);
+        debug("Open session for " + getTraceId());
       }
     }
 
@@ -407,13 +408,13 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   public synchronized void close() throws CalFacadeException {
     if (!isOpen) {
       if (debug) {
-        debug("Close for " + objTimestamp + " closed session");
+        debug("Close for " + getTraceId() + " closed session");
       }
       return;
     }
 
     if (debug) {
-      debug("Close for " + objTimestamp);
+      debug("Close for " + getTraceId());
     }
 
     try {
@@ -456,7 +457,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     checkOpen();
 
     if (debug) {
-      debug("Begin transaction for " + objTimestamp);
+      debug("Begin transaction for " + getTraceId());
     }
 
     sess.beginTransaction();
@@ -478,7 +479,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       checkOpen();
 
       if (debug) {
-        debug("End transaction for " + objTimestamp);
+        debug("End transaction for " + getTraceId());
       }
 
       if (!sess.rolledback()) {
@@ -525,7 +526,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   @Override
   public void flush() throws CalFacadeException {
     if (debug) {
-      getLogger().debug("flush for " + objTimestamp);
+      getLogger().debug("flush for " + getTraceId());
     }
     if (sess.isOpen()) {
       sess.flush();

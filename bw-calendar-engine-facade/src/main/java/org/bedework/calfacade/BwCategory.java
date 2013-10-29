@@ -316,6 +316,8 @@ public class BwCategory extends BwEventProperty<BwCategory>
       cat.setDescription((BwString)getDescription().clone());
     }
 
+    cat.setName(getName());
+
     return cat;
   }
 }

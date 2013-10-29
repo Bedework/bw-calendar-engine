@@ -24,7 +24,7 @@ import java.io.Serializable;
 
 /** These are global parameters used by the CalSvc interface.
  *
- * @author Mike Douglass       douglm@bedework.edu
+ * @author Mike Douglass       douglm  rpi.edu
  */
 public class CalSvcIPars implements Serializable {
   /** The authenticated user - null for guest
@@ -50,6 +50,10 @@ public class CalSvcIPars implements Serializable {
   /** The clientid from headers.
    */
   private String clientId;
+
+  /** Id for logging.
+   */
+  private String logId;
 
   /** True if we should allow super user mode in non public admin
    */
@@ -262,6 +266,20 @@ public class CalSvcIPars implements Serializable {
   }
 
   /**
+   * @param val String logId
+   */
+  public void setLogId(final String  val) {
+    logId = val;
+  }
+
+  /**
+   * @return String
+   */
+  public String getLogId() {
+    return logId;
+  }
+
+  /**
    * @return boolean true if this is a public admin object.
    */
   public boolean getPublicAdmin() {
@@ -377,6 +395,7 @@ public class CalSvcIPars implements Serializable {
                                        getSessionsless());
 
     pars.setClientId(getClientId());
+    pars.setLogId(getLogId());
     pars.forRestore = getForRestore();
 
     return pars;

@@ -65,12 +65,13 @@ import java.util.List;
  * <p>The UserAuth object returned by getUserAuth usually represents the
  * authenticated user and determines the rights that user has.
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm  rpi.edu
  */
 public interface Calintf
     extends CoreCalendarsI, CoreEventsI, CoreFilterDefsI, CoreUserAuthI {
   /** Must be called to initialize the new object.
    *
+   * @param logId for tracing
    * @param syspars
    * @param principalInfo    Required for access evaluation.
    * @param url         String url to which we are connecting
@@ -78,7 +79,8 @@ public interface Calintf
    * @param sessionless true if this is a sessionless client
    * @throws CalFacadeException
    */
-  public void init(BasicSystemProperties syspars,
+  public void init(final String logId,
+                   BasicSystemProperties syspars,
                    PrincipalInfo principalInfo,
                    String url,
                    boolean publicAdmin,

@@ -35,7 +35,7 @@ import java.util.List;
 
 /** Base Implementation of CalIntf which throws exceptions for most methods.
 *
-* @author Mike Douglass   douglm@bedework.edu
+* @author Mike Douglass   douglm   rpi.edu
 */
 public abstract class CalintfBase implements Calintf {
   private BasicSystemProperties syspars;
@@ -52,6 +52,8 @@ public abstract class CalintfBase implements Calintf {
 
   /** When we were created for debugging */
   protected Timestamp objTimestamp;
+
+  protected String logId;
 
   /** User for whom we maintain this facade
    */
@@ -79,11 +81,13 @@ public abstract class CalintfBase implements Calintf {
   }
 
   @Override
-  public void init(final BasicSystemProperties syspars,
+  public void init(final String logId,
+                   final BasicSystemProperties syspars,
                    final PrincipalInfo PrincipalInfo,
                    final String url,
                    final boolean publicAdmin,
                    final boolean sessionless) throws CalFacadeException {
+    this.logId = logId;
     this.syspars = syspars;
     this.principalInfo = PrincipalInfo;
     this.url = url;
@@ -195,6 +199,14 @@ public abstract class CalintfBase implements Calintf {
   /* ====================================================================
    *                   Protected methods
    * ==================================================================== */
+
+  protected String getTraceId() {
+    if (logId == null) {
+      return String.valueOf(objTimestamp);
+    }
+
+    return logId + ": " + objTimestamp;
+  }
 
   protected void checkOpen() throws CalFacadeException {
     if (!isOpen) {
