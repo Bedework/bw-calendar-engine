@@ -35,5 +35,7 @@ public class BwPrincipalHrefFilter extends ObjectFilter<String> {
    */
   public BwPrincipalHrefFilter(String name, PropertyInfoIndex propertyIndex) {
     super(name, propertyIndex);
+
+    setCaseless(false);
   }
 }
