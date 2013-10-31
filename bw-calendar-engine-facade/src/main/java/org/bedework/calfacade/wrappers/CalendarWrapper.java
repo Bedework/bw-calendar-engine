@@ -794,4 +794,16 @@ public class CalendarWrapper extends BwCalendar
 
     return cw;
   }
+
+  @Override
+  public BwCalendar shallowClone() {
+    CalendarWrapper cw = new CalendarWrapper(entity.shallowClone(),
+                                             accessUtil);
+
+    cw.currentAccess = currentAccess;
+    cw.caMap = caMap;
+    cw.lastDesiredAccess = lastDesiredAccess;
+
+    return cw;
+  }
 }

@@ -329,6 +329,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   private BwCalendar aliasTarget;
 
   /* Non - db field */
+  private int aliasCalType;
+
+  /* Non - db field */
   private boolean pwNeedsEncrypt;
 
   /* Non - db field */
@@ -1405,6 +1408,23 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return aliasTarget;
   }
 
+  /** the aliased entity type
+   *
+   * @param val    type
+   */
+  public void setAliasCalType(final int val) {
+    aliasCalType = val;
+  }
+
+  /**
+   *
+   * @return the aliased entity type
+   */
+  @NoDump
+  public int getAliasCalType() {
+    return aliasCalType;
+  }
+
   /**
    * @param val   boolean true if the target is unreachable
    * @throws CalFacadeException
@@ -1849,6 +1869,15 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   @Override
   public Object clone() {
+    BwCalendar cal = shallowClone();
+
+    cal.setCategories(cloneCategories());
+    cal.setProperties(cloneProperties());
+
+    return cal;
+  }
+
+  public BwCalendar shallowClone() {
     BwCalendar cal = new BwCalendar();
 
     super.copyTo(cal);
@@ -1862,8 +1891,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     cal.setCalType(getCalType());
     cal.setCreated(getCreated());
     cal.setLastmod((BwCollectionLastmod)getLastmod().clone());
-    cal.setCategories(cloneCategories());
-    cal.setProperties(cloneProperties());
     cal.setAliasUri(getAliasUri());
     cal.setDisplay(getDisplay());
     cal.setAffectsFreeBusy(getAffectsFreeBusy());
@@ -1874,8 +1901,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     cal.setLastEtag(getLastEtag());
     cal.setFilterExpr(getFilterExpr());
 
-    //cal.setId(getId()); // Add to constructor
-    //cal.setSeq(getSeq()); // Add to constructor
     return cal;
   }
 
