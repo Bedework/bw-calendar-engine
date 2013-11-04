@@ -248,6 +248,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     private AccessChecker accessCheck;
 
+    private int lastPageStart;
+
     EsSearchResult(BwIndexer indexer) {
       this.indexer = indexer;
     }
@@ -304,8 +306,11 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     res.start = start;
     res.end = end;
     res.pageSize = pageSize;
-    res.curQuery = QueryBuilders.queryString(query);
     res.accessCheck = accessCheck;
+
+    if (query != null) {
+      res.curQuery = QueryBuilders.queryString(query);
+    }
 
     ESQueryFilter ef = getFilters();
 
@@ -314,9 +319,14 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     res.curFilter = ef.addDateRangeFilter(res.curFilter, start, end);
 
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
-    srb.setQuery(res.curQuery)
-            .setSearchType(SearchType.COUNT)
-            .setFilter(res.curFilter);
+    if (res.curQuery != null) {
+      srb.setQuery(res.curQuery);
+    }
+
+    srb.setSearchType(SearchType.COUNT)
+            .setFilter(res.curFilter)
+            .setFrom(0)
+            .setSize(0);
 
     if (debug) {
       debug("search-srb=" + srb);
@@ -337,16 +347,23 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
   @Override
   public List<SearchResultEntry> getSearchResult(final SearchResult sres,
-                                                 final boolean forward)
+                                                 final Position pos)
           throws CalFacadeException {
+    EsSearchResult res = (EsSearchResult)sres;
+
     int offset;
 
-    if (forward) {
+    if (pos == Position.next) {
       offset = sres.getPageStart();
-    } else {
+    } else if (pos == Position.previous) {
       // TODO - this is wrong - need to save offsets as we progress.
-      offset = sres.getPageStart() - 2 * sres.getPageSize();
+      offset = Math.max(0,
+                        res.lastPageStart - sres.getPageSize());
+    } else {
+      offset = res.lastPageStart;
     }
+
+    res.lastPageStart = offset;
 
     return getSearchResult(sres, offset, sres.getPageSize());
   }
@@ -362,9 +379,11 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     List<SearchResultEntry> entities = new ArrayList<>(num);
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+    if (res.curQuery != null) {
+      srb.setQuery(res.curQuery);
+    }
 
     srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setQuery(res.curQuery)
             .setFilter(res.curFilter)
             .setFrom(res.pageStart);
 
@@ -424,6 +443,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         if ((ca == null) || !ca.getAccessAllowed()) {
           continue;
         }
+
+        ei.setCurrentAccess(ca);
       }
 
       entities.add(new SearchResultEntry(entity,

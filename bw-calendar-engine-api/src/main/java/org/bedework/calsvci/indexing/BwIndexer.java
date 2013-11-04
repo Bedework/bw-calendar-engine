@@ -78,15 +78,21 @@ public interface BwIndexer extends Serializable {
                       int pageSize,
                       AccessChecker accessCheck) throws CalFacadeException;
 
+  enum Position {
+    previous,  // Move to previous batch
+    current,   // Return the current set
+    next       // Move to next batch
+  }
+
   /** Called to retrieve results after a search of the index. Updates
    * the current search result.
    *
    * @param  sres     result of previous search
-   * @param forward - true if we are moving forwards
+   * @param pos - specify movement in result set
    * @throws CalFacadeException
    */
   List<SearchResultEntry> getSearchResult(SearchResult sres,
-                                          boolean forward) throws CalFacadeException;
+                                          Position pos) throws CalFacadeException;
 
   /** Called to retrieve results after a search of the index. Updates
    * the SearchResult object

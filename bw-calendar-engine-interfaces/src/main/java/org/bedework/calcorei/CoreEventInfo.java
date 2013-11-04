@@ -34,7 +34,7 @@ import java.util.TreeSet;
  *
  * <p>This class allows us to handle thread, or user, specific information.
  *
- * @author Mike Douglass       douglm @ bedework.edu
+ * @author Mike Douglass       douglm @ rpi.edu
  */
 public class CoreEventInfo implements Comparable, Comparator, Serializable {
   protected BwEvent event;
@@ -90,14 +90,6 @@ public class CoreEventInfo implements Comparable, Comparator, Serializable {
    */
   public BwEvent getEvent() {
     return event;
-  }
-
-  /** Set the current users access rights.
-   *
-   * @param val  CurrentAccess
-   */
-  public void setCurrentAccess(final CurrentAccess val) {
-    currentAccess = val;
   }
 
   /** Get the current users access rights.
