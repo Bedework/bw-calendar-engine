@@ -30,18 +30,33 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
-import javax.xml.ws.Holder;
-
 /**
  * @author douglm
  *
  */
 public interface BwIndexer extends Serializable {
   // Types of entity we index
+  static final String docTypeUnknown = "unknown";
   static final String docTypeCollection = "collection";
   static final String docTypeCategory = "category";
 
   /* Other types are those defined in IcalDefs.entityTypeNames */
+
+  interface AccessChecker extends Serializable {
+    /** Check the access for the given entity. Returns the current access
+     * or null or optionally throws a no access exception.
+     *
+     * @param ent
+     * @param desiredAccess
+     * @param returnResult
+     * @return CurrentAccess
+     * @throws CalFacadeException if returnResult false and no access
+     */
+    Acl.CurrentAccess checkAccess(BwShareableDbentity ent,
+                                  int desiredAccess,
+                                  boolean returnResult)
+            throws CalFacadeException;
+  }
 
   /** Called to find entries that match the search string. This string may
    * be a simple sequence of keywords or some sort of query the syntax of
@@ -51,25 +66,40 @@ public interface BwIndexer extends Serializable {
    * @param filter       parsed filter
    * @param start - if non-null limit to this and after
    * @param end - if non-null limit to before this
+   * @param pageSize - stored in the search result for future calls.
+   * @param accessCheck  - required - lets us check access
    * @return  SearchResult - never null
    * @throws CalFacadeException
    */
   SearchResult search(String query,
                       FilterBase filter,
                       String start,
-                      String end) throws CalFacadeException;
+                      String end,
+                      int pageSize,
+                      AccessChecker accessCheck) throws CalFacadeException;
+
+  /** Called to retrieve results after a search of the index. Updates
+   * the current search result.
+   *
+   * @param  sres     result of previous search
+   * @param forward - true if we are moving forwards
+   * @throws CalFacadeException
+   */
+  List<SearchResultEntry> getSearchResult(SearchResult sres,
+                                          boolean forward) throws CalFacadeException;
 
   /** Called to retrieve results after a search of the index. Updates
    * the SearchResult object
    *
    * @param  sres     result of previous search
-   * @param pageNum
+   * @param offset from first record
    * @param num
+   * @return list of results - possibly empty - never null.
    * @throws CalFacadeException
    */
-  void getSearchResult(SearchResult sres,
-                       long pageNum,
-                       int num) throws CalFacadeException;
+  List<SearchResultEntry> getSearchResult(SearchResult sres,
+                                          int offset,
+                                          int num) throws CalFacadeException;
 
   /** Called to retrieve record keys from the result.
    *
@@ -179,43 +209,4 @@ public interface BwIndexer extends Serializable {
    * @throws CalFacadeException
    */
   List<BwCategory> fetchAllCats() throws CalFacadeException;
-
-  interface AccessChecker extends Serializable {
-    /** Check the access for the given entity. Returns the current access
-     * or null or optionally throws a no access exception.
-     *
-     * @param ent
-     * @param desiredAccess
-     * @param returnResult
-     * @return CurrentAccess
-     * @throws CalFacadeException if returnResult false and no access
-     */
-    Acl.CurrentAccess checkAccess(BwShareableDbentity ent,
-                                  int desiredAccess,
-                                  boolean returnResult)
-            throws CalFacadeException;
-  }
-
-  /** if fetching is enabled will return a List of EventInfo. List will be
-   * empty if the end of the range has been reached.
-   *
-   * On return the event may contain a list of category ids to be resolved and
-   * an unresolved location uid.
-   *
-   * @param filter
-   * @param start - if non-null limit to this and after
-   * @param end - if non-null limit to before this
-   * @param found - if non null the value will be total found by search
-   * @param pos
-   * @param count < 0 for no limit
-   * @return possibly empty list or null for end of range
-   * @throws CalFacadeException
-   */
-  Set<EventInfo> fetch(FilterBase filter,
-                       String start,
-                       String end,
-                       Holder<Long> found,
-                       long pos,
-                       int count,
-                       AccessChecker accessCheck) throws CalFacadeException;
 }

@@ -107,9 +107,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentSkipListSet;
-
-import javax.xml.ws.Holder;
 
 /** Implementation of indexer for ElasticSearch
  *
@@ -240,7 +237,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     private long found;
 
-    private long pageNum;
+    private int pageStart;
     private int pageSize;
 
     /* For paged queries - we need these values */
@@ -248,9 +245,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     private String end;
     private QueryBuilder curQuery;
     private FilterBuilder curFilter;
-    private int from; // from index in search
 
-    private List<SearchResultEntry> searchResult;
+    private AccessChecker accessCheck;
 
     EsSearchResult(BwIndexer indexer) {
       this.indexer = indexer;
@@ -271,8 +267,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
 
     @Override
-    public long getPageNum() {
-      return pageNum;
+    public int getPageStart() {
+      return pageStart;
     }
 
     @Override
@@ -294,25 +290,22 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     public Set<String> getFacetNames() {
       return null;
     }
-
-    @Override
-    public List<SearchResultEntry> getSearchResult() {
-      return searchResult;
-    }
   }
 
   @Override
   public SearchResult search(final String query,
                              final FilterBase filter,
                              final String start,
-                             final String end) throws CalFacadeException {
+                             final String end,
+                             final int pageSize,
+                             final AccessChecker accessCheck) throws CalFacadeException {
     EsSearchResult res = new EsSearchResult(this);
-    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
     res.start = start;
     res.end = end;
+    res.pageSize = pageSize;
     res.curQuery = QueryBuilders.queryString(query);
-    srb.setQuery(res.curQuery);
+    res.accessCheck = accessCheck;
 
     ESQueryFilter ef = getFilters();
 
@@ -320,7 +313,9 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     res.curFilter = ef.addDateRangeFilter(res.curFilter, start, end);
 
-    srb.setSearchType(SearchType.COUNT)
+    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+    srb.setQuery(res.curQuery)
+            .setSearchType(SearchType.COUNT)
             .setFilter(res.curFilter);
 
     if (debug) {
@@ -341,23 +336,45 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   }
 
   @Override
-  public void getSearchResult(final SearchResult sres,
-                              final long pageNum,
+  public List<SearchResultEntry> getSearchResult(final SearchResult sres,
+                                                 final boolean forward)
+          throws CalFacadeException {
+    int offset;
+
+    if (forward) {
+      offset = sres.getPageStart();
+    } else {
+      // TODO - this is wrong - need to save offsets as we progress.
+      offset = sres.getPageStart() - 2 * sres.getPageSize();
+    }
+
+    return getSearchResult(sres, offset, sres.getPageSize());
+  }
+
+  @Override
+  public List<SearchResultEntry> getSearchResult(final SearchResult sres,
+                                                 final int offset,
                               final int num)
           throws CalFacadeException {
     EsSearchResult res = (EsSearchResult)sres;
 
-    res.pageNum = pageNum;
-    res.pageSize = num;
-    res.searchResult = new ArrayList<>();
+    res.pageStart = offset;
 
+    List<SearchResultEntry> entities = new ArrayList<>(num);
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
-    SearchResponse resp = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
+    srb.setSearchType(SearchType.QUERY_THEN_FETCH)
             .setQuery(res.curQuery)
             .setFilter(res.curFilter)
-            .setFrom(res.from)
-            .setSize(res.pageSize).execute().actionGet();
+            .setFrom(res.pageStart);
+
+    if (num < 0) {
+      srb.setSize(Integer.MAX_VALUE);
+    } else {
+      srb.setSize(num);
+    }
+
+    SearchResponse resp = srb.execute().actionGet();
 
     if (resp.status() != RestStatus.OK) {
       if (debug) {
@@ -369,16 +386,16 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     if ((hits.getHits() == null) ||
             (hits.getHits().length == 0)) {
-      return;
+      return entities;
     }
 
     //Break condition: No hits are returned
     if (hits.hits().length == 0) {
-      return;
+      return entities;
     }
 
     for (SearchHit hit : hits) {
-      res.from++;
+      res.pageStart++;
       String dtype = hit.getType();
 
       if (dtype == null) {
@@ -393,22 +410,28 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       Map<String, Object> fields = hit.sourceAsMap();
 
-      Object entity;
+      Object entity = null;
       if (dtype.equals(docTypeCollection)) {
         entity = makeCollection(fields);
       } else if (dtype.equals(docTypeCategory)) {
         entity = makeCat(fields);
       } else if (IcalDefs.entityTypes.contains(dtype)) {
         entity = makeEvent(fields);
-      } else {
-        throw new CalFacadeException(IndexException.unknownRecordType,
-                                     dtype);
+        EventInfo ei = (EventInfo)entity;
+        Acl.CurrentAccess ca = res.accessCheck.checkAccess(ei.getEvent(),
+                                                         PrivilegeDefs.privAny, true);
+
+        if ((ca == null) || !ca.getAccessAllowed()) {
+          continue;
+        }
       }
 
-      res.searchResult.add(new SearchResultEntry(entity,
+      entities.add(new SearchResultEntry(entity,
                                                  dtype,
                                                  hit.getScore()));
     }
+
+    return entities;
   }
 
   @Override
@@ -689,6 +712,9 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     return makeCat(hits.hits()[0].sourceAsMap());
   }
 
+  private static final int maxFetchCount = 100;
+  private static final int absoluteMaxTries = 1000;
+
   @Override
   public List<BwCategory> fetchAllCats() throws CalFacadeException {
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
@@ -745,95 +771,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
 
     return res;
-  }
-
-  private static final int maxFetchCount = 100;
-  private static final int absoluteMaxTries = 1000;
-
-  @Override
-  public Set<EventInfo> fetch(final FilterBase filter,
-                              final String start,
-                              final String end,
-                              final Holder<Long> found,
-                              final long pos,
-                              final int count,
-                              final AccessChecker accessCheck) throws CalFacadeException {
-    int ourCount = count;
-
-    if ((ourCount < 0) | (ourCount > maxFetchCount)) {
-      ourCount = maxFetchCount;
-    }
-
-    int fetched = 0;
-    int tries = 0;
-    Set<EventInfo> res = new ConcurrentSkipListSet<>();
-
-    ESQueryFilter ef = getFilters();
-
-    FilterBuilder f = ef.buildFilter(filter);
-
-    f = ef.addDateRangeFilter(f, start, end);
-
-    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
-
-    srb.setTypes(IcalDefs.entityTypeNames[IcalDefs.entityTypeEvent],
-                 IcalDefs.entityTypeNames[IcalDefs.entityTypeTodo]);
-
-    long toFetch = count;
-
-    srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setFilter(f)
-            .setFrom((int)pos)
-            .setSize(count);
-    if (debug) {
-      debug("fetch-srb: " + srb);
-    }
-
-    SearchResponse resp = srb.execute().actionGet();
-
-    if (resp.status() != RestStatus.OK) {
-      if (debug) {
-        debug("Fetch returned status " + resp.status());
-      }
-    }
-
-    SearchHits hits = resp.getHits();
-
-    if (found != null) {
-      found.value = hits.getTotalHits();
-    }
-
-    if ((hits.getHits() == null) ||
-            (hits.getHits().length == 0)) {
-      return res;
-    }
-
-    //Break condition: No hits are returned
-    if (hits.hits().length == 0) {
-      return res;
-    }
-
-    for (SearchHit hit : hits) {
-      //Handle the hit...
-      EventInfo ei = makeEvent(hit.sourceAsMap());
-      res.add(ei);
-      fetched++;
-    }
-
-    Set<EventInfo> checked = new ConcurrentSkipListSet<>();
-
-    for (EventInfo ei: res) {
-      Acl.CurrentAccess ca = accessCheck.checkAccess(ei.getEvent(),
-                                     PrivilegeDefs.privAny, true);
-
-      if ((ca == null) || !ca.getAccessAllowed()) {
-        continue;
-      }
-
-      checked.add(ei);
-    }
-
-    return checked;
   }
 
   /* ========================================================================

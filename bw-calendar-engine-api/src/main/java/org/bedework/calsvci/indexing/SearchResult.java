@@ -1,7 +1,6 @@
 package org.bedework.calsvci.indexing;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -14,19 +13,19 @@ public interface SearchResult extends Serializable {
   BwIndexer getIndexer();
 
   /**
-   * @return Number found. 0 means none found,
+   * @return Total number found. 0 means none found,
    *                                -1 means indeterminate
    */
   long getFound();
 
   /**
-   * @return for a paged request the page index
+   * @return for a paged request the next record index
    */
-  long getPageNum();
+  int getPageStart();
 
   /**
    *
-   * @return for a paged request the page size
+   * @return for a paged request the max number of hits
    */
   int getPageSize();
 
@@ -46,10 +45,4 @@ public interface SearchResult extends Serializable {
    * @return names of returned facets - possibly null
    */
   Set<String> getFacetNames();
-
-  /**
-   *
-   * @return the entries from calling BwIndexer#getSearchResult
-   */
-  List<SearchResultEntry> getSearchResult();
 }
