@@ -377,7 +377,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     res.pageStart = offset;
 
-    List<SearchResultEntry> entities = new ArrayList<>(num);
+    List<SearchResultEntry> entities;
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
     if (res.curQuery != null) {
       srb.setQuery(res.curQuery);
@@ -389,8 +389,10 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     if (num < 0) {
       srb.setSize(Integer.MAX_VALUE);
+      entities = new ArrayList<>();
     } else {
       srb.setSize(num);
+      entities = new ArrayList<>(num);
     }
 
     SearchResponse resp = srb.execute().actionGet();
