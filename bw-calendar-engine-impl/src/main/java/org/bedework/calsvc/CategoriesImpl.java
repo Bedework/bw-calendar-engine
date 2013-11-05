@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.CoreEventPropertiesI;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwPrincipal;
@@ -29,8 +30,6 @@ import org.bedework.calsvci.indexing.BwIndexer;
 import org.bedework.calsvci.Categories;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
-
-import org.bedework.access.PrivilegeDefs;
 
 import java.util.ArrayList;
 import java.util.Collection;

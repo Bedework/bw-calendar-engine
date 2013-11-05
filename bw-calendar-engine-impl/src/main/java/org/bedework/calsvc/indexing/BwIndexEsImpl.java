@@ -920,12 +920,17 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     ev.setName(getString(fields, "name"));
     ev.setColPath(getString(fields, "path"));
 
+    Categories cats = getSvc().getCategoriesHandler();
+
     Collection<Object> vals = getFieldValues(fields, "category_uid");
     if (!Util.isEmpty(vals)) {
       Set<String> catUids = new TreeSet<>();
 
       for (Object o: vals) {
-        catUids.add((String)o);
+        String uid = (String)o;
+        catUids.add(uid);
+
+        ev.addCategory(cats.get(uid));
       }
 
       ev.setCategoryUids(catUids);
