@@ -38,12 +38,10 @@ public class BwHrefFilter extends ObjectFilter<String> {
   }
 
   /**
-   * @return the name part of the href - that bit after the last "/"
+   * @return the href only - that bit after the "#"
    */
-  public String getNamePart() {
+  public String getHref() {
     String s = getEntity();
-
-    s = s.substring(s.lastIndexOf("/") + 1);
 
     /* Remove any appended recurrenceid */
 
@@ -54,6 +52,15 @@ public class BwHrefFilter extends ObjectFilter<String> {
     }
 
     return s.substring(0, pos);
+  }
+
+  /**
+   * @return the name part of the href - that bit after the last "/"
+   */
+  public String getNamePart() {
+    String s = getHref();
+
+    return s.substring(s.lastIndexOf("/") + 1);
   }
 
   /**

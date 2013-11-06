@@ -39,6 +39,7 @@ import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Stack;
 
 /** This is a simple filter parser to allow us to embed filter expressions in the
@@ -154,21 +155,17 @@ public abstract class SimpleFilterParser {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder();
+      ToString ts = new ToString(this);
 
-      sb.append("ParseResult[ok=");
-      sb.append(ok);
+      ts.append("ok", ok);
 
       if (ok) {
-        sb.append(" filter=");
-        sb.append(filter);
+        ts.append("filter", filter);
       } else {
-        sb.append(" errcode=");
-        sb.append(cfe.getMessage());
+        ts.append("errcode", cfe.getMessage());
       }
 
-      sb.append("]");
-      return sb.toString();
+      return ts.toString();
     }
   }
 
@@ -250,6 +247,66 @@ public abstract class SimpleFilterParser {
         error(cfe);
       }
       return new ParseResult(cfe);
+    }
+  }
+
+  /** Parse a comma list of sort terms. Each term is a property name
+   * optionally followed by ":" then the terms "ASC" or "DESC". The
+   * default is descending.
+   *
+   * <p>The property name is either a valid bedework property or the
+   * word "RELEVANCE" - which is the default</p>
+   *
+   * @param sexpr
+   * @return list of terms in order of application. Empty for no sort
+   *         terms.
+   * @throws CalFacadeException
+   */
+  public List<SortTerm> parseSort(final String sexpr) throws CalFacadeException {
+    List<SortTerm> res = new ArrayList<>();
+
+    if (sexpr == null) {
+      return res;
+    }
+
+    tokenizer = new SfpTokenizer(new StringReader(sexpr));
+    for (;;) {
+      int tkn = nextToken("parseSort()");
+
+      if (tkn == StreamTokenizer.TT_EOF) {
+        return res;
+      }
+
+      PropertyInfoIndex pi = getProperty(tkn);
+
+      tkn = nextToken("parseSort() - :");
+
+      boolean ascending = false;
+
+      if (tkn == ':') {
+        tkn = nextToken("parseSort() - asc/desc");
+
+        if (tkn != StreamTokenizer.TT_WORD) {
+          throw new CalFacadeException(CalFacadeException.filterExpectedAscDesc,
+                                       String.valueOf(tkn));
+        }
+
+        if ("asc".equalsIgnoreCase(tokenizer.sval)) {
+          ascending = true;
+        } else if ("asc".equalsIgnoreCase(tokenizer.sval)) {
+          ascending = false;
+        } else {
+          throw new CalFacadeException(CalFacadeException.filterExpectedAscDesc,
+                                       String.valueOf(tkn));
+        }
+      } else if (tkn == StreamTokenizer.TT_EOF) {
+        tokenizer.pushBack();
+      } else if (tkn != ',') {
+        throw new CalFacadeException(CalFacadeException.filterBadSort,
+                                     String.valueOf(tkn) + " from " + sexpr);
+      }
+
+      res.add(new SortTerm(pi, ascending));
     }
   }
 
@@ -411,9 +468,7 @@ public abstract class SimpleFilterParser {
     return tkn;
   }
 
-  private void doPropertyComparison() throws CalFacadeException {
-    int tkn = nextToken("doPropertyComparison()");
-
+  private PropertyInfoIndex getProperty(final int tkn) throws CalFacadeException {
     if (tkn != StreamTokenizer.TT_WORD) {
       throw new CalFacadeException(CalFacadeException.filterExpectedPropertyName,
                                    String.valueOf(tkn));
@@ -422,19 +477,20 @@ public abstract class SimpleFilterParser {
     String pname = tokenizer.sval;
     String pnameUc = pname.toUpperCase();
 
-    boolean catuid = pnameUc.equals("CATUID");
     PropertyInfoIndex pi;
 
-    if (catuid) {
-      pi = PropertyInfoIndex.lookupPname("CATEGORIES"); // XXX do that properly
-    } else {
-      pi = PropertyInfoIndex.lookupPname(pnameUc);
-    }
+    pi = PropertyInfoIndex.lookupPname(pnameUc);
 
     if (pi == null) {
       throw new CalFacadeException(CalFacadeException.unknownProperty,
                                    pname + ": expr was " + currentExpr);
     }
+
+    return pi;
+  }
+
+  private void doPropertyComparison() throws CalFacadeException {
+    PropertyInfoIndex pi = getProperty(nextToken("getProperty()"));
 
     Operator oper = nextOperator();
     TimeRange tr = null;
@@ -442,20 +498,19 @@ public abstract class SimpleFilterParser {
 
     if (oper.op == inTimeRange) {
       tr = getTimeRange();
-    } else if ((oper.op != isDefined) && (oper.op != notDefined)) {
-      if (!catuid) {
-        // Expect a value
-        tokenizer.assertString();
+    } else if ((oper.op != isDefined) && (oper.op != notDefined) &&
+            (pi != PropertyInfoIndex.CATUID)) {
+      // Expect a value
+      tokenizer.assertString();
 
-        tm = new TextMatchType();
-        tm.setValue(tokenizer.sval);
-        if (oper.op == notEqual) {
-          tm.setNegateCondition("yes");
-        } else {
-          tm.setNegateCondition("no");
-        }
-        tm.setCollation("i;ascii-casemap");
+      tm = new TextMatchType();
+      tm.setValue(tokenizer.sval);
+      if (oper.op == notEqual) {
+        tm.setNegateCondition("yes");
+      } else {
+        tm.setNegateCondition("no");
       }
+      tm.setCollation("i;ascii-casemap");
     }
 
     FilterBase pfilter = makePropFilter(pi, oper.op,
@@ -463,7 +518,8 @@ public abstract class SimpleFilterParser {
                                     tm, null);
 
     if (pfilter == null) {
-      throw new CalFacadeException(CalFacadeException.filterBadProperty, pname);
+      throw new CalFacadeException(CalFacadeException.filterBadProperty,
+                                   pi.toString());
     }
 
     /* If there is a logical operator on the stack top (and/or) then we create
@@ -574,6 +630,39 @@ public abstract class SimpleFilterParser {
       filter = new PresenceFilter(null, pi, true);
     } else if (timeRange != null) {
       filter = ObjectFilter.makeFilter(null, pi, timeRange);
+    } else if (pi.equals(PropertyInfoIndex.CATUID)) {
+      // No match and category - expect list of uids.
+      ArrayList<String> uids = doWordList();
+
+      for (String uid: uids) {
+        BwCategory cat = getCategory(uid);
+
+        if (cat == null) {
+          throw new CalFacadeException(CalFacadeException.filterBadProperty,
+                                       "category uid: " + uid);
+        }
+
+        ObjectFilter<BwCategory> f = new BwCategoryFilter(null);
+
+        f.setEntity(cat);
+
+        f.setExact(exact);
+        f.setNot(oper == notEqual);
+
+        if (filter == null) {
+          filter = f;
+        } else {
+          if (filter instanceof BwCategoryFilter) {
+            AndFilter af = new AndFilter();
+
+            af.addChild(filter);
+
+            filter = af;
+          }
+
+          ((AndFilter)filter).addChild(f);
+        }
+      }
     } else if (match != null) {
       if (pi.equals(PropertyInfoIndex.CATEGORIES)) {
         String val = match.getValue();
@@ -618,39 +707,6 @@ public abstract class SimpleFilterParser {
         f.setNot(match.getNegateCondition().equals("yes"));
 
         filter = f;
-      }
-    } else if (pi.equals(PropertyInfoIndex.CATEGORIES)) {
-      // No match and category - expect list of uids.
-      ArrayList<String> uids = doWordList();
-
-      for (String uid: uids) {
-        BwCategory cat = getCategory(uid);
-
-        if (cat == null) {
-          throw new CalFacadeException(CalFacadeException.filterBadProperty,
-        		                       "category uid: " + uid);
-        }
-
-        ObjectFilter<BwCategory> f = new BwCategoryFilter(null);
-
-        f.setEntity(cat);
-
-        f.setExact(exact);
-        f.setNot(oper == notEqual);
-
-        if (filter == null) {
-          filter = f;
-        } else {
-          if (filter instanceof BwCategoryFilter) {
-            AndFilter af = new AndFilter();
-
-            af.addChild(filter);
-
-            filter = af;
-          }
-
-          ((AndFilter)filter).addChild(f);
-        }
       }
     } else {
       // Must have param filters

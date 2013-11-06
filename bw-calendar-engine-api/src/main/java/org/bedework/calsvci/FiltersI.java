@@ -20,9 +20,11 @@ package org.bedework.calsvci;
 
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.filter.SortTerm;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 
 /** Interface for handling bedework filters.
  *
@@ -39,34 +41,26 @@ import java.util.Collection;
  *
  */
 public interface FiltersI extends Serializable {
-  /** Parse an xml definition and create a filter
-   *
-   * @param  val       String xml filter definition
-   * @return BwFilterDef object
-   * @throws CalFacadeException
-  public BwFilterDef parse(String val) throws CalFacadeException;
-   */
-
   /** Parse the xml definition in the given filter object
    *
    * @param  val       BwFilterDef
    * @throws CalFacadeException
    */
-  public void parse(BwFilterDef val) throws CalFacadeException;
+  void parse(BwFilterDef val) throws CalFacadeException;
 
   /** Validate a filter definition.
    *
    * @param  val       String xml filter definition
    * @throws CalFacadeException
    */
-  public void validate(String val) throws CalFacadeException;
+  void validate(String val) throws CalFacadeException;
 
   /** Validate and persist a new filter definition
    *
    * @param  val       filter definition
    * @throws CalFacadeException for errrors including duplicate name
    */
-  public void save(BwFilterDef val) throws CalFacadeException;
+  void save(BwFilterDef val) throws CalFacadeException;
 
   /** Get a filter given the name
    *
@@ -74,26 +68,33 @@ public interface FiltersI extends Serializable {
    * @return BwFilter null for unknown filter
    * @throws CalFacadeException
    */
-  public BwFilterDef get(String name) throws CalFacadeException;
+  BwFilterDef get(String name) throws CalFacadeException;
 
   /** Get filter definitions to which this user has access
    *
    * @return Collection     of BwCalSuiteWrapper
    * @throws CalFacadeException
    */
-  public Collection<BwFilterDef> getAll() throws CalFacadeException;
+  Collection<BwFilterDef> getAll() throws CalFacadeException;
 
   /** Update a filter definition.
    *
    * @param  val        filter definition
    * @throws CalFacadeException for errors including duplicate name
    */
-  public void update(BwFilterDef val) throws CalFacadeException;
+  void update(BwFilterDef val) throws CalFacadeException;
 
   /** Delete a filter given the name
    *
    * @param  name     String name of filter
    * @throws CalFacadeException
    */
-  public void delete(String name) throws CalFacadeException;
+  void delete(String name) throws CalFacadeException;
+
+  /** Parse the sort expression
+   *
+   * @param  val  String sort expression
+   * @throws CalFacadeException
+   */
+  List<SortTerm> parseSort(String val) throws CalFacadeException;
 }

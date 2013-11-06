@@ -20,7 +20,7 @@ package org.bedework.calfacade.exc;
 
 /** Exception somewhere in the calendar facade
  *
- * @author Mike Douglass douglm@bedework.edu
+ * @author Mike Douglass douglm   rpi.edu
  */
 public class CalFacadeException extends Exception {
   /* Property names used as message value. These should be used to
@@ -188,6 +188,14 @@ public class CalFacadeException extends Exception {
   /** expected property name */
   public static final String filterExpectedPropertyName =
       "org.bedework.exception.filter.expected.propertyname";
+
+  /** expected ascending/descending */
+  public static final String filterExpectedAscDesc =
+          "org.bedework.exception.filter.expected.ascdesc";
+
+  /** Bad sort expression */
+  public static final String filterBadSort =
+          "org.bedework.exception.filter.badsort";
 
   /** expected uid */
   public static final String filterExpectedUid =

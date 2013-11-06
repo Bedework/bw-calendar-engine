@@ -24,15 +24,17 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
+import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calsvci.FiltersI;
 
 import ietf.params.xml.ns.caldav.FilterType;
 
 import java.util.Collection;
+import java.util.List;
 
 /** This acts as an interface to the database for filters.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 class Filters extends CalSvcDb implements FiltersI {
   /** Constructor
@@ -128,5 +130,11 @@ class Filters extends CalSvcDb implements FiltersI {
   @Override
   public void delete(final String name) throws CalFacadeException {
     getCal().deleteFilterDef(name, getEntityOwner(getPrincipal()));
+  }
+
+  @Override
+  public List<SortTerm> parseSort(final String val)
+          throws CalFacadeException {
+    return getSvc().getFilterParser().parseSort(val);
   }
 }

@@ -118,7 +118,8 @@ public class ESQueryFilter {
 
     if (start != null) {
       // End of events must be on or after the start of the range
-      RangeFilterBuilder rfb = new RangeFilterBuilder("end_utc");
+      RangeFilterBuilder rfb = new RangeFilterBuilder(
+              PropertyInfoIndex.DTEND_UTC.getPnameLC());
 
       rfb.gte(dateTimeUTC(start));
 
@@ -135,7 +136,8 @@ public class ESQueryFilter {
 
     if (end != null) {
       // Start of events must be before the end of the range
-      RangeFilterBuilder rfb = new RangeFilterBuilder("start_utc");
+      RangeFilterBuilder rfb = new RangeFilterBuilder(
+              PropertyInfoIndex.DTSTART_UTC.getPnameLC());
 
       rfb.lt(dateTimeUTC(end));
 
@@ -380,18 +382,10 @@ public class ESQueryFilter {
     }
 
     if (f instanceof BwHrefFilter) {
-      AndFilterBuilder fb = new AndFilterBuilder();
-
-      fb.add(FilterBuilders.termFilter("colPath",
-                                       ((BwHrefFilter)f)
-                                               .getPathPart()));
-      fb.add(FilterBuilders.termFilter("name",
-                                       ((BwHrefFilter)f)
-                                               .getNamePart()));
-
       queryLimited = true;
 
-      return fb;
+      return FilterBuilders.termFilter(PropertyInfoIndex.HREF.getPnameLC(),
+                                       ((BwHrefFilter)f).getHref());
     }
 
     if (!(f instanceof PropertyFilter)) {
@@ -402,7 +396,7 @@ public class ESQueryFilter {
 
     if (pf.getPropertyIndex() == PropertyInfoIndex.CATEGORY_PATH) {
       // Special case this one.
-      return new TermOrTerms("category_path",
+      return new TermOrTerms(PropertyInfoIndex.CATEGORY_PATH.getPnameLC(),
                              ((ObjectFilter)pf).getEntity());
     }
 
@@ -414,15 +408,18 @@ public class ESQueryFilter {
                                    String.valueOf(pf.getPropertyIndex()));
     }
 
-    String fieldName = pi.getDbFieldName();
-    boolean multi = pi.getMultiValued();
+    String fieldName = pf.getPropertyIndex().getPnameLC();
+    //String fieldName = pi.getDbFieldName();
+    //boolean multi = pi.getMultiValued();
     boolean param = pi.getParam();
 
     if (param) {
-      BwIcalPropertyInfo.BwIcalPropertyInfoEntry parentPi =
-              BwIcalPropertyInfo.getPinfo(pf.getParentPropertyIndex());
+      //BwIcalPropertyInfo.BwIcalPropertyInfoEntry parentPi =
+      //        BwIcalPropertyInfo.getPinfo(pf.getParentPropertyIndex());
 
-      fieldName = parentPi.getDbFieldName() + "." + fieldName;
+      //fieldName = parentPi.getDbFieldName() + "." + fieldName;
+      fieldName = pf.getParentPropertyIndex().getPnameLC() +
+              "." + fieldName;
     }
 
     if (f instanceof PresenceFilter) {
@@ -446,13 +443,14 @@ public class ESQueryFilter {
 
     if (pf instanceof BwCategoryFilter) {
       BwCategory cat = ((BwCategoryFilter)pf).getEntity();
-      return new TermOrTerms("category_uid", cat.getUid());
+      return new TermOrTerms(PropertyInfoIndex.CATUID.getPnameLC(),
+                             cat.getUid());
     }
 
     if (pf instanceof BwCollectionFilter) {
       BwCalendar col = ((BwCollectionFilter)pf).getEntity();
 
-      return new TermOrTerms("path",
+      return new TermOrTerms(PropertyInfoIndex.COLPATH.getPnameLC(),
                              col.getPath());
     }
 
@@ -597,7 +595,8 @@ public class ESQueryFilter {
       return filter;
     }
 
-    FilterBuilder fb = FilterBuilders.termFilter("owner", principal);
+    FilterBuilder fb = FilterBuilders.termFilter(
+            PropertyInfoIndex.OWNER.getPnameLC(), principal);
 
     if (filter == null) {
       return fb;

@@ -297,6 +297,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   @Override
   public SearchResult search(final String query,
                              final FilterBase filter,
+                             final List<SortTerm> sort,
                              final String start,
                              final String end,
                              final int pageSize,
@@ -327,6 +328,22 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
             .setFilter(res.curFilter)
             .setFrom(0)
             .setSize(0);
+
+    if (!Util.isEmpty(sort)) {
+      SortOrder so;
+
+      for (SortTerm st: sort) {
+        if (st.isAscending()) {
+          so = SortOrder.ASC;
+        } else {
+          so = SortOrder.DESC;
+        }
+
+        FieldSortBuilder fsb;
+        srb.addSort(new FieldSortBuilder(st.getIndex().getPnameLC())
+                            .order(so));
+      }
+    }
 
     if (debug) {
       debug("search-srb=" + srb);
@@ -695,7 +712,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   public BwCategory fetchCat(final String field,
                              final String val)
           throws CalFacadeException {
-    if (field.equals("uid")) {
+    if (field.equals(PropertyInfoIndex.UID.getPnameLC())) {
       GetRequestBuilder grb = getClient().prepareGet(targetIndex,
                                                      docTypeCategory,
                                                      val);
@@ -855,20 +872,49 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     return bwkey;
   }
 
+  private void restoreSharedEntity(final Map<String, Object> fields,
+                                   BwShareableContainedDbentity ent) throws CalFacadeException {
+    ent.setCreatorHref(getString(fields, PropertyInfoIndex.CREATOR));
+    ent.setOwnerHref(getString(fields, PropertyInfoIndex.OWNER));
+    ent.setColPath(getString(fields, PropertyInfoIndex.COLPATH));
+    ent.setAccess(getString(fields, PropertyInfoIndex.ACL));
+  }
+
+  private List<String> restoreCategories(final Map<String, Object> fields,
+                                         final CategorisedEntity ce) throws CalFacadeException {
+    Categories cats = getSvc().getCategoriesHandler();
+
+    Collection<Object> vals = getFieldValues(fields, PropertyInfoIndex.CATUID);
+    if (Util.isEmpty(vals)) {
+      return null;
+    }
+
+    List<String> catUids = new ArrayList<>();
+
+    for (Object o: vals) {
+      String uid = (String)o;
+      catUids.add(uid);
+
+      ce.addCategory(cats.get(uid));
+    }
+
+    return catUids;
+  }
+
   private BwCategory makeCat(final Map<String, Object> fields) throws CalFacadeException {
     BwCategory cat = new BwCategory();
 
+    restoreSharedEntity(fields, cat);
+
+    cat.setName(getString(fields, PropertyInfoIndex.NAME));
+    cat.setUid(getString(fields, PropertyInfoIndex.UID));
+
     cat.setWord(new BwString(null,
-                             getString(fields, "value")));
+                             getString(fields,
+                                       PropertyInfoIndex.CATEGORIES)));
     cat.setDescription(new BwString(null,
                                     getString(fields,
-                                              "description")));
-    cat.setCreatorHref(getString(fields, "creator"));
-    cat.setOwnerHref(getString(fields, "owner"));
-    cat.setUid(getString(fields, "uid"));
-
-    cat.setName(getString(fields, "name"));
-    cat.setColPath(getString(fields, "colPath"));
+                                              PropertyInfoIndex.DESCRIPTION)));
 
     return cat;
   }
@@ -876,31 +922,20 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   private BwCalendar makeCollection(final Map<String, Object> fields) throws CalFacadeException {
     BwCalendar col = new BwCalendar();
 
-    col.setName(getString(fields, "name"));
-    col.setColPath(getString(fields, "path"));
+    restoreSharedEntity(fields, col);
 
-    Categories cats = getSvc().getCategoriesHandler();
+    col.setName(getString(fields, PropertyInfoIndex.NAME));
+    col.setPath(getString(fields, PropertyInfoIndex.HREF));
 
-    Collection<Object> vals = getFieldValues(fields, "category_uid");
-    if (!Util.isEmpty(vals)) {
-      for (Object o: vals) {
-        BwCategory cat = cats.get((String)o);
+    restoreCategories(fields, col);
 
-        if (o != null) {
-          col.addCategory(cat);
-        }
-      }
-    }
-
-    col.setCreated(getString(fields, "created"));
+    col.setCreated(getString(fields, PropertyInfoIndex.CREATED));
     col.setLastmod(new BwCollectionLastmod(col,
                                            getString(fields,
-                                                     "last_modified")));
-    col.setCreatorHref(getString(fields, "creator"));
-    col.setOwnerHref(getString(fields, "owner"));
-    col.setSummary(getString(fields, "summary"));
-    col.setDescription(getString(fields, "description"));
-    col.setAccess(getString(fields, "acl"));
+                                                     PropertyInfoIndex.LAST_MODIFIED)));
+    col.setSummary(getString(fields, PropertyInfoIndex.SUMMARY));
+    col.setDescription(getString(fields,
+                                 PropertyInfoIndex.DESCRIPTION));
 
     return col;
   }
@@ -917,63 +952,55 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
     */
 
-    ev.setName(getString(fields, "name"));
-    ev.setColPath(getString(fields, "path"));
+    restoreSharedEntity(fields, ev);
 
-    Categories cats = getSvc().getCategoriesHandler();
+    ev.setName(getString(fields, PropertyInfoIndex.NAME));
 
-    Collection<Object> vals = getFieldValues(fields, "category_uid");
-    if (!Util.isEmpty(vals)) {
-      Set<String> catUids = new TreeSet<>();
+    ev.setCategoryUids(restoreCategories(fields, ev));
 
-      for (Object o: vals) {
-        String uid = (String)o;
-        catUids.add(uid);
+    ev.setCreated(getString(fields, PropertyInfoIndex.CREATED));
+    ev.setLastmod(getString(fields,
+                            PropertyInfoIndex.LAST_MODIFIED));
+    ev.setSummary(getString(fields, PropertyInfoIndex.SUMMARY));
+    ev.setDescription(getString(fields,
+                                PropertyInfoIndex.DESCRIPTION));
 
-        ev.addCategory(cats.get(uid));
-      }
-
-      ev.setCategoryUids(catUids);
-    }
-
-    ev.setCreated(getString(fields, "created"));
-
-    ev.setLastmod(getString(fields, "last_modified"));
-    ev.setDtstamp(ev.getLastmod());
-    ev.setCreatorHref(getString(fields, "creator"));
-    ev.setOwnerHref(getString(fields, "owner"));
-    ev.setAccess(getString(fields, "acl"));
-    ev.setSummary(getString(fields, "summary"));
-    ev.setDescription(getString(fields, "description"));
+    ev.setDtstamp(getString(fields,
+                            PropertyInfoIndex.DTSTAMP));
 
     /* comment */
     /* contact */
     /* location - lat/long */
     /* resources */
 
-    ev.setDtstart(unindexDate(fields, "start_"));
-    ev.setDtend(unindexDate(fields, "end_"));
+    ev.setDtstart(unindexDate(fields, true));
+    ev.setDtend(unindexDate(fields, false));
 
-    ev.setDuration(getString(fields, "duration"));
-    ev.setNoStart(Boolean.parseBoolean(getString(fields, "start_present")));
-    ev.setEndType(getString(fields, "end_type").charAt(0));
+    ev.setNoStart(Boolean.parseBoolean(getString(fields,
+                                                 PropertyInfoIndex.START_PRESENT)));
+    ev.setEndType(getString(fields, PropertyInfoIndex.END_TYPE).charAt(0));
+    ev.setDuration(getString(fields, PropertyInfoIndex.DURATION));
 
-    ev.setUid(getString(fields, "uid"));
+    ev.setUid(getString(fields, PropertyInfoIndex.UID));
 
-    ev.setRecurrenceId(getString(fields, "recurrenceid"));
+    ev.setRecurrenceId(getString(fields, PropertyInfoIndex.RECURRENCE_ID));
 
-    ev.setEntityType(makeEntityType(getString(fields, "eventType")));
+    ev.setEntityType(makeEntityType(getString(fields,
+                                              PropertyInfoIndex.ENTITY_TYPE)));
 
-    ev.setStatus(getString(fields, "status"));
+    ev.setStatus(getString(fields, PropertyInfoIndex.STATUS));
 
-    ev.setLocationUid(getString(fields, "location_uid"));
+    ev.setLocationUid(getString(fields,
+                                PropertyInfoIndex.LOCATION_UID));
 
     Set<String> xpnames = interestingXprops.keySet();
 
     if (!Util.isEmpty(xpnames)) {
       for (String xpname: xpnames) {
         @SuppressWarnings("unchecked")
-        Collection<String> xvals = (Collection)getFieldValues(fields, interestingXprops.get(xpname));
+        Collection<String> xvals =
+                (Collection)getFieldValues(fields,
+                                           interestingXprops.get(xpname));
 
         if (!Util.isEmpty(xvals)) {
           for (String xval: xvals) {
@@ -995,6 +1022,11 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   }
 
   private List<Object> getFieldValues(final Map<String, Object> fields,
+                                      final PropertyInfoIndex id) {
+    return getFieldValues(fields, id.getPnameLC());
+  }
+
+  private List<Object> getFieldValues(final Map<String, Object> fields,
                                       final String name) {
     Object val = fields.get(name);
 
@@ -1013,8 +1045,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   }
 
   private Object getFirstValue(final Map<String, Object> fields,
-                               final String name) {
-    Object val = fields.get(name);
+                               final PropertyInfoIndex id) {
+    Object val = fields.get(id.getPnameLC());
 
     if (val == null) {
       return null;
@@ -1033,8 +1065,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   }
 
   private String getString(final Map<String, Object> fields,
-                           final String name) {
-    return (String)getFirstValue(fields, name);
+                           final PropertyInfoIndex id) {
+    return (String)getFirstValue(fields, id);
   }
 
   private static Map<String, Integer> entitytypeMap =
@@ -1061,12 +1093,25 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   }
 
   private BwDateTime unindexDate(final Map<String, Object> fields,
-                                 final String prefix) throws CalFacadeException {
-    String utc = getString(fields, prefix + "utc");
-    String local = getString(fields, prefix + "local");
-    String tzid = getString(fields, prefix + "tzid");
-    boolean floating = Boolean.parseBoolean(getString(fields,
-                                                      prefix + "floating"));
+                                 final boolean start) throws CalFacadeException {
+    String utc;
+    String local;
+    String tzid;
+    boolean floating;
+
+    if (start) {
+      utc = getString(fields, PropertyInfoIndex.DTSTART_UTC);
+      local = getString(fields, PropertyInfoIndex.DTSTART_LOCAL);
+      tzid = getString(fields, PropertyInfoIndex.DTSTART_TZID);
+      floating = Boolean.parseBoolean(getString(fields,
+                                                PropertyInfoIndex.DTSTART_FLOATING));
+    } else {
+      utc = getString(fields, PropertyInfoIndex.DTEND_UTC);
+      local = getString(fields, PropertyInfoIndex.DTEND_LOCAL);
+      tzid = getString(fields, PropertyInfoIndex.DTEND_TZID);
+      floating = Boolean.parseBoolean(getString(fields,
+                                                PropertyInfoIndex.DTEND_FLOATING));
+    }
 
     boolean dateType = (local != null) && (local.length() == 8);
 
@@ -1490,28 +1535,31 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   private String makeDoc(final XContentBuilder builder,
                          final BwCategory cat) throws CalFacadeException {
     try {
-      makeField(builder, "uid", cat.getUid());
-      makeField(builder, "creator", cat.getCreatorHref());
-      makeField(builder, "owner", cat.getOwnerHref());
-
       /* We don't have real collections. It's been the practice to
          create "/" delimited names to emulate a hierarchy. Look out
          for these and try to create a real path based on them.
        */
 
-      makeField(builder, "value", cat.getWord().getValue());
+//      makeField(builder, "value", cat.getWord().getValue());
 
       setColPath(cat);
 
-      makeField(builder, "name", cat.getName());
-      makeField(builder, "colPath", cat.getColPath());
+      makeField(builder, PropertyInfoIndex.CREATOR, cat.getCreatorHref());
+      makeField(builder, PropertyInfoIndex.OWNER, cat.getOwnerHref());
+      makeField(builder, PropertyInfoIndex.COLPATH, cat.getColPath());
 
-      makeField(builder, "category_path", Util.buildPath(false,
-                                                cat.getColPath(),
-                                                cat.getName()));
+      makeField(builder, PropertyInfoIndex.NAME, cat.getName());
+      makeField(builder, PropertyInfoIndex.UID, cat.getUid());
 
-      makeField(builder, "category", cat.getWord());
-      makeField(builder, "description", cat.getDescription());
+      makeField(builder, PropertyInfoIndex.HREF,
+                Util.buildPath(false,
+                               cat.getColPath(),
+                               cat.getName()));
+
+      makeField(builder, PropertyInfoIndex.CATEGORIES,
+                cat.getWord().getValue());
+      makeField(builder, PropertyInfoIndex.DESCRIPTION,
+                cat.getDescription());
 
       batchCurSize++;
 
@@ -1535,9 +1583,9 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       BwEvent ev = null;
 
       String colPath = null;
+      String path = null;
       Collection <BwCategory> cats = null;
 
-      String key = null;
       String name = null;
       String created = null;
       String creator = null;
@@ -1551,11 +1599,11 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       if (rec instanceof BwCalendar) {
         col = (BwCalendar)rec;
 
-        key = makeKeyVal(col);
         itemType = docTypeCollection;
 
         name = col.getName();
         colPath = col.getColPath();
+        path = col.getPath();
         cats = col.getCategories();
         created = col.getCreated();
         creator = col.getCreatorHref();
@@ -1568,11 +1616,9 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         ei = (EventInfo)rec;
         ev = ei.getEvent();
 
+        colPath = ev.getColPath();
         name = ev.getName();
-
-        key = keyConverter.makeEventKey(ev.getColPath(),
-                                        ev.getUid(),
-                                        recurid);
+        path = colPath + "/" + name;
 
         itemType = IcalDefs.fromEntityType(ev.getEntityType());
 
@@ -1587,7 +1633,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         }
         */
 
-        colPath = ev.getColPath();
         cats = ev.getCategories();
         created = ev.getCreated();
         creator = ev.getCreatorHref();
@@ -1613,25 +1658,24 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       /* Start doc and do common collection/event fields */
 
-      makeField(builder, "key", key);
-      makeField(builder, "itemType", itemType);
-
       if (colPath == null) {
         colPath = "";
       }
 
-      makeField(builder, "name", name);
-      makeField(builder, "path", colPath);
+      makeField(builder, PropertyInfoIndex.CREATOR, creator);
+      makeField(builder, PropertyInfoIndex.OWNER, owner);
+      makeField(builder, PropertyInfoIndex.COLPATH, colPath);
+      makeField(builder, PropertyInfoIndex.ACL, acl);
+
+      makeField(builder, PropertyInfoIndex.NAME, name);
+      makeField(builder, PropertyInfoIndex.HREF, path);
 
       indexCategories(builder, cats);
 
-      makeField(builder, "created", created);
-      makeField(builder, "last_modified", lastmod);
-      makeField(builder, "creator", creator);
-      makeField(builder, "owner", owner);
-      makeField(builder, "summary", summary);
-      makeField(builder, "description", description);
-      makeField(builder, "acl", acl);
+      makeField(builder, PropertyInfoIndex.CREATED, created);
+      makeField(builder, PropertyInfoIndex.LAST_MODIFIED, lastmod);
+      makeField(builder, PropertyInfoIndex.SUMMARY, summary);
+      makeField(builder, PropertyInfoIndex.DESCRIPTION, description);
 
       if (col != null) {
         // Doing collection - we're done
@@ -1644,25 +1688,30 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       /* location - lat/long */
       /* resources */
 
-      indexDate(builder, "start_", start);
-      indexDate(builder, "end_", end);
+      makeField(builder, PropertyInfoIndex.DTSTAMP, ev.getDtstamp());
 
-      makeField(builder, "start_present", String.valueOf(ev.getNoStart()));
-      makeField(builder, "end_type", String.valueOf(ev.getEndType()));
+      indexDate(builder, true, start);
+      indexDate(builder, false, end);
 
-      makeField(builder, "duration", ev.getDuration());
-      makeField(builder, "uid", ev.getUid());
-      makeField(builder, "status", ev.getStatus());
+      makeField(builder, PropertyInfoIndex.START_PRESENT,
+                String.valueOf(ev.getNoStart()));
+      makeField(builder, PropertyInfoIndex.END_TYPE,
+                String.valueOf(ev.getEndType()));
+
+      makeField(builder, PropertyInfoIndex.DURATION, ev.getDuration());
+      makeField(builder, PropertyInfoIndex.UID, ev.getUid());
+      makeField(builder, PropertyInfoIndex.STATUS, ev.getStatus());
 
       if (recurid != null) {
-        makeField(builder, "recurrenceid", recurid);
+        makeField(builder, PropertyInfoIndex.RECURRENCE_ID, recurid);
       }
 
-      makeField(builder, "eventType", IcalDefs.entityTypeNames[ev.getEntityType()]);
+      makeField(builder, PropertyInfoIndex.ENTITY_TYPE,
+                IcalDefs.entityTypeNames[ev.getEntityType()]);
 
       BwLocation loc = ev.getLocation();
       if (loc != null) {
-        makeField(builder, "location_uid", loc.getUid());
+        makeField(builder, PropertyInfoIndex.LOCATION_UID, loc.getUid());
 
         String s = null;
 
@@ -1679,21 +1728,25 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         }
 
         if (s != null) {
-          makeField(builder, "location_str", s);
+          makeField(builder, PropertyInfoIndex.LOCATION_STR, s);
         }
       }
 
       if (ev.getXproperties() != null) {
         for (BwXproperty xp: ev.getXproperties()) {
-          String solrname = interestingXprops.get(xp.getName());
+          String nm = interestingXprops.get(xp.getName());
 
-          if (solrname != null) {
+          if (nm != null) {
             String pars = xp.getPars();
             if (pars == null) {
               pars = "";
             }
 
-            makeField(builder, solrname, pars + "\t" + xp.getValue());
+            try {
+              builder.field(nm, pars + "\t" + xp.getValue());
+            } catch (IOException e) {
+              throw new CalFacadeException(e);
+            }
           }
         }
       }
@@ -1709,12 +1762,21 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   }
 
   private void indexDate(final XContentBuilder builder,
-                         final String prefix,
+                         final boolean start,
                          final BwDateTime dt) throws CalFacadeException {
-    makeField(builder, prefix + "utc", dt.getDate());
-    makeField(builder, prefix + "local", dt.getDtval());
-    makeField(builder, prefix + "tzid", dt.getTzid());
-    makeField(builder, prefix + "floating", String.valueOf(dt.getFloating()));
+    if (start) {
+      makeField(builder, PropertyInfoIndex.DTSTART_UTC, dt.getDate());
+      makeField(builder, PropertyInfoIndex.DTSTART_LOCAL, dt.getDtval());
+      makeField(builder, PropertyInfoIndex.DTSTART_TZID, dt.getTzid());
+      makeField(builder, PropertyInfoIndex.DTSTART_FLOATING,
+                String.valueOf(dt.getFloating()));
+    } else {
+      makeField(builder, PropertyInfoIndex.DTEND_UTC, dt.getDate());
+      makeField(builder, PropertyInfoIndex.DTEND_LOCAL, dt.getDtval());
+      makeField(builder, PropertyInfoIndex.DTEND_TZID, dt.getTzid());
+      makeField(builder, PropertyInfoIndex.DTEND_FLOATING,
+                String.valueOf(dt.getFloating()));
+    }
   }
 
   private void makeId(final XContentBuilder builder,
@@ -1731,7 +1793,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   }
 
   private void makeField(final XContentBuilder builder,
-                         final String name,
+                         final PropertyInfoIndex pi,
                          final BwString val) throws CalFacadeException {
     if (val == null) {
       return;
@@ -1739,12 +1801,13 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     try {
       // XXX Need to handle languages.
-      builder.field(name, val.getValue());
+      builder.field(pi.getPnameLC(), val.getValue());
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }
   }
 
+  /*
   private void makeField(final XContentBuilder builder,
                          final String name,
                          final String val) throws CalFacadeException {
@@ -1754,6 +1817,20 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     try {
       builder.field(name, val);
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }*/
+
+  private void makeField(final XContentBuilder builder,
+                         final PropertyInfoIndex pi,
+                         final String val) throws CalFacadeException {
+    if (val == null) {
+      return;
+  }
+
+    try {
+      builder.field(pi.getPnameLC(), val);
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }
@@ -1767,11 +1844,12 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     for (BwCategory cat: cats) {
       setColPath(cat);
-      makeField(builder, "category", cat.getWord().getValue());
-      makeField(builder, "category_uid", cat.getUid());
-      makeField(builder, "category_path", Util.buildPath(false,
-                                                         cat.getColPath(),
-                                                         cat.getName()));
+      makeField(builder, PropertyInfoIndex.CATEGORIES, cat.getWord().getValue());
+      makeField(builder, PropertyInfoIndex.CATUID, cat.getUid());
+      makeField(builder, PropertyInfoIndex.CATEGORY_PATH,
+                Util.buildPath(false,
+                               cat.getColPath(),
+                               cat.getName()));
     }
   }
 

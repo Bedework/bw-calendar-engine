@@ -23,7 +23,7 @@ import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.util.indexing.Index;
 
 import java.io.Serializable;
@@ -64,6 +64,7 @@ public interface BwIndexer extends Serializable {
    *
    * @param query        Query string
    * @param filter       parsed filter
+   * @param sort  list of fields to sort by - may be null
    * @param start - if non-null limit to this and after
    * @param end - if non-null limit to before this
    * @param pageSize - stored in the search result for future calls.
@@ -73,6 +74,7 @@ public interface BwIndexer extends Serializable {
    */
   SearchResult search(String query,
                       FilterBase filter,
+                      List<SortTerm> sort,
                       String start,
                       String end,
                       int pageSize,
