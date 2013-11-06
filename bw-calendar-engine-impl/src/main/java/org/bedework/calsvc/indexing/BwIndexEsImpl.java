@@ -31,10 +31,13 @@ import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.base.BwShareableContainedDbentity;
+import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvc.CalSvcDb;
@@ -45,6 +48,7 @@ import org.bedework.calsvci.indexing.SearchResultEntry;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.indexing.Index;
 import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
@@ -97,6 +101,8 @@ import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 
 import java.io.File;
 import java.io.IOException;
@@ -405,8 +411,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
             .setFrom(res.pageStart);
 
     if (num < 0) {
-      srb.setSize(Integer.MAX_VALUE);
-      entities = new ArrayList<>();
+      srb.setSize((int)sres.getFound());
+      entities = new ArrayList<>((int)sres.getFound());
     } else {
       srb.setSize(num);
       entities = new ArrayList<>(num);
@@ -880,7 +886,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     ent.setAccess(getString(fields, PropertyInfoIndex.ACL));
   }
 
-  private List<String> restoreCategories(final Map<String, Object> fields,
+  private Set<String> restoreCategories(final Map<String, Object> fields,
                                          final CategorisedEntity ce) throws CalFacadeException {
     Categories cats = getSvc().getCategoriesHandler();
 
@@ -889,7 +895,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       return null;
     }
 
-    List<String> catUids = new ArrayList<>();
+    Set<String> catUids = new TreeSet<>();
 
     for (Object o: vals) {
       String uid = (String)o;

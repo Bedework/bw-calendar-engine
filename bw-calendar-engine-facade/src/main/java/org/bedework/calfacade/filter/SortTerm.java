@@ -18,8 +18,8 @@
 */
 package org.bedework.calfacade.filter;
 
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
-import edu.rpi.sss.util.ToString;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.ToString;
 
 /** Define a field we sort by
  *

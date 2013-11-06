@@ -28,6 +28,7 @@ import org.bedework.caldav.util.filter.parse.Filters;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 
 import ietf.params.xml.ns.caldav.ParamFilterType;
