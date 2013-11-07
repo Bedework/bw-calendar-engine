@@ -251,6 +251,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     private String end;
     private QueryBuilder curQuery;
     private FilterBuilder curFilter;
+    private List<SortTerm> curSort;
 
     private AccessChecker accessCheck;
 
@@ -325,6 +326,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     res.curFilter = ef.addDateRangeFilter(res.curFilter, start, end);
 
+    res.curSort = sort;
+
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
     if (res.curQuery != null) {
       srb.setQuery(res.curQuery);
@@ -335,17 +338,16 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
             .setFrom(0)
             .setSize(0);
 
-    if (!Util.isEmpty(sort)) {
+    if (!Util.isEmpty(res.curSort)) {
       SortOrder so;
 
-      for (SortTerm st: sort) {
+      for (SortTerm st: res.curSort) {
         if (st.isAscending()) {
           so = SortOrder.ASC;
         } else {
           so = SortOrder.DESC;
         }
 
-        FieldSortBuilder fsb;
         srb.addSort(new FieldSortBuilder(st.getIndex().getPnameLC())
                             .order(so));
       }
@@ -416,6 +418,21 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     } else {
       srb.setSize(num);
       entities = new ArrayList<>(num);
+    }
+
+    if (!Util.isEmpty(res.curSort)) {
+      SortOrder so;
+
+      for (SortTerm st: res.curSort) {
+        if (st.isAscending()) {
+          so = SortOrder.ASC;
+        } else {
+          so = SortOrder.DESC;
+        }
+
+        srb.addSort(new FieldSortBuilder(st.getIndex().getPnameLC())
+                            .order(so));
+      }
     }
 
     SearchResponse resp = srb.execute().actionGet();
