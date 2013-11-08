@@ -41,6 +41,8 @@ import org.bedework.util.xml.tagdefs.BedeworkServerTags;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
+import net.fortuna.ical4j.model.property.LastModified;
+
 import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -1364,6 +1366,19 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
            "\"";
   }
 
+  /**
+   * @return a version value in microseconds.
+   */
+  @NoDump
+  public long getMicrosecsVersion() throws CalFacadeException {
+    try {
+      return new LastModified(getLastmod().getTimestamp()).getDate().getTime() * 1000000 +
+              getLastmod().getSequence() * 100;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
   /** true if this is to 'hold' calendar objects
    *
    * @return boolean  true if this is to 'hold' calendar objects
@@ -1928,4 +1943,4 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
                               shareable);
   }
 
-  }
+}

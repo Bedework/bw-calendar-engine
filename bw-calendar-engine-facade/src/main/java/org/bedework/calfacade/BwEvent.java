@@ -3861,7 +3861,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   /** Add our stuff to the StringBuilder
    *
-   * @param ts    StringBuilder for result
+   * @param ts    ToString object for result
    */
   @Override
   @NoProxy
@@ -4318,20 +4318,24 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return ev;
   }
 
+  /**
+   * @return a version value in microsecords.
+   */
+  @NoDump
+  public long getMicrosecsVersion() throws CalFacadeException {
+    try {
+      String[] ct = getCtoken().split("-");
+
+      return new LastModified(ct[0]).getDate().getTime() * 1000000 +
+              Integer.parseInt(ct[1], 16) * 100;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
   /* ====================================================================
    *                   Private methods
    *  =================================================================== */
-
-  private volatile static int stagseq;
-  private volatile static Object stagseqLock = new Object();
-
-  /**
-   * @return a value we increment to try tomake lastmods unique
-   */
-  @NoProxy
-  public static String stagseqDigits() {
-    return hex4(getStagseq());
-  }
 
   /**
    * @param val
@@ -4357,26 +4361,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     buf.replace(4 - formatted.length(), 4, formatted);
 
     return buf.toString();
-  }
-
-  /**
-   * @return stagseq after increment
-   */
-  @NoProxy
-  @NoDump
-  public static int getStagseq() {
-    int val;
-
-    synchronized (stagseqLock) {
-      if (stagseq > 32000) {
-        stagseq = 0;
-      } else {
-        stagseq++;
-      }
-      val = stagseq;
-    }
-
-    return val;
   }
 
   private boolean isEmpty(final Collection c) {

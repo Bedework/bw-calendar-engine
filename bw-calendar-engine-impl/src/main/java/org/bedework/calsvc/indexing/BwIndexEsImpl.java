@@ -75,13 +75,14 @@ import org.elasticsearch.action.admin.indices.status.IndicesStatusResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
+import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
@@ -93,6 +94,7 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -569,7 +571,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       // Unbatched
 
-      UpdateResponse resp = index(rec);
+      IndexResponse resp = index(rec);
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -1177,25 +1179,25 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   }
 
   /* Return the response after indexing */
-  private UpdateResponse index(final Object rec) throws CalFacadeException {
+  private IndexResponse index(final Object rec) throws CalFacadeException {
     try {
-      String type = null;
+      DocInfo di = null;
       XContentBuilder builder = newBuilder();
 
       builder.startObject();
 
-    if (rec instanceof BwCalendar) {
-        type = makeDoc(builder, rec, null, null, null);
-    }
+      if (rec instanceof BwCalendar) {
+        di = makeDoc(builder, rec, null, null, null);
+      }
 
-    if (rec instanceof BwCategory) {
-        type = makeDoc(builder, (BwCategory)rec);
-    }
+      if (rec instanceof BwCategory) {
+        di = makeDoc(builder, (BwCategory)rec);
+      }
 
       builder.endObject();
 
-      if (type != null) {
-        return indexDoc(builder, type, rec, makeKeyVal(rec));
+      if (di != null) {
+        return indexDoc(builder, di);
       }
 
       if (!(rec instanceof EventInfo)) {
@@ -1212,19 +1214,23 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         builder = newBuilder();
 
         builder.startObject();
-        type = makeDoc(builder,
-                       rec,
-                       ev.getDtstart(),
-                       ev.getDtend(),
-                       ev.getRecurrenceId());
+        di = makeDoc(builder,
+                     rec,
+                     ev.getDtstart(),
+                     ev.getDtend(),
+                     ev.getRecurrenceId());
 
         builder.endObject();
 
-        return indexDoc(builder, type, rec, makeKeyVal(rec));
+        return indexDoc(builder, di);
       }
 
       /* Delete all instances of this event: we'll do a delete by query
        * We need to find all with the same path and uid.
+       */
+
+      /* TODO - do a query for all recurrence ids and delete the ones
+          we don't want.
        */
 
       String itemType = IcalDefs.fromEntityType(ev.getEntityType());
@@ -1239,6 +1245,14 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
                                                    fb));
       DeleteByQueryResponse delResp = delQreq.execute()
               .actionGet();
+
+      for (IndexDeleteByQueryResponse idqr: delResp.getIndices().values()) {
+        if (idqr.getFailedShards() > 0) {
+          warn("Failing shards for recurrence delete uid: " + ev.getUid() +
+               " colPath: " + ev.getColPath() +
+               " index: " + idqr.getIndex());
+        }
+      }
 
       /* Emit all instances that aren't overridden. */
 
@@ -1278,7 +1292,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         }
       }
       */
-      UpdateResponse uresp = null;
+      IndexResponse iresp = null;
 
       if (!Util.isEmpty(ei.getOverrides())) {
         for (EventInfo oei: ei.getOverrides()) {
@@ -1287,15 +1301,15 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
           builder = newBuilder();
 
           builder.startObject();
-          makeDoc(builder,
-                  oei,
-                  ov.getDtstart(),
-                  ov.getDtend(),
-                  ov.getRecurrenceId());
+          di = makeDoc(builder,
+                       oei,
+                       ov.getDtstart(),
+                       ov.getDtend(),
+                       ov.getRecurrenceId());
 
           builder.endObject();
 
-          uresp = indexDoc(builder, itemType, ov, makeKeyVal(ov));
+          iresp = indexDoc(builder, di);
         }
       }
 
@@ -1324,18 +1338,18 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         builder = newBuilder();
 
         builder.startObject();
-        makeDoc(builder,
-                rec,
-                rstart,
-                rend,
-                recurrenceId);
+        di = makeDoc(builder,
+                     rec,
+                     rstart,
+                     rend,
+                     recurrenceId);
 
         builder.endObject();
 
-        uresp = indexDoc(builder, itemType, rec,
-                         keyConverter.makeEventKey(ev.getColPath(),
-                                                   ev.getUid(),
-                                                   recurrenceId));
+        di.id = keyConverter.makeEventKey(ev.getColPath(),
+                                          ev.getUid(),
+                                          recurrenceId);
+        iresp = indexDoc(builder, di);
 
         instanceCt--;
         if (instanceCt == 0) {
@@ -1344,7 +1358,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         }
       }
 
-      return uresp;
+      return iresp;
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
@@ -1352,16 +1366,18 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
   }
 
-  private UpdateResponse indexDoc(final XContentBuilder builder,
-                                  final String type,
-                                  final Object rec,
-                                  final String id) throws Throwable {
-    UpdateRequestBuilder req = getClient().prepareUpdate(targetIndex,
-                                                         type, id);
+  private IndexResponse indexDoc(final XContentBuilder builder,
+                                 final DocInfo di) throws Throwable {
+    IndexRequestBuilder req = getClient().
+            prepareIndex(targetIndex, di.type, di.id);
 
-    return req.setDoc(builder)
-            .setDocAsUpsert(true)
-            .execute().actionGet();
+    req.setSource(builder);
+
+    if (di.version != 0) {
+      req.setVersion(di.version).setVersionType(VersionType.EXTERNAL);
+    }
+
+    return req.execute().actionGet();
   }
 
   private static class TypeId {
@@ -1554,9 +1570,21 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     cat.setName(name);
   }
 
-  /* Return the type for the indexer */
-  private String makeDoc(final XContentBuilder builder,
-                         final BwCategory cat) throws CalFacadeException {
+  private static class DocInfo {
+    String type;
+    long version;
+    String id;
+
+    DocInfo(String type, long version, final String id) {
+      this.type = type;
+      this.version = version;
+      this.id = id;
+    }
+  }
+
+  /* Return the docinfo for the indexer */
+  private DocInfo makeDoc(final XContentBuilder builder,
+                          final BwCategory cat) throws CalFacadeException {
     try {
       /* We don't have real collections. It's been the practice to
          create "/" delimited names to emulate a hierarchy. Look out
@@ -1586,7 +1614,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       batchCurSize++;
 
-      return docTypeCategory;
+      return new DocInfo(docTypeCategory, 0, makeKeyVal(cat));
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
@@ -1594,28 +1622,29 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
   }
 
-  /* Return the type for the indexer */
-  private String makeDoc(final XContentBuilder builder,
-                         final Object rec,
-                         final BwDateTime start,
-                         final BwDateTime end,
-                         final String recurid) throws CalFacadeException {
+  /* Return the docinfo for the indexer */
+  private DocInfo makeDoc(final XContentBuilder builder,
+                          final Object rec,
+                          final BwDateTime start,
+                          final BwDateTime end,
+                          final String recurid) throws CalFacadeException {
     try {
       BwCalendar col = null;
       EventInfo ei = null;
       BwEvent ev = null;
 
-      String colPath = null;
-      String path = null;
-      Collection <BwCategory> cats = null;
+      String colPath;
+      String path;
+      Collection <BwCategory> cats;
 
-      String name = null;
-      String created = null;
-      String creator = null;
-      String description = null;
-      String lastmod = null;
-      String owner = null;
-      String summary = null;
+      String name;
+      String created;
+      String creator;
+      String description;
+      String lastmod;
+      long version;
+      String owner;
+      String summary;
       String itemType;
       String acl;
 
@@ -1632,6 +1661,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         creator = col.getCreatorHref();
         description = col.getDescription();
         lastmod = col.getLastmod().getTimestamp();
+        version = col.getMicrosecsVersion();
         owner = col.getOwnerHref();
         summary = col.getSummary();
         acl = col.getAccess();
@@ -1661,6 +1691,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         creator = ev.getCreatorHref();
         description = ev.getDescription();
         lastmod = ev.getLastmod();
+        version = ev.getMicrosecsVersion();
         owner = ev.getOwnerHref();
         summary = ev.getSummary();
         acl = ev.getAccess();
@@ -1703,7 +1734,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       if (col != null) {
         // Doing collection - we're done
 
-        return itemType;
+        return new DocInfo(itemType, version, makeKeyVal(rec));
       }
 
       /* comment */
@@ -1776,7 +1807,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       batchCurSize++;
 
-      return itemType;
+      return new DocInfo(itemType, version, makeKeyVal(rec));
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
