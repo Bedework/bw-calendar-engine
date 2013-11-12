@@ -31,6 +31,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeSubscriptionLoopException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
+import org.bedework.calfacade.svc.BwView;
 
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
@@ -182,6 +183,31 @@ public abstract class FilterBuilder {
    */
   public abstract BwCategory getCategory(String uid) throws CalFacadeException;
 
+  /** Get the view given the path.
+   *
+   * @param path
+   * @return view or null
+   * @throws CalFacadeException
+   */
+  public abstract BwView getView(String path) throws CalFacadeException;
+
+  /** A virtual path might be for example "/user/adgrp_Eng/Lectures/Lectures"
+   * which has two two components<ul>
+   * <li>"/user/adgrp_Eng/Lectures" and</li>
+   * <li>"Lectures"</li></ul>
+   *
+   * <p>
+   * "/user/adgrp_Eng/Lectures" is a real path which is an alias to
+   * "/public/aliases/Lectures" which is a folder containing the alias
+   * "/public/aliases/Lectures/Lectures" which is aliased to the single calendar.
+   *
+   * @param vpath
+   * @return collection of collection objects - null for bad vpath
+   * @throws CalFacadeException
+   */
+  public abstract Collection<BwCalendar> decomposeVirtualPath(final String vpath)
+          throws CalFacadeException;
+
   class FltSimpleFilterParser extends SimpleFilterParser {
     @Override
     public BwCategory getCategoryByName(final String name) throws CalFacadeException {
@@ -191,6 +217,23 @@ public abstract class FilterBuilder {
     @Override
     public BwCategory getCategory(final String uid) throws CalFacadeException {
       return FilterBuilder.this.getCategory(uid);
+    }
+
+    @Override
+    public BwView getView(final String path)
+            throws CalFacadeException {
+      return FilterBuilder.this.getView(path);
+  }
+
+    @Override
+    public Collection<BwCalendar> decomposeVirtualPath(final String vpath)
+            throws CalFacadeException {
+      return FilterBuilder.this.decomposeVirtualPath(vpath);
+    }
+
+    @Override
+    public SimpleFilterParser getParser() throws CalFacadeException {
+      return FilterBuilder.this.getParser();
     }
   }
 
@@ -296,6 +339,10 @@ public abstract class FilterBuilder {
     }
 
     return f;
+  }
+
+  private SimpleFilterParser getParser() throws CalFacadeException {
+    return new FltSimpleFilterParser();
   }
 
   private FilterBase makeBwFilter(final CalFilter val) {
@@ -550,8 +597,7 @@ public abstract class FilterBuilder {
 
         if ((!(ecalf.filter instanceof ObjectFilter)) ||
             (!(ecf.filter instanceof ObjectFilter))) {
-          ecalf.filter = FilterBase
-                  .addOrChild(ecalf.filter, ecf.filter);
+          ecalf.filter = FilterBase.addOrChild(ecalf.filter, ecf.filter);
           return;  // Merged
         }
 
@@ -597,8 +643,7 @@ public abstract class FilterBuilder {
 
         if ((o1 == null) || (o2 == null) ||
             (!o1.getClass().equals(o2.getClass()))) {
-          ecalf.filter = FilterBase
-                  .addOrChild(ecalf.filter, ecf.filter);
+          ecalf.filter = FilterBase.addOrChild(ecalf.filter, ecf.filter);
           return;  // Merged
         }
 

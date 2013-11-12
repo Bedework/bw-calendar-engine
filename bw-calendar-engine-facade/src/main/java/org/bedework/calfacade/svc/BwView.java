@@ -18,6 +18,7 @@
 */
 package org.bedework.calfacade.svc;
 
+import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwDbentity;
@@ -29,7 +30,7 @@ import java.util.List;
 /** A view in Bedework. This is a named collection of collections used to
  * provide different views of the events.
  *
- * @author Mike Douglass douglm  bedework.edu
+ * @author Mike Douglass douglm  rpi.edu
  */
 @Dump(elementName="view", keyFields={"owner", "name"})
 public class BwView extends BwDbentity<BwView> {
@@ -41,8 +42,14 @@ public class BwView extends BwDbentity<BwView> {
    */
   private List<String> collectionPaths;
 
+  /* ====================================================================
+   *                   Non db fields
+   * ==================================================================== */
+
   // Non db for the moment
   private boolean conjunction;
+
+  private FilterBase filter;
 
   /** Constructor
    *
@@ -134,6 +141,23 @@ public class BwView extends BwDbentity<BwView> {
   @NoDump
   public boolean getConjunction() {
     return conjunction;
+  }
+
+  /**
+   *
+   * @param val
+   */
+  public void setFilter(final FilterBase val) {
+    filter = val;
+  }
+
+  /**
+   *
+   * @return the filter or null
+   */
+  @NoDump
+  public FilterBase getFilter() {
+    return filter;
   }
 
   /* ====================================================================

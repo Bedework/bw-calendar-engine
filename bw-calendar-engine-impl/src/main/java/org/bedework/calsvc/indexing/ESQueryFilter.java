@@ -36,6 +36,7 @@ import org.bedework.calfacade.filter.BwCategoryFilter;
 import org.bedework.calfacade.filter.BwCollectionFilter;
 import org.bedework.calfacade.filter.BwCreatorFilter;
 import org.bedework.calfacade.filter.BwHrefFilter;
+import org.bedework.calfacade.filter.BwViewFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -231,6 +232,12 @@ public class ESQueryFilter {
     private String exec;
     boolean isTerms;
 
+    /* If true we don't merge this term with other terms. This might
+     * help with the expansion of views which we would expect to turn
+     * up frequently.
+     */
+    boolean dontMerge;
+
     TermOrTerms(final String fldName,
                 final Object value) {
       this.fldName = fldName;
@@ -312,7 +319,8 @@ public class ESQueryFilter {
         /* Can we combine them? */
         TermOrTerms thisFb = (TermOrTerms)fb;
 
-        if (!lastFb.fldName.equals(thisFb.fldName)) {
+        if (!thisFb.dontMerge &&
+                !lastFb.fldName.equals(thisFb.fldName)) {
           fbs.add(lastFb);
           lastFb = thisFb;
         } else {
@@ -379,6 +387,10 @@ public class ESQueryFilter {
       }
 
       return ofb;
+    }
+
+    if (f instanceof BwViewFilter) {
+      return doView((BwViewFilter)f);
     }
 
     if (f instanceof BwHrefFilter) {
@@ -477,6 +489,12 @@ public class ESQueryFilter {
       addThisJoin(pi);
       return;
     }*/
+  }
+
+  private FilterBuilder doView(final BwViewFilter vf) throws CalFacadeException {
+    FilterBuilder fb = makeFilter(vf.getFilter());
+
+    return fb;
   }
 
   private FilterBuilder doObject(final ObjectFilter of,

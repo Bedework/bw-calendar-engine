@@ -56,6 +56,7 @@ import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.security.GenKeysMBean;
 import org.bedework.calfacade.svc.BwCalSuite;
+import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
@@ -588,6 +589,23 @@ public class CalSvc extends CalSvcI {
     public BwCategory getCategory(final String uid) throws CalFacadeException {
       return getCategoriesHandler().get(uid);
     }
+
+    @Override
+    public BwView getView(final String path)
+            throws CalFacadeException {
+      return getViewsHandler().find(path);
+  }
+
+  @Override
+    public Collection<BwCalendar> decomposeVirtualPath(final String vpath)
+            throws CalFacadeException {
+      return getCalendarsHandler().decomposeVirtualPath(vpath);
+    }
+
+    @Override
+    public SimpleFilterParser getParser() throws CalFacadeException {
+      return new SvcSimpleFilterParser();
+    }
   }
 
   @Override
@@ -998,9 +1016,6 @@ public class CalSvc extends CalSvcI {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#defaultAccess(org.bedework.calfacade.base.BwShareableDbentity, AceWho)
-   */
   @Override
   public void defaultAccess(BwShareableDbentity ent,
                             final AceWho who) throws CalFacadeException {

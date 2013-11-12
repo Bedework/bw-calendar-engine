@@ -327,4 +327,18 @@ public interface BasicSystemProperties extends Serializable {
    */
   @MBeanInfo("Calendar address prefixes")
   CalAddrPrefixes getCalAddrPrefixes();
+
+  /** This directory allows us to hide away bedework specific resources
+   * such as views and categories. We can hide this directory from
+   * generic caldav and other protocols.
+   *
+   * @param val
+   */
+  void setBedeworkResourceDirectory(String val);
+
+  /**
+   * @return CalAddrPrefixes or null
+   */
+  @MBeanInfo("Directory for bedework resources")
+  String getBedeworkResourceDirectory();
 }

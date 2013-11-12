@@ -25,8 +25,10 @@ import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.caldav.util.filter.ObjectFilter;
 import org.bedework.caldav.util.filter.PresenceFilter;
 import org.bedework.caldav.util.filter.parse.Filters;
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.BwView;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
@@ -68,6 +70,8 @@ public abstract class SimpleFilterParser {
 
   private SfpTokenizer tokenizer;
   private String currentExpr;
+
+  private SimpleFilterParser subParser;
 
   private static class Token {
   }
@@ -198,6 +202,38 @@ public abstract class SimpleFilterParser {
    * @throws CalFacadeException
    */
   public abstract BwCategory getCategory(String uid) throws CalFacadeException;
+
+  /** Get the view given the path.
+   *
+   * @param path
+   * @return view or null
+   * @throws CalFacadeException
+   */
+  public abstract BwView getView(String path) throws CalFacadeException;
+
+  /** A virtual path might be for example "/user/adgrp_Eng/Lectures/Lectures"
+   * which has two two components<ul>
+   * <li>"/user/adgrp_Eng/Lectures" and</li>
+   * <li>"Lectures"</li></ul>
+   *
+   * <p>
+   * "/user/adgrp_Eng/Lectures" is a real path which is an alias to
+   * "/public/aliases/Lectures" which is a folder containing the alias
+   * "/public/aliases/Lectures/Lectures" which is aliased to the single calendar.
+   *
+   * @param vpath
+   * @return collection of collection objects - null for bad vpath
+   * @throws CalFacadeException
+   */
+  public abstract Collection<BwCalendar> decomposeVirtualPath(final String vpath)
+          throws CalFacadeException;
+
+  /**
+   *
+   * @return a parser so we can parse out sub-filters
+   * @throws CalFacadeException
+   */
+  public abstract SimpleFilterParser getParser() throws CalFacadeException;
 
   /** Parse the given expression into a filter
    *
@@ -559,7 +595,7 @@ public abstract class SimpleFilterParser {
     }
 
     boolean paren = false;
-    ArrayList<String> res = new ArrayList<String>();
+    ArrayList<String> res = new ArrayList<>();
 
     if (tkn == '(') {
       push(openParen);
@@ -631,6 +667,32 @@ public abstract class SimpleFilterParser {
       filter = new PresenceFilter(null, pi, true);
     } else if (timeRange != null) {
       filter = ObjectFilter.makeFilter(null, pi, timeRange);
+    } else if (pi.equals(PropertyInfoIndex.VIEW)) {
+      // expect list of views.
+      ArrayList<String> views = doWordList();
+
+      for (String view: views) {
+        FilterBase vpf = viewFilter(view);
+
+        if (vpf == null) {
+          continue;
+        }
+
+        filter = and(filter, vpf);
+      }
+    } else if (pi.equals(PropertyInfoIndex.VPATH)) {
+      // expect list of virtual paths.
+      ArrayList<String> vpaths = doWordList();
+
+      for (String vpath: vpaths) {
+        FilterBase vpf = resolveVpath(vpath);
+
+        if (vpf == null) {
+          continue;
+        }
+
+        filter = and(filter, vpf);
+      }
     } else if (pi.equals(PropertyInfoIndex.CATUID)) {
       // No match and category - expect list of uids.
       ArrayList<String> uids = doWordList();
@@ -650,19 +712,7 @@ public abstract class SimpleFilterParser {
         f.setExact(exact);
         f.setNot(oper == notEqual);
 
-        if (filter == null) {
-          filter = f;
-        } else {
-          if (filter instanceof BwCategoryFilter) {
-            AndFilter af = new AndFilter();
-
-            af.addChild(filter);
-
-            filter = af;
-          }
-
-          ((AndFilter)filter).addChild(f);
-        }
+        filter = and(filter, f);
       }
     } else if (match != null) {
       if (pi.equals(PropertyInfoIndex.CATEGORIES)) {
@@ -729,6 +779,164 @@ public abstract class SimpleFilterParser {
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
+  }
+
+  private FilterBase viewFilter(final String val) throws CalFacadeException {
+    try {
+      BwView view = getView(val);
+
+      if (view == null) {
+        throw new CalFacadeException(CalFacadeException.filterUnknownView,
+                                     val);
+      }
+
+      FilterBase filter = view.getFilter();
+
+      if (filter != null) {
+        return filter;
+      }
+
+      ArrayList<String> vpaths = doWordList();
+
+      for (String vpath: vpaths) {
+        FilterBase vpf = resolveVpath(vpath);
+
+        if (vpf == null) {
+          continue;
+        }
+
+        filter = and(filter, vpf);
+      }
+
+      BwViewFilter vf = new BwViewFilter(null);
+
+      vf.setEntity(view);
+      vf.setFilter(filter);
+
+      view.setFilter(filter);
+
+      return vf;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  private FilterBase and(FilterBase af, FilterBase f) {
+    if (af == null) {
+      return f;
+    }
+
+    if (af instanceof AndFilter) {
+      ((AndFilter)af).addChild(f);
+      return af;
+    }
+
+    AndFilter naf = new AndFilter();
+    naf.addChild(af);
+    naf.addChild(f);
+
+    return naf;
+  }
+
+  /** A virtual path is the apparent path for a user looking at an explorer
+   * view of collections.
+   *
+   * <p>We might have,
+   * <pre>
+   *    home-->Arts-->Theatre
+   * </pre>
+   *
+   * <p>In reality the Arts collection might be an alias to another alias which
+   * is an alias to a collection containing aliases including "Theatre".
+   *
+   * <p>So the real picture might be something like...
+   * <pre>
+   *    home-->Arts             (categories="ChemEng")
+   *            |
+   *            V
+   *           Arts             (categories="Approved")
+   *            |
+   *            V
+   *           Arts-->Theatre   (categories="Arts" AND categories="Theatre")
+   *                     |
+   *                     V
+   *                    MainCal
+   * </pre>
+   * where the vertical links are aliasing. The importance of this is that
+   * each alias might introduce another filtering term, the intent of which is
+   * to restrict the retrieval to a specific subset. The parenthesized terms
+   * represent example filters.
+   *
+   * <p>The desired filter is the ANDing of all the above.
+   *
+   * @param  vpath  a String virtual path
+   * @return FilterBase object or null for bad path
+   * @throws CalFacadeException
+   */
+  private FilterBase resolveVpath(final String vpath) throws CalFacadeException {
+    /* We decompose the virtual path into it's elements and then try to
+     * build a sequence of collections that include the aliases and their
+     * targets until we reach the last element in the path.
+     *
+     * We'll assume the path is already normalized and that no "/" are allowed
+     * as parts of names.
+     *
+     * What we're doing here is resolving aliases to aliases and accumulating
+     * any filtering that might be in place as a sequence of ANDed terms. For
+     * example:
+     *
+     * /user/eng/Lectures has the filter cat=eng and is aliased to
+     * /public/aliases/Lectures which has the filter cat=lectures and is aliased to
+     * /public/cals/MainCal
+     *
+     * We want the filter (cat=eng) & (cat=Lectures) on MainCal.
+     *
+     * Below, we decompose the virtual path and we save the path to an actual
+     * folder or calendar collection.
+     */
+
+    Collection<BwCalendar> cols = decomposeVirtualPath(vpath);
+
+    if (cols == null) {
+      // Bad vpath
+      return null;
+    }
+
+    FilterBase vfilter = null;
+    BwCalendar vpathTarget = null;
+
+    for (BwCalendar col: cols) {
+      if (debug) {
+        debugMsg("      vpath collection:" + col.getPath());
+      }
+
+      if (col.getFilterExpr() != null) {
+        if (subParser == null) {
+          subParser = getParser();
+        }
+
+        ParseResult pr = subParser.parse(col.getFilterExpr());
+        if (pr.cfe != null) {
+          throw pr.cfe;
+        }
+
+        if (pr.filter != null) {
+          vfilter = and(vfilter, pr.filter);
+        }
+      }
+
+      if (col.getCollectionInfo().onlyCalEntities ||
+              (col.getCalType() == BwCalendar.calTypeFolder)) {
+        // reached an end point
+        vpathTarget = col;
+      }
+    }
+
+    if (vpathTarget == null) {
+      throw new CalFacadeException("Bad vpath - no calendar collection");
+    }
+
+    return and(vfilter, new BwCollectionFilter(null, vpathTarget));
   }
 
   private TimeRange getTimeRange() throws CalFacadeException {

@@ -266,6 +266,16 @@ public final class ROBasicSystemProperties implements BasicSystemProperties {
   }
 
   @Override
+  public void setBedeworkResourceDirectory(final String val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public String getBedeworkResourceDirectory() {
+    return getConfig().getBedeworkResourceDirectory();
+  }
+
+  @Override
   public String toString() {
     return getConfig().toString();
   }

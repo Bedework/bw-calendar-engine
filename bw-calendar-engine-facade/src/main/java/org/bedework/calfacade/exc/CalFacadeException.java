@@ -229,6 +229,10 @@ public class CalFacadeException extends Exception {
   public static final String filterTypeFirst =
       "org.bedework.exception.filter.typefirst";
 
+  /** unknown property */
+  public static final String filterUnknownView =
+          "org.bedework.exception.filter.unknown.view";
+
   /* ****************** Resources ****************************** */
 
   /** Missing resource content */

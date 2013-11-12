@@ -67,6 +67,8 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
 
   private CalAddrPrefixes calAddrPrefixes;
 
+  private String bedeworkResourceDirectory;
+
   @Override
   public void setPrincipalRoot(final String val) {
     principalRoot = val;
@@ -300,6 +302,16 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
   }
 
   @Override
+  public void setBedeworkResourceDirectory(final String val) {
+    bedeworkResourceDirectory = val;
+  }
+
+  @Override
+  public String getBedeworkResourceDirectory() {
+    return bedeworkResourceDirectory;
+  }
+
+  @Override
   public String toString() {
     ToString ts = new ToString(this);
 
@@ -323,6 +335,7 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
 
     ts.newLine();
     ts.append("indexRoot", getIndexRoot());
+    ts.append("bedeworkResourceDirectory", getBedeworkResourceDirectory());
 
     return ts.toString();
   }
@@ -350,6 +363,8 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
     clone.setGlobalResourcesPath(getGlobalResourcesPath());
 
     clone.setCalAddrPrefixes(getCalAddrPrefixes());
+
+    clone.setBedeworkResourceDirectory(getBedeworkResourceDirectory());
 
     return clone;
   }

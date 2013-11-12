@@ -20,6 +20,7 @@ package org.bedework.calsvc;
 
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calsvci.ViewsI;
@@ -29,7 +30,7 @@ import java.util.TreeSet;
 
 /** This acts as an interface to the database for views.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 class Views extends CalSvcDb implements ViewsI {
   Views(final CalSvc svci) {
@@ -94,9 +95,6 @@ class Views extends CalSvcDb implements ViewsI {
     return true;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ViewsI#find(java.lang.String)
-   */
   @Override
   public BwView find(String val) throws CalFacadeException {
     if (val == null) {
@@ -108,9 +106,54 @@ class Views extends CalSvcDb implements ViewsI {
       }
     }
 
-    Collection<BwView> views = getAll();
+    /* val may be a name in which case it's for the current user or it
+     * may be a fully qualified path referencing another users views.
+     */
+    if (!val.startsWith("/")) {
+      // This user
+      Collection<BwView> views = getAll();
+      for (BwView view: views) {
+        if (view.getName().equals(val)) {
+          return view;
+        }
+      }
+
+      return null;
+    }
+
+    /* Other user - we expect a path of th eform
+     *  /user/<id>/<bedework-resource-name>/views/<view-name>
+     */
+
+    String[] pathEls = val.split("/");
+
+    BasicSystemProperties bsp = getBasicSyspars();
+
+    if ((pathEls.length != 5) ||
+            !bsp.getBedeworkResourceDirectory().equals(pathEls[2]) ||
+            !"views".equals(pathEls[3])) {
+      return null;
+    }
+
+    StringBuilder sb = new StringBuilder();
+
+    if (bsp.getUserCalendarRoot().equals(pathEls[0])) {
+      sb.append(bsp.getUserPrincipalRoot());
+    } else {
+      return null;
+    }
+
+    sb.append(pathEls[1]);  // user id
+
+    BwPrincipal pr = getPrincipal(sb.toString());
+    if (pr == null) {
+      return null;
+    }
+
+    Collection<BwView> views = getAll(pr);
+    String viewName = pathEls[4];
     for (BwView view: views) {
-      if (view.getName().equals(val)) {
+      if (view.getName().equals(viewName)) {
         return view;
       }
     }

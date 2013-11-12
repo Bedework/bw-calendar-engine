@@ -69,6 +69,7 @@ import org.bedework.calfacade.exc.CalFacadeInvalidSynctoken;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.calfacade.filter.ColorMap;
 import org.bedework.calfacade.filter.FilterBuilder;
+import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
@@ -135,7 +136,7 @@ import javax.xml.namespace.QName;
 
 /** Bedework implementation of SysIntf.
  *
- * @author Mike Douglass douglm at bedework.edu
+ * @author Mike Douglass douglm at rpi.edu
  */
 public class BwSysIntfImpl implements SysIntf {
   private boolean debug;
@@ -269,9 +270,6 @@ public class BwSysIntfImpl implements SysIntf {
     return els[1].equals(uhome);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.sysinterface.SysIntf#getAcceptContentType()
-   */
   @Override
   public String getDefaultContentType() throws WebdavException {
     if (calWs) {
@@ -460,9 +458,6 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#getCalPrincipalInfo(AccessPrincipal)
-   */
   @Override
   public CalPrincipalInfo getCalPrincipalInfo(final AccessPrincipal principal) throws WebdavException {
     try {
@@ -1043,6 +1038,30 @@ public class BwSysIntfImpl implements SysIntf {
         throw new CalFacadeException(wde);
       }
     }
+
+    @Override
+    public BwView getView(final String path)
+            throws CalFacadeException {
+      try {
+        return getSvci().getViewsHandler().find(path);
+      } catch (CalFacadeException cfe) {
+        throw cfe;
+      } catch (WebdavException wde) {
+        throw new CalFacadeException(wde);
+      }
+    }
+
+    @Override
+    public Collection<BwCalendar> decomposeVirtualPath(final String vpath)
+            throws CalFacadeException {
+      try {
+        return getSvci().getCalendarsHandler().decomposeVirtualPath(vpath);
+      } catch (CalFacadeException cfe) {
+        throw cfe;
+      } catch (WebdavException wde) {
+        throw new CalFacadeException(wde);
+      }
+    }
   }
 
   /* (non-Javadoc)
@@ -1338,9 +1357,6 @@ public class BwSysIntfImpl implements SysIntf {
     return new BwCalDAVCollection(this, col);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#updateAccess(org.bedework.caldav.server.CalDAVCollection, Acl)
-   */
   @Override
   public void updateAccess(final CalDAVCollection col,
                            final Acl acl) throws WebdavException {
