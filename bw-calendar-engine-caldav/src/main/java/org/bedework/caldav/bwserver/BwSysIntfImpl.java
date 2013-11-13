@@ -67,9 +67,8 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.exc.CalFacadeInvalidSynctoken;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
-import org.bedework.calfacade.filter.ColorMap;
-import org.bedework.calfacade.filter.FilterBuilder;
-import org.bedework.calfacade.svc.BwView;
+import org.bedework.calfacade.filter.SimpleFilterParser;
+import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
@@ -928,8 +927,17 @@ public class BwSysIntfImpl implements SysIntf {
           throws WebdavException {
     try {
       /* Limit the results to just this collection by adding an ANDed filter */
+      SimpleFilterParser sfp = getSvci().getFilterParser();
+      String expr = "(colPath='" + col.getPath() +"')";
+
+      ParseResult pr = sfp.parse(expr, true);
+      if (!pr.ok) {
+        throw new WebdavBadRequest("Failed to reference collection " +
+                                           col.getPath());
+      }
+
       FilterBase f = FilterBase.addAndChild(filter,
-                                   new CdvFilterBuilder().buildFilter(unwrap(col)));
+                                            pr.filter);
 
       Collection<EventInfo> bwevs =
              getSvci().getEventsHandler().getEvents(null,  // Collection
@@ -964,103 +972,6 @@ public class BwSysIntfImpl implements SysIntf {
       throw wde;
     } catch (Throwable t) {
       throw new WebdavException(t);
-    }
-  }
-
-  private class CdvFilterBuilder extends FilterBuilder {
-    public CdvFilterBuilder() {
-      super(new ColorMap());
-    }
-    public FilterBase buildFilter(final BwCalendar cal) throws CalFacadeException {
-      List<String> paths;
-      boolean conjunction = false;
-
-      paths = new ArrayList<String>();
-
-      paths.add(cal.getPath());
-
-      return buildFilter(paths,
-                         conjunction,
-                         null, true);
-    }
-
-    public BwCalendar getCollection(String path) throws CalFacadeException {
-      try {
-        return getSvci().getCalendarsHandler().get(path);
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (WebdavException wde) {
-        throw new CalFacadeException(wde);
-      }
-    }
-
-    public BwCalendar resolveAlias(BwCalendar val,
-                                   boolean resolveSubAlias) throws CalFacadeException {
-      try {
-        return getSvci().getCalendarsHandler().resolveAlias(val,
-                                                            resolveSubAlias,
-                                                            false);
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (WebdavException wde) {
-        throw new CalFacadeException(wde);
-      }
-    }
-    public Collection<BwCalendar> getChildren(BwCalendar col)
-            throws CalFacadeException {
-      try {
-        return getSvci().getCalendarsHandler().getChildren(col);
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (WebdavException wde) {
-        throw new CalFacadeException(wde);
-      }
-    }
-
-    @Override
-    public BwCategory getCategoryByName(final String name) throws CalFacadeException {
-      try {
-        return getSvci().getCategoriesHandler().find(new BwString(null, name));
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (WebdavException wde) {
-        throw new CalFacadeException(wde);
-      }
-    }
-
-    @Override
-    public BwCategory getCategory(final String uid) throws CalFacadeException {
-      try {
-        return getSvci().getCategoriesHandler().get(uid);
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (WebdavException wde) {
-        throw new CalFacadeException(wde);
-      }
-    }
-
-    @Override
-    public BwView getView(final String path)
-            throws CalFacadeException {
-      try {
-        return getSvci().getViewsHandler().find(path);
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (WebdavException wde) {
-        throw new CalFacadeException(wde);
-      }
-    }
-
-    @Override
-    public Collection<BwCalendar> decomposeVirtualPath(final String vpath)
-            throws CalFacadeException {
-      try {
-        return getSvci().getCalendarsHandler().decomposeVirtualPath(vpath);
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (WebdavException wde) {
-        throw new CalFacadeException(wde);
-      }
     }
   }
 
@@ -2400,8 +2311,7 @@ public class BwSysIntfImpl implements SysIntf {
         /* expand with time range */
         ExpandType ex = rm.getExpand();
 
-        DateTime s = new DateTime(XcalUtil.getIcalFormatDateTime(
-                ex.getStart()));
+        DateTime s = new DateTime(XcalUtil.getIcalFormatDateTime(ex.getStart()));
         DateTime e = new DateTime(XcalUtil.getIcalFormatDateTime(ex.getEnd()));
         return new RecurringRetrievalMode(Rmode.expanded,
                                           getBwDt(s),

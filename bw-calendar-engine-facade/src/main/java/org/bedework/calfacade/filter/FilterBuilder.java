@@ -25,13 +25,11 @@ import org.bedework.caldav.util.filter.ObjectFilter;
 import org.bedework.caldav.util.filter.OrFilter;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCalendar.EventListEntry;
-import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeSubscriptionLoopException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
-import org.bedework.calfacade.svc.BwView;
 
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
@@ -41,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 
 /** This class builds a filter expression given a set of paths.
  * Given one or more paths we create a filter to represent each path.
@@ -81,15 +78,12 @@ import java.util.List;
  * @author Mike Douglass
  *
  */
-public abstract class FilterBuilder {
+public class FilterBuilder {
   private boolean debug;
 
   private transient Logger log;
 
-  /* Built as we find the calendar collections. */
-  private ColorMap colorMap;
-
-  private HashMap<String, BwCalendar> colCache = new HashMap<String, BwCalendar>();
+  private HashMap<String, BwCalendar> colCache = new HashMap<>();
 
   //private HashMap<String, CalFilter> filterCache = new HashMap<String, CalFilter>();
 
@@ -117,196 +111,54 @@ public abstract class FilterBuilder {
   private SimpleFilterParser parser;
 
   /**
-   * @param colorMap
+   * @param parser
    */
-  public FilterBuilder(final ColorMap colorMap) {
-    this.colorMap = colorMap;
+  public FilterBuilder(final SimpleFilterParser parser) {
+    this.parser = parser;
     debug = getLogger().isDebugEnabled();
   }
 
-  /**
+  /** Build a filter from the given path. The applyFilter flag only
+   * applies to the root of the tree. The filter may already have been
+   * processed by the caller.
    *
    * @param path
-   * @return collection object or null.
-   * @throws org.bedework.calfacade.exc.CalFacadeException
-   */
-  public abstract BwCalendar getCollection(String path) throws CalFacadeException;
-
-  /** Attempt to get collection referenced by the alias. For an internal alias
-   * the result will also be set in the aliasTarget property of the parameter.
-   *
-   * @param val collection
-   * @param resolveSubAlias - if true and the alias points to an alias, resolve
-   *                  down to a non-alias.
-   * @return BwCalendar
-   * @throws org.bedework.calfacade.exc.CalFacadeException
-   */
-  public abstract BwCalendar resolveAlias(BwCalendar val,
-                                          boolean resolveSubAlias) throws CalFacadeException;
-
-  /** Returns children of the given collection to which the current user has
-   * some access.
-   *
-   * @param  col          parent collection
-   * @return Collection   of BwCalendar
-   * @throws org.bedework.calfacade.exc.CalFacadeException
-   */
-  public abstract Collection<BwCalendar> getChildren(BwCalendar col)
-          throws CalFacadeException;
-
-  /** An unsatisfactory approach - we'll special case categories for the moment
-   * to see if this works. When using these filters we need to search for a
-   * category being a member of the set of categories for the event.
-   *
-   * <p>This only works if the current user is the owner of the named category -
-   * at least with my current implementation.
-   *
-   * @param name
-   * @return category entity or null.
-   * @throws org.bedework.calfacade.exc.CalFacadeException
-   */
-  public abstract BwCategory getCategoryByName(String name) throws CalFacadeException;
-
-  /** A slightly better approach - we'll special case categories for the moment
-   * to see if this works. When using these filters we need to search for a
-   * category being a member of the set of categories for the event.
-   *
-   * <p>method takes the uid of the category and is used by the
-   * <pre>
-   *   catuid=(uid1,uid2,uid3)
-   * </pre>
-   * construct where the list members must ALL be present.
-   *
-   * @param uid of the category
-   * @return category entity or null.
-   * @throws org.bedework.calfacade.exc.CalFacadeException
-   */
-  public abstract BwCategory getCategory(String uid) throws CalFacadeException;
-
-  /** Get the view given the path.
-   *
-   * @param path
-   * @return view or null
+   * @param applyFilter applies only to root of tree
+   * @return FilterBase or null
    * @throws CalFacadeException
    */
-  public abstract BwView getView(String path) throws CalFacadeException;
-
-  /** A virtual path might be for example "/user/adgrp_Eng/Lectures/Lectures"
-   * which has two two components<ul>
-   * <li>"/user/adgrp_Eng/Lectures" and</li>
-   * <li>"Lectures"</li></ul>
-   *
-   * <p>
-   * "/user/adgrp_Eng/Lectures" is a real path which is an alias to
-   * "/public/aliases/Lectures" which is a folder containing the alias
-   * "/public/aliases/Lectures/Lectures" which is aliased to the single calendar.
-   *
-   * @param vpath
-   * @return collection of collection objects - null for bad vpath
-   * @throws CalFacadeException
-   */
-  public abstract Collection<BwCalendar> decomposeVirtualPath(final String vpath)
-          throws CalFacadeException;
-
-  class FltSimpleFilterParser extends SimpleFilterParser {
-    @Override
-    public BwCategory getCategoryByName(final String name) throws CalFacadeException {
-      return FilterBuilder.this.getCategoryByName(name);
+  public FilterBase buildFilter(final String path,
+                                final boolean applyFilter,
+                                final boolean explicitSelection) throws CalFacadeException {
+    if (path == null) {
+      return null;
     }
 
-    @Override
-    public BwCategory getCategory(final String uid) throws CalFacadeException {
-      return FilterBuilder.this.getCategory(uid);
-    }
+    BwCalendar col = colCache.get(path);
 
-    @Override
-    public BwView getView(final String path)
-            throws CalFacadeException {
-      return FilterBuilder.this.getView(path);
-  }
-
-    @Override
-    public Collection<BwCalendar> decomposeVirtualPath(final String vpath)
-            throws CalFacadeException {
-      return FilterBuilder.this.decomposeVirtualPath(vpath);
-    }
-
-    @Override
-    public SimpleFilterParser getParser() throws CalFacadeException {
-      return FilterBuilder.this.getParser();
-    }
-  }
-
-  /** Build a filter from the paths. If the paths were explicity selected paths
-   * (clicking on a collection etc), explicit will be marked as true. Otherwise
-   * the paths come from a view.
-   *
-   * @param paths
-   * @param conjunction - true for logical AND of paths
-   * @param filterStr - supplied filter - from vpath
-   * @param explicit
-   * @return BwFilter or null
-   * @throws org.bedework.calfacade.exc.CalFacadeException
-   */
-  public FilterBase buildFilter(final List<String> paths,
-                                final boolean conjunction,
-                                final String filterStr,
-                                final boolean explicit) throws CalFacadeException {
-    FilterBase globalFilter = null;
-
-    if (filterStr != null) {
-      globalFilter = parseExpr(filterStr);
-    }
-
-    if (paths == null) {
-      // No filters
-
-      return globalFilter;
-    }
-
-    CalFilterTerms cft;
-
-    if (conjunction) {
-      cft = new AndCalFilter();
-    } else {
-      cft = new OrCalFilter();
-    }
-
-    for (String path: paths) {
-      BwCalendar col = colCache.get(path);
+    if (col == null) {
+      try {
+        col = parser.getCollection(path);
+      } catch (CalFacadeAccessException cae) {
+      }
 
       if (col == null) {
-        try {
-          col = getCollection(path);
-        } catch (CalFacadeAccessException cae) {
-        }
+        // Presumably inacccessible or possibly deleted
 
-        if (col == null) {
-          // Presumably inacccessible or possibly deleted
-
-          continue;
-        }
-
-        colCache.put(path, col);
+        return null;
       }
 
-      if (!explicit && !col.getDisplay()) {
-        continue;
-      }
-
-      ArrayList<String> pathElements = new ArrayList<String>();
-      pathElements.add(path);
-      CalFilter calFilter = makeColFilter(col,
-                                          null,
-                                          paths.size() == 1,
-                                          pathElements);
-
-      if (calFilter != null) {
-        mergeFilter(cft.terms, calFilter, conjunction);
-      }
+      colCache.put(path, col);
     }
 
-    if (cft.terms.isEmpty()) {
+    ArrayList<String> pathElements = new ArrayList<>();
+    pathElements.add(path);
+    CalFilter calFilter = makeColFilter(col,
+                                        applyFilter,
+                                        explicitSelection,
+                                        pathElements);
+
+    if (calFilter == null) {
       // No valid matches
       return BooleanFilter.falseFilter;
     }
@@ -317,32 +169,16 @@ public abstract class FilterBuilder {
      * Re-express this as BwFilters
      */
 
-    FilterBase f = makeBwFilter(cft);
-
-    if (globalFilter != null) {
-      FilterBase and = new AndFilter();
-
-      and.addChild(globalFilter);
-      and.addChild(f);
-
-      f = and;
-    }
+    FilterBase f = makeBwFilter(calFilter);
 
     if (debug) {
       dmsg(" ---------  FilterBuilder result ---------------");
       dump(f, "");
 
-      if (colorMap != null) {
-        dump(colorMap);
-      }
       dmsg(" ---------  end of FilterBuilder result ---------------");
     }
 
     return f;
-  }
-
-  private SimpleFilterParser getParser() throws CalFacadeException {
-    return new FltSimpleFilterParser();
   }
 
   private FilterBase makeBwFilter(final CalFilter val) {
@@ -408,17 +244,15 @@ public abstract class FilterBuilder {
    * exception if we discover a repeated URI in the list.
    */
   private CalFilter makeColFilter(final BwCalendar cal,
-                                  final ColorInfo parCi,
+                                  final boolean applyFilter,
                                   final boolean explicitSelection,
                                   final ArrayList<String> pathElements) throws CalFacadeException {
     /* Result of parsing any filter attached to this entity. */
     FilterBase fltr = null;
 
-    if (cal.getFilterExpr() != null) {
+    if (applyFilter && (cal.getFilterExpr() != null)) {
       fltr = parseExpr(cal.getFilterExpr());
     }
-
-    ColorInfo ci = updateColorInfo(cal, fltr, parCi);
 
     if (cal.getCalType() ==  BwCalendar.calTypeEventList) {
       OrCalFilter ocf = new OrCalFilter();
@@ -452,7 +286,7 @@ public abstract class FilterBuilder {
     }
 
     if (cal.getInternalAlias()) {
-      BwCalendar target = resolveAlias(cal, false);
+      BwCalendar target = parser.resolveAlias(cal, false);
       if (target == null) {
         return null;
       }
@@ -465,11 +299,11 @@ public abstract class FilterBuilder {
 
       pathElements.add(path);
 
-      return anded(fltr, makeColFilter(target, ci, false, pathElements));
+      return anded(fltr, makeColFilter(target, true, false, pathElements));
     }
 
     if (cal.getCalType() == BwCalendar.calTypeFolder) {
-      return anded(fltr, makeFolderFilter(cal, ci, pathElements));
+      return anded(fltr, makeFolderFilter(cal, pathElements));
     }
 
     return null;
@@ -493,9 +327,8 @@ public abstract class FilterBuilder {
   }
 
   private CalFilter makeFolderFilter(final BwCalendar val,
-                                     final ColorInfo parCi,
                                      final ArrayList<String> pathElements) throws CalFacadeException {
-    Collection<BwCalendar> cols = getChildren(val);
+    Collection<BwCalendar> cols = parser.getChildren(val);
 
     OrCalFilter res = new OrCalFilter();
 
@@ -510,9 +343,9 @@ public abstract class FilterBuilder {
 
       ArrayList<String> pe;
       if (pathElements == null) {
-        pe = new ArrayList<String>();
+        pe = new ArrayList<>();
       } else {
-        pe = new ArrayList<String>(pathElements);
+        pe = new ArrayList<>(pathElements);
       }
 
       String path = col.getPath();
@@ -523,7 +356,7 @@ public abstract class FilterBuilder {
 
       pe.add(path);
 
-      CalFilter cf = makeColFilter(col, parCi, false, pe);
+      CalFilter cf = makeColFilter(col, true, false, pe);
 
       if (cf == null) {
         continue;
@@ -667,134 +500,6 @@ public abstract class FilterBuilder {
     terms.add(cf);
   }
 
-  private static class ColorInfo {
-    /* This is the leaf collection or the first alias */
-    BwCalendar col;
-
-    /* This is the last non-null color we saw heading down this path. */
-    String color;
-
-    /* This is the target path */
-    String path;
-
-    /* This is the combined filter for this path. */
-    FilterBase filter;
-
-    ColorInfo() {}
-
-    ColorInfo(final BwCalendar col,
-              final String color,
-              final String path,
-              final FilterBase filter) {
-      this.col = col;
-      this.color = color;
-      this.path = path;
-      this.filter = filter;
-    }
-
-    void setCol(final BwCalendar val) {
-      col = val;
-
-      if ((color == null) || (col.getColor() != null)) {
-        color = col.getColor();
-      }
-    }
-
-    /* We know the color if we have reached the leaf or the first alias
-     */
-    boolean colorKnown() {
-      return col != null;
-    }
-
-    void updateFilter(final FilterBase val) {
-      if (filter == null) {
-        filter = val;
-        return;
-      }
-
-      filter = FilterBase.addAndChild(filter, val);
-    }
-
-    @Override
-    protected Object clone() {
-      return new ColorInfo(col, color, color, filter);
-    }
-  }
-
-  /* As we work down the current subtree we build coloring information.
-   * This consists of an accumulated filter per virtual path, the end path and
-   * the last color set by the current users collections. For example
-   *
-   * For:
-   * /user/fred/calendar(red)
-   *   the resulting path is /user/fred/calendar
-   *   the color is red
-   *
-   * /user/fred/dance(blue) -->
-   *      /user/suite-a/dance(red) -->
-   *          /public/MainCal filter=cat=Dance
-   * That is fred has an alias to a calendar suite alias which in turn points to
-   * a public alias
-   *   the resulting path is /public/MainCal - the path in the events
-   *   the color is blue - that's what Fred set
-   *   the filter is cat=Dance, only filter we saw
-   *
-   * /user/fred/dance(green) -->
-   *      /user/suite-b/dance(puce) cat=suite-b-events -->
-   *          /public/MainCal filter=cat=Dance
-   *   the resulting path is /public/MainCal - the path in the events
-   *   the color is green - that's what Fred set
-   *   the filter is cat=suite-b-events && cat=Dance, aggregated filters we saw
-   *
-   * These are built while we are doing a recursive descent of the supplied
-   * initial paths. The parameter is the current calendar object and the state
-   * we are at in the descent. The result is the new state for that point in the
-   * tree.
-   *
-   * If the supplied collection object is a leaf node then the color map gets
-   * updated with the accumulated information.
-   *
-   * @param fltr Result of parsing any filter attached to this entity.
-   */
-  private ColorInfo updateColorInfo(final BwCalendar col,
-                                    final FilterBase fltr,
-                                    final ColorInfo parCi) throws CalFacadeException {
-    ColorInfo ci;
-
-    if (parCi == null) {
-      ci = new ColorInfo();
-    } else {
-      ci = (ColorInfo)parCi.clone();
-    }
-
-    String path = col.getPath();
-    boolean leaf = col.getCollectionInfo().onlyCalEntities;
-
-    ci.updateFilter(fltr);
-
-    if (leaf) {
-      if (ci.col == null) {
-        ci.setCol(col);
-      }
-
-      /* If there's no color set don't put it in the table */
-      if (ci.color != null) {
-        ci.path = path;
-
-        colorMap.put(path, new ClientCollectionInfo(path, ci.color,
-                                                    col.getCalType(),
-                                                    ci.filter));
-      }
-    } else if (col.getInternalAlias()) {
-      if (ci.col == null) {
-        // It's the first alias we've seen
-        ci.setCol(col);
-      }
-    }
-
-    return ci;
-  }
-
   private void dump(final FilterBase f, final String curLine) {
     if (f instanceof OrFilter) {
       dmsg(curLine + "  OR ");
@@ -828,32 +533,10 @@ public abstract class FilterBuilder {
     }
   }
 
-  private void dump(final ColorMap cmap) {
-    if (colorMap == null) {
-      dmsg("*** No color map ***");
-      return;
-    }
-
-    dmsg("------- color map ------");
-
-    for (String path: cmap.keySet()) {
-      dmsg("path: " + path);
-      for (ClientCollectionInfo cci: colorMap.get(path)) {
-        dmsg("  cci.path: " + cci.getPath());
-        dmsg("  cci.color: " + cci.getColor());
-        dmsg("  cci.filter: " + cci.getFilter());
-      }
-    }
-
-    dmsg("------- end color map ------");
-  }
-
   private FilterBase parseExpr(final String expr) throws CalFacadeException {
-    if (parser == null) {
-      parser = new FltSimpleFilterParser();
-    }
+    SimpleFilterParser sfp = parser.getParser();
 
-    ParseResult pr = parser.parse(expr);
+    ParseResult pr = sfp.parse(expr, false);
 
     if (!pr.ok) {
       throw pr.cfe;

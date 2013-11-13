@@ -581,6 +581,25 @@ public class CalSvc extends CalSvcI {
 
   class SvcSimpleFilterParser extends SimpleFilterParser {
     @Override
+    public BwCalendar getCollection(final String path)
+            throws CalFacadeException {
+      return getCalendarsHandler().get(path);
+    }
+
+    @Override
+    public BwCalendar resolveAlias(final BwCalendar val,
+                                   final boolean resolveSubAlias)
+            throws CalFacadeException {
+      return getCalendarsHandler().resolveAlias(val, resolveSubAlias, false);
+    }
+
+    @Override
+    public Collection<BwCalendar> getChildren(final BwCalendar col)
+            throws CalFacadeException {
+      return getCalendarsHandler().getChildren(col);
+    }
+
+    @Override
     public BwCategory getCategoryByName(final String name) throws CalFacadeException {
       return getCategoriesHandler().find(new BwString(null, name));
     }

@@ -33,7 +33,6 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 
-import ietf.params.xml.ns.caldav.ParamFilterType;
 import ietf.params.xml.ns.caldav.TextMatchType;
 import net.fortuna.ical4j.model.DateTime;
 import org.apache.log4j.Logger;
@@ -72,6 +71,7 @@ public abstract class SimpleFilterParser {
   private String currentExpr;
 
   private SimpleFilterParser subParser;
+  private boolean explicitSelection;
 
   private static class Token {
   }
@@ -174,6 +174,36 @@ public abstract class SimpleFilterParser {
     }
   }
 
+  /**
+   *
+   * @param path
+   * @return collection object or null.
+   * @throws org.bedework.calfacade.exc.CalFacadeException
+   */
+  public abstract BwCalendar getCollection(String path) throws CalFacadeException;
+
+  /** Attempt to get collection referenced by the alias. For an internal alias
+   * the result will also be set in the aliasTarget property of the parameter.
+   *
+   * @param val collection
+   * @param resolveSubAlias - if true and the alias points to an alias, resolve
+   *                  down to a non-alias.
+   * @return BwCalendar
+   * @throws org.bedework.calfacade.exc.CalFacadeException
+   */
+  public abstract BwCalendar resolveAlias(BwCalendar val,
+                                          boolean resolveSubAlias) throws CalFacadeException;
+
+  /** Returns children of the given collection to which the current user has
+   * some access.
+   *
+   * @param  col          parent collection
+   * @return Collection   of BwCalendar
+   * @throws org.bedework.calfacade.exc.CalFacadeException
+   */
+  public abstract Collection<BwCalendar> getChildren(BwCalendar col)
+          throws CalFacadeException;
+
   /** An unsatisfactory approach - we'll special case categories for the moment
    * to see if this works. When using these filters we need to search for a
    * category being a member of the set of categories for the event.
@@ -235,13 +265,21 @@ public abstract class SimpleFilterParser {
    */
   public abstract SimpleFilterParser getParser() throws CalFacadeException;
 
-  /** Parse the given expression into a filter
+  /** Parse the given expression into a filter. The explicitSelection
+   * flag determines whether or not we skip certain collections. For
+   * example, we normally skip collections with display off or the
+   * inbox. If we explicitly selct thos e items however, we want to
+   * see them.
    *
    * @param expr
+   * @param explicitSelection true if we are explicitly selecting a
+   *                          path or paths
    * @return ParseResult
    * @throws CalFacadeException
    */
-  public ParseResult parse(final String expr) throws CalFacadeException {
+  public ParseResult parse(final String expr,
+                           final boolean explicitSelection) throws CalFacadeException {
+    this.explicitSelection = explicitSelection;
     debug = getLogger().isDebugEnabled();
 
     try {
@@ -530,29 +568,8 @@ public abstract class SimpleFilterParser {
     PropertyInfoIndex pi = getProperty(nextToken("getProperty()"));
 
     Operator oper = nextOperator();
-    TimeRange tr = null;
-    TextMatchType tm = null;
 
-    if (oper.op == inTimeRange) {
-      tr = getTimeRange();
-    } else if ((oper.op != isDefined) && (oper.op != notDefined) &&
-            (pi != PropertyInfoIndex.CATUID)) {
-      // Expect a value
-      tokenizer.assertString();
-
-      tm = new TextMatchType();
-      tm.setValue(tokenizer.sval);
-      if (oper.op == notEqual) {
-        tm.setNegateCondition("yes");
-      } else {
-        tm.setNegateCondition("no");
-      }
-      tm.setCollation("i;ascii-casemap");
-    }
-
-    FilterBase pfilter = makePropFilter(pi, oper.op,
-                                    tr,
-                                    tm, null);
+    FilterBase pfilter = makePropFilter(pi, oper.op);
 
     if (pfilter == null) {
       throw new CalFacadeException(CalFacadeException.filterBadProperty,
@@ -608,7 +625,7 @@ public abstract class SimpleFilterParser {
       tkn = nextToken("doWordList(2)");
 
       if ((tkn != '"') && (tkn != '\'')) {
-        throw new CalFacadeException(CalFacadeException.filterExpectedUid,
+        throw new CalFacadeException(CalFacadeException.filterBadList,
                                      String.valueOf(tkn));
       }
 
@@ -648,26 +665,29 @@ public abstract class SimpleFilterParser {
   }
 
   private FilterBase makePropFilter(final PropertyInfoIndex pi,
-                                final int oper,
-                                final TimeRange timeRange,
-                                final TextMatchType match,
-                                    final Collection<ParamFilterType> paramFilters)
+                                    final int oper)
           throws CalFacadeException {
     FilterBase filter = null;
     final boolean exact = (oper != like) && (oper != notLike);
 
     if (pi.equals(PropertyInfoIndex.ENTITY_TYPE)) {
-      return entityFilter(match.getValue());
+      return entityFilter(getMatch(oper).getValue());
     }
 
-    if (oper  == notDefined) {
-      filter = new PresenceFilter(null, pi, false);
-    } else if (oper == isDefined) {
+    if (oper == notDefined) {
+      return new PresenceFilter(null, pi, false);
+    }
+
+    if (oper == isDefined) {
       // Presence check
-      filter = new PresenceFilter(null, pi, true);
-    } else if (timeRange != null) {
-      filter = ObjectFilter.makeFilter(null, pi, timeRange);
-    } else if (pi.equals(PropertyInfoIndex.VIEW)) {
+      return new PresenceFilter(null, pi, true);
+    }
+
+    if (oper == inTimeRange) {
+      return ObjectFilter.makeFilter(null, pi, getTimeRange());
+    }
+
+    if (pi.equals(PropertyInfoIndex.VIEW)) {
       // expect list of views.
       ArrayList<String> views = doWordList();
 
@@ -680,7 +700,11 @@ public abstract class SimpleFilterParser {
 
         filter = and(filter, vpf);
       }
-    } else if (pi.equals(PropertyInfoIndex.VPATH)) {
+
+      return filter;
+    }
+
+    if (pi.equals(PropertyInfoIndex.VPATH)) {
       // expect list of virtual paths.
       ArrayList<String> vpaths = doWordList();
 
@@ -693,7 +717,11 @@ public abstract class SimpleFilterParser {
 
         filter = and(filter, vpf);
       }
-    } else if (pi.equals(PropertyInfoIndex.CATUID)) {
+
+      return filter;
+    }
+
+    if (pi.equals(PropertyInfoIndex.CATUID)) {
       // No match and category - expect list of uids.
       ArrayList<String> uids = doWordList();
 
@@ -714,63 +742,91 @@ public abstract class SimpleFilterParser {
 
         filter = and(filter, f);
       }
-    } else if (match != null) {
-      if (pi.equals(PropertyInfoIndex.CATEGORIES)) {
-        String val = match.getValue();
 
-        if (val.startsWith("/")) {
-          // Assume a path match
-          ObjectFilter<String> f = new ObjectFilter<>(null, pi);
-          f.setEntity(val);
+      return filter;
+    }
 
-          f.setCaseless(false);
+    if (pi.equals(PropertyInfoIndex.COLLECTION) ||
+            pi.equals(PropertyInfoIndex.COLPATH)) {
+      ArrayList<String> paths = doWordList();
 
-          f.setExact(exact);
-          f.setNot(match.getNegateCondition().equals("yes"));
+      for (String path: paths) {
+        FilterBase pf = resolveColPath(path, true, explicitSelection);
 
-          filter = f;
-        } else {
-          // Try for name
-
-          BwCategory cat = getCategoryByName(val);
-
-          if (cat == null) {
-            throw new CalFacadeException(CalFacadeException.filterBadProperty,
-                    "category name: " + match.getValue());
-          }
-
-          ObjectFilter<BwCategory> f = new BwCategoryFilter(null);
-
-          f.setEntity(cat);
-
-          f.setExact(exact);
-          f.setNot(match.getNegateCondition().equals("yes"));
-
-          filter = f;
+        if (pf == null) {
+          continue;
         }
-      } else {
-        ObjectFilter<String> f = new ObjectFilter<>(null, pi);
-        f.setEntity(match.getValue());
 
-        f.setCaseless(Filters.caseless(match));
+        filter = and(filter, pf);
+      }
+
+      return filter;
+    }
+
+    TextMatchType match = getMatch(oper);
+
+    if (pi.equals(PropertyInfoIndex.CATEGORIES)) {
+      String val = match.getValue();
+
+      if (val.startsWith("/")) {
+        // Assume a path match
+        ObjectFilter<String> f = new ObjectFilter<>(null, pi);
+        f.setEntity(val);
+
+        f.setCaseless(false);
 
         f.setExact(exact);
         f.setNot(match.getNegateCondition().equals("yes"));
 
-        filter = f;
+        return f;
       }
-    } else {
-      // Must have param filters
-      if (Util.isEmpty(paramFilters)) {
-        return null;  // Flag error
+
+      // Try for name
+
+      BwCategory cat = getCategoryByName(val);
+
+      if (cat == null) {
+        throw new CalFacadeException(CalFacadeException.filterBadProperty,
+                                     "category name: " + match.getValue());
       }
+
+      ObjectFilter<BwCategory> f = new BwCategoryFilter(null);
+
+      f.setEntity(cat);
+
+      f.setExact(exact);
+      f.setNot(match.getNegateCondition().equals("yes"));
+
+      return f;
     }
 
-//    if (Util.isEmpty(paramFilters)) {
-      return filter;
-//    }
+    ObjectFilter<String> f = new ObjectFilter<>(null, pi);
+    f.setEntity(match.getValue());
 
-//    return BwFilter.addAndChild(filter, processParamFilters(pi, paramFilters));
+    f.setCaseless(Filters.caseless(match));
+
+    f.setExact(exact);
+    f.setNot(match.getNegateCondition().equals("yes"));
+
+    return f;
+  }
+
+  private TextMatchType getMatch(final int oper) throws CalFacadeException {
+    TextMatchType tm;
+
+    // Expect a value
+    tokenizer.assertString();
+
+    tm = new TextMatchType();
+    tm.setValue(tokenizer.sval);
+    if (oper == notEqual) {
+      tm.setNegateCondition("yes");
+    } else {
+      tm.setNegateCondition("no");
+    }
+    tm.setCollation("i;ascii-casemap");
+
+    return tm;
   }
 
   private FilterBase entityFilter(final String val) throws CalFacadeException {
@@ -915,7 +971,7 @@ public abstract class SimpleFilterParser {
           subParser = getParser();
         }
 
-        ParseResult pr = subParser.parse(col.getFilterExpr());
+        ParseResult pr = subParser.parse(col.getFilterExpr(), false);
         if (pr.cfe != null) {
           throw pr.cfe;
         }
@@ -936,7 +992,24 @@ public abstract class SimpleFilterParser {
       throw new CalFacadeException("Bad vpath - no calendar collection");
     }
 
-    return and(vfilter, new BwCollectionFilter(null, vpathTarget));
+    return and(vfilter,
+               resolveColPath(vpathTarget.getPath(),
+                              false, false));
+  }
+
+  /**
+   *
+   * @param path
+   * @param applyFilter - filter may already have been applied
+   * @return filter or null
+   * @throws CalFacadeException
+   */
+  private FilterBase resolveColPath(final String path,
+                                    final boolean applyFilter,
+                                    final boolean explicitSelection) throws CalFacadeException {
+    return new FilterBuilder(this).buildFilter(path,
+                                               applyFilter,
+                                               explicitSelection);
   }
 
   private TimeRange getTimeRange() throws CalFacadeException {

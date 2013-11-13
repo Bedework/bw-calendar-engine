@@ -67,7 +67,7 @@ class Filters extends CalSvcDb implements FiltersI {
     }
 
     // Assume simple expression filter
-    ParseResult pr = getSvc().getFilterParser().parse(def);
+    ParseResult pr = getSvc().getFilterParser().parse(def, false);
 
     if (pr.ok) {
       val.setFilters(pr.filter);
