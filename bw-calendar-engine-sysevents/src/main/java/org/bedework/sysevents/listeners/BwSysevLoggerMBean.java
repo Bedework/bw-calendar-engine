@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,47 +16,35 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.sysevents.monitor;
-
-import java.util.List;
+package org.bedework.sysevents.listeners;
 
 /**
  * @author douglm
  *
  */
-public interface BwSysMonitorMBean {
+public interface BwSysevLoggerMBean {
+  static final String serviceName = "org.bedework.bwengine:service=BwSysevLogger";
+
   /** Name apparently must be the same as the name attribute in the
    * jboss service definition
    *
    * @return Name
    */
-  public String getName();
+  String getName();
 
   /** Lifecycle
    *
    */
-  public void start();
+  void start();
 
   /** Lifecycle
    *
    */
-  public void stop();
+  void stop();
 
   /** Lifecycle
    *
    * @return true if started
    */
-  public boolean isStarted();
-
-  /** Display the current counts and values
-   *
-   * @return List of String
-   */
-  public List<String> showValues();
-
-  /** Get the current stats
-   *
-   * @return List of MonitorStat
-   */
-  public List<MonitorStat> getStats();
+  boolean isStarted();
 }

@@ -30,6 +30,7 @@ import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.indexer.BwIndexCtlMBean;
+import org.bedework.sysevents.listeners.BwSysevLogger;
 import org.bedework.util.config.ConfigurationStore;
 import org.bedework.util.http.service.HttpConfig;
 import org.bedework.util.http.service.HttpOut;
@@ -270,6 +271,11 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       register(new ObjectName(ho.getServiceName()), ho);
       ho.loadConfig();
       httpConfig = ho.getConfig();
+
+      /* ------------- Sysevents -------------------- */
+      BwSysevLogger sysev = new BwSysevLogger();
+      register(new ObjectName(BwSysevLogger.serviceName), sysev);
+      sysev.start();
 
       /* ------------- Change notifications  -------------------- */
       Object chg = loadInstance(chgnoteClass);

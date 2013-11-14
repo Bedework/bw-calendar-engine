@@ -20,7 +20,6 @@ package org.bedework.sysevents.listeners;
 
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
-import org.bedework.util.args.Args;
 
 /** Listener class which logs system events sent via JMS.
  *
@@ -51,60 +50,5 @@ public class LogListener extends JmsSysEventListener {
     open(syseventsLogQueueName);
 
     process(false);
-  }
-
-  boolean processArgs(final Args args) throws Throwable {
-    if (args == null) {
-      return true;
-    }
-
-    while (args.more()) {
-      if (args.ifMatch("")) {
-        continue;
-      }
-
-      if (args.ifMatch("-debug")) {
-        debug = true;
-      } else if (args.ifMatch("-ndebug")) {
-        debug = false;
-      } else if (args.ifMatch("-appname")) {
-        args.next(); // Not used at the moment
-      } else {
-        error("Illegal argument: " + args.current());
-        usage();
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  void usage() {
-    System.out.println("Usage:");
-    System.out.println("args   -debug");
-    System.out.println("       -ndebug");
-    System.out.println("       -appname <name>");
-    System.out.println("");
-  }
-
-  /**
-   * @param args
-   */
-  public static void main(final String[] args) {
-    try {
-      LogListener ll = new LogListener();
-
-      if (!ll.processArgs(new Args(args))) {
-        return;
-      }
-
-      if (ll.debug) {
-        ll.trace("About to start process");
-      }
-
-      ll.listen();
-    } catch (Throwable t) {
-      t.printStackTrace();
-    }
   }
 }

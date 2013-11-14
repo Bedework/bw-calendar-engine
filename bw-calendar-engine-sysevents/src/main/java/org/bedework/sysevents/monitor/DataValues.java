@@ -18,6 +18,7 @@
 */
 package org.bedework.sysevents.monitor;
 
+import org.bedework.calfacade.MonitorStat;
 import org.bedework.sysevents.events.MillisecsEvent;
 import org.bedework.sysevents.events.StatsEvent;
 import org.bedework.sysevents.events.StatsEvent.StatType;

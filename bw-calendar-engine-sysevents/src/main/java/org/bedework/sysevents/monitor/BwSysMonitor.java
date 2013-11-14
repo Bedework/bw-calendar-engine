@@ -18,6 +18,7 @@
 */
 package org.bedework.sysevents.monitor;
 
+import org.bedework.calfacade.MonitorStat;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
