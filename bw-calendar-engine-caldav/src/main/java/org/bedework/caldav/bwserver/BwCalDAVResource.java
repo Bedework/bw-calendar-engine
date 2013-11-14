@@ -79,9 +79,6 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
     return false;
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdEntity#isAlias()
-   */
   @Override
   public boolean isAlias() throws WebdavException {
     return false;
@@ -92,9 +89,6 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdEntity#resolveAlias(boolean)
-   */
   @Override
   public BwCalDAVResource resolveAlias(final boolean resolveSubAlias) throws WebdavException {
     return this;

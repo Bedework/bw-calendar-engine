@@ -1814,9 +1814,6 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.sysinterface.SysIntf#toIcalString(net.fortuna.ical4j.model.Calendar)
-   */
   @Override
   public String toIcalString(final Calendar cal,
                              final String contentType) throws WebdavException {

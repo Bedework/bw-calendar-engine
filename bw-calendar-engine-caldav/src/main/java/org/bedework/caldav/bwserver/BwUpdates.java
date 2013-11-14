@@ -81,7 +81,7 @@ import javax.xml.namespace.QName;
 
 /** Bedework implementation of SysIntf.
  *
- * @author Mike Douglass douglm at bedework.edu
+ * @author Mike Douglass douglm at rpi.edu
  */
 public class BwUpdates {
   private boolean debug;
