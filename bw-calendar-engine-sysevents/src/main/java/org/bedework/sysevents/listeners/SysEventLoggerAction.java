@@ -24,7 +24,7 @@ import org.bedework.sysevents.events.SysEvent;
 /** This is the implementation of a notifications action class which logs
  * system events.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 public class SysEventLoggerAction extends SysEventActionClass {
   /**

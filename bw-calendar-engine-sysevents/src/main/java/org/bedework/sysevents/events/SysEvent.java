@@ -77,10 +77,6 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
     updateDtstamp();
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.bedework.sysevents.events.SysEventBase#getSysCode()
-   */
   @Override
   public SysCode getSysCode() {
     return sysCode;

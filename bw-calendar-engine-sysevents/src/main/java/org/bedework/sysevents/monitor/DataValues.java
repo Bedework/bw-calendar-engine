@@ -36,7 +36,7 @@ import java.util.Map;
 public class DataValues {
   private Map<SysCode, DataAvg> dvMap = new HashMap<SysCode, DataAvg>();
 
-  private Map<String, DataAvg> timedValuesMap = new HashMap<String, DataAvg>();
+  private Map<String, DataAvg> timedValuesMap = new HashMap<>();
 
   private Map<String, DataAvg> statMap = new HashMap<String, DataAvg>();
 

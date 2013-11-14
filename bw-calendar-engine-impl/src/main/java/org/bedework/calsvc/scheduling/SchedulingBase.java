@@ -179,9 +179,7 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
 
     if (!ev.getRecurring()) {
       setChangeInfo(newEv, changeInfo);
-      EventInfo nei = new EventInfo(newEv);
-
-      return nei;
+      return new EventInfo(newEv);
     }
 
     if (cancel) {

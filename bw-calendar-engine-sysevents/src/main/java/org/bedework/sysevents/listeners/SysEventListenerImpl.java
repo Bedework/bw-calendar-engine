@@ -26,7 +26,7 @@ import java.util.Properties;
 
 /** This is the implementation of a notifications listener.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 public class SysEventListenerImpl extends SysEventListener {
   private String actionClassName;

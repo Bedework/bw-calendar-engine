@@ -37,7 +37,7 @@ import javax.naming.NamingException;
 
 /** This is a class to ease setting up of JMS connections..
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 public class JmsConnectionHandler implements JmsDefs {
   private boolean debug;

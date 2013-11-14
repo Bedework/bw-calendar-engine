@@ -24,7 +24,7 @@ import javax.jms.Session;
 
 /** Definitionsrelating to bedework use of jms.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 public interface JmsDefs extends Serializable {
   /** */

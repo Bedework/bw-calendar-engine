@@ -1153,11 +1153,9 @@ public class CalSvc extends CalSvcI {
 
       cali = CalintfFactory.getIntf(CalintfFactory.hibernateClass);
 
-      postNotification(
-                       SysEvent.makeTimedEvent("Login: about to obtain calintf",
+      postNotification(SysEvent.makeTimedEvent("Login: about to obtain calintf",
                                                beforeGetIntf));
-      postNotification(
-                       SysEvent.makeTimedEvent("Login: calintf obtained",
+      postNotification(SysEvent.makeTimedEvent("Login: calintf obtained",
                                                System.currentTimeMillis() - start));
 
       cali.open(pars.getWebMode(),
@@ -1198,8 +1196,7 @@ public class CalSvc extends CalSvcI {
         }
       }
 
-      postNotification(
-                       SysEvent.makeTimedEvent("Login: before get dirs",
+      postNotification(SysEvent.makeTimedEvent("Login: before get dirs",
                                                System.currentTimeMillis() - start));
 
       Directories dir = getDirectories();
@@ -1218,8 +1215,7 @@ public class CalSvc extends CalSvcI {
         }
       }
 
-      postNotification(
-                       SysEvent.makeTimedEvent("Login: before user fetch",
+      postNotification(SysEvent.makeTimedEvent("Login: before user fetch",
                                                System.currentTimeMillis() - start));
 
       synchronized (synchlock) {
@@ -1284,15 +1280,13 @@ public class CalSvc extends CalSvcI {
           }
 
           currentPrincipal.setGroups(dir.getAllGroups(currentPrincipal));
-          postNotification(
-                           SysEvent.makeTimedEvent("Login: after get Groups",
+          postNotification(SysEvent.makeTimedEvent("Login: after get Groups",
                                                    System.currentTimeMillis() - start));
 
           if (!pars.getService()) {
             currentPrincipal.setPrincipalInfo(dir.getDirInfo(currentPrincipal));
 
-            postNotification(
-                             SysEvent.makeTimedEvent("Login: got Dirinfo",
+            postNotification(SysEvent.makeTimedEvent("Login: got Dirinfo",
                                                      System.currentTimeMillis() - start));
           }
         }
@@ -1312,16 +1306,16 @@ public class CalSvc extends CalSvcI {
         if (!currentPrincipal.getUnauthenticated()) {
           if (pars.getService()) {
             postNotification(
-                             SysEvent.makePrincipalEvent(SysEvent.SysCode.SERVICE_USER_LOGIN,
-                                                         currentPrincipal,
-                                                         System.currentTimeMillis() - start));
+                    SysEvent.makePrincipalEvent(SysEvent.SysCode.SERVICE_USER_LOGIN,
+                                                currentPrincipal,
+                                                System.currentTimeMillis() - start));
           } else if (!creating) {
             users.logon(currentPrincipal);
 
             postNotification(
-                             SysEvent.makePrincipalEvent(SysEvent.SysCode.USER_LOGIN,
-                                                         currentPrincipal,
-                                                         System.currentTimeMillis() - start));
+                    SysEvent.makePrincipalEvent(SysEvent.SysCode.USER_LOGIN,
+                                                currentPrincipal,
+                                                System.currentTimeMillis() - start));
           }
         } else {
           // If we have a runAsUser it's a public client. Pretend we authenticated

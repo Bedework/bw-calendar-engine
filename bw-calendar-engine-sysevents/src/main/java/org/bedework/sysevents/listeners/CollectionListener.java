@@ -24,7 +24,7 @@ import org.bedework.sysevents.events.SysEventBase.SysCode;
 /** This is the implementation of a notifications action class which logs
  * system events.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 public class CollectionListener extends SysEventListenerImpl {
   private final static String colpathName = "colPath";

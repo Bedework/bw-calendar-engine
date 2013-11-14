@@ -33,7 +33,7 @@ import javax.jms.ObjectMessage;
  * This is the implementation of a notifications handler which sends jms
  * messages.
  *
- * @author Mike Douglass douglm - bedework.edu
+ * @author Mike Douglass douglm - rpi.edu
  */
 class JmsNotificationsHandlerImpl extends NotificationsHandler implements
     JmsDefs {
