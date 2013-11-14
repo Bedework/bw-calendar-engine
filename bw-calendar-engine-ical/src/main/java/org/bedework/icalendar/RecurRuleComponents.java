@@ -113,7 +113,7 @@ import java.util.Set;
 
          setposday  = yeardaynum
 
-* @author Mike Douglass     douglm - bedework.edu
+* @author Mike Douglass     douglm - rpi.edu
 *  @version 1.0
 */
 public class RecurRuleComponents {

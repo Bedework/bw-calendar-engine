@@ -36,12 +36,73 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.XcalUtil;
 
-import ietf.params.xml.ns.icalendar_2.*;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.WeekDay;
 import net.fortuna.ical4j.model.property.RRule;
+
+import ietf.params.xml.ns.icalendar_2.ArrayOfComponents;
+import ietf.params.xml.ns.icalendar_2.ArrayOfParameters;
+import ietf.params.xml.ns.icalendar_2.ArrayOfProperties;
+import ietf.params.xml.ns.icalendar_2.AttachPropType;
+import ietf.params.xml.ns.icalendar_2.AttendeePropType;
+import ietf.params.xml.ns.icalendar_2.BaseComponentType;
+import ietf.params.xml.ns.icalendar_2.BaseParameterType;
+import ietf.params.xml.ns.icalendar_2.BasePropertyType;
+import ietf.params.xml.ns.icalendar_2.CategoriesPropType;
+import ietf.params.xml.ns.icalendar_2.ClassPropType;
+import ietf.params.xml.ns.icalendar_2.CnParamType;
+import ietf.params.xml.ns.icalendar_2.CommentPropType;
+import ietf.params.xml.ns.icalendar_2.CompletedPropType;
+import ietf.params.xml.ns.icalendar_2.ContactPropType;
+import ietf.params.xml.ns.icalendar_2.CreatedPropType;
+import ietf.params.xml.ns.icalendar_2.CutypeParamType;
+import ietf.params.xml.ns.icalendar_2.DelegatedFromParamType;
+import ietf.params.xml.ns.icalendar_2.DelegatedToParamType;
+import ietf.params.xml.ns.icalendar_2.DescriptionPropType;
+import ietf.params.xml.ns.icalendar_2.DirParamType;
+import ietf.params.xml.ns.icalendar_2.DtendPropType;
+import ietf.params.xml.ns.icalendar_2.DtstampPropType;
+import ietf.params.xml.ns.icalendar_2.DtstartPropType;
+import ietf.params.xml.ns.icalendar_2.DuePropType;
+import ietf.params.xml.ns.icalendar_2.DurationPropType;
+import ietf.params.xml.ns.icalendar_2.FbtypeParamType;
+import ietf.params.xml.ns.icalendar_2.FreebusyPropType;
+import ietf.params.xml.ns.icalendar_2.FreqRecurType;
+import ietf.params.xml.ns.icalendar_2.GeoPropType;
+import ietf.params.xml.ns.icalendar_2.LanguageParamType;
+import ietf.params.xml.ns.icalendar_2.LastModifiedPropType;
+import ietf.params.xml.ns.icalendar_2.LocationPropType;
+import ietf.params.xml.ns.icalendar_2.MemberParamType;
+import ietf.params.xml.ns.icalendar_2.OrganizerPropType;
+import ietf.params.xml.ns.icalendar_2.PartstatParamType;
+import ietf.params.xml.ns.icalendar_2.PercentCompletePropType;
+import ietf.params.xml.ns.icalendar_2.PeriodType;
+import ietf.params.xml.ns.icalendar_2.PriorityPropType;
+import ietf.params.xml.ns.icalendar_2.RecurType;
+import ietf.params.xml.ns.icalendar_2.RecurrenceIdPropType;
+import ietf.params.xml.ns.icalendar_2.RelatedToPropType;
+import ietf.params.xml.ns.icalendar_2.ReltypeParamType;
+import ietf.params.xml.ns.icalendar_2.ResourcesPropType;
+import ietf.params.xml.ns.icalendar_2.RoleParamType;
+import ietf.params.xml.ns.icalendar_2.RrulePropType;
+import ietf.params.xml.ns.icalendar_2.RsvpParamType;
+import ietf.params.xml.ns.icalendar_2.ScheduleStatusParamType;
+import ietf.params.xml.ns.icalendar_2.SentByParamType;
+import ietf.params.xml.ns.icalendar_2.SequencePropType;
+import ietf.params.xml.ns.icalendar_2.StatusPropType;
+import ietf.params.xml.ns.icalendar_2.SummaryPropType;
+import ietf.params.xml.ns.icalendar_2.TranspPropType;
+import ietf.params.xml.ns.icalendar_2.UidPropType;
+import ietf.params.xml.ns.icalendar_2.UntilRecurType;
+import ietf.params.xml.ns.icalendar_2.UrlPropType;
+import ietf.params.xml.ns.icalendar_2.ValarmType;
+import ietf.params.xml.ns.icalendar_2.VeventType;
+import ietf.params.xml.ns.icalendar_2.VfreebusyType;
+import ietf.params.xml.ns.icalendar_2.VjournalType;
+import ietf.params.xml.ns.icalendar_2.VtodoType;
+import ietf.params.xml.ns.icalendar_2.XBedeworkCostPropType;
 
 import java.math.BigInteger;
 import java.util.Collection;
@@ -52,7 +113,7 @@ import javax.xml.bind.JAXBElement;
 
 /** Class to provide utility methods for translating to XML icalendar classes
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm    rpi.edu
  */
 public class ToXEvent extends Xutil {
   /** Make a BaseComponentType component from a BwEvent object. This may produce a

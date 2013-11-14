@@ -41,6 +41,7 @@ import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
+
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ import java.util.TreeSet;
 
 /** Some help with recurrences.
  *
- * @author Mike Douglass     douglm - bedework.edu
+ * @author Mike Douglass     douglm - rpi.edu
  *  @version 1.0
  */
 public class RecurUtil {

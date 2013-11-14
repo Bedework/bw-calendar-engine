@@ -55,7 +55,7 @@ import java.util.List;
 
 /** Class to provide utility methods for handline VAlarm ical4j classes
  *
- * @author Mike Douglass   douglm bedework.edu
+ * @author Mike Douglass   douglm rpi.edu
  */
 public class VAlarmUtil extends IcalUtil {
 

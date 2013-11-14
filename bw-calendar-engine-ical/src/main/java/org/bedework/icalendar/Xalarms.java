@@ -49,7 +49,7 @@ import javax.xml.bind.JAXBElement;
 /** Class to provide utility methods for translating  between XML and Bedework
  * alarm representations
  *
- * @author Mike Douglass   douglm  bedework.edu
+ * @author Mike Douglass   douglm  rpi.edu
  */
 public class Xalarms extends Xutil {
   /**

@@ -42,7 +42,7 @@ import java.util.Iterator;
  * timezones defined in the event objects which we do not store in the system
  * timezone store.
  *
- * @author Mike Douglass douglm@bedework.edu
+ * @author Mike Douglass douglm@rpi.edu
  * @version 1.0
  */
 public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializable {

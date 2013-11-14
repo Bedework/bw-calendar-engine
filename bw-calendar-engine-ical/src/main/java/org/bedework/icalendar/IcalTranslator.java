@@ -97,7 +97,7 @@ import javax.xml.namespace.QName;
 
 /** Object to provide translation between a bedework entity and an Icalendar format.
  *
- * @author Mike Douglass   douglm bedework.edu
+ * @author Mike Douglass   douglm rpi.edu
  */
 public class IcalTranslator implements Serializable {
   protected boolean debug;

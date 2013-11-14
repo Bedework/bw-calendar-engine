@@ -22,7 +22,7 @@ package org.bedework.icalendar;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 /**
- *   @author Mike Douglass   douglm @ bedework.edu
+ *   @author Mike Douglass   douglm @ rpi.edu
  */
 public class IcalMalformedException extends CalFacadeException {
   /** Constructor

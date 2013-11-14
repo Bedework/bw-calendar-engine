@@ -66,7 +66,50 @@ import net.fortuna.ical4j.model.parameter.AltRep;
 import net.fortuna.ical4j.model.parameter.FbType;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.parameter.XParameter;
-import net.fortuna.ical4j.model.property.*;
+import net.fortuna.ical4j.model.property.AcceptResponse;
+import net.fortuna.ical4j.model.property.Attach;
+import net.fortuna.ical4j.model.property.Attendee;
+import net.fortuna.ical4j.model.property.BusyType;
+import net.fortuna.ical4j.model.property.Categories;
+import net.fortuna.ical4j.model.property.Clazz;
+import net.fortuna.ical4j.model.property.Comment;
+import net.fortuna.ical4j.model.property.Completed;
+import net.fortuna.ical4j.model.property.Contact;
+import net.fortuna.ical4j.model.property.Created;
+import net.fortuna.ical4j.model.property.DateListProperty;
+import net.fortuna.ical4j.model.property.DateProperty;
+import net.fortuna.ical4j.model.property.Description;
+import net.fortuna.ical4j.model.property.DtEnd;
+import net.fortuna.ical4j.model.property.DtStamp;
+import net.fortuna.ical4j.model.property.DtStart;
+import net.fortuna.ical4j.model.property.Due;
+import net.fortuna.ical4j.model.property.Duration;
+import net.fortuna.ical4j.model.property.ExDate;
+import net.fortuna.ical4j.model.property.ExRule;
+import net.fortuna.ical4j.model.property.FreeBusy;
+import net.fortuna.ical4j.model.property.Geo;
+import net.fortuna.ical4j.model.property.LastModified;
+import net.fortuna.ical4j.model.property.Location;
+import net.fortuna.ical4j.model.property.Organizer;
+import net.fortuna.ical4j.model.property.PercentComplete;
+import net.fortuna.ical4j.model.property.PollItemId;
+import net.fortuna.ical4j.model.property.PollMode;
+import net.fortuna.ical4j.model.property.PollProperties;
+import net.fortuna.ical4j.model.property.Priority;
+import net.fortuna.ical4j.model.property.RDate;
+import net.fortuna.ical4j.model.property.RRule;
+import net.fortuna.ical4j.model.property.RecurrenceId;
+import net.fortuna.ical4j.model.property.RelatedTo;
+import net.fortuna.ical4j.model.property.RequestStatus;
+import net.fortuna.ical4j.model.property.Resources;
+import net.fortuna.ical4j.model.property.Sequence;
+import net.fortuna.ical4j.model.property.Status;
+import net.fortuna.ical4j.model.property.Summary;
+import net.fortuna.ical4j.model.property.Transp;
+import net.fortuna.ical4j.model.property.Uid;
+import net.fortuna.ical4j.model.property.Url;
+import net.fortuna.ical4j.model.property.Voter;
+import net.fortuna.ical4j.model.property.XProperty;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -77,7 +120,7 @@ import javax.xml.ws.Holder;
 
 /** Class to provide utility methods for translating to BwEvent from ical4j classes
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm  rpi.edu
  */
 public class BwEventUtil extends IcalUtil {
   /** We are going to try to construct a BwEvent object from a VEvent. This
