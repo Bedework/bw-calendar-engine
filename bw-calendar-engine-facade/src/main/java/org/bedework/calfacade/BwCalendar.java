@@ -988,12 +988,36 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    * ==================================================================== */
 
   /**
+   * @param val the supported component names e.g. "VEVENT", "VTODO" etc.
+   */
+  public void setSupportedComponents(List<String> val) {
+    supportedComponents = val;
+
+    if (Util.isEmpty(val)) {
+      removeQproperty(CaldavTags.supportedCalendarComponentSet);
+      return;
+    }
+
+
+    StringBuilder sb = new StringBuilder();
+    String delim = "";
+
+    for (String s: val) {
+      sb.append(delim);
+      sb.append(s);
+    }
+
+    setQproperty(CaldavTags.supportedCalendarComponentSet,
+                 sb.toString());
+  }
+
+  /**
    * @return the supported components
    */
   @NoDump
   public List<String> getSupportedComponents() {
     if (supportedComponents == null) {
-      supportedComponents = new ArrayList<String>();
+      supportedComponents = new ArrayList<>();
 
       if ((getCalType() != calTypeCalendarCollection) &&
           (getCalType() != calTypeInbox) &&

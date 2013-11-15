@@ -174,61 +174,45 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
     return getCol().getTombstoned();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVCollection#entitiesAllowed()
-   */
   @Override
   public boolean entitiesAllowed() throws WebdavException {
     return getCol().getCollectionInfo().onlyCalEntities;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVCollection#setAffectsFreeBusy(boolean)
-   */
   @Override
   public void setAffectsFreeBusy(final boolean val) throws WebdavException {
     getCol().setAffectsFreeBusy(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVCollection#getAffectsFreeBusy()
-   */
   @Override
   public boolean getAffectsFreeBusy() throws WebdavException {
     return getCol().getAffectsFreeBusy();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVCollection#setTimezone(java.lang.String)
-   */
   @Override
   public void setTimezone(final String val) throws WebdavException {
     getCol().setTimezone(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVCollection#getTimezone()
-   */
   @Override
   public String getTimezone() throws WebdavException {
     return getCol().getTimezone();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVCollection#setColor(java.lang.String)
-   */
   @Override
   public void setColor(final String val) throws WebdavException {
     getCol().setColor(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVCollection#getColor()
-   */
   @Override
   public String getColor() throws WebdavException {
     return getCol().getColor();
   }
+
+  @Override
+  public void setSupportedComponents(final List<String> val)
+          throws WebdavException {
+    getCol().setSupportedComponents(val);
 
   @Override
   public List<String> getSupportedComponents() throws WebdavException {
