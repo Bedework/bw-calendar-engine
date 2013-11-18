@@ -71,28 +71,13 @@ public class BwSysMonitor implements BwSysMonitorMBean {
 
   private ListenerThread processor;
 
-  public String getName() {
-    /* This apparently must be the same as the name attribute in the
-     * jboss service definition
-     */
-    return "org.bedework:service=BwSysMonitor";
+  @Override
+  public String getServiceName() {
+    return serviceName;
   }
-
-  /* an example say's we need this  - we'll see
-  public MBeanInfo getMBeanInfo() throws Exception {
-    InitialContext ic = new InitialContext();
-    RMIAdaptor server = (RMIAdaptor) ic.lookup("jmx/rmi/RMIAdaptor");
-
-    ObjectName name = new ObjectName(MBEAN_OBJ_NAME);
-
-    // Get the MBeanInfo for this MBean
-    MBeanInfo info = server.getMBeanInfo(name);
-    return info;
-  }
-  */
 
   @Override
-  public boolean isStarted() {
+  public boolean isRunning() {
     return (processor != null) && processor.isAlive();
   }
 
@@ -104,7 +89,7 @@ public class BwSysMonitor implements BwSysMonitorMBean {
     }
 
     info("************************************************************");
-    info(" * Starting " + getName());
+    info(" * Starting " + serviceName);
     info("************************************************************");
 
     processor = new ListenerThread();
@@ -119,7 +104,7 @@ public class BwSysMonitor implements BwSysMonitorMBean {
     }
 
     info("************************************************************");
-    info(" * Stopping " + getName());
+    info(" * Stopping " + serviceName);
     info("************************************************************");
 
     processor.interrupt();
@@ -134,7 +119,7 @@ public class BwSysMonitor implements BwSysMonitorMBean {
     processor = null;
 
     info("************************************************************");
-    info(" * " + getName() + " terminated");
+    info(" * " + serviceName + " terminated");
     info("************************************************************");
   }
 

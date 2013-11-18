@@ -25,13 +25,6 @@ package org.bedework.sysevents.listeners;
 public interface BwSysevLoggerMBean {
   static final String serviceName = "org.bedework.bwengine:service=BwSysevLogger";
 
-  /** Name apparently must be the same as the name attribute in the
-   * jboss service definition
-   *
-   * @return Name
-   */
-  String getName();
-
   /** Lifecycle
    *
    */

@@ -101,7 +101,8 @@ public final class CoreConfigurations extends ConfBase {
     dbConfig = dc.getConfig();
   }
 
-  void stop() {
+  @Override
+  public void stop() {
     try {
       getManagementContext().stop();
     } catch (Throwable t){

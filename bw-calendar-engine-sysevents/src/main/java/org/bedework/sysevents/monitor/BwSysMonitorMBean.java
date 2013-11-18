@@ -19,6 +19,7 @@
 package org.bedework.sysevents.monitor;
 
 import org.bedework.calfacade.MonitorStat;
+import org.bedework.util.jmx.BaseMBean;
 
 import java.util.List;
 
@@ -26,29 +27,8 @@ import java.util.List;
  * @author douglm
  *
  */
-public interface BwSysMonitorMBean {
-  /** Name apparently must be the same as the name attribute in the
-   * jboss service definition
-   *
-   * @return Name
-   */
-  public String getName();
-
-  /** Lifecycle
-   *
-   */
-  public void start();
-
-  /** Lifecycle
-   *
-   */
-  public void stop();
-
-  /** Lifecycle
-   *
-   * @return true if started
-   */
-  public boolean isStarted();
+public interface BwSysMonitorMBean extends BaseMBean {
+  static final String serviceName = "org.bedework.bwengine:service=BwSysMonitor";
 
   /** Display the current counts and values
    *

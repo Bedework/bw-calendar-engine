@@ -54,7 +54,6 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.mail.MailerIntf;
-import org.bedework.calfacade.security.GenKeysMBean;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
@@ -97,6 +96,7 @@ import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.jmx.MBeanUtil;
 import org.bedework.util.misc.Util;
 import org.bedework.util.security.PwEncryptionIntf;
+import org.bedework.util.security.keys.GenKeysMBean;
 import org.bedework.util.timezones.Timezones;
 
 import net.fortuna.ical4j.model.property.DtStamp;
@@ -1696,7 +1696,7 @@ public class CalSvc extends CalSvcI {
       String pubKeys = null;
 
       GenKeysMBean gk = (GenKeysMBean)MBeanUtil.getMBean(GenKeysMBean.class,
-                                                   "org.bedework:service=GenKeys");
+                                                         GenKeysMBean.serviceName);
       if (gk != null) {
         privKeys = gk.getPrivKeyFileName();
         pubKeys = gk.getPublicKeyFileName();

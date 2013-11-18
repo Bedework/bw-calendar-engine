@@ -277,6 +277,16 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       register(new ObjectName(BwSysevLogger.serviceName), sysev);
       sysev.start();
 
+      /* ------------- Monitor -------------------- */
+      BwSysMonitor sysmon = new BwSysMonitor();
+      register(new ObjectName(BwSysMonitor.serviceName), sysmon);
+      sysmon.start();
+
+      /* ------------- GenKeys -------------------- */
+      GenKeys gk = new GenKeys("org.bedework.bwengine.confuri");
+      register(new ObjectName(GenKeys.serviceName), gk);
+      gk.loadConfig();
+
       /* ------------- Change notifications  -------------------- */
       Object chg = loadInstance(chgnoteClass);
 
@@ -434,7 +444,18 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
     }
   }
 
-  void stop() {
+  @Override
+  public void stop() {
+    for (Object o: getRegisteredMBeans()) {
+      if (o instanceof BaseMBean) {
+        try {
+          ((BaseMBean)o).stop();
+        } catch (Throwable t){
+          t.printStackTrace();
+        }
+      }
+    }
+
     try {
       getManagementContext().stop();
     } catch (Throwable t){
