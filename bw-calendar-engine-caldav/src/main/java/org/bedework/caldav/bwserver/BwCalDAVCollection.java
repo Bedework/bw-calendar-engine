@@ -213,6 +213,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   public void setSupportedComponents(final List<String> val)
           throws WebdavException {
     getCol().setSupportedComponents(val);
+  }
 
   @Override
   public List<String> getSupportedComponents() throws WebdavException {
