@@ -558,7 +558,8 @@ public abstract class SimpleFilterParser {
 
       PropertyInfoIndex pi;
 
-      pi = PropertyInfoIndex.lookupPname(pnameUc);
+      //pi = PropertyInfoIndex.lookupPname(pname);
+      pi = PropertyInfoIndex.valueOf(pnameUc);
 
       if (pi == null) {
         throw new CalFacadeException(CalFacadeException.unknownProperty,
