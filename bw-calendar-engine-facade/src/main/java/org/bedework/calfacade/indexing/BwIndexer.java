@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calsvci.indexing;
+package org.bedework.calfacade.indexing;
 
 import org.bedework.access.Acl;
 import org.bedework.caldav.util.filter.FilterBase;
@@ -28,7 +28,6 @@ import org.bedework.util.indexing.Index;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author douglm

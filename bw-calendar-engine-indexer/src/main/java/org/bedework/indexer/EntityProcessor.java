@@ -23,7 +23,7 @@ import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.indexer.IndexStats.StatType;
 
 import org.apache.log4j.Logger;

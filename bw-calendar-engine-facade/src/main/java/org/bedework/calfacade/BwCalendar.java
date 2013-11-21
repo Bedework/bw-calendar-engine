@@ -324,25 +324,22 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   private String remotePw;
 
-  /* Non - db field */
+  /* ====================================================================
+   *                      Non-db fields
+   * ==================================================================== */
+
   private Set<BwCategory> categories = null;
 
-  /* Non - db field */
   private BwCalendar aliasTarget;
 
-  /* Non - db field */
   private int aliasCalType;
 
-  /* Non - db field */
   private boolean pwNeedsEncrypt;
 
-  /* Non - db field */
   private List<String> supportedComponents;
 
-  /* Non - db field */
   private Collection<BwCalendar> children;
 
-  /* Non - db field */
   private List<String> vpollSupportedComponents;
 
   /** Constructor

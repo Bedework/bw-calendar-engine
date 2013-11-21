@@ -22,7 +22,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer;
 
 import java.io.Serializable;
 import java.util.Collection;

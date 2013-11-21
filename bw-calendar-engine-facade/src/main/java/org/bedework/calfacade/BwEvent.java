@@ -1203,7 +1203,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   /** True if this is a valid organizer scheduling object. (See CalDAV
    * scheduling specification). This can be set false (and will be on copy) to
-   * supress sending of invitations, e.g. for a draft.
+   * suppress sending of invitations, e.g. for a draft.
    *
    * <p>When the event is added this flag will be set true if the appropriate
    * conditions are satisfied.

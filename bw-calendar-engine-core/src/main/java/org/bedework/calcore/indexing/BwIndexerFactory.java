@@ -16,11 +16,12 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calsvc.indexing;
+package org.bedework.calcore.indexing;
 
+import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvc.CalSvc;
-import org.bedework.calsvci.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer;
 
 /** Create an instance of an indexer for bedework.
  *
@@ -35,24 +36,25 @@ public class BwIndexerFactory {
 
   /** Factory method to get current indexer
    *
-   * @param svci
+   * @param configs
    * @param publick
    * @param principal - who we are searching for
    * @param writeable true if the caller can update the index
+   * @return indexer
    * @throws CalFacadeException
    */
-  public static BwIndexer getIndexer(final CalSvc svci,
+  public static BwIndexer getIndexer(final Configurations configs,
                                      final boolean publick,
-                                     final String principal,
+                                     final BwPrincipal principal,
                                      final boolean writeable) throws CalFacadeException {
     if (publick) {
-      return new BwIndexEsImpl(svci, true,
+      return new BwIndexEsImpl(configs, true,
                                principal,
                                writeable,
                                null); // No explicit name
     }
 
-    return new BwIndexEsImpl(svci, false,
+    return new BwIndexEsImpl(configs, false,
                              principal,
                              writeable,
                              null); // No explicit name
@@ -62,18 +64,18 @@ public class BwIndexerFactory {
    * be called from the crawler which will be indexing into an alternative
    * index.
    *
-   * @param svci
+   * @param configs
    * @param principal
    * @param writeable true if the caller can update the index
    * @param indexRoot
    * @return indexer
    * @throws CalFacadeException
    */
-  public static BwIndexer getIndexer(final CalSvc svci,
-                                     final String principal,
+  public static BwIndexer getIndexer(final Configurations configs,
+                                     final BwPrincipal principal,
                                      final boolean writeable,
                                      final String indexRoot) throws CalFacadeException {
-    return new BwIndexEsImpl(svci, true,
+    return new BwIndexEsImpl(configs, true,
                              principal,
                              writeable,
                              indexRoot); // Explicit name

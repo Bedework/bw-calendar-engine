@@ -35,7 +35,9 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.PrincipalInfo;
@@ -68,70 +70,70 @@ import java.util.List;
  * @author Mike Douglass   douglm  rpi.edu
  */
 public interface Calintf
-    extends CoreCalendarsI, CoreEventsI, CoreFilterDefsI, CoreUserAuthI {
+        extends CoreCalendarsI, CoreEventsI, CoreFilterDefsI, CoreUserAuthI {
   /** Must be called to initialize the new object.
    *
    * @param logId for tracing
-   * @param syspars
+   * @param configs  so we can get at configurations
    * @param principalInfo    Required for access evaluation.
    * @param url         String url to which we are connecting
    * @param publicAdmin boolean true if this is a public events admin app
    * @param sessionless true if this is a sessionless client
    * @throws CalFacadeException
    */
-  public void init(final String logId,
-                   BasicSystemProperties syspars,
-                   PrincipalInfo principalInfo,
-                   String url,
-                   boolean publicAdmin,
-                   boolean sessionless) throws CalFacadeException;
+  void init(String logId,
+            Configurations configs,
+            PrincipalInfo principalInfo,
+            String url,
+            boolean publicAdmin,
+            boolean sessionless) throws CalFacadeException;
 
   /**
    *
    * @return boolean true if super user
    */
-  public boolean getSuperUser();
+  boolean getSuperUser();
 
   /** Get the current system (not db) stats
    *
    * @return BwStats object
    * @throws CalFacadeException if not admin
    */
-  public BwStats getStats() throws CalFacadeException;
+  BwStats getStats() throws CalFacadeException;
 
   /** Enable/disable db statistics
    *
    * @param enable       boolean true to turn on db statistics collection
    * @throws CalFacadeException if not admin
    */
-  public void setDbStatsEnabled(boolean enable) throws CalFacadeException;
+  void setDbStatsEnabled(boolean enable) throws CalFacadeException;
 
   /**
    *
    * @return boolean true if statistics collection enabled
    * @throws CalFacadeException if not admin
    */
-  public boolean getDbStatsEnabled() throws CalFacadeException;
+  boolean getDbStatsEnabled() throws CalFacadeException;
 
   /** Dump db statistics
    *
    * @throws CalFacadeException if not admin
    */
-  public void dumpDbStats() throws CalFacadeException;
+  void dumpDbStats() throws CalFacadeException;
 
   /** Get db statistics
    *
    * @return Collection of BwStats.StatsEntry objects
    * @throws CalFacadeException if not admin
    */
-  public Collection<StatsEntry> getDbStats() throws CalFacadeException;
+  Collection<StatsEntry> getDbStats() throws CalFacadeException;
 
   /** Get information about this interface
    *
    * @return CalintfInfo
    * @throws CalFacadeException
    */
-  public CalintfInfo getInfo() throws CalFacadeException;
+  CalintfInfo getInfo() throws CalFacadeException;
 
   /** Signal the start of a sequence of operations. These overlap transactions
    * in that there may be 0 to many transactions started and ended within an
@@ -141,14 +143,14 @@ public interface Calintf
    * @param forRestore true if this is for a system restore
    * @throws CalFacadeException
    */
-  public void open(boolean webMode,
-                   boolean forRestore) throws CalFacadeException;
+  void open(boolean webMode,
+            boolean forRestore) throws CalFacadeException;
 
   /** Call on the way out after handling a request..
    *
    * @throws CalFacadeException
    */
-  public void close() throws CalFacadeException;
+  void close() throws CalFacadeException;
 
   /** Start a (possibly long-running) transaction. In the web environment
    * this might do nothing. The endTransaction method should in some way
@@ -157,7 +159,7 @@ public interface Calintf
    *
    * @throws CalFacadeException
    */
-  public void beginTransaction() throws CalFacadeException;
+  void beginTransaction() throws CalFacadeException;
 
   /** End a (possibly long-running) transaction. In the web environment
    * this should in some way check version numbers to detect concurrent updates
@@ -165,53 +167,65 @@ public interface Calintf
    *
    * @throws CalFacadeException
    */
-  public void endTransaction() throws CalFacadeException;
+  void endTransaction() throws CalFacadeException;
 
   /** Call if there has been an error during an update process.
    *
    * @throws CalFacadeException
    */
-  public void rollbackTransaction() throws CalFacadeException;
+  void rollbackTransaction() throws CalFacadeException;
 
   /**
    * @return boolean true if open and rolled back
    * @throws CalFacadeException
    */
-  public boolean isRolledback() throws CalFacadeException;
+  boolean isRolledback() throws CalFacadeException;
 
   /** Flush queued operations.
    *
    * @throws CalFacadeException
    */
-  public void flush() throws CalFacadeException;
+  void flush() throws CalFacadeException;
 
   /** Only valid during a transaction.
    *
    * @return a timestamp from the db
    * @throws CalFacadeException
    */
-  public Timestamp getCurrentTimestamp() throws CalFacadeException;
+  Timestamp getCurrentTimestamp() throws CalFacadeException;
 
   /** Call to reassociate an entity with the current database session
    *
    * @param val
    * @throws CalFacadeException
    */
-  public void reAttach(BwDbentity val) throws CalFacadeException;
-
-  /** Set the current system pars
-   *
-   * @param val SystemProperties object
-   * @throws CalFacadeException if not admin
-   */
-  public void setSyspars(BasicSystemProperties val) throws CalFacadeException;
+  void reAttach(BwDbentity val) throws CalFacadeException;
 
   /** Get the current system pars
    *
    * @return SystemProperties object
    * @throws CalFacadeException if not admin
    */
-  public BasicSystemProperties getSyspars() throws CalFacadeException;
+  BasicSystemProperties getSyspars() throws CalFacadeException;
+
+  /**
+   * @param publick true for public index
+   * @param principal
+   * @return the indexer
+   * @throws CalFacadeException
+   */
+  BwIndexer getIndexer(final boolean publick,
+                       BwPrincipal principal) throws CalFacadeException;
+
+  /** Method which allows us to specify the index root.
+   *
+   * @param principal
+   * @param indexRoot
+   * @return the indexer
+   * @throws CalFacadeException
+   */
+  BwIndexer getIndexer(BwPrincipal principal,
+                       final String indexRoot) throws CalFacadeException;
 
   /* ====================================================================
    *                   Notifications
@@ -224,21 +238,21 @@ public interface Calintf
    * @param ev
    * @throws CalFacadeException
    */
-  public void postNotification(final SysEventBase ev) throws CalFacadeException;
+  void postNotification(final SysEventBase ev) throws CalFacadeException;
 
   /** Called to flush any queued notifications. Called by the commit
    * process.
    *
    * @throws CalFacadeException
    */
-  public void flushNotifications() throws CalFacadeException;
+  void flushNotifications() throws CalFacadeException;
 
   /** Clear any queued notifications without posting. Called by the commit
    * process.
    *
    * @throws CalFacadeException
    */
-  public void clearNotifications() throws CalFacadeException;
+  void clearNotifications() throws CalFacadeException;
 
   /* ====================================================================
    *                   Access
@@ -251,32 +265,32 @@ public interface Calintf
    * @param replaceAll true to replace the entire access list.
    * @throws CalFacadeException
    */
-  public void changeAccess(BwShareableDbentity ent,
-                           Collection<Ace> aces,
-                           boolean replaceAll) throws CalFacadeException;
+  void changeAccess(BwShareableDbentity ent,
+                    Collection<Ace> aces,
+                    boolean replaceAll) throws CalFacadeException;
 
   /** Remove any explicit access for the given who to the given calendar entity.
-  *
-  * @param ent      BwShareableDbentity
-  * @param who      AceWho
-  * @throws CalFacadeException
-  */
- public abstract void defaultAccess(BwShareableDbentity ent,
-                                    AceWho who) throws CalFacadeException;
+   *
+   * @param ent      BwShareableDbentity
+   * @param who      AceWho
+   * @throws CalFacadeException
+   */
+  void defaultAccess(BwShareableDbentity ent,
+                     AceWho who) throws CalFacadeException;
 
- /** Return a Collection of the objects after checking access
-  *
-  * @param ents          Collection of BwShareableDbentity
-  * @param desiredAccess access we want
-  * @param alwaysReturn boolean flag behaviour on no access
-  * @return Collection   of checked objects
-  * @throws CalFacadeException for no access or other failure
-  */
- public Collection<? extends BwShareableDbentity<? extends Object>>
-                checkAccess(Collection<? extends BwShareableDbentity<? extends Object>> ents,
-                               int desiredAccess,
-                               boolean alwaysReturn)
-         throws CalFacadeException;
+  /** Return a Collection of the objects after checking access
+   *
+   * @param ents          Collection of BwShareableDbentity
+   * @param desiredAccess access we want
+   * @param alwaysReturn boolean flag behaviour on no access
+   * @return Collection   of checked objects
+   * @throws CalFacadeException for no access or other failure
+   */
+  Collection<? extends BwShareableDbentity<? extends Object>>
+  checkAccess(Collection<? extends BwShareableDbentity<? extends Object>> ents,
+              int desiredAccess,
+              boolean alwaysReturn)
+          throws CalFacadeException;
 
   /** Check the access for the given entity. Returns the current access
    * or null or optionally throws a no access exception.
@@ -287,8 +301,8 @@ public interface Calintf
    * @return CurrentAccess
    * @throws CalFacadeException if returnResult false and no access
    */
-  public CurrentAccess checkAccess(BwShareableDbentity ent, int desiredAccess,
-                                   boolean returnResult) throws CalFacadeException;
+  CurrentAccess checkAccess(BwShareableDbentity ent, int desiredAccess,
+                            boolean returnResult) throws CalFacadeException;
 
   /* ====================================================================
    *                   Alarms
@@ -306,7 +320,7 @@ public interface Calintf
    * @return Collection of unexpired alarms.
    * @throws CalFacadeException
    */
-  public abstract Collection<BwAlarm> getUnexpiredAlarms(long triggerTime)
+  Collection<BwAlarm> getUnexpiredAlarms(long triggerTime)
           throws CalFacadeException;
 
   /** Given an alarm return the associated event(s)
@@ -315,7 +329,7 @@ public interface Calintf
    * @return an event.
    * @throws CalFacadeException
    */
-  public abstract Collection<BwEvent> getEventsByAlarm(BwAlarm alarm)
+  Collection<BwEvent> getEventsByAlarm(BwAlarm alarm)
           throws CalFacadeException;
 
   /* ====================================================================
@@ -338,7 +352,7 @@ public interface Calintf
                       BwDateTime start, BwDateTime end,
                       boolean returnAll,
                       boolean ignoreTransparency)
-                          throws CalFacadeException;
+          throws CalFacadeException;
 
   /* ====================================================================
    *                       General db methods
@@ -541,83 +555,83 @@ public interface Calintf
    * @return BwCalSuite null for unknown calendar suite
    * @throws CalFacadeException
    */
-   BwCalSuite get(BwAdminGroup group) throws CalFacadeException;
+  BwCalSuite get(BwAdminGroup group) throws CalFacadeException;
 
-   /** Get a (live) calendar suite given the name
-    *
-    * @param  name     String name of calendar suite
-    * @return BwCalSuiteWrapper null for unknown calendar suite
-    * @throws CalFacadeException
-    */
-   BwCalSuite getCalSuite(String name) throws CalFacadeException;
+  /** Get a (live) calendar suite given the name
+   *
+   * @param  name     String name of calendar suite
+   * @return BwCalSuiteWrapper null for unknown calendar suite
+   * @throws CalFacadeException
+   */
+  BwCalSuite getCalSuite(String name) throws CalFacadeException;
 
-   /** Get calendar suites to which this user has access
-    *
-    * @return Collection     of BwCalSuiteWrapper
-    * @throws CalFacadeException
-    */
-   Collection<BwCalSuite> getAllCalSuites() throws CalFacadeException;
+  /** Get calendar suites to which this user has access
+   *
+   * @return Collection     of BwCalSuiteWrapper
+   * @throws CalFacadeException
+   */
+  Collection<BwCalSuite> getAllCalSuites() throws CalFacadeException;
 
    /* ====================================================================
     *                   Event Properties Factories
     * ==================================================================== */
 
-   /** Return an event properties handler.
-    *
-    * @param cl
-    * @return EventProperties
-    * @throws CalFacadeException
-    */
-   <T extends BwEventProperty> CoreEventPropertiesI<T>  getEvPropsHandler(final Class<T> cl)
-         throws CalFacadeException;
+  /** Return an event properties handler.
+   *
+   * @param cl
+   * @return EventProperties
+   * @throws CalFacadeException
+   */
+  <T extends BwEventProperty> CoreEventPropertiesI<T>  getEvPropsHandler(final Class<T> cl)
+          throws CalFacadeException;
 
    /* ====================================================================
     *                       resources
     * ==================================================================== */
 
-   /** Fetch a resource object.
-    *
-    * @param name
-    * @param coll
-    * @param desiredAccess
-    * @return BwResource object or null
-    * @throws CalFacadeException
-    */
-   BwResource getResource(final String name,
-                          final BwCalendar coll,
-                          final int desiredAccess) throws CalFacadeException;
+  /** Fetch a resource object.
+   *
+   * @param name
+   * @param coll
+   * @param desiredAccess
+   * @return BwResource object or null
+   * @throws CalFacadeException
+   */
+  BwResource getResource(final String name,
+                         final BwCalendar coll,
+                         final int desiredAccess) throws CalFacadeException;
 
-   /** Get resource content given the resource. It will be set in the resource
-    * object
-    *
-    * @param  val BwResource
-    * @throws CalFacadeException
-    */
-   void getResourceContent(BwResource val) throws CalFacadeException;
+  /** Get resource content given the resource. It will be set in the resource
+   * object
+   *
+   * @param  val BwResource
+   * @throws CalFacadeException
+   */
+  void getResourceContent(BwResource val) throws CalFacadeException;
 
-   /** Get resources to which this user has access - content is not fetched.
-    *
-    * @param  path           String path to containing collection
-    * @param forSynch
-    * @param token
-    * @return List     of BwResource
-    * @throws CalFacadeException
-    */
-   List<BwResource> getAllResources(String path,
-                                    final boolean forSynch,
-                                    final String token) throws CalFacadeException;
+  /** Get resources to which this user has access - content is not fetched.
+   *
+   * @param  path           String path to containing collection
+   * @param forSynch
+   * @param token
+   * @return List     of BwResource
+   * @throws CalFacadeException
+   */
+  List<BwResource> getAllResources(String path,
+                                   final boolean forSynch,
+                                   final String token) throws CalFacadeException;
 
    /* ====================================================================
     *                       system parameters
     * ==================================================================== */
 
-   /** Get the system pars given name - will update cache object if the name is
-    * the current system name.
-    *
-    * @param name
-    * @return BwSystem object
-    * @throws CalFacadeException if not admin
-    */
-   BwSystem getSyspars(String name) throws CalFacadeException;
+  /** Get the system pars given name - will update cache object if the name is
+   * the current system name.
+   *
+   * @param name
+   * @return BwSystem object
+   * @throws CalFacadeException if not admin
+   */
+  BwSystem getSyspars(String name) throws CalFacadeException;
 }
 

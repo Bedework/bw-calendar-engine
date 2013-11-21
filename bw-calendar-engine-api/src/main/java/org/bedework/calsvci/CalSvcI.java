@@ -39,7 +39,7 @@ import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
-import org.bedework.calsvci.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.icalendar.IcalCallback;
 import org.bedework.sysevents.events.SysEventBase;
 

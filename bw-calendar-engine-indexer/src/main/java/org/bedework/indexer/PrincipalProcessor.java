@@ -20,7 +20,7 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer;
 
 import java.util.List;
 

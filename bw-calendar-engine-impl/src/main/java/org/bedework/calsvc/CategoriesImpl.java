@@ -26,7 +26,7 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calsvci.Categories;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;

@@ -16,8 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calsvci.indexing;
-
+package org.bedework.calfacade.indexing;
 
 /**
  * @author Mike Douglass

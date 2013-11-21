@@ -352,7 +352,7 @@ public abstract class SimpleFilterParser {
         return res;
       }
 
-      PropertyInfoIndex pi = getProperty(tkn);
+      List<PropertyInfoIndex> pis = getProperty(tkn);
 
       tkn = nextToken("parseSort() - :");
 
@@ -381,7 +381,7 @@ public abstract class SimpleFilterParser {
                                      String.valueOf(tkn) + " from " + sexpr);
       }
 
-      res.add(new SortTerm(pi, ascending));
+      res.add(new SortTerm(pis, ascending));
     }
   }
 
@@ -543,37 +543,51 @@ public abstract class SimpleFilterParser {
     return tkn;
   }
 
-  private PropertyInfoIndex getProperty(final int tkn) throws CalFacadeException {
-    if (tkn != StreamTokenizer.TT_WORD) {
-      throw new CalFacadeException(CalFacadeException.filterExpectedPropertyName,
-                                   String.valueOf(tkn));
+  private List<PropertyInfoIndex> getProperty(final int curtkn) throws CalFacadeException {
+    int tkn = curtkn;
+    List<PropertyInfoIndex> pis = new ArrayList<>();
+
+    for (;;) {
+      if (tkn != StreamTokenizer.TT_WORD) {
+        throw new CalFacadeException(CalFacadeException.filterExpectedPropertyName,
+                                     String.valueOf(tkn));
+      }
+
+      String pname = tokenizer.sval;
+      String pnameUc = pname.toUpperCase();
+
+      PropertyInfoIndex pi;
+
+      pi = PropertyInfoIndex.lookupPname(pnameUc);
+
+      if (pi == null) {
+        throw new CalFacadeException(CalFacadeException.unknownProperty,
+                                     pname + ": expr was " + currentExpr);
+      }
+
+      pis.add(pi);
+
+      tkn = nextToken("getProperty");
+
+      if (tkn != '.') {
+        tokenizer.pushBack();
+        return pis;
+      }
+
+      tkn = nextToken("getProperty: pname");
     }
-
-    String pname = tokenizer.sval;
-    String pnameUc = pname.toUpperCase();
-
-    PropertyInfoIndex pi;
-
-    pi = PropertyInfoIndex.lookupPname(pnameUc);
-
-    if (pi == null) {
-      throw new CalFacadeException(CalFacadeException.unknownProperty,
-                                   pname + ": expr was " + currentExpr);
-    }
-
-    return pi;
   }
 
   private void doPropertyComparison() throws CalFacadeException {
-    PropertyInfoIndex pi = getProperty(nextToken("getProperty()"));
+    List<PropertyInfoIndex> pis = getProperty(nextToken("getProperty()"));
 
     Operator oper = nextOperator();
 
-    FilterBase pfilter = makePropFilter(pi, oper.op);
+    FilterBase pfilter = makePropFilter(pis, oper.op);
 
     if (pfilter == null) {
       throw new CalFacadeException(CalFacadeException.filterBadProperty,
-                                   pi.toString());
+                                   listProps(pis));
     }
 
     /* If there is a logical operator on the stack top (and/or) then we create
@@ -664,30 +678,36 @@ public abstract class SimpleFilterParser {
     }
   }
 
-  private FilterBase makePropFilter(final PropertyInfoIndex pi,
+  private FilterBase makePropFilter(final List<PropertyInfoIndex> pis,
                                     final int oper)
           throws CalFacadeException {
+    PropertyInfoIndex pi = pis.get(0);
     FilterBase filter = null;
     final boolean exact = (oper != like) && (oper != notLike);
 
     if (pi.equals(PropertyInfoIndex.ENTITY_TYPE)) {
+      checkSub(pis, 1);
       return entityFilter(getMatch(oper).getValue());
     }
 
     if (oper == notDefined) {
-      return new PresenceFilter(null, pi, false);
+      checkSub(pis, 2);
+      return new PresenceFilter(null, pis, false);
     }
 
     if (oper == isDefined) {
       // Presence check
-      return new PresenceFilter(null, pi, true);
+      checkSub(pis, 2);
+      return new PresenceFilter(null, pis, true);
     }
 
     if (oper == inTimeRange) {
-      return ObjectFilter.makeFilter(null, pi, getTimeRange());
+      checkSub(pis, 2);
+      return ObjectFilter.makeFilter(null, pis, getTimeRange());
     }
 
     if (pi.equals(PropertyInfoIndex.VIEW)) {
+      checkSub(pis, 1);
       // expect list of views.
       ArrayList<String> views = doWordList();
 
@@ -705,6 +725,7 @@ public abstract class SimpleFilterParser {
     }
 
     if (pi.equals(PropertyInfoIndex.VPATH)) {
+      checkSub(pis, 1);
       // expect list of virtual paths.
       ArrayList<String> vpaths = doWordList();
 
@@ -722,6 +743,7 @@ public abstract class SimpleFilterParser {
     }
 
     if (pi.equals(PropertyInfoIndex.CATUID)) {
+      checkSub(pis, 1);
       // No match and category - expect list of uids.
       ArrayList<String> uids = doWordList();
 
@@ -748,6 +770,7 @@ public abstract class SimpleFilterParser {
 
     if (pi.equals(PropertyInfoIndex.COLLECTION) ||
             pi.equals(PropertyInfoIndex.COLPATH)) {
+      checkSub(pis, 1);
       ArrayList<String> paths = doWordList();
 
       for (String path: paths) {
@@ -766,6 +789,7 @@ public abstract class SimpleFilterParser {
     TextMatchType match = getMatch(oper);
 
     if (pi.equals(PropertyInfoIndex.CATEGORIES)) {
+      checkSub(pis, 1);
       String val = match.getValue();
 
       if (val.startsWith("/")) {
@@ -800,7 +824,8 @@ public abstract class SimpleFilterParser {
       return f;
     }
 
-    ObjectFilter<String> f = new ObjectFilter<>(null, pi);
+    checkSub(pis, 2);
+    ObjectFilter<String> f = new ObjectFilter<>(null, pis);
     f.setEntity(match.getValue());
 
     f.setCaseless(Filters.caseless(match));
@@ -809,6 +834,36 @@ public abstract class SimpleFilterParser {
     f.setNot(match.getNegateCondition().equals("yes"));
 
     return f;
+  }
+
+  /** Check the properties to ensure we have no more than the allowed
+   * number. i.e. 1 means no subfields, 2 = only subfield e.g. a.b
+   * 3 means 2, a.b.c etc.
+   *
+   * @param pis
+   * @param depth
+   * @throws CalFacadeException
+   */
+  private void checkSub(final List<PropertyInfoIndex> pis,
+                        int depth) throws CalFacadeException {
+    if (depth != pis.size()) {
+      throw new CalFacadeException(CalFacadeException.filterBadProperty,
+                                   listProps(pis));
+    }
+  }
+
+  private String listProps(final List<PropertyInfoIndex> pis) {
+    String delim = "";
+
+    StringBuilder sb = new StringBuilder();
+
+    for (PropertyInfoIndex pi: pis) {
+      sb.append(delim);
+      sb.append(pi.getJname());
+      delim = ".";
+    }
+
+    return sb.toString();
   }
 
   private TextMatchType getMatch(final int oper) throws CalFacadeException {

@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,6 +19,7 @@
 package org.bedework.calfacade;
 
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.util.misc.ToString;
 
 import net.fortuna.ical4j.model.property.RequestStatus;
 
@@ -239,17 +240,13 @@ public class BwRequestStatus implements Comparable, Serializable {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("BwRequestStatus{");
+    ToString ts = new ToString(this);
 
-    sb.append(", code=");
-    sb.append(getCode());
-    sb.append(", description=");
-    sb.append(getDescription());
-    sb.append(", data=");
-    sb.append(getData());
-    sb.append("}");
+    ts.append("code", getCode());
+    ts.append("description", getDescription());
+    ts.append("data", getData());
 
-    return sb.toString();
+    return ts.toString();
   }
 
   @Override

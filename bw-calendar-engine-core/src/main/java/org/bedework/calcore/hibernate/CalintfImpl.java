@@ -61,6 +61,7 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
@@ -197,12 +198,12 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   @Override
   public void init(final String logId,
-                   final BasicSystemProperties syspars,
+                   final Configurations configs,
                    final PrincipalInfo principalInfo,
                    final String url,
                    final boolean publicAdmin,
                    final boolean sessionless) throws CalFacadeException {
-    super.init(logId, syspars, principalInfo, url, publicAdmin, sessionless);
+    super.init(logId, configs, principalInfo, url, publicAdmin, sessionless);
 
     try {
       access = new AccessUtil();

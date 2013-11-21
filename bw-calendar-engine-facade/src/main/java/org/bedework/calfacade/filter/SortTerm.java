@@ -21,6 +21,8 @@ package org.bedework.calfacade.filter;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 
+import java.util.List;
+
 /** Define a field we sort by
  *
  * @author Mike Douglass
@@ -28,21 +30,26 @@ import org.bedework.util.misc.ToString;
  */
 
 public class SortTerm {
-  private PropertyInfoIndex index;
+  private List<PropertyInfoIndex> properties;
 
   private boolean ascending;
 
-  public SortTerm(final PropertyInfoIndex index,
+  /** For a list of propa, propb we sort on propa.propb
+   *
+   * @param properties List of properties and subproperties to search on
+   * @param ascending
+   */
+  public SortTerm(final List<PropertyInfoIndex> properties,
                   final boolean ascending) {
-    this.index = index;
+    this.properties = properties;
     this.ascending = ascending;
   }
 
   /**
    * @return property name
    */
-  public PropertyInfoIndex getIndex() {
-    return index;
+  public List<PropertyInfoIndex> getProperties() {
+    return properties;
   }
 
   /**
@@ -56,7 +63,7 @@ public class SortTerm {
   public String toString() {
     ToString ts = new ToString(this);
 
-    ts.append(getIndex());
+    ts.append(getProperties());
     ts.append("ascending", isAscending());
 
     return ts.toString();

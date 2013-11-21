@@ -1,4 +1,4 @@
-package org.bedework.calsvci.indexing;
+package org.bedework.calfacade.indexing;
 
 import java.io.Serializable;
 import java.util.Set;

@@ -53,6 +53,7 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwView;
@@ -61,7 +62,6 @@ import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper;
 import org.bedework.calfacade.util.CalFacadeUtil;
-import org.bedework.calsvc.indexing.BwIndexerFactory;
 import org.bedework.calsvc.scheduling.Scheduling;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.AdminI;
@@ -88,7 +88,6 @@ import org.bedework.calsvci.SysparsI;
 import org.bedework.calsvci.TimeZonesStoreI;
 import org.bedework.calsvci.UsersI;
 import org.bedework.calsvci.ViewsI;
-import org.bedework.calsvci.indexing.BwIndexer;
 import org.bedework.icalendar.IcalCallback;
 import org.bedework.icalendar.URIgen;
 import org.bedework.sysevents.events.SysEvent;
@@ -739,28 +738,29 @@ public class CalSvc extends CalSvcI {
   @Override
   public BwIndexer getIndexer(final boolean publick,
                               final String principal) throws CalFacadeException {
-    String pref = principal;
+    BwPrincipal pr;
 
-    if (pref == null) {
-      pref = getPrincipal().getPrincipalRef();
+    if (principal == null) {
+      pr = getPrincipal();
+    } else {
+      pr = getPrincipal(principal);
     }
 
-    return BwIndexerFactory.getIndexer(this, publick, pref,
-                                       pars.isGuest());
+    return getCal().getIndexer(publick, pr);
   }
 
   @Override
   public BwIndexer getIndexer(final String principal,
                               final String indexRoot) throws CalFacadeException {
-    String pref = principal;
+    BwPrincipal pr;
 
-    if (pref == null) {
-      pref = getPrincipal().getPrincipalRef();
+    if (principal == null) {
+      pr = getPrincipal();
+    } else {
+      pr = getPrincipal(principal);
     }
 
-    return BwIndexerFactory.getIndexer(this, pref,
-                                       pars.isGuest(),
-                                       indexRoot);
+    return getCal().getIndexer(pr, indexRoot);
   }
 
   @Override
@@ -1297,7 +1297,7 @@ public class CalSvc extends CalSvcI {
                                               maxAllowedPrivs);
 
         cali.init(pars.getLogId(),
-                  getBasicSystemProperties(),
+                  configs,
                   principalInfo,
                   null,
                   pars.getPublicAdmin(),

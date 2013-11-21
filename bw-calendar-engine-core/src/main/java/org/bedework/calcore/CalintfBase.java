@@ -18,11 +18,14 @@
 */
 package org.bedework.calcore;
 
+import org.bedework.calcore.indexing.BwIndexerFactory;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.sysevents.NotificationsHandlerFactory;
 import org.bedework.sysevents.events.SysEventBase;
@@ -38,7 +41,7 @@ import java.util.List;
 * @author Mike Douglass   douglm   rpi.edu
 */
 public abstract class CalintfBase implements Calintf {
-  private BasicSystemProperties syspars;
+  private Configurations configs;
 
   protected PrincipalInfo principalInfo;
 
@@ -82,13 +85,13 @@ public abstract class CalintfBase implements Calintf {
 
   @Override
   public void init(final String logId,
-                   final BasicSystemProperties syspars,
+                   final Configurations configs,
                    final PrincipalInfo PrincipalInfo,
                    final String url,
                    final boolean publicAdmin,
                    final boolean sessionless) throws CalFacadeException {
     this.logId = logId;
-    this.syspars = syspars;
+    this.configs = configs;
     this.principalInfo = PrincipalInfo;
     this.url = url;
     this.sessionless = sessionless;
@@ -120,13 +123,23 @@ public abstract class CalintfBase implements Calintf {
   }
 
   @Override
-  public void setSyspars(final BasicSystemProperties val) throws CalFacadeException {
-    syspars = val;
+  public BasicSystemProperties getSyspars() throws CalFacadeException {
+    return configs.getBasicSystemProperties();
   }
 
   @Override
-  public BasicSystemProperties getSyspars() throws CalFacadeException {
-    return syspars;
+  public BwIndexer getIndexer(final boolean publick,
+                              final BwPrincipal principal) throws CalFacadeException {
+    return BwIndexerFactory.getIndexer(configs, publick, principal,
+                                       currentMode == CalintfDefs.guestMode);
+  }
+
+  @Override
+  public BwIndexer getIndexer(final BwPrincipal principal,
+                              final String indexRoot) throws CalFacadeException {
+    return BwIndexerFactory.getIndexer(configs, principal,
+                                       currentMode == CalintfDefs.guestMode,
+                                       indexRoot);
   }
 
   /* ====================================================================

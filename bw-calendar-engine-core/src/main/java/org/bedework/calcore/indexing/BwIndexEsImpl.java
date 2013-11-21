@@ -16,38 +16,47 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calsvc.indexing;
+package org.bedework.calcore.indexing;
 
 import org.bedework.access.Ace;
 import org.bedework.access.Acl;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.caldav.util.filter.FilterBase;
+import org.bedework.calfacade.BwAlarm;
+import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwCollectionLastmod;
+import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
+import org.bedework.calfacade.BwGeo;
 import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.BwOrganizer;
+import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwRelatedTo;
+import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
+import org.bedework.calfacade.indexing.BwIndexKey;
+import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.SearchResult;
+import org.bedework.calfacade.indexing.SearchResultEntry;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calsvc.CalSvc;
-import org.bedework.calsvc.CalSvcDb;
-import org.bedework.calsvci.Categories;
-import org.bedework.calsvci.indexing.BwIndexer;
-import org.bedework.calsvci.indexing.SearchResult;
-import org.bedework.calsvci.indexing.SearchResultEntry;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.ComponentInfoIndex;
+import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.indexing.Index;
 import org.bedework.util.indexing.IndexException;
@@ -57,6 +66,7 @@ import org.bedework.util.timezones.DateTimeUtil;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.fortuna.ical4j.model.Period;
+import net.fortuna.ical4j.model.parameter.Related;
 import org.apache.log4j.Logger;
 import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.action.ActionFuture;
@@ -121,7 +131,7 @@ import java.util.TreeSet;
  * @author Mike Douglass douglm - rpi.edu
  *
  */
-public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
+public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
   private transient Logger log;
 
   private boolean debug;
@@ -136,7 +146,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   private ObjectMapper om;
 
   private boolean publick;
-  private String principal;
+  private BwPrincipal principal;
 
   private String host;
   private int port = 9300;
@@ -157,30 +167,28 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
   /** Constructor
    *
-   * @param svci
+   * @param configs
    * @param publick - if false we add an owner term to the searches
    * @param principal - who we are searching for
    * @param writeable - true for an updatable index
    * @param indexName - explicitly specified
    * @throws CalFacadeException
    */
-  public BwIndexEsImpl(final CalSvc svci,
+  public BwIndexEsImpl(final Configurations configs,
                        final boolean publick,
-                       final String principal,
+                       final BwPrincipal principal,
                        final boolean writeable,
                        final String indexName) throws CalFacadeException {
-    super(svci);
-
     debug = getLog().isDebugEnabled();
 
     this.publick = publick;
     this.principal = principal;
     this.writeable = writeable;
 
-    idxpars = svci.getIndexProperties();
-    authpars = svci.getAuthProperties(true);
-    unauthpars = svci.getAuthProperties(false);
-    basicSysprops = svci.getBasicSystemProperties();
+    idxpars = configs.getIndexProperties();
+    authpars = configs.getAuthProperties(true);
+    unauthpars = configs.getAuthProperties(false);
+    basicSysprops = configs.getBasicSystemProperties();
 
     String url = idxpars.getIndexerURL();
 
@@ -350,7 +358,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
           so = SortOrder.DESC;
         }
 
-        srb.addSort(new FieldSortBuilder(st.getIndex().getPnameLC())
+        srb.addSort(new FieldSortBuilder(
+                ESQueryFilter.makePropertyRef(st.getProperties()))
                             .order(so));
       }
     }
@@ -432,7 +441,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
           so = SortOrder.DESC;
         }
 
-        srb.addSort(new FieldSortBuilder(st.getIndex().getPnameLC())
+        srb.addSort(new FieldSortBuilder(
+                ESQueryFilter.makePropertyRef(st.getProperties()))
                             .order(so));
       }
     }
@@ -737,7 +747,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   public BwCategory fetchCat(final String field,
                              final String val)
           throws CalFacadeException {
-    if (field.equals(PropertyInfoIndex.UID.getPnameLC())) {
+    if (field.equals(PropertyInfoIndex.UID.getJname())) {
       GetRequestBuilder grb = getClient().prepareGet(targetIndex,
                                                      docTypeCategory,
                                                      val);
@@ -905,13 +915,11 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     ent.setAccess(getString(fields, PropertyInfoIndex.ACL));
   }
 
-  private Set<String> restoreCategories(final Map<String, Object> fields,
+  private void restoreCategories(final Map<String, Object> fields,
                                          final CategorisedEntity ce) throws CalFacadeException {
-    Categories cats = getSvc().getCategoriesHandler();
-
     Collection<Object> vals = getFieldValues(fields, PropertyInfoIndex.CATUID);
     if (Util.isEmpty(vals)) {
-      return null;
+      return;
     }
 
     Set<String> catUids = new TreeSet<>();
@@ -919,11 +927,9 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     for (Object o: vals) {
       String uid = (String)o;
       catUids.add(uid);
-
-      ce.addCategory(cats.get(uid));
     }
 
-    return catUids;
+    ce.setCategoryUids(catUids);
   }
 
   private BwCategory makeCat(final Map<String, Object> fields) throws CalFacadeException {
@@ -981,7 +987,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     ev.setName(getString(fields, PropertyInfoIndex.NAME));
 
-    ev.setCategoryUids(restoreCategories(fields, ev));
+    restoreCategories(fields, ev);
 
     ev.setCreated(getString(fields, PropertyInfoIndex.CREATED));
     ev.setLastmod(getString(fields,
@@ -998,8 +1004,8 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     /* location - lat/long */
     /* resources */
 
-    ev.setDtstart(unindexDate(fields, true));
-    ev.setDtend(unindexDate(fields, false));
+    ev.setDtstart(unindexDate(fields, PropertyInfoIndex.DTSTART));
+    ev.setDtend(unindexDate(fields, PropertyInfoIndex.DTEND));
 
     ev.setNoStart(Boolean.parseBoolean(getString(fields,
                                                  PropertyInfoIndex.START_PRESENT)));
@@ -1048,7 +1054,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
   private List<Object> getFieldValues(final Map<String, Object> fields,
                                       final PropertyInfoIndex id) {
-    return getFieldValues(fields, id.getPnameLC());
+    return getFieldValues(fields, id.getJname());
   }
 
   private List<Object> getFieldValues(final Map<String, Object> fields,
@@ -1071,7 +1077,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
   private Object getFirstValue(final Map<String, Object> fields,
                                final PropertyInfoIndex id) {
-    Object val = fields.get(id.getPnameLC());
+    Object val = fields.get(id.getJname());
 
     if (val == null) {
       return null;
@@ -1118,25 +1124,30 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   }
 
   private BwDateTime unindexDate(final Map<String, Object> fields,
-                                 final boolean start) throws CalFacadeException {
+                                 final PropertyInfoIndex pi) throws CalFacadeException {
     String utc;
     String local;
     String tzid;
     boolean floating;
 
-    if (start) {
-      utc = getString(fields, PropertyInfoIndex.DTSTART_UTC);
-      local = getString(fields, PropertyInfoIndex.DTSTART_LOCAL);
-      tzid = getString(fields, PropertyInfoIndex.DTSTART_TZID);
-      floating = Boolean.parseBoolean(getString(fields,
-                                                PropertyInfoIndex.DTSTART_FLOATING));
-    } else {
-      utc = getString(fields, PropertyInfoIndex.DTEND_UTC);
-      local = getString(fields, PropertyInfoIndex.DTEND_LOCAL);
-      tzid = getString(fields, PropertyInfoIndex.DTEND_TZID);
-      floating = Boolean.parseBoolean(getString(fields,
-                                                PropertyInfoIndex.DTEND_FLOATING));
+    Object dto = getFirstValue(fields, pi);
+    if (dto == null) {
+      return null;
     }
+
+    /* Should be a Map of fields. */
+
+    if (!(dto instanceof Map)) {
+      return null;
+    }
+
+    Map<String, Object> dtFlds = (Map<String, Object>)dto;
+
+    utc = getString(dtFlds, PropertyInfoIndex.UTC);
+    local = getString(dtFlds, PropertyInfoIndex.LOCAL);
+    tzid = getString(dtFlds, PropertyInfoIndex.TZID);
+    floating = Boolean.parseBoolean(getString(dtFlds,
+                                              PropertyInfoIndex.FLOATING));
 
     boolean dateType = (local != null) && (local.length() == 8);
 
@@ -1512,19 +1523,6 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
   }
 
-  private static Map<String, String> interestingXprops = new HashMap<String, String>();
-
-  static {
-    interestingXprops.put(BwXproperty.bedeworkImage, "image_url");
-    interestingXprops.put(BwXproperty.bedeworkThumbImage, "thumb_image_url");
-    interestingXprops.put(BwXproperty.bedeworkAlias, "topical_area");
-
-    interestingXprops.put(BwXproperty.bedeworkEventRegMaxTickets, "eventreg_max_tickets");
-    interestingXprops.put(BwXproperty.bedeworkEventRegMaxTicketsPerUser, "eventreg_max_tickets_per_user");
-    interestingXprops.put(BwXproperty.bedeworkEventRegStart, "eventreg_start");
-    interestingXprops.put(BwXproperty.bedeworkEventRegEnd, "eventreg_end");
-  }
-
   private void setColPath(final BwCategory cat) throws CalFacadeException {
     if (cat.getColPath() != null) {
       return;
@@ -1551,17 +1549,17 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     } else {
       String homeDir;
 
-      if (getPrincipal().getKind() == Ace.whoTypeUser) {
+      if (principal.getKind() == Ace.whoTypeUser) {
         homeDir = basicSysprops.getUserCalendarRoot();
       } else {
-        homeDir = Util.pathElement(1, getPrincipalHref());
+        homeDir = Util.pathElement(1, principal.getPrincipalRef());
       }
 
       path = Util.buildPath(true,
                             "/",
                             homeDir,
                             "/",
-                            getPrincipal().getAccount(),
+                            principal.getAccount(),
                             "/categories/",
                             extra);
     }
@@ -1582,6 +1580,20 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
   }
 
+  private void makeShareableContained(final XContentBuilder builder,
+                                      final BwShareableContainedDbentity ent)
+          throws Throwable {
+    makeField(builder, PropertyInfoIndex.CREATOR, ent.getCreatorHref());
+    makeField(builder, PropertyInfoIndex.OWNER, ent.getOwnerHref());
+    String colPath = ent.getColPath();
+    if (colPath == null) {
+      colPath = "";
+    }
+
+    makeField(builder, PropertyInfoIndex.COLPATH, colPath);
+    makeField(builder, PropertyInfoIndex.ACL, ent.getAccess());
+  }
+
   /* Return the docinfo for the indexer */
   private DocInfo makeDoc(final XContentBuilder builder,
                           final BwCategory cat) throws CalFacadeException {
@@ -1595,9 +1607,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       setColPath(cat);
 
-      makeField(builder, PropertyInfoIndex.CREATOR, cat.getCreatorHref());
-      makeField(builder, PropertyInfoIndex.OWNER, cat.getOwnerHref());
-      makeField(builder, PropertyInfoIndex.COLPATH, cat.getColPath());
+      makeShareableContained(builder, cat);
 
       makeField(builder, PropertyInfoIndex.NAME, cat.getName());
       makeField(builder, PropertyInfoIndex.UID, cat.getUid());
@@ -1632,46 +1642,40 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
       BwCalendar col = null;
       EventInfo ei = null;
       BwEvent ev = null;
+      BwShareableContainedDbentity sce;
 
-      String colPath;
       String path;
       Collection <BwCategory> cats;
 
       String name;
       String created;
-      String creator;
       String description;
       String lastmod;
       long version;
-      String owner;
       String summary;
       String itemType;
-      String acl;
 
       if (rec instanceof BwCalendar) {
         col = (BwCalendar)rec;
+        sce = col;
 
         itemType = docTypeCollection;
 
         name = col.getName();
-        colPath = col.getColPath();
         path = col.getPath();
         cats = col.getCategories();
         created = col.getCreated();
-        creator = col.getCreatorHref();
         description = col.getDescription();
         lastmod = col.getLastmod().getTimestamp();
         version = col.getMicrosecsVersion();
-        owner = col.getOwnerHref();
         summary = col.getSummary();
-        acl = col.getAccess();
       } else if (rec instanceof EventInfo) {
         ei = (EventInfo)rec;
         ev = ei.getEvent();
+        sce = ev;
 
-        colPath = ev.getColPath();
         name = ev.getName();
-        path = colPath + "/" + name;
+        path = ev.getColPath() + "/" + name;
 
         itemType = IcalDefs.fromEntityType(ev.getEntityType());
 
@@ -1688,13 +1692,10 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
         cats = ev.getCategories();
         created = ev.getCreated();
-        creator = ev.getCreatorHref();
         description = ev.getDescription();
         lastmod = ev.getLastmod();
         version = ev.getMicrosecsVersion();
-        owner = ev.getOwnerHref();
         summary = ev.getSummary();
-        acl = ev.getAccess();
 
         if (start == null) {
           warn("No start for " + ev);
@@ -1712,22 +1713,13 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
       /* Start doc and do common collection/event fields */
 
-      if (colPath == null) {
-        colPath = "";
-      }
-
-      makeField(builder, PropertyInfoIndex.CREATOR, creator);
-      makeField(builder, PropertyInfoIndex.OWNER, owner);
-      makeField(builder, PropertyInfoIndex.COLPATH, colPath);
-      makeField(builder, PropertyInfoIndex.ACL, acl);
+      makeShareableContained(builder, sce);
 
       makeField(builder, PropertyInfoIndex.NAME, name);
       makeField(builder, PropertyInfoIndex.HREF, path);
 
       indexCategories(builder, cats);
 
-      makeField(builder, PropertyInfoIndex.CREATED, created);
-      makeField(builder, PropertyInfoIndex.LAST_MODIFIED, lastmod);
       makeField(builder, PropertyInfoIndex.SUMMARY, summary);
       makeField(builder, PropertyInfoIndex.DESCRIPTION, description);
 
@@ -1737,31 +1729,26 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         return new DocInfo(itemType, version, makeKeyVal(rec));
       }
 
-      /* comment */
-      /* contact */
-      /* location - lat/long */
-      /* resources */
-
-      makeField(builder, PropertyInfoIndex.DTSTAMP, ev.getDtstamp());
-
-      indexDate(builder, true, start);
-      indexDate(builder, false, end);
-
-      makeField(builder, PropertyInfoIndex.START_PRESENT,
-                String.valueOf(ev.getNoStart()));
-      makeField(builder, PropertyInfoIndex.END_TYPE,
-                String.valueOf(ev.getEndType()));
-
-      makeField(builder, PropertyInfoIndex.DURATION, ev.getDuration());
-      makeField(builder, PropertyInfoIndex.UID, ev.getUid());
-      makeField(builder, PropertyInfoIndex.STATUS, ev.getStatus());
-
-      if (recurid != null) {
-        makeField(builder, PropertyInfoIndex.RECURRENCE_ID, recurid);
-      }
-
       makeField(builder, PropertyInfoIndex.ENTITY_TYPE,
                 IcalDefs.entityTypeNames[ev.getEntityType()]);
+
+      makeField(builder, PropertyInfoIndex.CLASS, ev.getClassification());
+      makeField(builder, PropertyInfoIndex.URL, ev.getLink());
+      indexGeo(builder, ev.getGeo());
+      makeField(builder, PropertyInfoIndex.STATUS, ev.getStatus());
+      makeField(builder, PropertyInfoIndex.COST, ev.getCost());
+
+      indexOrganizer(builder, ev.getOrganizer());
+
+      makeField(builder, PropertyInfoIndex.DTSTAMP, ev.getDtstamp());
+      makeField(builder, PropertyInfoIndex.LAST_MODIFIED, lastmod);
+      makeField(builder, PropertyInfoIndex.CREATED, created);
+      makeField(builder, PropertyInfoIndex.SCHEDULE_TAG, ev.getStag());
+      makeField(builder, PropertyInfoIndex.PRIORITY, ev.getPriority());
+
+      if (ev.getSequence() != 0) {
+        makeField(builder, PropertyInfoIndex.SEQUENCE, ev.getSequence());
+      }
 
       BwLocation loc = ev.getLocation();
       if (loc != null) {
@@ -1786,24 +1773,70 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
         }
       }
 
-      if (ev.getXproperties() != null) {
-        for (BwXproperty xp: ev.getXproperties()) {
-          String nm = interestingXprops.get(xp.getName());
+      makeField(builder, PropertyInfoIndex.UID, ev.getUid());
+      makeField(builder, PropertyInfoIndex.TRANSP, ev.getTransparency());
+      makeField(builder, PropertyInfoIndex.PERCENT_COMPLETE,
+                ev.getPercentComplete());
+      makeField(builder, PropertyInfoIndex.COMPLETED, ev.getCompleted());
+      makeField(builder, PropertyInfoIndex.SCHEDULE_METHOD,
+                ev.getScheduleMethod());
+      makeField(builder, PropertyInfoIndex.ORIGINATOR, ev.getOriginator());
+      makeField(builder, PropertyInfoIndex.SCHEDULE_STATE,
+                ev.getScheduleState());
+      makeField(builder, PropertyInfoIndex.ORGANIZER_SCHEDULING_OBJECT,
+                ev.getOrganizerSchedulingObject());
+      makeField(builder, PropertyInfoIndex.ATTENDEE_SCHEDULING_OBJECT,
+                ev.getAttendeeSchedulingObject());
+      indexRelatedTo(builder, ev.getRelatedTo());
 
-          if (nm != null) {
-            String pars = xp.getPars();
-            if (pars == null) {
-              pars = "";
-            }
+      indexXprops(builder, ev.getXproperties());
 
-            try {
-              builder.field(nm, pars + "\t" + xp.getValue());
-            } catch (IOException e) {
-              throw new CalFacadeException(e);
-            }
-          }
+      indexReqStat(builder, ev.getRequestStatuses());
+      makeField(builder, PropertyInfoIndex.CTOKEN, ev.getCtoken());
+      makeField(builder, PropertyInfoIndex.RECURRING, ev.getRecurring());
+
+      if (recurid != null) {
+        makeField(builder, PropertyInfoIndex.RECURRENCE_ID, recurid);
+      }
+
+      makeField(builder, PropertyInfoIndex.RRULE, ev.getRrules());
+      makeField(builder, PropertyInfoIndex.EXRULE, ev.getExrules());
+      makeBwDateTimes(builder, PropertyInfoIndex.RDATE,
+                      ev.getRdates());
+      makeBwDateTimes(builder, PropertyInfoIndex.EXDATE,
+                      ev.getExdates());
+
+      indexDate(builder, PropertyInfoIndex.DTSTART, start);
+      indexDate(builder, PropertyInfoIndex.DTEND, end);
+
+      makeField(builder, PropertyInfoIndex.START_PRESENT,
+                String.valueOf(ev.getNoStart()));
+      makeField(builder, PropertyInfoIndex.END_TYPE,
+                String.valueOf(ev.getEndType()));
+
+      makeField(builder, PropertyInfoIndex.DURATION, ev.getDuration());
+
+      indexAlarms(builder, ev.getAlarms());
+
+      /* Attachment */
+
+      if (ev.getNumAttendees() > 0) {
+        for (BwAttendee att: ev.getAttendees()) {
+          indexAttendee(builder, att);
         }
       }
+
+      makeField(builder, PropertyInfoIndex.RECIPIENT, ev.getRecipients());
+
+      indexBwStrings(builder, PropertyInfoIndex.COMMENT,
+                     ev.getComments());
+      indexContacts(builder, ev.getContacts());
+      indexBwStrings(builder, PropertyInfoIndex.RESOURCES,
+                     ev.getResources());
+
+      /* freebusy */
+      /* Available */
+      /* vpoll */
 
       batchCurSize++;
 
@@ -1815,21 +1848,390 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
   }
 
+  private static Map<String, String> interestingXprops = new HashMap<String, String>();
+
+  static {
+    interestingXprops.put(BwXproperty.bedeworkImage, "imageUrl");
+    interestingXprops.put(BwXproperty.bedeworkThumbImage, "thumbImageUrl");
+    interestingXprops.put(BwXproperty.bedeworkAlias, "topicalArea");
+
+    interestingXprops.put(BwXproperty.bedeworkEventRegMaxTickets, "eventregMaxTickets");
+    interestingXprops.put(BwXproperty.bedeworkEventRegMaxTicketsPerUser, "eventregMaxTicketsPerUser");
+    interestingXprops.put(BwXproperty.bedeworkEventRegStart, "eventregStart");
+    interestingXprops.put(BwXproperty.bedeworkEventRegEnd, "eventregEnd");
+  }
+
+  private void indexXprops(final XContentBuilder builder,
+                           final List<BwXproperty> val) throws CalFacadeException {
+    try {
+      if (Util.isEmpty(val)) {
+        return;
+      }
+
+      boolean more = false;
+
+      /* First output ones we know about with our own name */
+      for (BwXproperty xp: val) {
+          String nm = interestingXprops.get(xp.getName());
+
+        if (nm == null) {
+          more = true;
+          continue;
+        }
+
+            String pars = xp.getPars();
+            if (pars == null) {
+              pars = "";
+            }
+
+        builder.field(nm, pars + "\t" + xp.getValue());
+      }
+
+      if (!more) {
+        return;
+      }
+
+      /* Now ones we don't know or care about */
+
+      builder.startArray(PropertyInfoIndex.XPROP.getJname());
+
+      for (BwXproperty xp: val) {
+        String nm = interestingXprops.get(xp.getName());
+
+        if (nm != null) {
+          continue;
+        }
+
+        builder.startObject();
+        makeField(builder, PropertyInfoIndex.NAME, xp.getName());
+
+        if (xp.getPars() != null) {
+          builder.field("pars", xp.getPars());
+        }
+
+        builder.field("value", xp.getValue());
+        builder.endObject();
+      }
+
+      builder.endArray();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void indexContacts(final XContentBuilder builder,
+                             final Set<BwContact> val) throws CalFacadeException {
+    try {
+      if (Util.isEmpty(val)) {
+        return;
+      }
+
+      builder.startArray(PropertyInfoIndex.CONTACT.getJname());
+
+      for (BwContact c: val) {
+        builder.startObject();
+        makeField(builder, PropertyInfoIndex.NAME, c.getName().getValue());
+
+        if (c.getName().getLang() != null) {
+          builder.field(ParameterInfoIndex.LANGUAGE.getJname(),
+                        c.getName().getLang());
+        }
+
+        if (c.getUid() != null) {
+          builder.field(ParameterInfoIndex.UID.getJname(),
+                        c.getUid());
+        }
+
+        if (c.getLink() != null) {
+          builder.field(ParameterInfoIndex.ALTREP.getJname(),
+                        c.getLink());
+        }
+
+        builder.endObject();
+      }
+
+      builder.endArray();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void indexAlarms(final XContentBuilder builder,
+                           final Set<BwAlarm> val) throws CalFacadeException {
+    try {
+      if (Util.isEmpty(val)) {
+        return;
+      }
+
+      builder.startArray(ComponentInfoIndex.VALARM.getJname());
+
+      for (BwAlarm al: val) {
+        builder.startObject();
+
+        int atype = al.getAlarmType();
+        String action;
+
+        if (atype != BwAlarm.alarmTypeOther) {
+          action = BwAlarm.alarmTypes[atype];
+        } else {
+          List<BwXproperty> xps = al.getXicalProperties("ACTION");
+
+          action = xps.get(0).getValue();
+        }
+
+        makeField(builder, PropertyInfoIndex.ACTION, action);
+        makeField(builder, PropertyInfoIndex.TRIGGER, al.getTrigger());
+
+        if (al.getTriggerDateTime()) {
+          makeField(builder, PropertyInfoIndex.TRIGGER_DATE_TIME, true);
+        } else if (!al.getTriggerStart()) {
+          builder.field(ParameterInfoIndex.RELATED.getJname(),
+                        Related.END.getValue());
+        }
+
+        if (al.getDuration() != null) {
+          makeField(builder, PropertyInfoIndex.DURATION, al.getDuration());
+          makeField(builder, PropertyInfoIndex.REPEAT, al.getRepeat());
+        }
+
+        if (atype == BwAlarm.alarmTypeAudio) {
+          makeField(builder, PropertyInfoIndex.ATTACH, al.getAttach());
+        } else if (atype == BwAlarm.alarmTypeDisplay) {
+          /* This is required but somehow we got a bunch of alarms with no description
+           * Is it possibly because of the rollback issue I (partially) fixed?
+           */
+          makeField(builder, PropertyInfoIndex.DESCRIPTION, al.getDescription());
+        } else if (atype == BwAlarm.alarmTypeEmail) {
+          makeField(builder, PropertyInfoIndex.ATTACH, al.getAttach());
+
+          makeField(builder, PropertyInfoIndex.DESCRIPTION, al.getDescription());
+          makeField(builder, PropertyInfoIndex.SUMMARY, al.getSummary());
+
+          if (al.getNumAttendees() > 0) {
+            for (BwAttendee att: al.getAttendees()) {
+              indexAttendee(builder, att);
+            }
+          }
+        } else if (atype == BwAlarm.alarmTypeProcedure) {
+          makeField(builder, PropertyInfoIndex.ATTACH, al.getAttach());
+          makeField(builder, PropertyInfoIndex.DESCRIPTION, al.getDescription());
+        } else {
+          makeField(builder, PropertyInfoIndex.DESCRIPTION, al.getDescription());
+        }
+
+        indexXprops(builder, al.getXproperties());
+
+        builder.endObject();
+      }
+
+      builder.endArray();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void indexReqStat(final XContentBuilder builder,
+                            final Set<BwRequestStatus> val) throws CalFacadeException {
+    try {
+      if (Util.isEmpty(val)) {
+        return;
+      }
+
+      builder.startArray(PropertyInfoIndex.REQUEST_STATUS.getJname());
+
+      for (BwRequestStatus rs: val) {
+        builder.value(rs.strVal());
+      }
+
+      builder.endArray();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void indexGeo(final XContentBuilder builder,
+                        final BwGeo val) throws CalFacadeException {
+    try {
+      if (val == null) {
+        return;
+      }
+
+      builder.startObject(PropertyInfoIndex.GEO.getJname());
+      builder.field("lat", val.getLatitude().toPlainString());
+      builder.field("lon", val.getLongitude().toPlainString());
+      builder.endObject();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void indexRelatedTo(final XContentBuilder builder,
+                              final BwRelatedTo val) throws CalFacadeException {
+    try {
+      if (val == null) {
+        return;
+      }
+
+      builder.startObject(PropertyInfoIndex.RELATED_TO.getJname());
+      builder.field(ParameterInfoIndex.RELTYPE.getJname(),
+                    val.getRelType());
+      builder.field("value", val.getValue());
+      builder.endObject();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void indexOrganizer(final XContentBuilder builder,
+                              final BwOrganizer val) throws CalFacadeException {
+    try {
+      if (val == null) {
+        return;
+      }
+
+      builder.startObject(PropertyInfoIndex.ORGANIZER.getJname());
+      builder.startObject("pars");
+      String temp = val.getScheduleStatus();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
+                      temp);
+      }
+
+      temp = val.getCn();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.CN.getJname(), temp);
+      }
+
+      temp = val.getDir();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.DIR.getJname(), temp);
+      }
+
+      temp = val.getLanguage();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.LANGUAGE.getJname(), temp);
+      }
+
+      temp = val.getSentBy();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.SENT_BY.getJname(), temp);
+      }
+
+      builder.endObject();
+
+      builder.field("uri", val.getOrganizerUri());
+      builder.endObject();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void indexAttendee(final XContentBuilder builder,
+                             final BwAttendee val) throws CalFacadeException {
+    try {
+      if (val == null) {
+        return;
+      }
+
+      builder.startObject(PropertyInfoIndex.ATTENDEE.getJname());
+      builder.startObject("pars");
+
+      if (val.getRsvp()) {
+        builder.field(ParameterInfoIndex.RSVP.getJname(),
+                      val.getRsvp());
+      }
+
+      String temp = val.getCn();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.CN.getJname(), temp);
+      }
+
+      temp = val.getPartstat();
+      if (temp == null) {
+        temp = IcalDefs.partstatValNeedsAction;
+      }
+      builder.field(ParameterInfoIndex.PARTSTAT.getJname(), temp);
+
+      temp = val.getScheduleStatus();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
+                      temp);
+      }
+
+      temp = val.getCuType();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.CUTYPE.getJname(), temp);
+      }
+
+      temp = val.getDelegatedFrom();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.DELEGATED_FROM.getJname(),
+                      temp);
+      }
+
+      temp = val.getDelegatedTo();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.DELEGATED_TO.getJname(),
+                      temp);
+      }
+
+      temp = val.getDir();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.DIR.getJname(), temp);
+      }
+
+      temp = val.getLanguage();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.LANGUAGE.getJname(), temp);
+      }
+
+      temp = val.getMember();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.MEMBER.getJname(), temp);
+      }
+
+      temp = val.getRole();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.ROLE.getJname(), temp);
+      }
+
+      temp = val.getSentBy();
+      if (temp != null) {
+        builder.field(ParameterInfoIndex.SENT_BY.getJname(), temp);
+      }
+
+      builder.endObject();
+
+      builder.field("uri", val.getAttendeeUri());
+      builder.endObject();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
   private void indexDate(final XContentBuilder builder,
-                         final boolean start,
+                         final PropertyInfoIndex dtype,
                          final BwDateTime dt) throws CalFacadeException {
-    if (start) {
-      makeField(builder, PropertyInfoIndex.DTSTART_UTC, dt.getDate());
-      makeField(builder, PropertyInfoIndex.DTSTART_LOCAL, dt.getDtval());
-      makeField(builder, PropertyInfoIndex.DTSTART_TZID, dt.getTzid());
-      makeField(builder, PropertyInfoIndex.DTSTART_FLOATING,
+    try {
+      if (dt == null) {
+        return;
+      }
+
+      if (dtype == null) {
+        builder.startObject();
+      } else {
+        builder.startObject(dtype.getJname());
+      }
+
+      makeField(builder, PropertyInfoIndex.UTC, dt.getDate());
+      makeField(builder, PropertyInfoIndex.LOCAL, dt.getDtval());
+      makeField(builder, PropertyInfoIndex.TZID, dt.getTzid());
+      makeField(builder, PropertyInfoIndex.FLOATING,
                 String.valueOf(dt.getFloating()));
-    } else {
-      makeField(builder, PropertyInfoIndex.DTEND_UTC, dt.getDate());
-      makeField(builder, PropertyInfoIndex.DTEND_LOCAL, dt.getDtval());
-      makeField(builder, PropertyInfoIndex.DTEND_TZID, dt.getTzid());
-      makeField(builder, PropertyInfoIndex.DTEND_FLOATING,
-                String.valueOf(dt.getFloating()));
+
+      builder.endObject();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
     }
   }
 
@@ -1846,6 +2248,27 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
     }
   }
 
+  private void indexBwStrings(final XContentBuilder builder,
+                              final PropertyInfoIndex pi,
+                              final Set<BwString> val) throws CalFacadeException {
+    try {
+      if (Util.isEmpty(val)) {
+        return;
+      }
+
+      builder.startArray(pi.getJname());
+
+      for (BwString s: val) {
+        // XXX Need to handle languages.
+        builder.value(s.getValue());
+      }
+
+      builder.endArray();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
   private void makeField(final XContentBuilder builder,
                          final PropertyInfoIndex pi,
                          final BwString val) throws CalFacadeException {
@@ -1855,36 +2278,77 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
 
     try {
       // XXX Need to handle languages.
-      builder.field(pi.getPnameLC(), val.getValue());
+      builder.field(pi.getJname(), val.getValue());
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }
   }
-
-  /*
-  private void makeField(final XContentBuilder builder,
-                         final String name,
-                         final String val) throws CalFacadeException {
-    if (val == null) {
-      return;
-    }
-
-    try {
-      builder.field(name, val);
-    } catch (IOException e) {
-      throw new CalFacadeException(e);
-    }
-  }*/
 
   private void makeField(final XContentBuilder builder,
                          final PropertyInfoIndex pi,
                          final String val) throws CalFacadeException {
     if (val == null) {
       return;
+    }
+
+    try {
+      builder.field(pi.getJname(), val);
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void makeField(final XContentBuilder builder,
+                         final PropertyInfoIndex pi,
+                         final Object val) throws CalFacadeException {
+    if (val == null) {
+      return;
   }
 
     try {
-      builder.field(pi.getPnameLC(), val);
+      builder.field(pi.getJname(), String.valueOf(val));
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void makeField(final XContentBuilder builder,
+                         final PropertyInfoIndex pi,
+                         final Set<String> vals) throws CalFacadeException {
+    try {
+      if (Util.isEmpty(vals)) {
+        return;
+      }
+
+      builder.startArray(pi.getJname());
+
+      for (String s: vals) {
+        builder.value(s);
+      }
+
+      builder.endArray();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void makeBwDateTimes(final XContentBuilder builder,
+                               final PropertyInfoIndex pi,
+                               final Set<BwDateTime> vals) throws CalFacadeException {
+    try {
+      if (Util.isEmpty(vals)) {
+        return;
+      }
+
+      builder.startArray(pi.getJname());
+
+      for (BwDateTime dt: vals) {
+        builder.startObject();
+        indexDate(builder, null, dt);
+        builder.endObject();
+      }
+
+      builder.endArray();
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }
@@ -2017,7 +2481,7 @@ public class BwIndexEsImpl extends CalSvcDb implements BwIndexer {
   }
 
   private ESQueryFilter getFilters() {
-    return new ESQueryFilter(publick, principal);
+    return new ESQueryFilter(publick, principal.getPrincipalRef());
   }
 
   private String newIndexSuffix() {

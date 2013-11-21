@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calsvc.indexing;
+package org.bedework.calcore.indexing;
 
 import org.bedework.caldav.util.TimeRange;
 import org.bedework.caldav.util.filter.AndFilter;
@@ -120,7 +120,8 @@ public class ESQueryFilter {
     if (start != null) {
       // End of events must be on or after the start of the range
       RangeFilterBuilder rfb = new RangeFilterBuilder(
-              PropertyInfoIndex.DTEND_UTC.getPnameLC());
+              PropertyInfoIndex.DTEND.getJname() + "." +
+                      PropertyInfoIndex.UTC.getJname());
 
       rfb.gte(dateTimeUTC(start));
 
@@ -138,7 +139,8 @@ public class ESQueryFilter {
     if (end != null) {
       // Start of events must be before the end of the range
       RangeFilterBuilder rfb = new RangeFilterBuilder(
-              PropertyInfoIndex.DTSTART_UTC.getPnameLC());
+              PropertyInfoIndex.DTEND.getJname() + "." +
+                      PropertyInfoIndex.UTC.getJname());
 
       rfb.lt(dateTimeUTC(end));
 
@@ -180,6 +182,25 @@ public class ESQueryFilter {
     afb.add(fb);
 
     return afb;
+  }
+
+  /**
+   *
+   * @param pis
+   * @return dot delimited property reference
+   */
+  public static String makePropertyRef(final List<PropertyInfoIndex> pis) {
+    String delim = "";
+
+    StringBuilder sb = new StringBuilder();
+
+    for (PropertyInfoIndex pi: pis) {
+      sb.append(delim);
+      sb.append(pi.getJname());
+      delim = ".";
+    }
+
+    return sb.toString();
   }
 
   private String dateTimeUTC(final String dt) {
@@ -396,7 +417,7 @@ public class ESQueryFilter {
     if (f instanceof BwHrefFilter) {
       queryLimited = true;
 
-      return FilterBuilders.termFilter(PropertyInfoIndex.HREF.getPnameLC(),
+      return FilterBuilders.termFilter(PropertyInfoIndex.HREF.getJname(),
                                        ((BwHrefFilter)f).getHref());
     }
 
@@ -408,7 +429,7 @@ public class ESQueryFilter {
 
     if (pf.getPropertyIndex() == PropertyInfoIndex.CATEGORY_PATH) {
       // Special case this one.
-      return new TermOrTerms(PropertyInfoIndex.CATEGORY_PATH.getPnameLC(),
+      return new TermOrTerms(PropertyInfoIndex.CATEGORY_PATH.getJname(),
                              ((ObjectFilter)pf).getEntity());
     }
 
@@ -420,9 +441,10 @@ public class ESQueryFilter {
                                    String.valueOf(pf.getPropertyIndex()));
     }
 
-    String fieldName = pf.getPropertyIndex().getPnameLC();
+    String fieldName = pf.getPropertyIndex().getJname();
     //String fieldName = pi.getDbFieldName();
     //boolean multi = pi.getMultiValued();
+    /*
     boolean param = pi.getParam();
 
     if (param) {
@@ -430,8 +452,13 @@ public class ESQueryFilter {
       //        BwIcalPropertyInfo.getPinfo(pf.getParentPropertyIndex());
 
       //fieldName = parentPi.getDbFieldName() + "." + fieldName;
-      fieldName = pf.getParentPropertyIndex().getPnameLC() +
+      fieldName = pf.getParentPropertyIndex().getJname() +
               "." + fieldName;
+    }
+    */
+
+    if (pf.getParentPropertyIndex() != null) {
+      fieldName = pf.getParentPropertyIndex().getJname() + "." + fieldName;
     }
 
     if (f instanceof PresenceFilter) {
@@ -455,14 +482,14 @@ public class ESQueryFilter {
 
     if (pf instanceof BwCategoryFilter) {
       BwCategory cat = ((BwCategoryFilter)pf).getEntity();
-      return new TermOrTerms(PropertyInfoIndex.CATUID.getPnameLC(),
+      return new TermOrTerms(PropertyInfoIndex.CATUID.getJname(),
                              cat.getUid());
     }
 
     if (pf instanceof BwCollectionFilter) {
       BwCalendar col = ((BwCollectionFilter)pf).getEntity();
 
-      return new TermOrTerms(PropertyInfoIndex.COLPATH.getPnameLC(),
+      return new TermOrTerms(PropertyInfoIndex.COLPATH.getJname(),
                              col.getPath());
     }
 
@@ -614,7 +641,7 @@ public class ESQueryFilter {
     }
 
     FilterBuilder fb = FilterBuilders.termFilter(
-            PropertyInfoIndex.OWNER.getPnameLC(), principal);
+            PropertyInfoIndex.OWNER.getJname(), principal);
 
     if (filter == null) {
       return fb;

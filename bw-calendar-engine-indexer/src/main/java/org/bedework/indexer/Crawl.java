@@ -22,7 +22,7 @@ import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -205,7 +205,7 @@ public class Crawl extends CalSys {
       }
 
       BwIndexer idx = getSvci().getIndexer(adminAccount,
-                                                  idxs.userIndex);
+                                           idxs.userIndex);
 
       idxs.userIndex = idx.newIndex(props.getUserIndexName());
 

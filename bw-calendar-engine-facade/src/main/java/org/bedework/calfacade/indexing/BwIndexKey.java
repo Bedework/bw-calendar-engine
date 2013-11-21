@@ -16,9 +16,8 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calsvc.indexing;
+package org.bedework.calfacade.indexing;
 
-import org.bedework.calsvci.indexing.BwIndexer;
 import org.bedework.util.indexing.Index;
 import org.bedework.util.indexing.IndexException;
 
