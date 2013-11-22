@@ -769,6 +769,26 @@ public abstract class SimpleFilterParser {
       return filter;
     }
 
+    if (pi.equals(PropertyInfoIndex.CATEGORY_PATH)) {
+      checkSub(pis, 1);
+      // No match and category - expect list of paths.
+      ArrayList<String> paths = doWordList();
+
+      for (String path: paths) {
+        ObjectFilter<String> f = new ObjectFilter<>(null, pis);
+        f.setEntity(path);
+
+        f.setCaseless(false);
+
+        f.setExact(exact);
+        f.setNot(oper == notEqual);
+
+        filter = and(filter, f);
+      }
+
+      return filter;
+    }
+
     if (pi.equals(PropertyInfoIndex.COLLECTION) ||
             pi.equals(PropertyInfoIndex.COLPATH)) {
       checkSub(pis, 1);
