@@ -236,11 +236,11 @@ public class EntityBuilder  {
   }
 
   private BwGeo restoreGeo() throws CalFacadeException {
-    try {
-      if (!pushFields(PropertyInfoIndex.GEO)) {
-        return null;
-      }
+    if (!pushFields(PropertyInfoIndex.GEO)) {
+      return null;
+    }
 
+    try {
       BwGeo geo = new BwGeo();
 
       geo.setLatitude(BigDecimal.valueOf(getLong("lat")));
@@ -253,11 +253,11 @@ public class EntityBuilder  {
   }
 
   private BwOrganizer restoreOrganizer() throws CalFacadeException {
-    try {
-      if (!pushFields(PropertyInfoIndex.ORGANIZER)) {
-        return null;
-      }
+    if (!pushFields(PropertyInfoIndex.ORGANIZER)) {
+      return null;
+    }
 
+    try {
       BwOrganizer org = new BwOrganizer();
 
       if (pushFields(PropertyInfoIndex.PARAMETERS)) {
@@ -281,60 +281,56 @@ public class EntityBuilder  {
   }
 
   private Set<BwAttendee> restoreAttendees() throws CalFacadeException {
-    try {
-      List<Object> vals = getFieldValues(PropertyInfoIndex.ATTENDEE);
+    List<Object> vals = getFieldValues(PropertyInfoIndex.ATTENDEE);
 
-      if (Util.isEmpty(vals)) {
-        return null;
-      }
-
-      Set<BwAttendee> atts = new TreeSet<>();
-
-      for (Object o: vals) {
-        try {
-          pushFields(o);
-
-          BwAttendee att = new BwAttendee();
-
-          if (pushFields(PropertyInfoIndex.PARAMETERS)) {
-            try {
-              att.setRsvp(getBool(ParameterInfoIndex.RSVP));
-              att.setCn(getString(ParameterInfoIndex.CN));
-              att.setPartstat(getString(ParameterInfoIndex.PARTSTAT));
-              att.setScheduleStatus(getString(ParameterInfoIndex.SCHEDULE_STATUS));
-              att.setCuType(getString(ParameterInfoIndex.CUTYPE));
-              att.setDelegatedFrom(getString(ParameterInfoIndex.DELEGATED_FROM));
-              att.setDelegatedTo(getString(ParameterInfoIndex.DELEGATED_TO));
-              att.setDir(getString(ParameterInfoIndex.DIR));
-              att.setLanguage(getString(ParameterInfoIndex.LANGUAGE));
-              att.setMember(getString(ParameterInfoIndex.MEMBER));
-              att.setRole(getString(ParameterInfoIndex.ROLE));
-              att.setSentBy(getString(ParameterInfoIndex.SENT_BY));
-            } finally {
-              fieldStack.pop();
-            }
-          }
-
-          att.setAttendeeUri(getString(PropertyInfoIndex.URI));
-
-          atts.add(att);
-        } finally {
-          fieldStack.pop();
-        }
-      }
-
-      return atts;
-    } finally {
-      fieldStack.pop();
+    if (Util.isEmpty(vals)) {
+      return null;
     }
+
+    Set<BwAttendee> atts = new TreeSet<>();
+
+    for (Object o: vals) {
+      try {
+        pushFields(o);
+
+        BwAttendee att = new BwAttendee();
+
+        if (pushFields(PropertyInfoIndex.PARAMETERS)) {
+          try {
+            att.setRsvp(getBool(ParameterInfoIndex.RSVP));
+            att.setCn(getString(ParameterInfoIndex.CN));
+            att.setPartstat(getString(ParameterInfoIndex.PARTSTAT));
+            att.setScheduleStatus(getString(ParameterInfoIndex.SCHEDULE_STATUS));
+            att.setCuType(getString(ParameterInfoIndex.CUTYPE));
+            att.setDelegatedFrom(getString(ParameterInfoIndex.DELEGATED_FROM));
+            att.setDelegatedTo(getString(ParameterInfoIndex.DELEGATED_TO));
+            att.setDir(getString(ParameterInfoIndex.DIR));
+            att.setLanguage(getString(ParameterInfoIndex.LANGUAGE));
+            att.setMember(getString(ParameterInfoIndex.MEMBER));
+            att.setRole(getString(ParameterInfoIndex.ROLE));
+            att.setSentBy(getString(ParameterInfoIndex.SENT_BY));
+          } finally {
+            fieldStack.pop();
+          }
+        }
+
+        att.setAttendeeUri(getString(PropertyInfoIndex.URI));
+
+        atts.add(att);
+      } finally {
+        fieldStack.pop();
+      }
+    }
+
+    return atts;
   }
 
   private BwRelatedTo restoreRelatedTo() throws CalFacadeException {
-    try {
-      if (!pushFields(PropertyInfoIndex.RELATED_TO)) {
-        return null;
-      }
+    if (!pushFields(PropertyInfoIndex.RELATED_TO)) {
+      return null;
+    }
 
+    try {
       BwRelatedTo rt = new BwRelatedTo();
 
       rt.setRelType(getString(ParameterInfoIndex.RELTYPE));
@@ -417,7 +413,7 @@ public class EntityBuilder  {
         BwContact c = new BwContact();
 
         try {
-          pushFields(getFieldValues(PropertyInfoIndex.NAME));
+          pushFields(PropertyInfoIndex.NAME);
 
           c.setName((BwString)restoreBwString(false));
         } finally {
@@ -802,11 +798,11 @@ public class EntityBuilder  {
     String tzid;
     boolean floating;
 
-    try {
-      if (!pushFields(pi)) {
-        return null;
-      }
+    if (!pushFields(pi)) {
+      return null;
+    }
 
+    try {
       utc = getString(PropertyInfoIndex.UTC);
       local = getString(PropertyInfoIndex.LOCAL);
       tzid = getString(PropertyInfoIndex.TZID);
