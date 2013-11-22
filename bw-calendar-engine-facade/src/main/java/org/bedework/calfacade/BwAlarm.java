@@ -62,7 +62,7 @@ import java.util.TreeSet;
  * This could lead to an alarm storm if there is a long down time.
  *
  *  @version 1.0
- *  @author Mike Douglass   douglm . bedework.edu
+ *  @author Mike Douglass   douglm . rpi.edu
  */
 @Dump(elementName="alarm", keyFields={"event"})
 public class BwAlarm extends BwOwnedDbentity<BwAlarm>
@@ -1270,6 +1270,7 @@ Example
   @Override
   protected void toStringSegment(final ToString ts) {
     super.toStringSegment(ts);
+
     if (getEvent() != null) {
       ts.append("eventid", getEvent().getId());
     }
@@ -1297,15 +1298,10 @@ Example
       ts.append("description", getDescription());
       ts.append("summary", getSummary());
       ts.append("attendees", getAttendees());
-
-      if (attach != null) {
-        ts.append("attach", getAttach());
-      }
+      ts.append("attach", getAttach());
     } else if (getAlarmType() == alarmTypeProcedure) {
       ts.append("attach", getAttach());
-      if (getDescription() != null) {
-        ts.append("description", getDescription());
-      }
+      ts.append("description", getDescription());
     }
   }
 
