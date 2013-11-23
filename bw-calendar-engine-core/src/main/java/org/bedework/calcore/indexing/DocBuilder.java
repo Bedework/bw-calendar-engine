@@ -276,7 +276,7 @@ public class DocBuilder {
                                cat.getName()));
 
       makeField(builder, PropertyInfoIndex.CATEGORIES,
-                cat.getWord().getValue());
+                cat.getWord());
       makeField(builder, PropertyInfoIndex.DESCRIPTION,
                 cat.getDescription());
 

@@ -91,10 +91,10 @@ public class EntityBuilder  {
     cat.setName(getString(PropertyInfoIndex.NAME));
     cat.setUid(getString(PropertyInfoIndex.UID));
 
-    cat.setWord(new BwString(null,
-                             getString(PropertyInfoIndex.CATEGORIES)));
-    cat.setDescription(new BwString(null,
-                                    getString(PropertyInfoIndex.DESCRIPTION)));
+    cat.setWord(
+            (BwString)restoreBwString(PropertyInfoIndex.CATEGORIES, false));
+    cat.setDescription(
+            (BwString)restoreBwString(PropertyInfoIndex.DESCRIPTION, false));
 
     return cat;
   }
@@ -412,14 +412,7 @@ public class EntityBuilder  {
 
         BwContact c = new BwContact();
 
-        try {
-          pushFields(PropertyInfoIndex.NAME);
-
-          c.setName((BwString)restoreBwString(false));
-        } finally {
-          fieldStack.pop();
-        }
-
+        c.setName((BwString)restoreBwString(PropertyInfoIndex.NAME, false));
         c.setUid(getString(PropertyInfoIndex.UID));
         c.setLink(getString(ParameterInfoIndex.ALTREP));
 
@@ -446,8 +439,20 @@ public class EntityBuilder  {
     }
   }
 
+  private BwStringBase restoreBwString(final PropertyInfoIndex pi,
+                                       final boolean longString) throws CalFacadeException {
+    try {
+      pushFields(pi);
+
+      return restoreBwString(longString);
+    } finally {
+      fieldStack.pop();
+    }
+  }
+
   private Set<? extends BwStringBase> restoreBwStringSet(
-          final PropertyInfoIndex pi, final boolean longStrings)
+          final PropertyInfoIndex pi,
+          final boolean longStrings)
           throws CalFacadeException {
     List<Object> vals = getFieldValues(pi);
 
