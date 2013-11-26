@@ -1104,7 +1104,7 @@ public class DocBuilder {
 
     for (BwCategory cat: cats) {
       setColPath(cat);
-      makeField(builder, PropertyInfoIndex.CATEGORIES, cat.getWord().getValue());
+      makeField(builder, PropertyInfoIndex.CATEGORIES, cat.getWord());
       makeField(builder, PropertyInfoIndex.CATUID, cat.getUid());
       makeField(builder, PropertyInfoIndex.CATEGORY_PATH,
                 Util.buildPath(false,

@@ -190,7 +190,7 @@ public class CategoriesImpl
 
   @Override
   public BwCategory find(final BwString val) throws CalFacadeException {
-    return getIndexer().fetchCat("word", val.getValue());
+    return getIndexer().fetchCat("categories.value", val.getValue());
   }
 
   @Override
