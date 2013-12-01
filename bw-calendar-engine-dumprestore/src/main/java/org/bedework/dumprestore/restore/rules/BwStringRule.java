@@ -35,7 +35,7 @@ import org.bedework.dumprestore.restore.RestoreGlobals;
 import org.xml.sax.Attributes;
 
 /**
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm  rpi.edu
  * @version 1.0
  */
 public class BwStringRule extends RestoreRule {
@@ -89,7 +89,7 @@ public class BwStringRule extends RestoreRule {
       BwContact ent = (BwContact)top();
 
       if (name.equals("value")) {
-        ent.setName(entity);
+        ent.setCn(entity);
       } else {
         unknownTag(name);
       }

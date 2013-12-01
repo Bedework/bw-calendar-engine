@@ -38,7 +38,7 @@ import java.util.Comparator;
 public class BwContact extends BwEventProperty<BwContact>
         implements CollatableEntity, Comparator<BwContact>,
                    SizedEntity {
-  private BwString name;  // The rfc value
+  private BwString cn;  // The rfc value
   private String phone;
   private String email;
   private String link;  // The rfc altrep
@@ -54,16 +54,16 @@ public class BwContact extends BwEventProperty<BwContact>
    *
    * @param val    BwString name
    */
-  public void setName(final BwString val) {
-    name = val;
+  public void setCn(final BwString val) {
+    cn = val;
   }
 
   /** Get the name
    *
    * @return BwString   name
    */
-  public BwString getName() {
-    return name;
+  public BwString getCn() {
+    return cn;
   }
 
   /**
@@ -121,8 +121,8 @@ public class BwContact extends BwEventProperty<BwContact>
    *
    */
   public void deleteName() {
-    addDeletedEntity(getName());
-    setName(null);
+    addDeletedEntity(getCn());
+    setCn(null);
   }
 
   /* ====================================================================
@@ -135,7 +135,7 @@ public class BwContact extends BwEventProperty<BwContact>
   @Override
   @NoDump
   public BwString getFinderKeyValue() {
-    return getName();
+    return getCn();
   }
 
   /* ====================================================================
@@ -148,7 +148,7 @@ public class BwContact extends BwEventProperty<BwContact>
   @Override
   @NoDump
   public String getCollateValue() {
-    return getName().getValue();
+    return getCn().getValue();
   }
 
   /* ====================================================================
@@ -160,7 +160,7 @@ public class BwContact extends BwEventProperty<BwContact>
    */
   @Override
   public void afterDeletion() {
-    addDeletedEntity(getName());
+    addDeletedEntity(getCn());
   }
 
   /** Size to use for quotas.
@@ -171,10 +171,36 @@ public class BwContact extends BwEventProperty<BwContact>
   @NoDump
   public int getSize() {
     return super.length() +
-           QuotaUtil.size(getName()) +
+           QuotaUtil.size(getCn()) +
            QuotaUtil.size(getPhone()) +
            QuotaUtil.size(getEmail()) +
            QuotaUtil.size(getLink());
+  }
+
+  public boolean updateFrom(final BwContact ent) {
+    boolean changed = false;
+
+    if (!CalFacadeUtil.eqObjval(getCn(), ent.getCn())) {
+      setCn(ent.getCn());
+      changed = true;
+    }
+
+    if (!CalFacadeUtil.eqObjval(getPhone(), ent.getPhone())) {
+      setPhone(ent.getPhone());
+      changed = true;
+    }
+
+    if (!CalFacadeUtil.eqObjval(getEmail(), ent.getEmail())) {
+      setEmail(ent.getEmail());
+      changed = true;
+    }
+
+    if (!CalFacadeUtil.eqObjval(getLink(), ent.getLink())) {
+      setLink(ent.getLink());
+      changed = true;
+    }
+
+    return changed;
   }
 
   /* ====================================================================
@@ -187,8 +213,8 @@ public class BwContact extends BwEventProperty<BwContact>
       return 0;
     }
 
-    return CalFacadeUtil.cmpObjval(thisone.getName().getValue(),
-                                   thatone.getName().getValue());
+    return CalFacadeUtil.cmpObjval(thisone.getCn().getValue(),
+                                   thatone.getCn().getValue());
   }
 
   @Override
@@ -211,7 +237,7 @@ public class BwContact extends BwEventProperty<BwContact>
 
     toStringSegment(ts);
     ts.append("uid", getUid());
-    ts.append("name", getName());
+    ts.append("cn", getCn());
     ts.append("phone", getPhone());
     ts.append("email", getEmail());
     ts.append("link", getLink());
@@ -225,7 +251,7 @@ public class BwContact extends BwEventProperty<BwContact>
 
     super.copyTo(sp);
 
-    sp.setName((BwString)getName().clone());
+    sp.setCn((BwString)getCn().clone());
     sp.setPhone(getPhone());
     sp.setEmail(getEmail());
     sp.setLink(getLink());

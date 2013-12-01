@@ -189,7 +189,7 @@ class Events extends CalSvcDb implements EventsI {
 
       BwPreferences prefs = getSvc().getPrefsHandler().get();
       if (prefs != null) {
-        List<BwCategory> cats = getSvc().getCategoriesHandler().
+        Collection<BwCategory> cats = getSvc().getCategoriesHandler().
                 get(prefs.getDefaultCategoryUids());
 
         for (BwCategory cat: cats) {

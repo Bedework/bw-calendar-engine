@@ -71,10 +71,12 @@ import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.Categories;
+import org.bedework.calsvci.Contacts;
 import org.bedework.calsvci.DumpIntf;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.calsvci.EventsI;
 import org.bedework.calsvci.FiltersI;
+import org.bedework.calsvci.Locations;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.PreferencesI;
 import org.bedework.calsvci.ResourcesI;
@@ -191,9 +193,9 @@ public class CalSvc extends CalSvcI {
 
   private Categories categoriesHandler;
 
-  private EventProperties<BwLocation> locationsHandler;
+  private Locations locationsHandler;
 
-  private EventProperties<BwContact> contactsHandler;
+  private Contacts contactsHandler;
 
   private Collection<CalSvcDb> handlers = new ArrayList<CalSvcDb>();
 
@@ -612,9 +614,9 @@ public class CalSvc extends CalSvcI {
     public BwView getView(final String path)
             throws CalFacadeException {
       return getViewsHandler().find(path);
-  }
+    }
 
-  @Override
+    @Override
     public Collection<BwCalendar> decomposeVirtualPath(final String vpath)
             throws CalFacadeException {
       return getCalendarsHandler().decomposeVirtualPath(vpath);
@@ -912,32 +914,22 @@ public class CalSvc extends CalSvcI {
     return categoriesHandler;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getLocationsHandler()
-   */
   @Override
-  public EventProperties<BwLocation> getLocationsHandler()
-          throws CalFacadeException {
+  public Locations getLocationsHandler() throws CalFacadeException {
     if (locationsHandler == null) {
-      locationsHandler = new EventPropertiesImpl<BwLocation>(this);
-      locationsHandler.init(BwLocation.class.getName(),
-                            pars.getAdminCanEditAllPublicLocations());
+      locationsHandler = new LocationsImpl(this);
+      locationsHandler.init(pars.getAdminCanEditAllPublicLocations());
       handlers.add((CalSvcDb)locationsHandler);
     }
 
     return locationsHandler;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getContactsHandler()
-   */
   @Override
-  public EventProperties<BwContact> getContactsHandler()
-          throws CalFacadeException {
+  public Contacts getContactsHandler() throws CalFacadeException {
     if (contactsHandler == null) {
-      contactsHandler = new EventPropertiesImpl<BwContact>(this);
-      contactsHandler.init(BwContact.class.getName(),
-                           pars.getAdminCanEditAllPublicContacts());
+      contactsHandler = new ContactsImpl(this);
+      contactsHandler.init(pars.getAdminCanEditAllPublicContacts());
       handlers.add((CalSvcDb)contactsHandler);
     }
 
@@ -1263,7 +1255,7 @@ public class CalSvc extends CalSvcI {
 
           if (authenticatedUser.equals(runAsUser)) {
             getLogger().debug("Authenticated user " + authenticatedUser +
-                " logged on");
+                                      " logged on");
           } else {
             currentPrincipal = users.getUser(runAsUser);
             if (currentPrincipal == null) {

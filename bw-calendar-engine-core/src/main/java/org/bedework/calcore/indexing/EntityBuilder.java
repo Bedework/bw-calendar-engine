@@ -28,6 +28,7 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwGeo;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwLongString;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwRelatedTo;
@@ -97,6 +98,38 @@ public class EntityBuilder  {
             (BwString)restoreBwString(PropertyInfoIndex.DESCRIPTION, false));
 
     return cat;
+  }
+
+  BwContact makeContact() throws CalFacadeException {
+    BwContact ent = new BwContact();
+
+    restoreSharedEntity(ent);
+
+    ent.setUid(getString(PropertyInfoIndex.UID));
+
+    ent.setCn((BwString)restoreBwString(PropertyInfoIndex.CN,
+                                        false));
+    ent.setPhone(getString(PropertyInfoIndex.PHONE));
+    ent.setEmail(getString(PropertyInfoIndex.EMAIL));
+    ent.setLink(getString(PropertyInfoIndex.URL));
+
+    return ent;
+  }
+
+  BwLocation makeLocation() throws CalFacadeException {
+    BwLocation ent = new BwLocation();
+
+    restoreSharedEntity(ent);
+
+    ent.setUid(getString(PropertyInfoIndex.UID));
+
+    ent.setAddress((BwString)restoreBwString(
+            PropertyInfoIndex.ADDRESS, false));
+    ent.setSubaddress((BwString)restoreBwString(
+            PropertyInfoIndex.SUBADDRESS, false));
+    ent.setLink(getString(PropertyInfoIndex.URL));
+
+    return ent;
   }
 
   BwCalendar makeCollection() throws CalFacadeException {
@@ -412,7 +445,8 @@ public class EntityBuilder  {
 
         BwContact c = new BwContact();
 
-        c.setName((BwString)restoreBwString(PropertyInfoIndex.NAME, false));
+        c.setCn((BwString)restoreBwString(PropertyInfoIndex.CN,
+                                          false));
         c.setUid(getString(PropertyInfoIndex.UID));
         c.setLink(getString(ParameterInfoIndex.ALTREP));
 
@@ -441,9 +475,11 @@ public class EntityBuilder  {
 
   private BwStringBase restoreBwString(final PropertyInfoIndex pi,
                                        final boolean longString) throws CalFacadeException {
-    try {
-      pushFields(pi);
+    if (!pushFields(pi)) {
+      return null;
+    }
 
+    try {
       return restoreBwString(longString);
     } finally {
       fieldStack.pop();
@@ -527,26 +563,26 @@ public class EntityBuilder  {
   }
 
   private Set<BwAlarm> restoreAlarms() throws CalFacadeException {
-    List<Object> vals = getFieldValues(PropertyInfoIndex.VALARM);
+    final List<Object> vals = getFieldValues(PropertyInfoIndex.VALARM);
 
     if (Util.isEmpty(vals)) {
       return null;
     }
 
-    Set<BwAlarm> alarms = new TreeSet<>();
+    final Set<BwAlarm> alarms = new TreeSet<>();
 
     for (Object o: vals) {
       try {
         pushFields(o);
 
-        BwAlarm alarm = new BwAlarm();
+        final BwAlarm alarm = new BwAlarm();
 
         alarm.setOwnerHref(getString(PropertyInfoIndex.OWNER));
         alarm.setPublick(getBoolean(PropertyInfoIndex.PUBLIC));
 
-        String action = getString(PropertyInfoIndex.ACTION);
+        final String action = getString(PropertyInfoIndex.ACTION);
 
-        String actionVal = action.toUpperCase();
+        final String actionVal = action.toUpperCase();
         int atype = -1;
 
         for (int i = 0; i < BwAlarm.alarmTypes.length; i++) {
@@ -569,7 +605,7 @@ public class EntityBuilder  {
         alarm.setTriggerDateTime(getBool(
                 PropertyInfoIndex.TRIGGER_DATE_TIME));
 
-        String rel = getString(ParameterInfoIndex.RELATED);
+        final String rel = getString(ParameterInfoIndex.RELATED);
         alarm.setTriggerStart(rel == null);
 
         alarm.setDuration(getString(PropertyInfoIndex.DURATION));
@@ -609,7 +645,7 @@ public class EntityBuilder  {
   }
 
   private static Map<String, Integer> entitytypeMap =
-          new HashMap<String, Integer>();
+          new HashMap<>();
 
   static {
     entitytypeMap.put("event", IcalDefs.entityTypeEvent);
@@ -622,7 +658,7 @@ public class EntityBuilder  {
   }
 
   private int makeEntityType(final String val) throws CalFacadeException {
-    Integer i = entitytypeMap.get(val);
+    final Integer i = entitytypeMap.get(val);
 
     if (i == null) {
       return IcalDefs.entityTypeEvent;

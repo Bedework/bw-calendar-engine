@@ -285,13 +285,13 @@ public class ToXEvent extends Xutil {
           for (BwContact ctct: val.getContacts()) {
             // LANG
             ContactPropType c = new ContactPropType();
-            c.setText(ctct.getName().getValue());
+            c.setText(ctct.getCn().getValue());
 
             pl.add(of.createContact(
                       (ContactPropType)langProp(
                           uidProp(altrepProp(c, ctct.getLink()),
                                   ctct.getUid()),
-                                  ctct.getName())));
+                                  ctct.getCn())));
           }
         }
       }

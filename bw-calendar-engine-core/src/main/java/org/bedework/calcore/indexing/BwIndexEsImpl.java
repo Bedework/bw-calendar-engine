@@ -24,8 +24,10 @@ import org.bedework.access.PrivilegeDefs;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
@@ -473,6 +475,10 @@ public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
         entity = eb.makeCollection();
       } else if (dtype.equals(docTypeCategory)) {
         entity = eb.makeCat();
+      } else if (dtype.equals(docTypeContact)) {
+        entity = eb.makeContact();
+      } else if (dtype.equals(docTypeLocation)) {
+        entity = eb.makeLocation();
       } else if (IcalDefs.entityTypes.contains(dtype)) {
         entity = eb.makeEvent();
         EventInfo ei = (EventInfo)entity;
@@ -642,7 +648,8 @@ public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
 
       IndicesStatusRequestBuilder isrb= idx.prepareStatus(Strings.EMPTY_ARRAY);
 
-      ActionFuture<IndicesStatusResponse> sr = idx.status(isrb.request());
+      ActionFuture<IndicesStatusResponse> sr = idx.status(
+              isrb.request());
       IndicesStatusResponse sresp  = sr.actionGet();
 
       return new ArrayList<>(sresp.getIndices().keySet());
@@ -729,47 +736,39 @@ public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
   }
 
   @Override
-  public BwCategory fetchCat(final String field,
-                             final String val)
+  public BwCategory fetchCat(final String field, final String val)
           throws CalFacadeException {
-    if (field.equals(PropertyInfoIndex.UID.getJname())) {
-      GetRequestBuilder grb = getClient().prepareGet(targetIndex,
-                                                     docTypeCategory,
-                                                     val);
+    EntityBuilder eb = fetchEntity(docTypeCategory, field,val);
 
-      GetResponse gr = grb.execute().actionGet();
-
-      if (!gr.isExists()) {
-        return null;
-      }
-
-      return getEntityBuilder(gr.getSourceAsMap()).makeCat();
-    }
-
-    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
-
-    srb.setTypes(docTypeCategory);
-
-    SearchResponse response = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setFilter(getFilters().buildFilter(field, val))
-            .setFrom(0).setSize(60).setExplain(true)
-            .execute()
-            .actionGet();
-
-    SearchHits hits = response.getHits();
-
-    //Break condition: No hits are returned
-    if (hits.hits().length == 0) {
+    if (eb == null) {
       return null;
     }
 
-    if (hits.getTotalHits() != 1) {
-      error("Multiple categories with field " + field +
-                    " value " + val);
+    return eb.makeCat();
+  }
+
+  @Override
+  public BwContact fetchContact(final String field, final String val)
+          throws CalFacadeException {
+    EntityBuilder eb = fetchEntity(docTypeContact, field,val);
+
+    if (eb == null) {
       return null;
     }
 
-    return getEntityBuilder(hits.hits()[0].sourceAsMap()).makeCat();
+    return eb.makeContact();
+  }
+
+  @Override
+  public BwLocation fetchLocation(final String field, final String val)
+          throws CalFacadeException {
+    EntityBuilder eb = fetchEntity(docTypeLocation, field,val);
+
+    if (eb == null) {
+      return null;
+    }
+
+    return eb.makeLocation();
   }
 
   private static final int maxFetchCount = 100;
@@ -777,15 +776,59 @@ public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
 
   @Override
   public List<BwCategory> fetchAllCats() throws CalFacadeException {
+    return fetchAllEntities(docTypeCategory,
+                            new BuildEntity<BwCategory>() {
+                              @Override
+                              BwCategory make(final EntityBuilder eb)
+                                      throws CalFacadeException {
+                                return eb.makeCat();
+                              }
+                            });
+  }
+
+  @Override
+  public List<BwContact> fetchAllContacts() throws CalFacadeException {
+    return fetchAllEntities(docTypeContact,
+                            new BuildEntity<BwContact>() {
+                              @Override
+                              BwContact make(final EntityBuilder eb)
+                                      throws CalFacadeException {
+                                return eb.makeContact();
+                              }
+                            });
+  }
+
+  @Override
+  public List<BwLocation> fetchAllLocations() throws CalFacadeException {
+    return fetchAllEntities(docTypeLocation,
+                            new BuildEntity<BwLocation>() {
+                              @Override
+                              BwLocation make(final EntityBuilder eb)
+                                      throws CalFacadeException {
+                                return eb.makeLocation();
+                              }
+                            });
+  }
+
+  /* ========================================================================
+   *                   private methods
+   * ======================================================================== */
+
+  private static abstract class BuildEntity<T> {
+    abstract T make(EntityBuilder eb) throws CalFacadeException;
+  }
+
+  private <T> List<T> fetchAllEntities(String docType,
+                                       BuildEntity<T> be) throws CalFacadeException {
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
-    srb.setTypes(docTypeCategory);
+    srb.setTypes(docType);
 
     int tries = 0;
     int ourPos = 0;
     int ourCount = maxFetchCount;
 
-    List<BwCategory> res = new ArrayList<>();
+    List<T> res = new ArrayList<>();
 
     SearchResponse scrollResp = srb.setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
@@ -822,8 +865,8 @@ public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
 
       for (SearchHit hit : hits) {
         //Handle the hit...
-        BwCategory cat = getEntityBuilder(hit.sourceAsMap()).makeCat();
-        res.add(cat);
+        T ent = be.make(getEntityBuilder(hit.sourceAsMap()));
+        res.add(ent);
         ourPos++;
       }
 
@@ -833,9 +876,50 @@ public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
     return res;
   }
 
-  /* ========================================================================
-   *                   private methods
-   * ======================================================================== */
+  private EntityBuilder fetchEntity(final String docType,
+                                    final String field,
+                                    final String val)
+          throws CalFacadeException {
+    if (field.equals(PropertyInfoIndex.UID.getJname())) {
+      GetRequestBuilder grb = getClient().prepareGet(targetIndex,
+                                                     docType,
+                                                     val);
+
+      GetResponse gr = grb.execute().actionGet();
+
+      if (!gr.isExists()) {
+        return null;
+      }
+
+      return getEntityBuilder(gr.getSourceAsMap());
+    }
+
+    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+
+    srb.setTypes(docType);
+
+    SearchResponse response = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
+            .setFilter(getFilters().buildFilter(field, val))
+            .setFrom(0).setSize(60).setExplain(true)
+            .execute()
+            .actionGet();
+
+    SearchHits hits = response.getHits();
+
+    //Break condition: No hits are returned
+    if (hits.hits().length == 0) {
+      return null;
+    }
+
+    if (hits.getTotalHits() != 1) {
+      error("Multiple entities of type " + docType +
+                    " with field " + field +
+                    " value " + val);
+      return null;
+    }
+
+    return getEntityBuilder(hits.hits()[0].sourceAsMap());
+  }
 
   /** Called to make or fill in a Key object.
    *
@@ -878,6 +962,10 @@ public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
       bwkey.setKey1(kval);
     } else if (dtype.equals(docTypeCategory)) {
       bwkey.setKey1(kval);
+    } else if (dtype.equals(docTypeContact)) {
+      bwkey.setKey1(kval);
+    } else if (dtype.equals(docTypeLocation)) {
+      bwkey.setKey1(kval);
     } else if (IcalDefs.entityTypes.contains(dtype)) {
       try {
         bwkey.setEventKey(kval);
@@ -908,6 +996,14 @@ public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
         di = getDocBuilder().makeDoc(builder, (BwCategory)rec);
       }
 
+      if (rec instanceof BwContact) {
+        di = getDocBuilder().makeDoc(builder, (BwContact)rec);
+      }
+
+      if (rec instanceof BwLocation) {
+        di = getDocBuilder().makeDoc(builder, (BwLocation)rec);
+      }
+
       builder.endObject();
 
       if (di != null) {
@@ -915,8 +1011,9 @@ public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
       }
 
       if (!(rec instanceof EventInfo)) {
-        throw new CalFacadeException(new IndexException(IndexException.unknownRecordType,
-                                                        rec.getClass().getName()));
+        throw new CalFacadeException(
+                new IndexException(IndexException.unknownRecordType,
+                                   rec.getClass().getName()));
       }
 
       /* If it's not recurring or an override index it */

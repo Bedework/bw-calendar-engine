@@ -26,6 +26,7 @@ import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
@@ -34,6 +35,7 @@ import org.bedework.access.PrivilegeDefs;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /** Class which handles manipulation of BwEventProperty subclasses which are
  * treated in the same manner, these being Category, Location and contact.
@@ -41,20 +43,59 @@ import java.util.Collection;
  * <p>Each has a single field which together with the owner makes a unique
  * key and all operations on those classes are the same.
  *
- * @author Mike Douglass   douglm - bedework.edu
+ * @author Mike Douglass   douglm - rpi.edu
  *
  * @param <T> type of property, Location, contact etc.
  */
-public class EventPropertiesImpl <T extends BwEventProperty>
+public abstract class EventPropertiesImpl<T extends BwEventProperty>
         extends CalSvcDb implements EventProperties<T>, PrivilegeDefs {
-  private FlushMap<String, T> cached =
-      new FlushMap<String, T>(60 * 1000 * 5, // 5 mins
-                              2000);  // max size
+  /* We'll cache the indexers we use. Use a map for non-public
+   */
+  private static FlushMap<String, BwIndexer> userIndexers =
+          new FlushMap<>(60 * 1000 * 5, // 5 mins
+                         200);  // max size
+
+  private static BwIndexer publicIndexer;
 
   private Class<T> ourClass;
   private CoreEventPropertiesI<T> coreHdlr;
 
   private boolean adminCanEditAllPublic;
+
+  /* fetch from indexer */
+  abstract Collection<T> fetchAllIndexed(String ownerHref) throws CalFacadeException;
+
+  abstract T fetchIndexedByUid(String uid) throws CalFacadeException;
+
+  abstract Collection<T> getCached(final String ownerHref);
+
+  abstract void putCached(String ownerHref, Collection<T> vals);
+
+  abstract void removeCached(String ownerHref);
+
+  abstract T getCachedByUid(String uid);
+
+  abstract void putCachedByUid(String uid, T val);
+
+  abstract void removeCachedByUid(String uid);
+
+  /** Find a persistent entry like the one given or return null.
+   *
+   * @param val
+   * @param ownerHref
+   * @return T or null
+   * @throws CalFacadeException
+   */
+  abstract T findPersistent(final T val,
+                            final String ownerHref) throws CalFacadeException;
+
+  /** Check for existence
+   *
+   * @param val the entity
+   * @return true if exists
+   * @throws CalFacadeException
+   */
+  abstract boolean exists(T val) throws CalFacadeException;
 
   /** Constructor
   *
@@ -84,7 +125,35 @@ public class EventPropertiesImpl <T extends BwEventProperty>
   @Override
   public Collection<T> get(final String ownerHref,
                            final String creatorHref) throws CalFacadeException {
-    return coreHdlr.get(ownerHref, creatorHref);
+    Collection<T> ents = getCached(ownerHref);
+
+    if (ents == null) {
+      ents = fetchAllIndexed(ownerHref);
+
+      if (Util.isEmpty(ents)) {
+        return new ArrayList<>();
+      }
+
+      putCached(ownerHref, ents);
+    }
+
+    /* Add them to the uid cache */
+    for (T ent: ents) {
+      putCachedByUid(ent.getUid(), ent);
+    }
+
+    if (creatorHref == null) {
+      return ents;
+    }
+
+    List<T> someEnts = new ArrayList<>();
+    for (T ent: ents) {
+      if (ent.getCreatorHref().equals(creatorHref)) {
+        someEnts.add(ent);
+      }
+    }
+
+    return someEnts;
   }
 
   @Override
@@ -99,9 +168,6 @@ public class EventPropertiesImpl <T extends BwEventProperty>
     return get(owner.getPrincipalRef(), null);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventProperties#getEditable()
-   */
   @Override
   public Collection<T> getEditable() throws CalFacadeException {
     if (!isPublicAdmin()) {
@@ -116,53 +182,52 @@ public class EventPropertiesImpl <T extends BwEventProperty>
                getPrincipal().getPrincipalRef());
   }
 
-  @Override
-  public T get(final String uid) throws CalFacadeException {
-    return coreHdlr.get(uid);
-  }
-
   @SuppressWarnings("unchecked")
   @Override
-  public T getCached(final String uid) throws CalFacadeException {
-    T ent = cached.get(uid);
+  public T get(final String uid) throws CalFacadeException {
+    T ent = getCachedByUid(uid);
 
     if (ent != null) {
       return ent;
     }
 
-    ent = get(uid);
+    ent = fetchIndexedByUid(uid);
+
     if (ent == null) {
       return null;
     }
 
-    ent =  (T)ent.clone();
-
-    cached.put(uid, ent);
+    putCachedByUid(uid, ent);
 
     return ent;
   }
 
   @Override
-  public Collection<T> getCached(final Collection<String> uids) throws CalFacadeException {
-    Collection<T> ents = new ArrayList<T>();
+  public Collection<T> get(final Collection<String> uids) throws CalFacadeException {
+    Collection<T> ents = new ArrayList();
 
     if (Util.isEmpty(uids)) {
       return ents;
     }
 
     for (String uid: uids) {
-      ents.add(getCached(uid));
+      T ent = get(uid);
+      if (ent != null) {
+        ents.add(get(uid));
+      }
     }
 
     return ents;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventProperties#find(org.bedework.calfacade.BwString, java.lang.String)
-   */
   @Override
-  public T find(final BwString val,
-                final String ownerHref) throws CalFacadeException {
+  public T getPersistent(final String uid) throws CalFacadeException {
+    return coreHdlr.get(uid);
+  }
+
+  @Override
+  public T findPersistent(final BwString val,
+                          final String ownerHref) throws CalFacadeException {
     String oh;
     if (ownerHref == null) {
       oh = getPrincipal().getPrincipalRef();
@@ -173,16 +238,13 @@ public class EventPropertiesImpl <T extends BwEventProperty>
     return coreHdlr.find(val, oh);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventProperties#add(org.bedework.calfacade.BwEventProperty)
-   */
   @Override
   public boolean add(final T val) throws CalFacadeException {
     setupSharableEntity(val, getPrincipal().getPrincipalRef());
 
     updateOK(val);
 
-    if (find(val.getFinderKeyValue(), val.getOwnerHref()) != null) {
+    if (exists(val)) {
       return false;
     }
 
@@ -200,12 +262,15 @@ public class EventPropertiesImpl <T extends BwEventProperty>
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
 
+    getIndexer(val.getOwnerHref()).indexEntity(val);
+
+    // Force a refetch
+    removeCached(val.getOwnerHref());
+    removeCachedByUid(val.getUid());
+
     return true;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventProperties#update(org.bedework.calfacade.BwEventProperty)
-   */
   @Override
   public void update(final T val) throws CalFacadeException {
     if ((val.getCreatorHref() == null) ||
@@ -221,11 +286,14 @@ public class EventPropertiesImpl <T extends BwEventProperty>
     ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false, val);
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
+
+    getIndexer(val.getOwnerHref()).indexEntity(val);
+
+    // Force a refetch
+    removeCached(val.getOwnerHref());
+    removeCachedByUid(val.getUid());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventProperties#delete(org.bedework.calfacade.BwEventProperty)
-   */
   @Override
   public int delete(final T val) throws CalFacadeException {
     deleteOK(val);
@@ -237,24 +305,25 @@ public class EventPropertiesImpl <T extends BwEventProperty>
     }
 
     /* Remove from preferences */
-    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true, val);
+    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true,
+                                                               val);
 
     coreHdlr.deleteProp(val);
+
+    getIndexer(val.getOwnerHref()).unindexEntity(val);
+
+    // Force a refetch
+    removeCached(val.getOwnerHref());
+    removeCachedByUid(val.getUid());
 
     return 0;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventProperties#getRefs(org.bedework.calfacade.BwEventProperty)
-   */
   @Override
   public Collection<EventPropertiesReference> getRefs(final T val) throws CalFacadeException {
     return coreHdlr.getRefs(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventProperties#ensureExists(org.bedework.calfacade.BwEventProperty, java.lang.String)
-   */
   @Override
   public EnsureEntityExistsResult<T> ensureExists(final T val,
                                                   final String ownerHref)
@@ -274,7 +343,7 @@ public class EventPropertiesImpl <T extends BwEventProperty>
       oh = ownerHref;
     }
 
-    eeer.entity = find(val.getFinderKeyValue(), oh);
+    eeer.entity = findPersistent(val, oh);
 
     if (eeer.entity != null) {
       // Exists
@@ -289,9 +358,76 @@ public class EventPropertiesImpl <T extends BwEventProperty>
     return eeer;
   }
 
+  @Override
+  public int reindex(BwIndexer indexer) throws CalFacadeException {
+    BwPrincipal owner;
+    if (!isPublicAdmin()) {
+      owner = getPrincipal();
+    } else {
+      owner = getPublicUser();
+    }
+
+    Collection<T> ents = coreHdlr.get(owner.getPrincipalRef(),
+                                      null);
+    if (Util.isEmpty(ents)) {
+      return 0;
+    }
+
+    for (T ent: ents) {
+      indexer.indexEntity(ent);
+    }
+
+    return ents.size();
+  }
+
+  /* ====================================================================
+   *                   Protected methods
+   * ==================================================================== */
+
+  protected BwIndexer getIndexer() throws CalFacadeException {
+    return getIndexer(getOwnerHref());
+  }
+
+  protected BwIndexer getIndexer(String ownerHref) throws CalFacadeException {
+    String href = checkHref(ownerHref);
+
+    boolean publick = isGuest() || isPublicAdmin();
+
+    if (publick) {
+      if (publicIndexer == null) {
+        publicIndexer = getSvc().getIndexer(true,
+                                            href);
+      }
+
+      return publicIndexer;
+    }
+
+    BwIndexer idx = userIndexers.get(href);
+
+    if (idx != null) {
+      return idx;
+    }
+
+    idx = getSvc().getIndexer(false,
+                              href);
+
+    userIndexers.put(href, idx);
+
+    return idx;
+  }
+
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
+
+  private String checkHref(String ownerHref) throws CalFacadeException {
+    if (ownerHref != null) {
+      return ownerHref;
+    }
+
+    // Assume public
+    return getSvc().getUsersHandler().getPublicUser().getPrincipalRef();
+  }
 
   private T check(final T ent) throws CalFacadeException {
     if (ent == null) {
@@ -333,7 +469,8 @@ public class EventPropertiesImpl <T extends BwEventProperty>
 
     BwShareableDbentity ent = o;
 
-    if (adminCanEditAllPublic || ent.getCreatorHref().equals(getPrincipal())) {
+    if (adminCanEditAllPublic ||
+            ent.getCreatorHref().equals(getPrincipal())) {
       return;
     }
 

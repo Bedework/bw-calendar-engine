@@ -21,6 +21,7 @@ package org.bedework.indexer;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.indexer.IndexStats.StatType;
 
 import java.util.List;
 
@@ -70,16 +71,25 @@ public class PrincipalProcessor extends Crawler {
 
       indexCollection(svc.getCalendarsHandler().getHomePath());
 
-      /* Skip the public owner here as categories would get indexed twice */
+      /* Skip the public owner here as public entities are already
+       * indexed by the public processor
+       */
 
-
-      if (!principal.equals(svc.getUsersHandler().getPublicUser().getPrincipalRef())) {
-        BwIndexer indexer = getSvci().getIndexer(principal,
-                                                 indexRootPath);
-
-        status.stats.inc(IndexStats.StatType.categories,
-                         svc.getCategoriesHandler().reindex(indexer));
+      if (principal.equals(svc.getUsersHandler().getPublicUser().getPrincipalRef())) {
+        return;
       }
+
+      BwIndexer indexer = getSvci().getIndexer(principal,
+                                               indexRootPath);
+
+      status.stats.inc(StatType.categories,
+                       svc.getCategoriesHandler().reindex(indexer));
+
+      status.stats.inc(StatType.contacts,
+                       svc.getContactsHandler().reindex(indexer));
+
+      status.stats.inc(StatType.locations,
+                       svc.getLocationsHandler().reindex(indexer));
     } finally {
       close();
     }

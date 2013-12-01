@@ -131,10 +131,28 @@ public class DocBuilder {
       }
 
       if (rec instanceof BwCategory) {
-        BwCategory cat = (BwCategory)rec;
+        BwCategory ent = (BwCategory)rec;
 
         res.add(new TypeId(BwIndexer.docTypeCategory,
-                           makeKeyVal(makeKeyVal(cat))));
+                           makeKeyVal(makeKeyVal(ent))));
+
+        return res;
+      }
+
+      if (rec instanceof BwContact) {
+        BwContact ent = (BwContact)rec;
+
+        res.add(new TypeId(BwIndexer.docTypeContact,
+                           makeKeyVal(makeKeyVal(ent))));
+
+        return res;
+      }
+
+      if (rec instanceof BwLocation) {
+        BwLocation ent = (BwLocation)rec;
+
+        res.add(new TypeId(BwIndexer.docTypeLocation,
+                           makeKeyVal(makeKeyVal(ent))));
 
         return res;
       }
@@ -254,7 +272,7 @@ public class DocBuilder {
 
   /* Return the docinfo for the indexer */
   DocInfo makeDoc(final XContentBuilder builder,
-                  final BwCategory cat) throws CalFacadeException {
+                  final BwCategory ent) throws CalFacadeException {
     try {
       /* We don't have real collections. It's been the practice to
          create "/" delimited names to emulate a hierarchy. Look out
@@ -263,24 +281,103 @@ public class DocBuilder {
 
 //      makeField(builder, "value", cat.getWord().getValue());
 
-      setColPath(cat);
+      setColPath(ent);
 
-      makeShareableContained(builder, cat);
+      makeShareableContained(builder, ent);
 
-      makeField(builder, PropertyInfoIndex.NAME, cat.getName());
-      makeField(builder, PropertyInfoIndex.UID, cat.getUid());
+      makeField(builder, PropertyInfoIndex.NAME, ent.getName());
+      makeField(builder, PropertyInfoIndex.UID, ent.getUid());
 
       makeField(builder, PropertyInfoIndex.HREF,
                 Util.buildPath(false,
-                               cat.getColPath(),
-                               cat.getName()));
+                               ent.getColPath(),
+                               ent.getName()));
 
       makeField(builder, PropertyInfoIndex.CATEGORIES,
-                cat.getWord());
+                ent.getWord());
       makeField(builder, PropertyInfoIndex.DESCRIPTION,
-                cat.getDescription());
+                ent.getDescription());
 
-      return new DocInfo(BwIndexer.docTypeCategory, 0, makeKeyVal(cat));
+      return new DocInfo(BwIndexer.docTypeCategory, 0, makeKeyVal(ent));
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  /* Return the docinfo for the indexer */
+  DocInfo makeDoc(final XContentBuilder builder,
+                  final BwContact ent) throws CalFacadeException {
+    try {
+      /* We don't have real collections. It's been the practice to
+         create "/" delimited names to emulate a hierarchy. Look out
+         for these and try to create a real path based on them.
+       */
+
+//      makeField(builder, "value", cat.getWord().getValue());
+
+      setColPath(ent);
+
+      makeShareableContained(builder, ent);
+
+      /* Use the uid as the name */
+      makeField(builder, PropertyInfoIndex.NAME, ent.getUid());
+      makeField(builder, PropertyInfoIndex.UID, ent.getUid());
+
+      makeField(builder, PropertyInfoIndex.HREF,
+                Util.buildPath(false,
+                               ent.getColPath(),
+                               ent.getUid()));
+
+      makeField(builder, PropertyInfoIndex.CN,
+                ent.getCn());
+      makeField(builder, PropertyInfoIndex.PHONE,
+                ent.getPhone());
+      makeField(builder, PropertyInfoIndex.EMAIL,
+                ent.getEmail());
+      makeField(builder, PropertyInfoIndex.URL,
+                ent.getLink());
+
+      return new DocInfo(BwIndexer.docTypeContact, 0, makeKeyVal(ent));
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  /* Return the docinfo for the indexer */
+  DocInfo makeDoc(final XContentBuilder builder,
+                  final BwLocation ent) throws CalFacadeException {
+    try {
+      /* We don't have real collections. It's been the practice to
+         create "/" delimited names to emulate a hierarchy. Look out
+         for these and try to create a real path based on them.
+       */
+
+//      makeField(builder, "value", cat.getWord().getValue());
+
+      setColPath(ent);
+
+      makeShareableContained(builder, ent);
+
+      makeField(builder, PropertyInfoIndex.NAME, ent.getAddress());
+      makeField(builder, PropertyInfoIndex.UID, ent.getUid());
+
+      makeField(builder, PropertyInfoIndex.HREF,
+                Util.buildPath(false,
+                               ent.getColPath(),
+                               ent.getUid()));
+
+      makeField(builder, PropertyInfoIndex.ADDRESS,
+                ent.getAddress());
+      makeField(builder, PropertyInfoIndex.SUBADDRESS,
+                ent.getSubaddress());
+      makeField(builder, PropertyInfoIndex.URL,
+                ent.getLink());
+
+      return new DocInfo(BwIndexer.docTypeLocation, 0, makeKeyVal(ent));
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
@@ -509,7 +606,6 @@ public class DocBuilder {
       return;
     }
 
-    String path;
     String extra = cat.getWordVal();
     String name;
 
@@ -523,10 +619,40 @@ public class DocBuilder {
       extra = extra.substring(0, pos);
     }
 
-    if (cat.getPublick()) {
+    cat.setName(name);
+    setColPath(cat, "categories", extra);
+  }
+
+  private void setColPath(final BwContact ent) throws CalFacadeException {
+    if (ent.getColPath() != null) {
+      return;
+    }
+
+    setColPath(ent, "contacts", null);
+  }
+
+  private void setColPath(final BwLocation ent) throws CalFacadeException {
+    if (ent.getColPath() != null) {
+      return;
+    }
+
+    setColPath(ent, "locations", null);
+  }
+
+  private void setColPath(final BwShareableContainedDbentity ent,
+                          final String dir,
+                          final String namePart) throws CalFacadeException {
+    String path;
+
+    if (ent.getPublick()) {
       path = Util.buildPath(true,
-                            "/public/categories/",
-                            extra);
+                            "/public",
+                            "/",
+                            basicSysprops.getBedeworkResourceDirectory(),
+                            "/",
+                            dir,
+                            "/",
+                            namePart);
     } else {
       String homeDir;
 
@@ -541,12 +667,15 @@ public class DocBuilder {
                             homeDir,
                             "/",
                             principal.getAccount(),
-                            "/categories/",
-                            extra);
+                            "/",
+                            basicSysprops.getBedeworkResourceDirectory(),
+                            "/",
+                            dir,
+                            "/",
+                            namePart);
     }
 
-    cat.setColPath(path);
-    cat.setName(name);
+    ent.setColPath(path);
   }
 
   private void makeShareableContained(final XContentBuilder builder,
@@ -634,7 +763,7 @@ public class DocBuilder {
 
       for (BwContact c: val) {
         builder.startObject();
-        makeField(builder, PropertyInfoIndex.NAME, c.getName());
+        makeField(builder, PropertyInfoIndex.CN, c.getCn());
 
         if (c.getUid() != null) {
           builder.field(ParameterInfoIndex.UID.getJname(),
@@ -983,7 +1112,15 @@ public class DocBuilder {
     }
 
     if (rec instanceof BwCategory) {
-      return keyConverter.makeCategoryKey(((BwCategory) rec).getUid());
+      return keyConverter.makeCategoryKey(((BwCategory)rec).getUid());
+    }
+
+    if (rec instanceof BwContact) {
+      return keyConverter.makeContactKey(((BwContact)rec).getUid());
+    }
+
+    if (rec instanceof BwLocation) {
+      return keyConverter.makeLocationKey(((BwLocation)rec).getUid());
     }
 
     BwEvent ev = null;

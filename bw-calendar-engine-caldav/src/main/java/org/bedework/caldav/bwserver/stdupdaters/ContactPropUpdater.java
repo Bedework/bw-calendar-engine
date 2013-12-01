@@ -53,7 +53,7 @@ public class ContactPropUpdater implements PropertyUpdater {
       if (ui.isAdd()) {
         if (!Util.isEmpty(contacts)) {
           for (BwContact cnct: contacts) {
-            if (cnct.getName().equals(nm)) {
+            if (cnct.getCn().equals(nm)) {
               // Already there
               return UpdateResult.getOkResult();
             }
@@ -65,7 +65,7 @@ public class ContactPropUpdater implements PropertyUpdater {
 
         if (cnct == null) {
           cnct = new BwContact();
-          cnct.setName(nm);
+          cnct.setCn(nm);
           cnct.setLink(altrep);
 
           ui.getIcalCallback().addContact(cnct);
@@ -84,7 +84,7 @@ public class ContactPropUpdater implements PropertyUpdater {
         }
 
         for (BwContact cnct: contacts) {
-          if (cnct.getName().equals(nm)) {
+          if (cnct.getCn().equals(nm)) {
             if (ev.removeContact(cnct)) {
               cte.addRemovedValue(cnct);
             }
@@ -104,7 +104,7 @@ public class ContactPropUpdater implements PropertyUpdater {
         }
 
         for (BwContact evcnct: contacts) {
-          if (evcnct.getName().equals(nm)) {
+          if (evcnct.getCn().equals(nm)) {
             // Found - remove that one and add a new one.
             BwString newnm = new BwString(UpdaterUtil.getLang(ui.getUpdprop()),
                                           ((TextPropertyType)ui.getUpdprop()).getText());
@@ -113,7 +113,7 @@ public class ContactPropUpdater implements PropertyUpdater {
 
             if (cnct == null) {
               cnct = new BwContact();
-              cnct.setName(newnm);
+              cnct.setCn(newnm);
               cnct.setLink(altrep);
 
               ui.getIcalCallback().addContact(cnct);

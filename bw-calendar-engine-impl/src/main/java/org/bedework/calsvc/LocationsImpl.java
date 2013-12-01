@@ -18,30 +18,30 @@
 */
 package org.bedework.calsvc;
 
-iimport org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.Categories;
-import org.bedework.util.caching.FlushMap;
-import org.bedework.util.misc.Util;
+import org.bedework.calsvci.Locations;
+
+import edu.rpi.sss.util.FlushMap;
 
 import java.util.Collection;
 
-/** Class which handles manipulation of Categories.
+/** Class which handles manipulation of Locations.
  *
  * @author Mike Douglass   douglm - rpi.edu
  */
-public class CategoriesImpl
-        extends EventPropertiesImpl<BwCategory>
-        implements Categories {
+public class LocationsImpl
+        extends EventPropertiesImpl<BwLocation>
+        implements Locations {
   /* We'll cache lists of entities by principal href - flushing them
     every so often.
    */
-  private static FlushMap<String, Collection<BwCategory>> cached =
+  private static FlushMap<String, Collection<BwLocation>> cached =
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          2000);  // max size
 
-  private FlushMap<String, BwCategory> cachedByUid =
+  private FlushMap<String, BwLocation> cachedByUid =
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          2000);  // max size
 
@@ -49,25 +49,25 @@ public class CategoriesImpl
   *
   * @param svci calsvc object
   */
-  public CategoriesImpl(final CalSvc svci) {
+  public LocationsImpl(final CalSvc svci) {
     super(svci);
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public void init(final boolean adminCanEditAllPublic) {
-    super.init(BwCategory.class.getCanonicalName(),
+    super.init(BwLocation.class.getCanonicalName(),
                adminCanEditAllPublic);
   }
 
   @Override
-  Collection<BwCategory> getCached(final String ownerHref) {
+  Collection<BwLocation> getCached(final String ownerHref) {
     return cached.get(ownerHref);
   }
 
   @Override
   void putCached(final String ownerHref,
-                 final Collection<BwCategory> vals) {
+                 final Collection<BwLocation> vals) {
     cached.put(ownerHref, vals);
   }
 
@@ -77,12 +77,12 @@ public class CategoriesImpl
   }
 
   @Override
-  BwCategory getCachedByUid(final String uid) {
+  BwLocation getCachedByUid(final String uid) {
     return cachedByUid.get(uid);
   }
 
   @Override
-  void putCachedByUid(final String uid, final BwCategory val) {
+  void putCachedByUid(final String uid, final BwLocation val) {
     cachedByUid.put(uid, val);
   }
 
@@ -92,29 +92,29 @@ public class CategoriesImpl
   }
 
   @Override
-  Collection<BwCategory> fetchAllIndexed(String ownerHref)
+  Collection<BwLocation> fetchAllIndexed(String ownerHref)
           throws CalFacadeException {
-    return getIndexer(ownerHref).fetchAllCats();
+    return getIndexer(ownerHref).fetchAllLocations();
   }
 
   @Override
-  BwCategory fetchIndexedByUid(String uid) throws CalFacadeException {
-    return getIndexer().fetchCat("uid", uid);
+  BwLocation fetchIndexedByUid(String uid) throws CalFacadeException {
+    return getIndexer().fetchLocation("uid", uid);
   }
 
-  BwCategory findPersistent(final BwCategory val,
+  BwLocation findPersistent(final BwLocation val,
                             final String ownerHref) throws CalFacadeException {
-    return findPersistent(val.getWord(), ownerHref);
+    return findPersistent(val.getAddress(), ownerHref);
   }
 
   @Override
-  public boolean exists(BwCategory cat) throws CalFacadeException {
-    return findPersistent(cat.getWord(), cat.getOwnerHref()) != null;
+  public boolean exists(BwLocation val) throws CalFacadeException {
+    return findPersistent(val.getFinderKeyValue(), val.getOwnerHref()) != null;
   }
 
   @Override
-  public BwCategory find(final BwString val) throws CalFacadeException {
-    return getIndexer().fetchCat("categories.value", val.getValue());
+  public BwLocation find(final BwString val) throws CalFacadeException {
+    return getIndexer().fetchLocation("address.value", val.getValue());
   }
 }
 

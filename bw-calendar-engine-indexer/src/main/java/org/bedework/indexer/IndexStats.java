@@ -48,11 +48,17 @@ public class IndexStats {
     categories,
 
     /** */
+    contacts,
+
+    /** */
+    locations,
+
+    /** */
     unreachableEntities
   }
 
   /**
-   * @param name
+   * @param name - name of the statistics
    */
   public IndexStats(final String name) {
     this.name = name;
@@ -65,7 +71,7 @@ public class IndexStats {
   public void stats() {
     info(name);
 
-    for (StatType st: StatType.values()) {
+    for (final StatType st: StatType.values()) {
       info(stat(st));
     }
   }
@@ -74,11 +80,11 @@ public class IndexStats {
    * @return info as list
    */
   public List<String> statsList() {
-    List<String> infoLines = new ArrayList<String>();
+    final List<String> infoLines = new ArrayList<>();
 
     infoLines.add(name + "\n");
 
-    for (StatType st: StatType.values()) {
+    for (final StatType st: StatType.values()) {
       infoLines.add(stat(st) + "\n");
     }
 
@@ -101,13 +107,12 @@ public class IndexStats {
     counts[st.ordinal()] += val;
   }
 
-  private final String blanks = "                                    ";
-  private final int paddedNmLen = 18;
+  private static final String blanks = "                                    ";
+  private static final int paddedNmLen = 18;
 
   private String stat(final StatType st) {
-    StringBuilder sb = new StringBuilder();
-
-    String name = st.toString();
+    final StringBuilder sb = new StringBuilder();
+    final String name = st.toString();
 
     if (name.length() < paddedNmLen) {
       sb.append(blanks.substring(0, paddedNmLen - name.length()));

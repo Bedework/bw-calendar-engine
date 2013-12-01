@@ -145,6 +145,16 @@ public class BwIndexKey extends Index.Key {
     return key1;
   }
 
+  public String makeContactKey(final String key1) {
+    // Key is just the uid
+    return key1;
+  }
+
+  public String makeLocationKey(final String key1) {
+    // Key is just the uid
+    return key1;
+  }
+
   /** Encode an event key
    *
    * @param key1

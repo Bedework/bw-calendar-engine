@@ -18,30 +18,30 @@
 */
 package org.bedework.calsvc;
 
-iimport org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.Categories;
-import org.bedework.util.caching.FlushMap;
-import org.bedework.util.misc.Util;
+import org.bedework.calsvci.Contacts;
+
+import edu.rpi.sss.util.FlushMap;
 
 import java.util.Collection;
 
-/** Class which handles manipulation of Categories.
+/** Class which handles manipulation of Contacts.
  *
  * @author Mike Douglass   douglm - rpi.edu
  */
-public class CategoriesImpl
-        extends EventPropertiesImpl<BwCategory>
-        implements Categories {
+public class ContactsImpl
+        extends EventPropertiesImpl<BwContact>
+        implements Contacts {
   /* We'll cache lists of entities by principal href - flushing them
     every so often.
    */
-  private static FlushMap<String, Collection<BwCategory>> cached =
+  private static FlushMap<String, Collection<BwContact>> cached =
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          2000);  // max size
 
-  private FlushMap<String, BwCategory> cachedByUid =
+  private FlushMap<String, BwContact> cachedByUid =
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          2000);  // max size
 
@@ -49,25 +49,25 @@ public class CategoriesImpl
   *
   * @param svci calsvc object
   */
-  public CategoriesImpl(final CalSvc svci) {
+  public ContactsImpl(final CalSvc svci) {
     super(svci);
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public void init(final boolean adminCanEditAllPublic) {
-    super.init(BwCategory.class.getCanonicalName(),
+    super.init(BwContact.class.getCanonicalName(),
                adminCanEditAllPublic);
   }
 
   @Override
-  Collection<BwCategory> getCached(final String ownerHref) {
+  Collection<BwContact> getCached(final String ownerHref) {
     return cached.get(ownerHref);
   }
 
   @Override
   void putCached(final String ownerHref,
-                 final Collection<BwCategory> vals) {
+                 final Collection<BwContact> vals) {
     cached.put(ownerHref, vals);
   }
 
@@ -77,12 +77,12 @@ public class CategoriesImpl
   }
 
   @Override
-  BwCategory getCachedByUid(final String uid) {
+  BwContact getCachedByUid(final String uid) {
     return cachedByUid.get(uid);
   }
 
   @Override
-  void putCachedByUid(final String uid, final BwCategory val) {
+  void putCachedByUid(final String uid, final BwContact val) {
     cachedByUid.put(uid, val);
   }
 
@@ -92,29 +92,29 @@ public class CategoriesImpl
   }
 
   @Override
-  Collection<BwCategory> fetchAllIndexed(String ownerHref)
+  Collection<BwContact> fetchAllIndexed(String ownerHref)
           throws CalFacadeException {
-    return getIndexer(ownerHref).fetchAllCats();
+    return getIndexer(ownerHref).fetchAllContacts();
   }
 
   @Override
-  BwCategory fetchIndexedByUid(String uid) throws CalFacadeException {
-    return getIndexer().fetchCat("uid", uid);
+  BwContact fetchIndexedByUid(String uid) throws CalFacadeException {
+    return getIndexer().fetchContact("uid", uid);
   }
 
-  BwCategory findPersistent(final BwCategory val,
+  BwContact findPersistent(final BwContact val,
                             final String ownerHref) throws CalFacadeException {
-    return findPersistent(val.getWord(), ownerHref);
+    return findPersistent(val.getFinderKeyValue(), ownerHref);
   }
 
   @Override
-  public boolean exists(BwCategory cat) throws CalFacadeException {
-    return findPersistent(cat.getWord(), cat.getOwnerHref()) != null;
+  public boolean exists(BwContact val) throws CalFacadeException {
+    return findPersistent(val.getFinderKeyValue(), val.getOwnerHref()) != null;
   }
 
   @Override
-  public BwCategory find(final BwString val) throws CalFacadeException {
-    return getIndexer().fetchCat("categories.value", val.getValue());
+  public BwContact find(final BwString val) throws CalFacadeException {
+    return getIndexer().fetchContact("name.value", val.getValue());
   }
 }
 

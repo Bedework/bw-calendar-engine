@@ -271,7 +271,7 @@ public class BwObjectFilter extends ObjectFilter<ObjectFilter> {
 
     case CONTACT:
       for (BwContact c: ev.getContacts()) {
-        if (stringMatch(c.getName().getValue(), val)) {
+        if (stringMatch(c.getCn().getValue(), val)) {
           return true;
         }
       }

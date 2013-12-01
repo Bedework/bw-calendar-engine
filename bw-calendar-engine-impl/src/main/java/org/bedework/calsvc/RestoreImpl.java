@@ -48,7 +48,7 @@ import java.util.Collection;
 
 /** Allow the restore process to work.
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm@rpi.edu
  * @version 1.0
  */
 class RestoreImpl extends CalSvcDb implements RestoreIntf {
@@ -392,14 +392,14 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   public BwContact getContact(final String uid) throws Throwable {
     startTransaction();
 
-    return getSvc().getContactsHandler().get(uid);
+    return getSvc().getContactsHandler().getPersistent(uid);
   }
 
   @Override
   public BwLocation getLocation(final String uid) throws Throwable {
     startTransaction();
 
-    return getSvc().getLocationsHandler().get(uid);
+    return getSvc().getLocationsHandler().getPersistent(uid);
   }
 
   @Override

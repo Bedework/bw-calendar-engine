@@ -309,13 +309,13 @@ public class VEventUtil extends IcalUtil {
       if (val.getNumContacts() > 0) {
         for (BwContact c: val.getContacts()) {
           // LANG
-          prop = new Contact(c.getName().getValue());
+          prop = new Contact(c.getCn().getValue());
           String l = c.getLink();
 
           if (l != null) {
             prop.getParameters().add(new AltRep(l));
           }
-          pl.add(langProp(uidProp(prop, c.getUid()), c.getName()));
+          pl.add(langProp(uidProp(prop, c.getUid()), c.getCn()));
         }
       }
 

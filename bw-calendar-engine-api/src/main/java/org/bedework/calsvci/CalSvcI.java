@@ -18,9 +18,7 @@
 */
 package org.bedework.calsvci;
 
-import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwGroup;
-import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwStats;
@@ -36,10 +34,10 @@ import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
-import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.icalendar.IcalCallback;
 import org.bedework.sysevents.events.SysEventBase;
 
@@ -486,18 +484,18 @@ public abstract class CalSvcI implements Serializable {
 
   /** Return the locations maintenance object.
    *
-   * @return EventProperties
+   * @return Locations
    * @throws CalFacadeException
    */
-  public abstract EventProperties<BwLocation> getLocationsHandler()
+  public abstract Locations getLocationsHandler()
         throws CalFacadeException;
 
   /** Return the contacts maintenance object.
    *
-   * @return EventProperties
+   * @return Contacts
    * @throws CalFacadeException
    */
-  public abstract EventProperties<BwContact> getContactsHandler()
+  public abstract Contacts getContactsHandler()
         throws CalFacadeException;
 
   /* ====================================================================

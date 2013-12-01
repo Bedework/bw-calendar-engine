@@ -21,6 +21,8 @@ package org.bedework.calfacade.indexing;
 import org.bedework.access.Acl;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwContact;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
@@ -38,6 +40,8 @@ public interface BwIndexer extends Serializable {
   static final String docTypeUnknown = "unknown";
   static final String docTypeCollection = "collection";
   static final String docTypeCategory = "category";
+  static final String docTypeLocation = "location";
+  static final String docTypeContact = "contact";
 
   /* Other types are those defined in IcalDefs.entityTypeNames */
 
@@ -205,15 +209,49 @@ public interface BwIndexer extends Serializable {
    *
    * @param field e.g. "uid", "word"
    * @param val - expected full value
-   * @return null or detached category object
+   * @return null or category object
    * @throws CalFacadeException
    */
   BwCategory fetchCat(String field, String val) throws CalFacadeException;
 
-  /**
+  /** Fetch all for the current principal.
    *
    * @return possibly empty list
    * @throws CalFacadeException
    */
   List<BwCategory> fetchAllCats() throws CalFacadeException;
+
+  /** Find a contact owned by the current user which has a named
+   * field which matches the value.
+   *
+   * @param field e.g. "uid", "name"
+   * @param val - expected full value
+   * @return null or contact object
+   * @throws CalFacadeException
+   */
+  BwContact fetchContact(String field, String val) throws CalFacadeException;
+
+  /** Fetch all for the current principal.
+   *
+   * @return possibly empty list
+   * @throws CalFacadeException
+   */
+  List<BwContact> fetchAllContacts() throws CalFacadeException;
+
+  /** Find a location owned by the current user which has a named
+   * field which matches the value.
+   *
+   * @param field e.g. "uid", "address"
+   * @param val - expected full value
+   * @return null or contact object
+   * @throws CalFacadeException
+   */
+  BwLocation fetchLocation(String field, String val) throws CalFacadeException;
+
+  /** Fetch all for the current principal.
+   *
+   * @return possibly empty list
+   * @throws CalFacadeException
+   */
+  List<BwLocation> fetchAllLocations() throws CalFacadeException;
 }

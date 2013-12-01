@@ -18,9 +18,9 @@
 */
 package org.bedework.calsvci;
 
-import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwContact;
 
-/** Interface which handles manipulation of Category entities.
+/** Interface which handles manipulation of contact entities.
  *
  * <p>These are maintained in the database but completely cached by the indexer
  * and in memory.
@@ -30,7 +30,7 @@ import org.bedework.calfacade.BwCategory;
  * @author Mike Douglass   douglm - rpi.edu
  *
  */
-public interface Categories extends EventProperties<BwCategory> {
+public interface Contacts extends EventProperties<BwContact> {
   /** Initialize the object
    *
    * @param adminCanEditAllPublic   True if administrators can edit all public entities

@@ -173,6 +173,27 @@ public class BwLocation extends BwEventProperty<BwLocation>
            QuotaUtil.size(getLink());
   }
 
+  public boolean updateFrom(final BwLocation ent) {
+    boolean changed = false;
+
+    if (!CalFacadeUtil.eqObjval(getAddress(), ent.getAddress())) {
+      setAddress(ent.getAddress());
+      changed = true;
+    }
+
+    if (!CalFacadeUtil.eqObjval(getSubaddress(), ent.getSubaddress())) {
+      setSubaddress(ent.getSubaddress());
+      changed = true;
+    }
+
+    if (!CalFacadeUtil.eqObjval(getLink(), ent.getLink())) {
+      setLink(ent.getLink());
+      changed = true;
+    }
+
+    return changed;
+  }
+
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */

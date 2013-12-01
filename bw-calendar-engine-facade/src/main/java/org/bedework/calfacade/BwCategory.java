@@ -255,6 +255,11 @@ public class BwCategory extends BwEventProperty<BwCategory>
            getDescription().length();
   }
 
+  /**
+   *
+   * @param cat
+   * @return true if anything changed
+   */
   public boolean updateFrom(final BwCategory cat) {
     boolean changed = false;
 

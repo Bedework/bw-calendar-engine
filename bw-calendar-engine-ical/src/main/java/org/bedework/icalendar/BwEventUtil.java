@@ -587,11 +587,11 @@ public class BwEventUtil extends IcalUtil {
 
           if (contact == null) {
             contact = BwContact.makeContact();
-            contact.setName(nm);
+            contact.setCn(nm);
             contact.setLink(altrep);
             cb.addContact(contact);
           } else {
-            contact.setName(nm);
+            contact.setCn(nm);
             contact.setLink(altrep);
           }
 

@@ -24,7 +24,7 @@ import org.bedework.calfacade.BwString;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
 /**
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm rpi.edu
  * @version 1.0
  */
 public class ContactFieldRule extends EntityFieldRule {
@@ -37,7 +37,16 @@ public class ContactFieldRule extends EntityFieldRule {
       // Expect the value on stack top
       BwString s = (BwString)pop();
 
-      ((BwContact)top()).setName(s);
+      ((BwContact)top()).setCn(s);
+
+      return;
+    }
+
+    if (name.equals("cn")) {
+      // Expect the value on stack top
+      BwString s = (BwString)pop();
+
+      ((BwContact)top()).setCn(s);
 
       return;
     }
