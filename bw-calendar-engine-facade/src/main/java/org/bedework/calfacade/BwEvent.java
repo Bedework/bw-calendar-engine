@@ -726,6 +726,8 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   private BwEvent parent;
 
+  private Set<String> contactUids;
+
   private String locationUid;
 
   private ChangeTable changeSet;
@@ -3593,6 +3595,30 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoDump
   public BwEvent getParent() {
     return parent;
+  }
+
+  /** Set list of referenced contacts
+   *
+   * @param val list of contact uids
+   */
+  @NoProxy
+  @NoWrap
+  @NoDump
+  @Override
+  public void setContactUids(final Set<String> val) {
+    contactUids = val;
+  }
+
+  /**
+   *
+   * @return list of contact uids.
+   */
+  @NoProxy
+  @NoWrap
+  @NoDump
+  @Override
+  public Set<String> getContactUids() {
+    return contactUids;
   }
 
   /** Set uid of referenced location

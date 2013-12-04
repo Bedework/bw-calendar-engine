@@ -191,6 +191,9 @@ public class ValidationError implements Serializable {
   /** Your information is incomplete: please supply a location. */
   public static final String missingLocation = prefix + "missinglocation";
 
+  /** The location is not flagged as public. */
+  public static final String locationNotPublic = prefix + "locationnotpublic";
+
   /** Your information is incomplete: please supply a name. */
   public static final String missingName = prefix + "missingname";
 

@@ -578,7 +578,7 @@ public class EntityBuilder  {
         final BwAlarm alarm = new BwAlarm();
 
         alarm.setOwnerHref(getString(PropertyInfoIndex.OWNER));
-        alarm.setPublick(getBoolean(PropertyInfoIndex.PUBLIC));
+        alarm.setPublick(getBooleanNotNull(PropertyInfoIndex.PUBLIC));
 
         final String action = getString(PropertyInfoIndex.ACTION);
 
@@ -672,6 +672,7 @@ public class EntityBuilder  {
     ent.setOwnerHref(getString(PropertyInfoIndex.OWNER));
     ent.setColPath(getString(PropertyInfoIndex.COLPATH));
     ent.setAccess(getString(PropertyInfoIndex.ACL));
+    ent.setPublick(getBooleanNotNull(PropertyInfoIndex.PUBLIC));
   }
 
   private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
@@ -763,6 +764,16 @@ public class EntityBuilder  {
     }
 
     return Boolean.valueOf(s);
+  }
+
+  private Boolean getBooleanNotNull(final PropertyInfoIndex id) {
+    Boolean b = getBoolean(id);
+
+    if (b == null) {
+      return Boolean.FALSE;
+    }
+
+    return b;
   }
 
   private boolean getBool(final PropertyInfoIndex id) {

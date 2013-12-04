@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -27,6 +27,18 @@ import java.util.Set;
  * @author douglm
  */
 public interface ContactedEntity {
+  /** Set the contacts uids Set
+   *
+   * @param val    Set of contact uids
+   */
+  void setContactUids(Set<String> val);
+
+  /** Get the contact uids
+   *
+   *  @return Set of contact uids
+   */
+  Set<String> getContactUids();
+
   /** Set the contacts Set
    *
    * @param val    Set of contacts

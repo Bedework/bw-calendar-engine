@@ -690,6 +690,7 @@ public class DocBuilder {
 
     makeField(builder, PropertyInfoIndex.COLPATH, colPath);
     makeField(builder, PropertyInfoIndex.ACL, ent.getAccess());
+    makeField(builder, PropertyInfoIndex.PUBLIC, ent.getPublick());
   }
 
   private void indexXprops(final XContentBuilder builder,
