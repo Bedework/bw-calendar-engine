@@ -19,12 +19,14 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.IndexProperties;
+import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
 import org.bedework.util.misc.Util;
 
 import java.util.List;
+import java.util.Set;
 
 /** The crawler program for the bedework calendar system.
  *
@@ -33,12 +35,6 @@ import java.util.List;
  */
 public class BwIndexApp extends JmsSysEventListener {
   private IndexProperties props;
-
-  private String indexBuildLocationPrefix;
-
-  private boolean doCrawl;
-
-  private boolean doListen;
 
   private long messageCount;
 
@@ -102,39 +98,11 @@ public class BwIndexApp extends JmsSysEventListener {
   }
 
   /**
-   * @param val
-   */
-  public void setIndexBuildLocationPrefix(final String val) {
-    indexBuildLocationPrefix = val;
-  }
-
-  /**
-   * @return list of indexes maintained by indexer.
+   * @return info on indexes maintained by indexer.
    * @throws Throwable
    */
-  public String listIndexes() {
-    try {
-      List<String> is = getCrawler().listIndexes();
-
-      if (Util.isEmpty(is)) {
-        return "No indexes found";
-      }
-
-      StringBuilder res = new StringBuilder("Indexes");
-
-      res.append("------------------------\n");
-
-      for (String i: is) {
-        res.append(i);
-        res.append("\n");
-      }
-
-      return res.toString();
-    } catch (Throwable t) {
-      error(t);
-
-      return t.getLocalizedMessage();
-    }
+  public Set<IndexInfo> getIndexInfo() throws Throwable {
+    return getCrawler().getIndexInfo();
   }
 
   /**

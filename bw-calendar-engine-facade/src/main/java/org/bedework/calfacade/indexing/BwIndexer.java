@@ -30,6 +30,7 @@ import org.bedework.util.indexing.Index;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author douglm
@@ -168,20 +169,59 @@ public interface BwIndexer extends Serializable {
    */
   String newIndex(String name) throws CalFacadeException;
 
-  /** List all indexes maintained by server
+  class IndexInfo implements Comparable<IndexInfo>, Serializable {
+    private String indexName;
+
+    private Set<String> aliases;
+
+    /**
+     * @param indexName
+     */
+    public IndexInfo(final String indexName) {
+      this.indexName = indexName;
+    }
+
+    /**
+     *
+     * @return index name
+     */
+    public String getIndexName() {
+      return indexName;
+    }
+
+    /**
+     * @param val - set of aliases - never null
+     */
+    public void setAliases(final Set<String> val) {
+      aliases = val;
+    }
+
+    /**
+     * @return - set of aliases - never null
+     */
+    public Set<String> getAliases() {
+      return aliases;
+    }
+
+    @Override
+    public int compareTo(final IndexInfo o) {
+      return getIndexName().compareTo(o.getIndexName());
+    }
+  }
+
+  /** Get info on indexes maintained by server
    *
-   * @return names of indexes.
+   * @return list of index info.
    * @throws CalFacadeException
    */
-  List<String> listIndexes() throws CalFacadeException;
+  Set<IndexInfo> getIndexInfo() throws CalFacadeException;
 
   /** Purge non-current indexes maintained by server.
    *
-   * @param preserve - list of indexes to preserve
    * @return names of indexes removed.
    * @throws CalFacadeException
    */
-  List<String> purgeIndexes(List<String> preserve) throws CalFacadeException;
+  List<String> purgeIndexes() throws CalFacadeException;
 
   /** create a new index and start using it.
    *

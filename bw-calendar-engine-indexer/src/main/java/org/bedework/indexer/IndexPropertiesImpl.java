@@ -51,8 +51,6 @@ public class IndexPropertiesImpl
 
   private String indexerConfig;
 
-  private String solrCoreAdmin;
-
   private String publicIndexName;
 
   private String userIndexName;
@@ -139,16 +137,6 @@ public class IndexPropertiesImpl
   @Override
   public String getIndexerConfig() {
     return indexerConfig;
-  }
-
-  @Override
-  public void setSolrCoreAdmin(final String val) {
-    solrCoreAdmin = val;
-  }
-
-  @Override
-  public String getSolrCoreAdmin() {
-    return solrCoreAdmin;
   }
 
   @Override
@@ -279,7 +267,6 @@ public class IndexPropertiesImpl
     ts.append("indexerURL", getIndexerURL());
     ts.append("embeddedIndexer", getEmbeddedIndexer());
     ts.append("indexerConfig", getIndexerConfig());
-    ts.append("solrCoreAdmin", getSolrCoreAdmin());
     ts.append("publicIndexName", getPublicIndexName());
     ts.append("userIndexName", getUserIndexName());
 
@@ -305,7 +292,6 @@ public class IndexPropertiesImpl
     clone.setIndexerURL(getIndexerURL());
     clone.setEmbeddedIndexer(getEmbeddedIndexer());
     clone.setIndexerConfig(getIndexerConfig());
-    clone.setSolrCoreAdmin(getSolrCoreAdmin());
     clone.setPublicIndexName(getPublicIndexName());
     clone.setUserIndexName(getUserIndexName());
 

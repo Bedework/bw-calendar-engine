@@ -72,8 +72,8 @@ public class PublicProcessor extends Crawler {
       indexCollection(Util.buildPath(true, "/",
                                      getPublicCalendarRoot()));
 
-      BwIndexer indexer =getSvci().getIndexer(principal,
-                                              indexRootPath);
+      BwIndexer indexer = getSvci().getIndexer(principal,
+                                               indexRootPath);
 
       status.stats.inc(StatType.categories,
                        getSvci().getCategoriesHandler().reindex(indexer));

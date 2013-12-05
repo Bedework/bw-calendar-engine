@@ -21,11 +21,13 @@ package org.bedework.indexer;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.CalSvcI;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
+import org.bedework.calsvci.CalSvcI;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /** A class to crawl the entire data structure reindexing as it proceeds.
@@ -168,13 +170,13 @@ public class Crawl extends CalSys {
   }
 
   /**
-   * @return list of indexes maintained by indexer.
+   * @return info on indexes maintained by indexer.
    * @throws CalFacadeException
    */
-  public List<String> listIndexes() throws CalFacadeException {
+  public Set<IndexInfo> getIndexInfo() throws CalFacadeException {
     BwIndexer idx = getSvci().getIndexer(adminAccount, null);
 
-    return idx.listIndexes();
+    return idx.getIndexInfo();
   }
 
   /** Purge non-current indexes maintained by server.
@@ -183,14 +185,9 @@ public class Crawl extends CalSys {
    * @throws CalFacadeException
    */
   public List<String> purgeIndexes() throws CalFacadeException {
-    List<String> preserve = new ArrayList<>();
-
-    preserve.add(props.getPublicIndexName());
-    preserve.add(props.getUserIndexName());
-
     BwIndexer idx = getSvci().getIndexer(adminAccount, null);
 
-    return idx.purgeIndexes(preserve);
+    return idx.purgeIndexes();
   }
 
   private Indexes newIndexes(final CrawlStatus cr) throws CalFacadeException {

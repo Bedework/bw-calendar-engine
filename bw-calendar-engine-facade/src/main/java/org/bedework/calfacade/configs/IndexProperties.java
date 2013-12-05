@@ -123,20 +123,7 @@ public interface IndexProperties {
   @MBeanInfo("indexer config location")
   String getIndexerConfig();
 
-  /** Set the solr admin root
-   *
-   * @param val
-   */
-  void setSolrCoreAdmin(String val);
-
-  /** Get the solr admin Root
-   *
-   * @return Root
-   */
-  @MBeanInfo("solr core admin")
-  String getSolrCoreAdmin();
-
-  /** Set the solr public core
+  /** Set the public index name
    *
    * @param val
    */

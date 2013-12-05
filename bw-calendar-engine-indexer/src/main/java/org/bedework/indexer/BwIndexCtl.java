@@ -19,11 +19,13 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.IndexProperties;
-
+import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
 import org.bedework.util.jmx.ConfBase;
+import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author douglm
@@ -47,9 +49,46 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     }
     @Override
     public void run() {
+      BwIndexApp app = getIndexApp();
+
+      info("************************************************************");
+      info(" * Starting indexer");
+
+    /* List the indexes in use - ensures we have an indexer early on */
+
+      info(" * Current indexes: ");
+      Set<IndexInfo> is = null;
+
+      try {
+        is = app.getIndexInfo();
+      } catch (Throwable t) {
+        info(" * Exception getting index info:");
+        info(" * " + t.getLocalizedMessage());
+      }
+
+      if (Util.isEmpty(is)) {
+        info(" *   No indexes");
+      } else {
+        for (IndexInfo ii: is) {
+          StringBuilder res = new StringBuilder(ii.getIndexName());
+
+          String delim = "<----";
+
+          for (String a: ii.getAliases()) {
+            res.append(delim);
+            res.append(a);
+            delim = ", ";
+          }
+
+          info(" * " + res.toString());
+        }
+      }
+
+      info("************************************************************");
+
       while (running) {
         try {
-          getIndexer().listen();
+          app.listen();
         } catch (InterruptedException ie) {
           break;
         } catch (Throwable t) {
@@ -60,7 +99,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
             error(t.getMessage());
           }
         } finally {
-          getIndexer().close();
+          getIndexApp().close();
         }
       }
     }
@@ -80,7 +119,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     @Override
     public void run() {
       try {
-        getIndexer().crawl();
+        getIndexApp().crawl();
       } catch (InterruptedException ie) {
       } catch (Throwable t) {
         if (!showedTrace) {
@@ -97,7 +136,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
 
   private final static String nm = "indexing";
 
-  private BwIndexApp indexer;
+  private BwIndexApp indexApp;
 
   /**
    */
@@ -185,16 +224,6 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   @Override
   public String getIndexerConfig() {
     return getConfig().getIndexerConfig();
-  }
-
-  @Override
-  public void setSolrCoreAdmin(final String val) {
-    getConfig().setSolrCoreAdmin(val);
-  }
-
-  @Override
-  public String getSolrCoreAdmin() {
-    return getConfig().getSolrCoreAdmin();
   }
 
   @Override
@@ -304,27 +333,61 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
 
   @Override
   public long getMessageCount() {
-    return getIndexer().getMessageCount();
+    return getIndexApp().getMessageCount();
   }
 
+  @Override
   public String listIndexes() {
-    return getIndexer().listIndexes();
+    try {
+      Set<IndexInfo> is = getIndexApp().getIndexInfo();
+
+      if (Util.isEmpty(is)) {
+        return "No indexes found";
+      }
+
+      StringBuilder res = new StringBuilder("Indexes");
+
+      res.append("------------------------\n");
+
+      for (IndexInfo ii: is) {
+        res.append(ii.getIndexName());
+
+        String delim = "<----";
+
+        for (String a: ii.getAliases()) {
+          res.append(delim);
+          res.append(a);
+          delim = ", ";
+        }
+
+        res.append("\n");
+      }
+
+      return res.toString();
+    } catch (Throwable t) {
+      return t.getLocalizedMessage();
+    }
+  }
+
+  @Override
+  public String purgeIndexes() {
+    return getIndexApp().purgeIndexes();
   }
 
   public long getEntitiesUpdated() {
-    return getIndexer().getEntitiesUpdated();
+    return getIndexApp().getEntitiesUpdated();
   }
 
   public long getEntitiesDeleted() {
-    return getIndexer().getEntitiesDeleted();
+    return getIndexApp().getEntitiesDeleted();
   }
 
   public long getCollectionsUpdated() {
-    return getIndexer().getCollectionsUpdated();
+    return getIndexApp().getCollectionsUpdated();
   }
 
   public long getCollectionsDeleted() {
-    return getIndexer().getCollectionsDeleted();
+    return getIndexApp().getCollectionsDeleted();
   }
 
   /* ========================================================================
@@ -333,14 +396,14 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
 
   @Override
   public List<String> rebuildStatus() {
-    List<String> res = new ArrayList<String>();
+    List<String> res = new ArrayList<>();
 
     if (crawler == null) {
       outLine(res, "No rebuild appears to have taken place");
       return res;
     }
 
-    List<CrawlStatus> sts = getIndexer().getStatus();
+    List<CrawlStatus> sts = getIndexApp().getStatus();
 
     if (sts != null) {
       for (CrawlStatus st: sts) {
@@ -398,10 +461,6 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     }
 
     running = true;
-
-    info("************************************************************");
-    info(" * Starting indexer");
-    info("************************************************************");
 
     processor = new ProcessorThread(getServiceName());
     processor.start();
@@ -472,13 +531,13 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     res.add(msg + "\n");
   }
 
-  private BwIndexApp getIndexer() {
-    if (indexer != null) {
-      return indexer;
+  private BwIndexApp getIndexApp() {
+    if (indexApp != null) {
+      return indexApp;
     }
 
-    indexer = new BwIndexApp(getConfig());
+    indexApp = new BwIndexApp(getConfig());
 
-    return indexer;
+    return indexApp;
   }
 }

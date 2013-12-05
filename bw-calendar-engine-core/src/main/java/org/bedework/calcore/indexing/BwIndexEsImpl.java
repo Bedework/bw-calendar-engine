@@ -58,6 +58,7 @@ import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequestBuilder;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
 import org.elasticsearch.action.admin.indices.alias.get.IndicesGetAliasesRequestBuilder;
@@ -65,6 +66,8 @@ import org.elasticsearch.action.admin.indices.alias.get.IndicesGetAliasesRespons
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.status.IndicesStatusRequestBuilder;
 import org.elasticsearch.action.admin.indices.status.IndicesStatusResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -79,7 +82,9 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.ClusterAdminClient;
 import org.elasticsearch.client.IndicesAdminClient;
+import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Strings;
@@ -107,6 +112,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import static org.bedework.calcore.indexing.DocBuilder.DocInfo;
 import static org.bedework.calcore.indexing.DocBuilder.TypeId;
@@ -116,7 +122,7 @@ import static org.bedework.calcore.indexing.DocBuilder.TypeId;
  * @author Mike Douglass douglm - rpi.edu
  *
  */
-public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
+public class BwIndexEsImpl implements BwIndexer {
   private transient Logger log;
 
   private boolean debug;
@@ -640,47 +646,85 @@ public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
   }
 
   @Override
-  public List<String> listIndexes() throws CalFacadeException {
-    List<String> res = new ArrayList<>();
+  public Set<IndexInfo> getIndexInfo() throws CalFacadeException {
+    Set<IndexInfo> res = new TreeSet<>();
 
     try {
       IndicesAdminClient idx = getAdminIdx();
 
-      IndicesStatusRequestBuilder isrb= idx.prepareStatus(Strings.EMPTY_ARRAY);
+      IndicesStatusRequestBuilder isrb = idx.prepareStatus(Strings.EMPTY_ARRAY);
 
       ActionFuture<IndicesStatusResponse> sr = idx.status(
               isrb.request());
       IndicesStatusResponse sresp  = sr.actionGet();
 
-      return new ArrayList<>(sresp.getIndices().keySet());
+      for (String inm: sresp.getIndices().keySet()) {
+        IndexInfo ii = new IndexInfo(inm);
+        res.add(ii);
+
+        ClusterStateRequest clusterStateRequest = Requests
+                .clusterStateRequest()
+                .filterRoutingTable(true)
+                .filterNodes(true)
+                .filteredIndices(inm);
+        ii.setAliases(getAdminCluster().state(clusterStateRequest).
+                actionGet().getState().getMetaData().aliases().keySet());
+      }
+
+      return res;
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   @Override
-  public List<String> purgeIndexes(final List<String> preserve) throws CalFacadeException {
-      List<String> indexes = listIndexes();
-      List<String> purged = new ArrayList<>();
+  public List<String> purgeIndexes() throws CalFacadeException {
+    Set<IndexInfo> indexes = getIndexInfo();
+    List<String> purged = new ArrayList<>();
 
-      if (Util.isEmpty(indexes)) {
-        return purged;
+    if (Util.isEmpty(indexes)) {
+      return purged;
+    }
+
+    purge:
+    for (IndexInfo ii: indexes) {
+      String idx = ii.getIndexName();
+
+      if (!idx.startsWith(idxpars.getPublicIndexName()) &&
+              !idx.startsWith(idxpars.getUserIndexName())) {
+        continue;
       }
 
-      for (String idx: indexes) {
-        if (preserve.contains(idx)) {
-          continue;
+      /* Don't delete those pointed to by the current aliases */
+
+      for (String alias: ii.getAliases()) {
+        if (alias.equals(idxpars.getPublicIndexName())) {
+          continue purge;
         }
 
-        unloadIndex(idx);
-
-        purged.add(idx);
+        if (alias.equals(idxpars.getUserIndexName())) {
+          continue purge;
+        }
       }
 
-      return purged;
+      purged.add(idx);
+    }
+
+    deleteIndexes(purged);
+
+    return purged;
   }
 
-  private void unloadIndex(final String name) throws CalFacadeException {
+  private void deleteIndexes(final List<String> names) throws CalFacadeException {
+    try {
+      IndicesAdminClient idx = getAdminIdx();
+      DeleteIndexRequestBuilder dirb = getAdminIdx().prepareDelete(names.toArray(new String[0]));
+
+      ActionFuture<DeleteIndexResponse> dr = idx.delete(dirb.request());
+      DeleteIndexResponse dir  = dr.actionGet();
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
   }
 
   @Override
@@ -1285,6 +1329,10 @@ public class BwIndexEsImpl /*extends CalSvcDb*/ implements BwIndexer {
 
   private IndicesAdminClient getAdminIdx() throws CalFacadeException {
     return getClient().admin().indices();
+  }
+
+  private ClusterAdminClient getAdminCluster() throws CalFacadeException {
+    return getClient().admin().cluster();
   }
 
   private XContentBuilder newBuilder() throws CalFacadeException {

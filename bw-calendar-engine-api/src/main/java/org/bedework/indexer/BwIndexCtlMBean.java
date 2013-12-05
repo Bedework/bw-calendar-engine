@@ -33,66 +33,65 @@ public interface BwIndexCtlMBean extends ConfBaseMBean, IndexProperties {
   /**
    * @return number of messages processed
    */
-  public long getMessageCount();
+  long getMessageCount();
 
   /**
    * @return count processed
    */
-  public long getCollectionsUpdated();
+  long getCollectionsUpdated();
 
   /**
    * @return count processed
    */
-  public long getCollectionsDeleted();
+  long getCollectionsDeleted();
 
   /**
    * @return count processed
    */
-  public long getEntitiesUpdated();
+  long getEntitiesUpdated();
 
   /**
    * @return count processed
    */
-  public long getEntitiesDeleted();
+  long getEntitiesDeleted();
 
   /** Get the current status of the reindexing process
    *
    * @return messages as a list
    */
-  public List<String> rebuildStatus();
+  List<String> rebuildStatus();
 
   /** Crawl the data and create indexes - listener should have been stopped.
    *
    * @return message
    */
-  public String rebuildIndex();
+  String rebuildIndex();
 
   /**
    * @return list of indexes maintained by indexer.
    */
-  public String listIndexes();
+  String listIndexes();
 
-  /* *
+  /**
    * @return list of purged indexes.
-   * @throws Throwable
-   * /
-  public String purgeIndexes(); NOT YET */
+   */
+  String purgeIndexes();
 
   /** Start the indexer
    *
    */
-  public void start();
+  void start();
 
   /** Stop the indexer
    *
    */
-  public void stop();
+  void stop();
 
   /** Lifecycle
    *
    * @return true if started
    */
-  public boolean isStarted();
+  boolean isStarted();
 
   /** (Re)load the configuration
    *
