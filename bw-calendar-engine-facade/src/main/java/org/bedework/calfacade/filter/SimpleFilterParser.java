@@ -31,7 +31,6 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
-import org.bedework.util.misc.Util;
 
 import ietf.params.xml.ns.caldav.TextMatchType;
 import net.fortuna.ical4j.model.DateTime;
@@ -751,50 +750,53 @@ public abstract class SimpleFilterParser {
       return filter;
     }
 
-    if (pi.equals(PropertyInfoIndex.CATUID)) {
-      checkSub(pis, 1);
-      // No match and category - expect list of uids.
-      ArrayList<String> uids = doWordList();
+    if (pi.equals(PropertyInfoIndex.CATEGORIES) &&
+            (pis.size() == 2)) {
+      PropertyInfoIndex subPi = pis.get(1);
 
-      for (String uid: uids) {
-        BwCategory cat = getCategory(uid);
+      if (subPi.equals(PropertyInfoIndex.UID)) {
+        // No match and category - expect list of uids.
+        ArrayList<String> uids = doWordList();
 
-        if (cat == null) {
-          throw new CalFacadeException(CalFacadeException.filterBadProperty,
-                                       "category uid: " + uid);
+        for (String uid: uids) {
+          BwCategory cat = getCategory(uid);
+
+          if (cat == null) {
+            throw new CalFacadeException(CalFacadeException.filterBadProperty,
+                                         "category uid: " + uid);
+          }
+
+          ObjectFilter<BwCategory> f = new BwCategoryFilter(null, pis);
+
+          f.setEntity(cat);
+
+          f.setExact(exact);
+          f.setNot(oper == notEqual);
+
+          filter = and(filter, f);
         }
 
-        ObjectFilter<BwCategory> f = new BwCategoryFilter(null);
-
-        f.setEntity(cat);
-
-        f.setExact(exact);
-        f.setNot(oper == notEqual);
-
-        filter = and(filter, f);
+        return filter;
       }
 
-      return filter;
-    }
+      if (subPi.equals(PropertyInfoIndex.HREF)) {
+        // No match and category - expect list of paths.
+        ArrayList<String> paths = doWordList();
 
-    if (pi.equals(PropertyInfoIndex.CATEGORY_PATH)) {
-      checkSub(pis, 1);
-      // No match and category - expect list of paths.
-      ArrayList<String> paths = doWordList();
+        for (String path: paths) {
+          ObjectFilter<String> f = new ObjectFilter<>(null, pis);
+          f.setEntity(path);
 
-      for (String path: paths) {
-        ObjectFilter<String> f = new ObjectFilter<>(null, pis);
-        f.setEntity(path);
+          f.setCaseless(false);
 
-        f.setCaseless(false);
+          f.setExact(exact);
+          f.setNot(oper == notEqual);
 
-        f.setExact(exact);
-        f.setNot(oper == notEqual);
+          filter = and(filter, f);
+        }
 
-        filter = and(filter, f);
+        return filter;
       }
-
-      return filter;
     }
 
     if (pi.equals(PropertyInfoIndex.COLLECTION) ||
@@ -822,8 +824,9 @@ public abstract class SimpleFilterParser {
       String val = match.getValue();
 
       if (val.startsWith("/")) {
+        pis.add(PropertyInfoIndex.HREF);
         // Assume a path match
-        ObjectFilter<String> f = new ObjectFilter<>(null, pi);
+        ObjectFilter<String> f = new ObjectFilter<>(null, pis);
         f.setEntity(val);
 
         f.setCaseless(false);
@@ -843,7 +846,8 @@ public abstract class SimpleFilterParser {
                                      "category name: " + match.getValue());
       }
 
-      ObjectFilter<BwCategory> f = new BwCategoryFilter(null);
+      pis.add(PropertyInfoIndex.UID);
+      ObjectFilter<BwCategory> f = new BwCategoryFilter(null, pis);
 
       f.setEntity(cat);
 

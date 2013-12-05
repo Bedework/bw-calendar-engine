@@ -9,6 +9,7 @@
       <sourceFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/target/generated-sources/apt" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/target/classes" />
       <excludeFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/target/maven-archiver" />
+      <excludeFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/target/surefire" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
