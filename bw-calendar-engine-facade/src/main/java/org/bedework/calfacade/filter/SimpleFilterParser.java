@@ -558,6 +558,14 @@ public abstract class SimpleFilterParser {
 
       PropertyInfoIndex pi;
 
+      if ((pis.size() == 0) && pnameUc.equals("CATUID")) {
+        // These are stored all over the place.
+
+        pis.add(PropertyInfoIndex.CATEGORIES);
+        pis.add(PropertyInfoIndex.UID);
+        return pis;
+      }
+
       //pi = PropertyInfoIndex.lookupPname(pname);
       pi = PropertyInfoIndex.valueOf(pnameUc);
 

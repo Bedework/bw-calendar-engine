@@ -28,6 +28,7 @@ import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.DescriptionEntity;
 import org.bedework.calfacade.base.Differable;
 import org.bedework.calfacade.base.SummaryEntity;
+import org.bedework.calfacade.base.XpropsEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.BwDateTimeUtil;
 import org.bedework.calfacade.util.CalFacadeUtil;
@@ -67,7 +68,7 @@ import java.util.TreeSet;
 @Dump(elementName="alarm", keyFields={"event"})
 public class BwAlarm extends BwOwnedDbentity<BwAlarm>
         implements AttendeesEntity, DescriptionEntity<BwString>, SummaryEntity,
-                   Differable<BwAlarm>, Serializable {
+                   Differable<BwAlarm>, XpropsEntity, Serializable {
   /** The event or todo this refers to.
    */
   private BwEvent event;
@@ -879,7 +880,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @NoProxy
   @NoDump
   public List<BwXproperty> getXicalProperties(final String val) throws CalFacadeException {
-    List<BwXproperty> res = new ArrayList<BwXproperty>();
+    List<BwXproperty> res = new ArrayList<>();
     List<BwXproperty> xs = getXproperties();
     if (xs == null) {
       return res;

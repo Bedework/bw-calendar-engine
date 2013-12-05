@@ -426,12 +426,12 @@ public class ESQueryFilter {
     }
 
     PropertyFilter pf = (PropertyFilter)f;
-
+/*
     if (pf.getPropertyIndex() == PropertyInfoIndex.CATEGORY_PATH) {
       // Special case this one.
       return new TermOrTerms(PropertyInfoIndex.CATEGORY_PATH.getJname(),
                              ((ObjectFilter)pf).getEntity());
-    }
+    }*/
 
     BwIcalPropertyInfo.BwIcalPropertyInfoEntry pi =
             BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
@@ -482,7 +482,8 @@ public class ESQueryFilter {
 
     if (pf instanceof BwCategoryFilter) {
       BwCategory cat = ((BwCategoryFilter)pf).getEntity();
-      return new TermOrTerms(PropertyInfoIndex.CATUID.getJname(),
+      return new TermOrTerms(PropertyInfoIndex.CATEGORIES.getJname() +
+              "." + PropertyInfoIndex.UID.getJname(),
                              cat.getUid());
     }
 

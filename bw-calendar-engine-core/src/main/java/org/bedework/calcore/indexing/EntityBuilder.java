@@ -676,7 +676,7 @@ public class EntityBuilder  {
   }
 
   private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
-    Collection<Object> vals = getFieldValues(PropertyInfoIndex.CATUID);
+    Collection<Object> vals = getFieldValues(PropertyInfoIndex.CATEGORIES);
     if (Util.isEmpty(vals)) {
       return;
     }
@@ -684,8 +684,13 @@ public class EntityBuilder  {
     Set<String> catUids = new TreeSet<>();
 
     for (Object o: vals) {
-      String uid = (String)o;
-      catUids.add(uid);
+      pushFields(o);
+      try {
+        String uid = getString(PropertyInfoIndex.UID);
+        catUids.add(uid);
+      } finally {
+        fieldStack.pop();
+      }
     }
 
     ce.setCategoryUids(catUids);

@@ -18,6 +18,7 @@
 */
 package org.bedework.calfacade;
 
+import org.bedework.calfacade.BwXproperty.Xpar;
 import org.bedework.calfacade.annotations.CloneForOverride;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
@@ -1316,6 +1317,35 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     for (BwXproperty x: xs) {
       if (x.getName().equals(val)) {
         res.add(x);
+      }
+    }
+
+    return res;
+  }
+
+  /** Find x-properties storing the value of the named ical property
+   *
+   * @param val - name to match
+   * @return list of matching properties - never null
+   *  @throws CalFacadeException
+   */
+  @NoProxy
+  @NoDump
+  public List<BwXproperty> getXicalProperties(final String val) throws CalFacadeException {
+    List<BwXproperty> res = new ArrayList<>();
+    List<BwXproperty> xs = getXproperties();
+    if (xs == null) {
+      return res;
+    }
+
+    for (BwXproperty x: xs) {
+      if (x.getName().equals(BwXproperty.bedeworkIcalProp)) {
+        List<Xpar> xpars = x.getParameters();
+
+        Xpar xp = xpars.get(0);
+        if (xp.getName().equals(val)) {
+          res.add(x);
+        }
       }
     }
 

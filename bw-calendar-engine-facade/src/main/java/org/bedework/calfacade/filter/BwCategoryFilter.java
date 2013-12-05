@@ -23,6 +23,8 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
+import java.util.List;
+
 /** A filter that selects events that have a certain category
  *
  * @author Mike Douglass
@@ -35,6 +37,16 @@ public class BwCategoryFilter extends ObjectFilter<BwCategory> {
    */
   public BwCategoryFilter(final String name) {
     super(name, PropertyInfoIndex.CATEGORIES);
+  }
+
+  /** Match on any of the categories.
+   *
+   * @param name - null one will be created
+   * @param propertyIndexes
+   */
+  public BwCategoryFilter(final String name,
+                          final List<PropertyInfoIndex> propertyIndexes) {
+    super(name, propertyIndexes);
   }
 
   /* ====================================================================

@@ -35,6 +35,7 @@ import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwStringBase;
+import org.bedework.calfacade.base.XpropsEntity;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -83,14 +84,21 @@ public class DocBuilder {
   static Map<String, String> interestingXprops = new HashMap<>();
 
   static {
-    interestingXprops.put(BwXproperty.bedeworkImage, "imageUrl");
-    interestingXprops.put(BwXproperty.bedeworkThumbImage, "thumbImageUrl");
-    interestingXprops.put(BwXproperty.bedeworkAlias, "topicalArea");
+    interestingXprops.put(BwXproperty.bedeworkImage,
+                          PropertyInfoIndex.IMAGE.getJname());
+    interestingXprops.put(BwXproperty.bedeworkThumbImage,
+                          PropertyInfoIndex.THUMBIMAGE.getJname());
+    interestingXprops.put(BwXproperty.bedeworkAlias,
+                          PropertyInfoIndex.TOPICAL_AREA.getJname());
 
-    interestingXprops.put(BwXproperty.bedeworkEventRegMaxTickets, "eventregMaxTickets");
-    interestingXprops.put(BwXproperty.bedeworkEventRegMaxTicketsPerUser, "eventregMaxTicketsPerUser");
-    interestingXprops.put(BwXproperty.bedeworkEventRegStart, "eventregStart");
-    interestingXprops.put(BwXproperty.bedeworkEventRegEnd, "eventregEnd");
+    interestingXprops.put(BwXproperty.bedeworkEventRegMaxTickets,
+                          PropertyInfoIndex.EVENTREG_MAX_TICKETS.getJname());
+    interestingXprops.put(BwXproperty.bedeworkEventRegMaxTicketsPerUser,
+                          PropertyInfoIndex.EVENTREG_MAX_TICKETS_PER_USER.getJname());
+    interestingXprops.put(BwXproperty.bedeworkEventRegStart,
+                          PropertyInfoIndex.EVENTREG_START.getJname());
+    interestingXprops.put(BwXproperty.bedeworkEventRegEnd,
+                          PropertyInfoIndex.EVENTREG_END.getJname());
   }
 
   DocBuilder(final BwPrincipal principal,
@@ -540,7 +548,7 @@ public class DocBuilder {
                 ev.getAttendeeSchedulingObject());
       indexRelatedTo(builder, ev.getRelatedTo());
 
-      indexXprops(builder, ev.getXproperties());
+      indexXprops(builder, ev);
 
       indexReqStat(builder, ev.getRequestStatuses());
       makeField(builder, PropertyInfoIndex.CTOKEN, ev.getCtoken());
@@ -694,40 +702,39 @@ public class DocBuilder {
   }
 
   private void indexXprops(final XContentBuilder builder,
-                           final List<BwXproperty> val) throws CalFacadeException {
+                           final XpropsEntity ent) throws CalFacadeException {
     try {
-      if (Util.isEmpty(val)) {
+      if (Util.isEmpty(ent.getXproperties())) {
         return;
       }
 
-      boolean more = false;
-
       /* First output ones we know about with our own name */
-      for (BwXproperty xp: val) {
-        String nm = interestingXprops.get(xp.getName());
+      for (String nm: interestingXprops.keySet()) {
+        List<BwXproperty> props = ent.getXproperties(nm);
 
-        if (nm == null) {
-          more = true;
+        if (Util.isEmpty(props)) {
           continue;
         }
 
-        String pars = xp.getPars();
-        if (pars == null) {
-          pars = "";
+        builder.startArray(interestingXprops.get(nm));
+
+        for (BwXproperty xp: props) {
+          String pars = xp.getPars();
+          if (pars == null) {
+            pars = "";
+          }
+
+          builder.value(pars + "\t" + xp.getValue());
         }
 
-        builder.field(nm, pars + "\t" + xp.getValue());
-      }
-
-      if (!more) {
-        return;
+        builder.endArray();
       }
 
       /* Now ones we don't know or care about */
 
       builder.startArray(PropertyInfoIndex.XPROP.getJname());
 
-      for (BwXproperty xp: val) {
+      for (BwXproperty xp: ent.getXproperties()) {
         String nm = interestingXprops.get(xp.getName());
 
         if (nm != null) {
@@ -851,7 +858,7 @@ public class DocBuilder {
           makeField(builder, PropertyInfoIndex.DESCRIPTION, al.getDescription());
         }
 
-        indexXprops(builder, al.getXproperties());
+        indexXprops(builder, al);
 
         builder.endObject();
       }
@@ -1240,14 +1247,28 @@ public class DocBuilder {
       return;
     }
 
-    for (BwCategory cat: cats) {
-      setColPath(cat);
-      makeField(builder, PropertyInfoIndex.CATEGORIES, cat.getWord());
-      makeField(builder, PropertyInfoIndex.CATUID, cat.getUid());
-      makeField(builder, PropertyInfoIndex.CATEGORY_PATH,
-                Util.buildPath(false,
-                               cat.getColPath(),
-                               cat.getName()));
+    try {
+      builder.startArray(PropertyInfoIndex.CATEGORIES.getJname());
+
+      for (BwCategory cat: cats) {
+        builder.startObject();
+
+        setColPath(cat);
+        makeField(builder, PropertyInfoIndex.UID, cat.getUid());
+        makeField(builder, PropertyInfoIndex.HREF,
+                  Util.buildPath(false,
+                                 cat.getColPath(),
+                                 cat.getName()));
+        builder.startArray(PropertyInfoIndex.VALUE.getJname());
+        // Eventually may be more of these
+        makeField(builder, null, cat.getWord());
+        builder.endArray();
+        builder.endObject();
+      }
+
+      builder.endArray();
+    } catch (IOException e) {
+      throw new CalFacadeException(e);
     }
   }
 
