@@ -22,8 +22,7 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.Contacts;
-
-import edu.rpi.sss.util.FlushMap;
+import org.bedework.util.caching.FlushMap;
 
 import java.util.Collection;
 

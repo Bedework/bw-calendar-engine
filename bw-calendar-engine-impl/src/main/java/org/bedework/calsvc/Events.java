@@ -976,7 +976,7 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       if (ev.getLocationUid() != null) {
-        ev.setLocation(locs.getCached(ev.getLocationUid()));
+        ev.setLocation(locs.get(ev.getLocationUid()));
       }
     }
   }
@@ -1030,7 +1030,7 @@ class Events extends CalSvcDb implements EventsI {
     }
 
     if (ev.getLocationUid() != null) {
-      ev.setLocation(locs.getCached(ev.getLocationUid()));
+      ev.setLocation(locs.get(ev.getLocationUid()));
     }
   }
 

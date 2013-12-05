@@ -18,12 +18,11 @@
 */
 package org.bedework.calsvc;
 
-iimport org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.Categories;
 import org.bedework.util.caching.FlushMap;
-import org.bedework.util.misc.Util;
 
 import java.util.Collection;
 

@@ -73,7 +73,6 @@ import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.Categories;
 import org.bedework.calsvci.Contacts;
 import org.bedework.calsvci.DumpIntf;
-import org.bedework.calsvci.EventProperties;
 import org.bedework.calsvci.EventsI;
 import org.bedework.calsvci.FiltersI;
 import org.bedework.calsvci.Locations;
@@ -1515,8 +1514,8 @@ public class CalSvc extends CalSvcI {
 
     @Override
     public BwContact findContact(final BwString val) throws CalFacadeException {
-      return getContactsHandler().find(val,
-                                                   getOwner().getPrincipalRef());
+      return getContactsHandler().findPersistent(val, getOwner()
+              .getPrincipalRef());
     }
 
     @Override

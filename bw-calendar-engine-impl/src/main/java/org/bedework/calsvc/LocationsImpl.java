@@ -22,8 +22,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.Locations;
-
-import edu.rpi.sss.util.FlushMap;
+import org.bedework.util.caching.FlushMap;
 
 import java.util.Collection;
 
