@@ -61,8 +61,10 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
     this.intf = intf;
     this.rsrc = rsrc;
 
-    rsrc.setPrevLastmod(rsrc.getPrevLastmod());
-    rsrc.setPrevSeq(rsrc.getPrevSeq());
+    if (rsrc != null) {
+      rsrc.setPrevLastmod(rsrc.getPrevLastmod());
+      rsrc.setPrevSeq(rsrc.getPrevSeq());
+    }
   }
 
   /* ====================================================================
