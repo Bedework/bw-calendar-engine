@@ -45,6 +45,7 @@ import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.BaseFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.NotFilterBuilder;
 import org.elasticsearch.index.query.OrFilterBuilder;
 import org.elasticsearch.index.query.RangeFilterBuilder;
 import org.elasticsearch.index.query.TermsFilterBuilder;
@@ -296,6 +297,7 @@ public class ESQueryFilter {
     Object value;
     private String exec;
     boolean isTerms;
+    boolean not;
 
     /* If true we don't merge this term with other terms. This might
      * help with the expansion of views which we would expect to turn
@@ -304,9 +306,11 @@ public class ESQueryFilter {
     boolean dontMerge;
 
     TermOrTerms(final String fldName,
-                final Object value) {
+                final Object value,
+                final boolean not) {
       this.fldName = fldName;
       this.value = value;
+      this.not = not;
     }
 
     TermOrTerms anding(final boolean anding) {
@@ -320,12 +324,19 @@ public class ESQueryFilter {
     }
 
     FilterBuilder makeFb() {
+      FilterBuilder fb;
       if (!isTerms) {
-        return FilterBuilders.termFilter(fldName, value);
+        fb = FilterBuilders.termFilter(fldName, value);
+      } else {
+        fb = FilterBuilders.termsFilter(fldName,
+                                        (Iterable <?>)value).execution(exec);
       }
 
-      return FilterBuilders.termsFilter(fldName,
-                                        (Iterable <?>)value).execution(exec);
+      if (!not) {
+        return fb;
+      }
+
+      return new NotFilterBuilder(fb);
     }
 
     void addValue(final Object val) {
@@ -384,8 +395,9 @@ public class ESQueryFilter {
         /* Can we combine them? */
         TermOrTerms thisFb = (TermOrTerms)fb;
 
-        if (!thisFb.dontMerge &&
-                !lastFb.fldName.equals(thisFb.fldName)) {
+        if (thisFb.dontMerge ||
+                !lastFb.fldName.equals(thisFb.fldName) ||
+                (lastFb.not != thisFb.not)) {
           fbs.add(lastFb);
           lastFb = thisFb;
         } else {
@@ -521,7 +533,8 @@ public class ESQueryFilter {
 
     if (pf instanceof BwCreatorFilter) {
       return new TermOrTerms("creator",
-                             ((BwCreatorFilter)pf).getEntity());
+                             ((BwCreatorFilter)pf).getEntity(),
+                             pf.getNot());
     }
 
     /*
@@ -536,14 +549,16 @@ public class ESQueryFilter {
       BwCalendar col = ((BwCollectionFilter)pf).getEntity();
 
       return new TermOrTerms(PropertyInfoIndex.COLPATH.getJname(),
-                             col.getPath());
+                             col.getPath(),
+                             pf.getNot());
     }
 
     if (pf instanceof EntityTypeFilter) {
       EntityTypeFilter etf = (EntityTypeFilter)pf;
 
       return new TermOrTerms("_type",
-                             IcalDefs.entityTypeNames[etf.getEntity()]);
+                             IcalDefs.entityTypeNames[etf.getEntity()],
+                             pf.getNot());
     }
 
     if (pf instanceof ObjectFilter) {
@@ -580,9 +595,6 @@ public class ESQueryFilter {
     }
 
     Object o = of.getEntity();
-    Collection c = null;
-
-    boolean doCaseless = false;
 
     if (o instanceof BwCalendar) {
       if (!of.getNot()) {
@@ -591,15 +603,22 @@ public class ESQueryFilter {
     }
 
     Object val = getValue(of);
+    FilterBuilder fb;
 
     if (val instanceof Collection) {
       TermsFilterBuilder tfb = FilterBuilders.termsFilter(dbfld, (Collection)val);
       tfb.execution("or");
 
-      return tfb;
+      fb = tfb;
+    } else {
+      fb = FilterBuilders.termFilter(dbfld, val);
     }
 
-    return FilterBuilders.termFilter(dbfld, val);
+    if (!of.getNot()) {
+      return fb;
+    }
+
+    return new NotFilterBuilder(fb);
   }
 
   private Object getValue(final ObjectFilter of) throws CalFacadeException {
