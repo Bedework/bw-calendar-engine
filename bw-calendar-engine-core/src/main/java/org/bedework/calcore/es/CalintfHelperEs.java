@@ -18,6 +18,8 @@
 */
 package org.bedework.calcore.es;
 
+import org.bedework.access.Acl;
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.CalintfHelper;
 import org.bedework.calcore.indexing.BwIndexEsImpl;
 import org.bedework.calcore.indexing.ESQueryFilter;
@@ -29,9 +31,6 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.sysevents.events.SysEvent;
-
-import edu.rpi.cmt.access.Acl;
-import edu.rpi.cmt.access.PrivilegeDefs;
 
 import java.io.Serializable;
 import java.sql.Timestamp;

@@ -18,6 +18,8 @@
 */
 package org.bedework.calcore;
 
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.hibernate.Filters;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
@@ -50,8 +52,8 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
-
-import org.bedework.access.PrivilegeDefs;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
 
@@ -439,7 +441,8 @@ public abstract class CalintfHelper
                                                 getHref(val),
                                                 shared,
                                                 val.getPublick(),
-                                                IcalDefs.fromEntityType(val.getEntityType()),
+                                                IcalDefs.fromEntityType(
+                                                        val.getEntityType()),
                                                 val.getUid(),
                                                 val.getRecurrenceId(),
                                                 note,

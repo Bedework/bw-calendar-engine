@@ -304,7 +304,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
      */
 
     EventsQueryResult eqr = new EventsQueryResult();
-    eqr.flt = new Filters(getCalintfCb(), null);
+    eqr.flt = new Filters(null);
     eqr.addColPath(colPath);
 
     for (CoreEventInfo cei: ceis) {
@@ -453,7 +453,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     }
 
     EventsQueryResult eqr = new EventsQueryResult();
-    eqr.flt = new Filters(getCalintfCb(), filter);
+    eqr.flt = new Filters(filter);
     eqr.colPaths = colPaths;
 
     eventsQuery(eqr, startDate, endDate,

@@ -18,11 +18,11 @@
 */
 package org.bedework.calcore.es;
 
+import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.calcore.AccessUtil;
 import org.bedework.calcore.FieldNamesEntry;
 import org.bedework.calcore.FieldNamesMap;
 import org.bedework.calcore.FieldNamesMap.FieldnamesList;
-import org.bedework.calcore.hibernate.CalintfHelperHib.CalintfHelperHibCb;
 import org.bedework.calcore.hibernate.EventQueryBuilder;
 import org.bedework.calcore.hibernate.EventQueryBuilder.EventsQueryResult;
 import org.bedework.calcore.hibernate.Filters;
@@ -35,14 +35,12 @@ import org.bedework.caldav.util.filter.OrFilter;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCalendar.CollectionInfo;
-import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwRecurrenceInstance;
-import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
@@ -63,11 +61,9 @@ import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.sysevents.events.StatsEvent;
 import org.bedework.sysevents.events.SysEvent;
-
-import edu.rpi.cmt.access.Acl.CurrentAccess;
-import edu.rpi.cmt.calendar.IcalDefs;
-import edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
-import edu.rpi.sss.util.Util;
+import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
@@ -75,7 +71,6 @@ import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.TimeZone;
 
 import java.lang.reflect.Method;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -493,54 +488,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
 
     EventsQueryResult eqr = new EventsQueryResult();
 //    eqr.flt = new Filters(getCalintfCb(), filter);
-    eqr.flt = new Filters(new CalintfHelperHibCb() {
-      @Override
-      public HibSession getSess() throws CalFacadeException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-      }
-
-      @Override
-      public Timestamp getCurrentTimestamp()
-              throws CalFacadeException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-      }
-
-      @Override
-      public BwStats getStats() throws CalFacadeException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-      }
-
-      @Override
-      public BwCalendar getCollection(final String path)
-              throws CalFacadeException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-      }
-
-      @Override
-      public BwCategory getCategory(final String uid)
-              throws CalFacadeException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-      }
-
-      @Override
-      public BwCalendar getCollection(final String path,
-                                      final int desiredAccess,
-                                      final boolean alwaysReturn)
-              throws CalFacadeException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-      }
-
-      @Override
-      public void postNotification(final SysEvent ev)
-              throws CalFacadeException {
-        //To change body of implemented methods use File | Settings | File Templates.
-      }
-
-      @Override
-      public boolean getForRestore() {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
-      }
-    }, filter);
+    eqr.flt = new Filters(filter);
     eqr.colPaths = colPaths;
 
     eventsQuery(eqr, startDate, endDate,
@@ -2879,7 +2827,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
         CoreEventInfo vavail = vavails.get(ev.getUid());
 
         if (vavail != null) {
-          vavail.addAvailable(cei);
+          vavail.addContainedItem(cei);
         } else {
           unclaimed.add(cei);
         }
@@ -2901,7 +2849,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
       CoreEventInfo vavail = vavails.get(cei.getEvent().getUid());
 
       if (vavail != null) {
-        vavail.addAvailable(cei);
+        vavail.addContainedItem(cei);
         continue;
       }
 
