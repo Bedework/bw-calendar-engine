@@ -204,16 +204,6 @@ public interface EventsI extends Serializable {
    */
   void markDeleted(BwEvent event) throws CalFacadeException;
 
-  /** Return calendars which contain guid and recurrence id
-   *
-   * @param guid
-   * @param rid
-   * @return containing calendars
-   * @throws CalFacadeException
-   */
-  public Collection<BwCalendar> findCalendars(String guid,
-                                              String rid) throws CalFacadeException;
-
   /** Result from copy or move operations. */
   public static enum CopyMoveStatus {
     /** */

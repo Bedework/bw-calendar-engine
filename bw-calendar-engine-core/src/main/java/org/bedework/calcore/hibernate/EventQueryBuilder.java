@@ -20,7 +20,6 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calcore.FieldNamesEntry;
 import org.bedework.calcore.FieldNamesMap.FieldnamesList;
-import org.bedework.calcore.hibernate.CoreEvents.EventsQueryResult;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwDateTime;
@@ -30,6 +29,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -39,9 +39,9 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
   private StringBuilder sb = new StringBuilder();
   private HibSession sess;
 
-  void fields(final FieldnamesList retrieveListFields,
-              final String name,
-              final boolean isAnnotation) {
+  public void fields(final FieldnamesList retrieveListFields,
+                     final String name,
+                     final boolean isAnnotation) {
     if (Util.isEmpty(retrieveListFields)) {
       sb.append(name);
       sb.append(" ");
@@ -83,21 +83,21 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
     sb.append(" ");
   }
 
-  void from() {
+  public void from() {
     sb.append("from ");
   }
 
-  void addClass(final Class cl, final String name) {
+  public void addClass(final Class cl, final String name) {
     sb.append(cl.getName());
     sb.append(" ");
     sb.append(name);
   }
 
-  void where() {
+  public void where() {
     sb.append(" where ");
   }
 
-  void and() {
+  public void and() {
     if (sb.length() == 0) {
       return;
     }
@@ -105,7 +105,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
     sb.append(" and ");
   }
 
-  void paren(final Object val) {
+  public void paren(final Object val) {
     append("(");
     sb.append(val);
     append(")");
@@ -127,10 +127,10 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
    *
    * @return boolean true if we appended something
    */
-  boolean appendDateTerms(final String evname,
-                          final BwDateTime from, final BwDateTime to,
-                          final boolean withAnd,
-                          final boolean instances) {
+  public boolean appendDateTerms(final String evname,
+                                 final BwDateTime from, final BwDateTime to,
+                                 final boolean withAnd,
+                                 final boolean instances) {
     if ((from == null) && (to == null)) {
       return false;
     }
@@ -155,7 +155,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
     return true;
   }
 
-  void append(final Object val) {
+  public void append(final Object val) {
     sb.append(val);
   }
 
@@ -173,9 +173,9 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
    * @return boolean  true if we need to set the :user term
    * @throws CalFacadeException
    */
-  boolean appendPublicOrOwnerTerm(final String entName,
-                                  final int currentMode,
-                                  final boolean ignoreCreator)
+  public boolean appendPublicOrOwnerTerm(final String entName,
+                                         final int currentMode,
+                                         final boolean ignoreCreator)
             throws CalFacadeException {
     boolean publicEvents = (currentMode == guestMode) ||
                            (currentMode == publicAdminMode);
@@ -295,20 +295,20 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
      */
   }
 
-  void emitCalendarClause(final String qevName,
+  public void emitCalendarClause(final String qevName,
                           final Collection<String> colPaths) {
     sb.append("(");
     sb.append(qevName);
     sb.append(".colPath in (:colPaths))");
   }
 
-  void createQuery(final HibSession sess) throws CalFacadeException {
+  public void createQuery(final HibSession sess) throws CalFacadeException {
     this.sess = sess;
 
     sess.createQuery(sb.toString());
   }
 
-  void setDateTermValues(final BwDateTime startDate,
+  public void setDateTermValues(final BwDateTime startDate,
                          final BwDateTime endDate) throws CalFacadeException {
     if (startDate != null) {
       sess.setString("fromDate", startDate.getDate());
@@ -342,9 +342,48 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
     throw new RuntimeException("Bad date " + dt);
   }
 
-  void doCalendarEntities(final boolean setUser,
-                          final BwPrincipal pr,
-                          final EventsQueryResult eqr)
+  public static class EventsQueryResult {
+    /* BwEvent or event instances. */
+    public Collection es;
+    public Filters flt;
+
+    /* Calendar clause fields */
+    public boolean empty;
+
+    /* Set true to suppress filtering. Will be set false. */
+    public boolean suppressFilter;
+
+    /* This is set to the calendars we should search. */
+    public Collection<String> colPaths;
+
+    /* This is any hrefs we should retrieve - for a multiget or an event list. */
+    public Collection<String> hrefs;
+
+    public void reset() {
+      es = null;
+      empty = true;
+    }
+
+    public void addColPath(final String val) {
+      if (colPaths == null) {
+        colPaths = new ArrayList<String>();
+      }
+
+      colPaths.add(val);
+    }
+
+    void addHref(final String val) {
+      if (hrefs == null) {
+        hrefs = new ArrayList<String>();
+      }
+
+      hrefs.add(val);
+    }
+  }
+
+  public void doCalendarEntities(final boolean setUser,
+                                 final BwPrincipal pr,
+                                 final EventsQueryResult eqr)
           throws CalFacadeException {
     if (setUser) {
       sess.setString("userHref", pr.getPrincipalRef());

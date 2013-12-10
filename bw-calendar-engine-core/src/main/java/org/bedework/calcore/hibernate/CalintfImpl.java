@@ -266,6 +266,19 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     }
 
     @Override
+    public BwCategory getCategory(String uid) throws CalFacadeException {
+      try {
+        return intf.categoriesHandler.get(uid);
+      } catch (Throwable t) {
+        if (t instanceof CalFacadeException) {
+          throw (CalFacadeException)t;
+        }
+
+        throw new CalFacadeException(t);
+      }
+    }
+
+    @Override
     public BwCalendar getCollection(final String path,
                                     final int desiredAccess,
                                     final boolean alwaysReturn) throws CalFacadeException {
@@ -1093,22 +1106,6 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
           throws CalFacadeException {
     checkOpen();
     return events.getEvent(colPath, val, recurRetrieval);
-  }
-
-  @Override
-  public Collection<BwCalendar> findCalendars(final String guid,
-                                              final String rid) throws CalFacadeException {
-    checkOpen();
-    return events.findCalendars(guid, rid);
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.EventsI#getDeletedProxies(org.bedework.calfacade.BwCalendar)
-   */
-  @Override
-  public Collection<CoreEventInfo> getDeletedProxies(final BwCalendar cal)
-          throws CalFacadeException {
-    return events.getDeletedProxies(cal);
   }
 
   /* ====================================================================

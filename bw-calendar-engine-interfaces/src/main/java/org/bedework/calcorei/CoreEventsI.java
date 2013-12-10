@@ -36,22 +36,13 @@ import java.util.Set;
 /** This is the events section of the low level interface to the calendar
  * database.
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm  rpi.edu
  */
 public interface CoreEventsI extends Serializable {
 
   /* ====================================================================
    *                   Events
    * ==================================================================== */
-
-  /** Return calendars which contain
-   * @param guid
-   * @param rid
-   * @return Collection of calendar objects.
-   * @throws CalFacadeException
-   */
-  public Collection<BwCalendar> findCalendars(String guid,
-                                              String rid) throws CalFacadeException;
 
   /** Return one or more events using the calendar, guid and optionally a
    * recurrence-id as a key.
@@ -270,17 +261,6 @@ public interface CoreEventsI extends Serializable {
   public void moveEvent(BwEvent val,
                         BwCalendar from,
                         BwCalendar to) throws CalFacadeException;
-
-  /** XXX temp I think
-   * Retrieve event proxies in the given calendar - they will be used to remove events
-   * from result sets.
-   *
-   * @param cal     BwCalendar object restricting search or null.
-   * @return Collection of CoreEventInfo objects
-   * @throws CalFacadeException
-   */
-  public Collection<CoreEventInfo> getDeletedProxies(BwCalendar cal)
-          throws CalFacadeException;
 
   /** This represents an internal key to an event.
    *

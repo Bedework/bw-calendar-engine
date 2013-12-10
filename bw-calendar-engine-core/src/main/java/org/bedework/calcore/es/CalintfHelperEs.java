@@ -16,47 +16,51 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.es;
 
 import org.bedework.calcore.CalintfHelper;
+import org.bedework.calcore.indexing.BwIndexEsImpl;
+import org.bedework.calcore.indexing.ESQueryFilter;
 import org.bedework.calcorei.CalintfDefs;
-import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwStats;
+import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.sysevents.events.SysEvent;
 
-import org.bedework.access.PrivilegeDefs;
+import edu.rpi.cmt.access.Acl;
+import edu.rpi.cmt.access.PrivilegeDefs;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
 
 /** Class used as basis for a number of helper classes.
  *
- * @author Mike Douglass   douglm  rpi.edu
+ * @author Mike Douglass   douglm@rpi.edu
  */
-public abstract class CalintfHelperHib extends CalintfHelper
+public abstract class CalintfHelperEs extends CalintfHelper
           implements CalintfDefs, PrivilegeDefs, Serializable {
   /**
    */
-  public interface CalintfHelperHibCb extends Serializable {
+  public interface CalintfHelperEsCb extends Serializable {
     /**
-     * @return HibSession
+     * @return BwIndexer
      * @throws CalFacadeException
      */
-    public HibSession getSess() throws CalFacadeException;
+    public BwIndexer getIndexer() throws CalFacadeException;
 
     /** Only valid during a transaction.
      *
      * @return a timestamp from the db
-     * @throws CalFacadeException
+     * @throws org.bedework.calfacade.exc.CalFacadeException
      */
     public Timestamp getCurrentTimestamp() throws CalFacadeException;
 
     /**
      * @return BwStats
-     * @throws CalFacadeException
+     * @throws org.bedework.calfacade.exc.CalFacadeException
      */
     public BwStats getStats() throws CalFacadeException;
 
@@ -64,7 +68,7 @@ public abstract class CalintfHelperHib extends CalintfHelper
      *
      * @param path
      * @return BwCalendar
-     * @throws CalFacadeException
+     * @throws org.bedework.calfacade.exc.CalFacadeException
      */
     public BwCalendar getCollection(String path) throws CalFacadeException;
 
@@ -72,7 +76,7 @@ public abstract class CalintfHelperHib extends CalintfHelper
      *
      * @param uid
      * @return BwCategory
-     * @throws CalFacadeException
+     * @throws org.bedework.calfacade.exc.CalFacadeException
      */
     public BwCategory getCategory(String uid) throws CalFacadeException;
 
@@ -82,7 +86,7 @@ public abstract class CalintfHelperHib extends CalintfHelper
      * @param desiredAccess
      * @param alwaysReturn
      * @return BwCalendar
-     * @throws CalFacadeException
+     * @throws org.bedework.calfacade.exc.CalFacadeException
      */
     public BwCalendar getCollection(String path,
                                     int desiredAccess,
@@ -93,7 +97,7 @@ public abstract class CalintfHelperHib extends CalintfHelper
      * should only receive notifications when the actual data has been written.
      *
      * @param ev
-     * @throws CalFacadeException
+     * @throws org.bedework.calfacade.exc.CalFacadeException
      */
     public void postNotification(final SysEvent ev) throws CalFacadeException;
 
@@ -103,7 +107,19 @@ public abstract class CalintfHelperHib extends CalintfHelper
     public boolean getForRestore();
   }
 
-  private CalintfHelperHibCb calintfCb;
+  protected class AccessChecker implements BwIndexer.AccessChecker {
+    @Override
+    public Acl.CurrentAccess checkAccess(final BwShareableDbentity ent,
+                                         final int desiredAccess,
+                                         final boolean returnResult)
+            throws CalFacadeException {
+      return access.checkAccess(ent, desiredAccess, returnResult);
+    }
+  }
+
+  private CalintfHelperEsCb calintfCb;
+
+  private AccessChecker ac =new AccessChecker();
 
   protected BwCalendar getCollection(String path,
                                      int desiredAccess,
@@ -115,22 +131,30 @@ public abstract class CalintfHelperHib extends CalintfHelper
   /**
    * @param calintfCb
    */
-  public CalintfHelperHib(final CalintfHelperHibCb calintfCb) {
+  public CalintfHelperEs(final CalintfHelperEsCb calintfCb) {
     this.calintfCb = calintfCb;
   }
 
-  protected HibSession getSess() throws CalFacadeException {
-    return calintfCb.getSess();
+  protected BwIndexer getIndexer() throws CalFacadeException {
+    return calintfCb.getIndexer();
   }
 
-  protected CalintfHelperHibCb getCalintfCb() throws CalFacadeException {
+  protected AccessChecker getAccessChecker() throws CalFacadeException {
+    return ac;
+  }
+
+  protected ESQueryFilter getFilters() throws CalFacadeException {
+    return ((BwIndexEsImpl)getIndexer()).getFilters();
+  }
+
+  protected CalintfHelperEsCb getCalintfCb() throws CalFacadeException {
     return calintfCb;
   }
 
   /** Only valid during a transaction.
    *
    * @return a timestamp from the db
-   * @throws CalFacadeException
+   * @throws org.bedework.calfacade.exc.CalFacadeException
    */
   public Timestamp getCurrentTimestamp() throws CalFacadeException {
     return calintfCb.getCurrentTimestamp();
@@ -149,40 +173,25 @@ public abstract class CalintfHelperHib extends CalintfHelper
    * should only receive notifications when the actual data has been written.
    *
    * @param ev
-   * @throws CalFacadeException
+   * @throws org.bedework.calfacade.exc.CalFacadeException
    */
   public void postNotification(final SysEvent ev) throws CalFacadeException {
     calintfCb.postNotification(ev);
   }
 
-  /** Just encapsulate building a query out of a number of parts
-   *
-   * @param parts
-   * @throws CalFacadeException
-   */
-  public void makeQuery(final String[] parts) throws CalFacadeException {
-    StringBuilder sb = new StringBuilder();
-
-    for (String s: parts) {
-      sb.append(s);
-    }
-
-    getSess().createQuery(sb.toString());
-  }
-
   @Override
   protected void throwException(final CalFacadeException cfe) throws CalFacadeException {
-    getSess().rollback();
+    //getSess().rollback();
     throw cfe;
   }
 
   protected void throwException(final String pname) throws CalFacadeException {
-    getSess().rollback();
+    //getSess().rollback();
     throw new CalFacadeException(pname);
   }
 
   protected void throwException(final String pname, final String extra) throws CalFacadeException {
-    getSess().rollback();
+    //getSess().rollback();
     throw new CalFacadeException(pname, extra);
   }
 }

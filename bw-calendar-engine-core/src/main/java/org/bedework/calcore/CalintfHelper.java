@@ -18,24 +18,49 @@
 */
 package org.bedework.calcore;
 
+import org.bedework.calcore.hibernate.Filters;
 import org.bedework.calcorei.CalintfDefs;
+import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwEventAnnotation;
+import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.base.AlarmsEntity;
+import org.bedework.calfacade.base.AttachmentsEntity;
+import org.bedework.calfacade.base.AttendeesEntity;
+import org.bedework.calfacade.base.BwShareableContainedDbentity;
+import org.bedework.calfacade.base.CategorisedEntity;
+import org.bedework.calfacade.base.CommentedEntity;
+import org.bedework.calfacade.base.ContactedEntity;
+import org.bedework.calfacade.base.DescriptionEntity;
+import org.bedework.calfacade.base.PropertiesEntity;
+import org.bedework.calfacade.base.RecurrenceEntity;
+import org.bedework.calfacade.base.ResourcedEntity;
+import org.bedework.calfacade.base.SummaryEntity;
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessUtilI;
+import org.bedework.calfacade.util.NotificationsInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calsvci.CalSvcFactoryDefault;
+import org.bedework.sysevents.NotificationException;
+import org.bedework.sysevents.events.SysEvent;
 
 import org.bedework.access.PrivilegeDefs;
 
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 /** Class used as basis for a number of helper classes.
  *
- * @author Mike Douglass   douglm  bedework.edu
+ * @author Mike Douglass   douglm  rpi.edu
  */
 public abstract class CalintfHelper
         implements CalintfDefs, PrivilegeDefs, Serializable {
@@ -74,6 +99,10 @@ public abstract class CalintfHelper
 
   protected boolean sessionless;
 
+  public SystemProperties sysprops;
+
+  public AuthProperties authprops;
+
   /** Initialize
    *
    * @param cb
@@ -104,6 +133,24 @@ public abstract class CalintfHelper
    * @throws CalFacadeException
    */
   public abstract void endTransaction() throws CalFacadeException;
+
+  protected abstract void throwException(final CalFacadeException cfe)
+          throws CalFacadeException;
+
+  public abstract void postNotification(final SysEvent ev)
+          throws CalFacadeException;
+
+  /** Used to fetch a calendar from the cache
+   *
+   * @param path
+   * @param desiredAccess
+   * @param alwaysReturn
+   * @return BwCalendar
+   * @throws org.bedework.calfacade.exc.CalFacadeException
+   */
+  protected abstract BwCalendar getCollection(String path,
+                                              int desiredAccess,
+                                              boolean alwaysReturn) throws CalFacadeException;
 
   protected BasicSystemProperties getSyspars() throws CalFacadeException {
     return cb.getSyspars();
@@ -170,6 +217,336 @@ public abstract class CalintfHelper
     }
 
     return ((CalendarWrapper)val).fetchEntity();
+  }
+
+  protected BwCalendar getEntityCollection(final String path,
+                                           final int nonSchedAccess,
+                                           final boolean scheduling,
+                                           final boolean alwaysReturn) throws CalFacadeException {
+    int desiredAccess;
+
+    if (!scheduling) {
+      desiredAccess = nonSchedAccess;
+    } else {
+      desiredAccess = privAny;
+    }
+
+    BwCalendar cal = getCollection(path, desiredAccess,
+                                   alwaysReturn | scheduling);
+    if (cal == null) {
+      return cal;
+    }
+
+    if (!cal.getCalendarCollection()) {
+      throwException(new CalFacadeAccessException());
+    }
+
+    if (!scheduling) {
+      return cal;
+    }
+
+    CurrentAccess ca;
+
+    if (cal.getCalType() == BwCalendar.calTypeInbox) {
+      ca = access.checkAccess(cal, privScheduleDeliver, true);
+      if (!ca.getAccessAllowed()) {
+        // try old style
+        ca = access.checkAccess(cal, privScheduleRequest, alwaysReturn);
+      }
+    } else if (cal.getCalType() == BwCalendar.calTypeOutbox) {
+      ca = access.checkAccess(cal, privScheduleSend, true);
+      if (!ca.getAccessAllowed()) {
+        // try old style
+        ca = access.checkAccess(cal, privScheduleReply, alwaysReturn);
+      }
+    } else {
+      throw new CalFacadeAccessException();
+    }
+
+    if (!ca.getAccessAllowed()) {
+      return null;
+    }
+
+    return cal;
+  }
+
+  protected void tombstoneEntity(final BwShareableContainedDbentity val) {
+    if (val instanceof AlarmsEntity) {
+      clearCollection(((AlarmsEntity)val).getAlarms());
+    }
+
+    if (val instanceof AttachmentsEntity) {
+      clearCollection(((AttachmentsEntity)val).getAttachments());
+    }
+
+    if (val instanceof AttendeesEntity) {
+      clearCollection(((AttendeesEntity)val).getAttendees());
+    }
+
+    if (val instanceof CategorisedEntity) {
+      clearCollection(((CategorisedEntity)val).getCategories());
+    }
+
+    if (val instanceof CommentedEntity) {
+      clearCollection(((CommentedEntity)val).getComments());
+    }
+
+    if (val instanceof ContactedEntity) {
+      clearCollection(((ContactedEntity)val).getContacts());
+    }
+
+    if (val instanceof DescriptionEntity) {
+      clearCollection(((DescriptionEntity)val).getDescriptions());
+    }
+
+    if (val instanceof RecurrenceEntity) {
+      RecurrenceEntity re = (RecurrenceEntity)val;
+
+      re.setRecurring(false);
+      clearCollection(re.getExdates());
+      clearCollection(re.getExrules());
+      clearCollection(re.getRdates());
+      clearCollection(re.getRrules());
+    }
+
+    if (val instanceof ResourcedEntity) {
+      clearCollection(((ResourcedEntity)val).getResources());
+    }
+
+    if (val instanceof SummaryEntity) {
+      clearCollection(((SummaryEntity)val).getSummaries());
+    }
+
+    if (val instanceof PropertiesEntity) {
+      clearCollection(((PropertiesEntity)val).getProperties());
+    }
+  }
+
+  protected void clearCollection(final Collection val) {
+    if (val == null) {
+      return;
+    }
+
+    val.clear();
+  }
+
+  protected String fixPath(final String path) {
+    if (path.length() <= 1) {
+      return path;
+    }
+
+    if (path.endsWith("/")) {
+      return path.substring(0, path.length() - 1);
+    }
+
+    return path;
+  }
+
+  /* Post processing of event. Return null or throw exception for no access
+   */
+  protected CoreEventInfo postGetEvent(final BwEvent ev,
+                                       final int desiredAccess,
+                                       final boolean nullForNoAccess,
+                                       final Filters f) throws CalFacadeException {
+    if (ev == null) {
+      return null;
+    }
+
+    CurrentAccess ca = access.checkAccess(ev, desiredAccess, nullForNoAccess);
+
+    if (!ca.getAccessAllowed()) {
+      return null;
+    }
+
+    /* XXX-ALARM
+    if (currentMode == userMode) {
+      ev.setAlarms(getAlarms(ev, user));
+    }
+    */
+
+    BwEvent event;
+
+    if (ev instanceof BwEventAnnotation) {
+      event = new BwEventProxy((BwEventAnnotation)ev);
+
+      if ((f != null) && !f.postFilter(ev, currentPrincipal())) {
+        return null;
+      }
+    } else {
+      event = ev;
+    }
+
+    CoreEventInfo cei = new CoreEventInfo(ev, ca);
+
+    return cei;
+  }
+
+  protected AuthProperties getAuthprops() throws CalFacadeException {
+    if (authprops == null) {
+      authprops = new CalSvcFactoryDefault().getSystemConfig().getAuthProperties(currentMode == guestMode);
+    }
+
+    return authprops;
+  }
+
+  protected SystemProperties getSysprops() throws CalFacadeException {
+    if (sysprops == null) {
+      sysprops = new CalSvcFactoryDefault().getSystemConfig().getSystemProperties();
+    }
+
+    return sysprops;
+  }
+
+  protected void stat(final String name,
+                      final Long startTime) throws CalFacadeException {
+    if (!collectTimeStats) {
+      return;
+    }
+
+    try {
+      postNotification(SysEvent.makeStatsEvent(name,
+                                               System.currentTimeMillis() - startTime));
+    } catch (NotificationException ne) {
+      throw new CalFacadeException(ne);
+    }
+  }
+
+  /*
+  private void stat(final String name,
+                    final String val) throws CalFacadeException {
+    try {
+      postNotification(SysEvent.makeStatsEvent(name, val));
+    } catch (NotificationException ne) {
+      throw new CalFacadeException(ne);
+    }
+  }*/
+
+  protected void notify(final SysEvent.SysCode code,
+                        final BwEvent val,
+                        final boolean shared) throws CalFacadeException {
+    try {
+      String note = getChanges(code, val);
+      if (note == null) {
+        return;
+      }
+
+      if (code.equals(SysEvent.SysCode.ENTITY_DELETED) ||
+              code.equals(SysEvent.SysCode.ENTITY_TOMBSTONED)) {
+        postNotification(
+                SysEvent.makeEntityDeletedEvent(code,
+                                                authenticatedPrincipal(),
+                                                val.getOwnerHref(),
+                                                getHref(val),
+                                                shared,
+                                                val.getPublick(),
+                                                IcalDefs.fromEntityType(val.getEntityType()),
+                                                val.getUid(),
+                                                val.getRecurrenceId(),
+                                                note,
+                                                null)); // XXX Emit multiple targted?
+      } else {
+        postNotification(
+                SysEvent.makeEntityUpdateEvent(code,
+                                               authenticatedPrincipal(),
+                                               val.getOwnerHref(),
+                                               getHref(val),
+                                               shared,
+                                               val.getUid(),
+                                               val.getRecurrenceId(),
+                                               note,
+                                               null)); // XXX Emit multiple targted?
+      }
+    } catch (NotificationException ne) {
+      throw new CalFacadeException(ne);
+    }
+  }
+
+  protected void notifyMove(final SysEvent.SysCode code,
+                            final String oldHref,
+                            final boolean oldShared,
+                            final BwEvent val,
+                            final boolean shared) throws CalFacadeException {
+    try {
+      postNotification(
+              SysEvent.makeEntityMovedEvent(code,
+                                            currentPrincipal(),
+                                            val.getOwnerHref(),
+                                            getHref(val), shared,
+                                            oldHref,
+                                            oldShared));
+    } catch (NotificationException ne) {
+      throw new CalFacadeException(ne);
+    }
+  }
+
+  protected void notifyInstanceChange(final SysEvent.SysCode code,
+                                      final BwEvent val,
+                                      final boolean shared,
+                                      final String recurrenceId) throws CalFacadeException {
+    try {
+      String note = getChanges(code, val);
+      if (note == null) {
+        return;
+      }
+
+      if (code.equals(SysEvent.SysCode.ENTITY_DELETED) ||
+              code.equals(SysEvent.SysCode.ENTITY_TOMBSTONED)) {
+        postNotification(
+                SysEvent.makeEntityDeletedEvent(code,
+                                                authenticatedPrincipal(),
+                                                val.getOwnerHref(),
+                                                getHref(val),
+                                                shared,
+                                                val.getPublick(),
+                                                IcalDefs.fromEntityType(
+                                                        val.getEntityType()),
+                                                val.getUid(),
+                                                recurrenceId,
+                                                note,
+                                                null)); // XXX Emit multiple targted?
+      } else {
+        postNotification(
+                SysEvent.makeEntityUpdateEvent(code,
+                                               authenticatedPrincipal(),
+                                               val.getOwnerHref(),
+                                               getHref(val),
+                                               shared,
+                                               val.getUid(),
+                                               val.getRecurrenceId(),
+                                               note,  // changes
+                                               null)); // XXX Emit multiple targted?
+      }
+    } catch (NotificationException ne) {
+      throw new CalFacadeException(ne);
+    }
+  }
+
+  protected String getChanges(final SysEvent.SysCode code,
+                              final BwEvent val) {
+    try {
+      if (code.equals(SysEvent.SysCode.ENTITY_DELETED) ||
+              code.equals(SysEvent.SysCode.ENTITY_TOMBSTONED)) {
+        return NotificationsInfo.deleted(authenticatedPrincipal(),
+                                         val);
+      }
+
+      if (code.equals(SysEvent.SysCode.ENTITY_UPDATED)) {
+        return NotificationsInfo.updated(authenticatedPrincipal(), val);
+      }
+
+      if (code.equals(SysEvent.SysCode.ENTITY_ADDED)) {
+        return NotificationsInfo.added(authenticatedPrincipal(), val);
+      }
+
+      return null;
+    } catch (Throwable t) {
+      error(t);
+      return null;
+    }
+  }
+
+  protected String getHref(final BwEvent val) {
+    return Util.buildPath(false, val.getColPath(), "/", val.getName());
   }
 
   /** Get a logger for messages

@@ -605,15 +605,6 @@ class Events extends CalSvcDb implements EventsI {
     add(new EventInfo(proxy), true, false, false, false);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventsI#findCalendars(java.lang.String, java.lang.String)
-   */
-  @Override
-  public Collection<BwCalendar> findCalendars(final String guid,
-                                              final String rid) throws CalFacadeException {
-    return getCal().findCalendars(guid, rid);
-  }
-
   @Override
   public CopyMoveStatus copyMoveNamed(final EventInfo fromEi,
                                       final BwCalendar to,
