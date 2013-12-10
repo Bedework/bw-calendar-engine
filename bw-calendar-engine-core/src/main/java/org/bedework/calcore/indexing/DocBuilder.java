@@ -241,11 +241,6 @@ public class DocBuilder {
 
         String recurrenceId = rstart.getDate();
 
-        dtval = p.getEnd().toString();
-        if (dateOnly) {
-          dtval = dtval.substring(0, 8);
-        }
-
         res.add(new TypeId(type,
                            makeKeyVal(keyConverter.makeEventKey(ev.getColPath(),
                                                      ev.getUid(),
@@ -395,48 +390,56 @@ public class DocBuilder {
 
   /* Return the docinfo for the indexer */
   DocInfo makeDoc(final XContentBuilder builder,
-                  final Object rec,
+                  final BwCalendar col) throws CalFacadeException {
+    try {
+      long version = col.getMicrosecsVersion();
+
+      makeShareableContained(builder, col);
+
+      makeField(builder, PropertyInfoIndex.LAST_MODIFIED,
+                col.getLastmod().getTimestamp());
+      makeField(builder, PropertyInfoIndex.CREATED,
+                col.getCreated());
+      makeField(builder, PropertyInfoIndex.VERSION, version);
+
+      makeField(builder, PropertyInfoIndex.NAME, col.getName());
+      makeField(builder, PropertyInfoIndex.HREF, col.getPath());
+
+      indexCategories(builder, col.getCategories());
+
+      // Doing collection - we're almost done
+      makeField(builder, PropertyInfoIndex.SUMMARY, col.getSummary());
+      makeField(builder, PropertyInfoIndex.DESCRIPTION,
+                col.getDescription());
+
+      return new DocInfo(BwIndexer.docTypeCollection,
+                         version, makeKeyVal(col));
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  enum ItemKind {
+    kindMaster,
+    kindOverride,
+    kindEntity
+  }
+
+  /* Return the docinfo for the indexer */
+  DocInfo makeDoc(final XContentBuilder builder,
+                  final EventInfo ei,
+                  final String itemType,
+                  final ItemKind kind,
                   final BwDateTime start,
                   final BwDateTime end,
                   final String recurid) throws CalFacadeException {
     try {
-      BwCalendar col = null;
-      EventInfo ei = null;
-      BwEvent ev = null;
-      BwShareableContainedDbentity sce;
+      BwEvent ev = ei.getEvent();
+      long version = ev.getMicrosecsVersion();
 
-      String path;
-      Collection <BwCategory> cats;
-
-      String name;
-      String created;
-      String lastmod;
-      long version;
-      String itemType;
-
-      if (rec instanceof BwCalendar) {
-        col = (BwCalendar)rec;
-        sce = col;
-
-        itemType = BwIndexer.docTypeCollection;
-
-        name = col.getName();
-        path = col.getPath();
-        cats = col.getCategories();
-        created = col.getCreated();
-        lastmod = col.getLastmod().getTimestamp();
-        version = col.getMicrosecsVersion();
-      } else if (rec instanceof EventInfo) {
-        ei = (EventInfo)rec;
-        ev = ei.getEvent();
-        sce = ev;
-
-        name = ev.getName();
-        path = ev.getColPath() + "/" + name;
-
-        itemType = IcalDefs.fromEntityType(ev.getEntityType());
-
-        /*
+      /*
         if (ev instanceof BwEventProxy) {
           // Index with the master key
           rec.addField(BwIndexLuceneDefs.keyEventMaster,
@@ -447,42 +450,26 @@ public class DocBuilder {
         }
         */
 
-        cats = ev.getCategories();
-        created = ev.getCreated();
-        lastmod = ev.getLastmod();
-        version = ev.getMicrosecsVersion();
+      if (start == null) {
+        warn("No start for " + ev);
+        return null;
+      }
 
-        if (start == null) {
-          warn("No start for " + ev);
-          return null;
-        }
-
-        if (end == null) {
-          warn("No end for " + ev);
-          return null;
-        }
-      } else {
-        throw new IndexException(IndexException.unknownRecordType,
-                                 rec.getClass().getName());
+      if (end == null) {
+        warn("No end for " + ev);
+        return null;
       }
 
       /* Start doc and do common collection/event fields */
 
-      makeShareableContained(builder, sce);
+      makeShareableContained(builder, ev);
 
-      makeField(builder, PropertyInfoIndex.NAME, name);
-      makeField(builder, PropertyInfoIndex.HREF, path);
+      makeField(builder, PropertyInfoIndex.NAME, ev.getName());
+      makeField(builder, PropertyInfoIndex.HREF,
+                Util.buildPath(false, ev.getColPath(), "/",
+                               ev.getName()));
 
-      indexCategories(builder, cats);
-
-      if (col != null) {
-        // Doing collection - we're almost done
-        makeField(builder, PropertyInfoIndex.SUMMARY, col.getSummary());
-        makeField(builder, PropertyInfoIndex.DESCRIPTION,
-                  col.getDescription());
-
-        return new DocInfo(itemType, version, makeKeyVal(rec));
-      }
+      indexCategories(builder, ev.getCategories());
 
       makeField(builder, PropertyInfoIndex.ENTITY_TYPE,
                 IcalDefs.entityTypeNames[ev.getEntityType()]);
@@ -500,8 +487,9 @@ public class DocBuilder {
       indexOrganizer(builder, ev.getOrganizer());
 
       makeField(builder, PropertyInfoIndex.DTSTAMP, ev.getDtstamp());
-      makeField(builder, PropertyInfoIndex.LAST_MODIFIED, lastmod);
-      makeField(builder, PropertyInfoIndex.CREATED, created);
+      makeField(builder, PropertyInfoIndex.LAST_MODIFIED,
+                ev.getLastmod());
+      makeField(builder, PropertyInfoIndex.CREATED, ev.getCreated());
       makeField(builder, PropertyInfoIndex.SCHEDULE_TAG, ev.getStag());
       makeField(builder, PropertyInfoIndex.PRIORITY, ev.getPriority());
 
@@ -565,8 +553,19 @@ public class DocBuilder {
       makeBwDateTimes(builder, PropertyInfoIndex.EXDATE,
                       ev.getExdates());
 
-      indexDate(builder, PropertyInfoIndex.DTSTART, start);
-      indexDate(builder, PropertyInfoIndex.DTEND, end);
+      if (kind == ItemKind.kindEntity) {
+        indexDate(builder, PropertyInfoIndex.DTSTART, start);
+        indexDate(builder, PropertyInfoIndex.DTEND, end);
+
+        indexDate(builder, PropertyInfoIndex.INDEX_START, start);
+        indexDate(builder, PropertyInfoIndex.INDEX_END, end);
+      } else {
+        indexDate(builder, PropertyInfoIndex.DTSTART, ev.getDtstart());
+        indexDate(builder, PropertyInfoIndex.DTEND, ev.getDtend());
+
+        indexDate(builder, PropertyInfoIndex.INDEX_START, start);
+        indexDate(builder, PropertyInfoIndex.INDEX_END, end);
+      }
 
       makeField(builder, PropertyInfoIndex.START_PRESENT,
                 String.valueOf(ev.getNoStart()));
@@ -597,7 +596,8 @@ public class DocBuilder {
       /* Available */
       /* vpoll */
 
-      return new DocInfo(itemType, version, makeKeyVal(rec));
+      return new DocInfo(itemType,
+                         version, makeKeyVal(ei));
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {

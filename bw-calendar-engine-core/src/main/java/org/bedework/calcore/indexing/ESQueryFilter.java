@@ -28,11 +28,9 @@ import org.bedework.caldav.util.filter.PresenceFilter;
 import org.bedework.caldav.util.filter.PropertyFilter;
 import org.bedework.caldav.util.filter.TimeRangeFilter;
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.filter.BwCategoryFilter;
 import org.bedework.calfacade.filter.BwCollectionFilter;
 import org.bedework.calfacade.filter.BwCreatorFilter;
 import org.bedework.calfacade.filter.BwHrefFilter;
@@ -158,6 +156,51 @@ public class ESQueryFilter {
     }
 
     return fb;
+  }
+
+  /**
+   *
+   * @param types - array of type of entity
+   * @return TermFilterBuilder or AndFilterBuilder
+   * @throws CalFacadeException
+   */
+  public FilterBuilder typeFilter(final String... types) throws CalFacadeException {
+    FilterBuilder filter = null;
+
+    for (String type: types) {
+      FilterBuilder fb = addTerm(null, "_type", types[0]);
+
+      if (filter == null) {
+        filter = fb;
+        continue;
+      }
+
+      if (filter instanceof OrFilterBuilder) {
+        ((OrFilterBuilder)filter).add(fb);
+        continue;
+      }
+
+      OrFilterBuilder ofb = new OrFilterBuilder(filter);
+
+      ofb.add(fb);
+      filter = ofb;
+    }
+
+    return filter;
+  }
+
+  /**
+   *
+   * @param filter - null or filter to AND with new term
+   * @param pi
+   * @param val
+   * @return TermFilterBuilder or AndFilterBuilder
+   * @throws CalFacadeException
+   */
+  public FilterBuilder addTerm(final FilterBuilder filter,
+                               final PropertyInfoIndex pi,
+                               final String val) throws CalFacadeException {
+    return addTerm(filter, pi.getJname(), val);
   }
 
   /**
@@ -480,12 +523,13 @@ public class ESQueryFilter {
                              ((BwCreatorFilter)pf).getEntity());
     }
 
+    /*
     if (pf instanceof BwCategoryFilter) {
       BwCategory cat = ((BwCategoryFilter)pf).getEntity();
       return new TermOrTerms(PropertyInfoIndex.CATEGORIES.getJname() +
               "." + PropertyInfoIndex.UID.getJname(),
                              cat.getUid());
-    }
+    }*/
 
     if (pf instanceof BwCollectionFilter) {
       BwCalendar col = ((BwCollectionFilter)pf).getEntity();
@@ -543,23 +587,18 @@ public class ESQueryFilter {
       if (!of.getNot()) {
         queryLimited = true;
       }
-    } else {
-      boolean isString = o instanceof String;
-
-      if (!isString) {
-        if (o instanceof Collection) {
-          c = (Collection)o;
-          if (c.size() > 0) {
-            o = c.iterator().next();
-            isString = o instanceof String;
-          }
-        }
-      }
-
-      doCaseless = isString && of.getCaseless();
     }
 
-    return FilterBuilders.termFilter(dbfld, getValue(of));
+    Object val = getValue(of);
+
+    if (val instanceof Collection) {
+      TermsFilterBuilder tfb = FilterBuilders.termsFilter(dbfld, (Collection)val);
+      tfb.execution("or");
+
+      return tfb;
+    }
+
+    return FilterBuilders.termFilter(dbfld, val);
   }
 
   private Object getValue(final ObjectFilter of) throws CalFacadeException {

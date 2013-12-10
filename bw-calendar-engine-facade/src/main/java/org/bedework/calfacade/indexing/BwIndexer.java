@@ -44,6 +44,40 @@ public interface BwIndexer extends Serializable {
   static final String docTypeLocation = "location";
   static final String docTypeContact = "contact";
 
+  static final String[] masterDocTypes = {
+          "masterEvent",
+          null,  // alarm
+          "masterTask",
+          "masterJournal",
+          null,   // freebusy
+          null,   // vavail
+          "masterAvailable",
+          null,   // vpoll
+  };
+
+  static final String[] overrideDocTypes = {
+          "overrideEvent",
+          null,  // alarm
+          "overrideTask",
+          "overrideJournal",
+          null,   // freebusy
+          null,   // vavail
+          "overrideAvailable",
+          null,   // vpoll
+  };
+
+  /** Used for fetching master + override
+   *
+   */
+  static final String[] masterOverrideEventTypes = {
+          "masterEvent",
+          "masterTask",
+          "overrideEvent",
+          "overrideTask",
+          "masterAvailable",
+          "overrideAvailable",
+  };
+
   /* Other types are those defined in IcalDefs.entityTypeNames */
 
   interface AccessChecker extends Serializable {

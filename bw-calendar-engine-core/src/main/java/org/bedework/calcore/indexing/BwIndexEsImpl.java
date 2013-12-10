@@ -21,11 +21,13 @@ package org.bedework.calcore.indexing;
 import org.bedework.access.Ace;
 import org.bedework.access.Acl;
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.calcore.indexing.DocBuilder.ItemKind;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
+import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
@@ -119,6 +121,35 @@ import static org.bedework.calcore.indexing.DocBuilder.TypeId;
 
 /** Implementation of indexer for ElasticSearch
  *
+ * <p>Indexing events is complicated by the need to support CalDAV
+ * time-range queries and recurring events. A recurring event will have
+ * a MASTER event, INSTANCES and OVERRIDES</p>
+ *
+ * <p>A timerange query must return the MASTER, and any overrides that
+ * fall within the date range - or WOULD HAVE if they weren't overridden</p>
+ *
+ * <p>So it's possible none of the returned components actually lie in
+ * the requested range. However we need to index them so that they are
+ * found.</p>
+ *
+ * <p>First we index a full copy of all event instances expanded. We
+ * need a full copy so that filtering can work.</p>
+ *
+ * <p>We index the MASTER and set the start and end to cover the
+ * entire time range. It will always appear</p>
+ *
+ * <p>OVERRIDEs appear as an instance and as an override. The instance
+ * will have the new overridden date/time the override will have the
+ * overridden date time.</p>
+ *
+ * <p>All searching is done on UTC values. We need 2 sets of values -
+ * One represents the real dtstart/dtend for the entity, The other
+ * is the indexed start/end as outlined above.</p>
+ *
+ * <p>As well as indexing events/tasks etc we also have to index alarms
+ * so that the associated events can be located. This is an alarm object
+ * inside an entity with a start date</p>
+ *
  * @author Mike Douglass douglm - rpi.edu
  *
  */
@@ -157,6 +188,24 @@ public class BwIndexEsImpl implements BwIndexer {
   private EntityBuilder entityBuilder;
 
   private DocBuilder docBuilder;
+
+  private static Set<String> eventDoctypes;
+
+  static {
+    eventDoctypes = new TreeSet<>(IcalDefs.entityTypes);
+
+    for (String s: masterDocTypes) {
+      if (s != null) {
+        eventDoctypes.add(s);
+      }
+    }
+
+    for (String s: overrideDocTypes) {
+      if (s != null) {
+        eventDoctypes.add(s);
+      }
+    }
+  }
 
   /** Constructor
    *
@@ -485,7 +534,7 @@ public class BwIndexEsImpl implements BwIndexer {
         entity = eb.makeContact();
       } else if (dtype.equals(docTypeLocation)) {
         entity = eb.makeLocation();
-      } else if (IcalDefs.entityTypes.contains(dtype)) {
+      } else if (eventDoctypes.contains(dtype)) {
         entity = eb.makeEvent();
         EventInfo ei = (EventInfo)entity;
         Acl.CurrentAccess ca = res.accessCheck.checkAccess(ei.getEvent(),
@@ -718,9 +767,11 @@ public class BwIndexEsImpl implements BwIndexer {
   private void deleteIndexes(final List<String> names) throws CalFacadeException {
     try {
       IndicesAdminClient idx = getAdminIdx();
-      DeleteIndexRequestBuilder dirb = getAdminIdx().prepareDelete(names.toArray(new String[0]));
+      DeleteIndexRequestBuilder dirb = getAdminIdx().prepareDelete(
+              names.toArray(new String[0]));
 
-      ActionFuture<DeleteIndexResponse> dr = idx.delete(dirb.request());
+      ActionFuture<DeleteIndexResponse> dr = idx.delete(
+              dirb.request());
       DeleteIndexResponse dir  = dr.actionGet();
     } catch (Throwable t) {
       throw new CalFacadeException(t);
@@ -794,7 +845,7 @@ public class BwIndexEsImpl implements BwIndexer {
   @Override
   public BwContact fetchContact(final String field, final String val)
           throws CalFacadeException {
-    EntityBuilder eb = fetchEntity(docTypeContact, field,val);
+    EntityBuilder eb = fetchEntity(docTypeContact, field, val);
 
     if (eb == null) {
       return null;
@@ -806,7 +857,7 @@ public class BwIndexEsImpl implements BwIndexer {
   @Override
   public BwLocation fetchLocation(final String field, final String val)
           throws CalFacadeException {
-    EntityBuilder eb = fetchEntity(docTypeLocation, field,val);
+    EntityBuilder eb = fetchEntity(docTypeLocation, field, val);
 
     if (eb == null) {
       return null;
@@ -1024,16 +1075,25 @@ public class BwIndexEsImpl implements BwIndexer {
     return bwkey;
   }
 
+  private static class DateLimits {
+    String minStart;
+    String maxEnd;
+  }
+
   /* Return the response after indexing */
   private IndexResponse index(final Object rec) throws CalFacadeException {
     try {
+      if (rec instanceof EventInfo) {
+        return indexEvent((EventInfo)rec);
+      }
+
       DocInfo di = null;
       XContentBuilder builder = newBuilder();
 
       builder.startObject();
 
       if (rec instanceof BwCalendar) {
-        di = getDocBuilder().makeDoc(builder, rec, null, null, null);
+        di = getDocBuilder().makeDoc(builder, (BwCalendar)rec);
       }
 
       if (rec instanceof BwCategory) {
@@ -1054,30 +1114,31 @@ public class BwIndexEsImpl implements BwIndexer {
         return indexDoc(builder, di);
       }
 
-      if (!(rec instanceof EventInfo)) {
-        throw new CalFacadeException(
-                new IndexException(IndexException.unknownRecordType,
-                                   rec.getClass().getName()));
-      }
+      throw new CalFacadeException(
+              new IndexException(IndexException.unknownRecordType,
+                                 rec.getClass().getName()));
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  private IndexResponse indexEvent(final EventInfo ei) throws CalFacadeException {
+    try {
 
       /* If it's not recurring or an override index it */
 
-      EventInfo ei = (EventInfo)rec;
       BwEvent ev = ei.getEvent();
 
       if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
-        builder = newBuilder();
-
-        builder.startObject();
-        di = getDocBuilder().makeDoc(builder,
-                                     rec,
-                                     ev.getDtstart(),
-                                     ev.getDtend(),
-                                     ev.getRecurrenceId());
-
-        builder.endObject();
-
-        return indexDoc(builder, di);
+        return indexEvent(ei,
+                          IcalDefs.fromEntityType(ev.getEntityType()),
+                          ItemKind.kindEntity,
+                          ev.getDtstart(),
+                          ev.getDtend(),
+                          ev.getRecurrenceId(),
+                          null);
       }
 
       /* Delete all instances of this event: we'll do a delete by query
@@ -1094,8 +1155,9 @@ public class BwIndexEsImpl implements BwIndexer {
               targetIndex).setTypes(itemType);
 
       ESQueryFilter esq= getFilters();
-      FilterBuilder fb = esq.addTerm(null, "colPath", ev.getColPath());
-      fb = esq.addTerm(fb, "uid", ev.getUid());
+      FilterBuilder fb = esq.addTerm(null, PropertyInfoIndex.COLPATH,
+                                     ev.getColPath());
+      fb = esq.addTerm(fb, PropertyInfoIndex.UID, ev.getUid());
       delQreq.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(),
                                                    fb));
       DeleteByQueryResponse delResp = delQreq.execute()
@@ -1109,10 +1171,11 @@ public class BwIndexEsImpl implements BwIndexer {
         }
       }
 
-      /* Emit all instances that aren't overridden. */
+      /* Create a list of all instance date/times before overrides. */
 
       int maxYears;
       int maxInstances;
+      DateLimits dl = new DateLimits();
 
       if (ev.getPublick()) {
         maxYears = unauthpars.getMaxYears();
@@ -1153,20 +1216,25 @@ public class BwIndexEsImpl implements BwIndexer {
         for (EventInfo oei: ei.getOverrides()) {
           BwEvent ov = oei.getEvent();
           overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
-          builder = newBuilder();
 
-          builder.startObject();
-          di = getDocBuilder().makeDoc(builder,
-                                       oei,
-                                       ov.getDtstart(),
-                                       ov.getDtend(),
-                                       ov.getRecurrenceId());
+          BwDateTime rstart = BwDateTime.makeBwDateTime(ov.getDtstart().getDateType(),
+                                                        ov.getRecurrenceId(),
+                                                        stzid);
+          BwDateTime rend = rstart.addDuration(BwDuration.makeDuration(ov.getDuration()));
 
-          builder.endObject();
+          iresp = indexEvent(oei,
+                             IcalDefs.fromEntityType(ov.getEntityType()),
+                             ItemKind.kindOverride,
+                             rstart,
+                             rend,
+                             ov.getRecurrenceId(),
+                             dl);
 
-          iresp = indexDoc(builder, di);
+          instanceCt--;
         }
       }
+
+      /* Emit all instances that aren't overridden. */
 
       for (Period p: rp.instances) {
         String dtval = p.getStart().toString();
@@ -1190,21 +1258,14 @@ public class BwIndexEsImpl implements BwIndexer {
 
         BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
-        builder = newBuilder();
-
-        builder.startObject();
-        di = getDocBuilder().makeDoc(builder,
-                                     rec,
-                                     rstart,
-                                     rend,
-                                     recurrenceId);
-
-        builder.endObject();
-
-        di.id = keyConverter.makeEventKey(ev.getColPath(),
-                                          ev.getUid(),
-                                          recurrenceId);
-        iresp = indexDoc(builder, di);
+        iresp = indexEvent(ei,
+                           IcalDefs.fromEntityType(
+                                   ev.getEntityType()),
+                           ItemKind.kindEntity,
+                           rstart,
+                           rend,
+                           recurrenceId,
+                           dl);
 
         instanceCt--;
         if (instanceCt == 0) {
@@ -1213,12 +1274,99 @@ public class BwIndexEsImpl implements BwIndexer {
         }
       }
 
+      /* Emit the master event with a date range covering the entire
+       * period.
+       */
+
+      itemType = BwIndexer.masterDocTypes[ev.getEntityType()];
+
+      if (itemType == null) {
+        throw new CalFacadeException("Unrecognized recurring type" +
+                                             ev.getEntityType());
+      }
+
+      BwDateTime start = BwDateTime.makeBwDateTime(dateOnly,
+                                                   dl.minStart, stzid);
+      BwDateTime end = BwDateTime.makeBwDateTime(dateOnly,
+                                                 dl.maxEnd, stzid);
+      iresp = indexEvent(ei,
+                         itemType,
+                         ItemKind.kindMaster,
+                         start,
+                         end,
+                         null,
+                         null);
+
       return iresp;
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
+  }
+
+  private IndexResponse indexEvent(final EventInfo ei,
+                                   final String itemType,
+                                   final ItemKind kind,
+                                   final BwDateTime start,
+                                   final BwDateTime end,
+                                   final String recurid,
+                                   final DateLimits dl) throws CalFacadeException {
+    try {
+      XContentBuilder builder = newBuilder();
+      BwEvent ev = ei.getEvent();
+
+      builder.startObject();
+      DocInfo di = getDocBuilder().makeDoc(builder,
+                                           ei,
+                                           itemType,
+                                           kind,
+                                           start,
+                                           end,
+                                           recurid);
+
+      if (dl != null) {
+        dl.minStart = checkMin(dl.minStart, start);
+        dl.maxEnd = checkMax(dl.maxEnd, end);
+      }
+
+      builder.endObject();
+
+      di.id = keyConverter.makeEventKey(ev.getColPath(),
+                                        ev.getUid(),
+                                        recurid);
+      return indexDoc(builder, di);
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  private String checkMin(final String start,
+                          final BwDateTime tm) {
+    if (start == null) {
+      return tm.getDate();
+    }
+
+    if (start.compareTo(tm.getDate()) > 0) {
+      return tm.getDate();
+    }
+
+    return start;
+  }
+
+  private String checkMax(final String start,
+                          final BwDateTime tm) {
+    if (start == null) {
+      return tm.getDate();
+    }
+
+    if (start.compareTo(tm.getDate()) < 0) {
+      return tm.getDate();
+    }
+
+    return start;
   }
 
   private IndexResponse indexDoc(final XContentBuilder builder,
@@ -1349,7 +1497,11 @@ public class BwIndexEsImpl implements BwIndexer {
     }
   }
 
-  private ESQueryFilter getFilters() {
+  /** For use by th ecore classes
+   *
+   * @return a filter builder
+   */
+  public ESQueryFilter getFilters() {
     return new ESQueryFilter(publick, principal.getPrincipalRef());
   }
 

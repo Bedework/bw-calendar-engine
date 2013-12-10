@@ -766,9 +766,9 @@ public abstract class SimpleFilterParser {
                                          "category uid: " + uid);
           }
 
-          ObjectFilter<BwCategory> f = new BwCategoryFilter(null, pis);
+          ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
 
-          f.setEntity(cat);
+          f.setEntity(uid);
 
           f.setExact(exact);
           f.setNot(oper == notEqual);
@@ -784,7 +784,7 @@ public abstract class SimpleFilterParser {
         ArrayList<String> paths = doWordList();
 
         for (String path: paths) {
-          ObjectFilter<String> f = new ObjectFilter<>(null, pis);
+          ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
           f.setEntity(path);
 
           f.setCaseless(false);
@@ -826,7 +826,7 @@ public abstract class SimpleFilterParser {
       if (val.startsWith("/")) {
         pis.add(PropertyInfoIndex.HREF);
         // Assume a path match
-        ObjectFilter<String> f = new ObjectFilter<>(null, pis);
+        ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
         f.setEntity(val);
 
         f.setCaseless(false);
@@ -858,7 +858,7 @@ public abstract class SimpleFilterParser {
     }
 
     checkSub(pis, 2);
-    ObjectFilter<String> f = new ObjectFilter<>(null, pis);
+    ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
     f.setEntity(match.getValue());
 
     f.setCaseless(Filters.caseless(match));
