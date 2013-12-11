@@ -1024,7 +1024,6 @@ public class BwIndexEsImpl implements BwIndexer {
 
       if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
         return indexEvent(ei,
-                          IcalDefs.fromEntityType(ev.getEntityType()),
                           ItemKind.kindEntity,
                           ev.getDtstart(),
                           ev.getDtend(),
@@ -1114,7 +1113,6 @@ public class BwIndexEsImpl implements BwIndexer {
           BwDateTime rend = rstart.addDuration(BwDuration.makeDuration(ov.getDuration()));
 
           iresp = indexEvent(oei,
-                             IcalDefs.fromEntityType(ov.getEntityType()),
                              ItemKind.kindOverride,
                              rstart,
                              rend,
@@ -1150,8 +1148,6 @@ public class BwIndexEsImpl implements BwIndexer {
         BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
         iresp = indexEvent(ei,
-                           IcalDefs.fromEntityType(
-                                   ev.getEntityType()),
                            ItemKind.kindEntity,
                            rstart,
                            rend,
@@ -1169,19 +1165,11 @@ public class BwIndexEsImpl implements BwIndexer {
        * period.
        */
 
-      itemType = BwIndexer.masterDocTypes[ev.getEntityType()];
-
-      if (itemType == null) {
-        throw new CalFacadeException("Unrecognized recurring type" +
-                                             ev.getEntityType());
-      }
-
       BwDateTime start = BwDateTime.makeBwDateTime(dateOnly,
                                                    dl.minStart, stzid);
       BwDateTime end = BwDateTime.makeBwDateTime(dateOnly,
                                                  dl.maxEnd, stzid);
       iresp = indexEvent(ei,
-                         itemType,
                          ItemKind.kindMaster,
                          start,
                          end,
@@ -1197,7 +1185,6 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   private IndexResponse indexEvent(final EventInfo ei,
-                                   final String itemType,
                                    final ItemKind kind,
                                    final BwDateTime start,
                                    final BwDateTime end,
@@ -1210,7 +1197,6 @@ public class BwIndexEsImpl implements BwIndexer {
       builder.startObject();
       DocInfo di = getDocBuilder().makeDoc(builder,
                                            ei,
-                                           itemType,
                                            kind,
                                            start,
                                            end,

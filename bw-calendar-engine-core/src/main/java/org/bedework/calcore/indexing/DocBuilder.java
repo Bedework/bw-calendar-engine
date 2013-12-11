@@ -430,7 +430,6 @@ public class DocBuilder {
   /* Return the docinfo for the indexer */
   DocInfo makeDoc(final XContentBuilder builder,
                   final EventInfo ei,
-                  final String itemType,
                   final ItemKind kind,
                   final BwDateTime start,
                   final BwDateTime end,
@@ -438,6 +437,20 @@ public class DocBuilder {
     try {
       BwEvent ev = ei.getEvent();
       long version = ev.getMicrosecsVersion();
+      String itemType;
+
+      if (kind == ItemKind.kindEntity) {
+        itemType = IcalDefs.fromEntityType(ev.getEntityType());
+      } else if (kind == ItemKind.kindMaster) {
+        itemType = BwIndexer.masterDocTypes[ev.getEntityType()];
+      } else {
+        itemType = BwIndexer.overrideDocTypes[ev.getEntityType()];
+      }
+
+      if (itemType == null) {
+        throw new CalFacadeException("Unrecognized recurring type" +
+                                             ev.getEntityType());
+      }
 
       /*
         if (ev instanceof BwEventProxy) {
