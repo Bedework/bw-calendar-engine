@@ -556,46 +556,6 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   @Override
-  public long getKeys(final SearchResult sres,
-                      final long n,
-                      final Index.Key[] keys) throws CalFacadeException {
-    EsSearchResult res = (EsSearchResult)sres;
-    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
-
-    SearchResponse resp = srb.setSearchType(SearchType.QUERY_AND_FETCH)
-//            .setScroll(new TimeValue(60000))
-            .setQuery(res.curQuery)
-            .setFilter(res.curFilter).execute().actionGet();
-
-    if (resp.status() != RestStatus.OK) {
-      if (debug) {
-        debug("Search returned status " + resp.status());
-      }
-    }
-
-    SearchHits hits = resp.getHits();
-
-    if ((hits.getHits() == null) ||
-            (hits.getHits().length == 0)) {
-      return 0;
-    }
-
-    int num = hits.getHits().length;
-    if (keys.length < num) {
-      // Bad result?
-      num = keys.length;
-    }
-
-    for (int i = 0; i < num; i++) {
-      SearchHit hit = hits.getAt(i);
-
-      keys[i] = makeKey(keys[i], hit);
-    }
-
-    return num;
-  }
-
-  @Override
   public void indexEntity(final Object rec) throws CalFacadeException {
     try {
       /* XXX later with batch
@@ -651,11 +611,6 @@ public class BwIndexEsImpl implements BwIndexer {
     //} catch (IOException e) {
     //throw new CalFacadeException(e);
     //}
-  }
-
-  @Override
-  public void setCleanLocks(final boolean val) {
-    throw new RuntimeException("unimplemented");
   }
 
   @Override
@@ -823,11 +778,6 @@ public class BwIndexEsImpl implements BwIndexer {
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
-  }
-
-  @Override
-  public boolean isFetchEnabled() throws CalFacadeException {
-    return true;
   }
 
   @Override
@@ -1014,65 +964,6 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     return getEntityBuilder(hits.hits()[0].sourceAsMap());
-  }
-
-  /** Called to make or fill in a Key object.
-   *
-   * @param key   Possible Index.Key object for reuse
-   * @param hit    The retrieved document
-   * @return Index.Key  new or reused object
-   * @throws CalFacadeException
-   */
-  private Index.Key makeKey(final Index.Key key,
-                            final SearchHit hit) throws CalFacadeException {
-    BwIndexKey bwkey;
-
-    if ((key == null) || (!(key instanceof BwIndexKey))) {
-      bwkey = new BwIndexKey();
-    } else {
-      bwkey = (BwIndexKey)key;
-    }
-
-    Float score = hit.getScore();
-
-    if (score != null) {
-      bwkey.setScore(score);
-    }
-
-    String dtype = hit.getType();
-
-    if (dtype == null) {
-      throw new CalFacadeException("org.bedework.index.noitemtype");
-    }
-
-    String kval = hit.getId();
-
-    if (kval == null) {
-      throw new CalFacadeException("org.bedework.index.noitemkey");
-    }
-
-    bwkey.setItemType(dtype);
-
-    if (dtype.equals(docTypeCollection)) {
-      bwkey.setKey1(kval);
-    } else if (dtype.equals(docTypeCategory)) {
-      bwkey.setKey1(kval);
-    } else if (dtype.equals(docTypeContact)) {
-      bwkey.setKey1(kval);
-    } else if (dtype.equals(docTypeLocation)) {
-      bwkey.setKey1(kval);
-    } else if (IcalDefs.entityTypes.contains(dtype)) {
-      try {
-        bwkey.setEventKey(kval);
-      } catch (IndexException ie) {
-        throw new CalFacadeException(ie);
-      }
-    } else {
-      throw new CalFacadeException(IndexException.unknownRecordType,
-                                   dtype);
-    }
-
-    return bwkey;
   }
 
   private static class DateLimits {

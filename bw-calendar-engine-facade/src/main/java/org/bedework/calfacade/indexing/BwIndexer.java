@@ -147,17 +147,6 @@ public interface BwIndexer extends Serializable {
                                           int offset,
                                           int num) throws CalFacadeException;
 
-  /** Called to retrieve record keys from the result.
-   *
-   * @param   sres     result of previous search
-   * @param   n        Starting index
-   * @param   keys     Array for the record keys
-   * @return  int      Actual number of records
-   * @throws CalFacadeException
-   */
-  long getKeys(SearchResult sres,
-               long n, Index.Key[] keys) throws CalFacadeException;
-
   /** Called to unindex a record
    *
    * @param   rec      The record to unindex
@@ -188,12 +177,6 @@ public interface BwIndexer extends Serializable {
    * @throws CalFacadeException
    */
   void flush() throws CalFacadeException;
-
-  /** Indicate if we should try to clean locks. (lucene)
-   *
-   * @param val true/false
-   */
-  void setCleanLocks(boolean val);
 
   /** create a new index and start using it.
    *
@@ -265,18 +248,6 @@ public interface BwIndexer extends Serializable {
    * @throws CalFacadeException
    */
   int swapIndex(String index, String other) throws CalFacadeException;
-
-  /** If true the fetchEvents method can be used to retrieve events that are
-   * adequate for display at least. They are rebuilt from th indexed data and
-   * will be incomplete. In particular there is no access control.
-   *
-   * <p>This approach may be fine for public events and cheaper than retrieval
-   * from the core system.
-   *
-   * @return true if this interface will support the fetching of events
-   * @throws CalFacadeException
-   */
-  boolean isFetchEnabled() throws CalFacadeException;
 
   /** Find a category owned by the current user which has a named
    * field which matches the value.
