@@ -748,6 +748,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Immutable
   @IcalProperty(pindex = PropertyInfoIndex.ENTITY_TYPE,
+                required = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)
@@ -766,6 +767,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    * @param val    String event's name
    */
+  @IcalProperty(pindex = PropertyInfoIndex.NAME,
+                required = true,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true)
   public void setName(final String val) {
     name = val;
   }
@@ -948,6 +954,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val
    */
   @IcalProperty(pindex = PropertyInfoIndex.DTSTAMP,
+                required = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -987,6 +994,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val
    */
   @IcalProperty(pindex = PropertyInfoIndex.CREATED,
+                required = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -1081,6 +1089,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val    String uid
    */
   @IcalProperty(pindex = PropertyInfoIndex.UID,
+                required = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -1469,6 +1478,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val    BwRequestStatus requestStatus
    */
   @IcalProperty(pindex = PropertyInfoIndex.REQUEST_STATUS,
+                adderName = "requestStatus",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -1553,6 +1563,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.CTOKEN,
+                required = true,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true,
+                freeBusyProperty = true
+  )
   public void setCtoken(final String val) {
     ctoken = val;
   }
@@ -1616,6 +1633,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.RRULE,
+                adderName = "rrule",
                 reschedule = true,
                 eventProperty = true,
                 todoProperty = true,
@@ -1638,6 +1656,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.EXRULE,
+                adderName = "exrule",
                 reschedule = true,
                 eventProperty = true,
                 todoProperty = true,
@@ -1659,6 +1678,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.RDATE,
+                adderName = "rdate",
                 reschedule = true,
                 eventProperty = true,
                 todoProperty = true,
@@ -1681,6 +1701,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.EXDATE,
+                adderName = "exdate",
                 reschedule = true,
                 eventProperty = true,
                 todoProperty = true,
@@ -1849,6 +1870,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.DTSTART,
                 presenceField = "dtval",
+                required = true,
                 reschedule = true,
                 eventProperty = true,
                 todoProperty = true,
@@ -1875,6 +1897,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @IcalProperties({
     @IcalProperty(pindex = PropertyInfoIndex.DTEND,
                   presenceField = "dtval",
+                  required = true,
                   reschedule = true,
                   eventProperty = true,
                   freeBusyProperty = true),
@@ -1901,6 +1924,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @NoProxy
+  @IcalProperty(pindex = PropertyInfoIndex.END_TYPE,
+                required = true,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true)
   public void setEndType(final char val) {
     endType = val;
   }
@@ -1917,13 +1945,14 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @see org.bedework.calfacade.base.StartEndComponent#setDuration(java.lang.String)
    */
   @Override
+  @NoProxy
   @IcalProperty(pindex = PropertyInfoIndex.DURATION,
+                required = true,
                 reschedule = true,
                 eventProperty = true,
                 todoProperty = true,
                 freeBusyProperty = true
                 )
-  @NoProxy
   public void setDuration(final String val) {
    duration = val;
   }
@@ -1941,6 +1970,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @NoProxy
+  @IcalProperty(pindex = PropertyInfoIndex.NO_START,
+                required = true,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true)
   public void setNoStart(final Boolean val) {
     noStart = val;
   }
@@ -1962,6 +1996,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.VALARM,
+                adderName = "alarm",
                 eventProperty = true,
                 todoProperty = true)
   public void setAlarms(final Set<BwAlarm> val) {
@@ -2052,6 +2087,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.ATTACH,
+                adderName = "attachment",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)
@@ -2141,6 +2177,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.ATTENDEE,
+                adderName = "attendee",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -2381,6 +2418,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.CATEGORIES,
+                adderName = "category",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)
@@ -2513,6 +2551,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.COMMENT,
+                adderName = "comment",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -2625,6 +2664,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.CONTACT,
+                adderName = "contact",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -2746,6 +2786,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.DESCRIPTION,
+                adderName = "description",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)
@@ -2959,6 +3000,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.SUMMARY,
+                adderName = "summary",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)

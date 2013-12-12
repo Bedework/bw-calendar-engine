@@ -20,9 +20,6 @@ package org.bedework.calcore.es;
 
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.calcore.AccessUtil;
-import org.bedework.calcore.FieldNamesEntry;
-import org.bedework.calcore.FieldNamesMap;
-import org.bedework.calcore.FieldNamesMap.FieldnamesList;
 import org.bedework.calcore.hibernate.EventQueryBuilder;
 import org.bedework.calcore.hibernate.EventQueryBuilder.EventsQueryResult;
 import org.bedework.calcore.hibernate.Filters;
@@ -49,6 +46,8 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeDupNameException;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.Position;
 import org.bedework.calfacade.indexing.SearchResult;
@@ -219,22 +218,6 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
     super(chcb);
     super.init(cb, access, currentMode, sessionless);
   }
-
-  /* ------------------------------------------------------------
-     The following are here to suppress compile errors as this class
-     gets migrated.
-   */
-
-  HibSession getSess() {
-    return null;
-  }
-
-  void makeQuery(final String[] parts) throws CalFacadeException {
-  }
-
-  /* ------------------------------------------------------------
-     End of dummy methods/classes.
-   */
 
   /* (non-Javadoc)
    * @see org.bedework.calcore.CalintfHelper#startTransaction()
@@ -455,30 +438,42 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
       }
     }
 
-    FieldnamesList retrieveListFields = null;
+    List<BwIcalPropertyInfoEntry> retrieveListFields = null;
 
     if (retrieveList != null) {
       // Convert property names to field names
-      retrieveListFields = new FieldnamesList(retrieveList.size() +
-                                              FieldNamesMap.reqFlds.size());
+      retrieveListFields = new ArrayList<>(retrieveList.size() +
+                                                   BwIcalPropertyInfo.requiredPindexes.size());
 
       for (String pname: retrieveList) {
-        FieldNamesEntry fent = FieldNamesMap.getEntry(pname);
+        PropertyInfoIndex pi;
 
-        if ((fent == null) || (fent.getMulti())) {
-          // At this stage it seems better to be inefficient
+        try {
+          pi = PropertyInfoIndex.valueOf(pname);
+        } catch (Throwable t) {
+          //warn("Bad property " + pname);
           retrieveListFields = null;
           break;
         }
 
-        retrieveListFields.add(fent);
+        BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
+
+        if ((ipie == null) || (ipie.getMultiValued())) {
+          // At this stage it seems better to be inefficient
+          //warn("Bad property " + pname);
+          retrieveListFields = null;
+          break;
+        }
+
+        retrieveListFields.add(ipie);
       }
 
       if (retrieveListFields != null) {
-        retrieveListFields.addAll(FieldNamesMap.reqFlds);
+        for (PropertyInfoIndex pi: BwIcalPropertyInfo.requiredPindexes) {
+          retrieveListFields.add(BwIcalPropertyInfo.getPinfo(pi));
+        }
       }
     }
-
 
     int desiredAccess = privRead;
     if (freeBusy) {
@@ -2256,7 +2251,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
   private void eventsQuery(final EventsQueryResult eqr,
                            final BwDateTime startDate,
                            final BwDateTime endDate,
-                           final FieldnamesList retrieveListFields,
+                           final List<BwIcalPropertyInfoEntry> retrieveListFields,
                            final boolean freebusy,
                            final BwEvent master,
                            final Collection<BwEvent> masters,
@@ -2528,16 +2523,18 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
     }
   }
 
-  private BwEvent makeEvent(final FieldnamesList retrieveListFields,
+  private BwEvent makeEvent(final List<BwIcalPropertyInfoEntry> retrieveListFields,
                             final Object[] evflds,
                             final int getWhat) throws CalFacadeException {
     BwEvent ev;
-    FieldnamesList rlf;
+    List<BwIcalPropertyInfoEntry> rlf;
     if (getWhat == getAnnotations) {
       ev = new BwEventAnnotation();
-      rlf = new FieldnamesList(retrieveListFields.size());
+      rlf = new ArrayList<>(retrieveListFields.size());
       rlf.addAll(retrieveListFields);
-      rlf.addAll(FieldNamesMap.annotationRequired);
+      for (PropertyInfoIndex pi: BwIcalPropertyInfo.requiredAnnotationPindexes) {
+        rlf.add(BwIcalPropertyInfo.getPinfo(pi));
+      }
     } else {
       ev = new BwEventObj();
       rlf = retrieveListFields;
@@ -2568,15 +2565,15 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
   }
 
   private void setEventField(final BwEvent ev,
-                             final FieldNamesEntry fent,
+                             final BwIcalPropertyInfoEntry ipie,
                              final Object o) throws CalFacadeException {
     try {
       Method m;
 
-      if (fent.getMulti()) {
-        m = findAdder(ev, fent.getAddMethodName());
+      if (ipie.getMultiValued()) {
+        m = findAdder(ev, ipie.getAdderName());
       } else {
-        m = findSetter(ev, fent.getFname());
+        m = findSetter(ev, ipie.getDbFieldName());
       }
 
       Object[] pars = new Object[]{o};

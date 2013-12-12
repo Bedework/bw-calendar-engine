@@ -20,6 +20,8 @@
 package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
+import org.bedework.calfacade.annotations.ical.IcalProperty;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 
 import java.util.List;
@@ -122,6 +124,12 @@ public class BwEventAnnotation extends BwEvent {
   /**
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.TARGET,
+                annotationRequired = true,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true,
+                freeBusyProperty = true)
   public void setTarget(final BwEvent val) {
     target = val;
   }
@@ -141,6 +149,12 @@ public class BwEventAnnotation extends BwEvent {
    *
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.MASTER,
+                annotationRequired = true,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true,
+                freeBusyProperty = true)
   public void setMaster(final BwEvent val) {
     master = val;
   }
@@ -157,6 +171,12 @@ public class BwEventAnnotation extends BwEvent {
    *
    *  @param val    Boolean true if the event is deleted
    */
+  @IcalProperty(pindex = PropertyInfoIndex.OVERRIDE,
+                annotationRequired = true,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true,
+                freeBusyProperty = true)
   public void setOverride(final Boolean val) {
     override = val;
   }

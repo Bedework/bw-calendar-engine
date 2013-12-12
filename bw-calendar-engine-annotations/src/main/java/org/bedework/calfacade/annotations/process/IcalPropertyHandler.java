@@ -62,6 +62,8 @@ public class IcalPropertyHandler {
 
     String dbFieldName;
 
+    String adderName;
+
     String fieldType;
 
     boolean isCollectionType;
@@ -71,6 +73,9 @@ public class IcalPropertyHandler {
     boolean reschedule;
 
     String presenceField;
+
+    boolean required;
+    boolean annotationRequired;
 
     boolean eventProperty;
     boolean todoProperty;
@@ -89,6 +94,11 @@ public class IcalPropertyHandler {
       dbFieldName = fieldName;
       this.fieldType = fieldType;
 
+      if ((p.adderName() != null) &&
+              (p.adderName().length() > 0)) {
+        adderName = p.adderName();
+      }
+
       if ((p.presenceField() != null) &&
           (p.presenceField().length() > 0)) {
         presenceField = p.presenceField();
@@ -99,6 +109,9 @@ public class IcalPropertyHandler {
       param = p.param();
 
       reschedule = p.reschedule();
+
+      required = p.required();
+      annotationRequired = p.annotationRequired();
 
       eventProperty = p.eventProperty();
       todoProperty = p.todoProperty();
@@ -139,6 +152,9 @@ public class IcalPropertyHandler {
 
     void merge(final IcalProperty p) {
       param = merge(param, p.param());
+
+      required = merge(required, p.required());
+      annotationRequired = merge(annotationRequired, p.annotationRequired());
       reschedule = merge(reschedule, p.reschedule());
 
       eventProperty = merge(eventProperty, p.eventProperty());
@@ -279,7 +295,7 @@ public class IcalPropertyHandler {
       startPinfo(env);
 
       SortedMap<String, PropertyInfoIndex> pixNames =
-        new TreeMap<String, PropertyInfoIndex>();
+        new TreeMap<>();
 
       for (PropertyInfoIndex ipe: PropertyInfoIndex.values()) {
         pixNames.put(ipe.name(), ipe);
@@ -297,6 +313,44 @@ public class IcalPropertyHandler {
 
         emit(env, mip);
         pixNames.remove(ipe.name());
+      }
+
+      pinfoOut.println("  }");
+      pinfoOut.println();
+
+      pinfoOut.println("  /** An array of property indexes required for valid events */");
+      pinfoOut.println("  public static Set<PropertyInfoIndex> requiredPindexes = ");
+      pinfoOut.println("          new TreeSet<>();");
+      pinfoOut.println();
+      pinfoOut.println("  static {");
+
+      for (PropertyInfoIndex ipe: sorted) {
+        MergedIcalProperty mip = pinfos.get(ipe);
+        if ((mip == null) || !mip.required) {
+          continue;
+        }
+
+        pinfoOut.println("    requiredPindexes.add(PropertyInfoIndex." +
+                                 ipe.name() + ");");
+      }
+
+      pinfoOut.println("  }");
+      pinfoOut.println();
+
+      pinfoOut.println("  /** An array of property indexes required for valid annotations */");
+      pinfoOut.println("  public static Set<PropertyInfoIndex> requiredAnnotationPindexes = ");
+      pinfoOut.println("          new TreeSet<>();");
+      pinfoOut.println();
+      pinfoOut.println("  static {");
+
+      for (PropertyInfoIndex ipe: sorted) {
+        MergedIcalProperty mip = pinfos.get(ipe);
+        if ((mip == null) || !mip.annotationRequired) {
+          continue;
+        }
+
+        pinfoOut.println("    requiredAnnotationPindexes.add(PropertyInfoIndex." +
+                                 ipe.name() + ");");
       }
 
       pinfoOut.println("  }");
@@ -376,9 +430,12 @@ public class IcalPropertyHandler {
   private static final PinfoField[] pinfoFields = {
     new PinfoField("PropertyInfoIndex", "pindex", true, false),
     new PinfoField("String", "dbFieldName"),
+    new PinfoField("String", "adderName"),
     new PinfoField("Class", "fieldType"),
     new PinfoField("String", "presenceField", "/* field we test for presence */"),
     new PinfoField("boolean", "param", "/* It's a parameter   */"),
+    new PinfoField("boolean", "required", "/* Required for a valid event   */"),
+    new PinfoField("boolean", "annotationRequired", "/* Required for a valid annotation   */"),
     new PinfoField("boolean", "reschedule",
                    "/* True if changing this forces a reschedule */"),
     new PinfoField("boolean", "multiValued", "/* Derived during generation */"),
@@ -403,6 +460,8 @@ public class IcalPropertyHandler {
 
     makePar(parIndent, quote(ip.dbFieldName), "dbFieldName");
 
+    makePar(parIndent, quote(ip.adderName), "adderName");
+
     if (ip.fieldType == null) {
       makePar(parIndent, "null", "fieldType");
     } else {
@@ -412,6 +471,10 @@ public class IcalPropertyHandler {
     makePar(parIndent, quote(ip.presenceField), "presenceField");
 
     makePar(parIndent, ip.param, "param");
+
+    makePar(parIndent, ip.required, "required");
+
+    makePar(parIndent, ip.annotationRequired, "annotationRequired");
 
     makePar(parIndent, ip.reschedule, "reschedule");
 
@@ -477,6 +540,8 @@ public class IcalPropertyHandler {
     imports.add("org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex");
     imports.add("java.io.Serializable");
     imports.add("java.util.HashMap");
+    imports.add("java.util.Set");
+    imports.add("java.util.TreeSet");
 
     pinfoOut.println("/* Auto generated file - do not edit ");
     pinfoOut.println(" */");
@@ -546,7 +611,7 @@ public class IcalPropertyHandler {
     pinfoOut.println("  }");
 
     pinfoOut.println("  private static HashMap<PropertyInfoIndex, BwIcalPropertyInfoEntry> info = ");
-    pinfoOut.println("          new HashMap<PropertyInfoIndex, BwIcalPropertyInfoEntry>();");
+    pinfoOut.println("          new HashMap<>();");
     pinfoOut.println();
     pinfoOut.println("  static {");
   }

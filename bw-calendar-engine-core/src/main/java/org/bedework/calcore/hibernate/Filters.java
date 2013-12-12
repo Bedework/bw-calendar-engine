@@ -18,8 +18,6 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calcore.FieldNamesEntry;
-import org.bedework.calcore.FieldNamesMap.FieldnamesList;
 import org.bedework.calcorei.HibSession;
 import org.bedework.caldav.util.TimeRange;
 import org.bedework.caldav.util.filter.AndFilter;
@@ -209,7 +207,8 @@ public class Filters implements Serializable {
    * @param retrieveListFields
    * @throws CalFacadeException
    */
-  public void joinPass(final FieldnamesList retrieveListFields) throws CalFacadeException {
+  public void joinPass(final List<BwIcalPropertyInfoEntry> retrieveListFields)
+          throws CalFacadeException {
     if (getFilter() == null) {
       return;
     }
@@ -217,13 +216,13 @@ public class Filters implements Serializable {
     joinDone.clear();
 
     if (!Util.isEmpty(retrieveListFields)) {
-      for (FieldNamesEntry fent: retrieveListFields) {
-        if (!fent.getMulti()) {
+      for (BwIcalPropertyInfoEntry ipie: retrieveListFields) {
+        if (!ipie.getMultiValued()) {
           // No join needed
           continue;
         }
 
-        String fname = fent.getFname();
+        String fname = ipie.getDbFieldName();
 
         if (joinDone.get(fname) != null) {
           // Already done

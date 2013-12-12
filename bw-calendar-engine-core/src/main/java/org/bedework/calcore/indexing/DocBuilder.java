@@ -580,7 +580,7 @@ public class DocBuilder {
         indexDate(builder, PropertyInfoIndex.INDEX_END, end);
       }
 
-      makeField(builder, PropertyInfoIndex.START_PRESENT,
+      makeField(builder, PropertyInfoIndex.NO_START,
                 String.valueOf(ev.getNoStart()));
       makeField(builder, PropertyInfoIndex.END_TYPE,
                 String.valueOf(ev.getEndType()));

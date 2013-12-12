@@ -42,8 +42,17 @@ public @interface IcalProperty {
   /** used in db queries - better extracted from the schema? */
   String dbFieldName() default "";
 
+  /** For multiple fields the unprefixed add method name */
+  String adderName() default "";
+
   /** field we test for presence */
   String presenceField() default "";
+
+  /** Required for a valid event   */
+  boolean required() default false;
+
+  /** Required for a valid annotation   */
+  boolean annotationRequired() default false;
 
   /** It's a parameter   */
   boolean param() default false;

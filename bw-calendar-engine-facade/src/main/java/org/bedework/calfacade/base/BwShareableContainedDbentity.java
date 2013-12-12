@@ -46,6 +46,7 @@ public class BwShareableContainedDbentity<T> extends BwShareableDbentity<T> {
    * @param val    String path
    */
   @IcalProperty(pindex = PropertyInfoIndex.COLLECTION,
+                required = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,

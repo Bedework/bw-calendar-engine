@@ -56,6 +56,7 @@ public class BwShareableDbentity<T> extends BwOwnedDbentity<T> {
    * @param val     String creator of the entity
    */
   @IcalProperty(pindex = PropertyInfoIndex.CREATOR,
+                required = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -77,6 +78,13 @@ public class BwShareableDbentity<T> extends BwOwnedDbentity<T> {
    *
    * @param val    String access
    */
+  @IcalProperty(pindex = PropertyInfoIndex.ACL,
+                required = true,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true,
+                freeBusyProperty = true,
+                vavailabilityProperty = true)
   public void setAccess(final String val) {
     access = val;
   }

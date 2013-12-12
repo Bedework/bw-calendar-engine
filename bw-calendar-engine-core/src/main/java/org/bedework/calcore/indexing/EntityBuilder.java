@@ -227,7 +227,7 @@ public class EntityBuilder  {
     ev.setDtstart(unindexDate(PropertyInfoIndex.DTSTART));
     ev.setDtend(unindexDate(PropertyInfoIndex.DTEND));
 
-    ev.setNoStart(Boolean.parseBoolean(getString(PropertyInfoIndex.START_PRESENT)));
+    ev.setNoStart(Boolean.parseBoolean(getString(PropertyInfoIndex.NO_START)));
     ev.setEndType(getString(PropertyInfoIndex.END_TYPE).charAt(0));
     ev.setDuration(getString(PropertyInfoIndex.DURATION));
 

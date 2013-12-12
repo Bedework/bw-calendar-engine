@@ -568,6 +568,10 @@ public abstract class CalintfHelper
     getLogger().debug(msg);
   }
 
+  protected void warn(final String msg) {
+    getLogger().warn(msg);
+  }
+
   protected void trace(final String msg) {
     getLogger().debug(msg);
   }

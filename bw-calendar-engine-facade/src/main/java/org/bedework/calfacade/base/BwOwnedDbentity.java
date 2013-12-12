@@ -47,6 +47,7 @@ public class BwOwnedDbentity<T> extends BwDbentity<T> {
    * @param val     String owner path of the entity e.g. /principals/users/jim
    */
   @IcalProperty(pindex = PropertyInfoIndex.OWNER,
+                required = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,

@@ -18,19 +18,19 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calcore.FieldNamesEntry;
-import org.bedework.calcore.FieldNamesMap.FieldnamesList;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Mike Douglass
@@ -39,7 +39,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
   private StringBuilder sb = new StringBuilder();
   private HibSession sess;
 
-  public void fields(final FieldnamesList retrieveListFields,
+  public void fields(final List<BwIcalPropertyInfoEntry> retrieveListFields,
                      final String name,
                      final boolean isAnnotation) {
     if (Util.isEmpty(retrieveListFields)) {
@@ -49,17 +49,17 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
     }
 
     String delim = "";
-    for (FieldNamesEntry fent: retrieveListFields) {
+    for (BwIcalPropertyInfoEntry ipie: retrieveListFields) {
       sb.append(delim);
 
-      if (fent.getMulti()) {
+      if (ipie.getMultiValued()) {
         sb.append("joined_");
       } else {
         sb.append(name);
         sb.append(".");
       }
 
-      sb.append(fent.getFname());
+      sb.append(ipie.getDbFieldName());
       delim = ", ";
     }
 
