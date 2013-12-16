@@ -18,6 +18,8 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.InternalEventKey;
@@ -62,9 +64,6 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
-
-import org.bedework.access.AccessPrincipal;
-import org.bedework.access.PrivilegeDefs;
 
 import net.fortuna.ical4j.model.Component;
 
@@ -136,7 +135,7 @@ class Events extends CalSvcDb implements EventsI {
   @Override
   public Collection<EventInfo> getEvents(final BwCalendar cal, final FilterBase filter,
                                          final BwDateTime startDate, final BwDateTime endDate,
-                                         final List<String> retrieveList,
+                                         final List<BwIcalPropertyInfoEntry> retrieveList,
                                          final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
     Collection<BwCalendar> cals = null;
@@ -799,7 +798,7 @@ class Events extends CalSvcDb implements EventsI {
   Collection<EventInfo> getMatching(final Collection<BwCalendar> cals,
                                     final FilterBase filter,
                                     final BwDateTime startDate, final BwDateTime endDate,
-                                    final List<String> retrieveList,
+                                    final List<BwIcalPropertyInfoEntry> retrieveList,
                                     final RecurringRetrievalMode recurRetrieval,
                                     final boolean freeBusy) throws CalFacadeException {
     TreeSet<EventInfo> ts = new TreeSet<EventInfo>();
@@ -1336,7 +1335,7 @@ class Events extends CalSvcDb implements EventsI {
                                          null, "TRUE"));
       event.addAlarm(alarm);
 
-      ei.getChangeset(getPrincipalHref()).addValue(Component.VALARM, alarm);
+      ei.getChangeset(getPrincipalHref()).addValue(PropertyInfoIndex.VALARM, alarm);
     }
   }
 

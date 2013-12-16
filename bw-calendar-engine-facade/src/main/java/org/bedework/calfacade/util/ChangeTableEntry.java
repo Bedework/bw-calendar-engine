@@ -43,9 +43,6 @@ public class ChangeTableEntry {
   /** Immutable: Index of the property */
   private PropertyInfoIndex index;
 
-  /** Immutable: Name of the property */
-  private String name;
-
   private Object oldVal;
   private Object newVal;
 
@@ -82,8 +79,8 @@ public class ChangeTableEntry {
   private boolean listField;
 
   /* Used to supply new entries */
-  private static HashMap<String, ChangeTableEntry> map =
-    new HashMap<String, ChangeTableEntry>();
+  private static HashMap<PropertyInfoIndex, ChangeTableEntry> map =
+    new HashMap<>();
 
   static {
     initMap();
@@ -100,7 +97,6 @@ public class ChangeTableEntry {
     this.chg = chg;
     this.multiValued = multiValued;
     this.index = index;
-    name = index.getPname();
   }
 
   /**
@@ -110,21 +106,6 @@ public class ChangeTableEntry {
   public ChangeTableEntry(final boolean multiValued,
                           final PropertyInfoIndex index) {
     this(null, multiValued, index);
-  }
-
-  /**
-   * @param chg
-   * @param multiValued
-   * @param name
-d   * @param todoProperty
-   */
-  public ChangeTableEntry(final ChangeTable chg,
-                          final boolean multiValued,
-                          final String name) {
-    this.chg = chg;
-    this.multiValued = multiValued;
-    index = PropertyInfoIndex.UNKNOWN_PROPERTY;
-    this.name = name;
   }
 
   /**
@@ -143,6 +124,7 @@ d   * @param todoProperty
     this(null, false, index);
   }
 
+
   /** Return a new entry based on this entry.
    *
    * @param chg - the change table
@@ -156,15 +138,15 @@ d   * @param todoProperty
     return cte;
   }
 
-  /** Return a new entry given the property name.
+  /** Return a new entry given the property index.
    *
    * @param chg - the change table
-   * @param name
+   * @param index
    * @return ChangeTableEntry
    */
   public static ChangeTableEntry newEntry(final ChangeTable chg,
-                                          final String name) {
-    ChangeTableEntry ent = map.get(name);
+                                          final PropertyInfoIndex index) {
+    ChangeTableEntry ent = map.get(index);
     if (ent == null) {
       return null;
     }
@@ -227,13 +209,6 @@ d   * @param todoProperty
    */
   public PropertyInfoIndex getIndex() {
     return index;
-  }
-
-  /**
-   * @return Name of the property
-   */
-  public String getName() {
-    return name;
   }
 
   /**
@@ -690,7 +665,6 @@ d   * @param todoProperty
     ToString ts = new ToString(this);
 
     ts.append("index", index.toString());
-    ts.append("name", name);
     ts.append("added", added);
     ts.append("deleted", deleted);
     ts.append("changed", changed);
@@ -835,6 +809,6 @@ d   * @param todoProperty
   }
 
   private static void put(final ChangeTableEntry ent) {
-    map.put(ent.name, ent);
+    map.put(ent.index, ent);
   }
 }

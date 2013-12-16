@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.Categories;
 import org.bedework.util.caching.FlushMap;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
 
@@ -98,7 +99,7 @@ public class CategoriesImpl
 
   @Override
   BwCategory fetchIndexedByUid(String uid) throws CalFacadeException {
-    return getIndexer().fetchCat("uid", uid);
+    return getIndexer().fetchCat(uid, PropertyInfoIndex.UID);
   }
 
   BwCategory findPersistent(final BwCategory val,
@@ -113,7 +114,9 @@ public class CategoriesImpl
 
   @Override
   public BwCategory find(final BwString val) throws CalFacadeException {
-    return getIndexer().fetchCat("categories.value", val.getValue());
+    return getIndexer().fetchCat(val.getValue(),
+                                 PropertyInfoIndex.CATEGORIES,
+                                 PropertyInfoIndex.VALUE);
   }
 }
 

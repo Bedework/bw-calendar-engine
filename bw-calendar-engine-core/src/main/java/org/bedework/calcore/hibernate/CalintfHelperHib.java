@@ -45,20 +45,20 @@ public abstract class CalintfHelperHib extends CalintfHelper
      * @return HibSession
      * @throws CalFacadeException
      */
-    public HibSession getSess() throws CalFacadeException;
+    HibSession getSess() throws CalFacadeException;
 
     /** Only valid during a transaction.
      *
      * @return a timestamp from the db
      * @throws CalFacadeException
      */
-    public Timestamp getCurrentTimestamp() throws CalFacadeException;
+    Timestamp getCurrentTimestamp() throws CalFacadeException;
 
     /**
      * @return BwStats
      * @throws CalFacadeException
      */
-    public BwStats getStats() throws CalFacadeException;
+    BwStats getStats() throws CalFacadeException;
 
     /** Used to fetch a calendar from the cache - assumes any access
      *
@@ -66,7 +66,7 @@ public abstract class CalintfHelperHib extends CalintfHelper
      * @return BwCalendar
      * @throws CalFacadeException
      */
-    public BwCalendar getCollection(String path) throws CalFacadeException;
+    BwCalendar getCollection(String path) throws CalFacadeException;
 
     /** Used to fetch a category from the cache - assumes any access
      *
@@ -74,7 +74,7 @@ public abstract class CalintfHelperHib extends CalintfHelper
      * @return BwCategory
      * @throws CalFacadeException
      */
-    public BwCategory getCategory(String uid) throws CalFacadeException;
+    BwCategory getCategory(String uid) throws CalFacadeException;
 
     /** Used to fetch a calendar from the cache
      *
@@ -84,9 +84,9 @@ public abstract class CalintfHelperHib extends CalintfHelper
      * @return BwCalendar
      * @throws CalFacadeException
      */
-    public BwCalendar getCollection(String path,
-                                    int desiredAccess,
-                                    boolean alwaysReturn) throws CalFacadeException;
+    BwCalendar getCollection(String path,
+                             int desiredAccess,
+                             boolean alwaysReturn) throws CalFacadeException;
 
     /** Called to notify container that an event occurred. This method should
      * queue up notifications until after transaction commit as consumers
@@ -95,28 +95,28 @@ public abstract class CalintfHelperHib extends CalintfHelper
      * @param ev
      * @throws CalFacadeException
      */
-    public void postNotification(final SysEvent ev) throws CalFacadeException;
+    void postNotification(final SysEvent ev) throws CalFacadeException;
 
     /**
      * @return true if restoring
      */
-    public boolean getForRestore();
+    boolean getForRestore();
   }
 
   private CalintfHelperHibCb calintfCb;
-
-  protected BwCalendar getCollection(String path,
-                                     int desiredAccess,
-                                     boolean alwaysReturn) throws CalFacadeException {
-    return getCalintfCb().getCollection(path, desiredAccess,
-                                        alwaysReturn);
-  }
 
   /**
    * @param calintfCb
    */
   public CalintfHelperHib(final CalintfHelperHibCb calintfCb) {
     this.calintfCb = calintfCb;
+  }
+
+  protected BwCalendar getCollection(String path,
+                                     int desiredAccess,
+                                     boolean alwaysReturn) throws CalFacadeException {
+    return getCalintfCb().getCollection(path, desiredAccess,
+                                        alwaysReturn);
   }
 
   protected HibSession getSess() throws CalFacadeException {

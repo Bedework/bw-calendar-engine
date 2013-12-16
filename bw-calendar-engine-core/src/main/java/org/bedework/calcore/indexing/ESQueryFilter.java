@@ -36,6 +36,7 @@ import org.bedework.calfacade.filter.BwCreatorFilter;
 import org.bedework.calfacade.filter.BwHrefFilter;
 import org.bedework.calfacade.filter.BwViewFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
@@ -69,12 +70,37 @@ public class ESQueryFilter {
   private final String principal;
   private boolean queryLimited;
 
+  private static String colpathJname = getJname(PropertyInfoIndex.COLPATH);
+  private static String dtendJname = getJname(PropertyInfoIndex.DTEND);
+  private static String dtstartJname = getJname(PropertyInfoIndex.DTSTART);
+  private static String hrefJname = getJname(PropertyInfoIndex.HREF);
+  private static String ownerJname = getJname(PropertyInfoIndex.OWNER);
+
+  private static String indexEndJname = getJname(PropertyInfoIndex.INDEX_END);
+  private static String indexStartJname = getJname(PropertyInfoIndex.INDEX_START);
+
+  private static String dtEndUTCRef = makePropertyRef(PropertyInfoIndex.DTEND,
+                                                          PropertyInfoIndex.UTC);
+  private static String dtStartUTCRef = makePropertyRef(PropertyInfoIndex.DTSTART,
+                                                          PropertyInfoIndex.UTC);
+
   public ESQueryFilter(final boolean publick,
                        final String principal) {
     debug = getLog().isDebugEnabled();
 
     this.publick = publick;
     this.principal = principal;
+  }
+
+  public FilterBuilder buildFilter(final String val,
+                                   final PropertyInfoIndex... index) throws CalFacadeException {
+    StringBuilder sb = new StringBuilder();
+
+    FilterBuilder fb = addPrincipal(addTerm(null,
+                                            makePropertyRef(index),
+                                            val));
+
+    return fb;
   }
 
   public FilterBuilder buildFilter(final String field,
@@ -120,8 +146,7 @@ public class ESQueryFilter {
     if (start != null) {
       // End of events must be on or after the start of the range
       RangeFilterBuilder rfb = new RangeFilterBuilder(
-              PropertyInfoIndex.DTEND.getJname() + "." +
-                      PropertyInfoIndex.UTC.getJname());
+              dtEndUTCRef);
 
       rfb.gte(dateTimeUTC(start));
 
@@ -139,8 +164,7 @@ public class ESQueryFilter {
     if (end != null) {
       // Start of events must be before the end of the range
       RangeFilterBuilder rfb = new RangeFilterBuilder(
-              PropertyInfoIndex.DTEND.getJname() + "." +
-                      PropertyInfoIndex.UTC.getJname());
+              dtStartUTCRef);
 
       rfb.lt(dateTimeUTC(end));
 
@@ -202,7 +226,7 @@ public class ESQueryFilter {
   public FilterBuilder addTerm(final FilterBuilder filter,
                                final PropertyInfoIndex pi,
                                final String val) throws CalFacadeException {
-    return addTerm(filter, pi.getJname(), val);
+    return addTerm(filter, getJname(pi), val);
   }
 
   /**
@@ -241,11 +265,40 @@ public class ESQueryFilter {
 
     for (PropertyInfoIndex pi: pis) {
       sb.append(delim);
-      sb.append(pi.getJname());
+      getJname(pi);
       delim = ".";
     }
 
     return sb.toString();
+  }
+
+  /**
+   *
+   * @param pis
+   * @return dot delimited property reference
+   */
+  public static String makePropertyRef(PropertyInfoIndex... pis) {
+    String delim = "";
+
+    StringBuilder sb = new StringBuilder();
+
+    for (PropertyInfoIndex pi: pis) {
+      sb.append(delim);
+      getJname(pi);
+      delim = ".";
+    }
+
+    return sb.toString();
+  }
+
+  private static String getJname(PropertyInfoIndex pi) {
+    BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
+
+    if (ipie == null) {
+      return null;
+    }
+
+    return ipie.getJname();
   }
 
   private String dateTimeUTC(final String dt) {
@@ -473,7 +526,7 @@ public class ESQueryFilter {
     if (f instanceof BwHrefFilter) {
       queryLimited = true;
 
-      return FilterBuilders.termFilter(PropertyInfoIndex.HREF.getJname(),
+      return FilterBuilders.termFilter(hrefJname,
                                        ((BwHrefFilter)f).getHref());
     }
 
@@ -497,24 +550,13 @@ public class ESQueryFilter {
                                    String.valueOf(pf.getPropertyIndex()));
     }
 
-    String fieldName = pf.getPropertyIndex().getJname();
-    //String fieldName = pi.getDbFieldName();
-    //boolean multi = pi.getMultiValued();
-    /*
-    boolean param = pi.getParam();
-
-    if (param) {
-      //BwIcalPropertyInfo.BwIcalPropertyInfoEntry parentPi =
-      //        BwIcalPropertyInfo.getPinfo(pf.getParentPropertyIndex());
-
-      //fieldName = parentPi.getDbFieldName() + "." + fieldName;
-      fieldName = pf.getParentPropertyIndex().getJname() +
-              "." + fieldName;
-    }
-    */
+    String fieldName;
 
     if (pf.getParentPropertyIndex() != null) {
-      fieldName = pf.getParentPropertyIndex().getJname() + "." + fieldName;
+      fieldName = makePropertyRef(pf.getParentPropertyIndex(),
+                                  pf.getPropertyIndex());
+    } else {
+      fieldName = getJname(pf.getPropertyIndex());
     }
 
     if (f instanceof PresenceFilter) {
@@ -548,7 +590,7 @@ public class ESQueryFilter {
     if (pf instanceof BwCollectionFilter) {
       BwCalendar col = ((BwCollectionFilter)pf).getEntity();
 
-      return new TermOrTerms(PropertyInfoIndex.COLPATH.getJname(),
+      return new TermOrTerms(colpathJname,
                              col.getPath(),
                              pf.getNot());
     }
@@ -701,7 +743,7 @@ public class ESQueryFilter {
     }
 
     FilterBuilder fb = FilterBuilders.termFilter(
-            PropertyInfoIndex.OWNER.getJname(), principal);
+            ownerJname, principal);
 
     if (filter == null) {
       return fb;

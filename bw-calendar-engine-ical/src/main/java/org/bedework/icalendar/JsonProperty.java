@@ -20,6 +20,7 @@ package org.bedework.icalendar;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.PropertyIndex;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.XcalUtil;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -94,9 +95,9 @@ public class JsonProperty implements Serializable {
   }
 
   private static String getType(final Property prop) {
-    String nm = prop.getName().toLowerCase();
-    PropertyIndex.PropertyInfoIndex pii = PropertyIndex
-            .PropertyInfoIndex.lookupPname(nm);
+    String nm = prop.getName().toUpperCase();
+    PropertyInfoIndex pii =
+            PropertyInfoIndex.valueOf(nm);
 
     if (pii == null) {
       return "text";

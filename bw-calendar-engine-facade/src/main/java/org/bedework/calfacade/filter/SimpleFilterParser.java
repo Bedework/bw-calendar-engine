@@ -28,6 +28,7 @@ import org.bedework.caldav.util.filter.parse.Filters;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
@@ -892,7 +893,7 @@ public abstract class SimpleFilterParser {
 
     for (PropertyInfoIndex pi: pis) {
       sb.append(delim);
-      sb.append(pi.getJname());
+      sb.append(BwIcalPropertyInfo.getPinfo(pi).getJname());
       delim = ".";
     }
 

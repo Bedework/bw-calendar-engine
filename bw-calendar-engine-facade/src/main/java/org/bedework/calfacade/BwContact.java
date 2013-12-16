@@ -20,10 +20,12 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
+import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.CollatableEntity;
 import org.bedework.calfacade.base.SizedEntity;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.QuotaUtil;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 
 import java.util.Comparator;
@@ -54,6 +56,7 @@ public class BwContact extends BwEventProperty<BwContact>
    *
    * @param val    BwString name
    */
+  @IcalProperty(pindex = PropertyInfoIndex.CN)
   public void setCn(final BwString val) {
     cn = val;
   }

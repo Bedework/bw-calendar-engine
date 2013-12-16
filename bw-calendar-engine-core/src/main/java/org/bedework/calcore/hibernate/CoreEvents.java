@@ -230,7 +230,8 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
    */
   @Override
   public Collection<CoreEventInfo> getEvent(final String colPath,
-                                            final String uid, final String rid,
+                                            final String uid,
+                                            final String rid,
                                             final boolean scheduling,
                                             final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
@@ -354,7 +355,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
                                              final FilterBase filter,
                                              final BwDateTime startDate,
                                              final BwDateTime endDate,
-                                             final List<String> retrieveList,
+                                             final List<BwIcalPropertyInfoEntry> retrieveList,
                                              RecurringRetrievalMode recurRetrieval,
                                              final boolean freeBusy) throws CalFacadeException {
     /* Ensure dates are limited explicitly or implicitly */
@@ -368,49 +369,12 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     Collection<String> colPaths = null;
 
     if (calendars != null) {
-      colPaths = new ArrayList<String>();
+      colPaths = new ArrayList<>();
       for (BwCalendar c: calendars) {
         colPaths.add(c.getPath());
 
         if (debug) {
           trace("   calendar:" + c.getPath());
-        }
-      }
-    }
-
-    List<BwIcalPropertyInfoEntry> retrieveListFields = null;
-
-    if (retrieveList != null) {
-      // Convert property names to field names
-      retrieveListFields = new ArrayList<>(retrieveList.size() +
-                                                   BwIcalPropertyInfo.requiredPindexes.size());
-
-      for (String pname: retrieveList) {
-        PropertyInfoIndex pi;
-
-        try {
-          pi = PropertyInfoIndex.valueOf(pname);
-        } catch (Throwable t) {
-          //warn("Bad property " + pname);
-          retrieveListFields = null;
-          break;
-        }
-
-        BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
-
-        if ((ipie == null) || (ipie.getMultiValued())) {
-          // At this stage it seems better to be inefficient
-          //warn("Bad property " + pname);
-          retrieveListFields = null;
-          break;
-        }
-
-        retrieveListFields.add(ipie);
-      }
-
-      if (retrieveListFields != null) {
-        for (PropertyInfoIndex pi: BwIcalPropertyInfo.requiredPindexes) {
-          retrieveListFields.add(BwIcalPropertyInfo.getPinfo(pi));
         }
       }
     }
@@ -469,7 +433,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     eqr.colPaths = colPaths;
 
     eventsQuery(eqr, startDate, endDate,
-                retrieveListFields,
+                retrieveList,
                 freeBusy,
                 null, // master
                 null, // masters
@@ -482,7 +446,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     /* Now get the annotations - these are not overrides */
     eventsQuery(eqr, startDate, endDate,
-                retrieveListFields,
+                retrieveList,
                 freeBusy,
                 null, // master
                 null, // masters
@@ -496,7 +460,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     ceis = getRecurrences(eqr, ceis,
                           startDate, endDate,
-                          retrieveListFields, recurRetrieval, desiredAccess,
+                          retrieveList, recurRetrieval, desiredAccess,
                           freeBusy);
 
     return buildVavail(ceis);

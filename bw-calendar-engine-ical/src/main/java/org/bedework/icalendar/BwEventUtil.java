@@ -41,6 +41,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.icalendar.Icalendar.TimeZoneInfo;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
@@ -69,45 +70,25 @@ import net.fortuna.ical4j.model.parameter.XParameter;
 import net.fortuna.ical4j.model.property.AcceptResponse;
 import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Attendee;
-import net.fortuna.ical4j.model.property.BusyType;
 import net.fortuna.ical4j.model.property.Categories;
-import net.fortuna.ical4j.model.property.Clazz;
-import net.fortuna.ical4j.model.property.Comment;
-import net.fortuna.ical4j.model.property.Completed;
-import net.fortuna.ical4j.model.property.Contact;
-import net.fortuna.ical4j.model.property.Created;
 import net.fortuna.ical4j.model.property.DateListProperty;
 import net.fortuna.ical4j.model.property.DateProperty;
-import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.DtEnd;
-import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Due;
 import net.fortuna.ical4j.model.property.Duration;
-import net.fortuna.ical4j.model.property.ExDate;
-import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.FreeBusy;
 import net.fortuna.ical4j.model.property.Geo;
-import net.fortuna.ical4j.model.property.LastModified;
-import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.PercentComplete;
 import net.fortuna.ical4j.model.property.PollItemId;
 import net.fortuna.ical4j.model.property.PollMode;
 import net.fortuna.ical4j.model.property.PollProperties;
 import net.fortuna.ical4j.model.property.Priority;
-import net.fortuna.ical4j.model.property.RDate;
-import net.fortuna.ical4j.model.property.RRule;
-import net.fortuna.ical4j.model.property.RecurrenceId;
 import net.fortuna.ical4j.model.property.RelatedTo;
 import net.fortuna.ical4j.model.property.RequestStatus;
 import net.fortuna.ical4j.model.property.Resources;
 import net.fortuna.ical4j.model.property.Sequence;
-import net.fortuna.ical4j.model.property.Status;
-import net.fortuna.ical4j.model.property.Summary;
-import net.fortuna.ical4j.model.property.Transp;
-import net.fortuna.ical4j.model.property.Uid;
-import net.fortuna.ical4j.model.property.Url;
 import net.fortuna.ical4j.model.property.Voter;
 import net.fortuna.ical4j.model.property.XProperty;
 
@@ -422,7 +403,7 @@ public class BwEventUtil extends IcalUtil {
 
         if ((evrid == null) || (!evrid.equals(rid))) {
           warn("Mismatched rid ev=" + evrid + " expected " + rid);
-          chg.changed(Property.RECURRENCE_ID, evrid, rid); // XXX spurious???
+          chg.changed(PropertyInfoIndex.RECURRENCE_ID, evrid, rid); // XXX spurious???
         }
 
         if (masterEI.getEvent().getSuppressed()) {
@@ -461,461 +442,589 @@ public class BwEventUtil extends IcalUtil {
           pval = null;
         }
 
-        chg.present(prop.getName());
+        PropertyInfoIndex pi = PropertyInfoIndex.valueOf(prop.getName());
 
-        if (prop instanceof AcceptResponse) {
-          /* ------------------- Poll mode -------------------- */
+        if (pi == null) {
+          debugMsg("Unknown property with name " + prop.getName() +
+                           " class " + prop.getClass() +
+                           " and value " + pval);
+          continue;
+        }
 
-          String sval = ((AcceptResponse)prop).getValue();
-          if (chg.changed(prop.getName(), ev.getPollAcceptResponse(), sval)) {
-            ev.setPollAcceptResponse(sval);
-          }
-        } else if (prop instanceof Attach) {
-          /* ------------------- Attachment -------------------- */
+        chg.present(pi);
 
-          chg.addValue(prop.getName(), getAttachment((Attach)prop));
-        } else if (prop instanceof Attendee) {
-          /* ------------------- Attendee -------------------- */
+        switch (pi) {
+          case ACCEPT_RESPONSE:
+            /* ------------------- Accept Response -------------------- */
 
-          if (methodType == ScheduleMethods.methodTypePublish) {
-            if (cb.getStrictness() == IcalCallback.conformanceStrict) {
-              throw new CalFacadeException(CalFacadeException.attendeesInPublish);
+            String sval = ((AcceptResponse)prop).getValue();
+            if (chg.changed(pi, ev.getPollAcceptResponse(), sval)) {
+              ev.setPollAcceptResponse(sval);
+            }
+            break;
+
+          case ATTACH:
+            /* ------------------- Attachment -------------------- */
+
+            chg.addValue(pi, getAttachment((Attach)prop));
+            break;
+
+          case ATTENDEE:
+            /* ------------------- Attendee -------------------- */
+
+            if (methodType == ScheduleMethods.methodTypePublish) {
+              if (cb.getStrictness() == IcalCallback.conformanceStrict) {
+                throw new CalFacadeException(CalFacadeException.attendeesInPublish);
+              }
+
+              if (cb.getStrictness() == IcalCallback.conformanceWarn) {
+                //warn("Had attendees for PUBLISH");
+              }
             }
 
-            if (cb.getStrictness() == IcalCallback.conformanceWarn) {
-              //warn("Had attendees for PUBLISH");
-            }
-          }
+            Attendee attPr = (Attendee)prop;
 
-          Attendee attPr = (Attendee)prop;
+            if (evinfo.getNewEvent() || !mergeAttendees) {
+              chg.addValue(pi, getAttendee(cb, attPr));
+            } else {
+              String pUri = cb.getCaladdr(attPr.getValue());
 
-          if (evinfo.getNewEvent() || !mergeAttendees) {
-            chg.addValue(prop.getName(), getAttendee(cb, attPr));
-          } else {
-            String pUri = cb.getCaladdr(attPr.getValue());
-
-            if (pUri.equals(attUri)) {
-              /* Only update for our own attendee
+              if (pUri.equals(attUri)) {
+                /* Only update for our own attendee
                * We're doing a PUT and this must be the attendee updating their
                * partstat. We don't allow them to change other attendees
                * whatever the PUT content says.
                */
-              chg.addValue(prop.getName(), getAttendee(cb, attPr));
-            } else {
-              // Use the value we currently have
-              for (BwAttendee att: ev.getAttendees()) {
-                if (pUri.equals(att.getAttendeeUri())) {
-                  chg.addValue(prop.getName(), att.clone());
-                  break;
+                chg.addValue(pi, getAttendee(cb, attPr));
+              } else {
+                // Use the value we currently have
+                for (BwAttendee att: ev.getAttendees()) {
+                  if (pUri.equals(att.getAttendeeUri())) {
+                    chg.addValue(pi, att.clone());
+                    break;
+                  }
                 }
               }
             }
-          }
-        } else if (prop instanceof BusyType) {
-          int ibt = BwEvent.fromBusyTypeString(pval);
-          if (chg.changed(prop.getName(),
-                          ev.getBusyType(),
-                          ibt)) {
-            ev.setBusyType(ibt);
-          }
-        } else if (prop instanceof Categories) {
-          /* ------------------- Categories -------------------- */
 
-          Categories cats = (Categories)prop;
-          CategoryList cl = cats.getCategories();
-          String lang = getLang(cats);
+            break;
 
-          if (cl != null) {
-            /* Got some categories */
-
-            Iterator cit = cl.iterator();
-
-            while (cit.hasNext()) {
-              String wd = (String)cit.next();
-              if (wd == null) {
-                continue;
-              }
-
-              BwString key = new BwString(lang, wd);
-
-              BwCategory cat = cb.findCategory(key);
-
-              if (cat == null) {
-                cat = BwCategory.makeCategory();
-                cat.setWord(key);
-
-                cb.addCategory(cat);
-              }
-
-              chg.addValue(prop.getName(), cat);
-            }
-          }
-        } else if (prop instanceof Clazz) {
-          /* ------------------- Class -------------------- */
-
-          if (chg.changed(prop.getName(), ev.getClassification(), pval)) {
-            ev.setClassification(pval);
-          }
-        } else if (prop instanceof Comment) {
-          /* ------------------- Comment -------------------- */
-
-          chg.addValue(prop.getName(),
-                       new BwString(null, pval));
-        } else if (prop instanceof Completed) {
-          /* ------------------- Completed -------------------- */
-
-          if (chg.changed(prop.getName(), ev.getCompleted(), pval)) {
-            ev.setCompleted(pval);
-          }
-        } else if (prop instanceof Contact) {
-          /* ------------------- Contact -------------------- */
-
-          String altrep = getAltRepPar(prop);
-          String lang = getLang(prop);
-          String uid = getUidPar(prop);
-          BwString nm = new BwString(lang, pval);
-
-          BwContact contact = null;
-
-          if (uid != null) {
-            contact = cb.getContact(uid);
-          }
-
-          if (contact == null) {
-            contact = cb.findContact(nm);
-          }
-
-          if (contact == null) {
-            contact = BwContact.makeContact();
-            contact.setCn(nm);
-            contact.setLink(altrep);
-            cb.addContact(contact);
-          } else {
-            contact.setCn(nm);
-            contact.setLink(altrep);
-          }
-
-          chg.addValue(prop.getName(), contact);
-        } else if (prop instanceof Created) {
-          /* ------------------- Created -------------------- */
-
-          if (chg.changed(prop.getName(), ev.getCreated(), pval)) {
-            ev.setCreated(pval);
-          }
-        } else if (prop instanceof Description) {
-          /* ------------------- Description -------------------- */
-
-          if (chg.changed(prop.getName(), ev.getDescription(), pval)) {
-            ev.setDescription(pval);
-          }
-        } else if (prop instanceof DtEnd) {
-          /* ------------------- DtEnd -------------------- */
-        } else if (prop instanceof DtStamp) {
-          /* ------------------- DtStamp -------------------- */
-
-          ev.setDtstamp(pval);
-        } else if (prop instanceof DtStart) {
-          /* ------------------- DtStart -------------------- */
-        } else if (prop instanceof Duration) {
-          /* ------------------- Duration -------------------- */
-        } else if (prop instanceof ExDate) {
-          /* ------------------- ExDate -------------------- */
-
-          chg.addValues(prop.getName(),
-                        makeDateTimes((DateListProperty)prop));
-        } else if (prop instanceof ExRule) {
-          /* ------------------- ExRule -------------------- */
-
-          chg.addValue(prop.getName(), pval);
-        } else if (prop instanceof FreeBusy) {
-          /* ------------------- freebusy -------------------- */
-
-          FreeBusy fbusy = (FreeBusy)prop;
-          PeriodList perpl = fbusy.getPeriods();
-          Parameter par = getParameter(fbusy, "FBTYPE");
-          int fbtype;
-
-          if (par == null) {
-            fbtype = BwFreeBusyComponent.typeBusy;
-          } else if (par.equals(FbType.BUSY)) {
-            fbtype = BwFreeBusyComponent.typeBusy;
-          } else if (par.equals(FbType.BUSY_TENTATIVE)) {
-            fbtype = BwFreeBusyComponent.typeBusyTentative;
-          } else if (par.equals(FbType.BUSY_UNAVAILABLE)) {
-            fbtype = BwFreeBusyComponent.typeBusyUnavailable;
-          } else if (par.equals(FbType.FREE)) {
-            fbtype = BwFreeBusyComponent.typeFree;
-          } else {
-            if (debug) {
-              debugMsg("Unsupported parameter " + par.getName());
+          case BUSYTYPE:
+            int ibt = BwEvent.fromBusyTypeString(pval);
+            if (chg.changed(pi,
+                            ev.getBusyType(),
+                            ibt)) {
+              ev.setBusyType(ibt);
             }
 
-            throw new IcalMalformedException("parameter " + par.getName());
-          }
+            break;
 
-          BwFreeBusyComponent fbc = new BwFreeBusyComponent();
+          case CATEGORIES:
+            /* ------------------- Categories -------------------- */
 
-          fbc.setType(fbtype);
+            Categories cats = (Categories)prop;
+            CategoryList cl = cats.getCategories();
+            String lang = getLang(cats);
 
-          Iterator perit = perpl.iterator();
-          while (perit.hasNext()) {
-            Period per = (Period)perit.next();
+            if (cl != null) {
+              /* Got some categories */
 
-            fbc.addPeriod(per);
-          }
+              Iterator cit = cl.iterator();
 
-          ev.addFreeBusyPeriod(fbc);
-        } else if (prop instanceof Geo) {
-          /* ------------------- Geo -------------------- */
+              while (cit.hasNext()) {
+                String wd = (String)cit.next();
+                if (wd == null) {
+                  continue;
+                }
 
-          Geo g = (Geo)prop;
-          BwGeo geo = new BwGeo(g.getLatitude(), g.getLongitude());
-          if (chg.changed(prop.getName(), ev.getGeo(), geo)) {
-            ev.setGeo(geo);
-          }
-        } else if (prop instanceof LastModified) {
-          /* ------------------- LastModified -------------------- */
+                BwString key = new BwString(lang, wd);
 
-          if (chg.changed(prop.getName(), ev.getLastmod(), pval)) {
-            ev.setLastmod(pval);
-          }
-        } else if (prop instanceof Location) {
-          /* ------------------- Location -------------------- */
-          BwLocation loc = null;
-          //String uid = getUidPar(prop);
+                BwCategory cat = cb.findCategory(key);
 
-          /* At the moment Mozilla lightning is broken and this leads to all
+                if (cat == null) {
+                  cat = BwCategory.makeCategory();
+                  cat.setWord(key);
+
+                  cb.addCategory(cat);
+                }
+
+                chg.addValue(pi, cat);
+              }
+            }
+
+            break;
+
+          case CLASS:
+            /* ------------------- Class -------------------- */
+
+            if (chg.changed(pi, ev.getClassification(), pval)) {
+              ev.setClassification(pval);
+            }
+
+            break;
+
+          case COMMENT:
+            /* ------------------- Comment -------------------- */
+
+            chg.addValue(pi,
+                         new BwString(null, pval));
+
+            break;
+
+          case COMPLETED:
+            /* ------------------- Completed -------------------- */
+
+            if (chg.changed(pi, ev.getCompleted(), pval)) {
+              ev.setCompleted(pval);
+            }
+
+            break;
+
+          case CONTACT:
+            /* ------------------- Contact -------------------- */
+
+            String altrep = getAltRepPar(prop);
+            lang = getLang(prop);
+            String uid = getUidPar(prop);
+            BwString nm = new BwString(lang, pval);
+
+            BwContact contact = null;
+
+            if (uid != null) {
+              contact = cb.getContact(uid);
+            }
+
+            if (contact == null) {
+              contact = cb.findContact(nm);
+            }
+
+            if (contact == null) {
+              contact = BwContact.makeContact();
+              contact.setCn(nm);
+              contact.setLink(altrep);
+              cb.addContact(contact);
+            } else {
+              contact.setCn(nm);
+              contact.setLink(altrep);
+            }
+
+            chg.addValue(pi, contact);
+
+            break;
+
+          case CREATED:
+            /* ------------------- Created -------------------- */
+
+            if (chg.changed(pi, ev.getCreated(), pval)) {
+              ev.setCreated(pval);
+            }
+
+            break;
+
+          case DESCRIPTION:
+            /* ------------------- Description -------------------- */
+
+            if (chg.changed(pi, ev.getDescription(), pval)) {
+              ev.setDescription(pval);
+            }
+
+            break;
+
+          case DTEND:
+            /* ------------------- DtEnd -------------------- */
+
+            break;
+
+          case DTSTAMP:
+            /* ------------------- DtStamp -------------------- */
+
+            ev.setDtstamp(pval);
+
+            break;
+
+          case DTSTART:
+            /* ------------------- DtStart -------------------- */
+
+            break;
+
+          case DURATION:
+            /* ------------------- Duration -------------------- */
+
+            break;
+
+          case EXDATE:
+            /* ------------------- ExDate -------------------- */
+
+            chg.addValues(pi,
+                          makeDateTimes((DateListProperty)prop));
+
+            break;
+
+          case EXRULE:
+            /* ------------------- ExRule -------------------- */
+
+            chg.addValue(pi, pval);
+
+            break;
+
+          case FREEBUSY:
+            /* ------------------- freebusy -------------------- */
+
+            FreeBusy fbusy = (FreeBusy)prop;
+            PeriodList perpl = fbusy.getPeriods();
+            Parameter par = getParameter(fbusy, "FBTYPE");
+            int fbtype;
+
+            if (par == null) {
+              fbtype = BwFreeBusyComponent.typeBusy;
+            } else if (par.equals(FbType.BUSY)) {
+              fbtype = BwFreeBusyComponent.typeBusy;
+            } else if (par.equals(FbType.BUSY_TENTATIVE)) {
+              fbtype = BwFreeBusyComponent.typeBusyTentative;
+            } else if (par.equals(FbType.BUSY_UNAVAILABLE)) {
+              fbtype = BwFreeBusyComponent.typeBusyUnavailable;
+            } else if (par.equals(FbType.FREE)) {
+              fbtype = BwFreeBusyComponent.typeFree;
+            } else {
+              if (debug) {
+                debugMsg("Unsupported parameter " + par.getName());
+              }
+
+              throw new IcalMalformedException("parameter " + par.getName());
+            }
+
+            BwFreeBusyComponent fbc = new BwFreeBusyComponent();
+
+            fbc.setType(fbtype);
+
+            Iterator perit = perpl.iterator();
+            while (perit.hasNext()) {
+              Period per = (Period)perit.next();
+
+              fbc.addPeriod(per);
+            }
+
+            ev.addFreeBusyPeriod(fbc);
+
+            break;
+
+          case GEO:
+            /* ------------------- Geo -------------------- */
+
+            Geo g = (Geo)prop;
+            BwGeo geo = new BwGeo(g.getLatitude(), g.getLongitude());
+            if (chg.changed(pi, ev.getGeo(), geo)) {
+              ev.setGeo(geo);
+            }
+
+            break;
+
+          case LAST_MODIFIED:
+            /* ------------------- LastModified -------------------- */
+
+            if (chg.changed(pi, ev.getLastmod(), pval)) {
+              ev.setLastmod(pval);
+            }
+
+            break;
+
+          case LOCATION:
+            /* ------------------- Location -------------------- */
+            BwLocation loc = null;
+            //String uid = getUidPar(prop);
+
+            /* At the moment Mozilla lightning is broken and this leads to all
            * sorts of problems.
             if (uid != null) {
               loc = cb.getLocation(uid);
             }
            */
 
-          String lang = getLang(prop);
-          BwString addr = null;
+            lang = getLang(prop);
+            BwString addr = null;
 
-          if (pval != null) {
-            if (loc == null) {
-              addr = new BwString(lang, pval);
-              loc = cb.findLocation(addr);
+            if (pval != null) {
+              if (loc == null) {
+                addr = new BwString(lang, pval);
+                loc = cb.findLocation(addr);
+              }
+
+              if (loc == null) {
+                loc = BwLocation.makeLocation();
+                loc.setAddress(addr);
+                cb.addLocation(loc);
+              }
             }
 
-            if (loc == null) {
-              loc = BwLocation.makeLocation();
-              loc.setAddress(addr);
-              cb.addLocation(loc);
+            BwLocation evloc = ev.getLocation();
+
+            if (chg.changed(pi, evloc, loc)) {
+              // CHGTBL - this only shows that it's a different location object
+              ev.setLocation(loc);
+            } else if ((loc != null) && (evloc != null)) {
+              // See if the value is changed
+              String evval = evloc.getAddress().getValue();
+              String inval = loc.getAddress().getValue();
+              if (!evval.equals(inval)) {
+                chg.changed(pi, evval, inval);
+                evloc.getAddress().setValue(inval);
+              }
             }
-          }
 
-          BwLocation evloc = ev.getLocation();
+            break;
 
-          if (chg.changed(prop.getName(), evloc, loc)) {
-            // CHGTBL - this only shows that it's a different location object
-            ev.setLocation(loc);
-          } else if ((loc != null) && (evloc != null)) {
-            // See if the value is changed
-            String evval = evloc.getAddress().getValue();
-            String inval = loc.getAddress().getValue();
-            if (!evval.equals(inval)) {
-              chg.changed(prop.getName(), evval, inval);
-              evloc.getAddress().setValue(inval);
+          case ORGANIZER:
+            /* ------------------- Organizer -------------------- */
+
+            BwOrganizer org = getOrganizer(cb, (Organizer)prop);
+            BwOrganizer evorg = ev.getOrganizer();
+
+            if (chg.changed(pi, evorg, org)) {
+              if (evorg == null) {
+                ev.setOrganizer(org);
+              } else {
+                evorg.update(org);
+              }
             }
-          }
-        } else if (prop instanceof Organizer) {
-          /* ------------------- Organizer -------------------- */
 
-          BwOrganizer org = getOrganizer(cb, (Organizer)prop);
-          BwOrganizer evorg = ev.getOrganizer();
+            break;
 
-          if (chg.changed(prop.getName(), evorg, org)) {
-            if (evorg == null) {
-              ev.setOrganizer(org);
+          case PERCENT_COMPLETE:
+            /* ------------------- PercentComplete -------------------- */
+
+            Integer ival = new Integer(((PercentComplete)prop).getPercentage());
+            if (chg.changed(pi, ev.getPercentComplete(), ival)) {
+              ev.setPercentComplete(ival);
+            }
+
+            break;
+
+          case POLL_ITEM_ID:
+            /* ------------------- Poll item id -------------------- */
+
+            ival = new Integer(((PollItemId)prop).getPollitemid());
+            if (chg.changed(pi, ev.getPollItemId(), ival)) {
+              ev.setPollItemId(ival);
+            }
+
+            break;
+
+          case POLL_MODE:
+            /* ------------------- Poll mode -------------------- */
+
+            sval = ((PollMode)prop).getValue();
+            if (chg.changed(pi, ev.getPollMode(), sval)) {
+              ev.setPollMode(sval);
+            }
+
+            break;
+
+          case POLL_PROPERTIES:
+            /* ------------------- Poll mode -------------------- */
+
+            sval = ((PollProperties)prop).getValue();
+            if (chg.changed(pi, ev.getPollProperties(), sval)) {
+              ev.setPollProperties(sval);
+            }
+
+            break;
+          case PRIORITY:
+            /* ------------------- Priority -------------------- */
+
+            ival = new Integer(((Priority)prop).getLevel());
+            if (chg.changed(pi, ev.getPriority(), ival)) {
+              ev.setPriority(ival);
+            }
+
+            break;
+
+          case RDATE:
+            /* ------------------- RDate -------------------- */
+
+            chg.addValues(pi,
+                          makeDateTimes((DateListProperty)prop));
+
+            break;
+
+          case RECURRENCE_ID:
+            /* ------------------- RecurrenceID -------------------- */
+            // Done above
+
+            break;
+
+          case RELATED_TO:
+            /* ------------------- RelatedTo -------------------- */
+            RelatedTo irelto = (RelatedTo)prop;
+            BwRelatedTo relto = new BwRelatedTo();
+
+            String parval = IcalUtil.getParameterVal(irelto, "RELTYPE");
+            if (parval != null) {
+              relto.setRelType(parval);
+            }
+
+            relto.setValue(irelto.getValue());
+
+            if (chg.changed(pi, ev.getRelatedTo(), relto)) {
+              ev.setRelatedTo(relto);
+            }
+
+            break;
+
+          case REQUEST_STATUS:
+            /* ------------------- RequestStatus -------------------- */
+            BwRequestStatus rs = BwRequestStatus.fromRequestStatus((RequestStatus)prop);
+
+            chg.addValue(pi, rs);
+
+            break;
+
+          case RESOURCES:
+            /* ------------------- Resources -------------------- */
+
+            ResourceList rl = ((Resources)prop).getResources();
+
+            if (rl != null) {
+              /* Got some resources */
+              lang = getLang(prop);
+
+              Iterator rit = rl.iterator();
+
+              while (rit.hasNext()) {
+                BwString rsrc = new BwString(lang, (String)rit.next());
+                chg.addValue(pi, rsrc);
+              }
+            }
+
+            break;
+
+          case RRULE:
+            /* ------------------- RRule -------------------- */
+
+            chg.addValue(pi, pval);
+
+            break;
+
+          case SEQUENCE:
+            /* ------------------- Sequence -------------------- */
+
+            int seq = ((Sequence)prop).getSequenceNo();
+            if (seq != ev.getSequence()) {
+              chg.changed(pi, ev.getSequence(), seq);
+              ev.setSequence(seq);
+            }
+
+            break;
+
+          case STATUS:
+            /* ------------------- Status -------------------- */
+
+            if (chg.changed(pi, ev.getStatus(), pval)) {
+              ev.setStatus(pval);
+            }
+
+            break;
+
+          case SUMMARY:
+            /* ------------------- Summary -------------------- */
+
+            if (chg.changed(pi, ev.getSummary(), pval)) {
+              ev.setSummary(pval);
+            }
+
+            break;
+
+          case TRANSP:
+            /* ------------------- Transp -------------------- */
+
+            if (chg.changed(pi,
+                            ev.getPeruserTransparency(cb.getPrincipal().getPrincipalRef()), pval)) {
+              BwXproperty pu = ev.setPeruserTransparency(cb.getPrincipal().getPrincipalRef(),
+                                                         pval);
+              if (pu != null) {
+                chg.addValue(PropertyInfoIndex.XPROP, pu);
+              }
+            }
+
+            break;
+
+          case UID:
+            /* ------------------- Uid -------------------- */
+
+            /* We did this above */
+
+            break;
+
+          case URL:
+            /* ------------------- Url -------------------- */
+
+            if (chg.changed(pi, ev.getLink(), pval)) {
+              ev.setLink(pval);
+            }
+
+            break;
+
+          case VOTER:
+            /* ------------------- Voter -------------------- */
+
+            if (methodType == ScheduleMethods.methodTypePublish) {
+              if (cb.getStrictness() == IcalCallback.conformanceStrict) {
+                throw new CalFacadeException(CalFacadeException.attendeesInPublish);
+              }
+
+              if (cb.getStrictness() == IcalCallback.conformanceWarn) {
+                //warn("Had attendees for PUBLISH");
+              }
+            }
+
+            Voter vPr = (Voter)prop;
+
+            if (evinfo.getNewEvent() || !mergeAttendees) {
+              chg.addValue(pi, getVoter(cb, vPr));
             } else {
-              evorg.update(org);
-            }
-          }
-        } else if (prop instanceof PercentComplete) {
-          /* ------------------- PercentComplete -------------------- */
+              String pUri = cb.getCaladdr(vPr.getValue());
 
-          Integer ival = new Integer(((PercentComplete)prop).getPercentage());
-          if (chg.changed(prop.getName(), ev.getPercentComplete(), ival)) {
-            ev.setPercentComplete(ival);
-          }
-        } else if (prop instanceof PollItemId) {
-          /* ------------------- Poll item id -------------------- */
-
-          Integer ival = new Integer(((PollItemId)prop).getPollitemid());
-          if (chg.changed(prop.getName(), ev.getPollItemId(), ival)) {
-            ev.setPollItemId(ival);
-          }
-        } else if (prop instanceof PollMode) {
-          /* ------------------- Poll mode -------------------- */
-
-          String sval = ((PollMode)prop).getValue();
-          if (chg.changed(prop.getName(), ev.getPollMode(), sval)) {
-            ev.setPollMode(sval);
-          }
-        } else if (prop instanceof PollProperties) {
-          /* ------------------- Poll mode -------------------- */
-
-          String sval = ((PollProperties)prop).getValue();
-          if (chg.changed(prop.getName(), ev.getPollProperties(), sval)) {
-            ev.setPollProperties(sval);
-          }
-        } else if (prop instanceof Priority) {
-          /* ------------------- Priority -------------------- */
-
-          Integer ival = new Integer(((Priority)prop).getLevel());
-          if (chg.changed(prop.getName(), ev.getPriority(), ival)) {
-            ev.setPriority(ival);
-          }
-        } else if (prop instanceof RDate) {
-          /* ------------------- RDate -------------------- */
-
-          chg.addValues(prop.getName(),
-                        makeDateTimes((DateListProperty)prop));
-        } else if (prop instanceof RecurrenceId) {
-          /* ------------------- RecurrenceID -------------------- */
-          // Done above
-        } else if (prop instanceof RelatedTo) {
-          /* ------------------- RelatedTo -------------------- */
-          RelatedTo irelto = (RelatedTo)prop;
-          BwRelatedTo relto = new BwRelatedTo();
-
-          String par = IcalUtil.getParameterVal(irelto, "RELTYPE");
-          if (par != null) {
-            relto.setRelType(par);
-          }
-
-          relto.setValue(irelto.getValue());
-
-          if (chg.changed(prop.getName(), ev.getRelatedTo(), relto)) {
-            ev.setRelatedTo(relto);
-          }
-        } else if (prop instanceof RequestStatus) {
-          /* ------------------- RequestStatus -------------------- */
-          BwRequestStatus rs = BwRequestStatus.fromRequestStatus((RequestStatus)prop);
-
-          chg.addValue(prop.getName(), rs);
-        } else if (prop instanceof Resources) {
-          /* ------------------- Resources -------------------- */
-
-          ResourceList rl = ((Resources)prop).getResources();
-
-          if (rl != null) {
-            /* Got some resources */
-            String lang = getLang(prop);
-
-            Iterator rit = rl.iterator();
-
-            while (rit.hasNext()) {
-              BwString rsrc = new BwString(lang, (String)rit.next());
-              chg.addValue(prop.getName(), rsrc);
-            }
-          }
-        } else if (prop instanceof RRule) {
-          /* ------------------- RRule -------------------- */
-
-          chg.addValue(prop.getName(), pval);
-        } else if (prop instanceof Sequence) {
-          /* ------------------- Sequence -------------------- */
-
-          int seq = ((Sequence)prop).getSequenceNo();
-          if (seq != ev.getSequence()) {
-            chg.changed(prop.getName(), ev.getSequence(), seq);
-            ev.setSequence(seq);
-          }
-        } else if (prop instanceof Status) {
-          /* ------------------- Status -------------------- */
-
-          if (chg.changed(prop.getName(), ev.getStatus(), pval)) {
-            ev.setStatus(pval);
-          }
-        } else if (prop instanceof Summary) {
-          /* ------------------- Summary -------------------- */
-
-          if (chg.changed(prop.getName(), ev.getSummary(), pval)) {
-            ev.setSummary(pval);
-          }
-        } else if (prop instanceof Transp) {
-          /* ------------------- Transp -------------------- */
-
-          if (chg.changed(prop.getName(),
-                          ev.getPeruserTransparency(cb.getPrincipal().getPrincipalRef()), pval)) {
-            BwXproperty pu = ev.setPeruserTransparency(cb.getPrincipal().getPrincipalRef(),
-                                                       pval);
-            if (pu != null) {
-              chg.addValue("XPROP", pu);
-            }
-          }
-        } else if (prop instanceof Uid) {
-          /* ------------------- Uid -------------------- */
-
-          /* We did this above */
-        } else if (prop instanceof Url) {
-          /* ------------------- Url -------------------- */
-
-          if (chg.changed(prop.getName(), ev.getLink(), pval)) {
-            ev.setLink(pval);
-          }
-        } else if (prop instanceof Voter) {
-          /* ------------------- Voter -------------------- */
-
-          if (methodType == ScheduleMethods.methodTypePublish) {
-            if (cb.getStrictness() == IcalCallback.conformanceStrict) {
-              throw new CalFacadeException(CalFacadeException.attendeesInPublish);
-            }
-
-            if (cb.getStrictness() == IcalCallback.conformanceWarn) {
-              //warn("Had attendees for PUBLISH");
-            }
-          }
-
-          Voter vPr = (Voter)prop;
-
-          if (evinfo.getNewEvent() || !mergeAttendees) {
-            chg.addValue(prop.getName(), getVoter(cb, vPr));
-          } else {
-            String pUri = cb.getCaladdr(vPr.getValue());
-
-            if (pUri.equals(attUri)) {
-              /* Only update for our own attendee
-               * We're doing a PUT and this must be the attendee updating their
-               * response. We don't allow them to change other voters
+              if (pUri.equals(attUri)) {
+                /* Only update for our own attendee
+                 * We're doing a PUT and this must be the attendee updating their
+                 * response. We don't allow them to change other voters
                * whatever the PUT content says.
                */
-              chg.addValue(prop.getName(), getVoter(cb, vPr));
-            } else {
-              // Use the value we currently have
-              for (BwAttendee att: ev.getAttendees()) {
-                if (pUri.equals(att.getAttendeeUri())) {
-                  chg.addValue(prop.getName(), att.clone());
-                  break;
+                chg.addValue(pi, getVoter(cb, vPr));
+              } else {
+                // Use the value we currently have
+                for (BwAttendee att: ev.getAttendees()) {
+                  if (pUri.equals(att.getAttendeeUri())) {
+                    chg.addValue(pi, att.clone());
+                    break;
+                  }
                 }
               }
             }
-          }
-        } else if (prop instanceof XProperty) {
-          /* ------------------------- x-property --------------------------- */
 
-          String name = prop.getName();
+            break;
+          default:
+            if (prop instanceof XProperty) {
+              /* ------------------------- x-property --------------------------- */
 
-          if (name.equalsIgnoreCase(BwXproperty.bedeworkCost)) {
-            if (chg.changed("COST", ev.getCost(), pval)) {
-              ev.setCost(pval);
+              String name = prop.getName();
+
+              if (name.equalsIgnoreCase(BwXproperty.bedeworkCost)) {
+                if (chg.changed(PropertyInfoIndex.COST, ev.getCost(), pval)) {
+                  ev.setCost(pval);
+                }
+              } else {
+                XProperty xp = (XProperty)prop;
+                chg.addValue(PropertyInfoIndex.XPROP,
+                             new BwXproperty(name,
+                                             xp.getParameters().toString(),
+                                             pval));
+              }
+            } else {
+              if (debug) {
+                debugMsg("Unsupported property with class " + prop.getClass() +
+                                 " and value " + pval);
+              }
             }
-          } else {
-            XProperty xp = (XProperty)prop;
-            chg.addValue("XPROP",
-                         new BwXproperty(name,
-                                         xp.getParameters().toString(),
-                                         pval));
-          }
-        } else {
-          if (debug) {
-            debugMsg("Unsupported property with class " + prop.getClass() +
-                     " and value " + pval);
-          }
         }
       }
 
@@ -959,7 +1068,7 @@ public class BwEventUtil extends IcalUtil {
           }
         }
 
-        chg.addValue("XPROP",
+        chg.addValue(PropertyInfoIndex.XPROP,
                      new BwXproperty(BwXproperty.bedeworkIcal,
                                      null,
                                      valCopy.toString()));
@@ -1037,7 +1146,7 @@ public class BwEventUtil extends IcalUtil {
         continue;
       }
 
-      chg.addValue("XPROP",
+      chg.addValue(PropertyInfoIndex.XPROP,
                    new BwXproperty(BwXproperty.bedeworkXTimezone,
                                    null,
                                    BwXproperty.escapeSemi(tzi.tzid) + ";" +
@@ -1152,7 +1261,7 @@ public class BwEventUtil extends IcalUtil {
     }
 
     ChangeTable chg = evinfo.getChangeset(cb.getPrincipal().getPrincipalRef());
-    chg.changed(Property.UID, null, uid); // get that out of the way
+    chg.changed(PropertyInfoIndex.UID, null, uid); // get that out of the way
 
     evinfo.setNewEvent(true);
 

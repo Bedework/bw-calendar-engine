@@ -39,6 +39,8 @@ import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
@@ -697,7 +699,7 @@ public class EntityBuilder  {
   }
 
   private List<Object> getFieldValues(final PropertyInfoIndex id) {
-    return getFieldValues(id.getJname());
+    return getFieldValues(getJname(id));
   }
 
   private List<Object> getFieldValues(final String name) {
@@ -735,11 +737,21 @@ public class EntityBuilder  {
 
 
   private Object getFirstValue(final PropertyInfoIndex id) {
-    return getFirstValue(id.getJname());
+    return getFirstValue(getJname(id));
   }
 
   private Object getFirstValue(final ParameterInfoIndex id) {
     return getFirstValue(id.getJname());
+  }
+
+  private static String getJname(PropertyInfoIndex pi) {
+    BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
+
+    if (ipie == null) {
+      return null;
+    }
+
+    return ipie.getJname();
   }
 
   private Object getFirstValue(String id) {

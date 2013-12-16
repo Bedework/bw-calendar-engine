@@ -67,6 +67,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.exc.CalFacadeInvalidSynctoken;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
+import org.bedework.calfacade.filter.RetrieveList;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.svc.EventInfo;
@@ -928,7 +929,7 @@ public class BwSysIntfImpl implements SysIntf {
     try {
       /* Limit the results to just this collection by adding an ANDed filter */
       SimpleFilterParser sfp = getSvci().getFilterParser();
-      String expr = "(colPath='" + col.getPath() +"')";
+      String expr = "(colPath='" + col.getPath() + "')";
 
       ParseResult pr = sfp.parse(expr, true);
       if (!pr.ok) {
@@ -944,7 +945,7 @@ public class BwSysIntfImpl implements SysIntf {
                                                     f,
                                                     null,  // start
                                                     null,  // end
-                                                    retrieveList,
+                                                    RetrieveList.getRetrieveList(retrieveList),
                                                     getRrm(recurRetrieval));
 
       if (bwevs == null) {

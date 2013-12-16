@@ -26,6 +26,7 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -97,7 +98,7 @@ public interface CoreEventsI extends Serializable {
   public Collection<CoreEventInfo> getEvents(Collection <BwCalendar> calendars,
                                              FilterBase filter,
                                              BwDateTime startDate, BwDateTime endDate,
-                                             List<String> retrieveList,
+                                             List<BwIcalPropertyInfoEntry> retrieveList,
                                              RecurringRetrievalMode recurRetrieval,
                                              boolean freeBusy) throws CalFacadeException;
 

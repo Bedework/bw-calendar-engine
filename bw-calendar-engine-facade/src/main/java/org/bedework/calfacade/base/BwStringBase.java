@@ -98,6 +98,7 @@ public class BwStringBase extends BwDbentity<BwStringBase>
    *
    * @param val    String value
    */
+  @IcalProperty(pindex = PropertyInfoIndex.VALUE)
   public void setValue(final String val) {
     value = val;
   }

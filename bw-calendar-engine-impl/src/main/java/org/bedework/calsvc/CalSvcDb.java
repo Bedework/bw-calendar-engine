@@ -32,6 +32,7 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
@@ -59,7 +60,7 @@ import java.util.UUID;
 /** This acts as an interface to the database for more client oriented
  * bedework objects. CalIntf is a more general calendar specific interface.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 public class CalSvcDb implements Serializable {
   protected boolean debug;
@@ -224,7 +225,7 @@ public class CalSvcDb implements Serializable {
   protected Collection<EventInfo> getEvents(final Collection<BwCalendar> cals,
                                             final FilterBase filter,
                                             final BwDateTime startDate, final BwDateTime endDate,
-                                            final List<String> retrieveList,
+                                            final List<BwIcalPropertyInfoEntry> retrieveList,
                                             final RecurringRetrievalMode recurRetrieval,
                                             final boolean freeBusy) throws CalFacadeException {
    Events events = (Events)getSvc().getEventsHandler();

@@ -34,6 +34,7 @@ import org.bedework.icalendar.IcalCallback;
 import org.bedework.icalendar.IcalTranslator;
 import org.bedework.icalendar.Xalarms;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.calendar.XcalUtil.TzGetter;
@@ -54,7 +55,6 @@ import ietf.params.xml.ns.icalendar_2.VjournalType;
 import ietf.params.xml.ns.icalendar_2.VtodoType;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.Dur;
-import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.DtEnd;
@@ -638,13 +638,13 @@ public class BwUpdates {
 
     BwEvent ev = ei.getEvent();
     boolean task = ev.getEntityType() == IcalDefs.entityTypeTodo;
-    String endPname;
+    PropertyInfoIndex endPi;
     ChangeTable chg = ei.getChangeset(userHref);
 
     if (task) {
-      endPname = Property.DUE;
+      endPi = PropertyInfoIndex.DUE;
     } else {
-      endPname = Property.DTEND;
+      endPi = PropertyInfoIndex.DTEND;
     }
 
     /* We maintain both end and duration - if either changed we need to adjust
@@ -676,12 +676,12 @@ public class BwUpdates {
 
         if (!ev.getNoStart() ||
             !CalFacadeUtil.eqObjval(ev.getDtstart(), ds.start)) {
-          chg.changed(Property.DTSTART, ev.getDtstart(), null);
+          chg.changed(PropertyInfoIndex.DTSTART, ev.getDtstart(), null);
           ev.setDtstart(ds.start);
           ev.setNoStart(true);
         }
       } else if (ev.getNoStart() || !ds.start.equals(ev.getDtstart())) {
-        chg.changed(Property.DTSTART, ev.getDtstart(), ds.start);
+        chg.changed(PropertyInfoIndex.DTSTART, ev.getDtstart(), ds.start);
         ev.setNoStart(false);
         ev.setDtstart(ds.start);
       }
@@ -691,7 +691,7 @@ public class BwUpdates {
       if (ds.end != null) {
         if ((ev.getEndType() != StartEndComponent.endTypeDate) ||
             !CalFacadeUtil.eqObjval(ev.getDtend(), ds.end)) {
-          chg.changed(endPname, ev.getDtend(), ds.end);
+          chg.changed(endPi, ev.getDtend(), ds.end);
           endType = StartEndComponent.endTypeDate;
           ev.setDtend(ds.end);
         }
@@ -702,7 +702,7 @@ public class BwUpdates {
         dtEnd.getParameters().add(Value.DATE);
         ds.end = BwDateTime.makeBwDateTime(dtEnd);
         if (!CalFacadeUtil.eqObjval(ev.getDtend(), ds.end)) {
-          chg.changed(endPname, ev.getDtend(), ds.end);
+          chg.changed(endPi, ev.getDtend(), ds.end);
           ev.setDtend(ds.end);
         }
       }
@@ -723,7 +723,7 @@ public class BwUpdates {
         endType = StartEndComponent.endTypeDuration;
 
         if (!ds.duration.equals(ev.getDuration())) {
-          chg.changed(Property.DURATION, ev.getDuration(), ds.duration);
+          chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), ds.duration);
           ev.setDuration(ds.duration);
         }
 
@@ -747,7 +747,7 @@ public class BwUpdates {
         BwDateTime bwDtEnd = BwDateTime.makeDateTime(ev.getDtstart().makeDtStart(),
                                                      dateOnly, dur);
         if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
-          chg.changed(endPname, ev.getDtend(), bwDtEnd);
+          chg.changed(endPi, ev.getDtend(), bwDtEnd);
           ev.setDtend(bwDtEnd);
         }
       }
@@ -759,7 +759,7 @@ public class BwUpdates {
         String durVal = BwDateTime.makeDuration(ev.getDtstart(),
                                                 ev.getDtend()).toString();
         if (!durVal.equals(ev.getDuration())) {
-          chg.changed(Property.DURATION, ev.getDuration(), durVal);
+          chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), durVal);
           ev.setDuration(durVal);
         }
       }
@@ -884,6 +884,8 @@ public class BwUpdates {
 
     private QName propName;
 
+    private PropertyInfoIndex pi;
+
     private IcalCallback cb;
 
     private EventInfo ei;
@@ -913,6 +915,12 @@ public class BwUpdates {
       this.subComponent = subComponent;
       this.state = state;
       this.userHref = userHref;
+
+      try {
+        pi = PropertyInfoIndex.valueOf(pname.getLocalPart().toUpperCase());
+      } catch (Throwable t) {
+        throw new RuntimeException("unknown property " + pname);
+      }
 
       chg = ei.getChangeset(userHref);
     }
@@ -1077,7 +1085,7 @@ public class BwUpdates {
 
     @Override
     public ChangeTableEntry getCte() {
-      return chg.getEntry(getPropName().getLocalPart());
+      return chg.getEntry(pi);
     }
 
     @Override

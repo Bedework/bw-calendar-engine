@@ -64,6 +64,7 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAdminGroupEntry;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -982,7 +983,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   public Collection<CoreEventInfo> getEvents(final Collection <BwCalendar> calendars,
                                              final FilterBase filter,
                                              final BwDateTime startDate, final BwDateTime endDate,
-                                             final List<String> retrieveList,
+                                             final List<BwIcalPropertyInfoEntry> retrieveList,
                                              final RecurringRetrievalMode recurRetrieval,
                                              final boolean freeBusy) throws CalFacadeException {
     return events.getEvents(calendars, filter,

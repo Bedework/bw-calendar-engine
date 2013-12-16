@@ -26,7 +26,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
-import org.bedework.util.indexing.Index;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.io.Serializable;
 import java.util.List;
@@ -252,12 +252,13 @@ public interface BwIndexer extends Serializable {
   /** Find a category owned by the current user which has a named
    * field which matches the value.
    *
-   * @param field e.g. "uid", "word"
    * @param val - expected full value
+   * @param index e.g. UID or CN, VALUE
    * @return null or category object
    * @throws CalFacadeException
    */
-  BwCategory fetchCat(String field, String val) throws CalFacadeException;
+  BwCategory fetchCat(String val,
+                      PropertyInfoIndex... index) throws CalFacadeException;
 
   /** Fetch all for the current principal.
    *
@@ -269,12 +270,13 @@ public interface BwIndexer extends Serializable {
   /** Find a contact owned by the current user which has a named
    * field which matches the value.
    *
-   * @param field e.g. "uid", "name"
    * @param val - expected full value
+   * @param index e.g. UID or CN, VALUE
    * @return null or contact object
    * @throws CalFacadeException
    */
-  BwContact fetchContact(String field, String val) throws CalFacadeException;
+  BwContact fetchContact(String val,
+                         PropertyInfoIndex... index) throws CalFacadeException;
 
   /** Fetch all for the current principal.
    *
@@ -286,12 +288,13 @@ public interface BwIndexer extends Serializable {
   /** Find a location owned by the current user which has a named
    * field which matches the value.
    *
-   * @param field e.g. "uid", "address"
    * @param val - expected full value
+   * @param index e.g. UID or CN, VALUE
    * @return null or contact object
    * @throws CalFacadeException
    */
-  BwLocation fetchLocation(String field, String val) throws CalFacadeException;
+  BwLocation fetchLocation(String val,
+                           PropertyInfoIndex... index) throws CalFacadeException;
 
   /** Fetch all for the current principal.
    *

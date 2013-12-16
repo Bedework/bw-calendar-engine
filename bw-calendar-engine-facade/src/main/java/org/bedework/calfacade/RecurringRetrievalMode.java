@@ -18,6 +18,8 @@
 */
 package org.bedework.calfacade;
 
+import org.bedework.util.misc.ToString;
+
 import java.io.Serializable;
 
 /** How recurring events should be retrieved.
@@ -26,16 +28,9 @@ import java.io.Serializable;
  */
 public class RecurringRetrievalMode implements Serializable {
   /**
-   * Values which define how to retrieve recurring events. We have the
-   * following choices (derived from caldav)
+   * Values which define how to retrieve events. For recurring events
+   * we have the following choices (derived from caldav)
    */
-
-  // DORECUR instancesOnlyWithTz needs to be dealt with correctly.
-  /** return any instances that fall in the range and do not convert to UTC.
-   *  Do not chain them together as a single master and instances but return
-   *  each as a separate event.    (non-CalDAV)
-   * /
-  public final static int instancesOnlyWithTz = 0;*/
 
   public static enum Rmode {
     /** return all instances within the time range as
@@ -99,18 +94,12 @@ public class RecurringRetrievalMode implements Serializable {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("RecurringRetrievalMode{");
+    ToString ts = new ToString(this);
 
-    sb.append("mode=");
-    sb.append(mode);
+    ts.append("mode", mode);
+    ts.append("start", start);
+    ts.append("end", end);
 
-    sb.append(", start=");
-    sb.append(start);
-
-    sb.append(", end=");
-    sb.append(end);
-
-    sb.append("}");
-    return sb.toString();
+    return ts.toString();
   }
 }

@@ -18,6 +18,7 @@
 */
 package org.bedework.calfacade.svc;
 
+import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwEvent;
@@ -28,10 +29,9 @@ import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.ChangeTable;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
-
-import org.bedework.access.Acl.CurrentAccess;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -46,7 +46,7 @@ import java.util.TreeSet;
  *
  * <p>This class allows us to handle thread, or user, specific information.
  *
- * @author Mike Douglass       douglm @ bedework.edu
+ * @author Mike Douglass       douglm  rpi.edu
  */
 public class EventInfo
       implements Comparable<EventInfo>, Comparator<EventInfo>, Serializable {
@@ -641,12 +641,12 @@ public class EventInfo
       ChangeTable chg = getChangeset(userHref);
 
       if (pu != null) {
-        chg.addValue("XPROP", pu);
+        chg.addValue(PropertyInfoIndex.XPROP, pu);
       }
 
       if (!Util.isEmpty(toRemove)) {
         for (BwAlarm a: toRemove) {
-          chg.addValue("VALARM", a);
+          chg.addValue(PropertyInfoIndex.VALARM, a);
         }
       }
     }

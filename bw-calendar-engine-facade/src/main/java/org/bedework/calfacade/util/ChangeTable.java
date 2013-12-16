@@ -46,7 +46,7 @@ import java.util.Set;
  * @author Mike Douglass
  */
 public class ChangeTable implements Serializable {
-  private HashMap<String, ChangeTableEntry> map = new HashMap<String, ChangeTableEntry>();
+  private HashMap<PropertyInfoIndex, ChangeTableEntry> map = new HashMap<>();
 
   private boolean collectionSetChanged;
 
@@ -116,11 +116,11 @@ public class ChangeTable implements Serializable {
 
   /** Set the present flag on the named entry.
    *
-   * @param name
+   * @param index
    * @return boolean false if entry not found
    */
-  public boolean present(final String name) {
-    ChangeTableEntry ent = getEntry(name);
+  public boolean present(final PropertyInfoIndex index) {
+    ChangeTableEntry ent = getEntry(index);
 
     if (ent != null) {
       ent.setPresent(true);
@@ -132,23 +132,24 @@ public class ChangeTable implements Serializable {
 
   /** Return true if from is not the same as to and set the entry changed flag.
    *
-   * @param name
+   * @param index - the property index
    * @param from
    * @param to
    * @return boolean true if changed
    */
-  public boolean changed(final String name,
+  public boolean changed(final PropertyInfoIndex index,
                          final Object from,
                          final Object to) {
-    return getEntry(name).setChanged(from, to);
+    return getEntry(index).setChanged(from, to);
   }
 
   /**
-   * @param name
+   * @param index
    * @param val
    */
-  public void addValue(final String name, final Object val) {
-    ChangeTableEntry ent = getEntry(name);
+  public void addValue(final PropertyInfoIndex index,
+                       final Object val) {
+    ChangeTableEntry ent = getEntry(index);
 
     if (ent == null) {
       throw new RuntimeException("org.bedework.icalendar.notmultivalued");
@@ -158,11 +159,12 @@ public class ChangeTable implements Serializable {
   }
 
   /**
-   * @param name
+   * @param index
    * @param val
    */
-  public void addValues(final String name, final Collection val) {
-    ChangeTableEntry ent = getEntry(name);
+  public void addValues(final PropertyInfoIndex index,
+                        final Collection val) {
+    ChangeTableEntry ent = getEntry(index);
 
     if (ent == null) {
       throw new RuntimeException("org.bedework.icalendar.notmultivalued");
@@ -171,52 +173,28 @@ public class ChangeTable implements Serializable {
     ent.addValues(val);
   }
 
-  /**
-   * @param name
-   * @return Collection of values or null
-   */
-  public Collection getValues(final String name) {
-    ChangeTableEntry ent = getEntry(name);
-
-    if (ent == null) {
-      throw new RuntimeException("org.bedework.icalendar.notmultivalued");
-    }
-
-    return ent.getNewValues();
-  }
-
-  /** Get the named entry
-   *
-   * @param name
-   * @return Entry null if not found
-   */
-  public ChangeTableEntry getEntry(final String name) {
-    String uc = name.toUpperCase();
-    ChangeTableEntry ent = map.get(uc);
-    if (ent != null) {
-      return ent;
-    }
-
-    ent = ChangeTableEntry.newEntry(this, uc);
-    if (ent != null) {
-      map.put(uc, ent);
-      return ent;
-    }
-
-    // Presumably an unknown property - assume multi?
-
-    ent = new ChangeTableEntry(this, true, uc);
-    map.put(uc, ent);
-    return ent;
-  }
-
   /** Get the indexed entry
    *
    * @param index
    * @return Entry null if not found
    */
   public ChangeTableEntry getEntry(final PropertyInfoIndex index) {
-    return getEntry(index.getPname());
+    ChangeTableEntry ent = map.get(index);
+    if (ent != null) {
+      return ent;
+    }
+
+    ent = ChangeTableEntry.newEntry(this, index);
+    if (ent != null) {
+      map.put(index, ent);
+      return ent;
+    }
+
+    // Presumably an unknown property - assume multi?
+
+    ent = new ChangeTableEntry(this, true, index);
+    map.put(index, ent);
+    return ent;
   }
 
   /**
@@ -238,26 +216,20 @@ public class ChangeTable implements Serializable {
   @SuppressWarnings("unchecked")
   public void processChanges(final BwEvent ev,
                              final boolean update) throws CalFacadeException {
-    HashMap<String, ChangeTableEntry> fullmap =
-      new HashMap<String, ChangeTableEntry>(map);
+    HashMap<PropertyInfoIndex, ChangeTableEntry> fullmap =
+      new HashMap<>(map);
 
     for (PropertyInfoIndex pii: PropertyInfoIndex.values()) {
-      String name = pii.getPname();
-
-      if (name != null) {
-        name = name.toUpperCase();
-      }
-
-      ChangeTableEntry ent = fullmap.get(name);
+      ChangeTableEntry ent = fullmap.get(pii);
       if (ent == null) {
-        ent = ChangeTableEntry.newEntry(this, name);
+        ent = ChangeTableEntry.newEntry(this, pii);
 
         if (ent == null) {
           if (debug && !pii.getImmutable()) {
-            warn("No entry for index " + pii + " name " +  name);
+            warn("No entry for index " + pii + " name " +  pii);
           }
         } else {
-          fullmap.put(name, ent);
+          fullmap.put(pii, ent);
         }
       }
     }
@@ -290,13 +262,15 @@ public class ChangeTable implements Serializable {
         break;
 
       case IcalDefs.entityTypeVavailability:
-        if (!ent.getVavailabilityProperty()) {
+        // XXX Fake this one for the moment
+        if (!ent.getEventProperty()) {
           continue;
         }
         break;
 
       case IcalDefs.entityTypeAvailable:
-        if (!ent.getAvailableProperty()) {
+        // XXX Fake this one for the moment
+        if (!ent.getEventProperty()) {
           continue;
         }
         break;
@@ -938,7 +912,7 @@ public class ChangeTable implements Serializable {
     }
 
     if (ent.getChanged()) {
-      map.put(ent.getName(), ent);
+      map.put(ent.getIndex(), ent);
     }
 
     if (!ent.getChanged() || !update) {

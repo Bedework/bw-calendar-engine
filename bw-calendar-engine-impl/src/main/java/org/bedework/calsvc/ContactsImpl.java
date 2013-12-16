@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.Contacts;
 import org.bedework.util.caching.FlushMap;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
 
@@ -98,7 +99,7 @@ public class ContactsImpl
 
   @Override
   BwContact fetchIndexedByUid(String uid) throws CalFacadeException {
-    return getIndexer().fetchContact("uid", uid);
+    return getIndexer().fetchContact(uid, PropertyInfoIndex.UID);
   }
 
   BwContact findPersistent(final BwContact val,
@@ -113,7 +114,9 @@ public class ContactsImpl
 
   @Override
   public BwContact find(final BwString val) throws CalFacadeException {
-    return getIndexer().fetchContact("name.value", val.getValue());
+    return getIndexer().fetchContact(val.getValue(),
+                                     PropertyInfoIndex.CN,
+                                     PropertyInfoIndex.VALUE);
   }
 }
 

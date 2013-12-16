@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
 
@@ -98,7 +99,7 @@ public interface EventsI extends Serializable {
                                          FilterBase filter,
                                          BwDateTime startDate,
                                          BwDateTime endDate,
-                                         List<String> retrieveList,
+                                         List<BwIcalPropertyInfoEntry> retrieveList,
                                          RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException;
 

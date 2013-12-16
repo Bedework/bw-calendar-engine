@@ -50,7 +50,6 @@ import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.Period;
-import net.fortuna.ical4j.model.Property;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -752,14 +751,14 @@ public class InRequest extends InProcessor {
           break;
 
         case CLASS:
-          if (chg.changed(PropertyInfoIndex.CLASS.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getClassification(), inEv.getClassification())) {
             ourEv.setClassification(inEv.getClassification());
           }
           break;
 
         case COMPLETED: /* Todo only */
-          if (chg.changed(PropertyInfoIndex.COMPLETED.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getCompleted(), inEv.getCompleted())) {
             ourEv.setCompleted(inEv.getCompleted());
           }
@@ -774,7 +773,7 @@ public class InRequest extends InProcessor {
             chg.addValue(Property.DESCRIPTION, s);
           }
           */
-          if (chg.changed(PropertyInfoIndex.DESCRIPTION.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getDescription(), inEv.getDescription())) {
             ourEv.setDescription(inEv.getDescription());
           }
@@ -785,13 +784,13 @@ public class InRequest extends InProcessor {
           BwDateTime dt = inEv.getDtend();
           if (!CalFacadeUtil.eqObjval(ourEv.getDtend(), dt)) {
             ourEv.setDtend(dt);
-            chg.changed(ipi.getPname(), ourEv.getDtend(), dt);
+            chg.changed(ipi, ourEv.getDtend(), dt);
           }
 
           char c = inEv.getEndType();
           if (c != ourEv.getEndType()) {
             ourEv.setEndType(c);
-            chg.changed(PropertyInfoIndex.END_TYPE.getPname(),
+            chg.changed(PropertyInfoIndex.END_TYPE,
                         ourEv.getEndType(), c);
           }
 
@@ -804,20 +803,20 @@ public class InRequest extends InProcessor {
           dt = inEv.getDtstart();
           if (!CalFacadeUtil.eqObjval(ourEv.getDtstart(), dt)) {
             ourEv.setDtstart(dt);
-            chg.changed(PropertyInfoIndex.DTSTART.getPname(),
+            chg.changed(ipi,
                         ourEv.getDtstart(), dt);
           }
           break;
 
         case DURATION:
-          if (chg.changed(PropertyInfoIndex.DURATION.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getDuration(), inEv.getDuration())) {
             ourEv.setDuration(inEv.getDuration());
           }
           break;
 
         case GEO:
-          if (chg.changed(PropertyInfoIndex.GEO.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getGeo(), inEv.getGeo())) {
             ourEv.setGeo(inEv.getGeo());
           }
@@ -827,21 +826,21 @@ public class InRequest extends InProcessor {
           break;
 
         case LOCATION:
-          if (chg.changed(PropertyInfoIndex.GEO.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getLocation(), inEv.getLocation())) {
             ourEv.setLocation((BwLocation)inEv.getLocation().clone());
           }
           break;
 
         case ORGANIZER:
-          if (chg.changed(PropertyInfoIndex.ORGANIZER.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getOrganizer(), inEv.getOrganizer())) {
             ourEv.setOrganizer((BwOrganizer)inEv.getOrganizer().clone());
           }
           break;
 
         case PRIORITY:
-          if (chg.changed(PropertyInfoIndex.PRIORITY.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getPriority(), inEv.getPriority())) {
             ourEv.setPriority(inEv.getPriority());
           }
@@ -854,7 +853,7 @@ public class InRequest extends InProcessor {
           break;
 
         case STATUS:
-          if (chg.changed(PropertyInfoIndex.STATUS.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getStatus(), inEv.getStatus())) {
             ourEv.setStatus(inEv.getStatus());
           }
@@ -866,14 +865,14 @@ public class InRequest extends InProcessor {
             chg.addValue(Property.SUMMARY, s);
           }
           */
-          if (chg.changed(PropertyInfoIndex.SUMMARY.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getSummary(), inEv.getSummary())) {
             ourEv.setSummary(inEv.getSummary());
           }
           break;
 
         case PERCENT_COMPLETE: /* Todo only */
-          if (chg.changed(PropertyInfoIndex.PERCENT_COMPLETE.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getPercentComplete(), inEv.getPercentComplete())) {
             ourEv.setPercentComplete(inEv.getPercentComplete());
           }
@@ -883,7 +882,7 @@ public class InRequest extends InProcessor {
           break;
 
         case URL:
-          if (chg.changed(PropertyInfoIndex.URL.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getLink(), inEv.getLink())) {
             ourEv.setLink(inEv.getLink());
           }
@@ -931,7 +930,7 @@ public class InRequest extends InProcessor {
                 }
               }
             }*/
-            chg.addValue(Property.ATTENDEE, att);
+            chg.addValue(PropertyInfoIndex.ATTENDEE, att);
           }
 
           if (ourAtt == null) {
@@ -945,7 +944,7 @@ public class InRequest extends InProcessor {
 
           /* transparency is set by above */
 
-          if (chg.changed(PropertyInfoIndex.TRANSP.getPname(),
+          if (chg.changed(PropertyInfoIndex.TRANSP,
                           ourEv.getTransparency(), transparency)) {
             ourEv.setTransparency(transparency);
           }
@@ -955,20 +954,20 @@ public class InRequest extends InProcessor {
         case CATEGORIES:
           if (!Util.isEmpty(inEv.getCategories())) {
             for (BwCategory cat: inEv.getCategories()) {
-              chg.addValue(Property.CATEGORIES, cat);
+              chg.addValue(ipi, cat);
             }
           }
           break;
 
         case COMMENT:
           for (BwString s: inEv.getComments()) {
-            chg.addValue(Property.COMMENT, s);
+            chg.addValue(ipi, s);
           }
           break;
 
         case CONTACT:
           for (BwContact ct: inEv.getContacts()) {
-            chg.addValue(Property.CONTACT, ct.clone());
+            chg.addValue(ipi, ct.clone());
           }
           break;
 
@@ -979,7 +978,7 @@ public class InRequest extends InProcessor {
           }
 
           for (BwDateTime bdt: inEv.getExdates()) {
-            chg.addValue(Property.EXDATE, bdt);
+            chg.addValue(ipi, bdt);
           }
           break;
 
@@ -990,7 +989,7 @@ public class InRequest extends InProcessor {
           }
 
           for (String s: inEv.getExrules()) {
-            chg.addValue(Property.EXRULE, s);
+            chg.addValue(ipi, s);
           }
           break;
 
@@ -998,7 +997,7 @@ public class InRequest extends InProcessor {
           break;
 
         case RELATED_TO:
-          if (chg.changed(PropertyInfoIndex.RELATED_TO.getPname(),
+          if (chg.changed(ipi,
                           ourEv.getRelatedTo(), inEv.getRelatedTo())) {
             ourEv.setRelatedTo(inEv.getRelatedTo());
           }
@@ -1006,7 +1005,7 @@ public class InRequest extends InProcessor {
 
         case RESOURCES:
           for (BwString bs: inEv.getResources()) {
-            chg.addValue(Property.RESOURCES, bs);
+            chg.addValue(ipi, bs);
           }
           break;
 
@@ -1017,7 +1016,7 @@ public class InRequest extends InProcessor {
           }
 
           for (BwDateTime bdt: inEv.getRdates()) {
-            chg.addValue(Property.RDATE, bdt);
+            chg.addValue(ipi, bdt);
           }
           break;
 
@@ -1028,13 +1027,13 @@ public class InRequest extends InProcessor {
           }
 
           for (String s: inEv.getRrules()) {
-            chg.addValue(Property.RRULE, s);
+            chg.addValue(ipi, s);
           }
           break;
 
         case XPROP:
           for (BwXproperty x: inEv.getXproperties()) {
-            chg.addValue("XPROP", x);
+            chg.addValue(ipi, x);
           }
           break;
 
@@ -1072,7 +1071,7 @@ public class InRequest extends InProcessor {
 
     /* ------------------- Cost -------------------- */
 
-    if (chg.changed(PropertyInfoIndex.COST.getPname(),
+    if (chg.changed(PropertyInfoIndex.COST,
                     ourEv.getCost(), inEv.getCost())) {
       ourEv.setCost(inEv.getCost());
     }
@@ -1106,7 +1105,7 @@ public class InRequest extends InProcessor {
 
     if (flagNeedsReply) {
       // Apple ical seems to expect an x-prop.
-      //chg.addValue(PropertyInfoIndex.XPROP.getPname(),
+      //chg.addValue(PropertyInfoIndex.XPROP,
       //             new BwXproperty(BwXproperty.appleNeedsReply,
       //                             null, "TRUE"));
     }

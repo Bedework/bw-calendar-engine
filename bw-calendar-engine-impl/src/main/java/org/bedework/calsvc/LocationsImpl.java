@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.Locations;
 import org.bedework.util.caching.FlushMap;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
 
@@ -98,7 +99,7 @@ public class LocationsImpl
 
   @Override
   BwLocation fetchIndexedByUid(String uid) throws CalFacadeException {
-    return getIndexer().fetchLocation("uid", uid);
+    return getIndexer().fetchLocation(uid, PropertyInfoIndex.UID);
   }
 
   BwLocation findPersistent(final BwLocation val,
@@ -113,7 +114,9 @@ public class LocationsImpl
 
   @Override
   public BwLocation find(final BwString val) throws CalFacadeException {
-    return getIndexer().fetchLocation("address.value", val.getValue());
+    return getIndexer().fetchLocation("address.value",
+                                      PropertyInfoIndex.ADDRESS,
+                                      PropertyInfoIndex.VALUE);
   }
 }
 

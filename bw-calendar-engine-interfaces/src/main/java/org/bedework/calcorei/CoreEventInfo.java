@@ -73,7 +73,8 @@ public class CoreEventInfo implements Comparable, Comparator, Serializable {
    * @param event
    * @param currentAccess
    */
-  public CoreEventInfo(final BwEvent event, final CurrentAccess currentAccess) {
+  public CoreEventInfo(final BwEvent event,
+                       final CurrentAccess currentAccess) {
     this.event = event;
     this.currentAccess = currentAccess;
   }

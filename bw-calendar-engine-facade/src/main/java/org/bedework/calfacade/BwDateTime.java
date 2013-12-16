@@ -375,6 +375,8 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    *
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.UTC,
+                jname = "utc")
   private void setDate(final String val) {
     date = val;
   }

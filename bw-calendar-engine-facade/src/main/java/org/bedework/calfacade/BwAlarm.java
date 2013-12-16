@@ -289,6 +289,13 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    *
    *  @return boolean    true if we trigger off DateTime
    */
+  @IcalProperty(pindex = PropertyInfoIndex.TRIGGER_DATE_TIME,
+                jname = "triggerDateTime",
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true,
+                freeBusyProperty = true,
+                timezoneProperty = true)
   public boolean getTriggerDateTime() {
     return triggerDateTime;
   }

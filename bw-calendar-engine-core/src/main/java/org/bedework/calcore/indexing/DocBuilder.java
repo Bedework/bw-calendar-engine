@@ -39,6 +39,8 @@ import org.bedework.calfacade.base.XpropsEntity;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo;
+import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexKey;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
@@ -85,20 +87,20 @@ public class DocBuilder {
 
   static {
     interestingXprops.put(BwXproperty.bedeworkImage,
-                          PropertyInfoIndex.IMAGE.getJname());
+                          getJname(PropertyInfoIndex.IMAGE));
     interestingXprops.put(BwXproperty.bedeworkThumbImage,
-                          PropertyInfoIndex.THUMBIMAGE.getJname());
+                          getJname(PropertyInfoIndex.THUMBIMAGE));
     interestingXprops.put(BwXproperty.bedeworkAlias,
-                          PropertyInfoIndex.TOPICAL_AREA.getJname());
+                          getJname(PropertyInfoIndex.TOPICAL_AREA));
 
     interestingXprops.put(BwXproperty.bedeworkEventRegMaxTickets,
-                          PropertyInfoIndex.EVENTREG_MAX_TICKETS.getJname());
+                          getJname(PropertyInfoIndex.EVENTREG_MAX_TICKETS));
     interestingXprops.put(BwXproperty.bedeworkEventRegMaxTicketsPerUser,
-                          PropertyInfoIndex.EVENTREG_MAX_TICKETS_PER_USER.getJname());
+                          getJname(PropertyInfoIndex.EVENTREG_MAX_TICKETS_PER_USER));
     interestingXprops.put(BwXproperty.bedeworkEventRegStart,
-                          PropertyInfoIndex.EVENTREG_START.getJname());
+                          getJname(PropertyInfoIndex.EVENTREG_START));
     interestingXprops.put(BwXproperty.bedeworkEventRegEnd,
-                          PropertyInfoIndex.EVENTREG_END.getJname());
+                          getJname(PropertyInfoIndex.EVENTREG_END));
   }
 
   DocBuilder(final BwPrincipal principal,
@@ -745,7 +747,7 @@ public class DocBuilder {
 
       /* Now ones we don't know or care about */
 
-      builder.startArray(PropertyInfoIndex.XPROP.getJname());
+      builder.startArray(getJname(PropertyInfoIndex.XPROP));
 
       for (BwXproperty xp: ent.getXproperties()) {
         String nm = interestingXprops.get(xp.getName());
@@ -758,11 +760,11 @@ public class DocBuilder {
         makeField(builder, PropertyInfoIndex.NAME, xp.getName());
 
         if (xp.getPars() != null) {
-          builder.field(PropertyInfoIndex.PARAMETERS.getJname(),
+          builder.field(getJname(PropertyInfoIndex.PARAMETERS),
                         xp.getPars());
         }
 
-        builder.field(PropertyInfoIndex.VALUE.getJname(),
+        builder.field(getJname(PropertyInfoIndex.VALUE),
                       xp.getValue());
         builder.endObject();
       }
@@ -780,7 +782,7 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(PropertyInfoIndex.CONTACT.getJname());
+      builder.startArray(getJname(PropertyInfoIndex.CONTACT));
 
       for (BwContact c: val) {
         builder.startObject();
@@ -812,7 +814,7 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(PropertyInfoIndex.VALARM.getJname());
+      builder.startArray(getJname(PropertyInfoIndex.VALARM));
 
       for (BwAlarm al: val) {
         builder.startObject();
@@ -889,7 +891,7 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(PropertyInfoIndex.REQUEST_STATUS.getJname());
+      builder.startArray(getJname(PropertyInfoIndex.REQUEST_STATUS));
 
       for (BwRequestStatus rs: val) {
         builder.value(rs.strVal());
@@ -908,7 +910,7 @@ public class DocBuilder {
         return;
       }
 
-      builder.startObject(PropertyInfoIndex.GEO.getJname());
+      builder.startObject(getJname(PropertyInfoIndex.GEO));
       builder.field("lat", val.getLatitude().toPlainString());
       builder.field("lon", val.getLongitude().toPlainString());
       builder.endObject();
@@ -924,10 +926,10 @@ public class DocBuilder {
         return;
       }
 
-      builder.startObject(PropertyInfoIndex.RELATED_TO.getJname());
+      builder.startObject(getJname(PropertyInfoIndex.RELATED_TO));
       builder.field(ParameterInfoIndex.RELTYPE.getJname(),
                     val.getRelType());
-      builder.field(PropertyInfoIndex.VALUE.getJname(), val.getValue());
+      builder.field(getJname(PropertyInfoIndex.VALUE), val.getValue());
       builder.endObject();
     } catch (IOException e) {
       throw new CalFacadeException(e);
@@ -941,8 +943,8 @@ public class DocBuilder {
         return;
       }
 
-      builder.startObject(PropertyInfoIndex.ORGANIZER.getJname());
-      builder.startObject(PropertyInfoIndex.PARAMETERS.getJname());
+      builder.startObject(getJname(PropertyInfoIndex.ORGANIZER));
+      builder.startObject(getJname(PropertyInfoIndex.PARAMETERS));
       String temp = val.getScheduleStatus();
       if (temp != null) {
         builder.field(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
@@ -971,7 +973,7 @@ public class DocBuilder {
 
       builder.endObject();
 
-      builder.field(PropertyInfoIndex.URI.getJname(),
+      builder.field(getJname(PropertyInfoIndex.URI),
                     val.getOrganizerUri());
       builder.endObject();
     } catch (IOException e) {
@@ -986,7 +988,7 @@ public class DocBuilder {
         return;
       }
 
-      builder.startObject(PropertyInfoIndex.ATTENDEE.getJname());
+      builder.startObject(getJname(PropertyInfoIndex.ATTENDEE));
       builder.startObject("pars");
 
       if (val.getRsvp()) {
@@ -1073,7 +1075,7 @@ public class DocBuilder {
       if (dtype == null) {
         builder.startObject();
       } else {
-        builder.startObject(dtype.getJname());
+        builder.startObject(getJname(dtype));
       }
 
       makeField(builder, PropertyInfoIndex.UTC, dt.getDate());
@@ -1109,7 +1111,7 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(pi.getJname());
+      builder.startArray(getJname(pi));
 
       for (BwStringBase s: val) {
         makeField(builder, null, s);
@@ -1174,7 +1176,7 @@ public class DocBuilder {
       if (pi == null) {
         builder.startObject();
       } else {
-        builder.startObject(pi.getJname());
+        builder.startObject(getJname(pi));
       }
       makeField(builder, PropertyInfoIndex.LANG, val.getLang());
       makeField(builder, PropertyInfoIndex.VALUE, val.getValue());
@@ -1192,7 +1194,7 @@ public class DocBuilder {
     }
 
     try {
-      builder.field(pi.getJname(), val);
+      builder.field(getJname(pi), val);
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }
@@ -1206,7 +1208,7 @@ public class DocBuilder {
     }
 
     try {
-      builder.field(pi.getJname(), String.valueOf(val));
+      builder.field(getJname(pi), String.valueOf(val));
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }
@@ -1220,7 +1222,7 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(pi.getJname());
+      builder.startArray(getJname(pi));
 
       for (String s: vals) {
         builder.value(s);
@@ -1240,7 +1242,7 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(pi.getJname());
+      builder.startArray(getJname(pi));
 
       for (BwDateTime dt: vals) {
         builder.startObject();
@@ -1261,7 +1263,7 @@ public class DocBuilder {
     }
 
     try {
-      builder.startArray(PropertyInfoIndex.CATEGORIES.getJname());
+      builder.startArray(getJname(PropertyInfoIndex.CATEGORIES));
 
       for (BwCategory cat: cats) {
         builder.startObject();
@@ -1272,7 +1274,7 @@ public class DocBuilder {
                   Util.buildPath(false,
                                  cat.getColPath(),
                                  cat.getName()));
-        builder.startArray(PropertyInfoIndex.VALUE.getJname());
+        builder.startArray(getJname(PropertyInfoIndex.VALUE));
         // Eventually may be more of these
         makeField(builder, null, cat.getWord());
         builder.endArray();
@@ -1283,6 +1285,16 @@ public class DocBuilder {
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }
+  }
+
+  private static String getJname(PropertyInfoIndex pi) {
+    BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
+
+    if (ipie == null) {
+      return null;
+    }
+
+    return ipie.getJname();
   }
 
   /*

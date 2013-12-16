@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.ChangeTable;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
@@ -248,7 +249,7 @@ public class VAlarmUtil extends IcalUtil {
 
         al.setEvent(ev);
         al.setOwnerHref(currentPrincipal);
-        chg.addValue(va.getName(), al);
+        chg.addValue(PropertyInfoIndex.VALARM, al);
       }
     } catch (CalFacadeException cfe) {
       throw cfe;

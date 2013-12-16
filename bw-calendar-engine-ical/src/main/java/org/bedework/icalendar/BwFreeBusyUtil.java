@@ -27,6 +27,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Period;
@@ -36,14 +37,11 @@ import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.component.VFreeBusy;
 import net.fortuna.ical4j.model.parameter.FbType;
 import net.fortuna.ical4j.model.property.Attendee;
-import net.fortuna.ical4j.model.property.Comment;
 import net.fortuna.ical4j.model.property.DtEnd;
-import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.FreeBusy;
 import net.fortuna.ical4j.model.property.Organizer;
-import net.fortuna.ical4j.model.property.Uid;
 
 import java.util.Iterator;
 
@@ -97,82 +95,112 @@ public class BwFreeBusyUtil extends IcalUtil {
           pval = null;
         }
 
-        if (prop instanceof Attendee) {
-          /* ------------------- Attendee -------------------- */
+        PropertyInfoIndex pi = PropertyInfoIndex.valueOf(prop.getName());
 
-          BwAttendee att = getAttendee(cb, (Attendee)prop);
-          fb.addAttendee(att);
-          chg.addValue(prop.getName(), att);
-        } else if (prop instanceof Comment) {
-          /* ------------------- Comment -------------------- */
+        if (pi == null) {
+          debugMsg("Unknown property with name " + prop.getName() +
+                           " class " + prop.getClass() +
+                           " and value " + pval);
+          continue;
+        }
 
-          // LANG
-          fb.addComment(null, pval);
-          chg.addValue(prop.getName(), pval);
-        } else if (prop instanceof DtEnd) {
-          /* ------------------- DtEnd -------------------- */
-        } else if (prop instanceof DtStamp) {
-          /* ------------------- DtStamp -------------------- */
+        switch (pi) {
+          case ATTENDEE:
+            /* ------------------- Attendee -------------------- */
 
-          chg.changed(prop.getName(), fb.getDtstamp(), pval);
-          fb.setDtstamp(pval);
-        } else if (prop instanceof DtStart) {
-          /* ------------------- DtStart -------------------- */
-        } else if (prop instanceof FreeBusy) {
-          /* ------------------- freebusy -------------------- */
+            BwAttendee att = getAttendee(cb, (Attendee)prop);
+            fb.addAttendee(att);
+            chg.addValue(pi, att);
 
-          FreeBusy fbusy = (FreeBusy)prop;
-          PeriodList perpl = fbusy.getPeriods();
-          Parameter par = getParameter(fbusy, "FBTYPE");
-          int fbtype;
+            break;
 
-          if (par == null) {
-            fbtype = BwFreeBusyComponent.typeBusy;
-          } else if (par.equals(FbType.BUSY)) {
-            fbtype = BwFreeBusyComponent.typeBusy;
-          } else if (par.equals(FbType.BUSY_TENTATIVE)) {
-            fbtype = BwFreeBusyComponent.typeBusyTentative;
-          } else if (par.equals(FbType.BUSY_UNAVAILABLE)) {
-            fbtype = BwFreeBusyComponent.typeBusyUnavailable;
-          } else if (par.equals(FbType.FREE)) {
-            fbtype = BwFreeBusyComponent.typeFree;
-          } else {
-            if (debug) {
-              debugMsg("Unsupported parameter " + par.getName());
+          case COMMENT:
+            /* ------------------- Comment -------------------- */
+
+            // LANG
+            fb.addComment(null, pval);
+            chg.addValue(pi, pval);
+
+          case DTEND:
+            /* ------------------- DtEnd -------------------- */
+
+            break;
+
+          case DTSTAMP:
+            /* ------------------- DtStamp -------------------- */
+
+            chg.changed(pi, fb.getDtstamp(), pval);
+            fb.setDtstamp(pval);
+
+          case DTSTART:
+            /* ------------------- DtStart -------------------- */
+
+            break;
+
+          case FREEBUSY:
+            /* ------------------- freebusy -------------------- */
+
+            FreeBusy fbusy = (FreeBusy)prop;
+            PeriodList perpl = fbusy.getPeriods();
+            Parameter par = getParameter(fbusy, "FBTYPE");
+            int fbtype;
+
+            if (par == null) {
+              fbtype = BwFreeBusyComponent.typeBusy;
+            } else if (par.equals(FbType.BUSY)) {
+              fbtype = BwFreeBusyComponent.typeBusy;
+            } else if (par.equals(FbType.BUSY_TENTATIVE)) {
+              fbtype = BwFreeBusyComponent.typeBusyTentative;
+            } else if (par.equals(FbType.BUSY_UNAVAILABLE)) {
+              fbtype = BwFreeBusyComponent.typeBusyUnavailable;
+            } else if (par.equals(FbType.FREE)) {
+              fbtype = BwFreeBusyComponent.typeFree;
+            } else {
+              if (debug) {
+                debugMsg("Unsupported parameter " + par.getName());
+              }
+
+              throw new IcalMalformedException("parameter " + par.getName());
             }
 
-            throw new IcalMalformedException("parameter " + par.getName());
-          }
+            BwFreeBusyComponent fbc = new BwFreeBusyComponent();
 
-          BwFreeBusyComponent fbc = new BwFreeBusyComponent();
+            fbc.setType(fbtype);
 
-          fbc.setType(fbtype);
+            Iterator perit = perpl.iterator();
+            while (perit.hasNext()) {
+              Period per = (Period)perit.next();
 
-          Iterator perit = perpl.iterator();
-          while (perit.hasNext()) {
-            Period per = (Period)perit.next();
+              fbc.addPeriod(per);
+            }
 
-            fbc.addPeriod(per);
-          }
+            fb.addFreeBusyPeriod(fbc);
+            chg.addValue(pi, fbc);
 
-          fb.addFreeBusyPeriod(fbc);
-          chg.addValue(prop.getName(), fbc);
-        } else if (prop instanceof Organizer) {
-          /* ------------------- Organizer -------------------- */
+            break;
 
-          BwOrganizer org = getOrganizer(cb, (Organizer)prop);
-          fb.setOrganizer(org);
-          chg.addValue(prop.getName(), org);
-        } else if (prop instanceof Uid) {
-          /* ------------------- Uid -------------------- */
+          case ORGANIZER:
+            /* ------------------- Organizer -------------------- */
 
-          chg.changed(prop.getName(), fb.getUid(), pval);
-          fb.setUid(pval);
-        } else {
-          if (debug) {
-            debugMsg("Unsupported property with class " + prop.getClass() +
-                     " and value " + pval);
-          }
+            BwOrganizer org = getOrganizer(cb, (Organizer)prop);
+            fb.setOrganizer(org);
+            chg.addValue(pi, org);
+
+            break;
+
+          case UID:
+            /* ------------------- Uid -------------------- */
+
+            chg.changed(pi, fb.getUid(), pval);
+            fb.setUid(pval);
+
+            break;
+
+          default:
+            if (debug) {
+              debugMsg("Unsupported property with class " + prop.getClass() +
+                               " and value " + pval);
+            }
         }
       }
 

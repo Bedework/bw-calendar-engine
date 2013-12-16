@@ -45,6 +45,9 @@ public @interface IcalProperty {
   /** For multiple fields the unprefixed add method name */
   String adderName() default "";
 
+  /** java/json camel cased name */
+  String jname() default "";
+
   /** field we test for presence */
   String presenceField() default "";
 

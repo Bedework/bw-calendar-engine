@@ -747,11 +747,20 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val
    */
   @Immutable
-  @IcalProperty(pindex = PropertyInfoIndex.ENTITY_TYPE,
-                required = true,
-                eventProperty = true,
-                todoProperty = true,
-                journalProperty = true)
+  @IcalProperties({
+                          @IcalProperty(pindex = PropertyInfoIndex.ENTITY_TYPE,
+                                        jname = "entityType",
+                                        required = true,
+                                        eventProperty = true,
+                                        todoProperty = true,
+                                        journalProperty = true),
+                          @IcalProperty(pindex = PropertyInfoIndex.DOCTYPE,
+                                        jname = "_type",
+                                        required = true,
+                                        eventProperty = true,
+                                        todoProperty = true,
+                                        journalProperty = true)}
+  )
   public void setEntityType(final int val) {
     entityType = val;
   }
@@ -911,10 +920,16 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    * @param val    String event's cost
    */
-  @IcalProperty(pindex = PropertyInfoIndex.COST,
-                eventProperty = true,
-                todoProperty = true,
-                journalProperty = true)
+  @IcalProperties({
+      @IcalProperty(pindex = PropertyInfoIndex.COST,
+                    eventProperty = true,
+                    todoProperty = true,
+                    journalProperty = true),
+      @IcalProperty(pindex = PropertyInfoIndex.XBEDEWORK_COST,
+                    eventProperty = true,
+                    todoProperty = true,
+                    journalProperty = true)}
+  )
   public void setCost(final String val) {
     cost = val;
   }
@@ -975,6 +990,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val
    */
   @IcalProperty(pindex = PropertyInfoIndex.LAST_MODIFIED,
+                jname = "lastModified",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -1014,6 +1030,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   /**
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.SCHEDULE_TAG,
+                jname = "scheduleTag",
+                eventProperty = true,
+                todoProperty = true)
   public void setStag(final String val) {
     stag = val;
   }
@@ -1069,10 +1089,17 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   /**
    * @param val
    */
-  @IcalProperty(pindex = PropertyInfoIndex.LOCATION,
-                reschedule = true,
-                eventProperty = true,
-                todoProperty = true)
+  @IcalProperties({
+    @IcalProperty(pindex = PropertyInfoIndex.LOCATION,
+                  reschedule = true,
+                  eventProperty = true,
+                  todoProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.LOCATION_STR,
+                  jname = "locationStr",
+                  required = true,
+                  eventProperty = true,
+                  todoProperty = true)}
+  )
   public void setLocation(final BwLocation val) {
     location = val;
   }
@@ -1129,6 +1156,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val    percentComplete
    */
   @IcalProperty(pindex = PropertyInfoIndex.PERCENT_COMPLETE,
+                jname = "percentComplete",
                 todoProperty = true)
   public void setPercentComplete(final Integer val) {
     percentComplete = val;
@@ -1163,6 +1191,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    * @param val    scheduleMethod
    */
+  @IcalProperty(pindex = PropertyInfoIndex.SCHEDULE_METHOD,
+                jname = "scheduleMethod",
+                eventProperty = true,
+                todoProperty = true)
   public void setScheduleMethod(final int val) {
     scheduleMethod = val;
   }
@@ -1195,6 +1227,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    * @param val    scheduleState
    */
+  @IcalProperty(pindex = PropertyInfoIndex.SCHEDULE_STATE,
+                jname = "scheduleState",
+                eventProperty = true,
+                todoProperty = true)
   public void setScheduleState(final int val) {
     if ((val != scheduleStateNotProcessed) &&
         (val != scheduleStateProcessed) &&
@@ -1222,6 +1258,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.ORGANIZER_SCHEDULING_OBJECT,
+                jname = "organizerSchedulingObject",
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true,
+                freeBusyProperty = true)
   public void setOrganizerSchedulingObject(final Boolean val) {
     organizerSchedulingObject = val;
   }
@@ -1238,6 +1280,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.ATTENDEE_SCHEDULING_OBJECT,
+                jname = "attendeeSchedulingObject",
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true)
   public void setAttendeeSchedulingObject(final Boolean val) {
     attendeeSchedulingObject = val;
   }
@@ -1254,6 +1301,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val    BwRelatedTo relatedTo property
    */
   @IcalProperty(pindex = PropertyInfoIndex.RELATED_TO,
+                jname = "relatedTo",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)
@@ -1277,12 +1325,56 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   /**
    * @param val
    */
-  @IcalProperty(pindex = PropertyInfoIndex.XPROP,
-                eventProperty = true,
-                todoProperty = true,
-                journalProperty = true,
-                freeBusyProperty = true,
-                timezoneProperty = true)
+  @IcalProperties({
+    @IcalProperty(pindex = PropertyInfoIndex.XPROP,
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.EVENTREG_END,
+                  jname = "eventregEnd",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.EVENTREG_MAX_TICKETS,
+                  jname = "eventregMaxTickets",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.EVENTREG_MAX_TICKETS_PER_USER,
+                  jname = "eventregMaxTicketsPerUser",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.EVENTREG_START,
+                  jname = "eventregStart",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.TOPICAL_AREA,
+                  jname = "topicalArea",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.PARAMETERS,
+                  jname = "pars",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true)}
+  )
   public void setXproperties(final List<BwXproperty> val) {
     xproperties = val;
   }
@@ -1479,6 +1571,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @IcalProperty(pindex = PropertyInfoIndex.REQUEST_STATUS,
                 adderName = "requestStatus",
+                jname = "requestStatus",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -1611,6 +1704,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.RECURRENCE_ID,
+                jname = "recurrenceId",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -1868,15 +1962,27 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @see org.bedework.calfacade.base.StartEndComponent#setDtstart(org.bedework.calfacade.BwDateTime)
    */
   @Override
-  @IcalProperty(pindex = PropertyInfoIndex.DTSTART,
-                presenceField = "dtval",
-                required = true,
-                reschedule = true,
-                eventProperty = true,
-                todoProperty = true,
-                journalProperty = true,
-                freeBusyProperty = true,
-                timezoneProperty = true)
+  @IcalProperties({
+    @IcalProperty(pindex = PropertyInfoIndex.DTSTART,
+                  presenceField = "dtval",
+                  required = true,
+                  reschedule = true,
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.INDEX_START,
+                  jname = "indexStart",
+                  presenceField = "dtval",
+                  required = true,
+                  reschedule = true,
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true)}
+  )
   @NoProxy
   public void setDtstart(final BwDateTime val) {
     dtstart = val;
@@ -1896,6 +2002,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @IcalProperties({
     @IcalProperty(pindex = PropertyInfoIndex.DTEND,
+                  presenceField = "dtval",
+                  required = true,
+                  reschedule = true,
+                  eventProperty = true,
+                  freeBusyProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.INDEX_END,
+                  jname = "indexEnd",
                   presenceField = "dtval",
                   required = true,
                   reschedule = true,
@@ -1925,6 +2038,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   @IcalProperty(pindex = PropertyInfoIndex.END_TYPE,
+                jname = "endType",
                 required = true,
                 eventProperty = true,
                 todoProperty = true,
@@ -1971,6 +2085,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   @IcalProperty(pindex = PropertyInfoIndex.NO_START,
+                jname = "noStart",
                 required = true,
                 eventProperty = true,
                 todoProperty = true,
@@ -2419,6 +2534,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.CATEGORIES,
                 adderName = "category",
+                jname = "categories",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)
@@ -3700,6 +3816,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoWrap
   @NoDump
+  @IcalProperty(pindex = PropertyInfoIndex.LOCATION_UID,
+                jname = "locationUid",
+                required = true,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true)
   public void setLocationUid(final String val) {
     locationUid = val;
   }

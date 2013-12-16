@@ -19,8 +19,13 @@
 package org.bedework.calfacade.annotations.process;
 
 import org.bedework.calfacade.annotations.ical.IcalProperty;
-
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+
+import com.sun.mirror.apt.AnnotationProcessorEnvironment;
+import com.sun.mirror.apt.Messager;
+import com.sun.mirror.declaration.MethodDeclaration;
+import com.sun.mirror.declaration.ParameterDeclaration;
+import com.sun.mirror.type.TypeMirror;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -31,12 +36,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
-import com.sun.mirror.apt.AnnotationProcessorEnvironment;
-import com.sun.mirror.apt.Messager;
-import com.sun.mirror.declaration.MethodDeclaration;
-import com.sun.mirror.declaration.ParameterDeclaration;
-import com.sun.mirror.type.TypeMirror;
 
 /**
  * @author douglm
@@ -49,7 +48,7 @@ public class IcalPropertyHandler {
 
   private PrintWriter pinfoOut;
 
-  Set<String> imports = new TreeSet<String>();
+  Set<String> imports = new TreeSet<>();
 
   private HashMap<PropertyInfoIndex, MergedIcalProperty> pinfos =
          new HashMap<PropertyInfoIndex, MergedIcalProperty>();
@@ -63,6 +62,8 @@ public class IcalPropertyHandler {
     String dbFieldName;
 
     String adderName;
+
+    String jname;
 
     String fieldType;
 
@@ -97,6 +98,13 @@ public class IcalPropertyHandler {
       if ((p.adderName() != null) &&
               (p.adderName().length() > 0)) {
         adderName = p.adderName();
+      }
+
+      if ((p.jname() != null) &&
+              (p.jname().length() > 0)) {
+        jname = p.jname();
+      } else {
+        jname = dbFieldName;
       }
 
       if ((p.presenceField() != null) &&
@@ -431,6 +439,7 @@ public class IcalPropertyHandler {
     new PinfoField("PropertyInfoIndex", "pindex", true, false),
     new PinfoField("String", "dbFieldName"),
     new PinfoField("String", "adderName"),
+    new PinfoField("String", "jname"),
     new PinfoField("Class", "fieldType"),
     new PinfoField("String", "presenceField", "/* field we test for presence */"),
     new PinfoField("boolean", "param", "/* It's a parameter   */"),
@@ -461,6 +470,8 @@ public class IcalPropertyHandler {
     makePar(parIndent, quote(ip.dbFieldName), "dbFieldName");
 
     makePar(parIndent, quote(ip.adderName), "adderName");
+
+    makePar(parIndent, quote(ip.jname), "jname");
 
     if (ip.fieldType == null) {
       makePar(parIndent, "null", "fieldType");

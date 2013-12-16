@@ -34,6 +34,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 
 import net.fortuna.ical4j.data.CalendarParserImpl;
@@ -80,7 +81,6 @@ import net.fortuna.ical4j.model.property.Trigger;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Voter;
 import net.fortuna.ical4j.model.property.XProperty;
-
 import org.apache.log4j.Logger;
 
 import java.io.StringReader;
@@ -922,7 +922,7 @@ public class IcalUtil {
       if (dtStart != null) {
         BwDateTime bwDtStart = BwDateTime.makeBwDateTime(dtStart);
         if (!CalFacadeUtil.eqObjval(ev.getDtstart(), bwDtStart)) {
-          chg.changed(Property.DTSTART, ev.getDtstart(), bwDtStart);
+          chg.changed(PropertyInfoIndex.DTSTART, ev.getDtstart(), bwDtStart);
           ev.setDtstart(bwDtStart);
         }
       }
@@ -941,7 +941,7 @@ public class IcalUtil {
       if (dtEnd != null) {
         BwDateTime bwDtEnd = BwDateTime.makeBwDateTime(dtEnd);
         if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
-          chg.changed(Property.DTEND, ev.getDtend(), bwDtEnd);
+          chg.changed(PropertyInfoIndex.DTEND, ev.getDtend(), bwDtEnd);
           ev.setDtend(bwDtEnd);
         }
       }
@@ -962,7 +962,7 @@ public class IcalUtil {
         endType = StartEndComponent.endTypeDuration;
         String durVal = duration.getValue();
         if (!durVal.equals(ev.getDuration())) {
-          chg.changed(Property.DURATION, ev.getDuration(), durVal);
+          chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), durVal);
           ev.setDuration(durVal);
         }
 
@@ -986,7 +986,7 @@ public class IcalUtil {
         }
         BwDateTime bwDtEnd = BwDateTime.makeDateTime(dtStart, dateOnly, dur);
         if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
-          chg.changed(Property.DTEND, ev.getDtend(), bwDtEnd);
+          chg.changed(PropertyInfoIndex.DTEND, ev.getDtend(), bwDtEnd);
           ev.setDtend(bwDtEnd);
         }
       }
@@ -998,7 +998,7 @@ public class IcalUtil {
         String durVal = BwDateTime.makeDuration(ev.getDtstart(),
                                                 ev.getDtend()).toString();
         if (!durVal.equals(ev.getDuration())) {
-          chg.changed(Property.DURATION, ev.getDuration(), durVal);
+          chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), durVal);
           ev.setDuration(durVal);
         }
       }

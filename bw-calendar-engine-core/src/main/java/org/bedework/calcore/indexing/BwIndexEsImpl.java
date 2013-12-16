@@ -781,9 +781,10 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   @Override
-  public BwCategory fetchCat(final String field, final String val)
+  public BwCategory fetchCat(final String val,
+                             final PropertyInfoIndex... index)
           throws CalFacadeException {
-    EntityBuilder eb = fetchEntity(docTypeCategory, field,val);
+    EntityBuilder eb = fetchEntity(docTypeCategory, val, index);
 
     if (eb == null) {
       return null;
@@ -793,9 +794,10 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   @Override
-  public BwContact fetchContact(final String field, final String val)
+  public BwContact fetchContact(final String val,
+                                final PropertyInfoIndex... index)
           throws CalFacadeException {
-    EntityBuilder eb = fetchEntity(docTypeContact, field, val);
+    EntityBuilder eb = fetchEntity(docTypeContact, val, index);
 
     if (eb == null) {
       return null;
@@ -805,9 +807,10 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   @Override
-  public BwLocation fetchLocation(final String field, final String val)
+  public BwLocation fetchLocation(final String val,
+                                  final PropertyInfoIndex... index)
           throws CalFacadeException {
-    EntityBuilder eb = fetchEntity(docTypeLocation, field, val);
+    EntityBuilder eb = fetchEntity(docTypeLocation, val, index);
 
     if (eb == null) {
       return null;
@@ -922,10 +925,11 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   private EntityBuilder fetchEntity(final String docType,
-                                    final String field,
-                                    final String val)
+                                    final String val,
+                                    final PropertyInfoIndex... index)
           throws CalFacadeException {
-    if (field.equals(PropertyInfoIndex.UID.getJname())) {
+    if ((index.length == 0) &&
+            (index[0] == PropertyInfoIndex.UID)) {
       GetRequestBuilder grb = getClient().prepareGet(targetIndex,
                                                      docType,
                                                      val);
@@ -944,7 +948,7 @@ public class BwIndexEsImpl implements BwIndexer {
     srb.setTypes(docType);
 
     SearchResponse response = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setFilter(getFilters().buildFilter(field, val))
+            .setFilter(getFilters().buildFilter(val, index))
             .setFrom(0).setSize(60).setExplain(true)
             .execute()
             .actionGet();
@@ -958,7 +962,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
     if (hits.getTotalHits() != 1) {
       error("Multiple entities of type " + docType +
-                    " with field " + field +
+                    " with field " + ESQueryFilter.makePropertyRef(index) +
                     " value " + val);
       return null;
     }
