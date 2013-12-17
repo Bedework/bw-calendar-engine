@@ -480,9 +480,7 @@ public class DocBuilder {
       makeShareableContained(builder, ev);
 
       makeField(builder, PropertyInfoIndex.NAME, ev.getName());
-      makeField(builder, PropertyInfoIndex.HREF,
-                Util.buildPath(false, ev.getColPath(), "/",
-                               ev.getName()));
+      makeField(builder, PropertyInfoIndex.HREF, ev.getHref());
 
       indexCategories(builder, ev.getCategories());
 
@@ -711,7 +709,7 @@ public class DocBuilder {
       colPath = "";
     }
 
-    makeField(builder, PropertyInfoIndex.COLPATH, colPath);
+    makeField(builder, PropertyInfoIndex.COLLECTION, colPath);
     makeField(builder, PropertyInfoIndex.ACL, ent.getAccess());
     makeField(builder, PropertyInfoIndex.PUBLIC, ent.getPublick());
   }

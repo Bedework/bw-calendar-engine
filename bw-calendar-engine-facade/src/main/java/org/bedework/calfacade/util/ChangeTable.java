@@ -184,15 +184,7 @@ public class ChangeTable implements Serializable {
       return ent;
     }
 
-    ent = ChangeTableEntry.newEntry(this, index);
-    if (ent != null) {
-      map.put(index, ent);
-      return ent;
-    }
-
-    // Presumably an unknown property - assume multi?
-
-    ent = new ChangeTableEntry(this, true, index);
+    ent = new ChangeTableEntry(this, index);
     map.put(index, ent);
     return ent;
   }
@@ -222,15 +214,8 @@ public class ChangeTable implements Serializable {
     for (PropertyInfoIndex pii: PropertyInfoIndex.values()) {
       ChangeTableEntry ent = fullmap.get(pii);
       if (ent == null) {
-        ent = ChangeTableEntry.newEntry(this, pii);
-
-        if (ent == null) {
-          if (debug && !pii.getImmutable()) {
-            warn("No entry for index " + pii + " name " +  pii);
-          }
-        } else {
-          fullmap.put(pii, ent);
-        }
+        ent = new ChangeTableEntry(this, pii);
+        fullmap.put(pii, ent);
       }
     }
 

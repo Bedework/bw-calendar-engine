@@ -537,7 +537,9 @@ public class BwIndexEsImpl implements BwIndexer {
       } else if (eventDoctypes.contains(dtype)) {
         entity = eb.makeEvent();
         EventInfo ei = (EventInfo)entity;
-        Acl.CurrentAccess ca = res.accessCheck.checkAccess(ei.getEvent(),
+        BwEvent ev = ei.getEvent();
+
+        Acl.CurrentAccess ca = res.accessCheck.checkAccess(ev,
                                                          PrivilegeDefs.privAny, true);
 
         if ((ca == null) || !ca.getAccessAllowed()) {
@@ -1049,7 +1051,7 @@ public class BwIndexEsImpl implements BwIndexer {
               targetIndex).setTypes(itemType);
 
       ESQueryFilter esq= getFilters();
-      FilterBuilder fb = esq.addTerm(null, PropertyInfoIndex.COLPATH,
+      FilterBuilder fb = esq.addTerm(null, PropertyInfoIndex.COLLECTION,
                                      ev.getColPath());
       fb = esq.addTerm(fb, PropertyInfoIndex.UID, ev.getUid());
       delQreq.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(),

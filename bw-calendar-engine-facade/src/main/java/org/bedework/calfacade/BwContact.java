@@ -72,6 +72,7 @@ public class BwContact extends BwEventProperty<BwContact>
   /**
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.PHONE)
   public void setPhone(final String val) {
     phone = val;
   }
@@ -86,6 +87,7 @@ public class BwContact extends BwEventProperty<BwContact>
   /**
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.EMAIL)
   public void setEmail(final String val) {
     email = val;
   }

@@ -68,6 +68,14 @@ public class BwOwnedDbentity<T> extends BwDbentity<T> {
   /**
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.PUBLIC,
+                required = true,
+                jname = "public",
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true,
+                freeBusyProperty = true,
+                vavailabilityProperty = true)
   public void setPublick(final Boolean val) {
     publick = val;
   }

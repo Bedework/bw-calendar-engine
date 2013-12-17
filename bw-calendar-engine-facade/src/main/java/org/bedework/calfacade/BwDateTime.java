@@ -19,6 +19,7 @@
 package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
+import org.bedework.calfacade.annotations.ical.IcalProperties;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.BwCloneable;
 import org.bedework.calfacade.base.DumpEntity;
@@ -329,9 +330,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
     return bwd;
   }
 
-  /** Get the timezone's dateType
+  /** Get the date/times dateType
    *
-   * @return boolean    true for a date type
+   * @return boolean    true for a date only type
    */
   public boolean getDateType() {
     return dateType;
@@ -341,9 +342,13 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    *
    * @return String    tzid
    */
-  @IcalProperty(pindex = PropertyInfoIndex.TZIDPAR,
-                dbFieldName = "tzid",
-                param = true)
+  @IcalProperties({
+    @IcalProperty(pindex = PropertyInfoIndex.TZIDPAR,
+                  dbFieldName = "tzid",
+                  param = true),
+    @IcalProperty(pindex = PropertyInfoIndex.TZID)
+                  })
+
   public String getTzid() {
     return tzid;
   }
@@ -393,6 +398,8 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    *
    * @return String date
    */
+  @IcalProperty(pindex = PropertyInfoIndex.LOCAL,
+                jname = "local")
   public String getDate() {
     return date;
   }
@@ -408,6 +415,8 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    *
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.FLOATING,
+                jname = "floating")
   private void setFloatFlag(final Boolean val) {
     floatFlag = val;
   }

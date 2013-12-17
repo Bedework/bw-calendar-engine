@@ -26,7 +26,6 @@ import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -36,9 +35,6 @@ import java.util.TreeSet;
  */
 public class ChangeTableEntry {
   private ChangeTable chg;
-
-  /** Immutable */
-  private boolean multiValued;
 
   /** Immutable: Index of the property */
   private PropertyInfoIndex index;
@@ -78,79 +74,14 @@ public class ChangeTableEntry {
   /** true if the field is a list */
   private boolean listField;
 
-  /* Used to supply new entries */
-  private static HashMap<PropertyInfoIndex, ChangeTableEntry> map =
-    new HashMap<>();
-
-  static {
-    initMap();
-  }
-
   /**
    * @param chg
-   * @param multiValued
    * @param index
    */
   public ChangeTableEntry(final ChangeTable chg,
-                          final boolean multiValued,
                           final PropertyInfoIndex index) {
     this.chg = chg;
-    this.multiValued = multiValued;
     this.index = index;
-  }
-
-  /**
-   * @param multiValued
-   * @param index
-   */
-  public ChangeTableEntry(final boolean multiValued,
-                          final PropertyInfoIndex index) {
-    this(null, multiValued, index);
-  }
-
-  /**
-   * @param chg
-   * @param index
-   */
-  public ChangeTableEntry(final ChangeTable chg,
-                          final PropertyInfoIndex index) {
-    this(chg, false, index);
-  }
-
-  /**
-   * @param index
-   */
-  public ChangeTableEntry(final PropertyInfoIndex index) {
-    this(null, false, index);
-  }
-
-
-  /** Return a new entry based on this entry.
-   *
-   * @param chg - the change table
-   * @return ChangeTableEntry
-   */
-  public ChangeTableEntry newEntry(final ChangeTable chg) {
-    ChangeTableEntry cte = new ChangeTableEntry(chg, multiValued, index);
-    // TODO - fix for lists
-    cte.listField = listField;
-
-    return cte;
-  }
-
-  /** Return a new entry given the property index.
-   *
-   * @param chg - the change table
-   * @param index
-   * @return ChangeTableEntry
-   */
-  public static ChangeTableEntry newEntry(final ChangeTable chg,
-                                          final PropertyInfoIndex index) {
-    ChangeTableEntry ent = map.get(index);
-    if (ent == null) {
-      return null;
-    }
-    return ent.newEntry(chg);
   }
 
   /** Add a value and mark as present.
@@ -159,12 +90,14 @@ public class ChangeTableEntry {
    */
   @SuppressWarnings("unchecked")
   public void addValue(final Object val) {
-    if (!multiValued) {
+    if (!index.getMultiValued()) {
       throw new RuntimeException("org.bedework.icalendar.notmultivalued");
     }
 
     if (newValues == null) {
-      if (listField) {
+      // TEMP = this needs to be in BwPropertyInfo
+      //if (listField) {
+      if (index == PropertyInfoIndex.XPROP) {
         newValues = new ArrayList();
       } else {
         newValues = new TreeSet();
@@ -181,7 +114,7 @@ public class ChangeTableEntry {
    */
   @SuppressWarnings("unchecked")
   public void addValues(final Collection val) {
-    if (!multiValued) {
+    if (!index.getMultiValued()) {
       throw new RuntimeException("org.bedework.icalendar.notmultivalued");
     }
 
@@ -195,13 +128,6 @@ public class ChangeTableEntry {
 
     present = true;
     newValues.addAll(val);
-  }
-
-  /**
-   * @return true for a multi-valued property
-   */
-  public boolean getMultiValued() {
-    return multiValued;
   }
 
   /**
@@ -679,8 +605,9 @@ public class ChangeTableEntry {
     return ts.toString();
   }
 
+  /*
   private static void initMap() {
-    /* ---------------------------- Single valued --------------- */
+    / * ---------------------------- Single valued --------------- * /
 
     put(new ChangeTableEntry(PropertyInfoIndex.ACCEPT_RESPONSE));
 
@@ -736,14 +663,14 @@ public class ChangeTableEntry {
 
     put(new ChangeTableEntry(PropertyInfoIndex.URL));
 
-    /* ---------------------------- Multi valued --------------- */
+    / * ---------------------------- Multi valued --------------- * /
 
     // TODO - this should be dealt with by annotations.
     ChangeTableEntry xpropEntry = new ChangeTableEntry(true, PropertyInfoIndex.XPROP);
     xpropEntry.listField = true;
     put(xpropEntry);
 
-    /* Event, Todo and Freebusy */
+    / * Event, Todo and Freebusy * /
 
     put(new ChangeTableEntry(true, PropertyInfoIndex.ATTENDEE));
 
@@ -753,7 +680,7 @@ public class ChangeTableEntry {
 
     put(new ChangeTableEntry(true, PropertyInfoIndex.REQUEST_STATUS));
 
-    /* Event and Todo */
+    / * Event and Todo * /
 
     put(new ChangeTableEntry(true, PropertyInfoIndex.ATTACH));
 
@@ -765,7 +692,7 @@ public class ChangeTableEntry {
 
     put(new ChangeTableEntry(true, PropertyInfoIndex.VALARM));
 
-    /* -------------Recurrence (also multi valued) --------------- */
+    / * -------------Recurrence (also multi valued) --------------- * /
 
     put(new ChangeTableEntry(true, PropertyInfoIndex.EXDATE));
 
@@ -775,7 +702,7 @@ public class ChangeTableEntry {
 
     put(new ChangeTableEntry(true, PropertyInfoIndex.RRULE));
 
-    /* -------------- Other non-event, non-todo ---------------- */
+    / * -------------- Other non-event, non-todo ---------------- * /
 
     put(new ChangeTableEntry(null, PropertyInfoIndex.FREEBUSY));
 
@@ -797,7 +724,7 @@ public class ChangeTableEntry {
 
     put(new ChangeTableEntry(null, PropertyInfoIndex.TRIGGER));
 
-    /* ----------------------------- Non-ical ---------------- */
+    / * ----------------------------- Non-ical ---------------- * /
 
     put(new ChangeTableEntry(PropertyInfoIndex.COLLECTION));
 
@@ -811,4 +738,5 @@ public class ChangeTableEntry {
   private static void put(final ChangeTableEntry ent) {
     map.put(ent.index, ent);
   }
+  */
 }

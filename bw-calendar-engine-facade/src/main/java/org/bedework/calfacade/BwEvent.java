@@ -748,18 +748,18 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Immutable
   @IcalProperties({
-                          @IcalProperty(pindex = PropertyInfoIndex.ENTITY_TYPE,
-                                        jname = "entityType",
-                                        required = true,
-                                        eventProperty = true,
-                                        todoProperty = true,
-                                        journalProperty = true),
-                          @IcalProperty(pindex = PropertyInfoIndex.DOCTYPE,
-                                        jname = "_type",
-                                        required = true,
-                                        eventProperty = true,
-                                        todoProperty = true,
-                                        journalProperty = true)}
+    @IcalProperty(pindex = PropertyInfoIndex.ENTITY_TYPE,
+                  jname = "entityType",
+                  required = true,
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.DOCTYPE,
+                  jname = "_type",
+                  required = true,
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true)}
   )
   public void setEntityType(final int val) {
     entityType = val;
@@ -860,6 +860,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    *  @param val    boolean true if the event is deleted
    */
+  @IcalProperty(pindex = PropertyInfoIndex.DELETED)
   public void setDeleted(final boolean val) {
     deleted = val;
   }
@@ -1211,6 +1212,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    * @param val    String event's originator
    */
+  @IcalProperty(pindex = PropertyInfoIndex.ORIGINATOR,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true,
+                freeBusyProperty = true,
+                timezoneProperty = true)
   public void setOriginator(final String val) {
     originator = val;
   }
@@ -1332,6 +1339,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                   journalProperty = true,
                   freeBusyProperty = true,
                   timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.CALSCALE,
+                  jname = "calscale",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
     @IcalProperty(pindex = PropertyInfoIndex.EVENTREG_END,
                   jname = "eventregEnd",
                   eventProperty = true,
@@ -1360,8 +1374,15 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                   journalProperty = true,
                   freeBusyProperty = true,
                   timezoneProperty = true),
-    @IcalProperty(pindex = PropertyInfoIndex.TOPICAL_AREA,
-                  jname = "topicalArea",
+    @IcalProperty(pindex = PropertyInfoIndex.IMAGE,
+                  jname = "image",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.METHOD,
+                  jname = "method",
                   eventProperty = true,
                   todoProperty = true,
                   journalProperty = true,
@@ -1369,6 +1390,61 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                   timezoneProperty = true),
     @IcalProperty(pindex = PropertyInfoIndex.PARAMETERS,
                   jname = "pars",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.PRODID,
+                  jname = "prodid",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.THUMBIMAGE,
+                  jname = "thumbimage",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.TOPICAL_AREA,
+                  jname = "topicalArea",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.UNKNOWN_PROPERTY,
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.URI,
+                  jname = "uri",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.VERSION,
+                  jname = "version",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.VIEW,
+                  jname = "view",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.VPATH,
+                  jname = "vpath",
                   eventProperty = true,
                   todoProperty = true,
                   journalProperty = true,
@@ -1656,12 +1732,21 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    * @param val
    */
-  @IcalProperty(pindex = PropertyInfoIndex.CTOKEN,
-                required = true,
-                eventProperty = true,
-                todoProperty = true,
-                journalProperty = true,
-                freeBusyProperty = true
+  @IcalProperties({
+    @IcalProperty(pindex = PropertyInfoIndex.CTOKEN,
+                  required = true,
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true
+    ),
+    @IcalProperty(pindex = PropertyInfoIndex.ETAG,
+                  jname = "etag",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true
+    )}
   )
   public void setCtoken(final String val) {
     ctoken = val;
@@ -1683,10 +1768,8 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *               RecurrenceEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.RecurrenceEntity#setRecurring(java.lang.Boolean)
-   */
   @Override
+  @IcalProperty(pindex = PropertyInfoIndex.RECURRING)
   public void setRecurring(final Boolean val) {
     recurring = val;
   }
@@ -3852,6 +3935,18 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
 
     return changeSet;
+  }
+
+  @NoProxy
+  @NoDump
+  @IcalProperty(pindex = PropertyInfoIndex.HREF,
+                jname = "href",
+                required = true,
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true)
+  public String getHref() {
+    return  Util.buildPath(false, getColPath(), "/", getName());
   }
 
   /** Return all timezone ids this event uses. This is used when an event is

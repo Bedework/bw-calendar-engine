@@ -672,7 +672,7 @@ public class EntityBuilder  {
   private void restoreSharedEntity(BwShareableContainedDbentity ent) throws CalFacadeException {
     ent.setCreatorHref(getString(PropertyInfoIndex.CREATOR));
     ent.setOwnerHref(getString(PropertyInfoIndex.OWNER));
-    ent.setColPath(getString(PropertyInfoIndex.COLPATH));
+    ent.setColPath(getString(PropertyInfoIndex.COLLECTION));
     ent.setAccess(getString(PropertyInfoIndex.ACL));
     ent.setPublick(getBooleanNotNull(PropertyInfoIndex.PUBLIC));
   }

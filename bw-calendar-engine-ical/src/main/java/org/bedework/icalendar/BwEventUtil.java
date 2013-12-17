@@ -442,7 +442,17 @@ public class BwEventUtil extends IcalUtil {
           pval = null;
         }
 
-        PropertyInfoIndex pi = PropertyInfoIndex.valueOf(prop.getName());
+        PropertyInfoIndex pi;
+
+        if (prop instanceof XProperty) {
+          pi = PropertyInfoIndex.XPROP;
+        } else {
+          try {
+            pi = PropertyInfoIndex.valueOf(prop.getName());
+          } catch (Throwable t) {
+            pi = null;
+          }
+        }
 
         if (pi == null) {
           debugMsg("Unknown property with name " + prop.getName() +
@@ -1002,29 +1012,29 @@ public class BwEventUtil extends IcalUtil {
             }
 
             break;
-          default:
-            if (prop instanceof XProperty) {
-              /* ------------------------- x-property --------------------------- */
 
-              String name = prop.getName();
+          case XPROP:
+            /* ------------------------- x-property --------------------------- */
 
-              if (name.equalsIgnoreCase(BwXproperty.bedeworkCost)) {
-                if (chg.changed(PropertyInfoIndex.COST, ev.getCost(), pval)) {
-                  ev.setCost(pval);
-                }
-              } else {
-                XProperty xp = (XProperty)prop;
-                chg.addValue(PropertyInfoIndex.XPROP,
-                             new BwXproperty(name,
-                                             xp.getParameters().toString(),
-                                             pval));
+            String name = prop.getName();
+
+            if (name.equalsIgnoreCase(BwXproperty.bedeworkCost)) {
+              if (chg.changed(PropertyInfoIndex.COST, ev.getCost(), pval)) {
+                ev.setCost(pval);
               }
             } else {
-              if (debug) {
-                debugMsg("Unsupported property with class " + prop.getClass() +
-                                 " and value " + pval);
-              }
+              XProperty xp = (XProperty)prop;
+              chg.addValue(PropertyInfoIndex.XPROP,
+                           new BwXproperty(name,
+                                           xp.getParameters().toString(),
+                                           pval));
             }
+          default:
+            if (debug) {
+              debugMsg("Unsupported property with class " + prop.getClass() +
+                               " and value " + pval);
+            }
+
         }
       }
 

@@ -1382,6 +1382,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    * @return valid quoted etag
    */
   @NoDump
+  @IcalProperty(pindex = PropertyInfoIndex.CTAG,
+                jname = "ctag")
   public String getEtag() {
     return "\"" + getLastmod().getTagValue() +
            "\"";

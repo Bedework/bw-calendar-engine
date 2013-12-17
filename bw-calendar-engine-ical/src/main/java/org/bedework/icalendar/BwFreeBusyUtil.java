@@ -95,9 +95,11 @@ public class BwFreeBusyUtil extends IcalUtil {
           pval = null;
         }
 
-        PropertyInfoIndex pi = PropertyInfoIndex.valueOf(prop.getName());
+        PropertyInfoIndex pi;
 
-        if (pi == null) {
+        try {
+          pi = PropertyInfoIndex.valueOf(prop.getName());
+        } catch (Throwable t) {
           debugMsg("Unknown property with name " + prop.getName() +
                            " class " + prop.getClass() +
                            " and value " + pval);

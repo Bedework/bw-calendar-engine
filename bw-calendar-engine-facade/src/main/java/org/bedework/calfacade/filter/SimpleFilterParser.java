@@ -567,9 +567,9 @@ public abstract class SimpleFilterParser {
       }
 
       //pi = PropertyInfoIndex.lookupPname(pname);
-      pi = PropertyInfoIndex.valueOf(pnameUc);
-
-      if (pi == null) {
+      try {
+        pi = PropertyInfoIndex.valueOf(pnameUc);
+      } catch (Throwable t) {
         throw new CalFacadeException(CalFacadeException.unknownProperty,
                                      pname + ": expr was " + currentExpr);
       }

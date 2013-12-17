@@ -32,7 +32,6 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCollectionFilter;
-import org.bedework.calfacade.filter.BwCreatorFilter;
 import org.bedework.calfacade.filter.BwHrefFilter;
 import org.bedework.calfacade.filter.BwViewFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
@@ -70,7 +69,7 @@ public class ESQueryFilter {
   private final String principal;
   private boolean queryLimited;
 
-  private static String colpathJname = getJname(PropertyInfoIndex.COLPATH);
+  private static String colpathJname = getJname(PropertyInfoIndex.COLLECTION);
   private static String dtendJname = getJname(PropertyInfoIndex.DTEND);
   private static String dtstartJname = getJname(PropertyInfoIndex.DTSTART);
   private static String hrefJname = getJname(PropertyInfoIndex.HREF);
@@ -81,8 +80,9 @@ public class ESQueryFilter {
 
   private static String dtEndUTCRef = makePropertyRef(PropertyInfoIndex.DTEND,
                                                           PropertyInfoIndex.UTC);
-  private static String dtStartUTCRef = makePropertyRef(PropertyInfoIndex.DTSTART,
-                                                          PropertyInfoIndex.UTC);
+  private static String dtStartUTCRef = makePropertyRef(
+          PropertyInfoIndex.DTSTART,
+          PropertyInfoIndex.UTC);
 
   public ESQueryFilter(final boolean publick,
                        final String principal) {
@@ -265,7 +265,7 @@ public class ESQueryFilter {
 
     for (PropertyInfoIndex pi: pis) {
       sb.append(delim);
-      getJname(pi);
+      sb.append(getJname(pi));
       delim = ".";
     }
 
@@ -284,7 +284,7 @@ public class ESQueryFilter {
 
     for (PropertyInfoIndex pi: pis) {
       sb.append(delim);
-      getJname(pi);
+      sb.append(getJname(pi));
       delim = ".";
     }
 
@@ -573,13 +573,13 @@ public class ESQueryFilter {
       return doTimeRange((TimeRangeFilter)pf, false, fieldName, null);
     }
 
+    /*
     if (pf instanceof BwCreatorFilter) {
       return new TermOrTerms("creator",
                              ((BwCreatorFilter)pf).getEntity(),
                              pf.getNot());
     }
 
-    /*
     if (pf instanceof BwCategoryFilter) {
       BwCategory cat = ((BwCategoryFilter)pf).getEntity();
       return new TermOrTerms(PropertyInfoIndex.CATEGORIES.getJname() +
