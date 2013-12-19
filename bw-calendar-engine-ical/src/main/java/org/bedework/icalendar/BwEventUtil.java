@@ -35,7 +35,6 @@ import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
@@ -317,9 +316,8 @@ public class BwEventUtil extends IcalUtil {
           debugMsg("TRANS-TO_EVENT: try to fetch event with guid=" + guid);
         }
 
-        RecurringRetrievalMode rrm =
-          new RecurringRetrievalMode(Rmode.overrides);
-        Collection eis = cb.getEvent(cal, guid, null, rrm);
+        Collection eis = cb.getEvent(cal, guid, null,
+                                     RecurringRetrievalMode.overrides);
         if (Util.isEmpty(eis)) {
           // do nothing
         } else if (eis.size() > 1) {

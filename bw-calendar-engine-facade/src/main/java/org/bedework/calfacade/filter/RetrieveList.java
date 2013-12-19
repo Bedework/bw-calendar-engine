@@ -22,6 +22,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.xml.tagdefs.WebdavTags;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +32,9 @@ import java.util.List;
  * @author Mike Douglass
  * @version 1.0
  */
-
 public class RetrieveList {
+  private final static String etagName = WebdavTags.getetag.toString();
+
   public static List<BwIcalPropertyInfoEntry> getRetrieveList(
           final List<String> retrieveList) throws CalFacadeException {
 
@@ -48,11 +50,16 @@ public class RetrieveList {
     for (String pname: retrieveList) {
       PropertyInfoIndex pi;
 
-      try {
-        pi = PropertyInfoIndex.valueOf(pname);
-      } catch (Throwable t) {
-        throw new CalFacadeException(CalFacadeException.unknownProperty,
-                                     pname);
+      /* Special case etag for the moment */
+      if (pname.equals(etagName)) {
+        pi = PropertyInfoIndex.ETAG;
+      } else {
+        try {
+          pi = PropertyInfoIndex.valueOf(pname);
+        } catch (Throwable t) {
+          throw new CalFacadeException(CalFacadeException.unknownProperty,
+                                       pname);
+        }
       }
 
       BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);

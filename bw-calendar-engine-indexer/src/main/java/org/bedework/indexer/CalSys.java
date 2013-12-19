@@ -21,7 +21,6 @@ package org.bedework.indexer;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.IndexProperties;
@@ -525,7 +524,7 @@ public abstract class CalSys {
     EventsI evhandler = svci.getEventsHandler();
 
     Collection<EventInfo> evis = evhandler.get(colPath, uid, rid,
-                                               new RecurringRetrievalMode(Rmode.overrides),
+                                               RecurringRetrievalMode.overrides,
                                                false);
 
     return evis;

@@ -65,6 +65,12 @@ public class RecurringRetrievalMode implements Serializable {
    */
   public BwDateTime end;
 
+  public static final RecurringRetrievalMode expanded =
+          new RecurringRetrievalMode();
+
+  public static final RecurringRetrievalMode overrides =
+          new RecurringRetrievalMode(Rmode.overrides);
+
   /** Default constructor - mode = Rmode.expanded, no date limits.
    */
   public RecurringRetrievalMode() {

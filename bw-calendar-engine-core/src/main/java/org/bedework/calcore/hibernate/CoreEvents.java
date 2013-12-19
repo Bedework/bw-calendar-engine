@@ -1913,10 +1913,9 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     BwEventAnnotation override = null;
     BwRecurrenceInstance inst = null;
 
-    RecurringRetrievalMode rrm = new RecurringRetrievalMode(Rmode.expanded);
-
     eventQuery(BwEventAnnotation.class, null, colPaths, null, rid, master,
-               null, rrm/*,
+               null,
+               RecurringRetrievalMode.expanded/*,
                false*/);
 
     Collection ovs = sess.getList();
@@ -1935,7 +1934,9 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       return null;
     }
 
-    return makeProxy(inst, override, null, rrm, desiredAccess, false);
+    return makeProxy(inst, override, null,
+                     RecurringRetrievalMode.expanded,
+                     desiredAccess, false);
   }
 
   private BwRecurrenceInstance getInstance(final BwEvent master,

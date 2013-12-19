@@ -20,6 +20,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calcore.AccessUtil;
 import org.bedework.calcore.CalintfBase;
+import org.bedework.calcore.es.CalintfHelperEs;
 import org.bedework.calcorei.CalintfInfo;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventPropertiesI;
@@ -65,6 +66,7 @@ import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAdminGroupEntry;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -214,10 +216,17 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     }
 
     cb = new CalintfHelperCallback(this);
-    chcb = new CalintfHelperHibCb(this);
 
-    events = new CoreEvents(chcb, cb,
-                            access, currentMode, sessionless);
+    if (Boolean.getBoolean("org.bedework.core.use.es")) {
+      CalintfHelperEsCb escb = new CalintfHelperEsCb(this);
+      chcb = escb;
+      events = new org.bedework.calcore.es.CoreEvents(escb, cb,
+                              access, currentMode, sessionless);
+    } else {
+      chcb = new CalintfHelperHibCb(this);
+      events = new CoreEvents(chcb, cb,
+                              access, currentMode, sessionless);
+    }
 
     calendars = new CoreCalendars(chcb, cb,
                                   access, currentMode, sessionless);
@@ -232,7 +241,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   }
 
   private static class CalintfHelperHibCb implements CalintfHelperHib.CalintfHelperHibCb {
-    private CalintfImpl intf;
+    protected CalintfImpl intf;
 
     CalintfHelperHibCb(final CalintfImpl intf) {
       this.intf = intf;
@@ -302,6 +311,19 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     @Override
     public boolean getForRestore() {
       return intf.forRestore;
+    }
+  }
+
+  private static class CalintfHelperEsCb extends CalintfHelperHibCb
+          implements CalintfHelperEs.CalintfHelperEsCb {
+    CalintfHelperEsCb(final CalintfImpl intf) {
+      super(intf);
+    }
+
+    @Override
+    public BwIndexer getIndexer() throws CalFacadeException {
+      return intf.getIndexer(intf.getPrincipal().getUnauthenticated(),
+                             intf.getPrincipal());
     }
   }
 

@@ -21,7 +21,6 @@ package org.bedework.inoutsched;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.calfacade.svc.EventInfo;
@@ -260,12 +259,11 @@ public class OutScheduler extends AbstractScheduler {
       return null;
     }
 
-    RecurringRetrievalMode rrm =
-      new RecurringRetrievalMode(Rmode.overrides);
-    Collection<EventInfo> eis = getSvc().getEventsHandler().getEvents(outbox, null,
-                                                                null, null,
-                                                                null, // retrieveList
-                                                                rrm);
+    Collection<EventInfo> eis = getSvc().getEventsHandler().
+            getEvents(outbox, null,
+                      null, null,
+                      null, // retrieveList
+                      RecurringRetrievalMode.overrides);
     if (Util.isEmpty(eis)) {
       if (debug) {
         trace("autoSchedule: no outbox events for " +

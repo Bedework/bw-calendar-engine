@@ -21,7 +21,6 @@ package org.bedework.inoutsched;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
@@ -90,7 +89,7 @@ public class InScheduler extends AbstractScheduler {
       Collection<EventInfo> eis = svci.getEventsHandler().get(msg.getColPath(),
                                                  msg.getUid(),
                                                  msg.getRecurrenceId(),
-                                                 new RecurringRetrievalMode(Rmode.expanded),
+                                                 RecurringRetrievalMode.expanded,
                                                  false);
       if (Util.isEmpty(eis)) {
         // Event deleted?.
@@ -266,9 +265,9 @@ public class InScheduler extends AbstractScheduler {
       return null;
     }
 
-    RecurringRetrievalMode rrm =
-      new RecurringRetrievalMode(Rmode.overrides);
-    EventInfo ei = svci.getEventsHandler().get(inbox.getPath(), eventName, rrm);
+    EventInfo ei = svci.getEventsHandler().get(inbox.getPath(),
+                                               eventName,
+                                               RecurringRetrievalMode.overrides);
     if (ei == null) {
       if (debug) {
         trace("autoSchedule: no event with name " + eventName);

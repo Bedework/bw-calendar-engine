@@ -41,7 +41,6 @@ import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
@@ -627,10 +626,8 @@ class Events extends CalSvcDb implements EventsI {
 
     try {
       // Get the target
-      RecurringRetrievalMode rrm =
-        new RecurringRetrievalMode(Rmode.overrides);
-
-      EventInfo destEi = get(to.getPath(), name, rrm);
+      EventInfo destEi = get(to.getPath(), name,
+                             RecurringRetrievalMode.overrides);
 
       if (destEi != null) {
         if (!overwrite) {

@@ -31,6 +31,7 @@ import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
@@ -360,7 +361,8 @@ public class BwIndexEsImpl implements BwIndexer {
                              final String start,
                              final String end,
                              final int pageSize,
-                             final AccessChecker accessCheck) throws CalFacadeException {
+                             final AccessChecker accessCheck,
+                             final RecurringRetrievalMode recurRetrieval) throws CalFacadeException {
     EsSearchResult res = new EsSearchResult(this);
 
     res.start = start;
@@ -376,7 +378,10 @@ public class BwIndexEsImpl implements BwIndexer {
 
     res.curFilter = ef.buildFilter(filter);
 
-    res.curFilter = ef.addDateRangeFilter(res.curFilter, start, end);
+    res.curFilter = ef.addDateRangeFilter(res.curFilter,
+                                          start,
+                                          end,
+                                          recurRetrieval);
 
     res.curSort = sort;
 

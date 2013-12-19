@@ -378,7 +378,7 @@ public abstract class CalintfHelper
       event = ev;
     }
 
-    CoreEventInfo cei = new CoreEventInfo(ev, ca);
+    CoreEventInfo cei = new CoreEventInfo(event, ca);
 
     return cei;
   }

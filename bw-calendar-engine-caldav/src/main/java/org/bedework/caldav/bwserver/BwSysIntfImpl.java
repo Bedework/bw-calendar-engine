@@ -2301,7 +2301,7 @@ public class BwSysIntfImpl implements SysIntf {
 
   private RecurringRetrievalMode getRrm(final RetrievalMode rm) throws WebdavException {
     if (rm == null) {
-      return new RecurringRetrievalMode(Rmode.overrides);
+      return RecurringRetrievalMode.overrides;
     }
 
     try {
@@ -2331,7 +2331,7 @@ public class BwSysIntfImpl implements SysIntf {
     }
 
     /* Return master + overrides */
-    return new RecurringRetrievalMode(Rmode.overrides);
+    return RecurringRetrievalMode.overrides;
   }
 
   /**

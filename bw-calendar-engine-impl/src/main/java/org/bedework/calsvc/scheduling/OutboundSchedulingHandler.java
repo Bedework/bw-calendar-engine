@@ -25,7 +25,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
@@ -235,14 +234,11 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     int smethod = ev.getScheduleMethod();
 
     if (Icalendar.itipRequestMethodType(smethod)) {
-      RecurringRetrievalMode rrm =
-        new RecurringRetrievalMode(Rmode.overrides);
-
       Collection<EventInfo> inevs = getEvents(inboxPath,
                                               ev.getUid(),
                                               ev.getRecurrenceId(),
                                               true,
-                                              rrm);
+                                              RecurringRetrievalMode.overrides);
 
       for (EventInfo inei: inevs) {
         BwEvent inev = inei.getEvent();

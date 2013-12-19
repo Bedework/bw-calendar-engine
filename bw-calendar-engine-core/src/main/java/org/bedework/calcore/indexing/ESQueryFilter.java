@@ -29,6 +29,8 @@ import org.bedework.caldav.util.filter.PropertyFilter;
 import org.bedework.caldav.util.filter.TimeRangeFilter;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.RecurringRetrievalMode;
+import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCollectionFilter;
@@ -84,6 +86,12 @@ public class ESQueryFilter {
           PropertyInfoIndex.DTSTART,
           PropertyInfoIndex.UTC);
 
+  private static String indexEndUTCRef = makePropertyRef(PropertyInfoIndex.INDEX_END,
+                                                      PropertyInfoIndex.UTC);
+  private static String indexStartUTCRef = makePropertyRef(
+          PropertyInfoIndex.INDEX_START,
+          PropertyInfoIndex.UTC);
+
   public ESQueryFilter(final boolean publick,
                        final String principal) {
     debug = getLog().isDebugEnabled();
@@ -134,19 +142,49 @@ public class ESQueryFilter {
     return queryLimited;
   }
 
+  /** Add date range terms to filter. The actual terms depend on
+   * how we want recurring events returned - expanded or as master
+   * and overrides.
+   *
+   * <p>For expanded we just search on the actual dtstart and
+   * end. This will find all the entities that fall in the desired
+   * range</p>
+   *
+   * <p>For master + overrides we need to return any override that
+   * overrides an instance in the range but itself is outside the
+   * range. For these we search on the index start/end</p>
+   *
+   * @param filter
+   * @param start
+   * @param end
+   * @param recurRetrieval
+   * @return
+   * @throws CalFacadeException
+   */
   public FilterBuilder addDateRangeFilter(final FilterBuilder filter,
                                           final String start,
-                                          final String end) throws CalFacadeException {
+                                          final String end,
+                                          final RecurringRetrievalMode recurRetrieval) throws CalFacadeException {
     if ((start == null) && (end == null)) {
       return filter;
+    }
+
+    String startRef;
+    String endRef;
+
+    if (recurRetrieval.mode == Rmode.expanded) {
+      startRef = dtStartUTCRef;
+      endRef = dtEndUTCRef;
+    } else {
+      startRef = indexStartUTCRef;
+      endRef = indexEndUTCRef;
     }
 
     FilterBuilder fb = filter;
 
     if (start != null) {
       // End of events must be on or after the start of the range
-      RangeFilterBuilder rfb = new RangeFilterBuilder(
-              dtEndUTCRef);
+      RangeFilterBuilder rfb = new RangeFilterBuilder(startRef);
 
       rfb.gte(dateTimeUTC(start));
 
@@ -163,8 +201,7 @@ public class ESQueryFilter {
 
     if (end != null) {
       // Start of events must be before the end of the range
-      RangeFilterBuilder rfb = new RangeFilterBuilder(
-              dtStartUTCRef);
+      RangeFilterBuilder rfb = new RangeFilterBuilder(endRef);
 
       rfb.lt(dateTimeUTC(end));
 

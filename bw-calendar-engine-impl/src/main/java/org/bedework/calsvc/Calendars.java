@@ -27,7 +27,6 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -50,7 +49,7 @@ import java.util.TreeSet;
 
 /** This acts as an interface to the database for calendars.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 class Calendars extends CalSvcDb implements CalendarsI {
   private String publicCalendarRootPath;
@@ -526,14 +525,13 @@ class Calendars extends CalSvcDb implements CalendarsI {
      */
     if (!val.getInternalAlias() && emptyIt) {
       if (val.getCalendarCollection()) {
-        RecurringRetrievalMode rrm = new RecurringRetrievalMode(Rmode.overrides);
-
-        for (EventInfo ei: getSvc().getEventsHandler().getEvents(val,
-                                                                 null,
-                                                                 null,
-                                                                 null,
-                                                                 null, // retrieveList
-                                                                 rrm)) {
+        for (EventInfo ei: getSvc().getEventsHandler().
+                getEvents(val,
+                          null,
+                          null,
+                          null,
+                          null, // retrieveList
+                          RecurringRetrievalMode.overrides)) {
           ((Events)getSvc().getEventsHandler()).delete(ei, false, true, true);
         }
       }

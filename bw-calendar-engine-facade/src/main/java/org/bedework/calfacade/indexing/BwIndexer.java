@@ -23,6 +23,7 @@ import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
@@ -107,6 +108,7 @@ public interface BwIndexer extends Serializable {
    * @param end - if non-null limit to before this
    * @param pageSize - stored in the search result for future calls.
    * @param accessCheck  - required - lets us check access
+   * @param recurRetrieval How recurring event is returned.
    * @return  SearchResult - never null
    * @throws CalFacadeException
    */
@@ -116,7 +118,8 @@ public interface BwIndexer extends Serializable {
                       String start,
                       String end,
                       int pageSize,
-                      AccessChecker accessCheck) throws CalFacadeException;
+                      AccessChecker accessCheck,
+                      RecurringRetrievalMode recurRetrieval) throws CalFacadeException;
 
   enum Position {
     previous,  // Move to previous batch
