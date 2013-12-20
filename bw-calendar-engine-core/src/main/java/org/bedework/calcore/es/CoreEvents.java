@@ -41,7 +41,6 @@ import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.CategorisedEntity;
-import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeDupNameException;
@@ -67,10 +66,10 @@ import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.TimeZone;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -273,7 +272,8 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
      */
 
     // First look in the events table for the master(s).
-    eventQuery(BwEventObj.class, colPath, null, uid, null, null, null,
+    eventQuery(BwEventObj.class, colPath, null, uid,
+               null, null, null,
                recurRetrieval);
 
     /* The uid and recurrence id is a unique key for calendar collections
@@ -288,7 +288,8 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
     if (Util.isEmpty(evs)) {
       /* Look for an annotation to that event by the current user.
        */
-      eventQuery(BwEventAnnotation.class, colPath, null, uid, /*null*/rid, null, null,
+      eventQuery(BwEventAnnotation.class, colPath, null, uid, /*null*/
+                 rid, null, null,
                  recurRetrieval);
       evs = sess.getList();
     }
@@ -332,7 +333,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
       } else if (!master.testRecurring()) {
         ts.add(cei);
       } else if (rid == null) {
-        doRecurrence(eqr, cei, null, null, null, null,
+        doRecurrence(eqr, cei, null, null,
                      recurRetrieval,
                      desiredAccess, false);
         if (recurRetrieval.mode == Rmode.expanded) {
@@ -345,7 +346,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
           ts.add(cei);
         }
       } else {
-        cei = getInstanceOrOverride(eqr.colPaths, null,
+        cei = getInstanceOrOverride(eqr.colPaths,
                                     master, rid, desiredAccess);
         if (cei != null) {
           ts.add(cei);
@@ -434,7 +435,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
           }
 
           if (aev.testRecurring()) {
-            doRecurrence(null, acei, null, null, null, null,
+            doRecurrence(null, acei, null, null,
                          recurRetrieval,
                          privRead, false);
           }
@@ -444,7 +445,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
       } else {
         ev = cei.getEvent();
         if (ev.testRecurring()) {
-          doRecurrence(null, cei, null, null, null, null,
+          doRecurrence(null, cei, null, null,
                        recurRetrieval,
                        privRead, false);
         }
@@ -1528,14 +1529,14 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
                             final CoreEventInfo cei,
                             final Collection<String> colPaths,
                             final HashMap<BwEvent, Collection<CoreEventInfo>> ovMap,
-                            final HashMap<BwEvent, Collection<BwRecurrenceInstance>> instMap,
-                            final CheckMap checked,
                             final RecurringRetrievalMode recurRetrieval,
                             final int desiredAccess,
                             final boolean freeBusy)
           throws CalFacadeException {
     HibSession sess = getSess();
     BwEvent master = cei.getEvent();
+    Set<String> overrides = new HashSet<>();
+    CheckMap checked = new CheckMap();
 
     // Always fetch overrides
     if (ovMap == null) {
@@ -1546,12 +1547,14 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
       Collection<BwEventAnnotation> ovs = sess.getList();
       if (ovs != null) {
         for (BwEventAnnotation override: ovs) {
-          CoreEventInfo ocei = makeProxy(null, override, checked, recurRetrieval,
+          CoreEventInfo ocei = makeProxy(null, override, checked,
                                          desiredAccess, freeBusy);
 
           if (ocei != null) {
             cei.addOverride(ocei);
           }
+
+          overrides.add(ocei.getEvent().getRecurrenceId());
         }
       }
     } else {
@@ -1559,58 +1562,92 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
       if (ovs != null) {
         for (CoreEventInfo ocei: ovs) {
           cei.addOverride(ocei);
+          overrides.add(ocei.getEvent().getRecurrenceId());
         }
       }
     }
 
-    /* If we are asking for full expansion retrieve all the instances (within
+    /* If we are asking for full expansion generate all the instances (within
      * the given date range if supplied)
      */
 
-    if (recurRetrieval.mode == Rmode.expanded) {
-      Collection<BwRecurrenceInstance> insts;
-
-      if (instMap == null) {
-        eventsQuery(eqr,
-                    recurRetrieval.start,
-                    recurRetrieval.end,
-                    null, // retrieveListFields
-                    freeBusy,
-                    master,
-                    null); // masters
-
-        insts = eqr.es;
-      } else {
-        insts = instMap.get(master);
-      }
-
-      TreeSet<CoreEventInfo> ceis = new TreeSet<>();
-
-      /* XXX I'm not sure insts should ever be null though possibly a date range
-       * on the instances may result in that.
-       */
-      if (insts != null) {
-        for (BwRecurrenceInstance inst: insts) {
-          CoreEventInfo instcei = makeProxy(inst, null, checked, recurRetrieval,
-                                            desiredAccess, freeBusy);
-          if (instcei != null) {
-            //if (debug) {
-            //  debugMsg("Ev: " + proxy);
-            //}
-            ceis.add(instcei);
-          }
-        }
-      }
-
-      cei.setInstances(ceis);
+    if (recurRetrieval.mode != Rmode.expanded) {
+      return;
     }
+
+    Collection<BwRecurrenceInstance> insts;
+
+      /* Create a list of all instance date/times before overrides. */
+
+    int maxYears;
+    int maxInstances;
+
+    maxYears = getAuthprops().getMaxYears();
+    maxInstances = getAuthprops().getMaxInstances();
+
+    RecurPeriods rp = RecurUtil.getPeriods(master, maxYears, maxInstances);
+
+    if (rp.instances.isEmpty()) {
+      // No instances for an alleged recurring event.
+      return;
+      //throw new CalFacadeException(CalFacadeException.noRecurrenceInstances);
+    }
+
+    String stzid = master.getDtstart().getTzid();
+
+    int instanceCt = maxInstances;
+
+    boolean dateOnly = master.getDtstart().getDateType();
+
+    /* Emit all instances that aren't overridden. */
+
+    TreeSet<CoreEventInfo> ceis = new TreeSet<>();
+
+    for (Period p: rp.instances) {
+      String dtval = p.getStart().toString();
+      if (dateOnly) {
+        dtval = dtval.substring(0, 8);
+      }
+
+      BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+
+      if (overrides.contains(rstart.getDate())) {
+        // Overrides built separately - skip this instance.
+        continue;
+      }
+
+      String recurrenceId = rstart.getDate();
+
+      dtval = p.getEnd().toString();
+      if (dateOnly) {
+        dtval = dtval.substring(0, 8);
+      }
+
+      BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+
+      BwRecurrenceInstance inst = new BwRecurrenceInstance(rstart,
+                                                           rend,
+                                                           recurrenceId,
+                                                           master,
+                                                           null);
+
+      CoreEventInfo instcei = makeProxy(inst, null, checked,
+                                        desiredAccess, freeBusy);
+      if (instcei != null) {
+        //if (debug) {
+        //  debugMsg("Ev: " + proxy);
+        //}
+        ceis.add(instcei);
+      }
+    }
+
+    cei.setInstances(ceis);
   }
 
   /* We were asked for a specific instance. This overrides the retrieval mode
    * as we always want it returned.
    */
   private CoreEventInfo getInstanceOrOverride(final Collection<String> colPaths,
-                                              final List<String> retrieveListFields,
                                               final BwEvent master,
                                               final String rid,
                                               final int desiredAccess)
@@ -1642,7 +1679,6 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
     }
 
     return makeProxy(inst, override, null,
-                     RecurringRetrievalMode.expanded,
                      desiredAccess, false);
   }
 
@@ -2383,283 +2419,6 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
     //debugMsg("Try query " + sb.toString());
   }
 
-  @SuppressWarnings("unchecked")
-  private void eventsQuery(final EventsQueryResult eqr,
-                           final BwDateTime startDate,
-                           final BwDateTime endDate,
-                           final List<BwIcalPropertyInfoEntry> retrieveListFields,
-                           final boolean freebusy,
-                           final BwEvent master,
-                           final Collection<BwEvent> masters) throws CalFacadeException {
-    HibSession sess = getSess();
-
-    /* Name of the event in the query */
-    final String qevName = "ev";
-
-    /* Name of the entity we test for date terms - might be the instance, might
-     * be the event itself.
-     */
-    String dtentName;
-
-    String qevNameMstr;
-    String qevNameSelect = qevName;
-
-    Class cl;
-    Class cldt = null;
-    boolean testTombstoned = false;
-
-    cl = BwRecurrenceInstance.class;
-    qevNameMstr = qevName + ".master";
-    dtentName = qevName;
-
-    eqr.reset();
-
-    EventQueryBuilder selectClause = new EventQueryBuilder();
-    EventQueryBuilder whereClause = new EventQueryBuilder();
-
-    eqr.flt.init(selectClause, whereClause,
-                 qevNameMstr, dtentName,
-                 false,
-                 eqr.suppressFilter);
-
-    eqr.suppressFilter = false;
-
-    /* SEG:   from <class> ev [, <cldt> inst] where */
-    selectClause.append("select distinct ");
-    selectClause.fields(retrieveListFields, qevNameSelect,
-                        false);
-    selectClause.from();
-    selectClause.addClass(cl, qevName);
-
-    if (cldt != null) {
-      selectClause.append(", ");
-      selectClause.addClass(cldt, dtentName);
-    }
-
-    eqr.flt.joinPass(retrieveListFields);
-
-    selectClause.append(" where ");
-
-    if (freebusy) {
-      whereClause.append(qevNameMstr);
-      whereClause.append(".endType <> '");
-      whereClause.append(StartEndComponent.endTypeNone);
-      whereClause.append("' ");
-    }
-
-    if (testTombstoned) {
-      whereClause.and();
-      whereClause.append(dtentName);
-      whereClause.append(".tombstoned=false ");
-    }
-
-    /* SEG:   and (<date-ranges>) */
-    whereClause.appendDateTerms(dtentName, startDate, endDate, true,
-                                true);
-
-    boolean doCals = false;
-
-    if (masters != null) {
-      whereClause.and();
-      whereClause.append("(");
-      whereClause.append(qevName);
-
-      whereClause.append(".master in (:masters)) ");
-    } else if (master != null) {
-      // We're asking for all instances for this master
-      whereClause.and();
-      whereClause.append("(");
-      whereClause.append(qevName);
-
-      whereClause.append(".master = :master) ");
-    } else {
-      /* We are being called to pick up the master for instances within the
-         * date range.
-         */
-      doCals = true;
-    }
-
-    /* If there is an override, either we already have it or it
-       * was overriden somewhere else.
-       */
-    whereClause.and();
-    whereClause.append(qevName);
-    whereClause.append(".override is null ");
-
-    boolean setUser = false;
-
-    eqr.flt.addWhereFilters();
-
-    if (doCals) {
-      if (eqr.colPaths == null) {
-        // Doesn't count as empty
-
-        if (!eqr.flt.getQueryLimited()) {
-          setUser = whereClause.appendPublicOrOwnerTerm(qevNameMstr,
-                                                        currentMode,
-                                                        cb.getPrincipalInfo().getSuperUser());
-        }
-      } else if (!eqr.colPaths.isEmpty()) {
-        // Doesn't count as empty either
-
-        whereClause.and();
-        whereClause.append(" (");
-
-        whereClause.emitCalendarClause(qevNameMstr, eqr.colPaths);
-        setUser = false;
-
-        whereClause.append(") ");
-      } else {
-        // No valid calendars or user to limit search. Disallow
-        eqr.es = new TreeSet();
-        return;
-      }
-    }
-
-    /* This ordering may be unnecessary. If so we can remove it and remove
-     * dtstart as a required field.
-     * /
-    whereClause.append(" order by ");
-    whereClause.append(qevNameSelect);
-    whereClause.append(".dtstart.date");*/
-
-    selectClause.append(whereClause);
-
-    if (debug) {
-      trace(selectClause.toString());
-    }
-
-    selectClause.createQuery(sess);
-
-    /* XXX Limit result set size - pagination allows something like:
-       query.setFirstResult(0);
-       query.setMaxResults(10);
-       */
-
-    selectClause.setDateTermValues(startDate, endDate);
-
-    if (masters != null) {
-      sess.setParameterList("masters", masters);
-    } else if (master != null) {
-      sess.setEntity("master", master);
-    }
-
-    if (doCals) {
-      selectClause.doCalendarEntities(setUser, getPrincipal(), eqr);
-    }
-
-    eqr.flt.parPass(sess);
-
-    //if (debug) {
-    //  trace(sess.getQueryString());
-    //}
-
-    if (Util.isEmpty(retrieveListFields)) {
-      eqr.es = sess.getList();
-    } else {
-      /* Build an event object from the results. */
-      List<Object[]> projRes = sess.getList();
-
-      Collection<BwEvent> evs = new ArrayList<BwEvent>();
-
-      for (Object[] evflds: projRes) {
-        evs.add(makeEvent(retrieveListFields, evflds));
-      }
-
-      eqr.es = evs;
-    }
-
-    if (debug) {
-      trace("Getting (instances) Found " + eqr.es.size() + " entries");
-    }
-  }
-
-  private BwEvent makeEvent(final List<BwIcalPropertyInfoEntry> retrieveListFields,
-                            final Object[] evflds) throws CalFacadeException {
-    BwEvent ev;
-    List<BwIcalPropertyInfoEntry> rlf;
-
-    ev = new BwEventObj();
-    rlf = retrieveListFields;
-
-    /* This could be done with reflection... */
-
-    if (evflds.length != rlf.size()) {
-      throw new CalFacadeException("Bad projection result");
-    }
-
-    for (int i = 0; i < evflds.length; i++) {
-      Object o = evflds[i];
-
-      if (o == null) {
-        continue;
-      }
-
-      if ((o instanceof Integer) &&
-          (((Integer)o) == 0)) {
-        continue;
-      }
-
-      setEventField(ev, rlf.get(i), o);
-    }
-
-    return ev;
-  }
-
-  private void setEventField(final BwEvent ev,
-                             final BwIcalPropertyInfoEntry ipie,
-                             final Object o) throws CalFacadeException {
-    try {
-      Method m;
-
-      if (ipie.getMultiValued()) {
-        m = findAdder(ev, ipie.getAdderName());
-      } else {
-        m = findSetter(ev, ipie.getDbFieldName());
-      }
-
-      Object[] pars = new Object[]{o};
-
-      m.invoke(ev, pars);
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  private Method findSetter(final Object val, final String name) throws CalFacadeException {
-    return findMethod(val, "set", name);
-  }
-
-  private Method findAdder(final Object val, final String name) throws CalFacadeException {
-    return findMethod(val, "add", name);
-  }
-
-  private Method findMethod(final Object val,
-                            final String prefix,
-                            final String name) throws CalFacadeException {
-    String methodName = prefix + name.substring(0, 1).toUpperCase() +
-                        name.substring(1);
-    Method[] meths = val.getClass().getMethods();
-    Method meth = null;
-
-    for (int i = 0; i < meths.length; i++) {
-      Method m = meths[i];
-
-      if (m.getName().equals(methodName)) {
-        if (meth != null) {
-          throw new CalFacadeException("org.bedework.calenv.multiple.setters");
-        }
-        meth = m;
-      }
-    }
-
-    if (meth == null) {
-      throw new CalFacadeException("org.bedework.unknown.method", name);
-    }
-
-    return meth;
-  }
-
   /** Check the master for access and if ok build and return an event
    * proxy.
    *
@@ -2671,7 +2430,6 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
    * @param inst        May be null if we retrieved the override
    * @param override    May be null if we retrieved the instance
    * @param checked
-   * @param recurRetrieval
    * @param desiredAccess
    * @param freeBusy
    * @return CoreEventInfo
@@ -2680,7 +2438,6 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
   private CoreEventInfo makeProxy(final BwRecurrenceInstance inst,
                                   BwEventAnnotation override,
                                   final CheckMap checked,
-                                  final RecurringRetrievalMode recurRetrieval,
                                   final int desiredAccess,
                                   final boolean freeBusy) throws CalFacadeException {
     BwEvent mstr;
@@ -2742,10 +2499,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
      */
 
     if (override == null) {
-      if (recurRetrieval.mode == Rmode.overrides) {
-        // Master and overrides only
-        return null;
-      }
+      /* Building an instance */
 
       /* DORECUR The instance could point to an overrride if the owner of the event
              changed an instance.
