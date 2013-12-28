@@ -357,6 +357,14 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
     return ts;
   }
 
+  private static final String eventsByNameQuery =
+          "from " + BwEventObj.class.getName() + " as ev " +
+                  "where ev.name = :name and ev.tombstoned=false and ev.colPath = :colPath";
+
+  private static final String eventAnnotationsByNameQuery =
+          "from " + BwEventAnnotation.class.getName() + " as ev " +
+                  "where ev.name = :name and ev.colPath = :colPath and ev.tombstoned=false";
+
   /* (non-Javadoc)
    * @see org.bedework.calcorei.EventsI#getEvent(org.bedework.calfacade.BwCalendar, java.lang.String, org.bedework.calfacade.RecurringRetrievalMode)
    */
