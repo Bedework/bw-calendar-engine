@@ -61,7 +61,7 @@ public class Scheduling extends ImplicitSchedulingHandler {
     }
 
     Collection<EventInfo> evs = getSvc().getEventsHandler().
-            get(preferred.getPath(),
+            get(preferred,
                 ev.getUid(),
                 null,
                 RecurringRetrievalMode.overrides,
