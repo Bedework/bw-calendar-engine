@@ -246,7 +246,7 @@ public class NotificationsInfo {
 
       if (cte.getIndex() == PropertyIndex.PropertyInfoIndex.XPROP) {
         /* Reflected a a set of removes and adds. */
-        if (!Util.isEmpty(cte.getAddedValues())) {
+        if (!Util.isEmpty(cte.getRemovedValues())) {
           for (BwXproperty xp: ((Collection<BwXproperty>)cte.getRemovedValues())) {
             ChangedPropertyType cp = new ChangedPropertyType();
             cp.setName(xp.getName());
@@ -255,6 +255,9 @@ public class NotificationsInfo {
 
             c.getChangedProperty().add(cp);
           }
+        }
+
+        if (!Util.isEmpty(cte.getAddedValues())) {
           for (BwXproperty xp: ((Collection<BwXproperty>)cte.getAddedValues())) {
             ChangedPropertyType cp = new ChangedPropertyType();
             cp.setName(xp.getName());
