@@ -27,6 +27,7 @@ import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.svc.EventInfo;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -181,16 +182,13 @@ public interface CoreEventsI extends Serializable {
   /** Add an event to the database. The id and uid will be set in the parameter
    * object.
    *
-   * @param val   BwEvent object to be added
-   * @param overrides    Collection of BwEventProxy objects which override instances
-   *                     of the new event
+   * @param ei   Event object to be added
    * @param scheduling   True if we are adding an event to an inbox for scheduling.
    * @param rollbackOnError true if we rollback and throw an exception on error
    * @return UpdateEventResult
    * @throws CalFacadeException
    */
-  public UpdateEventResult addEvent(BwEvent val,
-                                    Collection<BwEventProxy> overrides,
+  public UpdateEventResult addEvent(EventInfo ei,
                                     boolean scheduling,
                                     boolean rollbackOnError) throws CalFacadeException;
 
@@ -200,16 +198,12 @@ public interface CoreEventsI extends Serializable {
    * unless we are synchronizing in which case that belonging to the current
    * user is set to mark the event as synchronized
    *
-   * @param val   BwEvent object to be replaced
-   * @param overrides
-   * @param deletedOverrides - overrides that need to be deleted
+   * @param ei   EventInfo object to be replaced
    * @return indication of changes made to overrides.
    * @exception CalFacadeException If there's a db problem or problem with
    *     the event
    */
-  public UpdateEventResult updateEvent(BwEvent val,
-                                       Collection<BwEventProxy> overrides,
-                                       Collection<BwEventProxy> deletedOverrides) throws CalFacadeException;
+  public UpdateEventResult updateEvent(EventInfo ei) throws CalFacadeException;
 
   /** This class allows the implementations to pass back some information
    * about what happened. If possible it should fill in the supplied fields.

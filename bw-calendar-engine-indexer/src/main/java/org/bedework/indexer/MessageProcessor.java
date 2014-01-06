@@ -214,9 +214,9 @@ public class MessageProcessor extends CalSys {
     RemovalKey(final String itemType,
                final boolean publick,
                final String ownerHref,
-               final String path, final String uid,
+               final String href,
                final String rid) {
-      super(itemType, path, uid, rid);
+      super(itemType, href, rid);
 
       this.publick = publick;
       this.ownerHref = ownerHref;
@@ -228,8 +228,7 @@ public class MessageProcessor extends CalSys {
     RemovalKey rk = new RemovalKey(ede.getType(),
                                    ede.getPublick(),
                                    ede.getOwnerHref(),
-                                   getParentPath(ede.getHref()),
-                                   ede.getUid(),
+                                   ede.getHref(),
                                    ede.getRecurrenceId());
 
     remove(rk);
@@ -323,29 +322,23 @@ public class MessageProcessor extends CalSys {
   private BwIndexer getIndexer(final boolean publick,
                                final String principal) throws CalFacadeException {
     try {
-      BwIndexer indexer;
-
       if (publick) {
-        indexer = publicIndexer;
-      } else {
-        if ((userIndexerPrincipal != null) &&
-            (!userIndexerPrincipal.equals(principal))) {
-          userIndexer = null;
+        if (publicIndexer == null) {
+          publicIndexer = getSvci().getIndexer(true);
         }
-
-        indexer = userIndexer;
+        return publicIndexer;
       }
 
-      if (indexer == null) {
-        indexer = getSvci().getIndexer(publick, principal);
-        if (publick) {
-          publicIndexer = indexer;
-        } else {
-          userIndexer = indexer;
-        }
+      if ((userIndexerPrincipal != null) &&
+              (!userIndexerPrincipal.equals(principal))) {
+        userIndexer = null;
       }
 
-      return indexer;
+      if (userIndexer == null) {
+        userIndexer = getSvci().getIndexer(principal);
+      }
+
+      return userIndexer;
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }

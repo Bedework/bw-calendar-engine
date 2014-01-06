@@ -18,9 +18,8 @@
  */
 package org.bedework.sysevents;
 
-import org.bedework.sysevents.events.EntityQueuedEvent;
-import org.bedework.sysevents.events.ScheduleUpdateEvent;
 import org.bedework.sysevents.events.SysEventBase;
+import org.bedework.sysevents.events.SysEventBase.Attribute;
 import org.bedework.sysevents.listeners.SysEventListener;
 
 import org.apache.log4j.Logger;
@@ -72,22 +71,9 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
       ObjectMessage msg = conn.getSession().createObjectMessage();
 
       msg.setObject(ev);
-      msg.setStringProperty("syscode", String.valueOf(ev.getSysCode()));
-      msg.setStringProperty("indexable",
-                            String.valueOf(ev.getSysCode().getIndexable()));
-      msg.setStringProperty("changeEvent",
-                            String.valueOf(ev.getSysCode().getChangeEvent()));
 
-      if (ev instanceof EntityQueuedEvent) {
-        EntityQueuedEvent eqe = (EntityQueuedEvent)ev;
-
-        if (eqe.getInBox()) {
-          msg.setStringProperty("inbox", "true");
-        } else {
-          msg.setStringProperty("outbox", "true");
-        }
-      } else if (ev instanceof ScheduleUpdateEvent) {
-        msg.setStringProperty("scheduleEvent", "true");
+      for (Attribute attr: ev.getMessageAttributes()) {
+        msg.setStringProperty(attr.name, attr.value);
       }
 
       sender.send(msg);

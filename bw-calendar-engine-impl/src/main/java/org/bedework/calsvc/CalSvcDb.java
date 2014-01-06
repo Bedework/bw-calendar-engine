@@ -33,6 +33,7 @@ import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
@@ -313,6 +314,10 @@ public class CalSvcDb implements Serializable {
     }
 
     return getPrincipal().getPrincipalRef();
+  }
+
+  public BwIndexer getIndexer() throws CalFacadeException {
+    return svci.getIndexer();
   }
 
   protected BwPrincipal getPrincipal(final String href) throws CalFacadeException {

@@ -69,6 +69,8 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
 
   private String bedeworkResourceDirectory;
 
+  private boolean testMode;
+
   @Override
   public void setPrincipalRoot(final String val) {
     principalRoot = val;
@@ -312,6 +314,16 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
   }
 
   @Override
+  public void setTestMode(final boolean val) {
+    testMode = val;
+  }
+
+  @Override
+  public boolean getTestMode() {
+    return testMode;
+  }
+
+  @Override
   public String toString() {
     ToString ts = new ToString(this);
 
@@ -336,6 +348,7 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
     ts.newLine();
     ts.append("indexRoot", getIndexRoot());
     ts.append("bedeworkResourceDirectory", getBedeworkResourceDirectory());
+    ts.append("testMode", getTestMode());
 
     return ts.toString();
   }

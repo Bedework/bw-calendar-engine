@@ -34,12 +34,16 @@ public class CollectionUpdateEvent extends OwnedHrefEvent {
    * @param ownerHref
    * @param href for changed collection
    * @param shared
+   * @param indexed - true if already indexed
    */
   public CollectionUpdateEvent(final SysCode code,
                                final String authPrincipalHref,
                                final String ownerHref,
                                final String href,
-                               final boolean shared) {
+                               final boolean shared,
+                               final boolean indexed) {
     super(code, authPrincipalHref, ownerHref, href, shared);
+
+    setIndexed(indexed);
   }
 }

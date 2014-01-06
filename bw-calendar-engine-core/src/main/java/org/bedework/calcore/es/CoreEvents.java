@@ -20,6 +20,7 @@ package org.bedework.calcore.es;
 
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.calcore.AccessUtil;
+import org.bedework.calcore.hibernate.CalintfHelperHib;
 import org.bedework.calcore.hibernate.EventQueryBuilder;
 import org.bedework.calcore.hibernate.EventQueryBuilder.EventsQueryResult;
 import org.bedework.calcore.hibernate.Filters;
@@ -198,7 +199,7 @@ import java.util.TreeSet;
  *
  * @author Mike Douglass   douglm  - rpi.edu
  */
-public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
+public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
   /** Constructor
    *
    * @param chcb
@@ -207,7 +208,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
    * @param currentMode
    * @param sessionless
    */
-  public CoreEvents(final CalintfHelperEsCb chcb,
+  public CoreEvents(final CalintfHelperHibCb chcb,
                     final Callback cb,
                     final AccessUtil access,
                     final int currentMode,
@@ -481,7 +482,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
 
     FilterBase fltr = filter;
 
-    if (calendars != null) {
+    if (!Util.isEmpty(calendars)) {
       FilterBase colfltr = null;
       for (BwCalendar c: calendars) {
         colfltr = FilterBase.addOrChild(colfltr,
@@ -552,15 +553,13 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
     return buildVavail(ceis);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreEventsI#addEvent(org.bedework.calfacade.BwEvent, java.util.Collection, boolean, boolean)
-   */
   @Override
-  public UpdateEventResult addEvent(final BwEvent val,
-                                    final Collection<BwEventProxy> overrides,
+  public UpdateEventResult addEvent(final EventInfo ei,
                                     final boolean scheduling,
                                     final boolean rollbackOnError) throws CalFacadeException {
-    long startTime = System.currentTimeMillis();
+    final BwEvent val = ei.getEvent();
+    final Collection<BwEventProxy> overrides = ei.getOverrideProxies();
+    final long startTime = System.currentTimeMillis();
     RecuridTable recurids = null;
     HibSession sess = getSess();
     UpdateEventResult uer = new UpdateEventResult();
@@ -633,6 +632,8 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
 
       stat(StatsEvent.createTime, startTime);
 
+      indexIfTest(ei);
+
       return uer;
     }
 
@@ -655,6 +656,8 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
       uer.errorCode = CalFacadeException.noRecurrenceInstances;
 
       stat(StatsEvent.createTime, startTime);
+
+      indexIfTest(ei);
 
       return uer;
     }
@@ -765,18 +768,19 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
       notify(SysEvent.SysCode.ENTITY_ADDED, val, shared);
     }
 
+    indexIfTest(ei);
+
     stat(StatsEvent.createTime, startTime);
 
     return uer;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreEventsI#updateEvent(org.bedework.calfacade.BwEvent, java.util.Collection, java.util.Collection, org.bedework.calfacade.util.ChangeTable)
-   */
   @Override
-  public UpdateEventResult updateEvent(final BwEvent val,
-                                       final Collection<BwEventProxy> overrides,
-                                       final Collection<BwEventProxy> deletedOverrides) throws CalFacadeException {
+  public UpdateEventResult updateEvent(final EventInfo ei) throws CalFacadeException {
+    final BwEvent val = ei.getEvent();
+    final Collection<BwEventProxy> overrides = ei.getOverrideProxies();
+    final Collection<BwEventProxy> deletedOverrides =
+            ei.getDeletedOverrideProxies(cb.getPrincipalInfo().getPrincipal().getPrincipalRef());
     HibSession sess = getSess();
     UpdateEventResult ue = new UpdateEventResult();
 
@@ -867,6 +871,8 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
           (Util.isEmpty(overrides) && Util.isEmpty(deletedOverrides))) {
         notify(SysEvent.SysCode.ENTITY_UPDATED, val, shared);
 
+        indexIfTest(ei);
+
         return ue;
       }
 
@@ -951,18 +957,15 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
 
         removeInstances(val, rids, ue, deletedOverrides, shared);
       }
-
-      notify(SysEvent.SysCode.ENTITY_UPDATED, val, shared);
-
-      return ue;
+    } else {
+      if (proxy.getChangeFlag()) {
+        updateProxy(proxy);
+      }
     }
 
-    if (!proxy.getChangeFlag()) {
-      return ue;
-    }
-
-    updateProxy(proxy);
     notify(SysEvent.SysCode.ENTITY_UPDATED, val, shared);
+
+    indexIfTest(ei);
 
     return ue;
   }
@@ -1014,11 +1017,11 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
       // Master event - delete all instances and overrides.
       deleteInstances(val, new UpdateEventResult(), der, shared);
 
+      notifyDelete(reallyDelete, val, shared);
+
       if (reallyDelete) {
-        notify(SysEvent.SysCode.ENTITY_DELETED, val, shared);
         sess.delete(val);
       } else {
-        notify(SysEvent.SysCode.ENTITY_TOMBSTONED, val, shared);
         tombstoneEvent(val);
       }
 
@@ -1055,7 +1058,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
         return der;
       }
 
-      notify(SysEvent.SysCode.ENTITY_DELETED, val, shared);
+      notifyDelete(true, val, shared);
 
       sess.delete(inst);
 
@@ -1101,14 +1104,11 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
 
     //sess.delete(sess.merge(deletee));
 
+    notifyDelete(reallyDelete, val, shared);
     if (reallyDelete) {
-      notify(SysEvent.SysCode.ENTITY_DELETED, val, shared);
       clearCollection(val.getAttendees());
-
       sess.delete(deletee);
     } else {
-      notify(SysEvent.SysCode.ENTITY_TOMBSTONED, val, shared);
-
       tombstoneEvent(deletee);
     }
 
@@ -1136,7 +1136,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
     sess.saveOrUpdate(tombstone);
 
     notifyMove(SysEvent.SysCode.ENTITY_MOVED,
-               getHref(tombstone), from.getShared(),
+               tombstone.getHref(), from.getShared(),
                val, to.getShared());
   }
 
@@ -2677,7 +2677,7 @@ public class CoreEvents extends CalintfHelperEs implements CoreEventsI {
       String uid = (String)o;
 //      catUids.add(uid);
 
-      ce.addCategory(getCalintfCb().getCategory(uid));
+      ce.addCategory(cb.getCategory(uid));
     }
   }
 

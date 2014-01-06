@@ -29,15 +29,11 @@ import java.io.CharArrayWriter;
  */
 public class BwIndexKey extends Index.Key {
   private String key1; // calendar:path
-  private String key2; // event:guid
-  private String key3; // event:recurrenceid
+  private String key2; // event:recurrenceid
 
-  /** An event key is stored as a concatenated set of Strings,
-   * calendar:path + guid + (recurrenceid | null).
-   *
-   * <p>We set it here and use the decode methods to split it up.
+  /** An event key is stored as a concatenated pair of Strings,
+   * calendar:href + (recurrenceid | null).
    */
-  private char[] encoded;
 
   private String itemType;
 
@@ -59,16 +55,15 @@ public class BwIndexKey extends Index.Key {
   /** Constructor for an event key
    *
    * @param itemType
-   * @param path
-   * @param uid
-   * @param rid
+   * @param href
+   * @param recurrenceid
    */
   public BwIndexKey(final String itemType,
-                    final String path, final String uid, final String rid) {
+                    final String href,
+                    final String recurrenceid) {
     this.itemType = itemType;
-    key1 = path;
-    key2 = uid;
-    key3 = rid;
+    key1 = href;
+    key2 = recurrenceid;
   }
 
   /** Constructor
@@ -79,49 +74,11 @@ public class BwIndexKey extends Index.Key {
     this.score = score;
   }
 
-  /** Set the item type with a value defined in BwIndexDefs
-   *
-   * @param val
-   */
-  public void setItemType(final String val) {
-    itemType = val;
-  }
-
   /**
    * @return String item type as defined in BwIndexDefs
    */
   public String getItemType() {
     return itemType;
-  }
-
-  /** Set the score
-   *
-   * @param val
-   */
-  public void setScore(final float val) {
-    score = val;
-  }
-
-  /** Set the key for a calendar (the path) or category (the uid)
-   *
-   * @param key1
-   */
-  public void setKey1(final String key1) {
-    this.key1 = key1;
-  }
-
-  /** Set the key for an event (encode ca+guid+recurid)
-   *
-   * @param key
-   * @throws IndexException
-   */
-  public void setEventKey(final String key) throws IndexException {
-    encoded = key.toCharArray();
-    pos = 0;
-
-    key1 = getKeyString();
-    key2 = getKeyString();
-    key3 = getKeyString();
   }
 
   /**
@@ -137,7 +94,7 @@ public class BwIndexKey extends Index.Key {
       return makeCategoryKey(key1);
     }
 
-    return makeEventKey(key1, key2, key3);
+    return makeEventKey(key1, key2);
   }
 
   public String makeCategoryKey(final String key1) {
@@ -157,18 +114,16 @@ public class BwIndexKey extends Index.Key {
 
   /** Encode an event key
    *
-   * @param key1
-   * @param key2
-   * @param key3
-   * @return Strign encoded key
+   * @param href
+   * @param recurrenceid
+   * @return String encoded key
    * @throws IndexException
    */
-  public String makeEventKey(final String key1, final String key2,
-                             final String key3) throws IndexException {
+  public String makeEventKey(final String href,
+                             final String recurrenceid) throws IndexException {
     startEncoding();
-    encodeString(key1);
-    encodeString(key2);
-    encodeString(key3);
+    encodeString(href);
+    encodeString(recurrenceid);
 
     return getEncodedKey();
   }
@@ -191,107 +146,6 @@ public class BwIndexKey extends Index.Key {
   /* When encoding a key we build it here.
    */
   private CharArrayWriter caw;
-
-  /** Get next char from encoded value. Return < 0 for no more
-   *
-   * @return char value
-   */
-  private char getChar() {
-    if ((encoded == null) || (pos == encoded.length)) {
-      return (char)-1;
-    }
-
-    char c = encoded[pos];
-    pos++;
-
-    return c;
-  }
-
-  /** Back off one char
-   *
-   * @throws IndexException
-   */
-  private void back() throws IndexException {
-    back(1);
-  }
-
-  /** Back off n chars
-   *
-   * @param n   int number of chars
-   * @throws IndexException
-   */
-  private void back(final int n) throws IndexException {
-    if ((pos - n) < 0) {
-      throw new IndexException("org.bedework.index.badKeyRewind");
-    }
-
-    pos -= n;
-  }
-
-  /** Return the value of a blank terminated length. On success current pos
-   * has been incremented.
-   *
-   * @return int length
-   * @throws IndexException
-   */
-  private int getLength() throws IndexException {
-    int res = 0;
-
-    for (;;) {
-      char c = getChar();
-      if (c == ' ') {
-        break;
-      }
-
-      if (c < 0) {
-        throw new IndexException("org.bedework.index.badKeyLength");
-      }
-
-      if ((c < '0') || (c > '9')) {
-        throw new IndexException("org.bedework.index.badkeychar");
-      }
-
-      res = (res * 10) + Character.digit(c, 10);
-    }
-
-    return res;
-  }
-
-  /** Get a String from the encoded acl at the current position.
-   *
-   * @return String decoded String value
-   * @throws IndexException
-   */
-  private String getKeyString() throws IndexException {
-    if (getChar() == 'N') {
-      return null;
-    }
-    back();
-    int len = getLength();
-
-    if ((encoded.length - pos) < len) {
-      throw new IndexException("org.bedework.index.badKeyLength");
-    }
-
-    String s = new String(encoded, pos, len);
-    pos += len;
-
-    return s;
-  }
-
-  /* * Skip a String from the encoded acl at the current position.
-   *
-   * @throws IndexException
-   * /
-  public void skipString() throws IndexException {
-    if (getChar() == 'N') {
-      return;
-    }
-
-    back();
-    int len = getLength();
-    pos += len;
-  }*/
 
   /* ====================================================================
    *                 Encoding methods
@@ -339,19 +193,6 @@ public class BwIndexKey extends Index.Key {
       }
     } catch (IndexException ie) {
       throw ie;
-    } catch (Throwable t) {
-      throw new IndexException(t);
-    }
-  }
-
-  /** Add a character
-   *
-   * @param c char
-   * @throws IndexException
-   */
-  public void addChar(final char c) throws IndexException {
-    try {
-      caw.write(c);
     } catch (Throwable t) {
       throw new IndexException(t);
     }

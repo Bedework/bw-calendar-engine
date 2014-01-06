@@ -34,29 +34,39 @@ public class BwIndexerFactory {
   private BwIndexerFactory() {
   }
 
+  /** Factory method to get indexer
+   *
+   * @param configs
+   * @param currentMode - guest, user,publicAdmin
+   * @return indexer
+   * @throws CalFacadeException
+   */
+  public static BwIndexer getPublicIndexer(final Configurations configs,
+                                           final int currentMode) throws CalFacadeException {
+    return new BwIndexEsImpl(configs, true,
+                             null,    // principal
+                             false,   // super user
+                             currentMode,
+                             null); // No explicit name
+  }
+
   /** Factory method to get current indexer
    *
    * @param configs
-   * @param publick
    * @param principal - who we are searching for
-   * @param writeable true if the caller can update the index
+   * @param superUser - true if the principal is a superuser.
+   * @param currentMode - guest, user,publicAdmin
    * @return indexer
    * @throws CalFacadeException
    */
   public static BwIndexer getIndexer(final Configurations configs,
-                                     final boolean publick,
                                      final BwPrincipal principal,
-                                     final boolean writeable) throws CalFacadeException {
-    if (publick) {
-      return new BwIndexEsImpl(configs, true,
-                               principal,
-                               writeable,
-                               null); // No explicit name
-    }
-
+                                     final boolean superUser,
+                                     final int currentMode) throws CalFacadeException {
     return new BwIndexEsImpl(configs, false,
                              principal,
-                             writeable,
+                             superUser,
+                             currentMode,
                              null); // No explicit name
   }
 
@@ -66,18 +76,19 @@ public class BwIndexerFactory {
    *
    * @param configs
    * @param principal
-   * @param writeable true if the caller can update the index
+   * @param currentMode - guest, user,publicAdmin
    * @param indexRoot
    * @return indexer
    * @throws CalFacadeException
    */
   public static BwIndexer getIndexer(final Configurations configs,
                                      final BwPrincipal principal,
-                                     final boolean writeable,
+                                     final int currentMode,
                                      final String indexRoot) throws CalFacadeException {
     return new BwIndexEsImpl(configs, true,
                              principal,
-                             writeable,
+                             false,
+                             currentMode,
                              indexRoot); // Explicit name
   }
 }

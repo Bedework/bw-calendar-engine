@@ -20,6 +20,8 @@ package org.bedework.sysevents.events;
 
 import org.bedework.util.misc.ToString;
 
+import java.util.List;
+
 /** Signal queuing of an entity in an inbox or outbox
  *
  * @author douglm
@@ -53,6 +55,19 @@ public class EntityQueuedEvent extends NamedEvent {
     this.uid = uid;
     this.rid = rid;
     this.inBox = inBox;
+  }
+
+  @Override
+  public List<Attribute> getMessageAttributes() {
+    List<Attribute> attrs = super.getMessageAttributes();
+
+    if (getInBox()) {
+      attrs.add(new Attribute("inbox", "true"));
+    } else {
+      attrs.add(new Attribute("outbox", "true"));
+    }
+
+    return attrs;
   }
 
   /**

@@ -187,24 +187,12 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#restoreEvent(org.bedework.calfacade.BwEvent)
-   */
   @Override
   public void restoreEvent(final EventInfo ei) throws Throwable {
     try {
       startTransaction();
 
-      BwEvent ev = ei.getEvent();
-      BwEvent saveEv = ev;
-
-      if (ev instanceof BwEventProxy) {
-        BwEventProxy proxy = (BwEventProxy)ev;
-        saveEv = proxy.getRef();
-      }
-
-      UpdateEventResult uer = getCal().addEvent(saveEv,
-                                            ei.getOverrideProxies(),
+      UpdateEventResult uer = getCal().addEvent(ei,
                                             false, // scheduling
                                             false);
 
@@ -213,7 +201,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       }
       if (uer.failedOverrides != null) {
         error("Following overrides failed for event ");
-        error(ev.toString());
+        error(ei.getEvent().toString());
 
         for (BwEventProxy proxy: uer.failedOverrides) {
           error(proxy.toString());

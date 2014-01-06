@@ -19,6 +19,7 @@
 package org.bedework.sysevents.events;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * A system event - like adding something, updating something, startup, shutdown
@@ -287,4 +288,20 @@ public interface SysEventBase extends Serializable {
    * @return SysCode sysCode
    */
   SysCode getSysCode();
+
+  /** An attribute for the JMX message header
+   *
+   */
+  public static class Attribute {
+    public String name;
+    public String value;
+
+    public Attribute(final String name,
+                     final String value) {
+      this.name = name;
+      this.value = value;
+    }
+  }
+
+  List<Attribute> getMessageAttributes();
 }

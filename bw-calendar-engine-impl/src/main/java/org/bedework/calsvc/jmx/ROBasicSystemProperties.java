@@ -276,6 +276,16 @@ public final class ROBasicSystemProperties implements BasicSystemProperties {
   }
 
   @Override
+  public void setTestMode(final boolean val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public boolean getTestMode() {
+    return getConfig().getTestMode();
+  }
+
+  @Override
   public String toString() {
     return getConfig().toString();
   }

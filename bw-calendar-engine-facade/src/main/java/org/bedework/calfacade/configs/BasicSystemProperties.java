@@ -341,4 +341,22 @@ public interface BasicSystemProperties extends Serializable {
    */
   @MBeanInfo("Directory for bedework resources")
   String getBedeworkResourceDirectory();
+
+  /** True to run in test mode. This will adversely affect performance
+   * but avoids some test failures due to asynchronous behavior.
+   *
+   * <p>DO NOT run in production mode with this on</p>.
+   *
+   * @param val
+   */
+  void setTestMode(boolean val);
+
+  /**
+   * @return CalAddrPrefixes or null
+   */
+  @MBeanInfo("True to run in test mode. This will adversely affect performance\n" +
+                     "   * but avoids some test failures due to asynchronous behavior.\n" +
+                     "   *\n" +
+                     "   * <p>DO NOT run in production mode with this on")
+  boolean getTestMode();
 }

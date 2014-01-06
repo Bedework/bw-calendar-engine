@@ -46,21 +46,16 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
   void init(String className,
             boolean adminCanEditAllPublic);
 
-  /** Return all entities satisfying the conditions and to which the current
-   * user has access.
+  /** Return all public entities.
    *
    * <p>Returns an empty collection for none.
    *
-   * <p>The returned objects may not be persistent objects but the result of a
-   * report query.
+   * <p>The returned objects will not be persistent objects.
    *
-   * @param ownerHref   String principal href, null for current user
-   * @param  creatorHref        non-null means limit to this
    * @return Collection     of objects
    * @throws CalFacadeException
    */
-  Collection<T> get(String ownerHref,
-                    String creatorHref) throws CalFacadeException;
+  Collection<T> getPublic() throws CalFacadeException;
 
   /** Return all entities satisfying the conditions and to which the current
    * user has edit access.
@@ -120,8 +115,8 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    */
   Collection<T> get(Collection<String> uids) throws CalFacadeException;
 
-  /** Return one or more entities matching the given BwString to which the
-   * user has access.
+  /** Return one or more entities matching the given BwString and
+   * owned by the current principal.
    *
    * <p>All event properties have string values which are used as the external
    * representation in icalendar files. The combination of field and owner
@@ -129,12 +124,10 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * uid does not.
    *
    * @param val          BwString value
-   * @param ownerHref   String principal href, null for current user
    * @return matching BwEventProperty object
    * @throws CalFacadeException
    */
-  T findPersistent(final BwString val,
-                   final String ownerHref) throws CalFacadeException;
+  T findPersistent(final BwString val) throws CalFacadeException;
 
   /** Return an entity matching the given BwString to which the
    * user has access.

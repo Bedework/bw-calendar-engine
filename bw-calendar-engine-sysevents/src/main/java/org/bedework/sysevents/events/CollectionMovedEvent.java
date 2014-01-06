@@ -40,6 +40,7 @@ public class CollectionMovedEvent extends OwnedHrefEvent {
    * @param ownerHref
    * @param href for collection
    * @param shared
+   * @param indexed - true if already indexed
    * @param oldHref for collection
    * @param oldShared
    */
@@ -48,11 +49,14 @@ public class CollectionMovedEvent extends OwnedHrefEvent {
                               final String ownerHref,
                               final String href,
                               final boolean shared,
+                              final boolean indexed,
                               final String oldHref,
                               final boolean oldShared) {
     super(code, authPrincipalHref, ownerHref, href, shared);
     this.oldHref = oldHref;
     this.oldShared = oldShared;
+
+    setIndexed(indexed);
   }
 
   /**

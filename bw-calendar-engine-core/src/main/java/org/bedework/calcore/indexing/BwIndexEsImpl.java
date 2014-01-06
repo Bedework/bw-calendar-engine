@@ -98,6 +98,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.VersionType;
+import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -170,6 +171,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
   private boolean publick;
   private BwPrincipal principal;
+  private final boolean superUser;
 
   private String host;
   private int port = 9300;
@@ -179,7 +181,7 @@ public class BwIndexEsImpl implements BwIndexer {
   private static volatile Object clientSyncher = new Object();
 
   private String targetIndex;
-  private boolean writeable;
+  private int currentMode;
 
   private AuthProperties authpars;
   private AuthProperties unauthpars;
@@ -212,21 +214,24 @@ public class BwIndexEsImpl implements BwIndexer {
    *
    * @param configs
    * @param publick - if false we add an owner term to the searches
-   * @param principal - who we are searching for
-   * @param writeable - true for an updatable index
+   * @param principal - who we are searching for - only for non-public
+   * @param superUser - true if the principal is a superuser.
+   * @param currentMode - guest, user,publicAdmin
    * @param indexName - explicitly specified
    * @throws CalFacadeException
    */
   public BwIndexEsImpl(final Configurations configs,
                        final boolean publick,
                        final BwPrincipal principal,
-                       final boolean writeable,
+                       final boolean superUser,
+                       final int currentMode,
                        final String indexName) throws CalFacadeException {
     debug = getLog().isDebugEnabled();
 
     this.publick = publick;
     this.principal = principal;
-    this.writeable = writeable;
+    this.superUser = superUser;
+    this.currentMode = currentMode;
 
     idxpars = configs.getIndexProperties();
     authpars = configs.getAuthProperties(true);
@@ -887,7 +892,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
     SearchResponse scrollResp = srb.setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
-            .setFilter(getFilters().buildFilter(null))
+            .setFilter(getFilters().principalFilter(null))
             .setSize(ourCount).execute().actionGet(); //ourCount hits per shard will be returned for each scroll
 
     if (scrollResp.status() != RestStatus.OK) {
@@ -955,7 +960,7 @@ public class BwIndexEsImpl implements BwIndexer {
     srb.setTypes(docType);
 
     SearchResponse response = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setFilter(getFilters().buildFilter(val, index))
+            .setFilter(getFilters().singleEntityFilter(val, index))
             .setFrom(0).setSize(60).setExplain(true)
             .execute()
             .actionGet();
@@ -1050,27 +1055,9 @@ public class BwIndexEsImpl implements BwIndexer {
           we don't want.
        */
 
-      String itemType = IcalDefs.fromEntityType(ev.getEntityType());
-
-      DeleteByQueryRequestBuilder delQreq = getClient().prepareDeleteByQuery(
-              targetIndex).setTypes(itemType);
-
-      ESQueryFilter esq= getFilters();
-      FilterBuilder fb = esq.addTerm(null, PropertyInfoIndex.COLLECTION,
-                                     ev.getColPath());
-      fb = esq.addTerm(fb, PropertyInfoIndex.UID, ev.getUid());
-      delQreq.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(),
-                                                   fb));
-      DeleteByQueryResponse delResp = delQreq.execute()
-              .actionGet();
-
-      for (IndexDeleteByQueryResponse idqr: delResp.getIndices().values()) {
-        if (idqr.getFailedShards() > 0) {
-          warn("Failing shards for recurrence delete uid: " + ev.getUid() +
-               " colPath: " + ev.getColPath() +
-               " index: " + idqr.getIndex());
-        }
-      }
+      deleteEvent(ei, ItemKind.kindEntity);
+      deleteEvent(ei, ItemKind.kindMaster);
+      deleteEvent(ei, ItemKind.kindOverride);
 
       /* Create a list of all instance date/times before overrides. */
 
@@ -1195,16 +1182,54 @@ public class BwIndexEsImpl implements BwIndexer {
     }
   }
 
+  private boolean deleteEvent(final EventInfo ei,
+                              final ItemKind kind) throws CalFacadeException {
+    BwEvent ev = ei.getEvent();
+
+    DeleteByQueryRequestBuilder delQreq = getClient().prepareDeleteByQuery(
+            targetIndex).setTypes(DocBuilder.getItemType(ei, kind));
+
+    ESQueryFilter esq= getFilters();
+
+    /*
+    FilterBuilder fb = esq.addTerm(null, PropertyInfoIndex.COLLECTION,
+                                   ev.getColPath());
+    fb = esq.addTerm(fb, PropertyInfoIndex.UID, ev.getUid());
+    */
+
+    FilterBuilder fb = esq.addTerm(null, PropertyInfoIndex.HREF,
+                                   ev.getHref());
+
+    delQreq.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(),
+                                                 fb));
+    DeleteByQueryResponse delResp = delQreq.execute()
+            .actionGet();
+
+    boolean ok = true;
+
+    for (IndexDeleteByQueryResponse idqr: delResp.getIndices().values()) {
+      if (idqr.getFailedShards() > 0) {
+        warn("Failing shards for recurrence delete uid: " + ev.getUid() +
+                     " colPath: " + ev.getColPath() +
+                     " index: " + idqr.getIndex());
+
+        ok = false;
+      }
+    }
+
+    return ok;
+  }
+
   private IndexResponse indexEvent(final EventInfo ei,
                                    final ItemKind kind,
                                    final BwDateTime start,
                                    final BwDateTime end,
                                    final String recurid,
                                    final DateLimits dl) throws CalFacadeException {
+    BwEvent ev = ei.getEvent();
+
     try {
       XContentBuilder builder = newBuilder();
-      BwEvent ev = ei.getEvent();
-
       builder.startObject();
       DocInfo di = getDocBuilder().makeDoc(builder,
                                            ei,
@@ -1220,12 +1245,18 @@ public class BwIndexEsImpl implements BwIndexer {
 
       builder.endObject();
 
-      di.id = keyConverter.makeEventKey(ev.getColPath(),
-                                        ev.getUid(),
+      di.id = keyConverter.makeEventKey(ev.getHref(),
                                         recurid);
       return indexDoc(builder, di);
     } catch (CalFacadeException cfe) {
       throw cfe;
+    } catch (VersionConflictEngineException vcee) {
+      if (vcee.getCurrentVersion() == vcee.getProvidedVersion()) {
+        warn("Failed index with equal version for kind " + kind +
+                     " and href " + ev.getHref());
+      }
+
+      return null;
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -1233,28 +1264,42 @@ public class BwIndexEsImpl implements BwIndexer {
 
   private String checkMin(final String start,
                           final BwDateTime tm) {
-    if (start == null) {
-      return tm.getDate();
+    String val;
+    if (tm.getDateType()) {
+      val = tm.getDtval();
+    } else {
+      val = tm.getDate();
     }
 
-    if (start.compareTo(tm.getDate()) > 0) {
-      return tm.getDate();
+    if (start == null) {
+      return val;
+    }
+
+    if (start.compareTo(val) > 0) {
+      return val;
     }
 
     return start;
   }
 
-  private String checkMax(final String start,
+  private String checkMax(final String end,
                           final BwDateTime tm) {
-    if (start == null) {
-      return tm.getDate();
+    String val;
+    if (tm.getDateType()) {
+      val = tm.getDtval();
+    } else {
+      val = tm.getDate();
     }
 
-    if (start.compareTo(tm.getDate()) < 0) {
-      return tm.getDate();
+    if (end == null) {
+      return val;
     }
 
-    return start;
+    if (end.compareTo(val) < 0) {
+      return val;
+    }
+
+    return end;
   }
 
   private IndexResponse indexDoc(final XContentBuilder builder,
@@ -1390,7 +1435,7 @@ public class BwIndexEsImpl implements BwIndexer {
    * @return a filter builder
    */
   public ESQueryFilter getFilters() {
-    return new ESQueryFilter(publick, principal.getPrincipalRef());
+    return new ESQueryFilter(currentMode, principal, superUser);
   }
 
   private String newIndexSuffix() {

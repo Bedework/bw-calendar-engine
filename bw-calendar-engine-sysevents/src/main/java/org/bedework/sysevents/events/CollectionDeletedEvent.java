@@ -38,15 +38,19 @@ public class CollectionDeletedEvent extends OwnedHrefEvent {
    * @param href path for deleted collection
    * @param shared
    * @param publick
+   * @param indexed - true if already indexed
    */
   public CollectionDeletedEvent(final SysCode code,
                                 final String authPrincipalHref,
                                 final String ownerHref,
                                 final String href,
                                 final boolean shared,
-                                final boolean publick) {
+                                final boolean publick,
+                                final boolean indexed) {
     super(code, authPrincipalHref, ownerHref, href, shared);
     this.publick = publick;
+
+    setIndexed(indexed);
   }
 
   /** Get the publick flag
@@ -58,12 +62,12 @@ public class CollectionDeletedEvent extends OwnedHrefEvent {
   }
 
   /** Add our stuff to the ToString object
-  *
-  * @param ts for result
-  */
- @Override
- public void toStringSegment(final ToString ts) {
-   super.toStringSegment(ts);
+   *
+   * @param ts for result
+   */
+  @Override
+  public void toStringSegment(final ToString ts) {
+    super.toStringSegment(ts);
 
     ts.append("publick", getPublick());
   }

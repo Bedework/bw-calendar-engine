@@ -2540,6 +2540,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @see org.bedework.calfacade.base.AttendeesEntity#setRecipients(java.util.Set)
    */
   @Override
+  @IcalProperty(pindex = PropertyInfoIndex.RECIPIENT,
+                adderName = "recipient",
+                eventProperty = true,
+                todoProperty = true,
+                journalProperty = true,
+                freeBusyProperty = true)
   public void setRecipients(final Set<String> val) {
     recipients = val;
   }

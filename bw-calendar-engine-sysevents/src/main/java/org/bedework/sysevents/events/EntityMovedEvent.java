@@ -40,6 +40,7 @@ public class EntityMovedEvent extends OwnedHrefEvent {
    * @param ownerHref
    * @param href
    * @param shared
+   * @param indexed - true if already indexed
    * @param oldHref
    * @param oldShared
    */
@@ -48,12 +49,15 @@ public class EntityMovedEvent extends OwnedHrefEvent {
                           final String ownerHref,
                           final String href,
                           final boolean shared,
+                          final boolean indexed,
                           final String oldHref,
                           final boolean oldShared) {
     super(code, authPrincipalHref, ownerHref, href, shared);
 
     this.oldHref = oldHref;
     this.oldShared = oldShared;
+
+    setIndexed(indexed);
   }
 
   /**

@@ -736,9 +736,22 @@ public class CalSvc extends CalSvcI {
     return calSuitesHandler;
   }
 
+  public BwIndexer getIndexer() throws CalFacadeException {
+    return getIndexer(getPars().getPublicAdmin() ||
+            getPrincipal().getUnauthenticated());
+  }
+
   @Override
-  public BwIndexer getIndexer(final boolean publick,
-                              final String principal) throws CalFacadeException {
+  public BwIndexer getIndexer(final boolean publick) throws CalFacadeException {
+    if (publick) {
+      return getCal().getPublicIndexer();
+    }
+
+    return getCal().getIndexer(getPrincipal());
+  }
+
+  @Override
+  public BwIndexer getIndexer(final String principal) throws CalFacadeException {
     BwPrincipal pr;
 
     if (principal == null) {
@@ -747,7 +760,7 @@ public class CalSvc extends CalSvcI {
       pr = getPrincipal(principal);
     }
 
-    return getCal().getIndexer(publick, pr);
+    return getCal().getIndexer(pr);
   }
 
   @Override
@@ -1514,8 +1527,7 @@ public class CalSvc extends CalSvcI {
 
     @Override
     public BwContact findContact(final BwString val) throws CalFacadeException {
-      return getContactsHandler().findPersistent(val, getOwner()
-              .getPrincipalRef());
+      return getContactsHandler().findPersistent(val);
     }
 
     @Override
@@ -1537,7 +1549,7 @@ public class CalSvc extends CalSvcI {
       loc.setAddress(address);
 
       return getLocationsHandler().ensureExists(loc,
-                                                            getOwner().getPrincipalRef()).entity;
+                                                getOwner().getPrincipalRef()).entity;
     }
 
     /* (non-Javadoc)

@@ -119,67 +119,28 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventProperties#get(java.lang.String, java.lang.String)
-   */
   @Override
-  public Collection<T> get(final String ownerHref,
-                           final String creatorHref) throws CalFacadeException {
-    Collection<T> ents = getCached(ownerHref);
-
-    if (ents == null) {
-      ents = fetchAllIndexed(ownerHref);
-
-      if (Util.isEmpty(ents)) {
-        return new ArrayList<>();
-      }
-
-      putCached(ownerHref, ents);
-    }
-
-    /* Add them to the uid cache */
-    for (T ent: ents) {
-      putCachedByUid(ent.getUid(), ent);
-    }
-
-    if (creatorHref == null) {
-      return ents;
-    }
-
-    List<T> someEnts = new ArrayList<>();
-    for (T ent: ents) {
-      if (ent.getCreatorHref().equals(creatorHref)) {
-        someEnts.add(ent);
-      }
-    }
-
-    return someEnts;
+  public Collection<T> getPublic()
+          throws CalFacadeException {
+    return get(true, null);
   }
 
   @Override
   public Collection<T> get() throws CalFacadeException {
-    BwPrincipal owner;
-    if (!isPublicAdmin()) {
-      owner = getPrincipal();
-    } else {
-      owner = getPublicUser();
-    }
-
-    return get(owner.getPrincipalRef(), null);
+    return get(isPublicAdmin(), null);
   }
 
   @Override
   public Collection<T> getEditable() throws CalFacadeException {
     if (!isPublicAdmin()) {
-      return get(getPrincipal().getPrincipalRef(), null);
+      return get(false, null);
     }
 
     if (isSuper() || adminCanEditAllPublic) {
-      return get(getPublicUser().getPrincipalRef(), null);
+      return getPublic();
     }
 
-    return get(getPublicUser().getPrincipalRef(),
-               getPrincipal().getPrincipalRef());
+    return get(true, getPrincipal().getPrincipalRef());
   }
 
   @SuppressWarnings("unchecked")
@@ -226,16 +187,8 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   }
 
   @Override
-  public T findPersistent(final BwString val,
-                          final String ownerHref) throws CalFacadeException {
-    String oh;
-    if (ownerHref == null) {
-      oh = getPrincipal().getPrincipalRef();
-    } else {
-      oh = ownerHref;
-    }
-
-    return coreHdlr.find(val, oh);
+  public T findPersistent(final BwString val) throws CalFacadeException {
+    return coreHdlr.find(val, getPrincipal().getPrincipalRef());
   }
 
   @Override
@@ -384,10 +337,6 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
    *                   Protected methods
    * ==================================================================== */
 
-  protected BwIndexer getIndexer() throws CalFacadeException {
-    return getIndexer(getOwnerHref());
-  }
-
   protected BwIndexer getIndexer(String ownerHref) throws CalFacadeException {
     String href = checkHref(ownerHref);
 
@@ -395,8 +344,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     if (publick) {
       if (publicIndexer == null) {
-        publicIndexer = getSvc().getIndexer(true,
-                                            href);
+        publicIndexer = getSvc().getIndexer(true);
       }
 
       return publicIndexer;
@@ -408,17 +356,63 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
       return idx;
     }
 
-    idx = getSvc().getIndexer(false,
-                              href);
+    idx = getSvc().getIndexer(href);
 
     userIndexers.put(href, idx);
 
     return idx;
   }
 
+  protected T findPersistent(final BwString val,
+                             final String ownerHref) throws CalFacadeException {
+    return coreHdlr.find(val, ownerHref);
+  }
+
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
+
+  private Collection<T> get(final boolean publick,
+                            final String creatorHref) throws CalFacadeException {
+    final String ownerHref;
+
+    if (publick) {
+      ownerHref = getPrincipal().getPrincipalRef();
+    } else {
+      ownerHref = getPublicUser().getPrincipalRef();
+    }
+
+
+    Collection<T> ents = getCached(ownerHref);
+
+    if (ents == null) {
+      ents = fetchAllIndexed(ownerHref);
+
+      if (Util.isEmpty(ents)) {
+        return new ArrayList<>();
+      }
+
+      putCached(ownerHref, ents);
+    }
+
+    /* Add them to the uid cache */
+    for (T ent: ents) {
+      putCachedByUid(ent.getUid(), ent);
+    }
+
+    if (creatorHref == null) {
+      return ents;
+    }
+
+    List<T> someEnts = new ArrayList<>();
+    for (T ent: ents) {
+      if (ent.getCreatorHref().equals(creatorHref)) {
+        someEnts.add(ent);
+      }
+    }
+
+    return someEnts;
+  }
 
   private String checkHref(String ownerHref) throws CalFacadeException {
     if (ownerHref != null) {

@@ -209,13 +209,18 @@ public interface Calintf
   BasicSystemProperties getSyspars() throws CalFacadeException;
 
   /**
-   * @param publick true for public index
+   * @return the indexer
+   * @throws CalFacadeException
+   */
+  BwIndexer getPublicIndexer() throws CalFacadeException;
+
+  /** Get a non-public indexer for a principal
+   *
    * @param principal
    * @return the indexer
    * @throws CalFacadeException
    */
-  BwIndexer getIndexer(final boolean publick,
-                       BwPrincipal principal) throws CalFacadeException;
+  BwIndexer getIndexer(BwPrincipal principal) throws CalFacadeException;
 
   /** Method which allows us to specify the index root.
    *

@@ -21,17 +21,22 @@ package org.bedework.calcore;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.hibernate.Filters;
+import org.bedework.calcore.indexing.BwIndexEsImpl;
+import org.bedework.calcore.indexing.ESQueryFilter;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.base.AlarmsEntity;
 import org.bedework.calfacade.base.AttachmentsEntity;
 import org.bedework.calfacade.base.AttendeesEntity;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
+import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.base.CommentedEntity;
 import org.bedework.calfacade.base.ContactedEntity;
@@ -45,6 +50,8 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.util.NotificationsInfo;
@@ -58,6 +65,7 @@ import org.bedework.util.misc.Util;
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.Collection;
 
 /** Class used as basis for a number of helper classes.
@@ -85,7 +93,80 @@ public abstract class CalintfHelper
      * @throws CalFacadeException
      */
     public PrincipalInfo getPrincipalInfo() throws CalFacadeException;
+
+    /** Only valid during a transaction.
+     *
+     * @return a timestamp from the db
+     * @throws CalFacadeException
+     */
+    Timestamp getCurrentTimestamp() throws CalFacadeException;
+
+    /**
+     * @return BwStats
+     * @throws CalFacadeException
+     */
+    BwStats getStats() throws CalFacadeException;
+
+    /** Used to fetch a calendar from the cache - assumes any access
+     *
+     * @param path
+     * @return BwCalendar
+     * @throws CalFacadeException
+     */
+    BwCalendar getCollection(String path) throws CalFacadeException;
+
+    /** Used to fetch a category from the cache - assumes any access
+     *
+     * @param uid
+     * @return BwCategory
+     * @throws CalFacadeException
+     */
+    BwCategory getCategory(String uid) throws CalFacadeException;
+
+    /** Used to fetch a calendar from the cache
+     *
+     * @param path
+     * @param desiredAccess
+     * @param alwaysReturn
+     * @return BwCalendar
+     * @throws CalFacadeException
+     */
+    BwCalendar getCollection(String path,
+                             int desiredAccess,
+                             boolean alwaysReturn) throws CalFacadeException;
+
+    /** Called to notify container that an event occurred. This method should
+     * queue up notifications until after transaction commit as consumers
+     * should only receive notifications when the actual data has been written.
+     *
+     * @param ev
+     * @throws CalFacadeException
+     */
+    void postNotification(final SysEvent ev) throws CalFacadeException;
+
+    /**
+     * @return true if restoring
+     */
+    boolean getForRestore();
+
+    /**
+     * @return BwIndexer
+     * @throws CalFacadeException
+     */
+    BwIndexer getIndexer() throws CalFacadeException;
   }
+
+  protected class AccessChecker implements BwIndexer.AccessChecker {
+    @Override
+    public Acl.CurrentAccess checkAccess(final BwShareableDbentity ent,
+                                         final int desiredAccess,
+                                         final boolean returnResult)
+            throws CalFacadeException {
+      return access.checkAccess(ent, desiredAccess, returnResult);
+    }
+  }
+
+  private AccessChecker ac = new AccessChecker();
 
   protected boolean debug;
 
@@ -139,9 +220,6 @@ public abstract class CalintfHelper
   protected abstract void throwException(final CalFacadeException cfe)
           throws CalFacadeException;
 
-  public abstract void postNotification(final SysEvent ev)
-          throws CalFacadeException;
-
   /** Used to fetch a calendar from the cache
    *
    * @param path
@@ -150,9 +228,12 @@ public abstract class CalintfHelper
    * @return BwCalendar
    * @throws org.bedework.calfacade.exc.CalFacadeException
    */
-  protected abstract BwCalendar getCollection(String path,
-                                              int desiredAccess,
-                                              boolean alwaysReturn) throws CalFacadeException;
+  protected BwCalendar getCollection(String path,
+                                     int desiredAccess,
+                                     boolean alwaysReturn) throws CalFacadeException {
+    return cb.getCollection(path, desiredAccess,
+                            alwaysReturn);
+  }
 
   protected BasicSystemProperties getSyspars() throws CalFacadeException {
     return cb.getSyspars();
@@ -193,6 +274,59 @@ public abstract class CalintfHelper
     }
 
     return getPrincipal().getPrincipalRef();
+  }
+
+  /** Only valid during a transaction.
+   *
+   * @return a timestamp from the db
+   * @throws CalFacadeException
+   */
+  public Timestamp getCurrentTimestamp() throws CalFacadeException {
+    return cb.getCurrentTimestamp();
+  }
+
+  protected BwCalendar getCollection(final String path) throws CalFacadeException {
+    return cb.getCollection(path);
+  }
+
+  protected boolean getForRestore() {
+    return cb.getForRestore();
+  }
+
+  protected BwIndexer getIndexer() throws CalFacadeException {
+    return cb.getIndexer();
+  }
+
+  protected AccessChecker getAccessChecker() throws CalFacadeException {
+    return ac;
+  }
+
+  protected ESQueryFilter getFilters() throws CalFacadeException {
+    return ((BwIndexEsImpl)getIndexer()).getFilters();
+  }
+
+  protected void indexIfTest(final EventInfo ei) throws CalFacadeException {
+    if (!cb.getSyspars().getTestMode()) {
+      return;
+    }
+
+    getIndexer().indexEntity(ei);
+
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+    }
+  }
+
+  /** Called to notify container that an event occurred. This method should
+   * queue up notifications until after transaction commit as consumers
+   * should only receive notifications when the actual data has been written.
+   *
+   * @param ev
+   * @throws CalFacadeException
+   */
+  public void postNotification(final SysEvent ev) throws CalFacadeException {
+    cb.postNotification(ev);
   }
 
   protected CalendarWrapper wrap(final BwCalendar val) {
@@ -413,15 +547,49 @@ public abstract class CalintfHelper
     }
   }
 
-  /*
-  private void stat(final String name,
-                    final String val) throws CalFacadeException {
+  protected void notifyDelete(final boolean reallyDelete,
+                              final BwEvent val,
+                              final boolean shared) throws CalFacadeException {
+    SysEvent.SysCode code;
+
+    if (reallyDelete) {
+      code = SysEvent.SysCode.ENTITY_DELETED;
+    } else {
+      code = SysEvent.SysCode.ENTITY_TOMBSTONED;
+    };
+
+    String note = getChanges(code, val);
+    if (note == null) {
+      return;
+    }
+
+    boolean indexed = false;
+
+    if (getSyspars().getTestMode()) {
+      BwIndexer idx = cb.getIndexer();
+
+      idx.unindexEntity(val);
+      indexed = true;
+    }
+
     try {
-      postNotification(SysEvent.makeStatsEvent(name, val));
+      postNotification(
+              SysEvent.makeEntityDeletedEvent(code,
+                                              authenticatedPrincipal(),
+                                              val.getOwnerHref(),
+                                              val.getHref(),
+                                              shared,
+                                              val.getPublick(),
+                                              indexed,
+                                              IcalDefs.fromEntityType(
+                                                      val.getEntityType()),
+                                              val.getRecurrenceId(),
+                                              note,
+                                              null)); // XXX Emit multiple targted?
     } catch (NotificationException ne) {
       throw new CalFacadeException(ne);
     }
-  }*/
+  }
 
   protected void notify(final SysEvent.SysCode code,
                         final BwEvent val,
@@ -432,33 +600,17 @@ public abstract class CalintfHelper
         return;
       }
 
-      if (code.equals(SysEvent.SysCode.ENTITY_DELETED) ||
-              code.equals(SysEvent.SysCode.ENTITY_TOMBSTONED)) {
-        postNotification(
-                SysEvent.makeEntityDeletedEvent(code,
-                                                authenticatedPrincipal(),
-                                                val.getOwnerHref(),
-                                                getHref(val),
-                                                shared,
-                                                val.getPublick(),
-                                                IcalDefs.fromEntityType(
-                                                        val.getEntityType()),
-                                                val.getUid(),
-                                                val.getRecurrenceId(),
-                                                note,
-                                                null)); // XXX Emit multiple targted?
-      } else {
-        postNotification(
-                SysEvent.makeEntityUpdateEvent(code,
-                                               authenticatedPrincipal(),
-                                               val.getOwnerHref(),
-                                               getHref(val),
-                                               shared,
-                                               val.getUid(),
-                                               val.getRecurrenceId(),
-                                               note,
-                                               null)); // XXX Emit multiple targted?
-      }
+      postNotification(
+              SysEvent.makeEntityUpdateEvent(code,
+                                             authenticatedPrincipal(),
+                                             val.getOwnerHref(),
+                                             val.getHref(),
+                                             shared,
+                                             getSyspars().getTestMode(),
+                                             val.getUid(),
+                                             val.getRecurrenceId(),
+                                             note,
+                                             null)); // XXX Emit multiple targted?
     } catch (NotificationException ne) {
       throw new CalFacadeException(ne);
     }
@@ -474,7 +626,9 @@ public abstract class CalintfHelper
               SysEvent.makeEntityMovedEvent(code,
                                             currentPrincipal(),
                                             val.getOwnerHref(),
-                                            getHref(val), shared,
+                                            val.getHref(),
+                                            shared,
+                                            false,
                                             oldHref,
                                             oldShared));
     } catch (NotificationException ne) {
@@ -498,12 +652,12 @@ public abstract class CalintfHelper
                 SysEvent.makeEntityDeletedEvent(code,
                                                 authenticatedPrincipal(),
                                                 val.getOwnerHref(),
-                                                getHref(val),
+                                                val.getHref(),
                                                 shared,
                                                 val.getPublick(),
+                                                false,
                                                 IcalDefs.fromEntityType(
                                                         val.getEntityType()),
-                                                val.getUid(),
                                                 recurrenceId,
                                                 note,
                                                 null)); // XXX Emit multiple targted?
@@ -512,8 +666,9 @@ public abstract class CalintfHelper
                 SysEvent.makeEntityUpdateEvent(code,
                                                authenticatedPrincipal(),
                                                val.getOwnerHref(),
-                                               getHref(val),
+                                               val.getHref(),
                                                shared,
+                                               getSyspars().getTestMode(),
                                                val.getUid(),
                                                val.getRecurrenceId(),
                                                note,  // changes
@@ -546,10 +701,6 @@ public abstract class CalintfHelper
       error(t);
       return null;
     }
-  }
-
-  protected String getHref(final BwEvent val) {
-    return Util.buildPath(false, val.getColPath(), "/", val.getName());
   }
 
   /** Get a logger for messages

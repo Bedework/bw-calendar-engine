@@ -226,7 +226,7 @@ public class CoreCalendars extends CalintfHelperHib
             .getUserCalendarRoot());
     //groupCalendarRootPath = userCalendarRootPath + "/" + "groups";
 
-    colCache = new CollectionCache(this, chcb.getStats());
+    colCache = new CollectionCache(this, cb.getStats());
   }
 
   /* (non-Javadoc)
@@ -699,9 +699,6 @@ public class CoreCalendars extends CalintfHelperHib
     notify(SysEvent.SysCode.COLLECTION_UPDATED, cal);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CalendarsI#defaultAccess(org.bedework.calfacade.BwCalendar, AceWho)
-   */
   @Override
   public void defaultAccess(final BwCalendar cal,
                             final AceWho who) throws CalFacadeException {
@@ -1428,14 +1425,16 @@ public class CoreCalendars extends CalintfHelperHib
                                                val.getOwnerHref(),
                                                val.getPath(),
                                                val.getShared(),
-                                               val.getPublick()));
+                                               val.getPublick(),
+                                               false));
       } else {
         postNotification(
            SysEvent.makeCollectionUpdateEvent(code,
                                               authenticatedPrincipal(),
                                               val.getOwnerHref(),
                                               val.getPath(),
-                                              val.getShared()));
+                                              val.getShared(),
+                                              false));
       }
     } catch (NotificationException ne) {
       throw new CalFacadeException(ne);
@@ -1452,6 +1451,7 @@ public class CoreCalendars extends CalintfHelperHib
                                            val.getOwnerHref(),
                                            val.getPath(),
                                            val.getShared(),
+                                           false, // indexed
                                            oldHref,
                                            false)); // XXX wrong
     } catch (NotificationException ne) {

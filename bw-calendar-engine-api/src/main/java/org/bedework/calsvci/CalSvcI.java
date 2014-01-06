@@ -381,12 +381,17 @@ public abstract class CalSvcI implements Serializable {
 
   /**
    * @param publick true for public index
-   * @param principal
    * @return the indexer
    * @throws CalFacadeException
    */
-  public abstract BwIndexer getIndexer(final boolean publick,
-                                       String principal) throws CalFacadeException;
+  public abstract BwIndexer getIndexer(final boolean publick) throws CalFacadeException;
+
+  /**
+   * @param principal - for given principal
+   * @return the indexer
+   * @throws CalFacadeException
+   */
+  public abstract BwIndexer getIndexer(String principal) throws CalFacadeException;
 
   /** Method which allows us to specify the index root.
    *

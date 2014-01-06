@@ -241,6 +241,8 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       getManagementContext().start();
 
       loadConfig(BasicSystemPropertiesImpl.class);
+
+      cfg.setTestMode(Boolean.getBoolean("org.bedework.testmode"));
       basicProps = new ROBasicSystemProperties(cfg);
       saveConfig();
 

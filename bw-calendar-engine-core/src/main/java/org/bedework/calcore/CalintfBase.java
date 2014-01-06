@@ -128,17 +128,23 @@ public abstract class CalintfBase implements Calintf {
   }
 
   @Override
-  public BwIndexer getIndexer(final boolean publick,
-                              final BwPrincipal principal) throws CalFacadeException {
-    return BwIndexerFactory.getIndexer(configs, publick, principal,
-                                       currentMode == CalintfDefs.guestMode);
+  public BwIndexer getPublicIndexer() throws CalFacadeException {
+    return BwIndexerFactory.getPublicIndexer(configs,
+                                             currentMode);
+  }
+
+  @Override
+  public BwIndexer getIndexer(final BwPrincipal principal) throws CalFacadeException {
+    return BwIndexerFactory.getIndexer(configs, principal,
+                                       getPrincipalInfo().getSuperUser(),
+                                       currentMode);
   }
 
   @Override
   public BwIndexer getIndexer(final BwPrincipal principal,
                               final String indexRoot) throws CalFacadeException {
     return BwIndexerFactory.getIndexer(configs, principal,
-                                       currentMode == CalintfDefs.guestMode,
+                                       currentMode,
                                        indexRoot);
   }
 

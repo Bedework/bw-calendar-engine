@@ -20,7 +20,6 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calcore.AccessUtil;
 import org.bedework.calcore.CalintfBase;
-import org.bedework.calcore.es.CalintfHelperEs;
 import org.bedework.calcorei.CalintfInfo;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventPropertiesI;
@@ -41,7 +40,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProperty;
-import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwFreeBusyComponent;
 import org.bedework.calfacade.BwGroup;
@@ -70,6 +68,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAdminGroupEntry;
 import org.bedework.calfacade.svc.BwCalSuite;
+import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar;
@@ -216,14 +215,12 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     }
 
     cb = new CalintfHelperCallback(this);
+    chcb = new CalintfHelperHibCb(this);
 
     if (Boolean.getBoolean("org.bedework.core.use.es")) {
-      CalintfHelperEsCb escb = new CalintfHelperEsCb(this);
-      chcb = escb;
-      events = new org.bedework.calcore.es.CoreEvents(escb, cb,
+      events = new org.bedework.calcore.es.CoreEvents(chcb, cb,
                               access, currentMode, sessionless);
     } else {
-      chcb = new CalintfHelperHibCb(this);
       events = new CoreEvents(chcb, cb,
                               access, currentMode, sessionless);
     }
@@ -250,6 +247,29 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     @Override
     public HibSession getSess() throws CalFacadeException {
       return intf.sess;
+    }
+  }
+
+  private static class CalintfHelperCallback implements CalintfHelperHib.Callback {
+    private CalintfImpl intf;
+
+    CalintfHelperCallback(final CalintfImpl intf) {
+      this.intf = intf;
+    }
+
+    @Override
+    public void rollback() throws CalFacadeException {
+      intf.rollbackTransaction();
+    }
+
+    @Override
+    public BasicSystemProperties getSyspars() throws CalFacadeException {
+      return intf.getSyspars();
+    }
+
+    @Override
+    public PrincipalInfo getPrincipalInfo() throws CalFacadeException {
+      return intf.getPrincipalInfo();
     }
 
     @Override
@@ -312,41 +332,14 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     public boolean getForRestore() {
       return intf.forRestore;
     }
-  }
-
-  private static class CalintfHelperEsCb extends CalintfHelperHibCb
-          implements CalintfHelperEs.CalintfHelperEsCb {
-    CalintfHelperEsCb(final CalintfImpl intf) {
-      super(intf);
-    }
 
     @Override
     public BwIndexer getIndexer() throws CalFacadeException {
-      return intf.getIndexer(intf.getPrincipal().getUnauthenticated(),
-                             intf.getPrincipal());
-    }
-  }
+      if (intf.getPrincipal().getUnauthenticated()) {
+        return intf.getPublicIndexer();
+      }
 
-  private static class CalintfHelperCallback implements CalintfHelperHib.Callback {
-    private CalintfBase intf;
-
-    CalintfHelperCallback(final CalintfBase intf) {
-      this.intf = intf;
-    }
-
-    @Override
-    public void rollback() throws CalFacadeException {
-      intf.rollbackTransaction();
-    }
-
-    @Override
-    public BasicSystemProperties getSyspars() throws CalFacadeException {
-      return intf.getSyspars();
-    }
-
-    @Override
-    public PrincipalInfo getPrincipalInfo() throws CalFacadeException {
-      return intf.getPrincipalInfo();
+      return intf.getIndexer(intf.getPrincipal());
     }
   }
 
@@ -1026,43 +1019,34 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     return events.getEvent(colPath, guid, rid, scheduling, recurRetrieval);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreEventsI#addEvent(org.bedework.calfacade.BwEvent, java.util.Collection, boolean, boolean)
-   */
   @Override
-  public UpdateEventResult addEvent(final BwEvent val,
-                                    final Collection<BwEventProxy> overrides,
+  public UpdateEventResult addEvent(final EventInfo ei,
                                     final boolean scheduling,
                                     final boolean rollbackOnError) throws CalFacadeException {
     checkOpen();
-    UpdateEventResult uer = events.addEvent(val, overrides, scheduling,
+    UpdateEventResult uer = events.addEvent(ei, scheduling,
                                             rollbackOnError);
 
     if (!forRestore) {
-      calendars.touchCalendar(val.getColPath());
+      calendars.touchCalendar(ei.getEvent().getColPath());
     }
 
     return uer;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreEventsI#updateEvent(org.bedework.calfacade.BwEvent, java.util.Collection, java.util.Collection, org.bedework.calfacade.util.ChangeTable)
-   */
   @Override
-  public UpdateEventResult updateEvent(final BwEvent val,
-                                       final Collection<BwEventProxy> overrides,
-                                       final Collection<BwEventProxy> deletedOverrides) throws CalFacadeException {
+  public UpdateEventResult updateEvent(final EventInfo ei) throws CalFacadeException {
     checkOpen();
     UpdateEventResult ue = null;
 
     try {
-      ue = events.updateEvent(val, overrides, deletedOverrides);
+      ue = events.updateEvent(ei);
     } catch (CalFacadeException cfe) {
       rollbackTransaction();
       throw cfe;
     }
 
-    calendars.touchCalendar(val.getColPath());
+    calendars.touchCalendar(ei.getEvent().getColPath());
 
     return ue;
   }

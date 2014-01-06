@@ -103,6 +103,13 @@ public class DocBuilder {
                           getJname(PropertyInfoIndex.EVENTREG_END));
   }
 
+  /**
+   *
+   * @param principal - only used for building fake non-public entity paths
+   * @param authpars
+   * @param unauthpars
+   * @param basicSysprops
+   */
   DocBuilder(final BwPrincipal principal,
              final AuthProperties authpars,
              final AuthProperties unauthpars,
@@ -144,7 +151,7 @@ public class DocBuilder {
         BwCategory ent = (BwCategory)rec;
 
         res.add(new TypeId(BwIndexer.docTypeCategory,
-                           makeKeyVal(makeKeyVal(ent))));
+                           makeKeyVal(ent)));
 
         return res;
       }
@@ -153,7 +160,7 @@ public class DocBuilder {
         BwContact ent = (BwContact)rec;
 
         res.add(new TypeId(BwIndexer.docTypeContact,
-                           makeKeyVal(makeKeyVal(ent))));
+                           makeKeyVal(ent)));
 
         return res;
       }
@@ -162,7 +169,7 @@ public class DocBuilder {
         BwLocation ent = (BwLocation)rec;
 
         res.add(new TypeId(BwIndexer.docTypeLocation,
-                           makeKeyVal(makeKeyVal(ent))));
+                           makeKeyVal(ent)));
 
         return res;
       }
@@ -173,12 +180,17 @@ public class DocBuilder {
          */
         BwIndexKey ik = (BwIndexKey)rec;
 
-        res.add(new TypeId(ik.getItemType(), makeKeyVal(ik.getKey())));
+        res.add(new TypeId(ik.getItemType(), ik.getKey()));
 
         return res;
       }
 
-      if (!(rec instanceof EventInfo)) {
+      BwEvent ev = null;
+      if (rec instanceof EventInfo) {
+        ev = ((EventInfo)rec).getEvent();
+      } else if (rec instanceof BwEvent) {
+        ev = (BwEvent)rec;
+      } else {
         throw new CalFacadeException(new IndexException(
                 IndexException.unknownRecordType,
                 rec.getClass().getName()));
@@ -186,15 +198,12 @@ public class DocBuilder {
 
       /* If it's not recurring or an override delete it */
 
-      EventInfo ei = (EventInfo)rec;
-      BwEvent ev = ei.getEvent();
       String type = IcalDefs.entityTypeNames[ev.getEntityType()];
 
       if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
         res.add(new TypeId(type,
-                           makeKeyVal(keyConverter.makeEventKey(ev.getColPath(),
-                                                     ev.getUid(),
-                                                     ev.getRecurrenceId()))));
+                           keyConverter.makeEventKey(ev.getHref(),
+                                                     ev.getRecurrenceId())));
 
         return res;
       }
@@ -202,9 +211,8 @@ public class DocBuilder {
       /* Delete any possible non-recurring version */
 
       res.add(new TypeId(type,
-                         makeKeyVal(keyConverter.makeEventKey(ev.getColPath(),
-                                                   ev.getUid(),
-                                                   null))));
+                         keyConverter.makeEventKey(ev.getHref(),
+                                                   null)));
 
       /* Delete all instances. */
 
@@ -244,9 +252,8 @@ public class DocBuilder {
         String recurrenceId = rstart.getDate();
 
         res.add(new TypeId(type,
-                           makeKeyVal(keyConverter.makeEventKey(ev.getColPath(),
-                                                     ev.getUid(),
-                                                     recurrenceId))));
+                           keyConverter.makeEventKey(ev.getHref(),
+                                                     recurrenceId)));
 
         instanceCt--;
         if (instanceCt == 0) {
@@ -429,6 +436,21 @@ public class DocBuilder {
     kindEntity
   }
 
+  static String getItemType(final EventInfo ei,
+                            final ItemKind kind) throws CalFacadeException {
+    BwEvent ev = ei.getEvent();
+
+    if (kind == ItemKind.kindEntity) {
+      return IcalDefs.fromEntityType(ev.getEntityType());
+    }
+
+    if (kind == ItemKind.kindMaster) {
+      return BwIndexer.masterDocTypes[ev.getEntityType()];
+    }
+
+    return BwIndexer.overrideDocTypes[ev.getEntityType()];
+  }
+
   /* Return the docinfo for the indexer */
   DocInfo makeDoc(final XContentBuilder builder,
                   final EventInfo ei,
@@ -439,20 +461,6 @@ public class DocBuilder {
     try {
       BwEvent ev = ei.getEvent();
       long version = ev.getMicrosecsVersion();
-      String itemType;
-
-      if (kind == ItemKind.kindEntity) {
-        itemType = IcalDefs.fromEntityType(ev.getEntityType());
-      } else if (kind == ItemKind.kindMaster) {
-        itemType = BwIndexer.masterDocTypes[ev.getEntityType()];
-      } else {
-        itemType = BwIndexer.overrideDocTypes[ev.getEntityType()];
-      }
-
-      if (itemType == null) {
-        throw new CalFacadeException("Unrecognized recurring type" +
-                                             ev.getEntityType());
-      }
 
       /*
         if (ev instanceof BwEventProxy) {
@@ -609,7 +617,7 @@ public class DocBuilder {
       /* Available */
       /* vpoll */
 
-      return new DocInfo(itemType,
+      return new DocInfo(getItemType(ei, kind),
                          version, makeKeyVal(ei));
     } catch (CalFacadeException cfe) {
       throw cfe;
@@ -1152,11 +1160,8 @@ public class DocBuilder {
     }
 
     if (ev != null) {
-      String path = ev.getColPath();
-      String guid = ev.getUid();
-      String recurid = ev.getRecurrenceId();
-
-      return keyConverter.makeEventKey(path, guid, recurid);
+      return keyConverter.makeEventKey(ev.getHref(),
+                                       ev.getRecurrenceId());
     }
 
     throw new IndexException(IndexException.unknownRecordType,
@@ -1243,9 +1248,7 @@ public class DocBuilder {
       builder.startArray(getJname(pi));
 
       for (BwDateTime dt: vals) {
-        builder.startObject();
         indexDate(builder, null, dt);
-        builder.endObject();
       }
 
       builder.endArray();

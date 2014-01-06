@@ -26,6 +26,9 @@ import org.bedework.access.AccessPrincipal;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.LastModified;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A system event - like adding something, updating something, startup, shutdown
  * etc.
@@ -57,6 +60,8 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
 
   private boolean indexable;
 
+  private boolean indexed;
+
   /** UTC datetime */
   private String dtstamp;
 
@@ -80,6 +85,21 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
   @Override
   public SysCode getSysCode() {
     return sysCode;
+  }
+
+  @Override
+  public List<Attribute> getMessageAttributes() {
+    List<Attribute> attrs = new ArrayList<>();
+
+    attrs.add(new Attribute("syscode", String.valueOf(getSysCode())));
+    attrs.add(new Attribute("indexable",
+                            String.valueOf(getIndexable())));
+    attrs.add(new Attribute("indexed",
+                            String.valueOf(getIndexed())));
+    attrs.add(new Attribute("changeEvent",
+                            String.valueOf(getSysCode().getChangeEvent())));
+
+    return attrs;
   }
 
   /**
@@ -120,6 +140,28 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
    */
   public boolean getIndexable() {
     return indexable;
+  }
+
+  /**
+   * This, if true, flags that an indexable event has already been
+   * indexed. This is needed to make test suites run better by
+   * reducing the delay between creation and indexing.
+   *
+   * <p>It is not recommended that the system be run in that state
+   * as indexing can cause a significant delay for clients,
+   * especially for recurring events.</p>
+   *
+   * @param val
+   */
+  public void setIndexed(final boolean val) {
+    indexed = val;
+  }
+
+  /**
+   * @return true if entity already indexed
+   */
+  public boolean getIndexed() {
+    return indexed;
   }
 
   /**
@@ -180,6 +222,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
    * @param ownerHref
    * @param href
    * @param shared
+   * @param indexed - true if already indexed
    * @return SysEvent
    * @throws NotificationException
    */
@@ -187,11 +230,13 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
                                                    final String authPrincipalHref,
                                                    final String ownerHref,
                                                    final String href,
-                                                   final boolean shared)
+                                                   final boolean shared,
+                                                   final boolean indexed)
                                                        throws NotificationException {
     SysEvent sysev = new CollectionUpdateEvent(code,
                                                authPrincipalHref,
-                                               ownerHref, href, shared);
+                                               ownerHref, href,
+                                               shared, indexed);
 
     return sysev;
   }
@@ -203,6 +248,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
    * @param href
    * @param shared
    * @param publick
+   * @param indexed - true if already indexed
    * @return SysEvent
    * @throws NotificationException
    */
@@ -211,12 +257,14 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
                                                     final String ownerHref,
                                                     final String href,
                                                     final boolean shared,
-                                                    final boolean publick)
+                                                    final boolean publick,
+                                                    final boolean indexed)
                                                         throws NotificationException {
     SysEvent sysev =
         new CollectionDeletedEvent(code,
                                    authPrincipalHref,
-                                   ownerHref, href, shared, publick);
+                                   ownerHref, href,
+                                   shared, publick, indexed);
 
     return sysev;
   }
@@ -227,6 +275,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
    * @param ownerHref
    * @param href
    * @param shared
+   * @param indexed - true if already indexed
    * @param oldHref
    * @param oldShared
    * @return SysEvent
@@ -237,13 +286,16 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
                                                   final String ownerHref,
                                                   final String href,
                                                   final boolean shared,
+                                                  final boolean indexed,
                                                   final String oldHref,
                                                   final boolean oldShared)
                                                       throws NotificationException {
     SysEvent sysev =
         new CollectionMovedEvent(code,
                                  authPrincipalHref,
-                                 ownerHref, href, shared, oldHref, oldShared);
+                                 ownerHref, href,
+                                 shared, indexed,
+                                 oldHref, oldShared);
 
     return sysev;
   }
@@ -255,8 +307,8 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
    * @param href
    * @param shared
    * @param publick
+   * @param indexed - true if already indexed
    * @param type of entity
-   * @param uid
    * @param rid
    * @param notification - as the event won't be around
    * @param targetPrincipalHref
@@ -269,8 +321,8 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
                                                 final String href,
                                                 final boolean shared,
                                                 final boolean publick,
+                                                final boolean indexed,
                                                 final String type,
-                                                final String uid,
                                                 final String rid,
                                                 final String notification,
                                                 final String targetPrincipalHref)
@@ -279,7 +331,9 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
         new EntityDeletedEvent(code,
                                authPrincipalHref,
                                ownerHref,
-                               href, shared, publick, type, uid, rid,
+                               href,
+                               shared, publick, indexed,
+                               type, rid,
                                notification,
                                targetPrincipalHref);
     return sysev;
@@ -291,6 +345,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
    * @param ownerHref
    * @param href
    * @param shared
+   * @param indexed - true if already indexed
    * @param uid
    * @param rid
    * @param notification
@@ -303,6 +358,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
                                                final String ownerHref,
                                                final String href,
                                                final boolean shared,
+                                               final boolean indexed,
                                                final String uid,
                                                final String rid,
                                                final String notification,
@@ -311,7 +367,9 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
     SysEvent sysev =
         new EntityUpdateEvent(code,
                               authPrincipalHref,
-                              ownerHref, href, shared, uid, rid, notification,
+                              ownerHref, href,
+                              shared, indexed,
+                              uid, rid, notification,
                               targetPrincipalHref);
 
     return sysev;
@@ -361,12 +419,14 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
                                               final String ownerHref,
                                               final String href,
                                               final boolean shared,
+                                              final boolean indexed,
                                               final String oldHref,
                                               final boolean oldShared)
                                                   throws NotificationException {
     SysEvent sysev = new EntityMovedEvent(code,
                                           authPrincipalHref,
-                                          ownerHref, href, shared,
+                                          ownerHref, href,
+                                          shared, indexed,
                                           oldHref, oldShared);
 
     return sysev;
@@ -425,6 +485,7 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
    ts.append("dtstamp", getDtstamp());
    ts.append("sequence", getSequence());
    ts.append("indexable", getIndexable());
+   ts.append("indexed", getIndexed());
  }
 
   /*

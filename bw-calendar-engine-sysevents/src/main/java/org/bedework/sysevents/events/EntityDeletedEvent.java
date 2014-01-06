@@ -33,7 +33,6 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
 
   private boolean publick;
   private String type;
-  private String uid;
   private String rid;
 
   /**
@@ -43,8 +42,8 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
    * @param href
    * @param shared
    * @param publick
+   * @param indexed - true if already indexed
    * @param type of entity
-   * @param uid
    * @param rid
    * @param notification
    * @param targetPrincipalHref
@@ -55,18 +54,19 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
                             final String href,
                             final boolean shared,
                             final boolean publick,
+                            final boolean indexed,
                             final String type,
-                            final String uid,
                             final String rid,
                             final String notification,
                             final String targetPrincipalHref) {
     super(code, authPrincipalHref, ownerHref, href, shared);
 
+    setIndexed(indexed);
+
     this.notification = notification;
     this.targetPrincipalHref = targetPrincipalHref;
     this.publick = publick;
     this.type = type;
-    this.uid = uid;
     this.rid = rid;
   }
 
@@ -96,14 +96,6 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
     return type;
   }
 
-  /** Get the uid
-   *
-   * @return String   uid
-   */
-  public String getUid() {
-    return uid;
-  }
-
   /**
    * @return String
    */
@@ -122,7 +114,6 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
     ts.append("notification", notification);
     ts.append("targetPrincipalHref", getTargetPrincipalHref());
     ts.append("publick", getPublick());
-    ts.append("uid", getUid());
     if (getRecurrenceId() != null) {
       ts.append("rid", getRecurrenceId());
     }

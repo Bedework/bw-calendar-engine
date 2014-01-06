@@ -41,6 +41,7 @@ public class EntityUpdateEvent extends OwnedHrefEvent implements NotificationEve
    * @param ownerHref
    * @param href of the entity
    * @param shared
+   * @param indexed - true if already indexed
    * @param uid
    * @param rid
    * @param notification
@@ -51,11 +52,14 @@ public class EntityUpdateEvent extends OwnedHrefEvent implements NotificationEve
                            final String ownerHref,
                            final String href,
                            final boolean shared,
+                           final boolean indexed,
                            final String uid,
                            final String rid,
                            final String notification,
                            final String targetPrincipalHref) {
     super(code, authPrincipalHref, ownerHref, href, shared);
+
+    setIndexed(indexed);
 
     this.notification = notification;
     this.targetPrincipalHref = targetPrincipalHref;

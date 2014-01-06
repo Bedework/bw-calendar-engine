@@ -199,7 +199,6 @@ class Events extends CalSvcDb implements EventsI {
 
       BwCalendar cal = validate(event, autoCreateCollection);
 
-      Collection<BwEventProxy> overrides = ei.getOverrideProxies();
       BwEventProxy proxy = null;
       BwEvent override = null;
 
@@ -210,10 +209,8 @@ class Events extends CalSvcDb implements EventsI {
       } else {
         setupSharableEntity(event, getPrincipal().getPrincipalRef());
 
-        boolean avail = event.getEntityType() == IcalDefs.entityTypeVavailability;
-
-        if (avail && (ei.getNumContainedItems() > 0)) {
-          for (EventInfo aei: ei.getContainedItems()) {
+        if (ei.getNumAvailables() > 0) {
+          for (EventInfo aei: ei.getAvailable()) {
             BwEvent av = aei.getEvent();
             av.setParent(event);
 
@@ -277,6 +274,7 @@ class Events extends CalSvcDb implements EventsI {
 
       /* All Overrides go in same calendar and have same name */
 
+      Collection<BwEventProxy> overrides = ei.getOverrideProxies();
       if (overrides != null) {
         for (BwEventProxy ovei: overrides) {
           setScheduleState(ovei);
@@ -299,20 +297,14 @@ class Events extends CalSvcDb implements EventsI {
         }
       }
 
-      UpdateEventResult uer;
+      UpdateEventResult uer = getCal().addEvent(ei,
+                                                scheduling,
+                                                rollbackOnError);
 
-      if (proxy != null) {
-        uer = getCal().addEvent(override, overrides, scheduling, rollbackOnError);
-      } else {
-        uer = getCal().addEvent(event, overrides, scheduling, rollbackOnError);
-      }
-
-      boolean avail = event.getEntityType() == IcalDefs.entityTypeVavailability;
-
-      if (avail && (ei.getNumContainedItems() > 0)) {
+      if (ei.getNumContainedItems() > 0)) {
         for (EventInfo oei: ei.getContainedItems()) {
           oei.getEvent().setName(event.getName());
-          UpdateEventResult auer = getCal().addEvent(oei.getEvent(), null,
+          UpdateEventResult auer = getCal().addEvent(oei,
                                                      scheduling, rollbackOnError);
           if (auer.errorCode != null) {
             //?
@@ -440,9 +432,7 @@ class Events extends CalSvcDb implements EventsI {
 
       updateEntities(updResult, event);
 
-      UpdateEventResult uer = getCal().updateEvent(event,
-                                                   ei.getOverrideProxies(),
-                                                   ei.getDeletedOverrideProxies(getPrincipalHref()));
+      UpdateEventResult uer = getCal().updateEvent(ei);
 
       updResult.addedInstances = uer.added;
       updResult.updatedInstances = uer.updated;

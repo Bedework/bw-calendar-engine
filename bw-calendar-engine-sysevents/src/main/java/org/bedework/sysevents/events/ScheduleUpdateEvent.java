@@ -20,6 +20,8 @@ package org.bedework.sysevents.events;
 
 import org.bedework.util.misc.ToString;
 
+import java.util.List;
+
 /** Signal update of a scheduling entity. These are not yet in an inbox or outbox.
  *
  * @author douglm
@@ -64,6 +66,15 @@ public class ScheduleUpdateEvent extends EntityEvent {
     super(code, ownerHref, name, uid, rid, colPath);
 
     this.change = change;
+  }
+
+  @Override
+  public List<Attribute> getMessageAttributes() {
+    List<Attribute> attrs = super.getMessageAttributes();
+
+    attrs.add(new Attribute("scheduleEvent", "true"));
+
+    return attrs;
   }
 
   /**

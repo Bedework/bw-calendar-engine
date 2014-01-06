@@ -804,7 +804,13 @@ public class EntityBuilder  {
   }
 
   private Boolean getBoolean(final ParameterInfoIndex id) {
-    String s = (String)getFirstValue(id);
+    Object o = getFirstValue(id);
+
+    if (o instanceof Boolean) {
+      return (Boolean)o;
+    }
+
+    String s = (String)o;
 
     if (s == null) {
       return null;

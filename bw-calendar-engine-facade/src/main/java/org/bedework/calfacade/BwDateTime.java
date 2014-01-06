@@ -33,7 +33,6 @@ import org.bedework.util.timezones.Timezones;
 import org.bedework.util.timezones.TimezonesException;
 import org.bedework.util.timezones.DateTimeUtil;
 
-import ietf.params.xml.ns.icalendar_2.DateDatetimePropertyType;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
@@ -47,6 +46,8 @@ import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Due;
+
+import ietf.params.xml.ns.icalendar_2.DateDatetimePropertyType;
 
 import java.io.Serializable;
 import java.util.Calendar;
@@ -176,6 +177,8 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       bwd.setFloatFlag(floating);
 
       return bwd;
+    } catch (CalFacadeException cfe) {
+      throw cfe;
     } catch (Throwable t) {
       throw new CalFacadeBadDateException();
     }

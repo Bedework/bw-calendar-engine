@@ -21,16 +21,11 @@ package org.bedework.calcore.hibernate;
 import org.bedework.calcore.CalintfHelper;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.HibSession;
-import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwCategory;
-import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.sysevents.events.SysEvent;
 
 import org.bedework.access.PrivilegeDefs;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 
 /** Class used as basis for a number of helper classes.
  *
@@ -46,61 +41,6 @@ public abstract class CalintfHelperHib extends CalintfHelper
      * @throws CalFacadeException
      */
     HibSession getSess() throws CalFacadeException;
-
-    /** Only valid during a transaction.
-     *
-     * @return a timestamp from the db
-     * @throws CalFacadeException
-     */
-    Timestamp getCurrentTimestamp() throws CalFacadeException;
-
-    /**
-     * @return BwStats
-     * @throws CalFacadeException
-     */
-    BwStats getStats() throws CalFacadeException;
-
-    /** Used to fetch a calendar from the cache - assumes any access
-     *
-     * @param path
-     * @return BwCalendar
-     * @throws CalFacadeException
-     */
-    BwCalendar getCollection(String path) throws CalFacadeException;
-
-    /** Used to fetch a category from the cache - assumes any access
-     *
-     * @param uid
-     * @return BwCategory
-     * @throws CalFacadeException
-     */
-    BwCategory getCategory(String uid) throws CalFacadeException;
-
-    /** Used to fetch a calendar from the cache
-     *
-     * @param path
-     * @param desiredAccess
-     * @param alwaysReturn
-     * @return BwCalendar
-     * @throws CalFacadeException
-     */
-    BwCalendar getCollection(String path,
-                             int desiredAccess,
-                             boolean alwaysReturn) throws CalFacadeException;
-
-    /** Called to notify container that an event occurred. This method should
-     * queue up notifications until after transaction commit as consumers
-     * should only receive notifications when the actual data has been written.
-     *
-     * @param ev
-     * @throws CalFacadeException
-     */
-    void postNotification(final SysEvent ev) throws CalFacadeException;
-
-    /**
-     * @return true if restoring
-     */
-    boolean getForRestore();
   }
 
   private CalintfHelperHibCb calintfCb;
@@ -112,47 +52,12 @@ public abstract class CalintfHelperHib extends CalintfHelper
     this.calintfCb = calintfCb;
   }
 
-  protected BwCalendar getCollection(String path,
-                                     int desiredAccess,
-                                     boolean alwaysReturn) throws CalFacadeException {
-    return getCalintfCb().getCollection(path, desiredAccess,
-                                        alwaysReturn);
-  }
-
   protected HibSession getSess() throws CalFacadeException {
     return calintfCb.getSess();
   }
 
   protected CalintfHelperHibCb getCalintfCb() throws CalFacadeException {
     return calintfCb;
-  }
-
-  /** Only valid during a transaction.
-   *
-   * @return a timestamp from the db
-   * @throws CalFacadeException
-   */
-  public Timestamp getCurrentTimestamp() throws CalFacadeException {
-    return calintfCb.getCurrentTimestamp();
-  }
-
-  protected BwCalendar getCollection(final String path) throws CalFacadeException {
-    return calintfCb.getCollection(path);
-  }
-
-  protected boolean getForRestore() {
-    return calintfCb.getForRestore();
-  }
-
-  /** Called to notify container that an event occurred. This method should
-   * queue up notifications until after transaction commit as consumers
-   * should only receive notifications when the actual data has been written.
-   *
-   * @param ev
-   * @throws CalFacadeException
-   */
-  public void postNotification(final SysEvent ev) throws CalFacadeException {
-    calintfCb.postNotification(ev);
   }
 
   /** Just encapsulate building a query out of a number of parts
