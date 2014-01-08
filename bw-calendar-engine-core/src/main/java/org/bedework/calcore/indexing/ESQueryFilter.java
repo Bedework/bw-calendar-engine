@@ -77,7 +77,9 @@ public class ESQueryFilter implements CalintfDefs {
   private static String colpathJname = getJname(PropertyInfoIndex.COLLECTION);
   private static String dtendJname = getJname(PropertyInfoIndex.DTEND);
   private static String dtstartJname = getJname(PropertyInfoIndex.DTSTART);
-  private static String hrefJname = getJname(PropertyInfoIndex.HREF);
+
+  /** */
+  public static String hrefJname = getJname(PropertyInfoIndex.HREF);
   private static String ownerJname = getJname(PropertyInfoIndex.OWNER);
   private static String publicJname = getJname(PropertyInfoIndex.PUBLIC);
 
@@ -205,8 +207,21 @@ public class ESQueryFilter implements CalintfDefs {
     return fb;
   }
 
-  /** Addfilterfor the current principal - or public - to limit search
-   * to entiites owned by th ecurrent principal.
+  /** Add a filter for the given href.
+   *
+   * @param filter - or null
+   * @param href
+   * @return a filter
+   * @throws CalFacadeException
+   */
+  public FilterBuilder hrefFilter(final FilterBuilder filter,
+                                  final String href) throws CalFacadeException {
+    return and(filter,
+               FilterBuilders.termFilter(hrefJname,href));
+  }
+
+  /** Add filter for the current principal - or public - to limit search
+   * to entities owned by the current principal.
    *
    * @param filter - or null
    * @return a filter

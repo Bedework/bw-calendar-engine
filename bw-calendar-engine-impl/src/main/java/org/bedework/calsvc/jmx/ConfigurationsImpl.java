@@ -297,11 +297,6 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
       register(new ObjectName(((ConfBase)chg).getServiceName()), chg);
 
-      /* ------------- InoutSched -------------------- */
-      Object ios = loadInstance(inoutClass);
-
-      register(new ObjectName(((ConfBase)ios).getServiceName()), ios);
-
       /* ------------- Pooled buffers -------------------- */
       PooledBuffers pb = new PooledBuffers();
       register(new ObjectName(pb.getServiceName()), pb);
@@ -312,45 +307,23 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       sc.loadConfig();
       synchProps = sc.getConfig();
 
-      /* ------------- Directory interface properties -------------------- */
+      /* ------------- Directory interface properties ------------- */
       loadDirConfigs();
 
-      /* ------------- Carddav -------------------- */
-      CardDavInfoConf ci = new CardDavInfoConf(unauthCardDavInfoNamePart);
-      register(new ObjectName(ci.getServiceName()), ci);
-      ci.loadConfig();
-      ci.saveConfig();
-      unauthCardDavInfo = ci.getConfig();
-
-      ci = new CardDavInfoConf(authCardDavInfoNamePart);
-      register(new ObjectName(ci.getServiceName()), ci);
-      ci.loadConfig();
-      ci.saveConfig();
-      authCardDavInfo = ci.getConfig();
-
-      /* ------------- DumpRestore properties -------------------- */
-      Object dr = loadInstance(dumpRestoreClass);
-      dumpRestore = (ConfBase)dr;
-
-      register(new ObjectName(dumpRestore.getServiceName()), dumpRestore);
-      dumpRestore.loadConfig();
-      dumpRestore.saveConfig();
-      dumpRestoreProperties = (DumpRestoreProperties)dumpRestore.getConfig();
-
-      /* ------------- Indexer properties -------------------- */
-      Object idx = loadInstance(indexerCtlClass);
-      indexCtl = (BwIndexCtlMBean)idx;
-
-      ConfBase idxConf = (ConfBase)idx;
-      register(new ObjectName(idxConf.getServiceName()), indexCtl);
-      indexCtl.loadConfig();
-      idxConf.saveConfig();
-      indexProperties = (IndexProperties)idxConf.getConfig();
-
-      /* Start the indexer */
-      indexCtl.start();
-
+      /* At this point we can call ourselves usable */
       configured = true;
+
+      /* ------------- Carddav ------------------------------------ */
+      loadCardDav();
+
+      /* ------------- DumpRestore properties --------------------- */
+      loadDumpRestore();
+
+      /* ------------- Indexer properties ------------------------- */
+      startIndexing();
+
+      /* ------------- InoutSched --------------------------------- */
+      startScheduling();
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     } finally {
@@ -358,6 +331,42 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
         stop();
       }
     }
+  }
+
+  private void loadCardDav() throws Throwable {
+    unauthCardDavInfo = (CardDavInfo)load(
+            new CardDavInfoConf(unauthCardDavInfoNamePart), false);
+
+    authCardDavInfo = (CardDavInfo)load(
+            new CardDavInfoConf(authCardDavInfoNamePart), false);
+  }
+
+  private void loadDumpRestore() throws Throwable {
+    dumpRestoreProperties = (DumpRestoreProperties)load(
+            (ConfBase)loadInstance(dumpRestoreClass), false);
+  }
+
+  private void startIndexing() throws Throwable {
+    indexProperties = (IndexProperties)load(
+            (ConfBase)loadInstance(indexerCtlClass), true);
+  }
+
+  private void startScheduling() throws Throwable {
+    load((ConfBase)loadInstance(inoutClass), true);
+  }
+
+  private ConfigBase load(final ConfBase cb,
+                          final boolean start) throws Throwable {
+    register(new ObjectName(cb.getServiceName()), cb);
+
+    cb.loadConfig();
+    cb.saveConfig();
+
+    if (start) {
+      cb.start();
+    }
+
+    return cb.getConfig();
   }
 
   private void loadDirConfigs() throws Throwable {

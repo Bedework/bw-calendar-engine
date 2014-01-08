@@ -23,6 +23,7 @@ import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.CollatableEntity;
 import org.bedework.calfacade.base.SizedEntity;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.QuotaUtil;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -41,6 +42,8 @@ public class BwLocation extends BwEventProperty<BwLocation>
   private BwString address;
   private BwString subaddress;
   private String link;
+
+  private String href;
 
   /** Constructor
    *
@@ -120,6 +123,32 @@ public class BwLocation extends BwEventProperty<BwLocation>
   public void deleteSubaddress() {
     addDeletedEntity(getSubaddress());
     setSubaddress(null);
+  }
+
+  /* ====================================================================
+   *                   FixNamesEntity methods
+   * ==================================================================== */
+
+  @Override
+  public void fixNames(final BasicSystemProperties props,
+                       final BwPrincipal principal) {
+    if (getHref() != null) {
+      return;
+    }
+
+    setColPath(props, principal, "locations", null);
+
+    setHref(Util.buildPath(false, getColPath(), getUid()));
+  }
+
+  @Override
+  public void setHref(String val) {
+    href = val;
+  }
+
+  @Override
+  public String getHref(){
+    return href;
   }
 
   /* ====================================================================

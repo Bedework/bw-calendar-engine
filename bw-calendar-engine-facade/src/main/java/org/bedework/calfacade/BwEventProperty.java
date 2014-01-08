@@ -19,7 +19,8 @@
 package org.bedework.calfacade;
 
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
-import org.bedework.util.misc.Uid;
+import org.bedework.calfacade.base.FixNamesEntity;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 
 /** Base for those classes that can be a property of an event and are all
  * treated in the same manner, being Category, Location and Sponsor.
@@ -33,7 +34,7 @@ import org.bedework.util.misc.Uid;
  * @param <T>
  */
 public abstract class BwEventProperty<T> extends
-        BwShareableContainedDbentity<T> {
+        BwShareableContainedDbentity<T> implements FixNamesEntity {
   private String uid;
 
   /** Constructor
@@ -85,5 +86,44 @@ public abstract class BwEventProperty<T> extends
    */
   public void copyTo(final BwEventProperty<?> val) {
     val.setUid(getUid());
+  }
+
+  protected void setColPath(final BasicSystemProperties props,
+                            final BwPrincipal principal,
+                            final String dir,
+                            final String namePart) {
+    String path;
+
+    if (getPublick()) {
+      setColPath(Util.buildPath(true,
+                            "/public",
+                            "/",
+                            props.getBedeworkResourceDirectory(),
+                            "/",
+                            dir,
+                            "/",
+                            namePart));
+      return;
+    }
+
+      String homeDir;
+
+      if (principal.getKind() == Ace.whoTypeUser) {
+        homeDir = props.getUserCalendarRoot();
+      } else {
+        homeDir = Util.pathElement(1, principal.getPrincipalRef());
+      }
+
+    setColPath(Util.buildPath(true,
+                            "/",
+                            homeDir,
+                            "/",
+                            principal.getAccount(),
+                            "/",
+                            props.getBedeworkResourceDirectory(),
+                            "/",
+                            dir,
+                            "/",
+                            namePart));
   }
 }

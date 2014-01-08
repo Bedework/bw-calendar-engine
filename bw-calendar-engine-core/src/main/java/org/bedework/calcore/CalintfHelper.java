@@ -568,7 +568,7 @@ public abstract class CalintfHelper
     if (getSyspars().getTestMode()) {
       BwIndexer idx = cb.getIndexer();
 
-      idx.unindexEntity(val);
+      idx.unindexEntity(val.getHref());
       indexed = true;
     }
 
@@ -646,6 +646,9 @@ public abstract class CalintfHelper
         return;
       }
 
+      /* We flag these as indexed. They get handled by the update for
+         the master
+       */
       if (code.equals(SysEvent.SysCode.ENTITY_DELETED) ||
               code.equals(SysEvent.SysCode.ENTITY_TOMBSTONED)) {
         postNotification(
@@ -655,7 +658,7 @@ public abstract class CalintfHelper
                                                 val.getHref(),
                                                 shared,
                                                 val.getPublick(),
-                                                false,
+                                                true, // Indexed
                                                 IcalDefs.fromEntityType(
                                                         val.getEntityType()),
                                                 recurrenceId,
@@ -668,7 +671,7 @@ public abstract class CalintfHelper
                                                val.getOwnerHref(),
                                                val.getHref(),
                                                shared,
-                                               getSyspars().getTestMode(),
+                                               true, // Indexed
                                                val.getUid(),
                                                val.getRecurrenceId(),
                                                note,  // changes

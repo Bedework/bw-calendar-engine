@@ -1209,8 +1209,15 @@ public class CalSvc extends CalSvcI {
       String authenticatedUser = pars.getAuthUser();
 
       if (authenticatedUser != null) {
+        String sv = authenticatedUser;
+
         if (dir.isPrincipal(authenticatedUser)) {
           authenticatedUser = dir.accountFromPrincipal(authenticatedUser);
+        }
+
+        if (authenticatedUser == null) {
+          error("Failed with Authenticated user " + sv);
+          return null;
         }
 
         if (authenticatedUser.endsWith("/")) {

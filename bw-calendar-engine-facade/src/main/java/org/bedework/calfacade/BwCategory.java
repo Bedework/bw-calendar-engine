@@ -22,6 +22,7 @@ import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.CollatableEntity;
 import org.bedework.calfacade.base.SizedEntity;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.QuotaUtil;
 import org.bedework.util.misc.ToString;
@@ -43,6 +44,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
   /* Not persisted in the db */
 
   private String name;
+  private String href;
 
   /** Constructor
    */
@@ -121,6 +123,46 @@ public class BwCategory extends BwEventProperty<BwCategory>
    */
   public String getName() {
     return name;
+  }
+
+  /* ====================================================================
+   *                   FixNamesEntity methods
+   * ==================================================================== */
+
+  @Override
+  public void fixNames(final BasicSystemProperties props,
+                       final BwPrincipal principal) {
+    if (getHref() != null) {
+      return;
+    }
+
+    String extra = getWordVal();
+    String name;
+
+    int pos = extra.lastIndexOf("/");
+
+    if (pos < 0) {
+      name = extra;
+      extra = "";
+    } else {
+      name = extra.substring(pos + 1);
+      extra = extra.substring(0, pos);
+    }
+
+    setName(name);
+    setColPath(props, principal, "categories", extra);
+
+    setHref(Util.buildPath(false, getColPath(), getName()));
+  }
+
+  @Override
+  public void setHref(String val) {
+    href = val;
+  }
+
+  @Override
+  public String getHref(){
+    return href;
   }
 
   /* ====================================================================

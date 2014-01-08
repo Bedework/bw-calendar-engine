@@ -518,16 +518,12 @@ public abstract class CalSys {
     }
   }
 
-  protected Collection<EventInfo> getEvent(final String colPath,
-                                           final String uid,
-                                           final String rid) throws CalFacadeException {
+  protected EventInfo getEvent(final String colPath,
+                               final String name) throws CalFacadeException {
     EventsI evhandler = svci.getEventsHandler();
 
-    Collection<EventInfo> evis = evhandler.get(colPath, uid, rid,
-                                               RecurringRetrievalMode.overrides,
-                                               false);
-
-    return evis;
+    return evhandler.get(colPath, name,
+                         RecurringRetrievalMode.overrides);
   }
 
   /**

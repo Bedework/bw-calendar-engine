@@ -33,7 +33,7 @@ import java.util.List;
  * <p>Each has a single field which together with the owner makes a unique
  * key and all operations on those classes are the same.
  *
- * @author Mike Douglass   douglm - bedework.edu
+ * @author Mike Douglass   douglm - rpi.edu
  *
  * @param <T> type of property, Location, Sponsor etc.
  */
@@ -47,12 +47,10 @@ public interface CoreEventPropertiesI <T extends BwEventProperty> extends Serial
    * report query.
    *
    * @param ownerHref   String principal href, null for current user
-   * @param  creatorHref        non-null means limit to this
    * @return Collection     of objects
    * @throws CalFacadeException
    */
-  Collection<T> get(String ownerHref,
-                    String creatorHref) throws CalFacadeException;
+  Collection<T> getAll(String ownerHref) throws CalFacadeException;
 
   /** Return an entity given the uid if the user has access
    *

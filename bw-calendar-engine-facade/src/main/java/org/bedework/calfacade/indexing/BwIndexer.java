@@ -22,6 +22,7 @@ import org.bedework.access.Acl;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
+import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwShareableDbentity;
@@ -44,7 +45,9 @@ public interface BwIndexer extends Serializable {
   static final String docTypeCategory = "category";
   static final String docTypeLocation = "location";
   static final String docTypeContact = "contact";
+  static final String docTypeEvent = "event";
 
+  /* Following used for the id */
   static final String[] masterDocTypes = {
           "masterEvent",
           null,  // alarm
@@ -149,13 +152,19 @@ public interface BwIndexer extends Serializable {
   List<SearchResultEntry> getSearchResult(SearchResult sres,
                                           int offset,
                                           int num) throws CalFacadeException;
-
-  /** Called to unindex a record
+  /** Called to unindex an entity
    *
-   * @param   rec      The record to unindex
+   * @param   val     an event property
    * @throws CalFacadeException
    */
-  void unindexEntity(Object rec) throws CalFacadeException;
+  void unindexEntity(BwEventProperty val) throws CalFacadeException;
+
+  /** Called to unindex an entity
+   *
+   * @param   href     the entities href
+   * @throws CalFacadeException
+   */
+  void unindexEntity(String href) throws CalFacadeException;
 
   /** Called to index a record
    *

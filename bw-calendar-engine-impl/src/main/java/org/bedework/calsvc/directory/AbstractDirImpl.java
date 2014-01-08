@@ -68,7 +68,7 @@ import javax.xml.namespace.QName;
  * might have a user account "jim" or a ticket "TKT12345". These could be mapped
  * on to "/principals/users/jim" and "/principals/tickets/12345".
  *
- * @author Mike Douglass douglm@bedework.edu
+ * @author Mike Douglass douglm  rpi.edu
  * @version 1.0
  */
 public abstract class AbstractDirImpl implements Directories {
@@ -389,11 +389,15 @@ public abstract class AbstractDirImpl implements Directories {
   public String accountFromPrincipal(final String val) throws CalFacadeException {
     String userProot = fromWho.get(WhoDefs.whoTypeUser);
 
-    if (!val.startsWith(userProot) || !val.endsWith("/")) {
+    if (!val.startsWith(userProot)) {
       return null;
     }
 
-    String acc = val.substring(userProot.length(), val.length() - 1);
+    String acc = val.substring(userProot.length());
+
+    if (acc.endsWith("/")) {
+      acc = acc.substring(0, acc.length() - 1);
+    }
 
     if (acc.indexOf("/") > 0) {
       return null;

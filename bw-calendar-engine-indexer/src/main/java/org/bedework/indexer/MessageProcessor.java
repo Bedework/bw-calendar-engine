@@ -24,9 +24,8 @@ import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calfacade.indexing.BwIndexKey;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.sysevents.events.CollectionChangeEvent;
 import org.bedework.sysevents.events.CollectionDeletedEvent;
 import org.bedework.sysevents.events.EntityDeletedEvent;
@@ -35,8 +34,6 @@ import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
-
-import java.util.Collection;
 
 /**
  * Class to handle incoming system event messages and fire off index processes
@@ -162,12 +159,9 @@ public class MessageProcessor extends CalSys {
   }
 
   private void doCollectionDelete(final CollectionDeletedEvent cde)
-                                                                  throws CalFacadeException {
-    RemovalKey rk = new RemovalKey(cde.getPublick(),
-                                   cde.getOwnerHref(),
-                                   cde.getHref());
-
-    remove(rk);
+          throws CalFacadeException {
+    getIndexer(cde.getPublick(), cde.getOwnerHref()).
+            unindexEntity(cde.getHref());
   }
 
   private void doCollectionChange(final CollectionChangeEvent cce)
@@ -197,41 +191,38 @@ public class MessageProcessor extends CalSys {
     return val.substring(0, pos);
   }
 
-  private static class RemovalKey extends BwIndexKey {
-    boolean publick;
+  private String getName(final String val) {
+    int pos = val.lastIndexOf("/");
 
-    String ownerHref;
-
-    RemovalKey(final boolean publick,
-               final String ownerHref,
-               final String path) {
-      super(path);
-
-      this.publick = publick;
-      this.ownerHref = ownerHref;
+    if (pos <= 0) {
+      return val;
     }
 
-    RemovalKey(final String itemType,
-               final boolean publick,
-               final String ownerHref,
-               final String href,
-               final String rid) {
-      super(itemType, href, rid);
-
-      this.publick = publick;
-      this.ownerHref = ownerHref;
+    if (pos == val.length() - 1) {
+      return null;
     }
+
+    return val.substring(pos + 1);
   }
 
   private void doEntityDelete(final EntityDeletedEvent ede)
        throws CalFacadeException {
-    RemovalKey rk = new RemovalKey(ede.getType(),
-                                   ede.getPublick(),
-                                   ede.getOwnerHref(),
-                                   ede.getHref(),
-                                   ede.getRecurrenceId());
+    /* Treat the delete of a recurrence instance as an update */
 
-    remove(rk);
+    if (ede.getRecurrenceId() != null) {
+      try {
+        setCurrentPrincipal(ede.getOwnerHref());
+        getSvci();
+
+        add(getEvent(getParentPath(ede.getHref()),
+                     getName(ede.getHref())), false);
+      } finally {
+        close();
+      }
+    } else {
+      getIndexer(ede.getPublick(),
+                 ede.getOwnerHref()).unindexEntity(ede.getHref());
+    }
   }
 
   private void doEntityChange(final EntityUpdateEvent ece)
@@ -240,13 +231,8 @@ public class MessageProcessor extends CalSys {
       setCurrentPrincipal(ece.getOwnerHref());
       getSvci();
 
-      Collection<EventInfo> eis = getEvent(getParentPath(ece.getHref()),
-                                           ece.getUid(),
-                                           ece.getRecurrenceId());
-
-      for (EventInfo ei : eis) {
-        add(ei, false);
-      }
+      add(getEvent(getParentPath(ece.getHref()),
+                   getName(ece.getHref())), false);
     } finally {
       close();
     }
@@ -284,10 +270,6 @@ public class MessageProcessor extends CalSys {
     getIndexer(val).indexEntity(val);
   }
 
-  private void remove(final RemovalKey val) throws CalFacadeException {
-    getIndexer(val).unindexEntity(val);
-  }
-
   @SuppressWarnings("rawtypes")
   private BwIndexer getIndexer(final Object val) throws CalFacadeException {
     boolean publick = false;
@@ -300,10 +282,6 @@ public class MessageProcessor extends CalSys {
       ent = (BwOwnedDbentity)val;
     } else if (val instanceof EventInfo) {
       ent = ((EventInfo)val).getEvent();
-    } else if (val instanceof RemovalKey) {
-      RemovalKey rk = (RemovalKey)val;
-      publick = rk.publick;
-      principal = rk.ownerHref;
     } else {
       throw new CalFacadeException("org.bedework.index.unexpected.class");
     }

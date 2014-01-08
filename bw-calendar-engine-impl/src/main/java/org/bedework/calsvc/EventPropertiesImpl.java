@@ -320,8 +320,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
       owner = getPublicUser();
     }
 
-    Collection<T> ents = coreHdlr.get(owner.getPrincipalRef(),
-                                      null);
+    Collection<T> ents = coreHdlr.getAll(owner.getPrincipalRef());
     if (Util.isEmpty(ents)) {
       return 0;
     }

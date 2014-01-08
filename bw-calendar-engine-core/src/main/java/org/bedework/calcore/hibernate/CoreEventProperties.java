@@ -172,8 +172,7 @@ public class CoreEventProperties <T extends BwEventProperty>
 
   @SuppressWarnings("unchecked")
   @Override
-  public Collection<T> get(final String ownerHref,
-                           final String creatorHref) throws CalFacadeException {
+  public Collection<T> getAll(final String ownerHref) throws CalFacadeException {
     HibSession sess = getSess();
 
     StringBuilder qstr = new StringBuilder("from ");
@@ -183,13 +182,6 @@ public class CoreEventProperties <T extends BwEventProperty>
       qstr.append(" ent.ownerHref=:ownerHref");
     }
 
-    if (creatorHref != null) {
-      if (ownerHref != null) {
-        qstr.append(" and ");
-      }
-      qstr.append(" ent.creatorHref=:creatorHref");
-    }
-
     qstr.append(" order by ent.");
     qstr.append(keyFieldName);
 
@@ -197,10 +189,6 @@ public class CoreEventProperties <T extends BwEventProperty>
 
     if (ownerHref != null) {
       sess.setString("ownerHref", ownerHref);
-    }
-
-    if (creatorHref != null) {
-      sess.setString("creatorHref", creatorHref);
     }
 
     return (Collection<T>)access.checkAccess(sess.getList(), privRead, true);
@@ -349,6 +337,8 @@ public class CoreEventProperties <T extends BwEventProperty>
     if (ent == null) {
       return null;
     }
+
+    ent.fixNames(getSyspars(), getPrincipal());
 
     if (ent.getPublick()) {
       return ent;

@@ -29,6 +29,7 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.RecurringRetrievalMode;
@@ -38,7 +39,6 @@ import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
-import org.bedework.calfacade.indexing.BwIndexKey;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.SearchResult;
 import org.bedework.calfacade.indexing.SearchResultEntry;
@@ -73,7 +73,6 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.status.IndicesStatusRequestBuilder;
 import org.elasticsearch.action.admin.indices.status.IndicesStatusResponse;
-import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
@@ -95,8 +94,6 @@ import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.FilterBuilder;
@@ -119,7 +116,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calcore.indexing.DocBuilder.DocInfo;
-import static org.bedework.calcore.indexing.DocBuilder.TypeId;
 
 /** Implementation of indexer for ElasticSearch
  *
@@ -160,8 +156,6 @@ public class BwIndexEsImpl implements BwIndexer {
 
   private boolean debug;
 
-  private BwIndexKey keyConverter = new BwIndexKey();
-
   private int batchMaxSize = 0;
   private int batchCurSize = 0;
 
@@ -189,8 +183,6 @@ public class BwIndexEsImpl implements BwIndexer {
   private BasicSystemProperties basicSysprops;
 
   private EntityBuilder entityBuilder;
-
-  private DocBuilder docBuilder;
 
   private static Set<String> eventDoctypes;
 
@@ -417,14 +409,16 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     if (debug) {
-      debug("search-srb=" + srb);
+      debug("Search: targetIndex=" + targetIndex +
+                    "; srb=" + srb);
     }
 
     SearchResponse resp = srb.execute().actionGet();
 
     if (resp.status() != RestStatus.OK) {
       if (debug) {
-        debug("Search returned status " + resp.status());
+        debug("Search: returned status " + resp.status() +
+                " found: " + resp.getHits().getTotalHits());
       }
     }
 
@@ -606,23 +600,30 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   @Override
-  public void unindexEntity(final Object rec) throws CalFacadeException {
-    //try {
-    // Always unbatched
+  public void unindexEntity(BwEventProperty val) throws CalFacadeException {
+    unindexEntity(getDocBuilder().getHref(val));
+  }
 
-    List<TypeId> tids = getDocBuilder().makeKeys(rec);
+  @Override
+  public void unindexEntity(final String href) throws CalFacadeException {
+    try {
+      DeleteByQueryRequestBuilder dqrb = getClient().prepareDeleteByQuery(
+              targetIndex);
 
-    // XXX Should use a batch for large number
-    for (TypeId tid: tids) {
-      DeleteResponse resp = getClient().prepareDelete(targetIndex,
-                                                      tid.type,
-                                                      tid.id).execute().actionGet();
+      dqrb.setQuery(QueryBuilders.termQuery(ESQueryFilter.hrefJname, href));
 
-      // XXX process response
+      DeleteByQueryResponse resp = dqrb.execute().actionGet();
+
+      // TODO check response?
+    } catch (ElasticSearchException ese) {
+      // Failed somehow
+      error(ese);
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      error(t);
+      throw new CalFacadeException(t);
     }
-    //} catch (IOException e) {
-    //throw new CalFacadeException(e);
-    //}
   }
 
   @Override
@@ -995,30 +996,27 @@ public class BwIndexEsImpl implements BwIndexer {
       }
 
       DocInfo di = null;
-      XContentBuilder builder = newBuilder();
 
-      builder.startObject();
+      DocBuilder db = getDocBuilder();
 
       if (rec instanceof BwCalendar) {
-        di = getDocBuilder().makeDoc(builder, (BwCalendar)rec);
+        di = db.makeDoc((BwCalendar)rec);
       }
 
       if (rec instanceof BwCategory) {
-        di = getDocBuilder().makeDoc(builder, (BwCategory)rec);
+        di = db.makeDoc((BwCategory)rec);
       }
 
       if (rec instanceof BwContact) {
-        di = getDocBuilder().makeDoc(builder, (BwContact)rec);
+        di = db.makeDoc((BwContact)rec);
       }
 
       if (rec instanceof BwLocation) {
-        di = getDocBuilder().makeDoc(builder, (BwLocation)rec);
+        di = db.makeDoc((BwLocation)rec);
       }
 
-      builder.endObject();
-
       if (di != null) {
-        return indexDoc(builder, di);
+        return indexDoc(di);
       }
 
       throw new CalFacadeException(
@@ -1055,9 +1053,7 @@ public class BwIndexEsImpl implements BwIndexer {
           we don't want.
        */
 
-      deleteEvent(ei, ItemKind.kindEntity);
-      deleteEvent(ei, ItemKind.kindMaster);
-      deleteEvent(ei, ItemKind.kindOverride);
+      deleteEvent(ei);
 
       /* Create a list of all instance date/times before overrides. */
 
@@ -1182,12 +1178,11 @@ public class BwIndexEsImpl implements BwIndexer {
     }
   }
 
-  private boolean deleteEvent(final EventInfo ei,
-                              final ItemKind kind) throws CalFacadeException {
+  private boolean deleteEvent(final EventInfo ei) throws CalFacadeException {
     BwEvent ev = ei.getEvent();
 
     DeleteByQueryRequestBuilder delQreq = getClient().prepareDeleteByQuery(
-            targetIndex).setTypes(DocBuilder.getItemType(ei, kind));
+            targetIndex).setTypes(docTypeEvent);
 
     ESQueryFilter esq= getFilters();
 
@@ -1229,25 +1224,19 @@ public class BwIndexEsImpl implements BwIndexer {
     BwEvent ev = ei.getEvent();
 
     try {
-      XContentBuilder builder = newBuilder();
-      builder.startObject();
-      DocInfo di = getDocBuilder().makeDoc(builder,
-                                           ei,
-                                           kind,
-                                           start,
-                                           end,
-                                           recurid);
+      DocBuilder db = getDocBuilder();
+      DocInfo di = db.makeDoc(ei,
+                              kind,
+                              start,
+                              end,
+                              recurid);
 
       if (dl != null) {
         dl.minStart = checkMin(dl.minStart, start);
         dl.maxEnd = checkMax(dl.maxEnd, end);
       }
 
-      builder.endObject();
-
-      di.id = keyConverter.makeEventKey(ev.getHref(),
-                                        recurid);
-      return indexDoc(builder, di);
+      return indexDoc(di);
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (VersionConflictEngineException vcee) {
@@ -1302,16 +1291,20 @@ public class BwIndexEsImpl implements BwIndexer {
     return end;
   }
 
-  private IndexResponse indexDoc(final XContentBuilder builder,
-                                  final DocInfo di) throws Throwable {
+  private IndexResponse indexDoc(final DocInfo di) throws Throwable {
     batchCurSize++;
     IndexRequestBuilder req = getClient().
             prepareIndex(targetIndex, di.type, di.id);
 
-    req.setSource(builder);
+    req.setSource(di.source);
 
     if (di.version != 0) {
       req.setVersion(di.version).setVersionType(VersionType.EXTERNAL);
+    }
+
+    if (debug) {
+      debug("Indexing to index " + targetIndex +
+                    " with DocInfo " + di);
     }
 
     return req.execute().actionGet();
@@ -1416,20 +1409,6 @@ public class BwIndexEsImpl implements BwIndexer {
     return getClient().admin().cluster();
   }
 
-  private XContentBuilder newBuilder() throws CalFacadeException {
-    try {
-      XContentBuilder builder = XContentFactory.jsonBuilder();
-
-      if (debug) {
-        builder = builder.prettyPrint();
-      }
-
-      return builder;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
   /** For use by th ecore classes
    *
    * @return a filter builder
@@ -1463,13 +1442,9 @@ public class BwIndexEsImpl implements BwIndexer {
     return new EntityBuilder(fields);
   }
 
-  private DocBuilder getDocBuilder() {
-    if (docBuilder == null) {
-      docBuilder = new DocBuilder(principal,
-                                  authpars, unauthpars, basicSysprops);
-    }
-
-    return docBuilder;
+  private DocBuilder getDocBuilder() throws CalFacadeException {
+    return new DocBuilder(principal,
+                          authpars, unauthpars, basicSysprops);
   }
 
   protected Logger getLog() {
