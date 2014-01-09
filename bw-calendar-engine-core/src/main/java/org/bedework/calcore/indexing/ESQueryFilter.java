@@ -186,7 +186,7 @@ public class ESQueryFilter implements CalintfDefs {
 
     FilterBuilder fb = filter;
 
-    if (start != null) {
+    if (end != null) {
       // End of events must be on or after the start of the range
       RangeFilterBuilder rfb = new RangeFilterBuilder(startRef);
 
@@ -195,7 +195,7 @@ public class ESQueryFilter implements CalintfDefs {
       fb = and(fb, rfb);
     }
 
-    if (end != null) {
+    if (start != null) {
       // Start of events must be before the end of the range
       RangeFilterBuilder rfb = new RangeFilterBuilder(endRef);
 
