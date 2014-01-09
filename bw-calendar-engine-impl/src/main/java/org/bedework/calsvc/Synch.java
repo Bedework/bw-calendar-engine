@@ -56,13 +56,16 @@ import javax.xml.ws.BindingProvider;
 
 /** Handles interactions with the synch engine from within bedework.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 class Synch extends CalSvcDb implements SynchI {
   private SynchConnectionsMBean conns;
   //private ObjectFactory of = new ObjectFactory();
 
   private SynchConfig synchConf;
+
+  static final String synchConnectionsMBeanName =
+          SynchConnectionsMBean.serviceName;
 
   /** Namespace of the synch SOAP service
    */
@@ -324,8 +327,9 @@ class Synch extends CalSvcDb implements SynchI {
   private SynchConnectionsMBean getActiveSynchConnections() throws CalFacadeException {
     try {
       if (conns == null) {
-        conns = (SynchConnectionsMBean)MBeanUtil.getMBean(SynchConnectionsMBean.class,
-                                           "org.bedework:service=CalDAVSynchConnections");
+        conns = (SynchConnectionsMBean)MBeanUtil.
+                getMBean(SynchConnectionsMBean.class,
+                         synchConnectionsMBeanName);
       }
 
       return conns;
