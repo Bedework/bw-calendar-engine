@@ -292,11 +292,6 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       register(new ObjectName(GenKeys.serviceName), gk);
       gk.loadConfig();
 
-      /* ------------- Change notifications  -------------------- */
-      Object chg = loadInstance(chgnoteClass);
-
-      register(new ObjectName(((ConfBase)chg).getServiceName()), chg);
-
       /* ------------- Pooled buffers -------------------- */
       PooledBuffers pb = new PooledBuffers();
       register(new ObjectName(pb.getServiceName()), pb);
@@ -312,6 +307,9 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
       /* At this point we can call ourselves usable */
       configured = true;
+
+      /* ------------- Change notifications  -------------------- */
+      startChgNote();
 
       /* ------------- Carddav ------------------------------------ */
       loadCardDav();
@@ -333,6 +331,13 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
     }
   }
 
+  private void startChgNote() throws Throwable {
+    ConfBase cb = loadInstance(chgnoteClass);
+
+    register(new ObjectName(cb.getServiceName()), cb);
+    cb.start();
+  }
+
   private void loadCardDav() throws Throwable {
     unauthCardDavInfo = (CardDavInfo)load(
             new CardDavInfoConf(unauthCardDavInfoNamePart), false);
@@ -343,16 +348,16 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   private void loadDumpRestore() throws Throwable {
     dumpRestoreProperties = (DumpRestoreProperties)load(
-            (ConfBase)loadInstance(dumpRestoreClass), false);
+            loadInstance(dumpRestoreClass), false);
   }
 
   private void startIndexing() throws Throwable {
     indexProperties = (IndexProperties)load(
-            (ConfBase)loadInstance(indexerCtlClass), true);
+            loadInstance(indexerCtlClass), true);
   }
 
   private void startScheduling() throws Throwable {
-    load((ConfBase)loadInstance(inoutClass), true);
+    load(loadInstance(inoutClass), true);
   }
 
   private ConfigBase load(final ConfBase cb,
@@ -424,7 +429,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
     }
   }
 
-  private static Object loadInstance(final String cname) {
+  private static ConfBase loadInstance(final String cname) {
     try {
       ClassLoader loader = Thread.currentThread().getContextClassLoader();
       Class cl = loader.loadClass(cname);
@@ -439,7 +444,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
         throw new CalFacadeException("Unable to instantiate class " + cname);
       }
 
-      return o;
+      return (ConfBase)o;
     } catch (Throwable t) {
       t.printStackTrace();
       throw new RuntimeException(t);

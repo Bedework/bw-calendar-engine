@@ -74,7 +74,7 @@ public class BwChgNote extends ConfBase
    * @return object name value for the mbean with this name
    */
   public static String getServiceName(final String name) {
-    return "org.bedework.engine:service=" + name;
+    return "org.bedework.bwengine:service=" + name;
   }
 
   @Override
