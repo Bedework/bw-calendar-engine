@@ -298,7 +298,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     @Override
     public BwCategory getCategory(String uid) throws CalFacadeException {
       try {
-        return intf.categoriesHandler.get(uid);
+        return intf.getEvPropsHandler(BwCategory.class).get(uid);
       } catch (Throwable t) {
         if (t instanceof CalFacadeException) {
           throw (CalFacadeException)t;
