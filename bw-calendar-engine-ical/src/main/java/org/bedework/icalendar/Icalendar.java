@@ -302,6 +302,8 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
         setComponentType(IcalComponentType.freebusy);
       } else if (ev.getEntityType() == IcalDefs.entityTypeVavailability) {
         setComponentType(IcalComponentType.vavailability);
+      } else if (ev.getEntityType() == IcalDefs.entityTypeAvailable) {
+        setComponentType(IcalComponentType.available);
       } else if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
         setComponentType(IcalComponentType.vpoll);
       } else {
