@@ -79,6 +79,7 @@ public class BwShareableDbentity<T> extends BwOwnedDbentity<T> {
    * @param val    String access
    */
   @IcalProperty(pindex = PropertyInfoIndex.ACL,
+                jname = "acl",
                 required = true,
                 eventProperty = true,
                 todoProperty = true,

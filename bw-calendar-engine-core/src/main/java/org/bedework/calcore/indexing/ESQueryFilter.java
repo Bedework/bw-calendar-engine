@@ -18,6 +18,7 @@
 */
 package org.bedework.calcore.indexing;
 
+import org.bedework.calcorei.CalintfDefs;
 import org.bedework.caldav.util.TimeRange;
 import org.bedework.caldav.util.filter.AndFilter;
 import org.bedework.caldav.util.filter.EntityTypeFilter;
@@ -27,7 +28,6 @@ import org.bedework.caldav.util.filter.OrFilter;
 import org.bedework.caldav.util.filter.PresenceFilter;
 import org.bedework.caldav.util.filter.PropertyFilter;
 import org.bedework.caldav.util.filter.TimeRangeFilter;
-import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.RecurringRetrievalMode;
@@ -58,6 +58,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
+
 /** Build filters for ES searching
  *
  * @author Mike Douglass douglm @ rpi.edu
@@ -72,7 +74,16 @@ public class ESQueryFilter implements CalintfDefs {
   private final BwPrincipal principal;
   private final boolean superUser;
 
+  private RecurringRetrievalMode recurRetrieval;
+
+  /* True if we have a limitation to owner or collection */
   private boolean queryLimited;
+
+  /* True if we have a filter on a property which is not owner or
+     collection.
+
+     These can only be satisfied by searching the instances */
+  private boolean queryFiltered;
 
   private static String colpathJname = getJname(PropertyInfoIndex.COLLECTION);
   private static String dtendJname = getJname(PropertyInfoIndex.DTEND);
@@ -103,15 +114,21 @@ public class ESQueryFilter implements CalintfDefs {
    * @param currentMode - guest, user,publicAdmin
    * @param principal - only used to add a filter for non-public
    * @param superUser - true if the principal is a superuser.
+   * @param recurRetrieval  - value modifies search
    */
   public ESQueryFilter(final int currentMode,
                        final BwPrincipal principal,
-                       final boolean superUser) {
+                       final boolean superUser,
+                       final RecurringRetrievalMode recurRetrieval) {
     debug = getLog().isDebugEnabled();
 
     this.currentMode = currentMode;
     this.principal = principal;
     this.superUser = superUser;
+    this.recurRetrieval = recurRetrieval;
+    if (recurRetrieval == null) {
+      this.recurRetrieval = RecurringRetrievalMode.expanded;
+    }
   }
 
   /** Build a filter for a single entity identified by the property
@@ -139,11 +156,80 @@ public class ESQueryFilter implements CalintfDefs {
       fb = ((TermOrTerms)fb).makeFb();
     }
 
+    return fb;
+  }
+
+  public FilterBuilder multiHrefFilter(final List<String> hrefs) throws CalFacadeException {
+    FilterBuilder fb = null;
+
+    for (String href: hrefs) {
+      fb = or(fb, addTerm(null, hrefJname, href));
+    }
+
+    return fb;
+  }
+
+  public FilterBuilder addLimits(final FilterBuilder f) throws CalFacadeException {
+    FilterBuilder fb = f;
+
     if (!queryLimited) {
       fb = principalFilter(fb);
     }
 
-    return fb;
+    if (recurRetrieval.mode == Rmode.expanded) {
+      // Limit events to instances only //
+      FilterBuilder limit = not(addTerm(null, "_type",
+                                        BwIndexer.docTypeEvent));
+
+      limit = or(limit, addTerm(null, PropertyInfoIndex.MASTER,
+                                "false"));
+
+      limit = or(limit, addTerm(null, PropertyInfoIndex.OVERRIDE,
+                                "false"));
+
+      return and(fb, limit);
+    }
+
+    /* if the query is not filtered we can limit to the master and
+       overrides only
+     */
+
+    if (queryFiltered) {
+      return fb;
+    }
+
+    FilterBuilder limit = not(addTerm(null, "_type",
+                                      BwIndexer.docTypeEvent));
+
+    limit = or(limit, addTerm(null, PropertyInfoIndex.MASTER,
+                              "true"));
+
+    limit = or(limit, addTerm(null, PropertyInfoIndex.OVERRIDE,
+                              "true"));
+
+    queryFiltered = false; // Reset it.
+
+    return and(fb, limit);
+  }
+
+  /**
+   *
+   * @return true if we are not fetching expanded and we have a filtered
+   *          query which examines the instances. In this case we
+   *          fetch only the href and do a secondary fetch for master
+   *          and overrides.
+   */
+  public boolean requiresSecondaryFetch() {
+    return (recurRetrieval.mode != Rmode.expanded) &&
+            queryFiltered;
+  }
+
+  /**
+   *
+   * @return true if we are fetching expanded.
+   */
+  public boolean canPage() {
+    return recurRetrieval.mode == Rmode.expanded;
   }
 
   /** Add date range terms to filter. The actual terms depend on
@@ -161,17 +247,17 @@ public class ESQueryFilter implements CalintfDefs {
    * @param filter
    * @param start
    * @param end
-   * @param recurRetrieval
    * @return
    * @throws CalFacadeException
    */
   public FilterBuilder addDateRangeFilter(final FilterBuilder filter,
                                           final String start,
-                                          final String end,
-                                          final RecurringRetrievalMode recurRetrieval) throws CalFacadeException {
+                                          final String end) throws CalFacadeException {
     if ((start == null) && (end == null)) {
       return filter;
     }
+
+    queryFiltered = true;
 
     String startRef;
     String endRef;
@@ -258,6 +344,10 @@ public class ESQueryFilter implements CalintfDefs {
   public FilterBuilder addTerm(final FilterBuilder filter,
                                final PropertyInfoIndex pi,
                                final String val) throws CalFacadeException {
+    if ((pi != PropertyInfoIndex.HREF) &&
+            (pi != PropertyInfoIndex.COLLECTION)) {
+      queryFiltered = true;
+    }
     return addTerm(filter, getJname(pi), val);
   }
 
@@ -313,6 +403,10 @@ public class ESQueryFilter implements CalintfDefs {
     return sb.toString();
   }
 
+  private FilterBuilder not(final FilterBuilder filter) {
+    return new NotFilterBuilder(filter);
+  }
+
   private FilterBuilder and(final FilterBuilder filter,
                             final FilterBuilder newFilter) {
     if (filter == null) {
@@ -330,6 +424,25 @@ public class ESQueryFilter implements CalintfDefs {
     afb.add(newFilter);
 
     return afb;
+  }
+
+  private FilterBuilder or(final FilterBuilder filter,
+                           final FilterBuilder newFilter) {
+    if (filter == null) {
+      return newFilter;
+    }
+
+    if (filter instanceof OrFilterBuilder) {
+      ((OrFilterBuilder)filter).add(newFilter);
+
+      return filter;
+    }
+
+    OrFilterBuilder ofb = new OrFilterBuilder(filter);
+
+    ofb.add(newFilter);
+
+    return ofb;
   }
 
   private static String getJname(PropertyInfoIndex pi) {
@@ -419,6 +532,9 @@ public class ESQueryFilter implements CalintfDefs {
 
     FilterBuilder makeFb() {
       FilterBuilder fb;
+      boolean hrefOrPath = fldName.equals(hrefJname) ||
+              fldName.equals(colpathJname);
+
       if (!isTerms) {
         fb = FilterBuilders.termFilter(fldName, value);
       } else {
@@ -426,7 +542,10 @@ public class ESQueryFilter implements CalintfDefs {
                                         (Iterable <?>)value).execution(exec);
       }
 
+      queryFiltered |= !hrefOrPath;
+
       if (!not) {
+        queryLimited |= hrefOrPath;
         return fb;
       }
 

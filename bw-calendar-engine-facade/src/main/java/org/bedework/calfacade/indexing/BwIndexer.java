@@ -135,10 +135,12 @@ public interface BwIndexer extends Serializable {
    *
    * @param  sres     result of previous search
    * @param pos - specify movement in result set
+   * @param desiredAccess  to the entities
    * @throws CalFacadeException
    */
   List<SearchResultEntry> getSearchResult(SearchResult sres,
-                                          Position pos) throws CalFacadeException;
+                                          Position pos,
+                                          int desiredAccess) throws CalFacadeException;
 
   /** Called to retrieve results after a search of the index. Updates
    * the SearchResult object
@@ -146,12 +148,14 @@ public interface BwIndexer extends Serializable {
    * @param  sres     result of previous search
    * @param offset from first record
    * @param num
+   * @param desiredAccess  to the entities
    * @return list of results - possibly empty - never null.
    * @throws CalFacadeException
    */
   List<SearchResultEntry> getSearchResult(SearchResult sres,
                                           int offset,
-                                          int num) throws CalFacadeException;
+                                          int num,
+                                          int desiredAccess) throws CalFacadeException;
   /** Called to unindex an entity
    *
    * @param   val     an event property

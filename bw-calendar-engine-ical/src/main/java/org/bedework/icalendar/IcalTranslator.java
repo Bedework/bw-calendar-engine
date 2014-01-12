@@ -457,7 +457,7 @@ public class IcalTranslator implements Serializable {
         xml.closeTag(XcalTags.parameters);
       }
 
-      PropertyInfoIndex pii = PropertyInfoIndex.valueOf(val.getName());
+      PropertyInfoIndex pii = PropertyInfoIndex.fromName(val.getName());
 
       QName ptype = XcalTags.textVal;
 

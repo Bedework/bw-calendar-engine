@@ -445,6 +445,8 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.ATTENDEE,
+                jname = "attendee",
+                adderName = "attendee",
                 alarmProperty = true)
   public void setAttendees(final Set<BwAttendee> val) {
     attendees = val;
@@ -584,6 +586,8 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.DESCRIPTION,
+                jname = "description",
+                adderName = "description",
                 alarmProperty = true)
   public void setDescriptions(final Set<BwString> val) {
     descriptions = val;
@@ -824,6 +828,8 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * @param val
    */
   @IcalProperty(pindex = PropertyInfoIndex.XPROP,
+                jname = "xprop",
+                adderName = "xproperty",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,

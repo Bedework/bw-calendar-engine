@@ -318,7 +318,7 @@ public class DocBuilder {
                 col.getLastmod().getTimestamp());
       makeField(PropertyInfoIndex.CREATED,
                 col.getCreated());
-      makeField(PropertyInfoIndex.VERSION, version);
+      //makeField(PropertyInfoIndex.VERSION, version);
 
       makeField(PropertyInfoIndex.NAME, col.getName());
       makeField(PropertyInfoIndex.HREF, col.getPath());
@@ -343,20 +343,20 @@ public class DocBuilder {
   }
 
   enum ItemKind {
-    kindMaster,
-    kindOverride,
-    kindEntity
+    master,
+    override,
+    entity
   }
 
   static String getItemType(final EventInfo ei,
                             final ItemKind kind) throws CalFacadeException {
     BwEvent ev = ei.getEvent();
 
-    if (kind == ItemKind.kindEntity) {
+    if (kind == ItemKind.entity) {
       return IcalDefs.fromEntityType(ev.getEntityType());
     }
 
-    if (kind == ItemKind.kindMaster) {
+    if (kind == ItemKind.master) {
       return BwIndexer.masterDocTypes[ev.getEntityType()];
     }
 
@@ -488,14 +488,15 @@ public class DocBuilder {
       makeBwDateTimes(PropertyInfoIndex.EXDATE,
                       ev.getExdates());
 
-      if (kind == ItemKind.kindEntity) {
+      if (kind == ItemKind.entity) {
         indexDate(PropertyInfoIndex.DTSTART, start);
         indexDate(PropertyInfoIndex.DTEND, end);
 
         indexDate(PropertyInfoIndex.INDEX_START, start);
         indexDate(PropertyInfoIndex.INDEX_END, end);
+        makeField(PropertyInfoIndex.INSTANCE, true);
       } else {
-        if (kind == ItemKind.kindOverride) {
+        if (kind == ItemKind.override) {
           makeField(PropertyInfoIndex.OVERRIDE, true);
         } else {
           makeField(PropertyInfoIndex.MASTER, true);
@@ -542,7 +543,9 @@ public class DocBuilder {
       return new DocInfo(builder,
                          BwIndexer.docTypeEvent,
                          version,
-                         makeKeyVal(getItemType(ei, kind), ei));
+                         makeKeyVal(getItemType(ei, kind),
+                                    ei.getEvent().getHref(),
+                                    recurid));
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
@@ -997,19 +1000,19 @@ public class DocBuilder {
 
   /** Called to make a key value for a record.
    *
-   * @param   type of The record
-   * @param   ei      The record
+   * @param   type of the record
+   * @param   href of the record
+   * @param   recurid of the record or null
    * @return  String   String which uniquely identifies the record
    * @throws IndexException
    */
   private String makeKeyVal(final String type,
-                            final EventInfo ei) throws IndexException {
-    BwEvent ev = ei.getEvent();
-
+                            final String href,
+                            final String recurid) throws IndexException {
     startEncoding();
     encodeString(type);
-    encodeString(ev.getHref());
-    encodeString(ev.getRecurrenceId());
+    encodeString(href);
+    encodeString(recurid);
 
     return getEncodedKey();
   }

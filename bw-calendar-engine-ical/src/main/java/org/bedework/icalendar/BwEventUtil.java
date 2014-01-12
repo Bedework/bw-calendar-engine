@@ -241,7 +241,7 @@ public class BwEventUtil extends IcalUtil {
       BwEvent ev = null;
 
       /* If we have a recurrence id see if we already have the master (we should
-       * get a master + all it's overrides).
+       * get a master + all its overrides).
        *
        * If so find the override and use the annnotation or if no override,
        * make one.
@@ -445,11 +445,7 @@ public class BwEventUtil extends IcalUtil {
         if (prop instanceof XProperty) {
           pi = PropertyInfoIndex.XPROP;
         } else {
-          try {
-            pi = PropertyInfoIndex.valueOf(prop.getName());
-          } catch (Throwable t) {
-            pi = null;
-          }
+          pi = PropertyInfoIndex.fromName(prop.getName());
         }
 
         if (pi == null) {

@@ -18,9 +18,7 @@
 */
 package org.bedework.calcore.indexing;
 
-import org.bedework.access.Ace;
 import org.bedework.access.Acl;
-import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.indexing.DocBuilder.ItemKind;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
@@ -29,7 +27,9 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProperty;
+import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.RecurringRetrievalMode;
@@ -45,9 +45,7 @@ import org.bedework.calfacade.indexing.SearchResultEntry;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.RecurPeriods;
-import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.indexing.Index;
 import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
@@ -103,12 +101,14 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -182,8 +182,7 @@ public class BwIndexEsImpl implements BwIndexer {
   private IndexProperties idxpars;
   private BasicSystemProperties basicSysprops;
 
-  private EntityBuilder entityBuilder;
-
+  /*
   private static Set<String> eventDoctypes;
 
   static {
@@ -200,7 +199,7 @@ public class BwIndexEsImpl implements BwIndexer {
         eventDoctypes.add(s);
       }
     }
-  }
+  }*/
 
   /** Constructor
    *
@@ -296,6 +295,10 @@ public class BwIndexEsImpl implements BwIndexer {
     private int pageStart;
     private int pageSize;
 
+    private boolean requiresSecondaryFetch;
+
+    private boolean canPage;
+
     /* For paged queries - we need these values */
     private String start;
     private String end;
@@ -371,14 +374,18 @@ public class BwIndexEsImpl implements BwIndexer {
       res.curQuery = QueryBuilders.queryString(query);
     }
 
-    ESQueryFilter ef = getFilters();
+    ESQueryFilter ef = getFilters(recurRetrieval);
 
     res.curFilter = ef.buildFilter(filter);
 
     res.curFilter = ef.addDateRangeFilter(res.curFilter,
                                           start,
-                                          end,
-                                          recurRetrieval);
+                                          end);
+
+    res.curFilter = ef.addLimits(res.curFilter);
+
+    res.requiresSecondaryFetch = ef.requiresSecondaryFetch();
+    res.canPage = ef.canPage();
 
     res.curSort = sort;
 
@@ -416,10 +423,12 @@ public class BwIndexEsImpl implements BwIndexer {
     SearchResponse resp = srb.execute().actionGet();
 
     if (resp.status() != RestStatus.OK) {
-      if (debug) {
-        debug("Search: returned status " + resp.status() +
-                " found: " + resp.getHits().getTotalHits());
-      }
+      //TODO
+    }
+
+    if (debug) {
+      debug("Search: returned status " + resp.status() +
+                    " found: " + resp.getHits().getTotalHits());
     }
 
     res.setFound(resp.getHits().getTotalHits());
@@ -429,7 +438,8 @@ public class BwIndexEsImpl implements BwIndexer {
 
   @Override
   public List<SearchResultEntry> getSearchResult(final SearchResult sres,
-                                                 final Position pos)
+                                                 final Position pos,
+                                                 final int desiredAccess)
           throws CalFacadeException {
     EsSearchResult res = (EsSearchResult)sres;
 
@@ -447,13 +457,15 @@ public class BwIndexEsImpl implements BwIndexer {
 
     res.lastPageStart = offset;
 
-    return getSearchResult(sres, offset, sres.getPageSize());
+    return getSearchResult(sres, offset, sres.getPageSize(),
+                           desiredAccess);
   }
 
   @Override
   public List<SearchResultEntry> getSearchResult(final SearchResult sres,
                                                  final int offset,
-                                                 final int num)
+                                                 final int num,
+                                                 final int desiredAccess)
           throws CalFacadeException {
     EsSearchResult res = (EsSearchResult)sres;
 
@@ -493,6 +505,11 @@ public class BwIndexEsImpl implements BwIndexer {
       }
     }
 
+    if (res.requiresSecondaryFetch) {
+      // Limit to href then fetch those
+      srb.addField(ESQueryFilter.hrefJname);
+    }
+
     SearchResponse resp = srb.execute().actionGet();
 
     if (resp.status() != RestStatus.OK) {
@@ -512,6 +529,17 @@ public class BwIndexEsImpl implements BwIndexer {
     if (hits.hits().length == 0) {
       return entities;
     }
+
+    if (res.requiresSecondaryFetch) {
+      hits = multiFetch(hits);
+
+      if (hits == null) {
+        return entities;
+      }
+    }
+
+    Map<String, Collection<BwEventAnnotation>> overrides = new HashMap<>();
+    Collection<EventInfo> masters = new TreeSet<>();
 
     for (SearchHit hit : hits) {
       res.pageStart++;
@@ -538,19 +566,36 @@ public class BwIndexEsImpl implements BwIndexer {
         entity = eb.makeContact();
       } else if (dtype.equals(docTypeLocation)) {
         entity = eb.makeLocation();
-      } else if (eventDoctypes.contains(dtype)) {
+      } else if (dtype.equals(docTypeEvent)) {
         entity = eb.makeEvent();
         EventInfo ei = (EventInfo)entity;
         BwEvent ev = ei.getEvent();
 
         Acl.CurrentAccess ca = res.accessCheck.checkAccess(ev,
-                                                         PrivilegeDefs.privAny, true);
+                                                           desiredAccess,
+                                                           true);
 
         if ((ca == null) || !ca.getAccessAllowed()) {
           continue;
         }
 
         ei.setCurrentAccess(ca);
+
+        if (ev instanceof BwEventAnnotation) {
+          // Treat as override
+          Collection<BwEventAnnotation> ov = overrides.get(ev.getHref());
+
+          if (ov == null) {
+            ov = new TreeSet<>();
+
+            overrides.put(ev.getHref(), ov);
+          }
+
+          ov.add((BwEventAnnotation)ev);
+          continue;
+        }
+
+        masters.add(ei);
       }
 
       entities.add(new SearchResultEntry(entity,
@@ -558,7 +603,82 @@ public class BwIndexEsImpl implements BwIndexer {
                                          hit.getScore()));
     }
 
+    // Finish off the events
+
+    for (EventInfo ei: masters) {
+      BwEvent ev = ei.getEvent();
+
+      if (ev.getRecurring()) {
+        Collection<BwEventAnnotation> ov = overrides.get(ev.getHref());
+
+        if (ov != null) {
+          for (BwEventAnnotation ann: ov) {
+            BwEvent proxy = new BwEventProxy(ann);
+            ann.setTarget(ev);
+            ann.setMaster(ev);
+
+            EventInfo oei = new EventInfo(proxy);
+
+            ei.addOverride(oei);
+          }
+        }
+      }
+    }
+
     return entities;
+  }
+
+  private SearchHits multiFetch(SearchHits hits) throws CalFacadeException {
+    // Make an ored filter from keys
+
+    List<String> hrefs = new ArrayList<>();
+
+    for (SearchHit hit : hits) {
+      String dtype = hit.getType();
+
+      if (dtype == null) {
+        throw new CalFacadeException("org.bedework.index.noitemtype");
+      }
+
+      String kval = hit.getId();
+
+      if (kval == null) {
+        throw new CalFacadeException("org.bedework.index.noitemkey");
+      }
+
+      SearchHitField hrefField = hit.field(ESQueryFilter.hrefJname);
+
+
+      hrefs.add((String)hrefField.getValue());
+    }
+
+    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+
+    srb.setSearchType(SearchType.QUERY_THEN_FETCH)
+            .setFilter(getFilters(null).multiHrefFilter(hrefs));
+    SearchResponse resp = srb.execute().actionGet();
+
+    if (resp.status() != RestStatus.OK) {
+      if (debug) {
+        debug("Search returned status " + resp.status());
+      }
+
+      return null;
+    }
+
+    SearchHits hits2 = resp.getHits();
+
+    if ((hits2.getHits() == null) ||
+            (hits2.getHits().length == 0)) {
+      return null;
+    }
+
+    //Break condition: No hits are returned
+    if (hits2.hits().length == 0) {
+      return null;
+    }
+
+    return hits2;
   }
 
   @Override
@@ -893,7 +1013,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
     SearchResponse scrollResp = srb.setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
-            .setFilter(getFilters().principalFilter(null))
+            .setFilter(getFilters(null).principalFilter(null))
             .setSize(ourCount).execute().actionGet(); //ourCount hits per shard will be returned for each scroll
 
     if (scrollResp.status() != RestStatus.OK) {
@@ -941,8 +1061,8 @@ public class BwIndexEsImpl implements BwIndexer {
                                     final String val,
                                     final PropertyInfoIndex... index)
           throws CalFacadeException {
-    if ((index.length == 0) &&
-            (index[0] == PropertyInfoIndex.UID)) {
+    if ((index.length == 1) &&
+            (index[0] == PropertyInfoIndex.HREF)) {
       GetRequestBuilder grb = getClient().prepareGet(targetIndex,
                                                      docType,
                                                      val);
@@ -961,7 +1081,7 @@ public class BwIndexEsImpl implements BwIndexer {
     srb.setTypes(docType);
 
     SearchResponse response = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setFilter(getFilters().singleEntityFilter(val, index))
+            .setFilter(getFilters(null).singleEntityFilter(val, index))
             .setFrom(0).setSize(60).setExplain(true)
             .execute()
             .actionGet();
@@ -1032,16 +1152,16 @@ public class BwIndexEsImpl implements BwIndexer {
   private IndexResponse indexEvent(final EventInfo ei) throws CalFacadeException {
     try {
 
-      /* If it's not recurring or an override index it */
+      /* If it's not recurring or a stand-alone instance index it */
 
       BwEvent ev = ei.getEvent();
 
       if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
         return indexEvent(ei,
-                          ItemKind.kindEntity,
+                          ItemKind.entity,
                           ev.getDtstart(),
                           ev.getDtend(),
-                          ev.getRecurrenceId(),
+                          null, //ev.getRecurrenceId(),
                           null);
       }
 
@@ -1107,7 +1227,7 @@ public class BwIndexEsImpl implements BwIndexer {
           BwDateTime rend = rstart.addDuration(BwDuration.makeDuration(ov.getDuration()));
 
           iresp = indexEvent(oei,
-                             ItemKind.kindOverride,
+                             ItemKind.override,
                              rstart,
                              rend,
                              ov.getRecurrenceId(),
@@ -1142,7 +1262,7 @@ public class BwIndexEsImpl implements BwIndexer {
         BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
         iresp = indexEvent(ei,
-                           ItemKind.kindEntity,
+                           ItemKind.entity,
                            rstart,
                            rend,
                            recurrenceId,
@@ -1164,7 +1284,7 @@ public class BwIndexEsImpl implements BwIndexer {
       BwDateTime end = BwDateTime.makeBwDateTime(dateOnly,
                                                  dl.maxEnd, stzid);
       iresp = indexEvent(ei,
-                         ItemKind.kindMaster,
+                         ItemKind.master,
                          start,
                          end,
                          null,
@@ -1184,7 +1304,7 @@ public class BwIndexEsImpl implements BwIndexer {
     DeleteByQueryRequestBuilder delQreq = getClient().prepareDeleteByQuery(
             targetIndex).setTypes(docTypeEvent);
 
-    ESQueryFilter esq= getFilters();
+    ESQueryFilter esq= getFilters(null);
 
     /*
     FilterBuilder fb = esq.addTerm(null, PropertyInfoIndex.COLLECTION,
@@ -1409,12 +1529,14 @@ public class BwIndexEsImpl implements BwIndexer {
     return getClient().admin().cluster();
   }
 
-  /** For use by th ecore classes
+  /** Return a new filter builder
    *
+   * @param recurRetrieval  - value modifies search
    * @return a filter builder
    */
-  public ESQueryFilter getFilters() {
-    return new ESQueryFilter(currentMode, principal, superUser);
+  public ESQueryFilter getFilters(final RecurringRetrievalMode recurRetrieval) {
+    return new ESQueryFilter(currentMode, principal, superUser,
+                             recurRetrieval);
   }
 
   private String newIndexSuffix() {

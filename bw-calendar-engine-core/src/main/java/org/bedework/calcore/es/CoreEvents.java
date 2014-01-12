@@ -527,7 +527,8 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
             getAccessChecker(),
             recurRetrieval);
 
-    List<SearchResultEntry> sres = sr.getIndexer().getSearchResult(sr, 0, -1);
+    List<SearchResultEntry> sres =
+            sr.getIndexer().getSearchResult(sr, 0, -1, desiredAccess);
     TreeSet<CoreEventInfo> ceis = new TreeSet<>();
 
     for (SearchResultEntry sre: sres) {
@@ -537,11 +538,11 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
         continue;
       }
 
-      BwEvent ev = ((EventInfo)o).getEvent();
+      EventInfo ei = (EventInfo)o;
+      BwEvent ev = ei.getEvent();
       restoreCategories(ev);
 
-      CoreEventInfo cei = postGetEvent(ev, desiredAccess,
-                                       returnResultAlways, null);
+      CoreEventInfo cei = postGetEvent(ev, null, ei.getCurrentAccess());
 
       if (cei == null) {
         continue;

@@ -899,7 +899,7 @@ public class BwUpdates {
     private String userHref;
 
     private List<ParameterUpdater.UpdateInfo> paramUpdates =
-        new ArrayList<ParameterUpdater.UpdateInfo>();
+        new ArrayList<>();
 
     PropertyUpdateInfo(final BasePropertyType prop,
                        final QName pname,
@@ -916,9 +916,8 @@ public class BwUpdates {
       this.state = state;
       this.userHref = userHref;
 
-      try {
-        pi = PropertyInfoIndex.valueOf(pname.getLocalPart().toUpperCase());
-      } catch (Throwable t) {
+      pi = PropertyInfoIndex.fromName(pname.getLocalPart());
+      if (pi == null) {
         throw new RuntimeException("unknown property " + pname);
       }
 

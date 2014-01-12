@@ -26,6 +26,7 @@ import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwGeo;
 import org.bedework.calfacade.BwLocation;
@@ -154,7 +155,19 @@ public class EntityBuilder  {
   }
 
   EventInfo makeEvent() throws CalFacadeException {
-    BwEvent ev = new BwEventObj();
+    boolean override = getBool(PropertyInfoIndex.OVERRIDE);
+
+    BwEvent ev;
+
+    if (override) {
+      ev = new BwEventAnnotation();
+
+      BwEventAnnotation ann = (BwEventAnnotation)ev;
+      ann.setOverride(true);
+    } else {
+      ev= new BwEventObj();
+    }
+
     EventInfo ei = new  EventInfo(ev);
 
     /*

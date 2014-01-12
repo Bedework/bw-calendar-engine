@@ -1139,6 +1139,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val    String event's transparency
    */
   @IcalProperty(pindex = PropertyInfoIndex.TRANSP,
+                jname = "transp",
                 eventProperty = true)
   public void setTransparency(final String val) {
     transparency = val;
@@ -1334,6 +1335,8 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @IcalProperties({
     @IcalProperty(pindex = PropertyInfoIndex.XPROP,
+                  jname = "xprop",
+                  adderName = "xproperty",
                   eventProperty = true,
                   todoProperty = true,
                   journalProperty = true,
@@ -1381,6 +1384,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                   journalProperty = true,
                   freeBusyProperty = true,
                   timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.INSTANCE,
+                  jname = "instance",
+                  annotationRequired = true,
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true),
     @IcalProperty(pindex = PropertyInfoIndex.METHOD,
                   jname = "method",
                   eventProperty = true,
@@ -1810,6 +1820,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.RRULE,
+                jname = "rrule",
                 adderName = "rrule",
                 reschedule = true,
                 eventProperty = true,
@@ -1833,6 +1844,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.EXRULE,
+                jname = "exrule",
                 adderName = "exrule",
                 reschedule = true,
                 eventProperty = true,
@@ -1855,6 +1867,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.RDATE,
+                jname = "rdate",
                 adderName = "rdate",
                 reschedule = true,
                 eventProperty = true,
@@ -1878,6 +1891,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.EXDATE,
+                jname = "exdate",
                 adderName = "exdate",
                 reschedule = true,
                 eventProperty = true,
@@ -2375,6 +2389,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.ATTENDEE,
+                jname = "attendee",
                 adderName = "attendee",
                 eventProperty = true,
                 todoProperty = true,
@@ -2541,6 +2556,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.RECIPIENT,
+                jname = "recipient",
                 adderName = "recipient",
                 eventProperty = true,
                 todoProperty = true,
@@ -2991,6 +3007,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.DESCRIPTION,
+                jname = "description",
                 adderName = "description",
                 eventProperty = true,
                 todoProperty = true,
@@ -3122,11 +3139,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *               ResourcedEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.ResourcedEntity#setResources(java.util.Set)
-   */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.RESOURCES,
+                adderName = "resource",
                 eventProperty = true,
                 todoProperty = true)
   public void setResources(final Set<BwString> val) {
@@ -3205,6 +3220,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.SUMMARY,
+                jname = "summary",
                 adderName = "summary",
                 eventProperty = true,
                 todoProperty = true,

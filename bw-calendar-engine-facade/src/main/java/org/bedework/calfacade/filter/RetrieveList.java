@@ -54,9 +54,8 @@ public class RetrieveList {
       if (pname.equals(etagName)) {
         pi = PropertyInfoIndex.ETAG;
       } else {
-        try {
-          pi = PropertyInfoIndex.valueOf(pname);
-        } catch (Throwable t) {
+        pi = PropertyInfoIndex.fromName(pname);
+        if (pi == null) {
           throw new CalFacadeException(CalFacadeException.unknownProperty,
                                        pname);
         }

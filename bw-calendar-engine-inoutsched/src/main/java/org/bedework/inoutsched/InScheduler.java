@@ -156,6 +156,8 @@ public class InScheduler extends AbstractScheduler {
   }
 
   private ProcessMessageResult processEntityQueuedEvent(final EntityQueuedEvent msg) {
+    /* These are events that are placed in the inbox.
+     */
     CalSvcI svci = null;
 
     try {

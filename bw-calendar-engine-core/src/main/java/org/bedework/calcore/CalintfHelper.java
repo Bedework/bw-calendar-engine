@@ -21,8 +21,6 @@ package org.bedework.calcore;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.hibernate.Filters;
-import org.bedework.calcore.indexing.BwIndexEsImpl;
-import org.bedework.calcore.indexing.ESQueryFilter;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calfacade.BwCalendar;
@@ -301,9 +299,10 @@ public abstract class CalintfHelper
     return ac;
   }
 
+  /*
   protected ESQueryFilter getFilters() throws CalFacadeException {
     return ((BwIndexEsImpl)getIndexer()).getFilters();
-  }
+  }*/
 
   protected void indexIfTest(final EventInfo ei) throws CalFacadeException {
     if (!cb.getSyspars().getTestMode()) {
@@ -494,6 +493,14 @@ public abstract class CalintfHelper
       return null;
     }
 
+    return postGetEvent(ev, f, ca);
+  }
+
+  /* Post processing of event access has been checked
+   */
+  protected CoreEventInfo postGetEvent(final BwEvent ev,
+                                       final Filters f,
+                                       final Acl.CurrentAccess ca) throws CalFacadeException {
     /* XXX-ALARM
     if (currentMode == userMode) {
       ev.setAlarms(getAlarms(ev, user));

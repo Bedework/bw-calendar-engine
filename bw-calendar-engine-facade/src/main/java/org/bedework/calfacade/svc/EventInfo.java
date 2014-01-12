@@ -224,7 +224,7 @@ public class EventInfo
       this.overrides.add(new EventOverride(oei));
     }
 
-    retrievedOverrides = new TreeSet<EventOverride>(this.overrides);
+    retrievedOverrides = new TreeSet<>(this.overrides);
   }
 
   /**
@@ -502,7 +502,7 @@ public class EventInfo
       return null;
     }
 
-    Set<EventInfo> eis = new TreeSet<EventInfo>();
+    Set<EventInfo> eis = new TreeSet<>();
 
     for (EventOverride eo: overrides) {
       eis.add(eo.getEventInfo());
@@ -532,7 +532,7 @@ public class EventInfo
     }
 
     if (overrides == null) {
-      overrides = new TreeSet<EventOverride>();
+      overrides = new TreeSet<>();
     }
 
     EventOverride eo = new EventOverride(val);
@@ -563,7 +563,7 @@ public class EventInfo
       return null;
     }
 
-    TreeSet<BwEventProxy> proxies = new TreeSet<BwEventProxy>();
+    TreeSet<BwEventProxy> proxies = new TreeSet<>();
 
     for (EventInfo ei: getOverrides()) {
       BwEventProxy proxy = (BwEventProxy)ei.getEvent();
@@ -580,7 +580,7 @@ public class EventInfo
    */
   public Collection<BwEventProxy> getDeletedOverrideProxies(final String userHref)
       throws CalFacadeException {
-    TreeSet<BwEventProxy> proxies = new TreeSet<BwEventProxy>();
+    TreeSet<BwEventProxy> proxies = new TreeSet<>();
 
     if ((retrievedOverrides == null) || instanceOnly) {
       return proxies;
@@ -619,7 +619,7 @@ public class EventInfo
       }
 
       /* Remove any alarm(s) */
-      List<BwAlarm> toRemove = new ArrayList<BwAlarm>();
+      List<BwAlarm> toRemove = new ArrayList<>();
       for (BwAlarm a: proxy.getAlarms()) {
         if (a.getOwnerHref().equals(userHref)) {
           toRemove.add(a);

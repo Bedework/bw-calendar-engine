@@ -96,11 +96,9 @@ public class JsonProperty implements Serializable {
 
   private static String getType(final Property prop) {
     String nm = prop.getName().toUpperCase();
-    PropertyInfoIndex pii;
+    PropertyInfoIndex pii = PropertyInfoIndex.fromName(nm);
 
-    try {
-      pii = PropertyInfoIndex.valueOf(nm);
-    } catch (Throwable t) {
+    if (pii == null) {
       return "text";
     }
 
