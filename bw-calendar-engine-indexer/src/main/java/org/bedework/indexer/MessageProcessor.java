@@ -19,7 +19,6 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
@@ -31,7 +30,6 @@ import org.bedework.sysevents.events.CollectionDeletedEvent;
 import org.bedework.sysevents.events.EntityDeletedEvent;
 import org.bedework.sysevents.events.EntityUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
-import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
 
@@ -215,7 +213,7 @@ public class MessageProcessor extends CalSys {
         getSvci();
 
         add(getEvent(getParentPath(ede.getHref()),
-                     getName(ede.getHref())), false);
+                     getName(ede.getHref())) /*, false */);
       } finally {
         close();
       }
@@ -232,7 +230,7 @@ public class MessageProcessor extends CalSys {
       getSvci();
 
       add(getEvent(getParentPath(ece.getHref()),
-                   getName(ece.getHref())), false);
+                   getName(ece.getHref())) /*, false */);
     } finally {
       close();
     }
@@ -248,6 +246,7 @@ public class MessageProcessor extends CalSys {
     getIndexer(val).indexEntity(val);
   }
 
+  /*
   private void add(final EventInfo val,
                    final boolean firstRecurrence) throws CalFacadeException {
     boolean first = true;
@@ -267,6 +266,10 @@ public class MessageProcessor extends CalSys {
       getIndexer(val).indexEntity(ei);
     }
 
+    getIndexer(val).indexEntity(val);
+  }
+  */
+  private void add(final EventInfo val) throws CalFacadeException {
     getIndexer(val).indexEntity(val);
   }
 
