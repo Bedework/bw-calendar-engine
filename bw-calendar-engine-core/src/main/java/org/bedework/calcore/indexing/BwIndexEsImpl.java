@@ -1158,7 +1158,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
       if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
         return indexEvent(ei,
-                          ItemKind.entity,
+                          ItemKind.master,
                           ev.getDtstart(),
                           ev.getDtend(),
                           null, //ev.getRecurrenceId(),
