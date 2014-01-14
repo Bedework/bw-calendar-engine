@@ -1312,7 +1312,7 @@ public class BwIndexEsImpl implements BwIndexer {
     fb = esq.addTerm(fb, PropertyInfoIndex.UID, ev.getUid());
     */
 
-    FilterBuilder fb = esq.addTerm(null, PropertyInfoIndex.HREF,
+    FilterBuilder fb = esq.addTerm(PropertyInfoIndex.HREF,
                                    ev.getHref());
 
     delQreq.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(),

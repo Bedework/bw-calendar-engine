@@ -39,6 +39,7 @@ import org.bedework.calfacade.filter.BwHrefFilter;
 import org.bedework.calfacade.filter.BwViewFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
@@ -57,8 +58,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import static edu.rpi.cmt.calendar.PropertyIndex.PropertyInfoIndex;
 
 /** Build filters for ES searching
  *
@@ -142,8 +141,7 @@ public class ESQueryFilter implements CalintfDefs {
    */
   public FilterBuilder singleEntityFilter(final String val,
                                           final PropertyInfoIndex... index) throws CalFacadeException {
-    FilterBuilder fb = principalFilter(addTerm(null,
-                                               makePropertyRef(index),
+    FilterBuilder fb = principalFilter(addTerm(makePropertyRef(index),
                                                val));
 
     return fb;
@@ -163,7 +161,7 @@ public class ESQueryFilter implements CalintfDefs {
     FilterBuilder fb = null;
 
     for (String href: hrefs) {
-      fb = or(fb, addTerm(null, hrefJname, href));
+      fb = or(fb, addTerm(hrefJname, href));
     }
 
     return fb;
@@ -176,16 +174,28 @@ public class ESQueryFilter implements CalintfDefs {
       fb = principalFilter(fb);
     }
 
+    /* If the search is for expanded events we want instances or
+       non-recurring masters only.
+
+       For non-expanded, if it's filtered we don't limit -
+       the filter needs to check the instances and maybe the overrides.
+       However, we will return only the hrefs and do a secondary
+       retrieval of the events.
+
+       For non-expanded and non-filtered we want the master and
+       overrides only.
+     */
+
     if (recurRetrieval.mode == Rmode.expanded) {
       // Limit events to instances only //
-      FilterBuilder limit = not(addTerm(null, "_type",
+      FilterBuilder limit = not(addTerm("_type",
                                         BwIndexer.docTypeEvent));
 
-      limit = or(limit, addTerm(null, PropertyInfoIndex.MASTER,
-                                "false"));
+      limit = or(limit, addTerm(PropertyInfoIndex.INSTANCE, "true"));
 
-      limit = or(limit, addTerm(null, PropertyInfoIndex.OVERRIDE,
-                                "false"));
+      limit = or(limit,
+                 and(addTerm(PropertyInfoIndex.MASTER, "true"),
+                     addTerm(PropertyInfoIndex.RECURRING, "false")));
 
       return and(fb, limit);
     }
@@ -198,14 +208,12 @@ public class ESQueryFilter implements CalintfDefs {
       return fb;
     }
 
-    FilterBuilder limit = not(addTerm(null, "_type",
+    FilterBuilder limit = not(addTerm("_type",
                                       BwIndexer.docTypeEvent));
 
-    limit = or(limit, addTerm(null, PropertyInfoIndex.MASTER,
-                              "true"));
+    limit = or(limit, addTerm(PropertyInfoIndex.MASTER, "true"));
 
-    limit = or(limit, addTerm(null, PropertyInfoIndex.OVERRIDE,
-                              "true"));
+    limit = or(limit, addTerm(PropertyInfoIndex.OVERRIDE, "true"));
 
     queryFiltered = false; // Reset it.
 
@@ -335,34 +343,30 @@ public class ESQueryFilter implements CalintfDefs {
 
   /**
    *
-   * @param filter - null or filter to AND with new term
    * @param pi
    * @param val
    * @return TermFilterBuilder or AndFilterBuilder
    * @throws CalFacadeException
    */
-  public FilterBuilder addTerm(final FilterBuilder filter,
-                               final PropertyInfoIndex pi,
+  public FilterBuilder addTerm(final PropertyInfoIndex pi,
                                final String val) throws CalFacadeException {
     if ((pi != PropertyInfoIndex.HREF) &&
             (pi != PropertyInfoIndex.COLLECTION)) {
       queryFiltered = true;
     }
-    return addTerm(filter, getJname(pi), val);
+    return addTerm(getJname(pi), val);
   }
 
   /**
    *
-   * @param filter - null or filter to AND with new term
    * @param name
    * @param val
    * @return TermFilterBuilder or AndFilterBuilder
    * @throws CalFacadeException
    */
-  public FilterBuilder addTerm(final FilterBuilder filter,
-                               final String name,
+  public FilterBuilder addTerm(final String name,
                                final String val) throws CalFacadeException {
-    return and(filter, FilterBuilders.termFilter(name, val));
+    return FilterBuilders.termFilter(name, val);
   }
 
   /**

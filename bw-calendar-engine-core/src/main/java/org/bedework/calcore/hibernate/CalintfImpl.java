@@ -20,6 +20,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calcore.AccessUtil;
 import org.bedework.calcore.CalintfBase;
+import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CalintfInfo;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventPropertiesI;
@@ -335,7 +336,8 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
     @Override
     public BwIndexer getIndexer() throws CalFacadeException {
-      if (intf.getPrincipal().getUnauthenticated()) {
+      if (intf.currentMode == CalintfDefs.guestMode ||
+              (intf.currentMode == CalintfDefs.publicAdminMode)) {
         return intf.getPublicIndexer();
       }
 

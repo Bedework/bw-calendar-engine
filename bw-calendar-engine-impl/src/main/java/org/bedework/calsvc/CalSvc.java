@@ -738,7 +738,7 @@ public class CalSvc extends CalSvcI {
 
   public BwIndexer getIndexer() throws CalFacadeException {
     return getIndexer(getPars().getPublicAdmin() ||
-            getPrincipal().getUnauthenticated());
+                              getPars().isGuest());
   }
 
   @Override
@@ -1330,7 +1330,7 @@ public class CalSvc extends CalSvcI {
           }
         } else {
           // If we have a runAsUser it's a public client. Pretend we authenticated
-          currentPrincipal.setUnauthenticated(runAsUser == null);
+// WHY?          currentPrincipal.setUnauthenticated(runAsUser == null);
         }
 
         if (pars.getPublicAdmin() || pars.isGuest()) {
