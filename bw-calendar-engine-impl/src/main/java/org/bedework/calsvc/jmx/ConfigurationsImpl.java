@@ -32,6 +32,7 @@ import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.indexer.BwIndexCtlMBean;
 import org.bedework.sysevents.listeners.BwSysevLogger;
 import org.bedework.sysevents.monitor.BwSysMonitor;
+import org.bedework.util.config.ConfigBase;
 import org.bedework.util.config.ConfigurationStore;
 import org.bedework.util.http.service.HttpConfig;
 import org.bedework.util.http.service.HttpOut;

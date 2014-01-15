@@ -18,9 +18,12 @@
 */
 package org.bedework.calfacade;
 
+import org.bedework.access.Ace;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.FixNamesEntity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.util.misc.Uid;
+import org.bedework.util.misc.Util;
 
 /** Base for those classes that can be a property of an event and are all
  * treated in the same manner, being Category, Location and Sponsor.
@@ -96,13 +99,13 @@ public abstract class BwEventProperty<T> extends
 
     if (getPublick()) {
       setColPath(Util.buildPath(true,
-                            "/public",
-                            "/",
-                            props.getBedeworkResourceDirectory(),
-                            "/",
-                            dir,
-                            "/",
-                            namePart));
+                                "/public",
+                                "/",
+                                props.getBedeworkResourceDirectory(),
+                                "/",
+                                dir,
+                                "/",
+                                namePart));
       return;
     }
 

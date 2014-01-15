@@ -209,8 +209,8 @@ class Events extends CalSvcDb implements EventsI {
       } else {
         setupSharableEntity(event, getPrincipal().getPrincipalRef());
 
-        if (ei.getNumAvailables() > 0) {
-          for (EventInfo aei: ei.getAvailable()) {
+        if (ei.getNumContainedItems() > 0) {
+          for (EventInfo aei: ei.getContainedItems()) {
             BwEvent av = aei.getEvent();
             av.setParent(event);
 
@@ -301,7 +301,7 @@ class Events extends CalSvcDb implements EventsI {
                                                 scheduling,
                                                 rollbackOnError);
 
-      if (ei.getNumContainedItems() > 0)) {
+      if (ei.getNumContainedItems() > 0) {
         for (EventInfo oei: ei.getContainedItems()) {
           oei.getEvent().setName(event.getName());
           UpdateEventResult auer = getCal().addEvent(oei,

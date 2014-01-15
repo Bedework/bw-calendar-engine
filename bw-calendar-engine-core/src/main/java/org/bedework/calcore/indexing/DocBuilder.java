@@ -18,7 +18,6 @@
 */
 package org.bedework.calcore.indexing;
 
-import org.bedework.access.Ace;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
@@ -48,6 +47,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.indexing.IndexException;
+import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.parameter.Related;
