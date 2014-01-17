@@ -2598,7 +2598,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   public void addRecipient(final String val) {
     Set<String> rs = getRecipients();
     if (rs == null) {
-      rs = new TreeSet<String>();
+      rs = new TreeSet<>();
       setRecipients(rs);
     }
 
