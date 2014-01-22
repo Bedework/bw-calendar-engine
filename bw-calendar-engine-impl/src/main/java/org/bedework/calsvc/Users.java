@@ -213,14 +213,17 @@ class Users extends CalSvcDb implements UsersI {
     getSvc().initPrincipal(user);
     initPrincipal(user, getSvc());
 
-    getSvc().getCal().getSpecialCalendar(user, BwCalendar.calTypeInbox,
-                                         true, PrivilegeDefs.privAny);
+    getCal().getSpecialCalendar(user, BwCalendar.calTypeInbox,
+                                true, PrivilegeDefs.privAny);
 
-    getSvc().getCal().getSpecialCalendar(user, BwCalendar.calTypeOutbox,
-                                         true, PrivilegeDefs.privAny);
+    getCal().getSpecialCalendar(user, BwCalendar.calTypePendingInbox,
+                                true, PrivilegeDefs.privAny);
 
-    getSvc().getCal().getSpecialCalendar(user, BwCalendar.calTypeNotifications,
-                                         true, PrivilegeDefs.privAny);
+    getCal().getSpecialCalendar(user, BwCalendar.calTypeOutbox,
+                                true, PrivilegeDefs.privAny);
+
+    getCal().getSpecialCalendar(user, BwCalendar.calTypeNotifications,
+                                true, PrivilegeDefs.privAny);
 
     try {
       getSvc().postNotification(SysEvent.makePrincipalEvent(SysEvent.SysCode.NEW_USER,
@@ -259,7 +262,7 @@ class Users extends CalSvcDb implements UsersI {
 
     BwCalendar home = getSvc().getCalendarsHandler().get(userRoot);
     if (home != null) {
-      getSvc().getCalendarsHandler().delete(home, true);
+      getSvc().getCalendarsHandler().delete(home, true, false);
     }
 
     /* Remove preferences */

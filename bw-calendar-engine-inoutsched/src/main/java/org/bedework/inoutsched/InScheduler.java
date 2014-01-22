@@ -228,9 +228,9 @@ public class InScheduler extends AbstractScheduler {
       }
 
       if (!pr.noInboxChange) {
-        proc.updateInbox(ei, ev.getOwnerHref(),
-                         pr.attendeeAccepting,
-                         pr.removeInboxEntry);
+        proc.pendingToInbox(ei, ev.getOwnerHref(),
+                            pr.attendeeAccepting,
+                            pr.removeInboxEntry);
       }
 
       return ProcessMessageResult.PROCESSED;
@@ -262,7 +262,8 @@ public class InScheduler extends AbstractScheduler {
 
   private EventInfo getInboxEvent(final CalSvcI svci,
                                   final String eventName) throws CalFacadeException {
-    BwCalendar inbox = svci.getCalendarsHandler().getSpecial(BwCalendar.calTypeInbox, false);
+    BwCalendar inbox = svci.getCalendarsHandler().
+            getSpecial(BwCalendar.calTypePendingInbox, false);
     if (inbox == null) {
       return null;
     }

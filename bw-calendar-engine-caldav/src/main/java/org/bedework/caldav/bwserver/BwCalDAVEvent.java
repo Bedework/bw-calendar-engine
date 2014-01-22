@@ -197,7 +197,11 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
 
   @Override
   public void setRecipients(final Set<String> val) throws WebdavException {
-    getEv().setRecipients(val);
+    if (getEv().getRecipients() == null) {
+      getEv().setRecipients(val);
+    } else {
+      Util.adjustCollection(val, getEv().getRecipients());
+    }
   }
 
   @Override
@@ -212,7 +216,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
 
   @Override
   public Set<String> getAttendeeUris() throws WebdavException {
-    Set<String> uris = new TreeSet<String>();
+    Set<String> uris = new TreeSet<>();
 
     for (BwAttendee att: getEv().getAttendees()) {
       uris.add(att.getAttendeeUri());

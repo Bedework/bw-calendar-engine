@@ -70,8 +70,8 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
                               final String fromAttUri,
                               final boolean fromOrganizer) throws CalFacadeException {
     /* Recipients external to the system. */
-    BwEvent ev = ei.getEvent();
-    boolean freeBusyRequest = ev.getEntityType() ==
+    final BwEvent ev = ei.getEvent();
+    final boolean freeBusyRequest = ev.getEntityType() ==
       IcalDefs.entityTypeFreeAndBusy;
 
     ev.updateDtstamp();
@@ -81,15 +81,9 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     } else if (ev.getRecipients() == null) {
       return;
     } else {
-      for (String recip: ev.getRecipients()) {
+      for (final String recip: ev.getRecipients()) {
         getRecipientInbox(ei, recip, fromAttUri, sr, freeBusyRequest);
       }
-    }
-
-    if (sr.errorCode != null) {
-      /* Cannot continue if any disallowed
-       */
-      // return externalRcs;
     }
 
     /* As we go through the inbox info, we gather together those for the same
@@ -97,11 +91,10 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
      *
      * We then send off one request to each external host.
      */
-    Map<String, Collection<UserInbox>> hostMap = new HashMap<String,
-                                                             Collection<UserInbox>>();
+    final Map<String, Collection<UserInbox>> hostMap = new HashMap<>();
 
-    for (ScheduleRecipientResult sres: sr.recipientResults.values()) {
-      UserInbox ui = (UserInbox)sres;
+    for (final ScheduleRecipientResult sres: sr.recipientResults.values()) {
+      final UserInbox ui = (UserInbox)sres;
 
       if (sr.ignored) {
         ui.setStatus(ScheduleStates.scheduleIgnored);
@@ -110,10 +103,13 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
 
       if (ui.getStatus() == ScheduleStates.scheduleUnprocessed) {
         if (ui.getHost() != null) {
+          /* Needs to be sent to an external destination. Add it
+           * to the list of inboxes for that host.
+           */
           Collection<UserInbox> inboxes = hostMap.get(ui.getHost().getHostname());
 
           if (inboxes == null) {
-            inboxes = new ArrayList<UserInbox>();
+            inboxes = new ArrayList<>();
             hostMap.put(ui.getHost().getHostname(), inboxes);
           }
 
@@ -121,6 +117,8 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
 
           continue;
         }
+
+        /* Going to an internal destination */
 
         String deliveryStatus = null;
 
@@ -157,7 +155,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
             ui.setAttendeeScheduleStatus(deliveryStatus);
           }
         } else {
-          ev.getOrganizer().setScheduleStatus(deliveryStatus);
+//          ev.getOrganizer().setScheduleStatus(deliveryStatus);
         }
       }
 
@@ -166,7 +164,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
       }
     }
 
-    for (Collection<UserInbox> inboxes: hostMap.values()) {
+    for (final Collection<UserInbox> inboxes: hostMap.values()) {
       /* Send any ischedule requests to external servers. */
       sendExternalRequest(sr, ei, inboxes);
     }
@@ -176,10 +174,10 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
    * The 'sender' may be the organizer of a meeting, if it's REQUEST etc, or the
    * attendee replying.
    *
-   * @param inboxPath
-   * @param attPrincipal
-   * @param senderEi
-   * @param fromOrganizer
+   * @param inboxPath - eventual destination
+   * @param attPrincipal - attendees principal
+   * @param senderEi the event
+   * @param fromOrganizer - true if it's coming from the organizer
    * @return null for ok, errorcode otherwise
    * @throws CalFacadeException
    */
@@ -187,8 +185,8 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
                             final BwPrincipal attPrincipal,
                             final EventInfo senderEi,
                             final boolean fromOrganizer) throws CalFacadeException {
-    EventInfo ei = copyEventInfo(senderEi, fromOrganizer, attPrincipal);
-    BwEvent ev = ei.getEvent();
+    final EventInfo ei = copyEventInfo(senderEi, fromOrganizer, attPrincipal);
+    final BwEvent ev = ei.getEvent();
 
     if (senderEi.getReplyUpdate()) {
       // Flag as a trivial update to attendee status
@@ -198,7 +196,9 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
 
     // Recipients should not be able to see other recipients.
 
-    ev.setRecipients(null);
+    if (!Util.isEmpty(ev.getRecipients())) {
+      ev.getRecipients().clear();
+    }
     ev.addRecipient(getSvc().getDirectories().principalToCaladdr(attPrincipal));
 
     /*
@@ -213,13 +213,13 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
       }
     }*/
 
-    String evDtstamp = ev.getDtstamp();
+    final String evDtstamp = ev.getDtstamp();
 
     ev.setScheduleState(BwEvent.scheduleStateNotProcessed);
     ev.setColPath(inboxPath);
 
     if (ei.getNumContainedItems() > 0) {
-      for (EventInfo cei: ei.getContainedItems()) {
+      for (final EventInfo cei: ei.getContainedItems()) {
         cei.getEvent().setColPath(inboxPath);
       }
     }
@@ -231,19 +231,19 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
      * Also this current message may be earlier than one already in the inbox.
      */
 
-    int smethod = ev.getScheduleMethod();
+    final int smethod = ev.getScheduleMethod();
 
     if (Icalendar.itipRequestMethodType(smethod)) {
-      Collection<EventInfo> inevs = getEvents(inboxPath,
-                                              ev.getUid(),
-                                              ev.getRecurrenceId(),
-                                              true,
-                                              RecurringRetrievalMode.overrides);
+      final Collection<EventInfo> inevs = getEvents(inboxPath,
+                                                    ev.getUid(),
+                                                    ev.getRecurrenceId(),
+                                                    true,
+                                                    RecurringRetrievalMode.overrides);
 
-      for (EventInfo inei: inevs) {
-        BwEvent inev = inei.getEvent();
+      for (final EventInfo inei: inevs) {
+        final BwEvent inev = inei.getEvent();
 
-        int cres = evDtstamp.compareTo(inev.getDtstamp());
+        final int cres = evDtstamp.compareTo(inev.getDtstamp());
 
         if (cres <= 0) {
           // Discard the new one
@@ -263,9 +263,10 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     }
 
     /* Add it and post to the autoscheduler */
-    String ecode = addEvent(ei, "In-" + Uid.getUid() + "-" + evDtstamp,
-                            BwCalendar.calTypeInbox,
-                            true);
+    final String ecode = addEvent(ei,
+                                  "In-" + Uid.getUid() + "-" + evDtstamp,
+                                  BwCalendar.calTypePendingInbox,
+                                  true);
 
     if (ecode != null) {
       return ecode;
@@ -286,7 +287,8 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     return null;
   }
 
-  /* Get the inbox for the recipient. If the recipient is not local to this
+  /* Get the inbox for the recipient from the search result. If there is
+   * no inbox object already it will be added. If the recipient is not local to this
    * system, we mark the inbox entry as deferred and add the recipient to the
    * list of external recipients. We will possibly mail the request or try
    * ischedule to another server.
@@ -308,10 +310,10 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
                                  final ScheduleResult sr,
                                  final boolean freeBusyRequest)
   throws CalFacadeException {
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
 
     /* See if the attendee is in this event */
-    BwAttendee att = ev.findAttendee(recip);
+    final BwAttendee att = ev.findAttendee(recip);
 
     if ((att != null) && (fromAttUri != null) &&
         fromAttUri.equals(att.getAttendeeUri())) {
@@ -319,7 +321,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
       return;
     }
 
-    UserInbox ui = getInbox(sr, recip, freeBusyRequest);
+    final UserInbox ui = getInbox(sr, recip, freeBusyRequest);
 
     if (att != null) {
       ui.addAttendee(att);
@@ -345,13 +347,17 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     }
 
     if (ei.getNumOverrides() > 0) {
-      for (EventInfo oei: ei.getOverrides()) {
+      for (final EventInfo oei: ei.getOverrides()) {
         getRecipientInbox(oei, recip, fromAttUri, sr, freeBusyRequest);
       }
     }
   }
 
   /* Return with deferred for external user.
+   *
+   * For an internal user - skips it if it's ourself - we don't want
+   * our own message in our inbox. Otherwise checks that we have access
+   * to send the message. If so sets the path of the inbox.
    */
   private UserInbox getInbox(final ScheduleResult sr,
                              final String recipient,
@@ -365,14 +371,14 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     ui = new UserInbox();
     sr.recipientResults.put(recipient, ui);
 
-    BwPrincipal principal = getSvc().getDirectories().caladdrToPrincipal(recipient);
+    final BwPrincipal principal = getSvc().getDirectories().caladdrToPrincipal(recipient);
     ui.recipient = recipient;
 
     if (principal == null) {
       /* External to the system */
       ui.setHost(BwHosts.getHostForRecipient(recipient));
 
-      Host hi = ui.getHost();
+      final Host hi = ui.getHost();
       if (hi == null) {
         ui.setStatus(ScheduleStates.scheduleDeferred);
         return ui;
@@ -403,16 +409,16 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
 
       ui.principal = principal;
 
-      int priv;
+      final int priv;
       if (freeBusyRequest) {
         priv = PrivilegeDefs.privScheduleFreeBusy;
       } else {
         priv = PrivilegeDefs.privScheduleRequest;
       }
 
-      BwCalendar inbox = getSpecialCalendar(ui.principal,
-                                            BwCalendar.calTypeInbox,
-                                            true, priv);
+      final BwCalendar inbox = getSpecialCalendar(ui.principal,
+                                                  BwCalendar.calTypePendingInbox,
+                                                  true, priv);
       if (inbox == null) {
         ui.setStatus(ScheduleStates.scheduleNoAccess);
       } else {

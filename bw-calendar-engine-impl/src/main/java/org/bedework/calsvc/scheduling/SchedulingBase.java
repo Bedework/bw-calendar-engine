@@ -465,6 +465,7 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
       try {
         getSvc().getEventsHandler().add(ei, noInvites,
                                         (calType == BwCalendar.calTypeInbox) ||
+                                        (calType == BwCalendar.calTypePendingInbox) ||
                                         (calType == BwCalendar.calTypeOutbox),
                                         true,
                                         false);
@@ -547,7 +548,9 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
       /* Gather together recipients from all attendees in the master + overrides
        */
 
-      event.setRecipients(null);
+      if (!Util.isEmpty(event.getRecipients())) {
+        event.getRecipients().clear();
+      }
 
       if (response) {
         event.addRecipient(event.getOrganizer().getOrganizerUri());

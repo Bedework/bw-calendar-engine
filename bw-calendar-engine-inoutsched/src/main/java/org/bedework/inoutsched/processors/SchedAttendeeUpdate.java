@@ -161,7 +161,6 @@ public class SchedAttendeeUpdate extends SchedProcessor {
         EventInfo delegateEi = sched.copyEventInfo(ei, getPrincipal());
         BwEvent delegateEv = delegateEi.getEvent();
 
-        delegateEv.setRecipients(new TreeSet<String>());
         delegateEv.addRecipient(delegate);
         delegateEv.addAttendee((BwAttendee)delAtt.clone()); // Not in RFC
         delegateEv.setScheduleMethod(Icalendar.methodTypeRequest);

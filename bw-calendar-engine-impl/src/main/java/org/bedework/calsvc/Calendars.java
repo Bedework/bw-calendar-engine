@@ -410,13 +410,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
     getCal().updateCalendar(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#delete(org.bedework.calfacade.BwCalendar, boolean)
-   */
   @Override
   public boolean delete(final BwCalendar val,
-                        final boolean emptyIt) throws CalFacadeException {
-    return delete(val, emptyIt, false);
+                        final boolean emptyIt,
+                        final boolean sendSchedulingMessage) throws CalFacadeException {
+    return delete(val, emptyIt, false, sendSchedulingMessage);
   }
 
   /* (non-Javadoc)
@@ -494,7 +492,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   private boolean delete(final BwCalendar val,
                          final boolean emptyIt,
-                         final boolean reallyDelete) throws CalFacadeException {
+                         final boolean reallyDelete,
+                         final boolean sendSchedulingMessage) throws CalFacadeException {
     if (!emptyIt) {
       /** Only allow delete if not in use
        */
@@ -532,7 +531,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
                           null,
                           null, // retrieveList
                           RecurringRetrievalMode.overrides)) {
-          ((Events)getSvc().getEventsHandler()).delete(ei, false, true, true);
+          ((Events)getSvc().getEventsHandler()).delete(ei,
+                                                       false,
+                                                       sendSchedulingMessage,
+                                                       true);
         }
       }
 
@@ -550,7 +552,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       }
 
       for (BwCalendar cal: getChildren(val)) {
-        if (!delete(cal, true, true)) {
+        if (!delete(cal, true, true, sendSchedulingMessage)) {
           // Somebody else at it
           getSvc().rollbackTransaction();
           throw new CalFacadeException(CalFacadeException.collectionNotFound,

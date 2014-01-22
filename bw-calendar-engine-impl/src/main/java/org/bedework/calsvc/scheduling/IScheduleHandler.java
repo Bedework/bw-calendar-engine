@@ -59,7 +59,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     BwPrincipal principal;
 
     /* Attendee objects in the organizers event and overrides */
-    private List<BwAttendee> atts = new ArrayList<BwAttendee>();
+    private List<BwAttendee> atts = new ArrayList<>();
 
     String inboxPath; // null for our own account
 
@@ -67,7 +67,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     private HostInfo host;
 
     public void addAttendee(final BwAttendee val) {
-      for (BwAttendee att: atts) {
+      for (final BwAttendee att: atts) {
         if (val.unsaved()) {
           if (val == att) {
             return;  // already there
@@ -81,7 +81,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     }
 
     public void setAttendeeScheduleStatus(final String val) {
-      for (BwAttendee att: atts) {
+      for (final BwAttendee att: atts) {
         att.setScheduleStatus(val);
       }
     }
@@ -109,8 +109,8 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     /* Each entry in inboxes should have the same hostinfo */
 
     HostInfo hi = null;
-    BwEvent ev = ei.getEvent();
-    boolean freeBusyRequest = ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy;
+    final BwEvent ev = ei.getEvent();
+    final boolean freeBusyRequest = ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy;
 
     Set<String> recipients = null;
 
@@ -124,12 +124,12 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     }
     */
 
-    HashMap<String, UserInbox> uimap = new HashMap<String, UserInbox>();
+    final HashMap<String, UserInbox> uimap = new HashMap<>();
 
     /* For realtime or caldav we make up a single meeting request or freebusy request.
      * For freebusy url we just execute one url at a time
      */
-    for (UserInbox ui: inboxes) {
+    for (final UserInbox ui: inboxes) {
       if (hi == null) {
         // First time
         hi = ui.host;
@@ -137,7 +137,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
         if (hi.getSupportsBedework() ||
             hi.getSupportsCaldav() ||
             hi.getSupportsISchedule()) {
-          recipients = new TreeSet<String>();
+          recipients = new TreeSet<>();
         }
       }
 
@@ -158,7 +158,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     }
 
     if (debug) {
-      String meth;
+      final String meth;
       if (freeBusyRequest) {
         meth = "freebusy";
       } else {
@@ -168,10 +168,10 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
       trace(meth + " request to " + hi.getFbUrl() + " for " + recipients);
     }
 
-    EventInfo cei = copyEventInfo(ei, getPrincipal());
+    final EventInfo cei = copyEventInfo(ei, getPrincipal());
     cei.getEvent().setRecipients(recipients);
 
-    Response r = null;
+    final Response r;
     if (freeBusyRequest) {
       try {
         r = getCalDavClient().getFreeBusy(hi, cei);
@@ -184,8 +184,8 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
        * corresponding response element.
        */
 
-      for (ResponseElement re: r.getResponses()) {
-        UserInbox ui = uimap.get(re.getRecipient());
+      for (final ResponseElement re: r.getResponses()) {
+        final UserInbox ui = uimap.get(re.getRecipient());
 
         if (ui == null) {
           continue;
@@ -213,8 +213,8 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
       return;
     }
 
-    for (ResponseElement re: r.getResponses()) {
-      UserInbox ui = uimap.get(re.getRecipient());
+    for (final ResponseElement re: r.getResponses()) {
+      final UserInbox ui = uimap.get(re.getRecipient());
 
       if (ui == null) {
         continue;

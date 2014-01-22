@@ -161,11 +161,14 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   /** <em>Vpoll entities</em>  */
   public final static int calTypePoll = 12;
 
+  /** <em>Pending Inbox</em> Unprocessed meeting requests */
+  public final static int calTypePendingInbox = 13;
+
   /** <em>managed attachments</em>  */
-  public final static int calTypeAttachments = 13;
+  public final static int calTypeAttachments = 14;
 
   /** <em>Tasks</em>  */
-  public final static int calTypeTasks = 14;
+  public final static int calTypeTasks = 15;
 
   /** There are limitations on what may be placed in each type of collection,
    *  e.g folders cannot hold entities, guids must be unique in calendars etc.
@@ -264,6 +267,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     ci(calTypeNotifications,      T, f, f, f, f, f, f, f, f, f),
     ci(calTypeEventList,          T, f, T, T, T, T, f, T, f, f),
     ci(calTypePoll,               f, T, T, T, T, T, T, T, T, T),
+    ci(calTypePendingInbox,       T, f, T, f, f, f, f, T, f, f),
     ci(calTypeAttachments,        T, f, T, f, f, f, f, f, f, f),
     ci(calTypeTasks,              f, T, T, T, T, T, T, T, T, T),
   };
@@ -457,7 +461,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   /**
-   * @param val
+   * @param val - the created date
    */
   public void setCreated(final String val) {
     created = val;
@@ -471,7 +475,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   /**
-   * @param val
+   * @param val the lastmod
    */
   public void setLastmod(final BwCollectionLastmod val) {
     lastmod = val;
@@ -486,7 +490,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   /**
-   * @param val
+   * @param val - the filter expression
    */
   public void setFilterExpr(final String val) {
     filterExpr = val;
@@ -516,7 +520,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   /**
-   * @param val
+   * @param val - the value
    */
   public void setLastRefresh(final String val) {
     lastRefresh = val;
@@ -530,7 +534,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return lastRefresh;
   }
 
-  /** HTTP status or other appropriate value
+  /**
+   * @param val HTTP status or other appropriate value
    * @param val
    */
   public void setLastRefreshStatus(final String val) {
@@ -545,7 +550,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   /**
-   * @param val
+   * @param val - the value
    */
   public void setLastEtag(final String val) {
     lastEtag = val;
@@ -558,9 +563,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return lastEtag;
   }
 
-  /** If non-null we have a remote id and encrypted password
+  /**
    *
-   * @param val
+   * @param val If non-null we have a remote id and encrypted password
    */
   public void setRemoteId(final String val) {
     remoteId = val;
@@ -573,9 +578,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return remoteId;
   }
 
-  /** If non-null the encrypted password
+  /**
    *
-   * @param val
+   * @param val If non-null the encrypted password
    */
   public void setRemotePw(final String val) {
     remotePw = val;

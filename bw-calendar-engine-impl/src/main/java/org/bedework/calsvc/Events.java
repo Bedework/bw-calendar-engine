@@ -297,6 +297,15 @@ class Events extends CalSvcDb implements EventsI {
         }
       }
 
+      if (event.getOrganizerSchedulingObject()) {
+        // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
+        for (final BwAttendee att: event.getAttendees()) {
+          if (att.getPartstat() == IcalDefs.partstatValNeedsAction) {
+            att.setRsvp(true);
+          }
+        }
+      }
+
       UpdateEventResult uer = getCal().addEvent(ei,
                                                 scheduling,
                                                 rollbackOnError);
@@ -428,11 +437,11 @@ class Events extends CalSvcDb implements EventsI {
         getSvc().getScheduler().setupReschedule(ei);
       }
 
-      UpdateResult updResult = ei.getUpdResult();
+      final UpdateResult updResult = ei.getUpdResult();
 
       updateEntities(updResult, event);
 
-      UpdateEventResult uer = getCal().updateEvent(ei);
+      final UpdateEventResult uer = getCal().updateEvent(ei);
 
       updResult.addedInstances = uer.added;
       updResult.updatedInstances = uer.updated;
@@ -440,9 +449,17 @@ class Events extends CalSvcDb implements EventsI {
 
       updResult.fromAttUri = fromAttUri;
 
-      if (!noInvites) {
-        if (schedulingObject &&
-                        (organizerSchedulingObject || updResult.reply)) {
+      if (!noInvites && schedulingObject) {
+        if (organizerSchedulingObject) {
+          // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
+          for (final BwAttendee att: event.getAttendees()) {
+            if (att.getPartstat() == IcalDefs.partstatValNeedsAction) {
+              att.setRsvp(true);
+            }
+          }
+        }
+
+        if (organizerSchedulingObject || updResult.reply) {
           SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
 
           sched.implicitSchedule(ei,

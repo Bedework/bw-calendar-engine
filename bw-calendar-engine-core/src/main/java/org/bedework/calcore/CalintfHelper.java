@@ -382,7 +382,8 @@ public abstract class CalintfHelper
 
     CurrentAccess ca;
 
-    if (cal.getCalType() == BwCalendar.calTypeInbox) {
+    if ((cal.getCalType() == BwCalendar.calTypeInbox) ||
+        (cal.getCalType() == BwCalendar.calTypePendingInbox)) {
       ca = access.checkAccess(cal, privScheduleDeliver, true);
       if (!ca.getAccessAllowed()) {
         // try old style

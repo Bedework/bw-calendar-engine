@@ -429,6 +429,11 @@ public class CoreCalendars extends CalintfHelperHib
                                 true, false, PrivilegeDefs.privAny);
     }
 
+    if (Util.buildPath(true, pathTo, "/", ".pendingInbox").equals(path)) {
+      return getSpecialCalendar(owner, BwCalendar.calTypePendingInbox,
+                                true, false, PrivilegeDefs.privAny);
+    }
+
     if (Util.buildPath(true, pathTo, "/", sys.getUserOutbox()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeOutbox,
                                 true, false, PrivilegeDefs.privAny);
@@ -471,6 +476,8 @@ public class CoreCalendars extends CalintfHelperHib
 
     if (calType == BwCalendar.calTypeInbox) {
       name = sys.getUserInbox();
+    } else if (calType == BwCalendar.calTypePendingInbox) {
+      name = ".pendingInbox";// sys.getUserInbox();
     } else if (calType == BwCalendar.calTypeOutbox) {
       name = sys.getUserOutbox();
     } else if (calType == BwCalendar.calTypeNotifications) {

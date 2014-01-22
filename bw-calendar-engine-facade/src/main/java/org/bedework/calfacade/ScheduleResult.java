@@ -19,6 +19,7 @@
 package org.bedework.calfacade;
 
 import org.bedework.util.calendar.ScheduleStates;
+import org.bedework.util.misc.ToString;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,18 +50,16 @@ public class ScheduleResult {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("ScheduleRecipientResult{");
+      final ToString ts = new ToString(this);
 
-      ScheduleResult.tsseg(sb, "", "recipient", recipient);
-      ScheduleResult.tsseg(sb, ", ", "status", status);
+      ts.append("recipient", recipient);
+      ts.append("status", status);
 
-      sb.append("}");
-
-      return sb.toString();
+      return ts.toString();
     }
 
     /**
-     * @param val
+     * @param val - the value
      */
     public void setStatus(final int val) {
       status = val;
@@ -95,51 +94,27 @@ public class ScheduleResult {
 
   /** Set of ScheduleRecipientResult */
   public Map<String, ScheduleRecipientResult> recipientResults =
-    new HashMap<String, ScheduleRecipientResult>();
+    new HashMap<>();
 
   /** Recipients external to the system. */
-  public Set<String> externalRcs = new TreeSet<String>();
+  public Set<String> externalRcs = new TreeSet<>();
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("ScheduleResult{");
+    final ToString ts = new ToString(this);
 
-    tsseg(sb, "", "errorCode", errorCode);
+    ts.append("errorCode", errorCode);
 
-    tsseg(sb, "\n, ", "ignored", ignored);
-    tsseg(sb, ", ", "reschedule", reschedule);
-    tsseg(sb, ", ", "ignored", ignored);
+    ts.append("ignored", ignored);
+    ts.append("reschedule", reschedule);
+    ts.append("ignored", ignored);
 
     if ((recipientResults != null) && !recipientResults.isEmpty()) {
-      for (ScheduleRecipientResult srr: recipientResults.values()) {
-
-        sb.append("\n");
-        sb.append(srr);
+      for (final ScheduleRecipientResult srr: recipientResults.values()) {
+        ts.append(srr);
       }
     }
-    sb.append("}");
 
-    return sb.toString();
-  }
-
-  private static void tsseg(final StringBuilder sb, final String delim, final String name, final int val) {
-    sb.append(delim);
-    sb.append(name);
-    sb.append("=");
-    sb.append(val);
-  }
-
-  private static void tsseg(final StringBuilder sb, final String delim, final String name, final String val) {
-    sb.append(delim);
-    sb.append(name);
-    sb.append("=");
-    sb.append(val);
-  }
-
-  private static void tsseg(final StringBuilder sb, final String delim, final String name, final boolean val) {
-    sb.append(delim);
-    sb.append(name);
-    sb.append("=");
-    sb.append(val);
+    return ts.toString();
   }
 }

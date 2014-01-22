@@ -18,6 +18,7 @@
 */
 package org.bedework.inoutsched.processors;
 
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
@@ -33,7 +34,7 @@ import org.bedework.calsvci.CalSvcI;
  */
 public abstract class InProcessor extends CalSvcDb {
   /**
-   * @param svci
+   * @param svci for this processor
    */
   public InProcessor(final CalSvcI svci) {
     super(null);
@@ -56,7 +57,7 @@ public abstract class InProcessor extends CalSvcDb {
   }
 
   /**
-   * @param ei
+   * @param ei the event
    * @return ProcessResult
    * @throws CalFacadeException
    */
@@ -65,27 +66,28 @@ public abstract class InProcessor extends CalSvcDb {
   /** Update the inbox according to it's owners wishes (what if owner and proxy
    * have different wishes)
    *
-   * @param ei - the inbox event
-   * @param inboxOwnerHref
+   * @param ei - the pending inbox event
+   * @param inboxOwnerHref href of
    * @param attendeeAccepting - is this the result of a REPLY with PARTSTAT accept?
    * @param forceDelete - it's inbox noise, delete it
    * @throws CalFacadeException
    */
-  public void updateInbox(final EventInfo ei,
-                          final String inboxOwnerHref,
-                          final boolean attendeeAccepting,
-                          final boolean forceDelete) throws CalFacadeException {
+  public void pendingToInbox(final EventInfo ei,
+                             final String inboxOwnerHref,
+                             final boolean attendeeAccepting,
+                             final boolean forceDelete) throws CalFacadeException {
     boolean delete = forceDelete;
 
     if (!delete) {
-      BwPrincipal principal = getSvc().getUsersHandler().getPrincipal(inboxOwnerHref);
+      final BwPrincipal principal =
+              getSvc().getUsersHandler().getPrincipal(inboxOwnerHref);
 
       if (principal == null) {
         delete = true;
       } else {
-        BwPreferences prefs = getSvc().getPrefsHandler().get(principal);
+        final BwPreferences prefs = getSvc().getPrefsHandler().get(principal);
 
-        int sapr = prefs.getScheduleAutoProcessResponses();
+        final int sapr = prefs.getScheduleAutoProcessResponses();
 
         if (sapr == BwPreferences.scheduleAutoProcessResponsesNoNotify) {
           delete = true;
@@ -95,7 +97,7 @@ public abstract class InProcessor extends CalSvcDb {
       }
     }
 
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
 
     if (delete) {
       getSvc().getEventsHandler().delete(ei, false);
@@ -134,6 +136,13 @@ public abstract class InProcessor extends CalSvcDb {
         trace("set event to scheduleStateProcessed: " + ev.getName());
       }
       ev.setScheduleState(BwEvent.scheduleStateProcessed);
+      BwCalendar inbox = getSvc().getCalendarsHandler().
+              getSpecial(BwCalendar.calTypeInbox, false);
+      if (inbox == null) {
+        return;
+      }
+
+      ev.setColPath(inbox.getPath());
       getSvc().getEventsHandler().update(ei, true, null);
     }
   }

@@ -27,7 +27,7 @@ import org.bedework.dumprestore.restore.RestoreGlobals;
 import org.xml.sax.Attributes;
 
 /**
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm   rpi.edu
  * @version 1.0
  */
 public class CalendarRule extends EntityRule {
@@ -77,6 +77,8 @@ public class CalendarRule extends EntityRule {
 
         if (calname.equals(sys.getUserInbox())) {
           entity.setCalType(BwCalendar.calTypeInbox);
+        } else if (calname.equals(".pending" /*sys.getUserInbox()*/)) {
+          entity.setCalType(BwCalendar.calTypePendingInbox);
         } else if (calname.equals(sys.getUserOutbox())) {
           entity.setCalType(BwCalendar.calTypeOutbox);
         } else if (calname.equals(sys.getDefaultNotificationsName())) {

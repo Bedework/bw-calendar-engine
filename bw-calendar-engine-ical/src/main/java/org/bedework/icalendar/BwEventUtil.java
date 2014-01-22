@@ -311,6 +311,7 @@ public class BwEventUtil extends IcalUtil {
       if (diff && (evinfo == null) &&
           (cal != null) &&
           (cal.getCalType() != BwCalendar.calTypeInbox) &&
+          (cal.getCalType() != BwCalendar.calTypePendingInbox) &&
           (cal.getCalType() != BwCalendar.calTypeOutbox)) {
         if (debug) {
           debugMsg("TRANS-TO_EVENT: try to fetch event with guid=" + guid);

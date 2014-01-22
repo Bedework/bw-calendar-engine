@@ -216,12 +216,14 @@ public interface CalendarsI extends Serializable {
    *
    * @param val      BwCalendar calendar
    * @param emptyIt  true to delete contents
+   * @param sendSchedulingMessage  true if we should send cancels
    * @return boolean  true if it was deleted.
    *                  false if it didn't exist
    * @throws CalFacadeException for in use or marked as default calendar
    */
   boolean delete(BwCalendar val,
-                 boolean emptyIt) throws CalFacadeException;
+                 boolean emptyIt,
+                 boolean sendSchedulingMessage) throws CalFacadeException;
 
   /** Return true if cal != null and it represents a (local) user root
    *

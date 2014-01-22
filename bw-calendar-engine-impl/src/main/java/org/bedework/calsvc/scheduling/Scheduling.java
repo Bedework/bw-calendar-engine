@@ -25,6 +25,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.misc.Util;
 
 import java.util.Collection;
 
@@ -67,7 +68,7 @@ public class Scheduling extends ImplicitSchedulingHandler {
                 RecurringRetrievalMode.overrides,
                 true);
 
-    if ((evs == null) || (evs.isEmpty())) {
+    if (Util.isEmpty(evs)) {
       return null;
     }
 

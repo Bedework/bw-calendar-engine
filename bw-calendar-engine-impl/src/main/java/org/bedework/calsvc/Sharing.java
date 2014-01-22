@@ -354,7 +354,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
         if (!Util.isEmpty(cols)) {
           for (BwCalendar alias: cols) {
-            getCols().delete(alias, false);
+            getCols().delete(alias, false, true);
           }
         }
       } finally {

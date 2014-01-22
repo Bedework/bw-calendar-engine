@@ -45,7 +45,6 @@ import org.bedework.caldav.util.sharing.ShareType;
 import org.bedework.caldav.util.sharing.UserType;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCalendar.EventListEntry;
-import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
@@ -54,7 +53,6 @@ import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
-import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.ScheduleResult;
@@ -161,6 +159,8 @@ public class BwSysIntfImpl implements SysIntf {
 
   private AuthProperties authProperties;
 
+  private BasicSystemProperties basicSysProperties;
+
   private SystemProperties sysProperties;
 
   private long reqInTime;
@@ -204,6 +204,7 @@ public class BwSysIntfImpl implements SysIntf {
 
       authProperties = svci.getAuthProperties();
       sysProperties = svci.getSystemProperties();
+      basicSysProperties = svci.getBasicSystemProperties();
       svci.postNotification(new HttpEvent(SysCode.CALDAV_IN));
       reqInTime = System.currentTimeMillis();
 
@@ -211,6 +212,11 @@ public class BwSysIntfImpl implements SysIntf {
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
+  }
+
+  @Override
+  public boolean testMode() {
+    return basicSysProperties.getTestMode();
   }
 
   @Override
@@ -1434,13 +1440,12 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#deleteCollection(org.bedework.caldav.server.CalDAVCollection)
-   */
   @Override
-  public void deleteCollection(final CalDAVCollection col) throws WebdavException {
+  public void deleteCollection(final CalDAVCollection col,
+                               final boolean sendSchedulingMessage) throws WebdavException {
     try {
-      getSvci().getCalendarsHandler().delete(unwrap(col), true);
+      getSvci().getCalendarsHandler().delete(unwrap(col), true,
+                                             sendSchedulingMessage);
     } catch (CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
     } catch (CalFacadeException ce) {

@@ -213,7 +213,6 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
         EventInfo delegateEi = copyEventInfo(ei, getPrincipal());
         BwEvent delegateEv = delegateEi.getEvent();
 
-        delegateEv.setRecipients(new TreeSet<String>());
         delegateEv.addRecipient(delegate);
         delegateEv.addAttendee((BwAttendee)delAtt.clone()); // Not in RFC
         delegateEv.setScheduleMethod(ScheduleMethods.methodTypeRequest);

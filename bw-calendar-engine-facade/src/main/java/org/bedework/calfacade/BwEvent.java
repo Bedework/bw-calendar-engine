@@ -4307,7 +4307,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
     if (getNumAttendees() > 0) {
       ts.newLine();
-      ts.append("attendee", getAttendees());
+      ts.append("attendee", getAttendees(), true);
     }
 
     ts.newLine();
