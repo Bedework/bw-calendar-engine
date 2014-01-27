@@ -66,23 +66,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
         info(" * " + t.getLocalizedMessage());
       }
 
-      if (Util.isEmpty(is)) {
-        info(" *   No indexes");
-      } else {
-        for (IndexInfo ii: is) {
-          StringBuilder res = new StringBuilder(ii.getIndexName());
-
-          String delim = "<----";
-
-          for (String a: ii.getAliases()) {
-            res.append(delim);
-            res.append(a);
-            delim = ", ";
-          }
-
-          info(" * " + res.toString());
-        }
-      }
+      info(listIndexes(is));
 
       info("************************************************************");
 
@@ -339,33 +323,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   @Override
   public String listIndexes() {
     try {
-      Set<IndexInfo> is = getIndexApp().getIndexInfo();
-
-      if (Util.isEmpty(is)) {
-        return "No indexes found";
-      }
-
-      StringBuilder res = new StringBuilder("Indexes");
-
-      res.append("------------------------\n");
-
-      for (IndexInfo ii: is) {
-        res.append(ii.getIndexName());
-
-        if (!Util.isEmpty(ii.getAliases())) {
-          String delim = "<----";
-
-          for (String a: ii.getAliases()) {
-            res.append(delim);
-            res.append(a);
-            delim = ", ";
-          }
-        }
-
-        res.append("\n");
-      }
-
-      return res.toString();
+      return listIndexes(getIndexApp().getIndexInfo());
     } catch (Throwable t) {
       return t.getLocalizedMessage();
     }
@@ -508,6 +466,34 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   /* ========================================================================
    * Private methods
    * ======================================================================== */
+
+  private String listIndexes(Set<IndexInfo> is) {
+    if (Util.isEmpty(is)) {
+      return "No indexes found";
+    }
+
+    StringBuilder res = new StringBuilder("Indexes");
+
+    res.append("------------------------\n");
+
+    for (IndexInfo ii: is) {
+      res.append(ii.getIndexName());
+
+      if (!Util.isEmpty(ii.getAliases())) {
+        String delim = "<----";
+
+        for (String a: ii.getAliases()) {
+          res.append(delim);
+          res.append(a);
+          delim = ", ";
+        }
+      }
+
+      res.append("\n");
+    }
+
+    return res.toString();
+  }
 
   private void outputStatus(final CrawlStatus status,
                             final List<String> res) {
