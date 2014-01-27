@@ -33,6 +33,7 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author douglm
@@ -234,6 +235,17 @@ public interface BwIndexer extends Serializable {
      */
     public Set<String> getAliases() {
       return aliases;
+    }
+
+    /**
+     * @param val - an alias - never null
+     */
+    public void addAlias(final String val) {
+      if (aliases == null) {
+        aliases = new TreeSet<>();
+      }
+
+      aliases.add(val);
     }
 
     @Override

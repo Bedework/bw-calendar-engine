@@ -37,7 +37,6 @@
     <dependency>
       <groupId>net.fortuna.ical4j</groupId>
       <artifactId>ical4j</artifactId>
-      <version>${ical4j.version}</version>
     </dependency>
 	</dependencies>
 </project>

@@ -352,12 +352,14 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       for (IndexInfo ii: is) {
         res.append(ii.getIndexName());
 
-        String delim = "<----";
+        if (!Util.isEmpty(ii.getAliases())) {
+          String delim = "<----";
 
-        for (String a: ii.getAliases()) {
-          res.append(delim);
-          res.append(a);
-          delim = ", ";
+          for (String a: ii.getAliases()) {
+            res.append(delim);
+            res.append(a);
+            delim = ", ";
+          }
         }
 
         res.append("\n");

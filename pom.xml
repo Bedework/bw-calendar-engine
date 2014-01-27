@@ -22,14 +22,15 @@
 		<bw-caldav-util.version>4.0.0-SNAPSHOT</bw-caldav-util.version>
 		<bw-caldav-server.version>4.0.0-SNAPSHOT</bw-caldav-server.version>
 		<!-- Third Party Library Versions -->
+    <elasticsearch.version>0.90.10</elasticsearch.version>
 		<hibernate.version>3.6.9.Final</hibernate.version>
 		<hibernate-validator.version>3.1.0.GA</hibernate-validator.version>
 		<ical4j.version>1.0-BW-SNAPSHOT</ical4j.version>
 		<ical4j-vcard.version>0.9.6-BW-SNAPSHOT</ical4j-vcard.version>
+    <jackson.version>2.3.1</jackson.version>
 		<junit.version>4.8.2</junit.version>
 		<log4j.version>1.2.15</log4j.version>
 		<servlet-api.version>2.4</servlet-api.version>
-		<solr-core.version>4.3.0</solr-core.version>
 		<apache-jdkim-library.version>0.2.BEDEWORK-SNAPSHOT</apache-jdkim-library.version>
 	</properties>
 
@@ -241,34 +242,29 @@
 				<artifactId>ical4j-vcard</artifactId>
 				<version>${ical4j-vcard.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>org.apache.solr</groupId>
-				<artifactId>solr-core</artifactId>
-				<version>${solr-core.version}</version>
-			</dependency>
 
       <dependency>
         <groupId>org.elasticsearch</groupId>
         <artifactId>elasticsearch</artifactId>
-        <version>0.90.3</version>
+        <version>${elasticsearch.version}</version>
       </dependency>
 
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>2.1.1</version>
+        <version>${jackson.version}</version>
       </dependency>
 
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>2.1.1</version>
+        <version>${jackson.version}</version>
       </dependency>
 
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>2.1.1</version>
+        <version>${jackson.version}</version>
       </dependency>
 			<dependency>
 				<groupId>log4j</groupId>

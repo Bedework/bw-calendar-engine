@@ -88,6 +88,7 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -110,6 +111,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -804,8 +806,12 @@ public class BwIndexEsImpl implements BwIndexer {
                 .filterRoutingTable(true)
                 .filterNodes(true)
                 .filteredIndices(inm);
-        ii.setAliases(getAdminCluster().state(clusterStateRequest).
-                actionGet().getState().getMetaData().aliases().keySet());
+
+        Iterator<String> it = getAdminCluster().state(clusterStateRequest).
+                actionGet().getState().getMetaData().aliases().keysIt();
+        while (it.hasNext()) {
+          ii.addAlias(it.next());
+        }
       }
 
       return res;
@@ -883,11 +889,15 @@ public class BwIndexEsImpl implements BwIndexer {
               igarb.request());
       IndicesGetAliasesResponse garesp = getAliasesAf.actionGet();
 
-      Map<String, List<AliasMetaData>> aliasesmeta = garesp.getAliases();
+      ImmutableOpenMap<String, List<AliasMetaData>> aliasesmeta = garesp.getAliases();
 
       IndicesAliasesRequestBuilder iarb = idx.prepareAliases();
 
-      for (String indexName: aliasesmeta.keySet()) {
+      Iterator<String> it = aliasesmeta.keysIt();
+
+      while (it.hasNext()) {
+        final String indexName = it.next();
+
         for (AliasMetaData amd: aliasesmeta.get(indexName)) {
           if(amd.getAlias().equals(other)) {
             iarb.removeAlias(indexName, other);
