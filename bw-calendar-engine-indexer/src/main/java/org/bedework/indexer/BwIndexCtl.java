@@ -20,12 +20,16 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
+import org.bedework.sysevents.NotificationException;
 import org.bedework.util.jmx.ConfBase;
+import org.bedework.util.misc.AbstractProcessorThread;
 import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import javax.naming.NameNotFoundException;
 
 /**
  * @author douglm
@@ -36,56 +40,57 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   /* Name of the property holding the location of the config data */
   public static final String confuriPname = "org.bedework.bwengine.confuri";
 
-  private boolean running;
-
-  private class ProcessorThread extends Thread {
-    boolean showedTrace;
-
+  private class ProcessorThread extends AbstractProcessorThread {
     /**
      * @param name - for the thread
      */
     public ProcessorThread(final String name) {
       super(name);
     }
+
     @Override
-    public void run() {
-      BwIndexApp app = getIndexApp();
-
-      info("************************************************************");
-      info(" * Starting indexer");
-
-    /* List the indexes in use - ensures we have an indexer early on */
+    public void runInit() {
+      /* List the indexes in use - ensures we have an indexer early on */
 
       info(" * Current indexes: ");
       Set<IndexInfo> is = null;
 
       try {
-        is = app.getIndexInfo();
+        is = getIndexApp().getIndexInfo();
       } catch (Throwable t) {
         info(" * Exception getting index info:");
         info(" * " + t.getLocalizedMessage());
       }
 
       info(listIndexes(is));
+    }
 
-      info("************************************************************");
+    @Override
+    public void runProcess() throws Throwable {
+      getIndexApp().listen();
+    }
 
-      while (running) {
-        try {
-          app.listen();
-        } catch (InterruptedException ie) {
-          break;
-        } catch (Throwable t) {
-          if (!showedTrace) {
-            error(t);
-//            showedTrace = true;
-          } else {
-            error(t.getMessage());
-          }
-        } finally {
-          getIndexApp().close();
-        }
+    @Override
+    public void close() {
+      getIndexApp().close();
+    }
+
+    @Override
+    public boolean handleException(final Throwable val) {
+      if (!(val instanceof NotificationException)) {
+        return false;
       }
+
+      Throwable t = val.getCause();
+      if (t instanceof NameNotFoundException) {
+        // jmx shutting down?
+        error("Looks like JMX shut down.");
+        error(t);
+        running = false;
+        return true;
+      }
+
+      return false;
     }
   }
 
@@ -420,9 +425,8 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       return;
     }
 
-    running = true;
-
     processor = new ProcessorThread(getServiceName());
+    processor.setRunning(true);
     processor.start();
   }
 
@@ -436,26 +440,9 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       return;
     }
 
-    info("************************************************************");
-    info(" * Stopping indexer");
-    info("************************************************************");
-
-    running = false;
-
-    processor.interrupt();
-    try {
-      processor.join(20 * 1000);
-    } catch (InterruptedException ie) {
-    } catch (Throwable t) {
-      error("Error waiting for processor termination");
-      error(t);
-    }
+    ProcessorThread.stopProcess(processor);
 
     processor = null;
-
-    info("************************************************************");
-    info(" * Indexer terminated");
-    info("************************************************************");
   }
 
   @Override
