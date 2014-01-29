@@ -154,8 +154,15 @@ public class EntityBuilder  {
     return col;
   }
 
-  EventInfo makeEvent() throws CalFacadeException {
-    boolean override = getBool(PropertyInfoIndex.OVERRIDE);
+  /**
+   * @param expanded true if we are doing this for an expanded retrieval
+   *                 that is, treat everything as instances.
+   * @return an event object
+   * @throws CalFacadeException
+   */
+  EventInfo makeEvent(final boolean expanded) throws CalFacadeException {
+    final boolean override = !expanded &&
+            getBool(PropertyInfoIndex.OVERRIDE);
 
     BwEvent ev;
 

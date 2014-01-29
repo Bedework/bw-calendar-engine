@@ -33,6 +33,7 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.RecurringRetrievalMode;
+import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
@@ -307,6 +308,7 @@ public class BwIndexEsImpl implements BwIndexer {
     private QueryBuilder curQuery;
     private FilterBuilder curFilter;
     private List<SortTerm> curSort;
+    private RecurringRetrievalMode recurRetrieval;
 
     private AccessChecker accessCheck;
 
@@ -371,6 +373,7 @@ public class BwIndexEsImpl implements BwIndexer {
     res.end = end;
     res.pageSize = pageSize;
     res.accessCheck = accessCheck;
+    res.recurRetrieval = recurRetrieval;
 
     if (query != null) {
       res.curQuery = QueryBuilders.queryString(query);
@@ -397,7 +400,7 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     srb.setSearchType(SearchType.COUNT)
-            .setFilter(res.curFilter)
+            .setPostFilter(res.curFilter)
             .setFrom(0)
             .setSize(0);
 
@@ -480,7 +483,7 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setFilter(res.curFilter)
+            .setPostFilter(res.curFilter)
             .setFrom(res.pageStart);
 
     if (num < 0) {
@@ -569,7 +572,7 @@ public class BwIndexEsImpl implements BwIndexer {
       } else if (dtype.equals(docTypeLocation)) {
         entity = eb.makeLocation();
       } else if (dtype.equals(docTypeEvent)) {
-        entity = eb.makeEvent();
+        entity = eb.makeEvent(res.recurRetrieval.mode == Rmode.expanded);
         EventInfo ei = (EventInfo)entity;
         BwEvent ev = ei.getEvent();
 

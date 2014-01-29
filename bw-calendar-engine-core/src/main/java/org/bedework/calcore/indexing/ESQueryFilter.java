@@ -175,7 +175,7 @@ public class ESQueryFilter implements CalintfDefs {
     }
 
     /* If the search is for expanded events we want instances or
-       non-recurring masters only.
+       overrides or non-recurring masters only.
 
        For non-expanded, if it's filtered we don't limit -
        the filter needs to check the instances and maybe the overrides.
@@ -192,6 +192,7 @@ public class ESQueryFilter implements CalintfDefs {
                                         BwIndexer.docTypeEvent));
 
       limit = or(limit, addTerm(PropertyInfoIndex.INSTANCE, "true"));
+      limit = or(limit, addTerm(PropertyInfoIndex.OVERRIDE, "true"));
 
       limit = or(limit,
                  and(addTerm(PropertyInfoIndex.MASTER, "true"),
