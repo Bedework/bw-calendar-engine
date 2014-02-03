@@ -838,18 +838,20 @@ public class BwIndexEsImpl implements BwIndexer {
 
       if (!idx.startsWith(idxpars.getPublicIndexName()) &&
               !idx.startsWith(idxpars.getUserIndexName())) {
-        continue;
+        continue purge;
       }
 
       /* Don't delete those pointed to by the current aliases */
 
-      for (String alias: ii.getAliases()) {
-        if (alias.equals(idxpars.getPublicIndexName())) {
-          continue purge;
-        }
+      if (!Util.isEmpty(ii.getAliases())) {
+        for (String alias: ii.getAliases()) {
+          if (alias.equals(idxpars.getPublicIndexName())) {
+            continue purge;
+          }
 
-        if (alias.equals(idxpars.getUserIndexName())) {
-          continue purge;
+          if (alias.equals(idxpars.getUserIndexName())) {
+            continue purge;
+          }
         }
       }
 
