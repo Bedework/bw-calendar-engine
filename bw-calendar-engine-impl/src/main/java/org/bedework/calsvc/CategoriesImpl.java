@@ -92,9 +92,10 @@ public class CategoriesImpl
   }
 
   @Override
-  Collection<BwCategory> fetchAllIndexed(String ownerHref)
+  Collection<BwCategory> fetchAllIndexed(final boolean publick,
+                                         final String ownerHref)
           throws CalFacadeException {
-    return getIndexer(ownerHref).fetchAllCats();
+    return getIndexer(publick, ownerHref).fetchAllCats();
   }
 
   @Override

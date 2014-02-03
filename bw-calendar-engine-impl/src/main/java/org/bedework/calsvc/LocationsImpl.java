@@ -92,9 +92,10 @@ public class LocationsImpl
   }
 
   @Override
-  Collection<BwLocation> fetchAllIndexed(String ownerHref)
+  Collection<BwLocation> fetchAllIndexed(final boolean publick,
+                                         final String ownerHref)
           throws CalFacadeException {
-    return getIndexer(ownerHref).fetchAllLocations();
+    return getIndexer(publick, ownerHref).fetchAllLocations();
   }
 
   @Override

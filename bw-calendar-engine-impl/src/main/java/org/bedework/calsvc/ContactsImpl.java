@@ -92,9 +92,10 @@ public class ContactsImpl
   }
 
   @Override
-  Collection<BwContact> fetchAllIndexed(String ownerHref)
+  Collection<BwContact> fetchAllIndexed(final boolean publick,
+                                        final String ownerHref)
           throws CalFacadeException {
-    return getIndexer(ownerHref).fetchAllContacts();
+    return getIndexer(publick, ownerHref).fetchAllContacts();
   }
 
   @Override

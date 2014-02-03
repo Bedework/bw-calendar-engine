@@ -69,6 +69,7 @@ public class ESQueryFilter implements CalintfDefs {
 
   private boolean debug;
 
+  private boolean publick;
   private final int currentMode;
   private final BwPrincipal principal;
   private final boolean superUser;
@@ -110,17 +111,20 @@ public class ESQueryFilter implements CalintfDefs {
 
   /**
    *
+   * @param publick true for a public indexer
    * @param currentMode - guest, user,publicAdmin
    * @param principal - only used to add a filter for non-public
    * @param superUser - true if the principal is a superuser.
    * @param recurRetrieval  - value modifies search
    */
-  public ESQueryFilter(final int currentMode,
+  public ESQueryFilter(final boolean publick,
+                       final int currentMode,
                        final BwPrincipal principal,
                        final boolean superUser,
                        final RecurringRetrievalMode recurRetrieval) {
     debug = getLog().isDebugEnabled();
 
+    this.publick = publick;
     this.currentMode = currentMode;
     this.principal = principal;
     this.superUser = superUser;
@@ -323,7 +327,8 @@ public class ESQueryFilter implements CalintfDefs {
    * @throws CalFacadeException
    */
   public FilterBuilder principalFilter(final FilterBuilder filter) throws CalFacadeException {
-    boolean publicEvents = (currentMode == guestMode) ||
+    boolean publicEvents = publick ||
+            (currentMode == guestMode) ||
             (currentMode == publicAdminMode);
 
     //boolean all = (currentMode == guestMode) || ignoreCreator;

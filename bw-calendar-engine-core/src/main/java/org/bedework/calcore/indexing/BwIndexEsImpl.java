@@ -1550,7 +1550,8 @@ public class BwIndexEsImpl implements BwIndexer {
    * @return a filter builder
    */
   public ESQueryFilter getFilters(final RecurringRetrievalMode recurRetrieval) {
-    return new ESQueryFilter(currentMode, principal, superUser,
+    return new ESQueryFilter(publick,
+                             currentMode, principal, superUser,
                              recurRetrieval);
   }
 

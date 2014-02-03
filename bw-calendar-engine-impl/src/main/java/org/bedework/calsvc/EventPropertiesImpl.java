@@ -63,7 +63,8 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   private boolean adminCanEditAllPublic;
 
   /* fetch from indexer */
-  abstract Collection<T> fetchAllIndexed(String ownerHref) throws CalFacadeException;
+  abstract Collection<T> fetchAllIndexed(boolean publick,
+                                         String ownerHref) throws CalFacadeException;
 
   abstract T fetchIndexedByUid(String uid) throws CalFacadeException;
 
@@ -215,7 +216,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
 
-    getIndexer(val.getOwnerHref()).indexEntity(val);
+    getIndexer(false, val.getOwnerHref()).indexEntity(val);
 
     // Force a refetch
     removeCached(val.getOwnerHref());
@@ -240,7 +241,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
 
-    getIndexer(val.getOwnerHref()).indexEntity(val);
+    getIndexer(false, val.getOwnerHref()).indexEntity(val);
 
     // Force a refetch
     removeCached(val.getOwnerHref());
@@ -263,7 +264,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     coreHdlr.deleteProp(val);
 
-    getIndexer(val.getOwnerHref()).unindexEntity(val);
+    getIndexer(false, val.getOwnerHref()).unindexEntity(val);
 
     // Force a refetch
     removeCached(val.getOwnerHref());
@@ -336,10 +337,11 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
    *                   Protected methods
    * ==================================================================== */
 
-  protected BwIndexer getIndexer(String ownerHref) throws CalFacadeException {
+  protected BwIndexer getIndexer(final boolean getPublic,
+                                 final String ownerHref) throws CalFacadeException {
     String href = checkHref(ownerHref);
 
-    boolean publick = isGuest() || isPublicAdmin();
+    final boolean publick = getPublic || isGuest() || isPublicAdmin();
 
     if (publick) {
       if (publicIndexer == null) {
@@ -376,16 +378,16 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     final String ownerHref;
 
     if (publick) {
-      ownerHref = getPrincipal().getPrincipalRef();
-    } else {
       ownerHref = getPublicUser().getPrincipalRef();
+    } else {
+      ownerHref = getPrincipal().getPrincipalRef();
     }
 
 
     Collection<T> ents = getCached(ownerHref);
 
     if (ents == null) {
-      ents = fetchAllIndexed(ownerHref);
+      ents = fetchAllIndexed(publick, ownerHref);
 
       if (Util.isEmpty(ents)) {
         return new ArrayList<>();
