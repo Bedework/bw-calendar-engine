@@ -242,7 +242,7 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
     }
 
     Set<EventInfo> overrides = ei.getOverrides();
-    Set<EventInfo> newovs = new TreeSet<EventInfo>();
+    Set<EventInfo> newovs = new TreeSet<>();
 
     if (overrides != null) {
       for (EventInfo oei: overrides) {

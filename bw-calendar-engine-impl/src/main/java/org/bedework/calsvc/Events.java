@@ -401,6 +401,11 @@ class Events extends CalSvcDb implements EventsI {
                                      attendeeSchedulingObject) ||
                         ei.getOverridesChanged();
 
+      /* TODO - this is wrong.
+         At the very least we shouldonly reschedule the override that changed.
+         However adding an override looks like a change for all the fields
+         copied in. They shouldonly be a change if the value is differeet
+       */
       boolean doReschedule = ei.getUpdResult().doReschedule;
 
       if (ei.getNumOverrides() > 0) {
@@ -433,9 +438,10 @@ class Events extends CalSvcDb implements EventsI {
         return ei.getUpdResult();
       }
 
-      if (doReschedule) {
-        getSvc().getScheduler().setupReschedule(ei);
-      }
+      /* TODO - fix this */
+//      if (doReschedule) {
+  //      getSvc().getScheduler().setupReschedule(ei);
+    //  }
 
       final UpdateResult updResult = ei.getUpdResult();
 
@@ -459,7 +465,20 @@ class Events extends CalSvcDb implements EventsI {
           }
         }
 
-        if (organizerSchedulingObject || updResult.reply) {
+        boolean sendit = organizerSchedulingObject || updResult.reply;
+
+        if (!sendit) {
+          if (!Util.isEmpty(ei.getOverrides())) {
+            for (EventInfo oei: ei.getOverrides()) {
+              if (ei.getUpdResult().reply) {
+                sendit = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (sendit) {
           SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
 
           sched.implicitSchedule(ei,
@@ -512,6 +531,8 @@ class Events extends CalSvcDb implements EventsI {
 
     Collection<ChangeTableEntry> ctes = ei.getChangeset(getPrincipalHref()).getEntries();
 
+    boolean sequenceChanged = false;
+
     for (ChangeTableEntry cte: ctes) {
       if (!cte.getChanged()) {
         continue;
@@ -540,10 +561,22 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       if (organizerSchedulingObject) {
+        if (cte.getIndex().equals(PropertyInfoIndex.SEQUENCE)) {
+          sequenceChanged = true;
+        }
+
         BwIcalPropertyInfoEntry pi = BwIcalPropertyInfo.getPinfo(cte.getIndex());
         if (pi.getReschedule()) {
           updResult.doReschedule = true;
         }
+      }
+    }
+
+    BwEvent ev = ei.getEvent();
+
+    if (!(ev instanceof BwEventProxy)) {
+      if (organizerSchedulingObject && !sequenceChanged) {
+        ev.setSequence(ev.getSequence() + 1);
       }
     }
 
