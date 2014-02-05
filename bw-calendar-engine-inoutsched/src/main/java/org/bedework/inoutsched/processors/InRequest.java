@@ -850,6 +850,10 @@ public class InRequest extends InProcessor {
           break;
 
         case SEQUENCE:
+          if (chg.changed(ipi,
+                          ourEv.getSequence(), inEv.getSequence())) {
+            ourEv.setSequence(inEv.getSequence());
+          }
           break;
 
         case STATUS:

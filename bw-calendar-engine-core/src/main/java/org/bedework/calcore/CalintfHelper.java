@@ -310,11 +310,6 @@ public abstract class CalintfHelper
     }
 
     getIndexer().indexEntity(ei);
-
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-    }
   }
 
   /** Called to notify container that an event occurred. This method should

@@ -185,6 +185,13 @@ public class BwIndexEsImpl implements BwIndexer {
   private IndexProperties idxpars;
   private BasicSystemProperties basicSysprops;
 
+  /* This is used for testng - we delay searches to give the indexer
+   * time to catch up
+   */
+  private static long lastIndexTime;
+
+  private final static long indexerDelay = 1100;
+
   /*
   private static Set<String> eventDoctypes;
 
@@ -367,6 +374,18 @@ public class BwIndexEsImpl implements BwIndexer {
                              final int pageSize,
                              final AccessChecker accessCheck,
                              final RecurringRetrievalMode recurRetrieval) throws CalFacadeException {
+    if (basicSysprops.getTestMode()) {
+      long timeSinceIndex = System.currentTimeMillis() - lastIndexTime;
+      long waitTime = indexerDelay - timeSinceIndex;
+
+      if (waitTime > 0) {
+        try {
+          Thread.sleep(waitTime);
+        } catch (InterruptedException e) {
+        }
+      }
+    }
+
     EsSearchResult res = new EsSearchResult(this);
 
     res.start = start;
@@ -721,6 +740,8 @@ public class BwIndexEsImpl implements BwIndexer {
       IndexResponse resp = index(rec);
     } catch (Throwable t) {
       throw new CalFacadeException(t);
+    } finally {
+      lastIndexTime = System.currentTimeMillis();
     }
   }
 
@@ -748,6 +769,8 @@ public class BwIndexEsImpl implements BwIndexer {
     } catch (Throwable t) {
       error(t);
       throw new CalFacadeException(t);
+    } finally {
+      lastIndexTime = System.currentTimeMillis();
     }
   }
 

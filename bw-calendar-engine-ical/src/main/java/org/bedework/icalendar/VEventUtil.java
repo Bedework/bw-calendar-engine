@@ -54,6 +54,7 @@ import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.ResourceList;
+import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.component.Available;
 import net.fortuna.ical4j.model.component.VAvailability;
@@ -221,30 +222,8 @@ public class VEventUtil extends IcalUtil {
       String strval = val.getRecurrenceId();
       if ((strval != null) && (strval.length() > 0)) {
         isInstance = true;
-        // DORECUR - we should be restoring to original form.
 
-        /* Try using timezone from dtstart so we can more often be in same form
-         * as original.
-         */
-        Date dt = new DateTime(strval);
-
-        BwDateTime dts = val.getDtstart();
-
-        if (dts.getDateType()) {
-          // RECUR - fix all day recurrences sometime
-          if (strval.length() > 8) {
-            // Try to fix up bad all day recurrence ids. - assume a local timezone
-            ((DateTime)dt).setTimeZone(null);
-            dt = new Date(dt.toString().substring(0, 8));
-          }
-        } else if (!val.getForceUTC()) {
-          if ((dts != null) && !dts.isUTC()) {
-            DtStart ds = dts.makeDtStart();
-            ((DateTime)dt).setTimeZone(ds.getTimeZone());
-          }
-        }
-
-        pl.add(new RecurrenceId(dt));
+        pl.add(new RecurrenceId(makeZonedDt(val, strval)));
       }
 
       /* ------------------- Alarms -------------------- */
@@ -708,9 +687,9 @@ public class VEventUtil extends IcalUtil {
         }
       }
 
-      makeDlp(false, val.getRdates(), pl);
+      makeDlp(val, false, val.getRdates(), pl);
 
-      makeDlp(true, val.getExdates(), pl);
+      makeDlp(val, true, val.getExdates(), pl);
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
@@ -802,11 +781,22 @@ public class VEventUtil extends IcalUtil {
     return prop;
   }
 
-  private static void makeDlp(final boolean exdt,
+  private static void makeDlp(final BwEvent val,
+                              final boolean exdt,
                               final Collection<BwDateTime> dts,
                               final PropertyList pl) throws Throwable {
     if ((dts == null) || (dts.isEmpty())) {
       return;
+    }
+
+    TimeZone tz = null;
+    if (!val.getForceUTC()) {
+      BwDateTime dtstart = val.getDtstart();
+
+      if ((dtstart != null) && !dtstart.isUTC()) {
+        DtStart ds = dtstart.makeDtStart();
+        tz = ds.getTimeZone();
+      }
     }
 
     /* Generate as one date per property - matches up to other vendors better */
@@ -823,10 +813,18 @@ public class VEventUtil extends IcalUtil {
         dl.add(new Date(dt.getDtval()));
       } else {
         dl = new DateList(Value.DATE_TIME);
-        dl.setUtc(true);
-        DateTime dtm = new DateTime(dt.getDate());
-        dtm.setUtc(true);
-        dl.add(dtm);
+
+        if (tz == null) {
+          dl.setUtc(true);
+          DateTime dtm = new DateTime(dt.getDate());
+          dtm.setUtc(true);
+          dl.add(dtm);
+        } else {
+          dl.setTimeZone(tz);
+          DateTime dtm = new DateTime(dt.getDate());
+          dtm.setTimeZone(tz);
+          dl.add(dtm);
+        }
       }
 
       DateListProperty dlp;
@@ -837,12 +835,45 @@ public class VEventUtil extends IcalUtil {
         dlp = new RDate(dl);
       }
 
+      if (tz != null) {
+        dlp.setTimeZone(tz);
+      }
+
       if (dateType) {
         dlp.getParameters().add(Value.DATE);
       }
 
       pl.add(dlp);
     }
+  }
+
+  private static Date makeZonedDt(final BwEvent val,
+                                  final String dtval) throws Throwable {
+    BwDateTime dtstart = val.getDtstart();
+
+    Date dt = new DateTime(dtval);
+
+    if (dtstart.getDateType()) {
+      // RECUR - fix all day recurrences sometime
+      if (dtval.length() > 8) {
+        // Try to fix up bad all day recurrence ids. - assume a local timezone
+        ((DateTime)dt).setTimeZone(null);
+        return new Date(dt.toString().substring(0, 8));
+      }
+
+      return dt;
+    }
+
+    if (val.getForceUTC()) {
+      return dt;
+    }
+
+    if ((dtstart != null) && !dtstart.isUTC()) {
+      DtStart ds = dtstart.makeDtStart();
+      ((DateTime)dt).setTimeZone(ds.getTimeZone());
+    }
+
+    return dt;
   }
 
      /*
