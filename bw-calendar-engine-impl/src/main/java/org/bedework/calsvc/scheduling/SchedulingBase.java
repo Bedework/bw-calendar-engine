@@ -27,6 +27,7 @@ import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
@@ -40,7 +41,9 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -224,8 +227,18 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
       masterSuppressed = true;
     }
 
+    List<String> deletedRecurids = null;
+
     if (masterSuppressed) {
       // Attendee will appear in overrides. Remove rules and r/exdates
+      if (!Util.isEmpty(ei.getUpdResult().deletedInstances)) {
+        deletedRecurids = new ArrayList<>();
+
+        for (BwRecurrenceInstance ri: ei.getUpdResult().deletedInstances) {
+          deletedRecurids.add(ri.getRecurrenceId());
+        }
+      }
+
       if (newEv.getRrules() != null) {
         newEv.getRrules().clear();
       }
@@ -278,11 +291,17 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
             String rid = oev.getRecurrenceId();
             BwDateTime bwrdt = BwDateTime.fromUTC(rid.length() == 8, rid);
             newEv.addRdate(bwrdt);
-            if ((oev.getStatus() != null) &&
+
+            if ((deletedRecurids != null) &&
+                    deletedRecurids.contains(oev.getRecurrenceId())) {
+              oev.setStatus(BwEvent.statusCancelled);
+            } else if ((oev.getStatus() != null) &&
                 oev.getStatus().equals(BwEvent.statusMasterSuppressed)) {
               // Not overridden - set to saved master value
               oev.setStatus(masterStatus);
             }
+
+            oev.setSequence(ev.getSequence());
           } else {
             continue;
           }

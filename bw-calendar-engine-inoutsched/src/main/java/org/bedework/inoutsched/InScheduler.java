@@ -40,6 +40,7 @@ import org.bedework.inoutsched.processors.SchedProcessor.SchedProcResult;
 import org.bedework.sysevents.events.EntityQueuedEvent;
 import org.bedework.sysevents.events.ScheduleUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
 import java.util.Collection;
@@ -185,8 +186,14 @@ public class InScheduler extends AbstractScheduler {
       if (debug) {
         trace("InSchedule event for " + msg.getOwnerHref() + " " +
               msg.getName() +
-              " with method " + method + "\n" +
+              " with method " + ScheduleMethods.methods[method] + "\n" +
               ev);
+
+        if (ev.getSuppressed()){
+          for (EventInfo oei: ei.getOverrides()) {
+            trace("Override: " + oei.getEvent());
+          }
+        }
       }
 
       InProcessor proc = null;
