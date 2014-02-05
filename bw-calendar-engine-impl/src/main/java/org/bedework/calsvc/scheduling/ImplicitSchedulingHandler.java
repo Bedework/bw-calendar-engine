@@ -59,8 +59,9 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
   @Override
   public void implicitSchedule(final EventInfo ei,
-                               final UpdateResult uer,
                                final boolean noInvites) throws CalFacadeException {
+    UpdateResult uer = ei.getUpdResult();
+
     if (debug) {
       dump(uer);
     }
@@ -70,9 +71,32 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
     boolean organizerSchedulingObject = ev.getOrganizerSchedulingObject();
     boolean attendeeSchedulingObject = ev.getAttendeeSchedulingObject();
 
+    if (ev.getSuppressed()) {
+      if (!Util.isEmpty(ei.getOverrides())) {
+        for (EventInfo oei: ei.getOverrides()) {
+          uer = oei.getUpdResult();
+          if (debug) {
+            dump(uer);
+          }
+          BwEvent oev = oei.getEvent();
+
+          if (oev.getOrganizerSchedulingObject()) {
+            organizerSchedulingObject = true;
+          }
+
+          if (oev.getAttendeeSchedulingObject()) {
+            attendeeSchedulingObject = true;
+          }
+        }
+      }
+    }
+
     if (!organizerSchedulingObject &&
         !attendeeSchedulingObject) {
       // Not a scheduling event
+      if (debug) {
+        trace("No a scheduling object: just return");
+      }
       return;
     }
 

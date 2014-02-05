@@ -334,7 +334,6 @@ class Events extends CalSvcDb implements EventsI {
           SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
 
           sched.implicitSchedule(ei,
-                                 updResult,
                                  noInvites);
 
           /* We assume we don't need to update again to set attendee status
@@ -470,7 +469,7 @@ class Events extends CalSvcDb implements EventsI {
         if (!sendit) {
           if (!Util.isEmpty(ei.getOverrides())) {
             for (EventInfo oei: ei.getOverrides()) {
-              if (ei.getUpdResult().reply) {
+              if (oei.getUpdResult().reply) {
                 sendit = true;
                 break;
               }
@@ -482,7 +481,6 @@ class Events extends CalSvcDb implements EventsI {
           SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
 
           sched.implicitSchedule(ei,
-                                 updResult,
                                  noInvites);
 
           /* We assume we don't need to update again to set attendee status
@@ -942,10 +940,10 @@ class Events extends CalSvcDb implements EventsI {
                             IcalDefs.partstatDeclined, null);
           } else if (event.getOrganizerSchedulingObject()) {
             // send a cancel
-            UpdateResult uer = new UpdateResult();
+            UpdateResult uer = ei.getUpdResult();
             uer.deleting = true;
 
-            sched.implicitSchedule(ei, uer, false);
+            sched.implicitSchedule(ei, false);
           }
         } catch (CalFacadeException cfe) {
           if (debug) {

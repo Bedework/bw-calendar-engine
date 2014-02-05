@@ -21,7 +21,6 @@ package org.bedework.calsvc.scheduling;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calfacade.svc.EventInfo.UpdateResult;
 import org.bedework.calsvci.SchedulingI;
 
 /**
@@ -41,13 +40,11 @@ public interface SchedulingIntf extends SchedulingI {
    * <p>If we want to cancel we send cancels.
    *
    * @param ei
-   * @param uer   information about the change that took place.
    * @param noInvites - suppresses the sending of invitations. Does NOT suppress the
    *               sending of CANCEL to disinvited attendees
    * @throws CalFacadeException
    */
   void implicitSchedule(EventInfo ei,
-                        UpdateResult uer,
                         boolean noInvites)
           throws CalFacadeException;
 
