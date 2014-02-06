@@ -216,11 +216,15 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
 
-    getIndexer(false, val.getOwnerHref()).indexEntity(val);
+    getIndexer(val.getPublick(), val.getOwnerHref()).indexEntity(val);
 
-    // Force a refetch
-    removeCached(val.getOwnerHref());
-    removeCachedByUid(val.getUid());
+    // Update cached
+    Collection<T> ents = get();
+    if (ents != null) {
+      ents.add(val);
+    }
+
+    putCachedByUid(val.getUid(), val);
 
     return true;
   }
@@ -241,11 +245,17 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
 
-    getIndexer(false, val.getOwnerHref()).indexEntity(val);
+    getIndexer(val.getPublick(), val.getOwnerHref()).indexEntity(val);
 
-    // Force a refetch
-    removeCached(val.getOwnerHref());
-    removeCachedByUid(val.getUid());
+    // Update cached
+    Collection<T> ents = get();
+    if (ents != null) {
+      ents.remove(val);
+      ents.add(val);
+    }
+
+//    removeCached(val.getOwnerHref());
+    putCachedByUid(val.getUid(), val);
   }
 
   @Override
@@ -264,10 +274,14 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     coreHdlr.deleteProp(val);
 
-    getIndexer(false, val.getOwnerHref()).unindexEntity(val);
+    getIndexer(val.getPublick(), val.getOwnerHref()).unindexEntity(val);
 
-    // Force a refetch
-    removeCached(val.getOwnerHref());
+    // Update cached
+    Collection<T> ents = get();
+    if (ents != null) {
+      ents.remove(val);
+    }
+
     removeCachedByUid(val.getUid());
 
     return 0;
