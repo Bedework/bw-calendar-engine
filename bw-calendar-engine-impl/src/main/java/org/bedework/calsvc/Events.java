@@ -772,7 +772,7 @@ class Events extends CalSvcDb implements EventsI {
     if (ct != null) {
       EnsureEntityExistsResult<BwContact> eeers =
         getSvc().getContactsHandler().ensureExists(ct,
-                                                   event.getOwnerHref());
+                                                   ct.getOwnerHref());
 
       if (eeers.added) {
         updResult.contactsAdded++;
@@ -785,8 +785,9 @@ class Events extends CalSvcDb implements EventsI {
     BwLocation loc = event.getLocation();
 
     if (loc != null) {
-      EnsureEntityExistsResult<BwLocation> eeerl = getSvc().getLocationsHandler().ensureExists(loc,
-                                                                        event.getOwnerHref());
+      EnsureEntityExistsResult<BwLocation> eeerl =
+              getSvc().getLocationsHandler().ensureExists(loc,
+                                                          loc.getOwnerHref());
 
       if (eeerl.added) {
         updResult.locationsAdded++;
