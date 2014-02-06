@@ -1024,6 +1024,9 @@ public class BwEventUtil extends IcalUtil {
                                            xp.getParameters().toString(),
                                            pval));
             }
+
+            break;
+
           default:
             if (debug) {
               debugMsg("Unsupported property with class " + prop.getClass() +
