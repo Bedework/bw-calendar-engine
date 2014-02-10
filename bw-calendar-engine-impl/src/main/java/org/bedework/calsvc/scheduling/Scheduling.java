@@ -65,8 +65,7 @@ public class Scheduling extends ImplicitSchedulingHandler {
             get(preferred,
                 ev.getUid(),
                 null,
-                RecurringRetrievalMode.overrides,
-                true);
+                RecurringRetrievalMode.overrides);
 
     if (Util.isEmpty(evs)) {
       return null;

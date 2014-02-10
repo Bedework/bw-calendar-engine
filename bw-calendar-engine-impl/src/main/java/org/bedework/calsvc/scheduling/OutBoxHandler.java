@@ -64,9 +64,7 @@ public abstract class OutBoxHandler extends SchedulingBase {
 
     addAutoScheduleMessage(false,
                            outBox.getOwnerHref(),
-                           event.getName(),
-                           event.getUid(),
-                           event.getRecurrenceId());
+                           event.getName());
 
     return null;
   }

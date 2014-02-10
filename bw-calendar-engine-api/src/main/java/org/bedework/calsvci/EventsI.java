@@ -55,15 +55,13 @@ public interface EventsI extends Serializable {
    * @param   guid      String guid for the event
    * @param   recurrenceId String recurrence id or null
    * @param recurRetrieval How recurring event is returned.
-   * @param scheduling
    * @return  Collection of EventInfo objects representing event(s).
    * @throws CalFacadeException
    */
   public Collection<EventInfo> get(String colPath,
                                    String guid,
                                    String recurrenceId,
-                                   RecurringRetrievalMode recurRetrieval,
-                                   boolean scheduling)
+                                   RecurringRetrievalMode recurRetrieval)
         throws CalFacadeException;
 
   /** Get events given the calendar and String name. Return null for not

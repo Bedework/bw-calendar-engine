@@ -87,11 +87,10 @@ public class InScheduler extends AbstractScheduler {
 
       svci = getSvci(msg.getOwnerHref());
 
-      Collection<EventInfo> eis = svci.getEventsHandler().get(msg.getColPath(),
-                                                 msg.getUid(),
-                                                 msg.getRecurrenceId(),
-                                                 RecurringRetrievalMode.expanded,
-                                                 false);
+      Collection<EventInfo> eis = svci.getEventsHandler().get(getParentPath(msg.getHref()),
+                                                              getName(msg.getHref()),
+                                                              msg.getRecurrenceId(),
+                                                              RecurringRetrievalMode.expanded);
       if (Util.isEmpty(eis)) {
         // Event deleted?.
         if (debug) {

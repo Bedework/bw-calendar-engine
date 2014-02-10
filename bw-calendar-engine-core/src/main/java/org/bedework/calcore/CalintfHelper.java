@@ -610,7 +610,6 @@ public abstract class CalintfHelper
                                              val.getHref(),
                                              shared,
                                              getSyspars().getTestMode(),
-                                             val.getUid(),
                                              val.getRecurrenceId(),
                                              note,
                                              null)); // XXX Emit multiple targted?
@@ -675,7 +674,6 @@ public abstract class CalintfHelper
                                                val.getHref(),
                                                shared,
                                                true, // Indexed
-                                               val.getUid(),
                                                val.getRecurrenceId(),
                                                note,  // changes
                                                null)); // XXX Emit multiple targted?

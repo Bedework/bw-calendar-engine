@@ -237,7 +237,6 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
       final Collection<EventInfo> inevs = getEvents(inboxPath,
                                                     ev.getUid(),
                                                     ev.getRecurrenceId(),
-                                                    true,
                                                     RecurringRetrievalMode.overrides);
 
       for (final EventInfo inei: inevs) {
@@ -280,9 +279,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
 
     addAutoScheduleMessage(true,
                            attPrincipal.getPrincipalRef(),
-                           ev.getName(),
-                           ev.getUid(),
-                           ev.getRecurrenceId());
+                           ev.getName());
 
     return null;
   }

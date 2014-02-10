@@ -25,8 +25,8 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.sysevents.events.CollectionChangeEvent;
 import org.bedework.sysevents.events.CollectionDeletedEvent;
+import org.bedework.sysevents.events.CollectionUpdateEvent;
 import org.bedework.sysevents.events.EntityDeletedEvent;
 import org.bedework.sysevents.events.EntityUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
@@ -86,9 +86,9 @@ public class MessageProcessor extends CalSys {
           debugMsg("Event " + msg.getSysCode());
         }
 
-        if (msg instanceof CollectionChangeEvent) {
+        if (msg instanceof CollectionUpdateEvent) {
           collectionsUpdated++;
-          doCollectionChange((CollectionChangeEvent)msg);
+          doCollectionChange((CollectionUpdateEvent)msg);
           return;
         }
 
@@ -162,13 +162,13 @@ public class MessageProcessor extends CalSys {
             unindexEntity(cde.getHref());
   }
 
-  private void doCollectionChange(final CollectionChangeEvent cce)
+  private void doCollectionChange(final CollectionUpdateEvent cce)
                                                    throws CalFacadeException {
     try {
       setCurrentPrincipal(null);
       getSvci();
 
-      BwCalendar col = getCollection(cce.getColPath());
+      BwCalendar col = getCollection(cce.getHref());
 
       if (col != null) {
         // Null if no access or removed.
@@ -177,30 +177,6 @@ public class MessageProcessor extends CalSys {
     } finally {
       close();
     }
-  }
-
-  private String getParentPath(final String val) {
-    int pos = val.lastIndexOf("/");
-
-    if (pos <= 0) {
-      return null;
-    }
-
-    return val.substring(0, pos);
-  }
-
-  private String getName(final String val) {
-    int pos = val.lastIndexOf("/");
-
-    if (pos <= 0) {
-      return val;
-    }
-
-    if (pos == val.length() - 1) {
-      return null;
-    }
-
-    return val.substring(pos + 1);
   }
 
   private void doEntityDelete(final EntityDeletedEvent ede)

@@ -24,7 +24,8 @@ import org.bedework.util.misc.ToString;
  * @author douglm
  *
  */
-public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEvent {
+public class EntityDeletedEvent extends OwnedHrefEvent
+        implements NotificationEvent {
   private static final long serialVersionUID = 1L;
 
   private String notification;
@@ -36,9 +37,9 @@ public class EntityDeletedEvent extends OwnedHrefEvent implements NotificationEv
   private String rid;
 
   /**
-   * @param code
+   * @param code the system event code
    * @param authPrincipalHref
-   * @param ownerHref
+   * @param ownerHref principal href of the owner
    * @param href
    * @param shared
    * @param publick

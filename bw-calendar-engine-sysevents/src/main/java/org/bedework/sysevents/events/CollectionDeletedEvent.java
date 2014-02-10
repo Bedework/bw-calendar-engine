@@ -32,7 +32,7 @@ public class CollectionDeletedEvent extends OwnedHrefEvent {
 
   /** Constructor
    *
-   * @param code
+   * @param code the system event code
    * @param authPrincipalHref
    * @param ownerHref
    * @param href path for deleted collection

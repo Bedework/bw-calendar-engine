@@ -31,29 +31,21 @@ public class EntityQueuedEvent extends NamedEvent {
   private static final long serialVersionUID = 1L;
 
   private String ownerHref;
-  private String uid;
-  private String rid;
   private boolean inBox;
 
   /**
    * @param code
    * @param ownerHref
    * @param name
-   * @param uid
-   * @param rid
    * @param inBox
    */
   public EntityQueuedEvent(final SysCode code,
                            final String ownerHref,
                            final String name,
-                           final String uid,
-                           final String rid,
                            final boolean inBox) {
     super(code, name);
 
     this.ownerHref = ownerHref;
-    this.uid = uid;
-    this.rid = rid;
     this.inBox = inBox;
   }
 
@@ -78,20 +70,6 @@ public class EntityQueuedEvent extends NamedEvent {
     return ownerHref;
   }
 
-  /**
-   * @return String
-   */
-  public String getUid() {
-    return uid;
-  }
-
-  /**
-   * @return String
-   */
-  public String getRecurrenceId() {
-    return rid;
-  }
-
   /** Get the inbox flag
    *
    * @return String   inbox flag
@@ -106,8 +84,6 @@ public class EntityQueuedEvent extends NamedEvent {
 
     ts.newLine();
     ts.append("ownerHref", getOwnerHref());
-    ts.append("uid", getUid());
-    ts.append("recurrenceId", getRecurrenceId());
     ts.append("inBox", getInBox());
   }
 }

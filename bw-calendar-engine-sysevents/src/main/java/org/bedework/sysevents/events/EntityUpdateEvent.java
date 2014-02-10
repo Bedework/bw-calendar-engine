@@ -32,19 +32,17 @@ public class EntityUpdateEvent extends OwnedHrefEvent implements NotificationEve
 
   private String targetPrincipalHref;
 
-  private String uid;
   private String rid;
 
   /**
-   * @param code
-   * @param authPrincipalHref
-   * @param ownerHref
+   * @param code the system event code
+   * @param authPrincipalHref principal href of authenticated user
+   * @param ownerHref principal href of the owner
    * @param href of the entity
-   * @param shared
+   * @param shared true if this is shared (for notifications)
    * @param indexed - true if already indexed
-   * @param uid
-   * @param rid
-   * @param notification
+   * @param rid recurrence id
+   * @param notification the message
    * @param targetPrincipalHref
    */
   public EntityUpdateEvent(final SysCode code,
@@ -53,7 +51,6 @@ public class EntityUpdateEvent extends OwnedHrefEvent implements NotificationEve
                            final String href,
                            final boolean shared,
                            final boolean indexed,
-                           final String uid,
                            final String rid,
                            final String notification,
                            final String targetPrincipalHref) {
@@ -63,7 +60,6 @@ public class EntityUpdateEvent extends OwnedHrefEvent implements NotificationEve
 
     this.notification = notification;
     this.targetPrincipalHref = targetPrincipalHref;
-    this.uid = uid;
     this.rid = rid;
   }
 
@@ -75,14 +71,6 @@ public class EntityUpdateEvent extends OwnedHrefEvent implements NotificationEve
   @Override
   public String getTargetPrincipalHref() {
     return targetPrincipalHref;
-  }
-
-  /** Get the uid
-   *
-   * @return String   uid
-   */
-  public String getUid() {
-    return uid;
   }
 
   /**
@@ -103,7 +91,6 @@ public class EntityUpdateEvent extends OwnedHrefEvent implements NotificationEve
     ts.append("notification", getNotification());
     ts.append("targetPrincipalHref", getTargetPrincipalHref());
 
-    ts.append("uid", getUid());
     if (getRecurrenceId() != null) {
       ts.append("recurrenceId", getRecurrenceId());
     }

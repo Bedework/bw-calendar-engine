@@ -1008,17 +1008,13 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
                             freeBusy);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreEventsI#getEvent(java.lang.String, java.lang.String, java.lang.String, boolean, org.bedework.calfacade.RecurringRetrievalMode)
-   */
   @Override
   public Collection<CoreEventInfo> getEvent(final String colPath,
                                           final String guid, final String rid,
-                                          final boolean scheduling,
                                           final RecurringRetrievalMode recurRetrieval)
            throws CalFacadeException {
     checkOpen();
-    return events.getEvent(colPath, guid, rid, scheduling, recurRetrieval);
+    return events.getEvent(colPath, guid, rid, recurRetrieval);
   }
 
   @Override

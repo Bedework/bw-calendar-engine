@@ -233,7 +233,6 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
   public Collection<CoreEventInfo> getEvent(final String colPath,
                                             final String uid,
                                             final String rid,
-                                            final boolean scheduling,
                                             final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
     BwEvent master = null;
@@ -315,7 +314,6 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
         for (String auid : master.getAvailableUids()) {
           Collection<CoreEventInfo> aceis = getEvent(colPath, auid,
                                                      null, // rid,
-                                                     scheduling,
                                                      recurRetrieval);
           if (aceis.size() != 1) {
             throwException(CalFacadeException.badResponse);

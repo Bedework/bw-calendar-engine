@@ -1568,12 +1568,13 @@ public class CalSvc extends CalSvcI {
     }
 
     @Override
-    public Collection getEvent(final BwCalendar cal, final String guid, final String rid,
+    public Collection getEvent(final BwCalendar cal,
+                               final String guid,
+                               final String rid,
                                final RecurringRetrievalMode recurRetrieval)
             throws CalFacadeException {
       return getEventsHandler().get(cal.getPath(), guid,
-                                                rid, recurRetrieval,
-                                                false);
+                                                rid, recurRetrieval);
     }
 
     @Override

@@ -69,14 +69,12 @@ public interface CoreEventsI extends Serializable {
    * @param guid      String guid for the event
    * @param rid       String recurrence id, null for non-recurring, null valued for
    *                    master or non-null-valued for particular occurrence.
-   * @param scheduling true if this is us manipulating the inbox.
    * @param recurRetrieval How recurring event is returned.
    * @return  Collection of CoreEventInfo objects representing event(s).
    * @throws CalFacadeException
    */
   public Collection<CoreEventInfo> getEvent(String colPath,
                                             String guid, String rid,
-                                            boolean scheduling,
                                             RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException;
 
@@ -139,7 +137,7 @@ public interface CoreEventsI extends Serializable {
      */
     public Collection<BwEventProxy> failedOverrides;
 
-    /** These have been changed in some way */
+    /** These have had start or end changed in some way */
     public List<BwRecurrenceInstance> updated;
 
     /** These have been deleted */
@@ -149,31 +147,31 @@ public interface CoreEventsI extends Serializable {
     public List<BwRecurrenceInstance> added;
 
     /**
-     * @param val
+     * @param val the instance
      */
     public void addUpdated(final BwRecurrenceInstance val) {
       if (updated == null) {
-        updated = new ArrayList<BwRecurrenceInstance>();
+        updated = new ArrayList<>();
       }
       updated.add(val);
     }
 
     /**
-     * @param val
+     * @param val the instance
      */
     public void addDeleted(final BwRecurrenceInstance val) {
       if (deleted == null) {
-        deleted = new ArrayList<BwRecurrenceInstance>();
+        deleted = new ArrayList<>();
       }
       deleted.add(val);
     }
 
     /**
-     * @param val
+     * @param val the instance
      */
     public void addAdded(final BwRecurrenceInstance val) {
       if (added == null) {
-        added = new ArrayList<BwRecurrenceInstance>();
+        added = new ArrayList<>();
       }
       added.add(val);
     }
@@ -223,8 +221,8 @@ public interface CoreEventsI extends Serializable {
 
     /** Constructor
      *
-     * @param eventDeleted
-     * @param alarmsDeleted
+     * @param eventDeleted true if deleted
+     * @param alarmsDeleted true if alarms deleted
      */
     public DelEventResult(final boolean eventDeleted,
                           final int alarmsDeleted) {
@@ -285,7 +283,7 @@ public interface CoreEventsI extends Serializable {
    * <p>Note the lastmod has a coarse granularity so it may need to be backed off
    * to ensure all events are covered if doing batches.
    *
-   * @param lastmod
+   * @param lastmod the date
    * @return collection of opaque key objects.
    * @throws CalFacadeException
    */
@@ -295,7 +293,7 @@ public interface CoreEventsI extends Serializable {
   /** Get an event given the internal key. Returns null if event no longer
    * exists.
    *
-   * @param key
+   * @param key to event
    * @return CoreEventInfo
    * @throws CalFacadeException
    */
@@ -322,7 +320,7 @@ public interface CoreEventsI extends Serializable {
    * null will return the system roots. Tese are the names of stored entities,
    * NOT the paths.
    *
-   * @param parentPath
+   * @param parentPath path
    * @param start start index in the batch - 0 for the first
    * @param count count of results we want
    * @return collection of String names or null for no more

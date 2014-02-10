@@ -85,19 +85,14 @@ class Events extends CalSvcDb implements EventsI {
     super(svci);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventsI#get(org.bedework.calfacade.svc.BwSubscription, org.bedework.calfacade.BwCalendar, java.lang.String, java.lang.String, org.bedework.calfacade.RecurringRetrievalMode)
-   */
   @Override
   public Collection<EventInfo> get(final String colPath,
                                    final String guid, final String recurrenceId,
-                                   final RecurringRetrievalMode recurRetrieval,
-                                   final boolean scheduling)
+                                   final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
     Collection<EventInfo> res = postProcess(getCal().getEvent(colPath,
                                                               guid,
                                                               recurrenceId,
-                                                              scheduling,
                                                               recurRetrieval));
 
     int num = 0;
@@ -861,26 +856,6 @@ class Events extends CalSvcDb implements EventsI {
                           recurRetrieval, freeBusy)));
 
     return ts;
-  }
-
-  /** Method which allows us to flag it as a scheduling action
-   *
-   * @param colPath
-   * @param guid
-   * @param recurrenceId
-   * @param scheduling
-   * @param recurRetrieval
-   * @return Collection<EventInfo> - collection as there may be more than
-   *                one with this uid in the inbox.
-   * @throws CalFacadeException
-   */
-  Collection<EventInfo> get(final String colPath,
-                            final String guid, final String recurrenceId,
-                            final boolean scheduling,
-                            final RecurringRetrievalMode recurRetrieval)
-                            throws CalFacadeException {
-    return postProcess(getCal().getEvent(colPath, guid, recurrenceId,
-                                         scheduling, recurRetrieval));
   }
 
   Set<EventInfo> getSynchEvents(final String path,

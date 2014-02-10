@@ -24,35 +24,32 @@ import org.bedework.util.misc.ToString;
  * @author douglm
  *
  */
-public class OwnedHrefEvent extends SysEvent {
+public class OwnedHrefEvent extends HrefEvent {
   private static final long serialVersionUID = 1L;
 
   private String authPrincipalHref;
 
   private String ownerHref;
 
-  private String href;
-
   private boolean shared;
 
   /**
-   * @param code
+   * @param code the system event code
    * @param authPrincipalHref
    * @param ownerHref
    * @param href
    * @param shared
    */
   public OwnedHrefEvent(final SysCode code,
-                         final String authPrincipalHref,
-                         final String ownerHref,
-                         final String href,
-                         final boolean shared) {
-    super(code);
+                        final String authPrincipalHref,
+                        final String ownerHref,
+                        final String href,
+                        final boolean shared) {
+    super(code, href);
 
     this.authPrincipalHref = authPrincipalHref;
     this.ownerHref = ownerHref;
 
-    this.href = href;
     this.shared = shared;
   }
 
@@ -69,14 +66,6 @@ public class OwnedHrefEvent extends SysEvent {
    */
   public String getOwnerHref() {
     return ownerHref;
-  }
-
-  /** Get the href
-   *
-   * @return String   href
-   */
-  public String getHref() {
-    return href;
   }
 
   /** Get the shared flag. True if the entity is in a shared collection or if the
@@ -98,7 +87,6 @@ public class OwnedHrefEvent extends SysEvent {
 
     ts.append("authPrincipalHref", getAuthPrincipalHref());
     ts.append("ownerHref", getOwnerHref());
-    ts.append("href", getHref());
     ts.append("shared", getShared());
   }
 }

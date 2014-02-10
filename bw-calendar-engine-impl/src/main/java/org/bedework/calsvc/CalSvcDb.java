@@ -156,7 +156,6 @@ public class CalSvcDb implements Serializable {
    * @param colPath
    * @param guid
    * @param recurrenceId
-   * @param scheduling
    * @param recurRetrieval
    * @return Collection<EventInfo> - collection as there may be more than
    *                one with this uid in the inbox.
@@ -164,12 +163,11 @@ public class CalSvcDb implements Serializable {
    */
   protected Collection<EventInfo> getEvents(final String colPath,
                                             final String guid, final String recurrenceId,
-                                            final boolean scheduling,
                                             final RecurringRetrievalMode recurRetrieval)
                             throws CalFacadeException {
     Events events = (Events)getSvc().getEventsHandler();
 
-    return events.get(colPath, guid, recurrenceId, scheduling,
+    return events.get(colPath, guid, recurrenceId,
                       recurRetrieval);
   }
 

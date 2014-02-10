@@ -24,51 +24,26 @@ import org.bedework.util.misc.ToString;
  * @author douglm
  *
  */
-public class EntityEvent extends NamedEvent {
+public class EntityEvent extends OwnedHrefEvent {
   private static final long serialVersionUID = 1L;
 
-  private String ownerHref;
-
-  private String uid;
   private String rid;
-  private String colPath;
 
   /**
-   * @param code
+   * @param code the system event code
+   * @param authPrincipalHref
    * @param ownerHref
-   * @param name
-   * @param uid
+   * @param href
    * @param rid
-   * @param colPath path to parent
    */
   public EntityEvent(final SysCode code,
-                           final String ownerHref,
-                           final String name,
-                           final String uid,
-                           final String rid,
-                           final String colPath) {
-    super(code, name);
+                     final String authPrincipalHref,
+                     final String ownerHref,
+                     final String href,
+                     final String rid) {
+    super(code, authPrincipalHref, ownerHref, href, false);
 
-    this.ownerHref = ownerHref;
-
-    this.uid = uid;
     this.rid = rid;
-    this.colPath = colPath;
-  }
-
-  /**
-   * @return String
-   */
-  public String getOwnerHref() {
-    return ownerHref;
-  }
-
-  /** Get the uid
-   *
-   * @return String   uid
-   */
-  public String getUid() {
-    return uid;
   }
 
   /**
@@ -76,14 +51,6 @@ public class EntityEvent extends NamedEvent {
    */
   public String getRecurrenceId() {
     return rid;
-  }
-
-  /** Get the collection path
-   *
-   * @return String   path
-   */
-  public String getColPath() {
-    return colPath;
   }
 
   /** Add our stuff to the ToString object
@@ -94,12 +61,6 @@ public class EntityEvent extends NamedEvent {
   public void toStringSegment(final ToString ts) {
     super.toStringSegment(ts);
 
-    ts.append("ownerHref", getOwnerHref());
-
-    ts.append("uid", getUid());
-
     ts.append("recurrenceId", getRecurrenceId());
-
-    ts.append("colPath", getColPath());
   }
 }

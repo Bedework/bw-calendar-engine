@@ -220,7 +220,6 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     startTransaction();
     Collection<CoreEventInfo> ceis = getCal().getEvent(colPath,
                                                    uid, recurrenceId,
-                                                   false,
                                                    new RecurringRetrievalMode(Rmode.entityOnly));
 
     if (ceis.size() != 1) {

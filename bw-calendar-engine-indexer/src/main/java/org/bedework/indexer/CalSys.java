@@ -127,6 +127,30 @@ public abstract class CalSys {
     this.principal = principal;
   }
 
+  protected String getParentPath(final String href) {
+    int pos = href.lastIndexOf("/");
+
+    if (pos <= 0) {
+      return null;
+    }
+
+    return href.substring(0, pos);
+  }
+
+  protected String getName(final String href) {
+    int pos = href.lastIndexOf("/");
+
+    if (pos <= 0) {
+      return href;
+    }
+
+    if (pos == href.length() - 1) {
+      return null;
+    }
+
+    return href.substring(pos + 1);
+  }
+
   /** Get an svci object and return it. Also embed it in this object.
    *
    * @return svci object

@@ -34,7 +34,7 @@ public class PrincipalEvent extends SysEvent implements MillisecsEvent {
 
   /** Constructor
    *
-   * @param code
+   * @param code the system event code
    * @param principalHref
    * @param millis - time for stats - e.g. time to process login
    */

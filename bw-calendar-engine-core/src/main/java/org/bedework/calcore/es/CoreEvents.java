@@ -224,25 +224,18 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
   public void startTransaction() throws CalFacadeException {
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcore.CalintfHelper#endTransaction()
-   */
   @Override
   public void endTransaction() throws CalFacadeException {
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreEventsI#getEvent(java.lang.String, java.lang.String, java.lang.String, boolean, org.bedework.calfacade.RecurringRetrievalMode)
-   */
   @Override
   public Collection<CoreEventInfo> getEvent(final String colPath,
                                             final String uid,
                                             final String rid,
-                                            final boolean scheduling,
                                             final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
     BwEvent master = null;
-    TreeSet<CoreEventInfo> ts = new TreeSet<CoreEventInfo>();
+    TreeSet<CoreEventInfo> ts = new TreeSet<>();
     HibSession sess = getSess();
     int desiredAccess = privRead;
 
@@ -322,7 +315,6 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
         for (String auid : master.getAvailableUids()) {
           Collection<CoreEventInfo> aceis = getEvent(colPath, auid,
                                                      null, // rid,
-                                                     scheduling,
                                                      recurRetrieval);
           if (aceis.size() != 1) {
             throwException(CalFacadeException.badResponse);

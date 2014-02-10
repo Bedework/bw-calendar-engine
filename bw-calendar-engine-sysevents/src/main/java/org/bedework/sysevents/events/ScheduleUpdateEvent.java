@@ -49,21 +49,19 @@ public class ScheduleUpdateEvent extends EntityEvent {
 
   /**
    * @param code
+   * @param authPrincipalHref
    * @param ownerHref
-   * @param name
-   * @param colPath
-   * @param uid
+   * @param href
    * @param rid
    * @param change
    */
   public ScheduleUpdateEvent(final SysCode code,
+                             final String authPrincipalHref,
                              final String ownerHref,
-                             final String name,
-                             final String uid,
+                             final String href,
                              final String rid,
-                             final String colPath,
                              final ChangeType change) {
-    super(code, ownerHref, name, uid, rid, colPath);
+    super(code, authPrincipalHref, ownerHref, href, rid);
 
     this.change = change;
   }

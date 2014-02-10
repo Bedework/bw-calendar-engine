@@ -40,6 +40,30 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
     super(null);
   }
 
+  protected String getParentPath(final String href) {
+    int pos = href.lastIndexOf("/");
+
+    if (pos <= 0) {
+      return null;
+    }
+
+    return href.substring(0, pos);
+  }
+
+  protected String getName(final String href) {
+    int pos = href.lastIndexOf("/");
+
+    if (pos <= 0) {
+      return href;
+    }
+
+    if (pos == href.length() - 1) {
+      return null;
+    }
+
+    return href.substring(pos + 1);
+  }
+
   /** Get an svci object as a different user.
    *
    * @param principalHref

@@ -35,7 +35,7 @@ public class CollectionMovedEvent extends OwnedHrefEvent {
 
   /** Constructor
    *
-   * @param code
+   * @param code the system event code
    * @param authPrincipalHref
    * @param ownerHref
    * @param href for collection
