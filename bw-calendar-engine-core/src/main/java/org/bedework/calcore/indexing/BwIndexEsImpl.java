@@ -1194,13 +1194,20 @@ public class BwIndexEsImpl implements BwIndexer {
 
       BwEvent ev = ei.getEvent();
 
-      if (!ev.getRecurring() || (ev.getRecurrenceId() != null)) {
+      if (!ev.testRecurring() && (ev.getRecurrenceId() == null)) {
         return indexEvent(ei,
                           ItemKind.master,
                           ev.getDtstart(),
                           ev.getDtend(),
                           null, //ev.getRecurrenceId(),
                           null);
+      }
+
+      if (ev.getRecurrenceId() != null) {
+        /* Indexing a single instance which I think we can assume is
+         * an override
+         */
+        error("Not implemented - index of single override");
       }
 
       /* Delete all instances of this event: we'll do a delete by query

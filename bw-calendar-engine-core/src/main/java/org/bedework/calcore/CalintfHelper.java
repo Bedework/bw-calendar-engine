@@ -309,6 +309,11 @@ public abstract class CalintfHelper
       return;
     }
 
+    if (ei.getEvent().getRecurrenceId() != null) {
+      // Cannot index single instance at this time
+      return;
+    }
+
     getIndexer().indexEntity(ei);
   }
 
@@ -598,10 +603,14 @@ public abstract class CalintfHelper
                         final BwEvent val,
                         final boolean shared) throws CalFacadeException {
     try {
-      String note = getChanges(code, val);
+      final String note = getChanges(code, val);
       if (note == null) {
         return;
       }
+
+      final boolean indexed = (getSyspars().getTestMode() &&
+                                       (val.getRecurrenceId() == null));
+
 
       postNotification(
               SysEvent.makeEntityUpdateEvent(code,
@@ -609,10 +618,10 @@ public abstract class CalintfHelper
                                              val.getOwnerHref(),
                                              val.getHref(),
                                              shared,
-                                             getSyspars().getTestMode(),
+                                             indexed,
                                              val.getRecurrenceId(),
                                              note,
-                                             null)); // XXX Emit multiple targted?
+                                             null)); // XXX Emit multiple targeted?
     } catch (NotificationException ne) {
       throw new CalFacadeException(ne);
     }
