@@ -35,8 +35,6 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwSystem;
-import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -219,8 +217,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
                           final String uid) throws Throwable {
     startTransaction();
     Collection<CoreEventInfo> ceis = getCal().getEvent(colPath,
-                                                   uid, recurrenceId,
-                                                   new RecurringRetrievalMode(Rmode.entityOnly));
+                                                   uid);
 
     if (ceis.size() != 1) {
       error("Expected one event for {" + colPath + ", " +
@@ -228,7 +225,23 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       return null;
     }
 
-    BwEvent ev = ceis.iterator().next().getEvent();
+    CoreEventInfo ei = ceis.iterator().next();
+
+    BwEvent ev = null;
+    if (recurrenceId == null) {
+      ev = ei.getEvent();
+    } else {
+      for (final CoreEventInfo cei: ei.getOverrides()){
+        if (cei.getEvent().getRecurrenceId().equals(recurrenceId)) {
+          ev = cei.getEvent();
+          break;
+        }
+      }
+    }
+
+    if (ev == null) {
+      return null;
+    }
 
     if (ev instanceof BwEventAnnotation) {
       ev = new BwEventProxy((BwEventAnnotation)ev);

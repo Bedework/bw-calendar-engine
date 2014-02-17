@@ -34,7 +34,6 @@ import org.bedework.calfacade.BwRelatedTo;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
-import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
@@ -317,15 +316,14 @@ public class BwEventUtil extends IcalUtil {
           debugMsg("TRANS-TO_EVENT: try to fetch event with guid=" + guid);
         }
 
-        Collection eis = cb.getEvent(cal, guid, null,
-                                     RecurringRetrievalMode.overrides);
+        Collection<EventInfo> eis = cb.getEvent(cal, guid);
         if (Util.isEmpty(eis)) {
           // do nothing
         } else if (eis.size() > 1) {
           // DORECUR - wrong again
           throw new CalFacadeException("More than one event returned for guid.");
         } else {
-          evinfo = (EventInfo)eis.iterator().next();
+          evinfo = eis.iterator().next();
         }
 
         if (debug) {
@@ -1029,7 +1027,8 @@ public class BwEventUtil extends IcalUtil {
 
           default:
             if (debug) {
-              debugMsg("Unsupported property with class " + prop.getClass() +
+              debugMsg("Unsupported property with index " + pi +
+                               "; class " + prop.getClass() +
                                " and value " + pval);
             }
 

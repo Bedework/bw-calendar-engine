@@ -42,6 +42,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.IndexKeys;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
@@ -55,7 +56,6 @@ import org.apache.log4j.Logger;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 
-import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -80,6 +80,8 @@ public class DocBuilder {
   private AuthProperties authpars;
   private AuthProperties unauthpars;
   private BasicSystemProperties basicSysprops;
+
+  private IndexKeys keys = new IndexKeys();
 
   static Map<String, String> interestingXprops = new HashMap<>();
 
@@ -494,12 +496,19 @@ public class DocBuilder {
 
         indexDate(PropertyInfoIndex.INDEX_START, start);
         indexDate(PropertyInfoIndex.INDEX_END, end);
-        makeField(PropertyInfoIndex.INSTANCE, true);
       } else {
         if (kind == ItemKind.override) {
           makeField(PropertyInfoIndex.OVERRIDE, true);
         } else {
           makeField(PropertyInfoIndex.MASTER, true);
+
+          if (ev.getRecurring() && !Util.isEmpty(ei.getOverrides())) {
+            builder.startArray(getJname(PropertyInfoIndex.RECURRENCE_IDS));
+            for (EventInfo ovei: ei.getOverrides()) {
+              builder.value(ovei.getEvent().getRecurrenceId());
+            }
+            builder.endArray();
+          }
         }
 
         indexDate(PropertyInfoIndex.DTSTART, ev.getDtstart());
@@ -543,9 +552,9 @@ public class DocBuilder {
       return new DocInfo(builder,
                          BwIndexer.docTypeEvent,
                          version,
-                         makeKeyVal(getItemType(ei, kind),
-                                    ei.getEvent().getHref(),
-                                    recurid));
+                         keys.makeKeyVal(getItemType(ei, kind),
+                                         ei.getEvent().getHref(),
+                                         recurid));
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
@@ -967,18 +976,6 @@ public class DocBuilder {
     }
   }
 
-  private void makeId(final String val) throws CalFacadeException {
-    if (val == null) {
-      return;
-    }
-
-    try {
-      builder.field("_id", val);
-    } catch (IOException e) {
-      throw new CalFacadeException(e);
-    }
-  }
-
   private void indexBwStrings(final PropertyInfoIndex pi,
                               final Set<? extends BwStringBase> val) throws CalFacadeException {
     try {
@@ -988,7 +985,7 @@ public class DocBuilder {
 
       builder.startArray(getJname(pi));
 
-      for (BwStringBase s: val) {
+      for (final BwStringBase s: val) {
         makeField(null, s);
       }
 
@@ -996,88 +993,6 @@ public class DocBuilder {
     } catch (IOException e) {
       throw new CalFacadeException(e);
     }
-  }
-
-  /** Called to make a key value for a record.
-   *
-   * @param   type of the record
-   * @param   href of the record
-   * @param   recurid of the record or null
-   * @return  String   String which uniquely identifies the record
-   * @throws IndexException
-   */
-  private String makeKeyVal(final String type,
-                            final String href,
-                            final String recurid) throws IndexException {
-    startEncoding();
-    encodeString(type);
-    encodeString(href);
-    encodeString(recurid);
-
-    return getEncodedKey();
-  }
-
-  /* When encoding a key we build it here.
-   */
-  private CharArrayWriter caw;
-
-  /* ====================================================================
-   *                 Encoding methods
-   * ==================================================================== */
-
-  /** Get ready to encode
-   *
-   */
-  private void startEncoding() {
-    caw = new CharArrayWriter();
-  }
-
-  /** Encode a blank terminated 0 prefixed length.
-   *
-   * @param len
-   * @throws IndexException
-   */
-  private void encodeLength(final int len) throws IndexException {
-    try {
-      String slen = String.valueOf(len);
-      caw.write('0');
-      caw.write(slen, 0, slen.length());
-      caw.write(' ');
-    } catch (Throwable t) {
-      throw new IndexException(t);
-    }
-  }
-
-  /** Encode a String with length prefix. String is encoded as <ul>
-   * <li>One byte 'N' for null string or</li>
-   * <li>length {@link #encodeLength(int)} followed by</li>
-   * <li>String value.</li>
-   * </ul>
-   *
-   * @param val
-   * @throws IndexException
-   */
-  private void encodeString(final String val) throws IndexException {
-    try {
-      if (val == null) {
-        caw.write('N'); // flag null
-      } else {
-        encodeLength(val.length());
-        caw.write(val, 0, val.length());
-      }
-    } catch (IndexException ie) {
-      throw ie;
-    } catch (Throwable t) {
-      throw new IndexException(t);
-    }
-  }
-
-  /** Get the current encoed value
-   *
-   * @return char[] encoded value
-   */
-  private String getEncodedKey() {
-    return new String(caw.toCharArray());
   }
 
   private void makeField(final PropertyInfoIndex pi,

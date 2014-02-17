@@ -45,7 +45,7 @@ import org.bedework.calfacade.indexing.SearchResult;
 import org.bedework.calfacade.indexing.SearchResultEntry;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.icalendar.RecurUtil;
-import org.bedework.icalendar.RecurUtil.RecurPeriods;
+import org.bedework.icalendar.RecurUtil.Recurrence;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
@@ -53,7 +53,6 @@ import org.bedework.util.timezones.DateTimeUtil;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.fortuna.ical4j.model.Period;
 import org.apache.log4j.Logger;
 import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.action.ActionFuture;
@@ -147,10 +146,20 @@ import static org.bedework.calcore.indexing.DocBuilder.DocInfo;
  * One represents the real dtstart/dtend for the entity, The other
  * is the indexed start/end as outlined above.</p>
  *
- * <p>As well as indexing events/tasks etc we also have to index alarms
+ * <p>As xxx well as indexing events/tasks etc we also have to index alarms
  * so that the associated events can be located. This is an alarm object
  * inside an entity with a start date</p>
  *
+ * <p>M is the master, On are overrides. In are the instances -
+ * we don't index them. Assume a search in time range t1-t2 and
+ * with filter f. The master will always appear if there is nmo filter
+ * and if t1-t2 covers part of the range of the recurring event</p>
+ *
+ * <p>We store the list of overridden recurrence ids in the master</p>
+ *
+ * <p>If the master passes we need to generate instances.</p>
+ *
+ * <p>If no master appears no instances need be generated</p>
  * @author Mike Douglass douglm - rpi.edu
  *
  */
@@ -485,6 +494,220 @@ public class BwIndexEsImpl implements BwIndexer {
                            desiredAccess);
   }
 
+  private class Events {
+    private final EsSearchResult res;
+    private final int desiredAccess;
+
+    Map<String, Collection<BwEventAnnotation>> overrides = new HashMap<>();
+    Collection<EventInfo> masters = new TreeSet<>();
+
+    private Events(EsSearchResult res,
+                   final int desiredAccess) {
+      this.res = res;
+      this.desiredAccess = desiredAccess;
+    }
+
+    void addEvent(final EventInfo ei) throws CalFacadeException {
+      BwEvent ev = ei.getEvent();
+
+      Acl.CurrentAccess ca = res.accessCheck.checkAccess(ev,
+                                                         desiredAccess,
+                                                         true);
+
+      if ((ca == null) || !ca.getAccessAllowed()) {
+        return;
+      }
+
+      ei.setCurrentAccess(ca);
+
+      if (ev instanceof BwEventAnnotation) {
+        // An override
+        Collection<BwEventAnnotation> ov = overrides.get(ev.getHref());
+
+        if (ov == null) {
+          ov = new TreeSet<>();
+
+          overrides.put(ev.getHref(), ov);
+        }
+
+        ov.add((BwEventAnnotation)ev);
+        return;
+      }
+
+      masters.add(ei);
+    }
+
+    /**
+       Finish off the events
+       For non-expanded retrievals we will set up proxies for each
+       override and add the master to the result.
+
+       For expanded we divide the overrides into two groups - those with
+       master and those without.
+
+       Those without a master only th eoverrides passed and we return
+       each override as an event.
+
+       For the rest we need to generate instances within any specified
+       time range. We will not generate an infinite amount...
+     *
+     * @param entities
+     * @throws CalFacadeException
+     */
+    void process(final EsSearchResult res,
+                 final List<SearchResultEntry> entities) throws CalFacadeException {
+      if (res.recurRetrieval.mode == Rmode.expanded) {
+        processExpanded(res, entities);
+        return;
+      }
+
+      for (EventInfo ei: masters) {
+        addEntity(ei, entities);
+
+        BwEvent ev = ei.getEvent();
+
+        if (!ev.getRecurring()) {
+          continue;
+        }
+
+        Collection<BwEventAnnotation> ov = overrides.get(ev.getHref());
+
+        if (ov == null) {
+          continue;
+        }
+
+        for (BwEventAnnotation ann: ov) {
+          BwEvent proxy = new BwEventProxy(ann);
+          ann.setTarget(ev);
+          ann.setMaster(ev);
+
+          Acl.CurrentAccess ca = res.accessCheck.checkAccess(proxy,
+                                                             desiredAccess,
+                                                             true);
+
+          if ((ca == null) || !ca.getAccessAllowed()) {
+            continue;
+          }
+
+          EventInfo oei = new EventInfo(proxy);
+          oei.setCurrentAccess(ca);
+
+          ei.addOverride(oei);
+        }
+      }
+    }
+
+    void processExpanded(final EsSearchResult res,
+                         final List<SearchResultEntry> entities) throws CalFacadeException {
+      /* First do all the masters */
+
+      for (EventInfo ei: masters) {
+        BwEvent ev = ei.getEvent();
+
+        if (!ev.getRecurring()) {
+          addEntity(ei, entities);
+          continue;
+        }
+
+        Set<String> overrideIds = ei.getOverrideIds();
+        Collection<BwEventAnnotation> ov = overrides.get(ev.getHref());
+
+        if (ov != null) {
+          overrides.remove(ev.getHref());
+
+          for (BwEventAnnotation ann: ov) {
+            BwEvent proxy = new BwEventProxy(ann);
+            ann.setTarget(ev);
+            ann.setMaster(ev);
+
+            Acl.CurrentAccess ca = res.accessCheck.checkAccess(proxy,
+                                                               desiredAccess,
+                                                               true);
+
+            if ((ca == null) || !ca.getAccessAllowed()) {
+              continue;
+            }
+
+            EventInfo oei = new EventInfo(proxy);
+            oei.setCurrentAccess(ca);
+
+            ei.addOverride(oei);
+
+            addEntity(oei, entities);
+          }
+        }
+
+        /* Because we have a master we should generate instances. We
+           skip any that are overridden.
+
+           In addition we need to skip any recurrence id that appears
+           in the recurrence ids list. Such an id is for an override
+           that did not match the filter.
+         */
+        Collection<Recurrence> instances =
+                RecurUtil.getRecurrences(ei,
+                                         authpars.getMaxYears(),
+                                         authpars.getMaxInstances(),
+                                         res.getStart(),
+                                         res.getEnd());
+
+        for (Recurrence rec: instances) {
+          if ((rec.override != null) ||
+                  ((overrideIds != null) &&
+                  overrideIds.contains(rec.recurrenceId))) {
+            continue;
+          }
+
+          BwEventAnnotation ann = new BwEventAnnotation();
+
+          ann.setDtstart(rec.start);
+          ann.setDtend(rec.end);
+          ann.setRecurrenceId(rec.recurrenceId);
+          ann.setOwnerHref(ev.getOwnerHref());
+          ann.setOverride(false);
+          ann.setTombstoned(false);
+          ann.setName(ev.getName());
+          ann.setUid(ev.getUid());
+          ann.setTarget(ev);
+          ann.setMaster(ev);
+          BwEvent proxy = new BwEventProxy(ann);
+          EventInfo oei = new EventInfo(proxy);
+          oei.setCurrentAccess(ei.getCurrentAccess());
+
+          addEntity(oei, entities);
+        }
+      }
+
+      /* We've done all the masters. Any overrides left have no master
+         so they are just added to the result.
+       */
+
+      for (Collection<BwEventAnnotation> ov: overrides.values()) {
+        for (BwEventAnnotation ann: ov) {
+          Acl.CurrentAccess ca = res.accessCheck.checkAccess(ann,
+                                                             desiredAccess,
+                                                             true);
+
+          if ((ca == null) || !ca.getAccessAllowed()) {
+            continue;
+          }
+
+          EventInfo oei = new EventInfo(ann);
+          oei.setCurrentAccess(ca);
+
+          addEntity(oei, entities);
+        }
+      }
+    }
+
+    private void addEntity(final EventInfo ei,
+                           final List<SearchResultEntry> entities) {
+      entities.add(new SearchResultEntry(ei,
+                                         docTypeEvent,
+                                         0));
+    }
+  }
+
   @Override
   public List<SearchResultEntry> getSearchResult(final SearchResult sres,
                                                  final int offset,
@@ -562,8 +785,7 @@ public class BwIndexEsImpl implements BwIndexer {
       }
     }
 
-    Map<String, Collection<BwEventAnnotation>> overrides = new HashMap<>();
-    Collection<EventInfo> masters = new TreeSet<>();
+    Events evs = new Events(res, desiredAccess);
 
     for (SearchHit hit : hits) {
       res.pageStart++;
@@ -581,6 +803,11 @@ public class BwIndexEsImpl implements BwIndexer {
 
       EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
 
+      if (dtype.equals(docTypeEvent)) {
+        evs.addEvent(eb.makeEvent());
+        continue;
+      }
+
       Object entity = null;
       if (dtype.equals(docTypeCollection)) {
         entity = eb.makeCollection();
@@ -590,36 +817,6 @@ public class BwIndexEsImpl implements BwIndexer {
         entity = eb.makeContact();
       } else if (dtype.equals(docTypeLocation)) {
         entity = eb.makeLocation();
-      } else if (dtype.equals(docTypeEvent)) {
-        entity = eb.makeEvent(res.recurRetrieval.mode == Rmode.expanded);
-        EventInfo ei = (EventInfo)entity;
-        BwEvent ev = ei.getEvent();
-
-        Acl.CurrentAccess ca = res.accessCheck.checkAccess(ev,
-                                                           desiredAccess,
-                                                           true);
-
-        if ((ca == null) || !ca.getAccessAllowed()) {
-          continue;
-        }
-
-        ei.setCurrentAccess(ca);
-
-        if (ev instanceof BwEventAnnotation) {
-          // Treat as override
-          Collection<BwEventAnnotation> ov = overrides.get(ev.getHref());
-
-          if (ov == null) {
-            ov = new TreeSet<>();
-
-            overrides.put(ev.getHref(), ov);
-          }
-
-          ov.add((BwEventAnnotation)ev);
-          continue;
-        }
-
-        masters.add(ei);
       }
 
       entities.add(new SearchResultEntry(entity,
@@ -627,27 +824,7 @@ public class BwIndexEsImpl implements BwIndexer {
                                          hit.getScore()));
     }
 
-    // Finish off the events
-
-    for (EventInfo ei: masters) {
-      BwEvent ev = ei.getEvent();
-
-      if (ev.getRecurring()) {
-        Collection<BwEventAnnotation> ov = overrides.get(ev.getHref());
-
-        if (ov != null) {
-          for (BwEventAnnotation ann: ov) {
-            BwEvent proxy = new BwEventProxy(ann);
-            ann.setTarget(ev);
-            ann.setMaster(ev);
-
-            EventInfo oei = new EventInfo(proxy);
-
-            ei.addOverride(oei);
-          }
-        }
-      }
-    }
+    evs.process(res, entities);
 
     return entities;
   }
@@ -655,7 +832,7 @@ public class BwIndexEsImpl implements BwIndexer {
   private SearchHits multiFetch(SearchHits hits) throws CalFacadeException {
     // Make an ored filter from keys
 
-    List<String> hrefs = new ArrayList<>();
+    Set<String> hrefs = new TreeSet<>(); // Dedup
 
     for (SearchHit hit : hits) {
       String dtype = hit.getType();
@@ -679,7 +856,7 @@ public class BwIndexEsImpl implements BwIndexer {
     SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
     srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setFilter(getFilters(null).multiHrefFilter(hrefs));
+            .setPostFilter(getFilters(null).multiHrefFilter(hrefs));
     SearchResponse resp = srb.execute().actionGet();
 
     if (resp.status() != RestStatus.OK) {
@@ -756,7 +933,8 @@ public class BwIndexEsImpl implements BwIndexer {
       DeleteByQueryRequestBuilder dqrb = getClient().prepareDeleteByQuery(
               targetIndex);
 
-      dqrb.setQuery(QueryBuilders.termQuery(ESQueryFilter.hrefJname, href));
+      QueryBuilder qb = QueryBuilders.termQuery(ESQueryFilter.hrefJname, href);
+      dqrb.setQuery(qb);
 
       DeleteByQueryResponse resp = dqrb.execute().actionGet();
 
@@ -1144,6 +1322,42 @@ public class BwIndexEsImpl implements BwIndexer {
   private static class DateLimits {
     String minStart;
     String maxEnd;
+
+    void checkMin(final BwDateTime tm) {
+      String val;
+      if (tm.getDateType()) {
+        val = tm.getDtval();
+      } else {
+        val = tm.getDate();
+      }
+
+      if (minStart == null) {
+        minStart = val;
+        return;
+      }
+
+      if (minStart.compareTo(val) > 0) {
+        minStart = val;
+      }
+    }
+
+    void checkMax(final BwDateTime tm) {
+      String val;
+      if (tm.getDateType()) {
+        val = tm.getDtval();
+      } else {
+        val = tm.getDate();
+      }
+
+      if (maxEnd == null) {
+        maxEnd = val;
+        return;
+      }
+
+      if (maxEnd.compareTo(val) < 0) {
+        maxEnd = val;
+      }
+    }
   }
 
   /* Return the response after indexing */
@@ -1204,10 +1418,8 @@ public class BwIndexEsImpl implements BwIndexer {
       }
 
       if (ev.getRecurrenceId() != null) {
-        /* Indexing a single instance which I think we can assume is
-         * an override
-         */
         error("Not implemented - index of single override");
+        return null;
       }
 
       /* Delete all instances of this event: we'll do a delete by query
@@ -1220,31 +1432,26 @@ public class BwIndexEsImpl implements BwIndexer {
 
       deleteEvent(ei);
 
-      /* Create a list of all instance date/times before overrides. */
+      /* Index the master and overrides. */
 
-      int maxYears;
-      int maxInstances;
       DateLimits dl = new DateLimits();
 
-      if (ev.getPublick()) {
-        maxYears = unauthpars.getMaxYears();
-        maxInstances = unauthpars.getMaxInstances();
-      } else {
-        maxYears = authpars.getMaxYears();
-        maxInstances = authpars.getMaxInstances();
+      Collection<Recurrence> recurs = RecurUtil.getRecurrences(ei,
+                                                               authpars.getMaxYears(),
+                                                               authpars.getMaxInstances(),
+                                                               null,
+                                                               null);
+
+      if (recurs == null) {
+        return null;
       }
 
-      RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
-
-      if (rp.instances.isEmpty()) {
-        // No instances for an alleged recurring event.
-        return null;
-        //throw new CalFacadeException(CalFacadeException.noRecurrenceInstances);
+      for (Recurrence r: recurs) {
+        dl.checkMin(r.start);
+        dl.checkMax(r.end);
       }
 
       String stzid = ev.getDtstart().getTzid();
-
-      int instanceCt = maxInstances;
 
       boolean dateOnly = ev.getDtstart().getDateType();
 
@@ -1277,46 +1484,6 @@ public class BwIndexEsImpl implements BwIndexer {
                              rend,
                              ov.getRecurrenceId(),
                              dl);
-
-          instanceCt--;
-        }
-      }
-
-      /* Emit all instances that aren't overridden. */
-
-      for (Period p: rp.instances) {
-        String dtval = p.getStart().toString();
-        if (dateOnly) {
-          dtval = dtval.substring(0, 8);
-        }
-
-        BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
-
-        if (overrides.get(rstart.getDate()) != null) {
-          // Overrides indexed separately - skip this instance.
-          continue;
-        }
-
-        String recurrenceId = rstart.getDate();
-
-        dtval = p.getEnd().toString();
-        if (dateOnly) {
-          dtval = dtval.substring(0, 8);
-        }
-
-        BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
-
-        iresp = indexEvent(ei,
-                           ItemKind.entity,
-                           rstart,
-                           rend,
-                           recurrenceId,
-                           dl);
-
-        instanceCt--;
-        if (instanceCt == 0) {
-          // That's all you're getting from me
-          break;
         }
       }
 
@@ -1397,8 +1564,8 @@ public class BwIndexEsImpl implements BwIndexer {
                               recurid);
 
       if (dl != null) {
-        dl.minStart = checkMin(dl.minStart, start);
-        dl.maxEnd = checkMax(dl.maxEnd, end);
+        dl.checkMin(start);
+        dl.checkMax(end);
       }
 
       return indexDoc(di);
@@ -1414,46 +1581,6 @@ public class BwIndexEsImpl implements BwIndexer {
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
-  }
-
-  private String checkMin(final String start,
-                          final BwDateTime tm) {
-    String val;
-    if (tm.getDateType()) {
-      val = tm.getDtval();
-    } else {
-      val = tm.getDate();
-    }
-
-    if (start == null) {
-      return val;
-    }
-
-    if (start.compareTo(val) > 0) {
-      return val;
-    }
-
-    return start;
-  }
-
-  private String checkMax(final String end,
-                          final BwDateTime tm) {
-    String val;
-    if (tm.getDateType()) {
-      val = tm.getDtval();
-    } else {
-      val = tm.getDate();
-    }
-
-    if (end == null) {
-      return val;
-    }
-
-    if (end.compareTo(val) < 0) {
-      return val;
-    }
-
-    return end;
   }
 
   private IndexResponse indexDoc(final DocInfo di) throws Throwable {

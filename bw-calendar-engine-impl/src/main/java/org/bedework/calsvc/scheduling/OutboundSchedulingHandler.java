@@ -24,7 +24,6 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwXproperty;
-import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
@@ -229,15 +228,22 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
      * each attendee.
      *
      * Also this current message may be earlier than one already in the inbox.
+     *
+     * TODO - fix recurrences
+     *
+     * We could get separate messages for the same uid but with different
+     * recurrence ids if we are an attendee to some instances only.
+     *
+     * In the inbox these will be separate events with the same uid -
+     * possibly, They probably need to be combined in the users
+     * calendar as a single recurring event.
      */
 
     final int smethod = ev.getScheduleMethod();
 
     if (Icalendar.itipRequestMethodType(smethod)) {
       final Collection<EventInfo> inevs = getEvents(inboxPath,
-                                                    ev.getUid(),
-                                                    ev.getRecurrenceId(),
-                                                    RecurringRetrievalMode.overrides);
+                                                    ev.getUid());
 
       for (final EventInfo inei: inevs) {
         final BwEvent inev = inei.getEvent();

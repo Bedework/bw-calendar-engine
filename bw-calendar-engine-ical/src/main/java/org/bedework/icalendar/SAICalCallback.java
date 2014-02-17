@@ -24,7 +24,6 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.util.Collection;
@@ -113,8 +112,8 @@ public class SAICalCallback implements IcalCallback {
   }
 
   @Override
-  public Collection getEvent(final BwCalendar cal, final String guid, final String rid,
-                             final RecurringRetrievalMode recurRetrieval)
+  public Collection getEvent(final BwCalendar cal,
+                             final String guid)
           throws CalFacadeException {
     return null;
   }

@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -52,11 +52,20 @@ import org.bedework.calfacade.exc.CalFacadeException;
  *
  */
 public class CalintfFactory {
-  /** CalIntf implemented in hibernate */
-  public final static String hibernateClass = "org.bedework.calcore.hibernate.CalintfImpl";
+  public final static Class hibernateClass;
+  static {
+    try {
+      /** CalIntf implemented in hibernate */
+      hibernateClass =
+            Class.forName("org.bedework.calcore.hibernate.CalintfImpl");
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
 
-  /** CalIntf implemented via CalDAV */
-  public final static String caldavClass = "org.bedework.calcore.caldav.CalintfCaldavImpl";
+  /* CalIntf implemented via CalDAV */
+  //public final static String caldavClass =
+  // "org.bedework.calcore.caldav.CalintfCaldavImpl";
 
   /** Obtain a calintf object.
    *
@@ -64,9 +73,9 @@ public class CalintfFactory {
    * @return Calintf
    * @throws CalFacadeException
    */
-  public static Calintf getIntf(final String cl) throws CalFacadeException {
+  public static Calintf getIntf(final Class cl) throws CalFacadeException {
     try {
-      Object o = Class.forName(cl).newInstance();
+      Object o = cl.newInstance();
 
       if (o == null) {
         throw new CalFacadeException("Class " + cl + " not found");

@@ -155,18 +155,15 @@ public class EntityBuilder  {
   }
 
   /**
-   * @param expanded true if we are doing this for an expanded retrieval
-   *                 that is, treat everything as instances.
-   * @return an event object
+   * @return an event object - annotation for override
    * @throws CalFacadeException
    */
-  EventInfo makeEvent(final boolean expanded) throws CalFacadeException {
-    final boolean override = !expanded &&
-            getBool(PropertyInfoIndex.OVERRIDE);
+  EventInfo makeEvent() throws CalFacadeException {
+    final boolean master = getBool(PropertyInfoIndex.MASTER);
 
     BwEvent ev;
 
-    if (override) {
+    if (getBool(PropertyInfoIndex.OVERRIDE)) {
       ev = new BwEventAnnotation();
 
       BwEventAnnotation ann = (BwEventAnnotation)ev;
@@ -176,6 +173,10 @@ public class EntityBuilder  {
     }
 
     EventInfo ei = new  EventInfo(ev);
+
+    if (master) {
+      ei.setOverrideIds(getStringSet(PropertyInfoIndex.RECURRENCE_IDS));
+    }
 
     /*
     Float score = (Float)sd.getFirstValue("score");

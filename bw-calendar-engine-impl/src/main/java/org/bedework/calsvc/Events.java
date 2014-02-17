@@ -19,6 +19,7 @@
 package org.bedework.calsvc;
 
 import org.bedework.access.AccessPrincipal;
+import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calcorei.CoreEventInfo;
@@ -32,6 +33,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
+import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
@@ -41,6 +43,7 @@ import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.RecurringRetrievalMode;
+import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
@@ -56,6 +59,8 @@ import org.bedework.calsvci.EventProperties.EnsureEntityExistsResult;
 import org.bedework.calsvci.EventsI;
 import org.bedework.icalendar.IcalTranslator;
 import org.bedework.icalendar.Icalendar;
+import org.bedework.icalendar.RecurUtil;
+import org.bedework.icalendar.RecurUtil.Recurrence;
 import org.bedework.sysevents.events.EntityFetchEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
 import org.bedework.util.calendar.IcalDefs;
@@ -87,21 +92,155 @@ class Events extends CalSvcDb implements EventsI {
 
   @Override
   public Collection<EventInfo> get(final String colPath,
-                                   final String guid, final String recurrenceId,
+                                   final String guid,
+                                   final String recurrenceId,
                                    final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
     Collection<EventInfo> res = postProcess(getCal().getEvent(colPath,
-                                                              guid,
-                                                              recurrenceId,
-                                                              recurRetrieval));
+                                                              guid));
 
     int num = 0;
 
     if (res != null) {
       num = res.size();
     }
+
     getSvc().postNotification(new EntityFetchEvent(SysCode.ENTITY_FETCHED, num));
 
+    if ((recurrenceId == null) &&
+            ((recurRetrieval == null) ||
+            (recurRetrieval.mode != Rmode.expanded))) {
+      return res;
+    }
+
+    /* For an expansion replace the resultwith a set of expansions
+     */
+    if (recurrenceId == null) {
+      return processExpanded(res, recurRetrieval);
+    }
+
+    if (num > 1) {
+      throw new CalFacadeException("cannot return rid for multiple events");
+    }
+
+    return makeInstance(res, recurrenceId);
+  }
+
+  private Collection<EventInfo> processExpanded(final Collection<EventInfo> events,
+                                                final RecurringRetrievalMode recurRetrieval)
+          throws CalFacadeException {
+    Collection<EventInfo> res = new ArrayList<>();
+
+    for (EventInfo ei: events) {
+      BwEvent ev = ei.getEvent();
+
+      if (!ev.getRecurring()) {
+        res.add(ei);
+        continue;
+      }
+
+      CurrentAccess ca = ei.getCurrentAccess();
+      Set<EventInfo> oveis = ei.getOverrides();
+
+      if (!Util.isEmpty(oveis)) {
+        for (EventInfo oei: oveis) {
+          if (oei.getEvent().inDateTimeRange(recurRetrieval.start.getDate(),
+                                             recurRetrieval.end.getDate())) {
+            oei.setRetrievedEvent(ei);
+            res.add(oei);
+          }
+        }
+      }
+
+      /* Generate non-overridden instances. */
+      Collection<Recurrence> instances =
+              RecurUtil.getRecurrences(ei,
+                                       getAuthpars().getMaxYears(),
+                                       getAuthpars().getMaxInstances(),
+                                       recurRetrieval.start.getDate(),
+                                       recurRetrieval.end.getDate());
+
+      for (Recurrence rec: instances) {
+        if (rec.override != null) {
+          continue;
+        }
+
+        BwEventAnnotation ann = new BwEventAnnotation();
+
+        ann.setDtstart(rec.start);
+        ann.setDtend(rec.end);
+        ann.setRecurrenceId(rec.recurrenceId);
+        ann.setOwnerHref(ev.getOwnerHref());
+        ann.setOverride(true);  // Call it an override
+        ann.setTombstoned(false);
+        ann.setName(ev.getName());
+        ann.setUid(ev.getUid());
+        ann.setTarget(ev);
+        ann.setMaster(ev);
+        BwEvent proxy = new BwEventProxy(ann);
+        EventInfo oei = new EventInfo(proxy);
+        oei.setCurrentAccess(ei.getCurrentAccess());
+        oei.setRetrievedEvent(ei);
+
+        res.add(oei);
+      }
+    }
+
+    return res;
+  }
+
+  private Collection<EventInfo> makeInstance(final Collection<EventInfo> events,
+                                             final String recurrenceId)
+          throws CalFacadeException {
+    Collection<EventInfo> res = new ArrayList<>();
+
+    EventInfo ei = events.iterator().next();
+    BwEvent ev = ei.getEvent();
+
+    if (!ev.getRecurring()) {
+      return res;
+    }
+
+    /* See if it's in the overrides */
+
+    if (!Util.isEmpty(ei.getOverrides())) {
+      for (final EventInfo oei: ei.getOverrides()) {
+        if (oei.getEvent().getRecurrenceId().equals(recurrenceId)) {
+          oei.setRetrievedEvent(ei);
+          res.add(oei);
+          return res;
+        }
+      }
+    }
+
+    /* Not in the overrides - generate an instance */
+    final boolean dateOnly = ev.getDtstart().getDateType();
+    final String stzid = ev.getDtstart().getTzid();
+
+    BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly,
+                                                  recurrenceId,
+                                                  stzid);
+    BwDateTime rend = rstart.addDuration(
+            BwDuration.makeDuration(ev.getDuration()));
+
+    BwEventAnnotation ann = new BwEventAnnotation();
+
+    ann.setDtstart(rstart);
+    ann.setDtend(rend);
+    ann.setRecurrenceId(recurrenceId);
+    ann.setOwnerHref(ev.getOwnerHref());
+    ann.setOverride(true);  // Call it an override
+    ann.setTombstoned(false);
+    ann.setName(ev.getName());
+    ann.setUid(ev.getUid());
+    ann.setTarget(ev);
+    ann.setMaster(ev);
+    BwEvent proxy = new BwEventProxy(ann);
+    EventInfo oei = new EventInfo(proxy);
+    oei.setCurrentAccess(ei.getCurrentAccess());
+
+    oei.setRetrievedEvent(ei);
+    res.add(oei);
     return res;
   }
 
@@ -929,7 +1068,7 @@ class Events extends CalSvcDb implements EventsI {
       }
     }
 
-    if (!getCal().deleteEvent(event,
+    if (!getCal().deleteEvent(ei,
                               scheduling,
                               reallyDelete).eventDeleted) {
       getSvc().rollbackTransaction();
@@ -941,7 +1080,7 @@ class Events extends CalSvcDb implements EventsI {
     }
 
     for (EventInfo aei: ei.getContainedItems()) {
-      if (!getCal().deleteEvent(aei.getEvent(),
+      if (!getCal().deleteEvent(aei,
                                 scheduling,
                                 true).eventDeleted) {
         getSvc().rollbackTransaction();

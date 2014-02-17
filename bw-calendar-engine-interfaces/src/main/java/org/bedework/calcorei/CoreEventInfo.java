@@ -32,8 +32,6 @@ import java.util.TreeSet;
 /** This class provides information about an event for a specific user and
  * session.
  *
- * <p>This class allows us to handle thread, or user, specific information.
- *
  * @author Mike Douglass       douglm @ rpi.edu
  */
 public class CoreEventInfo implements Comparable, Comparator, Serializable {

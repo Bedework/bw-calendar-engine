@@ -1384,13 +1384,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                   journalProperty = true,
                   freeBusyProperty = true,
                   timezoneProperty = true),
-    @IcalProperty(pindex = PropertyInfoIndex.INSTANCE,
-                  jname = "instance",
-                  annotationRequired = true,
-                  eventProperty = true,
-                  todoProperty = true,
-                  journalProperty = true,
-                  freeBusyProperty = true),
     @IcalProperty(pindex = PropertyInfoIndex.METHOD,
                   jname = "method",
                   eventProperty = true,
@@ -1400,6 +1393,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                   timezoneProperty = true),
     @IcalProperty(pindex = PropertyInfoIndex.PARAMETERS,
                   jname = "pars",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.RECURRENCE_IDS,
+                  jname = "recurrenceIds",
                   eventProperty = true,
                   todoProperty = true,
                   journalProperty = true,
@@ -3754,20 +3754,22 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       evstSt = evStart.compareTo(end);
     }
 
-    if (evstSt < 0) {
-      int evendSt;
+    if (evstSt >= 0) {
+      return false;
+    }
 
-      if (start == null) {
-        evendSt = 1;   // > infinity
-      } else {
-        evendSt = evEnd.compareTo(start);
-      }
+    int evendSt;
 
-      if ((evendSt > 0) ||
-          (evStart.equals(evEnd) && (evendSt >= 0))) {
-        // Passed the tests.
-        return true;
-      }
+    if (start == null) {
+      evendSt = 1;   // > infinity
+    } else {
+      evendSt = evEnd.compareTo(start);
+    }
+
+    if ((evendSt > 0) ||
+            (evStart.equals(evEnd) && (evendSt >= 0))) {
+      // Passed the tests.
+      return true;
     }
 
     return false;

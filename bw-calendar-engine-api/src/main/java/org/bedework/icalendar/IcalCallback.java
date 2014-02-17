@@ -24,8 +24,8 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.EventInfo;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -151,18 +151,15 @@ public interface IcalCallback extends Serializable {
    */
   void addLocation(BwLocation val) throws CalFacadeException;
 
-  /** Return a Collection of EventInfo objects. More than one for a recurring
-   * event with overrides.
+  /** Return a Collection of EventInfo objects. There should only be
+   * one returned.
    *
    * @param cal       calendar to search
    * @param guid
-   * @param rid
-   * @param recurRetrieval How recurring event is returned.
    * @return Collection of EventInfo
    * @throws CalFacadeException
    */
-  Collection getEvent(BwCalendar cal, String guid, String rid,
-                      RecurringRetrievalMode recurRetrieval)
+  Collection<EventInfo> getEvent(BwCalendar cal, String guid)
           throws CalFacadeException;
 
   /** URIgen object used to provide ALTREP values - or null for no altrep

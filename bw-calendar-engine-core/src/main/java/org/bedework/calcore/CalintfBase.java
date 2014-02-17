@@ -70,7 +70,7 @@ public abstract class CalintfBase implements Calintf {
 
   private transient Logger log;
 
-  protected List<SysEventBase> queuedNotifications = new ArrayList<SysEventBase>();
+  protected final List<SysEventBase> queuedNotifications = new ArrayList<>();
 
   /* ====================================================================
    *                   initialisation
@@ -80,7 +80,6 @@ public abstract class CalintfBase implements Calintf {
    *
    */
   public CalintfBase() {
-    debug = getLogger().isDebugEnabled();
   }
 
   @Override
@@ -152,9 +151,6 @@ public abstract class CalintfBase implements Calintf {
    *                   Notifications
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.Calintf#postNotification(org.bedework.sysevents.events.SysEvent)
-   */
   @Override
   public void postNotification(final SysEventBase ev) throws CalFacadeException {
     if (!isOpen) {
@@ -173,13 +169,10 @@ public abstract class CalintfBase implements Calintf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.Calintf#flushNotifications()
-   */
   @Override
   public void flushNotifications() throws CalFacadeException {
     synchronized (queuedNotifications) {
-      for (SysEventBase ev: queuedNotifications) {
+      for (final SysEventBase ev: queuedNotifications) {
         try {
           NotificationsHandlerFactory.post(ev);
         } catch (Throwable t) {
@@ -197,9 +190,6 @@ public abstract class CalintfBase implements Calintf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.Calintf#clearNotifications()
-   */
   @Override
   public void clearNotifications() throws CalFacadeException {
     synchronized (queuedNotifications) {

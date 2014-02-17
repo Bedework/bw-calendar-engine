@@ -46,36 +46,34 @@ public interface CoreEventsI extends Serializable {
    *                   Events
    * ==================================================================== */
 
-  /** Return one or more events using the calendar, guid and optionally a
-   * recurrence-id as a key.
+  /** Return one or more events using the calendar path and guid.
    *
    * <p>For most calendar collections one and only one event should be returned
    * for any given guid. However, for certain special collections (inbox etc)
    * the guid rules are relaxed.
    *
-   * <p>For recurring events, the guid defines the 'master' event defining
-   * the rules together with any exceptions.
-   *
-   * <p>The recurrence id defines a particular instance of a recurrence.
-   *
-   * <p>To specify the master entry provide a null recurrenceId or use the
-   * recurRetrieval parameter. One CoreEventInfo object per recurring event will
-   * be returned as for getEvent using the name.
-   *
-   * <p>if the rerieval mode is to expand recurrences, the Collection returned
-   * will include all appropriate instances.
-   *
    * @param colPath   String collection path or null.
    * @param guid      String guid for the event
-   * @param rid       String recurrence id, null for non-recurring, null valued for
-   *                    master or non-null-valued for particular occurrence.
-   * @param recurRetrieval How recurring event is returned.
    * @return  Collection of CoreEventInfo objects representing event(s).
    * @throws CalFacadeException
    */
   public Collection<CoreEventInfo> getEvent(String colPath,
-                                            String guid, String rid,
-                                            RecurringRetrievalMode recurRetrieval)
+                                            String guid)
+          throws CalFacadeException;
+
+  /** Get an event given the calendar and String name. Return null for not
+   * found. For non-recurring there should be only one event. For recurring
+   * events, overrides and possibly instances will be returned.
+   *
+   * @param colPath    String collection path or null.
+   * @param val        String possible name
+   * @param recurRetrieval How recurring event is returned.
+   * @return CoreEventInfo or null
+   * @throws CalFacadeException
+   */
+  public CoreEventInfo getEvent(String colPath,
+                                String val,
+                                RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException;
 
   /** Return the events for the current user within the given date/time
@@ -100,21 +98,6 @@ public interface CoreEventsI extends Serializable {
                                              List<BwIcalPropertyInfoEntry> retrieveList,
                                              RecurringRetrievalMode recurRetrieval,
                                              boolean freeBusy) throws CalFacadeException;
-
-  /** Get an event given the calendar and String name. Return null for not
-   * found. For non-recurring there should be only one event. For recurring
-   * events, overrides and possibly instances will be returned.
-   *
-   * @param colPath    String collection path or null.
-   * @param val        String possible name
-   * @param recurRetrieval How recurring event is returned.
-   * @return CoreEventInfo or null
-   * @throws CalFacadeException
-   */
-  public CoreEventInfo getEvent(String colPath,
-                                String val,
-                                RecurringRetrievalMode recurRetrieval)
-          throws CalFacadeException;
 
   /** Result from add or update event
    * We need to know what instances and overrrides were added or removed for
@@ -234,13 +217,13 @@ public interface CoreEventsI extends Serializable {
   /** Delete an event and any associated alarms
    * Set any referring synch states to deleted.
    *
-   * @param val                BwEvent object to be deleted
+   * @param ei                object to be deleted
    * @param scheduling   True if we are deleting an event from an inbox for scheduling.
    * @param reallyDelete Really delete it - otherwise it's tombstoned
    * @return DelEventResult    result.
    * @exception CalFacadeException If there's a database access problem
    */
-  public DelEventResult deleteEvent(BwEvent val,
+  public DelEventResult deleteEvent(EventInfo ei,
                                     boolean scheduling,
                                     boolean reallyDelete) throws CalFacadeException;
 

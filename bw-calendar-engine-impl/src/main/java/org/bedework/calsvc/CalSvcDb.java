@@ -155,20 +155,17 @@ public class CalSvcDb implements Serializable {
    *
    * @param colPath
    * @param guid
-   * @param recurrenceId
-   * @param recurRetrieval
    * @return Collection<EventInfo> - collection as there may be more than
    *                one with this uid in the inbox.
    * @throws CalFacadeException
    */
   protected Collection<EventInfo> getEvents(final String colPath,
-                                            final String guid, final String recurrenceId,
-                                            final RecurringRetrievalMode recurRetrieval)
+                                            final String guid)
                             throws CalFacadeException {
     Events events = (Events)getSvc().getEventsHandler();
 
-    return events.get(colPath, guid, recurrenceId,
-                      recurRetrieval);
+    return events.get(colPath, guid, null,
+                      RecurringRetrievalMode.overrides);
   }
 
   /** Method which allows us to flag it as a scheduling action

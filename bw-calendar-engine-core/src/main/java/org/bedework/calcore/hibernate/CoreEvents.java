@@ -24,6 +24,7 @@ import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI;
 import org.bedework.calcorei.HibSession;
 import org.bedework.caldav.util.filter.FilterBase;
+import org.bedework.caldav.util.filter.ObjectFilter;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCalendar.CollectionInfo;
@@ -36,13 +37,15 @@ import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
-import org.bedework.calfacade.base.StartEndComponent;
+import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeDupNameException;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.ical.BwIcalPropertyInfo;
+import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.indexing.SearchResult;
+import org.bedework.calfacade.indexing.SearchResultEntry;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
@@ -62,10 +65,10 @@ import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.TimeZone;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -219,24 +222,15 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
   public void startTransaction() throws CalFacadeException {
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcore.CalintfHelper#endTransaction()
-   */
   @Override
   public void endTransaction() throws CalFacadeException {
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreEventsI#getEvent(java.lang.String, java.lang.String, java.lang.String, boolean, org.bedework.calfacade.RecurringRetrievalMode)
-   */
   @Override
   public Collection<CoreEventInfo> getEvent(final String colPath,
-                                            final String uid,
-                                            final String rid,
-                                            final RecurringRetrievalMode recurRetrieval)
+                                            final String uid)
           throws CalFacadeException {
-    BwEvent master = null;
-    TreeSet<CoreEventInfo> ts = new TreeSet<CoreEventInfo>();
+    TreeSet<CoreEventInfo> ts = new TreeSet<>();
     HibSession sess = getSess();
     int desiredAccess = privRead;
 
@@ -267,8 +261,9 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
      */
 
     // First look in the events table for the master(s).
-    eventQuery(BwEventObj.class, colPath, null, uid, null, null, null,
-               recurRetrieval);
+    eventQuery(BwEventObj.class, colPath, uid,
+               null, null,
+               null);
 
     /* The uid and recurrence id is a unique key for calendar collections
      * other than some special ones, Inbox and Outbox.
@@ -282,8 +277,9 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     if (Util.isEmpty(evs)) {
       /* Look for an annotation to that event by the current user.
        */
-      eventQuery(BwEventAnnotation.class, colPath, null, uid, /*null*/rid, null, null,
-                 recurRetrieval);
+      eventQuery(BwEventAnnotation.class, colPath, uid, /*null*/
+                 null, null,
+                 null);
       evs = sess.getList();
     }
 
@@ -308,13 +304,12 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     eqr.addColPath(colPath);
 
     for (CoreEventInfo cei: ceis) {
-      master = cei.getEvent();
+      final BwEvent master = cei.getEvent();
+      CurrentAccess ca = cei.getCurrentAccess();
 
       if (master.getEntityType() == IcalDefs.entityTypeVavailability) {
         for (String auid : master.getAvailableUids()) {
-          Collection<CoreEventInfo> aceis = getEvent(colPath, auid,
-                                                     null, // rid,
-                                                     recurRetrieval);
+          Collection<CoreEventInfo> aceis = getEvent(colPath, auid);
           if (aceis.size() != 1) {
             throwException(CalFacadeException.badResponse);
           }
@@ -324,145 +319,14 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
         ts.add(cei);
       } else if (!master.testRecurring()) {
         ts.add(cei);
-      } else if (rid == null) {
-        doRecurrence(eqr, cei, null, null, null, null,
-                     recurRetrieval,
-                     desiredAccess, false);
-        if (recurRetrieval.mode == Rmode.expanded) {
-          Collection<CoreEventInfo> instances = cei.getInstances();
-
-          if (instances != null) {
-            ts.addAll(instances);
-          }
-        } else {
-          ts.add(cei);
-        }
       } else {
-        cei = getInstanceOrOverride(eqr.colPaths, null,
-                                    master, rid, desiredAccess);
-        if (cei != null) {
-          ts.add(cei);
-        }
+        doRecurrence(cei, null);
+
+        ts.add(cei);
       }
     }
 
     return ts;
-  }
-
-  @Override
-  public Collection<CoreEventInfo> getEvents(final Collection<BwCalendar> calendars,
-                                             final FilterBase filter,
-                                             final BwDateTime startDate,
-                                             final BwDateTime endDate,
-                                             final List<BwIcalPropertyInfoEntry> retrieveList,
-                                             RecurringRetrievalMode recurRetrieval,
-                                             final boolean freeBusy) throws CalFacadeException {
-    /* Ensure dates are limited explicitly or implicitly */
-    recurRetrieval = defaultRecurringRetrieval(recurRetrieval,
-                                               startDate, endDate);
-
-    if (debug) {
-      trace("getEvents for start=" + startDate + " end=" + endDate);
-    }
-
-    Collection<String> colPaths = null;
-
-    if (calendars != null) {
-      colPaths = new ArrayList<>();
-      for (BwCalendar c: calendars) {
-        colPaths.add(c.getPath());
-
-        if (debug) {
-          trace("   calendar:" + c.getPath());
-        }
-      }
-    }
-
-    /* eventsQuery covers some of what is outlined here.
-     *
-     * 1. Get events and annotations in range and satisfying the filter.
-     *    If there is a date range exclude the recurring master events as they
-     *    turn up later attached to the instances.
-     *
-     *    If there is no date range we will not expand recurrences so we need
-     *    to send master events and overrrides.
-     *
-     *    We also exclude overrides to recurring instances.
-     *
-     *    If no date range was supplied we now have all the master events.
-     *    Otherwise we have all the non-recurring events
-     *    (XXX or recurring reference by an annotation???)
-     *
-     * 2. If there is a date range supplied, get all instances in date range and
-     *    add their masters to the set.
-     *
-     * 3. If there is a date range supplied, get all overrides in date range and
-     *    add their masters to the set.
-     *
-     * 4. For each event
-     *    4a. if not recurring add to result
-     *    4b. if recurring {
-     *          if expanding
-     *             find all instances (in range) and add to result set
-     *          else {
-     *            find all overrides (in override range if supplied)
-     *            find all instances (IF instance range)
-     *            attach them to the master
-     *            add master to set.
-     *          }
-     *        }
-     *
-     * Some points to remind ourselves. We have to fetch overides and instances
-     * because the master may be out of the range of a date limited query - usually
-     * is, but we need the master to construct a proxy.
-     *
-     * We could probably just use the overrides and instances obtained in
-     * steps 2 and 3 except for the CalDAV complications which allow a different
-     * date range for overrides and instances.
-     */
-
-    int desiredAccess = privRead;
-    if (freeBusy) {
-      // DORECUR - freebusy events must have enough info for expansion
-      desiredAccess = privReadFreeBusy;
-    }
-
-    EventsQueryResult eqr = new EventsQueryResult();
-    eqr.flt = new Filters(filter);
-    eqr.colPaths = colPaths;
-
-    eventsQuery(eqr, startDate, endDate,
-                retrieveList,
-                freeBusy,
-                null, // master
-                null, // masters
-                null, // uids
-                getEvents);
-
-    Collection<CoreEventInfo> ceis = postGetEvents(eqr.es, desiredAccess,
-                                                   returnResultAlways,
-                                                   null);
-
-    /* Now get the annotations - these are not overrides */
-    eventsQuery(eqr, startDate, endDate,
-                retrieveList,
-                freeBusy,
-                null, // master
-                null, // masters
-                null, // uids
-                getAnnotations);
-
-    if (!eqr.es.isEmpty()) {
-      ceis.addAll(postGetEvents(eqr.es, desiredAccess, returnResultAlways,
-                                eqr.flt));
-    }
-
-    ceis = getRecurrences(eqr, ceis,
-                          startDate, endDate,
-                          retrieveList, recurRetrieval, desiredAccess,
-                          freeBusy);
-
-    return buildVavail(ceis);
   }
 
   private static final String eventsByNameQuery =
@@ -551,9 +415,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
           }
 
           if (aev.testRecurring()) {
-            doRecurrence(null, acei, null, null, null, null,
-                         recurRetrieval,
-                         privRead, false);
+            doRecurrence(acei, recurRetrieval);
           }
 
           cei.addContainedItem(acei);
@@ -561,9 +423,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       } else {
         ev = cei.getEvent();
         if (ev.testRecurring()) {
-          doRecurrence(null, cei, null, null, null, null,
-                       recurRetrieval,
-                       privRead, false);
+          doRecurrence(cei, recurRetrieval);
         }
       }
     }
@@ -572,19 +432,105 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
   }
 
   @Override
+  public Collection<CoreEventInfo> getEvents(final Collection<BwCalendar> calendars,
+                                             final FilterBase filter,
+                                             final BwDateTime startDate,
+                                             final BwDateTime endDate,
+                                             final List<BwIcalPropertyInfoEntry> retrieveList,
+                                             RecurringRetrievalMode recurRetrieval,
+                                             final boolean freeBusy) throws CalFacadeException {
+    /* Ensure dates are limited explicitly or implicitly */
+    recurRetrieval = defaultRecurringRetrieval(recurRetrieval,
+                                               startDate, endDate);
+
+    if (debug) {
+      trace("getEvents for start=" + startDate + " end=" + endDate);
+    }
+
+    FilterBase fltr = filter;
+
+    if (!Util.isEmpty(calendars)) {
+      FilterBase colfltr = null;
+      for (BwCalendar c: calendars) {
+        colfltr = FilterBase.addOrChild(colfltr,
+                                        new ObjectFilter<String>(PropertyInfoIndex.COLLECTION,
+                                                                 c.getPath()));
+      }
+      fltr = FilterBase.addAndChild(fltr, colfltr);
+    }
+
+    int desiredAccess = privRead;
+    if (freeBusy) {
+      // DORECUR - freebusy events must have enough info for expansion
+      desiredAccess = privReadFreeBusy;
+    }
+
+    List<PropertyInfoIndex> properties = new ArrayList<>(2);
+
+    properties.add(PropertyInfoIndex.DTSTART);
+    properties.add(PropertyInfoIndex.UTC);
+
+    List<SortTerm> sort = new ArrayList<>(1);
+    sort.add(new SortTerm(properties, true));
+
+    String start = null;
+    String end = null;
+
+    if (startDate != null) {
+      start = startDate.getDate();
+    }
+
+    if (endDate != null) {
+      end = endDate.getDate();
+    }
+
+    SearchResult sr = getIndexer().search(
+            null,   // query
+            fltr,
+            sort,
+            start,
+            end,
+            -1,
+            getAccessChecker(),
+            recurRetrieval);
+
+    List<SearchResultEntry> sres =
+            sr.getIndexer().getSearchResult(sr, 0, -1, desiredAccess);
+    TreeSet<CoreEventInfo> ceis = new TreeSet<>();
+
+    for (SearchResultEntry sre: sres) {
+      Object o = sre.getEntity();
+
+      if (!(o instanceof EventInfo)) {
+        continue;
+      }
+
+      EventInfo ei = (EventInfo)o;
+      BwEvent ev = ei.getEvent();
+      restoreCategories(ev);
+
+      CoreEventInfo cei = postGetEvent(ev, null, ei.getCurrentAccess());
+
+      if (cei == null) {
+        continue;
+      }
+
+      ceis.add(cei);
+    }
+
+    return buildVavail(ceis);
+  }
+
+  @Override
   public UpdateEventResult addEvent(final EventInfo ei,
                                     final boolean scheduling,
                                     final boolean rollbackOnError) throws CalFacadeException {
+    final BwEvent val = ei.getEvent();
     final Collection<BwEventProxy> overrides = ei.getOverrideProxies();
     final long startTime = System.currentTimeMillis();
     RecuridTable recurids = null;
     HibSession sess = getSess();
     UpdateEventResult uer = new UpdateEventResult();
-
-    BwEvent val = ei.getEvent();
-    if (val instanceof BwEventProxy) {
-      val = ((BwEventProxy)val).getRef();
-    }
 
     uer.addedUpdated = true;
 
@@ -654,7 +600,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
       stat(StatsEvent.createTime, startTime);
 
-      indexIfTest(ei);
+      indexEntity(ei);
 
       return uer;
     }
@@ -679,7 +625,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
       stat(StatsEvent.createTime, startTime);
 
-      indexIfTest(ei);
+      indexEntity(ei);
 
       return uer;
     }
@@ -790,7 +736,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       notify(SysEvent.SysCode.ENTITY_ADDED, val, shared);
     }
 
-    indexIfTest(ei);
+    indexEntity(ei);
 
     stat(StatsEvent.createTime, startTime);
 
@@ -881,10 +827,32 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       if (val.testRecurring()) {
         /* Check the instances and see if any changes need to be made.
          */
+
+        if (!Util.isEmpty(overrides)) {
+          for (BwEventProxy pxy: overrides) {
+            BwEventAnnotation ann = pxy.getRef();
+            boolean updated = false;
+
+            if ((ann.getRecurring() != null) &&
+                    ann.getRecurring()) {
+              ann.setRecurring(new Boolean(false)); // be safe
+              updated = true;
+            }
+
+            if (ann.getTombstoned() == null) {
+              ann.setTombstoned(false); // be safe
+              updated = true;
+            }
+
+            if (ann.unsaved()) {
+              sess.save(ann);
+            } else if (updated) {
+              updateProxy(new BwEventProxy(ann));
+            }
+          }
+        }
+
         updateRecurrences(val, ue, overrides, shared);
-//      } else {
-  //      /* If the event was recurring and now is not remove recurrences */
-    //    deleteRecurrences(val, changes);
       }
 
       // XXX I don't think we want this updateRefs(val);
@@ -893,7 +861,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
           (Util.isEmpty(overrides) && Util.isEmpty(deletedOverrides))) {
         notify(SysEvent.SysCode.ENTITY_UPDATED, val, shared);
 
-        indexIfTest(ei);
+        indexEntity(ei);
 
         return ue;
       }
@@ -972,7 +940,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       }
 
       if (!Util.isEmpty(deletedOverrides)) {
-        Collection<String> rids = new ArrayList<String>();
+        Collection<String> rids = new ArrayList<>();
         for (BwEventProxy pxy: deletedOverrides) {
           rids.add(pxy.getRecurrenceId());
         }
@@ -987,7 +955,17 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     notify(SysEvent.SysCode.ENTITY_UPDATED, val, shared);
 
-    indexIfTest(ei);
+    if (proxy != null) {
+      if (ei.getRetrievedEvent() == null) {
+        warn("No retrieved event for indexer");
+      } else {
+        EventInfo rei = ei.getRetrievedEvent();
+        rei.addOverride(ei);
+        indexEntity(rei);
+      }
+    } else {
+      indexEntity(ei);
+    }
 
     return ue;
   }
@@ -996,9 +974,10 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
    * @see org.bedework.calcorei.CoreEventsI#deleteEvent(org.bedework.calfacade.BwEvent, boolean, boolean)
    */
   @Override
-  public DelEventResult deleteEvent(final BwEvent val,
+  public DelEventResult deleteEvent(final EventInfo ei,
                                     final boolean scheduling,
                                     final boolean reallyDelete) throws CalFacadeException {
+    BwEvent ev = ei.getEvent();
     long startTime = System.currentTimeMillis();
     HibSession sess = getSess();
     DelEventResult der = new DelEventResult(false, 0);
@@ -1006,7 +985,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     boolean shared;
 
     try {
-      BwCalendar col = getEntityCollection(val.getColPath(),
+      BwCalendar col = getEntityCollection(ev.getColPath(),
                                            privAny, scheduling, false);
       shared = col.getShared();
 
@@ -1021,13 +1000,13 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
         desiredAccess = cw.getLastDesiredAccess();
       }
 
-      access.checkAccess(val, desiredAccess, false);
+      access.checkAccess(ev, desiredAccess, false);
     } catch (CalFacadeException cfe) {
       sess.rollback();
       throw cfe;
     }
 
-    if (!reallyDelete && val.getTombstoned()) {
+    if (!reallyDelete && ev.getTombstoned()) {
       // no-op - just pretend
 
       der.eventDeleted = true;
@@ -1035,32 +1014,33 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       return der;
     }
 
-    if (val.testRecurring() && (val.getRecurrenceId() == null)) {
+    if (ev.testRecurring() && (ev.getRecurrenceId() == null)) {
       // Master event - delete all instances and overrides.
-      deleteInstances(val, new UpdateEventResult(), der, shared);
+      deleteInstances(ev, new UpdateEventResult(), der, shared);
 
-      notifyDelete(reallyDelete, val, shared);
+      notifyDelete(reallyDelete, ev, shared);
 
       if (reallyDelete) {
-        sess.delete(val);
+        sess.delete(ev);
       } else {
-        tombstoneEvent(val);
+        tombstoneEvent(ev);
       }
 
       der.eventDeleted = true;
 
       stat(StatsEvent.deleteTime, startTime);
+      unindexEntity(ei);
 
       return der;
     }
 
-    if ((val.getRecurrenceId() != null) &&
-        (val instanceof BwEventProxy)) {
+    if ((ev.getRecurrenceId() != null) &&
+        (ev instanceof BwEventProxy)) {
       /* Deleting a single instance. Delete any overrides, delete the instance
        * and add an exdate to the master.
        */
 
-      BwEventProxy proxy = (BwEventProxy)val;
+      BwEventProxy proxy = (BwEventProxy)ev;
       BwEventAnnotation ann = proxy.getRef();
       BwEvent master = ann.getMaster();
 
@@ -1071,7 +1051,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
                              " recurrenceId=:rid"});
 
       sess.setEntity("master", master);
-      sess.setString("rid", val.getRecurrenceId());
+      sess.setString("rid", ev.getRecurrenceId());
       BwRecurrenceInstance inst = (BwRecurrenceInstance)sess.getUnique();
 
       if (inst == null) {
@@ -1080,7 +1060,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
         return der;
       }
 
-      notifyDelete(true, val, shared);
+      notifyDelete(true, ev, shared);
 
       sess.delete(inst);
 
@@ -1104,16 +1084,18 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
       stat(StatsEvent.deleteTime, startTime);
 
+      indexEntity(ei.getRetrievedEvent());
+
       return der;
     }
 
     // Single non recurring event.
 
-    BwEvent deletee = val;
+    BwEvent deletee = ev;
 
-    if (val instanceof BwEventProxy) {
+    if (ev instanceof BwEventProxy) {
       // Deleting an annotation
-      deletee = ((BwEventProxy)val).getRef();
+      deletee = ((BwEventProxy)ev).getRef();
     }
 
     // I think we need something like this -- fixReferringAnnotations(deletee);
@@ -1126,9 +1108,9 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     //sess.delete(sess.merge(deletee));
 
-    notifyDelete(reallyDelete, val, shared);
+    notifyDelete(reallyDelete, ev, shared);
     if (reallyDelete) {
-      clearCollection(val.getAttendees());
+      clearCollection(ev.getAttendees());
 
       sess.delete(deletee);
     } else {
@@ -1138,6 +1120,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     der.eventDeleted = true;
 
     stat(StatsEvent.deleteTime, startTime);
+    unindexEntity(ei);
 
     return der;
   }
@@ -1452,270 +1435,6 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
    *                   Private methods
    * ==================================================================== */
 
-  /** We've collected together a bunch of master events - now we need to retrieve
-   * any associated overrides and instances (if that's what we're asked for.
-   *
-   * @param eqr
-   * @param ceis master events we discovered so far
-   * @param startDate
-   * @param endDate
-   * @param retrieveListFields
-   * @param recurRetrieval
-   * @param desiredAccess
-   * @param freeBusy true if we should return only freebusy related information.
-   * @return Collection of events
-   * @throws CalFacadeException
-   */
-  private Collection<CoreEventInfo> getRecurrences(final EventsQueryResult eqr,
-                                                   final Collection<CoreEventInfo> ceis,
-                                                   final BwDateTime startDate,
-                                                   final BwDateTime endDate,
-                                                   final List<BwIcalPropertyInfoEntry> retrieveListFields,
-                                                   final RecurringRetrievalMode recurRetrieval,
-                                                   final int desiredAccess,
-                                                   final boolean freeBusy)
-          throws CalFacadeException {
-    Collection<CoreEventInfo> res = new TreeSet<CoreEventInfo>();
-    Collection<CoreEventInfo> recurringMasters = new TreeSet<CoreEventInfo>();
-    Collection<BwEvent> instanceMasters = new TreeSet<BwEvent>();
-
-    /* Split out the recurring masters from non-recurring events,
-     */
-
-    for (CoreEventInfo cei: ceis) {
-      BwEvent master = cei.getEvent();
-
-      if (!master.testRecurring()) {
-        res.add(cei);
-      } else {
-        recurringMasters.add(cei);
-        instanceMasters.add(master);
-      }
-    }
-
-    /* If there were any date limits or filters fetch any masters for instances
-     * that fall in the range and add the unique masters to the Collection.
-     *
-     * Note: we cannot just get the attached override for an instance. An
-     * override might have moved an instance into the range we are fetching so
-     * we will not fetch the instance in the next query.
-     */
-    if ((startDate != null) || (endDate != null) || eqr.flt.getFiltered()) {
-      eventsQuery(eqr, startDate, endDate,
-                  retrieveListFields,
-                  freeBusy,
-                  null, // master
-                  null, // masters
-                  null, // uids
-                  getInstanceMasters);
-
-      if (!eqr.es.isEmpty()) {
-        Iterator it = eqr.es.iterator();
-        while (it.hasNext()) {
-          BwEvent mstr = (BwEvent)it.next();
-
-          CoreEventInfo cei = postGetEvent(mstr, desiredAccess,
-                                           returnResultAlways,
-                                           null);
-
-          if (cei != null)  {
-            // Access was not denied
-
-            recurringMasters.add(cei);
-            instanceMasters.add(mstr);
-          }
-        }
-      }
-    }
-
-    /* We'll build 2 maps - both indexed by the master, one of overrides that
-     * match and one of instances that match.
-     *
-     * We then pass these maps to doRecurrence which will create an event master
-     * with attached overrides and instances.
-     */
-
-    /* Before reading this head down to comments below
-     *
-     * Now we need to fetch all overrides and possibly instances for the masters.
-     *
-     * We always need overrides, but we only retrieve the instances if we were
-     * asked for them (usually the case).
-     *
-     * What we do here is batch that into 2 queries, one for all the overrides
-     * and one for all the instances. This avoids a query per master.
-     *
-     * This is not yet correct. If we are returning master + overrides (no
-     * expansions) we need ALL the overrides even if there is a filter. For
-     * example, if we have the filter category=Films then we need any master that
-     * has that category + all it's overrides (which might override the category)
-     * We also need any master+ ALL overrides where ANY override satisfies the
-     * condition. (This is partly the reason for the odd retrieval of the  master
-     * in getEvents)
-     *
-     * However, and this is where things fail, if we are expanding, we want ONLY
-     * the overrides that satisfy the conditions and, when we retrieve instances
-     * we should only retrieve non-overridden instances.
-     */
-
-    /* Ignore the above comment for the moment. We need to first see if there
-     * are any matching overrides. That's a query using the filters.
-     *
-     * If we have any matching instances or overrides AND if we are not expanding
-     * the result then we must retrieve ALL overrides for any matching event.
-     *
-     * This is because we are required to return the master + all the overrides
-     */
-
-    HashMap<BwEvent, Collection<CoreEventInfo>> ovMap =
-      new HashMap<BwEvent, Collection<CoreEventInfo>>();
-
-    /* First get any matching overrides. */
-    getOverrides(eqr,
-                 false,  // allOverrides,
-                 recurringMasters,
-                 ovMap,
-                 recurRetrieval,
-                 freeBusy,
-                 desiredAccess);
-
-    if (recurringMasters.isEmpty()) {
-      /* No recurring events this batch. We're done here */
-
-      if (freeBusy) {
-        return makeFreeBusy(res);
-      }
-
-      return res;
-    }
-
-    if (recurRetrieval.mode != Rmode.expanded) {
-      /* Now we have to retrieve ALL overrides for this instance */
-      eqr.suppressFilter = true;
-      getOverrides(eqr,
-                   true,  // allOverrides,
-                   recurringMasters,
-                   ovMap,
-                   recurRetrieval,
-                   freeBusy,
-                   desiredAccess);
-    }
-
-    /* Now do the same for all recurrence instances -
-     * one query to fetch them all */
-    HashMap<BwEvent, Collection<BwRecurrenceInstance>> instMap =
-      new HashMap<BwEvent, Collection<BwRecurrenceInstance>>();
-
-    if ((recurRetrieval.mode == Rmode.expanded) &&
-        !instanceMasters.isEmpty()) {
-      eventsQuery(eqr, recurRetrieval.start, recurRetrieval.end,
-                  null, // retrieveListFields
-                  freeBusy,
-                  null,
-                  instanceMasters,
-                  null, // uids
-                  getInstances);
-
-      Iterator it = eqr.es.iterator();
-      while (it.hasNext()) {
-        BwRecurrenceInstance inst = (BwRecurrenceInstance)it.next();
-        BwEvent mstr = inst.getMaster();
-
-        Collection<BwRecurrenceInstance> insts = instMap.get(mstr);
-        if (insts == null) {
-          insts = new ArrayList<BwRecurrenceInstance>();
-          instMap.put(mstr, insts);
-        }
-
-        insts.add(inst);
-      }
-    }
-
-    CheckMap checked = new CheckMap();
-    for (CoreEventInfo cei: recurringMasters) {
-      doRecurrence(eqr, cei, null, ovMap, instMap, checked,
-                   recurRetrieval, desiredAccess, freeBusy);
-      if (recurRetrieval.mode == Rmode.expanded) {
-        if (cei.getInstances() != null) {
-          res.addAll(cei.getInstances());
-        }
-
-        if (cei.getOverrides() != null) {
-          res.addAll(cei.getOverrides());
-        }
-      } else {
-        res.add(cei);
-      }
-    }
-
-    if (freeBusy) {
-      return makeFreeBusy(res);
-    }
-
-    return res;
-  }
-
-  private void getOverrides(final EventsQueryResult eqr,
-                            final boolean allOverrides,
-                            final Collection<CoreEventInfo> recurringMasters,
-                            final HashMap<BwEvent, Collection<CoreEventInfo>> ovMap,
-                            final RecurringRetrievalMode recurRetrieval,
-                            final boolean freeBusy,
-                            final int desiredAccess) throws CalFacadeException {
-    Collection<BwEvent> masters = null;
-
-    if (allOverrides) {
-      // Limit to supplied masters
-      masters = new ArrayList<BwEvent>();
-      for (CoreEventInfo cei: recurringMasters) {
-        masters.add(cei.getEvent());
-      }
-    }
-
-    eventsQuery(eqr,
-                recurRetrieval.start,
-                recurRetrieval.end,
-                null, // retrieveListFields
-                freeBusy,
-                null,
-                masters,
-                null, // uids
-                getOverrides);
-
-    Iterator it = eqr.es.iterator();
-
-    /* Build a map of overrides indexed by their master */
-    while (it.hasNext()) {
-      BwEventAnnotation override = (BwEventAnnotation)it.next();
-      BwEvent mstr = override.getMaster();
-
-      CoreEventInfo mstrCei = postGetEvent(mstr, desiredAccess,
-                                         returnResultAlways,
-                                         null);
-      if (mstrCei == null) {
-        continue;
-      }
-
-      CoreEventInfo cei = postGetEvent(override, desiredAccess,
-                                       returnResultAlways,
-                                       eqr.flt);
-
-      if (cei != null) {
-        Collection<CoreEventInfo> ovs = ovMap.get(mstr);
-        if (ovs == null) {
-          ovs = new ArrayList<CoreEventInfo>();
-          ovMap.put(mstr, ovs);
-        }
-
-        ovs.add(cei);
-
-        if (!allOverrides) {
-          recurringMasters.add(mstrCei);
-        }
-      }
-    }
-  }
-
   private void setupDependentEntities(final BwEvent val) throws CalFacadeException {
     // Ensure collections in reasonable state.
     if (val.getAlarms() != null) {
@@ -1820,128 +1539,104 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
    * different calendar, for example the trash.
    */
   @SuppressWarnings("unchecked")
-  private void doRecurrence(final EventsQueryResult eqr,
-                            final CoreEventInfo cei,
-                            final Collection<String> colPaths,
-                            final HashMap<BwEvent, Collection<CoreEventInfo>> ovMap,
-                            final HashMap<BwEvent, Collection<BwRecurrenceInstance>> instMap,
-                            final CheckMap checked,
-                            final RecurringRetrievalMode recurRetrieval,
-                            final int desiredAccess,
-                            final boolean freeBusy)
+  private void doRecurrence(final CoreEventInfo cei,
+                            final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
     HibSession sess = getSess();
     BwEvent master = cei.getEvent();
+    Set<String> overrides = new HashSet<>();
+    CurrentAccess ca = cei.getCurrentAccess();
 
-    // Always fetch overrides
-    if (ovMap == null) {
-      eventQuery(BwEventAnnotation.class, null, colPaths, null, null, master, null,
-                 recurRetrieval/*,
-                 false*/);
+    // Always fetch all overrides
+    eventQuery(BwEventAnnotation.class, null, null, null, master,
+               null); //recurRetrieval);
 
-      Collection<BwEventAnnotation> ovs = sess.getList();
-      if (ovs != null) {
-        for (BwEventAnnotation override: ovs) {
-          CoreEventInfo ocei = makeProxy(null, override, checked, recurRetrieval,
-                                         desiredAccess, freeBusy);
+    Collection<BwEventAnnotation> ovs = sess.getList();
+    if (ovs != null) {
+      for (BwEventAnnotation override: ovs) {
+        CoreEventInfo ocei = makeOverrideProxy(override, ca);
 
-          if (ocei != null) {
-            cei.addOverride(ocei);
-          }
-        }
-      }
-    } else {
-      Collection<CoreEventInfo> ovs = ovMap.get(master);
-      if (ovs != null) {
-        for (CoreEventInfo ocei: ovs) {
+        if (ocei != null) {
           cei.addOverride(ocei);
         }
+
+        overrides.add(ocei.getEvent().getRecurrenceId());
       }
     }
 
-    /* If we are asking for full expansion retrieve all the instances (within
+    /* If we are asking for full expansion generate all the instances (within
      * the given date range if supplied)
      */
 
-    if (recurRetrieval.mode == Rmode.expanded) {
-      Collection<BwRecurrenceInstance> insts;
+    if ((recurRetrieval == null) ||
+        (recurRetrieval.mode != Rmode.expanded)) {
+      return;
+    }
 
-      if (instMap == null) {
-        eventsQuery(eqr,
-                    recurRetrieval.start,
-                    recurRetrieval.end,
-                    null, // retrieveListFields
-                    freeBusy,
-                    master,
-                    null, // masters
-                    null, // uids
-                    getInstances);
+    /* Create a list of all instance date/times before overrides. */
 
-        insts = eqr.es;
-      } else {
-        insts = instMap.get(master);
+    int maxYears;
+    int maxInstances;
+
+    maxYears = getAuthprops().getMaxYears();
+    maxInstances = getAuthprops().getMaxInstances();
+
+    RecurPeriods rp = RecurUtil.getPeriods(master, maxYears, maxInstances);
+
+    if (rp.instances.isEmpty()) {
+      // No instances for an alleged recurring event.
+      return;
+      //throw new CalFacadeException(CalFacadeException.noRecurrenceInstances);
+    }
+
+    String stzid = master.getDtstart().getTzid();
+
+    int instanceCt = maxInstances;
+
+    boolean dateOnly = master.getDtstart().getDateType();
+
+    /* Emit all instances that aren't overridden. */
+
+    TreeSet<CoreEventInfo> ceis = new TreeSet<>();
+
+    for (Period p: rp.instances) {
+      String dtval = p.getStart().toString();
+      if (dateOnly) {
+        dtval = dtval.substring(0, 8);
       }
 
-      TreeSet<CoreEventInfo> ceis = new TreeSet<>();
+      BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
-      /* XXX I'm not sure insts should ever be null though possibly a date range
-       * on the instances may result in that.
-       */
-      if (insts != null) {
-        for (BwRecurrenceInstance inst: insts) {
-          CoreEventInfo instcei = makeProxy(inst, null, checked, recurRetrieval,
-                                            desiredAccess, freeBusy);
-          if (instcei != null) {
-            //if (debug) {
-            //  debugMsg("Ev: " + proxy);
-            //}
-            ceis.add(instcei);
-          }
-        }
+      if (overrides.contains(rstart.getDate())) {
+        // Overrides built separately - skip this instance.
+        continue;
       }
 
-      cei.setInstances(ceis);
-    }
-  }
+      String recurrenceId = rstart.getDate();
 
-  /* We were asked for a specific instance. This overrides the retrieval mode
-   * as we always want it returned.
-   */
-  private CoreEventInfo getInstanceOrOverride(final Collection<String> colPaths,
-                                              final List<String> retrieveListFields,
-                                              final BwEvent master,
-                                              final String rid,
-                                              final int desiredAccess)
-          throws CalFacadeException {
-    /* First look for an override */
-    HibSession sess = getSess();
-    BwEventAnnotation override = null;
-    BwRecurrenceInstance inst = null;
+      dtval = p.getEnd().toString();
+      if (dateOnly) {
+        dtval = dtval.substring(0, 8);
+      }
 
-    eventQuery(BwEventAnnotation.class, null, colPaths, null, rid, master,
-               null,
-               RecurringRetrievalMode.expanded/*,
-               false*/);
+      BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
-    Collection ovs = sess.getList();
+      BwRecurrenceInstance inst = new BwRecurrenceInstance(rstart,
+                                                           rend,
+                                                           recurrenceId,
+                                                           master,
+                                                           null);
 
-    if (ovs.size() > 1) {
-      throw new CalFacadeException("Multiple overrides");
+      CoreEventInfo instcei = makeInstanceProxy(inst, ca);
+      if (instcei != null) {
+        //if (debug) {
+        //  debugMsg("Ev: " + proxy);
+        //}
+        ceis.add(instcei);
+      }
     }
 
-    if (ovs.size() == 1) {
-      override = (BwEventAnnotation)ovs.iterator().next();
-    } else {
-      inst = getInstance(master, rid);
-    }
-
-    if ((override == null) && (inst == null)) {
-      return null;
-    }
-
-    return makeProxy(inst, override, null,
-                     RecurringRetrievalMode.expanded,
-                     desiredAccess, false);
+    cei.setInstances(ceis);
   }
 
   private BwRecurrenceInstance getInstance(final BwEvent master,
@@ -2596,11 +2291,11 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     }
   }
 
-  private void eventQuery(final Class cl, final String colPath,
-                          final Collection<String> colPaths,
-                          final String guid, final String rid,
+  private void eventQuery(final Class cl,
+                          final String colPath,
+                          final String guid,
+                          final String rid,
                           final BwEvent master,
-                          final Collection<BwEvent> masters,
                           final RecurringRetrievalMode recurRetrieval) throws CalFacadeException {
     HibSession sess = getSess();
     EventQueryBuilder qb = new EventQueryBuilder();
@@ -2625,22 +2320,11 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     if (master != null) {
       qb.append(" ev.master=:master ");
-    } else if (masters != null) {
-      qb.append(" ev.master in (:masters) ");
     } else {
       if (colPath != null) {
         qb.append(" ev.colPath=:colPath and");
       }
       qb.append(" ev.uid=:uid ");
-    }
-
-    //boolean setUser = false;
-    if (colPaths != null) {
-      qb.append(" and ((ev.colPath is null) or (ev.colPath in (:colPaths))) ");
-    //} else {
-    //  sb.append(" and ");
-    //  setUser = CalintfUtil.appendPublicOrOwnerTerm(sb, "ev",
-    //                                                currentMode, false);
     }
 
     qb.append(" and ev.tombstoned=false ");
@@ -2658,19 +2342,11 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     if (master != null) {
       sess.setEntity("master", master);
-    } else if (masters != null) {
-      sess.setParameterList("masters", masters);
     } else {
       if (colPath != null) {
         sess.setString("colPath", colPath);
       }
       sess.setString("uid", guid);
-    }
-
-    if (colPaths != null) {
-      sess.setParameterList("colPaths", colPaths);
-    //} else if (setUser) {
-    //  sess.setEntity("user", getUser());
     }
 
     //if (!masterOnly && (rid != null)) {
@@ -2681,437 +2357,22 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     //debugMsg("Try query " + sb.toString());
   }
 
-  // ENUM
-  private static final int getEvents = 0;
-  private static final int getAnnotations = 1;
-  private static final int getOverrides = 2;
-  private static final int getInstances = 3;
-  private static final int getInstanceMasters = 4;
-  private static final int getAvailables = 5;
-
-  @SuppressWarnings("unchecked")
-  private void eventsQuery(final EventsQueryResult eqr,
-                           final BwDateTime startDate,
-                           final BwDateTime endDate,
-                           final List<BwIcalPropertyInfoEntry> retrieveListFields,
-                           final boolean freebusy,
-                           final BwEvent master,
-                           final Collection<BwEvent> masters,
-                           final Set<String> uids,
-                           final int getWhat) throws CalFacadeException {
-    HibSession sess = getSess();
-
-    /* Name of the event in the query */
-    final String qevName = "ev";
-
-    /* Name of the entity we test for date terms - might be the instance, might
-     * be the event itself.
-     */
-    String dtentName;
-
-    String qevNameMstr;
-    String qevNameSelect = qevName;
-
-    Class cl;
-    Class cldt = null;
-    boolean testTombstoned = false;
-
-    if (getWhat == getInstances) {
-      cl = BwRecurrenceInstance.class;
-      qevNameMstr = qevName + ".master";
-      dtentName = qevName;
-    } else if (getWhat == getInstanceMasters) {
-      cl = BwEventObj.class;
-      qevNameMstr = qevName;
-
-      cldt = BwRecurrenceInstance.class;
-      dtentName = "inst";
-
-      qevNameSelect = qevNameMstr;
-    } else if (getWhat == getAnnotations) {
-      cl = BwEventAnnotation.class;
-      qevNameMstr = qevName;
-      dtentName = qevName;
-      testTombstoned = true;
-    } else if (getWhat == getOverrides) {
-      cl = BwEventAnnotation.class;
-      qevNameMstr = qevName;
-      dtentName = qevName;
-      testTombstoned = true;
-    } else {
-      cl = BwEventObj.class;
-      qevNameMstr = qevName;
-      dtentName = qevName;
-      testTombstoned = true;
-    }
-
-    eqr.reset();
-
-    EventQueryBuilder selectClause = new EventQueryBuilder();
-    EventQueryBuilder whereClause = new EventQueryBuilder();
-
-    eqr.flt.init(selectClause, whereClause,
-                 qevNameMstr, dtentName,
-                 (getWhat == getAnnotations) || (getWhat == getOverrides),
-                 eqr.suppressFilter);
-
-    eqr.suppressFilter = false;
-
-    /* SEG:   from <class> ev [, <cldt> inst] where */
-    selectClause.append("select distinct ");
-    selectClause.fields(retrieveListFields, qevNameSelect,
-                        getWhat == getAnnotations);
-    selectClause.from();
-    selectClause.addClass(cl, qevName);
-
-    if (cldt != null) {
-      selectClause.append(", ");
-      selectClause.addClass(cldt, dtentName);
-    }
-
-    eqr.flt.joinPass(retrieveListFields);
-
-    selectClause.append(" where ");
-
-    if (freebusy) {
-      whereClause.append(qevNameMstr);
-      whereClause.append(".endType <> '");
-      whereClause.append(StartEndComponent.endTypeNone);
-      whereClause.append("' ");
-    }
-
-    if (getWhat == getInstanceMasters) {
-      if (freebusy) {
-        whereClause.and();
-      }
-
-      whereClause.append("(");
-      whereClause.append(dtentName);
-      whereClause.append(".master = ");
-      whereClause.append(qevName);
-      whereClause.append(") ");
-    }
-
-    if (testTombstoned) {
-      whereClause.and();
-      whereClause.append(dtentName);
-      whereClause.append(".tombstoned=false ");
-    }
-
-    /* SEG:   and (<date-ranges>) */
-    whereClause.appendDateTerms(dtentName, startDate, endDate, true,
-                                (getWhat == getInstances) ||
-                                (getWhat == getInstanceMasters));
-
-    if ((getWhat == getEvents) &&
-        ((startDate != null) || (endDate != null))) {
-      /* Don't retrieve any recurrences master records if we have a date range.
-       * We pick these up along with the instances that match the time range.
-       */
-      whereClause.and();
-      whereClause.append(qevName);
-      whereClause.append(".recurring = false ");
-    }
-
-    boolean doCals = false;
-
-    if (getWhat == getAvailables) {
-      whereClause.and();
-      whereClause.append("(");
-      whereClause.append(qevName);
-
-      whereClause.append(".uid in (:uids)) ");
-    }
-
-    if ((getWhat == getInstances) ||
-        (getWhat == getOverrides)) {
-      if (masters != null) {
-        whereClause.and();
-        whereClause.append("(");
-        whereClause.append(qevName);
-
-        whereClause.append(".master in (:masters)) ");
-      } else if (master != null) {
-        // We're asking for all instances for this master
-        whereClause.and();
-        whereClause.append("(");
-        whereClause.append(qevName);
-
-        whereClause.append(".master = :master) ");
-      } else {
-        /* We are being called to pick up the master for instances within the
-         * date range.
-         */
-        doCals = true;
-      }
-
-      /* If there is an override, either we already have it or it
-       * was overriden somewhere else.
-       */
-      if (getWhat == getInstances) {
-        whereClause.and();
-        whereClause.append(qevName);
-        whereClause.append(".override is null ");
-      }
-    } else {
-      doCals = true;
-    }
-
-    boolean setUser = false;
-
-    eqr.flt.addWhereFilters();
-
-    if (doCals) {
-      if (eqr.colPaths == null) {
-        // Doesn't count as empty
-
-        if (!eqr.flt.getQueryLimited()) {
-          setUser = whereClause.appendPublicOrOwnerTerm(qevNameMstr,
-                                                        currentMode,
-                                                        cb.getPrincipalInfo().getSuperUser());
-        }
-      } else if (!eqr.colPaths.isEmpty()) {
-        // Doesn't count as empty either
-
-        whereClause.and();
-        whereClause.append(" (");
-
-        whereClause.emitCalendarClause(qevNameMstr, eqr.colPaths);
-        setUser = false;
-
-        whereClause.append(") ");
-      } else {
-        // No valid calendars or user to limit search. Disallow
-        eqr.es = new TreeSet();
-        return;
-      }
-    }
-
-    if (getWhat == getAnnotations) {
-      /* Exclude overrides */
-
-      whereClause.and();
-      whereClause.append(" (");
-      whereClause.append(qevName);
-      whereClause.append(".override = false) ");
-    } else if (getWhat == getOverrides) {
-      whereClause.and();
-      whereClause.append(" (");
-      whereClause.append(qevName);
-      whereClause.append(".override = true) ");
-    }
-
-    /* This ordering may be unnecessary. If so we can remove it and remove
-     * dtstart as a required field.
-     * /
-    whereClause.append(" order by ");
-    whereClause.append(qevNameSelect);
-    whereClause.append(".dtstart.date");*/
-
-    selectClause.append(whereClause);
-
-    if (debug) {
-      trace(selectClause.toString());
-    }
-
-    selectClause.createQuery(sess);
-
-    /* XXX Limit result set size - pagination allows something like:
-       query.setFirstResult(0);
-       query.setMaxResults(10);
-       */
-
-    selectClause.setDateTermValues(startDate, endDate);
-
-    if (getWhat == getAvailables) {
-      sess.setParameterList("uids", uids);
-    } else if ((getWhat == getInstances) ||
-               (getWhat == getOverrides)) {
-      if (masters != null) {
-        sess.setParameterList("masters", masters);
-      } else if (master != null) {
-        sess.setEntity("master", master);
-      }
-    }
-
-    if (doCals) {
-      selectClause.doCalendarEntities(setUser, getPrincipal(), eqr);
-    }
-
-    eqr.flt.parPass(sess);
-
-    //if (debug) {
-    //  trace(sess.getQueryString());
-    //}
-
-    if (Util.isEmpty(retrieveListFields)) {
-      eqr.es = sess.getList();
-    } else {
-      /* Build an event object from the results. */
-      List<Object[]> projRes = sess.getList();
-
-      Collection<BwEvent> evs = new ArrayList<BwEvent>();
-
-      for (Object[] evflds: projRes) {
-        evs.add(makeEvent(retrieveListFields, evflds, getWhat));
-      }
-
-      eqr.es = evs;
-    }
-
-    if (debug) {
-      trace("Getting (" + getWhat +
-            ") Found " + eqr.es.size() + " entries");
-    }
+  private CoreEventInfo makeOverrideProxy(BwEventAnnotation override,
+                                          final CurrentAccess ca) throws CalFacadeException {
+    return new CoreEventInfo(new BwEventProxy(override), ca);
   }
 
-  private BwEvent makeEvent(final List<BwIcalPropertyInfoEntry> retrieveListFields,
-                            final Object[] evflds,
-                            final int getWhat) throws CalFacadeException {
-    BwEvent ev;
-    List<BwIcalPropertyInfoEntry> rlf;
-    if (getWhat == getAnnotations) {
-      ev = new BwEventAnnotation();
-      rlf = new ArrayList<>(retrieveListFields.size());
-      rlf.addAll(retrieveListFields);
-      for (PropertyInfoIndex pi: BwIcalPropertyInfo.requiredAnnotationPindexes) {
-        rlf.add(BwIcalPropertyInfo.getPinfo(pi));
-      }
-    } else {
-      ev = new BwEventObj();
-      rlf = retrieveListFields;
-    }
-
-    /* This could be done with reflection... */
-
-    if (evflds.length != rlf.size()) {
-      throw new CalFacadeException("Bad projection result");
-    }
-
-    for (int i = 0; i < evflds.length; i++) {
-      Object o = evflds[i];
-
-      if (o == null) {
-        continue;
-      }
-
-      if ((o instanceof Integer) &&
-          (((Integer)o) == 0)) {
-        continue;
-      }
-
-      setEventField(ev, rlf.get(i), o);
-    }
-
-    return ev;
-  }
-
-  private void setEventField(final BwEvent ev,
-                             final BwIcalPropertyInfoEntry ipie,
-                             final Object o) throws CalFacadeException {
-    try {
-      Method m;
-
-      if (ipie.getMultiValued()) {
-        m = findAdder(ev, ipie.getAdderName());
-      } else {
-        m = findSetter(ev, ipie.getDbFieldName());
-      }
-
-      Object[] pars = new Object[]{o};
-
-      m.invoke(ev, pars);
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  private Method findSetter(final Object val, final String name) throws CalFacadeException {
-    return findMethod(val, "set", name);
-  }
-
-  private Method findAdder(final Object val, final String name) throws CalFacadeException {
-    return findMethod(val, "add", name);
-  }
-
-  private Method findMethod(final Object val,
-                            final String prefix,
-                            final String name) throws CalFacadeException {
-    String methodName = prefix + name.substring(0, 1).toUpperCase() +
-                        name.substring(1);
-    Method[] meths = val.getClass().getMethods();
-    Method meth = null;
-
-    for (int i = 0; i < meths.length; i++) {
-      Method m = meths[i];
-
-      if (m.getName().equals(methodName)) {
-        if (meth != null) {
-          throw new CalFacadeException("org.bedework.calenv.multiple.setters");
-        }
-        meth = m;
-      }
-    }
-
-    if (meth == null) {
-      throw new CalFacadeException("org.bedework.unknown.method", name);
-    }
-
-    return meth;
-  }
-
-  /** Check the master for access and if ok build and return an event
-   * proxy.
+  /** The master has been checked for access and we now build and
+   * return an event proxy for an instance which has no override.
    *
-   * <p>If there is an override we don't need the instance. If there is no
-   * override we create an annotation.
-   *
-   * <p>If checked is non-null will use and update the checked map.
-   *
-   * @param inst        May be null if we retrieved the override
-   * @param override    May be null if we retrieved the instance
-   * @param checked
-   * @param recurRetrieval
-   * @param desiredAccess
-   * @param freeBusy
+   * @param inst        the instance
+   * @param ca          Checked access from master
    * @return CoreEventInfo
    * @throws CalFacadeException
    */
-  private CoreEventInfo makeProxy(final BwRecurrenceInstance inst,
-                                  BwEventAnnotation override,
-                                  final CheckMap checked,
-                                  final RecurringRetrievalMode recurRetrieval,
-                                  final int desiredAccess,
-                                  final boolean freeBusy) throws CalFacadeException {
-    BwEvent mstr;
-    if (inst != null) {
-      mstr = inst.getMaster();
-    } else {
-      mstr = override.getTarget();
-    }
-
-    //int res = 0;
-    CurrentAccess ca = null;
-
-    if (checked != null) {
-      ca = checked.getca(mstr);
-      if ((ca != null) && !ca.getAccessAllowed()) {
-        // failed
-        return null;
-      }
-    }
-
-    if ((checked == null) || (ca == null)) {
-      // untested
-      ca = access.checkAccess(mstr, desiredAccess, returnResultAlways);
-      if (checked != null) {
-        checked.setChecked(mstr, ca);
-      }
-
-      if (!ca.getAccessAllowed()) {
-        return null;
-      }
-    }
+  private CoreEventInfo makeInstanceProxy(final BwRecurrenceInstance inst,
+                                          final CurrentAccess ca) throws CalFacadeException {
+    BwEvent mstr = inst.getMaster();
 
     /*
     if (recurRetrieval.mode == Rmode.masterOnly) {
@@ -3141,53 +2402,23 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     /* success so now we build a proxy with the event and any override.
      */
 
-    if (override == null) {
-      if (recurRetrieval.mode == Rmode.overrides) {
-        // Master and overrides only
-        return null;
-      }
+    BwEventAnnotation override = new BwEventAnnotation();
 
-      /* DORECUR The instance could point to an overrride if the owner of the event
-             changed an instance.
-       */
-      BwEventAnnotation instOverride = inst.getOverride();
-      boolean newOverride = true;
+    override.setTarget(mstr);
+    override.setMaster(mstr);
 
-      if (instOverride != null) {
-//        if (instOverride.getOwner().equals(getUser())) {
-          // It's our own override.
-          override = instOverride;
-          newOverride = false;
-  //      } else {
-    //      // make a fake one pointing at the owners override
-      //    override = new BwEventAnnotation();
-        //  override.setTarget(instOverride);
-          //override.setMaster(instOverride);
-        //}
-      } else {
-        // make a fake one pointing at the master event
-        override = new BwEventAnnotation();
+    BwDateTime start = inst.getDtstart();
+    BwDateTime end = inst.getDtend();
+    override.setRecurrenceId(inst.getRecurrenceId());
 
-        override.setTarget(mstr);
-        override.setMaster(mstr);
-      }
-
-      if (newOverride) {
-        BwDateTime start = inst.getDtstart();
-        BwDateTime end = inst.getDtend();
-
-        override.setDtstart(start);
-        override.setDtend(end);
-        override.setDuration(BwDateTime.makeDuration(start, end).toString());
-        override.setCreatorHref(mstr.getCreatorHref());
-        override.setOwnerHref(mstr.getOwnerHref());
-        override.setOverride(true);
-        override.setName(mstr.getName());
-        override.setUid(mstr.getUid());
-
-        override.setRecurrenceId(inst.getRecurrenceId());
-      }
-    }
+    override.setDtstart(start);
+    override.setDtend(end);
+    override.setDuration(BwDateTime.makeDuration(start, end).toString());
+    override.setCreatorHref(mstr.getCreatorHref());
+    override.setOwnerHref(mstr.getOwnerHref());
+    override.setOverride(true);
+    override.setName(mstr.getName());
+    override.setUid(mstr.getUid());
 
     /* At this point we have an event with possible overrides. If this is free
      * busy we need to replace it all with a skeleton event holding only date/time
@@ -3199,40 +2430,15 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     BwEvent proxy = new BwEventProxy(override);
 
-    if (freeBusy) {
-      proxy = proxy.makeFreeBusyEvent();
-    }
-
     return new CoreEventInfo(proxy, ca);
   }
-
-  private static class CheckMap extends HashMap<Integer, CurrentAccess> {
-    void setChecked(final BwEvent ev, final CurrentAccess ca) {
-      put(ev.getId(), ca);
-    }
-
-    /* Return null for not found.
-     */
-    CurrentAccess getca(final BwEvent ev) {
-      return get(ev.getId());
-    }
-  }
-
-  /*
-  private int deleteAlarms(BwEvent ev) throws CalFacadeException {
-    HibSession sess = getSess();
-    sess.namedQuery("deleteEventAlarms");
-    sess.setEntity("ev", ev);
-
-    return sess.executeUpdate();
-  }*/
 
   private Collection<CoreEventInfo> postGetEvents(final Collection evs,
                                                   final int desiredAccess,
                                                   final boolean nullForNoAccess,
                                                   final Filters f)
           throws CalFacadeException {
-    TreeSet<CoreEventInfo> outevs = new TreeSet<CoreEventInfo>();
+    TreeSet<CoreEventInfo> outevs = new TreeSet<>();
 
     Iterator it = evs.iterator();
 
@@ -3253,11 +2459,11 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
   private Collection<CoreEventInfo> buildVavail(final Collection<CoreEventInfo> ceis)
           throws CalFacadeException {
-    TreeSet<CoreEventInfo> outevs = new TreeSet<CoreEventInfo>();
+    TreeSet<CoreEventInfo> outevs = new TreeSet<>();
 
-    Map<String, CoreEventInfo> vavails = new HashMap<String, CoreEventInfo>();
+    Map<String, CoreEventInfo> vavails = new HashMap<>();
 
-    List<CoreEventInfo> unclaimed = new ArrayList<CoreEventInfo>();
+    List<CoreEventInfo> unclaimed = new ArrayList<>();
 
     for (CoreEventInfo cei: ceis) {
       BwEvent ev = cei.getEvent();
@@ -3303,21 +2509,20 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     return outevs;
   }
 
-  private Collection<CoreEventInfo> makeFreeBusy(final Collection<CoreEventInfo> ceis)
-          throws CalFacadeException {
-    TreeSet<CoreEventInfo> outevs = new TreeSet<CoreEventInfo>();
-
-    HibSession sess = getSess();
-
-    for (CoreEventInfo cei: ceis) {
-      BwEvent ev = cei.getEvent();
-      cei.setEvent(ev.makeFreeBusyEvent());
-      outevs.add(cei);
-
-      sess.evict(ev);
+  private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
+    Set<String> uids = ce.getCategoryUids();
+    if (Util.isEmpty(uids)) {
+      return;
     }
 
-    return outevs;
+// Set<String> catUids = new TreeSet<>();
+
+    for (Object o: uids) {
+      String uid = (String)o;
+// catUids.add(uid);
+
+      ce.addCategory(cb.getCategory(uid));
+    }
   }
 
   private class RecuridTable extends HashMap<String, BwEventProxy> {

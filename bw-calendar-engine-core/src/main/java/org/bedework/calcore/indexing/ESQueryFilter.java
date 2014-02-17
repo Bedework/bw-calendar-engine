@@ -39,7 +39,6 @@ import org.bedework.calfacade.filter.BwHrefFilter;
 import org.bedework.calfacade.filter.BwViewFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
-import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
@@ -58,6 +57,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /** Build filters for ES searching
  *
@@ -93,6 +93,8 @@ public class ESQueryFilter implements CalintfDefs {
   public static String hrefJname = getJname(PropertyInfoIndex.HREF);
   private static String ownerJname = getJname(PropertyInfoIndex.OWNER);
   private static String publicJname = getJname(PropertyInfoIndex.PUBLIC);
+  public static String recurrenceidJname =
+          getJname(PropertyInfoIndex.RECURRENCE_ID);
 
   private static String indexEndJname = getJname(PropertyInfoIndex.INDEX_END);
   private static String indexStartJname = getJname(PropertyInfoIndex.INDEX_START);
@@ -161,7 +163,7 @@ public class ESQueryFilter implements CalintfDefs {
     return fb;
   }
 
-  public FilterBuilder multiHrefFilter(final List<String> hrefs) throws CalFacadeException {
+  public FilterBuilder multiHrefFilter(final Set<String> hrefs) throws CalFacadeException {
     FilterBuilder fb = null;
 
     for (String href: hrefs) {
@@ -176,6 +178,8 @@ public class ESQueryFilter implements CalintfDefs {
 
     if (!queryLimited) {
       fb = principalFilter(fb);
+
+      // TODO - add the default view here
     }
 
     /* If the search is for expanded events we want instances or
@@ -188,7 +192,7 @@ public class ESQueryFilter implements CalintfDefs {
 
        For non-expanded and non-filtered we want the master and
        overrides only.
-     */
+     * /
 
     if (recurRetrieval.mode == Rmode.expanded) {
       // Limit events to instances only //
@@ -207,7 +211,7 @@ public class ESQueryFilter implements CalintfDefs {
 
     /* if the query is not filtered we can limit to the master and
        overrides only
-     */
+     * /
 
     if (queryFiltered) {
       return fb;
@@ -222,10 +226,19 @@ public class ESQueryFilter implements CalintfDefs {
 
     queryFiltered = false; // Reset it.
 
-    return and(fb, limit);
+    return and(fb, limit); */
+    return fb;
   }
 
-  /**
+  /** If we have a filtered query the search result will only contain
+   * the master and/or overrides that match the query.
+   *
+   * <p> If we are not returning expansions we need to return the
+   * entire event - master and all overrides. FOr non-expanded we
+   * have to do a fetch of the entire event so we don't want parts of
+   * it returned for the search. Instead we'll just ask for the matching
+   * hrefs and then do a fetch for those.
+   *</p>
    *
    * @return true if we are not fetching expanded and we have a filtered
    *          query which examines the instances. In this case we
@@ -275,13 +288,13 @@ public class ESQueryFilter implements CalintfDefs {
     String startRef;
     String endRef;
 
-    if (recurRetrieval.mode == Rmode.expanded) {
-      startRef = dtStartUTCRef;
-      endRef = dtEndUTCRef;
-    } else {
+//    if (recurRetrieval.mode == Rmode.expanded) {
+//      startRef = dtStartUTCRef;
+//      endRef = dtEndUTCRef;
+//    } else {
       startRef = indexStartUTCRef;
       endRef = indexEndUTCRef;
-    }
+//    }
 
     FilterBuilder fb = filter;
 
@@ -316,7 +329,7 @@ public class ESQueryFilter implements CalintfDefs {
   public FilterBuilder hrefFilter(final FilterBuilder filter,
                                   final String href) throws CalFacadeException {
     return and(filter,
-               FilterBuilders.termFilter(hrefJname,href));
+               FilterBuilders.termFilter(hrefJname, href));
   }
 
   /** Add filter for the current principal - or public - to limit search

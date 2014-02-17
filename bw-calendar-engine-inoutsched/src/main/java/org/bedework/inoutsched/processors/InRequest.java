@@ -298,7 +298,9 @@ public class InRequest extends InProcessor {
 
     Collection<Recurrence> recurrences = RecurUtil.getRecurrences(inboxEi,
                                                                   maxYears,
-                                                                  maxInstances);
+                                                                  maxInstances,
+                                                                  null,
+                                                                  null);
 
     if (Util.isEmpty(recurrences)) {
       return false;
@@ -717,7 +719,9 @@ public class InRequest extends InProcessor {
 
     return RecurUtil.getRecurrences(ei,
                                     maxYears,
-                                    maxInstances);
+                                    maxInstances,
+                                    null,
+                                    null);
   }
 
   private boolean updateAttendeeFields(final EventInfo ourCopy,

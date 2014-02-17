@@ -218,13 +218,8 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     cb = new CalintfHelperCallback(this);
     chcb = new CalintfHelperHibCb(this);
 
-    if (Boolean.getBoolean("org.bedework.core.use.es")) {
-      events = new org.bedework.calcore.es.CoreEvents(chcb, cb,
-                              access, currentMode, sessionless);
-    } else {
-      events = new CoreEvents(chcb, cb,
-                              access, currentMode, sessionless);
-    }
+    events = new CoreEvents(chcb, cb,
+                            access, currentMode, sessionless);
 
     calendars = new CoreCalendars(chcb, cb,
                                   access, currentMode, sessionless);
@@ -1010,11 +1005,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   @Override
   public Collection<CoreEventInfo> getEvent(final String colPath,
-                                          final String guid, final String rid,
-                                          final RecurringRetrievalMode recurRetrieval)
+                                            final String guid)
            throws CalFacadeException {
     checkOpen();
-    return events.getEvent(colPath, guid, rid, recurRetrieval);
+    return events.getEvent(colPath, guid);
   }
 
   @Override
@@ -1038,26 +1032,26 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     UpdateEventResult ue = null;
 
     try {
+      calendars.touchCalendar(ei.getEvent().getColPath());
+
       ue = events.updateEvent(ei);
     } catch (CalFacadeException cfe) {
       rollbackTransaction();
       throw cfe;
     }
 
-    calendars.touchCalendar(ei.getEvent().getColPath());
-
     return ue;
   }
 
   @Override
-  public DelEventResult deleteEvent(final BwEvent val,
+  public DelEventResult deleteEvent(final EventInfo ei,
                                     final boolean scheduling,
                                     final boolean reallyDelete) throws CalFacadeException {
     checkOpen();
-    String colPath = val.getColPath();
+    String colPath = ei.getEvent().getColPath();
     try {
       try {
-        return events.deleteEvent(val, scheduling, reallyDelete);
+        return events.deleteEvent(ei, scheduling, reallyDelete);
       } catch (CalFacadeException cfe) {
         rollbackTransaction();
         throw cfe;

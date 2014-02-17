@@ -87,11 +87,10 @@ public class InScheduler extends AbstractScheduler {
 
       svci = getSvci(msg.getOwnerHref());
 
-      Collection<EventInfo> eis = svci.getEventsHandler().get(getParentPath(msg.getHref()),
+      EventInfo ei = svci.getEventsHandler().get(getParentPath(msg.getHref()),
                                                               getName(msg.getHref()),
-                                                              msg.getRecurrenceId(),
-                                                              RecurringRetrievalMode.expanded);
-      if (Util.isEmpty(eis)) {
+                                                              RecurringRetrievalMode.overrides);
+      if (ei == null) {
         // Event deleted?.
         if (debug) {
           trace("InSchedule event deleted?");
@@ -100,16 +99,6 @@ public class InScheduler extends AbstractScheduler {
         return ProcessMessageResult.NO_ACTION;
       }
 
-      if (eis.size() != 1) {
-        // This should not happen.
-        if (debug) {
-          trace("InSchedule expeected only 1 event");
-        }
-
-        return ProcessMessageResult.FAILED;
-      }
-
-      EventInfo ei = eis.iterator().next();
       BwEvent ev = ei.getEvent();
 
       SchedProcessor proc = null;

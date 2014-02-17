@@ -304,17 +304,24 @@ public abstract class CalintfHelper
     return ((BwIndexEsImpl)getIndexer()).getFilters();
   }*/
 
-  protected void indexIfTest(final EventInfo ei) throws CalFacadeException {
-    if (!cb.getSyspars().getTestMode()) {
-      return;
-    }
-
+  protected void indexEntity(final EventInfo ei) throws CalFacadeException {
     if (ei.getEvent().getRecurrenceId() != null) {
-      // Cannot index single instance at this time
+      // Cannot index single instance
+      warn("Tried to index a recurrence instance");
       return;
     }
 
     getIndexer().indexEntity(ei);
+  }
+
+  protected void unindexEntity(final EventInfo ei) throws CalFacadeException {
+    if (ei.getEvent().getRecurrenceId() != null) {
+      // Cannot index single instance
+      warn("Tried to unindex a recurrence instance");
+      return;
+    }
+
+    getIndexer().unindexEntity(ei.getEvent().getHref());
   }
 
   /** Called to notify container that an event occurred. This method should
@@ -571,15 +578,6 @@ public abstract class CalintfHelper
       return;
     }
 
-    boolean indexed = false;
-
-    if (getSyspars().getTestMode()) {
-      BwIndexer idx = cb.getIndexer();
-
-      idx.unindexEntity(val.getHref());
-      indexed = true;
-    }
-
     try {
       postNotification(
               SysEvent.makeEntityDeletedEvent(code,
@@ -588,7 +586,7 @@ public abstract class CalintfHelper
                                               val.getHref(),
                                               shared,
                                               val.getPublick(),
-                                              indexed,
+                                              true, // indexed,
                                               IcalDefs.fromEntityType(
                                                       val.getEntityType()),
                                               val.getRecurrenceId(),
@@ -608,8 +606,8 @@ public abstract class CalintfHelper
         return;
       }
 
-      final boolean indexed = (getSyspars().getTestMode() &&
-                                       (val.getRecurrenceId() == null));
+      final boolean indexed = (getSyspars().getTestMode() /* &&
+                                       (val.getRecurrenceId() == null)*/);
 
 
       postNotification(

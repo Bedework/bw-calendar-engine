@@ -44,8 +44,6 @@ import java.util.TreeSet;
 /** This class provides information about an event for a specific user and
  * session.
  *
- * <p>This class allows us to handle thread, or user, specific information.
- *
  * @author Mike Douglass       douglm  rpi.edu
  */
 public class EventInfo
@@ -113,6 +111,8 @@ public class EventInfo
     public ScheduleResult schedulingResult;
   }
 
+  private EventInfo retrievedEvent;
+
   protected BwEvent event;
 
   /** editable is set at retrieval to indicate an event owned by the current
@@ -167,6 +167,8 @@ public class EventInfo
    * us to compare the state of overrides after modifications.
    */
   private Set<EventOverride> retrievedOverrides;
+
+  private Set<String> overrideIds;
 
   /* * At the start of an update we set this to the full set of overrides.
    * At the end it will be the set of overrides to delete
@@ -232,6 +234,24 @@ public class EventInfo
    */
   public BwEvent getEvent() {
     return event;
+  }
+
+  /** The full event as retrieved. This allows us to (re)index after
+   * changes to a single instance for example
+   *
+   * @param val the full retrieved copy
+   */
+  public void setRetrievedEvent(final EventInfo val) {
+    retrievedEvent = val;
+  }
+
+  /** The full event as retrieved. This allows us to (re)index after
+   * changes to a single instance for example
+   *
+   * @return as retrieved
+   */
+  public EventInfo getRetrievedEvent() {
+    return retrievedEvent;
   }
 
   /** editable is set at retrieval to indicate an event owned by the current
@@ -493,6 +513,22 @@ public class EventInfo
    *                   Overrides methods
    * ==================================================================== */
 
+  /**
+   *
+   * @param val Set of override ids
+   */
+  public void setOverrideIds(final Set<String> val) {
+    overrideIds = val;
+  }
+
+  /** Get the override recurrence ids. Provided by the indexer
+   *
+   *  @return Set of override ids
+   */
+  public Set<String> getOverrideIds() {
+    return overrideIds;
+  }
+
   /** Get the overrides
    *
    *  @return Set     overrides list
@@ -630,8 +666,7 @@ public class EventInfo
         proxy.removeAlarm(a);
       }
 
-      if (Util.isEmpty(proxy.getXproperties(
-              BwXproperty.peruserPropTransp)) &&
+      if (Util.isEmpty(proxy.getXproperties(BwXproperty.peruserPropTransp)) &&
           Util.isEmpty(proxy.getAlarms())) {
         /* No more peruser data - add to remove list */
         proxies.add(proxy);

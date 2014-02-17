@@ -19,7 +19,9 @@
 package org.bedework.icalendar;
 
 import org.bedework.calfacade.BwDateTime;
+import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.misc.Util;
@@ -59,6 +61,83 @@ import java.util.TreeSet;
 public class RecurUtil {
   /**
    */
+  public static class RecurRange {
+    /** The earliest date */
+    public Date rangeStart;
+
+    /** The latest date */
+    public Date rangeEnd;
+  }
+
+  /**
+   * Returns range of dates for this recurring event possibly bounded by
+   * the supplied maximum end date.
+   *
+   * @param ev        the recurring event
+   * @param maxYears  Provide an upper limit
+   * @return the range for this event
+   * @throws CalFacadeException
+   */
+  @SuppressWarnings("unchecked")
+  public static RecurRange getRange(final BwEvent ev,
+                                    final int maxYears) throws CalFacadeException {
+    PropertyList evprops = new PropertyList();
+    VEventUtil.doRecurring(ev, evprops);
+    RecurRange rr = new RecurRange();
+
+    DtStart start = ev.getDtstart().makeDtStart();
+    DtEnd end = ev.getDtend().makeDtEnd();
+    Duration duration = new Duration(null, ev.getDuration());
+
+    //boolean durSpecified = ev.getEndType() == BwEvent.endTypeDuration;
+
+    rr.rangeStart = start.getDate();
+
+    for (Object o: evprops){
+      if (o instanceof RDate) {
+        RDate rd = (RDate)o;
+
+        for (Object o1: rd.getDates()) {
+          Date d = (Date)o1;
+
+          if (d.before(rr.rangeStart)) {
+            rr.rangeStart = d;
+          }
+        }
+      }
+    }
+
+    /* Limit date according to system settings
+     */
+    Dur dur = new Dur(maxYears * 365, 0, 0, 0);
+
+    Date maxRangeEnd = new Date(dur.getTime(rr.rangeStart));
+
+    if (ev.getParent() != null) {
+      BwDateTime pend = ev.getParent().getDtend();
+
+      if (pend != null) {
+        Date dt = pend.makeDate();
+
+        if (dt.before(maxRangeEnd)) {
+          maxRangeEnd = dt;
+        }
+      }
+    }
+
+    rr.rangeEnd = getLatestRecurrenceDate(evprops,
+                                          start, end, duration,
+                                          maxRangeEnd);
+
+    if ((rr.rangeEnd == null) || (rr.rangeEnd.after(maxRangeEnd))) {
+      rr.rangeEnd = maxRangeEnd;
+    }
+
+    return rr;
+  }
+
+  /**
+   */
   public static class RecurPeriods {
     /** The recurrences */
     public Collection<Period> instances;
@@ -84,7 +163,8 @@ public class RecurUtil {
    * @throws CalFacadeException
    */
   @SuppressWarnings("unchecked")
-  public static RecurPeriods getPeriods(final BwEvent ev, final int maxYears,
+  public static RecurPeriods getPeriods(final BwEvent ev,
+                                        final int maxYears,
                                         final int maxInstances) throws CalFacadeException {
     PropertyList evprops = new PropertyList();
     VEventUtil.doRecurring(ev, evprops);
@@ -389,45 +469,80 @@ public class RecurUtil {
     }
   }
 
+  /** Generate a recurrence instance for the given master event
+   * based on the recurrenceId and the date/time info in the master.
+   *
+   * @param master event
+   * @param recurrenceId for the instance.
+   * @return instance object filled in.
+   * @throws CalFacadeException
+   */
+  public static BwRecurrenceInstance fromRecurrencId(final BwEvent master,
+                                                     String recurrenceId)
+          throws CalFacadeException {
+    final String stzid = master.getDtstart().getTzid();
+    final boolean dateOnly = master.getDtstart().getDateType();
+
+    final BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly,
+                                                        recurrenceId,
+                                                        stzid);
+    final BwDateTime rend = rstart.addDuration(
+            BwDuration.makeDuration(master.getDuration()));
+
+
+    final BwRecurrenceInstance ri = new BwRecurrenceInstance();
+
+    ri.setDtstart(rstart);
+    ri.setDtend(rend);
+    ri.setRecurrenceId(ri.getDtstart().getDate());
+    ri.setMaster(master);
+
+    return ri;
+  }
+
   /**
-   * @param ei
-   * @param maxYears
-   * @param maxInstances
+   * @param ei       master event
+   * @param maxYears Max number of years to prodice
+   * @param maxInstances max number of instances
+   * @param fromDate UTC date-time - if non-null only this and after
+   * @param toDate UTC date-time - if non-null before this date
    * @return collection of recurrences
    * @throws CalFacadeException
    */
   public static Collection<Recurrence> getRecurrences(final EventInfo ei,
                                                       final int maxYears,
-                                                      final int maxInstances) throws CalFacadeException {
+                                                      final int maxInstances,
+                                                      final String fromDate,
+                                                      final String toDate) throws CalFacadeException {
     try {
-      BwEvent ev = ei.getEvent();
+      final BwEvent ev = ei.getEvent();
 
-      RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
+      final RecurPeriods rp = getPeriods(ev, maxYears, maxInstances);
 
       if (rp.instances.isEmpty()) {
         // No instances for an alleged recurring event.
         return null;
       }
 
-      Collection<Recurrence> recurrences = new ArrayList<Recurrence>();
+      final Collection<Recurrence> recurrences = new ArrayList<>();
 
-      String stzid = ev.getDtstart().getTzid();
+      final String stzid = ev.getDtstart().getTzid();
 
       // ev.setLatestDate(Timezones.getUtc(rp.rangeEnd.toString(),
       // stzid));
       int instanceCt = maxInstances;
 
-      boolean dateOnly = ev.getDtstart().getDateType();
+      final boolean dateOnly = ev.getDtstart().getDateType();
 
-      Map<String, BwEvent> overrides = new HashMap<String, BwEvent>();
+      Map<String, BwEvent> overrides = new HashMap<>();
 
       if (!Util.isEmpty(ei.getOverrideProxies())) {
-        for (BwEvent ov: ei.getOverrideProxies()) {
+        for (final BwEvent ov: ei.getOverrideProxies()) {
           overrides.put(ov.getRecurrenceId(), ov);
         }
       }
 
-      for (Period p: rp.instances) {
+      for (final Period p: rp.instances) {
         String dtval = p.getStart().toString();
         if (dateOnly) {
           dtval = dtval.substring(0, 8);
@@ -435,9 +550,9 @@ public class RecurUtil {
 
         BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
-        String rid = rstart.getDate();
+        final String rid = rstart.getDate();
         BwDateTime rend = null;
-        BwEvent override = overrides.get(rid);
+        final BwEvent override = overrides.get(rid);
 
         if (override != null) {
           rstart = override.getDtstart();
@@ -451,12 +566,15 @@ public class RecurUtil {
           rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
         }
 
-        recurrences.add(new Recurrence(rstart, rend, rid, override));
+        if (inDateTimeRange(fromDate, toDate,
+                            rstart.getDate(), rend.getDate())) {
+          recurrences.add(new Recurrence(rstart, rend, rid, override));
 
-        instanceCt--;
-        if (instanceCt == 0) {
-          // That's all you're getting from me
-          break;
+          instanceCt--;
+          if (instanceCt == 0) {
+            // That's all you're getting from me
+            break;
+          }
         }
       }
 
@@ -466,6 +584,49 @@ public class RecurUtil {
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
+  }
+
+
+  /** Returns true if the period start and end dates overlap the specified
+   * limits. Either or both of rangeStart and rangeEnd may be null.
+   *
+   * @param rangeStart - UTC date/time or null
+   * @param rangeEnd - UTC date/time or null
+   * @param periodStart - UTC date/time, NOT null
+   * @param periodEnd - UTC date/time, NOT null
+   * @return true if event satisfies the limits
+   */
+  public static boolean inDateTimeRange(final String rangeStart,
+                                        final String rangeEnd,
+                                        final String periodStart,
+                                        final String periodEnd) {
+    int evstSt;
+
+    if (rangeEnd == null) {
+      evstSt = -1;   // < infinity
+    } else {
+      evstSt = periodStart.compareTo(rangeEnd);
+    }
+
+    if (evstSt >= 0) {
+      return false;
+    }
+
+    int evendSt;
+
+    if (rangeStart == null) {
+      evendSt = 1;   // > infinity
+    } else {
+      evendSt = periodEnd.compareTo(rangeStart);
+    }
+
+    if ((evendSt > 0) ||
+            (periodStart.equals(periodEnd) && (evendSt >= 0))) {
+      // Passed the tests.
+      return true;
+    }
+
+    return false;
   }
 
   /** Return the absolute latest end date for this event. Note that
