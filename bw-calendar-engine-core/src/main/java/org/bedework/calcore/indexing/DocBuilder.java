@@ -496,19 +496,12 @@ public class DocBuilder {
 
         indexDate(PropertyInfoIndex.INDEX_START, start);
         indexDate(PropertyInfoIndex.INDEX_END, end);
+        makeField(PropertyInfoIndex.INSTANCE, true);
       } else {
         if (kind == ItemKind.override) {
           makeField(PropertyInfoIndex.OVERRIDE, true);
         } else {
           makeField(PropertyInfoIndex.MASTER, true);
-
-          if (ev.getRecurring() && !Util.isEmpty(ei.getOverrides())) {
-            builder.startArray(getJname(PropertyInfoIndex.RECURRENCE_IDS));
-            for (EventInfo ovei: ei.getOverrides()) {
-              builder.value(ovei.getEvent().getRecurrenceId());
-            }
-            builder.endArray();
-          }
         }
 
         indexDate(PropertyInfoIndex.DTSTART, ev.getDtstart());

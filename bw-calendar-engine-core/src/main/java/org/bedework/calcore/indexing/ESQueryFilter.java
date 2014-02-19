@@ -192,7 +192,7 @@ public class ESQueryFilter implements CalintfDefs {
 
        For non-expanded and non-filtered we want the master and
        overrides only.
-     * /
+     */
 
     if (recurRetrieval.mode == Rmode.expanded) {
       // Limit events to instances only //
@@ -211,7 +211,7 @@ public class ESQueryFilter implements CalintfDefs {
 
     /* if the query is not filtered we can limit to the master and
        overrides only
-     * /
+     */
 
     if (queryFiltered) {
       return fb;
@@ -226,8 +226,7 @@ public class ESQueryFilter implements CalintfDefs {
 
     queryFiltered = false; // Reset it.
 
-    return and(fb, limit); */
-    return fb;
+    return and(fb, limit);
   }
 
   /** If we have a filtered query the search result will only contain
@@ -288,13 +287,13 @@ public class ESQueryFilter implements CalintfDefs {
     String startRef;
     String endRef;
 
-//    if (recurRetrieval.mode == Rmode.expanded) {
-//      startRef = dtStartUTCRef;
-//      endRef = dtEndUTCRef;
-//    } else {
+    if (recurRetrieval.mode == Rmode.expanded) {
+      startRef = dtStartUTCRef;
+      endRef = dtEndUTCRef;
+    } else {
       startRef = indexStartUTCRef;
       endRef = indexEndUTCRef;
-//    }
+    }
 
     FilterBuilder fb = filter;
 
