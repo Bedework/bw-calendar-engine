@@ -70,8 +70,11 @@ import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.DateTime;
+import net.fortuna.ical4j.model.property.DtStart;
 
 import java.io.StringReader;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -214,12 +217,26 @@ class Events extends CalSvcDb implements EventsI {
     }
 
     /* Not in the overrides - generate an instance */
+    BwDateTime rstart;
     final boolean dateOnly = ev.getDtstart().getDateType();
-    final String stzid = ev.getDtstart().getTzid();
 
-    BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly,
-                                                  recurrenceId,
-                                                  stzid);
+    if (dateOnly) {
+      rstart = BwDateTime.makeBwDateTime(true, recurrenceId, null);
+    } else {
+      final String stzid = ev.getDtstart().getTzid();
+
+      DateTime dt = null;
+      try {
+        dt = new DateTime(recurrenceId);
+      } catch (ParseException pe) {
+        throw new CalFacadeException(pe);
+      }
+      DtStart ds = ev.getDtstart().makeDtStart();
+      dt.setTimeZone(ds.getTimeZone());
+
+      rstart = BwDateTime.makeBwDateTime(dt);
+    }
+
     BwDateTime rend = rstart.addDuration(
             BwDuration.makeDuration(ev.getDuration()));
 
