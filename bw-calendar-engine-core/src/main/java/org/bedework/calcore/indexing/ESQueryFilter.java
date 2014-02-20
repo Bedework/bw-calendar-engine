@@ -39,6 +39,7 @@ import org.bedework.calfacade.filter.BwHrefFilter;
 import org.bedework.calfacade.filter.BwViewFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
