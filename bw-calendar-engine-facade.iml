@@ -5,8 +5,8 @@
     <output-test url="file://$MODULE_DIR$/bw-calendar-engine-facade/target/test-classes" />
     <content url="file://$MODULE_DIR$/bw-calendar-engine-facade">
       <sourceFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/src/main/java" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/src/main/resources" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/target/generated-sources/apt" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/target/generated-sources/apt" isTestSource="false" generated="true" />
       <excludeFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/target/classes" />
       <excludeFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/target/maven-archiver" />
       <excludeFolder url="file://$MODULE_DIR$/bw-calendar-engine-facade/target/surefire" />
@@ -46,7 +46,15 @@
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
     <orderEntry type="module" module-name="bw-util-xml" />
-    <orderEntry type="library" name="Maven: com.sun:tools:1.4.2" level="project" />
+    <orderEntry type="module-library">
+      <library name="Maven: com.sun:tools:1.4.2">
+        <CLASSES>
+          <root url="jar:///usr/java/jdk1.7.0_21/lib/tools.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntry type="module" module-name="bw-access" />
     <orderEntry type="module" module-name="bw-util-caching" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.8.2" level="project" />
