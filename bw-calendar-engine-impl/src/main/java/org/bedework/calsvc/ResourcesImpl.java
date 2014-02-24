@@ -30,27 +30,24 @@ import java.util.List;
 
 /** This acts as an interface to the database for resources.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 class ResourcesImpl extends CalSvcDb implements ResourcesI {
   /* Used for resource manipulation */
 
   /** Constructor
    *
-   * @param svci
+   * @param svci service interface
    */
   ResourcesImpl(final CalSvc svci) {
     super(svci);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ResourcesI#save(java.lang.String, org.bedework.calfacade.BwResource)
-   */
   @Override
   public void save(final String path,
                    final BwResource val) throws CalFacadeException {
     try {
-      BwResourceContent rc = val.getContent();
+      final BwResourceContent rc = val.getContent();
       if (rc == null) {
         throw new CalFacadeException(CalFacadeException.missingResourceContent);
       }
@@ -59,7 +56,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
       val.setColPath(path);
 
-      BwCalendar coll = getCols().get(path);
+      final BwCalendar coll = getCols().get(path);
 
       if (coll == null) {
         throw new CalFacadeException(CalFacadeException.collectionNotFound, path);
@@ -72,8 +69,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
       checkAccess(coll, PrivilegeDefs.privBind, false);
 
-      BwResource r = getCal().getResource(val.getName(),
-                                          coll, PrivilegeDefs.privAny);
+      final BwResource r = getCal().getResource(val.getName(),
+                                                coll, PrivilegeDefs.privAny);
 
       if (r != null) {
         throw new CalFacadeException(CalFacadeException.duplicateResource,
@@ -89,18 +86,15 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       getCal().saveOrUpdate(rc);
 
       touchCalendar(coll);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       getSvc().rollbackTransaction();
       throw cfe;
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ResourcesI#get(java.lang.String)
-   */
   @Override
   public BwResource get(final String path) throws CalFacadeException {
-    CollectionAndName cn = getCollectionAndName(path);
+    final CollectionAndName cn = getCollectionAndName(path);
 
     return getCal().getResource(cn.name, cn.coll, PrivilegeDefs.privRead);
   }
@@ -110,17 +104,11 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     getCal().getResourceContent(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ResourcesI#getAll(java.lang.String)
-   */
   @Override
   public List<BwResource> getAll(final String path) throws CalFacadeException {
     return getCal().getAllResources(path, false, null);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ResourcesI#update(org.bedework.calfacade.BwResource)
-   */
   @Override
   public void update(final BwResource val,
                      final boolean updateContent) throws CalFacadeException {
@@ -132,7 +120,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       getCal().saveOrUpdate(val);
 
       if (updateContent && (val.getContent() != null)) {
-        BwResourceContent rc = val.getContent();
+        final BwResourceContent rc = val.getContent();
         rc.setColPath(val.getColPath());
         rc.setName(val.getName());
 
@@ -140,7 +128,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       }
 
       touchCalendar(getCols().get(val.getColPath()));
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       getSvc().rollbackTransaction();
       throw cfe;
     }
@@ -151,10 +139,10 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
    */
   @Override
   public void delete(final String path) throws CalFacadeException {
-    CollectionAndName cn = getCollectionAndName(path);
+    final CollectionAndName cn = getCollectionAndName(path);
 
-    BwResource r = getCal().getResource(cn.name,
-                                        cn.coll, PrivilegeDefs.privUnbind);
+    final BwResource r = getCal().getResource(cn.name,
+                                              cn.coll, PrivilegeDefs.privUnbind);
 
     if (r == null) {
       throw new CalFacadeException(CalFacadeException.unknownResource, path);
@@ -162,24 +150,24 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
     try {
       getContent(r);
-    } catch (CalFacadeException cfe) {
-      if (cfe.getMessage().equals(CalFacadeException.missingResourceContent)) {
-        // Swallow it
-      } else {
+    } catch (final CalFacadeException cfe) {
+      if (!cfe.getMessage().equals(CalFacadeException.missingResourceContent)) {
         getSvc().rollbackTransaction();
         throw cfe;
       }
+
+      // Otherwise we just swallow it
     }
 
     /* Remove any previous tombstoned version */
-    BwResource tr = getCal().getResource(cn.name + BwResource.tombstonedSuffix,
-                                         cn.coll, PrivilegeDefs.privUnbind);
+    final BwResource tr = getCal().getResource(cn.name + BwResource.tombstonedSuffix,
+                                               cn.coll, PrivilegeDefs.privUnbind);
 
     if (tr != null) {
       getCal().delete(tr);
     }
 
-    BwResourceContent rc = r.getContent();
+    final BwResourceContent rc = r.getContent();
 
     r.setContent(null);
     r.tombstone();
@@ -194,9 +182,6 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     touchCalendar(cn.coll);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ResourcesI#copyMove(org.bedework.calfacade.BwResource, java.lang.String, java.lang.String, boolean, boolean)
-   */
   @Override
   public boolean copyMove(final BwResource val,
                           final String to,
@@ -206,7 +191,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     try {
       setupSharableEntity(val, getPrincipal().getPrincipalRef());
 
-      BwCalendar collTo = getCols().get(to);
+      final BwCalendar collTo = getCols().get(to);
 
       if (collTo == null) {
         throw new CalFacadeException(CalFacadeException.collectionNotFound, to);
@@ -217,7 +202,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         throw new CalFacadeException(CalFacadeException.badRequest, to);
       }
 
-      int access;
+      final int access;
       if (copy) {
         access = PrivilegeDefs.privWrite;
       } else {
@@ -240,8 +225,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         getContent(r);
         r.setContentType(val.getContentType());
 
-        BwResourceContent rc = r.getContent();
-        BwResourceContent toRc = val.getContent();
+        final BwResourceContent rc = r.getContent();
+        final BwResourceContent toRc = val.getContent();
 
         r.setContentLength(toRc.getValue().length());
         r.updateLastmod(getCurrentTimestamp());
@@ -265,8 +250,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
         getCal().saveOrUpdate(r);
 
-        BwResourceContent fromRc = val.getContent();
-        BwResourceContent rc = new BwResourceContent();
+        final BwResourceContent fromRc = val.getContent();
+        final BwResourceContent rc = new BwResourceContent();
 
         rc.setColPath(collTo.getPath());
         rc.setName(val.getName());
@@ -280,17 +265,17 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       if (!copy) {
         // Delete (tombstone) the old one
 
-        BwCalendar collFrom = getCols().get(val.getColPath());
+        final BwCalendar collFrom = getCols().get(val.getColPath());
         checkAccess(collFrom, PrivilegeDefs.privUnbind, false);
 
-        BwResourceContent rc = val.getContent();
+        final BwResourceContent rc = val.getContent();
 
         getCal().delete(rc);
 
         /* Remove any previous tombstoned version */
-        BwResource tr = getCal().getResource(val.getName() +
-                                                 BwResource.tombstonedSuffix,
-                                             collFrom, PrivilegeDefs.privUnbind);
+        final BwResource tr = getCal().getResource(val.getName() +
+                                                           BwResource.tombstonedSuffix,
+                                                   collFrom, PrivilegeDefs.privUnbind);
 
         if (tr != null) {
           getCal().delete(tr);
@@ -307,10 +292,10 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       touchCalendar(collTo);
 
       return createdNew;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       getSvc().rollbackTransaction();
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       getSvc().rollbackTransaction();
       throw new CalFacadeException(t);
     }
