@@ -260,29 +260,35 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
   @Override
   public int delete(final T val) throws CalFacadeException {
-    deleteOK(val);
+    T ent = val;
+
+    if (val.unsaved()) {
+      ent = getPersistent(val.getUid());
+    }
+
+    deleteOK(ent);
 
     /** Only allow delete if not in use
      */
-    if (coreHdlr.getRefsCount(val) != 0) {
+    if (coreHdlr.getRefsCount(ent) != 0) {
       return 2;
     }
 
     /* Remove from preferences */
     ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true,
-                                                               val);
+                                                               ent);
 
-    coreHdlr.deleteProp(val);
+    coreHdlr.deleteProp(ent);
 
-    getIndexer(val.getPublick(), val.getOwnerHref()).unindexEntity(val);
+    getIndexer(ent.getPublick(), ent.getOwnerHref()).unindexEntity(ent);
 
     // Update cached
     Collection<T> ents = get();
     if (ents != null) {
-      ents.remove(val);
+      ents.remove(ent);
     }
 
-    removeCachedByUid(val.getUid());
+    removeCachedByUid(ent.getUid());
 
     return 0;
   }

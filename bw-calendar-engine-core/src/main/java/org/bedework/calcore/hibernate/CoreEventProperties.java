@@ -191,7 +191,8 @@ public class CoreEventProperties <T extends BwEventProperty>
       sess.setString("ownerHref", ownerHref);
     }
 
-    return (Collection<T>)access.checkAccess(sess.getList(), privRead, true);
+    Collection c = access.checkAccess(sess.getList(), privRead, true);
+    return c;
   }
 
   @SuppressWarnings("unchecked")
@@ -296,7 +297,7 @@ public class CoreEventProperties <T extends BwEventProperty>
     if (val instanceof BwCategory) {
       total += getRefsCount(val,
                             "select count(*) from org.bedework.calfacade.BwCalendar as col " +
-                               "where :ent in elements(col.categories");
+                               "where :ent in elements(col.categories)");
     }
 
     return total;
