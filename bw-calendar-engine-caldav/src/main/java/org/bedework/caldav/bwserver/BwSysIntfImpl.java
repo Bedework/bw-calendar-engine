@@ -59,6 +59,7 @@ import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -169,6 +170,16 @@ public class BwSysIntfImpl implements SysIntf {
 
   private BasicSystemProperties syspars;
 
+  private static Configurations configs;
+
+  static {
+    try {
+      configs = new CalSvcFactoryDefault().getSystemConfig();
+    } catch (Throwable t) {
+      t.printStackTrace();
+    }
+  }
+
   @Override
   public void init(final HttpServletRequest req,
                    final String account,
@@ -226,7 +237,14 @@ public class BwSysIntfImpl implements SysIntf {
 
   @Override
   public SystemProperties getSystemProperties() throws WebdavException {
-    return sysProperties;
+    try {
+      if (sysProperties == null) {
+        sysProperties = configs.getSystemProperties();
+      }
+      return sysProperties;
+    } catch (Throwable t) {
+      throw new WebdavException(t);
+    }
   }
 
   @Override
