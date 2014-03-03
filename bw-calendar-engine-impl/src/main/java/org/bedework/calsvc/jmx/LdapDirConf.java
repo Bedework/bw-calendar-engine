@@ -22,7 +22,6 @@ package org.bedework.calsvc.jmx;
 /**
  * @author douglm
  *
- * @param <X>
  */
 public class LdapDirConf extends DirConf<LdapConfigPropertiesImpl>
     implements LdapDirConfMBean {

@@ -376,16 +376,16 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   }
 
   private void loadDirConfigs() throws Throwable {
-    ConfigurationStore cs = getStore().getStore("dirconfigs");
+    final ConfigurationStore cs = getStore().getStore("dirconfigs");
 
-    List<String> names = cs.getConfigs();
+    final List<String> names = cs.getConfigs();
 
-    for (String dn: names) {
-      ObjectName objectName = createObjectName("dirconfig", dn);
+    for (final String dn: names) {
+      final ObjectName objectName = createObjectName("dirconfig", dn);
 
       /* Read the config so we can get the mbean class name. */
 
-      DirConfigPropertiesImpl dCfg = (DirConfigPropertiesImpl)cs.getConfig(dn);
+      final DirConfigPropertiesImpl dCfg = (DirConfigPropertiesImpl)cs.getConfig(dn);
 
       if (dCfg == null) {
         error("Unable to read directory configuration " + dn);
@@ -402,8 +402,9 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       }
 
       @SuppressWarnings("unchecked")
-      DirConf<DirConfigPropertiesImpl> dc = (DirConf<DirConfigPropertiesImpl>)makeObject(mbeanClassName);
-      dc.init(cs, objectName.toString(), dCfg);
+      final DirConf<DirConfigPropertiesImpl> dc =
+              (DirConf<DirConfigPropertiesImpl>)makeObject(mbeanClassName);
+      dc.init(cs, objectName.toString(), dCfg, dn);
 
       dc.saveConfig();
       dirConfigs.put(dn, dc);
