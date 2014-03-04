@@ -150,6 +150,26 @@ public final class ROSystemProperties implements SystemProperties {
     return getConfig().getCalSoapWsURI();
   }
 
+  @Override
+  public void setNotifierId(final String val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public String getNotifierId() {
+    return getConfig().getNotifierId();
+  }
+
+  @Override
+  public void setNotifierToken(final String val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public String getNotifierToken() {
+    return getConfig().getNotifierToken();
+  }
+
   /** Set the calws soap web service WSDL uri - null for no service
    *
    * @param val    String

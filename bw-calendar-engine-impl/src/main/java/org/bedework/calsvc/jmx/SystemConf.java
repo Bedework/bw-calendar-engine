@@ -40,7 +40,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   private CalSvcI svci;
 
   /**
-   * @param name
+   * @param name of config
    */
   public SystemConf(final String name) {
     super(getServiceName(name));
@@ -53,7 +53,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   /**
-   * @param name
+   * @param name of config
    * @return service name for the mbean with this name
    */
   public static String getServiceName(final String name) {
@@ -168,6 +168,26 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   @Override
   public String getCalSoapWsURI() {
     return getConfig().getCalSoapWsURI();
+  }
+
+  @Override
+  public void setNotifierId(final String val) {
+    getConfig().setNotifierId(val);
+  }
+
+  @Override
+  public String getNotifierId() {
+    return getConfig().getNotifierId();
+  }
+
+  @Override
+  public void setNotifierToken(final String val) {
+    getConfig().setNotifierToken(val);
+  }
+
+  @Override
+  public String getNotifierToken() {
+    return getConfig().getNotifierToken();
   }
 
   /** Set the calws soap web service WSDL uri - null for no service
@@ -310,7 +330,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
       if (svci != null) {
         svci.setDbStatsEnabled(enable);
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
     } finally {
       closeSvci();
@@ -322,12 +342,8 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
     try {
       getSvci();
 
-      if (svci == null) {
-        return false;
-      }
-
-      return svci.getDbStatsEnabled();
-    } catch (Throwable t) {
+      return svci != null && svci.getDbStatsEnabled();
+    } catch (final Throwable t) {
       error(t);
       return false;
     } finally {
@@ -349,7 +365,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
       }
 
       return svci.getStats();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
       return null;
     } finally {
@@ -365,7 +381,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
       if (svci != null) {
         svci.dumpDbStats();
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
     } finally {
       closeSvci();
@@ -408,23 +424,21 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
       return svci;
     }
 
-    boolean publicAdmin = false;
-
     /* Extract a root user */
 
     if (getRootUsers() == null) {
       return null;
     }
 
-    String rootUsers[] = getRootUsers().split(",");
+    final String[] rootUsers = getRootUsers().split(",");
 
     if ((rootUsers.length == 0) || (rootUsers[0] == null)) {
       return null;
     }
 
-    CalSvcIPars pars = CalSvcIPars.getServicePars(rootUsers[0],
-                                                  true,   // publicAdmin
-                                                  true);   // Allow super user
+    final CalSvcIPars pars = CalSvcIPars.getServicePars(rootUsers[0],
+                                                        true,   // publicAdmin
+                                                        true);   // Allow super user
     svci = new CalSvcFactoryDefault().getSvc(pars);
 
     svci.open();
@@ -442,16 +456,16 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
     try {
       svci.endTransaction();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       try {
         svci.close();
-      } catch (Throwable t1) {
+      } catch (final Throwable ignored) {
       }
     }
 
     try {
       svci.close();
-    } catch (Throwable t) {
+    } catch (final Throwable ignored) {
     }
   }
 

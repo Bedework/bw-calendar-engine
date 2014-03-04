@@ -41,7 +41,7 @@ public class IscheduleOut extends IscheduleMessage {
   private String method;
   private String domain;
 
-  private Header[] headers;
+  private List<Header> headers;
 
   private List<String> contentLines;
   private byte[] contentBytes;
@@ -136,23 +136,21 @@ public class IscheduleOut extends IscheduleMessage {
   /** Get header for client. This skips the content type header as that is added
    * by the client.
    *
-   * @return Header[]
+   * @return Header list
    */
-  public Header[] getHeaders() {
+  public List<Header> getHeaders() {
     if (headers == null) {
-      List<Header> hs = new ArrayList<Header>();
+      headers = new ArrayList<>();
 
-      for (String hname: getFields()) {
+      for (final String hname: getFields()) {
         if (hname.equalsIgnoreCase("content-type")) {
           continue;
         }
 
         for (String hval: getFieldVals(hname)) {
-          hs.add(new BasicHeader(hname, hval));
+          headers.add(new BasicHeader(hname, hval));
         }
       }
-
-      headers = hs.toArray(new Header[hs.size()]);
     }
 
     return headers;

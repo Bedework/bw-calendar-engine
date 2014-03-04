@@ -66,12 +66,12 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private boolean timezonesByReference;
 
-  private boolean directoryBrowsingDisallowed;
-
   private String localeList;
 
   private String eventregAdminToken;
   private String eventregUrl;
+  private String notifierId;
+  private String notifierToken;
 
   private Integer vpollMaxItems;
   private Integer vpollMaxActive;
@@ -117,197 +117,131 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     return rootUsers;
   }
 
-  /** Set the administrator contact property
-   *
-   * @param val
-   */
   @Override
   public void setAdminContact(final String val) {
     adminContact = val;
   }
 
-  /** Get the administrator contact property
-   *
-   * @return String
-   */
   @Override
   public String getAdminContact() {
     return adminContact;
   }
 
-  /** Set the ischedule service uri - null for no ischedule service
-   *
-   * @param val    String
-   */
   @Override
   public void setIscheduleURI(final String val) {
     ischeduleURI = val;
   }
 
-  /** get the ischedule service uri - null for no ischedule service
-   *
-   * @return String
-   */
   @Override
   public String getIscheduleURI() {
     return ischeduleURI;
   }
 
-  /** Set the Free busy service uri - null for no freebusy service
-   *
-   * @param val    String
-   */
   @Override
   public void setFburlServiceURI(final String val) {
     fburlServiceURI = val;
   }
 
-  /** get the Free busy service uri - null for no freebusy service
-   *
-   * @return String
-   */
   @Override
   public String getFburlServiceURI() {
     return fburlServiceURI;
   }
 
-  /** Set the web calendar service uri - null for no web calendar service
-   *
-   * @param val    String
-   */
   @Override
   public void setWebcalServiceURI(final String val) {
     webcalServiceURI = val;
   }
 
-  /** get the web calendar service uri - null for no web calendar service
-   *
-   * @return String
-   */
   @Override
   public String getWebcalServiceURI() {
     return webcalServiceURI;
   }
 
-  /** Set the calws soap web service uri - null for no service
-   *
-   * @param val    String
-   */
   @Override
   public void setCalSoapWsURI(final String val) {
     calSoapWsURI = val;
   }
 
-  /** Get the calws soap web service uri - null for no service
-   *
-   * @return String
-   */
   @Override
   public String getCalSoapWsURI() {
     return calSoapWsURI;
   }
 
-  /** Set the calws soap web service WSDL uri - null for no service
-   *
-   * @param val    String
-   */
+  @Override
+  public void setNotifierId(final String val) {
+    notifierId = val;
+  }
+
+  @Override
+  public String getNotifierId() {
+    return notifierId;
+  }
+
+  @Override
+  public void setNotifierToken(final String val) {
+    notifierToken = val;
+  }
+
+  @Override
+  public String getNotifierToken() {
+    return notifierToken;
+  }
+
   @Override
   public void setCalSoapWsWSDLURI(final String val) {
     calSoapWsWSDLURI = val;
   }
 
-  /** Get the calws soap web service WSDL uri - null for no service
-   *
-   * @return String
-   */
   @Override
   public String getCalSoapWsWSDLURI() {
     return calSoapWsWSDLURI;
   }
 
-  /**
-   * @param val boolean true if we are not including the full tz specification..
-   */
   @Override
   public void setTimezonesByReference(final boolean val) {
     timezonesByReference = val;
   }
 
-  /**
-   * @return true if we are not including the full tz specification
-   */
   @Override
   public boolean getTimezonesByReference() {
     return timezonesByReference;
   }
 
-  /** Set the userauth class
-   *
-   * @param val    String userauth class
-   */
   @Override
   public void setUserauthClass(final String val) {
     userauthClass = val;
   }
 
-  /**
-   *
-   * @return String
-   */
   @Override
   public String getUserauthClass() {
     return userauthClass;
   }
 
-  /** Set the mailer class
-   *
-   * @param val    String mailer class
-   */
   @Override
   public void setMailerClass(final String val) {
     mailerClass = val;
   }
 
-  /**
-   *
-   * @return String
-   */
   @Override
   public String getMailerClass() {
     return mailerClass;
   }
 
-  /** Set the admingroups class
-   *
-   * @param val    String admingroups class
-   */
   @Override
   public void setAdmingroupsClass(final String val) {
     admingroupsClass = val;
   }
 
-  /**
-   *
-   * @return String
-   */
   @Override
   public String getAdmingroupsClass() {
     return admingroupsClass;
   }
 
-  /** Set the usergroups class
-   *
-   * @param val    String usergroups class
-   */
   @Override
   public void setUsergroupsClass(final String val) {
     usergroupsClass = val;
   }
 
-  /**
-   *
-   * @return String
-   */
   @Override
   public String getUsergroupsClass() {
     return usergroupsClass;
@@ -379,7 +313,7 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     ts.newLine();
     ts.append("name", getName());
@@ -414,7 +348,7 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   @Override
   public SystemProperties cloneIt() {
-    SystemPropertiesImpl clone = new SystemPropertiesImpl();
+    final SystemPropertiesImpl clone = new SystemPropertiesImpl();
 
     clone.setName(getName());
     clone.setTzid(getTzid());
