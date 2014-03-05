@@ -38,30 +38,30 @@ public interface NotificationsI extends Serializable {
    * indicated principal.
    *
    * @param pr - target
-   * @param val
+   * @param val - the notification
    * @return false for unknown CU
    * @throws CalFacadeException
    */
-  public boolean send(BwPrincipal pr,
-                      NotificationType val) throws CalFacadeException;
+  boolean send(BwPrincipal pr,
+               NotificationType val) throws CalFacadeException;
 
   /** Add the given notification to the notification collection for the
    * current principal. Caller should check for notifications enabled if
    * appropriate.
    *
-   * @param val
+   * @param val - the notification
    * @return false for no notification or collection
    * @throws CalFacadeException
    */
-  public boolean add(NotificationType val) throws CalFacadeException;
+  boolean add(NotificationType val) throws CalFacadeException;
 
   /** Update the given notification
    *
-   * @param val
+   * @param val - the notification
    * @return false for no notification or collection
    * @throws CalFacadeException
    */
-  public boolean update(NotificationType val) throws CalFacadeException;
+  boolean update(NotificationType val) throws CalFacadeException;
 
   /** Find a notification in the notification collection for the
    * current principal with the given name.
@@ -70,38 +70,38 @@ public interface NotificationsI extends Serializable {
    * @return null for no notification or the notification with that name
    * @throws CalFacadeException
    */
-  public NotificationType find(String name) throws CalFacadeException;
+  NotificationType find(String name) throws CalFacadeException;
 
   /** Remove the given notification from the notification collection for the
    * indicated calendar user.
    *
    * @param pr - target
-   * @param val
+   * @param val - the notification
    * @throws CalFacadeException
    */
-  public void remove(BwPrincipal pr,
-                     NotificationType val) throws CalFacadeException;
+  void remove(BwPrincipal pr,
+              NotificationType val) throws CalFacadeException;
 
   /** Remove the given notification from the notification collection for the
    * current calendar user.
    *
-   * @param val
+   * @param val - the notification
    * @throws CalFacadeException
    */
-  public void remove(NotificationType val) throws CalFacadeException;
+  void remove(NotificationType val) throws CalFacadeException;
 
   /**
    * @return all notifications for this user
    * @throws CalFacadeException
    */
-  public List<NotificationType> getAll() throws CalFacadeException;
+  List<NotificationType> getAll() throws CalFacadeException;
 
   /**
    * @param type of notification (null for all)
    * @return matching notifications for this user - never null
    * @throws CalFacadeException
    */
-  public List<NotificationType> getMatching(QName type) throws CalFacadeException;
+  List<NotificationType> getMatching(QName type) throws CalFacadeException;
 
   /**
    * @param pr principal
@@ -109,8 +109,8 @@ public interface NotificationsI extends Serializable {
    * @return notifications for the given principal of the given type
    * @throws CalFacadeException
    */
-  public List<NotificationType> getMatching(BwPrincipal pr,
-                                            QName type) throws CalFacadeException;
+  List<NotificationType> getMatching(BwPrincipal pr,
+                                     QName type) throws CalFacadeException;
 
   /**
    * @param href principal href
@@ -118,6 +118,6 @@ public interface NotificationsI extends Serializable {
    * @return notifications for the given principal of the given type
    * @throws CalFacadeException
    */
-  public List<NotificationType> getMatching(String href,
-                                            QName type) throws CalFacadeException;
+  List<NotificationType> getMatching(String href,
+                                     QName type) throws CalFacadeException;
 }

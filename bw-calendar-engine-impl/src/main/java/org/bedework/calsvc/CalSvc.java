@@ -48,6 +48,7 @@ import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.IndexProperties;
+import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -127,7 +128,7 @@ public class CalSvc extends CalSvcI {
   static {
     try {
       configs = new CalSvcFactoryDefault().getSystemConfig();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       t.printStackTrace();
     }
   }
@@ -196,7 +197,7 @@ public class CalSvc extends CalSvcI {
 
   private Contacts contactsHandler;
 
-  private Collection<CalSvcDb> handlers = new ArrayList<CalSvcDb>();
+  private final Collection<CalSvcDb> handlers = new ArrayList<>();
 
   /* ....................... ... ..................................... */
 
@@ -234,9 +235,6 @@ public class CalSvc extends CalSvcI {
 
   private transient Logger log;
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#init(org.bedework.calsvci.CalSvcIPars)
-   */
   @Override
   public void init(final CalSvcIPars parsParam) throws CalFacadeException {
     init(parsParam, false);
@@ -249,7 +247,7 @@ public class CalSvc extends CalSvcI {
     this.creating = creating;
 
     debug = getLogger().isDebugEnabled();
-    long start = System.currentTimeMillis();
+    final long start = System.currentTimeMillis();
 
     try {
       if (configs == null) {
@@ -270,7 +268,7 @@ public class CalSvc extends CalSvcI {
                          configs);
       }
 
-      SystemProperties sp = getSystemProperties();
+      final SystemProperties sp = getSystemProperties();
 
       if (tzserverUri == null) {
         tzserverUri = sp.getTzServeruri();
@@ -295,7 +293,7 @@ public class CalSvc extends CalSvcI {
       "org.bedework.icalendar.TimeZoneRegistryFactoryImpl");
 
       if (!creating) {
-        String tzid = getPrefsHandler().get().getDefaultTzid();
+        final String tzid = getPrefsHandler().get().getDefaultTzid();
 
         if (tzid != null) {
           Timezones.setThreadDefaultTzid(tzid);
@@ -322,21 +320,21 @@ public class CalSvc extends CalSvcI {
         SysEvent.makePrincipalEvent(SysEvent.SysCode.USER_SVCINIT,
                                                       getPrincipal(),
                                                       System.currentTimeMillis() - start));
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       rollbackTransaction();
       cfe.printStackTrace();
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       rollbackTransaction();
       t.printStackTrace();
       throw new CalFacadeException(t);
     } finally {
       try {
         endTransaction();
-      } catch (Throwable t1) {}
+      } catch (final Throwable ignored) {}
       try {
         close();
-      } catch (Throwable t2) {}
+      } catch (final Throwable ignored) {}
     }
   }
 
@@ -351,13 +349,19 @@ public class CalSvc extends CalSvcI {
   }
 
   @Override
-  public AuthProperties getAuthProperties(boolean auth) throws CalFacadeException {
+  public AuthProperties getAuthProperties(final boolean auth) throws CalFacadeException {
     return configs.getAuthProperties(auth);
   }
 
   @Override
   public SystemProperties getSystemProperties() throws CalFacadeException {
     return configs.getSystemProperties();
+  }
+
+  @Override
+  public NotificationProperties getNotificationProperties()
+          throws CalFacadeException {
+    return configs.getNotificationProps();
   }
 
   @Override

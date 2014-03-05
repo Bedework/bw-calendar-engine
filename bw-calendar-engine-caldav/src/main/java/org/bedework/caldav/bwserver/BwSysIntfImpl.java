@@ -60,6 +60,7 @@ import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
+import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -168,8 +169,6 @@ public class BwSysIntfImpl implements SysIntf {
 
   private boolean calWs;
 
-  private BasicSystemProperties syspars;
-
   private static Configurations configs;
 
   static {
@@ -181,10 +180,10 @@ public class BwSysIntfImpl implements SysIntf {
   }
 
   @Override
-  public void init(final HttpServletRequest req,
-                   final String account,
-                   final boolean service,
-                   final boolean calWs) throws WebdavException {
+  public String init(final HttpServletRequest req,
+                     final String account,
+                     final boolean service,
+                     final boolean calWs) throws WebdavException {
     try {
       this.calWs = calWs;
       debug = getLogger().isDebugEnabled();
@@ -202,24 +201,56 @@ public class BwSysIntfImpl implements SysIntf {
         throw new WebdavException("bwappname is not set in web.xml");
       }
 
+      final String hdr = req.getHeader("X-BEDEWORK-NOTE");
+
+      String id = null;
+
+      if (hdr == null) {
+        id = account;
+      } else {
+        final String[] hparts = hdr.split(":");
+
+        if (hparts.length == 2) {
+          id = hparts[0];
+
+          NotificationProperties nprops = configs.getNotificationProps();
+
+          String token = hparts[1];
+
+          if (id != null) {
+            if (!id.equals(nprops.getNotifierId()) ||
+                    (token == null) ||
+                    !token.equals(nprops.getNotifierToken())) {
+              id = null;
+            }
+          }
+        }
+
+        if (id == null) {
+          throw new WebdavBadRequest();
+        }
+      }
+
       /* Find the mbean and get the config */
 
 //      ObjectName mbeanName = new ObjectName(CalDAVConf.getServiceName(appName));
 
       // Call to set up ThreadLocal variables
 
-      getSvci(account,
+      getSvci(id,
               CalDavHeaders.getRunAs(req),
               service,
               CalDavHeaders.getClientId(req));
 
       authProperties = svci.getAuthProperties();
-      sysProperties = svci.getSystemProperties();
-      basicSysProperties = svci.getBasicSystemProperties();
+      sysProperties = configs.getSystemProperties();
+      basicSysProperties = configs.getBasicSystemProperties();
       svci.postNotification(new HttpEvent(SysCode.CALDAV_IN));
       reqInTime = System.currentTimeMillis();
 
-      currentPrincipal = svci.getUsersHandler().getUser(account);
+      currentPrincipal = svci.getUsersHandler().getUser(id);
+
+      return id;
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
@@ -269,7 +300,7 @@ public class BwSysIntfImpl implements SysIntf {
 
     /* This must be a collection which is either a user home or below. */
 
-    String uhome = getSysPars().getUserCalendarRoot();
+    String uhome = basicSysProperties.getUserCalendarRoot();
 
     if (uhome.endsWith("/")) {
       uhome = uhome.substring(0, uhome.length() - 1);
@@ -504,7 +535,7 @@ public class BwSysIntfImpl implements SysIntf {
       }
 
       // SCHEDULE - just get home path and get default cal from user prefs.
-      BasicSystemProperties sys = getSysPars();
+
       BwCalendar cal = getSvci().getCalendarsHandler().getHome(p, true);
       if (cal == null) {
         return null;
@@ -512,14 +543,18 @@ public class BwSysIntfImpl implements SysIntf {
 
       String userHomePath = Util.buildPath(true, cal.getPath());
 
-      String defaultCalendarPath = Util.buildPath(true, userHomePath +
-                                                  sys.getUserDefaultCalendar());
-      String inboxPath = Util.buildPath(true, userHomePath, "/",
-                                        sys.getUserInbox());;
-      String outboxPath = Util.buildPath(true, userHomePath, "/",
-                                         sys.getUserOutbox());
-      String notificationsPath = Util.buildPath(true, userHomePath, "/",
-                                                sys.getDefaultNotificationsName());
+      String defaultCalendarPath =
+              Util.buildPath(true, userHomePath +
+                      basicSysProperties.getUserDefaultCalendar());
+      String inboxPath =
+              Util.buildPath(true, userHomePath, "/",
+                             basicSysProperties.getUserInbox());;
+      String outboxPath =
+              Util.buildPath(true, userHomePath, "/",
+                             basicSysProperties.getUserOutbox());
+      String notificationsPath =
+              Util.buildPath(true, userHomePath, "/",
+                             basicSysProperties.getDefaultNotificationsName());
 
       principalInfo = new CalPrincipalInfo(p,
                                            userHomePath,
@@ -2541,18 +2576,6 @@ public class BwSysIntfImpl implements SysIntf {
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
-  }
-
-  private BasicSystemProperties getSysPars() throws WebdavException {
-    try {
-      if (syspars == null) {
-        syspars = getSvci().getBasicSystemProperties();
-      }
-    } catch (Throwable t) {
-      throw new WebdavException(t);
-    }
-
-    return syspars;
   }
 
   private BwPreferences getPrefs() throws WebdavException {

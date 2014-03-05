@@ -170,26 +170,6 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
     return getConfig().getCalSoapWsURI();
   }
 
-  @Override
-  public void setNotifierId(final String val) {
-    getConfig().setNotifierId(val);
-  }
-
-  @Override
-  public String getNotifierId() {
-    return getConfig().getNotifierId();
-  }
-
-  @Override
-  public void setNotifierToken(final String val) {
-    getConfig().setNotifierToken(val);
-  }
-
-  @Override
-  public String getNotifierToken() {
-    return getConfig().getNotifierToken();
-  }
-
   /** Set the calws soap web service WSDL uri - null for no service
    *
    * @param val    String

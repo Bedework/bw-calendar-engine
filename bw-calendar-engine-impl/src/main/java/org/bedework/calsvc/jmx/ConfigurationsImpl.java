@@ -25,6 +25,7 @@ import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.DumpRestoreProperties;
 import org.bedework.calfacade.configs.IndexProperties;
+import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SynchConfig;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -75,6 +76,8 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   private static SystemProperties sysProperties;
 
   private static MailConfigProperties mailProps;
+
+  private static NotificationProperties notificationProps;
 
   private static SynchConfig synchProps;
 
@@ -178,6 +181,11 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   }
 
   @Override
+  public NotificationProperties getNotificationProps() throws CalFacadeException {
+    return notificationProps;
+  }
+
+  @Override
   public SynchConfig getSynchConfig() throws CalFacadeException {
     return synchProps;
   }
@@ -263,6 +271,12 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       register(getSyspropsName(), sconf);
       sconf.loadConfig();
       sconf.saveConfig();
+
+      /* ------------- Notification properties -------------------- */
+      NotificationConf nc = new NotificationConf();
+      register(new ObjectName(nc.getServiceName()), nc);
+      nc.loadConfig();
+      notificationProps = nc.getConfig();
 
       /* ------------- Mailer properties -------------------- */
       MailerConf mc = new MailerConf();

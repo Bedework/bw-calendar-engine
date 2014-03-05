@@ -70,8 +70,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private String eventregAdminToken;
   private String eventregUrl;
-  private String notifierId;
-  private String notifierToken;
 
   private Integer vpollMaxItems;
   private Integer vpollMaxActive;
@@ -165,26 +163,6 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   @Override
   public String getCalSoapWsURI() {
     return calSoapWsURI;
-  }
-
-  @Override
-  public void setNotifierId(final String val) {
-    notifierId = val;
-  }
-
-  @Override
-  public String getNotifierId() {
-    return notifierId;
-  }
-
-  @Override
-  public void setNotifierToken(final String val) {
-    notifierToken = val;
-  }
-
-  @Override
-  public String getNotifierToken() {
-    return notifierToken;
   }
 
   @Override

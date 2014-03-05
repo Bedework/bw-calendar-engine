@@ -18,6 +18,9 @@
 */
 package org.bedework.calsvci;
 
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
@@ -30,6 +33,7 @@ import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.IndexProperties;
+import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
@@ -40,10 +44,6 @@ import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.icalendar.IcalCallback;
 import org.bedework.sysevents.events.SysEventBase;
-
-import org.bedework.access.Ace;
-import org.bedework.access.AceWho;
-import org.bedework.access.Acl.CurrentAccess;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -103,6 +103,13 @@ public abstract class CalSvcI implements Serializable {
    * @throws CalFacadeException
    */
   public abstract SystemProperties getSystemProperties() throws CalFacadeException;
+
+  /** Return notification properties.
+   *
+   * @return NotificationProperties object - never null.
+   * @throws CalFacadeException
+   */
+  public abstract NotificationProperties getNotificationProperties() throws CalFacadeException;
 
   /** Return properties for indexing.
    *

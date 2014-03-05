@@ -74,6 +74,12 @@ public interface Configurations extends Serializable {
   MailConfigProperties getMailConfigProperties() throws CalFacadeException;
 
   /**
+   * @return notification properties
+   * @throws CalFacadeException
+   */
+  NotificationProperties getNotificationProps() throws CalFacadeException;
+
+  /**
    * @return synch properties
    * @throws CalFacadeException
    */

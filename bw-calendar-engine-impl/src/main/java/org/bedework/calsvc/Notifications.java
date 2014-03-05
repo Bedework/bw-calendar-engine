@@ -44,12 +44,12 @@ import javax.xml.namespace.QName;
  * set to the serialized value of the QName for the notification. The stored
  * resource will be the XML for the notification.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 class Notifications extends CalSvcDb implements NotificationsI {
   /** Constructor
   *
-  * @param svci
+  * @param svci service interface
   */
   Notifications(final CalSvc svci) {
    super(svci);
@@ -61,9 +61,9 @@ class Notifications extends CalSvcDb implements NotificationsI {
     try {
       pushPrincipal(pr);
       return add(val);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     } finally {
       popPrincipal();
@@ -78,35 +78,35 @@ class Notifications extends CalSvcDb implements NotificationsI {
       return false;
     }
 
-    BwCalendar ncol = getCols().getSpecial(BwCalendar.calTypeNotifications,
-                                           true);
+    final BwCalendar ncol = getCols().getSpecial(BwCalendar.calTypeNotifications,
+                                                 true);
 
     if (ncol == null) {
       return false;
     }
 
-    BwResource noteRsrc = new BwResource();
+    final BwResource noteRsrc = new BwResource();
 
     noteRsrc.setName(val.getName());
     noteRsrc.setEncoding(val.getNotification().getEncoding());
 
-    BwResourceContent rc = new BwResourceContent();
+    final BwResourceContent rc = new BwResourceContent();
     noteRsrc.setContent(rc);
 
     try {
-      String xml = val.toXml();
+      final String xml = val.toXml();
 
       if (xml == null) {
         return false;
       }
 
-      byte[] xmlData = xml.getBytes();
+      final byte[] xmlData = xml.getBytes();
 
       rc.setContent(xmlData);
 
       noteRsrc.setContentLength(xmlData.length);
       noteRsrc.setContentType(val.getContentType());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
 
@@ -123,20 +123,20 @@ class Notifications extends CalSvcDb implements NotificationsI {
     }
 
     try {
-      String xml = val.toXml();
+      final String xml = val.toXml();
 
       if (xml == null) {
         return false;
       }
 
-      BwCalendar ncol = getCols().getSpecial(BwCalendar.calTypeNotifications,
-                                             true);
+      final BwCalendar ncol = getCols().getSpecial(BwCalendar.calTypeNotifications,
+                                                   true);
 
       if (ncol == null) {
         return false;
       }
 
-      BwResource noteRsrc =
+      final BwResource noteRsrc =
           getSvc().getResourcesHandler().get(Util.buildPath(false,
                                                             ncol.getPath(),
                                                             "/",
@@ -152,7 +152,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
         noteRsrc.setContent(rc);
       }
 
-      byte[] xmlData = xml.getBytes();
+      final byte[] xmlData = xml.getBytes();
 
       rc.setContent(xmlData);
 
@@ -161,23 +161,23 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
       getSvc().getResourcesHandler().update(noteRsrc, true);
       return true;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   @Override
   public NotificationType find(final String name) throws CalFacadeException {
-    BwCalendar ncol = getCols().getSpecial(BwCalendar.calTypeNotifications,
-                                           true);
+    final BwCalendar ncol = getCols().getSpecial(BwCalendar.calTypeNotifications,
+                                                 true);
 
     if (ncol == null) {
       return null;
     }
 
-    BwResource noteRsrc =
+    final BwResource noteRsrc =
         getSvc().getResourcesHandler().get(Util.buildPath(false, ncol.getPath(),
                                                           "/", name));
 
@@ -207,14 +207,14 @@ class Notifications extends CalSvcDb implements NotificationsI {
       return;
     }
 
-    BwCalendar ncol = getCols().getSpecial(BwCalendar.calTypeNotifications,
-                                           true);
+    final BwCalendar ncol = getCols().getSpecial(BwCalendar.calTypeNotifications,
+                                                 true);
 
     if (ncol == null) {
       return;
     }
 
-    String path = Util.buildPath(false, ncol.getPath(), "/", val.getName());
+    final String path = Util.buildPath(false, ncol.getPath(), "/", val.getName());
 
     getSvc().getResourcesHandler().delete(path);
   }
@@ -226,30 +226,32 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
   @Override
   public List<NotificationType> getMatching(final QName type) throws CalFacadeException {
-    List<NotificationType> res = new ArrayList<NotificationType>();
+    final List<NotificationType> res = new ArrayList<>();
 
-    BwCalendar ncol = getSvc().getCalendarsHandler().getSpecial(BwCalendar.calTypeNotifications,
-                                                                true);
+    final BwCalendar ncol =
+            getCols().getSpecial(BwCalendar.calTypeNotifications,
+                                 true);
 
     if (ncol == null) {
       return res;
     }
 
-    Collection<BwResource> rsrc = getSvc().getResourcesHandler().getAll(ncol.getPath());
+    final Collection<BwResource> rsrc =
+            getSvc().getResourcesHandler().getAll(ncol.getPath());
 
     if (Util.isEmpty(rsrc)) {
       return res;
     }
 
-    for (BwResource r: rsrc) {
+    for (final BwResource r: rsrc) {
       if (type != null) {
-        NotificationInfo ni = NotificationType.fromContentType(r.getContentType());
+        final NotificationInfo ni = NotificationType.fromContentType(r.getContentType());
         if ((ni == null) || !type.equals(ni.type)) {
           continue;
         }
       }
 
-      NotificationType nt = makeNotification(r);
+      final NotificationType nt = makeNotification(r);
       if (r != null) {
         res.add(nt);
       }
@@ -273,7 +275,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
   @Override
   public List<NotificationType> getMatching(final String href,
                                             final QName type) throws CalFacadeException {
-    BwPrincipal pr = getSvc().getDirectories().caladdrToPrincipal(href);
+    final BwPrincipal pr = getSvc().getDirectories().caladdrToPrincipal(href);
 
     if (pr == null) {
       return null;
@@ -285,28 +287,28 @@ class Notifications extends CalSvcDb implements NotificationsI {
   private NotificationType makeNotification(final BwResource rsrc) throws CalFacadeException {
     getSvc().getResourcesHandler().getContent(rsrc);
 
-    BwResourceContent bwrc = rsrc.getContent();
+    final BwResourceContent bwrc = rsrc.getContent();
 
     if (bwrc == null) {
       return null;
     }
 
-    Blob b = bwrc.getValue();
+    final Blob b = bwrc.getValue();
 
     if (b == null) {
       return null;
     }
 
     try {
-      InputStream is = b.getBinaryStream();
+      final InputStream is = b.getBinaryStream();
 
-      NotificationType note = Parser.fromXml(is);
+      final NotificationType note = Parser.fromXml(is);
 
       note.setName(rsrc.getName());
       note.getNotification().setEncoding(rsrc.getEncoding());
 
       return note;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
