@@ -67,7 +67,7 @@ import java.util.Collection;
  *
  * @author Mike Douglass       douglm rpi.edu
  */
-public abstract class CalSvcI implements Serializable {
+public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** (Re)initialise the object for a particular use.
    *
    * @param pars        Defines the global parameters for the object

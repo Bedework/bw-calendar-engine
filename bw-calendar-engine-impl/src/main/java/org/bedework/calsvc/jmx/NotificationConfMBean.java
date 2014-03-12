@@ -32,6 +32,14 @@ public interface NotificationConfMBean extends ConfBaseMBean,
    * Operations
    * ======================================================================== */
 
+  /**
+   * @param cua calendar user address
+   * @return status
+   */
+  @MBeanInfo("Send a test notification to the user")
+  String sendInvite(@MBeanInfo("calendar user address")String cua,
+                    @MBeanInfo("Collection href")String href);
+
   /** (Re)load the configuration
    *
    * @return status

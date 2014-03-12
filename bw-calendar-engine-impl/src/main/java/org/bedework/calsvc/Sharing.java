@@ -39,6 +39,7 @@ import org.bedework.caldav.util.sharing.UserType;
 import org.bedework.caldav.util.sharing.parse.Parser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calsvci.NotificationsI;
@@ -83,9 +84,9 @@ public class Sharing extends CalSvcDb implements SharingI {
     try {
       pushPrincipal(principalHref);
       return getSvc().getSharingHandler().share(col, share);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     } finally {
       popPrincipal();
@@ -99,22 +100,22 @@ public class Sharing extends CalSvcDb implements SharingI {
       throw new CalFacadeForbidden("Cannot share");
     }
 
-    ShareResultType sr = new ShareResultType();
-    Acl acl = col.getCurrentAccess().getAcl();
-    Holder<Acl> hacl = new Holder<Acl>();
+    final ShareResultType sr = new ShareResultType();
+    final Acl acl = col.getCurrentAccess().getAcl();
+    final Holder<Acl> hacl = new Holder<Acl>();
     hacl.value = acl;
 
-    String calAddr = principalToCaladdr(getPrincipal());
+    final String calAddr = principalToCaladdr(getPrincipal());
 
-    InviteType invite = getInviteStatus(col);
+    final InviteType invite = getInviteStatus(col);
 
-    List<InviteNotificationType> notifications =
+    final List<InviteNotificationType> notifications =
         new ArrayList<InviteNotificationType>();
 
     boolean addedSharee = false;
 
-    for (RemoveType rem: share.getRemove()) {
-      InviteNotificationType n = doRemove(col, rem, hacl, calAddr, invite);
+    for (final RemoveType rem: share.getRemove()) {
+      final InviteNotificationType n = doRemove(col, rem, hacl, calAddr, invite);
 
       if (n != null) {
         notifications.add(n);
@@ -124,8 +125,8 @@ public class Sharing extends CalSvcDb implements SharingI {
       }
     }
 
-    for(SetType set: share.getSet()) {
-      InviteNotificationType n = doSet(col, set, hacl, calAddr, invite);
+    for(final SetType set: share.getSet()) {
+      final InviteNotificationType n = doSet(col, set, hacl, calAddr, invite);
 
       if (n != null) {
         addedSharee = true;
@@ -146,20 +147,20 @@ public class Sharing extends CalSvcDb implements SharingI {
      * accepted then just delete the current invitation
      */
 
-    NotificationsI notify = getSvc().getNotificationsHandler();
+    final NotificationsI notify = getSvc().getNotificationsHandler();
 
     sendNotifications:
-    for (InviteNotificationType in: notifications) {
-      BwPrincipal pr = caladdrToPrincipal(in.getHref());
-      boolean remove = in.getInviteStatus().equals(removeStatus);
+    for (final InviteNotificationType in: notifications) {
+      final BwPrincipal pr = caladdrToPrincipal(in.getHref());
+      final boolean remove = in.getInviteStatus().equals(removeStatus);
 
-      List<NotificationType> notes =
+      final List<NotificationType> notes =
           notify.getMatching(in.getHref(),
                              AppleServerTags.inviteNotification);
 
       if (!Util.isEmpty(notes)) {
-        for (NotificationType n: notes) {
-          InviteNotificationType nin = (InviteNotificationType)n.getNotification();
+        for (final NotificationType n: notes) {
+          final InviteNotificationType nin = (InviteNotificationType)n.getNotification();
 
           if (!nin.getHostUrl().equals(in.getHostUrl())) {
             continue;
@@ -182,7 +183,7 @@ public class Sharing extends CalSvcDb implements SharingI {
         }
       }
 
-      NotificationType note = new NotificationType();
+      final NotificationType note = new NotificationType();
 
       note.setDtstamp(new DtStamp(new DateTime(true)).getValue());
       note.setNotification(in);
@@ -192,14 +193,14 @@ public class Sharing extends CalSvcDb implements SharingI {
       /* Add the invite to the set of properties associated with this collection
        * We give it a name consisting of the inviteNotification tag + uid.
        */
-      QName qn = new QName(AppleServerTags.inviteNotification.getNamespaceURI(),
-                           AppleServerTags.inviteNotification.getLocalPart() +
-                           in.getUid());
+      final QName qn = new QName(AppleServerTags.inviteNotification.getNamespaceURI(),
+                                 AppleServerTags.inviteNotification.getLocalPart() +
+                                         in.getUid());
       try {
         col.setProperty(NamespaceAbbrevs.prefixed(qn), in.toXml());
-      } catch (CalFacadeException cfe) {
+      } catch (final CalFacadeException cfe) {
         throw cfe;
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         throw new CalFacadeException(t);
       }
     }
@@ -214,9 +215,9 @@ public class Sharing extends CalSvcDb implements SharingI {
       getCols().update(col);
 
       getSvc().changeAccess(col, hacl.value.getAces(), true);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
 
@@ -676,47 +677,69 @@ public class Sharing extends CalSvcDb implements SharingI {
     return in;
   }
 
+  private NotificationProperties getNoteProps() throws CalFacadeException {
+    return getSvc().getNotificationProperties();
+  }
+
   private InviteNotificationType doSet(final BwCalendar col,
                                        final SetType s,
                                        final Holder<Acl> hacl,
                                        final String calAddr,
                                        final InviteType invite) throws CalFacadeException {
-    String href = getSvc().getDirectories().normalizeCua(s.getHref());
+    final String href = getSvc().getDirectories().normalizeCua(s.getHref());
 
-    BwPrincipal pr = caladdrToPrincipal(href);
+    final BwPrincipal pr = caladdrToPrincipal(href);
 
-    if (pr == null) {
-      // Cannot invite - need to set a good response
-      return null;
-    }
+    final boolean principalExists = pr != null &&
+            getUsers().getPrincipal(pr.getPrincipalRef()) != null;
+
+    /*
+       pr != null means this is potentially one of our users.
+
+       If the principal doesn't exist and we handle outbound
+       notifications then we should drop a notification into the
+       global notification collection. Eventually the user will log in
+       we hope - we can then turn that invite into a real local user
+       invite,
+     */
 
     UserType uentry = invite.finduser(href);
-    if (uentry != null) {
-      if (uentry.getInviteStatus().equals(Parser.inviteNoresponseTag)) {
-        // Already an outstanding invitation
-        NotificationType n = findInvite(pr, col.getPath());
 
-        if (n != null) {
-          InviteNotificationType in = (InviteNotificationType)n.getNotification();
+    if (!principalExists) {
+      if (!getNoteProps().getOutboundEnabled()) {
+        // Cannot invite - need to set a good response
 
-          if (in.getAccess().equals(s.getAccess())) {
-            // In their collection - no need to resend.
-            return null;
+        return null;
+      }
+    } else {
+      if (uentry != null) {
+        if (uentry.getInviteStatus().equals(Parser.inviteNoresponseTag)) {
+          // Already an outstanding invitation
+          final NotificationType n = findInvite(pr, col.getPath());
+
+          if (n != null) {
+            final InviteNotificationType in =
+                    (InviteNotificationType)n.getNotification();
+
+            if (in.getAccess().equals(s.getAccess())) {
+              // In their collection - no need to resend.
+              return null;
+            }
+
+            /* Delete the old notification - we're changing the access */
+            deleteInvite(pr,n);
           }
-
-          /* Delete the old notification - we're changing the access */
-          deleteInvite(pr,n);
         }
       }
+
+      hacl.value = setAccess(col,
+                             pr.getAccount(),
+                             pr.getKind(),
+                             hacl.value,
+                             s.getAccess().testRead());
     }
 
-    hacl.value = setAccess(col,
-                           pr.getAccount(),
-                           pr.getKind(),
-                           hacl.value,
-                           s.getAccess().testRead());
-
-    InviteNotificationType in = new InviteNotificationType();
+    final InviteNotificationType in = new InviteNotificationType();
 
     in.setSharedType(InviteNotificationType.sharedTypeCalendar);
     in.setUid(Uid.getUid());
@@ -726,7 +749,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     in.setHostUrl(col.getPath());
     in.setSummary(s.getSummary());
 
-    OrganizerType org = new OrganizerType();
+    final OrganizerType org = new OrganizerType();
     org.setHref(calAddr);
 
     in.setOrganizer(org);
@@ -748,6 +771,8 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       invite.getUsers().add(uentry);
     }
+
+    uentry.setExternalUser(!principalExists);
 
     return in;
   }
