@@ -51,8 +51,6 @@ import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.fortuna.ical4j.model.Period;
 import org.apache.log4j.Logger;
 import org.elasticsearch.ElasticSearchException;
@@ -159,12 +157,10 @@ public class BwIndexEsImpl implements BwIndexer {
 
   private boolean debug;
 
-  private int batchMaxSize = 0;
-  private int batchCurSize = 0;
+  //private int batchMaxSize = 0;
+  //private int batchCurSize = 0;
 
-  private Object batchLock = new Object();
-
-  private ObjectMapper om;
+  // private Object batchLock = new Object();
 
   private boolean publick;
   private BwPrincipal principal;
@@ -173,9 +169,8 @@ public class BwIndexEsImpl implements BwIndexer {
   private String host;
   private int port = 9300;
 
-  private static Node theNode; /* For embedded use */
   private static Client theClient;
-  private static volatile Object clientSyncher = new Object();
+  private static final Object clientSyncher = new Object();
 
   private String targetIndex;
   private int currentMode;
@@ -192,28 +187,9 @@ public class BwIndexEsImpl implements BwIndexer {
 
   private final static long indexerDelay = 1100;
 
-  /*
-  private static Set<String> eventDoctypes;
-
-  static {
-    eventDoctypes = new TreeSet<>(IcalDefs.entityTypes);
-
-    for (String s: masterDocTypes) {
-      if (s != null) {
-        eventDoctypes.add(s);
-      }
-    }
-
-    for (String s: overrideDocTypes) {
-      if (s != null) {
-        eventDoctypes.add(s);
-      }
-    }
-  }*/
-
   /** Constructor
    *
-   * @param configs
+   * @param configs - the configurations object
    * @param publick - if false we add an owner term to the searches
    * @param principal - who we are searching for - only for non-public
    * @param superUser - true if the principal is a superuser.
@@ -239,12 +215,12 @@ public class BwIndexEsImpl implements BwIndexer {
     unauthpars = configs.getAuthProperties(false);
     basicSysprops = configs.getBasicSystemProperties();
 
-    String url = idxpars.getIndexerURL();
+    final String url = idxpars.getIndexerURL();
 
     if (url == null) {
       host = "localhost";
     } else {
-      int pos = url.indexOf(":");
+      final int pos = url.indexOf(":");
 
       if (pos < 0) {
         host = url;
@@ -255,15 +231,6 @@ public class BwIndexEsImpl implements BwIndexer {
         }
       }
     }
-
-    om = new ObjectMapper();
-
-    /* Don't use dates in json - still issues with timezones ironically */
-    //DateFormat df = new SimpleDateFormat("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
-
-    //om.setDateFormat(df);
-
-    om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     if (indexName == null) {
       if (publick) {
@@ -279,8 +246,8 @@ public class BwIndexEsImpl implements BwIndexer {
 
   @Override
   public void setBatchSize(final int val) {
-    batchMaxSize = val;
-    batchCurSize = 0;
+    //batchMaxSize = val;
+    //batchCurSize = 0;
 
     /* XXX later
     if (batchMaxSize > 1) {
@@ -307,7 +274,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
     private boolean requiresSecondaryFetch;
 
-    private boolean canPage;
+    //private boolean canPage;
 
     /* For paged queries - we need these values */
     private String start;
@@ -321,7 +288,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
     private int lastPageStart;
 
-    EsSearchResult(BwIndexer indexer) {
+    EsSearchResult(final BwIndexer indexer) {
       this.indexer = indexer;
     }
 
@@ -375,18 +342,18 @@ public class BwIndexEsImpl implements BwIndexer {
                              final AccessChecker accessCheck,
                              final RecurringRetrievalMode recurRetrieval) throws CalFacadeException {
     if (basicSysprops.getTestMode()) {
-      long timeSinceIndex = System.currentTimeMillis() - lastIndexTime;
-      long waitTime = indexerDelay - timeSinceIndex;
+      final long timeSinceIndex = System.currentTimeMillis() - lastIndexTime;
+      final long waitTime = indexerDelay - timeSinceIndex;
 
       if (waitTime > 0) {
         try {
           Thread.sleep(waitTime);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException ignored) {
         }
       }
     }
 
-    EsSearchResult res = new EsSearchResult(this);
+    final EsSearchResult res = new EsSearchResult(this);
 
     res.start = start;
     res.end = end;
@@ -398,7 +365,7 @@ public class BwIndexEsImpl implements BwIndexer {
       res.curQuery = QueryBuilders.queryString(query);
     }
 
-    ESQueryFilter ef = getFilters(recurRetrieval);
+    final ESQueryFilter ef = getFilters(recurRetrieval);
 
     res.curFilter = ef.buildFilter(filter);
 
@@ -409,11 +376,11 @@ public class BwIndexEsImpl implements BwIndexer {
     res.curFilter = ef.addLimits(res.curFilter);
 
     res.requiresSecondaryFetch = ef.requiresSecondaryFetch();
-    res.canPage = ef.canPage();
+    //res.canPage = ef.canPage();
 
     res.curSort = sort;
 
-    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+    final SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
     if (res.curQuery != null) {
       srb.setQuery(res.curQuery);
     }
@@ -426,7 +393,7 @@ public class BwIndexEsImpl implements BwIndexer {
     if (!Util.isEmpty(res.curSort)) {
       SortOrder so;
 
-      for (SortTerm st: res.curSort) {
+      for (final SortTerm st: res.curSort) {
         if (st.isAscending()) {
           so = SortOrder.ASC;
         } else {
@@ -444,11 +411,11 @@ public class BwIndexEsImpl implements BwIndexer {
                     "; srb=" + srb);
     }
 
-    SearchResponse resp = srb.execute().actionGet();
+    final SearchResponse resp = srb.execute().actionGet();
 
-    if (resp.status() != RestStatus.OK) {
+//    if (resp.status() != RestStatus.OK) {
       //TODO
-    }
+//    }
 
     if (debug) {
       debug("Search: returned status " + resp.status() +
@@ -465,9 +432,9 @@ public class BwIndexEsImpl implements BwIndexer {
                                                  final Position pos,
                                                  final int desiredAccess)
           throws CalFacadeException {
-    EsSearchResult res = (EsSearchResult)sres;
+    final EsSearchResult res = (EsSearchResult)sres;
 
-    int offset;
+    final int offset;
 
     if (pos == Position.next) {
       offset = sres.getPageStart();
@@ -491,12 +458,12 @@ public class BwIndexEsImpl implements BwIndexer {
                                                  final int num,
                                                  final int desiredAccess)
           throws CalFacadeException {
-    EsSearchResult res = (EsSearchResult)sres;
+    final EsSearchResult res = (EsSearchResult)sres;
 
     res.pageStart = offset;
 
-    List<SearchResultEntry> entities;
-    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+    final List<SearchResultEntry> entities;
+    final SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
     if (res.curQuery != null) {
       srb.setQuery(res.curQuery);
     }
@@ -516,7 +483,7 @@ public class BwIndexEsImpl implements BwIndexer {
     if (!Util.isEmpty(res.curSort)) {
       SortOrder so;
 
-      for (SortTerm st: res.curSort) {
+      for (final SortTerm st: res.curSort) {
         if (st.isAscending()) {
           so = SortOrder.ASC;
         } else {
@@ -534,7 +501,7 @@ public class BwIndexEsImpl implements BwIndexer {
       srb.addField(ESQueryFilter.hrefJname);
     }
 
-    SearchResponse resp = srb.execute().actionGet();
+    final SearchResponse resp = srb.execute().actionGet();
 
     if (resp.status() != RestStatus.OK) {
       if (debug) {
@@ -562,64 +529,73 @@ public class BwIndexEsImpl implements BwIndexer {
       }
     }
 
-    Map<String, Collection<BwEventAnnotation>> overrides = new HashMap<>();
-    Collection<EventInfo> masters = new TreeSet<>();
+    final Map<String, Collection<BwEventAnnotation>> overrides = new HashMap<>();
+    final Collection<EventInfo> masters = new TreeSet<>();
 
-    for (SearchHit hit : hits) {
+    for (final SearchHit hit : hits) {
       res.pageStart++;
-      String dtype = hit.getType();
+      final String dtype = hit.getType();
 
       if (dtype == null) {
         throw new CalFacadeException("org.bedework.index.noitemtype");
       }
 
-      String kval = hit.getId();
+      final String kval = hit.getId();
 
       if (kval == null) {
         throw new CalFacadeException("org.bedework.index.noitemkey");
       }
 
-      EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
+      final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
 
       Object entity = null;
-      if (dtype.equals(docTypeCollection)) {
-        entity = eb.makeCollection();
-      } else if (dtype.equals(docTypeCategory)) {
-        entity = eb.makeCat();
-      } else if (dtype.equals(docTypeContact)) {
-        entity = eb.makeContact();
-      } else if (dtype.equals(docTypeLocation)) {
-        entity = eb.makeLocation();
-      } else if (dtype.equals(docTypeEvent)) {
-        entity = eb.makeEvent(res.recurRetrieval.mode == Rmode.expanded);
-        EventInfo ei = (EventInfo)entity;
-        BwEvent ev = ei.getEvent();
+      switch (dtype) {
+        case docTypeCollection:
+          entity = eb.makeCollection();
+          break;
+        case docTypeCategory:
+          entity = eb.makeCat();
+          break;
+        case docTypeContact:
+          entity = eb.makeContact();
+          break;
+        case docTypeLocation:
+          entity = eb.makeLocation();
+          break;
+        case docTypeEvent:
+          entity = eb.makeEvent(
+                  res.recurRetrieval.mode == Rmode.expanded);
+          final EventInfo ei = (EventInfo)entity;
+          final BwEvent ev = ei.getEvent();
 
-        Acl.CurrentAccess ca = res.accessCheck.checkAccess(ev,
-                                                           desiredAccess,
-                                                           true);
+          final Acl.CurrentAccess ca =
+                  res.accessCheck.checkAccess(ev,
+                                              desiredAccess,
+                                              true);
 
-        if ((ca == null) || !ca.getAccessAllowed()) {
-          continue;
-        }
-
-        ei.setCurrentAccess(ca);
-
-        if (ev instanceof BwEventAnnotation) {
-          // Treat as override
-          Collection<BwEventAnnotation> ov = overrides.get(ev.getHref());
-
-          if (ov == null) {
-            ov = new TreeSet<>();
-
-            overrides.put(ev.getHref(), ov);
+          if ((ca == null) || !ca.getAccessAllowed()) {
+            continue;
           }
 
-          ov.add((BwEventAnnotation)ev);
-          continue;
-        }
+          ei.setCurrentAccess(ca);
 
-        masters.add(ei);
+          if (ev instanceof BwEventAnnotation) {
+            // Treat as override
+            Collection<BwEventAnnotation> ov = overrides.get(
+                    ev.getHref());
+
+            if (ov == null) {
+              ov = new TreeSet<>();
+
+              overrides.put(ev.getHref(), ov);
+            }
+
+            ov.add((BwEventAnnotation)ev);
+            continue;
+          }
+
+          masters.add(ei);
+          break;
       }
 
       entities.add(new SearchResultEntry(entity,
@@ -629,19 +605,19 @@ public class BwIndexEsImpl implements BwIndexer {
 
     // Finish off the events
 
-    for (EventInfo ei: masters) {
-      BwEvent ev = ei.getEvent();
+    for (final EventInfo ei: masters) {
+      final BwEvent ev = ei.getEvent();
 
       if (ev.getRecurring()) {
-        Collection<BwEventAnnotation> ov = overrides.get(ev.getHref());
+        final Collection<BwEventAnnotation> ov = overrides.get(ev.getHref());
 
         if (ov != null) {
-          for (BwEventAnnotation ann: ov) {
-            BwEvent proxy = new BwEventProxy(ann);
+          for (final BwEventAnnotation ann: ov) {
+            final BwEvent proxy = new BwEventProxy(ann);
             ann.setTarget(ev);
             ann.setMaster(ev);
 
-            EventInfo oei = new EventInfo(proxy);
+            final EventInfo oei = new EventInfo(proxy);
 
             ei.addOverride(oei);
           }
@@ -650,59 +626,6 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     return entities;
-  }
-
-  private SearchHits multiFetch(SearchHits hits) throws CalFacadeException {
-    // Make an ored filter from keys
-
-    Set<String> hrefs = new TreeSet<>(); // Dedup
-
-    for (SearchHit hit : hits) {
-      String dtype = hit.getType();
-
-      if (dtype == null) {
-        throw new CalFacadeException("org.bedework.index.noitemtype");
-      }
-
-      String kval = hit.getId();
-
-      if (kval == null) {
-        throw new CalFacadeException("org.bedework.index.noitemkey");
-      }
-
-      SearchHitField hrefField = hit.field(ESQueryFilter.hrefJname);
-
-
-      hrefs.add((String)hrefField.getValue());
-    }
-
-    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
-
-    srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setPostFilter(getFilters(null).multiHrefFilter(hrefs));
-    SearchResponse resp = srb.execute().actionGet();
-
-    if (resp.status() != RestStatus.OK) {
-      if (debug) {
-        debug("Search returned status " + resp.status());
-      }
-
-      return null;
-    }
-
-    SearchHits hits2 = resp.getHits();
-
-    if ((hits2.getHits() == null) ||
-            (hits2.getHits().length == 0)) {
-      return null;
-    }
-
-    //Break condition: No hits are returned
-    if (hits2.hits().length == 0) {
-      return null;
-    }
-
-    return hits2;
   }
 
   @Override
@@ -737,8 +660,8 @@ public class BwIndexEsImpl implements BwIndexer {
 
       // Unbatched
 
-      IndexResponse resp = index(rec);
-    } catch (Throwable t) {
+      /* final IndexResponse resp = */index(rec);
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     } finally {
       lastIndexTime = System.currentTimeMillis();
@@ -746,27 +669,27 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   @Override
-  public void unindexEntity(BwEventProperty val) throws CalFacadeException {
+  public void unindexEntity(final BwEventProperty val) throws CalFacadeException {
     unindexEntity(getDocBuilder().getHref(val));
   }
 
   @Override
   public void unindexEntity(final String href) throws CalFacadeException {
     try {
-      DeleteByQueryRequestBuilder dqrb = getClient().prepareDeleteByQuery(
+      final DeleteByQueryRequestBuilder dqrb = getClient().prepareDeleteByQuery(
               targetIndex);
 
       dqrb.setQuery(QueryBuilders.termQuery(ESQueryFilter.hrefJname, href));
 
-      DeleteByQueryResponse resp = dqrb.execute().actionGet();
+      /*final DeleteByQueryResponse resp = */dqrb.execute().actionGet();
 
       // TODO check response?
-    } catch (ElasticSearchException ese) {
+    } catch (final ElasticSearchException ese) {
       // Failed somehow
       error(ese);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
       throw new CalFacadeException(t);
     } finally {
@@ -776,35 +699,34 @@ public class BwIndexEsImpl implements BwIndexer {
 
   @Override
   public String newIndex(final String name) throws CalFacadeException {
-    CreateIndexResponse resp = null;
     try {
-      String newName = name + newIndexSuffix();
+      final String newName = name + newIndexSuffix();
       targetIndex = newName;
 
-      IndicesAdminClient idx = getAdminIdx();
+      final IndicesAdminClient idx = getAdminIdx();
 
-      CreateIndexRequestBuilder cirb = idx.prepareCreate(newName);
+      final CreateIndexRequestBuilder cirb = idx.prepareCreate(newName);
 
-      File f = new File(idxpars.getIndexerConfig());
+      final File f = new File(idxpars.getIndexerConfig());
 
-      byte[] sbBytes = Streams.copyToByteArray(f);
+      final byte[] sbBytes = Streams.copyToByteArray(f);
 
       cirb.setSource(sbBytes);
 
-      CreateIndexRequest cir = cirb.request();
+      final CreateIndexRequest cir = cirb.request();
 
-      ActionFuture<CreateIndexResponse> af = idx.create(cir);
+      final ActionFuture<CreateIndexResponse> af = idx.create(cir);
 
-      resp = af.actionGet();
+      /*resp = */af.actionGet();
 
       return newName;
-    } catch (ElasticSearchException ese) {
+    } catch (final ElasticSearchException ese) {
       // Failed somehow
       error(ese);
       return null;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
       throw new CalFacadeException(t);
     }
@@ -812,52 +734,54 @@ public class BwIndexEsImpl implements BwIndexer {
 
   @Override
   public Set<IndexInfo> getIndexInfo() throws CalFacadeException {
-    Set<IndexInfo> res = new TreeSet<>();
+    final Set<IndexInfo> res = new TreeSet<>();
 
     try {
-      IndicesAdminClient idx = getAdminIdx();
+      final IndicesAdminClient idx = getAdminIdx();
 
-      IndicesStatusRequestBuilder isrb = idx.prepareStatus(Strings.EMPTY_ARRAY);
+      final IndicesStatusRequestBuilder isrb =
+              idx.prepareStatus(Strings.EMPTY_ARRAY);
 
-      ActionFuture<IndicesStatusResponse> sr = idx.status(
+      final ActionFuture<IndicesStatusResponse> sr = idx.status(
               isrb.request());
-      IndicesStatusResponse sresp  = sr.actionGet();
+      final IndicesStatusResponse sresp  = sr.actionGet();
 
-      for (String inm: sresp.getIndices().keySet()) {
-        IndexInfo ii = new IndexInfo(inm);
+      for (final String inm: sresp.getIndices().keySet()) {
+        final IndexInfo ii = new IndexInfo(inm);
         res.add(ii);
 
-        ClusterStateRequest clusterStateRequest = Requests
+        final ClusterStateRequest clusterStateRequest = Requests
                 .clusterStateRequest()
                 .filterRoutingTable(true)
                 .filterNodes(true)
                 .filteredIndices(inm);
 
-        Iterator<String> it = getAdminCluster().state(clusterStateRequest).
-                actionGet().getState().getMetaData().aliases().keysIt();
+        final Iterator<String> it =
+                getAdminCluster().state(clusterStateRequest).
+                        actionGet().getState().getMetaData().aliases().keysIt();
         while (it.hasNext()) {
           ii.addAlias(it.next());
         }
       }
 
       return res;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   @Override
   public List<String> purgeIndexes() throws CalFacadeException {
-    Set<IndexInfo> indexes = getIndexInfo();
-    List<String> purged = new ArrayList<>();
+    final Set<IndexInfo> indexes = getIndexInfo();
+    final List<String> purged = new ArrayList<>();
 
     if (Util.isEmpty(indexes)) {
       return purged;
     }
 
     purge:
-    for (IndexInfo ii: indexes) {
-      String idx = ii.getIndexName();
+    for (final IndexInfo ii: indexes) {
+      final String idx = ii.getIndexName();
 
       if (!idx.startsWith(idxpars.getPublicIndexName()) &&
               !idx.startsWith(idxpars.getUserIndexName())) {
@@ -867,7 +791,7 @@ public class BwIndexEsImpl implements BwIndexer {
       /* Don't delete those pointed to by the current aliases */
 
       if (!Util.isEmpty(ii.getAliases())) {
-        for (String alias: ii.getAliases()) {
+        for (final String alias: ii.getAliases()) {
           if (alias.equals(idxpars.getPublicIndexName())) {
             continue purge;
           }
@@ -886,47 +810,34 @@ public class BwIndexEsImpl implements BwIndexer {
     return purged;
   }
 
-  private void deleteIndexes(final List<String> names) throws CalFacadeException {
-    try {
-      IndicesAdminClient idx = getAdminIdx();
-      DeleteIndexRequestBuilder dirb = getAdminIdx().prepareDelete(
-              names.toArray(new String[0]));
-
-      ActionFuture<DeleteIndexResponse> dr = idx.delete(
-              dirb.request());
-      DeleteIndexResponse dir  = dr.actionGet();
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
   @Override
   public int swapIndex(final String index,
                        final String other) throws CalFacadeException {
-    IndicesAliasesResponse resp = null;
+    //IndicesAliasesResponse resp = null;
     try {
       /* Other is the alias name - index is the index we were just indexing into
        */
 
-      IndicesAdminClient idx = getAdminIdx();
+      final IndicesAdminClient idx = getAdminIdx();
 
-      IndicesGetAliasesRequestBuilder igarb = idx.prepareGetAliases(
+      final IndicesGetAliasesRequestBuilder igarb = idx.prepareGetAliases(
               other);
 
-      ActionFuture<IndicesGetAliasesResponse> getAliasesAf = idx.getAliases(
-              igarb.request());
-      IndicesGetAliasesResponse garesp = getAliasesAf.actionGet();
+      final ActionFuture<IndicesGetAliasesResponse> getAliasesAf =
+              idx.getAliases(igarb.request());
+      final IndicesGetAliasesResponse garesp = getAliasesAf.actionGet();
 
-      ImmutableOpenMap<String, List<AliasMetaData>> aliasesmeta = garesp.getAliases();
+      final ImmutableOpenMap<String, List<AliasMetaData>> aliasesmeta =
+              garesp.getAliases();
 
-      IndicesAliasesRequestBuilder iarb = idx.prepareAliases();
+      final IndicesAliasesRequestBuilder iarb = idx.prepareAliases();
 
-      Iterator<String> it = aliasesmeta.keysIt();
+      final Iterator<String> it = aliasesmeta.keysIt();
 
       while (it.hasNext()) {
         final String indexName = it.next();
 
-        for (AliasMetaData amd: aliasesmeta.get(indexName)) {
+        for (final AliasMetaData amd: aliasesmeta.get(indexName)) {
           if(amd.getAlias().equals(other)) {
             iarb.removeAlias(indexName, other);
           }
@@ -935,18 +846,19 @@ public class BwIndexEsImpl implements BwIndexer {
 
       iarb.addAlias(index, other);
 
-      ActionFuture<IndicesAliasesResponse> af = idx.aliases(iarb.request());
+      final ActionFuture<IndicesAliasesResponse> af =
+              idx.aliases(iarb.request());
 
-      resp = af.actionGet();
+      /*resp = */af.actionGet();
 
       return 0;
-    } catch (ElasticSearchException ese) {
+    } catch (final ElasticSearchException ese) {
       // Failed somehow
       error(ese);
       return -1;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -955,7 +867,7 @@ public class BwIndexEsImpl implements BwIndexer {
   public BwCategory fetchCat(final String val,
                              final PropertyInfoIndex... index)
           throws CalFacadeException {
-    EntityBuilder eb = fetchEntity(docTypeCategory, val, index);
+    final EntityBuilder eb = fetchEntity(docTypeCategory, val, index);
 
     if (eb == null) {
       return null;
@@ -968,7 +880,7 @@ public class BwIndexEsImpl implements BwIndexer {
   public BwContact fetchContact(final String val,
                                 final PropertyInfoIndex... index)
           throws CalFacadeException {
-    EntityBuilder eb = fetchEntity(docTypeContact, val, index);
+    final EntityBuilder eb = fetchEntity(docTypeContact, val, index);
 
     if (eb == null) {
       return null;
@@ -981,7 +893,7 @@ public class BwIndexEsImpl implements BwIndexer {
   public BwLocation fetchLocation(final String val,
                                   final PropertyInfoIndex... index)
           throws CalFacadeException {
-    EntityBuilder eb = fetchEntity(docTypeLocation, val, index);
+    final EntityBuilder eb = fetchEntity(docTypeLocation, val, index);
 
     if (eb == null) {
       return null;
@@ -1033,25 +945,92 @@ public class BwIndexEsImpl implements BwIndexer {
    *                   private methods
    * ======================================================================== */
 
+  private SearchHits multiFetch(final SearchHits hits) throws CalFacadeException {
+    // Make an ored filter from keys
+
+    final Set<String> hrefs = new TreeSet<>(); // Dedup
+
+    for (final SearchHit hit : hits) {
+      final String dtype = hit.getType();
+
+      if (dtype == null) {
+        throw new CalFacadeException("org.bedework.index.noitemtype");
+      }
+
+      final String kval = hit.getId();
+
+      if (kval == null) {
+        throw new CalFacadeException("org.bedework.index.noitemkey");
+      }
+
+      final SearchHitField hrefField = hit.field(ESQueryFilter.hrefJname);
+
+
+      hrefs.add((String)hrefField.getValue());
+    }
+
+    final SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+
+    srb.setSearchType(SearchType.QUERY_THEN_FETCH)
+            .setPostFilter(getFilters(null).multiHrefFilter(hrefs));
+    final SearchResponse resp = srb.execute().actionGet();
+
+    if (resp.status() != RestStatus.OK) {
+      if (debug) {
+        debug("Search returned status " + resp.status());
+      }
+
+      return null;
+    }
+
+    final SearchHits hits2 = resp.getHits();
+
+    if ((hits2.getHits() == null) ||
+            (hits2.getHits().length == 0)) {
+      return null;
+    }
+
+    //Break condition: No hits are returned
+    if (hits2.hits().length == 0) {
+      return null;
+    }
+
+    return hits2;
+  }
+
+  private void deleteIndexes(final List<String> names) throws CalFacadeException {
+    try {
+      final IndicesAdminClient idx = getAdminIdx();
+      final DeleteIndexRequestBuilder dirb = getAdminIdx().prepareDelete(
+              names.toArray(new String[names.size()]));
+
+      final ActionFuture<DeleteIndexResponse> dr = idx.delete(
+              dirb.request());
+      /*DeleteIndexResponse dir = */dr.actionGet();
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
   private static abstract class BuildEntity<T> {
     abstract T make(EntityBuilder eb) throws CalFacadeException;
   }
 
-  private <T> List<T> fetchAllEntities(String docType,
-                                       BuildEntity<T> be) throws CalFacadeException {
-    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+  private <T> List<T> fetchAllEntities(final String docType,
+                                       final BuildEntity<T> be) throws CalFacadeException {
+    final SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
     srb.setTypes(docType);
 
     int tries = 0;
-    int ourPos = 0;
-    int ourCount = maxFetchCount;
+    //int ourPos = 0;
+    final int ourCount = maxFetchCount;
 
-    List<T> res = new ArrayList<>();
+    final List<T> res = new ArrayList<>();
 
     SearchResponse scrollResp = srb.setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
-            .setFilter(getFilters(null).principalFilter(null))
+            .setPostFilter(getFilters(null).principalFilter(null))
             .setSize(ourCount).execute().actionGet(); //ourCount hits per shard will be returned for each scroll
 
     if (scrollResp.status() != RestStatus.OK) {
@@ -1075,18 +1054,18 @@ public class BwIndexEsImpl implements BwIndexer {
         }
       }
 
-      SearchHits hits = scrollResp.getHits();
+      final SearchHits hits = scrollResp.getHits();
 
       //Break condition: No hits are returned
       if (hits.hits().length == 0) {
         break;
       }
 
-      for (SearchHit hit : hits) {
+      for (final SearchHit hit : hits) {
         //Handle the hit...
-        T ent = be.make(getEntityBuilder(hit.sourceAsMap()));
+        final T ent = be.make(getEntityBuilder(hit.sourceAsMap()));
         res.add(ent);
-        ourPos++;
+        //ourPos++;
       }
 
       tries++;
@@ -1101,11 +1080,11 @@ public class BwIndexEsImpl implements BwIndexer {
           throws CalFacadeException {
     if ((index.length == 1) &&
             (index[0] == PropertyInfoIndex.HREF)) {
-      GetRequestBuilder grb = getClient().prepareGet(targetIndex,
-                                                     docType,
-                                                     val);
+      final GetRequestBuilder grb = getClient().prepareGet(targetIndex,
+                                                           docType,
+                                                           val);
 
-      GetResponse gr = grb.execute().actionGet();
+      final GetResponse gr = grb.execute().actionGet();
 
       if (!gr.isExists()) {
         return null;
@@ -1114,17 +1093,17 @@ public class BwIndexEsImpl implements BwIndexer {
       return getEntityBuilder(gr.getSourceAsMap());
     }
 
-    SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+    final SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
     srb.setTypes(docType);
 
-    SearchResponse response = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setFilter(getFilters(null).singleEntityFilter(val, index))
+    final SearchResponse response = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
+            .setPostFilter(getFilters(null).singleEntityFilter(val, index))
             .setFrom(0).setSize(60).setExplain(true)
             .execute()
             .actionGet();
 
-    SearchHits hits = response.getHits();
+    final SearchHits hits = response.getHits();
 
     //Break condition: No hits are returned
     if (hits.hits().length == 0) {
@@ -1146,7 +1125,7 @@ public class BwIndexEsImpl implements BwIndexer {
     String maxEnd;
 
     void checkMin(final BwDateTime tm) {
-      String val;
+      final String val;
       if (tm.getDateType()) {
         val = tm.getDtval();
       } else {
@@ -1164,7 +1143,7 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     void checkMax(final BwDateTime tm) {
-      String val;
+      final String val;
       if (tm.getDateType()) {
         val = tm.getDtval();
       } else {
@@ -1191,7 +1170,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
       DocInfo di = null;
 
-      DocBuilder db = getDocBuilder();
+      final DocBuilder db = getDocBuilder();
 
       if (rec instanceof BwCalendar) {
         di = db.makeDoc((BwCalendar)rec);
@@ -1216,9 +1195,9 @@ public class BwIndexEsImpl implements BwIndexer {
       throw new CalFacadeException(
               new IndexException(IndexException.unknownRecordType,
                                  rec.getClass().getName()));
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -1228,7 +1207,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
       /* If it's not recurring or a stand-alone instance index it */
 
-      BwEvent ev = ei.getEvent();
+      final BwEvent ev = ei.getEvent();
 
       if (!ev.testRecurring() && (ev.getRecurrenceId() == null)) {
         return indexEvent(ei,
@@ -1256,9 +1235,9 @@ public class BwIndexEsImpl implements BwIndexer {
 
       /* Create a list of all instance date/times before overrides. */
 
-      int maxYears;
-      int maxInstances;
-      DateLimits dl = new DateLimits();
+      final int maxYears;
+      final int maxInstances;
+      final DateLimits dl = new DateLimits();
 
       if (ev.getPublick()) {
         maxYears = unauthpars.getMaxYears();
@@ -1268,7 +1247,7 @@ public class BwIndexEsImpl implements BwIndexer {
         maxInstances = authpars.getMaxInstances();
       }
 
-      RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
+      final RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
 
       if (rp.instances.isEmpty()) {
         // No instances for an alleged recurring event.
@@ -1276,15 +1255,15 @@ public class BwIndexEsImpl implements BwIndexer {
         //throw new CalFacadeException(CalFacadeException.noRecurrenceInstances);
       }
 
-      String stzid = ev.getDtstart().getTzid();
+      final String stzid = ev.getDtstart().getTzid();
 
       int instanceCt = maxInstances;
 
-      boolean dateOnly = ev.getDtstart().getDateType();
+      final boolean dateOnly = ev.getDtstart().getDateType();
 
       /* First build a table of overrides so we can skip these later
        */
-      Map<String, String> overrides = new HashMap<>();
+      final Map<String, String> overrides = new HashMap<>();
 
       /*
       if (!Util.isEmpty(ei.getOverrideProxies())) {
@@ -1293,24 +1272,26 @@ public class BwIndexEsImpl implements BwIndexer {
         }
       }
       */
-      IndexResponse iresp = null;
+      final IndexResponse iresp;
 
       if (!Util.isEmpty(ei.getOverrides())) {
-        for (EventInfo oei: ei.getOverrides()) {
-          BwEvent ov = oei.getEvent();
+        for (final EventInfo oei: ei.getOverrides()) {
+          final BwEvent ov = oei.getEvent();
           overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
 
-          BwDateTime rstart = BwDateTime.makeBwDateTime(ov.getDtstart().getDateType(),
-                                                        ov.getRecurrenceId(),
-                                                        stzid);
-          BwDateTime rend = rstart.addDuration(BwDuration.makeDuration(ov.getDuration()));
+          final BwDateTime rstart =
+                  BwDateTime.makeBwDateTime(ov.getDtstart().getDateType(),
+                                            ov.getRecurrenceId(),
+                                            stzid);
+          final BwDateTime rend =
+                  rstart.addDuration(BwDuration.makeDuration(ov.getDuration()));
 
-          iresp = indexEvent(oei,
-                             ItemKind.override,
-                             rstart,
-                             rend,
-                             ov.getRecurrenceId(),
-                             dl);
+          /*iresp = */indexEvent(oei,
+                                 ItemKind.override,
+                                 rstart,
+                                 rend,
+                                 ov.getRecurrenceId(),
+                                 dl);
 
           instanceCt--;
         }
@@ -1318,34 +1299,36 @@ public class BwIndexEsImpl implements BwIndexer {
 
       /* Emit all instances that aren't overridden. */
 
-      for (Period p: rp.instances) {
+      for (final Period p: rp.instances) {
         String dtval = p.getStart().toString();
         if (dateOnly) {
           dtval = dtval.substring(0, 8);
         }
 
-        BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+        final BwDateTime rstart =
+                BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
         if (overrides.get(rstart.getDate()) != null) {
           // Overrides indexed separately - skip this instance.
           continue;
         }
 
-        String recurrenceId = rstart.getDate();
+        final String recurrenceId = rstart.getDate();
 
         dtval = p.getEnd().toString();
         if (dateOnly) {
           dtval = dtval.substring(0, 8);
         }
 
-        BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+        final BwDateTime rend =
+                BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
-        iresp = indexEvent(ei,
-                           ItemKind.entity,
-                           rstart,
-                           rend,
-                           recurrenceId,
-                           dl);
+        /*iresp = */indexEvent(ei,
+                               ItemKind.entity,
+                               rstart,
+                               rend,
+                               recurrenceId,
+                               dl);
 
         instanceCt--;
         if (instanceCt == 0) {
@@ -1358,10 +1341,12 @@ public class BwIndexEsImpl implements BwIndexer {
        * period.
        */
 
-      BwDateTime start = BwDateTime.makeBwDateTime(dateOnly,
-                                                   dl.minStart, stzid);
-      BwDateTime end = BwDateTime.makeBwDateTime(dateOnly,
-                                                 dl.maxEnd, stzid);
+      final BwDateTime start =
+              BwDateTime.makeBwDateTime(dateOnly,
+                                        dl.minStart, stzid);
+      final BwDateTime end =
+              BwDateTime.makeBwDateTime(dateOnly,
+                                        dl.maxEnd, stzid);
       iresp = indexEvent(ei,
                          ItemKind.master,
                          start,
@@ -1370,20 +1355,21 @@ public class BwIndexEsImpl implements BwIndexer {
                          null);
 
       return iresp;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   private boolean deleteEvent(final EventInfo ei) throws CalFacadeException {
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
 
-    DeleteByQueryRequestBuilder delQreq = getClient().prepareDeleteByQuery(
-            targetIndex).setTypes(docTypeEvent);
+    final DeleteByQueryRequestBuilder delQreq =
+            getClient().prepareDeleteByQuery(targetIndex).
+                    setTypes(docTypeEvent);
 
-    ESQueryFilter esq= getFilters(null);
+    final ESQueryFilter esq= getFilters(null);
 
     /*
     FilterBuilder fb = esq.addTerm(null, PropertyInfoIndex.COLLECTION,
@@ -1391,17 +1377,17 @@ public class BwIndexEsImpl implements BwIndexer {
     fb = esq.addTerm(fb, PropertyInfoIndex.UID, ev.getUid());
     */
 
-    FilterBuilder fb = esq.addTerm(PropertyInfoIndex.HREF,
-                                   ev.getHref());
+    final FilterBuilder fb = esq.addTerm(PropertyInfoIndex.HREF,
+                                         ev.getHref());
 
     delQreq.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(),
                                                  fb));
-    DeleteByQueryResponse delResp = delQreq.execute()
+    final DeleteByQueryResponse delResp = delQreq.execute()
             .actionGet();
 
     boolean ok = true;
 
-    for (IndexDeleteByQueryResponse idqr: delResp.getIndices().values()) {
+    for (final IndexDeleteByQueryResponse idqr: delResp.getIndices().values()) {
       if (idqr.getFailedShards() > 0) {
         warn("Failing shards for recurrence delete uid: " + ev.getUid() +
                      " colPath: " + ev.getColPath() +
@@ -1420,15 +1406,15 @@ public class BwIndexEsImpl implements BwIndexer {
                                    final BwDateTime end,
                                    final String recurid,
                                    final DateLimits dl) throws CalFacadeException {
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
 
     try {
-      DocBuilder db = getDocBuilder();
-      DocInfo di = db.makeDoc(ei,
-                              kind,
-                              start,
-                              end,
-                              recurid);
+      final DocBuilder db = getDocBuilder();
+      final DocInfo di = db.makeDoc(ei,
+                                    kind,
+                                    start,
+                                    end,
+                                    recurid);
 
       if (dl != null) {
         dl.checkMin(start);
@@ -1436,23 +1422,23 @@ public class BwIndexEsImpl implements BwIndexer {
       }
 
       return indexDoc(di);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (VersionConflictEngineException vcee) {
+    } catch (final VersionConflictEngineException vcee) {
       if (vcee.getCurrentVersion() == vcee.getProvidedVersion()) {
         warn("Failed index with equal version for kind " + kind +
                      " and href " + ev.getHref());
       }
 
       return null;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   private IndexResponse indexDoc(final DocInfo di) throws Throwable {
-    batchCurSize++;
-    IndexRequestBuilder req = getClient().
+    //batchCurSize++;
+    final IndexRequestBuilder req = getClient().
             prepareIndex(targetIndex, di.type, di.id);
 
     req.setSource(di.source);
@@ -1478,7 +1464,7 @@ public class BwIndexEsImpl implements BwIndexer {
       if (idxpars.getEmbeddedIndexer()) {
         /* Start up a node and get a client from it.
          */
-        ImmutableSettings.Builder settings =
+        final ImmutableSettings.Builder settings =
                 ImmutableSettings.settingsBuilder();
 
         if (idxpars.getNodeName() != null) {
@@ -1497,14 +1483,14 @@ public class BwIndexEsImpl implements BwIndexer {
           warn("*************************************************************");
         }
         settings.put("http.enabled", idxpars.getHttpEnabled());
-        NodeBuilder nbld = NodeBuilder.nodeBuilder()
+        final NodeBuilder nbld = NodeBuilder.nodeBuilder()
                 .settings(settings);
 
         if (idxpars.getClusterName() != null) {
           nbld.clusterName(idxpars.getClusterName());
         }
 
-        theNode = nbld.data(true).local(true).node();
+        final Node theNode = nbld.data(true).local(true).node();
 
         theClient = theNode.client();
       } else {
@@ -1523,9 +1509,10 @@ public class BwIndexEsImpl implements BwIndexer {
       int yellowTries = 0;
 
       for (;;) {
-        ClusterHealthRequestBuilder chrb = theClient.admin().cluster().prepareHealth();
+        final ClusterHealthRequestBuilder chrb =
+                theClient.admin().cluster().prepareHealth();
 
-        ClusterHealthResponse chr = chrb.execute().actionGet();
+        final ClusterHealthResponse chr = chrb.execute().actionGet();
 
         if (chr.getStatus() == ClusterHealthStatus.GREEN) {
           break;
@@ -1551,7 +1538,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
         try {
           Thread.sleep(1000);
-        } catch(InterruptedException ex) {
+        } catch(final InterruptedException ex) {
           throw new CalFacadeException("Interrupted out of getClient");
         }
       }
@@ -1581,9 +1568,9 @@ public class BwIndexEsImpl implements BwIndexer {
 
   private String newIndexSuffix() {
     // ES only allows lower case letters in names (and digits)
-    StringBuilder suffix = new StringBuilder("p");
+    final StringBuilder suffix = new StringBuilder("p");
 
-    char[] ch = DateTimeUtil.isoDateTime().toCharArray();
+    final char[] ch = DateTimeUtil.isoDateTime().toCharArray();
 
     for (int i = 0; i < 8; i++) {
       suffix.append(ch[i]);
