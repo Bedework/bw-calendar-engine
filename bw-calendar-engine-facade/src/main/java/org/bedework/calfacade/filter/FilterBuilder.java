@@ -139,7 +139,7 @@ public class FilterBuilder {
     if (col == null) {
       try {
         col = parser.getCollection(path);
-      } catch (CalFacadeAccessException cae) {
+      } catch (final CalFacadeAccessException cae) {
       }
 
       if (col == null) {
@@ -151,12 +151,12 @@ public class FilterBuilder {
       colCache.put(path, col);
     }
 
-    ArrayList<String> pathElements = new ArrayList<>();
+    final ArrayList<String> pathElements = new ArrayList<>();
     pathElements.add(path);
-    CalFilter calFilter = makeColFilter(col,
-                                        applyFilter,
-                                        explicitSelection,
-                                        pathElements);
+    final CalFilter calFilter = makeColFilter(col,
+                                              applyFilter,
+                                              explicitSelection,
+                                              pathElements);
 
     if (calFilter == null) {
       // No valid matches
@@ -169,7 +169,7 @@ public class FilterBuilder {
      * Re-express this as BwFilters
      */
 
-    FilterBase f = makeBwFilter(calFilter);
+    final FilterBase f = makeBwFilter(calFilter);
 
     if (debug) {
       dmsg(" ---------  FilterBuilder result ---------------");

@@ -54,7 +54,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
   }
 
   /**
-   * @param val
+   * @param val the main address
    */
   public void setAddress(final BwString val) {
     address = val;
@@ -70,7 +70,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
   }
 
   /**
-   * @param val
+   * @param val the sub-address
    */
   @IcalProperty(pindex = PropertyInfoIndex.SUBADDRESS)
   public void setSubaddress(final BwString val) {
@@ -143,7 +143,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
   }
 
   @Override
-  public void setHref(String val) {
+  public void setHref(final String val) {
     href = val;
   }
 
@@ -258,7 +258,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 
@@ -272,7 +272,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
 
   @Override
   public Object clone() {
-    BwLocation loc = new BwLocation();
+    final BwLocation loc = new BwLocation();
 
     super.copyTo(loc);
     if (getAddress() != null) {

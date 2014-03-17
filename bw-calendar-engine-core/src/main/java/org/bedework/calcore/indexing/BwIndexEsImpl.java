@@ -336,6 +336,7 @@ public class BwIndexEsImpl implements BwIndexer {
   public SearchResult search(final String query,
                              final FilterBase filter,
                              final List<SortTerm> sort,
+                             final FilterBase defaultFilterContext,
                              final String start,
                              final String end,
                              final int pageSize,
@@ -373,7 +374,7 @@ public class BwIndexEsImpl implements BwIndexer {
                                           start,
                                           end);
 
-    res.curFilter = ef.addLimits(res.curFilter);
+    res.curFilter = ef.addLimits(res.curFilter, defaultFilterContext);
 
     res.requiresSecondaryFetch = ef.requiresSecondaryFetch();
     //res.canPage = ef.canPage();

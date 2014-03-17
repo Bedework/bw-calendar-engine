@@ -105,9 +105,18 @@ public interface BwIndexer extends Serializable {
    * be a simple sequence of keywords or some sort of query the syntax of
    * which is determined by the underlying implementation.
    *
+   * <p>defaultFilterContext is a temporary fix until the client is
+   * fully upgraded. This is applied as the context for the search if
+   * present and no other context is provided. For example, in the user
+   * client the default context includes all the user calendars,
+   * not the inbox. If no path is selected we apply the default. If a
+   * path IS selected we do not apply the default. This allows, for
+   * instance, selection of the inbox.</p>
+   *
    * @param query        Query string
    * @param filter       parsed filter
    * @param sort  list of fields to sort by - may be null
+   * @param defaultFilterContext  - see above
    * @param start - if non-null limit to this and after
    * @param end - if non-null limit to before this
    * @param pageSize - stored in the search result for future calls.
@@ -119,6 +128,7 @@ public interface BwIndexer extends Serializable {
   SearchResult search(String query,
                       FilterBase filter,
                       List<SortTerm> sort,
+                      FilterBase defaultFilterContext,
                       String start,
                       String end,
                       int pageSize,

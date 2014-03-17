@@ -647,7 +647,8 @@ public abstract class SimpleFilterParser {
 
       if ((tkn != '"') && (tkn != '\'')) {
         throw new CalFacadeException(CalFacadeException.filterBadList,
-                                     String.valueOf(tkn));
+                                     "Expected quoted string: found" +
+                                             String.valueOf(tkn));
       }
 
       res.add(tokenizer.sval);
@@ -926,7 +927,7 @@ public abstract class SimpleFilterParser {
 
   private FilterBase viewFilter(final String val) throws CalFacadeException {
     try {
-      BwView view = getView(val);
+      final BwView view = getView(val);
 
       if (view == null) {
         throw new CalFacadeException(CalFacadeException.filterUnknownView,
@@ -939,10 +940,8 @@ public abstract class SimpleFilterParser {
         return filter;
       }
 
-      ArrayList<String> vpaths = doWordList();
-
-      for (String vpath: vpaths) {
-        FilterBase vpf = resolveVpath(vpath);
+      for (final String vpath: view.getCollectionPaths()) {
+        final FilterBase vpf = resolveVpath(vpath);
 
         if (vpf == null) {
           continue;
@@ -951,7 +950,7 @@ public abstract class SimpleFilterParser {
         filter = and(filter, vpf);
       }
 
-      BwViewFilter vf = new BwViewFilter(null);
+      final BwViewFilter vf = new BwViewFilter(null);
 
       vf.setEntity(view);
       vf.setFilter(filter);
@@ -959,7 +958,7 @@ public abstract class SimpleFilterParser {
       view.setFilter(filter);
 
       return vf;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -1038,7 +1037,7 @@ public abstract class SimpleFilterParser {
      * folder or calendar collection.
      */
 
-    Collection<BwCalendar> cols = decomposeVirtualPath(vpath);
+    final Collection<BwCalendar> cols = decomposeVirtualPath(vpath);
 
     if (cols == null) {
       // Bad vpath
@@ -1048,7 +1047,7 @@ public abstract class SimpleFilterParser {
     FilterBase vfilter = null;
     BwCalendar vpathTarget = null;
 
-    for (BwCalendar col: cols) {
+    for (final BwCalendar col: cols) {
       if (debug) {
         debugMsg("      vpath collection:" + col.getPath());
       }
@@ -1058,7 +1057,7 @@ public abstract class SimpleFilterParser {
           subParser = getParser();
         }
 
-        ParseResult pr = subParser.parse(col.getFilterExpr(), false);
+        final ParseResult pr = subParser.parse(col.getFilterExpr(), false);
         if (pr.cfe != null) {
           throw pr.cfe;
         }

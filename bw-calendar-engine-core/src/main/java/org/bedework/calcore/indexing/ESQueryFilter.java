@@ -174,13 +174,18 @@ public class ESQueryFilter implements CalintfDefs {
     return fb;
   }
 
-  public FilterBuilder addLimits(final FilterBuilder f) throws CalFacadeException {
+  public FilterBuilder addLimits(final FilterBuilder f,
+                                 final FilterBase defaultFilterContext) throws CalFacadeException {
     FilterBuilder fb = f;
 
     if (!queryLimited) {
-      fb = principalFilter(fb);
+      if (defaultFilterContext != null) {
+        fb = and(buildFilter(defaultFilterContext), fb);
+      }
 
-      // TODO - add the default view here
+      if (!queryLimited) {
+        fb = principalFilter(fb);
+      }
     }
 
     /* If the search is for expanded events we want instances or
