@@ -947,7 +947,7 @@ public abstract class SimpleFilterParser {
           continue;
         }
 
-        filter = and(filter, vpf);
+        filter = or(filter, vpf);
       }
 
       final BwViewFilter vf = new BwViewFilter(null);
@@ -963,17 +963,36 @@ public abstract class SimpleFilterParser {
     }
   }
 
-  private FilterBase and(FilterBase af, FilterBase f) {
+  private FilterBase or(final FilterBase of,
+                        final FilterBase f) {
+    if (of == null) {
+      return f;
+    }
+
+    if (of instanceof OrFilter) {
+      of.addChild(f);
+      return of;
+    }
+
+    final OrFilter nof = new OrFilter();
+    nof.addChild(of);
+    nof.addChild(f);
+
+    return nof;
+  }
+
+  private FilterBase and(final FilterBase af,
+                         final FilterBase f) {
     if (af == null) {
       return f;
     }
 
     if (af instanceof AndFilter) {
-      ((AndFilter)af).addChild(f);
+      af.addChild(f);
       return af;
     }
 
-    AndFilter naf = new AndFilter();
+    final AndFilter naf = new AndFilter();
     naf.addChild(af);
     naf.addChild(f);
 
