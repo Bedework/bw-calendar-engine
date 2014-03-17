@@ -805,7 +805,7 @@ public abstract class SimpleFilterParser {
       ArrayList<String> paths = doWordList();
 
       for (String path: paths) {
-        FilterBase pf = resolveColPath(path, true, explicitSelection);
+        FilterBase pf = resolveColPath(path, true, true);
 
         if (pf == null) {
           continue;
