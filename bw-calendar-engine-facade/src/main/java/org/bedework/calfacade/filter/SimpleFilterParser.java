@@ -23,6 +23,7 @@ import org.bedework.caldav.util.filter.AndFilter;
 import org.bedework.caldav.util.filter.EntityTypeFilter;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.caldav.util.filter.ObjectFilter;
+import org.bedework.caldav.util.filter.OrFilter;
 import org.bedework.caldav.util.filter.PresenceFilter;
 import org.bedework.caldav.util.filter.parse.Filters;
 import org.bedework.calfacade.BwCalendar;
