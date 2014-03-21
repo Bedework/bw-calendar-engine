@@ -1008,18 +1008,26 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     if (supportedComponents == null) {
       supportedComponents = new ArrayList<>();
 
-      if ((getCalType() != calTypeCalendarCollection) &&
-          (getCalType() != calTypeInbox) &&
-          (getCalType() != calTypeOutbox)) {
+      final int ctype = getCalType();
+
+      if (ctype == calTypePoll) {
+        supportedComponents.add("VPOLL");
         return supportedComponents;
       }
 
-      String slist = getQproperty(CaldavTags.supportedCalendarComponentSet);
+      if ((ctype != calTypeCalendarCollection) &&
+          (ctype != calTypeInbox) &&
+          (ctype != calTypeOutbox)) {
+        return supportedComponents;
+      }
+
+      final String slist = getQproperty(CaldavTags.supportedCalendarComponentSet);
 
       if (slist == null) {
         supportedComponents.add("VEVENT");
         supportedComponents.add("VTODO");
         supportedComponents.add("VAVAILABILITY");
+        supportedComponents.add("VPOLL");
       } else {
         String[] ss = slist.split(",");
         for (String s: ss) {
