@@ -48,7 +48,7 @@ public class JmsConnectionHandler implements JmsDefs {
 
   private static volatile Properties pr;
 
-  private static volatile Object lockit = new Object();
+  private static final Object lockit = new Object();
 
   private transient Logger log;
 
@@ -59,8 +59,6 @@ public class JmsConnectionHandler implements JmsDefs {
   private Queue ourQueue;
 
   private Session session;
-
-  private MessageProducer sender;
 
   private MessageConsumer consumer;
 
@@ -73,15 +71,15 @@ public class JmsConnectionHandler implements JmsDefs {
   /** Open a connection to the named queue ready to create a producer or
    * consumer.
    *
-   * @param queueName
+   * @param queueName the queue
    * @throws NotificationException
    */
   public void open(final String queueName) throws NotificationException {
     try {
-      ConnectionFactory connFactory;
+      final ConnectionFactory connFactory;
 
-      Properties pr = getPr();
-      Context ctx = new InitialContext(pr);
+      final Properties pr = getPr();
+      final Context ctx = new InitialContext(pr);
       /*
       try {
         Context jcectx = (Context)ctx.lookup("java:comp/env/");
@@ -98,11 +96,12 @@ public class JmsConnectionHandler implements JmsDefs {
       try {
         connFactory = (ConnectionFactory)ctx.lookup(
                     pr.getProperty("org.bedework.connection.factory.name"));
+
 //        connFactory = (ConnectionFactory)ctx.lookup(connFactoryName);
 
         connection = connFactory.createConnection();
 
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         if (debug) {
           error(t);
         }
@@ -119,20 +118,20 @@ public class JmsConnectionHandler implements JmsDefs {
         try {
           ourQueue =  (Queue)new InitialContext().lookup(pr.getProperty("org.bedework.jms.queue.prefix") +
                                       queueName);
-        } catch (NamingException ne) {
+        } catch (final NamingException ne) {
           // Try again with our own properties
           ourQueue =  (Queue)ctx.lookup(pr.getProperty("org.bedework.jms.queue.prefix") +
                                             queueName);
         }
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         if (debug) {
           error(t);
         }
         throw new NotificationException(t);
       }
-    } catch (NotificationException ne) {
+    } catch (final NotificationException ne) {
       throw ne;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug) {
         error(t);
       }
@@ -166,12 +165,12 @@ public class JmsConnectionHandler implements JmsDefs {
    */
   public MessageProducer getProducer() throws NotificationException {
     try {
-      sender = session.createProducer(ourQueue);
+      final MessageProducer sender = session.createProducer(ourQueue);
 
       connection.start();
 
       return sender;
-    } catch (JMSException je) {
+    } catch (final JMSException je) {
       throw new NotificationException(je);
     }
   }
@@ -187,7 +186,7 @@ public class JmsConnectionHandler implements JmsDefs {
       connection.start();
 
       return consumer;
-    } catch (JMSException je) {
+    } catch (final JMSException je) {
       throw new NotificationException(je);
     }
   }
@@ -252,9 +251,9 @@ public class JmsConnectionHandler implements JmsDefs {
       try {
         try {
           // The jboss?? way - should work for others as well.
-          ClassLoader cl = Thread.currentThread().getContextClassLoader();
+          final ClassLoader cl = Thread.currentThread().getContextClassLoader();
           is = cl.getResourceAsStream(propertiesFile);
-        } catch (Throwable clt) {}
+        } catch (final Throwable ignored) {}
 
         if (is == null) {
           // Try another way
@@ -269,16 +268,16 @@ public class JmsConnectionHandler implements JmsDefs {
         pr.load(is);
 
         return pr;
-      } catch (NotificationException cee) {
+      } catch (final NotificationException cee) {
         throw cee;
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         Logger.getLogger(JmsConnectionHandler.class).error("getEnv error", t);
         throw new NotificationException(t.getMessage());
       } finally {
         if (is != null) {
           try {
             is.close();
-          } catch (Throwable t1) {}
+          } catch (final Throwable ignored) {}
         }
       }
     }
