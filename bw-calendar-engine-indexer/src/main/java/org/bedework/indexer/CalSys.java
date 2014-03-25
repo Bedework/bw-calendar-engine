@@ -184,9 +184,8 @@ public abstract class CalSys {
       curAccount = account;
       curPublicAdmin = publicAdmin;
 
-      CalSvcIPars pars = CalSvcIPars.getServicePars(account,
-                                                    publicAdmin,
-                                                    true);   // Allow super user
+      CalSvcIPars pars = CalSvcIPars.getIndexerPars(account,
+                                                    publicAdmin);   // Allow super user
       svci = new CalSvcFactoryDefault().getSvc(pars);
     }
 
@@ -201,9 +200,8 @@ public abstract class CalSys {
    * @throws CalFacadeException
    */
   public CalSvcI getAdminSvci() throws CalFacadeException {
-    CalSvcIPars pars = CalSvcIPars.getServicePars(adminAccount,
-                                                  true,   // publicAdmin,
-                                                  true);   // Allow super user
+    CalSvcIPars pars = CalSvcIPars.getIndexerPars(adminAccount,
+                                                  true);   // publicAdmin,
     CalSvcI svci = new CalSvcFactoryDefault().getSvc(pars);
 
     svci.open();

@@ -135,8 +135,6 @@ import java.util.TreeSet;
  * @author Mike Douglass   douglm rpi.edu
  */
 public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
-  private static CoreConfigurations configs = CoreConfigurations.getConfigs();
-
   private static BwStats stats = new BwStats();
 
   private static CalintfInfo info = new CalintfInfo(
@@ -397,13 +395,15 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   @Override
   public synchronized void open(final boolean webMode,
-                                final boolean forRestore) throws CalFacadeException {
+                                final boolean forRestore,
+                                final boolean indexRebuild) throws CalFacadeException {
     if (isOpen) {
       throw new CalFacadeException("Already open");
     }
 
     isOpen = true;
     this.forRestore = forRestore;
+    this.indexRebuild = indexRebuild;
 
     if ((sess != null) && !webMode) {
       warn("Session is not null. Will close");
@@ -518,12 +518,16 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       }
 
       if (calendars != null) {
-        ((CalintfHelperHib)calendars).endTransaction();
+        calendars.endTransaction();
       }
-    } catch (CalFacadeException cfe) {
+
+      if (!indexRebuild) {
+        getIndexer(getPrincipal()).markTransaction();
+      }
+    } catch (final CalFacadeException cfe) {
       sess.rollback();
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       sess.rollback();
       throw new CalFacadeException(t);
 //    } finally {
@@ -1882,7 +1886,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
        * application resource hibernate.cfg.xml together with some run time values
        */
       try {
-        DbConfig dbConf = configs.getDbConfig();
+        DbConfig dbConf = CoreConfigurations.getConfigs().getDbConfig();
         Configuration conf = new Configuration();
 
         StringBuilder sb = new StringBuilder();

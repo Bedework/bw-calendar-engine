@@ -496,7 +496,8 @@ public class CalSvc extends CalSvcI {
 
     open = true;
     getCal().open(pars.getWebMode(),
-                  pars.getForRestore());
+                  pars.getForRestore(),
+                  pars.getIndexRebuild());
 
     for (CalSvcDb handler: handlers) {
       handler.open();
@@ -1154,30 +1155,32 @@ public class CalSvc extends CalSvcI {
       return cali;
     }
 
-    long start = System.currentTimeMillis();
+    final long start = System.currentTimeMillis();
 
     try {
-      long beforeGetIntf = System.currentTimeMillis() - start;
+      final long beforeGetIntf = System.currentTimeMillis() - start;
 
       cali = CalintfFactory.getIntf(CalintfFactory.hibernateClass);
+
+      final long afterGetIntf = System.currentTimeMillis() - start;
+
+      cali.open(pars.getWebMode(),
+                pars.getForRestore(),
+                pars.getIndexRebuild()); // Just for the user interactions
 
       postNotification(SysEvent.makeTimedEvent("Login: about to obtain calintf",
                                                beforeGetIntf));
       postNotification(SysEvent.makeTimedEvent("Login: calintf obtained",
-                                               System.currentTimeMillis() - start));
-
-      cali.open(pars.getWebMode(),
-                pars.getForRestore()); // Just for the user interactions
-
+                                               afterGetIntf));
       postNotification(
-                       SysEvent.makeTimedEvent("Login: intf opened",
-                                               System.currentTimeMillis() - start));
+              SysEvent.makeTimedEvent("Login: intf opened",
+                                      System.currentTimeMillis() - start));
 
       cali.beginTransaction();
 
       postNotification(
-                       SysEvent.makeTimedEvent("Login: transaction started",
-                                               System.currentTimeMillis() - start));
+              SysEvent.makeTimedEvent("Login: transaction started",
+                                      System.currentTimeMillis() - start));
 
       String runAsUser = pars.getUser();
 
@@ -1241,7 +1244,7 @@ public class CalSvc extends CalSvcI {
         }
 
         BwPrincipal currentPrincipal;
-        BwPrincipal authPrincipal;
+        final BwPrincipal authPrincipal;
         PrivilegeSet maxAllowedPrivs = null;
 
         if (pars.getForRestore()) {

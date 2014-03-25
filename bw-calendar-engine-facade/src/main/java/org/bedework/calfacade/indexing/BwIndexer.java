@@ -42,11 +42,13 @@ import java.util.TreeSet;
 public interface BwIndexer extends Serializable {
   // Types of entity we index
   static final String docTypeUnknown = "unknown";
+  static final String docTypeUpdateTracker = "updateTracker";
   static final String docTypeCollection = "collection";
   static final String docTypeCategory = "category";
   static final String docTypeLocation = "location";
   static final String docTypeContact = "contact";
   static final String docTypeEvent = "event";
+  static final String docTypePoll = "poll";
 
   /* Following used for the id */
   static final String[] masterDocTypes = {
@@ -83,15 +85,17 @@ public interface BwIndexer extends Serializable {
           "overrideAvailable",
   };
 
+  static final String updateTrackerId = "updateTracker";
+
   /* Other types are those defined in IcalDefs.entityTypeNames */
 
   interface AccessChecker extends Serializable {
     /** Check the access for the given entity. Returns the current access
      * or null or optionally throws a no access exception.
      *
-     * @param ent
-     * @param desiredAccess
-     * @param returnResult
+     * @param ent to check
+     * @param desiredAccess access we want
+     * @param returnResult true for a result even if access denied
      * @return CurrentAccess
      * @throws CalFacadeException if returnResult false and no access
      */
@@ -100,6 +104,19 @@ public interface BwIndexer extends Serializable {
                                   boolean returnResult)
             throws CalFacadeException;
   }
+
+  /** Flag the end of a transaction - updates the updateTracker if any
+   * changes were made to the index.
+   *
+   * @throws CalFacadeException
+   */
+  void markTransaction() throws CalFacadeException;
+
+  /**
+   * @return a token based on the update tracker value.
+   * @throws CalFacadeException
+   */
+  String currentChangeToken() throws CalFacadeException;
 
   /** Called to find entries that match the search string. This string may
    * be a simple sequence of keywords or some sort of query the syntax of
@@ -158,7 +175,7 @@ public interface BwIndexer extends Serializable {
    *
    * @param  sres     result of previous search
    * @param offset from first record
-   * @param num
+   * @param num number of entries
    * @param desiredAccess  to the entities
    * @return list of results - possibly empty - never null.
    * @throws CalFacadeException

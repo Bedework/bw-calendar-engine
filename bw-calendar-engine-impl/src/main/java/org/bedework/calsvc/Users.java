@@ -225,6 +225,12 @@ class Users extends CalSvcDb implements UsersI {
     getCal().getSpecialCalendar(user, BwCalendar.calTypeNotifications,
                                 true, PrivilegeDefs.privAny);
 
+    getCal().getSpecialCalendar(user, BwCalendar.calTypePoll,
+                                true, PrivilegeDefs.privAny);
+
+    getCal().getSpecialCalendar(user, BwCalendar.calTypeTasks,
+                                true, PrivilegeDefs.privAny);
+
     try {
       getSvc().postNotification(SysEvent.makePrincipalEvent(SysEvent.SysCode.NEW_USER,
                                                             user, 0));
@@ -303,7 +309,7 @@ class Users extends CalSvcDb implements UsersI {
 
   private void initPrincipal(final BwPrincipal principal,
                              final CalSvc svc) throws CalFacadeException {
-    // Add preferences
+    // Add preferencesgetUser
     BwPreferences prefs = new BwPreferences();
 
     prefs.setOwnerHref(principal.getPrincipalRef());

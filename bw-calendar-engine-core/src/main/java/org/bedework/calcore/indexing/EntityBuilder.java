@@ -18,6 +18,7 @@
 */
 package org.bedework.calcore.indexing;
 
+import org.bedework.calcore.indexing.DocBuilder.UpdateInfo;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
@@ -50,6 +51,7 @@ import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.property.RequestStatus;
 import org.apache.log4j.Logger;
+import org.elasticsearch.index.get.GetField;
 
 import java.math.BigDecimal;
 import java.util.ArrayDeque;
@@ -76,19 +78,31 @@ public class EntityBuilder  {
 
   /** Constructor - 1 use per entity
    *
+   * @param fields
+   * @throws CalFacadeException
    */
-  EntityBuilder(final Map<String, Object> fields) {
+  EntityBuilder(final Map<String, ? extends Object> fields) throws CalFacadeException {
     debug = getLog().isDebugEnabled();
 
-    fieldStack.push(fields);
+    pushFields(fields);
   }
 
   /* ========================================================================
    *                   package private methods
    * ======================================================================== */
 
+  UpdateInfo makeUpdateInfo() throws CalFacadeException {
+    Long l = getLong("count");
+    if (l == null) {
+      l = 0l;
+    }
+
+    return new UpdateInfo(String.valueOf(getFirstValue("_timestamp")),
+                          l);
+  }
+
   BwCategory makeCat() throws CalFacadeException {
-    BwCategory cat = new BwCategory();
+    final BwCategory cat = new BwCategory();
 
     restoreSharedEntity(cat);
 
@@ -104,7 +118,7 @@ public class EntityBuilder  {
   }
 
   BwContact makeContact() throws CalFacadeException {
-    BwContact ent = new BwContact();
+    final BwContact ent = new BwContact();
 
     restoreSharedEntity(ent);
 
@@ -120,7 +134,7 @@ public class EntityBuilder  {
   }
 
   BwLocation makeLocation() throws CalFacadeException {
-    BwLocation ent = new BwLocation();
+    final BwLocation ent = new BwLocation();
 
     restoreSharedEntity(ent);
 
@@ -271,11 +285,11 @@ public class EntityBuilder  {
    *                   private methods
    * ======================================================================== */
 
-  private boolean pushFields(PropertyInfoIndex pi) throws CalFacadeException {
+  private boolean pushFields(final PropertyInfoIndex pi) throws CalFacadeException {
     return pushFields(getFirstValue(pi));
   }
 
-  private boolean pushFields(Object objFlds) throws CalFacadeException {
+  private boolean pushFields(final Object objFlds) throws CalFacadeException {
     if (objFlds == null) {
       return false;
     }
@@ -290,20 +304,24 @@ public class EntityBuilder  {
     return true;
   }
 
+  private void popFields() {
+    fieldStack.pop();
+  }
+
   private BwGeo restoreGeo() throws CalFacadeException {
     if (!pushFields(PropertyInfoIndex.GEO)) {
       return null;
     }
 
     try {
-      BwGeo geo = new BwGeo();
+      final BwGeo geo = new BwGeo();
 
       geo.setLatitude(BigDecimal.valueOf(getLong("lat")));
       geo.setLongitude(BigDecimal.valueOf(getLong("lon")));
 
       return geo;
     } finally {
-      fieldStack.pop();
+      popFields();
     }
   }
 
@@ -313,7 +331,7 @@ public class EntityBuilder  {
     }
 
     try {
-      BwOrganizer org = new BwOrganizer();
+      final BwOrganizer org = new BwOrganizer();
 
       if (pushFields(PropertyInfoIndex.PARAMETERS)) {
         try {
@@ -323,7 +341,7 @@ public class EntityBuilder  {
           org.setLanguage(getString(ParameterInfoIndex.LANGUAGE));
           org.setSentBy(getString(ParameterInfoIndex.SENT_BY));
         } finally {
-          fieldStack.pop();
+          popFields();
         }
       }
 
@@ -331,24 +349,24 @@ public class EntityBuilder  {
 
       return org;
     } finally {
-      fieldStack.pop();
+      popFields();
     }
   }
 
   private Set<BwAttendee> restoreAttendees() throws CalFacadeException {
-    List<Object> vals = getFieldValues(PropertyInfoIndex.ATTENDEE);
+    final List<Object> vals = getFieldValues(PropertyInfoIndex.ATTENDEE);
 
     if (Util.isEmpty(vals)) {
       return null;
     }
 
-    Set<BwAttendee> atts = new TreeSet<>();
+    final Set<BwAttendee> atts = new TreeSet<>();
 
-    for (Object o: vals) {
+    for (final Object o: vals) {
       try {
         pushFields(o);
 
-        BwAttendee att = new BwAttendee();
+        final BwAttendee att = new BwAttendee();
 
         if (pushFields(PropertyInfoIndex.PARAMETERS)) {
           try {
@@ -365,7 +383,7 @@ public class EntityBuilder  {
             att.setRole(getString(ParameterInfoIndex.ROLE));
             att.setSentBy(getString(ParameterInfoIndex.SENT_BY));
           } finally {
-            fieldStack.pop();
+            popFields();
           }
         }
 
@@ -373,7 +391,7 @@ public class EntityBuilder  {
 
         atts.add(att);
       } finally {
-        fieldStack.pop();
+        popFields();
       }
     }
 
@@ -386,39 +404,39 @@ public class EntityBuilder  {
     }
 
     try {
-      BwRelatedTo rt = new BwRelatedTo();
+      final BwRelatedTo rt = new BwRelatedTo();
 
       rt.setRelType(getString(ParameterInfoIndex.RELTYPE));
       rt.setValue(getString(PropertyInfoIndex.VALUE));
 
       return rt;
     } finally {
-      fieldStack.pop();
+      popFields();
     }
   }
 
   private List<BwXproperty> restoreXprops() throws CalFacadeException {
     /* Convert our special fields back to xprops */
-    Set<String> xpnames = DocBuilder.interestingXprops.keySet();
+    final Set<String> xpnames = DocBuilder.interestingXprops.keySet();
 
-    List<BwXproperty> xprops = new ArrayList<>();
+    final List<BwXproperty> xprops = new ArrayList<>();
 
     if (!Util.isEmpty(xpnames)) {
-      for (String xpname: xpnames) {
+      for (final String xpname: xpnames) {
         @SuppressWarnings("unchecked")
-        Collection<String> xvals =
+        final Collection<String> xvals =
                 (Collection)getFieldValues(DocBuilder.interestingXprops.get(xpname));
 
         if (!Util.isEmpty(xvals)) {
-          for (String xval: xvals) {
-            int pos = xval.indexOf("\t");
+          for (final String xval: xvals) {
+            final int pos = xval.indexOf("\t");
             String pars = null;
 
             if (pos > 0) {
               pars = xval.substring(0, pos);
             }
 
-            BwXproperty xp = new BwXproperty(xpname, pars, xval.substring(pos + 1));
+            final BwXproperty xp = new BwXproperty(xpname, pars, xval.substring(pos + 1));
             xprops.add(xp);
           }
         }
@@ -445,7 +463,7 @@ public class EntityBuilder  {
 
         xprops.add(xp);
       } finally {
-        fieldStack.pop();
+        popFields();
       }
     }
 
@@ -453,19 +471,19 @@ public class EntityBuilder  {
   }
 
   private Set<BwContact> restoreContacts() throws CalFacadeException {
-    List<Object> cFlds = getFieldValues(PropertyInfoIndex.CONTACT);
+    final List<Object> cFlds = getFieldValues(PropertyInfoIndex.CONTACT);
 
     if (Util.isEmpty(cFlds)) {
       return null;
     }
 
-    Set<BwContact> cs = new TreeSet<>();
+    final Set<BwContact> cs = new TreeSet<>();
 
-    for (Object o: cFlds) {
+    for (final Object o: cFlds) {
       try {
         pushFields(o);
 
-        BwContact c = new BwContact();
+        final BwContact c = new BwContact();
 
         c.setCn((BwString)restoreBwString(PropertyInfoIndex.CN,
                                           false));
@@ -474,14 +492,14 @@ public class EntityBuilder  {
 
         cs.add(c);
       } finally {
-        fieldStack.pop();
+        popFields();
       }
     }
 
     return cs;
   }
 
-  private void restoreReqStat(BwEvent ev) throws CalFacadeException {
+  private void restoreReqStat(final BwEvent ev) throws CalFacadeException {
     Collection<String> vals =
             (Collection)getFieldValues(PropertyInfoIndex.REQUEST_STATUS);
     if (Util.isEmpty(vals)) {
@@ -504,7 +522,7 @@ public class EntityBuilder  {
     try {
       return restoreBwString(longString);
     } finally {
-      fieldStack.pop();
+      popFields();
     }
   }
 
@@ -512,21 +530,21 @@ public class EntityBuilder  {
           final PropertyInfoIndex pi,
           final boolean longStrings)
           throws CalFacadeException {
-    List<Object> vals = getFieldValues(pi);
+    final List<Object> vals = getFieldValues(pi);
 
     if (Util.isEmpty(vals)) {
       return null;
     }
 
-    Set<BwStringBase> ss = new TreeSet<>();
+    final Set<BwStringBase> ss = new TreeSet<>();
 
-    for (Object o: vals) {
+    for (final Object o: vals) {
       try {
         pushFields(o);
 
         ss.add(restoreBwString(longStrings));
       } finally {
-        fieldStack.pop();
+        popFields();
       }
     }
 
@@ -535,7 +553,7 @@ public class EntityBuilder  {
 
   private BwStringBase restoreBwString(final boolean longString)
           throws CalFacadeException {
-    BwStringBase sb;
+    final BwStringBase sb;
 
     if (longString) {
       sb = new BwLongString();
@@ -551,33 +569,33 @@ public class EntityBuilder  {
 
   private Set<BwDateTime> restoreBwDateTimeSet(final PropertyInfoIndex pi)
           throws CalFacadeException {
-    List<Object> vals = getFieldValues(pi);
+    final List<Object> vals = getFieldValues(pi);
 
     if (Util.isEmpty(vals)) {
       return null;
     }
 
-    Set<BwDateTime> tms = new TreeSet<>();
+    final Set<BwDateTime> tms = new TreeSet<>();
 
-    for (Object o: vals) {
+    for (final Object o: vals) {
       try {
         pushFields(o);
 
-        String date = getString(PropertyInfoIndex.LOCAL);
-        String utcDate = getString(PropertyInfoIndex.UTC);
-        String tzid = getString(PropertyInfoIndex.TZID);
-        boolean floating = getBoolean(PropertyInfoIndex.FLOATING);
-        boolean dateType = date.length() == 8;
+        final String date = getString(PropertyInfoIndex.LOCAL);
+        final String utcDate = getString(PropertyInfoIndex.UTC);
+        final String tzid = getString(PropertyInfoIndex.TZID);
+        final boolean floating = getBoolean(PropertyInfoIndex.FLOATING);
+        final boolean dateType = date.length() == 8;
 
-        BwDateTime tm = BwDateTime.makeBwDateTime(dateType,
-                                                  date,
-                                                  utcDate,
-                                                  tzid,
-                                                  floating);
+        final BwDateTime tm = BwDateTime.makeBwDateTime(dateType,
+                                                        date,
+                                                        utcDate,
+                                                        tzid,
+                                                        floating);
 
         tms.add(tm);
       } finally {
-        fieldStack.pop();
+        popFields();
       }
     }
 
@@ -659,7 +677,7 @@ public class EntityBuilder  {
 
         alarms.add(alarm);
       } finally {
-        fieldStack.pop();
+        popFields();
       }
     }
 
@@ -711,7 +729,7 @@ public class EntityBuilder  {
         String uid = getString(PropertyInfoIndex.UID);
         catUids.add(uid);
       } finally {
-        fieldStack.pop();
+        popFields();
       }
     }
 
@@ -722,8 +740,8 @@ public class EntityBuilder  {
     return getFieldValues(getJname(id));
   }
 
-  private List<Object> getFieldValues(final String name) {
-    Object val = fieldStack.peek().get(name);
+  private List getFieldValues(final String name) {
+    final Object val = fieldStack.peek().get(name);
 
     if (val == null) {
       return null;
@@ -733,7 +751,11 @@ public class EntityBuilder  {
       return (List)val;
     }
 
-    List<Object> vals = new ArrayList<>();
+    if (val instanceof GetField) {
+      return ((GetField)val).getValues();
+    }
+
+    final List<Object> vals = new ArrayList<>();
     vals.add(val);
 
     return vals;
@@ -774,18 +796,23 @@ public class EntityBuilder  {
     return ipie.getJname();
   }
 
-  private Object getFirstValue(String id) {
-    Object val = fieldStack.peek().get(id);
+  private Object getFirstValue(final String id) {
+    final Object val = fieldStack.peek().get(id);
 
     if (val == null) {
       return null;
     }
 
-    if (!(val instanceof List)) {
+    final List vals;
+
+    if (val instanceof GetField) {
+      vals = ((GetField)val).getValues();
+    } else if (val instanceof List) {
+      vals = (List)val;
+    } else {
       return val;
     }
 
-    List vals = (List)val;
     if (Util.isEmpty(vals)) {
       return null;
     }
@@ -860,11 +887,21 @@ public class EntityBuilder  {
   }
 
   private Long getLong(final String name) {
-    String s = (String)fieldStack.peek().get(name);
+    Object o = getFirstValue(name);
 
-    if (s == null) {
+    if (o == null) {
       return null;
     }
+
+    if (o instanceof Integer) {
+      return new Long((Integer)o);
+    }
+
+    if (o instanceof Long) {
+      return (Long)o;
+    }
+
+    String s = (String)o;
 
     return Long.valueOf(s);
   }
@@ -903,10 +940,10 @@ public class EntityBuilder  {
       tzid = getString(PropertyInfoIndex.TZID);
       floating = Boolean.parseBoolean(getString(PropertyInfoIndex.FLOATING));
     } finally {
-      fieldStack.pop();
+      popFields();
     }
 
-    boolean dateType = (local != null) && (local.length() == 8);
+    final boolean dateType = (local != null) && (local.length() == 8);
 
     return BwDateTime.makeBwDateTime(dateType, local, utc, tzid,
                                      floating);

@@ -141,10 +141,12 @@ public interface Calintf
    *
    * @param webMode  true for long-running multi request conversations.
    * @param forRestore true if this is for a system restore
+   * @param indexRebuild  true if we are rebuilding the index.
    * @throws CalFacadeException
    */
   void open(boolean webMode,
-            boolean forRestore) throws CalFacadeException;
+            boolean forRestore,
+            boolean indexRebuild) throws CalFacadeException;
 
   /** Call on the way out after handling a request..
    *

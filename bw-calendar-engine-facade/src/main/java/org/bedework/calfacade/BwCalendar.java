@@ -46,9 +46,13 @@ import net.fortuna.ical4j.model.property.LastModified;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -211,17 +215,17 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     public boolean shareable;
 
     /**
-     * @param collectionType
-     * @param special
-     * @param childrenAllowed
-     * @param indexable
-     * @param uniqueKey
-     * @param allowAnnotations
-     * @param allowFreeBusy
-     * @param canAlias
-     * @param onlyCalEntities
-     * @param scheduling
-     * @param shareable
+     * @param collectionType the type
+     * @param special true for special
+     * @param childrenAllowed true/false
+     * @param indexable true/false
+     * @param uniqueKey e.g. false for inbox
+     * @param allowAnnotations can we annotate the entities
+     * @param allowFreeBusy on this collection?
+     * @param canAlias can we symlink it
+     * @param onlyCalEntities one entities in this
+     * @param scheduling a scheduling collection?
+     * @param shareable is it shareable?
      */
     public CollectionInfo(final int collectionType,
                           final boolean special,
@@ -286,6 +290,25 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
          shareable 10 ---------------------------------------+
    */
 
+  /* Certain collections should be initialised so that they
+     restrict the entity types that can be added to them. The
+     following table provides that information.
+   */
+
+  public final static Map<Integer, List<String>> entityTypes;
+
+  static {
+    final Map<Integer, List<String>> et = new HashMap<>();
+
+    et.put(calTypeCalendarCollection,
+           Collections.unmodifiableList(Arrays.asList(new String[]{"VEVENT"})));
+    et.put(calTypePoll,
+           Collections.unmodifiableList(Arrays.asList(new String[]{"VPOLL"})));
+    et.put(calTypeTasks,
+           Collections.unmodifiableList(Arrays.asList(new String[]{"VTODO"})));
+
+    entityTypes = Collections.unmodifiableMap(et);
+  }
 
   /** UTC datetime */
   private String created;
@@ -353,7 +376,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
     /* Set the lastmod and created */
 
-    Date dt = new Date();
+    final Date dt = new Date();
     setLastmod(new BwCollectionLastmod(this, dt));
     setCreated(DateTimeUtil.isoDateTimeUTC(dt));
   }
@@ -979,7 +1002,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   /**
    * @param val the supported component names e.g. "VEVENT", "VTODO" etc.
    */
-  public void setSupportedComponents(List<String> val) {
+  public void setSupportedComponents(final List<String> val) {
     supportedComponents = val;
 
     if (Util.isEmpty(val)) {

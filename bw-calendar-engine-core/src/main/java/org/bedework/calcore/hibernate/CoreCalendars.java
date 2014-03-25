@@ -420,9 +420,9 @@ public class CoreCalendars extends CalintfHelperHib
 
   private GetSpecialCalendarResult getIfSpecial(final BwPrincipal owner,
                                                 final String path) throws CalFacadeException {
-    String pathTo = cb.getPrincipalInfo().getCalendarHomePath(owner);
+    final String pathTo = cb.getPrincipalInfo().getCalendarHomePath(owner);
 
-    BasicSystemProperties sys = getSyspars();
+    final BasicSystemProperties sys = getSyspars();
 
     if (Util.buildPath(true, pathTo, "/", sys.getUserInbox()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeInbox,
@@ -470,8 +470,8 @@ public class CoreCalendars extends CalintfHelperHib
                                                       final boolean create,
                                                       final boolean tryFetch,
                                                       final int access) throws CalFacadeException {
-    String name;
-    BasicSystemProperties sys = getSyspars();
+    final String name;
+    final BasicSystemProperties sys = getSyspars();
     int ctype = calType;
 
     if (calType == BwCalendar.calTypeInbox) {
@@ -498,11 +498,13 @@ public class CoreCalendars extends CalintfHelperHib
       return null;
     }
 
-    String pathTo = cb.getPrincipalInfo().getCalendarHomePath(owner);
+    final List<String> entityTypes = BwCalendar.entityTypes.get(calType);
 
-    GetSpecialCalendarResult gscr = new GetSpecialCalendarResult();
+    final String pathTo = cb.getPrincipalInfo().getCalendarHomePath(owner);
 
-    BwCalendar userHome = getCalendar(pathTo, access, false);
+    final GetSpecialCalendarResult gscr = new GetSpecialCalendarResult();
+
+    final BwCalendar userHome = getCalendar(pathTo, access, false);
     if (userHome == null) {
       gscr.noUserHome = true;
       return gscr;
@@ -530,6 +532,10 @@ public class CoreCalendars extends CalintfHelperHib
     gscr.cal.setCreatorHref(owner.getPrincipalRef());
     gscr.cal.setOwnerHref(owner.getPrincipalRef());
     gscr.cal.setCalType(ctype);
+
+    if (entityTypes != null) {
+      gscr.cal.setSupportedComponents(entityTypes);
+    }
 
     /* I think we're allowing privNone here because we don't mind if the
      * calendar gets created even if the caller has no access.

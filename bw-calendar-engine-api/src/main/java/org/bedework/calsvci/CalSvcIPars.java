@@ -69,6 +69,8 @@ public class CalSvcIPars implements Serializable {
 
   private boolean forRestore;
 
+  private boolean indexRebuild;
+
   /** True if this is a web application
    */
   private boolean webMode;
@@ -81,9 +83,9 @@ public class CalSvcIPars implements Serializable {
    * @param publicAdmin true for admin
    * @param allowSuperUser  true to allow superuser mode in non-admin mode
    * @param service     true for a service
-   * @param adminCanEditAllPublicCategories
-   * @param adminCanEditAllPublicLocations
-   * @param adminCanEditAllPublicContacts
+   * @param adminCanEditAllPublicCategories true/false
+   * @param adminCanEditAllPublicLocations true/false
+   * @param adminCanEditAllPublicContacts true/false
    * @param sessionless true if this is a sessionless client
    */
   public CalSvcIPars(final String authUser,
@@ -110,9 +112,9 @@ public class CalSvcIPars implements Serializable {
 
   /** Return new parameters for a service
    *
-   * @param account
-   * @param publicAdmin
-   * @param allowSuperUser
+   * @param account - the account
+   * @param publicAdmin - true for public admin
+   * @param allowSuperUser - trie/false
    * @return CalSvcIPars
    */
   public static CalSvcIPars getServicePars(final String account,
@@ -129,21 +131,45 @@ public class CalSvcIPars implements Serializable {
                            false); // sessionless
   }
 
+  /** Return new pars for an index rebuild
+   *
+   * @param account - the account
+   * @param publicAdmin - true for public admin
+   * @return CalSvcIPars
+   */
+  public static CalSvcIPars getIndexerPars(final String account,
+                                           final boolean publicAdmin) {
+    final CalSvcIPars pars = new CalSvcIPars(account,
+                                             null,   // calsuite
+                                             publicAdmin,
+                                             true,
+                                             true,   // service
+                                             false,  // adminCanEditAllPublicCategories
+                                             false,  // adminCanEditAllPublicLocations
+                                             false,  // adminCanEditAllPublicSponsors
+                                             false); // sessionless
+
+    pars.indexRebuild = true;
+
+    return pars;
+  }
+
+
   /** Return new pars for a system restore
    *
-   * @param account
+   * @param account - the account
    * @return CalSvcIPars
    */
   public static CalSvcIPars getRestorePars(final String account) {
-    CalSvcIPars p = new CalSvcIPars(account,
-                                    null,   // calsuite
-                                    true,   // publicAdmin,
-                                    true,   // superUser,
-                                    true,   // service
-                                    true,   // adminCanEditAllPublicCategories
-                                    true,   // adminCanEditAllPublicLocations
-                                    true,   // adminCanEditAllPublicSponsors
-                                    false); // sessionless
+    final CalSvcIPars p = new CalSvcIPars(account,
+                                          null,   // calsuite
+                                          true,   // publicAdmin,
+                                          true,   // superUser,
+                                          true,   // service
+                                          true,   // adminCanEditAllPublicCategories
+                                          true,   // adminCanEditAllPublicLocations
+                                          true,   // adminCanEditAllPublicSponsors
+                                          false); // sessionless
 
     p.forRestore = true;
 
@@ -165,16 +191,16 @@ public class CalSvcIPars implements Serializable {
                      final String clientId,
                      final boolean allowSuperUser,
                      final boolean service) {
-    CalSvcIPars pars = new CalSvcIPars(authUser,
-                                       runAsUser,
-                                       null,    // calsuite
-                                       false,   // publicAdmin
-                                       allowSuperUser,   // allow SuperUser
-                                       service,
-                                       false,  // adminCanEditAllPublicCategories
-                                       false,  // adminCanEditAllPublicLocations
-                                       false,  // adminCanEditAllPublicSponsors
-                                       true);  // sessionless
+    final CalSvcIPars pars = new CalSvcIPars(authUser,
+                                             runAsUser,
+                                             null,    // calsuite
+                                             false,   // publicAdmin
+                                             allowSuperUser,   // allow SuperUser
+                                             service,
+                                             false,  // adminCanEditAllPublicCategories
+                                             false,  // adminCanEditAllPublicLocations
+                                             false,  // adminCanEditAllPublicSponsors
+                                             true);  // sessionless
 
     pars.setClientId(clientId);
 
@@ -188,9 +214,9 @@ public class CalSvcIPars implements Serializable {
    * @param publicAdmin true for admin
    * @param allowSuperUser  true to allow superuser mode in non-admin mode
    * @param service     true for a service
-   * @param adminCanEditAllPublicCategories
-   * @param adminCanEditAllPublicLocations
-   * @param adminCanEditAllPublicContacts
+   * @param adminCanEditAllPublicCategories true/false
+   * @param adminCanEditAllPublicLocations true/false
+   * @param adminCanEditAllPublicContacts true/false
    * @param sessionless true if this is a sessionless client
    */
   public CalSvcIPars(final String authUser,
@@ -322,24 +348,10 @@ public class CalSvcIPars implements Serializable {
   }
 
   /**
-   * @param val boolean true if this is a sessionless client..
-   */
-  public void setSessionsless(final boolean val) {
-    sessionless = val;
-  }
-
-  /**
    * @return boolean true if this is a sessionless client..
    */
   public boolean getSessionsless() {
     return sessionless;
-  }
-
-  /**
-   * @param val boolean true if this is a web client..
-   */
-  public void setWebMode(final boolean val) {
-    webMode = val;
   }
 
   /**
@@ -357,6 +369,13 @@ public class CalSvcIPars implements Serializable {
   }
 
   /**
+   * @return boolean true if this is for an index rebuild.
+   */
+  public boolean getIndexRebuild() {
+    return indexRebuild;
+  }
+
+  /**
    * @return boolean true for guest
    */
   public boolean isGuest() {
@@ -365,7 +384,7 @@ public class CalSvcIPars implements Serializable {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     ts.append("authUser", getAuthUser());
     ts.append("user", getUser());
@@ -377,26 +396,28 @@ public class CalSvcIPars implements Serializable {
     ts.append("adminCanEditAllPublicSponsors()", getAdminCanEditAllPublicContacts());
     ts.append("sessionless", getSessionsless());
     ts.append("forRestore", getForRestore());
+    ts.append("indexRebuild", getIndexRebuild());
 
     return ts.toString();
   }
 
   @Override
   public Object clone() {
-    CalSvcIPars pars = new CalSvcIPars(getAuthUser(),
-                                       getUser(),
-                                       getCalSuite(),
-                                       getPublicAdmin(),
-                                       getAllowSuperUser(),
-                                       getService(),
-                                       getAdminCanEditAllPublicCategories(),
-                                       getAdminCanEditAllPublicLocations(),
-                                       getAdminCanEditAllPublicContacts(),
-                                       getSessionsless());
+    final CalSvcIPars pars = new CalSvcIPars(getAuthUser(),
+                                             getUser(),
+                                             getCalSuite(),
+                                             getPublicAdmin(),
+                                             getAllowSuperUser(),
+                                             getService(),
+                                             getAdminCanEditAllPublicCategories(),
+                                             getAdminCanEditAllPublicLocations(),
+                                             getAdminCanEditAllPublicContacts(),
+                                             getSessionsless());
 
     pars.setClientId(getClientId());
     pars.setLogId(getLogId());
     pars.forRestore = getForRestore();
+    pars.indexRebuild = getIndexRebuild();
 
     return pars;
   }

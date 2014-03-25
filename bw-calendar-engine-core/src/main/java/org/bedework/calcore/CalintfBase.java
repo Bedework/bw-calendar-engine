@@ -33,8 +33,7 @@ import org.bedework.sysevents.events.SysEventBase;
 import org.apache.log4j.Logger;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.LinkedTransferQueue;
 
 /** Base Implementation of CalIntf which throws exceptions for most methods.
 *
@@ -53,6 +52,8 @@ public abstract class CalintfBase implements Calintf {
 
   protected boolean forRestore;
 
+  protected boolean indexRebuild;
+
   /** When we were created for debugging */
   protected Timestamp objTimestamp;
 
@@ -70,7 +71,7 @@ public abstract class CalintfBase implements Calintf {
 
   private transient Logger log;
 
-  protected final List<SysEventBase> queuedNotifications = new ArrayList<>();
+  protected final LinkedTransferQueue<SysEventBase> queuedNotifications = new LinkedTransferQueue<>();
 
   /* ====================================================================
    *                   initialisation
@@ -164,37 +165,31 @@ public abstract class CalintfBase implements Calintf {
       return;
     }
 
-    synchronized (queuedNotifications) {
-      queuedNotifications.add(ev);
-    }
+    queuedNotifications.add(ev);
   }
 
   @Override
   public void flushNotifications() throws CalFacadeException {
-    synchronized (queuedNotifications) {
-      for (final SysEventBase ev: queuedNotifications) {
-        try {
-          NotificationsHandlerFactory.post(ev);
-        } catch (Throwable t) {
-          /* This could be a real issue as we are currently relying on jms
+    while (!queuedNotifications.isEmpty()) {
+      SysEventBase ev = null;
+      try {
+        ev = queuedNotifications.take();
+        NotificationsHandlerFactory.post(ev);
+      } catch (Throwable t) {
+        /* This could be a real issue as we are currently relying on jms
            * messages to trigger the scheduling process.
            *
            * At this point there's not much we can do about it.
            */
-          error("Unable to post system notification " + ev);
-          error(t);
-        }
+        error("Unable to post system notification " + ev);
+        error(t);
       }
-
-      queuedNotifications.clear();
     }
   }
 
   @Override
   public void clearNotifications() throws CalFacadeException {
-    synchronized (queuedNotifications) {
-      queuedNotifications.clear();
-    }
+    queuedNotifications.clear();
   }
 
   /**

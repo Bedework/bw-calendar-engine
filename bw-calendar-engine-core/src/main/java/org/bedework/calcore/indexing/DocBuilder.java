@@ -142,6 +142,58 @@ public class DocBuilder {
     }
   }
 
+  static class UpdateInfo {
+    private String dtstamp;
+    private Long count = 0l;
+
+    /* Set this true if we write something to the index */
+    private boolean update;
+
+    UpdateInfo() {
+    }
+
+    UpdateInfo(final String dtstamp,
+               final Long count) {
+      this.dtstamp = dtstamp;
+      this.count = count;
+    }
+
+    /**
+     * @return dtstamp last time this object type saved
+     */
+    public String getDtstamp() {
+      return dtstamp;
+    }
+
+    /**
+     * @return count of updates
+     */
+    public Long getCount() {
+      return count;
+    }
+
+    /**
+     * @param update true to indicate update occurred
+     */
+    public void setUpdate(final boolean update) {
+      this.update = update;
+    }
+
+    /**
+     * @return true to indicate update occurred
+     */
+    public boolean isUpdate() {
+      return update;
+    }
+
+    /**
+     * @return a change token for the index.
+     */
+    public String getChangeToken() {
+      return dtstamp + ";" + count;
+    }
+  }
+
   static class DocInfo {
     XContentBuilder source;
     String type;
@@ -205,6 +257,25 @@ public class DocBuilder {
   }
 
   /* Return the docinfo for the indexer */
+  DocInfo makeDoc(final UpdateInfo ent) throws CalFacadeException {
+    try {
+      startObject();
+
+      builder.field("count", ent.getCount());
+
+      endObject();
+
+      return new DocInfo(builder,
+                         BwIndexer.docTypeUpdateTracker, 0,
+                         BwIndexer.updateTrackerId);
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  /* Return the docinfo for the indexer */
   DocInfo makeDoc(final BwCategory ent) throws CalFacadeException {
     try {
       /* We don't have real collections. It's been the practice to
@@ -230,9 +301,9 @@ public class DocBuilder {
 
       return new DocInfo(builder,
                          BwIndexer.docTypeCategory, 0, ent.getHref());
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }

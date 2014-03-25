@@ -65,8 +65,8 @@
     <orderEntry type="module" module-name="bw-webdav" />
     <orderEntry type="module" module-name="bw-util-servlet" />
     <orderEntry type="module" module-name="bw-caldav-util" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-ws-synchws:4.0.0" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-ws-caldav:4.0.0" level="project" />
+    <orderEntry type="module" module-name="bw-ws-synchws" />
+    <orderEntry type="module" module-name="bw-ws-caldav" />
     <orderEntry type="library" name="Maven: org.apache.james.jdkim:apache-jdkim-library:0.2.BEDEWORK-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.specs:geronimo-activation_1.1_spec:1.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.javamail:geronimo-javamail_1.4_mail:1.6" level="project" />

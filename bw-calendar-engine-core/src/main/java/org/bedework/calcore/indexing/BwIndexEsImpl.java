@@ -20,6 +20,7 @@ package org.bedework.calcore.indexing;
 
 import org.bedework.access.Acl;
 import org.bedework.calcore.indexing.DocBuilder.ItemKind;
+import org.bedework.calcore.indexing.DocBuilder.UpdateInfo;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -80,6 +81,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.ClusterAdminClient;
 import org.elasticsearch.client.IndicesAdminClient;
@@ -180,6 +182,9 @@ public class BwIndexEsImpl implements BwIndexer {
   private IndexProperties idxpars;
   private BasicSystemProperties basicSysprops;
 
+  /* Indexed by index name */
+  private final static Map<String, UpdateInfo> updateInfo = new HashMap<>();
+
   /* This is used for testng - we delay searches to give the indexer
    * time to catch up
    */
@@ -241,6 +246,10 @@ public class BwIndexEsImpl implements BwIndexer {
       targetIndex = Util.buildPath(false, targetIndex);
     } else {
       targetIndex = Util.buildPath(false, indexName);
+    }
+
+    if (updateInfo.get(targetIndex) == null) {
+      // Need to get the info from the index
     }
   }
 
@@ -330,6 +339,53 @@ public class BwIndexEsImpl implements BwIndexer {
     public Set<String> getFacetNames() {
       return null;
     }
+  }
+
+  @Override
+  public void markTransaction() throws CalFacadeException {
+    final UpdateInfo ui = updateInfo.get(targetIndex);
+    if ((ui != null) && !ui.isUpdate()) {
+      return;
+    }
+
+    final UpdateRequestBuilder urb =
+            getClient().prepareUpdate(targetIndex,
+                                      docTypeUpdateTracker,
+                                      updateTrackerId).
+                    setRetryOnConflict(20).
+                    setRefresh(true);
+
+    urb.setScript("ctx._source.count += 1");
+    /*final UpdateResponse ur = */urb.execute().actionGet();
+  }
+
+  @Override
+  public String currentChangeToken() throws CalFacadeException {
+    final GetRequestBuilder grb = getClient().prepareGet(targetIndex,
+                                                         docTypeUpdateTracker,
+                                                         updateTrackerId).
+            setFields("count", "_timestamp");
+
+    final GetResponse gr = grb.execute().actionGet();
+
+    if (!gr.isExists()) {
+      return null;
+    }
+
+    final EntityBuilder er = getEntityBuilder(gr.getFields());
+    UpdateInfo ui = er.makeUpdateInfo();
+
+    synchronized (updateInfo) {
+      final UpdateInfo tui = updateInfo.get(targetIndex);
+
+      if ((tui == null) || (tui.getCount() < ui.getCount())) {
+        updateInfo.put(targetIndex, ui);
+      } else {
+        ui = tui;
+      }
+    }
+
+    return ui.getChangeToken();
   }
 
   @Override
@@ -661,6 +717,20 @@ public class BwIndexEsImpl implements BwIndexer {
 
       // Unbatched
 
+      UpdateInfo ui = updateInfo.get(targetIndex);
+
+      if (ui == null) {
+        currentChangeToken();
+      }
+
+      ui = updateInfo.get(targetIndex);
+
+      if (ui == null) {
+        throw new CalFacadeException("Unable to set updateInfo");
+      }
+
+      ui.setUpdate(true);
+
       /* final IndexResponse resp = */index(rec);
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
@@ -719,6 +789,10 @@ public class BwIndexEsImpl implements BwIndexer {
       final ActionFuture<CreateIndexResponse> af = idx.create(cir);
 
       /*resp = */af.actionGet();
+
+      index(new UpdateInfo());
+
+      info("Index created: change token set to " + currentChangeToken());
 
       return newName;
     } catch (final ElasticSearchException ese) {
@@ -1173,6 +1247,10 @@ public class BwIndexEsImpl implements BwIndexer {
 
       final DocBuilder db = getDocBuilder();
 
+      if (rec instanceof UpdateInfo) {
+        di = db.makeDoc((UpdateInfo)rec);
+      }
+
       if (rec instanceof BwCalendar) {
         di = db.makeDoc((BwCalendar)rec);
       }
@@ -1588,7 +1666,8 @@ public class BwIndexEsImpl implements BwIndexer {
     return suffix.toString();
   }
 
-  private EntityBuilder getEntityBuilder(final Map<String, Object> fields) {
+  private EntityBuilder getEntityBuilder(final Map<String,
+          ? extends Object> fields) throws CalFacadeException {
     return new EntityBuilder(fields);
   }
 
