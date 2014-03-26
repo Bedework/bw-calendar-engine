@@ -75,6 +75,31 @@
 	</modules>
 
 	<repositories>
+    <repository>
+      <id>jboss.repository</id>
+      <name>JBoss Public Repository Group</name>
+      <url>http://repository.jboss.org/nexus/content/groups/developer/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <!-- Only needed for JBoss 5 dependencies. We should remove this when we
+      move Bedework off of JBoss 5. -->
+    <repository>
+      <id>jboss-deprecated</id>
+      <name>JBoss Deprecated Repository</name>
+      <url>http://repository.jboss.org/nexus/content/repositories/deprecated</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
 		<repository>
 			<id>bedework.repository</id>
 			<name>Bedework Maven Repository</name>
