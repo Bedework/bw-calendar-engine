@@ -75,7 +75,8 @@ public class BwEventAnnotation extends BwEvent {
 
   @Override
   public void setOrganizerSchedulingObject(final Boolean val) {
-    List<BwXproperty> props = getXproperties(BwXproperty.bedeworkOrganizerSchedulingObject);
+    final List<BwXproperty> props =
+            getXproperties(BwXproperty.bedeworkOrganizerSchedulingObject);
     BwXproperty xp = null;
     if ((props != null) && (props.size() > 0)) {
       xp = props.get(0);
@@ -97,7 +98,8 @@ public class BwEventAnnotation extends BwEvent {
 
   @Override
   public void setAttendeeSchedulingObject(final Boolean val) {
-    List<BwXproperty> props = getXproperties(BwXproperty.bedeworkAttendeeSchedulingObject);
+    final List<BwXproperty> props =
+            getXproperties(BwXproperty.bedeworkAttendeeSchedulingObject);
     BwXproperty xp = null;
     if ((props != null) && (props.size() > 0)) {
       xp = props.get(0);
@@ -122,7 +124,7 @@ public class BwEventAnnotation extends BwEvent {
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val the target
    */
   @IcalProperty(pindex = PropertyInfoIndex.TARGET,
                 annotationRequired = true,
@@ -147,7 +149,7 @@ public class BwEventAnnotation extends BwEvent {
    *
    * <p>This allows us to do a single fetch of all related annotations
    *
-   * @param val
+   * @param val the master
    */
   @IcalProperty(pindex = PropertyInfoIndex.MASTER,
                 annotationRequired = true,
@@ -193,6 +195,7 @@ public class BwEventAnnotation extends BwEvent {
    *
    *  @return boolean    true if this is an override
    */
+  @SuppressWarnings("UnusedDeclaration")
   public boolean testOverride() {
     return (getOverride() != null) && getOverride();
   }
@@ -228,15 +231,13 @@ public class BwEventAnnotation extends BwEvent {
     if (fs == null) {
       fs = initCflags.clone();
     } else if (fs.length < flagsLen) {
-      char[] newFs = initCflags.clone();
-      for (int i = 0; i < fs.length; i++) {
-        newFs[i] = fs[i];
-      }
+      final char[] newFs = initCflags.clone();
+      System.arraycopy(fs, 0, newFs, 0, fs.length);
       fs = newFs;
     }
 
-    int fsi = fieldIndex.ordinal();
-    char newF;
+    final int fsi = fieldIndex.ordinal();
+    final char newF;
     if (val) {
       newF = 'T';
     } else {
@@ -266,7 +267,7 @@ public class BwEventAnnotation extends BwEvent {
       return false;
     }
 
-    int fsi = fieldIndex.ordinal();
+    final int fsi = fieldIndex.ordinal();
     if (fs.length <= fsi) {
       return false;
     }
@@ -280,7 +281,7 @@ public class BwEventAnnotation extends BwEvent {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
     ts.append("target", getTarget().getId());
@@ -292,11 +293,13 @@ public class BwEventAnnotation extends BwEvent {
 
   @Override
   public Object clone() {
-    BwEventAnnotation ev = new BwEventAnnotation();
+    final BwEventAnnotation ev = new BwEventAnnotation();
 
     copyTo(ev);
     ev.setTarget(getTarget());
     ev.setMaster(getMaster());
+
+    ev.setOverride(getOverride());
 
     return ev;
   }

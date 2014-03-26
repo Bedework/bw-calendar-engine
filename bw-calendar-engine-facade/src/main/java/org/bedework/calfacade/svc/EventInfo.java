@@ -560,7 +560,7 @@ public class EventInfo
   }
 
   /**
-   * @param val
+   * @param val an override
    */
   public void addOverride(final EventInfo val) {
     if (val.getEvent().getRecurrenceId() == null) {
@@ -571,7 +571,7 @@ public class EventInfo
       overrides = new TreeSet<>();
     }
 
-    EventOverride eo = new EventOverride(val);
+    final EventOverride eo = new EventOverride(val);
 
     if (!overrides.contains(eo)) {
       overrides.add(eo);
