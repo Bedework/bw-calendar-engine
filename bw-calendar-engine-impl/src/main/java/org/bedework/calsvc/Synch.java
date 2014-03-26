@@ -109,19 +109,19 @@ class Synch extends CalSvcDb implements SynchI {
       this.sc = sc;
     }
   }
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SynchI#getSynchConnection()
-   */
+
   @Override
   public Connection getSynchConnection() throws CalFacadeException {
     try {
       return new SConnection(getActiveSynchConnections().
                                  getConnectionById(synchConf.getConnectorId()));
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
+      warn("Exception getting synch connection: " +
+                   "is the synch engine installed and running?");
       if (debug) {
         error(t);
       }
-      throw new CalFacadeException(t);
+      return null;
     }
   }
 
@@ -304,11 +304,12 @@ class Synch extends CalSvcDb implements SynchI {
       return null;
     }
 
-    SynchConnection sc = sconn.sc;
+    final SynchConnection sc = sconn.sc;
 
-    GetInfoResponseType girt = getPort(synchConf.getManagerUri()).getInfo(
-           getIdToken(getPrincipal().getPrincipalRef(), sc),
-           new GetInfoRequestType());
+    final GetInfoResponseType girt =
+            getPort(synchConf.getManagerUri()).getInfo(
+                    getIdToken(getPrincipal().getPrincipalRef(), sc),
+                    new GetInfoRequestType());
 
     if ((girt == null) || (girt.getInfo() == null)) {
       warn("Unable to fetch synch info");
