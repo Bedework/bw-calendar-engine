@@ -1238,12 +1238,12 @@ public class BwIndexEsImpl implements BwIndexer {
 
   /* Return the response after indexing */
   private IndexResponse index(final Object rec) throws CalFacadeException {
+    DocInfo di = null;
+
     try {
       if (rec instanceof EventInfo) {
         return indexEvent((EventInfo)rec);
       }
-
-      DocInfo di = null;
 
       final DocBuilder db = getDocBuilder();
 
@@ -1276,6 +1276,13 @@ public class BwIndexEsImpl implements BwIndexer {
                                  rec.getClass().getName()));
     } catch (final CalFacadeException cfe) {
       throw cfe;
+    } catch (final VersionConflictEngineException vcee) {
+      if (vcee.getCurrentVersion() == vcee.getProvidedVersion()) {
+        warn("Failed index with equal version for type " + di.type +
+                     " and id " + di.id);
+      }
+
+      return null;
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
