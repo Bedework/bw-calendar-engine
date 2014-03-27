@@ -427,7 +427,7 @@ public abstract class CalintfHelper
     }
 
     if (val instanceof CategorisedEntity) {
-      clearCollection(((CategorisedEntity)val).getCategories());
+      clearCollection(((CategorisedEntity)val).getCategoryUids());
     }
 
     if (val instanceof CommentedEntity) {
