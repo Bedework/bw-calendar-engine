@@ -71,7 +71,6 @@
 		<module>bw-calendar-engine-inoutsched</module>
 		<module>bw-calendar-engine-interfaces</module>
 		<module>bw-calendar-engine-sysevents</module>
-		<module>bw-calendar-engine-deployutil</module>
 	</modules>
 
 	<repositories>
