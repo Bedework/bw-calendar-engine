@@ -46,6 +46,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** Rather than have a single class steering calls to a number of smaller classes
  * we will build up a full implementation by progressivly implementing abstract
@@ -462,33 +463,48 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
     return newEv;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvc.scheduling.SchedulingIntf#addEvent(org.bedework.calfacade.svc.EventInfo, java.lang.String, int, boolean)
-   */
+  private static AtomicLong suffixValue = new AtomicLong();
+
   @Override
   public String addEvent(final EventInfo ei,
                          final String namePrefix,
                          final int calType,
                          final boolean noInvites) throws CalFacadeException {
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
     String prefix = namePrefix;
+
+    final boolean schedulingBox = (calType == BwCalendar.calTypeInbox) ||
+            (calType == BwCalendar.calTypePendingInbox) ||
+            (calType == BwCalendar.calTypeOutbox);
+
+    /* We can get a lot of adds and deletions in scheduling inboxes.
+       An event will arrive, be processed and deleted from the inbox
+       only for another to arrive moments later.
+
+       This has an implication for naming - elasticsearch will ignore
+       updates for a deleted entity for a period following the
+       deletion. We need to make it look like a different entity for
+       each add.
+      */
+
+    if (schedulingBox) {
+      prefix += suffixValue.getAndIncrement();
+    }
 
     for (int i = 0; i < 100; i++) {  // Avoid malicious users
       ev.setName(prefix + ".ics");
 
       try {
         getSvc().getEventsHandler().add(ei, noInvites,
-                                        (calType == BwCalendar.calTypeInbox) ||
-                                        (calType == BwCalendar.calTypePendingInbox) ||
-                                        (calType == BwCalendar.calTypeOutbox),
+                                        schedulingBox,
                                         true,
                                         false);
 
         return null;
-      } catch (CalFacadeException cfe) {
+      } catch (final CalFacadeException cfe) {
         if (CalFacadeException.duplicateName.equals(cfe.getMessage())) {
-          prefix += "0";
-          continue;    // Try again - Google won't like this one.
+          prefix += suffixValue.getAndIncrement();
+          continue;    // Try again
         }
 
         if (CalFacadeException.duplicateGuid.equals(cfe.getMessage())) {
