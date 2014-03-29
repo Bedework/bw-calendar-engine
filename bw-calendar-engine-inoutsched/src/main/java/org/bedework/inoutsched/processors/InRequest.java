@@ -48,12 +48,16 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
+import org.bedework.util.timezones.DateTimeUtil;
 
+import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Period;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /** Handles incoming method REQUEST scheduling messages.
  *
@@ -245,7 +249,15 @@ public class InRequest extends InProcessor {
 
     BwEvent ourEvent = ourCopy.getEvent();
 
+    String now = DateTimeUtil.isoDateTimeUTC(new Date());
+
     if (!ourEvent.getRecurring()) {
+      /* Don't bother if it's in the past */
+
+      if (ourEvent.getDtend().getDate().compareTo(now) < 0) {
+        return false;
+      }
+
       att = ourEvent.findAttendee(uri);
 
       if (att == null) {
@@ -299,7 +311,7 @@ public class InRequest extends InProcessor {
     Collection<Recurrence> recurrences = RecurUtil.getRecurrences(inboxEi,
                                                                   maxYears,
                                                                   maxInstances,
-                                                                  null,
+                                                                  now,
                                                                   null);
 
     if (Util.isEmpty(recurrences)) {
@@ -668,7 +680,11 @@ public class InRequest extends InProcessor {
       }
     }
 
-    if (ourRecurMaster && (inCopy.getOverrides() != null)) {
+    if (!ourRecurMaster) {
+      return true;
+    }
+
+    if (inCopy.getOverrides() != null) {
       // Go through all the overrides
 
       Collection<Recurrence> recurrences = null;
@@ -678,7 +694,7 @@ public class InRequest extends InProcessor {
 
         String rid = inOv.getRecurrenceId();
 
-        EventInfo ourOvei = ourCopy.findOverride(rid);
+        EventInfo ourOvei = findOverride(ourCopy, rid);
 
         if (ourOvei.getEvent().unsaved()) {
           // New override - add rdate if not in current recurrence set
@@ -709,7 +725,48 @@ public class InRequest extends InProcessor {
       }
     }
 
+    /* The incoming event may have exdates that are not in the
+       attendee copy. Remove each of those and add an override cancelling
+       that instance.
+     */
+
+    final Set<BwDateTime> inExdates = inCopy.getEvent().getExdates();
+
+    if (!Util.isEmpty(inExdates)) {
+      final Set<BwDateTime> ourExdates = ourCopy.getEvent().getExdates();
+
+      for (final BwDateTime exdt: inExdates) {
+        if (!Util.isEmpty(ourExdates) && ourExdates.contains(exdt)) {
+          continue;
+        }
+
+        final EventInfo ourOvei = findOverride(ourCopy,
+                                               exdt.getDate());
+
+        ourOvei.getEvent().setStatus(BwEvent.statusCancelled);
+      }
+    }
+
     return true;
+  }
+
+  private EventInfo findOverride(final EventInfo ei,
+                                 final String recurrenceId) throws CalFacadeException {
+    final EventInfo ovei = ei.findOverride(recurrenceId);
+
+    if (ovei.getEvent().unsaved()) {
+      // New override - set start/end based on duration
+      BwDateTime start = BwDateTime.fromUTC(recurrenceId.length() == 8,
+                                            recurrenceId,
+                                            ei.getEvent().getDtstart().getTzid());
+
+      BwDateTime end = start.addDur(new Dur(ei.getEvent().getDuration()));
+
+      ovei.getEvent().setDtstart(start);
+      ovei.getEvent().setDtend(end);
+    }
+
+    return ovei;
   }
 
   private Collection<Recurrence> getRecurrences(final EventInfo ei) throws CalFacadeException {
@@ -974,20 +1031,13 @@ public class InRequest extends InProcessor {
           break;
 
         case CONTACT:
-          for (BwContact ct: inEv.getContacts()) {
+          for (final BwContact ct: inEv.getContacts()) {
             chg.addValue(ipi, ct.clone());
           }
           break;
 
         case EXDATE:
-          // Only for master events
-          if (ourEv instanceof BwEventProxy) {
-            break;
-          }
-
-          for (BwDateTime bdt: inEv.getExdates()) {
-            chg.addValue(ipi, bdt);
-          }
+          // Don't updaye exdate - we add cancelled overrides
           break;
 
         case EXRULE:
@@ -996,7 +1046,7 @@ public class InRequest extends InProcessor {
             break;
           }
 
-          for (String s: inEv.getExrules()) {
+          for (final String s: inEv.getExrules()) {
             chg.addValue(ipi, s);
           }
           break;
