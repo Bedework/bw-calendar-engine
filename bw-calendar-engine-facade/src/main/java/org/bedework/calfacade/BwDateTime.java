@@ -26,13 +26,13 @@ import org.bedework.calfacade.base.DumpEntity;
 import org.bedework.calfacade.exc.CalFacadeBadDateException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
-
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.XcalUtil;
+import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.timezones.Timezones;
 import org.bedework.util.timezones.TimezonesException;
-import org.bedework.util.timezones.DateTimeUtil;
 
+import ietf.params.xml.ns.icalendar_2.DateDatetimePropertyType;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
@@ -46,8 +46,6 @@ import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Due;
-
-import ietf.params.xml.ns.icalendar_2.DateDatetimePropertyType;
 
 import java.io.Serializable;
 import java.util.Calendar;
@@ -177,9 +175,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       bwd.setFloatFlag(floating);
 
       return bwd;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeBadDateException();
     }
   }
@@ -331,6 +329,47 @@ public class BwDateTime extends DumpEntity<BwDateTime>
     }
 
     return bwd;
+  }
+
+  /** Create from utc time with timezone
+   *
+   * @param dateType true for a date value
+   * @param date the string UTC date/time or 8 character date
+   * @param tzid  tzid for local time
+   * @return initialised BwDateTime
+   * @throws CalFacadeException
+   */
+  public static BwDateTime fromUTC(final boolean dateType,
+                                   final String date,
+                                   final String tzid) throws CalFacadeException {
+    if (!dateType && !date.endsWith("Z")) {
+      throw new CalFacadeBadDateException();
+    }
+
+    try {
+      final BwDateTime bwd = new BwDateTime();
+      bwd.setDateType(dateType);
+
+      if (dateType | (tzid == null)) {
+        bwd.setDtval(date);
+        bwd.setTzid(null);
+      } else {
+        final java.util.Date dt = DateTimeUtil.fromISODateTimeUTC(date);
+
+        bwd.setDtval(DateTimeUtil.isoDateTime(dt, Timezones.getTz(tzid)));
+        bwd.setTzid(tzid);
+      }
+
+      if (dateType) {
+        bwd.setDate(date + "T000000Z");
+      } else {
+        bwd.setDate(date);
+      }
+
+      return bwd;
+    } catch (final Throwable t) {
+      throw new CalFacadeBadDateException();
+    }
   }
 
   /** Get the date/times dateType
