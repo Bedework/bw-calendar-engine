@@ -1547,6 +1547,10 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     synchronized (clientSyncher) {
+      if (theClient != null) {
+        return theClient;
+      }
+
       if (idxpars.getEmbeddedIndexer()) {
         /* Start up a node and get a client from it.
          */
