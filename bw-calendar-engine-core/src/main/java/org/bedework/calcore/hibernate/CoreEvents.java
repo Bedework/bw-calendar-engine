@@ -230,9 +230,9 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
   public Collection<CoreEventInfo> getEvent(final String colPath,
                                             final String uid)
           throws CalFacadeException {
-    TreeSet<CoreEventInfo> ts = new TreeSet<>();
-    HibSession sess = getSess();
-    int desiredAccess = privRead;
+    final TreeSet<CoreEventInfo> ts = new TreeSet<>();
+    final HibSession sess = getSess();
+    final int desiredAccess = privRead;
 
     /*
     if (colPath != null) {
@@ -263,7 +263,8 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     // First look in the events table for the master(s).
     eventQuery(BwEventObj.class, colPath, uid,
                null, null,
-               null);
+               null,  // overrides
+               null); //recurRetrieval);
 
     /* The uid and recurrence id is a unique key for calendar collections
      * other than some special ones, Inbox and Outbox.
@@ -279,7 +280,8 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
        */
       eventQuery(BwEventAnnotation.class, colPath, uid, /*null*/
                  null, null,
-                 null);
+                 false,  // overrides
+                 null); //recurRetrieval);
       evs = sess.getList();
     }
 
@@ -287,9 +289,10 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       return ts;
     }
 
-    Collection<CoreEventInfo> ceis = postGetEvents(evs, desiredAccess,
-                                                   returnResultAlways,
-                                                   null);
+    final Collection<CoreEventInfo> ceis =
+            postGetEvents(evs, desiredAccess,
+                          returnResultAlways,
+                          null);
 
     if (ceis.isEmpty()) {
       return ceis;
@@ -299,17 +302,17 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
      * otherwise just retrieve the instance.
      */
 
-    EventsQueryResult eqr = new EventsQueryResult();
+    final EventsQueryResult eqr = new EventsQueryResult();
     eqr.flt = new Filters(null);
     eqr.addColPath(colPath);
 
-    for (CoreEventInfo cei: ceis) {
+    for (final CoreEventInfo cei: ceis) {
       final BwEvent master = cei.getEvent();
-      CurrentAccess ca = cei.getCurrentAccess();
+      final CurrentAccess ca = cei.getCurrentAccess();
 
       if (master.getEntityType() == IcalDefs.entityTypeVavailability) {
-        for (String auid : master.getAvailableUids()) {
-          Collection<CoreEventInfo> aceis = getEvent(colPath, auid);
+        for (final String auid : master.getAvailableUids()) {
+          final Collection<CoreEventInfo> aceis = getEvent(colPath, auid);
           if (aceis.size() != 1) {
             throwException(CalFacadeException.badResponse);
           }
@@ -1549,6 +1552,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     // Always fetch all overrides
     eventQuery(BwEventAnnotation.class, null, null, null, master,
+               true,  // overrides
                null); //recurRetrieval);
 
     Collection<BwEventAnnotation> ovs = sess.getList();
@@ -1590,8 +1594,6 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     }
 
     String stzid = master.getDtstart().getTzid();
-
-    int instanceCt = maxInstances;
 
     boolean dateOnly = master.getDtstart().getDateType();
 
@@ -2296,6 +2298,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
                           final String guid,
                           final String rid,
                           final BwEvent master,
+                          final Boolean overrides,
                           final RecurringRetrievalMode recurRetrieval) throws CalFacadeException {
     HibSession sess = getSess();
     EventQueryBuilder qb = new EventQueryBuilder();
@@ -2329,6 +2332,10 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     qb.append(" and ev.tombstoned=false ");
 
+    if (overrides != null) {
+      qb.append(" and ev.override=:override ");
+    }
+
     /*
     if (masterOnly) {
       sb.append(" and ev.recurrenceId is null ");
@@ -2347,6 +2354,10 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
         sess.setString("colPath", colPath);
       }
       sess.setString("uid", guid);
+    }
+
+    if (overrides != null) {
+      sess.setBool("override", overrides);
     }
 
     //if (!masterOnly && (rid != null)) {
