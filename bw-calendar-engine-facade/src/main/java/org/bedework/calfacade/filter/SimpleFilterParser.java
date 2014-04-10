@@ -408,16 +408,18 @@ public abstract class SimpleFilterParser {
       popOpenParen();
     } else {
       tokenizer.pushBack();
-      doPropertyComparison();
+      if (!doPropertyComparison()) {
+        return false;
+      }
     }
 
     if (!topLOp()) {
       return true;
     }
 
-    FilterBase filter = popFilters();
+    final FilterBase filter = popFilters();
 
-    FilterBase topFilter = popFilters();
+    final FilterBase topFilter = popFilters();
     if (anding()) {
       filterStack.push(FilterBase.addAndChild(topFilter, filter));
     } else {
@@ -586,16 +588,17 @@ public abstract class SimpleFilterParser {
     }
   }
 
-  private void doPropertyComparison() throws CalFacadeException {
-    List<PropertyInfoIndex> pis = getProperty(nextToken("getProperty()"));
+  private boolean doPropertyComparison() throws CalFacadeException {
+    final List<PropertyInfoIndex> pis = getProperty(nextToken("getProperty()"));
 
-    Operator oper = nextOperator();
+    final Operator oper = nextOperator();
 
-    FilterBase pfilter = makePropFilter(pis, oper.op);
+    final FilterBase pfilter = makePropFilter(pis, oper.op);
 
     if (pfilter == null) {
-      throw new CalFacadeException(CalFacadeException.filterBadProperty,
-                                   listProps(pis));
+      error(new CalFacadeException(CalFacadeException.filterBadProperty,
+                                   listProps(pis)));
+      return false;
     }
 
     /* If there is a logical operator on the stack top (and/or) then we create
@@ -617,6 +620,8 @@ public abstract class SimpleFilterParser {
 
       pop(); // The operator
     }*/
+
+    return true;
   }
 
   /** Enter with either
@@ -753,18 +758,19 @@ public abstract class SimpleFilterParser {
 
     if (pi.equals(PropertyInfoIndex.CATEGORIES) &&
             (pis.size() == 2)) {
-      PropertyInfoIndex subPi = pis.get(1);
+      final PropertyInfoIndex subPi = pis.get(1);
 
       if (subPi.equals(PropertyInfoIndex.UID)) {
         // No match and category - expect list of uids.
-        ArrayList<String> uids = doWordList();
+        final ArrayList<String> uids = doWordList();
 
-        for (String uid: uids) {
-          BwCategory cat = getCategory(uid);
+        for (final String uid: uids) {
+          final BwCategory cat = getCategory(uid);
 
           if (cat == null) {
-            throw new CalFacadeException(CalFacadeException.filterBadProperty,
-                                         "category uid: " + uid);
+            error(new CalFacadeException(CalFacadeException.filterBadProperty,
+                                         "category uid: " + uid));
+            return null;
           }
 
           ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
