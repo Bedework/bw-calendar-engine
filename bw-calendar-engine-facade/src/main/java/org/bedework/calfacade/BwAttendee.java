@@ -431,7 +431,7 @@ public class BwAttendee extends BwDbentity<BwAttendee>
 
   /** Copy this objects values into the parameter
    *
-   * @param val
+   * @param val to copy
    */
   public void copyTo(final BwAttendee val) {
     val.setType(getType());
@@ -459,7 +459,7 @@ public class BwAttendee extends BwDbentity<BwAttendee>
   /** Only true if something changes the status of, or information about, the
    * attendee.
    *
-   * @param val
+   * @param val incoming value
    * @return true for significant change
    */
   public boolean changedBy(final BwAttendee val) {
@@ -469,7 +469,7 @@ public class BwAttendee extends BwDbentity<BwAttendee>
   /** Only true if something changes the status of, or information about, the
    * attendee.
    *
-   * @param val
+   * @param val incoming value
    * @param checkPartStat - true if we check the partstat
    * @return true for significant change
    */
@@ -549,7 +549,7 @@ public class BwAttendee extends BwDbentity<BwAttendee>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 
@@ -590,7 +590,7 @@ public class BwAttendee extends BwDbentity<BwAttendee>
 
   @Override
   public Object clone() {
-    BwAttendee nobj = new BwAttendee();
+    final BwAttendee nobj = new BwAttendee();
 
     copyTo(nobj);
 

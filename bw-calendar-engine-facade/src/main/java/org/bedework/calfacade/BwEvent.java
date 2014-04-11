@@ -2388,13 +2388,18 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @see org.bedework.calfacade.base.AttendeesEntity#setAttendees(java.util.Set)
    */
   @Override
-  @IcalProperty(pindex = PropertyInfoIndex.ATTENDEE,
-                jname = "attendee",
-                adderName = "attendee",
-                eventProperty = true,
-                todoProperty = true,
-                journalProperty = true,
-                freeBusyProperty = true)
+  @IcalProperties({
+    @IcalProperty(pindex = PropertyInfoIndex.ATTENDEE,
+                  jname = "attendee",
+                  adderName = "attendee",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.VOTER,
+                  jname = "voter",
+                  adderName = "voter",
+                  vpollProperty = true)})
   public void setAttendees(final Set<BwAttendee> val) {
     attendees = val;
   }
@@ -3473,6 +3478,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    * @param val    Set<String>
    */
+  @IcalProperty(pindex = PropertyInfoIndex.POLL_ITEM,
+                vpollProperty = true
+  )
   @NoProxy
   public void setPollItems(final Set<String> val) {
     pollItems = val;
@@ -3636,17 +3644,17 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   }
 
   /**
-   * @param userHref
-   * @param name
+   * @param userHref of user who owns property
+   * @param name of property
    * @return x-prop for this user if found
    * @throws CalFacadeException
    */
   @NoProxy
   public BwXproperty findPeruserXprop(final String userHref,
-                                       final String name) throws CalFacadeException {
-    List<BwXproperty> pus = getXproperties(BwXproperty.peruserPropTransp);
+                                      final String name) throws CalFacadeException {
+    final List<BwXproperty> pus = getXproperties(name);
 
-    for (BwXproperty pu: pus) {
+    for (final BwXproperty pu: pus) {
       if (userHref.equals(pu.getParam(BwXproperty.peruserOwnerParam))) {
         return pu;
       }

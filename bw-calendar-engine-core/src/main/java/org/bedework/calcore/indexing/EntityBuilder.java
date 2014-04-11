@@ -72,16 +72,17 @@ import java.util.TreeSet;
 public class EntityBuilder  {
   private transient Logger log;
 
-  private boolean debug;
+  @SuppressWarnings({"FieldCanBeLocal", "UnusedDeclaration"})
+  private final boolean debug;
 
-  private Deque<Map<String, Object>> fieldStack = new ArrayDeque<>();
+  private final Deque<Map<String, Object>> fieldStack = new ArrayDeque<>();
 
   /** Constructor - 1 use per entity
    *
-   * @param fields
+   * @param fields map of fields from index
    * @throws CalFacadeException
    */
-  EntityBuilder(final Map<String, ? extends Object> fields) throws CalFacadeException {
+  EntityBuilder(final Map<String, ?> fields) throws CalFacadeException {
     debug = getLog().isDebugEnabled();
 
     pushFields(fields);
@@ -150,7 +151,7 @@ public class EntityBuilder  {
   }
 
   BwCalendar makeCollection() throws CalFacadeException {
-    BwCalendar col = new BwCalendar();
+    final BwCalendar col = new BwCalendar();
 
     restoreSharedEntity(col);
 
@@ -174,22 +175,23 @@ public class EntityBuilder  {
    * @return an event object
    * @throws CalFacadeException
    */
+  @SuppressWarnings("unchecked")
   EventInfo makeEvent(final boolean expanded) throws CalFacadeException {
     final boolean override = !expanded &&
             getBool(PropertyInfoIndex.OVERRIDE);
 
-    BwEvent ev;
+    final BwEvent ev;
 
     if (override) {
       ev = new BwEventAnnotation();
 
-      BwEventAnnotation ann = (BwEventAnnotation)ev;
+      final BwEventAnnotation ann = (BwEventAnnotation)ev;
       ann.setOverride(true);
     } else {
       ev= new BwEventObj();
     }
 
-    EventInfo ei = new  EventInfo(ev);
+    final EventInfo ei = new  EventInfo(ev);
 
     /*
     Float score = (Float)sd.getFirstValue("score");
@@ -278,6 +280,16 @@ public class EntityBuilder  {
     ev.setResources((Set<BwString>)restoreBwStringSet(
             PropertyInfoIndex.RESOURCES, false));
 
+    if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
+      final Set<String> pollItems = getStringSet(PropertyInfoIndex.POLL_ITEM);
+
+      if (!Util.isEmpty(pollItems)) {
+        for (final String s: pollItems) {
+          ev.addPollItem(s);
+        }
+      }
+    }
+
     return ei;
   }
 
@@ -300,6 +312,7 @@ public class EntityBuilder  {
       throw new CalFacadeException(CalFacadeException.illegalObjectClass);
     }
 
+    //noinspection unchecked
     fieldStack.push((Map<String, Object>)objFlds);
     return true;
   }
@@ -445,17 +458,17 @@ public class EntityBuilder  {
 
     /* Now restore the rest of the xprops */
 
-    List<Object> xpropFields = getFieldValues(PropertyInfoIndex.XPROP);
+    final List<Object> xpropFields = getFieldValues(PropertyInfoIndex.XPROP);
 
     if (Util.isEmpty(xpropFields)) {
       return xprops;
     }
 
-    for (Object o: xpropFields) {
+    for (final Object o: xpropFields) {
       try {
         pushFields(o);
 
-        BwXproperty xp = new BwXproperty();
+        final BwXproperty xp = new BwXproperty();
 
         xp.setName(getString(PropertyInfoIndex.NAME));
         xp.setPars(getString(PropertyInfoIndex.PARAMETERS));
@@ -499,15 +512,16 @@ public class EntityBuilder  {
     return cs;
   }
 
+  @SuppressWarnings("unchecked")
   private void restoreReqStat(final BwEvent ev) throws CalFacadeException {
-    Collection<String> vals =
+    final Collection<String> vals =
             (Collection)getFieldValues(PropertyInfoIndex.REQUEST_STATUS);
     if (Util.isEmpty(vals)) {
       return;
     }
 
-    for (String s: vals) {
-      RequestStatus rs = new RequestStatus(null, s);
+    for (final String s: vals) {
+      final RequestStatus rs = new RequestStatus(null, s);
 
       ev.addRequestStatus(BwRequestStatus.fromRequestStatus(rs));
     }
@@ -611,7 +625,7 @@ public class EntityBuilder  {
 
     final Set<BwAlarm> alarms = new TreeSet<>();
 
-    for (Object o: vals) {
+    for (final Object o: vals) {
       try {
         pushFields(o);
 
@@ -684,7 +698,7 @@ public class EntityBuilder  {
     return alarms;
   }
 
-  private static Map<String, Integer> entitytypeMap =
+  private static final Map<String, Integer> entitytypeMap =
           new HashMap<>();
 
   static {
@@ -695,6 +709,7 @@ public class EntityBuilder  {
     entitytypeMap.put("freeAndBusy", IcalDefs.entityTypeFreeAndBusy);
     entitytypeMap.put("vavailability", IcalDefs.entityTypeVavailability);
     entitytypeMap.put("available", IcalDefs.entityTypeAvailable);
+    entitytypeMap.put("vpoll", IcalDefs.entityTypeVpoll);
   }
 
   private int makeEntityType(final String val) throws CalFacadeException {
@@ -707,7 +722,7 @@ public class EntityBuilder  {
     return i;
   }
 
-  private void restoreSharedEntity(BwShareableContainedDbentity ent) throws CalFacadeException {
+  private void restoreSharedEntity(final BwShareableContainedDbentity ent) throws CalFacadeException {
     ent.setCreatorHref(getString(PropertyInfoIndex.CREATOR));
     ent.setOwnerHref(getString(PropertyInfoIndex.OWNER));
     ent.setColPath(getString(PropertyInfoIndex.COLLECTION));
@@ -716,17 +731,17 @@ public class EntityBuilder  {
   }
 
   private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
-    Collection<Object> vals = getFieldValues(PropertyInfoIndex.CATEGORIES);
+    final Collection<Object> vals = getFieldValues(PropertyInfoIndex.CATEGORIES);
     if (Util.isEmpty(vals)) {
       return;
     }
 
-    Set<String> catUids = new TreeSet<>();
+    final Set<String> catUids = new TreeSet<>();
 
-    for (Object o: vals) {
+    for (final Object o: vals) {
       pushFields(o);
       try {
-        String uid = getString(PropertyInfoIndex.UID);
+        final String uid = getString(PropertyInfoIndex.UID);
         catUids.add(uid);
       } finally {
         popFields();
@@ -736,6 +751,7 @@ public class EntityBuilder  {
     ce.setCategoryUids(catUids);
   }
 
+  @SuppressWarnings("unchecked")
   private List<Object> getFieldValues(final PropertyInfoIndex id) {
     return getFieldValues(getJname(id));
   }
@@ -762,15 +778,15 @@ public class EntityBuilder  {
   }
 
   private Set<String> getStringSet(final PropertyInfoIndex pi) {
-    List<Object> l = getFieldValues(pi);
+    final List<Object> l = getFieldValues(pi);
 
     if (Util.isEmpty(l)) {
       return null;
     }
 
-    TreeSet<String> ts = new TreeSet<>();
+    final TreeSet<String> ts = new TreeSet<>();
 
-    for (Object o: l) {
+    for (final Object o: l) {
       ts.add((String)o);
     }
 
@@ -786,8 +802,8 @@ public class EntityBuilder  {
     return getFirstValue(id.getJname());
   }
 
-  private static String getJname(PropertyInfoIndex pi) {
-    BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
+  private static String getJname(final PropertyInfoIndex pi) {
+    final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
 
     if (ipie == null) {
       return null;
@@ -821,7 +837,7 @@ public class EntityBuilder  {
   }
 
   private Boolean getBoolean(final PropertyInfoIndex id) {
-    String s = (String)getFirstValue(id);
+    final String s = (String)getFirstValue(id);
 
     if (s == null) {
       return null;
@@ -831,7 +847,7 @@ public class EntityBuilder  {
   }
 
   private Boolean getBooleanNotNull(final PropertyInfoIndex id) {
-    Boolean b = getBoolean(id);
+    final Boolean b = getBoolean(id);
 
     if (b == null) {
       return Boolean.FALSE;
@@ -841,7 +857,7 @@ public class EntityBuilder  {
   }
 
   private boolean getBool(final PropertyInfoIndex id) {
-    Boolean b = getBoolean(id);
+    final Boolean b = getBoolean(id);
 
     if (b == null) {
       return false;
@@ -851,13 +867,13 @@ public class EntityBuilder  {
   }
 
   private Boolean getBoolean(final ParameterInfoIndex id) {
-    Object o = getFirstValue(id);
+    final Object o = getFirstValue(id);
 
     if (o instanceof Boolean) {
       return (Boolean)o;
     }
 
-    String s = (String)o;
+    final String s = (String)o;
 
     if (s == null) {
       return null;
@@ -867,7 +883,7 @@ public class EntityBuilder  {
   }
 
   private boolean getBool(final ParameterInfoIndex id) {
-    Boolean b = getBoolean(id);
+    final Boolean b = getBoolean(id);
 
     if (b == null) {
       return false;
@@ -877,7 +893,7 @@ public class EntityBuilder  {
   }
 
   private Integer getInteger(final PropertyInfoIndex id) {
-    String s = (String)getFirstValue(id);
+    final String s = (String)getFirstValue(id);
 
     if (s == null) {
       return null;
@@ -887,27 +903,27 @@ public class EntityBuilder  {
   }
 
   private Long getLong(final String name) {
-    Object o = getFirstValue(name);
+    final Object o = getFirstValue(name);
 
     if (o == null) {
       return null;
     }
 
     if (o instanceof Integer) {
-      return new Long((Integer)o);
+      return (long)o;
     }
 
     if (o instanceof Long) {
       return (Long)o;
     }
 
-    String s = (String)o;
+    final String s = (String)o;
 
     return Long.valueOf(s);
   }
 
   private int getInt(final PropertyInfoIndex id) {
-    String s = (String)getFirstValue(id);
+    final String s = (String)getFirstValue(id);
 
     if (s == null) {
       return 0;

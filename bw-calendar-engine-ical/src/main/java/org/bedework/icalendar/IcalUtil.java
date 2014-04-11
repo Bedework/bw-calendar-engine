@@ -36,6 +36,7 @@ import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.data.CalendarParserImpl;
 import net.fortuna.ical4j.data.ParserException;
@@ -409,36 +410,38 @@ public class IcalUtil {
   }
 
   /**
-   * @param poll
+   * @param poll the poll entity
    * @return Parsed components.
    * @throws Throwable
    */
   public static Calendar parseVpollCandidates(final BwEvent poll) throws Throwable {
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     sb.append("BEGIN:VCALENDAR\n");
     sb.append("PRODID://Bedework.org//BedeWork V3.9//EN\n");
     sb.append("VERSION:2.0\n");
 
-    for (String s: poll.getPollItems()) {
-      sb.append(s);
+    if (!Util.isEmpty(poll.getPollItems())) {
+      for (final String s: poll.getPollItems()) {
+        sb.append(s);
+      }
     }
 
     sb.append("END:VCALENDAR\n");
 
     try {
-      StringReader sr = new StringReader(sb.toString());
+      final StringReader sr = new StringReader(sb.toString());
 
-      Icalendar ic = new Icalendar();
+      final Icalendar ic = new Icalendar();
 
-      CalendarBuilder bldr = new CalendarBuilder(new CalendarParserImpl(), ic);
+      final CalendarBuilder bldr = new CalendarBuilder(new CalendarParserImpl(), ic);
 
-      UnfoldingReader ufrdr = new UnfoldingReader(sr, true);
+      final UnfoldingReader ufrdr = new UnfoldingReader(sr, true);
 
       return bldr.build(ufrdr);
-    } catch (ParserException pe) {
+    } catch (final ParserException pe) {
       throw new IcalMalformedException(pe.getMessage());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -901,7 +904,7 @@ public class IcalUtil {
           throw new CalFacadeException("org.bedework.error.nostartdate");
         }
 
-        /* A todo or vpoll can have no date and time. set start to now, end to
+        /* A task or vpoll can have no date and time. set start to now, end to
          * many years from now and the noStart flag.
          *
          * A todo without dates has to appear only on the current day.

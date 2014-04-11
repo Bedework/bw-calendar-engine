@@ -26,7 +26,7 @@ import java.io.Serializable;
 
 /** Interface defining svc factory
  *
- * @author Mike Douglass       douglm@bedework.edu
+ * @author Mike Douglass       douglm  rpi.edu
  */
 public interface CalSvcFactory extends Serializable {
   /** Get an initialised instance of CalSvcI

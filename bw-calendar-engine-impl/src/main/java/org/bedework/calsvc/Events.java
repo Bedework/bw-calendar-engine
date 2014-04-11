@@ -318,9 +318,6 @@ class Events extends CalSvcDb implements EventsI {
     return delete(ei, false, sendSchedulingMessage);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventsI#add(org.bedework.calfacade.svc.EventInfo, boolean, boolean, boolean)
-   */
   @Override
   public UpdateResult add(final EventInfo ei,
                           final boolean noInvites,

@@ -47,7 +47,6 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 
@@ -593,9 +592,11 @@ public class DocBuilder {
 
       /* Attachment */
 
+      final boolean vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
+
       if (ev.getNumAttendees() > 0) {
-        for (BwAttendee att: ev.getAttendees()) {
-          indexAttendee(att);
+        for (final BwAttendee att: ev.getAttendees()) {
+          indexAttendee(att, vpoll);
         }
       }
 
@@ -613,15 +614,27 @@ public class DocBuilder {
 
       endObject();
 
+      final String docType;
+
+      if (vpoll) {
+        docType = BwIndexer.docTypePoll;
+
+        if (!Util.isEmpty(ev.getPollItems())) {
+          makeField(PropertyInfoIndex.POLL_ITEM, ev.getPollItems());
+        }
+      } else {
+        docType = BwIndexer.docTypeEvent;
+      }
+
       return new DocInfo(builder,
-                         BwIndexer.docTypeEvent,
+                         docType,
                          version,
                          keys.makeKeyVal(getItemType(ei, kind),
                                          ei.getEvent().getHref(),
                                          recurid));
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -819,7 +832,7 @@ public class DocBuilder {
 
           if (al.getNumAttendees() > 0) {
             for (BwAttendee att: al.getAttendees()) {
-              indexAttendee(att);
+              indexAttendee(att, false);
             }
           }
         } else if (atype == BwAlarm.alarmTypeProcedure) {
@@ -928,18 +941,23 @@ public class DocBuilder {
       builder.field(getJname(PropertyInfoIndex.URI),
                     val.getOrganizerUri());
       builder.endObject();
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new CalFacadeException(e);
     }
   }
 
-  private void indexAttendee(final BwAttendee val) throws CalFacadeException {
+  private void indexAttendee(final BwAttendee val,
+                             final boolean vpoll) throws CalFacadeException {
     try {
       if (val == null) {
         return;
       }
 
-      builder.startObject(getJname(PropertyInfoIndex.ATTENDEE));
+      if (vpoll) {
+        builder.startObject(getJname(PropertyInfoIndex.VOTER));
+      } else {
+        builder.startObject(getJname(PropertyInfoIndex.ATTENDEE));
+      }
       builder.startObject("pars");
 
       if (val.getRsvp()) {
@@ -1010,7 +1028,7 @@ public class DocBuilder {
 
       builder.field("uri", val.getAttendeeUri());
       builder.endObject();
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1144,7 +1162,7 @@ public class DocBuilder {
   }
 
   private static String getJname(PropertyInfoIndex pi) {
-    BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
+    final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
 
     if (ipie == null) {
       return null;

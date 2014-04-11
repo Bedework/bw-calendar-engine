@@ -274,7 +274,7 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   private class EsSearchResult implements SearchResult {
-    private BwIndexer indexer;
+    private final BwIndexer indexer;
 
     private long found;
 
@@ -619,7 +619,7 @@ public class BwIndexEsImpl implements BwIndexer {
         case docTypeLocation:
           entity = eb.makeLocation();
           break;
-        case docTypeEvent:
+        case docTypeEvent: case docTypePoll:
           entity = eb.makeEvent(
                   res.recurRetrieval.mode == Rmode.expanded);
           final EventInfo ei = (EventInfo)entity;
@@ -1453,7 +1453,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
     final DeleteByQueryRequestBuilder delQreq =
             getClient().prepareDeleteByQuery(targetIndex).
-                    setTypes(docTypeEvent);
+                    setTypes(docTypeEvent,docTypePoll);
 
     final ESQueryFilter esq= getFilters(null);
 

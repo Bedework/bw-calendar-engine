@@ -30,7 +30,6 @@ public class SynchConf extends ConfBase<SynchConfigImpl>
   public static final String confuriPname = "org.bedework.bwengine.confuri";
 
   /**
-   * @param name
    */
   public SynchConf() {
     super(getServiceName("synch"));

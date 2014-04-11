@@ -2526,11 +2526,11 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       return;
     }
 
-// Set<String> catUids = new TreeSet<>();
+//    Set<String> catUids = new TreeSet<>();
 
     for (Object o: uids) {
       String uid = (String)o;
-// catUids.add(uid);
+//      catUids.add(uid);
 
       ce.addCategory(cb.getCategory(uid));
     }

@@ -115,7 +115,7 @@ public class CalendarBuilder {
 
     private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 
-    private Logger log = Logger.getLogger(CalendarBuilder.class);
+    private final Logger log = Logger.getLogger(CalendarBuilder.class);
 
     private final CalendarParser parser;
 

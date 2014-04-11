@@ -48,7 +48,9 @@ public interface BwIndexer extends Serializable {
   static final String docTypeLocation = "location";
   static final String docTypeContact = "contact";
   static final String docTypeEvent = "event";
-  static final String docTypePoll = "poll";
+  //        IcalDefs.entityTypeNames[IcalDefs.entityTypeEvent];
+  static final String docTypePoll = "vpoll";
+  //        IcalDefs.entityTypeNames[IcalDefs.entityTypeVpoll];
 
   /* Following used for the id */
   static final String[] masterDocTypes = {
@@ -59,7 +61,7 @@ public interface BwIndexer extends Serializable {
           null,   // freebusy
           null,   // vavail
           "masterAvailable",
-          null,   // vpoll
+          "masterVpoll",   // vpoll
   };
 
   static final String[] overrideDocTypes = {
@@ -70,7 +72,7 @@ public interface BwIndexer extends Serializable {
           null,   // freebusy
           null,   // vavail
           "overrideAvailable",
-          null,   // vpoll
+          "overrideVpoll",   // vpoll
   };
 
   /** Used for fetching master + override
@@ -231,12 +233,12 @@ public interface BwIndexer extends Serializable {
   String newIndex(String name) throws CalFacadeException;
 
   class IndexInfo implements Comparable<IndexInfo>, Serializable {
-    private String indexName;
+    private final String indexName;
 
     private Set<String> aliases;
 
     /**
-     * @param indexName
+     * @param indexName name of the index
      */
     public IndexInfo(final String indexName) {
       this.indexName = indexName;
@@ -275,6 +277,7 @@ public interface BwIndexer extends Serializable {
       aliases.add(val);
     }
 
+    @SuppressWarnings("NullableProblems")
     @Override
     public int compareTo(final IndexInfo o) {
       return getIndexName().compareTo(o.getIndexName());

@@ -304,9 +304,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
     getSvc().getPrefsHandler().get().setDefaultCalendarPath(val.getPath());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#getPreferred()
-   */
   @Override
   public String getPreferred(final String entityType) throws CalFacadeException {
     if (entityType.equals(Component.VEVENT)) {

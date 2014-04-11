@@ -158,6 +158,7 @@ public class BwEventUtil extends IcalUtil {
     }
 
     boolean debug = getLog().isDebugEnabled();
+    @SuppressWarnings("unchecked")
     Holder<Boolean> hasXparams = new Holder<Boolean>(Boolean.FALSE);
 
     int methodType = ical.getMethodType();
