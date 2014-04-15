@@ -21,6 +21,7 @@ package org.bedework.calsvc;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.Calintf;
+import org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
@@ -306,6 +307,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   @Override
   public String getPreferred(final String entityType) throws CalFacadeException {
+    final int calType;
+
     if (entityType.equals(Component.VEVENT)) {
       String path = getSvc().getPrefsHandler().get().getDefaultCalendarPath();
 
@@ -313,21 +316,21 @@ class Calendars extends CalSvcDb implements CalendarsI {
         return path;
       }
 
-      return Util.buildPath(true, getHomePath(), "/",
-                            getBasicSyspars().getUserDefaultCalendar());
+      calType = BwCalendar.calTypeCalendarCollection;
+    } else if (entityType.equals(Component.VTODO)) {
+      calType = BwCalendar.calTypeTasks;
+    } else if (entityType.equals(Component.VPOLL)) {
+      calType = BwCalendar.calTypePoll;
+    } else {
+      return null;
     }
 
-    if (entityType.equals(Component.VTODO)) {
-      return Util.buildPath(true, getHomePath(), "/",
-                            getBasicSyspars().getUserDefaultTasksCalendar());
-    }
+    GetSpecialCalendarResult gscr = getCal().getSpecialCalendar(getPrincipal(),
+                                                                calType,
+                                                                true,
+                                                                PrivilegeDefs.privAny);
 
-    if (entityType.equals(Component.VPOLL)) {
-      return Util.buildPath(true, getHomePath(), "/",
-                            getBasicSyspars().getUserDefaultPollsCalendar());
-    }
-
-    return null;
+    return gscr.cal.getPath();
   }
 
   /* (non-Javadoc)
