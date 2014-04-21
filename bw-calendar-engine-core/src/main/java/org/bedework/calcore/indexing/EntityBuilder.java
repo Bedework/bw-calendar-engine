@@ -272,7 +272,9 @@ public class EntityBuilder  {
     ev.setAlarms(restoreAlarms());
     /* uuu Attachment */
 
-    ev.setAttendees(restoreAttendees());
+    final boolean vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
+
+    ev.setAttendees(restoreAttendees(vpoll));
     ev.setRecipients(getStringSet(PropertyInfoIndex.RECIPIENT));
     ev.setComments((Set<BwString>)restoreBwStringSet(
             PropertyInfoIndex.COMMENT, false));
@@ -280,7 +282,7 @@ public class EntityBuilder  {
     ev.setResources((Set<BwString>)restoreBwStringSet(
             PropertyInfoIndex.RESOURCES, false));
 
-    if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
+    if (vpoll) {
       final Set<String> pollItems = getStringSet(PropertyInfoIndex.POLL_ITEM);
 
       if (!Util.isEmpty(pollItems)) {
@@ -288,6 +290,9 @@ public class EntityBuilder  {
           ev.addPollItem(s);
         }
       }
+
+      ev.setPollMode(getString(PropertyInfoIndex.POLL_MODE));
+      ev.setPollProperties(getString(PropertyInfoIndex.POLL_PROPERTIES));
     }
 
     return ei;
@@ -366,8 +371,15 @@ public class EntityBuilder  {
     }
   }
 
-  private Set<BwAttendee> restoreAttendees() throws CalFacadeException {
-    final List<Object> vals = getFieldValues(PropertyInfoIndex.ATTENDEE);
+  private Set<BwAttendee> restoreAttendees(final boolean vpoll) throws CalFacadeException {
+    final PropertyInfoIndex pi;
+
+    if (vpoll) {
+      pi = PropertyInfoIndex.VOTER;
+    } else {
+      pi = PropertyInfoIndex.ATTENDEE;
+    }
+    final List<Object> vals = getFieldValues(pi);
 
     if (Util.isEmpty(vals)) {
       return null;
@@ -395,6 +407,10 @@ public class EntityBuilder  {
             att.setMember(getString(ParameterInfoIndex.MEMBER));
             att.setRole(getString(ParameterInfoIndex.ROLE));
             att.setSentBy(getString(ParameterInfoIndex.SENT_BY));
+
+            if (vpoll) {
+              att.setStayInformed(getBool(ParameterInfoIndex.STAY_INFORMED));
+            }
           } finally {
             popFields();
           }
@@ -677,7 +693,7 @@ public class EntityBuilder  {
                   PropertyInfoIndex.DESCRIPTION));
           alarm.setSummary(getString(PropertyInfoIndex.SUMMARY));
 
-          alarm.setAttendees(restoreAttendees());
+          alarm.setAttendees(restoreAttendees(false));
         } else if (atype == BwAlarm.alarmTypeProcedure) {
           alarm.setAttach(getString(PropertyInfoIndex.ATTACH));
           alarm.setDescription(getString(

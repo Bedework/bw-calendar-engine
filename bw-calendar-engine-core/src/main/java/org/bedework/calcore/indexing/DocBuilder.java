@@ -370,9 +370,9 @@ public class DocBuilder {
 
       return new DocInfo(builder,
                          BwIndexer.docTypeLocation, 0, ent.getHref());
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -380,7 +380,7 @@ public class DocBuilder {
   /* Return the docinfo for the indexer */
   DocInfo makeDoc(final BwCalendar col) throws CalFacadeException {
     try {
-      long version = col.getMicrosecsVersion();
+      final long version = col.getMicrosecsVersion();
 
       startObject();
 
@@ -407,9 +407,9 @@ public class DocBuilder {
       return new DocInfo(builder,
                          BwIndexer.docTypeCollection,
                          version, col.getPath());
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -422,7 +422,7 @@ public class DocBuilder {
 
   static String getItemType(final EventInfo ei,
                             final ItemKind kind) throws CalFacadeException {
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
 
     if (kind == ItemKind.entity) {
       return IcalDefs.fromEntityType(ev.getEntityType());
@@ -442,8 +442,8 @@ public class DocBuilder {
                   final BwDateTime end,
                   final String recurid) throws CalFacadeException {
     try {
-      BwEvent ev = ei.getEvent();
-      long version = ev.getMicrosecsVersion();
+      final BwEvent ev = ei.getEvent();
+      final long version = ev.getMicrosecsVersion();
 
       /*
         if (ev instanceof BwEventProxy) {
@@ -502,7 +502,7 @@ public class DocBuilder {
         makeField(PropertyInfoIndex.SEQUENCE, ev.getSequence());
       }
 
-      BwLocation loc = ev.getLocation();
+      final BwLocation loc = ev.getLocation();
       if (loc != null) {
         loc.fixNames(basicSysprops, principal);
 
@@ -612,8 +612,6 @@ public class DocBuilder {
       /* Available */
       /* vpoll */
 
-      endObject();
-
       final String docType;
 
       if (vpoll) {
@@ -622,9 +620,14 @@ public class DocBuilder {
         if (!Util.isEmpty(ev.getPollItems())) {
           makeField(PropertyInfoIndex.POLL_ITEM, ev.getPollItems());
         }
+
+        makeField(PropertyInfoIndex.POLL_MODE, ev.getPollMode());
+        makeField(PropertyInfoIndex.POLL_PROPERTIES, ev.getPollProperties());
       } else {
         docType = BwIndexer.docTypeEvent;
       }
+
+      endObject();
 
       return new DocInfo(builder,
                          docType,
@@ -673,7 +676,7 @@ public class DocBuilder {
 
         builder.startArray(interestingXprops.get(nm));
 
-        for (BwXproperty xp: props) {
+        for (final BwXproperty xp: props) {
           String pars = xp.getPars();
           if (pars == null) {
             pars = "";
@@ -689,7 +692,7 @@ public class DocBuilder {
 
       builder.startArray(getJname(PropertyInfoIndex.XPROP));
 
-      for (BwXproperty xp: ent.getXproperties()) {
+      for (final BwXproperty xp: ent.getXproperties()) {
         String nm = interestingXprops.get(xp.getName());
 
         if (nm != null) {
@@ -963,6 +966,11 @@ public class DocBuilder {
       if (val.getRsvp()) {
         builder.field(ParameterInfoIndex.RSVP.getJname(),
                       val.getRsvp());
+      }
+
+      if (vpoll && val.getStayInformed()) {
+        builder.field(ParameterInfoIndex.STAY_INFORMED.getJname(),
+                      val.getStayInformed());
       }
 
       String temp = val.getCn();

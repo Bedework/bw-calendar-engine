@@ -21,6 +21,7 @@ package org.bedework.calcore.indexing;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.caldav.util.TimeRange;
 import org.bedework.caldav.util.filter.AndFilter;
+import org.bedework.caldav.util.filter.EntityTimeRangeFilter;
 import org.bedework.caldav.util.filter.EntityTypeFilter;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.caldav.util.filter.ObjectFilter;
@@ -86,29 +87,29 @@ public class ESQueryFilter implements CalintfDefs {
      These can only be satisfied by searching the instances */
   private boolean queryFiltered;
 
-  private static String colpathJname = getJname(PropertyInfoIndex.COLLECTION);
-  private static String dtendJname = getJname(PropertyInfoIndex.DTEND);
-  private static String dtstartJname = getJname(PropertyInfoIndex.DTSTART);
+  private static final String colpathJname = getJname(PropertyInfoIndex.COLLECTION);
+  //private static final String dtendJname = getJname(PropertyInfoIndex.DTEND);
+  //private static final String dtstartJname = getJname(PropertyInfoIndex.DTSTART);
 
   /** */
-  public static String hrefJname = getJname(PropertyInfoIndex.HREF);
-  private static String ownerJname = getJname(PropertyInfoIndex.OWNER);
-  private static String publicJname = getJname(PropertyInfoIndex.PUBLIC);
-  public static String recurrenceidJname =
-          getJname(PropertyInfoIndex.RECURRENCE_ID);
+  public static final String hrefJname = getJname(PropertyInfoIndex.HREF);
+  private static final String ownerJname = getJname(PropertyInfoIndex.OWNER);
+  private static final String publicJname = getJname(PropertyInfoIndex.PUBLIC);
+  //public static final String recurrenceidJname =
+  //        getJname(PropertyInfoIndex.RECURRENCE_ID);
 
-  private static String indexEndJname = getJname(PropertyInfoIndex.INDEX_END);
-  private static String indexStartJname = getJname(PropertyInfoIndex.INDEX_START);
+  //private static String indexEndJname = getJname(PropertyInfoIndex.INDEX_END);
+  //private static String indexStartJname = getJname(PropertyInfoIndex.INDEX_START);
 
-  private static String dtEndUTCRef = makePropertyRef(PropertyInfoIndex.DTEND,
-                                                          PropertyInfoIndex.UTC);
-  private static String dtStartUTCRef = makePropertyRef(
+  private final static String dtEndUTCRef = makePropertyRef(PropertyInfoIndex.DTEND,
+                                                            PropertyInfoIndex.UTC);
+  private final static String dtStartUTCRef = makePropertyRef(
           PropertyInfoIndex.DTSTART,
           PropertyInfoIndex.UTC);
 
-  private static String indexEndUTCRef = makePropertyRef(PropertyInfoIndex.INDEX_END,
-                                                      PropertyInfoIndex.UTC);
-  private static String indexStartUTCRef = makePropertyRef(
+  private final static String indexEndUTCRef = makePropertyRef(PropertyInfoIndex.INDEX_END,
+                                                               PropertyInfoIndex.UTC);
+  private final static String indexStartUTCRef = makePropertyRef(
           PropertyInfoIndex.INDEX_START,
           PropertyInfoIndex.UTC);
 
@@ -499,12 +500,10 @@ public class ESQueryFilter implements CalintfDefs {
     return dt; // It's probably a bad date
   }
 
-  private FilterBuilder doTimeRange(final TimeRangeFilter trf,
+  private FilterBuilder doTimeRange(final TimeRange tr,
                                     final boolean dateTimeField,
                                     final String fld,
                                     final String subfld) {
-    TimeRange tr = trf.getEntity();
-
     RangeFilterBuilder rfb = FilterBuilders.rangeFilter(fld);
 
     if (tr.getEnd() == null) {
@@ -759,7 +758,8 @@ public class ESQueryFilter implements CalintfDefs {
     }
 
     if (pf instanceof TimeRangeFilter) {
-      return doTimeRange((TimeRangeFilter)pf, false, fieldName, null);
+      return doTimeRange(((TimeRangeFilter)pf).getEntity(),
+                         false, fieldName, null);
     }
 
     /*
@@ -781,7 +781,7 @@ public class ESQueryFilter implements CalintfDefs {
         queryLimited = true;
       }
 
-      BwCalendar col = ((BwCollectionFilter)pf).getEntity();
+      final BwCalendar col = ((BwCollectionFilter)pf).getEntity();
 
       return new TermOrTerms(colpathJname,
                              col.getPath(),
@@ -789,11 +789,18 @@ public class ESQueryFilter implements CalintfDefs {
     }
 
     if (pf instanceof EntityTypeFilter) {
-      EntityTypeFilter etf = (EntityTypeFilter)pf;
+      final EntityTypeFilter etf = (EntityTypeFilter)pf;
 
       return new TermOrTerms("_type",
                              IcalDefs.entityTypeNames[etf.getEntity()],
                              pf.getNot());
+    }
+
+    if (pf instanceof EntityTimeRangeFilter) {
+      final EntityTimeRangeFilter etrf = (EntityTimeRangeFilter)pf;
+
+      return doTimeRange(etrf.getEntity(),
+                         false, fieldName, null);
     }
 
     if (pii == PropertyInfoIndex.COLLECTION) {
