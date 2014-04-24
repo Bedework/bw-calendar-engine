@@ -156,9 +156,9 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
 
     changeInfo.append(ev.getDtstamp());
 
-    boolean cancel = ev.getScheduleMethod() == ScheduleMethods.methodTypeCancel;
-    boolean adding = ei.getUpdResult().adding;
-    boolean reply = ev.getScheduleMethod() == ScheduleMethods.methodTypeReply;
+    final boolean cancel = ev.getScheduleMethod() == ScheduleMethods.methodTypeCancel;
+    final boolean adding = ei.getUpdResult().adding;
+    final boolean reply = ev.getScheduleMethod() == ScheduleMethods.methodTypeReply;
 
     if (cancel) {
       changeInfo.append(";CANCEL");

@@ -105,6 +105,9 @@ public class EventInfo
      */
     public String fromAttUri;
 
+    /** Marked entity */
+    public Integer pollWinner;
+
     /** Non-null if the object we added was a scheduling object and
      * resulted in some scheduling operations.
      */

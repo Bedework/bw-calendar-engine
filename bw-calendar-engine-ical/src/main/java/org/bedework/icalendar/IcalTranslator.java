@@ -729,6 +729,35 @@ public class IcalTranslator implements Serializable {
     }
   }
 
+  /** Convert the component to Calendar objects
+   *
+   * @param col      collection the entities will live in - possibly null
+   * @param comp - the component
+   * @param diff     True if we should assume we are updating existing events.
+   * @return Icalendar
+   * @throws CalFacadeException
+   */
+  public Icalendar fromComp(final BwCalendar col,
+                            final Component comp,
+                            final boolean diff,
+                            final boolean mergeAttendees) throws CalFacadeException {
+    try {
+      final Icalendar ic = new Icalendar();
+
+      setSystemProperties();
+
+      final Calendar cal = new Calendar();
+
+      cal.getComponents().add(comp);
+
+      return makeIc(col, ic, cal, diff, mergeAttendees);
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
   /** Convert the Icalendar reader to a Collection of Calendar objects
    *
    * @param col      collection the entities will live in - possibly null

@@ -24,22 +24,32 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwRequestStatus;
+import org.bedework.calfacade.PollItmId;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
+import org.bedework.icalendar.IcalUtil;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.timezones.Timezones;
 
+import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
+import net.fortuna.ical4j.model.Parameter;
+import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.TimeZone;
+import net.fortuna.ical4j.model.parameter.Response;
 import net.fortuna.ical4j.model.property.DtStart;
+import net.fortuna.ical4j.model.property.Voter;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 /** Handles incoming method REPLY scheduling messages.
  *
@@ -66,11 +76,11 @@ public class InReply extends InProcessor {
      * an attendee
      */
 
-    ProcessResult pr = new ProcessResult();
-    SchedulingI sched = getSvc().getScheduler();
+    final ProcessResult pr = new ProcessResult();
+    final SchedulingI sched = getSvc().getScheduler();
     BwEvent ev = ei.getEvent();
 
-    EventInfo colEi = sched.getStoredMeeting(ev);
+    final EventInfo colEi = sched.getStoredMeeting(ev);
 
     /* The event should have a calendar set to the inbox it came from.
      * That inbox may be owned by somebody other than the current user if a
@@ -95,13 +105,13 @@ public class InReply extends InProcessor {
 
       /* Should be exactly one attendee */
       if (!ev.getSuppressed()) {
-        Collection<BwAttendee> atts = ev.getAttendees();
+        final Collection<BwAttendee> atts = ev.getAttendees();
         if ((atts == null) || (atts.size() != 1)) {
           pr.sr.errorCode = CalFacadeException.schedulingExpectOneAttendee;
           break check;
         }
 
-        BwAttendee att = atts.iterator().next();
+        final BwAttendee att = atts.iterator().next();
         if (!att.getPartstat().equals(acceptPartstat)) {
           pr.attendeeAccepting = false;
         }
@@ -110,15 +120,15 @@ public class InReply extends InProcessor {
       }
 
       if (ei.getNumOverrides() > 0) {
-        for (EventInfo oei: ei.getOverrides()) {
+        for (final EventInfo oei: ei.getOverrides()) {
           ev = oei.getEvent();
-          Collection<BwAttendee> atts = ev.getAttendees();
+          final Collection<BwAttendee> atts = ev.getAttendees();
           if ((atts == null) || (atts.size() != 1)) {
             pr.sr.errorCode = CalFacadeException.schedulingExpectOneAttendee;
             break check;
           }
 
-          BwAttendee att = atts.iterator().next();
+          final BwAttendee att = atts.iterator().next();
           if (!att.getPartstat().equals(acceptPartstat)) {
             pr.attendeeAccepting = false;
           }
@@ -141,7 +151,13 @@ public class InReply extends InProcessor {
        * calendar event we ignore it.
        */
 
-      if (!updateOrganizerCopy(colEi, ei, attUri, pr.sr, 0)) {
+      final boolean vpoll = colEi.getEvent().getEntityType() ==
+              IcalDefs.entityTypeVpoll;
+      if (vpoll) {
+        if (!updateOrganizerPollCopy(colEi, ei, attUri, pr.sr, 0)) {
+          break check;
+        }
+      } else if (!updateOrganizerCopy(colEi, ei, attUri, pr.sr, 0)) {
         break check;
       }
 
@@ -155,13 +171,86 @@ public class InReply extends InProcessor {
                       Private methods
      ==================================================================== */
 
+  private boolean updateOrganizerPollCopy(final EventInfo colEi,
+                                          final EventInfo inBoxEi,
+                                          final String attUri,
+                                          final ScheduleResult sr,
+                                          final int action) throws CalFacadeException {
+    /* We have a single voter and their responses to each item.
+       Add a VOTER property to each candidate with the response.
+     */
+
+    /* First parse out the poll items */
+    try {
+      final BwEvent colEv = colEi.getEvent();
+      final Map<Integer, Component> comps = IcalUtil.parseVpollCandidates(colEv);
+
+      colEv.clearPollItems();  // We'll add them back
+
+      final BwEvent inEv = inBoxEi.getEvent();
+
+      final Set<PollItmId> pids = inEv.getPollItemIds();
+
+      for (final PollItmId pid: pids) {
+        final Component comp = comps.get(pid.getId());
+
+        if (comp == null) {
+          continue;
+        }
+
+        final PropertyList pl = comp.getProperties(Property.VOTER);
+
+        if (pl == null) {
+          continue;
+        }
+
+        Voter voter = null;
+
+        for (final Object vo: pl) {
+          final Voter v = (Voter)vo;
+
+          if (v.getValue().equals(attUri)) {
+            voter = v;
+            break;
+          }
+        }
+
+        if (voter == null) {
+          // Make a new VOTER property for this respondee
+          voter = new Voter(attUri);
+          comp.getProperties().add(voter);
+        }
+
+        final Response resp = (Response)voter.getParameter(Parameter.RESPONSE);
+
+        if (resp != null) {
+          voter.getParameters().remove(resp);
+        }
+
+        voter.getParameters().add(new Response(pid.getResponse()));
+      }
+
+      for (final Component comp: comps.values()) {
+        colEv.addPollItem(comp.toString());
+      }
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+
+    getSvc().getEventsHandler().update(colEi, false, attUri);
+
+    return true;
+  }
+
   private boolean updateOrganizerCopy(final EventInfo colEi,
                                       final EventInfo inBoxEi,
                                       final String attUri,
                                       final ScheduleResult sr,
                                       final int action) throws CalFacadeException {
-    BwEvent inBoxEv = inBoxEi.getEvent();
-    BwEvent calEv = colEi.getEvent();
+    final BwEvent inBoxEv = inBoxEi.getEvent();
+    final BwEvent calEv = colEi.getEvent();
 
     /* Only set true if the inbox copy needs to stay as notification.
      * Do not set true for status updates
@@ -196,8 +285,8 @@ public class InReply extends InProcessor {
       }
 
       // For a recurring instance we replace or we update all recurring instances.
-      boolean recurringInstance = (calEv instanceof BwEventProxy);
-      BwAttendee att = inBoxEv.findAttendee(attUri);
+      final boolean recurringInstance = (calEv instanceof BwEventProxy);
+      final BwAttendee att = inBoxEv.findAttendee(attUri);
 
       if (calAtt.changedBy(att)) {
         changed = true;
@@ -219,9 +308,9 @@ public class InReply extends InProcessor {
 
       // XXX Ensure no name change
       if (calEv instanceof BwEventProxy) {
-        BwEventProxy pr = (BwEventProxy)calEv;
+        final BwEventProxy pr = (BwEventProxy)calEv;
 
-        BwEventAnnotation ann = pr.getRef();
+        final BwEventAnnotation ann = pr.getRef();
         ann.setName(null);
       }
     }
@@ -229,9 +318,9 @@ public class InReply extends InProcessor {
     /* The above changed the master - now we need to update or add any overrides
      */
     if (calEv.getRecurring() && (inBoxEi.getOverrides() != null)) {
-      for (EventInfo oei: inBoxEi.getOverrides()) {
-        BwEvent oev = oei.getEvent();
-        EventInfo cei = colEi.findOverride(oev.getRecurrenceId() /*, false */);
+      for (final EventInfo oei: inBoxEi.getOverrides()) {
+        final BwEvent oev = oei.getEvent();
+        final EventInfo cei = colEi.findOverride(oev.getRecurrenceId() /*, false */);
 
         /*
         if (cei == null) {
@@ -242,12 +331,12 @@ public class InReply extends InProcessor {
           continue;
         }*/
 
-        BwEvent ocalEv = cei.getEvent();
+        final BwEvent ocalEv = cei.getEvent();
 
         if (((BwEventProxy)ocalEv).getRef().unsaved()) {
           // New Override
           try {
-            String rid = oev.getRecurrenceId();
+            final String rid = oev.getRecurrenceId();
             Date dt = new DateTime(rid);
 
             if (calEv.getDtstart().getDateType()) {
@@ -304,7 +393,7 @@ public class InReply extends InProcessor {
 
     colEi.setReplyUpdate(true);
 
-    /* Update the organizer copy. This will briadcast the changes tp all
+    /* Update the organizer copy. This will broadcast the changes tp all
      * attendees
      */
     getSvc().getEventsHandler().update(colEi, noinvites, attUri);

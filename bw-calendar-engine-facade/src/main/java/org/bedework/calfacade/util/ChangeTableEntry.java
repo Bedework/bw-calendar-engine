@@ -105,6 +105,7 @@ public class ChangeTableEntry {
     }
 
     present = true;
+    changed = true;
     newValues.add(val);
   }
 

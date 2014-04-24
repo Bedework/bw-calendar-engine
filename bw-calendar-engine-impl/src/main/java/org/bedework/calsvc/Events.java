@@ -325,20 +325,20 @@ class Events extends CalSvcDb implements EventsI {
                           final boolean autoCreateCollection,
                           final boolean rollbackOnError) throws CalFacadeException {
     try {
-      UpdateResult updResult = ei.getUpdResult();
+      final UpdateResult updResult = ei.getUpdResult();
       updResult.adding = true;
       updResult.hasChanged = true;
 
-      BwEvent event = ei.getEvent();
+      final BwEvent event = ei.getEvent();
 
       adjustEntities(ei);
 
-      BwPreferences prefs = getSvc().getPrefsHandler().get();
+      final BwPreferences prefs = getSvc().getPrefsHandler().get();
       if (prefs != null) {
-        Collection<BwCategory> cats = getSvc().getCategoriesHandler().
+        final Collection<BwCategory> cats = getSvc().getCategoriesHandler().
                 get(prefs.getDefaultCategoryUids());
 
-        for (BwCategory cat: cats) {
+        for (final BwCategory cat: cats) {
           event.addCategory(cat);
         }
       }
@@ -459,10 +459,11 @@ class Events extends CalSvcDb implements EventsI {
                                                 rollbackOnError);
 
       if (ei.getNumContainedItems() > 0) {
-        for (EventInfo oei: ei.getContainedItems()) {
+        for (final EventInfo oei: ei.getContainedItems()) {
           oei.getEvent().setName(event.getName());
-          UpdateEventResult auer = getCal().addEvent(oei,
-                                                     scheduling, rollbackOnError);
+          final UpdateEventResult auer =
+                  getCal().addEvent(oei,
+                                    scheduling, rollbackOnError);
           if (auer.errorCode != null) {
             //?
           }
@@ -479,10 +480,10 @@ class Events extends CalSvcDb implements EventsI {
 
         if (cal.getCollectionInfo().scheduling &&
             schedulingObject) {
-          SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
+          final SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
 
           sched.implicitSchedule(ei,
-                                 noInvites);
+                                 false /*noInvites*/);
 
           /* We assume we don't need to update again to set attendee status
            * Trying to do an update results in duplicate key errors.
@@ -495,7 +496,7 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       return updResult;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug) {
         error(t);
       }
@@ -522,10 +523,10 @@ class Events extends CalSvcDb implements EventsI {
                              final boolean noInvites,
                              final String fromAttUri) throws CalFacadeException {
     try {
-      BwEvent event = ei.getEvent();
+      final BwEvent event = ei.getEvent();
       event.setDtstamps(getCurrentTimestamp());
 
-      BwCalendar cal = validate(event,false);
+      final BwCalendar cal = validate(event,false);
       adjustEntities(ei);
 
       boolean organizerSchedulingObject = false;
@@ -549,14 +550,14 @@ class Events extends CalSvcDb implements EventsI {
                         ei.getOverridesChanged();
 
       /* TODO - this is wrong.
-         At the very least we shouldonly reschedule the override that changed.
+         At the very least we should only reschedule the override that changed.
          However adding an override looks like a change for all the fields
-         copied in. They shouldonly be a change if the value is differeet
+         copied in. There should only be a change if the value is different
        */
       boolean doReschedule = ei.getUpdResult().doReschedule;
 
       if (ei.getNumOverrides() > 0) {
-        for (EventInfo oei: ei.getOverrides()) {
+        for (final EventInfo oei: ei.getOverrides()) {
           setScheduleState(oei.getEvent());
 
           if (cal.getCollectionInfo().scheduling &&
@@ -606,7 +607,7 @@ class Events extends CalSvcDb implements EventsI {
         if (organizerSchedulingObject) {
           // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
           for (final BwAttendee att: event.getAttendees()) {
-            if (att.getPartstat() == IcalDefs.partstatValNeedsAction) {
+            if (att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
               att.setRsvp(true);
             }
           }
@@ -616,7 +617,7 @@ class Events extends CalSvcDb implements EventsI {
 
         if (!sendit) {
           if (!Util.isEmpty(ei.getOverrides())) {
-            for (EventInfo oei: ei.getOverrides()) {
+            for (final EventInfo oei: ei.getOverrides()) {
               if (oei.getUpdResult().reply) {
                 sendit = true;
                 break;
@@ -626,10 +627,10 @@ class Events extends CalSvcDb implements EventsI {
         }
 
         if (sendit) {
-          SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
+          final SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
 
           sched.implicitSchedule(ei,
-                                 noInvites);
+                                 false /*noInvites */);
 
           /* We assume we don't need to update again to set attendee status
            * Trying to do an update results in duplicate key errors.
@@ -641,8 +642,30 @@ class Events extends CalSvcDb implements EventsI {
         }
       }
 
+      /*
+      final boolean vpoll = event.getEntityType() == IcalDefs.entityTypeVpoll;
+
+      if (vpoll && (updResult.pollWinner != null)) {
+        // Add the winner and send it out
+        final Map<Integer, Component> comps =
+                IcalUtil.parseVpollCandidates(event);
+
+        final Component comp = comps.get(updResult.pollWinner);
+
+        if (comp != null) {
+          final IcalTranslator trans =
+                  new IcalTranslator(getSvc().getIcalCallback());
+          final String colPath = getSvc().getCalendarsHandler().getPreferred(
+                  comp.getName());
+          final BwCalendar col = getSvc().getCalendarsHandler().get(colPath);
+          final Icalendar ical = trans.fromComp(col, comp, true, true);
+
+          add(ical.getEventInfo(), false, false, true, true);
+        }
+      } */
+
       return updResult;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       getSvc().rollbackTransaction();
       if (t instanceof CalFacadeException) {
         throw (CalFacadeException)t;
@@ -656,7 +679,7 @@ class Events extends CalSvcDb implements EventsI {
   private boolean checkChanges(final EventInfo ei,
                                final boolean organizerSchedulingObject,
                                final boolean attendeeSchedulingObject) throws CalFacadeException {
-    UpdateResult updResult = ei.getUpdResult();
+    final UpdateResult updResult = ei.getUpdResult();
 
     if (ei.getChangeset(getPrincipalHref()).isEmpty()) {
       // Forced update?
@@ -675,26 +698,28 @@ class Events extends CalSvcDb implements EventsI {
       ei.getChangeset(getPrincipalHref()).dumpEntries();
     }
 
-    Collection<ChangeTableEntry> ctes = ei.getChangeset(getPrincipalHref()).getEntries();
+    final Collection<ChangeTableEntry> ctes =
+            ei.getChangeset(getPrincipalHref()).getEntries();
 
     boolean sequenceChanged = false;
 
-    for (ChangeTableEntry cte: ctes) {
+    for (final ChangeTableEntry cte: ctes) {
       if (!cte.getChanged()) {
         continue;
       }
 
       updResult.hasChanged = true;
+      final PropertyInfoIndex pi = cte.getIndex();
 
       if (!organizerSchedulingObject &&
-          cte.getIndex().equals(PropertyInfoIndex.ORGANIZER)) {
+          pi.equals(PropertyInfoIndex.ORGANIZER)) {
         // Never valid
         throw new CalFacadeForbidden(CaldavTags.attendeeAllowed,
                                      "Cannot change organizer");
       }
 
-      if (cte.getIndex().equals(PropertyInfoIndex.ATTENDEE) ||
-          cte.getIndex().equals(PropertyInfoIndex.VOTER)) {
+      if (pi.equals(PropertyInfoIndex.ATTENDEE) ||
+              pi.equals(PropertyInfoIndex.VOTER)) {
         updResult.addedAttendees = cte.getAddedValues();
         updResult.deletedAttendees = cte.getRemovedValues();
 
@@ -706,13 +731,32 @@ class Events extends CalSvcDb implements EventsI {
         }
       }
 
+      if (pi.equals(PropertyInfoIndex.POLL_WINNER)) {
+        if (!attendeeSchedulingObject) {
+          // Attendee replying?
+          /* XXX We should really check to see if the value changed here -
+           */
+          updResult.pollWinner = ei.getEvent().getPollWinner();
+        }
+      }
+
+      if (pi.equals(PropertyInfoIndex.POLL_ITEM)) {
+        if (attendeeSchedulingObject) {
+          // Attendee replying?
+          /* XXX We should really check to see if the value changed here -
+           */
+          updResult.reply = true;
+        }
+      }
+
       if (organizerSchedulingObject) {
-        if (cte.getIndex().equals(PropertyInfoIndex.SEQUENCE)) {
+        if (pi.equals(PropertyInfoIndex.SEQUENCE)) {
           sequenceChanged = true;
         }
 
-        BwIcalPropertyInfoEntry pi = BwIcalPropertyInfo.getPinfo(cte.getIndex());
-        if (pi.getReschedule()) {
+        final BwIcalPropertyInfoEntry pie =
+                BwIcalPropertyInfo.getPinfo(cte.getIndex());
+        if (pie.getReschedule()) {
           updResult.doReschedule = true;
         }
       }

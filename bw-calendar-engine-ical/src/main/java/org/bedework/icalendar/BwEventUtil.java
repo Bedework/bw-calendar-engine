@@ -34,6 +34,7 @@ import org.bedework.calfacade.BwRelatedTo;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.PollItmId;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
@@ -82,6 +83,7 @@ import net.fortuna.ical4j.model.property.PercentComplete;
 import net.fortuna.ical4j.model.property.PollItemId;
 import net.fortuna.ical4j.model.property.PollMode;
 import net.fortuna.ical4j.model.property.PollProperties;
+import net.fortuna.ical4j.model.property.PollWinner;
 import net.fortuna.ical4j.model.property.Priority;
 import net.fortuna.ical4j.model.property.RelatedTo;
 import net.fortuna.ical4j.model.property.RequestStatus;
@@ -151,17 +153,17 @@ public class BwEventUtil extends IcalUtil {
     }
 
     String currentPrincipal = null;
-    BwPrincipal principal = cb.getPrincipal();
+    final BwPrincipal principal = cb.getPrincipal();
 
     if (principal != null) {
       currentPrincipal = principal.getPrincipalRef();
     }
 
-    boolean debug = getLog().isDebugEnabled();
+    final boolean debug = getLog().isDebugEnabled();
     @SuppressWarnings("unchecked")
     Holder<Boolean> hasXparams = new Holder<Boolean>(Boolean.FALSE);
 
-    int methodType = ical.getMethodType();
+    final int methodType = ical.getMethodType();
 
     String attUri = null;
 
@@ -171,14 +173,15 @@ public class BwEventUtil extends IcalUtil {
     }
 
     try {
-      PropertyList pl = val.getProperties();
+      final PropertyList pl = val.getProperties();
+      boolean vpoll = false;
 
       if (pl == null) {
         // Empty component
         return null;
       }
 
-      int entityType;
+      final int entityType;
 
       if (val instanceof VEvent) {
         entityType = IcalDefs.entityTypeEvent;
@@ -194,6 +197,7 @@ public class BwEventUtil extends IcalUtil {
         entityType = IcalDefs.entityTypeAvailable;
       } else if (val instanceof VPoll) {
         entityType = IcalDefs.entityTypeVpoll;
+        vpoll = true;
       } else {
         throw new CalFacadeException("org.bedework.invalid.component.type",
                                      val.getName());
@@ -317,7 +321,7 @@ public class BwEventUtil extends IcalUtil {
           debugMsg("TRANS-TO_EVENT: try to fetch event with guid=" + guid);
         }
 
-        Collection<EventInfo> eis = cb.getEvent(cal, guid);
+        final Collection<EventInfo> eis = cb.getEvent(cal, guid);
         if (Util.isEmpty(eis)) {
           // do nothing
         } else if (eis.size() > 1) {
@@ -806,9 +810,16 @@ public class BwEventUtil extends IcalUtil {
           case POLL_ITEM_ID:
             /* ------------------- Poll item id -------------------- */
 
-            ival = new Integer(((PollItemId)prop).getPollitemid());
-            if (chg.changed(pi, ev.getPollItemId(), ival)) {
-              ev.setPollItemId(ival);
+            final PollItemId pollid = (PollItemId)prop;
+            if (vpoll) {
+              // Response
+              ev.addPollItemId(getPollId(pollid));
+            } else {
+              ival = pollid.getPollitemid();
+
+              if (chg.changed(pi, ev.getPollItemId(), ival)) {
+                ev.setPollItemId(ival);
+              }
             }
 
             break;
@@ -824,7 +835,7 @@ public class BwEventUtil extends IcalUtil {
             break;
 
           case POLL_PROPERTIES:
-            /* ------------------- Poll mode -------------------- */
+            /* ------------------- Poll properties ---------------- */
 
             sval = ((PollProperties)prop).getValue();
             if (chg.changed(pi, ev.getPollProperties(), sval)) {
@@ -832,10 +843,21 @@ public class BwEventUtil extends IcalUtil {
             }
 
             break;
+
+          case POLL_WINNER:
+            /* ------------------- Poll winner -------------------- */
+
+            ival = ((PollWinner)prop).getPollwinner();
+            if (chg.changed(pi, ev.getPollWinner(), ival)) {
+              ev.setPollWinner(ival);
+            }
+
+            break;
+
           case PRIORITY:
             /* ------------------- Priority -------------------- */
 
-            ival = new Integer(((Priority)prop).getLevel());
+            ival = ((Priority)prop).getLevel();
             if (chg.changed(pi, ev.getPriority(), ival)) {
               ev.setPriority(ival);
             }
@@ -858,10 +880,10 @@ public class BwEventUtil extends IcalUtil {
 
           case RELATED_TO:
             /* ------------------- RelatedTo -------------------- */
-            RelatedTo irelto = (RelatedTo)prop;
-            BwRelatedTo relto = new BwRelatedTo();
+            final RelatedTo irelto = (RelatedTo)prop;
+            final BwRelatedTo relto = new BwRelatedTo();
 
-            String parval = IcalUtil.getParameterVal(irelto, "RELTYPE");
+            final String parval = IcalUtil.getParameterVal(irelto, "RELTYPE");
             if (parval != null) {
               relto.setRelType(parval);
             }
@@ -1041,7 +1063,7 @@ public class BwEventUtil extends IcalUtil {
       } else if (!(val instanceof Available)) {
         VAlarmUtil.processComponentAlarms(cb, val, ev, currentPrincipal, chg);
         if (val instanceof VPoll) {
-          processCandidates(cb, cal, ical, (VPoll)val, evinfo);
+          processCandidates((VPoll)val, evinfo, chg);
         }
       }
 
@@ -1113,6 +1135,27 @@ public class BwEventUtil extends IcalUtil {
   /* ====================================================================
                       Private methods
      ==================================================================== */
+
+  private static PollItmId getPollId(final PollItemId pid) {
+    Parameter par = pid.getParameter(Parameter.RESPONSE);
+
+    Integer response = null;
+
+    if (par != null) {
+      response = Integer.valueOf(par.getValue());
+    }
+
+    String publicComment = null;
+    par = pid.getParameter(Parameter.PUBLIC_COMMENT);
+
+    if (par != null) {
+      publicComment = par.getValue();
+    }
+
+    final Integer id = pid.getPollitemid();
+
+    return new PollItmId(response, publicComment, id);
+  }
 
   private static void testXparams(final Property p,
                            final Holder<Boolean> hasXparams) {
@@ -1198,39 +1241,40 @@ public class BwEventUtil extends IcalUtil {
     }
   }
 
-  private static void processCandidates(final IcalCallback cb,
-                                        final BwCalendar cal,
-                                        final Icalendar ical,
-                                        final VPoll val,
-                                        final EventInfo vpoll) throws CalFacadeException {
+  private static void processCandidates(final VPoll val,
+                                        final EventInfo vpoll,
+                                        final ChangeTable changes) throws CalFacadeException {
 
     try {
-      ComponentList cands = val.getCandidates();
+      final ComponentList cands = val.getCandidates();
 
       if ((cands == null) || cands.isEmpty()) {
         return;
       }
 
-      Iterator it = cands.iterator();
-      Set<Integer> pids = new TreeSet<Integer>();
-      BwEvent event = vpoll.getEvent();
+      final Iterator it = cands.iterator();
+      final Set<Integer> pids = new TreeSet<>();
+      final BwEvent event = vpoll.getEvent();
 
       if (!Util.isEmpty(event.getPollItems())) {
-        event.getPollItems().clear();
+        event.clearPollItems();
       }
 
       while (it.hasNext()) {
-        Component comp = (Component)it.next();
+        final Component comp = (Component)it.next();
 
-        event.addPollItem(comp.toString());
+        final String pollItem = comp.toString();
+        event.addPollItem(pollItem);
 
-        Property p = comp.getProperty(Property.POLL_ITEM_ID);
+        changes.addValue(PropertyInfoIndex.POLL_ITEM, pollItem);
+
+        final Property p = comp.getProperty(Property.POLL_ITEM_ID);
 
         if (p == null) {
           throw new CalFacadeException("XXX - no poll item id");
         }
 
-        int pid = ((PollItemId)p).getPollitemid();
+        final int pid = ((PollItemId)p).getPollitemid();
 
         if (pids.contains(pid)) {
           throw new CalFacadeException("XXX - duplicate poll item id " + pid);
@@ -1244,9 +1288,9 @@ public class BwEventUtil extends IcalUtil {
 
 //        vpoll.addContainedItem(cand);
       }
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }

@@ -622,6 +622,7 @@ public class DocBuilder {
         }
 
         makeField(PropertyInfoIndex.POLL_MODE, ev.getPollMode());
+        makeField(PropertyInfoIndex.POLL_WINNER, ev.getPollWinner());
         makeField(PropertyInfoIndex.POLL_PROPERTIES, ev.getPollProperties());
       } else {
         docType = BwIndexer.docTypeEvent;

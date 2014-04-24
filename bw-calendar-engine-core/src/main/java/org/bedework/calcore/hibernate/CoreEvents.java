@@ -565,7 +565,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
      *
      * It also ensures our guid allocation is working OK
      */
-    if (!val.getPollCandidate() && collInf.uniqueKey) {
+    if (collInf.uniqueKey) {
       String name = calendarGuidExists(val, false, true);
       if (name == null) {
         name = calendarGuidExists(val, true, true);

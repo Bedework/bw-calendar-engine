@@ -177,6 +177,13 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   public final static String peruserInstance = "X-PERUSER-INSTANCE";
 
   /* ====================================================================
+   *                      VPoll or VPoll related fields
+   * These are moved into real fields in 4.0
+   * ==================================================================== */
+
+  public final static String pollItemId = "X-BW-POLL-ITEMID";
+
+  /* ====================================================================
    *                        Misc properties
    * ==================================================================== */
 
@@ -229,7 +236,7 @@ public class BwXproperty extends BwDbentity<BwXproperty>
    * ==================================================================== */
 
   // For jsp
-  private static final Set<String> xskipJsp = new TreeSet<String>();
+  private static final Set<String> xskipJsp = new TreeSet<>();
 
   static {
     xskipJsp.add(bedeworkXTimezone);
@@ -246,13 +253,15 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
     xskipJsp.add(bedeworkDavProp);
 
+    xskipJsp.add(pollItemId);
+
     xskipJsp.add(peruserPropTransp);
 
     xskipJsp.add(peruserInstance);
   }
 
   // For icalendar
-  private static final Set<String> xskip = new TreeSet<String>();
+  private static final Set<String> xskip = new TreeSet<>();
 
   static {
     xskip.addAll(xskipJsp);

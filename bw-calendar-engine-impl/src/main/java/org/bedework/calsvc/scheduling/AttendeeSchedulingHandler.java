@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc.scheduling;
 
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
@@ -26,18 +27,25 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
+import org.bedework.calfacade.PollItmId;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
+import org.bedework.icalendar.IcalUtil;
 import org.bedework.icalendar.Icalendar;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
-import org.bedework.access.PrivilegeDefs;
+import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.Parameter;
+import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.PropertyList;
+import net.fortuna.ical4j.model.property.PollItemId;
+import net.fortuna.ical4j.model.property.Voter;
 
-import java.util.TreeSet;
+import java.util.Map;
 
 /** Rather than have a single class steering calls to a number of smaller classes
  * we will build up a full implementation by progressively implementing abstract
@@ -227,6 +235,10 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
         // Only attendee should be us
 
         setOnlyAttendee(outEi, ei, att.getAttendeeUri());
+
+        if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
+          setPollResponse(outEi, ei, att.getAttendeeUri());
+        }
 
         outEv.setScheduleMethod(ScheduleMethods.methodTypeReply);
       } else if (method == ScheduleMethods.methodTypeCounter) {
@@ -465,22 +477,91 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       if (!Util.isEmpty(outEv.getAttendees())) {
         outEv.getAttendees().clear();
       }
-      BwAttendee att = ev.findAttendee(attUri);
+      final BwAttendee att = ev.findAttendee(attUri);
       outEv.addAttendee((BwAttendee)att.clone());
     }
 
     if (ei.getNumOverrides() > 0) {
-      for (EventInfo oei: ei.getOverrides()) {
-        BwEvent ev = oei.getEvent();
-        EventInfo oOutEi = outEi.findOverride(ev.getRecurrenceId());
-        BwEvent outEv = oOutEi.getEvent();
+      for (final EventInfo oei: ei.getOverrides()) {
+        final BwEvent ev = oei.getEvent();
+        final EventInfo oOutEi = outEi.findOverride(ev.getRecurrenceId());
+        final BwEvent outEv = oOutEi.getEvent();
 
         if (!Util.isEmpty(outEv.getAttendees())) {
           outEv.getAttendees().clear();
         }
-        BwAttendee att = ev.findAttendee(attUri);
+        final BwAttendee att = ev.findAttendee(attUri);
         outEv.addAttendee((BwAttendee)att.clone());
       }
+    }
+  }
+
+  /** Set the poll response for the given voter in the output event
+   * from the voting state in the incoming event.
+   *
+   * @param outEi - destined for somebodies inbox
+   * @param ei - the voters copy
+   * @param attUri - uri of the voter
+   * @throws CalFacadeException
+   */
+  private void setPollResponse(final EventInfo outEi,
+                               final EventInfo ei,
+                               final String attUri) throws CalFacadeException {
+    /* This requires us to parse out the poll items - find our voter
+       and add a poll item id property in the output.
+
+       Note that this is implementing poll mode basic.
+     */
+
+    final BwEvent ev = ei.getEvent();
+    final BwEvent outEv = outEi.getEvent();
+
+    try {
+      final Map<Integer, Component> comps = IcalUtil.parseVpollCandidates(ev);
+      outEv.clearPollItems();
+      outEv.clearPollItemIds();
+
+      for (final Component comp: comps.values()) {
+        final PollItemId pid = (PollItemId)comp.getProperty(Property.POLL_ITEM_ID);
+        if (pid == null) {
+          continue;
+        }
+
+        final PropertyList pl = comp.getProperties(Property.VOTER);
+
+        if (pl == null) {
+          continue;
+        }
+
+        Voter voter = null;
+
+        for (Object vo: pl) {
+          Voter v = (Voter)vo;
+
+          if (v.getValue().equals(attUri)) {
+            voter = v;
+            break;
+          }
+        }
+
+        if (voter == null) {
+          continue;
+        }
+
+        Parameter resp = voter.getParameter(Parameter.RESPONSE);
+
+        if (resp == null) {
+          continue;
+        }
+
+        PollItmId outPid = new PollItmId(Integer.valueOf(
+                resp.getValue()), null, pid.getPollitemid());
+        outEv.addPollItemId(outPid);
+      }
+
+
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
     }
   }
 }

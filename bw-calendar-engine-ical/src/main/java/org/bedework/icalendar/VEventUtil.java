@@ -111,6 +111,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /** Class to provide utility methods for translating to VEvent ical4j classes
  *
@@ -638,24 +639,24 @@ public class VEventUtil extends IcalUtil {
         }
 
         if (val.getNumAttendees() > 0) {
-          for (BwAttendee att: val.getAttendees()) {
+          for (final BwAttendee att: val.getAttendees()) {
             prop = setVoter(att);
             mergeXparams(prop, xcomp);
             pl.add(prop);
           }
         }
 
-        Calendar vcal = parseVpollCandidates(val);
+        final Map<Integer, Component> comps = parseVpollCandidates(val);
 
-        for (Object o: vcal.getComponents()) {
-          ((VPoll)comp).getCandidates().add((Component)o);
+        for (final Component candidate: comps.values()) {
+          ((VPoll)comp).getCandidates().add(candidate);
         }
       }
 
       return comp;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }

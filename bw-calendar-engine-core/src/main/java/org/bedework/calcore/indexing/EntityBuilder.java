@@ -292,6 +292,7 @@ public class EntityBuilder  {
       }
 
       ev.setPollMode(getString(PropertyInfoIndex.POLL_MODE));
+      ev.setPollWinner(getInteger(PropertyInfoIndex.POLL_WINNER));
       ev.setPollProperties(getString(PropertyInfoIndex.POLL_PROPERTIES));
     }
 

@@ -77,6 +77,7 @@ import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.Organizer;
+import net.fortuna.ical4j.model.property.PollItemId;
 import net.fortuna.ical4j.model.property.Repeat;
 import net.fortuna.ical4j.model.property.Trigger;
 import net.fortuna.ical4j.model.property.Uid;
@@ -87,8 +88,10 @@ import org.apache.log4j.Logger;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 /** Class to provide utility methods for ical4j classes
@@ -414,7 +417,7 @@ public class IcalUtil {
    * @return Parsed components.
    * @throws Throwable
    */
-  public static Calendar parseVpollCandidates(final BwEvent poll) throws Throwable {
+  public static Map<Integer, Component> parseVpollCandidates(final BwEvent poll) throws Throwable {
     final StringBuilder sb = new StringBuilder();
 
     sb.append("BEGIN:VCALENDAR\n");
@@ -438,7 +441,22 @@ public class IcalUtil {
 
       final UnfoldingReader ufrdr = new UnfoldingReader(sr, true);
 
-      return bldr.build(ufrdr);
+      final Calendar ical = bldr.build(ufrdr);
+
+      final Map<Integer, Component> comps = new HashMap<>();
+
+      for (final Object o: ical.getComponents()) {
+        final Component comp = (Component)o;
+
+        final PollItemId pid = (PollItemId)comp.getProperty(Property.POLL_ITEM_ID);
+        if (pid == null) {
+          continue;
+        }
+
+        comps.put(pid.getPollitemid(), comp);
+      }
+
+      return comps;
     } catch (final ParserException pe) {
       throw new IcalMalformedException(pe.getMessage());
     } catch (final Throwable t) {

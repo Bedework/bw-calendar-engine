@@ -1050,7 +1050,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
         supportedComponents.add("VEVENT");
         supportedComponents.add("VTODO");
         supportedComponents.add("VAVAILABILITY");
-        supportedComponents.add("VPOLL");
       } else {
         String[] ss = slist.split(",");
         for (String s: ss) {
