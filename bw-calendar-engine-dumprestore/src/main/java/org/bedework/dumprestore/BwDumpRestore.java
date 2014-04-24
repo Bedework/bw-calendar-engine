@@ -532,9 +532,11 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     }
 
     if (svci == null) {
-      CalSvcIPars pars = CalSvcIPars.getServicePars(curSvciOwner,
-                                                    publicAdmin,   // publicAdmin
-                                                    true);   // Allow super user
+      final CalSvcIPars pars = CalSvcIPars.getIndexerPars(curSvciOwner,
+                                                          publicAdmin);
+      //CalSvcIPars pars = CalSvcIPars.getServicePars(curSvciOwner,
+      //                                              publicAdmin,   // publicAdmin
+      //                                              true);   // Allow super user
       svci = new CalSvcFactoryDefault().getSvc(pars);
     }
 
