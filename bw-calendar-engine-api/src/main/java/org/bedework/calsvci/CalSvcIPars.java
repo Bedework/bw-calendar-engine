@@ -171,6 +171,7 @@ public class CalSvcIPars implements Serializable {
                                           true,   // adminCanEditAllPublicSponsors
                                           false); // sessionless
 
+    p.indexRebuild = true;
     p.forRestore = true;
 
     return p;
