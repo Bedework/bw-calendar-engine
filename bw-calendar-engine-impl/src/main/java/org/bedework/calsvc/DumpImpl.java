@@ -57,7 +57,7 @@ import java.util.Map;
 /** Class which implements the functions needed to dump the
  * calendar using a jdbc connection.
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm@rpi.edu
  * @version 1.0
  */
 @SuppressWarnings("unchecked")
@@ -81,9 +81,9 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
 
   @Override
   public Iterator getAdminGroups() throws CalFacadeException {
-    Collection<BwGroup> c = getCal().getAllGroups(true);
+    final Collection<BwGroup> c = getCal().getAllGroups(true);
 
-    for (BwGroup grp: c) {
+    for (final BwGroup grp: c) {
       getAdminMembers(grp);
     }
 
@@ -97,7 +97,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
 
   @Override
   public Iterator getCalendars() throws CalFacadeException {
-    Collection<BwCalendar> cols = new ArrayList<BwCalendar>();
+    final Collection<BwCalendar> cols = new ArrayList<>();
 
     cols.add(getCal().getCalendar(Util.buildPath(true, "/",
                                                  getBasicSyspars()
@@ -127,9 +127,9 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
 
   @Override
   public Iterator<BwEvent> getEvents() throws CalFacadeException {
-    Collection<BwEvent> evs = getObjectCollection(BwEventObj.class.getName());
+    final Collection<BwEvent> evs = getObjectCollection(BwEventObj.class.getName());
 
-    for (BwEvent ev: evs) {
+    for (final BwEvent ev: evs) {
       if (ev.testRecurring()) {
         ev.setOverrides(getOverrides(ev));
       }
@@ -177,7 +177,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   public void getResourceContent(final BwResource res) throws CalFacadeException {
     try {
       getCal().getResourceContent(res);
-    } catch (CalFacadeException cfe){
+    } catch (final CalFacadeException cfe){
       if (cfe.getMessage().equals(CalFacadeException.missingResourceContent)) {
         return; // Caller will flag this.
       }
@@ -218,12 +218,12 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
    *
    */
   private static final class DumpPrincipalInfo extends PrincipalInfo {
-    private DumpImpl dump;
+    private final DumpImpl dump;
 
-    private HashMap<String, Integer> toWho = new HashMap<String, Integer>();
-    private HashMap<Integer, String> fromWho = new HashMap<Integer, String>();
+    private final HashMap<String, Integer> toWho = new HashMap<>();
+    private final HashMap<Integer, String> fromWho = new HashMap<>();
 
-    private Map<String, BwPrincipal> principals = new HashMap<String, BwPrincipal>();
+    private final Map<String, BwPrincipal> principals = new HashMap<>();
 
     private static class StackedState {
       BwPrincipal principal;
@@ -232,7 +232,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
       PrivilegeSet maxAllowedPrivs;
     }
 
-    private Deque<StackedState> stack = new ArrayDeque<StackedState>();
+    private final Deque<StackedState> stack = new ArrayDeque<>();
 
     DumpPrincipalInfo(final DumpImpl dump,
                       final BwPrincipal principal,
@@ -320,14 +320,14 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
           return id;
         }
 
-        String root = fromWho.get(whoType);
+        final String root = fromWho.get(whoType);
 
         if (root == null) {
           throw new CalFacadeException(CalFacadeException.unknownPrincipalType);
         }
 
         return Util.buildPath(true, root, "/", id);
-      } catch (CalFacadeException cfe) {
+      } catch (final CalFacadeException cfe) {
         throw new AccessException(cfe);
       }
     }
@@ -343,7 +343,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
        * Anything with fewer or greater elements is a collection or entity.
        */
 
-      int pos1 = val.indexOf("/", 1);
+      final int pos1 = val.indexOf("/", 1);
 
       if (pos1 < 0) {
         return false;
@@ -353,7 +353,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
         return false;
       }
 
-      int pos2 = val.indexOf("/", pos1 + 1);
+      final int pos2 = val.indexOf("/", pos1 + 1);
 
       if (pos2 < 0) {
         return false;
@@ -364,7 +364,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
         return false;
       }
 
-      for (String root: toWho.keySet()) {
+      for (final String root: toWho.keySet()) {
         String pfx = root;
         if (!pfx.endsWith("/")) {
           pfx += "/";
