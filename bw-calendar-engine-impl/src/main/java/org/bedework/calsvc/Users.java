@@ -247,17 +247,17 @@ class Users extends CalSvcDb implements UsersI {
 
   @Override
   public void remove(final BwPrincipal pr) throws CalFacadeException {
-    String userRoot = getSvc().getPrincipalInfo().getCalendarHomePath(pr);
+    final String userRoot = getSvc().getPrincipalInfo().getCalendarHomePath(pr);
 
     /* views */
 
-    Collection<BwView> views = getSvc().getViewsHandler().getAll(pr);
-    for (BwView view: views) {
+    final Collection<BwView> views = getSvc().getViewsHandler().getAll(pr);
+    for (final BwView view: views) {
       getSvc().getViewsHandler().remove(view);
     }
 
     /* Set default calendar to null so we don't get blocked. */
-    BwPreferences prefs = getSvc().getPrefsHandler().get(pr);
+    final BwPreferences prefs = getSvc().getPrefsHandler().get(pr);
 
     if (prefs != null) {
       prefs.setDefaultCalendarPath(null);
@@ -266,7 +266,7 @@ class Users extends CalSvcDb implements UsersI {
 
     /* collections and user home */
 
-    BwCalendar home = getSvc().getCalendarsHandler().get(userRoot);
+    final BwCalendar home = getSvc().getCalendarsHandler().get(userRoot);
     if (home != null) {
       getSvc().getCalendarsHandler().delete(home, true, false);
     }
@@ -282,15 +282,15 @@ class Users extends CalSvcDb implements UsersI {
    */
   @Override
   public void logon(final BwPrincipal val) throws CalFacadeException {
-    Timestamp now = new Timestamp(System.currentTimeMillis());
+    final Timestamp now = new Timestamp(System.currentTimeMillis());
 
     val.setLogon(now);
     val.setLastAccess(now);
     getCal().saveOrUpdate(val);
 
-    /* Ensure we have a notifications collection. */
-    //getSvc().getCal().getSpecialCalendar(val, BwCalendar.calTypeNotifications,
-    //                                     true, PrivilegeDefs.privAny);
+    /* Ensure we have a polls collection. */
+    getSvc().getCal().getSpecialCalendar(val, BwCalendar.calTypePoll,
+                                         true, PrivilegeDefs.privAny);
   }
 
   /*
@@ -309,8 +309,8 @@ class Users extends CalSvcDb implements UsersI {
 
   private void initPrincipal(final BwPrincipal principal,
                              final CalSvc svc) throws CalFacadeException {
-    // Add preferencesgetUser
-    BwPreferences prefs = new BwPreferences();
+    // Add preferences
+    final BwPreferences prefs = new BwPreferences();
 
     prefs.setOwnerHref(principal.getPrincipalRef());
 
@@ -322,7 +322,7 @@ class Users extends CalSvcDb implements UsersI {
 
     // Add a default view for the calendar home
 
-    BwView view = new BwView();
+    final BwView view = new BwView();
 
     view.setName(getAuthpars().getDefaultUserViewName());
 

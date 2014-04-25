@@ -42,6 +42,7 @@ import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.CalSvcI;
+import org.bedework.icalendar.IcalUtil;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.Recurrence;
 import org.bedework.util.calendar.IcalDefs;
@@ -51,12 +52,18 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Dur;
+import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Period;
+import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.PropertyList;
+import net.fortuna.ical4j.model.parameter.Response;
+import net.fortuna.ical4j.model.property.Voter;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /** Handles incoming method REQUEST scheduling messages.
@@ -115,7 +122,14 @@ public class InRequest extends InProcessor {
         }
 
         colPath = ourCopy.getEvent().getColPath();
-        if (!updateAttendeeCopy(ourCopy, ei, uri)) {
+        final boolean vpoll =
+                ev.getEntityType() == IcalDefs.entityTypeVpoll;
+
+        if (vpoll) {
+          if (!updateAttendeePollCopy(ourCopy, ei, uri)) {
+            break check;
+          }
+        } else if (!updateAttendeeCopy(ourCopy, ei, uri)) {
           break check;
         }
 
@@ -625,6 +639,89 @@ public class InRequest extends InProcessor {
     }
 
     return true;
+  }
+
+  private boolean updateAttendeePollCopy(final EventInfo ourCopy,
+                                         final EventInfo inCopy,
+                                         final String attUri) throws CalFacadeException {
+    /* Copy VPOLL status into our copy.
+       Copy VOTER status of everybody else into each candidate
+     */
+
+    try {
+      final BwEvent ourEv = ourCopy.getEvent();
+      final BwEvent inEv = inCopy.getEvent();
+
+      ourEv.setStatus(inEv.getStatus());
+
+      final Map<Integer, Component> inCands = IcalUtil.parseVpollCandidates(inEv);
+      final Map<Integer, Component> ourCands = IcalUtil.parseVpollCandidates(ourEv);
+
+      for (final Integer itemId: inCands.keySet()) {
+        final Component inComp = inCands.get(itemId);
+        final Component ourComp = ourCands.get(itemId);
+
+        if (ourComp == null) {
+          continue;
+        }
+
+        PropertyList inVoters = inComp.getProperties(Property.VOTER);
+        PropertyList ourVoters = ourComp.getProperties(Property.VOTER);
+
+        if (inVoters == null) {
+          continue;
+        }
+
+        for (Object o: inVoters) {
+          Voter v = (Voter)o;
+
+          if (v.getValue().equals(attUri)) {
+            continue;
+          }
+
+          updateVoter(ourComp, ourVoters, v);
+        }
+      }
+
+      ourEv.clearPollItems();
+
+      for (Component comp: ourCands.values()) {
+        ourEv.addPollItem(comp.toString());
+      }
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+    return false;
+  }
+
+  private void updateVoter(final Component comp,
+                           final PropertyList voters,
+                           final Voter voter) {
+    final String uri = voter.getValue();
+    final Response inResp = (Response)voter.getParameter(Parameter.RESPONSE);
+
+    if (inResp == null) {
+      return;
+    }
+
+    for (Object o: voters) {
+      Voter v = (Voter)o;
+
+      if (v.getValue().equals(uri)) {
+        Response resp = (Response)v.getParameter(Parameter.RESPONSE);
+
+        if (resp != null) {
+          v.getParameters().remove(resp);
+        }
+        v.getParameters().add(inResp);
+        return;
+      }
+    }
+
+    /* Didn't find the voter - add to the component */
+    comp.getProperties().add(voter);
   }
 
   /** Update our (the attendees) copy of the event from the inbox copy. We

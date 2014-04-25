@@ -187,25 +187,22 @@ public class InScheduler extends AbstractScheduler {
       InProcessor proc = null;
 
       switch (method) {
-        case Icalendar.methodTypeCancel: {
+        case Icalendar.methodTypeCancel:
           proc = new InCancel(svci);
           break;
-        }
 
-        case Icalendar.methodTypeRequest: {
+        case Icalendar.methodTypeRequest:
+        case Icalendar.methodTypePollStatus:
           proc = new InRequest(svci);
           break;
-        }
 
-        case Icalendar.methodTypeReply: {
+        case Icalendar.methodTypeReply:
           proc = new InReply(svci);
           break;
-        }
 
-        case Icalendar.methodTypeRefresh: {
+        case Icalendar.methodTypeRefresh:
           proc = new InRefresh(svci);
           break;
-        }
 
         default:
           warn("InSchedule: unhandled method for " + ev.getOwnerHref() +

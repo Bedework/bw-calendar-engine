@@ -595,9 +595,7 @@ public class DocBuilder {
       final boolean vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
 
       if (ev.getNumAttendees() > 0) {
-        for (final BwAttendee att: ev.getAttendees()) {
-          indexAttendee(att, vpoll);
-        }
+        indexAttendees(ev.getAttendees(), vpoll);
       }
 
       makeField(PropertyInfoIndex.RECIPIENT, ev.getRecipients());
@@ -835,9 +833,7 @@ public class DocBuilder {
           makeField(PropertyInfoIndex.SUMMARY, al.getSummary());
 
           if (al.getNumAttendees() > 0) {
-            for (BwAttendee att: al.getAttendees()) {
-              indexAttendee(att, false);
-            }
+            indexAttendees(al.getAttendees(), false);
           }
         } else if (atype == BwAlarm.alarmTypeProcedure) {
           makeField(PropertyInfoIndex.ATTACH, al.getAttach());
@@ -950,93 +946,99 @@ public class DocBuilder {
     }
   }
 
-  private void indexAttendee(final BwAttendee val,
-                             final boolean vpoll) throws CalFacadeException {
+  private void indexAttendees(final Set<BwAttendee> atts,
+                              final boolean vpoll) throws CalFacadeException {
     try {
-      if (val == null) {
+      if (Util.isEmpty(atts)) {
         return;
       }
 
       if (vpoll) {
-        builder.startObject(getJname(PropertyInfoIndex.VOTER));
+        builder.startArray(getJname(PropertyInfoIndex.VOTER));
       } else {
-        builder.startObject(getJname(PropertyInfoIndex.ATTENDEE));
-      }
-      builder.startObject("pars");
-
-      if (val.getRsvp()) {
-        builder.field(ParameterInfoIndex.RSVP.getJname(),
-                      val.getRsvp());
+        builder.startArray(getJname(PropertyInfoIndex.ATTENDEE));
       }
 
-      if (vpoll && val.getStayInformed()) {
-        builder.field(ParameterInfoIndex.STAY_INFORMED.getJname(),
-                      val.getStayInformed());
+      for (BwAttendee val: atts) {
+        builder.startObject();
+        builder.startObject("pars");
+
+        if (val.getRsvp()) {
+          builder.field(ParameterInfoIndex.RSVP.getJname(),
+                        val.getRsvp());
+        }
+
+        if (vpoll && val.getStayInformed()) {
+          builder.field(ParameterInfoIndex.STAY_INFORMED.getJname(),
+                        val.getStayInformed());
+        }
+
+        String temp = val.getCn();
+        if (temp != null) {
+          builder.field(ParameterInfoIndex.CN.getJname(), temp);
+        }
+
+        temp = val.getPartstat();
+        if (temp == null) {
+          temp = IcalDefs.partstatValNeedsAction;
+        }
+        builder.field(ParameterInfoIndex.PARTSTAT.getJname(), temp);
+
+        temp = val.getScheduleStatus();
+        if (temp != null) {
+          builder.field(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
+                        temp);
+        }
+
+        temp = val.getCuType();
+        if (temp != null) {
+          builder.field(ParameterInfoIndex.CUTYPE.getJname(), temp);
+        }
+
+        temp = val.getDelegatedFrom();
+        if (temp != null) {
+          builder.field(ParameterInfoIndex.DELEGATED_FROM.getJname(),
+                        temp);
+        }
+
+        temp = val.getDelegatedTo();
+        if (temp != null) {
+          builder.field(ParameterInfoIndex.DELEGATED_TO.getJname(),
+                        temp);
+        }
+
+        temp = val.getDir();
+        if (temp != null) {
+          builder.field(ParameterInfoIndex.DIR.getJname(), temp);
+        }
+
+        temp = val.getLanguage();
+        if (temp != null) {
+          builder.field(ParameterInfoIndex.LANGUAGE.getJname(), temp);
+        }
+
+        temp = val.getMember();
+        if (temp != null) {
+          builder.field(ParameterInfoIndex.MEMBER.getJname(), temp);
+        }
+
+        temp = val.getRole();
+        if (temp != null) {
+          builder.field(ParameterInfoIndex.ROLE.getJname(), temp);
+        }
+
+        temp = val.getSentBy();
+        if (temp != null) {
+          builder.field(ParameterInfoIndex.SENT_BY.getJname(), temp);
+        }
+
+        builder.endObject();
+
+        builder.field("uri", val.getAttendeeUri());
+        builder.endObject();
       }
 
-      String temp = val.getCn();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.CN.getJname(), temp);
-      }
-
-      temp = val.getPartstat();
-      if (temp == null) {
-        temp = IcalDefs.partstatValNeedsAction;
-      }
-      builder.field(ParameterInfoIndex.PARTSTAT.getJname(), temp);
-
-      temp = val.getScheduleStatus();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
-                      temp);
-      }
-
-      temp = val.getCuType();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.CUTYPE.getJname(), temp);
-      }
-
-      temp = val.getDelegatedFrom();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.DELEGATED_FROM.getJname(),
-                      temp);
-      }
-
-      temp = val.getDelegatedTo();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.DELEGATED_TO.getJname(),
-                      temp);
-      }
-
-      temp = val.getDir();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.DIR.getJname(), temp);
-      }
-
-      temp = val.getLanguage();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.LANGUAGE.getJname(), temp);
-      }
-
-      temp = val.getMember();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.MEMBER.getJname(), temp);
-      }
-
-      temp = val.getRole();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.ROLE.getJname(), temp);
-      }
-
-      temp = val.getSentBy();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.SENT_BY.getJname(), temp);
-      }
-
-      builder.endObject();
-
-      builder.field("uri", val.getAttendeeUri());
-      builder.endObject();
+      builder.endArray();
     } catch (final IOException e) {
       throw new CalFacadeException(e);
     }
