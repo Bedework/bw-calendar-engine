@@ -71,6 +71,8 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   private String eventregAdminToken;
   private String eventregUrl;
 
+  private String cacheUrlPrefix;
+
   private Integer vpollMaxItems;
   private Integer vpollMaxActive;
   private Integer vpollMaxVoters;
@@ -253,6 +255,16 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   @Override
   public String getEventregUrl() {
     return eventregUrl;
+  }
+
+  @Override
+  public void setCacheUrlPrefix(final String val) {
+    cacheUrlPrefix = val;
+  }
+
+  @Override
+  public String getCacheUrlPrefix() {
+    return cacheUrlPrefix;
   }
 
   @Override

@@ -273,6 +273,16 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
+  public void setCacheUrlPrefix(final String val) {
+    getConfig().setCacheUrlPrefix(val);
+  }
+
+  @Override
+  public String getCacheUrlPrefix() {
+    return getConfig().getCacheUrlPrefix();
+  }
+
+  @Override
   public void setVpollMaxItems(final Integer val) {
     getConfig().setVpollMaxItems(val);
   }

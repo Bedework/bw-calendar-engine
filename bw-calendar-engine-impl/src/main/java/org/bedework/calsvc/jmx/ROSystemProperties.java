@@ -27,14 +27,14 @@ import org.bedework.calfacade.configs.SystemProperties;
 public final class ROSystemProperties implements SystemProperties {
   /* Wrapper to make System properties read only. */
 
-  private SystemProperties cfg;
+  private final SystemProperties cfg;
 
   private SystemProperties getConfig() {
     return cfg;
   }
 
   /**
-   * @param cfg
+   * @param cfg - system properties
    */
   ROSystemProperties(final SystemProperties cfg) {
     this.cfg = cfg;
@@ -250,6 +250,16 @@ public final class ROSystemProperties implements SystemProperties {
   @Override
   public String getEventregUrl() {
     return getConfig().getEventregUrl();
+  }
+
+  @Override
+  public void setCacheUrlPrefix(final String val) {
+    throw new RuntimeException("Immutable"); // getConfig().setEventregUrl(val);
+  }
+
+  @Override
+  public String getCacheUrlPrefix() {
+    return getConfig().getCacheUrlPrefix();
   }
 
   @Override

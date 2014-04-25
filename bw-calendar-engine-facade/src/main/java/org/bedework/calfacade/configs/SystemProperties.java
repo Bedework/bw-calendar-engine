@@ -183,6 +183,19 @@ public interface SystemProperties extends CalDAVSystemProperties {
   @MBeanInfo("The url for event reg service")
   String getEventregUrl();
 
+  /** Set the url prefix for the cache
+   *
+   * @param val
+   */
+  void setCacheUrlPrefix(String val);
+
+  /** Get the url prefix for the cache
+   *
+   * @return token
+   */
+  @MBeanInfo("The url prefix for the cache")
+  String getCacheUrlPrefix();
+
   /**
    * @return copy of this
    */
