@@ -51,6 +51,7 @@ import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 
+import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Period;
