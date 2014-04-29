@@ -28,13 +28,13 @@ import org.bedework.access.WhoDefs;
 import java.util.Collection;
 
 /**
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm  rpi.edu
  * @version 1.0
  */
 public class AdminGroupRule extends EntityRule {
   /** Cobstructor
    *
-   * @param globals
+   * @param globals for restore
    */
   public AdminGroupRule(final RestoreGlobals globals) {
     super(globals);
@@ -42,7 +42,7 @@ public class AdminGroupRule extends EntityRule {
 
   @Override
   public void end(final String ns, final String name) throws Exception {
-    BwAdminGroup entity = (BwAdminGroup)pop();
+    final BwAdminGroup entity = (BwAdminGroup)pop();
 
     try {
       if (entity.getGroupOwnerHref() == null) {
@@ -68,22 +68,16 @@ public class AdminGroupRule extends EntityRule {
 
         /* Save members. */
 
-        Collection<BwPrincipal> c = entity.getGroupMembers();
+        final Collection<BwPrincipal> c = entity.getGroupMembers();
         if (c == null) {
           return;
         }
 
-        for (BwPrincipal pr: c) {
-          if ((pr.getKind() == WhoDefs.whoTypeUser) &&
-              !globals.onlyUsersMap.check(pr.getPrincipalRef())) {
-            continue;
-          }
-
+        for (final BwPrincipal pr: c) {
           globals.rintf.addAdminGroupMember(entity, pr);
         }
-
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error("Unable to restore admin group " + entity);
       throw new Exception(t);
     }
