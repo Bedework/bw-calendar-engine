@@ -89,6 +89,7 @@ public abstract class CalintfBase implements Calintf {
                    final PrincipalInfo PrincipalInfo,
                    final String url,
                    final boolean publicAdmin,
+                   final boolean publicSubmission,
                    final boolean sessionless) throws CalFacadeException {
     this.logId = logId;
     this.configs = configs;
@@ -99,17 +100,17 @@ public abstract class CalintfBase implements Calintf {
 
     if (principalInfo.getPrincipal().getUnauthenticated()) {
       currentMode = CalintfDefs.guestMode;
+    } else if (publicAdmin) {
+      currentMode = CalintfDefs.publicAdminMode;
+    } else if (publicSubmission) {
+      currentMode = CalintfDefs.publicUserMode;
     } else {
-      if (!publicAdmin) {
-        currentMode = CalintfDefs.userMode;
-      } else {
-        currentMode = CalintfDefs.publicAdminMode;
-      }
+      currentMode = CalintfDefs.userMode;
     }
 
     try {
       objTimestamp = new Timestamp(System.currentTimeMillis());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -157,7 +158,7 @@ public abstract class CalintfBase implements Calintf {
     if (!isOpen) {
       try {
         NotificationsHandlerFactory.post(ev);
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         error("Unable to post system notification " + ev);
         error(t);
       }
@@ -175,7 +176,7 @@ public abstract class CalintfBase implements Calintf {
       try {
         ev = queuedNotifications.take();
         NotificationsHandlerFactory.post(ev);
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         /* This could be a real issue as we are currently relying on jms
            * messages to trigger the scheduling process.
            *

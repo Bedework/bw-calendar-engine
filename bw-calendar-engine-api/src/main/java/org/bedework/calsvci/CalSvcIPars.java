@@ -41,11 +41,15 @@ public class CalSvcIPars implements Serializable {
 
   /** True if this is for public admin
    */
-  private boolean publicAdmin;
+  private final boolean publicAdmin;
+
+  /** True if this is for public event submission
+   */
+  private boolean publicSubmission;
 
   /** True if this is for a background service
    */
-  private boolean service;
+  private final boolean service;
 
   /** The clientid from headers.
    */
@@ -57,15 +61,15 @@ public class CalSvcIPars implements Serializable {
 
   /** True if we should allow super user mode in non public admin
    */
-  private boolean allowSuperUser;
+  private final boolean allowSuperUser;
 
-  private boolean adminCanEditAllPublicCategories;
-  private boolean adminCanEditAllPublicLocations;
-  private boolean adminCanEditAllPublicContacts;
+  private final boolean adminCanEditAllPublicCategories;
+  private final boolean adminCanEditAllPublicLocations;
+  private final boolean adminCanEditAllPublicContacts;
 
   /** True if this is a sessionless client, e.g. caldav or rss
    */
-  private boolean sessionless;
+  private final boolean sessionless;
 
   private boolean forRestore;
 
@@ -83,6 +87,7 @@ public class CalSvcIPars implements Serializable {
    * @param publicAdmin true for admin
    * @param allowSuperUser  true to allow superuser mode in non-admin mode
    * @param service     true for a service
+   * @param publicSubmission true for the submit app
    * @param adminCanEditAllPublicCategories true/false
    * @param adminCanEditAllPublicLocations true/false
    * @param adminCanEditAllPublicContacts true/false
@@ -95,6 +100,7 @@ public class CalSvcIPars implements Serializable {
                      final boolean publicAdmin,
                      final boolean allowSuperUser,
                      final boolean service,
+                     final boolean publicSubmission,
 
                      final boolean adminCanEditAllPublicCategories,
                      final boolean adminCanEditAllPublicLocations,
@@ -108,6 +114,7 @@ public class CalSvcIPars implements Serializable {
          sessionless);
 
     this.user = user;
+    this.publicSubmission = publicSubmission;
   }
 
   /** Return new parameters for a service
@@ -198,6 +205,7 @@ public class CalSvcIPars implements Serializable {
                                              false,   // publicAdmin
                                              allowSuperUser,   // allow SuperUser
                                              service,
+                                             false, // publicSubmission
                                              false,  // adminCanEditAllPublicCategories
                                              false,  // adminCanEditAllPublicLocations
                                              false,  // adminCanEditAllPublicSponsors
@@ -313,6 +321,10 @@ public class CalSvcIPars implements Serializable {
     return publicAdmin;
   }
 
+  public boolean getPublicSubmission() {
+    return publicSubmission;
+  }
+
   /**
    * @return boolean true if this is a service.
    */
@@ -410,6 +422,7 @@ public class CalSvcIPars implements Serializable {
                                              getPublicAdmin(),
                                              getAllowSuperUser(),
                                              getService(),
+                                             getPublicSubmission(),
                                              getAdminCanEditAllPublicCategories(),
                                              getAdminCanEditAllPublicLocations(),
                                              getAdminCanEditAllPublicContacts(),

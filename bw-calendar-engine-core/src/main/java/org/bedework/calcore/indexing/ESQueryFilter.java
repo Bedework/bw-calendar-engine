@@ -353,6 +353,9 @@ public class ESQueryFilter implements CalintfDefs {
     //boolean all = (currentMode == guestMode) || ignoreCreator;
     boolean all = publicEvents || superUser;
 
+    /* While we have public/user indexes we don't need to filter on
+       the public flag
+
     FilterBuilder fb = and(filter,
                            FilterBuilders.termFilter(
                                    publicJname,
@@ -364,6 +367,13 @@ public class ESQueryFilter implements CalintfDefs {
 
     return and(fb, FilterBuilders.termFilter(ownerJname,
                                              principal.getPrincipalRef()));
+                                             */
+    if (all) {
+      return filter;
+    }
+
+    return and(filter, FilterBuilders.termFilter(ownerJname,
+                                                 principal.getPrincipalRef()));
   }
 
   /**

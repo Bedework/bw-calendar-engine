@@ -203,13 +203,15 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
                    final PrincipalInfo principalInfo,
                    final String url,
                    final boolean publicAdmin,
+                   final boolean publicSubmission,
                    final boolean sessionless) throws CalFacadeException {
-    super.init(logId, configs, principalInfo, url, publicAdmin, sessionless);
+    super.init(logId, configs, principalInfo, url,
+               publicAdmin, publicSubmission, sessionless);
 
     try {
       access = new AccessUtil();
       access.init(principalInfo);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
 
@@ -329,7 +331,8 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
     @Override
     public BwIndexer getIndexer() throws CalFacadeException {
-      if (intf.currentMode == CalintfDefs.guestMode ||
+      if ((intf.currentMode == CalintfDefs.guestMode) ||
+              (intf.currentMode == CalintfDefs.publicUserMode) ||
               (intf.currentMode == CalintfDefs.publicAdminMode)) {
         return intf.getPublicIndexer();
       }

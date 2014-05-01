@@ -78,6 +78,7 @@ public interface Calintf
    * @param principalInfo    Required for access evaluation.
    * @param url         String url to which we are connecting
    * @param publicAdmin boolean true if this is a public events admin app
+   * @param publicSubmission true for the submit app
    * @param sessionless true if this is a sessionless client
    * @throws CalFacadeException
    */
@@ -86,6 +87,7 @@ public interface Calintf
             PrincipalInfo principalInfo,
             String url,
             boolean publicAdmin,
+            boolean publicSubmission,
             boolean sessionless) throws CalFacadeException;
 
   /**

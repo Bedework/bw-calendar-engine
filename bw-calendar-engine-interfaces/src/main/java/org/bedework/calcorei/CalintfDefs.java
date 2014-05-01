@@ -21,7 +21,7 @@ package org.bedework.calcorei;
 
 /** Some definitions.
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm rpi.edu
  */
 public interface CalintfDefs {
   /** We can run in the following modes:
@@ -37,7 +37,7 @@ public interface CalintfDefs {
    */
   static final int userMode = 1;
   /**
-   * publicUserMode: an orgUnit user - public events
+   * publicUserMode: an user creating public events - using the submission app.
    */
   static final int publicUserMode = 2;
   /**
