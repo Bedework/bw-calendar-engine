@@ -1319,6 +1319,7 @@ public class CalSvc extends CalSvcI {
                   principalInfo,
                   null,
                   pars.getPublicAdmin(),
+                  pars.getPublicSubmission(),
                   pars.getSessionsless());
 
         if (!currentPrincipal.getUnauthenticated()) {
@@ -1526,7 +1527,7 @@ public class CalSvc extends CalSvcI {
 
     @Override
     public BwCategory findCategory(final BwString val) throws CalFacadeException {
-      return getCategoriesHandler().find(val);
+      return getCategoriesHandler().findPersistent(val);
     }
 
     @Override
