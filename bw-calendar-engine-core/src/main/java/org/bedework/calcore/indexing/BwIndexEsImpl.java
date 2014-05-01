@@ -1567,7 +1567,8 @@ public class BwIndexEsImpl implements BwIndexer {
           warn("*************************************************************");
           warn("*************************************************************");
           warn("*************************************************************");
-          warn("http is enabled for the indexer. This may be a security risk.");
+          warn("http is enabled for the indexer. This is a security risk.    ");
+          warn("Turn it off in the indexer configuration.                    ");
           warn("*************************************************************");
           warn("*************************************************************");
           warn("*************************************************************");
