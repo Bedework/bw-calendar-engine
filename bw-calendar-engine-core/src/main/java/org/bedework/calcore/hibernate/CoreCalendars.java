@@ -372,7 +372,10 @@ public class CoreCalendars extends CalintfHelperHib
 
     col = (BwCalendar)sess.getUnique();
 
-    if (col == null) {
+    if ((col == null) &&  !getPrincipal().getUnauthenticated()) {
+      /* Didn't find it. Is this a specila collection we should create,
+         Only try thi sis authenticated.
+       */
       if (path.equals("/")) {
         // Make a root collection
         col = new BwCalendar();
