@@ -221,7 +221,9 @@ class Events extends CalSvcDb implements EventsI {
     final boolean dateOnly = ev.getDtstart().getDateType();
 
     if (dateOnly) {
-      rstart = BwDateTime.makeBwDateTime(true, recurrenceId, null);
+      rstart = BwDateTime.makeBwDateTime(true,
+                                         recurrenceId.substring(0, 8),
+                                         null);
     } else {
       final String stzid = ev.getDtstart().getTzid();
 

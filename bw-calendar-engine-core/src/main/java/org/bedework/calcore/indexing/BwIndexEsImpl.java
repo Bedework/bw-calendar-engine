@@ -157,30 +157,30 @@ import static org.bedework.calcore.indexing.DocBuilder.DocInfo;
 public class BwIndexEsImpl implements BwIndexer {
   private transient Logger log;
 
-  private boolean debug;
+  private final boolean debug;
 
   //private int batchMaxSize = 0;
   //private int batchCurSize = 0;
 
   // private Object batchLock = new Object();
 
-  private boolean publick;
-  private BwPrincipal principal;
+  private final boolean publick;
+  private final BwPrincipal principal;
   private final boolean superUser;
 
-  private String host;
+  private final String host;
   private int port = 9300;
 
   private static Client theClient;
   private static final Object clientSyncher = new Object();
 
   private String targetIndex;
-  private int currentMode;
+  private final int currentMode;
 
-  private AuthProperties authpars;
-  private AuthProperties unauthpars;
-  private IndexProperties idxpars;
-  private BasicSystemProperties basicSysprops;
+  private final AuthProperties authpars;
+  private final AuthProperties unauthpars;
+  private final IndexProperties idxpars;
+  private final BasicSystemProperties basicSysprops;
 
   /* Indexed by index name */
   private final static Map<String, UpdateInfo> updateInfo = new HashMap<>();
@@ -1365,9 +1365,15 @@ public class BwIndexEsImpl implements BwIndexer {
           final BwEvent ov = oei.getEvent();
           overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
 
+          final String start;
+          if (ov.getDtstart().getDateType()) {
+            start = ov.getRecurrenceId().substring(0, 8);
+          } else {
+            start = ov.getRecurrenceId();
+          }
           final BwDateTime rstart =
                   BwDateTime.makeBwDateTime(ov.getDtstart().getDateType(),
-                                            ov.getRecurrenceId(),
+                                            start,
                                             stzid);
           final BwDateTime rend =
                   rstart.addDuration(BwDuration.makeDuration(ov.getDuration()));
