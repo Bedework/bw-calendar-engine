@@ -85,7 +85,7 @@ public abstract class BwEventProperty<T> extends
 
   /** Copy this objects fields into the parameter
    *
-   * @param val
+   * @param val to copy to
    */
   public void copyTo(final BwEventProperty<?> val) {
     val.setUid(getUid());
@@ -95,38 +95,42 @@ public abstract class BwEventProperty<T> extends
                             final BwPrincipal principal,
                             final String dir,
                             final String namePart) {
-    String path;
-
     if (getPublick()) {
       setColPath(Util.buildPath(true,
-                                "/public",
-                                "/",
-                                props.getBedeworkResourceDirectory(),
-                                "/",
-                                dir,
-                                "/",
-                                namePart));
-      return;
-    }
-
-      String homeDir;
-
-      if (principal.getKind() == Ace.whoTypeUser) {
-        homeDir = props.getUserCalendarRoot();
-      } else {
-        homeDir = Util.pathElement(1, principal.getPrincipalRef());
-      }
-
-    setColPath(Util.buildPath(true,
-                            "/",
-                            homeDir,
-                            "/",
-                            principal.getAccount(),
+                            "/public",
                             "/",
                             props.getBedeworkResourceDirectory(),
                             "/",
                             dir,
                             "/",
                             namePart));
+      return;
+    }
+
+    final String homeDir;
+
+    if (principal.getKind() == Ace.whoTypeUser) {
+      homeDir = props.getUserCalendarRoot();
+    } else {
+      homeDir = Util.pathElement(1, principal.getPrincipalRef());
+    }
+
+    setColPath(Util.buildPath(true,
+                              "/",
+                              homeDir,
+                              "/",
+                              principal.getAccount(),
+                              "/",
+                              props.getBedeworkResourceDirectory(),
+                              "/",
+                              dir,
+                              "/",
+                              namePart));
+  }
+
+  @Override
+  protected void toStringSegment(final ToString ts) {
+    super.toStringSegment(ts);
+    ts.append("uid", getUid());
   }
 }

@@ -34,10 +34,10 @@ import java.util.Collection;
  * @version 1.0
  */
 public class EventFieldRule extends EntityFieldRule {
-  private static Collection<String> skippedNames;
+  private final static Collection<String> skippedNames;
 
   static {
-    skippedNames = new ArrayList<String>();
+    skippedNames = new ArrayList<>();
 
     skippedNames.add("alarms");
     skippedNames.add("attachments");

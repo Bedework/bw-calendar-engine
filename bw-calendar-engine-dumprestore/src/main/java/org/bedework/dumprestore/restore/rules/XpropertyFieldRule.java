@@ -21,33 +21,57 @@ package org.bedework.dumprestore.restore.rules;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
  * @author Mike Douglass
  * @version 1.0
  */
 public class XpropertyFieldRule extends EntityFieldRule {
+  private final static Collection<String> skippedNames;
+
+  static {
+    skippedNames = new ArrayList<>();
+
+    skippedNames.add("id");
+    skippedNames.add("seq");
+    skippedNames.add("skip");
+    skippedNames.add("skipJsp");
+  }
+
   XpropertyFieldRule(final RestoreGlobals globals) {
     super(globals);
   }
 
   @Override
   public void field(final String name) throws Exception {
-    BwXproperty xp = (BwXproperty)top();
+    if (skippedNames.contains(name)) {
+      return;
+    }
+
+    final BwXproperty xp = (BwXproperty)top();
 
     if (name.equals("id") || name.equals("seq")) {
       return;
     }
 
-    if (name.equals("name")) {
-      xp.setName(stringFld());
-    } else if (name.equals("pars")) {
-      xp.setPars(stringFld());
-    } else if (name.equals("value")) {
-      xp.setValue(stringFld());
-    } else if (name.equals("byteSize")) {
-      xp.setByteSize(intFld());
-    } else {
-      unknownTag(name);
+    switch (name) {
+      case "name":
+        xp.setName(stringFld());
+        break;
+      case "pars":
+        xp.setPars(stringFld());
+        break;
+      case "value":
+        xp.setValue(stringFld());
+        break;
+      case "byteSize":
+        xp.setByteSize(intFld());
+        break;
+      default:
+        unknownTag(name);
+        break;
     }
   }
 }

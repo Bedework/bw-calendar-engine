@@ -26,7 +26,7 @@ import org.bedework.dumprestore.restore.RestoreGlobals;
 
 /** Build an OwnerUidKey then retrieve and store the object..
  *
- * @author Mike Douglass   douglm @ bedework.edu
+ * @author Mike Douglass   douglm @ rpi.edu
  * @version 1.0
  */
 public class CategoryUidRule extends StringKeyRule {
@@ -36,19 +36,17 @@ public class CategoryUidRule extends StringKeyRule {
 
   @Override
   public void pushEntity(final String val) throws Exception {
-    BwCategory ent;
+    final BwCategory ent;
     try {
       ent = globals.rintf.getCategory(val);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new Exception(t);
     }
 
     if (ent == null) {
-      throw new Exception("Missing category with uid " + val + " for " + top());
-    }
-
-    if (top() instanceof BwAuthUser) {
-      ((BwAuthUser)top()).getPrefs().getCategoryPrefs().add(ent.getUid());
+      error("Missing category with uid " + val + " for " + top());
+    } else if (top() instanceof BwAuthUser) {
+      ((BwAuthUser)top()).getPrefs().getCategoryPrefs().add(ent);
     } else if (top() instanceof EventInfo) {
       ((EventInfo)top()).getEvent().addCategory(ent);
     } else if (top() instanceof CategorisedEntity) {

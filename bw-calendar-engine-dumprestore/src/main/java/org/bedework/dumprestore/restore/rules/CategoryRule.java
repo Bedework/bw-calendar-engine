@@ -23,13 +23,13 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
 /**
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm  rpi.edu
  * @version 1.0
  */
 public class CategoryRule extends EntityRule {
   /** Constructor
    *
-   * @param globals
+   * @param globals for restore
    */
   public CategoryRule(final RestoreGlobals globals) {
     super(globals);
@@ -40,10 +40,16 @@ public class CategoryRule extends EntityRule {
    */
   @Override
   public void end(final String ns, final String name) throws Exception {
-    BwCategory entity = (BwCategory)pop();
+    final BwCategory entity = (BwCategory)pop();
     globals.counts[globals.categories]++;
 
     fixSharableEntity(entity, "Category");
+
+    if (entity.getWord() == null) {
+      error("Missing keyword for category " + entity);
+
+      return;
+    }
 
     if (entity.getUid() == null) {
       error("Missing uid for category " + entity);
@@ -53,7 +59,7 @@ public class CategoryRule extends EntityRule {
 
     try {
       globals.rintf.restoreCategory(entity);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       warn("Unable to restore " + entity);
       throw new Exception(t);
     }

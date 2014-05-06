@@ -311,7 +311,9 @@ public abstract class CalintfHelper
       return;
     }
 
-    getIndexer().indexEntity(ei);
+    if (!getForRestore()) {
+      getIndexer().indexEntity(ei);
+    }
   }
 
   protected void unindexEntity(final EventInfo ei) throws CalFacadeException {
