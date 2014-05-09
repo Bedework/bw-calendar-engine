@@ -46,7 +46,7 @@ public class CategoryUidRule extends StringKeyRule {
     if (ent == null) {
       error("Missing category with uid " + val + " for " + top());
     } else if (top() instanceof BwAuthUser) {
-      ((BwAuthUser)top()).getPrefs().getCategoryPrefs().add(ent);
+      ((BwAuthUser)top()).getPrefs().getCategoryPrefs().add(ent.getUid());
     } else if (top() instanceof EventInfo) {
       ((EventInfo)top()).getEvent().addCategory(ent);
     } else if (top() instanceof CategorisedEntity) {

@@ -22,6 +22,7 @@ import org.bedework.access.Ace;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.FixNamesEntity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.misc.Util;
 
