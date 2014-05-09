@@ -372,17 +372,14 @@ public class CoreCalendars extends CalintfHelperHib
 
     col = (BwCalendar)sess.getUnique();
 
-    if ((col == null) &&  !getPrincipal().getUnauthenticated()) {
-      /* Didn't find it. Is this a specila collection we should create,
-         Only try thi sis authenticated.
-       */
+    if (col == null) {
       if (path.equals("/")) {
-        // Make a root collection
+        // Fake a root collection
         col = new BwCalendar();
         col.setPath("/");
 
         // Use this for owner/creator
-        BwCalendar userRoot = getCollection(userCalendarRootPath);
+        final BwCalendar userRoot = getCollection(userCalendarRootPath);
 
         if (userRoot == null) {
           return null;
@@ -391,18 +388,23 @@ public class CoreCalendars extends CalintfHelperHib
         col.setOwnerHref(userRoot.getOwnerHref());
         col.setCreatorHref(userRoot.getCreatorHref());
         col.setAccess(Access.getDefaultPublicAccess());
-      } else {
-        GetSpecialCalendarResult gscr = getIfSpecial(getPrincipal(), path);
+      } else if (!getPrincipal().getUnauthenticated()) {
+        /* Didn't find it. Is this a special collection we should create,
+           Only try this if authenticated.
+         */
+        final GetSpecialCalendarResult gscr = getIfSpecial(getPrincipal(), path);
 
-        if (gscr != null) {
-          return gscr.cal;
+        if (gscr == null) {
+          return null;
         }
 
+        col = gscr.cal;
+      } else {
         return null;
       }
     }
 
-    CalendarWrapper wcol = wrap(col);
+    final CalendarWrapper wcol = wrap(col);
     if (wcol != null) {
       colCache.put(wcol);
     }

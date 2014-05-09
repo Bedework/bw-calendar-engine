@@ -40,6 +40,11 @@
       <param-value>true</param-value>
     </init-param>
 
+    <init-param>
+      <param-name>sysintfImpl</param-name>
+      <param-value>org.bedework.caldav.bwserver.BwSysIntfImpl</param-value>
+    </init-param>
+
     <load-on-startup>1</load-on-startup>
   </servlet>
 

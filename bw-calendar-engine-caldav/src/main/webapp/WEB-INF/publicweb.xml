@@ -41,7 +41,6 @@
     </init-param>
 
     <init-param>
-      <!-- Only applies if debug on - causes responses to be wrapped. -->
       <param-name>sysintfImpl</param-name>
       <param-value>org.bedework.caldav.bwserver.BwSysIntfImpl</param-value>
     </init-param>
