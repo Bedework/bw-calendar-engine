@@ -44,7 +44,7 @@ import javax.xml.namespace.QName;
  *
  */
 public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
-  private BwSysIntfImpl intf;
+  private final BwSysIntfImpl intf;
 
   private BwResource rsrc;
 
@@ -139,19 +139,19 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
 
     try {
       /* If this is a notification we need to unprefix the data */
-      InputStream str;
+      final InputStream str;
 
       if (!isNotification()) {
         str = val;
       } else {
-        NotificationType note = Parser.fromXml(val);
+        final NotificationType note = Parser.fromXml(val);
 
         note.getNotification().unprefixHrefs(intf.getUrlHandler());
 
-        str = new ByteArrayInputStream(note.toXml().getBytes());
+        str = new ByteArrayInputStream(note.toXml(true).getBytes());
       }
 
-      ByteArrayOutputStream outBuff = new ByteArrayOutputStream();
+      final ByteArrayOutputStream outBuff = new ByteArrayOutputStream();
       byte[] inBuffer = new byte[1000];
       long clen = 0;
       int chunkSize;
@@ -228,7 +228,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
 
     try {
       return b.getBinaryStream();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
@@ -243,10 +243,10 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
 
       note.getNotification().prefixHrefs(intf.getUrlHandler());
 
-      xmlNote = note.toXml();
+      xmlNote = note.toXml(intf.bedeworkExtensionsEnabled());
 
       return note;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
@@ -319,17 +319,11 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
    *                      Overrides
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#setName(java.lang.String)
-   */
   @Override
   public void setName(final String val) throws WebdavException {
     getRsrc().setName(val);
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#getName()
-   */
   @Override
   public String getName() throws WebdavException {
     String n = getRsrc().getName();
@@ -341,25 +335,16 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
     return n.substring(0, n.length() - BwResource.tombstonedSuffix.length());
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#setDisplayName(java.lang.String)
-   */
   @Override
   public void setDisplayName(final String val) throws WebdavException {
     // No display name
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdEntity#getDisplayName()
-   */
   @Override
   public String getDisplayName() throws WebdavException {
     return getRsrc().getName();
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#setPath(java.lang.String)
-   */
   @Override
   public void setPath(final String val) throws WebdavException {
     // Not actually saved

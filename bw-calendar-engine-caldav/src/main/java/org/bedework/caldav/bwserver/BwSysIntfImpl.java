@@ -143,6 +143,8 @@ public class BwSysIntfImpl implements SysIntf {
 
   protected transient Logger log;
 
+  private boolean bedeworkExtensionsEnabled;
+
   protected AccessPrincipal currentPrincipal;
 
   private CalPrincipalInfo principalInfo;
@@ -192,44 +194,19 @@ public class BwSysIntfImpl implements SysIntf {
 
       urlHandler = new UrlHandler(req, !calWs);
 
-      HttpSession session = req.getSession();
-      ServletContext sc = session.getServletContext();
+      final HttpSession session = req.getSession();
+      final ServletContext sc = session.getServletContext();
 
-      String appName = sc.getInitParameter("bwappname");
+      final String appName = sc.getInitParameter("bwappname");
 
       if ((appName == null) || (appName.length() == 0)) {
         throw new WebdavException("bwappname is not set in web.xml");
       }
 
-      final String hdr = req.getHeader("X-BEDEWORK-NOTE");
+      final String id = doNoteHeader(req.getHeader("X-BEDEWORK-NOTE"),
+                                     account);
 
-      String id = null;
-
-      if (hdr == null) {
-        id = account;
-      } else {
-        final String[] hparts = hdr.split(":");
-
-        if (hparts.length == 2) {
-          id = hparts[0];
-
-          NotificationProperties nprops = configs.getNotificationProps();
-
-          String token = hparts[1];
-
-          if (id != null) {
-            if (!id.equals(nprops.getNotifierId()) ||
-                    (token == null) ||
-                    !token.equals(nprops.getNotifierToken())) {
-              id = null;
-            }
-          }
-        }
-
-        if (id == null) {
-          throw new WebdavBadRequest();
-        }
-      }
+      doBedeworkExtensions(req.getHeader("X-BEDEWORK-EXTENSIONS"));
 
       /* Find the mbean and get the config */
 
@@ -251,7 +228,7 @@ public class BwSysIntfImpl implements SysIntf {
       currentPrincipal = svci.getUsersHandler().getUser(id);
 
       return id;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
@@ -259,6 +236,11 @@ public class BwSysIntfImpl implements SysIntf {
   @Override
   public boolean testMode() {
     return basicSysProperties.getTestMode();
+  }
+
+  @Override
+  public boolean bedeworkExtensionsEnabled() {
+    return bedeworkExtensionsEnabled;
   }
 
   @Override
@@ -953,8 +935,9 @@ public class BwSysIntfImpl implements SysIntf {
         return new UpdateResult("No updates");
       }
 
-      UpdateResult ur = new BwUpdates(getPrincipal().getPrincipalRef()).updateEvent(ei, updates,
-                                                    getSvci().getIcalCallback());
+      UpdateResult ur = new BwUpdates(getPrincipal().getPrincipalRef()).updateEvent(
+              ei, updates,
+              getSvci().getIcalCallback());
       if (!ur.getOk()) {
         getSvci().rollbackTransaction();
         return ur;
@@ -2198,18 +2181,64 @@ public class BwSysIntfImpl implements SysIntf {
    *                         Private methods
    * ==================================================================== */
 
+  private String doNoteHeader(final String hdr,
+                              final String account) throws WebdavException {
+
+    if (hdr == null) {
+      return account;
+    }
+
+    try {
+      final String[] hparts = hdr.split(":");
+
+      if (hparts.length != 2) {
+        throw new WebdavBadRequest();
+      }
+
+      final String id = hparts[0];
+
+      final NotificationProperties nprops = configs.getNotificationProps();
+
+      final String token = hparts[1];
+
+      if (id == null) {
+        throw new WebdavBadRequest();
+      }
+
+      if (!id.equals(nprops.getNotifierId()) ||
+              (token == null) ||
+              !token.equals(nprops.getNotifierToken())) {
+        throw new WebdavBadRequest();
+      }
+
+      return id;
+    } catch (final WebdavException wde) {
+      throw wde;
+    } catch (final Throwable t) {
+      throw new WebdavException(t);
+    }
+  }
+
+  private void doBedeworkExtensions(final String hdr) throws WebdavException {
+    if (hdr == null) {
+      return;
+    }
+
+    bedeworkExtensionsEnabled = Boolean.valueOf(hdr);
+  }
+
   /**
-   * @param sr
+   * @param sr schedule result
    * @return recipient results
    * @throws WebdavException
    */
   private Collection<SchedRecipientResult> checkStatus(final ScheduleResult sr) throws WebdavException {
     if ((sr.errorCode == null) ||
-        (sr.errorCode == CalFacadeException.schedulingNoRecipients)) {
-      Collection<SchedRecipientResult> srrs = new ArrayList<SchedRecipientResult>();
+        (sr.errorCode.equals(CalFacadeException.schedulingNoRecipients))) {
+      final Collection<SchedRecipientResult> srrs = new ArrayList<>();
 
-      for (ScheduleRecipientResult bwsrr: sr.recipientResults.values()) {
-        SchedRecipientResult srr = new SchedRecipientResult();
+      for (final ScheduleRecipientResult bwsrr: sr.recipientResults.values()) {
+        final SchedRecipientResult srr = new SchedRecipientResult();
 
         srr.recipient = bwsrr.recipient;
         srr.status = bwsrr.getStatus();
@@ -2224,15 +2253,15 @@ public class BwSysIntfImpl implements SysIntf {
       return srrs;
     }
 
-    if (sr.errorCode == CalFacadeException.schedulingBadMethod) {
+    if (sr.errorCode.equals(CalFacadeException.schedulingBadMethod)) {
       throw new WebdavForbidden(CaldavTags.validCalendarData, "Bad METHOD");
     }
 
-    if (sr.errorCode == CalFacadeException.schedulingBadAttendees) {
+    if (sr.errorCode.equals(CalFacadeException.schedulingBadAttendees)) {
       throw new WebdavForbidden(CaldavTags.attendeeAllowed, "Bad attendees");
     }
 
-    if (sr.errorCode == CalFacadeException.schedulingAttendeeAccessDisallowed) {
+    if (sr.errorCode.equals(CalFacadeException.schedulingAttendeeAccessDisallowed)) {
       throw new WebdavForbidden(CaldavTags.attendeeAllowed, "attendeeAccessDisallowed");
     }
 
