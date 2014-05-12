@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -106,56 +106,6 @@ public class BwLocale {
     }
 
     return possible;
-  }
-
-  /** make a locale from the standard underscore separated parts - no idea why
-   * this isn't in Locale
-   *
-   * @param val
-   * @return a Locale
-   * @throws CalFacadeException
-   */
-  public static Locale makeLocale(final String val) throws CalFacadeException {
-    String lang = null;
-    String country = ""; // NOT null for Locale
-    String variant = "";
-
-    try {
-      if (val == null) {
-        throw new CalFacadeException(CalFacadeException.badLocale, "NULL");
-      }
-
-      if (val.length() == 2) {
-        lang = val;
-      } else {
-        int pos = val.indexOf('_');
-        if (pos != 2) {
-          throw new CalFacadeException(CalFacadeException.badLocale, val);
-        }
-
-        lang = val.substring(0, 2);
-        pos = val.indexOf("_", 3);
-        if (pos < 0) {
-          if (val.length() != 5) {
-            throw new CalFacadeException(CalFacadeException.badLocale, val);
-          }
-
-          country = val.substring(3);
-        } else {
-          country = val.substring(3, 5);
-
-          if (val.length() > 6) {
-            variant = val.substring(6);
-          }
-        }
-      }
-
-      return new Locale(lang, country, variant);
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(CalFacadeException.badLocale, val);
-    }
   }
 
   /** Get th elanguage from the current locale
