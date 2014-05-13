@@ -98,7 +98,7 @@ public class JcalHandler implements Serializable {
         jgen.useDefaultPrettyPrinter();
       }
 
-      jgen.writeStartArray();
+      jgen.writeStartArray(); // for vcalendar
 
       jgen.writeString("vcalendar");
       jgen.writeStartArray();
@@ -111,23 +111,22 @@ public class JcalHandler implements Serializable {
 
       /* Output subcomponents
        */
-      jgen.writeStartArray();
 
       jgen.writeStartArray(); // for components
 
-      for (Object o: cal.getComponents()) {
-        Component comp = (Component)o;
+      for (final Object o: cal.getComponents()) {
+        final Component comp = (Component)o;
         outComp(jgen, comp);
       }
 
       jgen.writeEndArray(); // for components
 
-      jgen.writeEndArray();
+      jgen.writeEndArray(); // for vcalendar
 
       jgen.flush();
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }

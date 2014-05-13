@@ -291,8 +291,8 @@ public class ESQueryFilter implements CalintfDefs {
 
     queryFiltered = true;
 
-    String startRef;
-    String endRef;
+    final String startRef;
+    final String endRef;
 
     if (recurRetrieval.mode == Rmode.expanded) {
       startRef = dtStartUTCRef;
@@ -306,7 +306,7 @@ public class ESQueryFilter implements CalintfDefs {
 
     if (end != null) {
       // End of events must be on or after the start of the range
-      RangeFilterBuilder rfb = new RangeFilterBuilder(startRef);
+      final RangeFilterBuilder rfb = new RangeFilterBuilder(startRef);
 
       rfb.lt(dateTimeUTC(end));
 
@@ -315,7 +315,7 @@ public class ESQueryFilter implements CalintfDefs {
 
     if (start != null) {
       // Start of events must be before the end of the range
-      RangeFilterBuilder rfb = new RangeFilterBuilder(endRef);
+      final RangeFilterBuilder rfb = new RangeFilterBuilder(endRef);
 
       rfb.gte(dateTimeUTC(start));
 
@@ -328,7 +328,7 @@ public class ESQueryFilter implements CalintfDefs {
   /** Add a filter for the given href.
    *
    * @param filter - or null
-   * @param href
+   * @param href to match
    * @return a filter
    * @throws CalFacadeException
    */
@@ -809,8 +809,9 @@ public class ESQueryFilter implements CalintfDefs {
     if (pf instanceof EntityTimeRangeFilter) {
       final EntityTimeRangeFilter etrf = (EntityTimeRangeFilter)pf;
 
-      return doTimeRange(etrf.getEntity(),
-                         false, fieldName, null);
+      return addDateRangeFilter(null,
+                                etrf.getEntity().getStart().toString(),
+                                etrf.getEntity().getEnd().toString());
     }
 
     if (pii == PropertyInfoIndex.COLLECTION) {
