@@ -27,21 +27,22 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import net.fortuna.ical4j.model.CategoryList;
 import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.NumberList;
+import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.WeekDay;
 import net.fortuna.ical4j.model.WeekDayList;
+import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Categories;
 import net.fortuna.ical4j.model.property.DateListProperty;
 import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.ExDate;
 import net.fortuna.ical4j.model.property.ExRule;
+import net.fortuna.ical4j.model.property.FreeBusy;
 import net.fortuna.ical4j.model.property.Geo;
-import net.fortuna.ical4j.model.property.PollItemId;
-import net.fortuna.ical4j.model.property.PollWinner;
 import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.RequestStatus;
@@ -51,12 +52,15 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
  * @author Mike Douglass douglm rpi.edu
  * @version 1.0
  */
+@SuppressWarnings("ConstantConditions")
 public class JsonProperty implements Serializable {
   public static void addFields(final JsonGenerator jgen,
                                final Property prop) throws CalFacadeException {
@@ -67,107 +71,106 @@ public class JsonProperty implements Serializable {
 
       JsonParameters.addFields(jgen, prop);
 
-      jgen.writeString(getType(prop));
+      final DataType type = getType(prop);
+      jgen.writeString(type.getJsonType());
 
-      outValue(jgen, prop);
+      outValue(jgen, prop, type);
 
       jgen.writeEndArray();
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   /* An entry in here if the value may have different types..
    */
-  private static Map<String, String> typeMap = new HashMap<>();
+  private final static Set<String> types = new TreeSet<>();
 
   static {
-    typeMap.put("attach", "");
-    typeMap.put("dtend", "");
-    typeMap.put("dtstart", "");
-    typeMap.put("due", "");
-    typeMap.put("exdate", "");
-    typeMap.put("rdate", "");
-    typeMap.put("recurrence-id", "");
-    typeMap.put("trigger", "");
+    types.add("attach");
+    types.add("dtend");
+    types.add("dtstart");
+    types.add("due");
+    types.add("exdate");
+    types.add("rdate");
+    types.add("recurrence-id");
+    types.add("trigger");
   }
 
-  private static String getType(final Property prop) {
-    String nm = prop.getName().toUpperCase();
-    PropertyInfoIndex pii = PropertyInfoIndex.fromName(nm);
+  private static DataType getType(final Property prop) {
+    final PropertyInfoIndex pii = PropertyInfoIndex.fromName(prop.getName());
 
     if (pii == null) {
-      return "text";
+      return DataType.TEXT;
     }
 
-    PropertyIndex.DataType dtype = pii.getPtype();
+    final DataType dtype = pii.getPtype();
     if (dtype == null) {
-      return "text";
+      return DataType.TEXT;
     }
 
-    if (dtype != PropertyIndex.DataType.SPECIAL) {
-      String type = typeMap.get(nm);
+    final String nm = prop.getName().toLowerCase();
 
-      if (type == null) {
-        return dtype.getXcalType().getLocalPart();
-      }
+    if ((dtype != DataType.SPECIAL) && (!types.contains(nm))) {
+      return dtype;
     }
 
     if (prop instanceof DateProperty) {
       // dtend, dtstart, due
 
-      DateProperty dp = (DateProperty)prop;
+      final DateProperty dp = (DateProperty)prop;
 
-      if (dp.getValue().length() > 8) {
-        return "date";
+      if (Value.DATE.equals(dp.getParameter(Parameter.VALUE))) {
+        return DataType.DATE;
       }
 
-      return "date-time";
+      return DataType.DATE_TIME;
     }
 
     if (prop instanceof DateListProperty) {
       // exdate, rdate
 
-      DateListProperty dlp = (DateListProperty)prop;
+      final DateListProperty dlp = (DateListProperty)prop;
 
-      return dlp.getDates().getType().getValue().toLowerCase();
+      if (Value.DATE.equals(dlp.getDates().getType())) {
+        return DataType.DATE;
+      }
+
+      return DataType.DATE_TIME;
     }
 
     if ("attach".equals(nm)) {
-      Attach att = (Attach)prop;
+      final Attach att = (Attach)prop;
       if (att.getUri() !=null) {
-        return "uri";
+        return DataType.URI;
       }
 
-      return "binary";
+      return DataType.BINARY;
     }
 
     if ("trigger".equals(nm)) {
-      Trigger tr = (Trigger)prop;
+      final Trigger tr = (Trigger)prop;
       if (tr.getDuration() !=null) {
-        return "duration";
+        return DataType.DURATION;
       }
 
-      return "date-time";
+      return DataType.DATE_TIME;
     }
 
     // in the absence of anything else callit text
-    return "text";
+    return DataType.TEXT;
   }
 
   private abstract static class PropertyValueEmitter {
     abstract void emitValue(JsonGenerator jgen,
                             Property prop) throws Throwable;
 
-    protected void outString(final JsonGenerator jgen,
-                             final String val) throws Throwable {
-      if (val == null) {
-        return;
-      }
-
-      jgen.writeString(val);
+    protected void emitValue(final JsonGenerator jgen,
+                             final Property prop,
+                             final DataType type) throws Throwable {
+      throw new RuntimeException("Unimplemented");
     }
 
     protected void outField(final JsonGenerator jgen,
@@ -204,7 +207,7 @@ public class JsonProperty implements Serializable {
 
       jgen.writeStartArray();
 
-      for (Object o: val) {
+      for (final Object o: val) {
         jgen.writeNumber((Integer)o);
       }
 
@@ -227,7 +230,7 @@ public class JsonProperty implements Serializable {
 
       jgen.writeStartArray();
 
-      for (Object o: val) {
+      for (final Object o: val) {
         jgen.writeString(((WeekDay)o).getDay().toLowerCase());
       }
 
@@ -237,76 +240,84 @@ public class JsonProperty implements Serializable {
 
   /* An entry in here if we special case the value..
    */
-  private static Map<String, PropertyValueEmitter> valMap = new HashMap<>();
+  private final static Map<String, PropertyValueEmitter> valMap = new HashMap<>();
 
   static {
     valMap.put("categories", new CategoriesValueEmitter());
-    valMap.put("created", new DateTimeValueEmitter());
-    valMap.put("dtend", new DateTimeValueEmitter());
-    valMap.put("dtstamp", new DateTimeValueEmitter());
-    valMap.put("dtstart", new DateTimeValueEmitter());
     valMap.put("exdate", new ExdateValueEmitter());
     valMap.put("exrule", new RecurValueEmitter());
+    valMap.put("freebusy", new PeriodListValueEmitter());
     valMap.put("geo", new GeoValueEmitter());
-    valMap.put("last-modified", new DateTimeValueEmitter());
-    valMap.put("poll-item-id", new PollItemidValueEmitter());
-    valMap.put("poll-winner", new PollWinnerValueEmitter());
     valMap.put("rdate", new RdateValueEmitter());
     valMap.put("request-status", new ReqStatValueEmitter());
     valMap.put("rrule", new RecurValueEmitter());
-    valMap.put("tzoffsetfrom", new UtcOffsetValueEmitter());
-    valMap.put("tzoffsetto", new UtcOffsetValueEmitter());
   }
 
   private static class SingleValueEmitter extends PropertyValueEmitter {
-    public void emitValue(JsonGenerator jgen,
-                          Property prop) throws Throwable {
+    @Override
+    public void emitValue(final JsonGenerator jgen,
+                          final Property prop) throws Throwable {
+      emitValue(jgen, prop, DataType.TEXT);
       jgen.writeString(prop.getValue());
     }
-  }
 
-  private static class DateTimeValueEmitter extends PropertyValueEmitter {
-    public void emitValue(JsonGenerator jgen,
-                          Property prop) throws Throwable {
-
-      jgen.writeString(XcalUtil.getXmlFormatDateTime(prop.getValue()));
-    }
-  }
-
-  private static class UtcOffsetValueEmitter extends PropertyValueEmitter {
-    public void emitValue(JsonGenerator jgen,
-                          Property prop) throws Throwable {
-
-      jgen.writeString(XcalUtil.getXmlFormatUtcOffset(prop.getValue()));
-    }
-  }
-
-  private static class PollItemidValueEmitter extends PropertyValueEmitter {
-    public void emitValue(JsonGenerator jgen,
-                          Property prop) throws Throwable {
-      PollItemId p = (PollItemId)prop;
-
-      jgen.writeNumber(p.getPollitemid());
-    }
-  }
-
-  private static class PollWinnerValueEmitter extends PropertyValueEmitter {
-    public void emitValue(JsonGenerator jgen,
-                          Property prop) throws Throwable {
-      PollWinner p = (PollWinner)prop;
-
-      jgen.writeNumber(p.getPollwinner());
+    @Override
+    public void emitValue(final JsonGenerator jgen,
+                          final Property prop,
+                          final DataType type) throws Throwable {
+      switch (type) {
+        case BOOLEAN:
+          jgen.writeBoolean(Boolean.valueOf(prop.getValue()));
+          break;
+        case DATE:
+        case DATE_TIME:
+          jgen.writeString(XcalUtil.getXmlFormatDateTime(prop.getValue()));
+          break;
+        case FLOAT:
+          jgen.writeNumber(Float.valueOf(prop.getValue()));
+          break;
+        case INTEGER:
+          jgen.writeNumber(Integer.valueOf(prop.getValue()));
+          break;
+        case PERIOD:
+          // Should not get here - just write something out
+          jgen.writeString(prop.getValue());
+          break;
+        case RECUR:
+          // Should not get here - just write something out
+          jgen.writeString(prop.getValue());
+          break;
+        case BINARY:
+        case CUA:
+        case DURATION:
+        case TEXT:
+        case URI:
+          jgen.writeString(prop.getValue());
+          break;
+        case TIME:
+          jgen.writeString(XcalUtil.getXmlFormatTime(prop.getValue()));
+          break;
+        case UTC_OFFSET:
+          jgen.writeString(XcalUtil.getXmlFormatUtcOffset(
+                  prop.getValue()));
+          break;
+        case SPECIAL:
+          break;
+        case HREF:
+          break;
+      }
     }
   }
 
   private static class ExdateValueEmitter extends PropertyValueEmitter {
-    public void emitValue(JsonGenerator jgen,
-                          Property prop) throws Throwable {
-      ExDate p = (ExDate)prop;
+    @Override
+    public void emitValue(final JsonGenerator jgen,
+                          final Property prop) throws Throwable {
+      final ExDate p = (ExDate)prop;
 
       jgen.writeStartArray();
-      DateList dl = p.getDates();
-      for (Object o: dl) {
+      final DateList dl = p.getDates();
+      for (final Object o: dl) {
         jgen.writeString(XcalUtil.getXmlFormatDateTime(o.toString()));
       }
 
@@ -314,53 +325,76 @@ public class JsonProperty implements Serializable {
     }
   }
 
-  private static class RdateValueEmitter extends PropertyValueEmitter {
-    public void emitValue(JsonGenerator jgen,
-                          Property prop) throws Throwable {
-      RDate p = (RDate)prop;
+  private static class PeriodListValueEmitter extends PropertyValueEmitter {
+    @Override
+    public void emitValue(final JsonGenerator jgen,
+                          final Property prop) throws Throwable {
+      final PeriodList pl;
+
+      if (prop instanceof RDate) {
+        final RDate p = (RDate)prop;
+        pl = p.getPeriods();
+      } else if (prop instanceof FreeBusy) {
+        final FreeBusy p = (FreeBusy)prop;
+        pl = p.getPeriods();
+      } else {
+        throw new RuntimeException("Unknown property " + prop);
+      }
 
       jgen.writeStartArray();
 
-      DateList dl = p.getDates();
+      for (final Object o: pl) {
+        final Period per = (Period)o;
 
-      if (dl != null) {
-        for (Object o: dl) {
-          jgen.writeString(XcalUtil.getXmlFormatDateTime(o.toString()));
+        final StringBuilder sb = new StringBuilder(XcalUtil.getXmlFormatDateTime(
+                per.getStart().toString()));
+        sb.append("/");
+
+        if (per.getDuration() != null) {
+          sb.append(per.getDuration());
+        } else {
+          sb.append(XcalUtil.getXmlFormatDateTime(
+                  per.getEnd().toString()));
         }
-      } else {
-        PeriodList pl = p.getPeriods();
 
-        for (Object o: dl) {
-          Period per = (Period)o;
-
-          StringBuilder sb = new StringBuilder(XcalUtil.getXmlFormatDateTime(
-                  per.getStart().toString()));
-          sb.append("/");
-
-          if (per.getDuration() != null) {
-            sb.append(per.getDuration());
-          } else {
-            sb.append(XcalUtil.getXmlFormatDateTime(
-                    per.getEnd().toString()));
-          }
-
-          jgen.writeString(sb.toString());
-        }
+        jgen.writeString(sb.toString());
       }
 
       jgen.writeEndArray();
     }
   }
 
+  private static class RdateValueEmitter extends PeriodListValueEmitter {
+    @Override
+    public void emitValue(final JsonGenerator jgen,
+                          final Property prop) throws Throwable {
+      final RDate p = (RDate)prop;
+
+      final DateList dl = p.getDates();
+
+      if (dl != null) {
+        jgen.writeStartArray();
+
+        for (final Object o: dl) {
+          jgen.writeString(XcalUtil.getXmlFormatDateTime(o.toString()));
+        }
+        jgen.writeEndArray();
+      } else {
+        super.emitValue(jgen, prop);
+      }
+    }
+  }
+
   private static class CategoriesValueEmitter extends PropertyValueEmitter {
-    public void emitValue(JsonGenerator jgen,
-                          Property prop) throws Throwable {
-      Categories p = (Categories)prop;
+    @Override
+    public void emitValue(final JsonGenerator jgen,
+                          final Property prop) throws Throwable {
+      final Categories p = (Categories)prop;
 
       jgen.writeStartArray();
 
-      CategoryList cl = p.getCategories();
-      Iterator it = cl.iterator();
+      final CategoryList cl = p.getCategories();
+      final Iterator it = cl.iterator();
       while (it.hasNext()){
         jgen.writeString(it.next().toString());
       }
@@ -370,9 +404,10 @@ public class JsonProperty implements Serializable {
   }
 
   private static class GeoValueEmitter extends PropertyValueEmitter {
-    public void emitValue(JsonGenerator jgen,
-                          Property prop) throws Throwable {
-      Geo p = (Geo)prop;
+    @Override
+    public void emitValue(final JsonGenerator jgen,
+                          final Property prop) throws Throwable {
+      final Geo p = (Geo)prop;
 
       jgen.writeStartArray();
 
@@ -384,9 +419,10 @@ public class JsonProperty implements Serializable {
   }
 
   private static class ReqStatValueEmitter extends PropertyValueEmitter {
-    public void emitValue(JsonGenerator jgen,
-                          Property prop) throws Throwable {
-      RequestStatus p = (RequestStatus)prop;
+    @Override
+    public void emitValue(final JsonGenerator jgen,
+                          final Property prop) throws Throwable {
+      final RequestStatus p = (RequestStatus)prop;
 
       jgen.writeStartArray();
 
@@ -402,8 +438,9 @@ public class JsonProperty implements Serializable {
   }
 
   private static class RecurValueEmitter extends PropertyValueEmitter {
-    public void emitValue(JsonGenerator jgen,
-                          Property prop) throws Throwable {
+    @Override
+    public void emitValue(final JsonGenerator jgen,
+                          final Property prop) throws Throwable {
       Recur r = null;
 
       if (prop instanceof RRule) {
@@ -414,6 +451,7 @@ public class JsonProperty implements Serializable {
 
       jgen.writeStartObject();
 
+      //noinspection ConstantConditions
       outField(jgen, "freq", r.getFrequency());
       outField(jgen, "wkst", r.getWeekStartDay());
       if (r.getUntil() != null) {
@@ -435,16 +473,17 @@ public class JsonProperty implements Serializable {
     }
   }
 
-  private static PropertyValueEmitter defValEmitter = new SingleValueEmitter();
+  private final static PropertyValueEmitter defValEmitter = new SingleValueEmitter();
 
   private static void outValue(final JsonGenerator jgen,
-                               final Property prop) throws Throwable {
-    String nm = prop.getName().toLowerCase();
+                               final Property prop,
+                               final DataType type) throws Throwable {
+    final String nm = prop.getName().toLowerCase();
 
-    PropertyValueEmitter pve = valMap.get(nm);
+    final PropertyValueEmitter pve = valMap.get(nm);
 
     if (pve == null) {
-      defValEmitter.emitValue(jgen, prop);
+      defValEmitter.emitValue(jgen, prop, type);
       return;
     }
 
