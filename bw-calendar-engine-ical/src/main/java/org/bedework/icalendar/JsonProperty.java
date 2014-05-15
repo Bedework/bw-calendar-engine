@@ -19,7 +19,7 @@
 package org.bedework.icalendar;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.util.calendar.PropertyIndex;
+import org.bedework.util.calendar.PropertyIndex.DataType;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.XcalUtil;
 
