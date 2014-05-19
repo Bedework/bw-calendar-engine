@@ -809,9 +809,19 @@ public class ESQueryFilter implements CalintfDefs {
     if (pf instanceof EntityTimeRangeFilter) {
       final EntityTimeRangeFilter etrf = (EntityTimeRangeFilter)pf;
 
-      return addDateRangeFilter(null,
-                                etrf.getEntity().getStart().toString(),
-                                etrf.getEntity().getEnd().toString());
+      final TimeRange tr = etrf.getEntity();
+      String start = null;
+      String end = null;
+
+      if (tr.getStart() != null) {
+        start = tr.getStart().toString();
+      }
+
+      if (tr.getEnd() != null) {
+        end = tr.getEnd().toString();
+      }
+
+      return addDateRangeFilter(null, start, end);
     }
 
     if (pii == PropertyInfoIndex.COLLECTION) {
