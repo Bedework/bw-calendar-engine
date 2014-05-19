@@ -191,6 +191,10 @@ public class InReply extends InProcessor {
 
       final Set<PollItmId> pids = inEv.getPollItemIds();
 
+      if (pids == null) {
+        return true; // Nothing to do - just accept it.
+      }
+
       for (final PollItmId pid: pids) {
         final Component comp = comps.get(pid.getId());
 
