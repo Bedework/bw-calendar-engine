@@ -430,7 +430,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     /** */
     pfiPollCandidate,
     /** */
-    pfiPollWinner;
+    pfiPollWinner,
+
+    /** */
+    pfiPollItemIds;
   }
 
   private int entityType = IcalDefs.entityTypeEvent;
@@ -675,6 +678,8 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   private Set<String> pollItems;
 
   private boolean pollCandidate;
+
+  private Set<String> pollItemIdsValues;
 
   /* ====================================================================
    *                      VAvailability fields
@@ -3468,16 +3473,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   )
   @NoDump
   public void setPollItemId(final Integer val) {
-    if (val == null) {
-      final BwXproperty x = findXproperty(BwXproperty.pollItemId);
-      if (x != null) {
-        removeXproperty(x);
-      }
-    } else {
-      final PollItmId pid = new PollItmId(val);
-
-      replaceXproperty(BwXproperty.pollItemId, pid.getVal());
-    }
+    pollItemId = val;
   }
 
   /** Get the event's poll item id
@@ -3485,20 +3481,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *  @return Integer   event's poll item id
    */
   public Integer getPollItemId() {
-    final List<BwXproperty> props = getXproperties(BwXproperty.pollItemId);
-
-    if (Util.isEmpty(props)) {
-      return null;
-    }
-
-    if (props.size() > 1) {
-      return null;
-    }
-
-    final BwXproperty p = props.get(0);
-    final PollItmId pid = new PollItmId(p.getValue());
-
-    return pid.getId();
+    return pollItemId;
   }
 
   /** For a VPOLL there may be a set of these with distinct values -
@@ -3511,12 +3494,17 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public void addPollItemId(final PollItmId val) {
-    final BwXproperty xp = new BwXproperty(BwXproperty.pollItemId,
-                                           null, val.getVal());
-    addXproperty(xp);
+    Set<String> props = getPollItemIdsValues();
+
+    if (props == null) {
+      props = new TreeSet<>();
+      setPollItemIdsValues(props);
+    }
+
+    props.add(val.getVal());
 
     if (changeSet != null) {
-      changeSet.addValue(PropertyInfoIndex.XPROP, xp);
+      changeSet.addValue(PropertyInfoIndex.POLL_ITEM_ID, val);
     }
   }
 
@@ -3526,7 +3514,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public Set<PollItmId> getPollItemIds() {
-    final List<BwXproperty> props = getXproperties(BwXproperty.pollItemId);
+    final Set<String> props = getPollItemIdsValues();
 
     if (Util.isEmpty(props)) {
       return null;
@@ -3534,8 +3522,8 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
     final Set<PollItmId> vals = new TreeSet<>();
 
-    for (final BwXproperty p: props) {
-      vals.add(new PollItmId(p.getValue()));
+    for (final String p: props) {
+      vals.add(new PollItmId(p));
     }
 
     return vals;
@@ -3547,15 +3535,27 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public void clearPollItemIds() {
-    final List<BwXproperty> props = getXproperties(BwXproperty.pollItemId);
+    final Set<String> props = getPollItemIdsValues();
 
     if (Util.isEmpty(props)) {
       return;
     }
 
-    for (final BwXproperty p: props) {
-      removeXproperty(p);
-    }
+    props.clear();
+  }
+
+  @NoProxy
+  public void setPollItemIdsValues(final Set<String> val) {
+    pollItemIdsValues = val;
+  }
+
+  /** Get the event's poll item id values
+   *
+   *  @return Set of String   event's poll item id
+   */
+  @NoProxy
+  public Set<String> getPollItemIdsValues() {
+    return pollItemIdsValues;
   }
 
   /** Set the poll mode
@@ -4622,6 +4622,17 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     ev.setPollMode(getPollMode());
     ev.setPollProperties(getPollProperties());
     ev.setPollAcceptResponse(getPollAcceptResponse());
+
+    if (!Util.isEmpty(getPollItemIdsValues())) {
+      Set<String> evPidv = ev.getPollItemIdsValues();
+      if (evPidv == null) {
+        evPidv = new TreeSet<>();
+        ev.setPollItemIdsValues(evPidv);
+      }
+      for (String s: getPollItemIdsValues()) {
+        evPidv.add(s);
+      }
+    }
 
     if (!Util.isEmpty(getPollItems())) {
       for (String s: getPollItems()) {
