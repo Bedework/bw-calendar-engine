@@ -230,6 +230,11 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
     getEv().setScheduleMethod(val);
   }
 
+  @Override
+  public int getScheduleMethod() throws WebdavException {
+    return getEv().getScheduleMethod();
+  }
+
   /* (non-Javadoc)
    * @see org.bedework.caldav.server.CalDAVEvent#getUid()
    */
