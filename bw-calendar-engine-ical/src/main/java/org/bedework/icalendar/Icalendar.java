@@ -423,7 +423,12 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
       return false;
     }
 
-    if (type == IcalComponentType.event) {
+    if ((type == IcalComponentType.todo) ||
+        (type == IcalComponentType.event)) {
+      return (val != methodTypePollStatus);
+    }
+
+    if (type == IcalComponentType.vpoll) {
       return true;
     }
 
