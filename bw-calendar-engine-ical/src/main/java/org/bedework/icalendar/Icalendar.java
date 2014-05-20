@@ -365,6 +365,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
         (mt == methodTypeCancel) ||
         (mt == methodTypeDeclineCounter) ||
         (mt == methodTypePublish) ||
+        (mt == methodTypePollStatus) ||
         (mt == methodTypeRequest)) {
       return true;
     }
