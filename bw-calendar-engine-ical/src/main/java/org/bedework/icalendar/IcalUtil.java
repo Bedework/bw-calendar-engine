@@ -407,7 +407,7 @@ public class IcalUtil {
 
     setAttendeeVoter(val, pars);
 
-    pars.add(new Response(val.getResponse()));
+    //pars.add(new Response(val.getResponse()));
 
     return prop;
   }
