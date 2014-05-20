@@ -30,8 +30,6 @@ import org.bedework.icalendar.Icalendar;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.misc.Util;
 
-import java.util.TreeSet;
-
 /** Handles attendee updates - updates the organizers copy with the new partstat,
  * essentially a REPLY.
  *
@@ -59,9 +57,9 @@ public class SchedAttendeeUpdate extends SchedProcessor {
   private ScheduleResult attendeeRespond(final EventInfo ei,
                                          final int method) throws CalFacadeException {
     ScheduleResult sr = new ScheduleResult();
-    BwEvent ev = ei.getEvent();
-    SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
-    String attUri = getSvc().getDirectories().principalToCaladdr(getSvc().getPrincipal());
+    final BwEvent ev = ei.getEvent();
+    final SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
+    final String attUri = getSvc().getDirectories().principalToCaladdr(getSvc().getPrincipal());
 
     check: {
       /* Check that the current user is actually an attendee of the event.
@@ -79,7 +77,7 @@ public class SchedAttendeeUpdate extends SchedProcessor {
       }
 
       if (ei.getNumOverrides() > 0) {
-        for (EventInfo oei: ei.getOverrides()) {
+        for (final EventInfo oei: ei.getOverrides()) {
           att = oei.getEvent().findAttendee(attUri);
 
           if (att == null) {
@@ -95,8 +93,8 @@ public class SchedAttendeeUpdate extends SchedProcessor {
       }
 
       //EventInfo outEi = makeReplyEventInfo(ei, getUser().getPrincipalRef());
-      EventInfo outEi = sched.copyEventInfo(ei, getPrincipal());
-      BwEvent outEv = outEi.getEvent();
+      final EventInfo outEi = sched.copyEventInfo(ei, getPrincipal());
+      final BwEvent outEv = outEi.getEvent();
 
       if (!Util.isEmpty(outEv.getRecipients())) {
         outEv.getRecipients().clear();

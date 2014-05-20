@@ -42,7 +42,6 @@ import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.icalendar.IcalUtil;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.Recurrence;
 import org.bedework.util.calendar.IcalDefs;
@@ -55,7 +54,6 @@ import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Period;
-import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.parameter.Response;
 import net.fortuna.ical4j.model.property.Voter;
@@ -64,7 +62,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /** Handles incoming method REQUEST scheduling messages.
@@ -655,6 +652,7 @@ public class InRequest extends InProcessor {
 
       ourEv.setStatus(inEv.getStatus());
 
+      /*
       final Map<Integer, Component> inCands = IcalUtil.parseVpollCandidates(inEv);
       final Map<Integer, Component> ourCands = IcalUtil.parseVpollCandidates(ourEv);
 
@@ -689,8 +687,13 @@ public class InRequest extends InProcessor {
       for (Component comp: ourCands.values()) {
         ourEv.addPollItem(comp.toString());
       }
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+      */
+
+      ourEv.clearPollItems();
+
+      for (String s: inEv.getPollItems()) {
+        ourEv.addPollItem(s);
+      }
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
