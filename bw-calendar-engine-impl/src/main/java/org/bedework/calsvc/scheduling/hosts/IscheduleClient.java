@@ -259,6 +259,8 @@ public class IscheduleClient {
       String url;
       if ("example.com".equals(hi.getHostname())) {
         url = "http://" + hi.getHostname() + ":8008/.well-known/ischedule";
+      } else if ("ken.name".equals(hi.getHostname())) {
+        url = "http://" + hi.getHostname() + ":8008/.well-known/ischedule";
       } else {
         url = "https://" + hi.getHostname() + "/.well-known/ischedule";
       }
@@ -357,7 +359,7 @@ public class IscheduleClient {
    *
    * @param resp       response from server
    * @return Document  Parsed body or null for no body
-   * @exception DavioException Some error occurred.
+   * @exception CalFacadeException Some error occurred.
    */
   private Document parseContent(final Response resp) throws CalFacadeException {
     try {
