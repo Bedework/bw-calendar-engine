@@ -513,6 +513,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
       getSvc().getSharingHandler().delete(val);
     }
 
+    getSvc().getSharingHandler().unsubscribe(val);
+
     /* Remove from preferences */
     ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true,
                                                                val,

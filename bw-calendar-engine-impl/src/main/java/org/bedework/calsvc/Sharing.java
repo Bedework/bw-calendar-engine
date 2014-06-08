@@ -457,7 +457,7 @@ public class Sharing extends CalSvcDb implements SharingI {
      * Otherwise we need to create an alias in the calendar home using the
      * reply summary as the display name */
 
-    List<BwCalendar> aliases = findAlias(colPath);
+    final List<BwCalendar> aliases = findAlias(colPath);
     if (!Util.isEmpty(aliases)) {
       sr.path = aliases.get(0).getPath();
       sr.alreadySubscribed = true;
@@ -465,7 +465,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       return sr;
     }
 
-    BwCalendar alias = new BwCalendar();
+    final BwCalendar alias = new BwCalendar();
 
     String summary = subscribedName;
     if ((summary == null) || (summary.length() == 0)) {
@@ -491,8 +491,8 @@ public class Sharing extends CalSvcDb implements SharingI {
                                            final int refresh,
                                            final String remoteId,
                                            final String remotePw) throws CalFacadeException {
-    BwCalendar alias = new BwCalendar();
-    SubscribeResult sr = new SubscribeResult();
+    final BwCalendar alias = new BwCalendar();
+    final SubscribeResult sr = new SubscribeResult();
 
     String summary = subscribedName;
     if ((summary == null) || (summary.length() == 0)) {
@@ -517,12 +517,12 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     if (remotePw != null) {
       try {
-        String pw = getSvc().getEncrypter().encrypt(remotePw);
+        final String pw = getSvc().getEncrypter().encrypt(remotePw);
         alias.setRemotePw(pw);
         alias.setPwNeedsEncrypt(false);
-      } catch (CalFacadeException cfe) {
+      } catch (final CalFacadeException cfe) {
         throw cfe;
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         throw new CalFacadeException(t);
       }
     }
@@ -530,6 +530,94 @@ public class Sharing extends CalSvcDb implements SharingI {
     sr.path = getCols().add(alias, getCols().getHome().getPath()).getPath();
 
     return sr;
+  }
+
+  @Override
+  public void unsubscribe(final BwCalendar col) throws CalFacadeException {
+    if (!col.getInternalAlias()) {
+      return;
+    }
+
+    final BwCalendar shared = getCols().resolveAlias(col, true, false);
+    if (shared == null) {
+      // Gone or no access - nothing to do now.
+      return;
+    }
+
+    final String sharerHref = shared.getOwnerHref();
+    final BwPrincipal sharee = getSvc().getPrincipal();
+
+    try {
+      pushPrincipal(sharerHref);
+
+      /* Get the invite property and locate and update this sharee */
+
+      final InviteType invite = getInviteStatus(shared);
+      UserType uentry = null;
+      final String invitee = principalToCaladdr(sharee);
+
+      if (invite != null) {
+        uentry = invite.finduser(invitee);
+      }
+
+      if (uentry == null) {
+        if (debug) {
+          trace("Cannot find invitee: " + invitee);
+        }
+
+        return;
+      }
+
+      uentry.setInviteStatus(AppleServerTags.inviteDeclined);
+
+      shared.setProperty(NamespaceAbbrevs.prefixed(AppleServerTags.invite),
+                         invite.toXml());
+      getCols().update(shared);
+
+      /* At this stage we need a message to notify the sharer -
+         change notification?
+
+      final NotificationType note = new NotificationType();
+
+      note.setDtstamp(new DtStamp(new DateTime(true)).getValue());
+      note.setNotification(reply);
+
+      getSvc().getNotificationsHandler().add(note);
+      */
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    } finally {
+      popPrincipal();
+    }
+    /*
+    final BwPrincipal pr = caladdrToPrincipal(getPrincipalHref());
+
+    if (pr != null) {
+      pushPrincipal(shared.getOwnerHref());
+      NotificationType n = null;
+      try {
+        n = findInvite(pr, shared.getPath());
+      } finally {
+        popPrincipal();
+      }
+      if (n != null) {
+        InviteNotificationType in = (InviteNotificationType)n.getNotification();
+        Holder<AccessType> access = new Holder<AccessType>();
+
+        // Create a dummy reply object.
+        InviteReplyType reply = new InviteReplyType();
+        reply.setHref(getPrincipalHref());
+        reply.setAccepted(false);
+        reply.setHostUrl(shared.getPath());
+        reply.setInReplyTo(in.getUid());
+
+        updateSharingStatus(shared.getOwnerHref(), shared.getPath(), reply, access);
+      }
+    }
+    */
+
   }
 
   /* ====================================================================
@@ -545,7 +633,7 @@ public class Sharing extends CalSvcDb implements SharingI {
                                       final Holder<AccessType> access) throws CalFacadeException {
     try {
       pushPrincipal(sharerHref);
-      BwCalendar col = getCols().get(path);
+      final BwCalendar col = getCols().get(path);
 
       if (col == null) {
         // Bad hosturl?
@@ -554,12 +642,12 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       /* See if we have an outstanding invite for this user */
 
-      QName qn = new QName(AppleServerTags.inviteNotification.getNamespaceURI(),
-                           AppleServerTags.inviteNotification.getLocalPart() +
-                           reply.getInReplyTo());
+      final QName qn = new QName(AppleServerTags.inviteNotification.getNamespaceURI(),
+                                 AppleServerTags.inviteNotification.getLocalPart() +
+                                         reply.getInReplyTo());
 
-      String pname = NamespaceAbbrevs.prefixed(qn);
-      String xmlInvite = col.getProperty(pname);
+      final String pname = NamespaceAbbrevs.prefixed(qn);
+      final String xmlInvite = col.getProperty(pname);
 
       if (xmlInvite == null) {
         // No invite
@@ -574,9 +662,9 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       /* Get the invite property and locate and update this sharee */
 
-      InviteType invite = getInviteStatus(col);
+      final InviteType invite = getInviteStatus(col);
       UserType uentry = null;
-      String invitee = getSvc().getDirectories().normalizeCua(reply.getHref());
+      final String invitee = getSvc().getDirectories().normalizeCua(reply.getHref());
 
       if (invite != null) {
         uentry = invite.finduser(invitee);
@@ -603,7 +691,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       /* Now send the sharer the reply as a notification */
 
-      NotificationType note = new NotificationType();
+      final NotificationType note = new NotificationType();
 
       note.setDtstamp(new DtStamp(new DateTime(true)).getValue());
       note.setNotification(reply);
@@ -611,9 +699,9 @@ public class Sharing extends CalSvcDb implements SharingI {
       getSvc().getNotificationsHandler().add(note);
 
       return reply.testAccepted();
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     } finally {
       popPrincipal();
@@ -670,7 +758,7 @@ public class Sharing extends CalSvcDb implements SharingI {
   private InviteNotificationType deletedNotification(final String shareeHref,
                                                      final String sharedUrl,
                                                      final String sharerHref) throws CalFacadeException {
-    InviteNotificationType in = new InviteNotificationType();
+    final InviteNotificationType in = new InviteNotificationType();
 
     in.setUid(Uid.getUid());
     in.setHref(shareeHref);
@@ -678,7 +766,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     // in.setAccess(xxx); <-- current access from sharing status?
     in.setHostUrl(shareeHref);
 
-    OrganizerType org = new OrganizerType();
+    final OrganizerType org = new OrganizerType();
     org.setHref(sharerHref);
 
     in.setOrganizer(org);
@@ -700,7 +788,7 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   private Sharee getSharee(final String cua) throws CalFacadeException {
-    Sharee sh = new Sharee();
+    final Sharee sh = new Sharee();
 
     sh.href = getSvc().getDirectories().normalizeCua(cua);
     sh.pr = caladdrToPrincipal(sh.href);
@@ -719,7 +807,7 @@ public class Sharing extends CalSvcDb implements SharingI {
                                        final Holder<Acl> hacl,
                                        final String calAddr,
                                        final InviteType invite) throws CalFacadeException {
-    Sharee sh = getSharee(s.getHref());
+    final Sharee sh = getSharee(s.getHref());
 
     /*
        pr != null means this is potentially one of our users.
@@ -849,9 +937,9 @@ public class Sharing extends CalSvcDb implements SharingI {
                         final boolean forRead) throws CalFacadeException {
     try {
       Acl acl = theAcl;
-      AceWho who = AceWho.getAceWho(whoHref, whoKind, false);
+      final AceWho who = AceWho.getAceWho(whoHref, whoKind, false);
 
-      Collection<Privilege> desiredPriv;
+      final Collection<Privilege> desiredPriv;
 
       if (forRead) {
         desiredPriv = readPrivs;
@@ -883,8 +971,9 @@ public class Sharing extends CalSvcDb implements SharingI {
         acl = removed;
       }
 
-      BwPrincipal owner = getUsers().getPrincipal(col.getOwnerHref());
-      AceWho ownerWho = AceWho.getAceWho(owner.getAccount(), owner.getKind(), false);
+      final BwPrincipal owner = getUsers().getPrincipal(col.getOwnerHref());
+      final AceWho ownerWho =
+              AceWho.getAceWho(owner.getAccount(), owner.getKind(), false);
 
       removed = acl.removeWho(ownerWho);
 
@@ -892,7 +981,7 @@ public class Sharing extends CalSvcDb implements SharingI {
         acl = removed;
       }
 
-      Collection<Ace> aces = new ArrayList<Ace>();
+      final Collection<Ace> aces = new ArrayList<Ace>();
       aces.addAll(acl.getAces());
 
       aces.add(Ace.makeAce(who, desiredPriv, null));
@@ -900,7 +989,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       aces.add(Ace.makeAce(ownerWho, allPrivs, null));
 
       return new Acl(aces);
-    } catch (AccessException ae) {
+    } catch (final AccessException ae) {
       throw new CalFacadeException(ae);
     }
   }
@@ -910,24 +999,24 @@ public class Sharing extends CalSvcDb implements SharingI {
                            final String href,
                            final int whoKind) throws CalFacadeException {
     try {
-      AceWho who = AceWho.getAceWho(href, whoKind, false);
+      final AceWho who = AceWho.getAceWho(href, whoKind, false);
 
-      Acl newAcl = acl.removeWho(who);
+      final Acl newAcl = acl.removeWho(who);
 
       return newAcl;
-    } catch (AccessException ae) {
+    } catch (final AccessException ae) {
       throw new CalFacadeException(ae);
     }
   }
 
   private NotificationType findInvite(final BwPrincipal pr,
                                             final String href) throws CalFacadeException {
-    List<NotificationType> ns =
+    final List<NotificationType> ns =
         getSvc().getNotificationsHandler().getMatching(pr,
                                                        Parser.inviteNotificationTag);
 
-    for (NotificationType n: ns) {
-      InviteNotificationType in = (InviteNotificationType)n.getNotification();
+    for (final NotificationType n: ns) {
+      final InviteNotificationType in = (InviteNotificationType)n.getNotification();
 
       if (in.getHostUrl().equals(href)) {
         return n;

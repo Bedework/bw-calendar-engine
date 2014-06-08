@@ -67,11 +67,11 @@ public interface SharingI extends Serializable {
     private SharedAsType sharedAs;
 
     /**
-     * @param msg
+     * @param msg reason
      * @return a failure result
      */
     public static ReplyResult failed(final String msg) {
-      ReplyResult rr = new ReplyResult();
+      final ReplyResult rr = new ReplyResult();
 
       rr.failMsg = msg;
 
@@ -79,11 +79,11 @@ public interface SharingI extends Serializable {
     }
 
     /**
-     * @param href
+     * @param href display name for new sharee
      * @return a successful result
      */
     public static ReplyResult success(final String href) {
-      ReplyResult rr = new ReplyResult();
+      final ReplyResult rr = new ReplyResult();
 
       rr.ok = true;
       rr.sharedAs = new SharedAsType(href);
@@ -186,4 +186,13 @@ public interface SharingI extends Serializable {
                                     int refresh,
                                     String remoteId,
                                     String remotePw) throws CalFacadeException;
+
+  /** Unsubscribe the collection - that is col MUST be an alias to
+   * another collection. Update any existing invite status for the
+   * current principal.
+   *
+   * @param col alias to unsubscribe
+   * @throws CalFacadeException
+   */
+  void unsubscribe(BwCalendar col) throws CalFacadeException;
 }
