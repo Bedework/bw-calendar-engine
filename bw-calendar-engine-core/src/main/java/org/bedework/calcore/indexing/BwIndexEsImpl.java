@@ -515,6 +515,10 @@ public class BwIndexEsImpl implements BwIndexer {
                                                  final int num,
                                                  final int desiredAccess)
           throws CalFacadeException {
+    if (debug) {
+      debug("offset: " + offset + ", num: " + num);
+    }
+
     final EsSearchResult res = (EsSearchResult)sres;
 
     res.pageStart = offset;
