@@ -46,7 +46,7 @@ import java.util.TreeSet;
 
 /** This acts as an interface to the database for calendar suites.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 class CalSuites extends CalSvcDb implements CalSuitesI {
   private BwCalSuiteWrapper currentCalSuite;
@@ -232,9 +232,9 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
   public void addResource(final BwCalSuite suite,
                           final BwResource res,
                           final ResourceClass cl) throws CalFacadeException {
-    BwCalendar resCol = getResourcesDir(suite, cl);
+    final BwCalendar resCol = getResourcesDir(suite, cl);
 
-    getRess().save(resCol.getPath(), res);
+    getRess().save(resCol.getPath(), res, false);
   }
 
   @Override

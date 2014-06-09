@@ -44,10 +44,30 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
   }
 
   @Override
-  public void save(final String path,
-                   final BwResource val) throws CalFacadeException {
+  public boolean save(final String path,
+                      final BwResource val,
+                      final boolean returnIfExists) throws CalFacadeException {
     try {
+      final BwCalendar coll = getCols().get(path);
+
+      if (coll == null) {
+        throw new CalFacadeException(CalFacadeException.collectionNotFound, path);
+      }
+
+      final BwResource r = getCal().getResource(val.getName(),
+                                                coll, PrivilegeDefs.privAny);
+
+      if (r != null) {
+        if (returnIfExists) {
+          return false;
+        }
+
+        throw new CalFacadeException(CalFacadeException.duplicateResource,
+                                     val.getName());
+      }
+
       final BwResourceContent rc = val.getContent();
+
       if (rc == null) {
         throw new CalFacadeException(CalFacadeException.missingResourceContent);
       }
@@ -56,26 +76,12 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
       val.setColPath(path);
 
-      final BwCalendar coll = getCols().get(path);
-
-      if (coll == null) {
-        throw new CalFacadeException(CalFacadeException.collectionNotFound, path);
-      }
-
       if ((coll.getCalType() == BwCalendar.calTypeCalendarCollection) ||
           (coll.getCalType() == BwCalendar.calTypeExtSub)) {
         throw new CalFacadeException(CalFacadeException.badRequest, path);
       }
 
       checkAccess(coll, PrivilegeDefs.privBind, false);
-
-      final BwResource r = getCal().getResource(val.getName(),
-                                                coll, PrivilegeDefs.privAny);
-
-      if (r != null) {
-        throw new CalFacadeException(CalFacadeException.duplicateResource,
-                                     val.getName());
-      }
 
       val.updateLastmod(getCurrentTimestamp());
       getCal().saveOrUpdate(val);
@@ -86,6 +92,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       getCal().saveOrUpdate(rc);
 
       touchCalendar(coll);
+
+      return true;
     } catch (final CalFacadeException cfe) {
       getSvc().rollbackTransaction();
       throw cfe;

@@ -38,13 +38,17 @@ import java.util.List;
  */
 public interface ResourcesI extends Serializable {
   /** Save a resource at the given collection path. The collection MUST exist.
+   * The named resource MUST NOT exist
    *
    * @param  path      String path to containing collection
    * @param  val       resource with attached content
+   * @param returnIfExists  false to throw an exception
    * @throws CalFacadeException for errors including duplicate name
+   * @return true if created, false if already exists
    */
-  void save(String path,
-            BwResource val) throws CalFacadeException;
+  boolean save(String path,
+               BwResource val,
+               boolean returnIfExists) throws CalFacadeException;
 
   /** Get a resource given the path - does not get content
    *

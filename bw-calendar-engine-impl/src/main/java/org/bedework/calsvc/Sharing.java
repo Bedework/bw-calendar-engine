@@ -236,7 +236,7 @@ public class Sharing extends CalSvcDb implements SharingI {
   @Override
   public ReplyResult reply(final BwCalendar col,
                            final InviteReplyType reply) throws CalFacadeException {
-    BwCalendar home = getCols().getHome();
+    final BwCalendar home = getCols().getHome();
 
     if (!home.getPath().equals(col.getPath())) {
       throw new CalFacadeForbidden("Not calendar home");
@@ -244,14 +244,14 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     /* We must have at least read access to the shared collection */
 
-    BwCalendar sharerCol = getCols().get(Util.buildPath(true, reply.getHostUrl()));
+    final BwCalendar sharerCol = getCols().get(Util.buildPath(true, reply.getHostUrl()));
 
     if (sharerCol == null) {
       // Bad hosturl
       throw new CalFacadeForbidden("Bad hosturl or no access");
     }
 
-    Holder<AccessType> access = new Holder<AccessType>();
+    final Holder<AccessType> access = new Holder<>();
 
     if (!updateSharingStatus(sharerCol.getOwnerHref(),
                              sharerCol.getPath(),
@@ -262,17 +262,17 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     /* Accepted */
 
-    AccessType at = access.value;
-    boolean sharedWritable = (at != null) && at.testReadWrite();
+    final AccessType at = access.value;
+    final boolean sharedWritable = (at != null) && at.testReadWrite();
 
     /* This may be a change in access or a new sharing request. See if an alias
      * already exists to the shared collection. If it does we're done.
      * Otherwise we need to create an alias in the calendar home using the
      * reply summary as the display name */
 
-    List<BwCalendar> aliases = findAlias(sharerCol.getPath());
+    final List<BwCalendar> aliases = findAlias(sharerCol.getPath());
     if (!Util.isEmpty(aliases)) {
-      BwCalendar alias = aliases.get(0);
+      final BwCalendar alias = aliases.get(0);
 
       alias.setSharedWritable(sharedWritable);
       getCols().update(alias);
@@ -280,14 +280,14 @@ public class Sharing extends CalSvcDb implements SharingI {
       return ReplyResult.success(alias.getPath());
     }
 
-    BwCalendar alias = new BwCalendar();
+    final BwCalendar alias = new BwCalendar();
 
     String summary = reply.getSummary();
     if ((summary == null) || (summary.length() == 0)) {
       summary = "Shared Calendar";
     }
 
-    alias.setName(getEncodedUuid());
+    alias.setName(reply.getInReplyTo());
     alias.setSummary(summary);
     alias.setCalType(BwCalendar.calTypeAlias);
     //alias.setPath(home.getPath() + "/" + UUID.randomUUID().toString());
@@ -295,14 +295,15 @@ public class Sharing extends CalSvcDb implements SharingI {
     alias.setShared(true);
     alias.setSharedWritable(sharedWritable);
 
-    alias = getCols().add(alias, home.getPath());
+    final BwCalendar createdAlias = getCols().add(alias, home.getPath());
 
-    return ReplyResult.success(alias.getPath());
+    return ReplyResult.success(createdAlias.getPath());
   }
 
   @Override
   public InviteType getInviteStatus(final BwCalendar col) throws CalFacadeException {
-    String inviteStr = col.getProperty(NamespaceAbbrevs.prefixed(AppleServerTags.invite));
+    final String inviteStr =
+            col.getProperty(NamespaceAbbrevs.prefixed(AppleServerTags.invite));
 
     if (inviteStr == null) {
       return new InviteType();
@@ -310,22 +311,22 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     try {
       return new Parser().parseInvite(inviteStr);
-    } catch (WebdavException we) {
+    } catch (final WebdavException we) {
       throw new CalFacadeException(we);
     }
   }
 
   @Override
   public void delete(final BwCalendar col) throws CalFacadeException {
-    InviteType invite = getInviteStatus(col);
+    final InviteType invite = getInviteStatus(col);
 
-    for (UserType u: invite.getUsers()) {
+    for (final UserType u: invite.getUsers()) {
       if (u.getInviteStatus().equals(Parser.inviteNoresponseTag)) {
         // An outstanding invitation
-        BwPrincipal pr = caladdrToPrincipal(u.getHref());
+        final BwPrincipal pr = caladdrToPrincipal(u.getHref());
 
         if (pr != null) {     // Unknown user
-          NotificationType n = findInvite(pr, col.getPath());
+          final NotificationType n = findInvite(pr, col.getPath());
 
           if (n != null) {
             //InviteNotificationType in = (InviteNotificationType)n.getNotification();
@@ -338,18 +339,18 @@ public class Sharing extends CalSvcDb implements SharingI {
         /* Send a notification indicating we deleted/uninvited and remove their
          * alias.
          */
-        String calAddr = principalToCaladdr(getPrincipal());
+        final String calAddr = principalToCaladdr(getPrincipal());
 
-        InviteNotificationType in = deletedNotification(u.getHref(),
-                                                        col.getPath(),
-                                                        calAddr);
-        NotificationType note = new NotificationType();
+        final InviteNotificationType in = deletedNotification(u.getHref(),
+                                                              col.getPath(),
+                                                              calAddr);
+        final NotificationType note = new NotificationType();
 
         note.setDtstamp(new DtStamp(new DateTime(true)).getValue());
         note.setNotification(in);
 
-        NotificationsI notify = getSvc().getNotificationsHandler();
-        BwPrincipal pr = caladdrToPrincipal(u.getHref());
+        final NotificationsI notify = getSvc().getNotificationsHandler();
+        final BwPrincipal pr = caladdrToPrincipal(u.getHref());
 
         notify.send(pr, note);
       }
@@ -360,10 +361,11 @@ public class Sharing extends CalSvcDb implements SharingI {
       try {
         pushPrincipal(u.getHref());
 
-        List<BwCalendar> cols = ((Calendars)getCols()).findUserAlias(col.getPath());
+        final List<BwCalendar> cols =
+                ((Calendars)getCols()).findUserAlias(col.getPath());
 
         if (!Util.isEmpty(cols)) {
-          for (BwCalendar alias: cols) {
+          for (final BwCalendar alias: cols) {
             getCols().delete(alias, false, true);
           }
         }
@@ -381,11 +383,11 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     /* Set access to read for everybody */
 
-    Acl acl = setAccess(col,
-                        null,
-                        WhoDefs.whoTypeAll,
-                        col.getCurrentAccess().getAcl(),
-                        true);  // Read access
+    final Acl acl = setAccess(col,
+                              null,
+                              WhoDefs.whoTypeAll,
+                              col.getCurrentAccess().getAcl(),
+                              true);  // Read access
 
     // Mark the collection as shared and published
     col.setQproperty(AppleServerTags.publishUrl, col.getPath());
@@ -394,9 +396,9 @@ public class Sharing extends CalSvcDb implements SharingI {
       getCols().update(col);
 
       getSvc().changeAccess(col, acl.getAces(), true);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -410,9 +412,9 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     /* Remove access to all */
 
-    Acl acl = removeAccess(col.getCurrentAccess().getAcl(),
-                           null,
-                           WhoDefs.whoTypeAll);
+    final Acl acl = removeAccess(col.getCurrentAccess().getAcl(),
+                                 null,
+                                 WhoDefs.whoTypeAll);
 
     // Mark the collection as published
     col.removeQproperty(AppleServerTags.publishUrl);
@@ -424,9 +426,9 @@ public class Sharing extends CalSvcDb implements SharingI {
       if (acl != null) {
         getSvc().changeAccess(col, acl.getAces(), true);
       }
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -436,8 +438,8 @@ public class Sharing extends CalSvcDb implements SharingI {
                                    final String subscribedName) throws CalFacadeException {
     /* We must have at least read access to the published collection */
 
-    BwCalendar publishedCol = getCols().get(colPath);
-    SubscribeResult sr = new SubscribeResult();
+    final BwCalendar publishedCol = getCols().get(colPath);
+    final SubscribeResult sr = new SubscribeResult();
 
     if (publishedCol == null) {
       // Bad url?
@@ -570,20 +572,30 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       uentry.setInviteStatus(AppleServerTags.inviteDeclined);
 
-      shared.setProperty(NamespaceAbbrevs.prefixed(AppleServerTags.invite),
+      shared.setProperty(NamespaceAbbrevs.prefixed(
+              AppleServerTags.invite),
                          invite.toXml());
       getCols().update(shared);
 
       /* At this stage we need a message to notify the sharer -
-         change notification?
+         change notification.
+         The name of the alias is the uid of the original invite
+         */
 
       final NotificationType note = new NotificationType();
 
       note.setDtstamp(new DtStamp(new DateTime(true)).getValue());
+
+      // Create a reply object.
+      final InviteReplyType reply = new InviteReplyType();
+      reply.setHref(principalToCaladdr(sharee));
+      reply.setAccepted(false);
+      reply.setHostUrl(shared.getPath());
+      reply.setInReplyTo(col.getName());
+
       note.setNotification(reply);
 
       getSvc().getNotificationsHandler().add(note);
-      */
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {

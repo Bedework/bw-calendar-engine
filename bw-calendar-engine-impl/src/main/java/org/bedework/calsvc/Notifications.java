@@ -110,8 +110,18 @@ class Notifications extends CalSvcDb implements NotificationsI {
       throw new CalFacadeException(t);
     }
 
-    getSvc().getResourcesHandler().save(ncol.getPath(), noteRsrc);
-    return true;
+    for (int i = 0; i <= 100; i++) {
+      if (getSvc().getResourcesHandler().save(ncol.getPath(),
+                                              noteRsrc,
+                                              true)) {
+        return true;
+      }
+
+      noteRsrc.setName(val.getName() + "-" + i);
+    }
+
+    throw new CalFacadeException(CalFacadeException.duplicateResource,
+                                 val.getName());
   }
 
   @Override

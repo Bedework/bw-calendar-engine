@@ -1574,7 +1574,9 @@ public class BwSysIntfImpl implements SysIntf {
   public void putFile(final CalDAVCollection coll,
                       final CalDAVResource val) throws WebdavException {
     try {
-      getSvci().getResourcesHandler().save(coll.getPath(), getRsrc(val));
+      getSvci().getResourcesHandler().save(coll.getPath(),
+                                           getRsrc(val),
+                                           false);
     } catch (CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
     } catch (CalFacadeException cfe) {
