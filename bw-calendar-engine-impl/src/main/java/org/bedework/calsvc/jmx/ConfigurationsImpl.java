@@ -55,17 +55,17 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
         implements Configurations {
   private static boolean configured;
 
-  private static String basicPropsNamePart = "basicSystem";
+  private static final String basicPropsNamePart = "basicSystem";
 
-  private static String unauthPropsNamePart = "unauthSystem";
+  private static final String unauthPropsNamePart = "unauthSystem";
 
-  private static String authPropsNamePart = "authSystem";
+  private static final String authPropsNamePart = "authSystem";
 
-  private static String systemPropsNamePart = "system";
+  private static final String systemPropsNamePart = "system";
 
-  private static String unauthCardDavInfoNamePart = "unauthCardDav";
+  private static final String unauthCardDavInfoNamePart = "unauthCardDav";
 
-  private static String authCardDavInfoNamePart = "authCardDav";
+  private static final String authCardDavInfoNamePart = "authCardDav";
 
   private static BasicSystemProperties basicProps;
 
@@ -89,7 +89,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   private static PooledBuffers pooledBuffers;
 
-  private Map<String, DirConfigProperties> dirConfigs = new HashMap<>();
+  private final Map<String, DirConfigProperties> dirConfigs = new HashMap<>();
 
   private static final String dumpRestoreClass =
           "org.bedework.dumprestore.BwDumpRestore";
@@ -130,9 +130,9 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       unAuthProperties = new ROAuthProperties(getAuthProps(false));
 
       sysProperties = new ROSystemProperties(getSystemProps());
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -253,24 +253,20 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
       cfg.setTestMode(Boolean.getBoolean("org.bedework.testmode"));
       basicProps = new ROBasicSystemProperties(cfg);
-      saveConfig();
 
       /* ------------- Auth properties -------------------- */
       AuthConf conf = new AuthConf(unauthPropsNamePart);
       register(getUnauthpropsName(), conf);
       conf.loadConfig();
-      conf.saveConfig();
 
       conf = new AuthConf(authPropsNamePart);
       register(getAuthpropsName(), conf);
       conf.loadConfig();
-      conf.saveConfig();
 
       /* ------------- System properties -------------------- */
       SystemConf sconf = new SystemConf(systemPropsNamePart);
       register(getSyspropsName(), sconf);
       sconf.loadConfig();
-      sconf.saveConfig();
 
       /* ------------- Notification properties -------------------- */
       NotificationConf nc = new NotificationConf();
@@ -380,7 +376,6 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
     register(new ObjectName(cb.getServiceName()), cb);
 
     cb.loadConfig();
-    cb.saveConfig();
 
     if (start) {
       cb.start();
@@ -420,7 +415,6 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
               (DirConf<DirConfigPropertiesImpl>)makeObject(mbeanClassName);
       dc.init(cs, objectName.toString(), dCfg, dn);
 
-      dc.saveConfig();
       dirConfigs.put(dn, dc);
 
       register(new ObjectName(dc.getServiceName()), dc);

@@ -177,8 +177,6 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
                                objectName.toString(),
                                hi);
 
-        bh.saveConfig(); // Just to ensure we have it for next time
-
         register("hostconf", hn, bh);
         hostConfigs.add(bh);
       }
