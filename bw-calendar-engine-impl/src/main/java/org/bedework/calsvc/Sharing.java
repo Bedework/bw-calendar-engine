@@ -335,7 +335,7 @@ public class Sharing extends CalSvcDb implements SharingI {
             deleteInvite(pr, n);
           }
         }
-      } else {
+      } else if (u.getInviteStatus().equals(Parser.inviteAcceptedTag)) {
         /* Send a notification indicating we deleted/uninvited and remove their
          * alias.
          */
@@ -919,11 +919,11 @@ public class Sharing extends CalSvcDb implements SharingI {
 
   private final static Privilege scheduleDeliverPriv = Privileges.makePriv(Privileges.privScheduleDeliver);
 
-  private final static Collection<Privilege> allPrivs = new ArrayList<Privilege>();
+  private final static Collection<Privilege> allPrivs = new ArrayList<>();
 
-  private final static Collection<Privilege> readPrivs = new ArrayList<Privilege>();
+  private final static Collection<Privilege> readPrivs = new ArrayList<>();
 
-  private final static Collection<Privilege> readWritePrivs = new ArrayList<Privilege>();
+  private final static Collection<Privilege> readWritePrivs = new ArrayList<>();
 
   static {
     allPrivs.add(allPriv);
