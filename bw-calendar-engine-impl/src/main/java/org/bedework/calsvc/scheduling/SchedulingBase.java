@@ -382,9 +382,9 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
   protected BwEvent copyEvent(final BwEvent origEv,
                               final BwEvent masterEv,
                               final BwPrincipal owner) throws CalFacadeException {
-    BwEvent newEv;
+    final BwEvent newEv;
     BwEventProxy proxy = null;
-    String ownerHref = owner.getPrincipalRef();
+    final String ownerHref = owner.getPrincipalRef();
 
     if (origEv instanceof BwEventProxy) {
       proxy = (BwEventProxy)origEv;

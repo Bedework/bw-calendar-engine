@@ -109,7 +109,7 @@ public class BwEventObj extends BwEvent implements ScheduleMethods {
 
   @Override
   public Object clone() {
-    BwEventObj ev = new BwEventObj();
+    final BwEventObj ev = new BwEventObj();
 
     copyTo(ev);
 

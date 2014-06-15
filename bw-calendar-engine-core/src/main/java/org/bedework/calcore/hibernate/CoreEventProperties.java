@@ -341,6 +341,12 @@ public class CoreEventProperties <T extends BwEventProperty>
 
     ent.fixNames(getSyspars(), getPrincipal());
 
+    /*  XXX This is wrong but it's always been like this.
+        For scheduling we end up with other users categories embedded
+        in attendees events.
+
+        This will probbaly get fixed when scheduling is moved out of
+        the core.
     if (ent.getPublick()) {
       return ent;
     }
@@ -350,6 +356,8 @@ public class CoreEventProperties <T extends BwEventProperty>
     }
 
     return null;
+     */
+    return ent;
   }
 
   private void findQuery(final boolean count,

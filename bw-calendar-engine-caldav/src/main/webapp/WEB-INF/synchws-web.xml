@@ -16,6 +16,10 @@
     <listener-class>org.bedework.util.servlet.SessionListener</listener-class>
   </listener>
 
+  <listener>
+    <listener-class>org.bedework.caldav.server.CaldavBWServlet</listener-class>
+  </listener>
+
   <servlet>
     <servlet-name>action</servlet-name>
     <servlet-class>
@@ -50,7 +54,7 @@
 
   <servlet-mapping>
     <servlet-name>action</servlet-name>
-    <url-pattern>/</url-pattern>
+    <url-pattern>/*</url-pattern>
   </servlet-mapping>
 
   <session-config>

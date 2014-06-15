@@ -2724,9 +2724,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public void addCategory(final BwCategory val) {
+    if (val == null) {
+      throw new RuntimeException("Attempting to store null");
+    }
+
     Set<BwCategory> cats = getCategories();
     if (cats == null) {
-      cats = new TreeSet<BwCategory>();
+      cats = new TreeSet<>();
       setCategories(cats);
     }
 
@@ -4501,7 +4505,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   /** Copy this objects fields into the parameter
    *
-   * @param ev
+   * @param ev - to copy to
    */
   @NoProxy
   public void copyTo(final BwEvent ev) {
@@ -4821,7 +4825,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public Object clone() {
-    BwEvent ev = new BwEvent();
+    final BwEvent ev = new BwEvent();
 
     copyTo(ev);
 
@@ -4834,11 +4838,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoDump
   public long getMicrosecsVersion() throws CalFacadeException {
     try {
-      String[] ct = getCtoken().split("-");
+      final String[] ct = getCtoken().split("-");
 
       return new LastModified(ct[0]).getDate().getTime() * 1000000 +
               Integer.parseInt(ct[1], 16) * 100;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }

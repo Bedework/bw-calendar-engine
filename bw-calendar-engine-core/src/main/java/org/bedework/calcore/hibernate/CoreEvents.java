@@ -28,6 +28,7 @@ import org.bedework.caldav.util.filter.ObjectFilter;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCalendar.CollectionInfo;
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
@@ -2526,13 +2527,15 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       return;
     }
 
-//    Set<String> catUids = new TreeSet<>();
+    for (final String uid: uids) {
+      BwCategory cat = cb.getCategory(uid);
 
-    for (Object o: uids) {
-      String uid = (String)o;
-//      catUids.add(uid);
+      if (cat == null) {
+        throw new CalFacadeException("Attempting to store null for cat uid "
+                                             + uid);
+      }
 
-      ce.addCategory(cb.getCategory(uid));
+      ce.addCategory(cat);
     }
   }
 
