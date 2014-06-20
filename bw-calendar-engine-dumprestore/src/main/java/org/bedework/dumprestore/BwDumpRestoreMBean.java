@@ -30,6 +30,28 @@ import java.util.List;
  */
 public interface BwDumpRestoreMBean extends ConfBaseMBean,
         DumpRestoreProperties {
+  /**
+   * @param val true to enable restores
+   */
+  void setAllowRestore(boolean val);
+
+  /**
+   * @return  true to enable restores
+   */
+  @MBeanInfo("Set true to enable restores")
+  boolean getAllowRestore();
+
+  /**
+   * @param val true to fix aliases only
+   */
+  void setFixAliases(boolean val);
+
+  /**
+   * @return  true to list aliases only
+   */
+  @MBeanInfo("Set true to fix aliases - false to list only")
+  boolean getFixAliases();
+
   /* ========================================================================
    * Operations
    * ======================================================================== */
@@ -71,6 +93,21 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
    */
   @MBeanInfo("Show status of external subscriptions check")
   List<String> checkSubsStatus();
+
+  /** Check aliases discovered during the dump or restore. This will
+   * attempt to fix sharing of fixAliases is true.
+   *
+   * @return Completion message
+   */
+  @MBeanInfo("check aliases")
+  String checkAliases();
+
+  /** Returns status of the alias check.
+   *
+   * @return Completion messages and stats
+   */
+  @MBeanInfo("Show status of alias check")
+  List<String> checkAliasStatus();
 
   /** Starts a dump of the data to a file in the DataOut directory.
    *

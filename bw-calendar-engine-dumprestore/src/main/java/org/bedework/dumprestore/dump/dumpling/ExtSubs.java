@@ -21,8 +21,8 @@ package org.bedework.dumprestore.dump.dumpling;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
-import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.dump.DumpGlobals;
 
 import org.apache.log4j.Logger;
@@ -32,7 +32,7 @@ import java.util.Iterator;
 
 /** Get all external subscriptions for checking.
  *
- * @author Mike Douglass   douglm  bedework.edu
+ * @author Mike Douglass   douglm  rpi.edu
  * @version 1.0
  *
  */
@@ -76,9 +76,10 @@ public class ExtSubs implements Defs {
 
       if (col.getExternalSub() && !col.getTombstoned()) {
         globals.counts[globals.externalSubscriptions]++;
-        globals.externalSubs.add(new ExternalSubInfo(col.getPath(),
-                                                     col.getPublick(),
-                                                     col.getOwnerHref()));
+        globals.externalSubs.add(
+                AliasInfo.getExternalSubInfo(col.getPath(),
+                                             col.getPublick(),
+                                             col.getOwnerHref()));
       }
 
       Collection<BwCalendar> cs = globals.di.getChildren(col);

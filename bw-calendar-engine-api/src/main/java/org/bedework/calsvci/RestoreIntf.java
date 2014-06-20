@@ -38,7 +38,7 @@ import org.bedework.calfacade.svc.EventInfo;
  * calendar database. The methods need to be called in the order defined
  * below.
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm rpi.edu
  * @version 1.0
  */
 public interface RestoreIntf {
@@ -99,6 +99,12 @@ public interface RestoreIntf {
    * @throws Throwable
    */
   void endTransaction() throws Throwable;
+
+  /** Check for an empty system first
+   *
+   * @throws Throwable
+   */
+  void checkEmptySystem() throws Throwable;
 
   /** Restore system pars
    *
@@ -271,5 +277,42 @@ public interface RestoreIntf {
    * @throws Throwable
    */
   void addCalendar(BwCalendar val) throws Throwable;
+
+  /** */
+  public enum FixAliasResult {
+    /** No action was required */
+    ok,
+
+    /** No access to target collection */
+    noAccess,
+
+    /** Wrong access to target collection */
+    wrongAccess,
+
+    /** No such target collection */
+    notFound,
+
+    /** Part of or points to a circular chain */
+    circular,
+
+    /** Broken chain */
+    broken,
+
+    /** reshared */
+    reshared,
+
+    /** failed */
+    failed;
+  }
+
+  /** Restore sharing for the given principal href
+   *
+   * @param col - the target collection
+   * @param shareeHref - the sharee
+   * @return indication of how it went
+   * @throws CalFacadeException
+   */
+  FixAliasResult fixSharee(BwCalendar col,
+                           String shareeHref) throws CalFacadeException;
 }
 

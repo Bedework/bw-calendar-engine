@@ -81,7 +81,7 @@ public class DumpAll extends Dumpling {
     globals.xml.property(new QName(dumpDateTag), DateTimeUtil.isoDateTime());
 
     open();
-    Collection<BwSystem> syspars = new ArrayList<BwSystem>();
+    Collection<BwSystem> syspars = new ArrayList<>();
 
     syspars.add(globals.svci.getSysparsHandler().get());
     new Dumpling<BwSystem>(globals,

@@ -513,6 +513,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       refreshRate = refresh;
     }
 
+    //noinspection UnusedAssignment
     refreshRate *= 60;
 
     alias.setRemoteId(remoteId);
@@ -993,7 +994,7 @@ public class Sharing extends CalSvcDb implements SharingI {
         acl = removed;
       }
 
-      final Collection<Ace> aces = new ArrayList<Ace>();
+      final Collection<Ace> aces = new ArrayList<>();
       aces.addAll(acl.getAces());
 
       aces.add(Ace.makeAce(who, desiredPriv, null));
@@ -1013,9 +1014,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     try {
       final AceWho who = AceWho.getAceWho(href, whoKind, false);
 
-      final Acl newAcl = acl.removeWho(who);
-
-      return newAcl;
+      return acl.removeWho(who);
     } catch (final AccessException ae) {
       throw new CalFacadeException(ae);
     }

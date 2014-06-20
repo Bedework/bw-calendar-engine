@@ -32,8 +32,8 @@ import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.RestoreIntf;
+import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Counters;
-import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.InfoLines;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.Timezones;
@@ -128,11 +128,6 @@ public class RestoreGlobals extends Counters {
    * For the moment I just need to get this going.
    */
   public boolean inOwnerKey;
-
-  /** True if we skip creation of special calendars. This is for the conversion
-   * from 3.0 which may have a lot of empty special calendars created
-   */
-  public boolean skipSpecialCals;
 
   /** Set false at start of entity, set true on entity error
    */
@@ -259,7 +254,11 @@ public class RestoreGlobals extends Counters {
 
   /** Collections marked as external subscriptions. We may need to resubscribe
    */
-  public List<ExternalSubInfo> externalSubs = new ArrayList<ExternalSubInfo>();
+  public List<AliasInfo> externalSubs = new ArrayList<>();
+
+  /** Collections marked as aliases. We may need to fix sharing
+   */
+  public Map<String, List<AliasInfo>> aliasInfo = new HashMap<>();
 
   /** */
   public PrincipalMap principalsTbl = new PrincipalMap();

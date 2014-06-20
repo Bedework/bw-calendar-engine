@@ -27,8 +27,8 @@ import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
+import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
-import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.InfoLines;
 import org.bedework.dumprestore.restore.rules.RestoreRuleSet;
 import org.bedework.util.misc.Util;
@@ -52,6 +52,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /** Application to restore from an XML calendar dump..
  *
@@ -103,6 +104,8 @@ public class Restore implements Defs {
     globals.svci.open();
     globals.rintf = globals.svci.getRestoreHandler();
     globals.rintf.setLogger(new RLogger(globals));
+
+    globals.rintf.checkEmptySystem();
   }
 
   /**
@@ -139,8 +142,15 @@ public class Restore implements Defs {
   /**
    * @return list of external subscriptions
    */
-  public List<ExternalSubInfo> getExternalSubs() {
+  public List<AliasInfo> getExternalSubs() {
     return globals.externalSubs;
+  }
+
+  /**
+   * @return table of aliases by path
+   */
+  public Map<String, List<AliasInfo>> getAliasInfo() {
+    return globals.aliasInfo;
   }
 
   private void createNewSystem() throws Throwable {

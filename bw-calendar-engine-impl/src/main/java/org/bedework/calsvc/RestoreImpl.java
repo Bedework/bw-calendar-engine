@@ -21,6 +21,9 @@ package org.bedework.calsvc;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
+import org.bedework.caldav.util.sharing.AccessType;
+import org.bedework.caldav.util.sharing.InviteType;
+import org.bedework.caldav.util.sharing.UserType;
 import org.bedework.calfacade.BwAuthUser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -35,6 +38,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwSystem;
+import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -43,6 +47,8 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.RestoreIntf;
 
 import java.util.Collection;
+import java.util.Set;
+import java.util.TreeSet;
 
 /** Allow the restore process to work.
  *
@@ -101,9 +107,19 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     endTransactionNow();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#restoreSyspars(org.bedework.calfacade.BwSystem)
-   */
+  @Override
+  public void checkEmptySystem() throws Throwable {
+    try {
+      startTransaction();
+
+      if (getSvc().getSysparsHandler().get() != null) {
+        throw new CalFacadeException("System is not empty - restore terminated");
+      }
+    } finally {
+      endTransaction();
+    }
+  }
+
   @Override
   public void restoreSyspars(final BwSystem o) throws Throwable {
     try {
@@ -442,6 +458,87 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     } finally {
       endTransaction();
     }
+  }
+
+  @Override
+  public FixAliasResult fixSharee(final BwCalendar col,
+                                  final String shareeHref) throws CalFacadeException {
+    /* First ensure this alias is not circular */
+
+    final Set<String> paths = new TreeSet<>();
+
+    BwCalendar curCol = col;
+    while (curCol.getInternalAlias()) {
+      if (paths.contains(curCol.getPath())) {
+        return FixAliasResult.circular;
+      }
+
+      paths.add(curCol.getPath());
+      try {
+        curCol = getCols().resolveAlias(curCol, false, false);
+      } catch (final CalFacadeAccessException ignored) {
+        return FixAliasResult.noAccess;
+      }
+
+      if (curCol == null) {
+        return FixAliasResult.broken;
+      }
+    }
+
+    // See if we are in the invite list
+
+    final InviteType invite =
+            getSvc().getSharingHandler().getInviteStatus(curCol);
+    final String shareeCua =
+            getSvc().getDirectories().userToCaladdr(shareeHref);
+
+    UserType uentry = invite.finduser(shareeCua);
+
+    if (uentry != null) {
+      // Already in list of sharers
+      return FixAliasResult.ok;
+    }
+
+
+    final PrivilegeSet ps = curCol.getCurrentAccess().getPrivileges();
+
+    final boolean write = ps.getPrivilege(
+              PrivilegeDefs.privWrite) == PrivilegeDefs.allowed;
+
+    final boolean read = ps.getPrivilege(
+              PrivilegeDefs.privRead) == PrivilegeDefs.allowed;
+
+    if (!write && !read) {
+      // No appropriate access
+      return FixAliasResult.noAccess;
+    }
+
+    if (write && !read) {
+      // Incompatible with current sharing
+      return FixAliasResult.wrongAccess;
+    }
+
+    final AccessType a = new AccessType();
+
+    if (write) {
+      a.setReadWrite(true);
+    } else {
+      a.setRead(true);
+    }
+
+    /* Now fix the sharing invite info */
+
+    uentry = new UserType();
+
+    uentry.setHref(shareeCua);
+    uentry.setInviteStatus(AppleServerTags.inviteAccepted);
+    //uentry.setCommonName(...);
+    uentry.setAccess(a);
+    //uentry.setSummary(s.getSummary());
+
+    invite.getUsers().add(uentry);
+
+    return FixAliasResult.reshared;
   }
 
   /* ====================================================================

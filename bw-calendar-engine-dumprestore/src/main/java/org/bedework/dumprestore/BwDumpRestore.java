@@ -43,7 +43,15 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   /* Name of the property holding the location of the config data */
   public static final String confuriPname = "org.bedework.bwengine.confuri";
 
-  private List<ExternalSubInfo> externalSubs;
+  private List<AliasInfo> externalSubs;
+
+  /* Collections marked as aliases. We may need to fix sharing
+   */
+  private Map<String, List<AliasInfo>> aliasInfo = new HashMap<>();
+
+  private boolean allowRestore;
+
+  private boolean fixAliases;
 
   private String curSvciOwner;
 
@@ -58,6 +66,17 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
     @Override
     public void run() {
+      if (!allowRestore) {
+        infoLines.add("***********************************\n");
+        infoLines.add("********* Restores disabled *******\n");
+        infoLines.add("***********************************\n");
+
+        return;
+      }
+
+      boolean closed = true;
+      Restore restorer = null;
+
       try {
         if (!disableIndexer()) {
           infoLines.add("***********************************\n");
@@ -67,9 +86,9 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
         infoLines.addLn("Started restore of data");
 
-        long startTime = System.currentTimeMillis();
+        final long startTime = System.currentTimeMillis();
 
-        Restore restorer = new Restore();
+        restorer = new Restore();
 
         restorer.getConfigProperties();
 
@@ -78,29 +97,36 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
         restorer.setFilename(getDataIn());
 
+        closed = false;
         restorer.open();
 
         restorer.doRestore(infoLines);
 
         externalSubs = restorer.getExternalSubs();
+        aliasInfo = restorer.getAliasInfo();
 
+        closed = true;
         restorer.close();
 
         restorer.stats(infoLines);
 
-        long millis = System.currentTimeMillis() - startTime;
-        long seconds = millis / 1000;
-        long minutes = seconds / 60;
-        seconds -= (minutes * 60);
+        final long millis = System.currentTimeMillis() - startTime;
+        final long seconds = millis / 1000;
+        final long minutes = seconds / 60;
 
         infoLines.addLn("Elapsed time: " + minutes + ":" +
-                        Restore.twoDigits(seconds));
+                                Restore.twoDigits(seconds - (minutes * 60)));
 
         infoLines.add("Restore complete" + "\n");
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         error(t);
         infoLines.exceptionMsg(t);
       } finally {
+        if (!closed) {
+          try {
+            restorer.close();
+          } catch (final Throwable ignored) {}
+        }
         infoLines.addLn("Restore completed - about to start indexer");
 
         try {
@@ -109,7 +135,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
             infoLines.addLn("********* Unable to reindex");
             infoLines.addLn("***********************************");
           }
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
           error(t);
           infoLines.exceptionMsg(t);
         }
@@ -132,15 +158,15 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     @Override
     public void run() {
       try {
-        long startTime = System.currentTimeMillis();
+        final long startTime = System.currentTimeMillis();
 
-        Dump d = new Dump(infoLines);
+        final Dump d = new Dump(infoLines);
 
         d.getConfigProperties();
 
         if (dumpAll) {
           infoLines.addLn("Started dump of data");
-          StringBuilder fname = new StringBuilder(getDataOut());
+          final StringBuilder fname = new StringBuilder(getDataOut());
           if (!getDataOut().endsWith("/")) {
             fname.append("/");
           }
@@ -164,21 +190,21 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         }
 
         externalSubs = d.getExternalSubs();
+        aliasInfo = d.getAliasInfo();
 
         d.close();
 
         d.stats(infoLines);
 
-        long millis = System.currentTimeMillis() - startTime;
-        long seconds = millis / 1000;
-        long minutes = seconds / 60;
-        seconds -= (minutes * 60);
+        final long millis = System.currentTimeMillis() - startTime;
+        final long seconds = millis / 1000;
+        final long minutes = seconds / 60;
 
         infoLines.addLn("Elapsed time: " + minutes + ":" +
-            Restore.twoDigits(seconds));
+                                Restore.twoDigits(seconds - (minutes * 60)));
 
         infoLines.addLn("Complete");
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         error(t);
         infoLines.exceptionMsg(t);
       }
@@ -197,7 +223,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     @Override
     public void run() {
       try {
-        boolean debug = getLogger().isDebugEnabled();
+        final boolean debug = getLogger().isDebugEnabled();
 
         if (externalSubs.isEmpty()) {
           infoLines.addLn("No external subscriptions");
@@ -230,14 +256,15 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         int errorCt = 0;
 
         resubscribe:
-          for (ExternalSubInfo esi: externalSubs) {
-            getSvci(esi);
+        for (final AliasInfo ai: externalSubs) {
+          getSvci(ai);
 
-            try {
-              CheckSubscriptionResult csr =
-                  svci.getCalendarsHandler().checkSubscription(esi.path);
+          try {
+            final CheckSubscriptionResult csr =
+                    svci.getCalendarsHandler().checkSubscription(
+                            ai.getPath());
 
-              switch (csr) {
+            switch (csr) {
               case ok:
                 okCt++;
                 break;
@@ -257,36 +284,37 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
               case failed:
                 failedCt++;
                 break;
-              } // switch
+            } // switch
 
-              if ((csr != CheckSubscriptionResult.ok) &&
-                  (csr != CheckSubscriptionResult.resubscribed)) {
-                infoLines.addLn("Status: " + csr + " for " + esi.path +
-                                " owner: " + esi.owner);
-              }
-
-              ct++;
-
-              if ((ct % 100) == 0) {
-                info("Checked " + ct + " collections");
-              }
-            } catch (CalFacadeAccessException cae) {
-              accessErrorCt++;
-
-              if ((accessErrorCt % 100) == 0) {
-                info("Had " + accessErrorCt + " access errors");
-              }
-            } catch (Throwable t) {
-              error(t);
-              errorCt++;
-
-              if ((errorCt % 100) == 0) {
-                info("Had " + errorCt + " errors");
-              }
-            } finally {
-              closeSvci();
+            if ((csr != CheckSubscriptionResult.ok) &&
+                    (csr != CheckSubscriptionResult.resubscribed)) {
+              infoLines.addLn("Status: " + csr +
+                                      " for " + ai.getPath() +
+                                      " owner: " + ai.getOwner());
             }
-          } // resubscribe
+
+            ct++;
+
+            if ((ct % 100) == 0) {
+              info("Checked " + ct + " collections");
+            }
+          } catch (final CalFacadeAccessException cae) {
+            accessErrorCt++;
+
+            if ((accessErrorCt % 100) == 0) {
+              info("Had " + accessErrorCt + " access errors");
+            }
+          } catch (final Throwable t) {
+            error(t);
+            errorCt++;
+
+            if ((errorCt % 100) == 0) {
+              info("Had " + errorCt + " errors");
+            }
+          } finally {
+            closeSvci();
+          }
+        } // resubscribe
 
         infoLines.addLn("Checked " + ct + " collections");
         infoLines.addLn("       errors: " + errorCt);
@@ -296,7 +324,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         infoLines.addLn("  notExternal: " + notExternalCt);
         infoLines.addLn(" resubscribed: " + resubscribedCt);
         infoLines.addLn("       failed: " + failedCt);
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         error(t);
         infoLines.exceptionMsg(t);
       }
@@ -304,6 +332,162 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   }
 
   private SubsThread subs;
+
+  private class AliasesThread extends Thread {
+    InfoLines infoLines = new InfoLines();
+
+    AliasesThread() {
+      super("Aliases");
+    }
+
+    @Override
+    public void run() {
+      try {
+        final boolean debug = getLogger().isDebugEnabled();
+
+        if (aliasInfo.isEmpty()) {
+          infoLines.addLn("No aliases");
+
+          return;
+        }
+
+        /** Number for which no action was required */
+        int okCt = 0;
+
+        /** Number of public aliases */
+        int publicCt = 0;
+
+        /** Number not found - broken links */
+        int notFoundCt = 0;
+
+        /** Number for which no access */
+        int noAccessCt = 0;
+
+        /** Number fixed */
+        int fixedCt = 0;
+
+        /** Number of failures */
+        int failedCt = 0;
+
+        if (debug) {
+          debug("About to process " + aliasInfo.size() +
+                        " aliases");
+        }
+
+        int ct = 0;
+        int errorCt = 0;
+
+        for (final String target: aliasInfo.keySet()) {
+          final List<AliasInfo> ais = aliasInfo.get(target);
+
+          fix:
+          for (final AliasInfo ai: ais) {
+            final CalSvcI svci = getSvci(ai);
+
+            if (ai.getPublick()) {
+              publicCt++;
+              continue fix;
+            }
+
+            /* Try to fetch as current user */
+            final BwCalendar targetCol;
+            try {
+              targetCol = svci.getCalendarsHandler().get(target);
+            } catch (final CalFacadeAccessException ignored) {
+              ai.setNoAccess(true);
+              noAccessCt++;
+              continue fix;
+            }
+
+            if (targetCol == null) {
+              ai.setNoAccess(true);
+              noAccessCt++;
+              continue fix;
+            }
+
+            if (targetCol.getPublick()) {
+              publicCt++;
+              continue fix;
+            }
+
+            try {
+              final FixAliasResult far =
+                      svci.getRestoreHandler().fixSharee(targetCol,
+                                                         ai.getOwner());
+
+              switch (far) {
+                case ok:
+                  okCt++;
+                  break;
+                case noAccess:
+                  noAccessCt++;
+                  break;
+                case wrongAccess:
+                  warn("Incompatible access for " + ai.getPath());
+                  break;
+                case notFound:
+                  notFoundCt++;
+                  break;
+                case circular:
+                  warn("Circular aliases for " + ai.getPath());
+                  break;
+                case broken:
+                  notFoundCt++;
+                  break;
+                case reshared:
+                  fixedCt++;
+                  break;
+                case failed:
+                  failedCt++;
+                  break;
+              } // switch
+
+              if ((far != FixAliasResult.ok) &&
+                      (far != FixAliasResult.reshared)) {
+                infoLines.addLn("Status: " + far + " for " + ai.getPath() +
+                                        " owner: " + ai.getOwner());
+              }
+
+              ct++;
+
+              if ((ct % 100) == 0) {
+                info("Checked " + ct + " collections");
+              }
+            } catch (final CalFacadeAccessException ignored) {
+              noAccessCt++;
+
+              if ((noAccessCt % 100) == 0) {
+                info("Had " + noAccessCt + " access errors");
+              }
+            } catch (final Throwable t) {
+              error(t);
+              errorCt++;
+
+              if ((errorCt % 100) == 0) {
+                info("Had " + errorCt + " errors");
+              }
+            } finally {
+              closeSvci();
+            }
+          } // fix
+        }
+
+        infoLines.addLn("Checked " + ct + " collections");
+        infoLines.addLn("       errors: " + errorCt);
+        infoLines.addLn("access errors: " + noAccessCt);
+        infoLines.addLn("           ok: " + okCt);
+        infoLines.addLn("       public: " + publicCt);
+        infoLines.addLn("    not found: " + notFoundCt);
+        infoLines.addLn("        fixed: " + fixedCt);
+        infoLines.addLn("       failed: " + failedCt);
+      } catch (final Throwable t) {
+        error(t);
+        infoLines.exceptionMsg(t);
+      }
+    }
+  }
+
+  private AliasesThread aliases;
 
   private final static String nm = "dumprestore";
 
@@ -318,7 +502,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   }
 
   /**
-   * @param name
+   * @param name of the service
    * @return object name value for the mbean with this name
    */
   public static String getServiceName(final String name) {
@@ -369,6 +553,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     return getConfig().getDataOutPrefix();
   }
 
+  @Override
   public DumpRestoreProperties cloneIt() {
     return getConfig().cloneIt();
   }
@@ -379,6 +564,26 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   }
 
   @Override
+  public void setAllowRestore(final boolean val) {
+    allowRestore = val;
+  }
+
+  @Override
+  public boolean getAllowRestore() {
+    return allowRestore;
+  }
+
+  @Override
+  public void setFixAliases(final boolean val) {
+    fixAliases = val;
+  }
+
+  @Override
+  public boolean getFixAliases() {
+    return fixAliases;
+  }
+
+  @Override
   public synchronized String restoreData() {
     try {
       restore = new RestoreThread();
@@ -386,7 +591,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
       restore.start();
 
       return "OK";
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
 
       return "Exception: " + t.getLocalizedMessage();
@@ -396,7 +601,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   @Override
   public synchronized List<String> restoreStatus() {
     if (restore == null) {
-      InfoLines infoLines = new InfoLines();
+      final InfoLines infoLines = new InfoLines();
 
       infoLines.addLn("Restore has not been started");
 
@@ -414,7 +619,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
       dump.start();
 
       return "OK";
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
 
       return "Exception: " + t.getLocalizedMessage();
@@ -423,13 +628,17 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
   @Override
   public String checkExternalSubs() {
+    if (externalSubs == null) {
+      return "No external subscriptions - do dump or restore first";
+    }
+
     try {
       subs = new SubsThread();
 
       subs.start();
 
       return "OK";
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
 
       return "Exception: " + t.getLocalizedMessage();
@@ -439,7 +648,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   @Override
   public List<String> checkSubsStatus() {
     if (subs == null) {
-      InfoLines infoLines = new InfoLines();
+      final InfoLines infoLines = new InfoLines();
 
       infoLines.addLn("Subscriptions check has not been started");
 
@@ -450,6 +659,38 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   }
 
   @Override
+  public String checkAliases() {
+    if (aliasInfo.isEmpty()) {
+      return "No alias info - do dump or restore first";
+    }
+
+    try {
+      aliases = new AliasesThread();
+
+      aliases.start();
+
+      return "OK";
+    } catch (final Throwable t) {
+      error(t);
+
+      return "Exception: " + t.getLocalizedMessage();
+    }
+  }
+
+  @Override
+  public List<String> checkAliasStatus() {
+    if (aliases == null) {
+      final InfoLines infoLines = new InfoLines();
+
+      infoLines.addLn("Aliases check has not been started");
+
+      return infoLines;
+    }
+
+    return aliases.infoLines;
+  }
+
+  @Override
   public String dumpData() {
     try {
       dump = new DumpThread(true);
@@ -457,7 +698,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
       dump.start();
 
       return "OK";
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
 
       return "Exception: " + t.getLocalizedMessage();
@@ -467,7 +708,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   @Override
   public synchronized List<String> dumpStatus() {
     if (dump == null) {
-      InfoLines infoLines = new InfoLines();
+      final InfoLines infoLines = new InfoLines();
 
       infoLines.addLn("Dump has not been started");
 
@@ -487,12 +728,12 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     try {
       if (indexer == null) {
         indexer = (BwIndexCtlMBean)MBeanUtil.getMBean(BwIndexCtlMBean.class,
-                                                     "org.bedework.bwengine:service=indexing");
+                                                      "org.bedework.bwengine:service=indexing");
       }
 
       indexer.setDiscardMessages(true);
       return true;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
       return false;
     }
@@ -506,7 +747,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
       indexer.rebuildIndex();
       indexer.setDiscardMessages(false);
       return true;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
       return false;
     }
@@ -517,18 +758,18 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
    * @return svci object
    * @throws CalFacadeException
    */
-  private CalSvcI getSvci(final ExternalSubInfo esi) throws CalFacadeException {
+  private CalSvcI getSvci(final AliasInfo ai) throws CalFacadeException {
     if ((svci != null) && svci.isOpen()) {
       return svci;
     }
 
     boolean publicAdmin = false;
 
-    if ((curSvciOwner == null) || !curSvciOwner.equals(esi.owner)) {
+    if ((curSvciOwner == null) || !curSvciOwner.equals(ai.getOwner())) {
       svci = null;
 
-      curSvciOwner = esi.owner;
-      publicAdmin = esi.publick;
+      curSvciOwner = ai.getOwner();
+      publicAdmin = ai.getPublick();
     }
 
     if (svci == null) {
@@ -556,16 +797,13 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
     try {
       svci.endTransaction();
-    } catch (Throwable t) {
-      try {
-        svci.close();
-      } catch (Throwable t1) {
-      }
+    } catch (final Throwable t) {
+      error(t);
     }
 
     try {
       svci.close();
-    } catch (Throwable t) {
+    } catch (final Throwable ignored) {
     }
   }
 }

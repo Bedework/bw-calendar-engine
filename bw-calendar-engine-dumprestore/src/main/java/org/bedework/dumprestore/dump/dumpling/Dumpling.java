@@ -22,23 +22,26 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.base.DumpEntity;
+import org.bedework.calfacade.base.DumpEntity.DumpType;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
-import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.dump.DumpGlobals;
 import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.xml.namespace.QName;
 
 /** Helper classes for the calendar data dump utility.
  *
- * @author Mike Douglass   douglm  bedework.edu
+ * @author Mike Douglass   douglm  rpi.edu
  * @version 1.0
  *
  * @param <T> class we are dumping
@@ -53,9 +56,9 @@ public class Dumpling<T extends DumpEntity> implements Defs {
   private transient Logger log;
 
   /**
-   * @param globals
-   * @param sectionTag
-   * @param countIndex
+   * @param globals our global stuff
+   * @param sectionTag xml output tag
+   * @param countIndex index into counters
    */
   public Dumpling(final DumpGlobals globals,
                   final QName sectionTag,
@@ -71,7 +74,7 @@ public class Dumpling<T extends DumpEntity> implements Defs {
    * <li>The restore process also assumes the availability of some objects
    * either in internal tables or in the db.</li></ul>
    *
-   * @param it
+   * @param it iterator over the entities
    * @throws Throwable
    */
   public void dumpSection(final Iterator<T> it) throws Throwable {
@@ -86,26 +89,7 @@ public class Dumpling<T extends DumpEntity> implements Defs {
 
   private void dumpCollection(final Iterator<T> it) throws Throwable {
     while (it.hasNext()) {
-      DumpEntity d = unwrap(it.next());
-
-      if (d instanceof BwResource) {
-        globals.di.getResourceContent((BwResource)d);
-
-        BwResource r = (BwResource)d;
-
-        if (r.getContent() == null) {
-          error("No content for resource " +
-                Util.buildPath(false, r.getColPath(), "/",
-                               r.getName()));
-        }
-      }
-
-      d.dump(globals.xml);
-
-      if (d instanceof BwResource) {
-        // Let GC take it away
-        ((BwResource)d).setContent(null);
-      }
+      final DumpEntity d = unwrap(it.next());
 
       globals.counts[countIndex]++;
 
@@ -113,27 +97,81 @@ public class Dumpling<T extends DumpEntity> implements Defs {
         info("        ... " + globals.counts[countIndex]);
       }
 
-      if (d instanceof BwCalendar) {
-        BwCalendar col = (BwCalendar)d;
-
-        if (col.getExternalSub() && !col.getTombstoned()) {
-          globals.counts[globals.externalSubscriptions]++;
-          globals.externalSubs.add(new ExternalSubInfo(col.getPath(),
-                                                       col.getPublick(),
-                                                       col.getOwnerHref()));
-        }
-
-        Collection<BwCalendar> cs = globals.di.getChildren(col);
-        if (cs != null) {
-          dumpCollection((Iterator<T>)cs.iterator());
-        }
-      } else if (d instanceof BwEvent) {
-        BwEvent ev = (BwEvent)d;
-
-        if (ev.getOverrides() != null) {
-          globals.counts[globals.eventOverrides] += ev.getOverrides().size();
-        }
+      if (d instanceof BwResource) {
+        dumpResource((BwResource)d);
+        continue;
       }
+
+      if (d instanceof BwCalendar) {
+        dumpCollection((BwCalendar)d);
+        continue;
+      }
+
+      if (d instanceof BwEvent) {
+        dumpEvent((BwEvent)d);
+        continue;
+      }
+
+      /* Just dump any remaining classes - no special treatment */
+      d.dump(globals.xml, DumpType.def);
+    }
+  }
+
+  private void dumpResource(final BwResource r) throws Throwable {
+    globals.di.getResourceContent(r);
+
+    if (r.getContent() == null) {
+      error("No content for resource " +
+                    Util.buildPath(false, r.getColPath(), "/", r.getName()));
+    }
+
+    r.dump(globals.xml, DumpType.def);
+
+    // Let GC take it away
+    r.setContent(null);
+  }
+
+  private void dumpCollection(final BwCalendar col) throws Throwable {
+    col.dump(globals.xml, DumpType.def);
+
+    if (col.getInternalAlias() && !col.getTombstoned()) {
+      final String target = col.getInternalAliasPath();
+
+      final AliasInfo ai = new AliasInfo(col.getPath(),
+                                         target,
+                                         col.getPublick(),
+                                         col.getOwnerHref());
+      List<AliasInfo> ais = globals.aliasInfo.get(target);
+
+      if (ais == null) {
+        ais = new ArrayList<>();
+        globals.aliasInfo.put(target, ais);
+      }
+      ais.add(ai);
+      globals.counts[globals.aliases]++;
+    }
+
+    if (col.getExternalSub() && !col.getTombstoned()) {
+      globals.counts[globals.externalSubscriptions]++;
+      globals.externalSubs.add(AliasInfo.getExternalSubInfo(col.getPath(),
+                                                            col.getPublick(),
+                                                            col.getOwnerHref()));
+    }
+
+    // Should I be dumping external subscriptions?
+
+    final Collection<BwCalendar> cs = globals.di.getChildren(col);
+    if (cs != null) {
+      //noinspection unchecked
+      dumpCollection((Iterator<T>)cs.iterator());
+    }
+  }
+
+  private void dumpEvent(final BwEvent ev) throws Throwable {
+    ev.dump(globals.xml, DumpType.def);
+
+    if (ev.getOverrides() != null) {
+      globals.counts[globals.eventOverrides] += ev.getOverrides().size();
     }
   }
 
@@ -169,6 +207,13 @@ public class Dumpling<T extends DumpEntity> implements Defs {
     getLog().info(msg);
     if (globals.info != null) {
       globals.info.addLn(msg);
+    }
+  }
+
+  protected void warn(final String msg) {
+    getLog().warn(msg);
+    if (globals.info != null) {
+      globals.info.addLn("WARN:" + msg);
     }
   }
 

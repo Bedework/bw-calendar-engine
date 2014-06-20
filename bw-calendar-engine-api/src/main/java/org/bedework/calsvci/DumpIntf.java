@@ -71,7 +71,7 @@ import java.util.Iterator;
  * <li>BwUserInfo</li>
  * </ul>
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm rpi.edu
  * @version 1.0
  */
 public interface DumpIntf {
@@ -98,7 +98,7 @@ public interface DumpIntf {
   public Iterator<BwCalendar> getCalendars() throws CalFacadeException;
 
   /**
-   * @param val
+   * @param val - the collection
    * @return Children of val
    * @throws CalFacadeException
    */

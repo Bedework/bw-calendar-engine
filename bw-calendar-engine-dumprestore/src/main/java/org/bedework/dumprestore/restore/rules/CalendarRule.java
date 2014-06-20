@@ -21,10 +21,13 @@ package org.bedework.dumprestore.restore.rules;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.dumprestore.ExternalSubInfo;
+import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
 import org.xml.sax.Attributes;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Mike Douglass   douglm   rpi.edu
@@ -33,7 +36,7 @@ import org.xml.sax.Attributes;
 public class CalendarRule extends EntityRule {
   /** Constructor
    *
-   * @param globals
+   * @param globals the globals
    */
   public CalendarRule(final RestoreGlobals globals) {
     super(globals);
@@ -46,8 +49,7 @@ public class CalendarRule extends EntityRule {
 
   @Override
   public void end(final String ns, final String name) throws Exception {
-    BwCalendar entity = (BwCalendar)pop();
-    boolean special = false;
+    final BwCalendar entity = (BwCalendar)pop();
 
     globals.counts[globals.collections]++;
 
@@ -57,54 +59,36 @@ public class CalendarRule extends EntityRule {
 
     fixSharableEntity(entity, "Calendar");
 
-    if (globals.skipSpecialCals &&
-        (entity.getCalType() == BwCalendar.calTypeFolder)) {
-      // might need to fix if from 3.0
-      BasicSystemProperties sys = globals.getBasicSyspars();
-      String calpath = entity.getPath();
-      String[] pes = calpath.split("/");
-      int pathLength = pes.length - 1;  // First element is empty string
+    if (!entity.getTombstoned()) {
+      if (entity.getExternalSub()) {
+        globals.counts[globals.externalSubscriptions]++;
+        globals.externalSubs.add(
+                AliasInfo.getExternalSubInfo(entity.getPath(),
+                                             entity.getPublick(),
+                                             entity.getOwnerHref()));
+      } else if (entity.getInternalAlias() && !entity.getPublick()) {
+        final String target = entity.getInternalAliasPath();
 
-      if ((pathLength == 3) &&
-          sys.getUserCalendarRoot().equals(pes[1])) {
-        String calname = pes[3];
+        final AliasInfo ai = new AliasInfo(entity.getPath(),
+                                           target,
+                                           entity.getPublick(),
+                                           entity.getOwnerHref());
+        List<AliasInfo> ais = globals.aliasInfo.get(target);
 
-        if (!calname.equals(entity.getName())) {
-          throw new Exception("Got path wrong - len = " + pathLength +
-                              " path = " + calpath +
-                              " calname = " + calname);
+        if (ais == null) {
+          ais = new ArrayList<>();
+          globals.aliasInfo.put(target, ais);
         }
-
-        if (calname.equals(sys.getUserInbox())) {
-          entity.setCalType(BwCalendar.calTypeInbox);
-        } else if (calname.equals(".pending" /*sys.getUserInbox()*/)) {
-          entity.setCalType(BwCalendar.calTypePendingInbox);
-        } else if (calname.equals(sys.getUserOutbox())) {
-          entity.setCalType(BwCalendar.calTypeOutbox);
-        } else if (calname.equals(sys.getDefaultNotificationsName())) {
-          entity.setCalType(BwCalendar.calTypeNotifications);
-        } else {
-          entity.setCalType(BwCalendar.calTypeCalendarCollection);
-        }
+        ais.add(ai);
+        globals.counts[globals.aliases]++;
       }
-    }
-
-    if (special && globals.skipSpecialCals) {
-      return;
-    }
-
-    if (entity.getExternalSub() && !entity.getTombstoned()) {
-      globals.counts[globals.externalSubscriptions]++;
-      globals.externalSubs.add(new ExternalSubInfo(entity.getPath(),
-                                                   entity.getPublick(),
-                                                   entity.getOwnerHref()));
     }
 
     try {
       if (globals.rintf != null) {
         /* If the parent is null then this should be one of the root calendars,
          */
-        String parentPath = entity.getColPath();
+        final String parentPath = entity.getColPath();
         if (parentPath == null) {
           // Ensure root
           globals.rintf.saveRootCalendar(entity);
@@ -112,7 +96,7 @@ public class CalendarRule extends EntityRule {
           globals.rintf.addCalendar(entity);
         }
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new Exception(t);
     }
   }

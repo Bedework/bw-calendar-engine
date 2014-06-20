@@ -84,8 +84,11 @@ public class Counters {
   /** */
   public final int externalSubscriptions = 17;
 
+  /** */
+  public final int aliases = 18;
+
   /**   */
-  public int[] counts = new int[18];
+  public int[] counts = new int[19];
 
   /** */
   public String[] countNames = {
@@ -107,6 +110,7 @@ public class Counters {
              "calendar suites",
              "resources",
              "external subscriptions",
+             "aliases",
   };
 
   /**
