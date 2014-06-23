@@ -305,7 +305,7 @@ public class ESQueryFilter implements CalintfDefs {
     FilterBuilder fb = filter;
 
     if (end != null) {
-      // End of events must be on or after the start of the range
+      // Start of events must be before the end of the range
       final RangeFilterBuilder rfb = new RangeFilterBuilder(startRef);
 
       rfb.lt(dateTimeUTC(end));
@@ -314,10 +314,11 @@ public class ESQueryFilter implements CalintfDefs {
     }
 
     if (start != null) {
-      // Start of events must be before the end of the range
+      // End of events must be before the end of the range
       final RangeFilterBuilder rfb = new RangeFilterBuilder(endRef);
 
       rfb.gte(dateTimeUTC(start));
+      rfb.includeLower(false);
 
       fb = and(fb, rfb);
     }
