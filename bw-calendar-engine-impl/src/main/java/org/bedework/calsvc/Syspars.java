@@ -162,6 +162,6 @@ class Syspars extends CalSvcDb implements SysparsI {
   public boolean present() throws CalFacadeException {
     final BwSystem sys = getCal().getSyspars(sysparsName);
 
-    return sys == null;
+    return sys != null;
   }
 }

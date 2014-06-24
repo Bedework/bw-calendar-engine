@@ -18,6 +18,8 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.access.PrivilegeDefs;
+import org.bedework.access.PrivilegeSet;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
@@ -45,6 +47,7 @@ import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.RestoreIntf;
+import org.bedework.util.xml.tagdefs.AppleServerTags;
 
 import java.util.Collection;
 import java.util.Set;
