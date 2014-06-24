@@ -68,4 +68,11 @@ public interface SysparsI extends Serializable {
    * @throws CalFacadeException
    */
   boolean isRootUser(BwPrincipal val) throws CalFacadeException;
+
+  /** Test for the presence of syspars. Helps ensure an empty system.
+   *
+   * @return true if BwSystem object is present in db
+   * @throws CalFacadeException if not admin
+   */
+  boolean present() throws CalFacadeException;
 }

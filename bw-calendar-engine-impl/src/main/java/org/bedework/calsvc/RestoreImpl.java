@@ -94,9 +94,6 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     curBatchSize = 0;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#endTransaction()
-   */
   @Override
   public void endTransaction() throws Throwable {
     if ((batchSize > 0) &&
@@ -112,7 +109,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     try {
       startTransaction();
 
-      if (getSvc().getSysparsHandler().get() != null) {
+      if (getSvc().getSysparsHandler().present()) {
         throw new CalFacadeException("System is not empty - restore terminated");
       }
     } finally {
@@ -139,16 +136,13 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
 
       o.markUnsaved();
       getCal().saveOrUpdate(o);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t, "Exception restoring user " + o);
     } finally {
       endTransaction();
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#restoreAdminGroup(org.bedework.calfacade.svc.BwAdminGroup)
-   */
   @Override
   public void restoreAdminGroup(final BwAdminGroup o) throws Throwable {
     try {
@@ -177,9 +171,6 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#getAdminGroup(java.lang.String)
-   */
   @Override
   public BwAdminGroup getAdminGroup(final String account) throws Throwable {
     startTransaction();
@@ -187,9 +178,6 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     return (BwAdminGroup)getCal().findGroup(account, true);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#restoreAuthUser(org.bedework.calfacade.svc.BwAuthUser)
-   */
   @Override
   public void restoreAuthUser(final BwAuthUser o) throws Throwable {
     try {
@@ -206,7 +194,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     try {
       startTransaction();
 
-      UpdateEventResult uer = getCal().addEvent(ei,
+      final UpdateEventResult uer = getCal().addEvent(ei,
                                             false, // scheduling
                                             false);
 
@@ -217,7 +205,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
         error("Following overrides failed for event ");
         error(ei.getEvent().toString());
 
-        for (BwEventProxy proxy: uer.failedOverrides) {
+        for (final BwEventProxy proxy: uer.failedOverrides) {
           error(proxy.toString());
         }
       }
@@ -232,8 +220,8 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
                           final String recurrenceId,
                           final String uid) throws Throwable {
     startTransaction();
-    Collection<CoreEventInfo> ceis = getCal().getEvent(colPath,
-                                                   uid);
+    final Collection<CoreEventInfo> ceis = getCal().getEvent(colPath,
+                                                             uid);
 
     if (ceis.size() != 1) {
       error("Expected one event for {" + colPath + ", " +
@@ -241,7 +229,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       return null;
     }
 
-    CoreEventInfo ei = ceis.iterator().next();
+    final CoreEventInfo ei = ceis.iterator().next();
 
     BwEvent ev = null;
     if (recurrenceId == null) {
@@ -266,9 +254,6 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     return ev;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#restoreCategory(org.bedework.calfacade.BwCategory)
-   */
   @Override
   public void restoreCategory(final BwCategory o) throws Throwable {
     try {
@@ -293,9 +278,6 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#restoreLocation(org.bedework.calfacade.BwLocation)
-   */
   @Override
   public void restoreLocation(final BwLocation o) throws Throwable {
     try {
@@ -340,7 +322,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       o.markUnsaved();
       getCal().saveOrUpdate(o);
 
-      BwResourceContent rc = o.getContent();
+      final BwResourceContent rc = o.getContent();
 
       rc.markUnsaved();
       getCal().saveOrUpdate(rc);
@@ -368,9 +350,9 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
         p = o;
 
         /* Ensure views are unsaved objects */
-        Collection<BwView> v = p.getViews();
+        final Collection<BwView> v = p.getViews();
         if (v != null) {
-          for (BwView view: v) {
+          for (final BwView view: v) {
             view.markUnsaved();
           }
         }
@@ -384,9 +366,6 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#getCalendar(java.lang.String)
-   */
   @Override
   public BwCalendar getCalendar(final String path) throws Throwable {
     startTransaction();
@@ -401,9 +380,6 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     return getSvc().getCategoriesHandler().getPersistent(uid);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#getContact(java.lang.String)
-   */
   @Override
   public BwContact getContact(final String uid) throws Throwable {
     startTransaction();
@@ -425,9 +401,6 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     return getSvc().getUsersHandler().getPrincipal(href);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#saveRootCalendar(org.bedework.calfacade.BwCalendar)
-   */
   @Override
   public void saveRootCalendar(final BwCalendar val) throws Throwable {
     // Ensure id not set
@@ -442,9 +415,6 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.restore.RestoreIntf#addCalendar(org.bedework.calfacade.BwCalendar)
-   */
   @Override
   public void addCalendar(final BwCalendar o) throws Throwable {
     // Ensure id not set

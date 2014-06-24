@@ -31,7 +31,7 @@ import java.util.Collection;
 
 /** This acts as an interface to the database for system parameters.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 class Syspars extends CalSvcDb implements SysparsI {
   private static BwSystem syspars;
@@ -39,7 +39,9 @@ class Syspars extends CalSvcDb implements SysparsI {
   private static boolean restoring;
 
   private static long lastRefresh;
-  private static long refreshInterval = 1000 * 60 * 5; // 5 mins
+  private final static long refreshInterval = 1000 * 60 * 5; // 5 mins
+
+  private final static String sysparsName = "bedework";
 
   private Collection<String> rootUsers;
 
@@ -47,9 +49,6 @@ class Syspars extends CalSvcDb implements SysparsI {
     super(svci);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SysparsI#get()
-   */
   @Override
   public BwSystem get() throws CalFacadeException {
     if (restoring) {
@@ -63,19 +62,16 @@ class Syspars extends CalSvcDb implements SysparsI {
       }
 
       if (syspars == null) {
-        syspars = get("bedework");
+        syspars = get(sysparsName);
       }
 
       return syspars;
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SysparsI#get(java.lang.String)
-   */
   @Override
   public BwSystem get(final String name) throws CalFacadeException {
-    BwSystem sys = getCal().getSyspars(name);
+    final BwSystem sys = getCal().getSyspars(name);
 
     if (sys == null) {
       throw new CalFacadeException("No system parameters with name " +
@@ -89,9 +85,6 @@ class Syspars extends CalSvcDb implements SysparsI {
     return sys;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SysparsI#update(org.bedework.calfacade.BwSystem)
-   */
   @Override
   public void update(final BwSystem val) throws CalFacadeException {
     if (!isSuper()) {
@@ -115,7 +108,7 @@ class Syspars extends CalSvcDb implements SysparsI {
 
     rootUsers = new ArrayList<String>();
 
-    String rus = getSvc().getSystemProperties().getRootUsers();
+    final String rus = getSvc().getSystemProperties().getRootUsers();
 
     if (rus == null) {
       return rootUsers;
@@ -125,7 +118,7 @@ class Syspars extends CalSvcDb implements SysparsI {
       int pos = 0;
 
       while (pos < rus.length()) {
-        int nextPos = rus.indexOf(",", pos);
+        final int nextPos = rus.indexOf(",", pos);
         if (nextPos < 0) {
           rootUsers.add(rus.substring(pos));
           break;
@@ -155,7 +148,7 @@ class Syspars extends CalSvcDb implements SysparsI {
       return false;
     }
 
-    Collection<String> rus = getRootUsers();
+    final Collection<String> rus = getRootUsers();
 
     return rus.contains(val.getAccount());
   }
@@ -163,5 +156,12 @@ class Syspars extends CalSvcDb implements SysparsI {
   void setForRestore(final BwSystem val) {
     restoring = true;
     syspars = val;
+  }
+
+  @Override
+  public boolean present() throws CalFacadeException {
+    final BwSystem sys = getCal().getSyspars(sysparsName);
+
+    return sys == null;
   }
 }
