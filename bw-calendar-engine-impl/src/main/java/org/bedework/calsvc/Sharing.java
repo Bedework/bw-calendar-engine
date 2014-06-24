@@ -67,6 +67,8 @@ import javax.xml.ws.Holder;
 public class Sharing extends CalSvcDb implements SharingI {
   private static final QName removeStatus = Parser.inviteDeletedTag;
 
+  private static final QName declineStatus = Parser.inviteDeclinedTag;
+
   private static final QName noresponseStatus = Parser.inviteNoresponseTag;
 
   /** Constructor
@@ -113,6 +115,7 @@ public class Sharing extends CalSvcDb implements SharingI {
         new ArrayList<>();
 
     boolean addedSharee = false;
+    boolean removedSharee = false;
 
     /* If there are any removal elements in the invite, remove those
      * sharees. We'll flag hrefs as bad if they are not actually sharees.
@@ -124,7 +127,12 @@ public class Sharing extends CalSvcDb implements SharingI {
       final InviteNotificationType n = doRemove(col, rem, hacl, calAddr, invite);
 
       if (n != null) {
-        notifications.add(n);
+        removedSharee = true;
+        if ((n.getPreviousStatus() != null) &&
+                !n.getPreviousStatus().equals(declineStatus)) {
+          // We don't notify if the user had declined
+          notifications.add(n);
+        }
         sr.addGood(rem.getHref());
       } else {
         sr.addBad(rem.getHref());
@@ -145,12 +153,12 @@ public class Sharing extends CalSvcDb implements SharingI {
       }
     }
 
-    if (notifications.isEmpty()) {
+    if (!addedSharee && !removedSharee) {
       // Nothing changed
       return sr;
     }
 
-    /* Send the invitations and update the sharing status.
+    /* Send any invitations and update the sharing status.
      * If it's a removal and the current status is not
      * accepted then just delete the current invitation
      */
@@ -303,7 +311,8 @@ public class Sharing extends CalSvcDb implements SharingI {
   @Override
   public InviteType getInviteStatus(final BwCalendar col) throws CalFacadeException {
     final String inviteStr =
-            col.getProperty(NamespaceAbbrevs.prefixed(AppleServerTags.invite));
+            col.getProperty(NamespaceAbbrevs.prefixed(
+                    AppleServerTags.invite));
 
     if (inviteStr == null) {
       return new InviteType();
@@ -355,23 +364,10 @@ public class Sharing extends CalSvcDb implements SharingI {
         notify.send(pr, note);
       }
 
-        /* Now we need to remove the alias - in theory we shouldn't have any
-         * but do this anyway to clean up */
+      /* Now we need to remove the alias - in theory we shouldn't have any
+       * but do this anyway to clean up */
 
-      try {
-        pushPrincipal(u.getHref());
-
-        final List<BwCalendar> cols =
-                ((Calendars)getCols()).findUserAlias(col.getPath());
-
-        if (!Util.isEmpty(cols)) {
-          for (final BwCalendar alias: cols) {
-            getCols().delete(alias, false, true);
-          }
-        }
-      } finally {
-        popPrincipal();
-      }
+      removeAlias(col, u.getHref());
     }
   }
 
@@ -762,7 +758,14 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       hacl.value = acl;
 
-      return deletedNotification(href, col.getPath(), calAddr);
+      final InviteNotificationType note =
+              deletedNotification(href, col.getPath(), calAddr);
+
+      note.setPreviousStatus(uentry.getInviteStatus());
+
+      removeAlias(col, uentry.getHref());
+
+      return note;
     } catch (final AccessException ae) {
       throw new CalFacadeException(ae);
     }
@@ -1017,6 +1020,24 @@ public class Sharing extends CalSvcDb implements SharingI {
       return acl.removeWho(who);
     } catch (final AccessException ae) {
       throw new CalFacadeException(ae);
+    }
+  }
+
+  private void removeAlias(final BwCalendar col,
+                           final String shareeHref) throws CalFacadeException {
+    try {
+      pushPrincipal(shareeHref);
+
+      final List<BwCalendar> cols =
+              ((Calendars)getCols()).findUserAlias(col.getPath());
+
+      if (!Util.isEmpty(cols)) {
+        for (final BwCalendar alias: cols) {
+          getCols().delete(alias, false, true);
+        }
+      }
+    } finally {
+      popPrincipal();
     }
   }
 
