@@ -97,6 +97,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
@@ -419,7 +420,12 @@ public class BwIndexEsImpl implements BwIndexer {
     res.recurRetrieval = recurRetrieval;
 
     if (query != null) {
-      res.curQuery = QueryBuilders.queryString(query);
+      final MatchQueryBuilder mqb = QueryBuilders.matchQuery("_all", query);
+
+      mqb.fuzziness("1");
+      mqb.prefixLength(2);
+      res.curQuery = mqb;
+//      res.curQuery = QueryBuilders.queryString(query);
     }
 
     final ESQueryFilter ef = getFilters(recurRetrieval);
