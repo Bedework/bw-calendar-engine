@@ -18,7 +18,8 @@
 */
 package org.bedework.dumprestore;
 
-import edu.rpi.sss.util.ToString;
+
+import org.bedework.util.misc.ToString;
 
 /** Information about an alias
  *

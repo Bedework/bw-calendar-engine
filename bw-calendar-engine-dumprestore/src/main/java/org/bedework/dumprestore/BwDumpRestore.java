@@ -18,6 +18,7 @@
 */
 package org.bedework.dumprestore;
 
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.configs.DumpRestoreProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -25,6 +26,7 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
+import org.bedework.calsvci.RestoreIntf.FixAliasResult;
 import org.bedework.dumprestore.dump.Dump;
 import org.bedework.dumprestore.restore.Restore;
 import org.bedework.indexer.BwIndexCtlMBean;
@@ -32,7 +34,9 @@ import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.MBeanUtil;
 import org.bedework.util.timezones.DateTimeUtil;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author douglm

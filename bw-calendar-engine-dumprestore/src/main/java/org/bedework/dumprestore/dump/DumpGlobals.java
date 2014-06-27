@@ -50,15 +50,17 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.DumpIntf;
+import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Counters;
-import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.InfoLines;
 
 import org.bedework.util.xml.XmlEmit;
 
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author douglm
@@ -87,7 +89,11 @@ public class DumpGlobals extends Counters {
 
   /** Collections marked as external subscriptions. We may need to resubscribe
    */
-  public List<ExternalSubInfo> externalSubs = new ArrayList<ExternalSubInfo>();
+  public List<AliasInfo> externalSubs = new ArrayList<>();
+
+  /** Collections marked as aliases. We may need to fix sharing
+   */
+  public Map<String, List<AliasInfo>> aliasInfo = new HashMap<>();
 
   /* Some counters */
 
@@ -96,7 +102,7 @@ public class DumpGlobals extends Counters {
   }
 
   /**
-   * @param val
+   * @param val output writer
    * @throws Throwable
    */
   public void setOut(final Writer val) throws Throwable {
@@ -113,14 +119,13 @@ public class DumpGlobals extends Counters {
     try {
       xml.flush();
       out.close();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   /**
-   * @param config
-   * @param sysRoots
+   * @param sysRoots the system root paths
    */
   public void init(final BasicSystemProperties sysRoots) {
     this.sysRoots = sysRoots;

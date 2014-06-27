@@ -21,8 +21,8 @@ package org.bedework.dumprestore.dump;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
+import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
-import org.bedework.dumprestore.ExternalSubInfo;
 import org.bedework.dumprestore.InfoLines;
 import org.bedework.dumprestore.dump.dumpling.DumpAll;
 import org.bedework.dumprestore.dump.dumpling.ExtSubs;
@@ -32,6 +32,7 @@ import org.apache.log4j.Logger;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
+import java.util.Map;
 
 /** Application to dump calendar data.
  *
@@ -121,8 +122,15 @@ public class Dump implements Defs {
   /**
    * @return list of external subscriptions
    */
-  public List<ExternalSubInfo> getExternalSubs() {
+  public List<AliasInfo> getExternalSubs() {
     return globals.externalSubs;
+  }
+
+  /**
+   * @return table of aliases by path
+   */
+  public Map<String, List<AliasInfo>> getAliasInfo() {
+    return globals.aliasInfo;
   }
 
   /**
