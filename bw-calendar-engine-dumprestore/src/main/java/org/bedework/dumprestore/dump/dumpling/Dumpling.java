@@ -18,11 +18,11 @@
 */
 package org.bedework.dumprestore.dump.dumpling;
 
+import org.apache.log4j.Logger;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.base.DumpEntity;
-import org.bedework.calfacade.base.DumpEntity.DumpType;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.dumprestore.AliasInfo;
@@ -30,14 +30,11 @@ import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.dump.DumpGlobals;
 import org.bedework.util.misc.Util;
 
-import org.apache.log4j.Logger;
-
+import javax.xml.namespace.QName;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.xml.namespace.QName;
 
 /** Helper classes for the calendar data dump utility.
  *
@@ -113,7 +110,7 @@ public class Dumpling<T extends DumpEntity> implements Defs {
       }
 
       /* Just dump any remaining classes - no special treatment */
-      d.dump(globals.xml, DumpType.def);
+      d.dump(globals.xml);
     }
   }
 
@@ -125,14 +122,14 @@ public class Dumpling<T extends DumpEntity> implements Defs {
                     Util.buildPath(false, r.getColPath(), "/", r.getName()));
     }
 
-    r.dump(globals.xml, DumpType.def);
+    r.dump(globals.xml);
 
     // Let GC take it away
     r.setContent(null);
   }
 
   private void dumpCollection(final BwCalendar col) throws Throwable {
-    col.dump(globals.xml, DumpType.def);
+    col.dump(globals.xml);
 
     if (col.getInternalAlias() && !col.getTombstoned()) {
       final String target = col.getInternalAliasPath();
@@ -168,7 +165,7 @@ public class Dumpling<T extends DumpEntity> implements Defs {
   }
 
   private void dumpEvent(final BwEvent ev) throws Throwable {
-    ev.dump(globals.xml, DumpType.def);
+    ev.dump(globals.xml);
 
     if (ev.getOverrides() != null) {
       globals.counts[globals.eventOverrides] += ev.getOverrides().size();

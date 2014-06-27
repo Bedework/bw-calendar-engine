@@ -18,6 +18,7 @@
 */
 package org.bedework.dumprestore.dump;
 
+import org.apache.log4j.Logger;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -25,11 +26,9 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI;
-import org.bedework.dumprestore.ExternalSubInfo;
+import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.InfoLines;
 import org.bedework.util.misc.Util;
-
-import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.nio.file.FileSystems;
@@ -209,7 +208,7 @@ public class DumpPrincipal {
   /**
    * @return list of external subscriptions
    */
-  public List<ExternalSubInfo> getExternalSubs() {
+  public List<AliasInfo> getExternalSubs() {
     return globals.externalSubs;
   }
 
