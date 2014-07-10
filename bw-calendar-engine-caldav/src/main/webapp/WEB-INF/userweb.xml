@@ -7,11 +7,6 @@
          version="2.4">
   <display-name>Bedework user (authenticated) caldav</display-name>
 
-  <context-param>
-    <param-name>bwappname</param-name>
-    <param-value>@BW-APP-NAME@</param-value>
-  </context-param>
-
   <listener>
     <listener-class>org.bedework.util.servlet.SessionListener</listener-class>
   </listener>
@@ -62,6 +57,7 @@
     <res-type>javax.sql.DataSource</res-type>
     <res-auth>Container</res-auth>
   </resource-ref>
+  <!-- Need this to fush a static table maintained by the servlet -->
 
   <!-- JMS DataSources (java:comp/env/jms) -->
   <resource-ref>
@@ -82,18 +78,19 @@
     </auth-constraint>
     <user-data-constraint>
       <description>no description</description>
-      <transport-guarantee>NONE</transport-guarantee>
+      <transport-guarantee>${app.transport.guarantee}</transport-guarantee>
     </user-data-constraint>
   </security-constraint>
 
   <login-config>
     <auth-method>BASIC</auth-method>
-    <realm-name>@SECURITY-DOMAIN@</realm-name>
+    <realm-name>${app.security.domain}</realm-name>
   </login-config>
 
+  <!-- Roles are not used -->
   <security-role>
     <description>A calendar system user</description>
-    <role-name>@SECURITY-PREFIX@.user</role-name>
+    <role-name>bedework.user</role-name>
   </security-role>
 
   <!-- Insert ejb-ref here -->

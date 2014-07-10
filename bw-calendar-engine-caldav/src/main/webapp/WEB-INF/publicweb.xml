@@ -7,11 +7,6 @@
          version="2.4">
   <display-name>Bedework public (unauthenticated) caldav</display-name>
 
-  <context-param>
-    <param-name>bwappname</param-name>
-    <param-value>@BW-APP-NAME@</param-value>
-  </context-param>
-
   <listener>
     <listener-class>org.bedework.util.servlet.SessionListener</listener-class>
   </listener>

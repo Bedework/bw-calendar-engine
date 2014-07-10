@@ -7,11 +7,6 @@
          version="2.4">
   <display-name>Bedework user (authenticated) CalWS-SOAP</display-name>
 
-  <context-param>
-    <param-name>bwappname</param-name>
-    <param-value>@BW-APP-NAME@</param-value>
-  </context-param>
-
   <listener>
     <listener-class>org.bedework.util.servlet.SessionListener</listener-class>
   </listener>
@@ -88,18 +83,18 @@
     </auth-constraint>
     <user-data-constraint>
       <description>no description</description>
-      <transport-guarantee>NONE</transport-guarantee>
+      <transport-guarantee>${app.transport.guarantee}</transport-guarantee>
     </user-data-constraint>
   </security-constraint>
 
   <login-config>
     <auth-method>BASIC</auth-method>
-    <realm-name>@SECURITY-DOMAIN@</realm-name>
+    <realm-name>${app.security.domain}</realm-name>
   </login-config>
 
   <security-role>
     <description>A calendar system user</description>
-    <role-name>@SECURITY-PREFIX@.user</role-name>
+    <role-name>bedework.user</role-name>
   </security-role>
 
   <!-- Insert ejb-ref here -->

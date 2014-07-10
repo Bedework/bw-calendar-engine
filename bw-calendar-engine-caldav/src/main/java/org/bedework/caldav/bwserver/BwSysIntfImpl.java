@@ -197,11 +197,11 @@ public class BwSysIntfImpl implements SysIntf {
       final HttpSession session = req.getSession();
       final ServletContext sc = session.getServletContext();
 
-      final String appName = sc.getInitParameter("bwappname");
+      //final String appName = sc.getInitParameter("bwappname");
 
-      if ((appName == null) || (appName.length() == 0)) {
-        throw new WebdavException("bwappname is not set in web.xml");
-      }
+      //if ((appName == null) || (appName.length() == 0)) {
+      //  throw new WebdavException("bwappname is not set in web.xml");
+      //}
 
       final String id = doNoteHeader(req.getHeader("X-BEDEWORK-NOTE"),
                                      account);
