@@ -25,6 +25,8 @@ import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /** Base class for shareable database entities.
  *
  * @author Mike Douglass
@@ -115,6 +117,7 @@ public class BwShareableDbentity<T> extends BwOwnedDbentity<T> {
    *
    * @return BwPrincipal    creator of the entity
    */
+  @JsonIgnore
   public BwPrincipal getCreatorEnt() {
     return creatorEnt;
   }

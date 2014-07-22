@@ -27,6 +27,7 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.parameter.Language;
 
@@ -138,8 +139,8 @@ public class BwStringBase extends BwDbentity<BwStringBase>
    *
    * <p>Otherwise we return the first one we found.
    *
-   * @param lang
-   * @param c
+   * @param lang language code
+   * @param c collection of strings
    * @return BwString or null if no strings.
    */
   protected static BwStringBase findLanguage(final String lang,
@@ -155,13 +156,13 @@ public class BwStringBase extends BwDbentity<BwStringBase>
       len = lang.length();
     }
 
-    for (BwStringBase s: c) {
+    for (final BwStringBase s: c) {
       if (def == null) {
         // Make sure we get something
         def = s;
       }
 
-      String slang = s.getLang();
+      final String slang = s.getLang();
 
       if (lang == null) {
         if ((slang == null) ||
@@ -188,7 +189,7 @@ public class BwStringBase extends BwDbentity<BwStringBase>
   /** Figure out what's different and update it. This should reduce the number
    * of spurious changes to the db.
    *
-   * @param from
+   * @param from the before value
    * @return true if we changed something.
    */
   public boolean update(final BwStringBase from) {
@@ -246,6 +247,7 @@ public class BwStringBase extends BwDbentity<BwStringBase>
    * @return int
    */
   @Override
+  @JsonIgnore
   public int getSize() {
     return super.length() +
            QuotaUtil.size(getLang()) +
@@ -266,7 +268,7 @@ public class BwStringBase extends BwDbentity<BwStringBase>
       return -1;
     }
 
-    int res = CalFacadeUtil.cmpObjval(getLang(), that.getLang());
+    final int res = CalFacadeUtil.cmpObjval(getLang(), that.getLang());
 
     if (res != 0) {
       return res;
@@ -299,7 +301,7 @@ public class BwStringBase extends BwDbentity<BwStringBase>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 

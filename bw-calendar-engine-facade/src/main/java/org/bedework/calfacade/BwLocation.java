@@ -30,6 +30,8 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.Comparator;
 
 /** The location of an <code>Event</code>
@@ -148,6 +150,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
   }
 
   @Override
+  @JsonIgnore
   public String getHref(){
     return href;
   }
@@ -156,11 +159,9 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *                   EventProperty methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwEventProperty#getFinderKeyValue()
-   */
   @Override
   @NoDump
+  @JsonIgnore
   public BwString getFinderKeyValue() {
     return getAddress();
   }
@@ -169,11 +170,9 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *                   CollatableEntity methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CollatableEntity#getCollateValue()
-   */
   @Override
   @NoDump
+  @JsonIgnore
   public String getCollateValue() {
     if (getAddress().getValue() == null) {
       return "";
@@ -194,12 +193,9 @@ public class BwLocation extends BwEventProperty<BwLocation>
     addDeletedEntity(getSubaddress());
   }
 
-  /** Size to use for quotas.
-   *
-   * @return int
-   */
   @Override
   @NoDump
+  @JsonIgnore
   public int getSize() {
     return super.length() +
            QuotaUtil.size(getAddress()) +

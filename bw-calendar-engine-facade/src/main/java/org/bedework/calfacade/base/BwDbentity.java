@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,6 +19,8 @@
 package org.bedework.calfacade.base;
 
 import org.bedework.calfacade.annotations.NoDump;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,6 +49,12 @@ public class BwDbentity<T> extends BwUnversionedDbentity<T> {
   /* For quota'd dbentities. */
   private int byteSize;
 
+  /** No-arg constructor
+   *
+   */
+  public BwDbentity() {
+  }
+
   /** The last calculated byte size should be stored with the entity. On update
    * call calculateByteSize to get a new value and use the difference to adjust
    * the quota.
@@ -60,14 +68,9 @@ public class BwDbentity<T> extends BwUnversionedDbentity<T> {
   /**
    * @return int last byte size
    */
+  @JsonIgnore
   public int getByteSize() {
     return byteSize;
-  }
-
-  /** No-arg constructor
-   *
-   */
-  public BwDbentity() {
   }
 
   /** Set the seq for this entity
@@ -82,6 +85,7 @@ public class BwDbentity<T> extends BwUnversionedDbentity<T> {
    *
    * @return int    the entity seq
    */
+  @JsonIgnore
   public int getSeq() {
     return seq;
   }

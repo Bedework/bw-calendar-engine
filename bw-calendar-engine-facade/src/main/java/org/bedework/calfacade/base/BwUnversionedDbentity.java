@@ -22,6 +22,8 @@ import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.annotations.NoWrap;
 import org.bedework.util.misc.ToString;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
 
 /** Base type for a database entity. We require an id and the subclasses must
@@ -46,6 +48,7 @@ public class BwUnversionedDbentity<T> extends DumpEntity<T>
   /**
    * @return int id
    */
+  @JsonIgnore
   public int getId() {
     return id;
   }

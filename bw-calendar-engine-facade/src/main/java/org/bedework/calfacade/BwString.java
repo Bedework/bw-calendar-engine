@@ -20,7 +20,6 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.base.BwStringBase;
-import org.bedework.util.misc.ToString;
 
 import java.util.Collection;
 
@@ -62,21 +61,12 @@ public class BwString extends BwStringBase {
    *
    * <p>Otherwise we return the first one we found.
    *
-   * @param lang
-   * @param c
+   * @param lang language code
+   * @param c collection of strings
    * @return BwString or null if no strings.
    */
   public static BwString findLang(final String lang, final Collection<BwString> c) {
     return (BwString)BwStringBase.findLanguage(lang, c);
-  }
-
-  @Override
-  public String toString() {
-    ToString ts = new ToString(this);
-
-    toStringSegment(ts);
-
-    return ts.toString();
   }
 
   @Override
