@@ -44,11 +44,13 @@ import org.bedework.access.AccessPrincipal;
 import org.bedework.access.WhoDefs;
 
 import org.apache.log4j.Logger;
+import org.w3c.dom.Element;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,7 +60,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
+import javax.xml.ws.Holder;
 
 /** A base implementation of Directories which handles some generic directory
  * methods.
@@ -244,9 +248,6 @@ public abstract class AbstractDirImpl implements Directories {
     return valid;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#getDirInfo(org.bedework.calfacade.BwPrincipal)
-   */
   @Override
   public BwPrincipalInfo getDirInfo(final BwPrincipal p) throws CalFacadeException {
     BwPrincipalInfo pi = principalInfoMap.get(p.getPrincipalRef());
@@ -257,7 +258,7 @@ public abstract class AbstractDirImpl implements Directories {
 
     // If carddav lookup is enabled - use that
 
-    CardDavInfo cdi = getCardDavInfo(false);
+    final CardDavInfo cdi = getCardDavInfo(false);
 
     if ((cdi == null) || (cdi.getHost() == null)) {
       return null;
@@ -272,17 +273,75 @@ public abstract class AbstractDirImpl implements Directories {
                               15 * 1000);
 
       pi.setPropertiesFromVCard(getCard(cdc, cdi.getContextPath(), p));
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (getLogger().isDebugEnabled()) {
         error(t);
       }
     } finally {
-      cdc.close();
+      if (cdc != null) {
+        cdc.close();
+      }
     }
 
     principalInfoMap.put(p.getPrincipalRef(), pi);
 
     return pi;
+  }
+
+  @Override
+  public List<BwPrincipalInfo> find(final List<WebdavProperty> props,
+                                    final String cutype,
+                                    final Holder<Boolean> truncated)
+          throws CalFacadeException {
+    final CardDavInfo cdi = getCardDavInfo(false);
+
+    if ((cdi == null) || (cdi.getHost() == null)) {
+      return null;
+    }
+
+    BasicHttpClient cdc = null;
+
+    final String path;
+
+    switch (cutype) {
+      case "individual":
+        path = "/directory/users/";
+        break;
+      case "group":
+        path = "/directory/groups/";
+        break;
+      default:
+        path = "/directory/users/";
+    }
+
+    try {
+      cdc = new BasicHttpClient(cdi.getHost(), cdi.getPort(), null,
+                                15 * 1000);
+      final List<MatchResult> mrs = matching(cdc,
+                                             cdi.getContextPath() + path,
+                                             props);
+
+      final List<BwPrincipalInfo> pis = new ArrayList<>();
+
+      for (final MatchResult mr: mrs) {
+        final BwPrincipalInfo pi = new BwPrincipalInfo();
+
+        pi.setPropertiesFromVCard(mr.card);
+        pis.add(pi);
+      }
+
+      return pis;
+    } catch (final Throwable t) {
+      if (getLogger().isDebugEnabled()) {
+        error(t);
+      }
+
+      throw new CalFacadeException(t);
+    } finally {
+      if (cdc != null) {
+        cdc.close();
+      }
+    }
   }
 
   @Override
@@ -908,6 +967,147 @@ public abstract class AbstractDirImpl implements Directories {
     }
   }
 
+  private static class MatchResult {
+    String href;
+    String etag;
+    String card;
+  }
+
+  private List<MatchResult> matching(final BasicHttpClient cl,
+                                     final String url,
+                                     final List<WebdavProperty> props)
+          throws CalFacadeException {
+    /* Try a search of the cards
+
+   <?xml version="1.0" encoding="utf-8" ?>
+   <C:addressbook-query xmlns:D="DAV:"
+                     xmlns:C="urn:ietf:params:xml:ns:carddav">
+     <D:prop>
+       <D:getetag/>
+       <C:address-data>
+         <C:prop name="VERSION"/>
+         <C:prop name="UID"/>
+         <C:prop name="NICKNAME"/>
+         <C:prop name="EMAIL"/>
+         <C:prop name="FN"/>
+       </C:address-data>
+     </D:prop>
+     <C:filter test="anyof">
+       <C:prop-filter name="FN">
+         <C:text-match collation="i;unicode-casemap"
+                       match-type="contains"
+         >daboo</C:text-match>
+       </C:prop-filter>
+       <C:prop-filter name="EMAIL">
+         <C:text-match collation="i;unicode-casemap"
+                       match-type="contains"
+         >daboo</C:text-match>
+       </C:prop-filter>
+     </C:filter>
+   </C:addressbook-query>
+     */
+
+    try {
+      final XmlEmit xml = new XmlEmit();
+      xml.addNs(new NameSpace(WebdavTags.namespace, "DAV"), true);
+      xml.addNs(new NameSpace(CarddavTags.namespace, "C"), false);
+
+      final StringWriter sw = new StringWriter();
+
+      xml.startEmit(sw);
+
+      xml.openTag(CarddavTags.addressbookQuery);
+      xml.openTag(WebdavTags.prop);
+      xml.emptyTag(WebdavTags.getetag);
+      xml.emptyTag(CarddavTags.addressData);
+      xml.closeTag(WebdavTags.prop);
+
+      xml.openTag(CarddavTags.filter, "test", "allof");
+
+      for (final WebdavProperty wd: props) {
+        if (wd.getTag().equals(CaldavTags.calendarUserType)) {
+          // Should match onto KIND
+          continue;
+        }
+
+        if (wd.getTag().equals(WebdavTags.displayname)) {
+          // Match FN
+          xml.openTag(CarddavTags.propFilter, "name", "FN");
+
+          xml.startTagSameLine(CarddavTags.textMatch);
+          xml.attribute("collation", "i;unicode-casemap");
+          xml.attribute("match-type", "contains");
+          xml.endOpeningTag();
+          xml.value(wd.getPval());
+          xml.closeTag(CarddavTags.textMatch);
+
+          xml.closeTag(CarddavTags.propFilter);
+          //continue;
+        }
+      }
+
+      xml.closeTag(CarddavTags.filter);
+
+      xml.closeTag(CarddavTags.addressbookQuery);
+
+      final DavUtil du = new DavUtil();
+
+      final byte[] content = sw.toString().getBytes();
+
+      final int res = du.sendRequest(cl, "REPORT", url,
+                                     null,
+                                     "text/xml", // contentType,
+                                     content.length, // contentLen,
+                                     content);
+
+      final int SC_MULTI_STATUS = 207; // not defined for some reason
+      if (res != SC_MULTI_STATUS) {
+        if (debug) {
+          trace("Got response " + res + " for path " + url);
+        }
+
+        return null;
+      }
+
+      final List<MatchResult> mrs = new ArrayList<>();
+      final MultiStatusResponse msr =
+              du.getMultiStatusResponse(cl.getResponseBodyAsStream());
+
+      for (final MultiStatusResponseElement msre: msr.responses) {
+        MatchResult mr = new MatchResult();
+        mrs.add(mr);
+
+        mr.href = msre.href;
+
+        for (final PropstatElement pe: msre.propstats) {
+          if (pe.status != HttpServletResponse.SC_OK) {
+            continue;
+          }
+
+          for (final Element e: pe.props) {
+            if (XmlUtil.nodeMatches(e, WebdavTags.getetag)) {
+              mr.etag = XmlUtil.getElementContent(e);
+              continue;
+            }
+
+            if (XmlUtil.nodeMatches(e, CarddavTags.addressData)) {
+              mr.card = XmlUtil.getElementContent(e);
+            }
+          }
+        }
+
+      }
+
+      return mrs;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    } finally {
+      try {
+        cl.release();
+      } catch (final Throwable ignored) {}
+    }
+  }
+
   /** Get the vcard for the given principal
    *
   * @param p - who we want card for
@@ -1019,8 +1219,8 @@ public abstract class AbstractDirImpl implements Directories {
        return null;
      }
      */
-     DavUtil du = new DavUtil();
-     Collection<QName> props = new ArrayList<QName>();
+     final DavUtil du = new DavUtil();
+     Collection<QName> props = new ArrayList<>();
 
      props.add(CarddavTags.principalAddress);
 
@@ -1030,20 +1230,18 @@ public abstract class AbstractDirImpl implements Directories {
        return null;
      }
 
-     cl.release();
-
      /* New request for card */
-     InputStream is = cl.get(dc.uri);
+     final InputStream is = cl.get(dc.uri);
 
      if (is == null) {
        return null;
      }
 
-     LineNumberReader lnr = new LineNumberReader(new InputStreamReader(is));
-     StringBuilder card = new StringBuilder();
+     final LineNumberReader lnr = new LineNumberReader(new InputStreamReader(is));
+     final StringBuilder card = new StringBuilder();
 
      for (;;) {
-       String ln = lnr.readLine();
+       final String ln = lnr.readLine();
        if (ln == null) {
          break;
        }
@@ -1052,8 +1250,12 @@ public abstract class AbstractDirImpl implements Directories {
      }
 
      return card.toString();
-   } catch (Throwable t) {
+   } catch (final Throwable t) {
      throw new CalFacadeException(t);
+   } finally {
+     try {
+       cl.release();
+     } catch (final Throwable ignored) {}
    }
  }
 

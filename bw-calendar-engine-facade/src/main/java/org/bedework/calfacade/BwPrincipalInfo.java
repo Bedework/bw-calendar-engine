@@ -43,7 +43,7 @@ import java.util.Map;
 /** This class represent directory style information for the principal. It will be
  * retrieved from a pluggable class.
  *
- *  @author Mike Douglass douglm bedework.edu
+ *  @author Mike Douglass douglm rpi.edu
  *  @version 1.0
  */
 /**
@@ -56,6 +56,8 @@ import java.util.Map;
  */
 public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializable  {
   protected String principalHref;  // Related principal
+
+  private VCard card;
 
   /* Basic info */
   private String lastname;
@@ -119,14 +121,12 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("PrincipalProperty{");
+      final ToString ts = new ToString(this);
 
-      sb.append(getName());
-      sb.append(", ");
-      sb.append(getVal());
-      sb.append("}");
+      ts.append("name", getName());
+      ts.append("val", getVal());
 
-      return sb.toString();
+      return ts.toString();
     }
   }
 
@@ -332,6 +332,13 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
    */
   public String getPrincipalHref() {
     return principalHref;
+  }
+
+  /**
+   * @return  associated vcard
+   */
+  public VCard getCard() {
+    return card;
   }
 
   /**
@@ -593,7 +600,12 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
     addProperty(new PrincipalProperty<String>("vcard", cardStr));
 
     try {
-      VCard card = new VCardBuilder(new StringReader(cardStr)).build();
+      card = new VCardBuilder(new StringReader(cardStr)).build();
+
+      final Property piprop = card.getExtendedProperty("X-BW-PRINCIPALHREF");
+      if (piprop != null) {
+        setPrincipalHref(piprop.getValue());
+      }
 
       for (PrincipalPropertyInfo ppi: BwPrincipalInfo.getPrincipalPropertyInfoSet()) {
         Property.Id pname = ppi.getVcardPname();
@@ -660,23 +672,13 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("BwPrincipalInfo{");
+    final ToString ts = new ToString(this);
 
-    sb.append("user=");
-    sb.append(getPrincipalHref());
-    sb.append(", lastName=");
-    sb.append(getLastname());
+    ts.append("user", getPrincipalHref());
+    ts.append("lastName", getLastname());
+    ts.append("properties", getProperties(), true);
 
-    if (getProperties() != null) {
-      for (PrincipalProperty pp: getProperties()) {
-        sb.append(",\n   ");
-        sb.append(pp.toString());
-      }
-    }
-
-    sb.append("}");
-
-    return sb.toString();
+    return ts.toString();
   }
 
   /* ====================================================================

@@ -52,6 +52,7 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
@@ -133,6 +134,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.xml.namespace.QName;
+import javax.xml.ws.Holder;
 
 /** Bedework implementation of SysIntf.
  *
@@ -413,7 +415,9 @@ public class BwSysIntfImpl implements SysIntf {
   @Override
   public String makeHref(final String id, final int whoType) throws WebdavException {
     try {
-      return getUrlHandler().prefix(getSvci().getDirectories().makePrincipalUri(id, whoType));
+      return getUrlHandler().prefix(
+              getSvci().getDirectories().makePrincipalUri(id,
+                                                          whoType));
 //      return getUrlPrefix() + getSvci().getDirectories().makePrincipalUri(id, whoType);
     } catch (Throwable t) {
       throw new WebdavException(t);
@@ -427,7 +431,8 @@ public class BwSysIntfImpl implements SysIntf {
   public Collection<String>getGroups(final String rootUrl,
                                      final String principalUrl) throws WebdavException {
     try {
-      return getSvci().getDirectories().getGroups(rootUrl, principalUrl);
+      return getSvci().getDirectories().getGroups(rootUrl,
+                                                  principalUrl);
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
@@ -459,7 +464,7 @@ public class BwSysIntfImpl implements SysIntf {
       }
 
       return getSvci().getDirectories().principalToCaladdr(
-                  (BwPrincipal)getPrincipal(principal.getPrincipalRef()));
+              (BwPrincipal)getPrincipal(principal.getPrincipalRef()));
     } catch (CalFacadeException cfe) {
       throw new WebdavException(cfe);
     } catch (Throwable t) {
@@ -502,11 +507,15 @@ public class BwSysIntfImpl implements SysIntf {
         return null;
       }
 
-      if (principalInfo != null) {
+      final boolean thisPrincipal = principal.equals(getSvci().getPrincipal());
+
+      if (thisPrincipal && (principalInfo != null)) {
         return principalInfo;
       }
 
-      BwPrincipal p = getSvci().getUsersHandler().getPrincipal(principal.getPrincipalRef());
+      final BwPrincipal p =
+              getSvci().getUsersHandler().getPrincipal(
+                      principal.getPrincipalRef());
       if (p == null) {
         return null;
       }
@@ -518,38 +527,97 @@ public class BwSysIntfImpl implements SysIntf {
 
       // SCHEDULE - just get home path and get default cal from user prefs.
 
-      BwCalendar cal = getSvci().getCalendarsHandler().getHome(p, true);
+      final BwCalendar cal = getSvci().getCalendarsHandler().getHome(p, true);
       if (cal == null) {
         return null;
       }
 
-      String userHomePath = Util.buildPath(true, cal.getPath());
+      final String userHomePath = Util.buildPath(true, cal.getPath());
 
-      String defaultCalendarPath =
+      final String defaultCalendarPath =
               Util.buildPath(true, userHomePath +
                       basicSysProperties.getUserDefaultCalendar());
-      String inboxPath =
+      final String inboxPath =
               Util.buildPath(true, userHomePath, "/",
                              basicSysProperties.getUserInbox());;
-      String outboxPath =
+      final String outboxPath =
               Util.buildPath(true, userHomePath, "/",
                              basicSysProperties.getUserOutbox());
-      String notificationsPath =
+      final String notificationsPath =
               Util.buildPath(true, userHomePath, "/",
                              basicSysProperties.getDefaultNotificationsName());
 
-      principalInfo = new CalPrincipalInfo(p,
-                                           userHomePath,
-                                           defaultCalendarPath,
-                                           inboxPath,
-                                           outboxPath,
-                                           notificationsPath,
-                                           p.getQuota());
+      final CalPrincipalInfo pi =
+              new CalPrincipalInfo(p,
+                                   null,
+                                   userHomePath,
+                                   defaultCalendarPath,
+                                   inboxPath,
+                                   outboxPath,
+                                   notificationsPath,
+                                   p.getQuota());
 
-      return principalInfo;
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
-    } catch (Throwable t) {
+      if (thisPrincipal) {
+        principalInfo = pi;
+      }
+
+      return pi;
+    } catch (final Throwable t) {
+      throw new WebdavException(t);
+    }
+  }
+
+  private CalPrincipalInfo getCalPrincipalInfo(final BwPrincipalInfo pi) throws WebdavException {
+    try {
+      // SCHEDULE - just get home path and get default cal from user prefs.
+
+      String userHomePath = Util.buildPath(false, "/",
+                                           basicSysProperties.getUserCalendarRoot());
+      if (pi.getPrincipalHref() == null) {
+        return new CalPrincipalInfo(null,
+                                    pi.getCard(),
+                                    null, // userHomePath,
+                                    null, // defaultCalendarPath,
+                                    null, // inboxPath,
+                                    null, // outboxPath,
+                                    null, // notificationsPath,
+                                    0);
+      }
+
+      final BwPrincipal p = getSvci().getDirectories().getPrincipal(pi.getPrincipalHref());
+
+      if (pi.getPrincipalHref().startsWith(basicSysProperties.getUserPrincipalRoot())) {
+        userHomePath = Util.buildPath(true, userHomePath,
+                                      pi.getPrincipalHref().
+            substring(basicSysProperties.getUserPrincipalRoot()
+                              .length()));
+      } else {
+        userHomePath = Util.buildPath(true, userHomePath,
+                                      pi.getPrincipalHref());
+      }
+
+      final String defaultCalendarPath =
+              Util.buildPath(true, userHomePath +
+                      basicSysProperties.getUserDefaultCalendar());
+      final String inboxPath =
+              Util.buildPath(true, userHomePath, "/",
+                             basicSysProperties.getUserInbox());
+      final String outboxPath =
+              Util.buildPath(true, userHomePath, "/",
+                             basicSysProperties.getUserOutbox());
+      final String notificationsPath =
+              Util.buildPath(true, userHomePath, "/",
+                             basicSysProperties.getDefaultNotificationsName());
+
+      return new CalPrincipalInfo(p,
+                                  pi.getCard(),
+                                  userHomePath,
+                                  defaultCalendarPath,
+                                  inboxPath,
+                                  outboxPath,
+                                  notificationsPath,
+                                  0);
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
@@ -572,12 +640,12 @@ public class BwSysIntfImpl implements SysIntf {
   public Collection<CalPrincipalInfo> getPrincipals(String resourceUri,
                                                final PrincipalPropertySearch pps)
           throws WebdavException {
-    ArrayList<CalPrincipalInfo> principals = new ArrayList<CalPrincipalInfo>();
+    List<CalPrincipalInfo> principals = null;
 
     if (pps.applyToPrincipalCollectionSet) {
       /* I believe it's valid (if unhelpful) to return nothing
        */
-      return principals;
+      return new ArrayList<>();
     }
 
     if (!resourceUri.endsWith("/")) {
@@ -592,9 +660,9 @@ public class BwSysIntfImpl implements SysIntf {
       }
 
       if (!resourceUri.equals(proot)) {
-        return principals;
+        return new ArrayList<>();
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
 
@@ -606,68 +674,93 @@ public class BwSysIntfImpl implements SysIntf {
      *
      * For calendarHomeSet it must be a valid home uri
      */
-    String matchVal = null;
-    boolean calendarUserAddressSet = false;
-    boolean calendarHomeSet = false;
+    final List<WebdavProperty> props = new ArrayList<>();
+    String cutype = null;
 
-    for (PrincipalPropertySearch.PropertySearch ps: pps.propertySearches) {
-      for (WebdavProperty prop: ps.props) {
-        if (CaldavTags.calendarUserAddressSet.equals(prop.getTag())) {
-          calendarUserAddressSet = true;
-        } else if (CaldavTags.calendarHomeSet.equals(prop.getTag())) {
-          calendarHomeSet = true;
-        } else {
-          return principals;
+    for (final WebdavProperty prop: pps.props) {
+      if (debug) {
+        debugMsg("Try to match " + prop);
+      }
+
+      final String pval = prop.getPval();
+
+      if (CaldavTags.calendarUserAddressSet.equals(prop.getTag())) {
+        principals = and(principals,
+                         getCalPrincipalInfo(caladdrToPrincipal(pval)));
+      } else if (CaldavTags.calendarHomeSet.equals(prop.getTag())) {
+        final String path = getUrlHandler().unprefix(pval);
+
+        final CalDAVCollection col = getCollection(path);
+        if (col != null) {
+          principals = and(principals, getCalPrincipalInfo(col.getOwner()));
+        }
+      } else if (CaldavTags.calendarUserType.equals(prop.getTag())) {
+        cutype = pval;
+      } else if (WebdavTags.displayname.equals(prop.getTag())) {
+        // Store for directory search
+        props.add(prop);
+      }
+    }
+
+    try {
+      if (props.size() != 0) {
+        // Directory search
+        final Holder<Boolean> truncated = new Holder<>();
+        if (principals == null) {
+          principals = new ArrayList<>();
+        }
+
+        final List<BwPrincipalInfo> pis =
+                getSvci().getDirectories().find(props, cutype, truncated);
+
+        if (pis != null) {
+          for (final BwPrincipalInfo pi: pis) {
+            principals.add(getCalPrincipalInfo(pi));
+          }
         }
       }
-
-      if (calendarUserAddressSet && calendarHomeSet) {
-        return principals;
-      }
-
-      String mval;
-      try {
-        mval = XmlUtil.getElementContent(ps.match);
-      } catch (Throwable t) {
-        throw new WebdavException("org.bedework.caldavintf.badvalue");
-      }
-
-      if (debug) {
-        debugMsg("Try to match " + mval);
-      }
-
-      if ((matchVal != null) && !matchVal.equals(mval)) {
-        return principals;
-      }
-
-      matchVal = mval;
+    } catch (final Throwable t) {
+      throw new WebdavException(t);
     }
 
-    CalPrincipalInfo cui = null;
-
-    if (calendarUserAddressSet) {
-      cui = getCalPrincipalInfo(caladdrToPrincipal(matchVal));
-    } else {
-      String path = getUrlHandler().unprefix(matchVal);
-
-      CalDAVCollection col = getCollection(path);
-      if (col != null) {
-        cui = getCalPrincipalInfo(col.getOwner());
-      }
-    }
-
-    if (cui != null) {
-      principals.add(cui);
+    if (principals == null) {
+      return new ArrayList<>();
     }
 
     return principals;
+  }
+  private List<CalPrincipalInfo> and(final List<CalPrincipalInfo> pis,
+                                     final CalPrincipalInfo pi) {
+    if (pis == null) {
+      final List<CalPrincipalInfo> newPis = new ArrayList<>();
+      newPis.add(pi);
+      return newPis;
+    }
+
+    if (pis.size() == 0) {
+      return pis;
+    }
+
+    for (final CalPrincipalInfo listPi: pis) {
+      if (pi.principal.equals(listPi.principal)) {
+        if (pis.size() == 1) {
+          return pis;
+        }
+
+        final List<CalPrincipalInfo> newPis = new ArrayList<>();
+        newPis.add(pi);
+        return newPis;
+      }
+    }
+
+    return new ArrayList<>();
   }
 
   @Override
   public boolean validPrincipal(final String account) throws WebdavException {
     try {
       return getSvci().getDirectories().validPrincipal(account);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }

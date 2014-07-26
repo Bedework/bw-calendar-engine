@@ -26,8 +26,13 @@ import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
 
+import edu.rpi.cct.webdav.servlet.shared.WebdavProperty;
+
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
+
+import javax.xml.ws.Holder;
 
 /** An interface to handle directory information and groups.
  *
@@ -38,7 +43,7 @@ import java.util.Collection;
  * <p>Methods may throw an unimplemented exception if functions are not
  * available.
  *
- * @author Mike Douglass douglm@bedework.edu
+ * @author Mike Douglass douglm rpi.edu
  * @version 3.3.2
  */
 public interface Directories extends Serializable {
@@ -326,6 +331,18 @@ public interface Directories extends Serializable {
    * @throws CalFacadeException
    */
   BwPrincipalInfo getDirInfo(BwPrincipal p) throws CalFacadeException;
+
+  /** Return matching principals.
+   *
+   * @param props     to match
+   * @param cutype    null - or type
+   * @param truncated value is true if result is incomplete
+   * @return BwPrincipalInfo objects that match.
+   * @throws CalFacadeException
+   */
+  List<BwPrincipalInfo> find(List<WebdavProperty> props,
+                             String cutype,
+                             Holder<Boolean> truncated) throws CalFacadeException;
 
   /** Uses the values in pinfo to update the supplied preferences. This may be a
    * site specific operation. It allows bedework to use directory information
