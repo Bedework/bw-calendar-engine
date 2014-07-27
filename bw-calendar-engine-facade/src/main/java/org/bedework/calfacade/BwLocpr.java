@@ -19,60 +19,32 @@
 
 package org.bedework.calfacade;
 
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 
-import org.bedework.access.WhoDefs;
-
-/** Value object to represent a calendar user.
+/** loation principal.
  *
  *   @author Mike Douglass
  *  @version 1.0
  */
-@Dump(elementName="user", keyFields={"account"})
+@Dump(elementName="locpr", keyFields={"account"})
 @NoDump({"byteSize"})
-public class BwUser extends BwPrincipal {
-  /* Temp to avoid schema change */
-  private boolean instanceOwner;
-
+public class BwLocpr extends BwPrincipal {
   /* ====================================================================
    *                   Constructors
    * ==================================================================== */
 
   /** Create a guest user
    */
-  public BwUser() {
+  public BwLocpr() {
     super();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwPrincipal#getKind()
-   */
   @Override
   @NoDump
   public int getKind() {
-    return WhoDefs.whoTypeUser;
-  }
-
-  /** An instance owner is the owner of an instance of the calendar system.
-   * This is the id we run as for that particular instance, e.g. the campus
-   * calendar, or the alumni calendar etc.
-   *
-   * @param val
-   * @deprecated
-   */
-  @Deprecated
-  public void setInstanceOwner(final boolean val) {
-    instanceOwner = val;
-  }
-
-  /**
-   * @return boolean
-   * @deprecated
-   */
-  @Deprecated
-  public boolean getInstanceOwner() {
-    return instanceOwner;
+    return WhoDefs.whoTypeVenue;
   }
 
   /* ====================================================================
@@ -83,7 +55,7 @@ public class BwUser extends BwPrincipal {
    *
    * @param val BwUser
    */
-  public void copyTo(final BwUser val) {
+  public void copyTo(final BwLocpr val) {
     super.copyTo(val);
   }
 
@@ -96,9 +68,9 @@ public class BwUser extends BwPrincipal {
     /* We do not clone the attached subscriptions if present. These need to
        be cloned explicitly or we might set up a clone loop.
     */
-    BwUser u = new BwUser();
-    copyTo(u);
+    BwLocpr l = new BwLocpr();
+    copyTo(l);
 
-    return u;
+    return l;
   }
 }

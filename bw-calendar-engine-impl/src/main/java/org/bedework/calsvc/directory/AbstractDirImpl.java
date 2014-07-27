@@ -303,12 +303,15 @@ public abstract class AbstractDirImpl implements Directories {
 
     final String path;
 
-    switch (cutype) {
+    switch (cutype.toLowerCase()) {
       case "individual":
         path = "/directory/users/";
         break;
       case "group":
         path = "/directory/groups/";
+        break;
+      case "room":
+        path = "/directory/locations/";
         break;
       default:
         path = "/directory/users/";
@@ -322,6 +325,10 @@ public abstract class AbstractDirImpl implements Directories {
                                              props);
 
       final List<BwPrincipalInfo> pis = new ArrayList<>();
+
+      if (mrs == null) {
+        return pis;
+      }
 
       for (final MatchResult mr: mrs) {
         final BwPrincipalInfo pi = new BwPrincipalInfo();

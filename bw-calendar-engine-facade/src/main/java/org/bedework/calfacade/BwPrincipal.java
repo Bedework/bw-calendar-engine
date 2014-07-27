@@ -47,7 +47,7 @@ import java.util.TreeSet;
  * of administrative groups as well as the functions we need for departmental
  * sites.
  *
- *   @author Mike Douglass douglm@bedework.edu
+ *   @author Mike Douglass douglm rpi.edu
  *  @version 1.0
  */
 @Dump(firstFields = {"account","principalRef"})
@@ -129,6 +129,10 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
       return makeGroupPrincipal();
     }
 
+    if (whoType == WhoDefs.whoTypeVenue) {
+      return makeLocationPrincipal();
+    }
+
     return null;
   }
 
@@ -144,6 +148,13 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
    */
   public static BwPrincipal makeGroupPrincipal() {
     return new BwGroup();
+  }
+
+  /**
+   * @return a location/venue principal
+   */
+  public static BwPrincipal makeLocationPrincipal() {
+    return new BwLocpr();
   }
 
   /* ====================================================================
@@ -389,17 +400,11 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
     getGroups().add(val);
   }
 
-  /* (non-Javadoc)
-   * @see AccessPrincipal#setGroupNames(java.util.Collection)
-   */
   @Override
   public void setGroupNames(final Collection<String> val) {
     groupNames = val;
   }
 
-  /* (non-Javadoc)
-   * @see AccessPrincipal#getGroupNames()
-   */
   @Override
   @NoDump
   public Collection<String> getGroupNames() {
@@ -506,7 +511,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 
