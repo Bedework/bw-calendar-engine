@@ -711,7 +711,9 @@ public class BwSysIntfImpl implements SysIntf {
         }
 
         final List<BwPrincipalInfo> pis =
-                getSvci().getDirectories().find(props, cutype, truncated);
+                getSvci().getDirectories().find(props,
+                                                pps.pr.props,
+                                                cutype, truncated);
 
         if (pis != null) {
           for (final BwPrincipalInfo pi: pis) {

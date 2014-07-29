@@ -272,7 +272,8 @@ public abstract class AbstractDirImpl implements Directories {
       cdc = new BasicHttpClient(cdi.getHost(), cdi.getPort(), null,
                               15 * 1000);
 
-      pi.setPropertiesFromVCard(getCard(cdc, cdi.getContextPath(), p));
+      pi.setPropertiesFromVCard(getCard(cdc, cdi.getContextPath(), p),
+                                "text/vcard");
     } catch (final Throwable t) {
       if (getLogger().isDebugEnabled()) {
         error(t);
@@ -290,6 +291,7 @@ public abstract class AbstractDirImpl implements Directories {
 
   @Override
   public List<BwPrincipalInfo> find(final List<WebdavProperty> props,
+                                    final List<WebdavProperty> returnProps,
                                     final String cutype,
                                     final Holder<Boolean> truncated)
           throws CalFacadeException {
@@ -317,11 +319,24 @@ public abstract class AbstractDirImpl implements Directories {
         path = "/directory/users/";
     }
 
+    String addrCtype = null;
+
+    /* See if we want address data in any particular form */
+    for (final WebdavProperty wd: returnProps) {
+      if (!wd.getTag().equals(CarddavTags.addressData)) {
+        continue;
+      }
+
+      addrCtype = wd.getAttr("content-type");
+      break;
+    }
+
     try {
       cdc = new BasicHttpClient(cdi.getHost(), cdi.getPort(), null,
                                 15 * 1000);
       final List<MatchResult> mrs = matching(cdc,
                                              cdi.getContextPath() + path,
+                                             addrCtype,
                                              props);
 
       final List<BwPrincipalInfo> pis = new ArrayList<>();
@@ -333,7 +348,7 @@ public abstract class AbstractDirImpl implements Directories {
       for (final MatchResult mr: mrs) {
         final BwPrincipalInfo pi = new BwPrincipalInfo();
 
-        pi.setPropertiesFromVCard(mr.card);
+        pi.setPropertiesFromVCard(mr.card, addrCtype);
         pis.add(pi);
       }
 
@@ -982,6 +997,7 @@ public abstract class AbstractDirImpl implements Directories {
 
   private List<MatchResult> matching(final BasicHttpClient cl,
                                      final String url,
+                                     final String addrDataCtype,
                                      final List<WebdavProperty> props)
           throws CalFacadeException {
     /* Try a search of the cards
@@ -1026,7 +1042,14 @@ public abstract class AbstractDirImpl implements Directories {
       xml.openTag(CarddavTags.addressbookQuery);
       xml.openTag(WebdavTags.prop);
       xml.emptyTag(WebdavTags.getetag);
-      xml.emptyTag(CarddavTags.addressData);
+
+      if (addrDataCtype == null) {
+        xml.emptyTag(CarddavTags.addressData);
+      } else {
+        xml.emptyTag(CarddavTags.addressData,
+                     "content-type", addrDataCtype);
+      }
+
       xml.closeTag(WebdavTags.prop);
 
       xml.openTag(CarddavTags.filter, "test", "allof");
@@ -1046,7 +1069,7 @@ public abstract class AbstractDirImpl implements Directories {
           xml.attribute("match-type", "contains");
           xml.endOpeningTag();
           xml.value(wd.getPval());
-          xml.closeTag(CarddavTags.textMatch);
+          xml.closeTagSameLine(CarddavTags.textMatch);
 
           xml.closeTag(CarddavTags.propFilter);
           //continue;

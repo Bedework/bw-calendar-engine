@@ -335,12 +335,14 @@ public interface Directories extends Serializable {
   /** Return matching principals.
    *
    * @param props     to match
+   * @param returnProps  used to configure returned data
    * @param cutype    null - or type
    * @param truncated value is true if result is incomplete
    * @return BwPrincipalInfo objects that match.
    * @throws CalFacadeException
    */
   List<BwPrincipalInfo> find(List<WebdavProperty> props,
+                             List<WebdavProperty> returnProps,
                              String cutype,
                              Holder<Boolean> truncated) throws CalFacadeException;
 

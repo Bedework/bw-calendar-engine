@@ -46,7 +46,7 @@
     <orderEntry type="module-library">
       <library name="Maven: com.sun:tools:1.4.2">
         <CLASSES>
-          <root url="jar:///usr/java/jdk1.7.0_21/lib/tools.jar!/" />
+          <root url="jar:///usr/java/jdk1.7.0_51/lib/tools.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

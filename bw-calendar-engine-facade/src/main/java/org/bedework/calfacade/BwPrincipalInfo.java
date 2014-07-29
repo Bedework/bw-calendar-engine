@@ -20,7 +20,9 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
+import org.bedework.util.vcard.JsonCardBuilder;
 
 import net.fortuna.ical4j.vcard.Property;
 import net.fortuna.ical4j.vcard.VCard;
@@ -592,7 +594,8 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
    * @param cardStr
    * @throws CalFacadeException
    */
-  public void setPropertiesFromVCard(final String cardStr) throws CalFacadeException {
+  public void setPropertiesFromVCard(final String cardStr,
+                                     final String addrDataCtype) throws CalFacadeException {
     if (cardStr == null) {
       return;
     }
@@ -600,7 +603,11 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
     addProperty(new PrincipalProperty<String>("vcard", cardStr));
 
     try {
-      card = new VCardBuilder(new StringReader(cardStr)).build();
+      if ("application/vcard+json".equals(addrDataCtype)) {
+        card = new JsonCardBuilder(null).build(new StringReader(cardStr));
+      } else {
+        card = new VCardBuilder(new StringReader(cardStr)).build();
+      }
 
       final Property piprop = card.getExtendedProperty("X-BW-PRINCIPALHREF");
       if (piprop != null) {
