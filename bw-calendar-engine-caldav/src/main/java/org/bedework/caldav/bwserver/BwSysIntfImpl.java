@@ -550,6 +550,7 @@ public class BwSysIntfImpl implements SysIntf {
       final CalPrincipalInfo pi =
               new CalPrincipalInfo(p,
                                    null,
+                                   null,
                                    userHomePath,
                                    defaultCalendarPath,
                                    inboxPath,
@@ -576,6 +577,7 @@ public class BwSysIntfImpl implements SysIntf {
       if (pi.getPrincipalHref() == null) {
         return new CalPrincipalInfo(null,
                                     pi.getCard(),
+                                    pi.getCardStr(),
                                     null, // userHomePath,
                                     null, // defaultCalendarPath,
                                     null, // inboxPath,
@@ -611,6 +613,7 @@ public class BwSysIntfImpl implements SysIntf {
 
       return new CalPrincipalInfo(p,
                                   pi.getCard(),
+                                  pi.getCardStr(),
                                   userHomePath,
                                   defaultCalendarPath,
                                   inboxPath,

@@ -61,6 +61,8 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
 
   private VCard card;
 
+  private String cardStr;
+
   /* Basic info */
   private String lastname;
   private String firstname;
@@ -344,6 +346,13 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
   }
 
   /**
+   * @return  associated vcard as a string
+   */
+  public String getCardStr() {
+    return cardStr;
+  }
+
+  /**
    * @param val
    */
   public void setLastname(final String val) {
@@ -600,6 +609,7 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
       return;
     }
 
+    this.cardStr = cardStr;
     addProperty(new PrincipalProperty<String>("vcard", cardStr));
 
     try {
