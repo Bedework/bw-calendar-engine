@@ -107,6 +107,11 @@ public interface BwIndexer extends Serializable {
             throws CalFacadeException;
   }
 
+  /**
+   * @return true if this is a public indexer
+   */
+  boolean getPublic();
+
   /** Flag the end of a transaction - updates the updateTracker if any
    * changes were made to the index.
    *

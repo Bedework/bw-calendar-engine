@@ -37,11 +37,11 @@ public class CategoriesImpl
   /* We'll cache lists of entities by principal href - flushing them
     every so often.
    */
-  private static FlushMap<String, Collection<BwCategory>> cached =
+  private final static FlushMap<String, Collection<BwCategory>> cached =
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          2000);  // max size
 
-  private FlushMap<String, BwCategory> cachedByUid =
+  private final FlushMap<String, BwCategory> cachedByUid =
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          2000);  // max size
 
@@ -99,17 +99,18 @@ public class CategoriesImpl
   }
 
   @Override
-  BwCategory fetchIndexedByUid(String uid) throws CalFacadeException {
+  BwCategory fetchIndexedByUid(final String uid) throws CalFacadeException {
     return getIndexer().fetchCat(uid, PropertyInfoIndex.UID);
   }
 
+  @Override
   BwCategory findPersistent(final BwCategory val,
                             final String ownerHref) throws CalFacadeException {
     return findPersistent(val.getWord(), ownerHref);
   }
 
   @Override
-  public boolean exists(BwCategory cat) throws CalFacadeException {
+  public boolean exists(final BwCategory cat) throws CalFacadeException {
     return findPersistent(cat.getWord(), cat.getOwnerHref()) != null;
   }
 

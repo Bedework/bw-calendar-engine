@@ -139,20 +139,20 @@ public class ESQueryFilter implements CalintfDefs {
   }
 
   /** Build a filter for a single entity identified by the property
-   * reference and value. The search willbe limited by the current
+   * reference and value. The search will be limited by the current
    * mode.
    *
-   * @param val
-   * @param index
+   * @param doctype  type of document we want
+   * @param val the value to match
+   * @param index list of terms for dot reference
    * @return
    * @throws CalFacadeException
    */
-  public FilterBuilder singleEntityFilter(final String val,
+  public FilterBuilder singleEntityFilter(final String doctype,
+                                          final String val,
                                           final PropertyInfoIndex... index) throws CalFacadeException {
-    FilterBuilder fb = principalFilter(addTerm(makePropertyRef(index),
-                                               val));
-
-    return fb;
+    return and(addTerm("_type", doctype),
+               addTerm(makePropertyRef(index), val));
   }
 
   public FilterBuilder buildFilter(final FilterBase f) throws CalFacadeException {

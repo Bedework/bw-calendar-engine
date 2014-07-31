@@ -37,11 +37,11 @@ public class LocationsImpl
   /* We'll cache lists of entities by principal href - flushing them
     every so often.
    */
-  private static FlushMap<String, Collection<BwLocation>> cached =
+  private final static FlushMap<String, Collection<BwLocation>> cached =
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          2000);  // max size
 
-  private FlushMap<String, BwLocation> cachedByUid =
+  private final FlushMap<String, BwLocation> cachedByUid =
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          2000);  // max size
 
@@ -99,17 +99,18 @@ public class LocationsImpl
   }
 
   @Override
-  BwLocation fetchIndexedByUid(String uid) throws CalFacadeException {
+  BwLocation fetchIndexedByUid(final String uid) throws CalFacadeException {
     return getIndexer().fetchLocation(uid, PropertyInfoIndex.UID);
   }
 
+  @Override
   BwLocation findPersistent(final BwLocation val,
                             final String ownerHref) throws CalFacadeException {
     return findPersistent(val.getAddress(), ownerHref);
   }
 
   @Override
-  public boolean exists(BwLocation val) throws CalFacadeException {
+  public boolean exists(final BwLocation val) throws CalFacadeException {
     return findPersistent(val.getFinderKeyValue(), val.getOwnerHref()) != null;
   }
 

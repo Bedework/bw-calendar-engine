@@ -315,6 +315,10 @@ public class CalSvcDb implements Serializable {
     return svci.getIndexer();
   }
 
+  public BwIndexer getPublicIndexer() throws CalFacadeException {
+    return svci.getIndexer(true);
+  }
+
   protected BwPrincipal getPrincipal(final String href) throws CalFacadeException {
     return svci.getUsersHandler().getPrincipal(href);
   }

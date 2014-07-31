@@ -176,6 +176,7 @@ public class BwIndexEsImpl implements BwIndexer {
   private static final Object clientSyncher = new Object();
 
   private String targetIndex;
+  private String[] searchIndexes;
   private final int currentMode;
 
   private final AuthProperties authpars;
@@ -245,8 +246,18 @@ public class BwIndexEsImpl implements BwIndexer {
         targetIndex = idxpars.getUserIndexName();
       }
       targetIndex = Util.buildPath(false, targetIndex);
+
+      if (publick) {
+        /* Search public only */
+        searchIndexes = new String[]{targetIndex};
+      } else {
+        /* Search public and user */
+        searchIndexes = new String[]{Util.buildPath(false, idxpars.getPublicIndexName()),
+                                     targetIndex};
+      }
     } else {
       targetIndex = Util.buildPath(false, indexName);
+      searchIndexes = new String[]{targetIndex};
     }
 
     if (updateInfo.get(targetIndex) == null) {
@@ -340,6 +351,11 @@ public class BwIndexEsImpl implements BwIndexer {
     public Set<String> getFacetNames() {
       return null;
     }
+  }
+
+  @Override
+  public boolean getPublic() {
+    return publick;
   }
 
   @Override
@@ -443,7 +459,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
     res.curSort = sort;
 
-    final SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+    final SearchRequestBuilder srb = getClient().prepareSearch(searchIndexes);
     if (res.curQuery != null) {
       srb.setQuery(res.curQuery);
     }
@@ -530,7 +546,7 @@ public class BwIndexEsImpl implements BwIndexer {
     res.pageStart = offset;
 
     final List<SearchResultEntry> entities;
-    final SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+    final SearchRequestBuilder srb = getClient().prepareSearch(searchIndexes);
     if (res.curQuery != null) {
       srb.setQuery(res.curQuery);
     }
@@ -1178,12 +1194,12 @@ public class BwIndexEsImpl implements BwIndexer {
       return getEntityBuilder(gr.getSourceAsMap());
     }
 
-    final SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+    final SearchRequestBuilder srb = getClient().prepareSearch(searchIndexes);
 
     srb.setTypes(docType);
 
     final SearchResponse response = srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setPostFilter(getFilters(null).singleEntityFilter(val, index))
+            .setPostFilter(getFilters(null).singleEntityFilter(docType, val, index))
             .setFrom(0).setSize(60).setExplain(true)
             .execute()
             .actionGet();
