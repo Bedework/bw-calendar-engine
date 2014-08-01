@@ -25,8 +25,7 @@ import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import edu.rpi.cct.webdav.servlet.shared.WebdavProperty;
+import org.bedework.webdav.servlet.shared.WebdavProperty;
 
 import java.io.Serializable;
 import java.util.Collection;
