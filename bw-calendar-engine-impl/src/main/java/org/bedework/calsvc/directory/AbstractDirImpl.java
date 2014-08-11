@@ -18,6 +18,8 @@
 */
 package org.bedework.calsvc.directory;
 
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
@@ -36,12 +38,18 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.dav.DavUtil;
 import org.bedework.util.dav.DavUtil.DavChild;
+import org.bedework.util.dav.DavUtil.MultiStatusResponse;
+import org.bedework.util.dav.DavUtil.MultiStatusResponseElement;
+import org.bedework.util.dav.DavUtil.PropstatElement;
 import org.bedework.util.http.BasicHttpClient;
 import org.bedework.util.misc.Util;
+import org.bedework.util.xml.XmlEmit;
+import org.bedework.util.xml.XmlEmit.NameSpace;
+import org.bedework.util.xml.XmlUtil;
+import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.CarddavTags;
-
-import org.bedework.access.AccessPrincipal;
-import org.bedework.access.WhoDefs;
+import org.bedework.util.xml.tagdefs.WebdavTags;
+import org.bedework.webdav.servlet.shared.WebdavProperty;
 
 import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
