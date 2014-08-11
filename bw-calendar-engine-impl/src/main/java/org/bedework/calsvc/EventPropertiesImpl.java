@@ -51,7 +51,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
         extends CalSvcDb implements EventProperties<T>, PrivilegeDefs {
   /* We'll cache the indexers we use. Use a map for non-public
    */
-  private static FlushMap<String, BwIndexer> userIndexers =
+  private final static FlushMap<String, BwIndexer> userIndexers =
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          200);  // max size
 
@@ -82,8 +82,8 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
   /** Find a persistent entry like the one given or return null.
    *
-   * @param val
-   * @param ownerHref
+   * @param val the non-persistent form
+   * @param ownerHref principal href
    * @return T or null
    * @throws CalFacadeException
    */
@@ -100,7 +100,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
   /** Constructor
   *
-  * @param svci
+  * @param svci the service interface
   */
   public EventPropertiesImpl(final CalSvc svci) {
     super(svci);
@@ -115,7 +115,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     try {
       ourClass = (Class<T>)Class.forName(className);
       coreHdlr = getCal().getEvPropsHandler(ourClass);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }
@@ -166,14 +166,14 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
   @Override
   public Collection<T> get(final Collection<String> uids) throws CalFacadeException {
-    Collection<T> ents = new ArrayList();
+    final Collection<T> ents = new ArrayList<>();
 
     if (Util.isEmpty(uids)) {
       return ents;
     }
 
-    for (String uid: uids) {
-      T ent = get(uid);
+    for (final String uid: uids) {
+      final T ent = get(uid);
       if (ent != null) {
         ents.add(get(uid));
       }
@@ -219,7 +219,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     getIndexer(val.getPublick(), val.getOwnerHref()).indexEntity(val);
 
     // Update cached
-    Collection<T> ents = get();
+    final Collection<T> ents = get();
     if (ents != null) {
       ents.add(val);
     }
@@ -248,7 +248,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     getIndexer(val.getPublick(), val.getOwnerHref()).indexEntity(val);
 
     // Update cached
-    Collection<T> ents = get();
+    final Collection<T> ents = get();
     if (ents != null) {
       ents.remove(val);
       ents.add(val);
@@ -283,7 +283,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     getIndexer(ent.getPublick(), ent.getOwnerHref()).unindexEntity(ent);
 
     // Update cached
-    Collection<T> ents = get();
+    final Collection<T> ents = get();
     if (ents != null) {
       ents.remove(ent);
     }
@@ -295,14 +295,19 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
   @Override
   public Collection<EventPropertiesReference> getRefs(final T val) throws CalFacadeException {
-    return coreHdlr.getRefs(val);
+    final T persistent = getPersistent(val.getUid());
+
+    if (persistent == null) {
+      return null;
+    }
+    return coreHdlr.getRefs(persistent);
   }
 
   @Override
   public EnsureEntityExistsResult<T> ensureExists(final T val,
                                                   final String ownerHref)
           throws CalFacadeException {
-    EnsureEntityExistsResult<T> eeer = new EnsureEntityExistsResult<T>();
+    final EnsureEntityExistsResult<T> eeer = new EnsureEntityExistsResult<T>();
 
     if (!val.unsaved()) {
       // Exists
