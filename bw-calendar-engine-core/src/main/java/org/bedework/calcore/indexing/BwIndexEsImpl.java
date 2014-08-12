@@ -82,6 +82,7 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.ClusterAdminClient;
 import org.elasticsearch.client.IndicesAdminClient;
@@ -373,7 +374,7 @@ public class BwIndexEsImpl implements BwIndexer {
                     setRefresh(true);
 
     urb.setScript("ctx._source.count += 1");
-    /*final UpdateResponse ur = */urb.execute().actionGet();
+    final UpdateResponse ur = urb.execute().actionGet();
   }
 
   @Override
@@ -743,19 +744,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
       // Unbatched
 
-      UpdateInfo ui = updateInfo.get(targetIndex);
-
-      if (ui == null) {
-        currentChangeToken();
-      }
-
-      ui = updateInfo.get(targetIndex);
-
-      if (ui == null) {
-        throw new CalFacadeException("Unable to set updateInfo");
-      }
-
-      ui.setUpdate(true);
+      markUpdated();
 
       /* final IndexResponse resp = */index(rec);
     } catch (final Throwable t) {
@@ -765,9 +754,27 @@ public class BwIndexEsImpl implements BwIndexer {
     }
   }
 
+  private void markUpdated() throws CalFacadeException {
+    UpdateInfo ui = updateInfo.get(targetIndex);
+
+    if (ui == null) {
+      currentChangeToken();
+    }
+
+    ui = updateInfo.get(targetIndex);
+
+    if (ui == null) {
+      throw new CalFacadeException("Unable to set updateInfo");
+    }
+
+    ui.setUpdate(true);
+  }
+
   @Override
   public void unindexEntity(final BwEventProperty val) throws CalFacadeException {
     unindexEntity(getDocBuilder().getHref(val));
+
+    markUpdated();
   }
 
   @Override
@@ -779,6 +786,8 @@ public class BwIndexEsImpl implements BwIndexer {
       dqrb.setQuery(QueryBuilders.termQuery(ESQueryFilter.hrefJname, href));
 
       /*final DeleteByQueryResponse resp = */dqrb.execute().actionGet();
+
+      markUpdated();
 
       // TODO check response?
     } catch (final ElasticSearchException ese) {

@@ -525,7 +525,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       }
 
       if (!indexRebuild) {
-        getIndexer(getPrincipal()).markTransaction();
+        cb.getIndexer().markTransaction();
       }
     } catch (final CalFacadeException cfe) {
       sess.rollback();

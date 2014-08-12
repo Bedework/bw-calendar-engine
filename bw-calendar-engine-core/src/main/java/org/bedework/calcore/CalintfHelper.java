@@ -326,6 +326,16 @@ public abstract class CalintfHelper
     getIndexer().unindexEntity(ei.getEvent().getHref());
   }
 
+  protected void indexEntity(final BwCalendar col) throws CalFacadeException {
+    if (!getForRestore()) {
+      getIndexer().indexEntity(col);
+    }
+  }
+
+  protected void unindexEntity(final BwCalendar col) throws CalFacadeException {
+    getIndexer().unindexEntity(col.getPath());
+  }
+
   /** Called to notify container that an event occurred. This method should
    * queue up notifications until after transaction commit as consumers
    * should only receive notifications when the actual data has been written.

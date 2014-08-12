@@ -364,7 +364,7 @@ public class CoreCalendars extends CalintfHelperHib
       return col;
     }
 
-    HibSession sess = getSess();
+    final HibSession sess = getSess();
 
     sess.createQuery(getCalendarByPathQuery);
     sess.setString("path", path);
@@ -613,7 +613,7 @@ public class CoreCalendars extends CalintfHelperHib
     val.setColPath(newParent.getPath());
     val.updateLastmod(getCurrentTimestamp());
 
-    BwCalendar tombstoned = val.makeTombstoneCopy();
+    final BwCalendar tombstoned = val.makeTombstoneCopy();
 
     tombstoned.tombstone();
     getSess().save(tombstoned);
@@ -739,18 +739,18 @@ public class CoreCalendars extends CalintfHelperHib
                                 final boolean reallyDelete) throws CalFacadeException {
     colCache.flush();
 
-    HibSession sess = getSess();
+    final HibSession sess = getSess();
 
     access.checkAccess(val, privUnbind, false);
 
-    String parentPath = val.getColPath();
+    final String parentPath = val.getColPath();
     if (parentPath == null) {
       throw new CalFacadeException(CalFacadeException.cannotDeleteCalendarRoot);
     }
 
     /* Ensure the parent exists and we have writeContent on the parent.
      */
-    BwCalendar parent = getCalendar(parentPath, privWriteContent, false);
+    final BwCalendar parent = getCalendar(parentPath, privWriteContent, false);
     if (parent == null) {
       throw new CalFacadeException(CalFacadeException.collectionNotFound);
     }
@@ -779,8 +779,8 @@ public class CoreCalendars extends CalintfHelperHib
 
     sess.executeUpdate();
 
-    String path = val.getPath();
-    BwCalendar unwrapped = unwrap(val);
+    final String path = val.getPath();
+    final BwCalendar unwrapped = unwrap(val);
 
     /* Ensure no tombstoned events or childen */
     removeTombstoned(val.getPath());
@@ -797,6 +797,7 @@ public class CoreCalendars extends CalintfHelperHib
     touchCalendar(parent);
 
     notify(SysEvent.SysCode.COLLECTION_DELETED, val);
+    getIndexer().unindexEntity(path);
 
     return true;
   }
@@ -1436,6 +1437,7 @@ public class CoreCalendars extends CalintfHelperHib
   private void notify(final SysEvent.SysCode code,
                       final BwCalendar val) throws CalFacadeException {
     try {
+      final boolean indexed = true;
       if (code.equals(SysEvent.SysCode.COLLECTION_DELETED)) {
         postNotification(
            SysEvent.makeCollectionDeletedEvent(code,
@@ -1444,17 +1446,18 @@ public class CoreCalendars extends CalintfHelperHib
                                                val.getPath(),
                                                val.getShared(),
                                                val.getPublick(),
-                                               false));
+                                               indexed));
       } else {
+        indexEntity(val);
         postNotification(
            SysEvent.makeCollectionUpdateEvent(code,
                                               authenticatedPrincipal(),
                                               val.getOwnerHref(),
                                               val.getPath(),
                                               val.getShared(),
-                                              false));
+                                              indexed));
       }
-    } catch (NotificationException ne) {
+    } catch (final NotificationException ne) {
       throw new CalFacadeException(ne);
     }
   }
@@ -1463,16 +1466,20 @@ public class CoreCalendars extends CalintfHelperHib
                           final String oldHref,
                           final BwCalendar val) throws CalFacadeException {
     try {
+      final boolean indexed = true;
+      getIndexer().unindexEntity(oldHref);
+      indexEntity(val);
+
       postNotification(
          SysEvent.makeCollectionMovedEvent(code,
                                            authenticatedPrincipal(),
                                            val.getOwnerHref(),
                                            val.getPath(),
                                            val.getShared(),
-                                           false, // indexed
+                                           indexed,
                                            oldHref,
                                            false)); // XXX wrong
-    } catch (NotificationException ne) {
+    } catch (final NotificationException ne) {
       throw new CalFacadeException(ne);
     }
   }
