@@ -474,7 +474,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     properties.add(PropertyInfoIndex.DTSTART);
     properties.add(PropertyInfoIndex.UTC);
 
-    List<SortTerm> sort = new ArrayList<>(1);
+    final List<SortTerm> sort = new ArrayList<>(1);
     sort.add(new SortTerm(properties, true));
 
     String start = null;
@@ -488,32 +488,34 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       end = endDate.getDate();
     }
 
-    SearchResult sr = getIndexer().search(null,   // query
-                                          fltr,
-                                          sort,
-                                          null,  // defaultFilterContext
-                                          start,
-                                          end,
-                                          -1,
-                                          getAccessChecker(),
-                                          recurRetrieval);
+    final SearchResult sr =
+            getIndexer().search(null,   // query
+                                false,
+                                fltr,
+                                sort,
+                                null,  // defaultFilterContext
+                                start,
+                                end,
+                                -1,
+                                getAccessChecker(),
+                                recurRetrieval);
 
-    List<SearchResultEntry> sres =
+    final List<SearchResultEntry> sres =
             sr.getIndexer().getSearchResult(sr, 0, -1, desiredAccess);
-    TreeSet<CoreEventInfo> ceis = new TreeSet<>();
+    final TreeSet<CoreEventInfo> ceis = new TreeSet<>();
 
-    for (SearchResultEntry sre: sres) {
-      Object o = sre.getEntity();
+    for (final SearchResultEntry sre: sres) {
+      final Object o = sre.getEntity();
 
       if (!(o instanceof EventInfo)) {
         continue;
       }
 
-      EventInfo ei = (EventInfo)o;
-      BwEvent ev = ei.getEvent();
+      final EventInfo ei = (EventInfo)o;
+      final BwEvent ev = ei.getEvent();
       restoreCategories(ev);
 
-      CoreEventInfo cei = postGetEvent(ev, null, ei.getCurrentAccess());
+      final CoreEventInfo cei = postGetEvent(ev, null, ei.getCurrentAccess());
 
       if (cei == null) {
         continue;

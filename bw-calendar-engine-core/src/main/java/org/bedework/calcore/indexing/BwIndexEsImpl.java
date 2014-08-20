@@ -99,6 +99,7 @@ import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
@@ -408,6 +409,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
   @Override
   public SearchResult search(final String query,
+                             final boolean relevance,
                              final FilterBase filter,
                              final List<SortTerm> sort,
                              final FilterBase defaultFilterContext,
@@ -439,8 +441,12 @@ public class BwIndexEsImpl implements BwIndexer {
     if (query != null) {
       final MatchQueryBuilder mqb = QueryBuilders.matchQuery("_all", query);
 
-      mqb.fuzziness("1");
-      mqb.prefixLength(2);
+      if (!relevance) {
+        mqb.operator(Operator.AND);
+      } else {
+        mqb.fuzziness("1");
+        mqb.prefixLength(2);
+      }
       res.curQuery = mqb;
 //      res.curQuery = QueryBuilders.queryString(query);
     }

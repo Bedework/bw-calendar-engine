@@ -138,6 +138,7 @@ public interface BwIndexer extends Serializable {
    * instance, selection of the inbox.</p>
    *
    * @param query        Query string
+   * @param relevance    true for a relevance style query
    * @param filter       parsed filter
    * @param sort  list of fields to sort by - may be null
    * @param defaultFilterContext  - see above
@@ -150,6 +151,7 @@ public interface BwIndexer extends Serializable {
    * @throws CalFacadeException
    */
   SearchResult search(String query,
+                      boolean relevance,
                       FilterBase filter,
                       List<SortTerm> sort,
                       FilterBase defaultFilterContext,
