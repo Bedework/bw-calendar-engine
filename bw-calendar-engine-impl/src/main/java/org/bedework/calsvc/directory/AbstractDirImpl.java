@@ -169,16 +169,16 @@ public abstract class AbstractDirImpl implements Directories {
 
   private transient Logger log;
 
-  private HashMap<String, Integer> toWho = new HashMap<String, Integer>();
-  private HashMap<Integer, String> fromWho = new HashMap<Integer, String>();
+  private final HashMap<String, Integer> toWho = new HashMap<>();
+  private final HashMap<Integer, String> fromWho = new HashMap<>();
 
-  private static FlushMap<String, String> validPrincipals =
-    new FlushMap<String, String>(60 * 1000 * 5, // 5 minute
-                                 0); // No size limit
+  private static final FlushMap<String, String> validPrincipals =
+          new FlushMap<>(60 * 1000 * 5, // 5 minute
+                         0); // No size limit
 
-  private static FlushMap<String, BwPrincipalInfo> principalInfoMap =
-    new FlushMap<String, BwPrincipalInfo>(60 * 1000 * 5, // 5 minute
-                                          0); // No size limit
+  private static final FlushMap<String, BwPrincipalInfo> principalInfoMap =
+          new FlushMap<>(60 * 1000 * 5, // 5 minute
+                         0); // No size limit
 
   @Override
   public void init(final CallBack cb,
@@ -201,13 +201,10 @@ public abstract class AbstractDirImpl implements Directories {
     initWhoMaps(getSystemRoots().getHostPrincipalRoot(), WhoDefs.whoTypeHost);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#getDirectoryInfo()
-   */
   @Override
   public DirectoryInfo getDirectoryInfo() throws CalFacadeException {
-    DirectoryInfo info = new DirectoryInfo();
-    BasicSystemProperties sr = getSystemRoots();
+    final DirectoryInfo info = new DirectoryInfo();
+    final BasicSystemProperties sr = getSystemRoots();
 
     info.setPrincipalRoot(sr.getPrincipalRoot());
     info.setUserPrincipalRoot(sr.getUserPrincipalRoot());
@@ -311,21 +308,7 @@ public abstract class AbstractDirImpl implements Directories {
 
     BasicHttpClient cdc = null;
 
-    final String path;
-
-    switch (cutype.toLowerCase()) {
-      case "individual":
-        path = "/directory/users/";
-        break;
-      case "group":
-        path = "/directory/groups/";
-        break;
-      case "room":
-        path = "/directory/locations/";
-        break;
-      default:
-        path = "/directory/users/";
-    }
+    final String path = getCutypePath(cutype, cdi);
 
     String addrCtype = null;
 
@@ -372,6 +355,49 @@ public abstract class AbstractDirImpl implements Directories {
         cdc.close();
       }
     }
+  }
+
+  private String getCutypePath(final String cutype,
+                               final CardDavInfo cdi) {
+    final String cutypeMapping = cdi.getCutypeMapping();
+
+    if (cutypeMapping == null) {
+      warn("No cutype mapping in carddav info");
+      return "/directory/";
+    }
+
+    final String[] split = cutypeMapping.split(",");
+
+    final String key;
+
+    if (cutype == null) {
+      key = "*:";
+    } else {
+      key = cutype.toLowerCase() + ":";
+    }
+
+    String defaultPath = null;
+
+    for (final String s: split) {
+      if (s.startsWith(key)) {
+        return s.substring(key.length());
+      }
+
+      if (s.startsWith("*:")) {
+        if (defaultPath != null) {
+          warn("More than one default path in cutype mapping");
+        } else {
+          defaultPath = s.substring(2);
+        }
+      }
+    }
+
+    if (defaultPath == null) {
+      warn("No default path in cutype mapping");
+      return "/directory/";
+    }
+
+    return defaultPath;
   }
 
   @Override

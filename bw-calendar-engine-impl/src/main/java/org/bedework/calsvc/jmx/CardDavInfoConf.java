@@ -30,7 +30,7 @@ public class CardDavInfoConf extends ConfBase<CardDavInfoImpl>
   public static final String confuriPname = "org.bedework.bwengine.confuri";
 
   /**
-   * @param name
+   * @param name of service
    */
   public CardDavInfoConf(final String name) {
     super(getServiceName(name));
@@ -43,7 +43,7 @@ public class CardDavInfoConf extends ConfBase<CardDavInfoImpl>
   }
 
   /**
-   * @param name
+   * @param name of service
    * @return service name for the mbean with this name
    */
   public static String getServiceName(final String name) {
@@ -92,6 +92,16 @@ public class CardDavInfoConf extends ConfBase<CardDavInfoImpl>
   @Override
   public String getContextPath() {
     return getConfig().getContextPath();
+  }
+
+  @Override
+  public void setCutypeMapping(final String val) {
+    getConfig().setCutypeMapping(val);
+  }
+
+  @Override
+  public String getCutypeMapping() {
+    return getConfig().getCutypeMapping();
   }
 
   /* ========================================================================

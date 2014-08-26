@@ -39,6 +39,8 @@ public class CardDavInfoImpl extends ConfigBase<CardDavInfoImpl>
 
   private String contextPath;
 
+  private String cutypeMapping;
+
   @Override
   public void setAuth(final boolean val) {
     auth = val;
@@ -77,5 +79,15 @@ public class CardDavInfoImpl extends ConfigBase<CardDavInfoImpl>
   @Override
   public String getContextPath() {
     return contextPath;
+  }
+
+  @Override
+  public void setCutypeMapping(final String val) {
+    cutypeMapping = val;
+  }
+
+  @Override
+  public String getCutypeMapping() {
+    return cutypeMapping;
   }
 }

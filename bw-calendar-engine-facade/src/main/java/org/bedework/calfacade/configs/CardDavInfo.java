@@ -75,4 +75,18 @@ public interface CardDavInfo extends Serializable {
    * @return String
    */
   public String getContextPath();
+
+  /** Comma delimited set of cutype:path - maps cutype on to the given path.
+   * cutype of * is the default.
+   *
+   * @param val    String
+   */
+  public void setCutypeMapping(final String val);
+
+  /** Comma delimited set of cutype:path - maps cutype on to the given path.
+   * cutype of * is the default.
+   *
+   * @return String
+   */
+  public String getCutypeMapping();
 }
