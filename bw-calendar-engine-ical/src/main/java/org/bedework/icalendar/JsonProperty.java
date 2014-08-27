@@ -194,7 +194,7 @@ public class JsonProperty implements Serializable {
     protected void outField(final JsonGenerator jgen,
                             final String name,
                             final NumberList val) throws Throwable {
-      if (val == null) {
+      if ((val == null) || (val.size() == 0)) {
         return;
       }
 
@@ -217,7 +217,7 @@ public class JsonProperty implements Serializable {
     protected void outField(final JsonGenerator jgen,
                             final String name,
                             final WeekDayList val) throws Throwable {
-      if (val == null) {
+      if ((val == null) || (val.size() == 0)) {
         return;
       }
 
