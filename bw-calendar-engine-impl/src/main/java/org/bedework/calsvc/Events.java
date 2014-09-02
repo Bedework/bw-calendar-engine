@@ -347,6 +347,8 @@ class Events extends CalSvcDb implements EventsI {
 
       assignGuid(event); // Or just validate?
 
+      updateEntities(updResult, event);
+
       BwCalendar cal = validate(event, autoCreateCollection);
 
       BwEventProxy proxy = null;
@@ -369,8 +371,6 @@ class Events extends CalSvcDb implements EventsI {
           }
         }
       }
-
-      updateEntities(updResult, event);
 
       BwCalendar undereffedCal = cal;
 
@@ -528,6 +528,10 @@ class Events extends CalSvcDb implements EventsI {
       final BwEvent event = ei.getEvent();
       event.setDtstamps(getCurrentTimestamp());
 
+      final UpdateResult updResult = ei.getUpdResult();
+
+      updateEntities(updResult, event);
+
       final BwCalendar cal = validate(event,false);
       adjustEntities(ei);
 
@@ -592,10 +596,6 @@ class Events extends CalSvcDb implements EventsI {
 //      if (doReschedule) {
   //      getSvc().getScheduler().setupReschedule(ei);
     //  }
-
-      final UpdateResult updResult = ei.getUpdResult();
-
-      updateEntities(updResult, event);
 
       final UpdateEventResult uer = getCal().updateEvent(ei);
 
