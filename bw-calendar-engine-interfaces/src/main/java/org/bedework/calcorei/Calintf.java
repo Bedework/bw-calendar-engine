@@ -393,13 +393,13 @@ public interface Calintf
    * can eliminate the need at some point...
    * ==================================================================== */
 
-  /** XXX This ought to be a paged query.
+  /**
    *
-   * @param className
+   * @param className of objects
    * @return collection
    * @throws CalFacadeException
    */
-  Collection getObjectCollection(final String className) throws CalFacadeException;
+  Iterator getObjectIterator(final String className) throws CalFacadeException;
 
   /**
    * @return annotations - not recurrence overrides
@@ -408,7 +408,7 @@ public interface Calintf
   Iterator<BwEventAnnotation> getEventAnnotations() throws CalFacadeException;
 
   /**
-   * @param ev
+   * @param ev the master
    * @return overrides for event
    * @throws CalFacadeException
    */

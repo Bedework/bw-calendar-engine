@@ -125,17 +125,42 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     return getObjects(BwCategory.class.getName());
   }
 
-  @Override
-  public Iterator<BwEvent> getEvents() throws CalFacadeException {
-    final Collection<BwEvent> evs = getObjectCollection(BwEventObj.class.getName());
+  private class EventIterator implements Iterator<BwEvent> {
+    private final Iterator it;
+    private boolean done;
 
-    for (final BwEvent ev: evs) {
-      if (ev.testRecurring()) {
-        ev.setOverrides(getOverrides(ev));
+    private EventIterator(final Iterator it) {
+      this.it = it;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return it.hasNext();
+    }
+
+    @Override
+    public BwEvent next() {
+      try {
+        final BwEvent ev = (BwEvent)it.next();
+        if (ev.testRecurring()) {
+          ev.setOverrides(getOverrides(ev));
+        }
+
+        return ev;
+      } catch (final Throwable t) {
+        throw new RuntimeException(t);
       }
     }
 
-    return evs.iterator();
+    @Override
+    public void remove() {
+      throw new RuntimeException("Forbidden");
+    }
+  }
+
+  @Override
+  public Iterator<BwEvent> getEvents() throws CalFacadeException {
+    return new EventIterator(getCal().getObjectIterator(BwEventObj.class.getName()));
   }
 
   @Override
@@ -192,12 +217,8 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     return getObjects(BwView.class.getName());
   }
 
-  private Collection getObjectCollection(final String className) throws CalFacadeException {
-    return getCal().getObjectCollection(className);
-  }
-
   private Iterator getObjects(final String className) throws CalFacadeException {
-    return getObjectCollection(className).iterator();
+    return getCal().getObjectIterator(className);
   }
 
   private void getAdminMembers(final BwGroup group) throws CalFacadeException {
@@ -310,9 +331,6 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
       maxAllowedPrivs = ss.maxAllowedPrivs;
     }
 
-    /* (non-Javadoc)
-     * @see Access.AccessCb#makeHref(java.lang.String, int)
-     */
     @Override
     public String makeHref(final String id, final int whoType) throws AccessException {
       try {

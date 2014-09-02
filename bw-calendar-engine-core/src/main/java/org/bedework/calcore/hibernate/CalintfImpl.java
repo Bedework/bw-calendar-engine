@@ -1133,11 +1133,74 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     return (BwUnversionedDbentity)sess.merge(val);
   }
 
-  @Override
-  public Collection getObjectCollection(final String className) throws CalFacadeException {
-    sess.createQuery("from " + className);
+  private class ObjectIterator implements Iterator {
+    private final String className;
+    private List batch;
+    private int index;
+    private boolean done;
+    private int start;
+    private final int batchSize = 100;
 
-    return sess.getList();
+    private ObjectIterator(final String className) {
+      this.className = className;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return more();
+    }
+
+    @Override
+    public Object next() {
+      if (!more()) {
+        return null;
+      }
+
+      index++;
+      return batch.get(index - 1);
+    }
+
+    @Override
+    public void remove() {
+      throw new RuntimeException("Forbidden");
+    }
+
+    private boolean more() {
+      if (done) {
+        return false;
+      }
+
+      if ((batch == null) || (index == batch.size())) {
+        nextBatch();
+      }
+
+      return !done;
+    }
+
+    private void nextBatch() {
+      try {
+        sess.createQuery("from " + className);
+
+        sess.setFirstResult(start);
+        sess.setMaxResults(batchSize);
+
+        start += batchSize;
+
+        batch = sess.getList();
+        index = 0;
+
+        if (Util.isEmpty(batch)) {
+          done = true;
+        }
+      } catch (final Throwable t) {
+        throw new RuntimeException(t);
+      }
+    }
+  }
+
+  @Override
+  public Iterator getObjectIterator(final String className) throws CalFacadeException {
+    return new ObjectIterator(className);
   }
 
   private static String getEventAnnotationsQuery =
@@ -1242,7 +1305,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     return (BwPrincipal)sess.getUnique();
   }
 
-  private static String getPrincipalHrefsQuery =
+  private static final String getPrincipalHrefsQuery =
       "select u.principalRef from " + BwUser.class.getName() +
         " u order by u.principalRef";
 
@@ -1255,7 +1318,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     sess.setMaxResults(count);
 
     @SuppressWarnings("unchecked")
-    List<String> res = sess.getList();
+    final List<String> res = sess.getList();
 
     if (Util.isEmpty(res)) {
       return null;
