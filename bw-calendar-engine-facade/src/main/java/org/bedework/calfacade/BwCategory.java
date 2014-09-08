@@ -138,9 +138,9 @@ public class BwCategory extends BwEventProperty<BwCategory>
     }
 
     String extra = getWordVal();
-    String name;
+    final String name;
 
-    int pos = extra.lastIndexOf("/");
+    final int pos = extra.lastIndexOf("/");
 
     if (pos < 0) {
       name = extra;
@@ -157,7 +157,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
   }
 
   @Override
-  public void setHref(String val) {
+  public void setHref(final String val) {
     href = val;
   }
 
@@ -222,7 +222,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
   }
 
   /**
-   * @param val
+   * @param val new category
    */
   public void setWordVal(final String val) {
     BwString s = getWord();
@@ -246,7 +246,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
    */
   @NoDump
   public String getWordVal() {
-    BwString s = getWord();
+    final BwString s = getWord();
     if (s == null) {
       return null;
     }
@@ -255,7 +255,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
   }
 
   /**
-   * @param val
+   * @param val new description value
    */
   public void setDescriptionVal(final String val) {
     BwString s = getDescription();
@@ -279,7 +279,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
    */
   @NoDump
   public String getDescriptionVal() {
-    BwString s = getDescription();
+    final BwString s = getDescription();
     if (s == null) {
       return null;
     }
@@ -300,7 +300,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
 
   /**
    *
-   * @param cat
+   * @param cat the other one
    * @return true if anything changed
    */
   public boolean updateFrom(final BwCategory cat) {
@@ -311,7 +311,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
       changed = true;
     }
 
-    if (!getDescription().equals(cat.getDescription())) {
+    if (Util.cmpObjval(getDescription(), cat.getDescription()) != 0) {
       setDescription(cat.getDescription());
       changed = true;
     }
@@ -344,7 +344,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
     ts.append("word", getWord());
@@ -354,7 +354,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
 
   @Override
   public Object clone() {
-    BwCategory cat = new BwCategory();
+    final BwCategory cat = new BwCategory();
 
     super.copyTo(cat);
 
