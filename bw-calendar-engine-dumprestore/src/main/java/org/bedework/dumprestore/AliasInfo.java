@@ -29,9 +29,9 @@ import org.bedework.util.misc.ToString;
 public class AliasInfo {
   private final String path;
 
-  private boolean publick;
+  private final boolean publick;
 
-  private String owner;
+  private final String owner;
 
   private boolean external;
 
@@ -57,6 +57,8 @@ public class AliasInfo {
                    final String owner) {
     this.path = path;
     this.targetPath = targetPath;
+    this.publick = publick;
+    this.owner = owner;
   }
 
   /**

@@ -46,21 +46,17 @@ public class Dump implements Defs {
    */
   private String fileName;
 
-  /* runtime arg -i (id) */
-  //private String id = "sa";
+  private final DumpGlobals globals = new DumpGlobals();
 
-  String indent = "";
-
-  private DumpGlobals globals = new DumpGlobals();
-
-  private String adminUserAccount = "admin";
+  @SuppressWarnings("FieldCanBeLocal")
+  private final String adminUserAccount = "admin";
 
   /** ===================================================================
    *                       Constructor
    *  =================================================================== */
 
   /**
-   * @param info
+   * @param info lines
    * @throws Throwable
    */
   public Dump(final InfoLines info) throws Throwable {
@@ -169,25 +165,16 @@ public class Dump implements Defs {
   }
 
   private CalSvcI getSvci() throws Throwable {
-    CalSvcIPars pars = new CalSvcIPars(adminUserAccount,
-                                       null,   // calsuite
-                                       true,   // publicAdmin
-                                       true,   // superUser,
-                                       true,   // service
-                                       true,  // adminCanEditAllPublicCategories
-                                       true,  // adminCanEditAllPublicLocations
-                                       true,  // adminCanEditAllPublicSponsors
-                                       false);    // sessionless
-    CalSvcI svci = new CalSvcFactoryDefault().getSvc(pars);
-
-    return svci;
-  }
-
-  private static String twoDigits(final long val) {
-    if (val < 10) {
-      return "0" + val;
-    }
-
-    return String.valueOf(val);
+    final CalSvcIPars pars =
+            new CalSvcIPars(adminUserAccount,
+                            null,   // calsuite
+                            true,   // publicAdmin
+                            true,   // superUser,
+                            true,   // service
+                            true,  // adminCanEditAllPublicCategories
+                            true,  // adminCanEditAllPublicLocations
+                            true,  // adminCanEditAllPublicSponsors
+                            false);    // sessionless
+    return new CalSvcFactoryDefault().getSvc(pars);
   }
 }

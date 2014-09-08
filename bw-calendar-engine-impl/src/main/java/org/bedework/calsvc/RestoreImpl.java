@@ -348,6 +348,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       if (p != null) {
         warn("Found instance of preferences for " + o.getOwnerHref());
         o.setId(p.getId());
+        //noinspection UnusedAssignment
         p = (BwPreferences)getSvc().merge(o);
       } else {
         p = o;
@@ -473,13 +474,13 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     }
 
 
-    final PrivilegeSet ps = curCol.getCurrentAccess().getPrivileges();
+    final boolean write = checkAccess(curCol,
+                                      PrivilegeDefs.privWrite,
+                                      true).getAccessAllowed();
 
-    final boolean write = ps.getPrivilege(
-              PrivilegeDefs.privWrite) == PrivilegeDefs.allowed;
-
-    final boolean read = ps.getPrivilege(
-              PrivilegeDefs.privRead) == PrivilegeDefs.allowed;
+    final boolean read = checkAccess(curCol,
+                                     PrivilegeDefs.privRead,
+                                     true).getAccessAllowed();
 
     if (!write && !read) {
       // No appropriate access
@@ -510,6 +511,15 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     //uentry.setSummary(s.getSummary());
 
     invite.getUsers().add(uentry);
+
+    try {
+      curCol.setQproperty(AppleServerTags.invite, invite.toXml());
+      getCols().update(curCol);
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
 
     return FixAliasResult.reshared;
   }
