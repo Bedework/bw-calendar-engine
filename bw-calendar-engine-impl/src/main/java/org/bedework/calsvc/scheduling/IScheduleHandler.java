@@ -59,12 +59,17 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     BwPrincipal principal;
 
     /* Attendee objects in the organizers event and overrides */
-    private List<BwAttendee> atts = new ArrayList<>();
+    private final List<BwAttendee> atts = new ArrayList<>();
 
     String inboxPath; // null for our own account
 
     /* Non-null if this is an external recipient we can process in real-time */
     private HostInfo host;
+
+    public UserInbox(final String recipient) {
+      super();
+      this.recipient = recipient;
+    }
 
     public void addAttendee(final BwAttendee val) {
       for (final BwAttendee att: atts) {
@@ -175,7 +180,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     if (freeBusyRequest) {
       try {
         r = getCalDavClient().getFreeBusy(hi, cei);
-      } catch (CalFacadeException cfe) {
+      } catch (final CalFacadeException cfe) {
         error(cfe);
         return;
       }
@@ -208,7 +213,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
 
     try {
       r = getCalDavClient().scheduleMeeting(hi, cei);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       error(cfe);
       return;
     }
@@ -232,7 +237,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
                                final String service) throws CalFacadeException {
         try {
           return getEncrypter().getPrivateKey();
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
           throw new CalFacadeException(t);
         }
       }

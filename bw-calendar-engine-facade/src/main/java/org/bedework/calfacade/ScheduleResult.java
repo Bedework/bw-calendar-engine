@@ -99,6 +99,10 @@ public class ScheduleResult {
   /** Recipients external to the system. */
   public Set<String> externalRcs = new TreeSet<>();
 
+  public void addRecipientResult(final ScheduleRecipientResult srr) {
+    recipientResults.put(srr.recipient, srr);
+  }
+
   @Override
   public String toString() {
     final ToString ts = new ToString(this);

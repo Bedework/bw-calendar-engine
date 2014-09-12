@@ -371,11 +371,10 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
       return ui;
     }
 
-    ui = new UserInbox();
-    sr.recipientResults.put(recipient, ui);
+    ui = new UserInbox(recipient);
+    sr.addRecipientResult(ui);
 
     final BwPrincipal principal = getSvc().getDirectories().caladdrToPrincipal(recipient);
-    ui.recipient = recipient;
 
     if (principal == null) {
       /* External to the system */
