@@ -1138,6 +1138,10 @@ public class BwIndexEsImpl implements BwIndexer {
 
     srb.setTypes(docType);
 
+    if (debug) {
+      debug("fetchAllEntities: srb=" + srb);
+    }
+
     int tries = 0;
     //int ourPos = 0;
     final int ourCount = maxFetchCount;

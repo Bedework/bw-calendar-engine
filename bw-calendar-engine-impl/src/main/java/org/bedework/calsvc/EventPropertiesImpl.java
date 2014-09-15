@@ -55,6 +55,17 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          200);  // max size
 
+  /* We'll cache lists of entities by principal href - flushing them
+    every so often.
+   */
+  private final FlushMap<String, Collection<T>> cached =
+          new FlushMap<>(60 * 1000 * 5, // 5 mins
+                         2000);  // max size
+
+  private final FlushMap<String, T> cachedByUid =
+          new FlushMap<>(60 * 1000 * 5, // 5 mins
+                         2000);  // max size
+
   private static BwIndexer publicIndexer;
 
   private Class<T> ourClass;
@@ -62,23 +73,13 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
   private boolean adminCanEditAllPublic;
 
+  private String lastChangeToken;
+
   /* fetch from indexer */
   abstract Collection<T> fetchAllIndexed(boolean publick,
                                          String ownerHref) throws CalFacadeException;
 
   abstract T fetchIndexedByUid(String uid) throws CalFacadeException;
-
-  abstract Collection<T> getCached(final String ownerHref);
-
-  abstract void putCached(String ownerHref, Collection<T> vals);
-
-  abstract void removeCached(String ownerHref);
-
-  abstract T getCachedByUid(String uid);
-
-  abstract void putCachedByUid(String uid, T val);
-
-  abstract void removeCachedByUid(String uid);
 
   /** Find a persistent entry like the one given or return null.
    *
@@ -389,6 +390,49 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     return idx;
   }
 
+  /**
+   * @return true if indexed data changed
+   * @throws CalFacadeException
+   */
+  protected boolean indexChanged() throws CalFacadeException {
+    final String token = getIndexer().currentChangeToken();
+
+    final boolean changed = lastChangeToken == null ||
+        !lastChangeToken.equals(token);
+
+    lastChangeToken = token;
+
+    return changed;
+  }
+
+  protected Collection<T> getCached(final String ownerHref) throws CalFacadeException {
+    checkChache();
+    return cached.get(ownerHref);
+  }
+
+  protected void putCached(final String ownerHref,
+                           final Collection<T> vals) throws CalFacadeException {
+    cached.put(ownerHref, vals);
+  }
+
+  protected void removeCached(final String ownerHref) throws CalFacadeException {
+    cached.remove(ownerHref);
+  }
+
+  protected T getCachedByUid(final String uid) throws CalFacadeException {
+    checkChache();
+    return cachedByUid.get(uid);
+  }
+
+  protected void putCachedByUid(final String uid,
+                                final T val) throws CalFacadeException {
+    cachedByUid.put(uid, val);
+  }
+
+  protected void removeCachedByUid(final String uid) throws CalFacadeException {
+    cachedByUid.remove(uid);
+  }
+
   protected T findPersistent(final BwString val,
                              final String ownerHref) throws CalFacadeException {
     return coreHdlr.find(val, ownerHref);
@@ -397,6 +441,13 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
+
+  private void checkChache() throws CalFacadeException {
+    if (indexChanged()) {
+      cached.clear();
+      cachedByUid.clear();
+    }
+  }
 
   private Collection<T> get(final boolean publick,
                             final String creatorHref) throws CalFacadeException {

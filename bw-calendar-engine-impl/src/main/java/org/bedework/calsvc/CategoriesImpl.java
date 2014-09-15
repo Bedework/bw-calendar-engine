@@ -22,7 +22,6 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.Categories;
-import org.bedework.util.caching.FlushMap;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
@@ -34,17 +33,6 @@ import java.util.Collection;
 public class CategoriesImpl
         extends EventPropertiesImpl<BwCategory>
         implements Categories {
-  /* We'll cache lists of entities by principal href - flushing them
-    every so often.
-   */
-  private final static FlushMap<String, Collection<BwCategory>> cached =
-          new FlushMap<>(60 * 1000 * 5, // 5 mins
-                         2000);  // max size
-
-  private final FlushMap<String, BwCategory> cachedByUid =
-          new FlushMap<>(60 * 1000 * 5, // 5 mins
-                         2000);  // max size
-
   /** Constructor
   *
   * @param svci calsvc object
@@ -58,37 +46,6 @@ public class CategoriesImpl
   public void init(final boolean adminCanEditAllPublic) {
     super.init(BwCategory.class.getCanonicalName(),
                adminCanEditAllPublic);
-  }
-
-  @Override
-  Collection<BwCategory> getCached(final String ownerHref) {
-    return cached.get(ownerHref);
-  }
-
-  @Override
-  void putCached(final String ownerHref,
-                 final Collection<BwCategory> vals) {
-    cached.put(ownerHref, vals);
-  }
-
-  @Override
-  void removeCached(final String ownerHref) {
-    cached.remove(ownerHref);
-  }
-
-  @Override
-  BwCategory getCachedByUid(final String uid) {
-    return cachedByUid.get(uid);
-  }
-
-  @Override
-  void putCachedByUid(final String uid, final BwCategory val) {
-    cachedByUid.put(uid, val);
-  }
-
-  @Override
-  void removeCachedByUid(final String uid) {
-    cachedByUid.remove(uid);
   }
 
   @Override

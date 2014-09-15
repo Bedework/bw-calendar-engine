@@ -22,7 +22,6 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.Locations;
-import org.bedework.util.caching.FlushMap;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
@@ -34,17 +33,6 @@ import java.util.Collection;
 public class LocationsImpl
         extends EventPropertiesImpl<BwLocation>
         implements Locations {
-  /* We'll cache lists of entities by principal href - flushing them
-    every so often.
-   */
-  private final static FlushMap<String, Collection<BwLocation>> cached =
-          new FlushMap<>(60 * 1000 * 5, // 5 mins
-                         2000);  // max size
-
-  private final FlushMap<String, BwLocation> cachedByUid =
-          new FlushMap<>(60 * 1000 * 5, // 5 mins
-                         2000);  // max size
-
   /** Constructor
   *
   * @param svci calsvc object
@@ -58,37 +46,6 @@ public class LocationsImpl
   public void init(final boolean adminCanEditAllPublic) {
     super.init(BwLocation.class.getCanonicalName(),
                adminCanEditAllPublic);
-  }
-
-  @Override
-  Collection<BwLocation> getCached(final String ownerHref) {
-    return cached.get(ownerHref);
-  }
-
-  @Override
-  void putCached(final String ownerHref,
-                 final Collection<BwLocation> vals) {
-    cached.put(ownerHref, vals);
-  }
-
-  @Override
-  void removeCached(final String ownerHref) {
-    cached.remove(ownerHref);
-  }
-
-  @Override
-  BwLocation getCachedByUid(final String uid) {
-    return cachedByUid.get(uid);
-  }
-
-  @Override
-  void putCachedByUid(final String uid, final BwLocation val) {
-    cachedByUid.put(uid, val);
-  }
-
-  @Override
-  void removeCachedByUid(final String uid) {
-    cachedByUid.remove(uid);
   }
 
   @Override
