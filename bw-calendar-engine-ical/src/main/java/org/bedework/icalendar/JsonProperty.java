@@ -458,7 +458,9 @@ public class JsonProperty implements Serializable {
         outField(jgen, "until", r.getUntil().toString());
       }
       outField(jgen, "count", r.getCount());
-      outField(jgen, "interval", r.getInterval());
+      if (r.getInterval() > 1) {
+        outField(jgen, "interval", r.getInterval());
+      }
       outField(jgen, "bymonth", r.getMonthList());
       outField(jgen, "byweekno", r.getWeekNoList());
       outField(jgen, "byyearday", r.getYearDayList());
