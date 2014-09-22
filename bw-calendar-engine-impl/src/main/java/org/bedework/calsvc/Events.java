@@ -21,7 +21,6 @@ package org.bedework.calsvc;
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
-import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.InternalEventKey;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
@@ -83,6 +82,8 @@ import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
+
+import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
 
 /** This acts as an interface to the database for subscriptions.
  *
@@ -362,8 +363,8 @@ class Events extends CalSvcDb implements EventsI {
         setupSharableEntity(event, getPrincipal().getPrincipalRef());
 
         if (ei.getNumContainedItems() > 0) {
-          for (EventInfo aei: ei.getContainedItems()) {
-            BwEvent av = aei.getEvent();
+          for (final EventInfo aei: ei.getContainedItems()) {
+            final BwEvent av = aei.getEvent();
             av.setParent(event);
 
             setupSharableEntity(av,
@@ -372,21 +373,21 @@ class Events extends CalSvcDb implements EventsI {
         }
       }
 
-      BwCalendar undereffedCal = cal;
+      final BwCalendar undereffedCal = cal;
 
       if (cal.getInternalAlias()) {
         /* Resolve the alias and put the event in it's proper place */
 
         //XXX This is probably OK for non-public admin
-        boolean setCats = getSvc().getPars().getPublicAdmin();
+        final boolean setCats = getSvc().getPars().getPublicAdmin();
 
         if (!setCats) {
           cal = getCols().resolveAlias(cal, true, false);
         } else {
           while (true) {
-            Set<BwCategory> cats = cal.getCategories();
+            final Set<BwCategory> cats = cal.getCategories();
 
-            for (BwCategory cat: cats) {
+            for (final BwCategory cat: cats) {
               event.addCategory(cat);
             }
 
@@ -976,10 +977,10 @@ class Events extends CalSvcDb implements EventsI {
       event.setContact(eeers.entity);
     }
 
-    BwLocation loc = event.getLocation();
+    final BwLocation loc = event.getLocation();
 
     if (loc != null) {
-      EnsureEntityExistsResult<BwLocation> eeerl =
+      final EnsureEntityExistsResult<BwLocation> eeerl =
               getSvc().getLocationsHandler().ensureExists(loc,
                                                           loc.getOwnerHref());
 
@@ -994,13 +995,11 @@ class Events extends CalSvcDb implements EventsI {
 
   /** Return all keys or all with a lastmod greater than or equal to that supplied.
    *
-   * <p>The lastmod allows us to redo the search after we have updated timezones
-   * to find all events added after we made the last call.
-   *
    * <p>Note the lastmod has a coarse granularity so it may need to be backed off
    * to ensure all events are covered if doing batches.
    *
-   * @param lastmod
+   * @param lastmod allows us to redo the search after we have updated timezones
+   *                 to find all events added after we made the last call.
    * @return collection of opaque key objects.
    * @throws CalFacadeException
    */
@@ -1364,20 +1363,24 @@ class Events extends CalSvcDb implements EventsI {
 
     // TODO - this all needs a rework
 
-    String entityType = IcalDefs.entityTypeIcalNames[ev.getEntityType()];
-    int calType;
+    final String entityType = IcalDefs.entityTypeIcalNames[ev.getEntityType()];
+    final int calType;
 
-    if (entityType.equals(Component.VEVENT)) {
-      calType = BwCalendar.calTypeCalendarCollection;
-    } else if (entityType.equals(Component.VTODO)) {
-      calType = BwCalendar.calTypeTasks;
-    } else if (entityType.equals(Component.VPOLL)) {
-      calType = BwCalendar.calTypePoll;
-    } else {
-      return null;
+    switch (entityType) {
+      case Component.VEVENT:
+        calType = BwCalendar.calTypeCalendarCollection;
+        break;
+      case Component.VTODO:
+        calType = BwCalendar.calTypeTasks;
+        break;
+      case Component.VPOLL:
+        calType = BwCalendar.calTypePoll;
+        break;
+      default:
+        return null;
     }
 
-    CoreCalendarsI.GetSpecialCalendarResult gscr =
+    final GetSpecialCalendarResult gscr =
             getCal().getSpecialCalendar(getPrincipal(), calType,
                                         true,
                                         PrivilegeDefs.privAny);
@@ -1398,15 +1401,15 @@ class Events extends CalSvcDb implements EventsI {
       return;
     }
 
-    BwOrganizer org = ev.getOrganizer();
+    final BwOrganizer org = ev.getOrganizer();
 
-    Collection<BwAttendee> atts = ev.getAttendees();
+    final Collection<BwAttendee> atts = ev.getAttendees();
 
     if (Util.isEmpty(atts) || (org == null)) {
       return;
     }
 
-    String curPrincipal = getSvc().getPrincipal().getPrincipalRef();
+    final String curPrincipal = getSvc().getPrincipal().getPrincipalRef();
     AccessPrincipal evPrincipal =
       getSvc().getDirectories().caladdrToPrincipal(org.getOrganizerUri());
 
@@ -1428,7 +1431,7 @@ class Events extends CalSvcDb implements EventsI {
       return;
     }
 
-    for (BwAttendee att: atts) {
+    for (final BwAttendee att: atts) {
       /* See if at least one attendee is us */
 
       evPrincipal = getSvc().getDirectories().caladdrToPrincipal(att.getAttendeeUri());
@@ -1458,16 +1461,16 @@ class Events extends CalSvcDb implements EventsI {
       ev = new BwEventProxy((BwEventAnnotation)ev);
     }
 
-    Set<EventInfo> overrides = new TreeSet<EventInfo>();
+    final Set<EventInfo> overrides = new TreeSet<EventInfo>();
     if (cei.getOverrides() != null) {
-      for (CoreEventInfo ocei: cei.getOverrides()) {
-        BwEventProxy op = (BwEventProxy)ocei.getEvent();
+      for (final CoreEventInfo ocei: cei.getOverrides()) {
+        final BwEventProxy op = (BwEventProxy)ocei.getEvent();
 
         overrides.add(new EventInfo(op));
       }
     }
 
-    EventInfo ei = new EventInfo(ev, overrides);
+    final EventInfo ei = new EventInfo(ev, overrides);
 
     /* Reconstruct if any contained items. */
     if (cei.getNumContainedItems() > 0) {

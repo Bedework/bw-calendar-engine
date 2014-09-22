@@ -186,7 +186,7 @@ public abstract class AbstractDirImpl implements Directories {
     this.cb = cb;
     this.caPrefixes = configs.getBasicSystemProperties().getCalAddrPrefixes();
     this.authCdinfo = configs.getCardDavInfo(true);
-    this.unauthCdinfo = configs.getCardDavInfo(false);;
+    this.unauthCdinfo = configs.getCardDavInfo(false);
     this.dirProps = configs.getDirConfig(getConfigName());
 
     debug = getLogger().isDebugEnabled();
