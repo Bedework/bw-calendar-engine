@@ -18,6 +18,8 @@
 */
 package org.bedework.dumprestore;
 
+import org.bedework.calfacade.annotations.Dump;
+import org.bedework.calfacade.base.DumpEntity;
 
 import org.bedework.util.misc.ToString;
 
@@ -26,16 +28,17 @@ import org.bedework.util.misc.ToString;
  * @author Mike Douglass
  * @version 1.0
  */
-public class AliasInfo {
-  private final String path;
+@Dump(elementName="alias", keyFields={"path"})
+public class AliasInfo extends DumpEntity<AliasInfo> {
+  private String path;
 
-  private final boolean publick;
+  private boolean publick;
 
-  private final String owner;
+  private String owner;
 
   private boolean external;
 
-  private final String targetPath;
+  private String targetPath;
 
   private boolean indirect;
 
@@ -44,6 +47,12 @@ public class AliasInfo {
   private boolean noAccess;
 
   private boolean noInvite;
+
+  /** Required for restore
+   *
+   */
+  public AliasInfo() {
+  }
 
   /**
    * @param path of the alias
@@ -67,16 +76,25 @@ public class AliasInfo {
    * @param owner the owner
    */
   public static AliasInfo getExternalSubInfo(final String path,
+                                             final String uri,
                                              final boolean publick,
                                              final String owner) {
-    final AliasInfo ai = new AliasInfo(path, null, publick, owner);
+    final AliasInfo ai = new AliasInfo(path, uri, publick, owner);
     ai.external = true;
 
     return ai;
   }
 
+  public void setPath(final String val) {
+    path = val;
+  }
+
   public String getPath() {
     return path;
+  }
+
+  public void setPublick(final boolean val) {
+    publick = val;
   }
 
   /**
@@ -86,6 +104,10 @@ public class AliasInfo {
     return publick;
   }
 
+  public void setOwner(final String val) {
+    owner = val;
+  }
+
   /**
    * @return owner principal href
    */
@@ -93,11 +115,19 @@ public class AliasInfo {
     return owner;
   }
 
+  public void setExternal(final boolean val) {
+    external = val;
+  }
+
   /**
    * @return true for an external subscription
    */
   public boolean getExternal() {
     return external;
+  }
+
+  public void setTargetPath(final String val) {
+    targetPath = val;
   }
 
   /**

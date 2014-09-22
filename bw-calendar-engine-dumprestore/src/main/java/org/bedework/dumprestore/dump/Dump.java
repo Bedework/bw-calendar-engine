@@ -21,9 +21,11 @@ package org.bedework.dumprestore.dump;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
+import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.InfoLines;
+import org.bedework.dumprestore.dump.dumpling.DumpAliases;
 import org.bedework.dumprestore.dump.dumpling.DumpAll;
 import org.bedework.dumprestore.dump.dumpling.ExtSubs;
 
@@ -42,9 +44,13 @@ import java.util.Map;
 public class Dump implements Defs {
   private transient Logger log;
 
-  /* Runtime arg -f Where we dump to.
+  /* Where we dump to.
    */
   private String fileName;
+
+  /* Where we dump aliases.
+   */
+  private String aliasesFileName;
 
   private final DumpGlobals globals = new DumpGlobals();
 
@@ -76,18 +82,38 @@ public class Dump implements Defs {
   }
 
   /**
+   * @param val - filename to dump to
+   */
+  public void setAliasesFilename(final String val) {
+    aliasesFileName = val;
+  }
+
+  /**
    * @throws Throwable
    */
   public void open() throws Throwable {
     globals.svci.open();
     globals.di = globals.svci.getDumpHandler();
+    boolean error = false;
 
     if (fileName == null) {
-      globals.setOut(new OutputStreamWriter(System.out));
-    } else {
-      globals.setOut(new OutputStreamWriter(new FileOutputStream(fileName),
-                                            "UTF-8"));
+      error("Must have an output file set");
+      error = true;
     }
+
+    if (aliasesFileName == null) {
+      error("Must have an output file for aliases set");
+      error = true;
+    }
+
+    if (error) {
+      return;
+    }
+
+    globals.setOut(new OutputStreamWriter(new FileOutputStream(fileName),
+                                          "UTF-8"),
+                   new OutputStreamWriter(new FileOutputStream(aliasesFileName),
+                                          "UTF-8"));
   }
 
   /**
@@ -105,6 +131,7 @@ public class Dump implements Defs {
    */
   public void doDump() throws Throwable {
     new DumpAll(globals).dumpSection(null);
+    new DumpAliases(globals).dumpSection(null);
   }
 
   /** Just get list of external subscriptions
@@ -125,7 +152,7 @@ public class Dump implements Defs {
   /**
    * @return table of aliases by path
    */
-  public Map<String, List<AliasInfo>> getAliasInfo() {
+  public Map<String, AliasEntry> getAliasInfo() {
     return globals.aliasInfo;
   }
 

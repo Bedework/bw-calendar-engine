@@ -20,14 +20,11 @@
 package org.bedework.dumprestore.restore.rules;
 
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
 import org.xml.sax.Attributes;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Mike Douglass   douglm   rpi.edu
@@ -64,6 +61,7 @@ public class CalendarRule extends EntityRule {
         globals.counts[globals.externalSubscriptions]++;
         globals.externalSubs.add(
                 AliasInfo.getExternalSubInfo(entity.getPath(),
+                                             entity.getAliasUri(),
                                              entity.getPublick(),
                                              entity.getOwnerHref()));
       } else if (entity.getInternalAlias() && !entity.getPublick()) {
@@ -73,13 +71,15 @@ public class CalendarRule extends EntityRule {
                                            target,
                                            entity.getPublick(),
                                            entity.getOwnerHref());
-        List<AliasInfo> ais = globals.aliasInfo.get(target);
+        AliasEntry ae = globals.aliasInfo.get(target);
 
-        if (ais == null) {
-          ais = new ArrayList<>();
-          globals.aliasInfo.put(target, ais);
+        if (ae == null) {
+          ae = new AliasEntry();
+          ae.setTargetPath(target);
+
+          globals.aliasInfo.put(target, ae);
         }
-        ais.add(ai);
+        ae.getAliases().add(ai);
         globals.counts[globals.aliases]++;
       }
     }

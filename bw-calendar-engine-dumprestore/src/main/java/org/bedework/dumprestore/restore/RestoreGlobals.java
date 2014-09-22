@@ -32,6 +32,7 @@ import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.RestoreIntf;
+import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.InfoLines;
@@ -258,7 +259,7 @@ public class RestoreGlobals extends Counters {
 
   /** Collections marked as aliases. We may need to fix sharing
    */
-  public Map<String, List<AliasInfo>> aliasInfo = new HashMap<>();
+  public Map<String, AliasEntry> aliasInfo = new HashMap<>();
 
   /** */
   public PrincipalMap principalsTbl = new PrincipalMap();

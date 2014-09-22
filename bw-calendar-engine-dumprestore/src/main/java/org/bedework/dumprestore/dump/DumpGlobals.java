@@ -50,6 +50,7 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.DumpIntf;
+import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.InfoLines;
@@ -73,6 +74,9 @@ public class DumpGlobals extends Counters {
   /** Use this to output xml */
   public XmlEmit xml;
 
+  /** Use this to output aliases xml */
+  public XmlEmit aliasesXml;
+
   /** Access to our data */
   public CalSvcI svci;
 
@@ -81,6 +85,9 @@ public class DumpGlobals extends Counters {
 
   /** */
   private Writer out;
+
+  /** */
+  private Writer aliasesOut;
 
   /** To track messages.
    *
@@ -93,7 +100,7 @@ public class DumpGlobals extends Counters {
 
   /** Collections marked as aliases. We may need to fix sharing
    */
-  public Map<String, List<AliasInfo>> aliasInfo = new HashMap<>();
+  public Map<String, AliasEntry> aliasInfo = new HashMap<>();
 
   /* Some counters */
 
@@ -102,14 +109,20 @@ public class DumpGlobals extends Counters {
   }
 
   /**
-   * @param val output writer
+   * @param val output writer for dump
+   * @param aliases output writer for aliases
    * @throws Throwable
    */
-  public void setOut(final Writer val) throws Throwable {
+  public void setOut(final Writer val,
+                     final Writer aliases) throws Throwable {
     out = val;
 
     xml = new XmlEmit();
     xml.startEmit(out);
+
+    aliasesOut = aliases;
+    aliasesXml = new XmlEmit();
+    aliasesXml.startEmit(aliases);
   }
 
   /**
@@ -119,6 +132,9 @@ public class DumpGlobals extends Counters {
     try {
       xml.flush();
       out.close();
+
+      aliasesXml.flush();
+      aliasesOut.close();
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }

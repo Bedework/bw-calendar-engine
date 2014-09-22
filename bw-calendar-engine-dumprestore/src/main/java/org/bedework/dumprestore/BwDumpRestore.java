@@ -33,7 +33,13 @@ import org.bedework.indexer.BwIndexCtlMBean;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.MBeanUtil;
 import org.bedework.util.timezones.DateTimeUtil;
+import org.bedework.util.xml.FromXml;
+import org.bedework.util.xml.XmlUtil;
 
+import org.w3c.dom.Element;
+
+import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +57,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
   /* Collections marked as aliases. We may need to fix sharing
    */
-  private Map<String, List<AliasInfo>> aliasInfo = new HashMap<>();
+  private Map<String, AliasEntry> aliasInfo = new HashMap<>();
 
   private boolean allowRestore;
 
@@ -170,18 +176,9 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
         if (dumpAll) {
           infoLines.addLn("Started dump of data");
-          final StringBuilder fname = new StringBuilder(getDataOut());
-          if (!getDataOut().endsWith("/")) {
-            fname.append("/");
-          }
 
-          fname.append(getDataOutPrefix());
-
-          /* append "yyyyMMddTHHmmss" */
-          fname.append(DateTimeUtil.isoDateTime());
-          fname.append(".xml");
-
-          d.setFilename(fname.toString());
+          d.setFilename(makeFilename(getDataOutPrefix()));
+          d.setAliasesFilename(makeFilename("aliases-" + getDataOutPrefix()));
 
           d.open();
 
@@ -382,10 +379,10 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         int errorCt = 0;
 
         for (final String target: aliasInfo.keySet()) {
-          final List<AliasInfo> ais = aliasInfo.get(target);
+          final AliasEntry ae = aliasInfo.get(target);
 
           fix:
-          for (final AliasInfo ai: ais) {
+          for (final AliasInfo ai: ae.getAliases()) {
             final CalSvcI svci = getSvci(ai);
 
             if (ai.getPublick()) {
@@ -616,6 +613,65 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   }
 
   @Override
+  public String loadAliasInfo(final String path) {
+    try {
+      final FromXml fxml = new FromXml();
+
+      final Element el = fxml.parseXml(new FileInputStream(path));
+
+      if (!el.getTagName().equals(Defs.aliasInfoTag)) {
+        return "Not an alias-info dump file - incorrect root element " +
+                el;
+      }
+
+      externalSubs = new ArrayList<>();
+      aliasInfo = new HashMap<>();
+
+      for (final Element child: XmlUtil.getElementsArray(el)) {
+        if (child.getTagName().equals(Defs.majorVersionTag)) {
+          continue;
+        }
+
+        if (child.getTagName().equals(Defs.minorVersionTag)) {
+          continue;
+        }
+
+        if (child.getTagName().equals(Defs.versionTag)) {
+          continue;
+        }
+
+        if (child.getTagName().equals(Defs.dumpDateTag)) {
+          continue;
+        }
+
+        if (child.getTagName().equals(Defs.extsubsTag)) {
+          for (final Element extSubEl: XmlUtil.getElementsArray(child)) {
+            externalSubs.add((AliasInfo)fxml.fromXml(extSubEl, AliasInfo.class));
+          }
+
+          continue;
+        }
+
+        if (child.getTagName().equals(Defs.aliasesTag)) {
+          for (final Element aliasEl: XmlUtil.getElementsArray(child)) {
+            final AliasEntry ae = (AliasEntry)fxml.fromXml(aliasEl,
+                                                           AliasEntry.class);
+            aliasInfo.put(ae.getTargetPath(), ae);
+          }
+
+          continue;
+        }
+
+        return "Not an alias-info dump file: unexpected element " + child;
+      }
+      return "Ok";
+    } catch (final Throwable t) {
+      error(t);
+      return t.getMessage();
+    }
+  }
+
+  @Override
   public String fetchExternalSubs() {
     try {
       dump = new DumpThread(false);
@@ -755,6 +811,21 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
       error(t);
       return false;
     }
+  }
+
+  private String makeFilename(final String val) throws Throwable {
+    final StringBuilder fname = new StringBuilder(getDataOut());
+    if (!getDataOut().endsWith("/")) {
+      fname.append("/");
+    }
+
+    fname.append(val);
+
+    /* append "yyyyMMddTHHmmss" */
+    fname.append(DateTimeUtil.isoDateTime());
+    fname.append(".xml");
+
+    return fname.toString();
   }
 
   /** Get an svci object and return it. Also embed it in this object.

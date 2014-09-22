@@ -178,4 +178,18 @@ public interface Defs {
 
   /** */
   public static final String objectColLastmod = "col-lastmod";
+
+  /* ====================================================================
+   *                      Tag names for aliases dump
+   * ==================================================================== */
+
+  /** */
+  public static final String aliasInfoTag = "alias-info";
+
+  /** */
+  public static final String aliasesTag = "aliases";
+
+  /** */
+  public static final String extsubsTag = "extsubs";
+
 }

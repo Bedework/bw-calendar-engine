@@ -71,6 +71,14 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
   @MBeanInfo("Show state of current restore")
   List<String> restoreStatus();
 
+  /** Load alias and external subscription info from a file.
+   *
+   * @param path  to file.
+   * @return Completion messages and stats
+   */
+  @MBeanInfo("Load alias and external subscription info from a file")
+  String loadAliasInfo(@MBeanInfo("Path to file")String path);
+
   /** Scan the system data looking for external subscriptions. When complete
    * the data can be used by checkExternalSubs
    *

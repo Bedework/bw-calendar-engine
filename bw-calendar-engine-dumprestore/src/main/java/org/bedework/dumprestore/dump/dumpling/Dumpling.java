@@ -18,23 +18,27 @@
 */
 package org.bedework.dumprestore.dump.dumpling;
 
-import org.apache.log4j.Logger;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.BwVersion;
 import org.bedework.calfacade.base.DumpEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.dump.DumpGlobals;
 import org.bedework.util.misc.Util;
+import org.bedework.util.timezones.DateTimeUtil;
+import org.bedework.util.xml.XmlEmit;
 
-import javax.xml.namespace.QName;
-import java.util.ArrayList;
+import org.apache.log4j.Logger;
+
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
+
+import javax.xml.namespace.QName;
 
 /** Helper classes for the calendar data dump utility.
  *
@@ -52,6 +56,8 @@ public class Dumpling<T extends DumpEntity> implements Defs {
 
   private transient Logger log;
 
+  protected XmlEmit xml;
+
   /**
    * @param globals our global stuff
    * @param sectionTag xml output tag
@@ -59,10 +65,12 @@ public class Dumpling<T extends DumpEntity> implements Defs {
    */
   public Dumpling(final DumpGlobals globals,
                   final QName sectionTag,
-                  final int countIndex) {
+                  final int countIndex,
+                  final XmlEmit xml) {
     this.globals = globals;
     this.sectionTag = sectionTag;
     this.countIndex = countIndex;
+    this.xml = xml;
   }
 
   /** Dump the whole section e.g. locations or events.
@@ -82,6 +90,26 @@ public class Dumpling<T extends DumpEntity> implements Defs {
     dumpCollection(it);
 
     tagEnd(sectionTag);
+  }
+
+  protected void versionDate() throws Throwable {
+    xml.property(new QName(majorVersionTag),
+                 String.valueOf(BwVersion.bedeworkMajorVersion));
+    xml.property(new QName(minorVersionTag),
+                 String.valueOf(BwVersion.bedeworkMinorVersion));
+    if (BwVersion.bedeworkUpdateVersion != 0) {
+      xml.property(new QName(updateVersionTag),
+                   String.valueOf(BwVersion.bedeworkUpdateVersion));
+    }
+
+    if (BwVersion.bedeworkPatchLevel != null) {
+      xml.property(new QName(patchLevelTag),
+                   BwVersion.bedeworkPatchLevel);
+    }
+
+    xml.property(new QName(versionTag), BwVersion.bedeworkVersion);
+
+    xml.property(new QName(dumpDateTag), DateTimeUtil.isoDateTime());
   }
 
   private void dumpCollection(final Iterator<T> it) throws Throwable {
@@ -110,7 +138,7 @@ public class Dumpling<T extends DumpEntity> implements Defs {
       }
 
       /* Just dump any remaining classes - no special treatment */
-      d.dump(globals.xml);
+      d.dump(xml);
     }
   }
 
@@ -122,14 +150,14 @@ public class Dumpling<T extends DumpEntity> implements Defs {
                     Util.buildPath(false, r.getColPath(), "/", r.getName()));
     }
 
-    r.dump(globals.xml);
+    r.dump(xml);
 
     // Let GC take it away
     r.setContent(null);
   }
 
   private void dumpCollection(final BwCalendar col) throws Throwable {
-    col.dump(globals.xml);
+    col.dump(xml);
 
     if (col.getInternalAlias() && !col.getTombstoned()) {
       final String target = col.getInternalAliasPath();
@@ -138,19 +166,22 @@ public class Dumpling<T extends DumpEntity> implements Defs {
                                          target,
                                          col.getPublick(),
                                          col.getOwnerHref());
-      List<AliasInfo> ais = globals.aliasInfo.get(target);
+      AliasEntry ae = globals.aliasInfo.get(target);
 
-      if (ais == null) {
-        ais = new ArrayList<>();
-        globals.aliasInfo.put(target, ais);
+      if (ae == null) {
+        ae = new AliasEntry();
+        ae.setTargetPath(target);
+
+        globals.aliasInfo.put(target, ae);
       }
-      ais.add(ai);
+      ae.getAliases().add(ai);
       globals.counts[globals.aliases]++;
     }
 
     if (col.getExternalSub() && !col.getTombstoned()) {
       globals.counts[globals.externalSubscriptions]++;
       globals.externalSubs.add(AliasInfo.getExternalSubInfo(col.getPath(),
+                                                            col.getAliasUri(),
                                                             col.getPublick(),
                                                             col.getOwnerHref()));
     }
@@ -165,7 +196,7 @@ public class Dumpling<T extends DumpEntity> implements Defs {
   }
 
   private void dumpEvent(final BwEvent ev) throws Throwable {
-    ev.dump(globals.xml);
+    ev.dump(xml);
 
     if (ev.getOverrides() != null) {
       globals.counts[globals.eventOverrides] += ev.getOverrides().size();
@@ -185,11 +216,11 @@ public class Dumpling<T extends DumpEntity> implements Defs {
   }
 
   protected void tagStart(final QName tag) throws Throwable {
-    globals.xml.openTag(tag);
+    xml.openTag(tag);
   }
 
   protected void tagEnd(final QName tag) throws Throwable {
-    globals.xml.closeTag(tag);
+    xml.closeTag(tag);
   }
 
   protected Logger getLog() {

@@ -78,6 +78,7 @@ public class ExtSubs implements Defs {
         globals.counts[globals.externalSubscriptions]++;
         globals.externalSubs.add(
                 AliasInfo.getExternalSubInfo(col.getPath(),
+                                             col.getAliasUri(),
                                              col.getPublick(),
                                              col.getOwnerHref()));
       }

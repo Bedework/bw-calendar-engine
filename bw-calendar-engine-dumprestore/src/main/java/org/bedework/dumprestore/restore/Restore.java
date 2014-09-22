@@ -27,6 +27,7 @@ import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
+import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.InfoLines;
@@ -149,7 +150,7 @@ public class Restore implements Defs {
   /**
    * @return table of aliases by path
    */
-  public Map<String, List<AliasInfo>> getAliasInfo() {
+  public Map<String, AliasEntry> getAliasInfo() {
     return globals.aliasInfo;
   }
 
