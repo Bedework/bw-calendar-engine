@@ -70,19 +70,21 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
   private String email;
   private String dept;
 
+  private List<BwPrincipalInfo> members;
+
   /** Class for properties collection.
    *
    * @param <T>
    */
   public static class PrincipalProperty<T> implements Comparable<PrincipalProperty> {
     /** Name of property */
-    private String name;
+    private final String name;
     /** Value of property */
-    private T val;
+    private final T val;
 
     /**
-     * @param name
-     * @param val
+     * @param name of property
+     * @param val of property
      */
     public PrincipalProperty(final String name,
                              final T val) {
@@ -215,7 +217,7 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
   public static final int ptypeImage = 3;
 
   /** */
-  public static final boolean isMulti = true;;
+  public static final boolean isMulti = true;
 
   /** Info about properties */
   public static class PrincipalPropertyInfo {
@@ -270,7 +272,7 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
   }
 
   private static final Map<String, PrincipalPropertyInfo> pinfoMap =
-    new HashMap<String, PrincipalPropertyInfo>();
+    new HashMap<>();
 
   static {
     // Type of principal
@@ -436,6 +438,21 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
    */
   public List<PrincipalProperty> getProperties() {
     return properties;
+  }
+
+  /** The members of the group.
+   *
+   * @param val list of members
+   */
+  public void setMembers(final List<BwPrincipalInfo> val) {
+    members = val;
+  }
+
+  /**
+   * @return Info on members
+   */
+  public List<BwPrincipalInfo> getMembers() {
+    return members;
   }
 
   /* ====================================================================
