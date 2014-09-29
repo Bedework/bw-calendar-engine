@@ -67,6 +67,15 @@
 			<artifactId>ical4j</artifactId>
 		</dependency>
      -->
+    <dependency>
+      <groupId>net.fortuna.ical4j</groupId>
+      <artifactId>ical4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mnode.ical4j</groupId>
+      <artifactId>ical4j-vcard</artifactId>
+    </dependency>
+    <!--
 		<dependency>
 			<groupId>org.mnode.ical4j</groupId>
 			<artifactId>ical4j-vcard</artifactId>
@@ -81,6 +90,7 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
 		</dependency>
+	-->
 	</dependencies>
 	<build>
 		<plugins>
