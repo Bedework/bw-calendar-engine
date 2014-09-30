@@ -28,6 +28,9 @@
     <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.5" level="project" />
     <orderEntry type="library" name="Maven: commons-lang:commons-lang:2.4" level="project" />
     <orderEntry type="library" name="Maven: backport-util-concurrent:backport-util-concurrent:3.1" level="project" />
+    <orderEntry type="library" name="Maven: org.mnode.ical4j:ical4j-vcard:0.9.6-BW-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.mnode.ical4j:ical4j:1.0.4" level="project" />
+    <orderEntry type="library" name="Maven: commons-io:commons-io:2.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpclient:4.2.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.2.2" level="project" />
     <orderEntry type="library" name="Maven: jtidy:jtidy:4aug2000r7-dev" level="project" />
@@ -64,6 +67,7 @@
     <orderEntry type="module" module-name="bw-util-timezones" />
     <orderEntry type="module" module-name="bw-webdav" />
     <orderEntry type="module" module-name="bw-util-servlet" />
+    <orderEntry type="module" module-name="bw-util-vcard" />
     <orderEntry type="module" module-name="bw-caldav-util" />
     <orderEntry type="module" module-name="bw-ws-synchws" />
     <orderEntry type="module" module-name="bw-ws-caldav" />
@@ -76,8 +80,6 @@
     <orderEntry type="library" name="Maven: org.apache.james:apache-mime4j-dom:0.7" level="project" />
     <orderEntry type="library" name="Maven: dnsjava:dnsjava:2.1.1" level="project" />
     <orderEntry type="module" module-name="bw-caldav-server" />
-    <orderEntry type="library" name="Maven: org.mnode.ical4j:ical4j-vcard:0.9.6-BW-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: commons-io:commons-io:2.3" level="project" />
     <orderEntry type="library" name="Maven: org.hibernate:hibernate-core:3.6.9.Final" level="project" />
     <orderEntry type="library" name="Maven: commons-collections:commons-collections:3.1" level="project" />
     <orderEntry type="library" name="Maven: dom4j:dom4j:1.6.1" level="project" />
