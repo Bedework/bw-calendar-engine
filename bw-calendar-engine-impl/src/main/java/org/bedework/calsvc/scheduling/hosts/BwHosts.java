@@ -278,6 +278,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
       hi = new HostInfo();
       hi.setHostname(domain);
       hi.setSupportsISchedule(true);
+      hi.setIScheduleUrl(domain);
 
       return hi;
     } catch (URISyntaxException use) {

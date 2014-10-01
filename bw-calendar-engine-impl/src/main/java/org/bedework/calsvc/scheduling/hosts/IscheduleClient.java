@@ -266,7 +266,22 @@ public class IscheduleClient {
       }
       */
 
-      String url = "https://" + hi.getHostname() + "/.well-known/ischedule";
+      String scheme;
+      String port;
+
+      if (hi.getPort() == 0) {
+        port = "";
+      } else {
+        port = ":" + hi.getPort();
+      }
+
+      if (hi.getSecure()) {
+        scheme = "https://";
+      } else {
+        scheme = "http://";
+      }
+
+      String url = scheme + hi.getIScheduleUrl() + port + "/.well-known/ischedule";
 
       cio = getCio(url);
 

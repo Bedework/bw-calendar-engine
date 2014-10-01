@@ -68,6 +68,10 @@ public class BwInoutSched extends ConfBase
    */
   public BwInoutSched() {
     super("org.bedework.bwengine:service=BwInoutSched");
+
+    isched = new BwHosts();
+    register("ischedconf", "ischedconf", isched);
+    isched.loadConfigs();
   }
 
   @Override
@@ -122,18 +126,6 @@ public class BwInoutSched extends ConfBase
 
   @Override
   public void create() {
-    try {
-      /* Register the carddav mbean and load the configs. */
-
-      getManagementContext().start();
-
-      isched = new BwHosts();
-      register("ischedconf", "ischedconf", isched);
-      isched.loadConfigs();
-    } catch (Throwable t) {
-      error("Failed to create service");
-      error(t);
-    }
   }
 
   @Override

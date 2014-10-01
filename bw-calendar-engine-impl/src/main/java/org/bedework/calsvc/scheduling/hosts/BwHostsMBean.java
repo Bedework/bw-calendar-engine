@@ -44,7 +44,8 @@ public interface BwHostsMBean extends ConfBaseMBean {
    * @param pw
    * @return status message
    */
-  String addIscheduleHost(@MBeanInfo("hostname") String hostname,
+  @MBeanInfo("Add a sttaic definition of a host")
+  String addIscheduleHost(@MBeanInfo("domain on cuas") String hostname,
                           @MBeanInfo("port") int port,
                           @MBeanInfo("secure") boolean secure,
                           @MBeanInfo("url") String url,
