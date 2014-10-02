@@ -42,6 +42,7 @@ import org.xml.sax.SAXException;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -71,7 +72,7 @@ public class IscheduleClient {
    * of calls to the same host + port combination it makes sense to preserve
    * the objects between calls.
    */
-  private HashMap<String, BasicHttpClient> cioTable = new HashMap<String, BasicHttpClient>();
+  private HashMap<String, BasicHttpClient> cioTable = new HashMap<>();
 
   private PrivateKeys pkeys;
 
@@ -331,6 +332,24 @@ public class IscheduleClient {
             error("Got response " + rcode +
                   ", host " + hi.getHostname() +
                   " and url " + url);
+
+            if (cio.getResponseContentLength() != 0) {
+              InputStream is = cio.getResponseBodyAsStream();
+
+              LineNumberReader in
+                      = new LineNumberReader(new InputStreamReader(is));
+
+              error("Content: ==========================");
+              while (true) {
+                String l = in.readLine();
+                if (l == null) {
+                  break;
+                }
+
+                error(l);
+              }
+              error("End content: ==========================");
+            }
           }
 
           throw new CalFacadeException("Got response " + rcode +
@@ -556,7 +575,7 @@ public class IscheduleClient {
                 ", host " + hi.getHostname() +
                 " and url " + url);
 
-          hi.setIScheduleUrl(null);
+//          hi.setIScheduleUrl(null);
           cio.release();
           discover(hi);
           continue;

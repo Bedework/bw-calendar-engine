@@ -152,9 +152,9 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
 
       ConfigurationStore cfs = getStore();
 
-      hostInfos = new ArrayList<HostInfo>();
+      hostInfos = new ArrayList<>();
 
-      Collection<String> hostNames = cfs.getConfigs();
+      final Collection<String> hostNames = cfs.getConfigs();
 
       if (hostNames.isEmpty()) {
         return "No hosts";
