@@ -96,6 +96,7 @@ import net.fortuna.ical4j.model.property.PercentComplete;
 import net.fortuna.ical4j.model.property.PollItemId;
 import net.fortuna.ical4j.model.property.PollMode;
 import net.fortuna.ical4j.model.property.PollProperties;
+import net.fortuna.ical4j.model.property.PollWinner;
 import net.fortuna.ical4j.model.property.Priority;
 import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
@@ -624,6 +625,12 @@ public class VEventUtil extends IcalUtil {
      // }
 
       if (vpoll) {
+        final Integer ival = val.getPollWinner();
+
+        if (ival != null) {
+          pl.add(new PollWinner(ival));
+        }
+
         strval = val.getPollAcceptResponse();
 
         if ((strval != null) && (strval.length() > 0)) {
