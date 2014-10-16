@@ -27,6 +27,9 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvcDb;
 import org.bedework.calsvci.CalSvcI;
+import org.bedework.util.calendar.IcalDefs;
+
+import java.util.Collection;
 
 /** Abstract class to support processing of inbox scheduling messages.
  *
@@ -99,49 +102,48 @@ public abstract class InProcessor extends CalSvcDb {
 
     final BwEvent ev = ei.getEvent();
 
+    final boolean vpoll = ev.getEntityType() ==
+            IcalDefs.entityTypeVpoll;
+
     if (delete) {
       getSvc().getEventsHandler().delete(ei, false);
     } else {
-      /* Delete other notifications for the same event
-       * NOTE: DON'T - this was deleting changes that had to
-       * be processed. Still an opportunity to improve this though.
-       * /
-
-       RecurringRetrievalMode rrm =
-         new RecurringRetrievalMode(Rmode.overrides);
-
-      Collection<EventInfo> inevs = getEvents(ev.getColPath(),
-                                              ev.getUid(),
-                                              ev.getRecurrenceId(),
-                                              true,
-                                              rrm);
-
-      for (EventInfo inei: inevs) {
-        BwEvent inev = inei.getEvent();
-
-        if (inev.getScheduleState() != BwEvent.scheduleStateProcessed) {
-          continue;
-        }
-
-        /* Discard the earlier message * /
-
-        if (debug) {
-          trace("delete earlier? event from inbox: " + inev.getName());
-        }
-        deleteEvent(inei, true, false);
-      }
-      */
-
-      if (debug) {
-        trace("set event to scheduleStateProcessed: " + ev.getName());
-      }
-      ev.setScheduleState(BwEvent.scheduleStateProcessed);
-      BwCalendar inbox = getSvc().getCalendarsHandler().
+      final BwCalendar inbox = getSvc().getCalendarsHandler().
               getSpecial(BwCalendar.calTypeInbox, false);
       if (inbox == null) {
         return;
       }
 
+      if (vpoll) {
+        /* Delete other notifications for the same event
+         * NOTE: DON'T for non-vpoll - this was deleting changes that had to
+         * be processed. Still an opportunity to improve this though.
+         */
+
+        final Collection<EventInfo> inevs = getEvents(inbox.getPath(),
+                                                      ev.getUid());
+
+        for (final EventInfo inei : inevs) {
+          final BwEvent inev = inei.getEvent();
+
+          if (inev.getScheduleState() != BwEvent.scheduleStateProcessed) {
+            continue;
+          }
+
+          /* Discard the earlier message */
+
+          if (debug) {
+            trace("delete earlier? event from inbox: " + inev
+                    .getName());
+          }
+          deleteEvent(inei, true, false);
+        }
+      }
+
+      if (debug) {
+        trace("set event to scheduleStateProcessed: " + ev.getName());
+      }
+      ev.setScheduleState(BwEvent.scheduleStateProcessed);
       ev.setColPath(inbox.getPath());
       getSvc().getEventsHandler().update(ei, true, null);
     }
