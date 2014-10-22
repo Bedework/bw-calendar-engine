@@ -691,8 +691,14 @@ public class InRequest extends InProcessor {
 
       ourEv.clearPollItems();
 
-      for (String s: inEv.getPollItems()) {
+      for (final String s: inEv.getPollItems()) {
         ourEv.addPollItem(s);
+      }
+
+      final Integer pw = inEv.getPollWinner();
+
+      if (pw != null) {
+        ourEv.setPollWinner(pw);
       }
     } catch (final Throwable t) {
       throw new CalFacadeException(t);

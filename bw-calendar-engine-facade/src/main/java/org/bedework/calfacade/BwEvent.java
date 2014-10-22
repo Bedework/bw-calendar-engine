@@ -4496,6 +4496,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     ts.append("pollCandidate", getPollCandidate());
 
     if (getEntityType() == IcalDefs.entityTypeVpoll) {
+      ts.append("pollWinner", getPollWinner());
       ts.append("pollMode", getPollMode());
       ts.append("pollProperties", getPollProperties());
       ts.append("pollAcceptResponse", getPollAcceptResponse());
@@ -4576,7 +4577,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumComments() > 0) {
       ev.setComments(null);
 
-      for (BwString str: getComments()) {
+      for (final BwString str: getComments()) {
         ev.addComment((BwString)str.clone());
       }
     }
@@ -4584,7 +4585,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumSummaries() > 0) {
       ev.setSummaries(null);
 
-      for (BwString str: getSummaries()) {
+      for (final BwString str: getSummaries()) {
         ev.addSummary((BwString)str.clone());
       }
     }
@@ -4592,7 +4593,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumDescriptions() > 0) {
       ev.setDescriptions(null);
 
-      for (BwLongString str: getDescriptions()) {
+      for (final BwLongString str: getDescriptions()) {
         ev.addDescription((BwLongString)str.clone());
       }
     }
@@ -4600,7 +4601,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumResources() > 0) {
       ev.setResources(null);
 
-      for (BwString str: getResources()) {
+      for (final BwString str: getResources()) {
         ev.addResource((BwString)str.clone());
       }
     }
@@ -4617,7 +4618,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
     //ev.setRequestStatuses(clone(getRequestStatuses()));
 
-    BwRelatedTo rt = getRelatedTo();
+    final BwRelatedTo rt = getRelatedTo();
     if (rt != null) {
       ev.setRelatedTo((BwRelatedTo)rt.clone());
     }
@@ -4639,7 +4640,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
 
     if (!Util.isEmpty(getPollItems())) {
-      for (String s: getPollItems()) {
+      for (final String s: getPollItems()) {
         ev.addPollItem(s);
       }
     }
@@ -4652,7 +4653,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public BwEvent cloneTombstone() {
-    BwEvent ev = new BwEventObj();
+    final BwEvent ev = new BwEventObj();
 
     super.copyTo(ev);
     ev.setEntityType(getEntityType());
@@ -4683,7 +4684,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   /** Check for a valid transparency - null is invalid
    *
-   * @param val
+   * @param val - possible transparency value
    * @return boolean true = it's OK
    */
   @NoProxy
@@ -4725,7 +4726,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public boolean getSuppressed() {
-    String s = getStatus();
+    final String s = getStatus();
 
     if (s == null) {
       return false;
@@ -4815,7 +4816,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 
@@ -4852,26 +4853,26 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *  =================================================================== */
 
   /**
-   * @param val
+   * @param val number to convert to hex
    * @return a 4 digit hex value
    */
   @NoProxy
   public static String hex4(final int val) {
-    String formatted = Integer.toHexString(val % 32001);
-    StringBuilder buf = new StringBuilder("0000");
+    final String formatted = Integer.toHexString(val % 32001);
+    final StringBuilder buf = new StringBuilder("0000");
     buf.replace(4 - formatted.length(), 4, formatted);
 
     return buf.toString();
   }
 
   /**
-   * @param val
+   * @param val - nanoseconds
    * @return a 4 digit hex value
    */
   @NoProxy
   public static String hex4FromNanos(final int val) {
-    String formatted = Integer.toHexString(val / 100000);
-    StringBuilder buf = new StringBuilder("0000");
+    final String formatted = Integer.toHexString(val / 100000);
+    final StringBuilder buf = new StringBuilder("0000");
     buf.replace(4 - formatted.length(), 4, formatted);
 
     return buf.toString();
@@ -4886,9 +4887,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       return null;
     }
 
-    TreeSet<T> ts = new TreeSet<T>();
+    final TreeSet<T> ts = new TreeSet<T>();
 
-    for (T ent: c) {
+    for (final T ent: c) {
       ts.add(ent);
     }
 
