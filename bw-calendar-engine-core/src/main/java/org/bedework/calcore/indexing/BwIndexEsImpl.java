@@ -752,8 +752,18 @@ public class BwIndexEsImpl implements BwIndexer {
 
       markUpdated();
 
-      /* final IndexResponse resp = */index(rec);
+      final IndexResponse resp = index(rec);
+
+      if (debug) {
+        debug("IndexResponse: index=" + resp.getIndex() +
+                      " id=" + resp.getId() +
+                      " type=" + resp.getType() +
+                      " version=" + resp.getVersion());
+      }
     } catch (final Throwable t) {
+      if (debug) {
+        error(t);
+      }
       throw new CalFacadeException(t);
     } finally {
       lastIndexTime = System.currentTimeMillis();
