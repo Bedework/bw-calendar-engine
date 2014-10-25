@@ -168,7 +168,7 @@ public class ESQueryFilter implements CalintfDefs {
   public FilterBuilder multiHrefFilter(final Set<String> hrefs) throws CalFacadeException {
     FilterBuilder fb = null;
 
-    for (String href: hrefs) {
+    for (final String href: hrefs) {
       fb = or(fb, addTerm(hrefJname, href));
     }
 

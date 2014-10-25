@@ -1095,10 +1095,18 @@ public class BwIndexEsImpl implements BwIndexer {
       hrefs.add((String)hrefField.getValue());
     }
 
-    final SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
+    final SearchRequestBuilder srb = getClient().prepareSearch(searchIndexes);
 
     srb.setSearchType(SearchType.QUERY_THEN_FETCH)
             .setPostFilter(getFilters(null).multiHrefFilter(hrefs));
+    srb.setFrom(0);
+    srb.setSize(hrefs.size());
+
+    if (debug) {
+      debug("MultiFetch: targetIndex=" + targetIndex +
+                    "; srb=" + srb);
+    }
+
     final SearchResponse resp = srb.execute().actionGet();
 
     if (resp.status() != RestStatus.OK) {
