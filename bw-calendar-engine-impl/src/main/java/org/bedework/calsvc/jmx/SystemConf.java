@@ -105,6 +105,16 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
+  public void setFeatureFlags(final String val) {
+    getConfig().setFeatureFlags(val);
+  }
+
+  @Override
+  public String getFeatureFlags() {
+    return getConfig().getFeatureFlags();
+  }
+
+  @Override
   public void setAdminContact(final String val) {
     getConfig().setAdminContact(val);
   }

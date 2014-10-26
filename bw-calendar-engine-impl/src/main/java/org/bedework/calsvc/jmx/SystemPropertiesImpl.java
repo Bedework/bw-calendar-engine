@@ -42,6 +42,8 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private String rootUsers;
 
+  private String featureFlags;
+
   private String userauthClass;
   private String mailerClass;
   private String admingroupsClass;
@@ -115,6 +117,16 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   @Override
   public String getRootUsers() {
     return rootUsers;
+  }
+
+  @Override
+  public void setFeatureFlags(final String val) {
+    featureFlags = val;
+  }
+
+  @Override
+  public String getFeatureFlags() {
+    return featureFlags;
   }
 
   @Override

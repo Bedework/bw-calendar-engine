@@ -76,12 +76,22 @@ public final class ROSystemProperties implements SystemProperties {
 
   @Override
   public void setRootUsers(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setRootUsers(val);
+    throw new RuntimeException("Immutable");
   }
 
   @Override
   public String getRootUsers() {
     return getConfig().getRootUsers();
+  }
+
+  @Override
+  public void setFeatureFlags(final String val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public String getFeatureFlags() {
+    return getConfig().getFeatureFlags();
   }
 
   @Override
