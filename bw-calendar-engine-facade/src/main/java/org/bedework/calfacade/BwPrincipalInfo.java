@@ -25,11 +25,13 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.vcard.JsonCardBuilder;
 
 import net.fortuna.ical4j.vcard.Property;
+import net.fortuna.ical4j.vcard.Property.Id;
 import net.fortuna.ical4j.vcard.VCard;
 import net.fortuna.ical4j.vcard.VCardBuilder;
 import net.fortuna.ical4j.vcard.property.AutoSchedule;
 import net.fortuna.ical4j.vcard.property.Capacity;
 import net.fortuna.ical4j.vcard.property.Categories;
+import net.fortuna.ical4j.vcard.property.Kind;
 import net.fortuna.ical4j.vcard.property.MaxInstances;
 import net.fortuna.ical4j.vcard.property.NoCost;
 
@@ -69,6 +71,10 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
   private String phone;
   private String email;
   private String dept;
+
+  private String caladruri;
+
+  private String kind;
 
   private List<BwPrincipalInfo> members;
 
@@ -284,6 +290,8 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
     addPinfo(Property.Id.N, "n");       // Structured name - see vcard
     addPinfo(null, "vcard");   // vcard if available
     addPinfo(Property.Id.ORG, "ou");      // Organizational unit - vcard url?
+    addPinfo(Id.EMAIL, "email");
+    addPinfo(Id.CALADRURI, "caladruri");
 
     // Descriptive
     addPinfo(Property.Id.CATEGORIES, "category", isMulti);
@@ -424,6 +432,31 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
     return dept;
   }
 
+  /**
+   * @param val
+   */
+  public void setKind(final String val) {
+    kind = val;
+  }
+
+  /**
+   * @return  String kind
+   */
+  public String getKind() {
+    return kind;
+  }
+
+  /**
+   * @param val
+   */
+  public void setCaladruri(final String val) {
+    caladruri = val;
+  }
+
+  public String getCaladruri() {
+    return caladruri;
+  }
+
   /** The properties are any other properties thought to be useful. All of type
    * PrincipalProperty.
    *
@@ -474,16 +507,16 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
   }
 
   /**
-   * @param name
+   * @param name of property
    * @return first property found or null
    */
   public PrincipalProperty findProperty(final String name) {
-    List<PrincipalProperty> l = getProperties();
+    final List<PrincipalProperty> l = getProperties();
     if (l == null) {
       return null;
     }
 
-    for (PrincipalProperty p: l) {
+    for (final PrincipalProperty p: l) {
       if (name.equalsIgnoreCase(p.getName())) {
         return p;
       }
@@ -493,17 +526,17 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
   }
 
   /**
-   * @param name
+   * @param name of property
    * @return (Possibly empty) List of PrincipalProperty values with given name
    */
   public List<PrincipalProperty> getProperties(final String name) {
-    List<PrincipalProperty> res = new ArrayList<PrincipalProperty>();;
-    List<PrincipalProperty> l = getProperties();
+    final List<PrincipalProperty> res = new ArrayList<>();
+    final List<PrincipalProperty> l = getProperties();
     if (l == null) {
       return res;
     }
 
-    for (PrincipalProperty p: l) {
+    for (final PrincipalProperty p: l) {
       if (name.equalsIgnoreCase(p.getName())) {
         res.add(p);
       }
@@ -520,6 +553,7 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
                           final Property p) {
     switch (p.getId()) {
     case KIND:
+      setKind(p.getValue());
       addProperty(new PrincipalProperty<String>("kind", p.getValue()));
       // addPinfo(null, "principal-class", ptypeInt);    // Provide finer grained classification
       break;
@@ -529,7 +563,30 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
       break;
 
     case N:
+      if (p.getValue() == null) {
+        break;
+      }
+
+      final String[] split = p.getValue().split(",");
+      if (split.length > 0) {
+        setLastname(split[0]);
+      }
+
+      if (split.length > 1) {
+        setFirstname(split[1]);
+      }
+
       addProperty(new PrincipalProperty<String>("n", p.getValue()));
+      break;
+
+    case CALADRURI:
+      setCaladruri(p.getValue());
+      addProperty(new PrincipalProperty<String>("caladruri", p.getValue()));
+      break;
+
+    case EMAIL:
+      setEmail(p.getValue());
+      addProperty(new PrincipalProperty<String>("email", p.getValue()));
       break;
 
     case ORG:
@@ -636,9 +693,23 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
         card = new VCardBuilder(new StringReader(cardStr)).build();
       }
 
-      final Property piprop = card.getExtendedProperty("X-BW-PRINCIPALHREF");
+      Property piprop = card.getExtendedProperty("X-BW-PRINCIPALHREF");
       if (piprop != null) {
         setPrincipalHref(piprop.getValue());
+      }
+
+      piprop = card.getExtendedProperty("X-ICAL4J-TOV3-KIND");
+      if (piprop != null) {
+        setKind(piprop.getValue());
+      }
+
+      if (getKind() == null) {
+        // Check for member attributes
+        piprop = card.getProperty(Id.MEMBER);
+
+        if (piprop != null) {
+          setKind(Kind.GROUP.getValue());
+        }
       }
 
       for (PrincipalPropertyInfo ppi: BwPrincipalInfo.getPrincipalPropertyInfoSet()) {
@@ -710,6 +781,8 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
 
     ts.append("user", getPrincipalHref());
     ts.append("lastName", getLastname());
+    ts.append("kind", getKind());
+    ts.append("caladruri", getCaladruri());
     ts.append("properties", getProperties(), true);
 
     return ts.toString();

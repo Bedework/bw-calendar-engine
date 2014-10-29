@@ -345,6 +345,19 @@ public interface Directories extends Serializable {
                              String cutype,
                              Holder<Boolean> truncated) throws CalFacadeException;
 
+  /** Return principals tha match the CUA.
+   *
+   * @param cua  a calendar user address
+   * @param cutype individual, group etc (null for individual)
+   * @param expand if true expand any groups so that the info contains group member info.
+   * @return BwPrincipalInfo objects that match.
+   * @throws CalFacadeException
+   */
+  List<BwPrincipalInfo> find(String cua,
+                             String cutype,
+                             boolean expand,
+                             Holder<Boolean> truncated) throws CalFacadeException;
+
   /** Uses the values in pinfo to update the supplied preferences. This may be a
    * site specific operation. It allows bedework to use directory information
    * to alter the behavior of principals. For example, we can define resources

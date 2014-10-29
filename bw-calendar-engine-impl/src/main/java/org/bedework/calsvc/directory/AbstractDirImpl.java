@@ -66,6 +66,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletResponse;
@@ -157,6 +158,20 @@ public abstract class AbstractDirImpl implements Directories {
       }
 
       return val.endsWith(pattern);
+    }
+
+    boolean matches(final String domain) {
+      int domainLen = domain.length();
+
+      if (exact) {
+        if (domainLen != pattern.length()) {
+          return false;
+        }
+      } else if (domainLen < pattern.length()) {
+        return false;
+      }
+
+      return domain.endsWith(pattern);
     }
   }
 
@@ -357,47 +372,218 @@ public abstract class AbstractDirImpl implements Directories {
     }
   }
 
+  @Override
+  public List<BwPrincipalInfo> find(final String cua,
+                                    final String cutype,
+                                    final boolean expand,
+                                    final Holder<Boolean> truncated) throws CalFacadeException {
+    final CardDavInfo cdi = getCardDavInfo(false);
+
+    if ((cdi == null) || (cdi.getHost() == null)) {
+      return null;
+    }
+
+    BasicHttpClient cdc = null;
+
+    try {
+      cdc = new BasicHttpClient(cdi.getHost(), cdi.getPort(), null,
+                                15 * 1000);
+
+      final List<BwPrincipalInfo> pis = find(cdc, cdi,
+                                             cua, cutype);
+
+      if (!expand) {
+        return pis;
+      }
+
+      /* if any of the returned entities represent a group then get
+         the info for each member
+       */
+
+      for (final BwPrincipalInfo pi: pis) {
+        if (!Kind.GROUP.getValue().equalsIgnoreCase(pi.getKind())) {
+          continue;
+        }
+
+        final List<BwPrincipalInfo> memberPis = new ArrayList<>();
+
+        VCard card = pi.getCard();
+
+        List<Property> members = card.getProperties(Id.MEMBER);
+
+        if (members == null) {
+          continue;
+        }
+
+        for (final Property p: members) {
+          BwPrincipalInfo memberPi = fetch(cdc, cdi, p.getValue());
+
+          if (memberPi != null) {
+            memberPis.add(memberPi);
+          }
+        }
+
+        pi.setMembers(memberPis);
+      }
+
+      return pis;
+    } catch (final Throwable t) {
+      if (getLogger().isDebugEnabled()) {
+        error(t);
+      }
+
+      throw new CalFacadeException(t);
+    } finally {
+      if (cdc != null) {
+        try {
+          cdc.release();
+        } catch (final Throwable ignored) {}
+      }
+    }
+  }
+
+  private BwPrincipalInfo fetch(final BasicHttpClient cdc,
+                                final CardDavInfo cdi,
+                                final String uri) throws CalFacadeException {
+    final List<BwPrincipalInfo> pis = find(cdc, cdi, uri,
+                                           CuType.INDIVIDUAL.getValue());
+
+    if ((pis == null) || (pis.size() != 1)) {
+      return null;
+    }
+
+    return pis.get(0);
+  }
+
+  private List<BwPrincipalInfo> find(final BasicHttpClient cdc,
+                                     final CardDavInfo cdi,
+                                     final String cua,
+                                     final String cutype) throws CalFacadeException {
+    /* Typically a group entry in a directory doesn't have a mail -
+       The cua is a uri which often looks like a mailto.
+     */
+
+    final List<WebdavProperty> props = new ArrayList<>();
+    final CalAddr ca = new CalAddr(cua);
+
+    if ((cutype != null) &&
+            cutype.equalsIgnoreCase(CuType.GROUP.getValue())) {
+      final WebdavProperty fnProp = new WebdavProperty(WebdavTags.displayname,
+                                                       ca.getId());
+
+      props.add(fnProp);
+    }
+
+
+    final WebdavProperty emailProp = new WebdavProperty(BedeworkServerTags.emailProp,
+                                                        ca.getNoScheme());
+
+    props.add(emailProp);
+
+    final List<BwPrincipalInfo> pis = new ArrayList<>();
+
+    final List<MatchResult> mrs = matching(cdc,
+                                           cdi.getContextPath() + getCutypePath(
+                                                   cutype, cdi),
+                                           null,
+                                           props);
+
+    if (mrs == null) {
+      return pis;
+    }
+
+    for (final MatchResult mr: mrs) {
+      final BwPrincipalInfo pi = new BwPrincipalInfo();
+
+      pi.setPropertiesFromVCard(mr.card, null);
+      pis.add(pi);
+    }
+
+    return pis;
+  }
+
+  private static class CutypeMap extends HashMap<String, String> {
+    String configValue; // What we built this from
+    String defaultPath;
+
+    String init(final String configValue) {
+      if (configValue == null) {
+        clear();
+
+        defaultPath = "/directory/";
+        return "No cutype mapping in carddav info";
+      }
+
+      if (configValue.equals(this.configValue)) {
+        return "";
+      }
+
+      this.configValue = configValue;
+
+      final String[] split = configValue.split(",");
+
+      String err = "";
+
+      for (final String s: split) {
+        final String[] keyVal = s.split(":");
+
+        if (keyVal.length != 2) {
+          err += "\nBad value in cutype mapping: " + s;
+          continue;
+        }
+
+        if (keyVal[0].equals("*")) {
+          if (defaultPath != null) {
+            err += "\nMore than one default path in cutype mapping";
+          } else {
+            defaultPath = keyVal[1];
+          }
+
+          continue;
+        }
+
+        put(keyVal[0], keyVal[1]);
+      }
+
+      if (defaultPath == null) {
+        err += "\nNo default path in cutype mapping";
+        defaultPath = "/directory/";
+      }
+
+      return err;
+    }
+
+    String getDefaultPath() {
+      return defaultPath;
+    }
+
+    Set<String> getCutypes() {
+      return keySet();
+    }
+  }
+
+  private static final CutypeMap cutypeMap = new CutypeMap();
+
   private String getCutypePath(final String cutype,
                                final CardDavInfo cdi) {
-    final String cutypeMapping = cdi.getCutypeMapping();
-
-    if (cutypeMapping == null) {
-      warn("No cutype mapping in carddav info");
-      return "/directory/";
+    final String msg = cutypeMap.init(cdi.getCutypeMapping());
+    if (msg.length() > 0) {
+      warn(msg);
     }
 
-    final String[] split = cutypeMapping.split(",");
+    final String cutypePath = cutypeMap.get(cutype.toLowerCase());
 
-    final String key;
-
-    if (cutype == null) {
-      key = "*:";
-    } else {
-      key = cutype.toLowerCase() + ":";
+    if (cutypePath != null) {
+      return cutypePath;
     }
 
-    String defaultPath = null;
+    return cutypeMap.getDefaultPath();
+  }
 
-    for (final String s: split) {
-      if (s.startsWith(key)) {
-        return s.substring(key.length());
-      }
+  private Set<String> getCutypes(final CardDavInfo cdi) {
+    cutypeMap.init(cdi.getCutypeMapping());
 
-      if (s.startsWith("*:")) {
-        if (defaultPath != null) {
-          warn("More than one default path in cutype mapping");
-        } else {
-          defaultPath = s.substring(2);
-        }
-      }
-    }
-
-    if (defaultPath == null) {
-      warn("No default path in cutype mapping");
-      return "/directory/";
-    }
-
-    return defaultPath;
+    return cutypeMap.getCutypes();
   }
 
   @Override
@@ -407,7 +593,7 @@ public abstract class AbstractDirImpl implements Directories {
     //PrincipalProperty kind = pinfo.findProperty("kind");
 
     /* ============ auto scheduling ================== */
-    BooleanPrincipalProperty pautoSched =
+    final BooleanPrincipalProperty pautoSched =
       (BooleanPrincipalProperty)pinfo.findProperty("auto-schedule");
 
     if ((pautoSched != null) &&
@@ -422,7 +608,7 @@ public abstract class AbstractDirImpl implements Directories {
       changed = true;
     }
 
-    IntPrincipalProperty pschedMaxInstances =
+    final IntPrincipalProperty pschedMaxInstances =
       (IntPrincipalProperty)pinfo.findProperty("max-instances");
 
     if (pschedMaxInstances != null) {
@@ -521,13 +707,10 @@ public abstract class AbstractDirImpl implements Directories {
     return acc;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#getPrincipal(java.lang.String)
-   */
   @Override
   public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
     try {
-      String uri = new URI(href).getPath();
+      final String uri = new URI(href).getPath();
 
       if (!isPrincipal(uri)) {
         return null;
@@ -578,9 +761,6 @@ public abstract class AbstractDirImpl implements Directories {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#makePrincipalUri(java.lang.String, boolean)
-   */
   @Override
   public String makePrincipalUri(final String id,
                                  final int whoType) throws CalFacadeException {
@@ -588,7 +768,7 @@ public abstract class AbstractDirImpl implements Directories {
       return id;
     }
 
-    String root = fromWho.get(whoType);
+    final String root = fromWho.get(whoType);
 
     if (root == null) {
       throw new CalFacadeException(CalFacadeException.unknownPrincipalType);
@@ -597,17 +777,11 @@ public abstract class AbstractDirImpl implements Directories {
     return Util.buildPath(true, root, "/", id);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#getPrincipalRoot()
-   */
   @Override
   public String getPrincipalRoot() throws CalFacadeException {
     return getSystemRoots().getPrincipalRoot();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#getGroups(java.lang.String, java.lang.String)
-   */
   @Override
   public Collection<String> getGroups(final String rootUrl,
                                       final String principalUrl) throws CalFacadeException {
@@ -651,8 +825,8 @@ public abstract class AbstractDirImpl implements Directories {
 
     /* check for something that looks like mailto:somebody@somewhere.com,
        scheduleto:, etc.  If exists, is not an internal Bedework account. */
-    int colonPos = val.indexOf(":");
-    int atPos = val.indexOf("@");
+    final int colonPos = val.indexOf(":");
+    final int atPos = val.indexOf("@");
     String uri = val;
 
     if (colonPos > 0) {
@@ -665,7 +839,7 @@ public abstract class AbstractDirImpl implements Directories {
       uri = "mailto:" + val;
     }
 
-    AccessPrincipal possibleAccount = caladdrToPrincipal(uri);
+    final AccessPrincipal possibleAccount = caladdrToPrincipal(uri);
     if ((possibleAccount != null) &&       // Possible bedework user
         !validPrincipal(possibleAccount.getPrincipalRef())) {   // but not valid
       return null;
@@ -847,6 +1021,50 @@ public abstract class AbstractDirImpl implements Directories {
       throw cfe;
     } catch (Throwable t) {
       throw new CalFacadeException(t);
+    }
+  }
+
+  private static class CalAddr {
+    private String scheme;
+    private String id;
+    private String domain;
+
+    CalAddr(final String val) {
+      final int atPos = val.indexOf("@");
+
+      if (atPos > 0) {
+        domain = val.substring(atPos + 1).toLowerCase();
+        id = val.substring(0, atPos);
+      } else {
+        id = val;
+      }
+
+      final int colonPos = id.indexOf(":");
+
+      if (colonPos > 0) {
+        scheme = id.substring(0, colonPos);
+        id = id.substring(colonPos + 1);
+      }
+    }
+
+    String getScheme() {
+      return scheme;
+    }
+
+    String getId() {
+      return id;
+    }
+
+    String getDomain() {
+      return domain;
+    }
+
+    String getNoScheme() {
+      if (domain == null) {
+        return id;
+      }
+
+      return id + "@" + domain;
     }
   }
 
@@ -1086,11 +1304,26 @@ public abstract class AbstractDirImpl implements Directories {
 
       xml.closeTag(WebdavTags.prop);
 
-      xml.openTag(CarddavTags.filter, "test", "allof");
+      xml.openTag(CarddavTags.filter, "test", "anyof");
 
       for (final WebdavProperty wd: props) {
         if (wd.getTag().equals(CaldavTags.calendarUserType)) {
           // Should match onto KIND
+          continue;
+        }
+
+        if (wd.getTag().equals(BedeworkServerTags.emailProp)) {
+          // Match FN
+          xml.openTag(CarddavTags.propFilter, "name", "EMAIL");
+
+          xml.startTagSameLine(CarddavTags.textMatch);
+          xml.attribute("collation", "i;unicode-casemap");
+          xml.attribute("match-type", "contains");
+          xml.endOpeningTag();
+          xml.value(wd.getPval());
+          xml.closeTagSameLine(CarddavTags.textMatch);
+
+          xml.closeTag(CarddavTags.propFilter);
           continue;
         }
 

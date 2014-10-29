@@ -39,6 +39,7 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPreferences;
+import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.RecurringRetrievalMode;
@@ -48,8 +49,10 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
+import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.Categories;
@@ -70,6 +73,7 @@ import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.DateTime;
+import net.fortuna.ical4j.model.parameter.CuType;
 import net.fortuna.ical4j.model.property.DtStart;
 
 import java.io.StringReader;
@@ -82,6 +86,7 @@ import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
+import javax.xml.ws.Holder;
 
 import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
 
@@ -965,7 +970,7 @@ class Events extends CalSvcDb implements EventsI {
     BwContact ct = event.getContact();
 
     if (ct != null) {
-      EnsureEntityExistsResult<BwContact> eeers =
+      final EnsureEntityExistsResult<BwContact> eeers =
         getSvc().getContactsHandler().ensureExists(ct,
                                                    ct.getOwnerHref());
 
@@ -1403,19 +1408,75 @@ class Events extends CalSvcDb implements EventsI {
 
     final BwOrganizer org = ev.getOrganizer();
 
-    final Collection<BwAttendee> atts = ev.getAttendees();
+    final Set<BwAttendee> atts = ev.getAttendees();
 
     if (Util.isEmpty(atts) || (org == null)) {
       return;
     }
 
     final String curPrincipal = getSvc().getPrincipal().getPrincipalRef();
+    final Directories dirs = getSvc().getDirectories();
+
     AccessPrincipal evPrincipal =
-      getSvc().getDirectories().caladdrToPrincipal(org.getOrganizerUri());
+      dirs.caladdrToPrincipal(org.getOrganizerUri());
 
     if ((evPrincipal != null) &&
         (evPrincipal.getPrincipalRef().equals(curPrincipal))) {
       ev.setOrganizerSchedulingObject(true);
+
+      /* If we are expanding groups do so here */
+
+      final Set<BwAttendee> groups = new TreeSet<>();
+      for (final BwAttendee att: atts) {
+        if (CuType.GROUP.getValue().equals(att.getCuType())) {
+          groups.add(att);
+        }
+      }
+
+      ChangeTable chg = ev.getChangeset(getPrincipalHref());
+
+      for (final BwAttendee att: groups) {
+        /* If the group is in one of our domains we cn try to expand it.
+         * We should leave it if it's an external id.
+         */
+
+        final Holder<Boolean> trunc = new Holder<>();
+        final List<BwPrincipalInfo> groupPis =
+                dirs.find(att.getAttendeeUri(),
+                          att.getCuType(),
+                          true,  // expand
+                          trunc);
+
+        if ((groupPis == null) || (groupPis.size() != 1)) {
+          continue;
+        }
+
+        final BwPrincipalInfo pi = groupPis.get(0);
+
+        if (pi.getMembers() == null) {
+          continue;
+        }
+
+        ev.removeAttendee(att); // Remove the group
+        chg.changed(PropertyInfoIndex.ATTENDEE, att, null);
+
+        for (final BwPrincipalInfo mbrPi: pi.getMembers()) {
+          if (mbrPi.getCaladruri() == null) {
+            continue;
+          }
+
+          final BwAttendee mbrAtt = new BwAttendee();
+
+          mbrAtt.setType(att.getType());
+          mbrAtt.setAttendeeUri(mbrPi.getCaladruri());
+          mbrAtt.setCn(mbrPi.getEmail());
+          mbrAtt.setCuType(mbrPi.getKind());
+          mbrAtt.setMember(att.getAttendeeUri());
+
+          ev.addAttendee(mbrAtt);
+          chg.addValue(PropertyInfoIndex.ATTENDEE, mbrAtt);
+        }
+      }
 
       if (ev instanceof BwEventProxy) {
         // Only add x-property to master
