@@ -46,11 +46,17 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.XmlEmit.NameSpace;
 import org.bedework.util.xml.XmlUtil;
+import org.bedework.util.xml.tagdefs.BedeworkServerTags;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.CarddavTags;
 import org.bedework.util.xml.tagdefs.WebdavTags;
 import org.bedework.webdav.servlet.shared.WebdavProperty;
 
+import net.fortuna.ical4j.model.parameter.CuType;
+import net.fortuna.ical4j.vcard.Property;
+import net.fortuna.ical4j.vcard.Property.Id;
+import net.fortuna.ical4j.vcard.VCard;
+import net.fortuna.ical4j.vcard.property.Kind;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
 
@@ -475,7 +481,8 @@ public abstract class AbstractDirImpl implements Directories {
     }
 
 
-    final WebdavProperty emailProp = new WebdavProperty(BedeworkServerTags.emailProp,
+    final WebdavProperty emailProp = new WebdavProperty(
+            BedeworkServerTags.emailProp,
                                                         ca.getNoScheme());
 
     props.add(emailProp);
