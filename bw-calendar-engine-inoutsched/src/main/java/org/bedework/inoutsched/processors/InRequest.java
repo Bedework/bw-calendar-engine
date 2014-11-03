@@ -50,13 +50,8 @@ import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 
-import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Dur;
-import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Period;
-import net.fortuna.ical4j.model.PropertyList;
-import net.fortuna.ical4j.model.parameter.Response;
-import net.fortuna.ical4j.model.property.Voter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -643,7 +638,9 @@ public class InRequest extends InProcessor {
                                          final EventInfo inCopy,
                                          final String attUri) throws CalFacadeException {
     /* Copy VPOLL status into our copy.
-       Copy VOTER status of everybody else into each candidate
+       Copy VPOLL winner if set
+       Update the actual items in case they changed
+       Copy VVOTER status of everybody else - should we preserve our own?
      */
 
     try {
@@ -652,86 +649,27 @@ public class InRequest extends InProcessor {
 
       ourEv.setStatus(inEv.getStatus());
 
-      /*
-      final Map<Integer, Component> inCands = IcalUtil.parseVpollCandidates(inEv);
-      final Map<Integer, Component> ourCands = IcalUtil.parseVpollCandidates(ourEv);
+      final Integer pw = inEv.getPollWinner();
 
-      for (final Integer itemId: inCands.keySet()) {
-        final Component inComp = inCands.get(itemId);
-        final Component ourComp = ourCands.get(itemId);
-
-        if (ourComp == null) {
-          continue;
-        }
-
-        PropertyList inVoters = inComp.getProperties(Property.VOTER);
-        PropertyList ourVoters = ourComp.getProperties(Property.VOTER);
-
-        if (inVoters == null) {
-          continue;
-        }
-
-        for (Object o: inVoters) {
-          Voter v = (Voter)o;
-
-          if (v.getValue().equals(attUri)) {
-            continue;
-          }
-
-          updateVoter(ourComp, ourVoters, v);
-        }
+      if (pw != null) {
+        ourEv.setPollWinner(pw);
       }
 
-      ourEv.clearPollItems();
+      ourEv.clearVvoters();
 
-      for (Component comp: ourCands.values()) {
-        ourEv.addPollItem(comp.toString());
+      for (final String s: inEv.getVvoters()) {
+        ourEv.addVvoter(s);
       }
-      */
 
       ourEv.clearPollItems();
 
       for (final String s: inEv.getPollItems()) {
         ourEv.addPollItem(s);
       }
-
-      final Integer pw = inEv.getPollWinner();
-
-      if (pw != null) {
-        ourEv.setPollWinner(pw);
-      }
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
     return false;
-  }
-
-  private void updateVoter(final Component comp,
-                           final PropertyList voters,
-                           final Voter voter) {
-    final String uri = voter.getValue();
-    final Response inResp = (Response)voter.getParameter(Parameter.RESPONSE);
-
-    if (inResp == null) {
-      return;
-    }
-
-    for (Object o: voters) {
-      Voter v = (Voter)o;
-
-      if (v.getValue().equals(uri)) {
-        Response resp = (Response)v.getParameter(Parameter.RESPONSE);
-
-        if (resp != null) {
-          v.getParameters().remove(resp);
-        }
-        v.getParameters().add(inResp);
-        return;
-      }
-    }
-
-    /* Didn't find the voter - add to the component */
-    comp.getProperties().add(voter);
   }
 
   /** Update our (the attendees) copy of the event from the inbox copy. We

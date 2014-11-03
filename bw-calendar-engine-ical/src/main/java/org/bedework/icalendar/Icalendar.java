@@ -287,11 +287,11 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   }
 
   /**
-   * @param val
+   * @param val the (possible) event object
    */
   public void addComponent(final Object val) {
     if (val instanceof EventInfo) {
-      BwEvent ev = ((EventInfo)val).getEvent();
+      final BwEvent ev = ((EventInfo)val).getEvent();
       if (ev.getEntityType() == IcalDefs.entityTypeEvent) {
         setComponentType(IcalComponentType.event);
       } else if (ev.getEntityType() == IcalDefs.entityTypeTodo) {

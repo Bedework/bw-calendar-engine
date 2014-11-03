@@ -52,6 +52,8 @@ import net.fortuna.ical4j.model.ParameterFactoryImpl;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
+import net.fortuna.ical4j.model.component.VPoll;
+import net.fortuna.ical4j.model.component.VVoter;
 import net.fortuna.ical4j.model.parameter.AltRep;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.CuType;
@@ -394,22 +396,64 @@ public class IcalUtil {
     return prop;
   }
 
-  /** make a voter
-   *
-   * @param val
-   * @return Voter
+  /**
+   * @param poll the poll entity
+   * @return Parsed VVOTER components map - key is voter cua.
    * @throws Throwable
    */
-  public static Voter setVoter(final BwAttendee val) throws Throwable {
-    Voter prop = new Voter(val.getAttendeeUri());
+  public static Map<String, VVoter> parseVpollVvoters(final BwEvent poll) throws Throwable {
+    final StringBuilder sb = new StringBuilder();
 
-    ParameterList pars = prop.getParameters();
+    // Better if ical4j supported sub-component parsing
 
-    setAttendeeVoter(val, pars);
+    sb.append("BEGIN:VCALENDAR\n");
+    sb.append("PRODID://Bedework.org//BedeWork V3.9//EN\n");
+    sb.append("VERSION:2.0\n");
+    sb.append("BEGIN:VPOLL\n");
+    sb.append("UID:0123\n");
 
-    //pars.add(new Response(val.getResponse()));
+    if (!Util.isEmpty(poll.getVvoters())) {
+      for (final String s: poll.getVvoters()) {
+        sb.append(s);
+      }
+    }
 
-    return prop;
+    sb.append("END:VPOLL\n");
+    sb.append("END:VCALENDAR\n");
+
+    try {
+      final StringReader sr = new StringReader(sb.toString());
+
+      final Icalendar ic = new Icalendar();
+
+      final CalendarBuilder bldr = new CalendarBuilder(new CalendarParserImpl(), ic);
+
+      final UnfoldingReader ufrdr = new UnfoldingReader(sr, true);
+
+      final Calendar ical = bldr.build(ufrdr);
+
+      final Map<String, VVoter> voters = new HashMap<>();
+
+      /* Should be one vpoll object */
+
+      final VPoll vpoll = (VPoll)ical.getComponent(Component.VPOLL);
+      for (final Object o: vpoll.getVoters()) {
+        final VVoter vvoter = (VVoter)o;
+
+        final Voter v = (Voter)vvoter.getProperty(Property.VOTER);
+        if (v == null) {
+          continue;
+        }
+
+        voters.put(v.getValue(), vvoter);
+      }
+
+      return voters;
+    } catch (final ParserException pe) {
+      throw new IcalMalformedException(pe.getMessage());
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
   }
 
   /**

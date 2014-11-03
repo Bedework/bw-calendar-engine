@@ -34,7 +34,6 @@ import org.bedework.calfacade.BwRelatedTo;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
-import org.bedework.calfacade.PollItmId;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
@@ -800,26 +799,9 @@ public class BwEventUtil extends IcalUtil {
           case PERCENT_COMPLETE:
             /* ------------------- PercentComplete -------------------- */
 
-            Integer ival = new Integer(((PercentComplete)prop).getPercentage());
+            Integer ival = ((PercentComplete)prop).getPercentage();
             if (chg.changed(pi, ev.getPercentComplete(), ival)) {
               ev.setPercentComplete(ival);
-            }
-
-            break;
-
-          case POLL_ITEM_ID:
-            /* ------------------- Poll item id -------------------- */
-
-            final PollItemId pollid = (PollItemId)prop;
-            if (vpoll) {
-              // Response
-              ev.addPollItemId(getPollId(pollid));
-            } else {
-              ival = pollid.getPollitemid();
-
-              if (chg.changed(pi, ev.getPollItemId(), ival)) {
-                ev.setPollItemId(ival);
-              }
             }
 
             break;
@@ -898,7 +880,7 @@ public class BwEventUtil extends IcalUtil {
 
           case REQUEST_STATUS:
             /* ------------------- RequestStatus -------------------- */
-            BwRequestStatus rs = BwRequestStatus.fromRequestStatus((RequestStatus)prop);
+            final BwRequestStatus rs = BwRequestStatus.fromRequestStatus((RequestStatus)prop);
 
             chg.addValue(pi, rs);
 
@@ -907,7 +889,7 @@ public class BwEventUtil extends IcalUtil {
           case RESOURCES:
             /* ------------------- Resources -------------------- */
 
-            ResourceList rl = ((Resources)prop).getResources();
+            final ResourceList rl = ((Resources)prop).getResources();
 
             if (rl != null) {
               /* Got some resources */
@@ -989,46 +971,6 @@ public class BwEventUtil extends IcalUtil {
 
             break;
 
-          case VOTER:
-            /* ------------------- Voter -------------------- */
-
-            if (methodType == ScheduleMethods.methodTypePublish) {
-              if (cb.getStrictness() == IcalCallback.conformanceStrict) {
-                throw new CalFacadeException(CalFacadeException.attendeesInPublish);
-              }
-
-              if (cb.getStrictness() == IcalCallback.conformanceWarn) {
-                //warn("Had attendees for PUBLISH");
-              }
-            }
-
-            Voter vPr = (Voter)prop;
-
-            if (evinfo.getNewEvent() || !mergeAttendees) {
-              chg.addValue(pi, getVoter(cb, vPr));
-            } else {
-              String pUri = cb.getCaladdr(vPr.getValue());
-
-              if (pUri.equals(attUri)) {
-                /* Only update for our own attendee
-                 * We're doing a PUT and this must be the attendee updating their
-                 * response. We don't allow them to change other voters
-               * whatever the PUT content says.
-               */
-                chg.addValue(pi, getVoter(cb, vPr));
-              } else {
-                // Use the value we currently have
-                for (BwAttendee att: ev.getAttendees()) {
-                  if (pUri.equals(att.getAttendeeUri())) {
-                    chg.addValue(pi, att.clone());
-                    break;
-                  }
-                }
-              }
-            }
-
-            break;
-
           case XPROP:
             /* ------------------------- x-property --------------------------- */
 
@@ -1063,6 +1005,7 @@ public class BwEventUtil extends IcalUtil {
       } else if (!(val instanceof Available)) {
         VAlarmUtil.processComponentAlarms(cb, val, ev, currentPrincipal, chg);
         if (val instanceof VPoll) {
+          processVvoters((VPoll)val, evinfo, cb, chg, mergeAttendees);
           processCandidates((VPoll)val, evinfo, chg);
         }
       }
@@ -1136,27 +1079,6 @@ public class BwEventUtil extends IcalUtil {
                       Private methods
      ==================================================================== */
 
-  private static PollItmId getPollId(final PollItemId pid) {
-    Parameter par = pid.getParameter(Parameter.RESPONSE);
-
-    Integer response = null;
-
-    if (par != null) {
-      response = Integer.valueOf(par.getValue());
-    }
-
-    String publicComment = null;
-    par = pid.getParameter(Parameter.PUBLIC_COMMENT);
-
-    if (par != null) {
-      publicComment = par.getValue();
-    }
-
-    final Integer id = pid.getPollitemid();
-
-    return new PollItmId(response, publicComment, id);
-  }
-
   private static void testXparams(final Property p,
                            final Holder<Boolean> hasXparams) {
     if (hasXparams.value) {
@@ -1218,26 +1140,120 @@ public class BwEventUtil extends IcalUtil {
         return;
       }
 
-      Iterator it = avls.iterator();
-
-      while (it.hasNext()) {
-        Object o = it.next();
-
+      for (final Object o : avls) {
         if (!(o instanceof Available)) {
           throw new IcalMalformedException("Invalid available list");
         }
 
-        EventInfo availi = toEvent(cb, cal, ical, (Component)o, true,
-                                   false);
-        availi.getEvent().setOwnerHref(vavail.getEvent().getOwnerHref());
+        final EventInfo availi = toEvent(cb, cal, ical, (Component)o,
+                                         true,
+                                         false);
+        availi.getEvent().setOwnerHref(
+                vavail.getEvent().getOwnerHref());
 
         vavail.addContainedItem(availi);
         vavail.getEvent().addAvailableUid(availi.getEvent().getUid());
       }
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
+    }
+  }
+
+  private static void processVvoters(final VPoll val,
+                                     final EventInfo vpoll,
+                                     final IcalCallback cb,
+                                     final ChangeTable changes,
+                                     final boolean mergeAttendees) throws CalFacadeException {
+
+    try {
+      final ComponentList voters = val.getVoters();
+
+      if ((voters == null) || voters.isEmpty()) {
+        return;
+      }
+
+      final Iterator it = voters.iterator();
+      final Set<String> vcuas = new TreeSet<>();
+      final BwEvent event = vpoll.getEvent();
+
+      if (!Util.isEmpty(event.getVvoters())) {
+        event.clearVvoters();
+      }
+
+      while (it.hasNext()) {
+        final Component comp = (Component)it.next();
+
+        final String vvoter = comp.toString();
+        event.addVvoter(vvoter);
+
+        changes.addValue(PropertyInfoIndex.VVOTER, vvoter);
+
+        final Property p = comp.getProperty(Property.VOTER);
+
+        if (p == null) {
+          throw new CalFacadeException("XXX - no voter");
+        }
+
+        final String vcua = p.getValue();
+
+        if (vcuas.contains(vcua)) {
+          throw new CalFacadeException("XXX - duplicate VVOTER for " + vcua);
+        }
+
+        processVoter((Voter)p, vpoll, cb, changes, mergeAttendees);
+        vcuas.add(vcua);
+      }
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  private static void processVoter(final Voter vPr,
+                                   final EventInfo vpoll,
+                                   final IcalCallback cb,
+                                   final ChangeTable chg,
+                                   final boolean mergeAttendees) throws Throwable {
+    final BwEvent ev = vpoll.getEvent();
+
+    /*
+    if (methodType == ScheduleMethods.methodTypePublish) {
+      if (cb.getStrictness() == IcalCallback.conformanceStrict) {
+        throw new CalFacadeException(CalFacadeException.attendeesInPublish);
+      }
+
+      if (cb.getStrictness() == IcalCallback.conformanceWarn) {
+        //warn("Had attendees for PUBLISH");
+      }
+    }
+    */
+
+    if (vpoll.getNewEvent() || !mergeAttendees) {
+      chg.addValue(PropertyInfoIndex.VOTER, getVoter(cb, vPr));
+      return;
+    }
+
+    final String pUri = cb.getCaladdr(vPr.getValue());
+
+    if (pUri.equals(cb.getCaladdr(cb.getPrincipal().getPrincipalRef()))) {
+      /* Only update for our own attendee
+                 * We're doing a PUT and this must be the attendee updating their
+                 * response. We don't allow them to change other voters
+               * whatever the PUT content says.
+               */
+      chg.addValue(PropertyInfoIndex.VOTER, getVoter(cb, vPr));
+      return;
+    }
+
+    // Use the value we currently have
+    for (final BwAttendee att: ev.getAttendees()) {
+      if (pUri.equals(att.getAttendeeUri())) {
+        chg.addValue(PropertyInfoIndex.VOTER, att.clone());
+        break;
+      }
     }
   }
 

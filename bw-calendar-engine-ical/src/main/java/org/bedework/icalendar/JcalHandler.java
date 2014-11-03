@@ -32,13 +32,11 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.component.Available;
 import net.fortuna.ical4j.model.component.VAvailability;
 import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.component.VFreeBusy;
-import net.fortuna.ical4j.model.component.VJournal;
 import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.component.VToDo;
+import net.fortuna.ical4j.model.component.VVoter;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Version;
@@ -196,7 +194,7 @@ public class JcalHandler implements Serializable {
       jgen.writeString(comp.getName().toLowerCase());
       jgen.writeStartArray();
 
-      for (Object o: comp.getProperties()) {
+      for (final Object o: comp.getProperties()) {
         JsonProperty.addFields(jgen, (Property)o);
       }
 
@@ -211,18 +209,25 @@ public class JcalHandler implements Serializable {
         cl = ((VEvent)comp).getAlarms();
       } else if (comp instanceof VToDo) {
         cl = ((VToDo)comp).getAlarms();
-      } else if (comp instanceof VJournal) {
-      } else if (comp instanceof VFreeBusy) {
+      //} else if (comp instanceof VJournal) {
+      //} else if (comp instanceof VFreeBusy) {
       } else if (comp instanceof VAvailability) {
         cl = ((VAvailability)comp).getAvailable();
-      } else if (comp instanceof Available) {
+      //} else if (comp instanceof Available) {
       } else if (comp instanceof VPoll) {
-        cl = ((VPoll)comp).getCandidates();
+        cl = ((VPoll)comp).getVoters();
+      } else if (comp instanceof VVoter) {
+        cl = ((VVoter)comp).getVotes();
       }
 
       if (cl != null) {
-        for (Object o: cl) {
+        for (final Object o: cl) {
           outComp(jgen, (Component)o);
+        }
+        if (comp instanceof VPoll) {
+          for (final Object o: ((VPoll)comp).getCandidates()) {
+            outComp(jgen, (Component)o);
+          }
         }
       }
 

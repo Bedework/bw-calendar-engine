@@ -31,7 +31,6 @@ import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwRelatedTo;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
-import org.bedework.calfacade.PollItmId;
 import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -64,11 +63,10 @@ import net.fortuna.ical4j.model.component.VFreeBusy;
 import net.fortuna.ical4j.model.component.VJournal;
 import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.component.VToDo;
+import net.fortuna.ical4j.model.component.VVoter;
 import net.fortuna.ical4j.model.parameter.AltRep;
 import net.fortuna.ical4j.model.parameter.FbType;
-import net.fortuna.ical4j.model.parameter.PublicComment;
 import net.fortuna.ical4j.model.parameter.RelType;
-import net.fortuna.ical4j.model.parameter.Response;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.parameter.XParameter;
 import net.fortuna.ical4j.model.property.AcceptResponse;
@@ -93,7 +91,6 @@ import net.fortuna.ical4j.model.property.FreeBusy;
 import net.fortuna.ical4j.model.property.LastModified;
 import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.PercentComplete;
-import net.fortuna.ical4j.model.property.PollItemId;
 import net.fortuna.ical4j.model.property.PollMode;
 import net.fortuna.ical4j.model.property.PollProperties;
 import net.fortuna.ical4j.model.property.PollWinner;
@@ -649,34 +646,16 @@ public class VEventUtil extends IcalUtil {
           pl.add(new PollProperties(strval));
         }
 
-        if (val.getNumAttendees() > 0) {
-          for (final BwAttendee att: val.getAttendees()) {
-            prop = setVoter(att);
-            mergeXparams(prop, xcomp);
-            pl.add(prop);
-          }
+        final Map<String, VVoter> vvoters = parseVpollVvoters(val);
+
+        for (final VVoter vv: vvoters.values()) {
+          ((VPoll)comp).getVoters().add(vv);
         }
 
         final Map<Integer, Component> comps = parseVpollCandidates(val);
 
         for (final Component candidate: comps.values()) {
           ((VPoll)comp).getCandidates().add(candidate);
-        }
-
-        if (!Util.isEmpty(val.getPollItemIds())) {
-          for (PollItmId pid: val.getPollItemIds()) {
-            PollItemId ipid = new PollItemId(new ParameterList(),
-                                             pid.getId());
-            Response r = new Response(pid.getResponse());
-            ipid.getParameters().add(r);
-
-            if (pid.getPublicComment() != null) {
-              PublicComment pc = new PublicComment(pid.getPublicComment());
-              ipid.getParameters().add(pc);
-            }
-
-            pl.add(ipid);
-          }
         }
       }
 

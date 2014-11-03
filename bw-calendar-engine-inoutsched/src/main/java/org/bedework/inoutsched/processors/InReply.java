@@ -24,7 +24,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwRequestStatus;
-import org.bedework.calfacade.PollItmId;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
@@ -39,17 +38,12 @@ import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.TimeZone;
-import net.fortuna.ical4j.model.parameter.Response;
+import net.fortuna.ical4j.model.component.VVoter;
 import net.fortuna.ical4j.model.property.DtStart;
-import net.fortuna.ical4j.model.property.Voter;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 /** Handles incoming method REPLY scheduling messages.
  *
@@ -177,65 +171,37 @@ public class InReply extends InProcessor {
                                           final ScheduleResult sr,
                                           final int action) throws CalFacadeException {
     /* We have a single voter and their responses to each item.
-       Add a VOTER property to each candidate with the response.
+       Replace the VVOTER component for that respondee.
      */
 
     /* First parse out the poll items */
     try {
       final BwEvent colEv = colEi.getEvent();
-      final Map<Integer, Component> comps = IcalUtil.parseVpollCandidates(colEv);
+      final Map<String, VVoter> votes = IcalUtil.parseVpollVvoters(
+              colEv);
 
-      colEv.clearPollItems();  // We'll add them back
+      colEv.clearVvoters();  // We'll add them back
 
       final BwEvent inEv = inBoxEi.getEvent();
 
-      final Set<PollItmId> pids = inEv.getPollItemIds();
+      final Map<String, VVoter> invote = IcalUtil.parseVpollVvoters(inEv);
 
-      if (pids == null) {
-        return true; // Nothing to do - just accept it.
+      /* Should only be one VVoter for this attendee */
+
+      if (invote.size() != 1) {
+        return true; // Ignore it.
       }
 
-      for (final PollItmId pid: pids) {
-        final Component comp = comps.get(pid.getId());
+      final VVoter vote = invote.get(attUri);
 
-        if (comp == null) {
-          continue;
-        }
-
-        final PropertyList pl = comp.getProperties(Property.VOTER);
-
-        if (pl == null) {
-          continue;
-        }
-
-        Voter voter = null;
-
-        for (final Object vo: pl) {
-          final Voter v = (Voter)vo;
-
-          if (v.getValue().equals(attUri)) {
-            voter = v;
-            break;
-          }
-        }
-
-        if (voter == null) {
-          // Make a new VOTER property for this respondee
-          voter = new Voter(attUri);
-          comp.getProperties().add(voter);
-        }
-
-        final Response resp = (Response)voter.getParameter(Parameter.RESPONSE);
-
-        if (resp != null) {
-          voter.getParameters().remove(resp);
-        }
-
-        voter.getParameters().add(new Response(pid.getResponse()));
+      if (vote == null) {
+        return true; // Ignore it.
       }
 
-      for (final Component comp: comps.values()) {
-        colEv.addPollItem(comp.toString());
+      votes.put(attUri, vote);
+
+      for (final VVoter vv: votes.values()) {
+        colEv.addVvoter(vv.toString());
       }
     } catch (final CalFacadeException cfe) {
       throw cfe;

@@ -312,7 +312,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    */
   public enum ProxiedFieldIndex {
-    /** */
+    /** 0 */
     pfiEntityType,
     /** */
     pfiName,
@@ -332,7 +332,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     pfiOrganizer,
     /** */
     pfiDtstamp,
-    /** */
+    /** 10 */
     pfiLastmod,
     /** */
     pfiCreated,
@@ -352,7 +352,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     pfiCompleted,
     /** */
     pfiScheduleMethod,
-    /** */
+    /** 20 */
     pfiOriginator,
     /** */
     pfiScheduleState,
@@ -372,7 +372,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     pfiExrules,
     /** */
     pfiRdates,
-    /** */
+    /** 30 */
     pfiExdates,
     /** */
     pfiLatestDate,
@@ -392,7 +392,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     pfiAlarms,
     /** */
     pfiAttachments,
-    /** */
+    /** 40 */
     pfiAttendees,
     /** */
     pfiRecipients,
@@ -412,7 +412,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     pfiStag,
     /** */
     pfiTombstoned,
-    /** */
+    /** 50 */
     pfiOrganizerSchedulingObject,
     /** */
     pfiAttendeeSchedulingObject,
@@ -429,11 +429,8 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     pfiPollAcceptResponse,
     /** */
     pfiPollCandidate,
-    /** */
+    /** 58 */
     pfiPollWinner,
-
-    /** */
-    pfiPollItemIds;
   }
 
   private int entityType = IcalDefs.entityTypeEvent;
@@ -675,11 +672,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   private String pollProperties;
 
+  private Set<String> pollVvotes;
+
   private Set<String> pollItems;
 
   private boolean pollCandidate;
-
-  private Set<String> pollItemIdsValues;
 
   /* ====================================================================
    *                      VAvailability fields
@@ -3488,80 +3485,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return pollItemId;
   }
 
-  /** For a VPOLL there may be a set of these with distinct values -
-   * these are only added and not updated. They are for transporting the response.
-   * For the candidates this gives the poll item id for that candidate.
-   *
-   * <p>We encode these as Response";"public-comment";"comment";"value</p>
-   *
-   * @param val    Integer id
-   */
-  @NoProxy
-  public void addPollItemId(final PollItmId val) {
-    Set<String> props = getPollItemIdsValues();
-
-    if (props == null) {
-      props = new TreeSet<>();
-      setPollItemIdsValues(props);
-    }
-
-    props.add(val.getVal());
-
-    if (changeSet != null) {
-      changeSet.addValue(PropertyInfoIndex.POLL_ITEM_ID, val);
-    }
-  }
-
-  /** Get the event's poll item id values
-   *
-   *  @return Set of String   event's poll item id
-   */
-  @NoProxy
-  public Set<PollItmId> getPollItemIds() {
-    final Set<String> props = getPollItemIdsValues();
-
-    if (Util.isEmpty(props)) {
-      return null;
-    }
-
-    final Set<PollItmId> vals = new TreeSet<>();
-
-    for (final String p: props) {
-      vals.add(new PollItmId(p));
-    }
-
-    return vals;
-  }
-
-  /** Clear the vpoll item ids
-   *
-   * @return Set<String>   names
-   */
-  @NoProxy
-  public void clearPollItemIds() {
-    final Set<String> props = getPollItemIdsValues();
-
-    if (Util.isEmpty(props)) {
-      return;
-    }
-
-    props.clear();
-  }
-
-  @NoProxy
-  public void setPollItemIdsValues(final Set<String> val) {
-    pollItemIdsValues = val;
-  }
-
-  /** Get the event's poll item id values
-   *
-   *  @return Set of String   event's poll item id
-   */
-  @NoProxy
-  public Set<String> getPollItemIdsValues() {
-    return pollItemIdsValues;
-  }
-
   /** Set the poll mode
    *
    * @param val    Integer id
@@ -3666,6 +3589,55 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   public void clearPollItems() {
     if (!Util.isEmpty(getPollItems())) {
       getPollItems().clear();
+    }
+  }
+
+  /** Set the vpoll items
+   *
+   * @param val    Set<String>
+   */
+  @IcalProperty(pindex = PropertyInfoIndex.VVOTER,
+                vpollProperty = true
+  )
+  @NoProxy
+  public void setVvoters(final Set<String> val) {
+    pollVvotes = val;
+  }
+
+  /** Get the vpoll vvoters
+   *
+   * @return Set<String>   vvoters
+   */
+  @NoProxy
+  public Set<String> getVvoters() {
+    return pollVvotes;
+  }
+
+  /** Clear the vpoll voters
+   *
+   */
+  @NoProxy
+  public void clearVvoters() {
+    if (!Util.isEmpty(getVvoters())) {
+      getVvoters().clear();
+    }
+  }
+
+  /** Add vpoll vvoter object
+   *
+   * @param val
+   */
+  @NoProxy
+  public void addVvoter(final String val) {
+    Set<String> pis = getVvoters();
+
+    if (pis == null) {
+      pis = new TreeSet<>();
+      setVvoters(pis);
+    }
+
+    if (!pis.contains(val)) {
+      pis.add(val);
     }
   }
 
@@ -4636,6 +4608,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       }
       for (String s: getPollItemIdsValues()) {
         evPidv.add(s);
+      }
+    }
+
+    if (!Util.isEmpty(getVvoters())) {
+      for (final String s: getVvoters()) {
+        ev.addVvoter(s);
       }
     }
 
