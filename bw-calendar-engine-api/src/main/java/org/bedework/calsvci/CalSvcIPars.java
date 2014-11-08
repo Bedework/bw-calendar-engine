@@ -93,7 +93,8 @@ public class CalSvcIPars implements Serializable {
    * @param adminCanEditAllPublicContacts true/false
    * @param sessionless true if this is a sessionless client
    */
-  public CalSvcIPars(final String authUser,
+  public CalSvcIPars(final String logId,
+                     final String authUser,
                      final String user,
                      final String calSuite,
 
@@ -107,7 +108,8 @@ public class CalSvcIPars implements Serializable {
                      final boolean adminCanEditAllPublicContacts,
 
                      final boolean sessionless) {
-    this(authUser, calSuite, publicAdmin, allowSuperUser, service,
+    this(logId,
+         authUser, calSuite, publicAdmin, allowSuperUser, service,
          adminCanEditAllPublicCategories,
          adminCanEditAllPublicLocations,
          adminCanEditAllPublicContacts,
@@ -119,15 +121,18 @@ public class CalSvcIPars implements Serializable {
 
   /** Return new parameters for a service
    *
+   * @param logId       String used for labelling
    * @param account - the account
    * @param publicAdmin - true for public admin
    * @param allowSuperUser - trie/false
    * @return CalSvcIPars
    */
-  public static CalSvcIPars getServicePars(final String account,
+  public static CalSvcIPars getServicePars(final String logId,
+                                           final String account,
                                            final boolean publicAdmin,
                                            final boolean allowSuperUser) {
-    return new CalSvcIPars(account,
+    return new CalSvcIPars(logId,
+                           account,
                            null,   // calsuite
                            publicAdmin,
                            allowSuperUser,
@@ -146,7 +151,8 @@ public class CalSvcIPars implements Serializable {
    */
   public static CalSvcIPars getIndexerPars(final String account,
                                            final boolean publicAdmin) {
-    final CalSvcIPars pars = new CalSvcIPars(account,
+    final CalSvcIPars pars = new CalSvcIPars("indexer",
+                                             account,
                                              null,   // calsuite
                                              publicAdmin,
                                              true,
@@ -168,7 +174,8 @@ public class CalSvcIPars implements Serializable {
    * @return CalSvcIPars
    */
   public static CalSvcIPars getRestorePars(final String account) {
-    final CalSvcIPars p = new CalSvcIPars(account,
+    final CalSvcIPars p = new CalSvcIPars("restore",
+                                          account,
                                           null,   // calsuite
                                           true,   // publicAdmin,
                                           true,   // superUser,
@@ -186,6 +193,7 @@ public class CalSvcIPars implements Serializable {
 
   /** Return new parameters for caldav.
    *
+   * @param logId       String used for labelling
    * @param authUser    String authenticated user of the application
    * @param runAsUser   String user to run as
    * @param clientId    The application we're acting for.
@@ -194,12 +202,14 @@ public class CalSvcIPars implements Serializable {
    *                rather than a real user.
    * @return CalSvcIPars
    */
-  public static CalSvcIPars getCaldavPars(final String authUser,
+  public static CalSvcIPars getCaldavPars(final String logId,
+                                          final String authUser,
                      final String runAsUser,
                      final String clientId,
                      final boolean allowSuperUser,
                      final boolean service) {
-    final CalSvcIPars pars = new CalSvcIPars(authUser,
+    final CalSvcIPars pars = new CalSvcIPars(logId,
+                                             authUser,
                                              runAsUser,
                                              null,    // calsuite
                                              false,   // publicAdmin
@@ -218,6 +228,7 @@ public class CalSvcIPars implements Serializable {
 
   /** Constructor we want for this object.
    *
+   * @param logId       String used for labelling
    * @param authUser    String authenticated user of the application
    * @param calSuite    String calSuite name
    * @param publicAdmin true for admin
@@ -228,7 +239,8 @@ public class CalSvcIPars implements Serializable {
    * @param adminCanEditAllPublicContacts true/false
    * @param sessionless true if this is a sessionless client
    */
-  public CalSvcIPars(final String authUser,
+  public CalSvcIPars(final String logId,
+                     final String authUser,
                      final String calSuite,
 
                      final boolean publicAdmin,
@@ -240,6 +252,7 @@ public class CalSvcIPars implements Serializable {
                      final boolean adminCanEditAllPublicContacts,
 
                      final boolean sessionless) {
+    this.logId = logId;
     this.authUser = authUser;
     this.calSuite = calSuite;
     this.publicAdmin = publicAdmin;
@@ -416,7 +429,8 @@ public class CalSvcIPars implements Serializable {
 
   @Override
   public Object clone() {
-    final CalSvcIPars pars = new CalSvcIPars(getAuthUser(),
+    final CalSvcIPars pars = new CalSvcIPars(getLogId(),
+                                             getAuthUser(),
                                              getUser(),
                                              getCalSuite(),
                                              getPublicAdmin(),
@@ -429,7 +443,6 @@ public class CalSvcIPars implements Serializable {
                                              getSessionsless());
 
     pars.setClientId(getClientId());
-    pars.setLogId(getLogId());
     pars.forRestore = getForRestore();
     pars.indexRebuild = getIndexRebuild();
 

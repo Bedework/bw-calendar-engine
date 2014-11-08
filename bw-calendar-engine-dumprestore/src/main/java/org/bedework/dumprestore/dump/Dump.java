@@ -193,7 +193,8 @@ public class Dump implements Defs {
 
   private CalSvcI getSvci() throws Throwable {
     final CalSvcIPars pars =
-            new CalSvcIPars(adminUserAccount,
+            new CalSvcIPars("dump",
+                            adminUserAccount,
                             null,   // calsuite
                             true,   // publicAdmin
                             true,   // superUser,

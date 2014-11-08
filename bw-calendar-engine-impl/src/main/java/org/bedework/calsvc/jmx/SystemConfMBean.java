@@ -69,6 +69,12 @@ public interface SystemConfMBean extends ConfBaseMBean, SystemProperties {
   @MBeanInfo("Dump the stats in the log.")
   void dumpDbStats();
 
+  /** Dump db statistics
+   *
+   */
+  @MBeanInfo("List any open interfaces and time since open.")
+  String listOpenIfs();
+
   /* * Get the current stats
    *
    * @return List of Stat

@@ -48,6 +48,7 @@ import org.bedework.sysevents.events.SysEventBase;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.List;
 
 /** This is the service interface to the calendar suite. This will be
  * used by web applications and web services as well as other applications
@@ -200,6 +201,27 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * @throws CalFacadeException if not admin
    */
   public abstract void logStats() throws CalFacadeException;
+
+  public interface IfInfo {
+    /**
+     *
+     * @return a label
+     */
+    String getId();
+
+    /**
+     *
+     * @return Seconds since transaction started
+     */
+    long getSeconds();
+  }
+
+  /**
+   *
+   * @return list of info about open interfaces
+   * @throws CalFacadeException
+   */
+  public abstract List<IfInfo> getIfInfo() throws CalFacadeException;
 
   /** Send a notification event
    *

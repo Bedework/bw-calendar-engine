@@ -162,7 +162,8 @@ public class NotificationConf extends ConfBase<NotificationPropertiesImpl>
     }
 
     if (svci == null) {
-      final CalSvcIPars pars = CalSvcIPars.getServicePars(account,
+      final CalSvcIPars pars = CalSvcIPars.getServicePars("notifications",
+                                                          account,
                                                           false,   // publicAdmin
                                                           true);   // Allow super user
       svci = new CalSvcFactoryDefault().getSvc(pars);

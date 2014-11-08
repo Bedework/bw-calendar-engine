@@ -96,6 +96,12 @@ public interface Calintf
    */
   boolean getSuperUser();
 
+  /**
+   *
+   * @return a label
+   */
+  String getLogId();
+
   /** Get the current system (not db) stats
    *
    * @return BwStats object
@@ -190,6 +196,20 @@ public interface Calintf
    * @throws CalFacadeException
    */
   void flush() throws CalFacadeException;
+
+  /**
+   * Get the set of active transactions
+   * @return set
+   * @throws CalFacadeException
+   */
+  Collection<? extends Calintf> active() throws CalFacadeException;
+
+  /**
+   *
+   * @return time in millis we started the transaction
+   * @throws CalFacadeException
+   */
+  long getStartMillis() throws CalFacadeException;
 
   /** Only valid during a transaction.
    *

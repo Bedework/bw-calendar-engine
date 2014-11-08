@@ -2437,7 +2437,8 @@ public class BwSysIntfImpl implements SysIntf {
         clientIdent = clientId;
       }
 
-      CalSvcIPars pars = CalSvcIPars.getCaldavPars(account,
+      CalSvcIPars pars = CalSvcIPars.getCaldavPars("bwcaldav",
+                                                   account,
                                                    runAsUser,
                                                    clientIdent,
                                                    possibleSuperUser,   // allow SuperUser

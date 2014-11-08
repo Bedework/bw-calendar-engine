@@ -461,14 +461,40 @@ public class CalSvc extends CalSvcI {
     return getCal().getDbStats();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#logStats()
-   */
   @Override
   public void logStats() throws CalFacadeException {
     logIt(getStats().toString());
   }
 
+  private static class InterfaceInfo implements IfInfo {
+    String id;
+    long seconds;
+
+    public String getId() {
+      return id;
+    }
+
+    public long getSeconds() {
+      return seconds;
+    }
+  }
+
+  @Override
+  public List<IfInfo> getIfInfo() throws CalFacadeException {
+    final List<IfInfo> ifs = new ArrayList<>();
+    final long now = System.currentTimeMillis();
+
+    for (final Calintf ci: getCal().active()) {
+      InterfaceInfo ii = new InterfaceInfo();
+
+      ii.id = ci.getLogId();
+      ii.seconds = (now - ci.getStartMillis()) / 1000;
+
+      ifs.add(ii);
+    }
+
+    return ifs;
+  }
 
   /* (non-Javadoc)
    * @see org.bedework.calsvci.CalSvcI#postNotification(org.bedework.sysevents.events.SysEvent)

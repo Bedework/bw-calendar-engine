@@ -389,6 +389,30 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
+  public String listOpenIfs() {
+    final StringBuilder sb = new StringBuilder();
+
+    try {
+      getSvci();
+
+      if (svci != null) {
+        for (final CalSvcI.IfInfo ifInfo: svci.getIfInfo()) {
+          sb.append(ifInfo.getId());
+          sb.append("\t");
+          sb.append(ifInfo.getSeconds());
+          sb.append("\n");
+        }
+      }
+    } catch (final Throwable t) {
+      error(t);
+    } finally {
+      closeSvci();
+    }
+
+    return sb.toString();
+  }
+
+  @Override
   public String loadConfig() {
     return loadConfig(SystemPropertiesImpl.class);
   }
@@ -436,7 +460,8 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
       return null;
     }
 
-    final CalSvcIPars pars = CalSvcIPars.getServicePars(rootUsers[0],
+    final CalSvcIPars pars = CalSvcIPars.getServicePars(getServiceName(),
+                                                        rootUsers[0],
                                                         true,   // publicAdmin
                                                         true);   // Allow super user
     svci = new CalSvcFactoryDefault().getSvc(pars);

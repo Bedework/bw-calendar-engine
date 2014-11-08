@@ -20,6 +20,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calcore.AccessUtil;
 import org.bedework.calcore.CalintfBase;
+import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CalintfInfo;
 import org.bedework.calcorei.CoreEventInfo;
@@ -98,8 +99,10 @@ import java.io.StringReader;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -142,6 +145,8 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
        true,     // handlesContacts
        true      // handlesCategories
      );
+
+  protected static Map<String, CalintfBase> openIfs = new HashMap<>();
 
   /** For evaluating access control
    */
@@ -490,6 +495,21 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       debug("Begin transaction for " + getTraceId());
     }
 
+    synchronized (openIfs) {
+      long objCount = 0;
+
+      while (true) {
+        objKey = objTimestamp.toString() + ":" + objCount;
+
+        if (!openIfs.containsKey(objKey)) {
+          openIfs.put(objKey, this);
+          break;
+        }
+
+        objCount++;
+      }
+    }
+
     sess.beginTransaction();
 
     if (events != null) {
@@ -533,8 +553,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     } catch (final Throwable t) {
       sess.rollback();
       throw new CalFacadeException(t);
-//    } finally {
-//      flushNotifications();
+    } finally {
+      synchronized (openIfs) {
+        openIfs.remove(objKey);
+      }
     }
   }
 
@@ -545,6 +567,9 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       sess.rollback();
     } finally {
       clearNotifications();
+      synchronized (openIfs) {
+        openIfs.remove(objKey);
+      }
     }
   }
 
@@ -565,6 +590,16 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     if (sess.isOpen()) {
       sess.flush();
     }
+  }
+
+  @Override
+  public Collection<? extends Calintf> active() throws CalFacadeException {
+    return openIfs.values();
+  }
+
+  @Override
+  public long getStartMillis() throws CalFacadeException {
+    return objMillis;
   }
 
   @Override

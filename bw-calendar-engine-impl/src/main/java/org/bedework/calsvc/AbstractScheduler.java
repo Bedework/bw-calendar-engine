@@ -76,7 +76,8 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
     /* account is what we authenticated with.
      * user, if non-null, is the user calendar we want to access.
      */
-    CalSvcIPars runAsPars = CalSvcIPars.getServicePars(principalHref,//principal.getAccount(),
+    CalSvcIPars runAsPars = CalSvcIPars.getServicePars("scheduler",
+                                                       principalHref,//principal.getAccount(),
                                                        false,   // publicAdmin
                                                        "/principals/users/root/".equals(principalHref));  // allow SuperUser
 

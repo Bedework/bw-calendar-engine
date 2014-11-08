@@ -57,6 +57,9 @@ public abstract class CalintfBase implements Calintf {
   /** When we were created for debugging */
   protected Timestamp objTimestamp;
 
+  protected long objMillis;
+  protected String objKey;
+
   protected String logId;
 
   /** User for whom we maintain this facade
@@ -81,6 +84,12 @@ public abstract class CalintfBase implements Calintf {
    *
    */
   public CalintfBase() {
+    try {
+      objMillis = System.currentTimeMillis();
+      objTimestamp = new Timestamp(objMillis);
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 
   @Override
@@ -107,12 +116,10 @@ public abstract class CalintfBase implements Calintf {
     } else {
       currentMode = CalintfDefs.userMode;
     }
+  }
 
-    try {
-      objTimestamp = new Timestamp(System.currentTimeMillis());
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    }
+  public String getLogId() {
+    return logId;
   }
 
   /**
