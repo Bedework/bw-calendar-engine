@@ -64,12 +64,10 @@ public class PrincipalProcessor extends Crawler {
     /* Index the current principal
      */
 
-    CalSvcI svc = null;
+    try (BwSvc bw = getBw()) {
+      final CalSvcI svc = bw.getSvci();
 
-    try {
-      svc = getSvci();
-
-      indexCollection(svc.getCalendarsHandler().getHomePath());
+      indexCollection(svc, svc.getCalendarsHandler().getHomePath());
 
       /* Skip the public owner here as public entities are already
        * indexed by the public processor
@@ -79,7 +77,7 @@ public class PrincipalProcessor extends Crawler {
         return;
       }
 
-      BwIndexer indexer = getSvci().getIndexer(principal,
+      final BwIndexer indexer = svc.getIndexer(principal,
                                                indexRootPath);
 
       status.stats.inc(StatType.categories,
@@ -90,8 +88,6 @@ public class PrincipalProcessor extends Crawler {
 
       status.stats.inc(StatType.locations,
                        svc.getLocationsHandler().reindex(indexer));
-    } finally {
-      close();
     }
   }
 }

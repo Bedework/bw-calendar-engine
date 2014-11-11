@@ -20,6 +20,7 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calsvci.CalSvcI;
 import org.bedework.indexer.IndexStats.StatType;
 import org.bedework.util.misc.Util;
 
@@ -67,24 +68,23 @@ public class PublicProcessor extends Crawler {
 
   @Override
   public void process() throws CalFacadeException {
-    try {
-      /* First index the public collection(s) */
-      indexCollection(Util.buildPath(true, "/",
-                                     getPublicCalendarRoot()));
+    try (BwSvc bw = getBw()) {
+      final CalSvcI svc = bw.getSvci();
 
-      BwIndexer indexer = getSvci().getIndexer(principal,
+      /* First index the public collection(s) */
+      indexCollection(svc, Util.buildPath(true, "/", getPublicCalendarRoot()));
+
+      BwIndexer indexer = svc.getIndexer(principal,
                                                indexRootPath);
 
       status.stats.inc(StatType.categories,
-                       getSvci().getCategoriesHandler().reindex(indexer));
+                       svc.getCategoriesHandler().reindex(indexer));
 
       status.stats.inc(StatType.contacts,
-                       getSvci().getContactsHandler().reindex(indexer));
+                       svc.getContactsHandler().reindex(indexer));
 
       status.stats.inc(StatType.locations,
-                       getSvci().getLocationsHandler().reindex(indexer));
-    } finally {
-      close();
+                       svc.getLocationsHandler().reindex(indexer));
     }
   }
 }

@@ -25,6 +25,7 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calsvci.CalSvcI;
 import org.bedework.sysevents.events.CollectionDeletedEvent;
 import org.bedework.sysevents.events.CollectionUpdateEvent;
 import org.bedework.sysevents.events.EntityDeletedEvent;
@@ -49,7 +50,7 @@ import org.apache.log4j.Logger;
 public class MessageProcessor extends CalSys {
   private transient Logger log;
 
-  private boolean debug;
+  private final boolean debug;
 
   transient private BwIndexer publicIndexer;
 
@@ -63,10 +64,10 @@ public class MessageProcessor extends CalSys {
   protected long entitiesUpdated;
   protected long entitiesDeleted;
 
-  private int maxRetryCt = 10;
+  private static final int maxRetryCt = 10;
 
   /**
-   * @param props
+   * @param props index properties
    * @throws CalFacadeException
    */
   public MessageProcessor(final IndexProperties props) throws CalFacadeException {
@@ -76,7 +77,7 @@ public class MessageProcessor extends CalSys {
   }
 
   /**
-   * @param msg
+   * @param msg the incoming message
    * @throws CalFacadeException
    */
   public void processMessage(final SysEvent msg) throws CalFacadeException {
@@ -111,11 +112,11 @@ public class MessageProcessor extends CalSys {
         }
 
         return;
-      } catch (CalFacadeAccessException cfae) {
+      } catch (final CalFacadeAccessException cfae) {
         // No point in retrying this
         warn("No access (or deleted)");
         break;
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         warn("Error indexing msg");
         if (ct == 0) {
           warn("Will retry " + maxRetryCt + " times");
@@ -131,6 +132,7 @@ public class MessageProcessor extends CalSys {
   /**
    * @return count processed
    */
+  @SuppressWarnings("UnusedDeclaration")
   public long getCollectionsUpdated() {
     return collectionsUpdated;
   }
@@ -158,24 +160,24 @@ public class MessageProcessor extends CalSys {
 
   private void doCollectionDelete(final CollectionDeletedEvent cde)
           throws CalFacadeException {
-    getIndexer(cde.getPublick(), cde.getOwnerHref()).
-            unindexEntity(cde.getHref());
+    try (BwSvc bw = getBw()) {
+      getIndexer(bw.getSvci(),
+                 cde.getPublick(), cde.getOwnerHref()).
+              unindexEntity(cde.getHref());
+    }
   }
 
   private void doCollectionChange(final CollectionUpdateEvent cce)
                                                    throws CalFacadeException {
-    try {
-      setCurrentPrincipal(null);
-      getSvci();
+    setCurrentPrincipal(null);
 
-      BwCalendar col = getCollection(cce.getHref());
+    try (BwSvc bw = getBw()) {
+      final BwCalendar col = getCollection(bw.getSvci(), cce.getHref());
 
       if (col != null) {
         // Null if no access or removed.
-        add(col);
+        add(bw.getSvci(), col);
       }
-    } finally {
-      close();
     }
   }
 
@@ -184,31 +186,29 @@ public class MessageProcessor extends CalSys {
     /* Treat the delete of a recurrence instance as an update */
 
     if (ede.getRecurrenceId() != null) {
-      try {
-        setCurrentPrincipal(ede.getOwnerHref());
-        getSvci();
+      setCurrentPrincipal(ede.getOwnerHref());
+      try (BwSvc bw = getBw()) {
 
-        add(getEvent(getParentPath(ede.getHref()),
+        add(getEvent(bw.getSvci(),
+                     getParentPath(ede.getHref()),
                      getName(ede.getHref())) /*, false */);
-      } finally {
-        close();
       }
     } else {
-      getIndexer(ede.getPublick(),
-                 ede.getOwnerHref()).unindexEntity(ede.getHref());
+      try (BwSvc bw = getBw()) {
+        getIndexer(bw.getSvci(), ede.getPublick(),
+                   ede.getOwnerHref()).unindexEntity(ede.getHref());
+      }
     }
   }
 
   private void doEntityChange(final EntityUpdateEvent ece)
        throws CalFacadeException {
-    try {
-      setCurrentPrincipal(ece.getOwnerHref());
-      getSvci();
+    setCurrentPrincipal(ece.getOwnerHref());
 
-      add(getEvent(getParentPath(ece.getHref()),
+    try (BwSvc bw = getBw()) {
+      add(getEvent(bw.getSvci(),
+                   getParentPath(ece.getHref()),
                    getName(ece.getHref())) /*, false */);
-    } finally {
-      close();
     }
   }
 
@@ -218,8 +218,9 @@ public class MessageProcessor extends CalSys {
    * ====================================================================
    */
 
-  private void add(final BwCalendar val) throws CalFacadeException {
-    getIndexer(val).indexEntity(val);
+  private void add(final CalSvcI svci,
+                   final BwCalendar val) throws CalFacadeException {
+    getIndexer(svci, val).indexEntity(val);
   }
 
   /*
@@ -246,16 +247,19 @@ public class MessageProcessor extends CalSys {
   }
   */
   private void add(final EventInfo val) throws CalFacadeException {
-    getIndexer(val).indexEntity(val);
+    try (BwSvc bw = getBw()) {
+      getIndexer(bw.getSvci(), val).indexEntity(val);
+    }
   }
 
   @SuppressWarnings("rawtypes")
-  private BwIndexer getIndexer(final Object val) throws CalFacadeException {
+  private BwIndexer getIndexer(final CalSvcI svci,
+                               final Object val) throws CalFacadeException {
     boolean publick = false;
 
     String principal = null;
 
-    BwOwnedDbentity ent = null;
+    final BwOwnedDbentity ent;
 
     if (val instanceof BwOwnedDbentity) {
       ent = (BwOwnedDbentity)val;
@@ -273,15 +277,16 @@ public class MessageProcessor extends CalSys {
       principal = ent.getOwnerHref();
     }
 
-    return getIndexer(publick, principal);
+    return getIndexer(svci, publick, principal);
   }
 
-  private BwIndexer getIndexer(final boolean publick,
+  private BwIndexer getIndexer(final CalSvcI svci,
+                               final boolean publick,
                                final String principal) throws CalFacadeException {
     try {
       if (publick) {
         if (publicIndexer == null) {
-          publicIndexer = getSvci().getIndexer(true);
+          publicIndexer = svci.getIndexer(true);
         }
         return publicIndexer;
       }
@@ -292,11 +297,11 @@ public class MessageProcessor extends CalSys {
       }
 
       if (userIndexer == null) {
-        userIndexer = getSvci().getIndexer(principal);
+        userIndexer = svci.getIndexer(principal);
       }
 
       return userIndexer;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }

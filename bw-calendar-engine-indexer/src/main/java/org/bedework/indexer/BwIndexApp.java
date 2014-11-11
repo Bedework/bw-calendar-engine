@@ -107,7 +107,6 @@ public class BwIndexApp extends JmsSysEventListener {
 
   /**
    * @return list of purged indexes.
-   * @throws Throwable
    */
   public String purgeIndexes() {
     try {
@@ -170,9 +169,6 @@ public class BwIndexApp extends JmsSysEventListener {
     process(false);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.sysevents.listeners.JmsSysEventListener#action(org.bedework.sysevents.events.SysEvent)
-   */
   @Override
   public void action(final SysEvent ev) throws NotificationException {
     if (ev == null) {

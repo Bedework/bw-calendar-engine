@@ -40,7 +40,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
 
   private String currentPath;
 
-  private List<String> skipPaths;
+  private final List<String> skipPaths;
 
   private List<String> unprefixedSkipPaths;
 
@@ -51,9 +51,9 @@ public abstract class ProcessorBase extends CalSys implements Processor {
   protected String indexRootPath;
 
   /**
-   * @param name
-   * @param adminAccount
-   * @param principal
+   * @param name to identify
+   * @param adminAccount admin
+   * @param principal principal
    * @param batchDelay - delay between batches - milliseconds
    * @param entityDelay - delay between entities - milliseconds
    * @param skipPaths - paths to skip
@@ -75,11 +75,11 @@ public abstract class ProcessorBase extends CalSys implements Processor {
     this.skipPaths = skipPaths;
 
     if (skipPaths != null) {
-      unprefixedSkipPaths = new ArrayList<String>();
-      prefixedSkipPaths = new ArrayList<String>();
+      unprefixedSkipPaths = new ArrayList<>();
+      prefixedSkipPaths = new ArrayList<>();
 
-      for (String sp: skipPaths) {
-        String fixed = Util.buildPath(true, sp);
+      for (final String sp: skipPaths) {
+        final String fixed = Util.buildPath(true, sp);
 
         if (fixed.startsWith("*")) {
           prefixedSkipPaths.add(fixed.substring(1));
@@ -98,7 +98,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
   }
 
   /**
-   * @param val
+   * @param val crawl status object
    */
   public void setStatus(final CrawlStatus val) {
     status = val;
@@ -121,13 +121,13 @@ public abstract class ProcessorBase extends CalSys implements Processor {
       return false;
     }
 
-    String fixed = Util.buildPath(true, path);
+    final String fixed = Util.buildPath(true, path);
 
     if (unprefixedSkipPaths.contains(fixed)) {
       return true;
     }
 
-    for (String psp: prefixedSkipPaths) {
+    for (final String psp: prefixedSkipPaths) {
       if (fixed.endsWith(psp)) {
         return true;
       }
@@ -136,7 +136,8 @@ public abstract class ProcessorBase extends CalSys implements Processor {
     return false;
   }
 
-  protected void indexCollection(final String path) throws CalFacadeException {
+  protected void indexCollection(final CalSvcI svci,
+                                 final String path) throws CalFacadeException {
     if (skipThis(path)) {
       if (debug) {
         debugMsg("Skipping " + path);
@@ -152,16 +153,12 @@ public abstract class ProcessorBase extends CalSys implements Processor {
 
     status.stats.inc(StatType.collections);
 
-    CalSvcI svci = null;
-
     try {
-      svci = getSvci();
-
       BwCalendar col = null;
 
       try {
         col = svci.getCalendarsHandler().get(path);
-      } catch (CalFacadeAccessException cfe) {
+      } catch (final CalFacadeAccessException cfe) {
         error("No access to " + path);
       }
 
@@ -173,8 +170,8 @@ public abstract class ProcessorBase extends CalSys implements Processor {
         return;
       }
 
-      BwIndexer indexer =getSvci().getIndexer(principal,
-                                              indexRootPath);
+      final BwIndexer indexer = svci.getIndexer(principal,
+                                                indexRootPath);
 
       indexer.indexEntity(col);
 //      close();
@@ -188,8 +185,8 @@ public abstract class ProcessorBase extends CalSys implements Processor {
           break;
         }
 
-        for (String cpath: refs.refs) {
-          indexCollection(cpath);
+        for (final String cpath: refs.refs) {
+          indexCollection(svci, cpath);
         }
       }
 
@@ -199,7 +196,6 @@ public abstract class ProcessorBase extends CalSys implements Processor {
       }
 
       refs = null;
-      svci = getSvci();
 
       for (;;) {
         refs = getChildEntities(path, refs);
@@ -208,23 +204,21 @@ public abstract class ProcessorBase extends CalSys implements Processor {
           break;
         }
 
-        EntityProcessor ep = new EntityProcessor(status,
-                                                 name + ":Entity",
-                                                 adminAccount,
-                                                 principal,
-                                                 entityDelay,
-                                                 path,
-                                                 refs.refs,
-                                                 indexRootPath);
+        final EntityProcessor ep = new EntityProcessor(status,
+                                                       name + ":Entity",
+                                                       adminAccount,
+                                                       principal,
+                                                       entityDelay,
+                                                       path,
+                                                       refs.refs,
+                                                       indexRootPath);
 
-        IndexerThread eit = getEntityThread(ep);
+        final IndexerThread eit = getEntityThread(ep);
 
         eit.start();
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
-//    } finally {
-  //    close();
     }
   }
 }

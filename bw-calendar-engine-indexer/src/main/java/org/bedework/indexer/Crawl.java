@@ -18,12 +18,10 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
-import org.bedework.calsvci.CalSvcI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,16 +51,16 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class Crawl extends CalSys {
-  private IndexProperties props;
+  private final IndexProperties props;
 
-  private List<CrawlStatus> statuses = new ArrayList<CrawlStatus>();
+  private final List<CrawlStatus> statuses = new ArrayList<>();
 
-  protected long batchDelay;
-  protected long entityDelay;
+  //protected long batchDelay;
+  //protected long entityDelay;
 
-  private IndexProperties idxProps;
-  private AuthProperties authProps;
-  private AuthProperties unauthProps;
+  //private final IndexProperties idxProps;
+  //private final AuthProperties authProps;
+  //private final AuthProperties unauthProps;
 
   /**
    * @param props - our config
@@ -78,16 +76,15 @@ public class Crawl extends CalSys {
     setThreadPools(props.getMaxEntityThreads(),
                    props.getMaxPrincipalThreads());
 
-    CalSvcI svci = null;
-    try {
-      svci = getAdminSvci();
+    /*
+    try (BwSvc bw = getAdminBw()) {
+      final CalSvcI svci = bw.getSvci();
 
       idxProps = svci.getIndexProperties();
       authProps = svci.getAuthProperties(true);
       unauthProps = svci.getAuthProperties(false);
-    } finally {
-      close(svci);
     }
+    */
   }
 
   static class Indexes {
@@ -99,18 +96,19 @@ public class Crawl extends CalSys {
   /**
    * @throws CalFacadeException
    */
+  @SuppressWarnings("ConstantConditions")
   public void crawl() throws CalFacadeException {
-    long start = System.currentTimeMillis();
+    final long start = System.currentTimeMillis();
 
-    CrawlStatus prstats = new CrawlStatus("Statistics for Principals");
+    final CrawlStatus prstats = new CrawlStatus("Statistics for Principals");
     statuses.add(prstats);
 
-    CrawlStatus pubstats = new CrawlStatus("Statistics for Public");
+    final CrawlStatus pubstats = new CrawlStatus("Statistics for Public");
     statuses.add(pubstats);
 
-    CrawlStatus status = new CrawlStatus("Overall status");
+    final CrawlStatus status = new CrawlStatus("Overall status");
     statuses.add(status);
-    Indexes idxs = newIndexes(status);
+    final Indexes idxs = newIndexes(status);
 
     /* Now we can reindex into the new directory */
 
@@ -151,9 +149,9 @@ public class Crawl extends CalSys {
       setStatus(status, "Public indexing completed");
     }
 
-    endIndexing(status, idxs);
+    endIndexing(idxs);
 
-    long millis = System.currentTimeMillis() - start;
+    final long millis = System.currentTimeMillis() - start;
     status.infoLines.add("Indexing took " +
       String.format("%d min, %d sec",
                     TimeUnit.MILLISECONDS.toMinutes(millis),
@@ -174,9 +172,11 @@ public class Crawl extends CalSys {
    * @throws CalFacadeException
    */
   public Set<IndexInfo> getIndexInfo() throws CalFacadeException {
-    BwIndexer idx = getSvci().getIndexer(adminAccount, null);
+    try (BwSvc bw = getAdminBw()) {
+      final BwIndexer idx = bw.getSvci().getIndexer(adminAccount, null);
 
-    return idx.getIndexInfo();
+      return idx.getIndexInfo();
+    }
   }
 
   /** Purge non-current indexes maintained by server.
@@ -185,66 +185,73 @@ public class Crawl extends CalSys {
    * @throws CalFacadeException
    */
   public List<String> purgeIndexes() throws CalFacadeException {
-    BwIndexer idx = getSvci().getIndexer(adminAccount, null);
+    try (BwSvc bw = getAdminBw()) {
+      final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
+                                                    null);
 
-    return idx.purgeIndexes();
+      return idx.purgeIndexes();
+    }
   }
 
   private Indexes newIndexes(final CrawlStatus cr) throws CalFacadeException {
-    Indexes idxs = new Indexes();
+    final Indexes idxs = new Indexes();
 
-    if (props.getIndexUsers()) {
-      // Switch user indexes.
+    try (BwSvc bw = getAdminBw()) {
+      if (props.getIndexUsers()) {
+        // Switch user indexes.
 
-      if (props.getUserIndexName() == null) {
-        outErr(cr, "No user index core defined in system properties");
-        throw new CalFacadeException("No user index core defined in system properties");
+        if (props.getUserIndexName() == null) {
+          outErr(cr,
+                 "No user index core defined in system properties");
+          throw new CalFacadeException(
+                  "No user index core defined in system properties");
+        }
+
+        final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
+                                                      idxs.userIndex);
+
+        idxs.userIndex = idx.newIndex(props.getUserIndexName());
+
+        setStatus(cr, "Switched user index to " + idxs.userIndex);
       }
 
-      BwIndexer idx = getSvci().getIndexer(adminAccount,
-                                           idxs.userIndex);
+      if (props.getIndexPublic()) {
+        // Switch public indexes.
 
-      idxs.userIndex = idx.newIndex(props.getUserIndexName());
+        if (props.getPublicIndexName() == null) {
+          outErr(cr,
+                 "No public index core defined in system properties");
+          throw new CalFacadeException(
+                  "No public index core defined in system properties");
+        }
 
-      setStatus(cr, "Switched solr core to " + idxs.userIndex);
-    }
+        final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
+                                                      idxs.publicIndex);
 
-    if (props.getIndexPublic()) {
-      // Switch public indexes.
+        idxs.publicIndex = idx.newIndex(props.getPublicIndexName());
 
-      if (props.getPublicIndexName() == null) {
-        outErr(cr, "No public index core defined in system properties");
-        throw new CalFacadeException("No public index core defined in system properties");
+        setStatus(cr, "Switched public index to " + idxs.publicIndex);
       }
-
-      BwIndexer idx = getSvci().getIndexer(adminAccount,
-                                           idxs.publicIndex);
-
-      idxs.publicIndex = idx.newIndex(props.getPublicIndexName());
-
-      setStatus(cr, "Switched solr core to " + idxs.publicIndex);
     }
 
     return idxs;
   }
 
-  private void endIndexing(final CrawlStatus cr,
-                           final Indexes idxs) throws CalFacadeException {
-    /* If it's lucene both public and user are the same.
-     */
+  private void endIndexing(final Indexes idxs) throws CalFacadeException {
+    try (BwSvc bw = getAdminBw()) {
+      if (props.getIndexUsers()) {
+        final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
+                                                      idxs.userIndex);
 
-    if (props.getIndexUsers()) {
-      BwIndexer idx = getSvci().getIndexer(adminAccount,
-                                           idxs.userIndex);
+        idx.swapIndex(idxs.userIndex, props.getUserIndexName());
+      }
 
-      idx.swapIndex(idxs.userIndex, props.getUserIndexName());
-    }
+      if (props.getIndexPublic()) {
+        final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
+                                                      idxs.publicIndex);
 
-    if (props.getIndexPublic()) {
-      BwIndexer idx = getSvci().getIndexer(adminAccount,
-                                           idxs.publicIndex);
-
-      idx.swapIndex(idxs.publicIndex, props.getPublicIndexName());
+        idx.swapIndex(idxs.publicIndex, props.getPublicIndexName());
+      }
     }
   }
 

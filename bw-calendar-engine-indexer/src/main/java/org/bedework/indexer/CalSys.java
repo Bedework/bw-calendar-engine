@@ -21,12 +21,11 @@ package org.bedework.indexer;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calsvci.CalSvcFactory;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
@@ -54,9 +53,9 @@ public abstract class CalSys {
 
   private String publicCalendarRoot;
 
-  private AuthProperties authpars;
-  private AuthProperties unauthpars;
-  private IndexProperties idxpars;
+  //private AuthProperties authpars;
+  //private AuthProperties unauthpars;
+  //private IndexProperties idxpars;
   private BasicSystemProperties basicSyspars;
 
   private int collectionBatchSize = 10;
@@ -64,12 +63,6 @@ public abstract class CalSys {
   private int entityBatchSize = 50;
 
   private int principalBatchSize = 10;
-
-  private CalSvcI svci;
-
-  /* Who the svci object is for */
-  private String curAccount;
-  private boolean curPublicAdmin;
 
   protected static ThreadPool entityThreadPool;
   protected static ThreadPool principalThreadPool;
@@ -151,96 +144,121 @@ public abstract class CalSys {
     return href.substring(pos + 1);
   }
 
-  /** Get an svci object and return it. Also embed it in this object.
-   *
-   * @return svci object
-   * @throws CalFacadeException
-   */
-  public CalSvcI getSvci() throws CalFacadeException {
-    if ((svci != null) && svci.isOpen()) {
-      // We shouldn't need to check if it's the same account.
+  static class BwSvc implements AutoCloseable {
+    private static CalSvcFactory factory = new CalSvcFactoryDefault();
+    private CalSvcI svci;
+
+    /* Who the svci object is for */
+    private String curAccount;
+    private boolean curPublicAdmin;
+
+    private String principal;
+    private String adminAccount;
+
+    BwSvc(final String principal,
+            final String adminAccount) {
+      this.principal = principal;
+      this.adminAccount = adminAccount;
+    }
+
+    BwSvc(final String adminAccount) {
+      this.adminAccount = adminAccount;
+    }
+
+    /**
+     * Get an svci object and return it. Also embed it in this
+     * object.
+     *
+     * @return svci object
+     * @throws CalFacadeException
+     */
+    public CalSvcI getSvci() throws CalFacadeException {
+      if ((svci != null) && svci.isOpen()) {
+        // We shouldn't need to check if it's the same account.
+        return svci;
+      }
+
+      String account = adminAccount;
+      boolean publicAdmin = true;
+      String userPrincipalPrefix = "/principals/users/";
+
+      if (principal != null) {
+        if (principal.startsWith(userPrincipalPrefix)) {
+          account = principal.substring(userPrincipalPrefix.length());
+
+          if (account.endsWith("/")) {
+            account = account.substring(0, account.length() - 1);
+          }
+        }
+
+        publicAdmin = false;
+      }
+
+      if ((svci == null) ||
+              !account.equals(curAccount) ||
+              (publicAdmin != curPublicAdmin)) {
+        curAccount = account;
+        curPublicAdmin = publicAdmin;
+
+        CalSvcIPars pars = CalSvcIPars.getIndexerPars(account,
+                                                      publicAdmin);   // Allow super user
+        svci = factory.getSvc(pars);
+      }
+
+      svci.open();
+      svci.beginTransaction();
+
       return svci;
     }
 
-    String account = adminAccount;
-    boolean publicAdmin = true;
-    String userPrincipalPrefix = "/principals/users/";
-
-    if (principal != null) {
-      if (principal.startsWith(userPrincipalPrefix)) {
-        account = principal.substring(userPrincipalPrefix.length());
-
-        if (account.endsWith("/")) {
-          account = account.substring(0, account.length() - 1);
-        }
+    /**
+     * @throws CalFacadeException
+     */
+    public void close() throws CalFacadeException {
+      if ((svci == null) || !svci.isOpen()) {
+        return;
       }
 
-      publicAdmin = false;
+      close(svci);
+
+      svci = null;
     }
 
-    if ((svci == null) ||
-        !account.equals(curAccount) ||
-        (publicAdmin != curPublicAdmin)) {
-      curAccount = account;
-      curPublicAdmin = publicAdmin;
+    /**
+     * @param svci
+     * @throws CalFacadeException
+     */
+    public void close(final CalSvcI svci) throws CalFacadeException {
+      if ((svci == null) || !svci.isOpen()) {
+        return;
+      }
 
-      CalSvcIPars pars = CalSvcIPars.getIndexerPars(account,
-                                                    publicAdmin);   // Allow super user
-      svci = new CalSvcFactoryDefault().getSvc(pars);
+      try {
+        svci.endTransaction();
+      } catch (Throwable t) {
+      }
+
+      try {
+        svci.close();
+      } catch (Throwable t) {
+      }
     }
-
-    svci.open();
-    svci.beginTransaction();
-
-    return svci;
   }
 
   /**
-   * @return svci object
+   * @return Bw object for principal use
    * @throws CalFacadeException
    */
-  public CalSvcI getAdminSvci() throws CalFacadeException {
-    CalSvcIPars pars = CalSvcIPars.getIndexerPars(adminAccount,
-                                                  true);   // publicAdmin,
-    CalSvcI svci = new CalSvcFactoryDefault().getSvc(pars);
-
-    svci.open();
-    svci.beginTransaction();
-
-    return svci;
+  public BwSvc getBw() throws CalFacadeException {
+    return new BwSvc(principal, adminAccount);
   }
 
   /**
+   * @return Bw object for admin use
    * @throws CalFacadeException
    */
-  public void close() throws CalFacadeException {
-    if ((svci == null) || !svci.isOpen()) {
-      return;
-    }
-
-    close(svci);
-
-    svci = null;
-  }
-
-  /**
-   * @param svci
-   * @throws CalFacadeException
-   */
-  public void close(final CalSvcI svci) throws CalFacadeException {
-    if ((svci == null) || !svci.isOpen()) {
-      return;
-    }
-
-    try {
-      svci.endTransaction();
-    } catch (Throwable t) {
-    }
-
-    try {
-      svci.close();
-    } catch (Throwable t) {
-    }
+  public BwSvc getAdminBw() throws CalFacadeException {
+    return new BwSvc(adminAccount);
   }
 
   protected String getPublicCalendarRoot() throws CalFacadeException {
@@ -251,69 +269,10 @@ public abstract class CalSys {
     return publicCalendarRoot;
   }
 
-  protected AuthProperties getAuthpars(boolean auth) throws CalFacadeException {
-    CalSvcI svci = null;
-    AuthProperties apars;
-    if (auth) {
-      apars = authpars;
-    } else {
-      apars = unauthpars;
-    }
-
-    if (apars == null) {
-      try {
-        svci = getAdminSvci();
-        apars = svci.getAuthProperties(auth);
-        if (auth) {
-          authpars = apars;
-        } else {
-          unauthpars = apars;
-        }
-      } finally {
-        if (svci != null) {
-          try {
-            close(svci);
-          } finally {
-          }
-        }
-      }
-    }
-
-    return apars;
-  }
-
-  protected IndexProperties getIdxpars() throws CalFacadeException {
-    CalSvcI svci = null;
-    if (idxpars == null) {
-      try {
-        svci = getAdminSvci();
-        idxpars = svci.getIndexProperties();
-      } finally {
-        if (svci != null) {
-          try {
-            close(svci);
-          } finally {
-          }
-        }
-      }
-    }
-
-    return idxpars;
-  }
-
   protected BasicSystemProperties getBasicSyspars() throws CalFacadeException {
-    CalSvcI svci = null;
     if (basicSyspars == null) {
-      try {
-        svci = getAdminSvci();
-        basicSyspars = svci.getBasicSystemProperties();
-      } finally {
-        if (svci != null) {
-          try {
-            close(svci);
-          } finally {
-          }
-        }
+      try (BwSvc bw = getAdminBw()) {
+        basicSyspars = bw.getSvci().getBasicSystemProperties();
       }
     }
 
@@ -353,8 +312,9 @@ public abstract class CalSys {
     return ent.getOwnerHref().equals(principal);
   }
 
-  protected BwCalendar getCollection(final String path) throws CalFacadeException {
-    BwCalendar col = svci.getCalendarsHandler().get(path);
+  protected BwCalendar getCollection(final CalSvcI svci,
+                                     final String path) throws CalFacadeException {
+    final BwCalendar col = svci.getCalendarsHandler().get(path);
 
     if ((col == null) || !hasAccess(col)) {
       if (debug) {
@@ -399,7 +359,6 @@ public abstract class CalSys {
    * @throws CalFacadeException
    */
   protected Refs getPrincipalHrefs(final Refs refs) throws CalFacadeException {
-    CalSvcI svci = getAdminSvci();
     Refs r = refs;
 
     if (r == null) {
@@ -407,8 +366,8 @@ public abstract class CalSys {
       r.batchSize = principalBatchSize;
     }
 
-    try {
-      r.refs = svci.getUsersHandler().getPrincipalHrefs(r.index, r.batchSize);
+    try (BwSvc bw = getAdminBw()) {
+      r.refs = bw.getSvci().getUsersHandler().getPrincipalHrefs(r.index, r.batchSize);
 
       if (debug) {
         if (r.refs == null) {
@@ -426,8 +385,6 @@ public abstract class CalSys {
       r.index += r.refs.size();
 
       return r;
-    } finally {
-      close(svci);
     }
   }
 
@@ -451,10 +408,8 @@ public abstract class CalSys {
       r.batchSize = collectionBatchSize;
     }
 
-    CalSvcI svci = getAdminSvci();
-
-    try {
-      BwCalendar col = svci.getCalendarsHandler().get(path);
+    try (BwSvc bw = getAdminBw()) {
+      final BwCalendar col = bw.getSvci().getCalendarsHandler().get(path);
 
       if ((col == null) || !hasAccess(col)) {
         if (debug) {
@@ -467,7 +422,7 @@ public abstract class CalSys {
         throw new CalFacadeAccessException();
       }
 
-      r.refs = svci.getAdminHandler().getChildCollections(path, r.index, r.batchSize);
+      r.refs = bw.getSvci().getAdminHandler().getChildCollections(path, r.index, r.batchSize);
 
       if (debug) {
         if (r.refs == null) {
@@ -484,8 +439,6 @@ public abstract class CalSys {
       r.index += r.refs.size();
 
       return r;
-    } finally {
-      close(svci);
     }
   }
 
@@ -502,8 +455,6 @@ public abstract class CalSys {
       debugMsg("getChildEntities(" + path + ")");
     }
 
-    CalSvcI svci = getAdminSvci();
-
     Refs r = refs;
 
     if (r == null) {
@@ -511,14 +462,14 @@ public abstract class CalSys {
       r.batchSize = entityBatchSize;
     }
 
-    try {
-      BwCalendar col = svci.getCalendarsHandler().get(path);
+    try (BwSvc bw = getAdminBw()) {
+      final BwCalendar col = bw.getSvci().getCalendarsHandler().get(path);
 
       if ((col == null) || !hasAccess(col)) {
         throw new CalFacadeAccessException();
       }
 
-      r.refs = svci.getAdminHandler().getChildEntities(path, r.index, r.batchSize);
+      r.refs = bw.getSvci().getAdminHandler().getChildEntities(path, r.index, r.batchSize);
 
       if (debug) {
         if (r.refs == null) {
@@ -535,14 +486,13 @@ public abstract class CalSys {
       r.index += r.refs.size();
 
       return r;
-    } finally {
-      close(svci);
     }
   }
 
-  protected EventInfo getEvent(final String colPath,
+  protected EventInfo getEvent(final CalSvcI svci,
+                               final String colPath,
                                final String name) throws CalFacadeException {
-    EventsI evhandler = svci.getEventsHandler();
+    final EventsI evhandler = svci.getEventsHandler();
 
     return evhandler.get(colPath, name,
                          RecurringRetrievalMode.overrides);

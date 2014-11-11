@@ -35,20 +35,21 @@ import java.util.Collection;
  *
  */
 public class EntityProcessor extends Crawler {
-  private Collection<String> entityNames;
-  private String path;
+  private final Collection<String> entityNames;
+  private final String path;
 
-  private int maxErrors = 10;
+  @SuppressWarnings("FieldCanBeLocal")
+  private final int maxErrors = 10;
   private int errors;
 
   /** Index a bunch of entities given the names.
-   * @param status
-   * @param name
-   * @param adminAccount
+   * @param status crawler status object
+   * @param name to identify process
+   * @param adminAccount for admin access
    * @param principal - the principal we are processing or null.
    * @param entityDelay delay in millisecs between entities (unused)
    * @param path for collection
-   * @param entityNames
+   * @param entityNames paths to index
    * @param indexRootPath - where we build the index
    * @throws CalFacadeException
    */
@@ -72,14 +73,13 @@ public class EntityProcessor extends Crawler {
   @Override
   public void process() throws CalFacadeException {
     try {
-      CalSvcI svci = null;
-      BwIndexer indexer = getSvci().getIndexer(principal,
-                                               indexRootPath);
+      try (BwSvc bw = getBw()) {
+        final CalSvcI svci = bw.getSvci();
 
-      try {
-        svci = getSvci();
+        final BwIndexer indexer = svci.getIndexer(principal,
+                                                  indexRootPath);
 
-        for (String name: entityNames) {
+        for (final String name: entityNames) {
           try {
             if (debug) {
               debugMsg("Indexing collection " + path +
@@ -87,15 +87,16 @@ public class EntityProcessor extends Crawler {
             }
 
             status.stats.inc(StatType.entities);
-            EventInfo ent = svci.getEventsHandler().get(path, name,
-                                                        RecurringRetrievalMode.overrides);
+            final EventInfo ent =
+                    svci.getEventsHandler().get(path, name,
+                                                RecurringRetrievalMode.overrides);
 
             if (ent == null) {
               status.stats.inc(StatType.unreachableEntities);
               continue;
             }
             indexer.indexEntity(ent);
-          } catch (Throwable t) {
+          } catch (final Throwable t) {
             Logger.getLogger(this.getClass()).error(this, t);
 
             errors++;
@@ -106,12 +107,8 @@ public class EntityProcessor extends Crawler {
             }
           }
         }
-      } finally {
-        if (svci != null) {
-          close();
-        }
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       Logger.getLogger(this.getClass()).error(t);
     }
   }

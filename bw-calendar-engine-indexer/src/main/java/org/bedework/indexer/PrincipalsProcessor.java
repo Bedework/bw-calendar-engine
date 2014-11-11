@@ -96,23 +96,23 @@ public class PrincipalsProcessor extends Crawler {
        * the value to look for.
        */
 
-      for (String href: refs.refs) {
+      for (final String href: refs.refs) {
         if (debug) {
           debugMsg("Principals: Processing principal " + href);
         }
 
         getStatus().currentStatus = "Principals: Processing principal " + href;
 
-        ProcessorBase p = new PrincipalProcessor(status,
-                                                 name + " " + principal,
-                                                 adminAccount,
-                                                 href,
-                                                 batchDelay,
-                                                 entityDelay,
-                                                 getSkipPaths(), indexRootPath);
+        final ProcessorBase p = new PrincipalProcessor(status,
+                                                       name + " " + principal,
+                                                       adminAccount,
+                                                       href,
+                                                       batchDelay,
+                                                       entityDelay,
+                                                       getSkipPaths(), indexRootPath);
 
         /* This call should hang waiting for an available process */
-        IndexerThread it = getPrincipalThread(p);
+        final IndexerThread it = getPrincipalThread(p);
 
         if (debug) {
           debugMsg("Principals: Got thread for " + href);
