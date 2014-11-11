@@ -455,10 +455,9 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     if (!Util.isEmpty(calendars)) {
       FilterBase colfltr = null;
-      for (BwCalendar c: calendars) {
+      for (final BwCalendar c: calendars) {
         colfltr = FilterBase.addOrChild(colfltr,
-                                        new ObjectFilter<String>(PropertyInfoIndex.COLLECTION,
-                                                                 c.getPath()));
+                                        new BwCollectionFilter(null, c));
       }
       fltr = FilterBase.addAndChild(fltr, colfltr);
     }
@@ -469,7 +468,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       desiredAccess = privReadFreeBusy;
     }
 
-    List<PropertyInfoIndex> properties = new ArrayList<>(2);
+    final List<PropertyInfoIndex> properties = new ArrayList<>(2);
 
     properties.add(PropertyInfoIndex.DTSTART);
     properties.add(PropertyInfoIndex.UTC);
@@ -983,16 +982,29 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
   public DelEventResult deleteEvent(final EventInfo ei,
                                     final boolean scheduling,
                                     final boolean reallyDelete) throws CalFacadeException {
+    final DelEventResult der = new DelEventResult(false, 0);
     BwEvent ev = ei.getEvent();
-    long startTime = System.currentTimeMillis();
-    HibSession sess = getSess();
-    DelEventResult der = new DelEventResult(false, 0);
-    int desiredAccess;
-    boolean shared;
+
+    if (ev.unsaved()) {
+      final CoreEventInfo cei = getEvent(ev.getColPath(),
+                                         ev.getName(),
+                                         RecurringRetrievalMode.overrides);
+
+      if (cei == null) {
+        return der;
+      }
+
+      ev = cei.getEvent();
+    }
+
+    final long startTime = System.currentTimeMillis();
+    final HibSession sess = getSess();
+    final int desiredAccess;
+    final boolean shared;
 
     try {
-      BwCalendar col = getEntityCollection(ev.getColPath(),
-                                           privAny, scheduling, false);
+      final BwCalendar col = getEntityCollection(ev.getColPath(),
+                                                 privAny, scheduling, false);
       shared = col.getShared();
 
       if (!scheduling) {
@@ -1002,12 +1014,12 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
          * Set desiredAccess to something that works.
          *  */
 
-        CalendarWrapper cw = (CalendarWrapper)col;
+        final CalendarWrapper cw = (CalendarWrapper)col;
         desiredAccess = cw.getLastDesiredAccess();
       }
 
       access.checkAccess(ev, desiredAccess, false);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       sess.rollback();
       throw cfe;
     }
@@ -1046,9 +1058,9 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
        * and add an exdate to the master.
        */
 
-      BwEventProxy proxy = (BwEventProxy)ev;
-      BwEventAnnotation ann = proxy.getRef();
-      BwEvent master = ann.getMaster();
+      final BwEventProxy proxy = (BwEventProxy)ev;
+      final BwEventAnnotation ann = proxy.getRef();
+      final BwEvent master = ann.getMaster();
 
       /* Fetch the instance so we can delete it */
       makeQuery(new String[]{"from ",
@@ -1058,7 +1070,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
       sess.setEntity("master", master);
       sess.setString("rid", ev.getRecurrenceId());
-      BwRecurrenceInstance inst = (BwRecurrenceInstance)sess.getUnique();
+      final BwRecurrenceInstance inst = (BwRecurrenceInstance)sess.getUnique();
 
       if (inst == null) {
         stat(StatsEvent.deleteTime, startTime);
@@ -1077,7 +1089,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
         sess.delete(ann);
       }
 
-      BwDateTime instDate = inst.getDtstart();
+      final BwDateTime instDate = inst.getDtstart();
 
       if (!master.getRdates().remove(instDate)) {
         // Wasn't an rdate event
