@@ -18,13 +18,13 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.calcore.AccessUtil;
 import org.bedework.calcore.hibernate.EventQueryBuilder.EventsQueryResult;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI;
 import org.bedework.calcorei.HibSession;
 import org.bedework.caldav.util.filter.FilterBase;
-import org.bedework.caldav.util.filter.ObjectFilter;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCalendar.CollectionInfo;
@@ -43,6 +43,7 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeDupNameException;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.filter.BwCollectionFilter;
 import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.SearchResult;
@@ -58,8 +59,6 @@ import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
-
-import org.bedework.access.Acl.CurrentAccess;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;

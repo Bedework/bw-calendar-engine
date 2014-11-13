@@ -18,7 +18,6 @@
 */
 package org.bedework.dumprestore.dump;
 
-import org.apache.log4j.Logger;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -29,6 +28,8 @@ import org.bedework.calsvci.CalendarsI;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.InfoLines;
 import org.bedework.util.misc.Util;
+
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.nio.file.FileSystems;
@@ -287,7 +288,8 @@ public class DumpPrincipal {
   }
 
   private CalSvcI getSvci() throws CalFacadeException {
-    CalSvcIPars pars = new CalSvcIPars(pr.getAccount(), // Need to use href
+    CalSvcIPars pars = new CalSvcIPars("dump-principal",
+                                       pr.getAccount(), // Need to use href
                                        null,   // calsuite
                                        true,   // publicAdmin
                                        true,   // superUser,
