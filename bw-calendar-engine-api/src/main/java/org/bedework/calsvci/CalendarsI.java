@@ -21,6 +21,7 @@ package org.bedework.calsvci;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.synch.wsmessages.SubscriptionStatusResponseType;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -193,8 +194,8 @@ public interface CalendarsI extends Serializable {
    * @param  newName     String name
    * @throws CalFacadeException
    */
-  public void rename(BwCalendar val,
-                     String newName) throws CalFacadeException;
+  void rename(BwCalendar val,
+              String newName) throws CalFacadeException;
 
   /** Move a calendar object from one parent to another
    *
@@ -202,15 +203,15 @@ public interface CalendarsI extends Serializable {
    * @param  newParent   BwCalendar potential parent
    * @throws CalFacadeException
    */
-  public void move(BwCalendar val,
-                   BwCalendar newParent) throws CalFacadeException;
+  void move(BwCalendar val,
+            BwCalendar newParent) throws CalFacadeException;
 
   /** Update a calendar object
    *
    * @param  val     BwCalendar object
    * @throws CalFacadeException
    */
-  public void update(BwCalendar val) throws CalFacadeException;
+  void update(BwCalendar val) throws CalFacadeException;
 
   /** Delete a calendar. Also remove it from the current user preferences (if any).
    *
@@ -231,7 +232,7 @@ public interface CalendarsI extends Serializable {
    * @return boolean
    * @throws CalFacadeException
    */
-  public boolean isUserRoot(BwCalendar cal) throws CalFacadeException;
+  boolean isUserRoot(BwCalendar cal) throws CalFacadeException;
 
   /** Attempt to get calendar referenced by the alias. For an internal alias
    * the result will also be set in the aliasTarget property of the parameter.
@@ -243,12 +244,12 @@ public interface CalendarsI extends Serializable {
    * @return BwCalendar
    * @throws CalFacadeException
    */
-  public BwCalendar resolveAlias(BwCalendar val,
-                                 boolean resolveSubAlias,
-                                 boolean freeBusy) throws CalFacadeException;
+  BwCalendar resolveAlias(BwCalendar val,
+                          boolean resolveSubAlias,
+                          boolean freeBusy) throws CalFacadeException;
 
   /** */
-  public enum CheckSubscriptionResult {
+  enum CheckSubscriptionResult {
     /** No action was required */
     ok,
 
@@ -258,6 +259,9 @@ public interface CalendarsI extends Serializable {
     /** Not external subscription */
     notExternal,
 
+    /** no subscription id */
+    notsubscribed,
+
     /** resubscribed */
     resubscribed,
 
@@ -265,26 +269,48 @@ public interface CalendarsI extends Serializable {
     noSynchService,
 
     /** failed */
-    failed;
+    failed
   }
+
+  class SynchStatusResponse {
+    public CheckSubscriptionResult requestStatus;
+
+    public SubscriptionStatusResponseType subscriptionStatus;
+
+    public CheckSubscriptionResult getRequestStatus() {
+      return requestStatus;
+    }
+
+    public SubscriptionStatusResponseType getSubscriptionStatus() {
+      return subscriptionStatus;
+    }
+  }
+
+  /**
+   *
+   * @param path to collection
+   * @return never null - requestStatus set for not an external subscription.
+   * @throws CalFacadeException
+   */
+  SynchStatusResponse getSynchStatus(String path) throws CalFacadeException;
 
   /** Check the subscription if this is an external subscription. Will contact
    * the synch server and check the validity. If there is no subscription
    * onthe synch server will attempt to resubscribe.
    *
-   * @param path
+   * @param path to collection
    * @return result of call
    * @throws CalFacadeException
    */
-  public CheckSubscriptionResult checkSubscription(String path) throws CalFacadeException;
+  CheckSubscriptionResult checkSubscription(String path) throws CalFacadeException;
 
   /** Return the value to be used as the sync-token property for the given path.
    * This is effectively the max sync-token of the collection and any child
    * collections.
    *
-   * @param path
+   * @param path to collection
    * @return a sync-token
    * @throws CalFacadeException
    */
-  public String getSyncToken(String path) throws CalFacadeException;
+  String getSyncToken(String path) throws CalFacadeException;
 }

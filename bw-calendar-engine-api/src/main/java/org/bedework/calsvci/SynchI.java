@@ -22,6 +22,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.synch.BwSynchInfo;
 import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
+import org.bedework.calsvci.CalendarsI.SynchStatusResponse;
 
 import java.io.Serializable;
 
@@ -61,7 +62,15 @@ public interface SynchI extends Serializable {
    * @return true if subscribed OK.
    * @throws CalFacadeException
    */
-  boolean subscribe(final BwCalendar val) throws CalFacadeException;
+  boolean subscribe(BwCalendar val) throws CalFacadeException;
+
+  /**
+   *
+   * @param val Collection
+   * @return status - never null.
+   * @throws CalFacadeException
+   */
+  public SynchStatusResponse getSynchStatus(BwCalendar val) throws CalFacadeException;
 
   /** Check the subscription if this is an external subscription. Will contact
    * the synch server and check the validity. If there is no subscription

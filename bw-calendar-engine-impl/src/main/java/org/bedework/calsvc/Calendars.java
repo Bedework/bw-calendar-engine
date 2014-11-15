@@ -444,6 +444,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
+  public SynchStatusResponse getSynchStatus(final String path) throws CalFacadeException {
+    return getSvc().getSynch().getSynchStatus(get(path));
+  }
+
+  @Override
   public CheckSubscriptionResult checkSubscription(final String path) throws CalFacadeException {
     return getSvc().getSynch().checkSubscription(get(path));
   }
@@ -502,7 +507,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       }
     }
 
-    BwPreferences prefs = getSvc().getPrefsHandler().get(
+    final BwPreferences prefs = getSvc().getPrefsHandler().get(
              getSvc().getUsersHandler().getPrincipal(val.getOwnerHref()));
     if (val.getPath().equals(prefs.getDefaultCalendarPath())) {
       throw new CalFacadeException(CalFacadeException.cannotDeleteDefaultCalendar);
@@ -541,19 +546,19 @@ class Calendars extends CalSvcDb implements CalendarsI {
       }
 
       /* Remove resources */
-      ResourcesI resI = getSvc().getResourcesHandler();
-      Collection<BwResource> rs = resI.getAll(val.getPath());
+      final ResourcesI resI = getSvc().getResourcesHandler();
+      final Collection<BwResource> rs = resI.getAll(val.getPath());
       if (!Util.isEmpty(rs)) {
         if (!emptyIt) {
           throw new CalFacadeException(CalFacadeException.collectionNotEmpty);
         }
 
-        for (BwResource r: rs) {
+        for (final BwResource r: rs) {
           resI.delete(Util.buildPath(false, r.getColPath(), "/", r.getName()));
         }
       }
 
-      for (BwCalendar cal: getChildren(val)) {
+      for (final BwCalendar cal: getChildren(val)) {
         if (!delete(cal, true, true, sendSchedulingMessage)) {
           // Somebody else at it
           getSvc().rollbackTransaction();
@@ -578,7 +583,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return;
     }
 
-    BwCalendar col = resolveAlias(root, true, false);
+    final BwCalendar col = resolveAlias(root, true, false);
     if (col == null) {
       // No access or gone
       return;
