@@ -33,7 +33,7 @@ public class CalSvcIPars implements Serializable {
 
   /** The current user we run as. null to use calSuite
    */
-  private String user;
+  private final String user;
 
   /** The calendar suite name. user and calSuite null for guest.
    */
@@ -45,7 +45,7 @@ public class CalSvcIPars implements Serializable {
 
   /** True if this is for public event submission
    */
-  private boolean publicSubmission;
+  private final boolean publicSubmission;
 
   /** True if this is for a background service
    */
@@ -108,13 +108,16 @@ public class CalSvcIPars implements Serializable {
                      final boolean adminCanEditAllPublicContacts,
 
                      final boolean sessionless) {
-    this(logId,
-         authUser, calSuite, publicAdmin, allowSuperUser, service,
-         adminCanEditAllPublicCategories,
-         adminCanEditAllPublicLocations,
-         adminCanEditAllPublicContacts,
-         sessionless);
-
+    this.logId = logId;
+    this.authUser = authUser;
+    this.calSuite = calSuite;
+    this.publicAdmin = publicAdmin;
+    this.allowSuperUser = allowSuperUser;
+    this.service = service;
+    this.adminCanEditAllPublicCategories = adminCanEditAllPublicCategories;
+    this.adminCanEditAllPublicLocations = adminCanEditAllPublicLocations;
+    this.adminCanEditAllPublicContacts = adminCanEditAllPublicContacts;
+    this.sessionless = sessionless;
     this.user = user;
     this.publicSubmission = publicSubmission;
   }
@@ -133,10 +136,12 @@ public class CalSvcIPars implements Serializable {
                                            final boolean allowSuperUser) {
     return new CalSvcIPars(logId,
                            account,
+                           null,    // user
                            null,   // calsuite
                            publicAdmin,
                            allowSuperUser,
                            true,   // service
+                           false,  // public submission
                            false,  // adminCanEditAllPublicCategories
                            false,  // adminCanEditAllPublicLocations
                            false,  // adminCanEditAllPublicSponsors
@@ -153,10 +158,12 @@ public class CalSvcIPars implements Serializable {
                                            final boolean publicAdmin) {
     final CalSvcIPars pars = new CalSvcIPars("indexer",
                                              account,
+                                             null,    // user
                                              null,   // calsuite
                                              publicAdmin,
                                              true,
                                              true,   // service
+                                             false,  // public submission
                                              false,  // adminCanEditAllPublicCategories
                                              false,  // adminCanEditAllPublicLocations
                                              false,  // adminCanEditAllPublicSponsors
@@ -176,10 +183,12 @@ public class CalSvcIPars implements Serializable {
   public static CalSvcIPars getRestorePars(final String account) {
     final CalSvcIPars p = new CalSvcIPars("restore",
                                           account,
+                                          null,    // user
                                           null,   // calsuite
                                           true,   // publicAdmin,
                                           true,   // superUser,
                                           true,   // service
+                                          false,  // public submission
                                           true,   // adminCanEditAllPublicCategories
                                           true,   // adminCanEditAllPublicLocations
                                           true,   // adminCanEditAllPublicSponsors
@@ -224,44 +233,6 @@ public class CalSvcIPars implements Serializable {
     pars.setClientId(clientId);
 
     return pars;
-  }
-
-  /** Constructor we want for this object.
-   *
-   * @param logId       String used for labelling
-   * @param authUser    String authenticated user of the application
-   * @param calSuite    String calSuite name
-   * @param publicAdmin true for admin
-   * @param allowSuperUser  true to allow superuser mode in non-admin mode
-   * @param service     true for a service
-   * @param adminCanEditAllPublicCategories true/false
-   * @param adminCanEditAllPublicLocations true/false
-   * @param adminCanEditAllPublicContacts true/false
-   * @param sessionless true if this is a sessionless client
-   */
-  public CalSvcIPars(final String logId,
-                     final String authUser,
-                     final String calSuite,
-
-                     final boolean publicAdmin,
-                     final boolean allowSuperUser,
-                     final boolean service,
-
-                     final boolean adminCanEditAllPublicCategories,
-                     final boolean adminCanEditAllPublicLocations,
-                     final boolean adminCanEditAllPublicContacts,
-
-                     final boolean sessionless) {
-    this.logId = logId;
-    this.authUser = authUser;
-    this.calSuite = calSuite;
-    this.publicAdmin = publicAdmin;
-    this.allowSuperUser = allowSuperUser;
-    this.service = service;
-    this.adminCanEditAllPublicCategories = adminCanEditAllPublicCategories;
-    this.adminCanEditAllPublicLocations = adminCanEditAllPublicLocations;
-    this.adminCanEditAllPublicContacts = adminCanEditAllPublicContacts;
-    this.sessionless = sessionless;
   }
 
   /**

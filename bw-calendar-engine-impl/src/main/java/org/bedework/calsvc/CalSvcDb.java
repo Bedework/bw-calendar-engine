@@ -451,6 +451,46 @@ public class CalSvcDb implements Serializable {
     throw new CalFacadeAccessException();
   }
 
+  /** Set the owner and creator on a contained shareable entity.
+   *
+   * @param entity to update
+   * @param col the container
+   * @param ownerHref - new owner
+   * @throws CalFacadeException
+   */
+  protected void setupSharableEntity(final BwShareableDbentity entity,
+                                     final BwCalendar col,
+                                     final String ownerHref)
+          throws CalFacadeException {
+    if (col.getPublick()) {
+      entity.setCreatorHref(col.getOwnerHref());
+    } else if (entity.getCreatorHref() == null) {
+      entity.setCreatorHref(ownerHref);
+    }
+
+    setupOwnedEntity(entity, col, ownerHref);
+  }
+
+  /** Set the owner and publick on a contained owned entity.
+   *
+   * @param entity to update
+   * @param col the container
+   * @param ownerHref - new owner
+   * @throws CalFacadeException
+   */
+  protected void setupOwnedEntity(final BwOwnedDbentity entity,
+                                  final BwCalendar col,
+                                  final String ownerHref)
+          throws CalFacadeException {
+    entity.setPublick(col.getPublick());
+
+    if (entity.getPublick()) {
+      entity.setOwnerHref(col.getOwnerHref());
+    } else if (entity.getOwnerHref() == null) {
+      entity.setOwnerHref(ownerHref);
+    }
+  }
+
   /** Set the owner and creator on a shareable entity.
    *
    * @param entity

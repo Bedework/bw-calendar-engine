@@ -59,6 +59,7 @@ import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
+import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
@@ -335,10 +336,14 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     }
 
     @Override
-    public BwIndexer getIndexer() throws CalFacadeException {
+    public BwIndexer getIndexer(final BwOwnedDbentity entity) throws CalFacadeException {
       if ((intf.currentMode == CalintfDefs.guestMode) ||
               (intf.currentMode == CalintfDefs.publicUserMode) ||
               (intf.currentMode == CalintfDefs.publicAdminMode)) {
+        return intf.getPublicIndexer();
+      }
+
+      if ((entity != null) && entity.getPublick()) {
         return intf.getPublicIndexer();
       }
 
@@ -545,7 +550,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       }
 
       if (!indexRebuild) {
-        cb.getIndexer().markTransaction();
+        cb.getIndexer(null).markTransaction();
       }
     } catch (final CalFacadeException cfe) {
       sess.rollback();

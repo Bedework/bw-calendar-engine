@@ -797,7 +797,7 @@ public class CoreCalendars extends CalintfHelperHib
     touchCalendar(parent);
 
     notify(SysEvent.SysCode.COLLECTION_DELETED, val);
-    getIndexer().unindexEntity(path);
+    getIndexer(val).unindexEntity(path);
 
     return true;
   }
@@ -1467,7 +1467,7 @@ public class CoreCalendars extends CalintfHelperHib
                           final BwCalendar val) throws CalFacadeException {
     try {
       final boolean indexed = true;
-      getIndexer().unindexEntity(oldHref);
+      getIndexer(val).unindexEntity(oldHref);
       indexEntity(val);
 
       postNotification(
@@ -1487,11 +1487,11 @@ public class CoreCalendars extends CalintfHelperHib
   /* No access checks performed */
   @SuppressWarnings("unchecked")
   private Collection<BwCalendar> getChildren(final BwCalendar col) throws CalFacadeException {
-    HibSession sess = getSess();
+    final HibSession sess = getSess();
 
     StringBuilder sb = new StringBuilder();
-    List<BwCalendar> ch;
-    List<BwCalendar> wch = new ArrayList<BwCalendar>();
+    final List<BwCalendar> ch;
+    final List<BwCalendar> wch = new ArrayList<BwCalendar>();
 
     if (col == null) {
       return wch;

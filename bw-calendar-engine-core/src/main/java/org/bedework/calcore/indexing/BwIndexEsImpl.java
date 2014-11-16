@@ -178,7 +178,7 @@ public class BwIndexEsImpl implements BwIndexer {
   private static final Object clientSyncher = new Object();
 
   private String targetIndex;
-  private String[] searchIndexes;
+  private final String[] searchIndexes;
   private final int currentMode;
 
   private final AuthProperties authpars;
@@ -1747,8 +1747,7 @@ public class BwIndexEsImpl implements BwIndexer {
     return suffix.toString();
   }
 
-  private EntityBuilder getEntityBuilder(final Map<String,
-          ? extends Object> fields) throws CalFacadeException {
+  private EntityBuilder getEntityBuilder(final Map<String, ?> fields) throws CalFacadeException {
     return new EntityBuilder(fields);
   }
 

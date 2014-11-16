@@ -34,6 +34,7 @@ import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.base.AlarmsEntity;
 import org.bedework.calfacade.base.AttachmentsEntity;
 import org.bedework.calfacade.base.AttendeesEntity;
+import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.CategorisedEntity;
@@ -78,19 +79,19 @@ public abstract class CalintfHelper
     /**
      * @throws CalFacadeException
      */
-    public void rollback() throws CalFacadeException;
+    void rollback() throws CalFacadeException;
 
     /**
      * @return BasicSystemProperties object
      * @throws CalFacadeException
      */
-    public BasicSystemProperties getSyspars() throws CalFacadeException;
+    BasicSystemProperties getSyspars() throws CalFacadeException;
 
     /**
      * @return PrincipalInfo object
      * @throws CalFacadeException
      */
-    public PrincipalInfo getPrincipalInfo() throws CalFacadeException;
+    PrincipalInfo getPrincipalInfo() throws CalFacadeException;
 
     /** Only valid during a transaction.
      *
@@ -140,7 +141,7 @@ public abstract class CalintfHelper
      * @param ev
      * @throws CalFacadeException
      */
-    void postNotification(final SysEvent ev) throws CalFacadeException;
+    void postNotification(SysEvent ev) throws CalFacadeException;
 
     /**
      * @return true if restoring
@@ -148,10 +149,11 @@ public abstract class CalintfHelper
     boolean getForRestore();
 
     /**
+     * @param entity may influence choice of indexer
      * @return BwIndexer
      * @throws CalFacadeException
      */
-    BwIndexer getIndexer() throws CalFacadeException;
+    BwIndexer getIndexer(BwOwnedDbentity entity) throws CalFacadeException;
   }
 
   protected class AccessChecker implements BwIndexer.AccessChecker {
@@ -291,8 +293,8 @@ public abstract class CalintfHelper
     return cb.getForRestore();
   }
 
-  protected BwIndexer getIndexer() throws CalFacadeException {
-    return cb.getIndexer();
+  protected BwIndexer getIndexer(final BwOwnedDbentity entity) throws CalFacadeException {
+    return cb.getIndexer(entity);
   }
 
   protected AccessChecker getAccessChecker() throws CalFacadeException {
@@ -312,28 +314,30 @@ public abstract class CalintfHelper
     }
 
     if (!getForRestore()) {
-      getIndexer().indexEntity(ei);
+      getIndexer(ei.getEvent()).indexEntity(ei);
     }
   }
 
   protected void unindexEntity(final EventInfo ei) throws CalFacadeException {
-    if (ei.getEvent().getRecurrenceId() != null) {
+    final BwEvent ev = ei.getEvent();
+
+    if (ev.getRecurrenceId() != null) {
       // Cannot index single instance
       warn("Tried to unindex a recurrence instance");
       return;
     }
 
-    getIndexer().unindexEntity(ei.getEvent().getHref());
+    getIndexer(ev).unindexEntity(ev.getHref());
   }
 
   protected void indexEntity(final BwCalendar col) throws CalFacadeException {
     if (!getForRestore()) {
-      getIndexer().indexEntity(col);
+      getIndexer(col).indexEntity(col);
     }
   }
 
   protected void unindexEntity(final BwCalendar col) throws CalFacadeException {
-    getIndexer().unindexEntity(col.getPath());
+    getIndexer(col).unindexEntity(col.getPath());
   }
 
   /** Called to notify container that an event occurred. This method should

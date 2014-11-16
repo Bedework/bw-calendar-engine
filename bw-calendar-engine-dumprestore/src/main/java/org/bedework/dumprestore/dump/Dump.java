@@ -195,10 +195,12 @@ public class Dump implements Defs {
     final CalSvcIPars pars =
             new CalSvcIPars("dump",
                             adminUserAccount,
+                            null,    // user
                             null,   // calsuite
                             true,   // publicAdmin
                             true,   // superUser,
                             true,   // service
+                            false,  // public submission
                             true,  // adminCanEditAllPublicCategories
                             true,  // adminCanEditAllPublicLocations
                             true,  // adminCanEditAllPublicSponsors

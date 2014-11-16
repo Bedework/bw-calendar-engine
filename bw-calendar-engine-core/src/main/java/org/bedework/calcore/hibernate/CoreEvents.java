@@ -487,16 +487,16 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     }
 
     final SearchResult sr =
-            getIndexer().search(null,   // query
-                                false,
-                                fltr,
-                                sort,
-                                null,  // defaultFilterContext
-                                start,
-                                end,
-                                -1,
-                                getAccessChecker(),
-                                recurRetrieval);
+            getIndexer(null).search(null,   // query
+                                    false,
+                                    fltr,
+                                    sort,
+                                    null,  // defaultFilterContext
+                                    start,
+                                    end,
+                                    -1,
+                                    getAccessChecker(),
+                                    recurRetrieval);
 
     final List<SearchResultEntry> sres =
             sr.getIndexer().getSearchResult(sr, 0, -1, desiredAccess);

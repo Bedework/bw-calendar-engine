@@ -45,11 +45,11 @@ public class PublicProcessor extends Crawler {
    * if principal is non-null then we are processing a user/group etc
    * so we just descend through the collections indexing stuff.
    *
-   * @param status
-   * @param name
-   * @param adminAccount
-   * @param batchDelay
-   * @param entityDelay
+   * @param status to keep track of progress
+   * @param name of processor
+   * @param adminAccount the account to use
+   * @param batchDelay millis
+   * @param entityDelay millis
    * @param skipPaths - paths to skip
    * @param indexRootPath - where we build the index
    * @throws CalFacadeException
@@ -74,7 +74,7 @@ public class PublicProcessor extends Crawler {
       /* First index the public collection(s) */
       indexCollection(svc, Util.buildPath(true, "/", getPublicCalendarRoot()));
 
-      BwIndexer indexer = svc.getIndexer(principal,
+      final BwIndexer indexer = svc.getIndexer(principal,
                                                indexRootPath);
 
       status.stats.inc(StatType.categories,
