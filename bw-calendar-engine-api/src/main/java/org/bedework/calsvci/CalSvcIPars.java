@@ -209,19 +209,21 @@ public class CalSvcIPars implements Serializable {
    * @param allowSuperUser  true to allow superuser mode in non-admin mode
    * @param service - true if this is a service call - e.g. iSchedule -
    *                rather than a real user.
+   * @param publicAdmin - true for public admin
    * @return CalSvcIPars
    */
   public static CalSvcIPars getCaldavPars(final String logId,
                                           final String authUser,
-                     final String runAsUser,
-                     final String clientId,
-                     final boolean allowSuperUser,
-                     final boolean service) {
+                                          final String runAsUser,
+                                          final String clientId,
+                                          final boolean allowSuperUser,
+                                          final boolean service,
+                                          final boolean publicAdmin) {
     final CalSvcIPars pars = new CalSvcIPars(logId,
                                              authUser,
                                              runAsUser,
                                              null,    // calsuite
-                                             false,   // publicAdmin
+                                             publicAdmin,
                                              allowSuperUser,   // allow SuperUser
                                              service,
                                              false, // publicSubmission

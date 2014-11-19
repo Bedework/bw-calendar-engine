@@ -187,7 +187,8 @@ public class BwSysIntfImpl implements SysIntf {
   public String init(final HttpServletRequest req,
                      final String account,
                      final boolean service,
-                     final boolean calWs) throws WebdavException {
+                     final boolean calWs,
+                     final String opaqueData) throws WebdavException {
     try {
       this.calWs = calWs;
       debug = getLogger().isDebugEnabled();
@@ -216,9 +217,17 @@ public class BwSysIntfImpl implements SysIntf {
 
       // Call to set up ThreadLocal variables
 
+      boolean publicAdmin = false;
+      if (opaqueData != null) {
+        if (opaqueData.startsWith("public-admin=")) {
+          publicAdmin = Boolean.valueOf(opaqueData.substring(13));
+        }
+      }
+
       getSvci(id,
               CalDavHeaders.getRunAs(req),
               service,
+              publicAdmin,
               CalDavHeaders.getClientId(req));
 
       authProperties = svci.getAuthProperties();
@@ -2421,6 +2430,7 @@ public class BwSysIntfImpl implements SysIntf {
   private CalSvcI getSvci(final String account,
                           final String runAs,
                           final boolean service,
+                          final boolean publicAdmin,
                           final String clientId) throws WebdavException {
     try {
       /* account is what we authenticated with.
@@ -2442,7 +2452,7 @@ public class BwSysIntfImpl implements SysIntf {
                                                    runAsUser,
                                                    clientIdent,
                                                    possibleSuperUser,   // allow SuperUser
-                                         service);
+                                                   service,publicAdmin);
       svci = new CalSvcFactoryDefault().getSvc(pars);
 
       svci.open();

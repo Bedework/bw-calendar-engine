@@ -155,6 +155,8 @@ class Synch extends CalSvcDb implements SynchI {
     aosA.getProperty().add(makeSynchProperty("uri", val.getPath()));
     aosA.getProperty().add(makeSynchProperty("principal",
                                              getPrincipal().getPrincipalRef()));
+    aosA.getProperty().add(makeSynchProperty("opaque-data",
+                                             makeOpaqueData()));
 
     subreq.setEndAConnector(ciA);
 
@@ -411,7 +413,7 @@ class Synch extends CalSvcDb implements SynchI {
   //}
 
   SynchIdTokenType getIdToken(final String principal,
-                              final SynchConnection sc) {
+                              final SynchConnection sc) throws CalFacadeException {
     final SynchIdTokenType idToken = new SynchIdTokenType();
 
     idToken.setPrincipalHref(principal);
@@ -419,6 +421,10 @@ class Synch extends CalSvcDb implements SynchI {
     idToken.setSynchToken(sc.getSynchToken());
 
     return idToken;
+  }
+
+  private String makeOpaqueData() throws CalFacadeException {
+    return "public-admin=" + this.isPublicAdmin();
   }
 
   SynchRemoteServicePortType getPort(final String uri) throws CalFacadeException {

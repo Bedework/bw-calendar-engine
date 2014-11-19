@@ -190,7 +190,14 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
   @Override
   public T findPersistent(final BwString val) throws CalFacadeException {
-    return coreHdlr.find(val, getPrincipal().getPrincipalRef());
+    BwPrincipal owner;
+    if (!isPublicAdmin()) {
+      owner = getPrincipal();
+    } else {
+      owner = getPublicUser();
+    }
+
+    return coreHdlr.find(val, owner.getPrincipalRef());
   }
 
   @Override
@@ -538,10 +545,10 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
       return;
     }
 
-    BwShareableDbentity ent = o;
+    final BwShareableDbentity ent = o;
 
     if (adminCanEditAllPublic ||
-            ent.getCreatorHref().equals(getPrincipal())) {
+            ent.getCreatorHref().equals(getPrincipal().getPrincipalRef())) {
       return;
     }
 
@@ -573,7 +580,8 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     BwShareableDbentity ent = (BwShareableDbentity)o;
 
-    if (adminCanEditAllPublic || ent.getCreatorHref().equals(getPrincipal())) {
+    if (adminCanEditAllPublic ||
+            ent.getCreatorHref().equals(getPrincipal().getPrincipalRef())) {
       return;
     }
 
