@@ -363,16 +363,16 @@ class Events extends CalSvcDb implements EventsI {
       if (event instanceof BwEventProxy) {
         proxy = (BwEventProxy)event;
         override = proxy.getRef();
-        setupSharableEntity(override, cal, getPrincipal().getPrincipalRef());
+        setupSharableEntity(override, getPrincipal().getPrincipalRef());
       } else {
-        setupSharableEntity(event, cal, getPrincipal().getPrincipalRef());
+        setupSharableEntity(event, getPrincipal().getPrincipalRef());
 
         if (ei.getNumContainedItems() > 0) {
           for (final EventInfo aei: ei.getContainedItems()) {
             final BwEvent av = aei.getEvent();
             av.setParent(event);
 
-            setupSharableEntity(av, cal,
+            setupSharableEntity(av,
                                 getPrincipal().getPrincipalRef());
           }
         }

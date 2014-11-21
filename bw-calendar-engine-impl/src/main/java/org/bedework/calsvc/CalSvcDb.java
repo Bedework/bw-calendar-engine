@@ -162,7 +162,7 @@ public class CalSvcDb implements Serializable {
   protected Collection<EventInfo> getEvents(final String colPath,
                                             final String guid)
                             throws CalFacadeException {
-    Events events = (Events)getSvc().getEventsHandler();
+    final Events events = (Events)getSvc().getEventsHandler();
 
     return events.get(colPath, guid, null,
                       RecurringRetrievalMode.overrides);
@@ -170,16 +170,16 @@ public class CalSvcDb implements Serializable {
 
   /** Method which allows us to flag it as a scheduling action
    *
-   * @param ei
-   * @param scheduling
-   * @param sendSchedulingReply
+   * @param ei event info
+   * @param scheduling true for scheduling
+   * @param sendSchedulingReply true if we need a reply
    * @return boolean
    * @throws CalFacadeException
    */
   protected boolean deleteEvent(final EventInfo ei,
                                 final boolean scheduling,
                                 final boolean sendSchedulingReply) throws CalFacadeException {
-    Events events = (Events)getSvc().getEventsHandler();
+    final Events events = (Events)getSvc().getEventsHandler();
 
     return events.delete(ei, scheduling, sendSchedulingReply);
   }
@@ -199,7 +199,7 @@ public class CalSvcDb implements Serializable {
    * queue up notifications until after transaction commit as consumers
    * should only receive notifications when the actual data has been written.
    *
-   * @param ev
+   * @param ev the event
    * @throws CalFacadeException
    */
   public void postNotification(final SysEvent ev) throws CalFacadeException {
@@ -208,28 +208,28 @@ public class CalSvcDb implements Serializable {
 
   /** Method which allows us to flag it as a scheduling action
    *
-   * @param cals
-   * @param filter
-   * @param startDate
-   * @param endDate
+   * @param cols collections
+   * @param filter a filter
+   * @param startDate start
+   * @param endDate end
    * @param retrieveList List of properties to retrieve or null for a full event.
-   * @param recurRetrieval
-   * @param freeBusy
+   * @param recurRetrieval expanded etc
+   * @param freeBusy is this for freebusy
    * @return Collection of matching events
    * @throws CalFacadeException
    */
-  protected Collection<EventInfo> getEvents(final Collection<BwCalendar> cals,
+  protected Collection<EventInfo> getEvents(final Collection<BwCalendar> cols,
                                             final FilterBase filter,
                                             final BwDateTime startDate, final BwDateTime endDate,
                                             final List<BwIcalPropertyInfoEntry> retrieveList,
                                             final RecurringRetrievalMode recurRetrieval,
                                             final boolean freeBusy) throws CalFacadeException {
-   Events events = (Events)getSvc().getEventsHandler();
+    final Events events = (Events)getSvc().getEventsHandler();
 
-   return events.getMatching(cals, filter, startDate, endDate,
-                             retrieveList,
-                             recurRetrieval, freeBusy);
- }
+    return events.getMatching(cols, filter, startDate, endDate,
+                              retrieveList,
+                              recurRetrieval, freeBusy);
+  }
 
   /** Result of calling getCollectionAndName with a path */
   protected static class CollectionAndName {
@@ -241,7 +241,7 @@ public class CalSvcDb implements Serializable {
   }
 
   protected CollectionAndName getCollectionAndName(final String path) throws CalFacadeException {
-    int end;
+    final int end;
 
     if (path.endsWith("/")) {
       end = path.length() - 1;
@@ -249,19 +249,19 @@ public class CalSvcDb implements Serializable {
       end = path.length();
     }
 
-    int pos = path.substring(0, end).lastIndexOf("/");
+    final int pos = path.substring(0, end).lastIndexOf("/");
     if (pos < 0) {
       throw new CalFacadeException(CalFacadeException.badRequest);
     }
 
-    CollectionAndName res = new CollectionAndName();
+    final CollectionAndName res = new CollectionAndName();
 
     res.name = path.substring(pos + 1, end);
     if (pos == 0) {
       // Root
       res.coll = null;
     } else {
-      res.coll = getCols().get(path.substring(0, pos + 1));
+      res.coll = getCols().get(path.substring(0, pos));
       if (res.coll == null) {
         throw new CalFacadeException(CalFacadeException.collectionNotFound);
       }
@@ -328,7 +328,7 @@ public class CalSvcDb implements Serializable {
   }
 
   /**
-   * @param svci
+   * @param svci service interface
    */
   public void setSvc(final CalSvcI svci) {
     this.svci = (CalSvc)svci;
@@ -406,7 +406,7 @@ public class CalSvcDb implements Serializable {
       return;
     }
 
-    String guidPrefix = "CAL-" + Uid.getUid();
+    final String guidPrefix = "CAL-" + Uid.getUid();
 
     if (val.getName() == null) {
       val.setName(guidPrefix + ".ics");
@@ -451,49 +451,9 @@ public class CalSvcDb implements Serializable {
     throw new CalFacadeAccessException();
   }
 
-  /** Set the owner and creator on a contained shareable entity.
-   *
-   * @param entity to update
-   * @param col the container
-   * @param ownerHref - new owner
-   * @throws CalFacadeException
-   */
-  protected void setupSharableEntity(final BwShareableDbentity entity,
-                                     final BwCalendar col,
-                                     final String ownerHref)
-          throws CalFacadeException {
-    if (col.getPublick()) {
-      entity.setCreatorHref(col.getOwnerHref());
-    } else if (entity.getCreatorHref() == null) {
-      entity.setCreatorHref(ownerHref);
-    }
-
-    setupOwnedEntity(entity, col, ownerHref);
-  }
-
-  /** Set the owner and publick on a contained owned entity.
-   *
-   * @param entity to update
-   * @param col the container
-   * @param ownerHref - new owner
-   * @throws CalFacadeException
-   */
-  protected void setupOwnedEntity(final BwOwnedDbentity entity,
-                                  final BwCalendar col,
-                                  final String ownerHref)
-          throws CalFacadeException {
-    entity.setPublick(col.getPublick());
-
-    if (entity.getPublick()) {
-      entity.setOwnerHref(col.getOwnerHref());
-    } else if (entity.getOwnerHref() == null) {
-      entity.setOwnerHref(ownerHref);
-    }
-  }
-
   /** Set the owner and creator on a shareable entity.
    *
-   * @param entity
+   * @param entity shareable entity
    * @param ownerHref - new owner
    * @throws CalFacadeException
    */
@@ -509,7 +469,7 @@ public class CalSvcDb implements Serializable {
 
   /** Set the owner and publick on an owned entity.
    *
-   * @param entity
+   * @param entity owned entity
    * @param ownerHref - new owner
    * @throws CalFacadeException
    */
