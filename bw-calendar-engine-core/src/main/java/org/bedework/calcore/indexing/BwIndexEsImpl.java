@@ -755,10 +755,14 @@ public class BwIndexEsImpl implements BwIndexer {
       final IndexResponse resp = index(rec);
 
       if (debug) {
-        debug("IndexResponse: index=" + resp.getIndex() +
-                      " id=" + resp.getId() +
-                      " type=" + resp.getType() +
-                      " version=" + resp.getVersion());
+        if (resp == null) {
+          debug("IndexResponse: resp=null");
+        } else {
+          debug("IndexResponse: index=" + resp.getIndex() +
+                        " id=" + resp.getId() +
+                        " type=" + resp.getType() +
+                        " version=" + resp.getVersion());
+        }
       }
     } catch (final Throwable t) {
       if (debug) {
