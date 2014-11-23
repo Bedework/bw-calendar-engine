@@ -470,10 +470,12 @@ public class CalSvc extends CalSvcI {
     String id;
     long seconds;
 
+    @Override
     public String getId() {
       return id;
     }
 
+    @Override
     public long getSeconds() {
       return seconds;
     }
@@ -485,9 +487,9 @@ public class CalSvc extends CalSvcI {
     final long now = System.currentTimeMillis();
 
     for (final Calintf ci: getCal().active()) {
-      InterfaceInfo ii = new InterfaceInfo();
+      final InterfaceInfo ii = new InterfaceInfo();
 
-      ii.id = ci.getLogId();
+      ii.id = ci.getTraceId();
       ii.seconds = (now - ci.getStartMillis()) / 1000;
 
       ifs.add(ii);
@@ -496,17 +498,11 @@ public class CalSvc extends CalSvcI {
     return ifs;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#postNotification(org.bedework.sysevents.events.SysEvent)
-   */
   @Override
   public void postNotification(final SysEventBase ev) throws CalFacadeException {
     getCal().postNotification(ev);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#flushAll()
-   */
   @Override
   public void flushAll() throws CalFacadeException {
     getCal().flush();

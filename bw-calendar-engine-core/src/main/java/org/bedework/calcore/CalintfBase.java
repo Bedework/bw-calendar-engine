@@ -118,8 +118,18 @@ public abstract class CalintfBase implements Calintf {
     }
   }
 
+  @Override
   public String getLogId() {
     return logId;
+  }
+
+  @Override
+  public String getTraceId() {
+    if (logId == null) {
+      return String.valueOf(objTimestamp);
+    }
+
+    return logId + ": " + objTimestamp;
   }
 
   /**
@@ -211,14 +221,6 @@ public abstract class CalintfBase implements Calintf {
   /* ====================================================================
    *                   Protected methods
    * ==================================================================== */
-
-  protected String getTraceId() {
-    if (logId == null) {
-      return String.valueOf(objTimestamp);
-    }
-
-    return logId + ": " + objTimestamp;
-  }
 
   protected void checkOpen() throws CalFacadeException {
     if (!isOpen) {

@@ -102,6 +102,12 @@ public interface Calintf
    */
   String getLogId();
 
+  /**
+   *
+   * @return an augmented label
+   */
+  String getTraceId();
+
   /** Get the current system (not db) stats
    *
    * @return BwStats object
