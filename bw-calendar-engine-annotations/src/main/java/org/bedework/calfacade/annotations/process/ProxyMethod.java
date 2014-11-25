@@ -18,15 +18,15 @@
 */
 package org.bedework.calfacade.annotations.process;
 
-import java.util.Collection;
+import java.util.List;
 
-import com.sun.mirror.apt.AnnotationProcessorEnvironment;
-import com.sun.mirror.apt.Messager;
-import com.sun.mirror.declaration.MethodDeclaration;
-import com.sun.mirror.type.ClassType;
-import com.sun.mirror.type.InterfaceType;
-import com.sun.mirror.type.PrimitiveType;
-import com.sun.mirror.type.TypeMirror;
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
+import javax.tools.Diagnostic.Kind;
 
 /** We create a list of these as we process the event. We tie together the
  * setter and getter methods so that only the setter needs to be annotated
@@ -39,9 +39,9 @@ public class ProxyMethod extends MethodHandler<ProxyMethod> {
    * @param annUtil
    * @param d
    */
-  public ProxyMethod(final AnnotationProcessorEnvironment env,
+  public ProxyMethod(final ProcessingEnvironment env,
                      final AnnUtil annUtil,
-                     final MethodDeclaration d) {
+                     final ExecutableElement d) {
     super(env, annUtil, d);
   }
 
@@ -49,7 +49,7 @@ public class ProxyMethod extends MethodHandler<ProxyMethod> {
    */
   @Override
   public void generateGet() {
-    String typeStr = AnnUtil.getClassName(returnType);
+    String typeStr = annUtil.getClassName(returnType);
 
     /* check corresponding setter to see if this is immutable */
     if ((setGet != null) && setGet.immutable) {
@@ -60,8 +60,8 @@ public class ProxyMethod extends MethodHandler<ProxyMethod> {
       return;
     }
 
-    if (!AnnUtil.isCollection(returnType)) {
-      if (!(returnType instanceof PrimitiveType)) {
+    if (!annUtil.isCollection(returnType)) {
+      if (!(returnType.getKind().isPrimitive())) {
         annUtil.println("    ", typeStr, " val = ", makeCallGetter("ref"), ";");
 
         annUtil.prntlns("    if (val != null) {",
@@ -117,27 +117,26 @@ public class ProxyMethod extends MethodHandler<ProxyMethod> {
                     "        }",
                     "");
 
+
     /*
      * From ClassType
      * Collection<TypeMirror> getActualTypeArguments()
      * Needed to build TreeSet decl below.
      */
     String typePar = null;
-    if (returnType instanceof ClassType) {
-      ClassType ct = (ClassType)returnType;
+    TypeElement returnEl = annUtil.asTypeElement(returnType);
+    if (returnEl.getKind() == ElementKind.CLASS) {
+      List<? extends TypeParameterElement> tps =  returnEl.getTypeParameters();
 
-      Collection<TypeMirror> tms = ct.getActualTypeArguments();
+      typePar = tps.iterator().next().toString();
+    } else if (returnEl.getKind() == ElementKind.INTERFACE) {
+      List<? extends TypeParameterElement> tps =  returnEl.getTypeParameters();
 
-      typePar = tms.iterator().next().toString();
-    } else if (returnType instanceof InterfaceType) {
-      InterfaceType ct = (InterfaceType)returnType;
-
-      Collection<TypeMirror> tms = ct.getActualTypeArguments();
-
-      typePar = tms.iterator().next().toString();
+      typePar = tps.iterator().next().toString();
     } else {
       Messager msg = env.getMessager();
-      msg.printWarning("Unhandled returnType: " + returnType);
+      msg.printMessage(Kind.WARNING,
+                       "Unhandled returnType: " + returnType);
     }
 
     typePar = AnnUtil.fixName(typePar);
@@ -178,8 +177,8 @@ public class ProxyMethod extends MethodHandler<ProxyMethod> {
       return;
     }
 
-    if (AnnUtil.isCollection(fieldType)) {
-      String fieldTypeStr = AnnUtil.getClassName(fieldType);
+    if (annUtil.isCollection(fieldType)) {
+      String fieldTypeStr = annUtil.getClassName(fieldType);
 
       annUtil.println("    if (val instanceof Override", AnnUtil.nonGeneric(fieldTypeStr),
                                         ") {");
@@ -207,8 +206,9 @@ public class ProxyMethod extends MethodHandler<ProxyMethod> {
    */
   @Override
   public void generateMethod() {
-    env.getMessager().printError("Proxy should only do set/get, found: " +
-                                 methName);
+    env.getMessager().printMessage(Kind.ERROR,
+                                   "Proxy should only do set/get, found: " +
+                                           methName);
   }
 
   private String makeGetEmptyFlag(final String objRef) {
@@ -223,19 +223,5 @@ public class ProxyMethod extends MethodHandler<ProxyMethod> {
 
   private String makeFieldIndex() {
     return "ProxiedFieldIndex.pfi" + ucFieldName;
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append("ProxyMethod{");
-    sb.append(fieldName);
-    sb.append(", basic=");
-    sb.append(basicType);
-    sb.append(", method=");
-    sb.append(methName);
-
-    return sb.toString();
   }
 }

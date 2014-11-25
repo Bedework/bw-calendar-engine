@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -26,9 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import com.sun.mirror.apt.AnnotationProcessorEnvironment;
-import com.sun.mirror.apt.Messager;
-import com.sun.mirror.declaration.MethodDeclaration;
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.tools.Diagnostic.Kind;
 
 /** TODO: We need to be able to handle something less generic than Collection,
  * e.g. List or Set.
@@ -39,9 +40,9 @@ import com.sun.mirror.declaration.MethodDeclaration;
 public class WrapperHandler {
   private static final String wrapperTemplateName = "Wrapper.java.rsrc";
 
-  private List<WrapperMethod> wrapperMethods = new ArrayList<WrapperMethod>();
+  private List<WrapperMethod> wrapperMethods = new ArrayList<>();
 
-  private Map<String, WrapperMethod> fieldNameMap = new HashMap<String, WrapperMethod>();
+  private Map<String, WrapperMethod> fieldNameMap = new HashMap<>();
 
   private String currentClassName;
 
@@ -72,7 +73,7 @@ public class WrapperHandler {
    * @param env
    * @return boolean true for OK
    */
-  public boolean start(final AnnotationProcessorEnvironment env) {
+  public boolean start(final ProcessingEnvironment env) {
     try {
       wrapperClassName = wrappedClassName + "NewWrapper";
 
@@ -83,14 +84,16 @@ public class WrapperHandler {
 
       if (!annUtil.emitTemplateSection()) {
         Messager msg = env.getMessager();
-        msg.printError("Apparently no more input available from template");
+        msg.printMessage(Kind.ERROR,
+                         "Apparently no more input available from template");
       }
 
       return true;
     } catch (Throwable t) {
       t.printStackTrace();
       Messager msg = env.getMessager();
-      msg.printError("Exception: " + t.getMessage());
+      msg.printMessage(Kind.ERROR,
+                       "Exception: " + t.getMessage());
       return false;
     }
   }
@@ -101,21 +104,26 @@ public class WrapperHandler {
    * @param fromSuper if declared in a superdeclaration
    * @return boolean true for ok
    */
-  public boolean method(final AnnotationProcessorEnvironment env,
-                        final MethodDeclaration d,
+  public boolean method(final ProcessingEnvironment env,
+                        final ExecutableElement d,
                         final boolean fromSuper) {
     Messager msg = env.getMessager();
 
     if (pstate.debug) {
-      msg.printNotice("Wrapperhandler.method: " + d +
-                      " declared by " + d.getDeclaringType());
+      annUtil.note("Wrapperhandler.method: " + d +
+                           " declared by " + d.getEnclosingElement());
+    }
+
+    if (d.getSimpleName().toString().equals("<init>")) {
+      // Maybe there's a better way
+      return true;
     }
 
     try {
       WrapperMethod wm = new WrapperMethod(env, annUtil, pstate, d, fromSuper);
 
       if (pstate.debug) {
-        msg.printNotice("          " + wm);
+        annUtil.note("          " + wm);
       }
 
       if (wrapperMethods.contains(wm)) {
@@ -132,16 +140,17 @@ public class WrapperHandler {
       } else if (setGet.setter) {
         // This should be a getter
         if (!wm.getter) {
-          msg.printError("Error - class: " + currentClassName +
-                         " found setter " + setGet + "\n in table for " + wm + " decl: " + d);
+          annUtil.error("Error - class: " + currentClassName +
+                                " found setter " + setGet +
+                                "\n in table for " + wm + " decl: " + d);
         } else {
           setGet.setGet = wm;
           wm.setGet = setGet;
         }
       } else if (setGet.getter) {
         if (!wm.setter) {
-          msg.printError("Error - class: " + currentClassName +
-                         "  found getter in table for " + wm);
+          annUtil.error("Error - class: " + currentClassName +
+                                   "  found getter in table for " + wm);
         } else {
           // Make setter first
           setGet.setGet = wm;
@@ -153,7 +162,7 @@ public class WrapperHandler {
       return true;
     } catch (Throwable t) {
       t.printStackTrace();
-      msg.printError("Exception: " + t.getMessage());
+      annUtil.error("Exception: " + t.getMessage());
       return false;
     }
   }
@@ -162,7 +171,7 @@ public class WrapperHandler {
    * @param env
    * @return boolean true for OK
    */
-  public boolean end(final AnnotationProcessorEnvironment env) {
+  public boolean end(final ProcessingEnvironment env) {
     try {
       TreeSet<String> imports = new TreeSet<String>();
 
@@ -179,8 +188,7 @@ public class WrapperHandler {
       }
 
       if (!annUtil.emitTemplateSection()) {
-        Messager msg = env.getMessager();
-        msg.printError("Apparently no more input available from template");
+        annUtil.error("Apparently no more input available from template");
       }
 
       annUtil.println("public class ", wrapperClassName, " extends ",
@@ -207,8 +215,7 @@ public class WrapperHandler {
         }
 
         if (pstate.debug) {
-          Messager msg = env.getMessager();
-          msg.printNotice("About to generate Wrapperhandler.method: " + wm);
+          annUtil.note("About to generate Wrapperhandler.method: " + wm);
         }
 
         wm.generate();
@@ -250,8 +257,7 @@ public class WrapperHandler {
       }
 
       if (annUtil.emitTemplateSection()) {
-        Messager msg = env.getMessager();
-        msg.printError("Apparently more input available from template");
+        annUtil.error("Apparently more input available from template");
       }
 
       annUtil.close();
@@ -259,8 +265,7 @@ public class WrapperHandler {
       return true;
     } catch (Throwable t) {
       t.printStackTrace();
-      Messager msg = env.getMessager();
-      msg.printError("Exception: " + t.getMessage());
+      annUtil.error("Exception: " + t.getMessage());
       return false;
     }
   }

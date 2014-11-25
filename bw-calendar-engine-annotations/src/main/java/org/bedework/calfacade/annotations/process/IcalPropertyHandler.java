@@ -21,21 +21,22 @@ package org.bedework.calfacade.annotations.process;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
-import com.sun.mirror.apt.AnnotationProcessorEnvironment;
-import com.sun.mirror.apt.Messager;
-import com.sun.mirror.declaration.MethodDeclaration;
-import com.sun.mirror.declaration.ParameterDeclaration;
-import com.sun.mirror.type.TypeMirror;
-
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic.Kind;
+import javax.tools.JavaFileObject;
 
 /**
  * @author douglm
@@ -131,27 +132,32 @@ public class IcalPropertyHandler {
       availableProperty = p.availableProperty();
     }
 
-    boolean check(final AnnotationProcessorEnvironment env,
+    boolean check(final ProcessingEnvironment env,
                   final IcalProperty p, final String fieldName,
                   final boolean isCollectionType) {
       if (!pindex.equals(p.pindex())) {
-        env.getMessager().printError("Mismatched indexes " + pindex +
-                                     ", " + p.pindex() +
-                                     " in class " + pstate.getCurrentClassName());
+        env.getMessager().printMessage(Kind.ERROR,
+                                       "Mismatched indexes " + pindex +
+                                               ", " + p.pindex() +
+                                               " in class " + pstate.getCurrentClassName());
         return false;
       }
 
       if (!dbFieldName.equals(fieldName)) {
-        env.getMessager().printError("Mismatched field names " + pindex +
-                                     ", " + dbFieldName + ", " + fieldName +
-                                     " in class " + pstate.getCurrentClassName());
+        env.getMessager().printMessage(Kind.ERROR,
+                                       "Mismatched field names " + pindex +
+                                               ", " + dbFieldName + ", " + fieldName +
+                                               " in class " + pstate
+                                               .getCurrentClassName());
         return false;
       }
 
       if (this.isCollectionType != isCollectionType) {
-        env.getMessager().printError("Mismatched method types " + pindex +
-                                     ", " + dbFieldName +
-                                     " in class " + pstate.getCurrentClassName());
+        env.getMessager().printMessage(Kind.ERROR,
+                                       "Mismatched method types " + pindex +
+                                               ", " + dbFieldName +
+                                               " in class " + pstate
+                                               .getCurrentClassName());
         return false;
       }
 
@@ -193,45 +199,51 @@ public class IcalPropertyHandler {
    * @param d
    * @return boolean true for OK
    */
-  public boolean property(final AnnotationProcessorEnvironment env,
+  public boolean property(final ProcessingEnvironment env,
                           final IcalProperty ip,
-                          final MethodDeclaration d) {
+                          final ExecutableElement d) {
     try {
       if (pinfoOut == null) {
         openPinfo(env);
       }
 
-      String methName = d.getSimpleName();
+      String methName = d.getSimpleName().toString();
 
       boolean getter = methName.startsWith("get");
       boolean setter = methName.startsWith("set");
       if (!getter && !setter) {
-        env.getMessager().printError("Annotation must be applied to a setter or getter. " +
-                                     "Found on method " + methName +
-                                     " in class " + pstate.getCurrentClassName());
+        env.getMessager().printMessage(Kind.ERROR,
+                                       "Annotation must be applied to a setter or getter. " +
+                                               "Found on method " + methName +
+                                               " in class " + pstate
+                                               .getCurrentClassName());
         return false;
       }
 
-      Collection<ParameterDeclaration> pars = d.getParameters();
+      List<? extends VariableElement> pars = d.getParameters();
       TypeMirror fldDcl;
 
       if (setter) {
         // Only 1 parameter
         if (pars.size() != 1) {
-          env.getMessager().printError("Expect only 1 parameter for setter " +
-                                       d.getSimpleName() +
-                                       " in class " + pstate.getCurrentClassName());
+          env.getMessager().printMessage(Kind.ERROR,
+                                         "Expect only 1 parameter for setter " +
+                                                 d.getSimpleName() +
+                                                 " in class " + pstate
+                                                 .getCurrentClassName());
           return false;
         }
 
-        ParameterDeclaration par = pars.iterator().next();
-        fldDcl = par.getType();
+        VariableElement par = pars.iterator().next();
+        fldDcl = par.asType();
       } else {
         // No parameters
         if ((pars != null) && (pars.size() > 0)) {
-          env.getMessager().printError("No parameters allowed for getter " +
-                                       d.getSimpleName() +
-                                       " in class " + pstate.getCurrentClassName());
+          env.getMessager().printMessage(Kind.ERROR,
+                                         "No parameters allowed for getter " +
+                                                 d.getSimpleName() +
+                                                 " in class " + pstate
+                                                 .getCurrentClassName());
           return false;
         }
 
@@ -286,7 +298,8 @@ public class IcalPropertyHandler {
     } catch (Throwable t) {
       Messager msg = env.getMessager();
       t.printStackTrace();
-      msg.printError("Exception: " + t.getMessage());
+      msg.printMessage(Kind.ERROR,
+                       "Exception: " + t.getMessage());
       return false;
     }
   }
@@ -295,7 +308,7 @@ public class IcalPropertyHandler {
    * @param env
    * @return boolean true for ok
    */
-  public boolean closePinfo(final AnnotationProcessorEnvironment env) {
+  public boolean closePinfo(final ProcessingEnvironment env) {
     try {
       if ((pinfos == null) || pinfos.isEmpty()) {
         return true;
@@ -401,7 +414,8 @@ public class IcalPropertyHandler {
     } catch (Throwable t) {
       Messager msg = env.getMessager();
       t.printStackTrace();
-      msg.printError("Exception: " + t.getMessage());
+      msg.printMessage(Kind.ERROR,
+                       "Exception: " + t.getMessage());
       return false;
     }
   }
@@ -458,7 +472,7 @@ public class IcalPropertyHandler {
     new PinfoField("boolean", "availableProperty", false, true),
   };
 
-  private boolean emit(final AnnotationProcessorEnvironment env,
+  private boolean emit(final ProcessingEnvironment env,
                        final MergedIcalProperty ip) throws Throwable {
 
     pinfoOut.print("    addPinfo(new BwIcalPropertyInfoEntry(PropertyInfoIndex.");
@@ -542,12 +556,14 @@ public class IcalPropertyHandler {
     pinfoOut.println(commentVal);
   }
 
-  private void openPinfo(final AnnotationProcessorEnvironment env) throws Throwable {
-    pinfoOut = env.getFiler().createSourceFile("org.bedework.calfacade.ical." +
-                                                 "BwIcalPropertyInfo");
+  private void openPinfo(final ProcessingEnvironment env) throws Throwable {
+    JavaFileObject fileObj = env.getFiler().
+            createSourceFile("org.bedework.calfacade.ical." +
+                                     "BwIcalPropertyInfo");
+    pinfoOut = new PrintWriter(fileObj.openOutputStream());
   }
 
-  private void startPinfo(final AnnotationProcessorEnvironment env) throws Throwable {
+  private void startPinfo(final ProcessingEnvironment env) throws Throwable {
     imports.add("org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex");
     imports.add("java.io.Serializable");
     imports.add("java.util.HashMap");

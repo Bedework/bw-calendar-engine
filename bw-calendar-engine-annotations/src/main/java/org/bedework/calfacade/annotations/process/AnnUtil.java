@@ -21,45 +21,58 @@ package org.bedework.calfacade.annotations.process;
 import java.io.FileReader;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
-import java.util.Collection;
+import java.util.List;
 
-import com.sun.mirror.apt.AnnotationProcessorEnvironment;
-import com.sun.mirror.declaration.ParameterDeclaration;
-import com.sun.mirror.type.ClassType;
-import com.sun.mirror.type.InterfaceType;
-import com.sun.mirror.type.PrimitiveType;
-import com.sun.mirror.type.ReferenceType;
-import com.sun.mirror.type.TypeMirror;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
+import javax.tools.Diagnostic.Kind;
+import javax.tools.JavaFileObject;
 
 /** Utility methods for annotations
  *
  * @author Mike DOuglass
  */
 public class AnnUtil {
-  //private AnnotationProcessorEnvironment env;
+  private final ProcessingEnvironment env;
+
   private String className;
 
   private PrintWriter out;
 
   private LineNumberReader templateRdr;
 
+  /** Initialise to handle messages
+   *
+   * @param env the processing environment
+   */
+  public AnnUtil(final ProcessingEnvironment env) {
+    this.env = env;
+  }
+
   /** We use a template file which has code insertion points marked by lines
    * starting with "++++".
    *
-   * @param env
+   * @param env the processing environment
    * @param className
    * @param templateName
    * @param outFileName
    * @throws Throwable
    */
-  public AnnUtil(final AnnotationProcessorEnvironment env,
+  public AnnUtil(final ProcessingEnvironment env,
                  final String className,
                  final String templateName,
                  final String outFileName) throws Throwable {
-    //this.env = env;
+    this(env);
     this.className = className;
     templateRdr = new LineNumberReader(new FileReader(templateName));
-    out = env.getFiler().createSourceFile(outFileName);
+    JavaFileObject outFile = env.getFiler().createSourceFile(
+            outFileName);
+    out = new PrintWriter(outFile.openOutputStream());
   }
 
   /** Close readers/writers
@@ -74,6 +87,20 @@ public class AnnUtil {
     if (out != null) {
       out.close();
     }
+  }
+
+  public void error(final  String msg) {
+    env.getMessager().printMessage(Kind.ERROR, msg);
+  }
+
+  public void warn(final  String msg) {
+    env.getMessager().printMessage(Kind.WARNING, msg);
+  }
+
+  public void note(final  String msg) {
+    // Maven swallowing output
+    System.out.println(msg);
+    env.getMessager().printMessage(Kind.NOTE, msg);
   }
 
   /** Emit a section of template up to a delimiter or to end of file.
@@ -124,7 +151,7 @@ public class AnnUtil {
   public static String makeCallSetter(final String objRef,
                                       final String ucFieldName,
                                       final Object val) {
-    StringBuilder sb = new StringBuilder(objRef);
+    final StringBuilder sb = new StringBuilder(objRef);
     sb.append(".");
     sb.append("set");
     sb.append(ucFieldName);
@@ -142,9 +169,9 @@ public class AnnUtil {
    * @param thrownTypes
    */
   public void generateSignature(final String methName,
-                                final Collection<ParameterDeclaration> pars,
+                                final List<? extends VariableElement> pars,
                                 final TypeMirror returnType,
-                                final Collection<ReferenceType> thrownTypes) {
+                                final List<? extends TypeMirror> thrownTypes) {
     /* Generate some javadoc first.
      */
     println("  /* (non-Javadoc)");
@@ -153,8 +180,8 @@ public class AnnUtil {
     int sz = pars.size();
     int i = 0;
 
-    for (ParameterDeclaration par: pars) {
-      out.print(nonGeneric(par.getType().toString()));
+    for (final VariableElement par: pars) {
+      out.print(nonGeneric(par.asType().toString()));
 
       i++;
       if (i < sz) {
@@ -193,8 +220,9 @@ public class AnnUtil {
 
     i = 0;
 
-    for (ParameterDeclaration par: pars) {
-      prntncc(fixName(par.getType().toString()), " ", par.getSimpleName());
+    for (final VariableElement par: pars) {
+      prntncc(fixName(par.asType().toString()), " ",
+              par.getSimpleName().toString());
 
       i++;
       if (i < sz) {
@@ -209,7 +237,7 @@ public class AnnUtil {
       out.println();
       out.print("        throws ");
       boolean first = true;
-      for (ReferenceType rt: thrownTypes) {
+      for (TypeMirror rt: thrownTypes) {
         if (!first) {
           out.print(", ");
         }
@@ -221,16 +249,21 @@ public class AnnUtil {
     out.println(" {");
   }
 
+  public TypeElement asTypeElement(TypeMirror typeMirror) {
+    Types TypeUtils = env.getTypeUtils();
+    return (TypeElement)TypeUtils.asElement(typeMirror);
+  }
+
   /**
    * @param tm
    * @return String
    */
-  public static String getClassName(final TypeMirror tm) {
-    if (tm instanceof ClassType) {
-      ClassType ct = (ClassType)tm;
-
-      return fixName(ct.getDeclaration().getSimpleName());
-    }
+  public String getClassName(final TypeMirror tm) {
+//    if (tm instanceof DeclaredType) {
+//      DeclaredType ct = (DeclaredType)tm;
+//
+//      return fixName(ct.asElement().toString());
+//    }
 
     return fixName(tm.toString());
   }
@@ -259,12 +292,12 @@ public class AnnUtil {
                                     tm.getClass().getName() +
                                     " " + tm.toString());
     }*/
-    if (!(tm instanceof PrimitiveType)) {
-      String className = nonGeneric(tm.toString());
+    if (tm.getKind() == TypeKind.VOID) {
+      return null;
+    }
 
-      if ("void".equals(className)) {
-        return null;
-      }
+    if (!tm.getKind().isPrimitive()) {
+      String className = nonGeneric(tm.toString());
 
       if (className.startsWith("java.lang.")) {
         return null;
@@ -281,7 +314,7 @@ public class AnnUtil {
   }
 
   /**
-   * @param str
+   * @param str name to fix
    * @return String
    */
   public static String fixName(String str) {
@@ -353,18 +386,21 @@ public class AnnUtil {
    * @param tm
    * @return boolean
    */
-  public static boolean isCollection(final TypeMirror tm) {
-    if (tm instanceof ClassType) {
-      ClassType ct = (ClassType)tm;
+  public boolean isCollection(final TypeMirror tm) {
+    TypeElement el = asTypeElement(tm);
 
-      Collection<InterfaceType> sis = ct.getSuperinterfaces();
-      for (InterfaceType it: sis) {
-        if (ProcessState.isCollection(it)) {
+    if (el == null) {
+      return false;
+    }
+
+    if (el.getKind() == ElementKind.CLASS) {
+      for (TypeMirror itm: el.getInterfaces()) {
+        if (ProcessState.isCollection(itm)) {
           return  true;
         }
-
-        return false;
       }
+
+      return false;
     }
 
     return ProcessState.isCollection(tm);

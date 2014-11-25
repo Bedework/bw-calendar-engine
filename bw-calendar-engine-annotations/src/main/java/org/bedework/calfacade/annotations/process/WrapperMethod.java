@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,11 +20,12 @@ package org.bedework.calfacade.annotations.process;
 
 import org.bedework.calfacade.annotations.NoQuota;
 
-import com.sun.mirror.apt.AnnotationProcessorEnvironment;
-import com.sun.mirror.declaration.MethodDeclaration;
-import com.sun.mirror.type.PrimitiveType;
-import com.sun.mirror.type.TypeMirror;
-import com.sun.mirror.util.Types;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
+import javax.tools.Diagnostic.Kind;
 
 /** We create a list of these as we process the event. We tie together the
  * setter and getter methods so that only the setter needs to be annotated
@@ -54,10 +55,10 @@ public class WrapperMethod extends MethodHandler<WrapperMethod> {
    * @param d
    * @param fromSuper if declared in a superdeclaration
    */
-  public WrapperMethod(final AnnotationProcessorEnvironment env,
+  public WrapperMethod(final ProcessingEnvironment env,
                        final AnnUtil annUtil,
                        final ProcessState pstate,
-                       final MethodDeclaration d,
+                       final ExecutableElement d,
                        final boolean fromSuper) {
     super(env, annUtil, d);
     this.pstate = pstate;
@@ -68,14 +69,14 @@ public class WrapperMethod extends MethodHandler<WrapperMethod> {
     if (typeBoolean == null) {
       // init primitive types.
       Types types = env.getTypeUtils();
-      typeBoolean = types.getPrimitiveType(PrimitiveType.Kind.BOOLEAN);
-      typeByte = types.getPrimitiveType(PrimitiveType.Kind.BYTE);
-      typeChar = types.getPrimitiveType(PrimitiveType.Kind.CHAR);
-      typeDouble = types.getPrimitiveType(PrimitiveType.Kind.DOUBLE);
-      typeFloat = types.getPrimitiveType(PrimitiveType.Kind.FLOAT);
-      typeInt = types.getPrimitiveType(PrimitiveType.Kind.INT);
-      typeLong = types.getPrimitiveType(PrimitiveType.Kind.LONG);
-      typeShort = types.getPrimitiveType(PrimitiveType.Kind.SHORT);
+      typeBoolean = types.getPrimitiveType(TypeKind.BOOLEAN);
+      typeByte = types.getPrimitiveType(TypeKind.BYTE);
+      typeChar = types.getPrimitiveType(TypeKind.CHAR);
+      typeDouble = types.getPrimitiveType(TypeKind.DOUBLE);
+      typeFloat = types.getPrimitiveType(TypeKind.FLOAT);
+      typeInt = types.getPrimitiveType(TypeKind.INT);
+      typeLong = types.getPrimitiveType(TypeKind.LONG);
+      typeShort = types.getPrimitiveType(TypeKind.SHORT);
     }
   }
 
@@ -104,7 +105,8 @@ public class WrapperMethod extends MethodHandler<WrapperMethod> {
         // Update overhead
 
         if (pstate.debug) {
-          msg.printNotice(" calc quota overhead for " + fieldType);
+          msg.printMessage(Kind.NOTE,
+                           " calc quota overhead for " + fieldType);
         }
 
         if (fieldType.equals(typeBoolean)) {
@@ -145,15 +147,5 @@ public class WrapperMethod extends MethodHandler<WrapperMethod> {
     }
     annUtil.prntlns("  }",
                     "");
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append("WrapperMethod{");
-    toStringSegment(sb);
-
-    return sb.toString();
   }
 }

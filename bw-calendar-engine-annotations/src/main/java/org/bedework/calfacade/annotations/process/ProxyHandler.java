@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -23,9 +23,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.sun.mirror.apt.AnnotationProcessorEnvironment;
-import com.sun.mirror.apt.Messager;
-import com.sun.mirror.declaration.MethodDeclaration;
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.tools.Diagnostic.Kind;
 
 /** TODO: We need to be able to handle something less generic than Collection,
  * e.g. List or Set.
@@ -36,9 +37,9 @@ import com.sun.mirror.declaration.MethodDeclaration;
 public class ProxyHandler {
   private static final String proxyTemplateName = "BwEventProxy.java.rsrc";
 
-  private List<ProxyMethod> proxyMethods = new ArrayList<ProxyMethod>();
+  private List<ProxyMethod> proxyMethods = new ArrayList<>();
 
-  private Map<String, ProxyMethod> fieldNameMap = new HashMap<String, ProxyMethod>();
+  private Map<String, ProxyMethod> fieldNameMap = new HashMap<>();
 
   private ProcessState pstate;
 
@@ -57,7 +58,7 @@ public class ProxyHandler {
    * @param env
    * @return boolean true for OK
    */
-  public boolean startProxy(final AnnotationProcessorEnvironment env) {
+  public boolean startProxy(final ProcessingEnvironment env) {
     try {
       annUtil = new AnnUtil(env,
                             "org.bedework.calfacade.BwEvent",
@@ -68,7 +69,8 @@ public class ProxyHandler {
     } catch (Throwable t) {
       Messager msg = env.getMessager();
       t.printStackTrace();
-      msg.printError("Exception: " + t.getMessage());
+      msg.printMessage(Kind.ERROR,
+                       "Exception: " + t.getMessage());
       return false;
     }
   }
@@ -78,11 +80,15 @@ public class ProxyHandler {
    * @param d
    * @return boolean true for ok
    */
-  public boolean proxyMethod(final AnnotationProcessorEnvironment env,
-                             final MethodDeclaration d) {
+  public boolean proxyMethod(final ProcessingEnvironment env,
+                             final ExecutableElement d) {
     Messager msg = env.getMessager();
     try {
       ProxyMethod pm = new ProxyMethod(env, annUtil, d);
+
+      if (pstate.debug) {
+        annUtil.note("          " + pm);
+      }
 
       proxyMethods.add(pm);
 
@@ -93,14 +99,16 @@ public class ProxyHandler {
       } else if (setGet.setter) {
         // This should be a getter
         if (!pm.getter) {
-          msg.printError("Error: found setter in table for " + pm);
+          msg.printMessage(Kind.ERROR,
+                           "Error: found setter in table for " + pm);
         } else {
           setGet.setGet = pm;
           pm.setGet = setGet;
         }
       } else if (setGet.getter) {
         if (!pm.setter) {
-          msg.printError("Error: found getter in table for " + pm);
+          msg.printMessage(Kind.ERROR,
+                           "Error: found getter in table for " + pm);
         } else {
           // Make setter first
           setGet.setGet = pm;
@@ -112,7 +120,8 @@ public class ProxyHandler {
       return true;
     } catch (Throwable t) {
       t.printStackTrace();
-      msg.printError("Exception: " + t.getMessage());
+      msg.printMessage(Kind.ERROR,
+                       "Exception: " + t.getMessage());
       return false;
     }
   }
@@ -121,7 +130,7 @@ public class ProxyHandler {
    * @param env
    * @return boolean true for OK
    */
-  public boolean endProxy(final AnnotationProcessorEnvironment env) {
+  public boolean endProxy(final ProcessingEnvironment env) {
     try {
       for (ProxyMethod pm: proxyMethods) {
         pm.generate();
@@ -129,7 +138,8 @@ public class ProxyHandler {
 
       if (annUtil.emitTemplateSection()) {
         Messager msg = env.getMessager();
-        msg.printError("Apparently more input available from template");
+        msg.printMessage(Kind.ERROR,
+                         "Apparently more input available from template");
       }
 
       annUtil.close();
@@ -138,7 +148,8 @@ public class ProxyHandler {
     } catch (Throwable t) {
       t.printStackTrace();
       Messager msg = env.getMessager();
-      msg.printError("Exception: " + t.getMessage());
+      msg.printMessage(Kind.ERROR,
+                       "Exception: " + t.getMessage());
       return false;
     }
   }

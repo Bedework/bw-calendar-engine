@@ -20,20 +20,20 @@ package org.bedework.calfacade.annotations.process;
 
 import org.bedework.calfacade.annotations.CloneForOverride;
 import org.bedework.calfacade.annotations.ical.Immutable;
+import org.bedework.util.misc.ToString;
 
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.sun.mirror.apt.AnnotationProcessorEnvironment;
-import com.sun.mirror.apt.Messager;
-import com.sun.mirror.declaration.MethodDeclaration;
-import com.sun.mirror.declaration.Modifier;
-import com.sun.mirror.declaration.ParameterDeclaration;
-import com.sun.mirror.type.PrimitiveType;
-import com.sun.mirror.type.ReferenceType;
-import com.sun.mirror.type.TypeMirror;
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 
 /** We create a list of these as we process the event. We tie together the
  * setter and getter methods so that only the setter needs to be annotated
@@ -70,30 +70,30 @@ public abstract class MethodHandler<T> implements Comparable<MethodHandler> {
   protected TypeMirror returnType;
   protected boolean returnsVoid;
 
-  protected Collection<ParameterDeclaration> pars;
+  protected List<? extends VariableElement> pars;
 
-  protected Collection<ReferenceType> thrownTypes;
+  protected List<? extends TypeMirror> thrownTypes;
 
-  protected AnnotationProcessorEnvironment env;
+  protected ProcessingEnvironment env;
   protected Messager msg;
 
   // Points at other one of pair. Arranged so that setter is in map if present
   protected T setGet;
 
   /**
-   * @param env
-   * @param annUtil
-   * @param d
+   * @param env the environment
+   * @param annUtil utils
+   * @param d the method
    */
-  public MethodHandler(final AnnotationProcessorEnvironment env,
+  public MethodHandler(final ProcessingEnvironment env,
                        final AnnUtil annUtil,
-                       final MethodDeclaration d) {
+                       final ExecutableElement d) {
     this.env = env;
     this.annUtil = annUtil;
     msg = env.getMessager();
 
     staticMethod = d.getModifiers().contains(Modifier.STATIC);
-    methName = d.getSimpleName();
+    methName = d.getSimpleName().toString();
     getter = methName.startsWith("get");
     setter = methName.startsWith("set");
 
@@ -107,19 +107,19 @@ public abstract class MethodHandler<T> implements Comparable<MethodHandler> {
     }
 
     returnType = d.getReturnType();
-    returnsVoid = env.getTypeUtils().getVoidType().equals(returnType);
+    returnsVoid = env.getTypeUtils().getNoType(TypeKind.VOID).equals(returnType);
 
     pars = d.getParameters();
     thrownTypes = d.getThrownTypes();
 
     if ((setter) && (pars != null) && (pars.size() == 1)) {
-      fieldType = pars.iterator().next().getType();
-      basicType = fieldType instanceof PrimitiveType;
+      fieldType = pars.iterator().next().asType();
+      basicType = fieldType.getKind().isPrimitive();
     }
 
     if (getter) {
       fieldType = returnType;
-      basicType = returnType instanceof PrimitiveType;
+      basicType = returnType.getKind().isPrimitive();
     }
 
     if (setter || getter) {
@@ -134,7 +134,7 @@ public abstract class MethodHandler<T> implements Comparable<MethodHandler> {
    * @return List
    */
   public Set<String> getImports(final String thisPackage) {
-    TreeSet<String> imports = new TreeSet<String>();
+    TreeSet<String> imports = new TreeSet<>();
 
     String cname = AnnUtil.getImportableClassName(returnType, thisPackage);
 
@@ -142,8 +142,8 @@ public abstract class MethodHandler<T> implements Comparable<MethodHandler> {
       imports.add(cname);
     }
 
-    for (ParameterDeclaration par: pars) {
-      String parType = AnnUtil.getImportableClassName(par.getType(), thisPackage);
+    for (VariableElement par: pars) {
+      String parType = AnnUtil.getImportableClassName(par.asType(), thisPackage);
 
       if (parType != null) {
         imports.add(parType);
@@ -197,7 +197,7 @@ public abstract class MethodHandler<T> implements Comparable<MethodHandler> {
     sb.append("(");
 
     boolean first = true;
-    for (ParameterDeclaration par: pars) {
+    for (VariableElement par: pars) {
       if (!first) {
         sb.append(", ");
       }
@@ -211,24 +211,23 @@ public abstract class MethodHandler<T> implements Comparable<MethodHandler> {
   }
 
   /**
-   * @param sb
+   * @param ts to string object
    */
-  public void toStringSegment(final StringBuilder sb) {
-    sb.append(fieldName);
-    sb.append(", basic=");
-    sb.append(basicType);
-    sb.append(", method=");
-    sb.append(methName);
+  public void toStringSegment(final ToString ts) {
+    ts.append("fieldName", fieldName);
+    ts.append("fieldType", fieldType);
+    ts.append("method", methName);
+    ts.append("staticMethod", staticMethod);
+    ts.append("basicType", basicType);
   }
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    ToString ts = new ToString(this);
 
-    sb.append("Method{");
-    toStringSegment(sb);
+    toStringSegment(ts);
 
-    return sb.toString();
+    return ts.toString();
   }
 
   public int compareTo(final MethodHandler that) {
@@ -249,9 +248,9 @@ public abstract class MethodHandler<T> implements Comparable<MethodHandler> {
       return 1;
     }
 
-    Iterator<ParameterDeclaration> it = that.pars.iterator();
-    for (ParameterDeclaration pd: pars) {
-      ParameterDeclaration thatPd = it.next();
+    Iterator<VariableElement> it = that.pars.iterator();
+    for (VariableElement pd: pars) {
+      VariableElement thatPd = it.next();
 
       if (!pd.equals(thatPd)) {
         return 1;

@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,14 +20,17 @@ package org.bedework.calfacade.annotations.process;
 
 import org.bedework.calfacade.annotations.Wrapper;
 
-import com.sun.mirror.type.InterfaceType;
-import com.sun.mirror.type.TypeMirror;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 
 /**
  * @author douglm
  *
  */
 public class ProcessState {
+  private final ProcessingEnvironment env;
+
   String currentClassName;
 
   boolean processingEvent;
@@ -48,8 +51,16 @@ public class ProcessState {
 
   boolean debug;
 
+  public ProcessState(final ProcessingEnvironment env) {
+    this.env = env;
+  }
+
+  public ProcessingEnvironment getEnv() {
+    return env;
+  }
+
   /**
-   * @param val
+   * @param val name of class
    */
   public void setCurrentClassName(String val) {
     currentClassName = val;
@@ -75,7 +86,7 @@ public class ProcessState {
 
   /**
    *
-   * @param wpr
+   * @param wpr Wrapper
    * @return vHandler
    */
   public WrapperHandler getWrapperHandler(Wrapper wpr) {
@@ -116,11 +127,11 @@ public class ProcessState {
   }
 
   /**
-   * @param tm
+   * @param tm TypeMirror
    * @return boolean
    */
   public static boolean isCollection(TypeMirror tm) {
-    if (!(tm instanceof InterfaceType)) {
+    if (!(tm instanceof DeclaredType)) {
       return false;
     }
 

@@ -22,6 +22,7 @@
     -->
 	</dependencies>
 
+  <!--
 	<profiles>
 		<profile>
 			<id>default-tools.jar</id>
@@ -41,5 +42,5 @@
 				</dependency>
 			</dependencies>
 		</profile>
-	</profiles>
+	</profiles> -->
 </project>
