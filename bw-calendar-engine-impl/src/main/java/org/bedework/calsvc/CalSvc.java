@@ -406,17 +406,17 @@ public class CalSvc extends CalSvcI {
                              final String service) throws CalFacadeException {
     try {
       return getEncrypter().getPublicKey();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   @Override
   public BwStats getStats() throws CalFacadeException {
-    BwStats stats = getCal().getStats();
+    final BwStats stats = getCal().getStats();
 
     if (timezones != null) {
-      CacheStats cs = stats.getDateCacheStats();
+      final CacheStats cs = stats.getDateCacheStats();
 
       cs.setHits(timezones.getDateCacheHits());
       cs.setMisses(timezones.getDateCacheMisses());
@@ -499,6 +499,25 @@ public class CalSvc extends CalSvcI {
   }
 
   @Override
+  public void kill(final String id) throws CalFacadeException {
+    // We could probably use some sort of kill listener to clean up after this
+
+    try {
+      for (final Calintf ci: getCal().active()) {
+        if (ci.getTraceId().equals(id)) {
+          warn("Stopping interface with id " + id);
+
+          ci.rollbackTransaction();
+          ci.close();
+          break;
+        }
+      }
+    } catch (final Throwable t) {
+      error(t);
+    }
+  }
+
+  @Override
   public void postNotification(final SysEventBase ev) throws CalFacadeException {
     getCal().postNotification(ev);
   }
@@ -521,7 +540,7 @@ public class CalSvc extends CalSvcI {
                   pars.getForRestore(),
                   pars.getIndexRebuild());
 
-    for (CalSvcDb handler: handlers) {
+    for (final CalSvcDb handler: handlers) {
       handler.open();
     }
   }
@@ -545,7 +564,7 @@ public class CalSvc extends CalSvcI {
     open = false;
     getCal().close();
 
-    for (CalSvcDb handler: handlers) {
+    for (final CalSvcDb handler: handlers) {
       handler.close();
     }
   }
@@ -683,12 +702,13 @@ public class CalSvc extends CalSvcI {
     }*/
 
     try {
-      MailerIntf mailer = (MailerIntf)CalFacadeUtil.getObject(getSystemProperties().getMailerClass(),
-                                                   MailerIntf.class);
+      final MailerIntf mailer =
+              (MailerIntf)CalFacadeUtil.getObject(getSystemProperties().getMailerClass(),
+                                                  MailerIntf.class);
       mailer.init(configs.getMailConfigProperties());
 
       return mailer;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -779,7 +799,7 @@ public class CalSvc extends CalSvcI {
 
   @Override
   public BwIndexer getIndexer(final String principal) throws CalFacadeException {
-    BwPrincipal pr;
+    final BwPrincipal pr;
 
     if (principal == null) {
       pr = getPrincipal();

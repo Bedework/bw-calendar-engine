@@ -75,6 +75,8 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private String cacheUrlPrefix;
 
+  private int autoKillMinutes;
+
   private Integer vpollMaxItems;
   private Integer vpollMaxActive;
   private Integer vpollMaxVoters;
@@ -277,6 +279,16 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   @Override
   public String getCacheUrlPrefix() {
     return cacheUrlPrefix;
+  }
+
+  @Override
+  public void setAutoKillMinutes(final int val) {
+    autoKillMinutes = val;
+  }
+
+  @Override
+  public int getAutoKillMinutes() {
+    return autoKillMinutes;
   }
 
   @Override

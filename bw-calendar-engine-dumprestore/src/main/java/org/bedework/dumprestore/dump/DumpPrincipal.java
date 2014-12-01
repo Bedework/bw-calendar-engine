@@ -290,10 +290,12 @@ public class DumpPrincipal {
   private CalSvcI getSvci() throws CalFacadeException {
     CalSvcIPars pars = new CalSvcIPars("dump-principal",
                                        pr.getAccount(), // Need to use href
+                                       null,   // user
                                        null,   // calsuite
                                        true,   // publicAdmin
                                        true,   // superUser,
                                        true,   // service
+                                       false,  // publicSubmission
                                        true,  // adminCanEditAllPublicCategories
                                        true,  // adminCanEditAllPublicLocations
                                        true,  // adminCanEditAllPublicSponsors

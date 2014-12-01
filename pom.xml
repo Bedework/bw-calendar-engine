@@ -318,7 +318,15 @@
 					<target>1.7</target>
 					<showDeprecation>false</showDeprecation>
 					<showWarnings>false</showWarnings>
-				</configuration>
+          <!-- This for up-to-date annotation processing
+          <annotationProcessors>
+            <annotationProcessor>
+              org.bedework.calfacade.annotations.BedeworkAp
+            </annotationProcessor>
+          </annotationProcessors>
+          -->
+          <compilerArgument>-proc:none</compilerArgument>
+        </configuration>
 			</plugin>
 			<!-- Produce source jars during the 'verify' phase -->
 			<plugin>

@@ -196,6 +196,19 @@ public interface SystemProperties extends CalDAVSystemProperties {
   @MBeanInfo("The url prefix for the cache")
   String getCacheUrlPrefix();
 
+  /** Set the minutes for the hung transaction killer
+   *
+   * @param val minutes
+   */
+  void setAutoKillMinutes(int val);
+
+  /** Get the minutes for the hung transaction killer
+   *
+   * @return minutes
+   */
+  @MBeanInfo("The minutes for the hung transaction killer")
+  int getAutoKillMinutes();
+
   /**
    * @return copy of this
    */

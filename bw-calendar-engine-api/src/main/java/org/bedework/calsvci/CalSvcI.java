@@ -223,6 +223,13 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    */
   public abstract List<IfInfo> getIfInfo() throws CalFacadeException;
 
+  /** Kill an errant interface.
+   *
+   * @param id id from IfInfo
+   * @throws CalFacadeException
+   */
+  public abstract void kill(String id) throws CalFacadeException;
+
   /** Send a notification event
    *
    * @param ev

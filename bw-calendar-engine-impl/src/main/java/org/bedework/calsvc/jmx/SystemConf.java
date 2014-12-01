@@ -39,6 +39,103 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   private CalSvcI svci;
 
+  private boolean running;
+
+  private class AutoKillThread extends Thread {
+    int ctr;
+    boolean showedTrace;
+
+    int terminated;
+
+    int failedTerminations;
+
+    AutoKillThread() {
+      super("Bedework AutoKill");
+    }
+
+    @Override
+    public void run() {
+      while (running) {
+        final int waitMins = getAutoKillMinutes();
+
+        try {
+          if (waitMins == 0) {
+            // Display every 10 mins
+            ctr++;
+            if (ctr == 10) {
+              info(listOpenIfs());
+              ctr = 0;
+            }
+          } else {
+            if (debug) {
+              debug("About to check interfaces");
+            }
+
+            checkIfs(waitMins * 60);
+          }
+        } catch (final Throwable t) {
+          if (!showedTrace) {
+            error(t);
+            showedTrace = true;
+          } else {
+            error(t.getMessage());
+          }
+        }
+
+        if (running) {
+          // Wait a bit before restarting
+          try {
+            synchronized (this) {
+              final int wait;
+
+              if (waitMins == 0) {
+                // Autokill disabled - go to sleep for a minute
+                wait = 60 * 1000;
+              } else {
+                wait = waitMins * 60 * 1000;
+              }
+              this.wait(wait);
+            }
+          } catch (final Throwable t) {
+            error(t.getMessage());
+          }
+        }
+      }
+    }
+
+    private void checkIfs(final int waitSecs) {
+      try {
+        getSvci();
+
+        if (svci != null) {
+          for (final CalSvcI.IfInfo ifInfo: svci.getIfInfo()) {
+            if (ifInfo.getSeconds() > waitSecs) {
+              try {
+                if (debug) {
+                  debug("About to shut down interface " +
+                                ifInfo.getId());
+                }
+                svci.kill(ifInfo.getId());
+                terminated++;
+              } catch (final Throwable t) {
+                warn("Failed to terminate " +
+                             ifInfo.getId());
+                error(t);
+                failedTerminations++;
+              }
+            }
+          }
+        }
+      } catch (final Throwable t) {
+        error(t);
+      } finally {
+        closeSvci();
+      }
+    }
+  }
+
+  private AutoKillThread autoKiller;
+
   /**
    * @param name of config
    */
@@ -48,8 +145,6 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
     setConfigName(name);
 
     setConfigPname(confuriPname);
-
-    //TzServerUtil.setTzConfigHolder(this);
   }
 
   /**
@@ -293,6 +388,26 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
+  public void setAutoKillMinutes(final int val) {
+    getConfig().setAutoKillMinutes(val);
+  }
+
+  @Override
+  public int getAutoKillMinutes() {
+    return getConfig().getAutoKillMinutes();
+  }
+
+  @Override
+  public int getAutoKillTerminated() {
+    return autoKiller.terminated;
+  }
+
+  @Override
+  public int getAutoKillFailedTerminations() {
+    return autoKiller.failedTerminations;
+  }
+
+  @Override
   public void setVpollMaxItems(final Integer val) {
     getConfig().setVpollMaxItems(val);
   }
@@ -414,7 +529,20 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
 
   @Override
   public String loadConfig() {
-    return loadConfig(SystemPropertiesImpl.class);
+    final String res = loadConfig(SystemPropertiesImpl.class);
+
+    try {
+      autoKiller = new AutoKillThread();
+
+      running = true;
+
+      autoKiller.start();
+    } catch (final Throwable t) {
+      error(t);
+      error("Unable to start autokill process");
+    }
+
+    return res;
   }
 
   /** Save the configuration.

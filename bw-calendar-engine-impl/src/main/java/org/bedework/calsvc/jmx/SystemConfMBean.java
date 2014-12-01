@@ -32,6 +32,21 @@ public interface SystemConfMBean extends ConfBaseMBean, SystemProperties {
   /* ========================================================================
    * Attributes
    * ======================================================================== */
+
+  /** Get number of hung transactions terminated
+   *
+   * @return count
+   */
+  @MBeanInfo("The number of hung transactions terminated")
+  int getAutoKillTerminated();
+
+  /** Get number of hung transactions which failed to be terminated
+   *
+   * @return count
+   */
+  @MBeanInfo("The number of hung transactions which failed to be terminated")
+  int getAutoKillFailedTerminations();
+
   /** Enable/disable db statistics
    *
    * @param enable       boolean true to turn on db statistics collection

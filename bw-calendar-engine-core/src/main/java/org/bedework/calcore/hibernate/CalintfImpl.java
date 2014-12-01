@@ -139,15 +139,15 @@ import java.util.TreeSet;
  * @author Mike Douglass   douglm rpi.edu
  */
 public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
-  private static BwStats stats = new BwStats();
+  private static final BwStats stats = new BwStats();
 
-  private static CalintfInfo info = new CalintfInfo(
+  private static final CalintfInfo info = new CalintfInfo(
        true,     // handlesLocations
        true,     // handlesContacts
        true      // handlesCategories
      );
 
-  protected static Map<String, CalintfBase> openIfs = new HashMap<>();
+  protected static final Map<String, CalintfBase> openIfs = new HashMap<>();
 
   /** For evaluating access control
    */
@@ -253,7 +253,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   }
 
   private static class CalintfHelperCallback implements CalintfHelperHib.Callback {
-    private CalintfImpl intf;
+    private final CalintfImpl intf;
 
     CalintfHelperCallback(final CalintfImpl intf) {
       this.intf = intf;
@@ -298,10 +298,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     }
 
     @Override
-    public BwCategory getCategory(String uid) throws CalFacadeException {
+    public BwCategory getCategory(final String uid) throws CalFacadeException {
       try {
         return intf.getEvPropsHandler(BwCategory.class).get(uid);
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         if (t instanceof CalFacadeException) {
           throw (CalFacadeException)t;
         }
@@ -316,7 +316,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
                                     final boolean alwaysReturn) throws CalFacadeException {
       try {
         return intf.calendars.getCalendar(path, desiredAccess, alwaysReturn);
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         if (t instanceof CalFacadeException) {
           throw (CalFacadeException)t;
         }
@@ -475,10 +475,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
           sess.close();
           sess = null;
         }
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         try {
           sess.close();
-        } catch (Throwable t1) {}
+        } catch (final Throwable ignored) {}
         sess = null; // Discard on error
       } finally {
         isOpen = false;
@@ -501,6 +501,9 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     }
 
     synchronized (openIfs) {
+      /* Add a count to the end of the millisecs timestamp to
+         make the key unique.
+       */
       long objCount = 0;
 
       while (true) {

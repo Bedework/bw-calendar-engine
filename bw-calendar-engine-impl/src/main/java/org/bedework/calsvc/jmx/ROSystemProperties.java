@@ -264,12 +264,22 @@ public final class ROSystemProperties implements SystemProperties {
 
   @Override
   public void setCacheUrlPrefix(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setEventregUrl(val);
+    throw new RuntimeException("Immutable");
   }
 
   @Override
   public String getCacheUrlPrefix() {
     return getConfig().getCacheUrlPrefix();
+  }
+
+  @Override
+  public void setAutoKillMinutes(final int val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public int getAutoKillMinutes() {
+    return getConfig().getAutoKillMinutes();
   }
 
   @Override
