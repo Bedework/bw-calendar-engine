@@ -30,7 +30,7 @@ import java.util.Collection;
 
 /** Implementation of UserAuth that handles Bedwork DB tables for authorisation.
  *
- * @author Mike Douglass    douglm@bedework.edu
+ * @author Mike Douglass    douglm@rpi.edu
  * @version 1.0
  */
 public class UserAuthUWDbImpl implements UserAuth {
@@ -72,12 +72,10 @@ public class UserAuthUWDbImpl implements UserAuth {
     return true;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.svc.UserAuth#updateUser(org.bedework.calfacade.svc.BwAuthUser)
-   */
   @Override
   public void updateUser(final BwAuthUser val) throws CalFacadeException {
-    if (val.getUsertype() == noPrivileges) {
+    if (val.isUnauthorized()) {
+      // We don't need an entry for a user with no special rights
       cb.delete(val);
 
       return;
@@ -86,16 +84,13 @@ public class UserAuthUWDbImpl implements UserAuth {
     cb.saveOrUpdate(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.svc.UserAuth#getUser(java.lang.String)
-   */
   @Override
   public BwAuthUser getUser(final String account) throws CalFacadeException {
     if (debug) {
       trace("getUserEntry for " + account);
     }
 
-    BwPrincipal p = cb.getPrincipal(account);
+    final BwPrincipal p = cb.getPrincipal(account);
 
     if (p == null) {
       return null;
@@ -104,11 +99,8 @@ public class UserAuthUWDbImpl implements UserAuth {
     return cb.getAuthUser(p.getPrincipalRef());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.svc.UserAuth#getAll()
-   */
   @Override
-  public Collection getAll() throws CalFacadeException {
+  public Collection<BwAuthUser> getAll() throws CalFacadeException {
     return cb.getAll();
   }
 

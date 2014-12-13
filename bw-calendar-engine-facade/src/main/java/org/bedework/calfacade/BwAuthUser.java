@@ -28,7 +28,7 @@ import org.bedework.util.misc.ToString;
  * with some special privilege. This could also be represented by users
  * with roles.
  *
- *   @author Mike Douglass douglm@bedework.edu
+ *   @author Mike Douglass douglm@rpi.edu
  *  @version 1.0
  */
 @Dump(elementName="authuser", keyFields={"user"})
@@ -56,7 +56,7 @@ public class BwAuthUser extends BwDbentity {
    */
   public static BwAuthUser makeAuthUser(final String user,
                                         final int usertype) {
-    BwAuthUser au = new BwAuthUser();
+    final BwAuthUser au = new BwAuthUser();
     au.setUserHref(user);
     au.setUsertype(usertype);
     au.setPrefs(BwAuthUserPrefs.makeAuthUserPrefs());
@@ -69,7 +69,7 @@ public class BwAuthUser extends BwDbentity {
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val href
    */
   public void setUserHref(final String val) {
     userHref = val;
@@ -83,7 +83,7 @@ public class BwAuthUser extends BwDbentity {
   }
 
   /**
-   * @param val
+   * @param val  BwAuthUserPrefs auth prefs
    */
   public void setPrefs(final BwAuthUserPrefs val) {
     prefs = val;
@@ -98,14 +98,14 @@ public class BwAuthUser extends BwDbentity {
   }
 
   /**
-   * @param val
+   * @param val rights
    */
   public void setUsertype(final int val) {
     usertype = val;
   }
 
   /**
-   * @return  int user type
+   * @return  int user rights
    */
   public int getUsertype() {
     return usertype;
@@ -116,10 +116,31 @@ public class BwAuthUser extends BwDbentity {
    * ==================================================================== */
 
   /**
+   * @return boolean true for unauthorized user
+   */
+  public boolean isUnauthorized() {
+    return (getUsertype() == UserAuth.noPrivileges);
+  }
+
+  /**
    * @return boolean true for public event user
    */
   public boolean isPublicEventUser() {
     return ((getUsertype() & UserAuth.publicEventUser) != 0);
+  }
+
+  /**
+   * @return boolean true for content admin user
+   */
+  public boolean isContentAdminUser() {
+    return ((getUsertype() & UserAuth.contentAdminUser) != 0);
+  }
+
+  /**
+   * @return boolean true for approver user
+   */
+  public boolean isApproverUser() {
+    return ((getUsertype() & UserAuth.approverUser) != 0);
   }
 
   /* ====================================================================
@@ -136,7 +157,7 @@ public class BwAuthUser extends BwDbentity {
       return false;
     }
 
-    BwAuthUser that = (BwAuthUser)obj;
+    final BwAuthUser that = (BwAuthUser)obj;
 
     return getUserHref().equals(that.getUserHref());
   }
@@ -148,19 +169,22 @@ public class BwAuthUser extends BwDbentity {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 
     ts.append("user", getUserHref());
     ts.append("usertype", getUsertype());
+    ts.append("publicEventUser", isPublicEventUser());
+    ts.append("contentAdminUser", isContentAdminUser());
+    ts.append("approverUser", isApproverUser());
 
     return ts.toString();
   }
 
   @Override
   public Object clone() {
-    BwAuthUser au = new BwAuthUser();
+    final BwAuthUser au = new BwAuthUser();
     au.setUserHref(getUserHref());
     au.setUsertype(getUsertype());
 

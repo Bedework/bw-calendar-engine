@@ -351,6 +351,7 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
     ts.newLine();
     ts.append("rootUsers", getRootUsers());
+    ts.append("autoKillMinutes", getAutoKillMinutes());
 
     ts.newLine();
     ts.append("vpollMaxItems", getVpollMaxItems());

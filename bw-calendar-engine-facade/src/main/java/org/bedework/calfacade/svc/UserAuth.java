@@ -36,7 +36,7 @@ import java.util.List;
  * rights. The underlying implementation may choose to use a database and
  * remove those entries for which there are no special rights.
  *
- * @author Mike Douglass douglm@bedework.edu
+ * @author Mike Douglass douglm@rpi.edu
  * @version 2.2
  */
 public interface UserAuth extends Serializable {
@@ -53,16 +53,21 @@ public interface UserAuth extends Serializable {
    */
   public static final int contentAdminUser = 128;
 
+  /** A user who can approve content
+   */
+  public static final int approverUser = 256;
+
   /** Useful value.
    */
   public static final int allAuth = publicEventUser +
-                                    contentAdminUser;
+                                    contentAdminUser +
+                                    approverUser;
 
   /** Class to be implemented by caller and passed during init.
    */
   public static abstract class CallBack implements Serializable {
     /**
-     * @param account
+     * @param account the href
      * @return BwPrincipal represented by account
      * @throws CalFacadeException
      */
@@ -77,14 +82,14 @@ public interface UserAuth extends Serializable {
 
     /** Delete the entry
      *
-     * @param val
+     * @param val the authuser object
      * @throws CalFacadeException
      */
     public abstract void delete(final BwAuthUser val) throws CalFacadeException;
 
     /** Save a new entry or update an existing entry
      *
-     * @param val
+     * @param val the authuser object
      * @throws CalFacadeException
      */
     public abstract void saveOrUpdate(final BwAuthUser val) throws CalFacadeException;
