@@ -22,6 +22,7 @@ import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
+import org.bedework.calfacade.BwAuthUser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
@@ -53,12 +54,12 @@ import java.util.TreeSet;
  * @author Mike Douglass       douglm - rpi.edu
  */
 class Calendars extends CalSvcDb implements CalendarsI {
-  private String publicCalendarRootPath;
+  private final String publicCalendarRootPath;
   //private String userCalendarRootPath;
 
   /** Constructor
    *
-   * @param svci
+   * @param svci interface
    * @throws CalFacadeException
    */
   Calendars(final CalSvc svci) throws CalFacadeException {
@@ -70,9 +71,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
     //userCalendarRootPath = "/" + getBasicSyspars().getUserCalendarRoot();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#getPublicCalendars()
-   */
   @Override
   public BwCalendar getPublicCalendars() throws CalFacadeException {
     return getCal().getCalendar(publicCalendarRootPath,
@@ -81,8 +79,25 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   @Override
   public String getHomePath() throws CalFacadeException {
-    if (isGuest() || isPublicAdmin()) {
+    if (isGuest()) {
       return publicCalendarRootPath;
+    }
+
+    if (isPublicAdmin()) {
+      if (!getSyspars().getWorkflowEnabled()) {
+        return publicCalendarRootPath;
+      }
+
+      final BwAuthUser au = getSvc().getUserAuth().getUser(getPars().getAuthUser());
+      final boolean isApprover = isSuper() || (au != null) && au.isApproverUser();
+
+      // Do they have approver status?
+      if (isApprover) {
+        return publicCalendarRootPath;
+      }
+
+      return Util.buildPath(true, getSyspars().getWorkflowRoot()); // "/",
+//                            getPrincipal().getAccountNoSlash());
     }
 
     return getSvc().getPrincipalInfo().getCalendarHomePath();
@@ -93,13 +108,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
     return getCal().getCalendar(getHomePath(), PrivilegeDefs.privRead, true);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#getHome(org.bedework.calfacade.BwUser, boolean)
-   */
   @Override
   public BwCalendar getHome(final BwPrincipal principal,
                             final boolean freeBusy) throws CalFacadeException {
-    int priv;
+    final int priv;
     if (freeBusy) {
       priv = PrivilegeDefs.privReadFreeBusy;
     } else {
@@ -109,12 +121,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                          priv, true);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#decomposeVirtualPath(java.lang.String)
-   */
   @Override
   public Collection<BwCalendar> decomposeVirtualPath(final String vpath) throws CalFacadeException {
-    Collection<BwCalendar> cols = new ArrayList<BwCalendar>();
+    final Collection<BwCalendar> cols = new ArrayList<>();
 
     /* First see if the vpath is an actual path - generally the case for
      * personal calendar users.
@@ -128,7 +137,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return cols;
     }
 
-    String[] pathEls = normalizeUri(vpath).split("/");
+    final String[] pathEls = normalizeUri(vpath).split("/");
 
     if ((pathEls == null) || (pathEls.length == 0)) {
       return cols;
@@ -149,7 +158,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
       try {
         curCol = get(startPath);
-      } catch (CalFacadeAccessException cfae) {
+      } catch (final CalFacadeAccessException cfae) {
         curCol = null;
       }
 
@@ -177,7 +186,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
       // Follow the chain of references for curCol until we reach a non-alias
       if (curCol.getInternalAlias()) {
-        BwCalendar nextCol = resolveAlias(curCol, false, false);
+        final BwCalendar nextCol = resolveAlias(curCol, false, false);
 
         if (nextCol == null) {
           // Bad vpath
@@ -217,7 +226,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
         }
       }
       */
-      BwCalendar col = get(Util.buildPath(true, curCol.getPath(), "/", pathEls[pathi]));
+      final BwCalendar col = get(curCol.getPath() + "/" + pathEls[pathi]);
 
       if (col == null) {
         /* Child not found - bad vpath */
@@ -231,9 +240,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
     return cols;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#getChildren(org.bedework.calfacade.BwCalendar)
-   */
   @Override
   public Collection<BwCalendar> getChildren(final BwCalendar col) throws CalFacadeException {
     if (col.getCalType() == BwCalendar.calTypeAlias) {
@@ -242,22 +248,16 @@ class Calendars extends CalSvcDb implements CalendarsI {
     return getCal().getCalendars(col.getAliasedEntity());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#getAddContentCollections()
-   */
   @Override
   public Set<BwCalendar> getAddContentCollections(final boolean includeAliases)
           throws CalFacadeException {
-    Set<BwCalendar> cals = new TreeSet<BwCalendar>();
+    final Set<BwCalendar> cals = new TreeSet<>();
 
     getAddContentCalendarCollections(includeAliases, getHome(), cals);
 
     return cals;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#isEmpty(org.bedework.calfacade.BwCalendar)
-   */
   @Override
   public boolean isEmpty(final BwCalendar val) throws CalFacadeException {
     return getSvc().getCal().isEmpty(val);
@@ -280,13 +280,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
     return getCal().getCalendar(path, PrivilegeDefs.privAny, false);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#getSpecial(int, boolean)
-   */
   @Override
   public BwCalendar getSpecial(final int calType,
                                final boolean create) throws CalFacadeException {
-    Calintf.GetSpecialCalendarResult gscr =  getSvc().getCal().getSpecialCalendar(
+    final Calintf.GetSpecialCalendarResult gscr =
+            getSvc().getCal().getSpecialCalendar(
                              getPrincipal(), calType, create,
                                        PrivilegeDefs.privAny);
     if (gscr.noUserHome) {
@@ -297,9 +295,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                        PrivilegeDefs.privAny).cal;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#setPreferred(org.bedework.calfacade.BwCalendar)
-   */
   @Override
   public void setPreferred(final BwCalendar  val) throws CalFacadeException {
     getSvc().getPrefsHandler().get().setDefaultCalendarPath(val.getPath());
@@ -309,33 +304,36 @@ class Calendars extends CalSvcDb implements CalendarsI {
   public String getPreferred(final String entityType) throws CalFacadeException {
     final int calType;
 
-    if (entityType.equals(Component.VEVENT)) {
-      String path = getSvc().getPrefsHandler().get().getDefaultCalendarPath();
+    switch (entityType) {
+      case Component.VEVENT:
+        final String path = getSvc().getPrefsHandler().get()
+                .getDefaultCalendarPath();
 
-      if (path != null) {
-        return path;
-      }
+        if (path != null) {
+          return path;
+        }
 
-      calType = BwCalendar.calTypeCalendarCollection;
-    } else if (entityType.equals(Component.VTODO)) {
-      calType = BwCalendar.calTypeTasks;
-    } else if (entityType.equals(Component.VPOLL)) {
-      calType = BwCalendar.calTypePoll;
-    } else {
-      return null;
+        calType = BwCalendar.calTypeCalendarCollection;
+        break;
+      case Component.VTODO:
+        calType = BwCalendar.calTypeTasks;
+        break;
+      case Component.VPOLL:
+        calType = BwCalendar.calTypePoll;
+        break;
+      default:
+        return null;
     }
 
-    GetSpecialCalendarResult gscr = getCal().getSpecialCalendar(getPrincipal(),
-                                                                calType,
-                                                                true,
-                                                                PrivilegeDefs.privAny);
+    final GetSpecialCalendarResult gscr =
+            getCal().getSpecialCalendar(getPrincipal(),
+                                        calType,
+                                        true,
+                                        PrivilegeDefs.privAny);
 
     return gscr.cal.getPath();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#add(org.bedework.calfacade.BwCalendar, java.lang.String)
-   */
   @Override
   public BwCalendar add(BwCalendar val,
                         final String parentPath) throws CalFacadeException {
@@ -355,7 +353,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                                 null,
                                                 null);
 
-    SynchI synch = getSvc().getSynch();
+    final SynchI synch = getSvc().getSynch();
 
     if (val.getExternalSub()) {
       if (!synch.subscribe(val)) {
@@ -366,27 +364,18 @@ class Calendars extends CalSvcDb implements CalendarsI {
     return val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#rename(org.bedework.calfacade.BwCalendar, java.lang.String)
-   */
   @Override
   public void rename(final BwCalendar val,
                      final String newName) throws CalFacadeException {
     getSvc().getCal().renameCalendar(val, newName);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#move(org.bedework.calfacade.BwCalendar, org.bedework.calfacade.BwCalendar)
-   */
   @Override
   public void move(final BwCalendar val,
                    final BwCalendar newParent) throws CalFacadeException {
     getSvc().getCal().moveCalendar(val, newParent);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#update(org.bedework.calfacade.BwCalendar)
-   */
   @Override
   public void update(final BwCalendar val) throws CalFacadeException {
     val.adjustCategories();
@@ -417,17 +406,14 @@ class Calendars extends CalSvcDb implements CalendarsI {
     return delete(val, emptyIt, false, sendSchedulingMessage);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#isUserRoot(org.bedework.calfacade.BwCalendar)
-   */
   @Override
   public boolean isUserRoot(final BwCalendar cal) throws CalFacadeException {
     if ((cal == null) || (cal.getPath() == null)) {
       return false;
     }
 
-    String[] ss = cal.getPath().split("/");
-    int pathLength = ss.length - 1;  // First element is empty string
+    final String[] ss = cal.getPath().split("/");
+    final int pathLength = ss.length - 1;  // First element is empty string
 
     return (pathLength == 2) &&
            (ss[1].equals(getBasicSyspars().getUserCalendarRoot()));
@@ -463,7 +449,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val an href
    * @return list of any aliases for the current user pointing at the given href
    * @throws CalFacadeException
    */
@@ -480,7 +466,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
                         final int calType,
                         final boolean create,
                         final int access) throws CalFacadeException {
-    Calintf.GetSpecialCalendarResult gscr =  getSvc().getCal().getSpecialCalendar(
+    final Calintf.GetSpecialCalendarResult gscr =
+            getSvc().getCal().getSpecialCalendar(
                                       owner, calType, create,
                                                 PrivilegeDefs.privAny);
     if (gscr.noUserHome) {
@@ -531,7 +518,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
      */
     if (!val.getInternalAlias() && emptyIt) {
       if (val.getCalendarCollection()) {
-        for (EventInfo ei: getSvc().getEventsHandler().
+        for (final EventInfo ei: getSvc().getEventsHandler().
                 getEvents(val,
                           null,
                           null,
@@ -549,10 +536,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
       final ResourcesI resI = getSvc().getResourcesHandler();
       final Collection<BwResource> rs = resI.getAll(val.getPath());
       if (!Util.isEmpty(rs)) {
-        if (!emptyIt) {
-          throw new CalFacadeException(CalFacadeException.collectionNotEmpty);
-        }
-
         for (final BwResource r: rs) {
           resI.delete(Util.buildPath(false, r.getColPath(), "/", r.getName()));
         }
@@ -594,9 +577,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
        * presumably we will want availability stored somewhere.
        * These might be implicit operations however.
        */
-      CurrentAccess ca = getSvc().checkAccess(col,
-                                              PrivilegeDefs.privWriteContent,
-                                              true);
+      final CurrentAccess ca = getSvc().checkAccess(col,
+                                                    PrivilegeDefs.privWriteContent,
+                                                    true);
 
       if (ca.getAccessAllowed()) {
         cals.add(root);  // Might be an alias, might not
@@ -609,7 +592,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return;
     }
 
-    for (BwCalendar ch: getChildren(root)) {
+    for (final BwCalendar ch: getChildren(root)) {
       getAddContentCalendarCollections(includeAliases, ch, cals);
     }
   }
@@ -617,7 +600,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   private void encryptPw(final BwCalendar val) throws CalFacadeException {
     try {
       val.setRemotePw(getSvc().getEncrypter().encrypt(val.getRemotePw()));
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -645,10 +628,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return;
     }
 
-    BwShareableDbentity ent = (BwShareableDbentity)o;
+    final BwShareableDbentity ent = (BwShareableDbentity)o;
 
     if (getPars().getAdminCanEditAllPublicContacts() ||
-        ent.getCreatorHref().equals(getPrincipal())) {
+        ent.getCreatorHref().equals(getPrincipal().getPrincipalRef())) {
       return;
     }
 
@@ -669,7 +652,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       }
 
       return uri;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug) {
         error(t);
       }

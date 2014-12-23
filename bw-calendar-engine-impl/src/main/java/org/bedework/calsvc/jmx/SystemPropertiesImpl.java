@@ -77,6 +77,9 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private int autoKillMinutes;
 
+  private boolean workflowEnabled;
+  private String workflowRoot;
+
   private Integer vpollMaxItems;
   private Integer vpollMaxActive;
   private Integer vpollMaxVoters;
@@ -287,6 +290,26 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   }
 
   @Override
+  public void setWorkflowEnabled(final boolean val) {
+    workflowEnabled = val;
+  }
+
+  @Override
+  public boolean getWorkflowEnabled() {
+    return workflowEnabled;
+  }
+
+  @Override
+  public void setWorkflowRoot(final String val) {
+    workflowRoot = val;
+  }
+
+  @Override
+  public String getWorkflowRoot() {
+    return workflowRoot;
+  }
+
+  @Override
   public int getAutoKillMinutes() {
     return autoKillMinutes;
   }
@@ -352,6 +375,8 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
     ts.newLine();
     ts.append("rootUsers", getRootUsers());
     ts.append("autoKillMinutes", getAutoKillMinutes());
+
+    ts.append("workflowEnabled", getWorkflowEnabled());
 
     ts.newLine();
     ts.append("vpollMaxItems", getVpollMaxItems());

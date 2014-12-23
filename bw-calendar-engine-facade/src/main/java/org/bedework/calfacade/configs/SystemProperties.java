@@ -210,6 +210,30 @@ public interface SystemProperties extends CalDAVSystemProperties {
   int getAutoKillMinutes();
 
   /**
+   *
+   * @param val True if public events workflow enabled
+   */
+  void setWorkflowEnabled(boolean val);
+
+  /**
+   *
+   * @return True if public events workflow enabled
+   */
+  @MBeanInfo("True if public events workflow enabled")
+  boolean getWorkflowEnabled();
+
+  /** The root of the collections used for submission of public events by non-approvers.
+   *
+   * @param val - the path
+   */
+  void setWorkflowRoot(String val);
+
+  /**
+   * @return String
+   */
+  String getWorkflowRoot();
+
+  /**
    * @return copy of this
    */
   SystemProperties cloneIt();

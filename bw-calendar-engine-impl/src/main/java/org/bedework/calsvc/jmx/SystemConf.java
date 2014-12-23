@@ -398,6 +398,26 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
+  public void setWorkflowEnabled(final boolean val) {
+    getConfig().setWorkflowEnabled(val);
+  }
+
+  @Override
+  public boolean getWorkflowEnabled() {
+    return getConfig().getWorkflowEnabled();
+  }
+
+  @Override
+  public void setWorkflowRoot(final String val) {
+    getConfig().setWorkflowRoot(val);
+  }
+
+  @Override
+  public String getWorkflowRoot() {
+    return getConfig().getWorkflowRoot();
+  }
+
+  @Override
   public int getAutoKillTerminated() {
     return autoKiller.terminated;
   }
@@ -513,6 +533,10 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
       if (svci != null) {
         for (final CalSvcI.IfInfo ifInfo: svci.getIfInfo()) {
           sb.append(ifInfo.getId());
+          sb.append("\t");
+          sb.append(ifInfo.getLastStateTime());
+          sb.append("\t");
+          sb.append(ifInfo.getState());
           sb.append("\t");
           sb.append(ifInfo.getSeconds());
           sb.append("\n");

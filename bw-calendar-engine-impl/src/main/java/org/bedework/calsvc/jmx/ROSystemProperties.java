@@ -283,6 +283,26 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
+  public void setWorkflowEnabled(final boolean val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public boolean getWorkflowEnabled() {
+    return getConfig().getWorkflowEnabled();
+  }
+
+  @Override
+  public void setWorkflowRoot(final String val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public String getWorkflowRoot() {
+    return getConfig().getWorkflowRoot();
+  }
+
+  @Override
   public void setVpollMaxItems(final Integer val) {
     throw new RuntimeException("Immutable");
   }

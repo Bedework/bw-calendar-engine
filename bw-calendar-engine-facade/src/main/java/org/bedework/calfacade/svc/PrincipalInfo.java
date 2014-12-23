@@ -32,7 +32,7 @@ import java.io.Serializable;
 
 /** Provide information about the current principal and given principals.
  *
- * @author Mike Douglass   douglm  bedework.edu
+ * @author Mike Douglass   douglm  rpi.edu
  */
 public abstract class PrincipalInfo implements AccessCb, Serializable {
   protected boolean superUser;
@@ -50,8 +50,8 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
   private String userHomePath;
 
   /**
-   * @param principal
-   * @param authPrincipal
+   * @param principal the principal
+   * @param authPrincipal the authenticated principal
    * @param maxAllowedPrivs - used to filter access - e.g. force read only in
    *                   public client
    */
@@ -71,7 +71,7 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
   }
 
   /**
-   * @param href
+   * @param href principal href
    * @return AccessPrincipal or null for not valid
    * @throws CalFacadeException
    */
@@ -90,7 +90,6 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
   }
 
   /**
-   * @param pr
    * @return the path for calendar home for the current principal, e.g. /user/douglm
    * @throws CalFacadeException
    */
@@ -103,7 +102,7 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
   }
 
   /**
-   * @param pr
+   * @param pr the principal
    * @return the path for calendar home for the given principal, e.g. /user/douglm
    * @throws CalFacadeException
    */
