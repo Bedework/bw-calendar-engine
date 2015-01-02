@@ -30,10 +30,11 @@ import ietf.params.xml.ns.icalendar_2.TextPropertyType;
  * @author douglm
  *
  */
+@SuppressWarnings("UnusedDeclaration")
 public class DescriptionPropUpdater implements PropertyUpdater {
   @Override
   public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
-    BwEvent ev = ui.getEvent();
+    final BwEvent ev = ui.getEvent();
     if (ui.isRemove()) {
       ui.getCte().setDeleted(ev.getDescription());
       ev.setDescription(null);
@@ -41,7 +42,12 @@ public class DescriptionPropUpdater implements PropertyUpdater {
       return UpdateResult.getOkResult();
     }
 
-    String val = ((TextPropertyType)ui.getUpdprop()).getText();
+    if (ui.getUpdprop() == null) {
+      // No change - parameters only upated?
+      return UpdateResult.getOkResult();
+    }
+
+    final String val = ((TextPropertyType)ui.getUpdprop()).getText();
 
     if (ui.getCte().setChanged(ev.getDescription(), val)) {
       ev.setDescription(val);

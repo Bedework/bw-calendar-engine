@@ -592,6 +592,7 @@ public class BwUpdates {
         ui.setParameterUpdates(psel.getParameters());
       }
 
+      // There may be no change
       ur = pu.applyUpdate(ui);
       if (!ur.getOk()) {
         return ur;

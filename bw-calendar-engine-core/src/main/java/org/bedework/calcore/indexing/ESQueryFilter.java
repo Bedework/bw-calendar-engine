@@ -948,8 +948,8 @@ public class ESQueryFilter implements CalintfDefs {
         s = s.toLowerCase();
       }
 
-      warn("Fuzzy search for " + of);
-      return "";
+      //warn("Fuzzy search for " + of);
+      return s;
       //sess.setString(parPrefix + qi, "%" + s + "%");
     }
 
