@@ -160,7 +160,7 @@ public class BwEventUtil extends IcalUtil {
 
     final boolean debug = getLog().isDebugEnabled();
     @SuppressWarnings("unchecked")
-    Holder<Boolean> hasXparams = new Holder<Boolean>(Boolean.FALSE);
+    final Holder<Boolean> hasXparams = new Holder<Boolean>(Boolean.FALSE);
 
     final int methodType = ical.getMethodType();
 
@@ -262,7 +262,7 @@ public class BwEventUtil extends IcalUtil {
        */
 
       /* We need this in a couple of places */
-      DtStart dtStart = (DtStart)pl.getProperty(Property.DTSTART);
+      final DtStart dtStart = (DtStart)pl.getProperty(Property.DTSTART);
 
       /*
       if (rid != null) {
@@ -355,16 +355,16 @@ public class BwEventUtil extends IcalUtil {
         } else if (rid != null) {
           /* Manufacture a master for the instance */
           masterEI = makeNewEvent(cb, entityType, guid, cal);
-          BwEvent e = masterEI.getEvent();
+          final BwEvent e = masterEI.getEvent();
 
           // XXX This seems bogus
-          DtStart mdtStart;
+          final DtStart mdtStart;
 
-          String bogusDate = "19980118";
-          String bogusTime = "T230000";
+          final String bogusDate = "19980118";
+          final String bogusTime = "T230000";
 
-          Parameter par = dtStart.getParameter("VALUE");
-          boolean isDateType = (par != null) && (par.equals(Value.DATE));
+          final Parameter par = dtStart.getParameter("VALUE");
+          final boolean isDateType = (par != null) && (par.equals(Value.DATE));
 
           if (isDateType) {
             mdtStart = new DtStart(new Date(bogusDate));
@@ -397,10 +397,10 @@ public class BwEventUtil extends IcalUtil {
                                      val.toString());
       }
 
-      ChangeTable chg = evinfo.getChangeset(cb.getPrincipal().getPrincipalRef());
+      final ChangeTable chg = evinfo.getChangeset(cb.getPrincipal().getPrincipalRef());
 
       if (rid != null) {
-        String evrid = evinfo.getEvent().getRecurrenceId();
+        final String evrid = evinfo.getEvent().getRecurrenceId();
 
         if ((evrid == null) || (!evrid.equals(rid))) {
           warn("Mismatched rid ev=" + evrid + " expected " + rid);
@@ -418,7 +418,7 @@ public class BwEventUtil extends IcalUtil {
       DtEnd dtEnd = null;
 
       if (entityType == IcalDefs.entityTypeTodo) {
-        Due due = (Due)pl.getProperty(Property.DUE);
+        final Due due = (Due)pl.getProperty(Property.DUE);
         if (due != null ) {
           dtEnd = new DtEnd(due.getParameters(), due.getValue());
         }
@@ -426,15 +426,13 @@ public class BwEventUtil extends IcalUtil {
         dtEnd = (DtEnd)pl.getProperty(Property.DTEND);
       }
 
-      Duration duration = (Duration)pl.getProperty(Property.DURATION);
+      final Duration duration = (Duration)pl.getProperty(Property.DURATION);
 
       setDates(cb.getPrincipal().getPrincipalRef(),
                evinfo, dtStart, dtEnd, duration);
 
-      Iterator it = pl.iterator();
-
-      while (it.hasNext()) {
-        prop = (Property)it.next();
+      for (final Object aPl : pl) {
+        prop = (Property)aPl;
         testXparams(prop, hasXparams);
 
         //debugMsg("ical prop " + prop.getClass().getName());
@@ -443,7 +441,7 @@ public class BwEventUtil extends IcalUtil {
           pval = null;
         }
 
-        PropertyInfoIndex pi;
+        final PropertyInfoIndex pi;
 
         if (prop instanceof XProperty) {
           pi = PropertyInfoIndex.XPROP;
@@ -481,7 +479,8 @@ public class BwEventUtil extends IcalUtil {
 
             if (methodType == ScheduleMethods.methodTypePublish) {
               if (cb.getStrictness() == IcalCallback.conformanceStrict) {
-                throw new CalFacadeException(CalFacadeException.attendeesInPublish);
+                throw new CalFacadeException(
+                        CalFacadeException.attendeesInPublish);
               }
 
               if (cb.getStrictness() == IcalCallback.conformanceWarn) {
@@ -697,7 +696,8 @@ public class BwEventUtil extends IcalUtil {
                 debugMsg("Unsupported parameter " + par.getName());
               }
 
-              throw new IcalMalformedException("parameter " + par.getName());
+              throw new IcalMalformedException(
+                      "parameter " + par.getName());
             }
 
             BwFreeBusyComponent fbc = new BwFreeBusyComponent();
@@ -865,7 +865,8 @@ public class BwEventUtil extends IcalUtil {
             final RelatedTo irelto = (RelatedTo)prop;
             final BwRelatedTo relto = new BwRelatedTo();
 
-            final String parval = IcalUtil.getParameterVal(irelto, "RELTYPE");
+            final String parval = IcalUtil.getParameterVal(irelto,
+                                                           "RELTYPE");
             if (parval != null) {
               relto.setRelType(parval);
             }
@@ -880,7 +881,8 @@ public class BwEventUtil extends IcalUtil {
 
           case REQUEST_STATUS:
             /* ------------------- RequestStatus -------------------- */
-            final BwRequestStatus rs = BwRequestStatus.fromRequestStatus((RequestStatus)prop);
+            final BwRequestStatus rs = BwRequestStatus
+                    .fromRequestStatus((RequestStatus)prop);
 
             chg.addValue(pi, rs);
 
@@ -898,7 +900,8 @@ public class BwEventUtil extends IcalUtil {
               Iterator rit = rl.iterator();
 
               while (rit.hasNext()) {
-                BwString rsrc = new BwString(lang, (String)rit.next());
+                BwString rsrc = new BwString(lang,
+                                             (String)rit.next());
                 chg.addValue(pi, rsrc);
               }
             }
@@ -945,9 +948,13 @@ public class BwEventUtil extends IcalUtil {
             /* ------------------- Transp -------------------- */
 
             if (chg.changed(pi,
-                            ev.getPeruserTransparency(cb.getPrincipal().getPrincipalRef()), pval)) {
-              BwXproperty pu = ev.setPeruserTransparency(cb.getPrincipal().getPrincipalRef(),
-                                                         pval);
+                            ev.getPeruserTransparency(
+                                    cb.getPrincipal()
+                                            .getPrincipalRef()),
+                            pval)) {
+              BwXproperty pu = ev.setPeruserTransparency(
+                      cb.getPrincipal().getPrincipalRef(),
+                      pval);
               if (pu != null) {
                 chg.addValue(PropertyInfoIndex.XPROP, pu);
               }
@@ -977,14 +984,16 @@ public class BwEventUtil extends IcalUtil {
             String name = prop.getName();
 
             if (name.equalsIgnoreCase(BwXproperty.bedeworkCost)) {
-              if (chg.changed(PropertyInfoIndex.COST, ev.getCost(), pval)) {
+              if (chg.changed(PropertyInfoIndex.COST, ev.getCost(),
+                              pval)) {
                 ev.setCost(pval);
               }
             } else {
               XProperty xp = (XProperty)prop;
               chg.addValue(PropertyInfoIndex.XPROP,
                            new BwXproperty(name,
-                                           xp.getParameters().toString(),
+                                           xp.getParameters()
+                                                   .toString(),
                                            pval));
             }
 
