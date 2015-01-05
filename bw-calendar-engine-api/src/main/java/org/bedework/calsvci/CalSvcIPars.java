@@ -210,6 +210,7 @@ public class CalSvcIPars implements Serializable {
    * @param service - true if this is a service call - e.g. iSchedule -
    *                rather than a real user.
    * @param publicAdmin - true for public admin
+   * @param allowCreateEprops  - allow create of new event properties, locations etc
    * @return CalSvcIPars
    */
   public static CalSvcIPars getCaldavPars(final String logId,
@@ -218,7 +219,8 @@ public class CalSvcIPars implements Serializable {
                                           final String clientId,
                                           final boolean allowSuperUser,
                                           final boolean service,
-                                          final boolean publicAdmin) {
+                                          final boolean publicAdmin,
+                                          final boolean allowCreateEprops) {
     final CalSvcIPars pars = new CalSvcIPars(logId,
                                              authUser,
                                              runAsUser,
@@ -227,9 +229,9 @@ public class CalSvcIPars implements Serializable {
                                              allowSuperUser,   // allow SuperUser
                                              service,
                                              false, // publicSubmission
-                                             false,  // adminCanEditAllPublicCategories
-                                             false,  // adminCanEditAllPublicLocations
-                                             false,  // adminCanEditAllPublicSponsors
+                                             allowCreateEprops,  // adminCanEditAllPublicCategories
+                                             allowCreateEprops,  // adminCanEditAllPublicLocations
+                                             allowCreateEprops,  // adminCanEditAllPublicSponsors
                                              true);  // sessionless
 
     pars.setClientId(clientId);

@@ -1142,6 +1142,25 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return getProperty(subscriptionIdProperty);
   }
 
+  /** Set the admin can create event properties flag for synch
+   *
+   * @param val
+   */
+  public void setSynchAdminCreateEprops(final boolean val) {
+    setProperty(BedeworkServerTags.synchAdminCreateEpropsProperty.getLocalPart(),
+                String.valueOf(val));
+  }
+
+  /** Get the admin can create event properties flag for synch
+   *
+   * @return boolean on/off
+   */
+  @NoDump
+  public boolean getSynchAdminCreateEprops() {
+    return Boolean.valueOf(getProperty(
+            BedeworkServerTags.synchAdminCreateEpropsProperty.getLocalPart()));
+  }
+
   /** Set the calendar timezone property
    *
    * @param val

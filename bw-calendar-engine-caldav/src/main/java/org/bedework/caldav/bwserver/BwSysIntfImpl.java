@@ -218,9 +218,19 @@ public class BwSysIntfImpl implements SysIntf {
       // Call to set up ThreadLocal variables
 
       boolean publicAdmin = false;
+      boolean adminCreateEprops = false;
+
       if (opaqueData != null) {
-        if (opaqueData.startsWith("public-admin=")) {
-          publicAdmin = Boolean.valueOf(opaqueData.substring(13));
+        String[] vals = opaqueData.split("\t");
+
+        for (final String val: vals) {
+          if (val.startsWith("public-admin=")) {
+            publicAdmin = Boolean.valueOf(val.substring(13));
+            continue;
+          }
+          if (val.startsWith("adminCreateEprops=")) {
+            adminCreateEprops = Boolean.valueOf(val.substring(18));
+          }
         }
       }
 
@@ -228,7 +238,8 @@ public class BwSysIntfImpl implements SysIntf {
               CalDavHeaders.getRunAs(req),
               service,
               publicAdmin,
-              CalDavHeaders.getClientId(req));
+              CalDavHeaders.getClientId(req),
+              adminCreateEprops);
 
       authProperties = svci.getAuthProperties();
       sysProperties = configs.getSystemProperties();
@@ -2431,7 +2442,8 @@ public class BwSysIntfImpl implements SysIntf {
                           final String runAs,
                           final boolean service,
                           final boolean publicAdmin,
-                          final String clientId) throws WebdavException {
+                          final String clientId,
+                          final boolean allowCreateEprops) throws WebdavException {
     try {
       /* account is what we authenticated with.
        * user, if non-null, is the user calendar we want to access.
@@ -2452,7 +2464,8 @@ public class BwSysIntfImpl implements SysIntf {
                                                    runAsUser,
                                                    clientIdent,
                                                    possibleSuperUser,   // allow SuperUser
-                                                   service,publicAdmin);
+                                                   service,publicAdmin,
+                                                   allowCreateEprops);
       svci = new CalSvcFactoryDefault().getSvc(pars);
 
       svci.open();

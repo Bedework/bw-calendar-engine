@@ -156,7 +156,7 @@ class Synch extends CalSvcDb implements SynchI {
     aosA.getProperty().add(makeSynchProperty("principal",
                                              getPrincipal().getPrincipalRef()));
     aosA.getProperty().add(makeSynchProperty("opaque-data",
-                                             makeOpaqueData()));
+                                             makeOpaqueData(val)));
 
     subreq.setEndAConnector(ciA);
 
@@ -423,8 +423,9 @@ class Synch extends CalSvcDb implements SynchI {
     return idToken;
   }
 
-  private String makeOpaqueData() throws CalFacadeException {
-    return "public-admin=" + this.isPublicAdmin();
+  private String makeOpaqueData(final BwCalendar col) throws CalFacadeException {
+    return "public-admin=" + this.isPublicAdmin() + "\t" +
+            "adminCreateEprops=" + col.getSynchAdminCreateEprops();
   }
 
   SynchRemoteServicePortType getPort(final String uri) throws CalFacadeException {
