@@ -24,9 +24,11 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
-
+import org.bedework.util.config.ConfInfo;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.ConfigHolder;
+
+import java.util.List;
 
 /**
  * @author douglm
@@ -455,6 +457,40 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   @Override
   public Integer getVpollMaxVoters() {
     return getConfig().getVpollMaxVoters();
+  }
+
+  @Override
+  public void setSyseventsProperties(final List<String> val) {
+    getConfig().setSyseventsProperties(val);
+  }
+
+  @Override
+  @ConfInfo(collectionElementName = "syseventsProperty" ,
+            elementType = "java.lang.String")
+  public List<String> getSyseventsProperties() {
+    return getConfig().getSyseventsProperties();
+  }
+
+  @Override
+  public void addSyseventsProperty(final String name,
+                                   final String val) {
+    getConfig().addSyseventsProperty(name, val);
+  }
+
+  @Override
+  public String getSyseventsProperty(final String name) {
+    return getConfig().getSyseventsProperty(name);
+  }
+
+  @Override
+  public void removeSyseventsProperty(final String name) {
+    getConfig().removeSyseventsProperty(name);
+  }
+
+  @Override
+  public void setSyseventsProperty(final String name,
+                                   final String val) {
+    getConfig().setSyseventsProperty(name, val);
   }
 
   @Override

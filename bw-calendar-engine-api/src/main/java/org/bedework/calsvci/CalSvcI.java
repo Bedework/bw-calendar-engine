@@ -209,6 +209,19 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
      */
     String getId();
 
+    /** Updated every time state is changed. Not necessarily an
+     * indication of idleness - it depends on state being updated,
+     *
+     * @return UTC time state was last changed.
+     */
+    String getLastStateTime();
+
+    /**
+     *
+     * @return a hopefully informative message
+     */
+    String getState();
+
     /**
      *
      * @return Seconds since transaction started
@@ -230,9 +243,16 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    */
   public abstract void kill(String id) throws CalFacadeException;
 
+  /**
+   *
+   * @param val a hopefully informative message
+   * @throws CalFacadeException
+   */
+  public abstract void setState(String val) throws CalFacadeException;
+
   /** Send a notification event
    *
-   * @param ev
+   * @param ev - system event
    * @throws CalFacadeException
    */
   public abstract void postNotification(SysEventBase ev) throws CalFacadeException;

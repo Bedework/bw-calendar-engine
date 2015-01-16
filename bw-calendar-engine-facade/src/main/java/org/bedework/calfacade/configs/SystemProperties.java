@@ -23,6 +23,8 @@ import org.bedework.caldav.server.sysinterface.CalDAVSystemProperties;
 import org.bedework.util.config.ConfInfo;
 import org.bedework.util.jmx.MBeanInfo;
 
+import java.util.List;
+
 /** These are the system properties that the server needs to know about, either
  * because it needs to apply these limits or just to report them to clients.
  *
@@ -237,4 +239,52 @@ public interface SystemProperties extends CalDAVSystemProperties {
    * @return copy of this
    */
   SystemProperties cloneIt();
+
+  /* sysevents properties
+   */
+
+  /**
+   *
+   * @param val the list of properties
+   */
+  void setSyseventsProperties(final List<String> val);
+
+  /**
+   *
+   * @return String val
+   */
+  @ConfInfo(collectionElementName = "syseventsProperty" ,
+            elementType = "java.lang.String")
+  List<String> getSyseventsProperties();
+
+  /** Add a sysevents property
+   *
+   * @param name of property
+   * @param val of property
+   */
+  void addSyseventsProperty(final String name,
+                            final String val);
+
+  /** Get a sysevents property
+   *
+   * @param name of property
+   * @return value or null
+   */
+  @ConfInfo(dontSave = true)
+  String getSyseventsProperty(final String name);
+
+  /** Remove a sysevents property
+   *
+   * @param name of property
+   */
+  void removeSyseventsProperty(final String name);
+
+  /** Set a sysevents property
+   *
+   * @param name of property
+   * @param val of property
+   */
+  @ConfInfo(dontSave = true)
+  void setSyseventsProperty(final String name,
+                            final String val);
 }

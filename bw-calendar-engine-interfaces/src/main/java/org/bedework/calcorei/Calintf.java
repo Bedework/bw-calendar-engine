@@ -108,6 +108,25 @@ public interface Calintf
    */
   String getTraceId();
 
+  /** Updated every time state is changed. Not necessarily an
+   * indication of idleness - it depends on state being updated,
+   *
+   * @return UTC time state was last changed.
+   */
+  String getLastStateTime();
+
+  /**
+   *
+   * @param val a hopefully informative message
+   */
+  void setState(String val);
+
+  /**
+   *
+   * @return a hopefully informative message
+   */
+  String getState();
+
   /** Get the current system (not db) stats
    *
    * @return BwStats object

@@ -60,6 +60,11 @@ public abstract class CalintfBase implements Calintf {
   protected long objMillis;
   protected String objKey;
 
+  /** last state change */
+  protected Timestamp lastStateChange;
+
+  protected String state;
+
   protected String logId;
 
   /** User for whom we maintain this facade
@@ -87,6 +92,7 @@ public abstract class CalintfBase implements Calintf {
     try {
       objMillis = System.currentTimeMillis();
       objTimestamp = new Timestamp(objMillis);
+      setState("-init-");
     } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
@@ -130,6 +136,22 @@ public abstract class CalintfBase implements Calintf {
     }
 
     return logId + ": " + objTimestamp;
+  }
+
+  @Override
+  public String getLastStateTime() {
+    return lastStateChange.toString();
+  }
+
+  @Override
+  public void setState(final String val) {
+    state = val;
+    lastStateChange = new Timestamp(System.currentTimeMillis());
+  }
+
+  @Override
+  public String getState() {
+    return state;
   }
 
   /**

@@ -19,6 +19,9 @@
 package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.util.config.ConfInfo;
+
+import java.util.List;
 
 /**
  * @author douglm
@@ -330,6 +333,40 @@ public final class ROSystemProperties implements SystemProperties {
   @Override
   public Integer getVpollMaxVoters() {
     return getConfig().getVpollMaxVoters();
+  }
+
+  @Override
+  public void setSyseventsProperties(final List<String> val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  @ConfInfo(collectionElementName = "syseventsProperty" ,
+            elementType = "java.lang.String")
+  public List<String> getSyseventsProperties() {
+    return getConfig().getSyseventsProperties();
+  }
+
+  @Override
+  public void addSyseventsProperty(final String name,
+                                   final String val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public String getSyseventsProperty(final String name) {
+    return getConfig().getSyseventsProperty(name);
+  }
+
+  @Override
+  public void removeSyseventsProperty(final String name) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public void setSyseventsProperty(final String name,
+                                   final String val) {
+    throw new RuntimeException("Immutable");
   }
 
   @Override

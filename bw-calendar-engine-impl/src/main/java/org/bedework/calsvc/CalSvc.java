@@ -468,11 +468,23 @@ public class CalSvc extends CalSvcI {
 
   private static class InterfaceInfo implements IfInfo {
     String id;
+    String lastStateTime;
+    String state;
     long seconds;
 
     @Override
     public String getId() {
       return id;
+    }
+
+    @Override
+    public String getLastStateTime() {
+      return lastStateTime;
+    }
+
+    @Override
+    public String getState() {
+      return state;
     }
 
     @Override
@@ -490,6 +502,8 @@ public class CalSvc extends CalSvcI {
       final InterfaceInfo ii = new InterfaceInfo();
 
       ii.id = ci.getTraceId();
+      ii.lastStateTime = ci.getLastStateTime();
+      ii.state = ci.getState();
       ii.seconds = (now - ci.getStartMillis()) / 1000;
 
       ifs.add(ii);
@@ -515,6 +529,11 @@ public class CalSvc extends CalSvcI {
     } catch (final Throwable t) {
       error(t);
     }
+  }
+
+  @Override
+  public void setState(final String val) throws CalFacadeException {
+    getCal().setState(val);
   }
 
   @Override

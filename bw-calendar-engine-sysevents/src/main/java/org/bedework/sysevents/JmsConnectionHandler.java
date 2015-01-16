@@ -18,9 +18,14 @@
 */
 package org.bedework.sysevents;
 
+import org.bedework.calfacade.configs.SystemProperties;
+import org.bedework.calsvci.CalSvcFactoryDefault;
+
 import org.apache.log4j.Logger;
 
 import java.io.InputStream;
+import java.io.StringReader;
+import java.util.List;
 import java.util.Properties;
 
 import javax.jms.Connection;
@@ -45,6 +50,8 @@ public class JmsConnectionHandler implements JmsDefs {
   /** Location of the properties file */
   private static final String propertiesFile =
       "/sysevents.properties";
+
+  private static SystemProperties sysProps;
 
   private static volatile Properties pr;
 
@@ -114,14 +121,14 @@ public class JmsConnectionHandler implements JmsDefs {
         * acknowledgement
         */
         session = connection.createSession(useTransactions, ackMode);
+        final String qn = pr.getProperty("org.bedework.jms.queue.prefix") +
+                queueName;
 
         try {
-          ourQueue =  (Queue)new InitialContext().lookup(pr.getProperty("org.bedework.jms.queue.prefix") +
-                                      queueName);
+          ourQueue =  (Queue)new InitialContext().lookup(qn);
         } catch (final NamingException ne) {
-          // Try again with our own properties
-          ourQueue =  (Queue)ctx.lookup(pr.getProperty("org.bedework.jms.queue.prefix") +
-                                            queueName);
+          // Try again with our own context
+          ourQueue =  (Queue)ctx.lookup(qn);
         }
       } catch (final Throwable t) {
         if (debug) {
@@ -147,7 +154,7 @@ public class JmsConnectionHandler implements JmsDefs {
       if (session != null) {
         session.close();
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       warn(t.getMessage());
     }
   }
@@ -198,7 +205,7 @@ public class JmsConnectionHandler implements JmsDefs {
   public Message receive() throws NotificationException {
     try {
       return consumer.receive();
-    } catch (JMSException je) {
+    } catch (final JMSException je) {
       throw new NotificationException(je);
     }
   }
@@ -243,12 +250,33 @@ public class JmsConnectionHandler implements JmsDefs {
         return pr;
       }
 
-      /** Load properties file */
-
-      pr = new Properties();
       InputStream is = null;
 
       try {
+        sysProps = new CalSvcFactoryDefault().getSystemConfig()
+                .getSystemProperties();
+
+        /** Load properties file */
+
+        pr = new Properties();
+
+        if (!Util.isEmpty(sysProps.getSyseventsProperties())) {
+          final StringBuilder sb = new StringBuilder();
+
+          @SuppressWarnings("unchecked")
+          final List<String> ps = sysProps.getSyseventsProperties();
+
+          for (final String p: ps) {
+            sb.append(p);
+            sb.append("\n");
+          }
+
+          pr.load(new StringReader(sb.toString()));
+
+          return pr;
+        }
+
+        /* Do it using the file */
         try {
           // The jboss?? way - should work for others as well.
           final ClassLoader cl = Thread.currentThread().getContextClassLoader();
