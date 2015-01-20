@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -57,6 +56,7 @@ public class BedeworkAp extends AbstractProcessor {
   /* Don't process inner classes - depth 0 is no class, depth 1 is outer class */
   private int classDepth;
 
+  @Override
   public void init(final ProcessingEnvironment env) {
     super.init(env);
 
@@ -64,8 +64,8 @@ public class BedeworkAp extends AbstractProcessor {
 
     pstate = new ProcessState(processingEnv);
 
-    Map<String, String> options = env.getOptions();
-    for (String option : options.keySet()) {
+    final Map<String, String> options = env.getOptions();
+    for (final String option : options.keySet()) {
       annUtil.note("Option: " + option + "=" + options.get(option));
       if (option.equals("resourcePath")) {
         pstate.resourcePath = options.get(option);
@@ -77,27 +77,28 @@ public class BedeworkAp extends AbstractProcessor {
       }
     }
 
-    pstate.debug = true;
+    //pstate.debug = true;
   }
 
-  /**
-   * The main processor.
-   */
-  public boolean process(Set<? extends TypeElement> annotations,
-                         RoundEnvironment roundEnv) {
-    Messager msg = processingEnv.getMessager();
+  @Override
+  public boolean process(final Set<? extends TypeElement> annotations,
+                         final RoundEnvironment roundEnv) {
+    if (pstate.debug) {
+      annUtil.note(
+              "--------------- process called: " + roundEnv
+                      .toString());
 
-    annUtil.note(
-            "--------------- process called: " + roundEnv.toString());
-
-    for (TypeElement tel : annotations) {
-      annUtil.note("Annotation " + tel.asType().toString());
+      for (final TypeElement tel : annotations) {
+        annUtil.note("Annotation " + tel.asType().toString());
+      }
     }
 
-    for (Element el : roundEnv.getRootElements()) {
+    for (final Element el : roundEnv.getRootElements()) {
       final String className = el.asType().toString();
 
-      annUtil.note("Processing " + className);
+      if (pstate.debug) {
+        annUtil.note("Processing " + className);
+      }
 
       el.accept(new ElVisitor(), pstate);
     }
@@ -111,8 +112,9 @@ public class BedeworkAp extends AbstractProcessor {
 
   private class ElVisitor
           extends SimpleElementVisitor6<Element, ProcessState> {
-    public Element visitType(TypeElement el,
-                             ProcessState p) {
+    @Override
+    public Element visitType(final TypeElement el,
+                             final ProcessState p) {
       final String className = el.asType().toString();
 
       if (pstate.debug) {
@@ -141,7 +143,7 @@ public class BedeworkAp extends AbstractProcessor {
         }
       }
 
-      Wrapper wpr = el.getAnnotation(Wrapper.class);
+      final Wrapper wpr = el.getAnnotation(Wrapper.class);
 
       if (wpr != null) {
         pstate.processingWrapper = true;
@@ -149,18 +151,18 @@ public class BedeworkAp extends AbstractProcessor {
       }
 
       //el.accept(new ElVisitor(), pstate);
-      for (Element subEl : el.getEnclosedElements()) {
+      for (final Element subEl : el.getEnclosedElements()) {
         subEl.accept(new ElVisitor(), pstate);
       }
 
-      endClass((TypeElement)el, pstate);
+      endClass(el, pstate);
 
       return el;
     }
 
     @Override
-    public Element visitExecutable(ExecutableElement e,
-                                   ProcessState pstate) {
+    public Element visitExecutable(final ExecutableElement e,
+                                   final ProcessState pstate) {
       if (pstate.debug) {
         annUtil.note("Executable: " + e);
       }
@@ -172,7 +174,7 @@ public class BedeworkAp extends AbstractProcessor {
 
       if (pstate.processingEvent) {
         if (e.getAnnotation(NoProxy.class) == null) {
-          Collection<Modifier> mods = e.getModifiers();
+          final Collection<Modifier> mods = e.getModifiers();
 
           if (mods.contains(Modifier.PUBLIC)) {
             pstate.getProxyHandler().proxyMethod(pstate.getEnv(), e);
@@ -182,7 +184,7 @@ public class BedeworkAp extends AbstractProcessor {
 
       if (pstate.processingWrapper) {
         if (e.getAnnotation(NoWrap.class) == null) {
-          Collection<Modifier> mods = e.getModifiers();
+          final Collection<Modifier> mods = e.getModifiers();
 
           if (mods.contains(Modifier.PUBLIC)) {
             pstate.getWrapperHandler().method(pstate.getEnv(), e,
@@ -191,7 +193,7 @@ public class BedeworkAp extends AbstractProcessor {
         }
       }
 
-      IcalProperty ip = e.getAnnotation(IcalProperty.class);
+      final IcalProperty ip = e.getAnnotation(IcalProperty.class);
       if (ip != null) {
         pstate.getIcalPropertyHandler().property(pstate.getEnv(), ip,
                                                  e);
@@ -200,11 +202,11 @@ public class BedeworkAp extends AbstractProcessor {
         }
       }
 
-      IcalProperties ips = e.getAnnotation(IcalProperties.class);
+      final IcalProperties ips = e.getAnnotation(IcalProperties.class);
       if (ips != null) {
-        IcalPropertyHandler iph = pstate.getIcalPropertyHandler();
+        final IcalPropertyHandler iph = pstate.getIcalPropertyHandler();
 
-        for (IcalProperty ip1 : ips.value()) {
+        for (final IcalProperty ip1 : ips.value()) {
           iph.property(pstate.getEnv(), ip1, e);
           if (pstate.debug) {
             annUtil.note("IcalProperty: " + ip1.pindex().name());
@@ -243,7 +245,7 @@ public class BedeworkAp extends AbstractProcessor {
     }
 
     if (pstate.processingWrapper) {
-      TypeMirror superD = el.getSuperclass();
+      final TypeMirror superD = el.getSuperclass();
       if (superD.toString().startsWith("org.bedework")) {
         processSuper(processingEnv.getTypeUtils().asElement(
                 superD));
@@ -256,20 +258,20 @@ public class BedeworkAp extends AbstractProcessor {
 
   }
 
-  private void processSuper(Element el) {
+  private void processSuper(final Element el) {
     final TypeElement typeEl = annUtil.asTypeElement(el.asType());
 
     if (pstate.debug) {
       annUtil.note("process super: " + el.toString());
     }
 
-    for (Element subEl : el.getEnclosedElements()) {
+    for (final Element subEl : el.getEnclosedElements()) {
       if (subEl.getKind() != ElementKind.METHOD) {
         continue;
       }
 
       if (subEl.getAnnotation(NoWrap.class) == null) {
-        Collection<Modifier> mods = subEl.getModifiers();
+        final Collection<Modifier> mods = subEl.getModifiers();
 
         if (mods.contains(Modifier.PUBLIC)) {
           pstate.getWrapperHandler().method(processingEnv,
@@ -279,7 +281,7 @@ public class BedeworkAp extends AbstractProcessor {
       }
     }
 
-    TypeMirror superD = typeEl.getSuperclass();
+    final TypeMirror superD = typeEl.getSuperclass();
     if (superD.toString().startsWith("org.bedework")) {
 
       processSuper(processingEnv.getTypeUtils().asElement(superD));

@@ -52,7 +52,7 @@ public class IcalPropertyHandler {
   Set<String> imports = new TreeSet<>();
 
   private HashMap<PropertyInfoIndex, MergedIcalProperty> pinfos =
-         new HashMap<PropertyInfoIndex, MergedIcalProperty>();
+          new HashMap<>();
 
   /* There doesn't appear to be a way to modify an annotation object
    * so this is a copy of the object
@@ -276,7 +276,7 @@ public class IcalPropertyHandler {
       }
 
       //env.getMessager().printNotice("*** " + fieldName + ": " + par.getType() +
-        //                            " fixed: " + fieldType);
+      //                            " fixed: " + fieldType);
 
       MergedIcalProperty mip = pinfos.get(ip.pindex());
       if (mip == null) {
@@ -316,7 +316,7 @@ public class IcalPropertyHandler {
       startPinfo(env);
 
       SortedMap<String, PropertyInfoIndex> pixNames =
-        new TreeMap<>();
+              new TreeMap<>();
 
       for (PropertyInfoIndex ipe: PropertyInfoIndex.values()) {
         pixNames.put(ipe.name(), ipe);
@@ -324,7 +324,7 @@ public class IcalPropertyHandler {
 
       /* Now in sort order... */
       List<PropertyInfoIndex> sorted =
-        new ArrayList<PropertyInfoIndex>(pixNames.values());
+              new ArrayList<>(pixNames.values());
 
       for (PropertyInfoIndex ipe: sorted) {
         MergedIcalProperty mip = pinfos.get(ipe);
@@ -450,26 +450,26 @@ public class IcalPropertyHandler {
 
   /* Same order as parameters of class */
   private static final PinfoField[] pinfoFields = {
-    new PinfoField("PropertyInfoIndex", "pindex", true, false),
-    new PinfoField("String", "dbFieldName"),
-    new PinfoField("String", "adderName"),
-    new PinfoField("String", "jname"),
-    new PinfoField("Class", "fieldType"),
-    new PinfoField("String", "presenceField", "/* field we test for presence */"),
-    new PinfoField("boolean", "param", "/* It's a parameter   */"),
-    new PinfoField("boolean", "required", "/* Required for a valid event   */"),
-    new PinfoField("boolean", "annotationRequired", "/* Required for a valid annotation   */"),
-    new PinfoField("boolean", "reschedule",
-                   "/* True if changing this forces a reschedule */"),
-    new PinfoField("boolean", "multiValued", "/* Derived during generation */"),
-    new PinfoField("boolean", "eventProperty"),
-    new PinfoField("boolean", "todoProperty"),
-    new PinfoField("boolean", "journalProperty"),
-    new PinfoField("boolean", "freeBusyProperty"),
-    new PinfoField("boolean", "timezoneProperty"),
-    new PinfoField("boolean", "alarmProperty"),
-    new PinfoField("boolean", "vavailabilityProperty"),
-    new PinfoField("boolean", "availableProperty", false, true),
+          new PinfoField("PropertyInfoIndex", "pindex", true, false),
+          new PinfoField("String", "dbFieldName"),
+          new PinfoField("String", "adderName"),
+          new PinfoField("String", "jname"),
+          new PinfoField("Class", "fieldType"),
+          new PinfoField("String", "presenceField", "/* field we test for presence */"),
+          new PinfoField("boolean", "param", "/* It's a parameter   */"),
+          new PinfoField("boolean", "required", "/* Required for a valid event   */"),
+          new PinfoField("boolean", "annotationRequired", "/* Required for a valid annotation   */"),
+          new PinfoField("boolean", "reschedule",
+                         "/* True if changing this forces a reschedule */"),
+          new PinfoField("boolean", "multiValued", "/* Derived during generation */"),
+          new PinfoField("boolean", "eventProperty"),
+          new PinfoField("boolean", "todoProperty"),
+          new PinfoField("boolean", "journalProperty"),
+          new PinfoField("boolean", "freeBusyProperty"),
+          new PinfoField("boolean", "timezoneProperty"),
+          new PinfoField("boolean", "alarmProperty"),
+          new PinfoField("boolean", "vavailabilityProperty"),
+          new PinfoField("boolean", "availableProperty", false, true),
   };
 
   private boolean emit(final ProcessingEnvironment env,
@@ -612,13 +612,13 @@ public class IcalPropertyHandler {
     for (PinfoField pif: pinfoFields) {
       if (pif.first) {
         pinfoOut.println("    public BwIcalPropertyInfoEntry(" +
-                         pif.type + " " + pif.name + ",");
+                                 pif.type + " " + pif.name + ",");
       } else if (pif.last) {
         pinfoOut.println("                                   " +
-                         pif.type + " " + pif.name + ") {");
+                                 pif.type + " " + pif.name + ") {");
       } else {
         pinfoOut.println("                                   " +
-                         pif.type + " " + pif.name + ",");
+                                 pif.type + " " + pif.name + ",");
       }
     }
 
