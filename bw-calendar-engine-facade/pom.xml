@@ -168,10 +168,10 @@
                 <processor>org.bedework.calfacade.annotations.process.BedeworkAp</processor>
               </processors>
               <compilerArguments>-AresourcePath=${basedir}/src/main/resources</compilerArguments>
-              <compilerArguments>-Adebug=true</compilerArguments>
+              <compilerArguments>-Adebug=false</compilerArguments>
               <options>
                 <resourcePath>${basedir}/src/main/resources</resourcePath>
-                <debug>true</debug>
+                <debug>false</debug>
               </options>
             </configuration>
           </execution>
