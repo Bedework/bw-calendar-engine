@@ -188,10 +188,16 @@ public class MessageProcessor extends CalSys {
     if (ede.getRecurrenceId() != null) {
       setCurrentPrincipal(ede.getOwnerHref());
       try (BwSvc bw = getBw()) {
-
-        add(getEvent(bw.getSvci(),
-                     getParentPath(ede.getHref()),
-                     getName(ede.getHref())) /*, false */);
+        final EventInfo val = getEvent(bw.getSvci(),
+                                       getParentPath(ede.getHref()),
+                                       getName(ede.getHref()));
+        if (val == null) {
+          if (debug) {
+            debugMsg("Missing event: " + ede.getHref());
+          }
+        } else {
+          add(val);
+        }
       }
     } else {
       try (BwSvc bw = getBw()) {
@@ -206,9 +212,16 @@ public class MessageProcessor extends CalSys {
     setCurrentPrincipal(ece.getOwnerHref());
 
     try (BwSvc bw = getBw()) {
-      add(getEvent(bw.getSvci(),
-                   getParentPath(ece.getHref()),
-                   getName(ece.getHref())) /*, false */);
+      final EventInfo val = getEvent(bw.getSvci(),
+                                     getParentPath(ece.getHref()),
+                                     getName(ece.getHref()));
+      if (val == null) {
+        if (debug) {
+          debugMsg("Missing event: " + ece.getHref());
+        }
+      } else {
+        add(val);
+      }
     }
   }
 

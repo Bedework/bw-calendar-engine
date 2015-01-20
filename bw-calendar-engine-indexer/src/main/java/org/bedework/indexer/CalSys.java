@@ -68,9 +68,9 @@ public abstract class CalSys {
   protected static ThreadPool principalThreadPool;
 
   /**
-   * @param name
-   * @param adminAccount
-   * @param principal
+   * @param name for object
+   * @param adminAccount admin account to use
+   * @param principal href
    * @throws CalFacadeException
    */
   public CalSys(final String name,
@@ -114,20 +114,20 @@ public abstract class CalSys {
   }
 
   /**
-   * @param principal
+   * @param principal the href
    */
   public void setCurrentPrincipal(final String principal) {
     this.principal = principal;
   }
 
   protected String getParentPath(final String href) {
-    int pos = href.lastIndexOf("/");
+    final int pos = href.lastIndexOf("/");
 
     if (pos <= 0) {
       return null;
     }
 
-    return href.substring(0, pos);
+    return href.substring(0, pos + 1);
   }
 
   protected String getName(final String href) {
@@ -145,7 +145,7 @@ public abstract class CalSys {
   }
 
   static class BwSvc implements AutoCloseable {
-    private static CalSvcFactory factory = new CalSvcFactoryDefault();
+    private final static CalSvcFactory factory = new CalSvcFactoryDefault();
     private CalSvcI svci;
 
     /* Who the svci object is for */
@@ -211,9 +211,7 @@ public abstract class CalSys {
       return svci;
     }
 
-    /**
-     * @throws CalFacadeException
-     */
+    @Override
     public void close() throws CalFacadeException {
       if ((svci == null) || !svci.isOpen()) {
         return;
@@ -225,7 +223,7 @@ public abstract class CalSys {
     }
 
     /**
-     * @param svci
+     * @param svci service interface
      * @throws CalFacadeException
      */
     public void close(final CalSvcI svci) throws CalFacadeException {
@@ -235,12 +233,12 @@ public abstract class CalSys {
 
       try {
         svci.endTransaction();
-      } catch (Throwable t) {
+      } catch (final Throwable ignored) {
       }
 
       try {
         svci.close();
-      } catch (Throwable t) {
+      } catch (final Throwable ignored) {
       }
     }
   }
@@ -390,7 +388,7 @@ public abstract class CalSys {
 
   /** Get the next batch of child collection paths.
    *
-   * @param path
+   * @param path to parent
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
    * @throws CalFacadeException
@@ -444,7 +442,7 @@ public abstract class CalSys {
 
   /** Get the next batch of child entity names.
    *
-   * @param path
+   * @param path to parent
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
    * @throws CalFacadeException
