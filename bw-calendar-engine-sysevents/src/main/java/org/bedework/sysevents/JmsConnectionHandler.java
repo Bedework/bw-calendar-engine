@@ -20,6 +20,7 @@ package org.bedework.sysevents;
 
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calsvci.CalSvcFactoryDefault;
+import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
 
