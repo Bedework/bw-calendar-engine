@@ -266,6 +266,7 @@ public class MessageProcessor extends CalSys {
     } else if (val instanceof EventInfo) {
       ent = ((EventInfo)val).getEvent();
     } else {
+      error("Cannot index class: " + val.getClass());
       throw new CalFacadeException("org.bedework.index.unexpected.class");
     }
 
