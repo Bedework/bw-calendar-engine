@@ -155,7 +155,9 @@
             <phase>generate-sources</phase>
             <configuration>
               <excludes>
+                <!--
                 <exclude>**/mail/**/*.java</exclude>
+                -->
                 <exclude>**/synch/**/*.java</exclude>
                 <exclude>**/timezonesImpl/**/*.java</exclude>
                 <!--
