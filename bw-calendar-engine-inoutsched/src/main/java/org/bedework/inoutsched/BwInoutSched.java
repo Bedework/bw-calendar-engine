@@ -22,6 +22,8 @@ import org.bedework.calsvc.scheduling.hosts.BwHosts;
 
 import org.bedework.util.jmx.ConfBase;
 
+import javax.management.ObjectName;
+
 /** JMX bean for bedework scheduling
  *
  * @author douglm
@@ -69,9 +71,14 @@ public class BwInoutSched extends ConfBase
   public BwInoutSched() {
     super("org.bedework.bwengine:service=BwInoutSched");
 
-    isched = new BwHosts();
-    register("ischedconf", "ischedconf", isched);
-    isched.loadConfigs();
+    try {
+      isched = new BwHosts();
+      register(new ObjectName(isched.getServiceName()), isched);
+      isched.loadConfigs();
+    } catch (final Throwable t) {
+      error("Failed to register hosts");
+      throw new RuntimeException(t);
+    }
   }
 
   @Override

@@ -48,7 +48,8 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
   /**
    */
   public BwHosts() {
-    super("org.bedework.ischedule:service=Conf");
+    super("org.bedework.ischedule:service=Hosts");
+    setConfigName("Hosts");
     setConfigPname(confuriPname);
   }
 
