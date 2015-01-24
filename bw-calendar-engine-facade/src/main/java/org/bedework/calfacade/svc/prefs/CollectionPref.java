@@ -20,6 +20,7 @@ package org.bedework.calfacade.svc.prefs;
 
 import org.bedework.calfacade.base.DumpEntity;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.util.misc.ToString;
 
 import java.io.Serializable;
 import java.util.Collection;
