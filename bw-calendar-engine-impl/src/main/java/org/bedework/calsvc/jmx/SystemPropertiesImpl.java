@@ -79,6 +79,7 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private int autoKillMinutes;
 
+  private boolean suggestionEnabled;
   private boolean workflowEnabled;
   private String workflowRoot;
 
@@ -291,6 +292,16 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   @Override
   public void setAutoKillMinutes(final int val) {
     autoKillMinutes = val;
+  }
+
+  @Override
+  public void setSuggestionEnabled(final boolean val) {
+    suggestionEnabled = val;
+  }
+
+  @Override
+  public boolean getSuggestionEnabled() {
+    return suggestionEnabled;
   }
 
   @Override

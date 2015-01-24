@@ -286,6 +286,16 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
+  public void setSuggestionEnabled(final boolean val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public boolean getSuggestionEnabled() {
+    return getConfig().getSuggestionEnabled();
+  }
+
+  @Override
   public void setWorkflowEnabled(final boolean val) {
     throw new RuntimeException("Immutable");
   }

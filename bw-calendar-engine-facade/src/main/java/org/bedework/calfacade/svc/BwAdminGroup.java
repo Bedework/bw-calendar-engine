@@ -100,15 +100,11 @@ public class BwAdminGroup extends BwGroup {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
-
-    ts.newLine();
     ts.append("description", getDescription());
-    ts.newLine();
     ts.append("groupOwner", getGroupOwnerHref());
-    ts.newLine();
     ts.append("owner", getOwnerHref());
 
     return ts.toString();
@@ -116,7 +112,7 @@ public class BwAdminGroup extends BwGroup {
 
   @Override
   public Object clone() {
-    BwAdminGroup ag = new BwAdminGroup();
+    final BwAdminGroup ag = new BwAdminGroup();
     copyTo(ag);
 
     ag.setDescription(getDescription());

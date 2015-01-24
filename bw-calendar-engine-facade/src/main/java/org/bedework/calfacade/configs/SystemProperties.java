@@ -213,6 +213,19 @@ public interface SystemProperties extends CalDAVSystemProperties {
 
   /**
    *
+   * @param val True if public events suggestion enabled
+   */
+  void setSuggestionEnabled(boolean val);
+
+  /**
+   *
+   * @return True if public events suggestion enabled
+   */
+  @MBeanInfo("True if public events suggestion enabled")
+  boolean getSuggestionEnabled();
+
+  /**
+   *
    * @param val True if public events workflow enabled
    */
   void setWorkflowEnabled(boolean val);

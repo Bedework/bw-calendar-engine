@@ -34,7 +34,7 @@ import java.util.TreeSet;
 
 /** Account preferences for Bedework. These affect the user view of calendars.
  *
- *  @author Mike Douglass douglm bedework.edu
+ *  @author Mike Douglass douglm rpi.edu
  *  @version 1.0
  */
 @Dump(elementName="preferences", keyFields={"ownerHref"}, firstFields={"ownerHref"})
@@ -174,6 +174,9 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
 
   /** default suite resources directory */
   public static final String propertySuiteResourcesDirectory = "userpref:suite-resources-directory";
+
+  /** preferred group - admin suggest event - this may occur multiple times */
+  public static final String propertyPreferredGroup = "userpref:preferrred-group";
 
   /** XXX Only here till we update schema
       max entity size for this user -only settable by admin */
@@ -463,27 +466,21 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     properties = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#getProperties()
-   */
   @Override
   @Dump(collectionElementName = "property", compound = true)
   public Set<BwProperty> getProperties() {
     return properties;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#getProperties(java.lang.String)
-   */
   @Override
   public Set<BwProperty> getProperties(final String name) {
-    TreeSet<BwProperty> ps = new TreeSet<BwProperty>();
+    final TreeSet<BwProperty> ps = new TreeSet<>();
 
     if (getNumProperties() == 0) {
       return null;
     }
 
-    for (BwProperty p: getProperties()) {
+    for (final BwProperty p: getProperties()) {
       if (p.getName().equals(name)) {
         ps.add(p);
       }
@@ -492,18 +489,15 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     return ps;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#removeProperties(java.lang.String)
-   */
   @Override
   public void removeProperties(final String name) {
-    Set<BwProperty> ps = getProperties(name);
+    final Set<BwProperty> ps = getProperties(name);
 
     if (ps == null) {
       return;
     }
 
-    for (BwProperty p: ps) {
+    for (final BwProperty p: ps) {
       removeProperty(p);
     }
   }
@@ -785,17 +779,16 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
    */
   @NoDump
   public Set<String> getDefaultCategoryUids() {
-    Set<String> uids = new TreeSet<String>();
+    return getProps(propertyDefaultCategory);
+  }
 
-    for (BwProperty p: getProperties()) {
-      if (!p.getName().equals(propertyDefaultCategory)) {
-        continue;
-      }
-
-      uids.add(p.getValue());
-    }
-
-    return uids;
+  /** Get the set of preferred groups.
+   *
+   * @return Set of group hrefs - always non-null.
+   */
+  @NoDump
+  public Set<String> getPreferredGroups() {
+    return getProps(propertyPreferredGroup);
   }
 
   /* ====================================================================
@@ -1007,16 +1000,32 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   }
 
   /**
-   * @return String tzid.
+   * @return String value.
    */
   @NoDump
   private String getProp(final String name) {
-    BwProperty prop = findProperty(name);
+    final BwProperty prop = findProperty(name);
 
     if (prop == null) {
       return null;
     }
 
     return prop.getValue();
+  }
+
+  /**
+   * @return String values.
+   */
+  @NoDump
+  private Set<String> getProps(final String name) {
+    final Set<BwProperty> props = getProperties(name);
+
+    final Set<String> vals = new TreeSet<>();
+
+    for (final BwProperty p: props) {
+      vals.add(p.getValue());
+    }
+
+    return vals;
   }
 }

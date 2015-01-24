@@ -27,7 +27,7 @@ import java.util.TreeSet;
 
 /** Represent a set of user preferences from a Collection - e.g. preferred category.
  *
- *  @author Mike Douglass douglm - bedework.edu
+ *  @author Mike Douglass douglm - rpi.edu
  *  @version 1.0
  *
  * @param <T> Type of element in the collection
@@ -43,9 +43,9 @@ public class CollectionPref<T> extends DumpEntity implements Serializable {
 
   /** If true we automatically add preference to the preferred list
    *
-   * @param val
+   * @param val true for autoadd
    */
-  public void setAutoAdd(boolean val) {
+  public void setAutoAdd(final boolean val) {
     autoAdd = val;
   }
 
@@ -57,9 +57,9 @@ public class CollectionPref<T> extends DumpEntity implements Serializable {
   }
 
   /**
-   * @param val
+   * @param val Collection of preferred entries
    */
-  public void setPreferred(Collection<T> val) {
+  public void setPreferred(final Collection<T> val) {
     preferred = val;
   }
 
@@ -76,10 +76,10 @@ public class CollectionPref<T> extends DumpEntity implements Serializable {
    * @param val        Element to add
    * @return boolean   true if added
    */
-  public boolean add(T val) {
+  public boolean add(final T val) {
     Collection<T> c = getPreferred();
     if (c == null) {
-      c = new TreeSet<T>();
+      c = new TreeSet<>();
       setPreferred(c);
     }
 
@@ -97,8 +97,8 @@ public class CollectionPref<T> extends DumpEntity implements Serializable {
    * @param val        Element to remove
    * @return boolean   true if removed
    */
-  public boolean remove(T val) {
-    Collection<T> c = getPreferred();
+  public boolean remove(final T val) {
+    final Collection<T> c = getPreferred();
 
     if ((c == null) || (!c.contains(val))) {
       return false;
@@ -112,7 +112,7 @@ public class CollectionPref<T> extends DumpEntity implements Serializable {
    * ==================================================================== */
 
   @SuppressWarnings("unchecked")
-  public boolean equals(Object obj) {
+  public boolean equals(final Object obj) {
     if (this == obj) {
       return true;
     }
@@ -121,7 +121,7 @@ public class CollectionPref<T> extends DumpEntity implements Serializable {
       return false;
     }
 
-    CollectionPref<T> that = (CollectionPref<T>)obj;
+    final CollectionPref<T> that = (CollectionPref<T>)obj;
 
     if (that.getAutoAdd() != getAutoAdd()) {
       return false;
@@ -136,7 +136,7 @@ public class CollectionPref<T> extends DumpEntity implements Serializable {
       h = 2;
     }
 
-    Collection<T> c = getPreferred();
+    final Collection<T> c = getPreferred();
     if (c != null) {
       h *= c.hashCode();
     }
@@ -145,36 +145,26 @@ public class CollectionPref<T> extends DumpEntity implements Serializable {
   }
 
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    final ToString ts = new ToString(this);
 
-    sb.append("CollectionPref{");
-    sb.append("autoAdd=");
-    sb.append(getAutoAdd());
+    ts.append("autoAdd", getAutoAdd());
+    ts.append("preferred", getPreferred());
 
-    Collection<T> c = getPreferred();
-
-    if (c != null) {
-      sb.append("preferred={");
-      for (T el: c) {
-        sb.append(" ");
-        sb.append(el);
-      }
-    }
-    sb.append("}");
-
-    return sb.toString();
+    return ts.toString();
   }
 
+  @SuppressWarnings("CloneDoesntDeclareCloneNotSupportedException")
+  @Override
   public Object clone() {
-    CollectionPref<T> cp = new CollectionPref<T>();
+    final CollectionPref<T> cp = new CollectionPref<>();
 
     cp.setAutoAdd(getAutoAdd());
 
-    Collection<T> c = getPreferred();
+    final Collection<T> c = getPreferred();
 
     if (c != null) {
-      TreeSet<T> nc = new TreeSet<T>();
-      for (T el: c) {
+      final TreeSet<T> nc = new TreeSet<>();
+      for (final T el: c) {
         nc.add(el);
       }
 

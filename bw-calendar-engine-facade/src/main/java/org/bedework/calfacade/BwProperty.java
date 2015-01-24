@@ -102,7 +102,8 @@ public class BwProperty extends BwDbentity<BwProperty> {
    * @param c
    * @return BwProperty or null if no strings.
    */
-  public static BwProperty findName(final String name, final Collection<BwProperty> c) {
+  public static BwProperty findName(final String name,
+                                    final Collection<BwProperty> c) {
     if (c == null) {
       return null;
     }
@@ -111,8 +112,8 @@ public class BwProperty extends BwDbentity<BwProperty> {
       return null;
     }
 
-    for (BwProperty p: c) {
-      String pname = p.getName();
+    for (final BwProperty p: c) {
+      final String pname = p.getName();
 
       if (CalFacadeUtil.cmpObjval(name, pname) == 0) {
         return p;
@@ -177,7 +178,7 @@ public class BwProperty extends BwDbentity<BwProperty> {
       return -1;
     }
 
-    int res = CalFacadeUtil.cmpObjval(getName(), that.getName());
+    final int res = CalFacadeUtil.cmpObjval(getName(), that.getName());
 
     if (res != 0) {
       return res;
@@ -210,7 +211,7 @@ public class BwProperty extends BwDbentity<BwProperty> {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 

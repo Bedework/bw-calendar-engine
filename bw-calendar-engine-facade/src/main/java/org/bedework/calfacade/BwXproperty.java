@@ -145,6 +145,13 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   public final static String bedeworkExsynchStarttzid = "X-BEDEWORK-EXSYNCH-STARTTZID";
 
   /* ====================================================================
+   *                        Suggested events properties
+   * ==================================================================== */
+
+  /** Hold href of group */
+  public final static String bedeworkSuggestedTo = "X-BEDEWORK-SUGGESTED-TO";
+
+  /* ====================================================================
    *                        Event registration properties
    * ==================================================================== */
 
@@ -690,7 +697,7 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 

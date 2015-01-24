@@ -400,6 +400,16 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
+  public void setSuggestionEnabled(final boolean val) {
+    getConfig().setSuggestionEnabled(val);
+  }
+
+  @Override
+  public boolean getSuggestionEnabled() {
+    return getConfig().getSuggestionEnabled();
+  }
+
+  @Override
   public void setWorkflowEnabled(final boolean val) {
     getConfig().setWorkflowEnabled(val);
   }

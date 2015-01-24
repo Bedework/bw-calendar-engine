@@ -264,18 +264,18 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       conf.loadConfig();
 
       /* ------------- System properties -------------------- */
-      SystemConf sconf = new SystemConf(systemPropsNamePart);
+      final SystemConf sconf = new SystemConf(systemPropsNamePart);
       register(getSyspropsName(), sconf);
       sconf.loadConfig();
 
       /* ------------- Notification properties -------------------- */
-      NotificationConf nc = new NotificationConf();
+      final NotificationConf nc = new NotificationConf();
       register(new ObjectName(nc.getServiceName()), nc);
       nc.loadConfig();
       notificationProps = nc.getConfig();
 
       /* ------------- Mailer properties -------------------- */
-      MailerConf mc = new MailerConf();
+      final MailerConf mc = new MailerConf();
       register(new ObjectName(mc.getServiceName()), mc);
       mc.loadConfig();
       mailProps = mc.getConfig();
@@ -294,21 +294,21 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       sysev.start();
 
       /* ------------- Monitor -------------------- */
-      BwSysMonitor sysmon = new BwSysMonitor();
+      final BwSysMonitor sysmon = new BwSysMonitor();
       register(new ObjectName(BwSysMonitor.serviceName), sysmon);
       sysmon.start();
 
       /* ------------- GenKeys -------------------- */
-      GenKeys gk = new GenKeys("org.bedework.bwengine.confuri");
+      final GenKeys gk = new GenKeys("org.bedework.bwengine.confuri");
       register(new ObjectName(GenKeys.serviceName), gk);
       gk.loadConfig();
 
       /* ------------- Pooled buffers -------------------- */
-      PooledBuffers pb = new PooledBuffers();
+      final PooledBuffers pb = new PooledBuffers();
       register(new ObjectName(pb.getServiceName()), pb);
 
       /* ------------- Synch properties -------------------- */
-      SynchConf sc = new SynchConf();
+      final SynchConf sc = new SynchConf();
       register(new ObjectName(sc.getServiceName()), sc);
       sc.loadConfig();
       synchProps = sc.getConfig();
