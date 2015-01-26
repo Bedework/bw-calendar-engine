@@ -1022,6 +1022,10 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
 
     final Set<String> vals = new TreeSet<>();
 
+    if (props == null) {
+      return vals;
+    }
+
     for (final BwProperty p: props) {
       vals.add(p.getValue());
     }
