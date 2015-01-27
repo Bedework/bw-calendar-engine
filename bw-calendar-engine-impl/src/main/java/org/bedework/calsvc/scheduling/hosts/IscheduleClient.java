@@ -267,8 +267,8 @@ public class IscheduleClient {
       }
       */
 
-      String scheme;
-      String port;
+      final String scheme;
+      final String port;
 
       if (hi.getPort() == 0) {
         port = "";
@@ -282,7 +282,7 @@ public class IscheduleClient {
         scheme = "http://";
       }
 
-      String url = scheme + hi.getIScheduleUrl() + port + "/.well-known/ischedule";
+      String url = scheme + hi.getHostname() + port + "/.well-known/ischedule";
 
       cio = getCio(url);
 

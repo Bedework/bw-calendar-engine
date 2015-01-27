@@ -41,9 +41,9 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
   /* Name of the property holding the location of the config data */
   private static final String confuriPname = "org.bedework.hosts.confuri";
 
-  private static List<HostInfo> hostInfos = new ArrayList<HostInfo>();
+  private static List<HostInfo> hostInfos = new ArrayList<>();
 
-  private static List<BwHost> hostConfigs = new ArrayList<BwHost>();
+  private static List<BwHost> hostConfigs = new ArrayList<>();
 
   /**
    */
@@ -62,7 +62,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
 
   @Override
   public String getHost(final String hostname) {
-    HostInfo host = get(hostname);
+    final HostInfo host = get(hostname);
 
     if (host != null) {
       return host.toString();
@@ -78,13 +78,13 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
                                  final String url,
                                  final String principal,
                                  final String pw) {
-    String result = null;
+    String result;
 
     try {
       BwHost bh = find(hostname);
 
       if (bh == null) {
-        HostInfo hi = new HostInfo();
+        final HostInfo hi = new HostInfo();
 
         hi.setHostname(hostname);
         hi.setPort(port);
@@ -94,7 +94,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
         hi.setIScheduleCredentials(pw);
         hi.setSupportsISchedule(true);
 
-        bh = new BwHost(getStore().getStore(hostname),
+        bh = new BwHost(getStore(),
                         getServiceName(),
                         hi);
 
@@ -105,7 +105,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
         return "added OK";
       }
 
-      HostInfo hi = bh.getInfo();
+      final HostInfo hi = bh.getConfig();
 
       if (hi.getSupportsISchedule()) {
         return "already supports ischedule";
@@ -121,7 +121,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
       bh.saveConfig();
 
       result = "updated OK";
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       result = t.getMessage();
       error(t);
     }
@@ -131,7 +131,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
 
   @Override
   public List<String> listHosts() {
-    List<String> hosts = new ArrayList<String>();
+    final List<String> hosts = new ArrayList<>();
 
     if (Util.isEmpty(hostInfos)) {
       hosts.add("No hosts defined");
@@ -139,7 +139,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
       return hosts;
     }
 
-    for (HostInfo hi: hostInfos) {
+    for (final HostInfo hi: hostInfos) {
       hosts.add(hi.getHostname());
     }
 
@@ -151,7 +151,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
     try {
       /* Load up the end-point configs */
 
-      ConfigurationStore cfs = getStore();
+      final ConfigurationStore cfs = getStore();
 
       hostInfos = new ArrayList<>();
 
@@ -161,10 +161,10 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
         return "No hosts";
       }
 
-      hostConfigs = new ArrayList<BwHost>();
+      hostConfigs = new ArrayList<>();
 
-      for (String hn: hostNames) {
-        HostInfo hi = getHostInfo(cfs, hn);
+      for (final String hn: hostNames) {
+        final HostInfo hi = getHostInfo(cfs, hn);
 
         if (hi == null) {
           continue;
@@ -173,17 +173,17 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
         hostInfos.add(hi);
 
         /* Create and register the mbean */
-        ObjectName objectName = createObjectName("hostconf", hn);
-        BwHost bh = new BwHost(getStore().getStore(hn),
-                               objectName.toString(),
-                               hi);
+        final ObjectName objectName = createObjectName("hostconf", hn);
+        final BwHost bh = new BwHost(getStore(),
+                                     objectName.toString(),
+                                     hi);
 
         register("hostconf", hn, bh);
         hostConfigs.add(bh);
       }
 
       return "OK";
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error("Failed to start management context");
       error(t);
       return "failed";
@@ -191,7 +191,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
   }
 
   /**
-   * @param name
+   * @param name of host
    * @return corresponding host info or null
    */
   public HostInfo get(final String name) {
@@ -199,12 +199,12 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
   }
 
   /**
-   * @param name
+   * @param name of host
    * @return BwHost object for name
    */
   public BwHost find(final String name) {
-    for (BwHost bh: hostConfigs) {
-      if (bh.getInfo().getHostname().equals(name)) {
+    for (final BwHost bh: hostConfigs) {
+      if (bh.getConfig().getHostname().equals(name)) {
         return bh;
       }
     }
@@ -214,7 +214,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
 
   /** Add a host.
    *
-   * @param val
+   * @param val host info
    * @throws CalFacadeException
    */
   public void add(final HostInfo val) throws CalFacadeException {
@@ -223,7 +223,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
 
   /** Update a host.
    *
-   * @param val
+   * @param val host info
    * @throws CalFacadeException
    */
   public void update(final HostInfo val) throws CalFacadeException {
@@ -232,7 +232,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
 
   /** Delete a host.
    *
-   * @param val
+   * @param val host info
    * @throws CalFacadeException
    */
   public void delete(final HostInfo val) throws CalFacadeException {
@@ -252,9 +252,9 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
    */
   public static HostInfo getHostForRecipient(final String val) throws CalFacadeException {
     try {
-      URI uri = new URI(val);
+      final URI uri = new URI(val);
 
-      String scheme = uri.getScheme();
+      final String scheme = uri.getScheme();
       String domain = null;
 
       if ((scheme == null) || ("mailto".equals(scheme.toLowerCase()))) {
@@ -282,17 +282,17 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
       hi.setIScheduleUrl(domain);
 
       return hi;
-    } catch (URISyntaxException use) {
+    } catch (final URISyntaxException use) {
       throw new CalFacadeException(CalFacadeException.badCalendarUserAddr);
     }
   }
 
   /**
-   * @param name
+   * @param name of host
    * @return host info or null
    */
   public static HostInfo getHostInfo(final String name) {
-    for (HostInfo hi: hostInfos) {
+    for (final HostInfo hi: hostInfos) {
       if (hi.getHostname().equals(name)) {
         return hi;
       }
@@ -305,17 +305,17 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
    *
    */
   public static void refreshStoredKeys() {
-    for (BwHost bwh: hostConfigs) {
-      HostInfo hi = bwh.getInfo();
+    for (final BwHost bwh: hostConfigs) {
+      final HostInfo hi = bwh.getConfig();
 
-      List<String> keys = hi.getDkimPublicKeys();
+      final List<String> keys = hi.getDkimPublicKeys();
 
       if (Util.isEmpty(keys)) {
         continue;
       }
 
-      for (String s: keys) {
-        String[] selKey = s.split("=");
+      for (final String s: keys) {
+        final String[] selKey = s.split("=");
 
         DKIMVerifier.addStoredKey(hi.getHostname(), selKey[0], selKey[1]);
       }
@@ -330,10 +330,10 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
     try {
       /* Try to load it */
 
-      HostInfo cfg = (HostInfo)cfs.getConfig(configName);
+      final HostInfo cfg = (HostInfo)cfs.getConfig(configName);
 
       return cfg;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
       return null;
     }

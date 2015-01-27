@@ -28,19 +28,17 @@ import java.util.List;
  * @author douglm
  *
  */
-public class BwHost extends ConfBase implements BwHostMBean {
-  private HostInfo info;
-
+public class BwHost extends ConfBase<HostInfo> implements BwHostMBean {
   /**
-   * @param configStore
-   * @param serviceName
-   * @param info
+   * @param configStore the store
+   * @param serviceName name
+   * @param info host info
    */
   public BwHost(final ConfigurationStore configStore,
                 final String serviceName,
                 final HostInfo info) {
     super(serviceName);
-    this.info = info;
+    cfg = info;
     setConfigName(info.getHostname());
     setStore(configStore);
   }
@@ -50,33 +48,26 @@ public class BwHost extends ConfBase implements BwHostMBean {
     return null;
   }
 
-  /**
-   * @return the host info
-   */
-  public HostInfo getInfo() {
-    return info;
-  }
-
   /** Get the hostname for the current entry.
    *
    * @return hostname
    */
   @Override
   public String getHostname() {
-    if (info == null) {
+    if (getConfig() == null) {
       return "No current entry";
     }
 
-    return info.getHostname();
+    return getConfig().getHostname();
   }
 
   @Override
   public void setPort(final int val) {
-    if (info == null) {
+    if (getConfig() == null) {
       return;
     }
 
-    info.setPort(val);
+    getConfig().setPort(val);
   }
 
   /** Get the port for the current entry.
@@ -85,24 +76,24 @@ public class BwHost extends ConfBase implements BwHostMBean {
    */
   @Override
   public int getPort() {
-    if (info == null) {
+    if (getConfig() == null) {
       return -1;
     }
 
-    return info.getPort();
+    return getConfig().getPort();
   }
 
   /** Set the secure flag for the current entry.
    *
-   * @param val
+   * @param val secureflag
    */
   @Override
   public void setSecure(final boolean val) {
-    if (info == null) {
+    if (getConfig() == null) {
       return;
     }
 
-    info.setSecure(val);
+    getConfig().setSecure(val);
   }
 
   /** Get the secure flag for the current entry.
@@ -111,24 +102,24 @@ public class BwHost extends ConfBase implements BwHostMBean {
    */
   @Override
   public boolean getSecure() {
-    if (info == null) {
+    if (getConfig() == null) {
       return false;
     }
 
-    return info.getSecure();
+    return getConfig().getSecure();
   }
 
   /** Set the iSchedule url for the current entry.
    *
-   * @param val
+   * @param val ischedule url
    */
   @Override
   public void setIScheduleUrl(final String val) {
-    if (info == null) {
+    if (getConfig() == null) {
       return;
     }
 
-    info.setIScheduleUrl(val);
+    getConfig().setIScheduleUrl(val);
   }
 
   /** Get the iSchedule url for the current entry.
@@ -137,93 +128,93 @@ public class BwHost extends ConfBase implements BwHostMBean {
    */
   @Override
   public String getIScheduleUrl() {
-    if (info == null) {
+    if (getConfig() == null) {
       return "No current entry";
     }
 
-    return info.getIScheduleUrl();
+    return getConfig().getIScheduleUrl();
   }
 
   @Override
   public void addDkimPublicKey(final String selector,
                                final String val) {
-    if (info == null) {
+    if (getConfig() == null) {
       return;
     }
 
-    info.addDkimPublicKey(selector, val);
+    getConfig().addDkimPublicKey(selector, val);
     BwHosts.refreshStoredKeys();
   }
 
   @Override
   public String getDkimPublicKey(final String selector) {
-    if (info == null) {
+    if (getConfig() == null) {
       return "No current entry";
     }
 
-    return info.getDkimPublicKey(selector);
+    return getConfig().getDkimPublicKey(selector);
   }
 
   @Override
   public void removeDkimPublicKey(final String selector) {
-    if (info == null) {
+    if (getConfig() == null) {
       return;
     }
 
-    info.removeDkimPublicKey(selector);
+    getConfig().removeDkimPublicKey(selector);
     BwHosts.refreshStoredKeys();
   }
 
   @Override
   public void setDkimPublicKey(final String selector,
                                final String val) {
-    if (info == null) {
+    if (getConfig() == null) {
       return;
     }
 
-    info.setDkimPublicKey(selector, val);
+    getConfig().setDkimPublicKey(selector, val);
     BwHosts.refreshStoredKeys();
   }
 
   @Override
   public List<String> getDkimPublicKeys() {
-    if (info == null) {
-      String[] msg = {"No current entry"};
+    if (getConfig() == null) {
+      final String[] msg = {"No current entry"};
       return Arrays.asList(msg);
     }
 
-    return info.getDkimPublicKeys();
+    return getConfig().getDkimPublicKeys();
   }
 
   @Override
   public void setIScheduleUsePublicKey(final boolean val) {
-    if (info == null) {
+    if (getConfig() == null) {
       return;
     }
 
-    info.setIScheduleUsePublicKey(val);
+    getConfig().setIScheduleUsePublicKey(val);
   }
 
   @Override
   public boolean getIScheduleUsePublicKey() {
-    if (info == null) {
+    if (getConfig() == null) {
       return false;
     }
 
-    return info.getIScheduleUsePublicKey();
+    return getConfig().getIScheduleUsePublicKey();
   }
 
   /** Set the iSchedule principal for the current entry.
    *
-   * @param val
+   * @param val ischedule principal
    */
   @Override
   public void setISchedulePrincipal(final String val) {
-    if (info == null) {
+    if (getConfig() == null) {
       return;
     }
 
-    info.setISchedulePrincipal(val);
+    getConfig().setISchedulePrincipal(val);
   }
 
   /** Get the iSchedule principal for the current entry.
@@ -232,24 +223,24 @@ public class BwHost extends ConfBase implements BwHostMBean {
    */
   @Override
   public String getISchedulePrincipal() {
-    if (info == null) {
+    if (getConfig() == null) {
       return "No current entry";
     }
 
-    return info.getISchedulePrincipal();
+    return getConfig().getISchedulePrincipal();
   }
 
   /** Set the iSchedule pw for the current entry.
    *
-   * @param val
+   * @param val ischedule pw
    */
   @Override
   public void setISchedulePw(final String val) {
-    if (info == null) {
+    if (getConfig() == null) {
       return;
     }
 
-    info.setIScheduleCredentials(val);
+    getConfig().setIScheduleCredentials(val);
   }
 
   /** Get the iSchedule pw for the current entry.
@@ -258,17 +249,17 @@ public class BwHost extends ConfBase implements BwHostMBean {
    */
   @Override
   public String getISchedulePw() {
-    if (info == null) {
+    if (getConfig() == null) {
       return "No current entry";
     }
 
-    return info.getIScheduleCredentials();
+    return getConfig().getIScheduleCredentials();
   }
 
   /* ================================= Operations =========================== */
 
   @Override
   public String display() {
-    return info.toString();
+    return getConfig().toString();
   }
 }

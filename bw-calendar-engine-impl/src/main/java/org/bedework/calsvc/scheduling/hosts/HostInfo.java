@@ -58,7 +58,7 @@ import java.util.List;
  * <p>To avoid any need to rebuild the db the host info shown here doesn't match
  * up to the column names in the db. At some point we'll fix that.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 @ConfInfo(elementName = "bwhost")
 public class HostInfo extends ConfigBase<HostInfo>
@@ -254,7 +254,6 @@ public class HostInfo extends ConfigBase<HostInfo>
 
   /** Set the dkim public keys
    *
-   * @param selector
    * @param val
    */
   public void setDkimPublicKeys(final List<String> val) {
@@ -409,19 +408,11 @@ public class HostInfo extends ConfigBase<HostInfo>
     supportsFreebusy = val;
   }
 
-  /**
-   *  @return boolean    true if Freebusy supported
-   */
   @Override
   public boolean getSupportsFreebusy() {
     return supportsFreebusy;
   }
 
-  /** Add our stuff to the StringBuilder
-   *
-   * @param sb    StringBuilder for result
-   * @param indent
-   */
   @Override
   public void toStringSegment(final ToString ts) {
     ts.append("hostname", getHostname());
