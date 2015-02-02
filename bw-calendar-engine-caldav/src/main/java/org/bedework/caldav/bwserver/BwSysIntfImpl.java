@@ -119,6 +119,7 @@ import org.oasis_open.docs.ws_calendar.ns.soap.ComponentSelectionType;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -2037,7 +2038,9 @@ public class BwSysIntfImpl implements SysIntf {
         if (xml == null) {
           trans.writeJcal(bwevs, meth, wtr);
         } else {
-          trans.writeJcal(bwevs, meth, xml.getWriter());
+          final StringWriter sw = new StringWriter();
+          trans.writeJcal(bwevs, meth, sw);
+          xml.cdataValue(sw.toString());
         }
       } else if (ctype.equals(XcalTags.mimetype)) {
         XmlEmit x;
