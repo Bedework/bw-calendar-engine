@@ -181,7 +181,7 @@ public class ESQueryFilter implements CalintfDefs {
 
     if (!queryLimited) {
       if (defaultFilterContext != null) {
-        fb = and(buildFilter(defaultFilterContext), fb);
+        fb = and(fb, buildFilter(defaultFilterContext));
       }
 
       if (!queryLimited) {
@@ -459,7 +459,7 @@ public class ESQueryFilter implements CalintfDefs {
       return filter;
     }
 
-    AndFilterBuilder afb = new AndFilterBuilder(filter);
+    final AndFilterBuilder afb = new AndFilterBuilder(filter);
 
     afb.add(newFilter);
 
