@@ -1078,9 +1078,6 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.sysinterface.SysIntf#getEvents(org.bedework.caldav.server.CalDAVCollection, org.bedework.caldav.util.filter.Filter, java.util.List, org.bedework.caldav.server.sysinterface.RetrievalMode)
-   */
   @Override
   public Collection<CalDAVEvent> getEvents(final CalDAVCollection col,
                                            final FilterBase filter,
@@ -1089,19 +1086,19 @@ public class BwSysIntfImpl implements SysIntf {
           throws WebdavException {
     try {
       /* Limit the results to just this collection by adding an ANDed filter */
-      SimpleFilterParser sfp = getSvci().getFilterParser();
-      String expr = "(colPath='" + col.getPath() + "')";
+      final SimpleFilterParser sfp = getSvci().getFilterParser();
+      final String expr = "(colPath='" + col.getPath() + "')";
 
-      ParseResult pr = sfp.parse(expr, true);
+      final ParseResult pr = sfp.parse(expr, true, null);
       if (!pr.ok) {
         throw new WebdavBadRequest("Failed to reference collection " +
                                            col.getPath());
       }
 
-      FilterBase f = FilterBase.addAndChild(filter,
+      final FilterBase f = FilterBase.addAndChild(filter,
                                             pr.filter);
 
-      Collection<EventInfo> bwevs =
+      final Collection<EventInfo> bwevs =
              getSvci().getEventsHandler().getEvents(null,  // Collection
                                                     f,
                                                     null,  // start
@@ -1113,9 +1110,9 @@ public class BwSysIntfImpl implements SysIntf {
         return null;
       }
 
-      Collection<CalDAVEvent> evs = new ArrayList<CalDAVEvent>();
+      final Collection<CalDAVEvent> evs = new ArrayList<>();
 
-      for (EventInfo ei: bwevs) {
+      for (final EventInfo ei: bwevs) {
         if (recurRetrieval != null) {
           ei.getEvent().setForceUTC(recurRetrieval.getExpand() != null);
         }
@@ -1123,16 +1120,16 @@ public class BwSysIntfImpl implements SysIntf {
       }
 
       return evs;
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       if (CalFacadeException.unknownProperty.equals(cfe.getMessage())) {
         throw new WebdavBadRequest("Unknown property " + cfe.getExtra());
       }
       throw new WebdavException(cfe);
-    } catch (WebdavException wde) {
+    } catch (final WebdavException wde) {
       throw wde;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }

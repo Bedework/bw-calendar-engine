@@ -148,7 +148,9 @@ public class BwXproperty extends BwDbentity<BwXproperty>
    *                        Suggested events properties
    * ==================================================================== */
 
-  /** Hold href of group */
+  /** Hold state and href of group in the form state:href where:</br>
+   * state = "A" - accepted, "R" - rejected, "P" - pending
+   */
   public final static String bedeworkSuggestedTo = "X-BEDEWORK-SUGGESTED-TO";
 
   /* ====================================================================

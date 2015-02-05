@@ -47,7 +47,7 @@ class Filters extends CalSvcDb implements FiltersI {
 
   @Override
   public void parse(final BwFilterDef val) throws CalFacadeException {
-    String def = val.getDefinition();
+    final String def = val.getDefinition();
 
     /* Require xml filters to start with <?xml
      */
@@ -56,10 +56,10 @@ class Filters extends CalSvcDb implements FiltersI {
       // Assume xml filter
 
       try {
-        FilterType f = org.bedework.caldav.util.filter.parse.Filters.parse(def);
-        EventQuery eq = org.bedework.caldav.util.filter.parse.Filters.getQuery(f);
+        final FilterType f = org.bedework.caldav.util.filter.parse.Filters.parse(def);
+        final EventQuery eq = org.bedework.caldav.util.filter.parse.Filters.getQuery(f);
         val.setFilters(eq.filter);
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         throw new CalFacadeException(t);
       }
 
@@ -67,7 +67,11 @@ class Filters extends CalSvcDb implements FiltersI {
     }
 
     // Assume simple expression filter
-    ParseResult pr = getSvc().getFilterParser().parse(def, false);
+    final String source = "BwFilterDef:" + val.getOwnerHref() + ":" +
+            val.getName();
+    final ParseResult pr = getSvc().getFilterParser().parse(def,
+                                                      false,
+                                                      source);
 
     if (pr.ok) {
       val.setFilters(pr.filter);

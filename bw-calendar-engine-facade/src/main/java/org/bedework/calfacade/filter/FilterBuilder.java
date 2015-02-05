@@ -251,7 +251,7 @@ public class FilterBuilder {
     FilterBase fltr = null;
 
     if (applyFilter && (cal.getFilterExpr() != null)) {
-      fltr = parseExpr(cal.getFilterExpr());
+      fltr = parseExpr(cal);
     }
 
     if (cal.getCalType() ==  BwCalendar.calTypeEventList) {
@@ -533,10 +533,12 @@ public class FilterBuilder {
     }
   }
 
-  private FilterBase parseExpr(final String expr) throws CalFacadeException {
+  private FilterBase parseExpr(final BwCalendar col) throws CalFacadeException {
     SimpleFilterParser sfp = parser.getParser();
 
-    ParseResult pr = sfp.parse(expr, false);
+    ParseResult pr = sfp.parse(col.getFilterExpr(),
+                               false,
+                               col.getPath());
 
     if (!pr.ok) {
       throw pr.cfe;

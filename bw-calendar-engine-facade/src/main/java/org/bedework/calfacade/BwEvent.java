@@ -1493,21 +1493,17 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return c.size();
   }
 
-  /**
-   *
-   * @param val - name to match
-   * @return list of matching properties - never null
-   */
+  @Override
   @NoProxy
   @NoDump
   public List<BwXproperty> getXproperties(final String val) {
-    List<BwXproperty> res = new ArrayList<BwXproperty>();
-    List<BwXproperty> xs = getXproperties();
+    final List<BwXproperty> res = new ArrayList<BwXproperty>();
+    final List<BwXproperty> xs = getXproperties();
     if (xs == null) {
       return res;
     }
 
-    for (BwXproperty x: xs) {
+    for (final BwXproperty x: xs) {
       if (x.getName().equals(val)) {
         res.add(x);
       }
@@ -1566,14 +1562,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return xs.size();
   }
 
-  /**
-   * @param val
-   */
+  @Override
   @NoProxy
   public void addXproperty(final BwXproperty val) {
     List<BwXproperty> c = getXproperties();
     if (c == null) {
-      c = new ArrayList<BwXproperty>();
+      c = new ArrayList<>();
       setXproperties(c);
     }
 
@@ -3794,6 +3788,84 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   /* ====================================================================
    *                   Convenience methods
    * ==================================================================== */
+
+  public static class SuggestedTo {
+    private final char status;
+
+    private final String groupHref;
+
+    public SuggestedTo(final char status,
+                       final String groupHref) {
+      this.status = status;
+      this.groupHref = groupHref;
+    }
+
+    public SuggestedTo(final String val) {
+      if ((val.length() > 4) &&
+          (val.charAt(1) == ':')) {
+        status = val.charAt(0);
+
+        if ((status == accepted) ||
+                (status == rejected) ||
+                (status == pending)) {
+          groupHref = val.substring(2);
+          return;
+        }
+      }
+
+      throw new RuntimeException("Bad suggested value: " + val);
+    }
+
+    public static final char accepted = 'A';
+    public static final char rejected = 'R';
+    public static final char pending = 'P';
+
+    public char getStatus() {
+      return status;
+    }
+
+    public String getGroupHref() {
+      return groupHref;
+    }
+
+    public String toString() {
+      final StringBuilder sb = new StringBuilder(getGroupHref().length() + 2);
+
+      return sb.append(getStatus()).
+              append(':').
+              append(getGroupHref()).
+              toString();
+    }
+  }
+
+  /** Suggested to values.
+   *
+   * @return list of suggested to objects
+   */
+  @NoProxy
+  @NoDump
+  @NoWrap
+  public List<SuggestedTo> getSuggested() {
+    final List<SuggestedTo> ss = new ArrayList<>();
+
+    for (final BwXproperty xp: getXproperties(BwXproperty.bedeworkSuggestedTo)) {
+      ss.add(new SuggestedTo(xp.getValue()));
+    }
+
+    return ss;
+  }
+
+  /** Add a suggested to value.
+   *
+   * @param val suggested to object
+   */
+  @NoProxy
+  @NoDump
+  @NoWrap
+  public void addSuggested(final SuggestedTo val) {
+    addXproperty(new BwXproperty(BwXproperty.bedeworkSuggestedTo, null,
+                                 val.toString()));
+  }
 
   /** Scheduling assistant?
    *

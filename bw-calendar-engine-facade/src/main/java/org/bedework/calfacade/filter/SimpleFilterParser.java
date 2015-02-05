@@ -60,6 +60,8 @@ import java.util.Stack;
  *
  * <p>The entity_type term must be first.
  *
+ * <p>This class is serially reusable but NOT thread-safe</p>
+ *
  * @author Mike Douglass
  *
  */
@@ -70,6 +72,7 @@ public abstract class SimpleFilterParser {
 
   private SfpTokenizer tokenizer;
   private String currentExpr;
+  private String source;
 
   private SimpleFilterParser subParser;
   private boolean explicitSelection;
@@ -84,7 +87,7 @@ public abstract class SimpleFilterParser {
     }
   }
 
-  private static Token openParen = new OpenParenthesis();
+  private final static Token openParen = new OpenParenthesis();
 
   private final static int isDefined = 0;
 
@@ -135,9 +138,9 @@ public abstract class SimpleFilterParser {
 
   private static final LogicalOperator orOperator = new LogicalOperator(orOp);
 
-  private Stack<Token> stack = new Stack<Token>();
+  private final Stack<Token> stack = new Stack<>();
 
-  private Stack<FilterBase> filterStack = new Stack<FilterBase>();
+  private final Stack<FilterBase> filterStack = new Stack<>();
 
   /** */
   public static class ParseResult {
@@ -161,7 +164,7 @@ public abstract class SimpleFilterParser {
 
     @Override
     public String toString() {
-      ToString ts = new ToString(this);
+      final ToString ts = new ToString(this);
 
       ts.append("ok", ok);
 
@@ -177,7 +180,7 @@ public abstract class SimpleFilterParser {
 
   /**
    *
-   * @param path
+   * @param path of collection
    * @return collection object or null.
    * @throws org.bedework.calfacade.exc.CalFacadeException
    */
@@ -212,7 +215,7 @@ public abstract class SimpleFilterParser {
    * <p>This only works if the current user is the owner of the named category -
    * at least with my current implementation.
    *
-   * @param name
+   * @param name of category
    * @return category entity or null.
    * @throws CalFacadeException
    */
@@ -236,7 +239,7 @@ public abstract class SimpleFilterParser {
 
   /** Get the view given the path.
    *
-   * @param path
+   * @param path for view
    * @return view or null
    * @throws CalFacadeException
    */
@@ -252,7 +255,7 @@ public abstract class SimpleFilterParser {
    * "/public/aliases/Lectures" which is a folder containing the alias
    * "/public/aliases/Lectures/Lectures" which is aliased to the single calendar.
    *
-   * @param vpath
+   * @param vpath the virtual path
    * @return collection of collection objects - null for bad vpath
    * @throws CalFacadeException
    */
@@ -272,20 +275,24 @@ public abstract class SimpleFilterParser {
    * inbox. If we explicitly selct thos e items however, we want to
    * see them.
    *
-   * @param expr
+   * @param expr the expression
    * @param explicitSelection true if we are explicitly selecting a
    *                          path or paths
+   * @param source            Where the expression came from - for errors
    * @return ParseResult
    * @throws CalFacadeException
    */
   public ParseResult parse(final String expr,
-                           final boolean explicitSelection) throws CalFacadeException {
+                           final boolean explicitSelection,
+                           final String source) throws CalFacadeException {
     this.explicitSelection = explicitSelection;
+    this.source = source;
     debug = getLogger().isDebugEnabled();
 
     try {
       if (debug) {
-        debugMsg("About to parse filter expression: " + expr);
+        debugMsg("About to parse filter expression: " + expr +
+                  " from " + source);
       }
 
       currentExpr = expr;
@@ -302,23 +309,25 @@ public abstract class SimpleFilterParser {
       }
 
       if (!stackEmpty()) {
-        throw new CalFacadeException(CalFacadeException.filterSyntax);
+        throw new CalFacadeException(CalFacadeException.filterSyntax,
+                                     "source: " + source);
       }
 
       /* We should be left with just the filter on the stack. */
 
       if (filterStack.size() != 1) {
-        throw new CalFacadeException(CalFacadeException.filterSyntax);
+        throw new CalFacadeException(CalFacadeException.filterSyntax,
+                                     " source: " + source);
       }
 
-      FilterBase f = popFilters();
+      final FilterBase f = popFilters();
 
       if (debug) {
         debugMsg(f.toString());
       }
 
       return new ParseResult(f);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       if (debug) {
         error(cfe);
       }
@@ -333,13 +342,13 @@ public abstract class SimpleFilterParser {
    * <p>The property name is either a valid bedework property or the
    * word "RELEVANCE" - which is the default</p>
    *
-   * @param sexpr
+   * @param sexpr - search expression
    * @return list of terms in order of application. Empty for no sort
    *         terms.
    * @throws CalFacadeException
    */
   public List<SortTerm> parseSort(final String sexpr) throws CalFacadeException {
-    List<SortTerm> res = new ArrayList<>();
+    final List<SortTerm> res = new ArrayList<>();
 
     if (sexpr == null) {
       return res;
@@ -353,7 +362,7 @@ public abstract class SimpleFilterParser {
         return res;
       }
 
-      List<PropertyInfoIndex> pis = getProperty(tkn);
+      final List<PropertyInfoIndex> pis = getProperty(tkn);
 
       tkn = nextToken("parseSort() - :");
 
@@ -364,7 +373,8 @@ public abstract class SimpleFilterParser {
 
         if (tkn != StreamTokenizer.TT_WORD) {
           throw new CalFacadeException(CalFacadeException.filterExpectedAscDesc,
-                                       String.valueOf(tkn));
+                                       String.valueOf(tkn) +
+                                               " source: " + source);
         }
 
         if ("asc".equalsIgnoreCase(tokenizer.sval)) {
@@ -373,13 +383,15 @@ public abstract class SimpleFilterParser {
           ascending = false;
         } else {
           throw new CalFacadeException(CalFacadeException.filterExpectedAscDesc,
-                                       String.valueOf(tkn));
+                                       String.valueOf(tkn) +
+                                               " source: " + source);
         }
       } else if (tkn == StreamTokenizer.TT_EOF) {
         tokenizer.pushBack();
       } else if (tkn != ',') {
         throw new CalFacadeException(CalFacadeException.filterBadSort,
-                                     String.valueOf(tkn) + " from " + sexpr);
+                                     String.valueOf(tkn) + " from " + sexpr +
+                                             " source: " + source);
       }
 
       res.add(new SortTerm(pis, ascending));
@@ -391,7 +403,7 @@ public abstract class SimpleFilterParser {
       debugMsg("doFactor: " + tokenizer.toString());
     }
 
-    int tkn = nextToken("doFactor(1)");
+    final int tkn = nextToken("doFactor(1)");
 
     if (tkn == StreamTokenizer.TT_EOF) {
       return false;
@@ -402,7 +414,8 @@ public abstract class SimpleFilterParser {
       doExpr();
 
       if (nextToken("doFactor(2)") != ')') {
-        throw new CalFacadeException(CalFacadeException.filterExpectedCloseParen);
+        throw new CalFacadeException(CalFacadeException.filterExpectedCloseParen,
+                                             " source: " + source);
       }
 
       popOpenParen();
@@ -463,9 +476,9 @@ public abstract class SimpleFilterParser {
     if ((tkn != '&') && (tkn != '|')) {
       tokenizer.pushBack();
       if (topLOp()) {
-        FilterBase filter = popFilters();
+        final FilterBase filter = popFilters();
 
-        FilterBase topFilter = popFilters();
+        final FilterBase topFilter = popFilters();
         if (anding()) {
           filterStack.push(FilterBase.addAndChild(topFilter, filter));
         } else {
@@ -506,10 +519,12 @@ public abstract class SimpleFilterParser {
       // Must match - not allowed to mix logical operators
       if (tkn == '&') {
         if (oper.op != andOp) {
-          throw new CalFacadeException(CalFacadeException.filterMixedLogicalOperators);
+          throw new CalFacadeException(CalFacadeException.filterMixedLogicalOperators,
+                                               " source: " + source);
         }
       } else if (oper.op != orOp) {
-        throw new CalFacadeException(CalFacadeException.filterMixedLogicalOperators);
+        throw new CalFacadeException(CalFacadeException.filterMixedLogicalOperators,
+                                             " source: " + source);
       }
 
       push(oper);
@@ -533,7 +548,7 @@ public abstract class SimpleFilterParser {
       return tkn;
     }
 
-    String pname = tokenizer.sval;
+    final String pname = tokenizer.sval;
 
     if (pname.equalsIgnoreCase("and")) {
       return '&';
@@ -548,18 +563,17 @@ public abstract class SimpleFilterParser {
 
   private List<PropertyInfoIndex> getProperty(final int curtkn) throws CalFacadeException {
     int tkn = curtkn;
-    List<PropertyInfoIndex> pis = new ArrayList<>();
+    final List<PropertyInfoIndex> pis = new ArrayList<>();
 
     for (;;) {
       if (tkn != StreamTokenizer.TT_WORD) {
         throw new CalFacadeException(CalFacadeException.filterExpectedPropertyName,
-                                     String.valueOf(tkn));
+                                     String.valueOf(tkn) +
+                                     " source: " + source);
       }
 
-      String pname = tokenizer.sval;
-      String pnameUc = pname.toUpperCase();
-
-      PropertyInfoIndex pi;
+      final String pname = tokenizer.sval;
+      final String pnameUc = pname.toUpperCase();
 
       if ((pis.size() == 0) && pnameUc.equals("CATUID")) {
         // These are stored all over the place.
@@ -569,10 +583,11 @@ public abstract class SimpleFilterParser {
         return pis;
       }
 
-      pi = PropertyInfoIndex.fromName(pname);
+      final PropertyInfoIndex pi = PropertyInfoIndex.fromName(pname);
       if (pi == null) {
         throw new CalFacadeException(CalFacadeException.unknownProperty,
-                                     pname + ": expr was " + currentExpr);
+                                     pname + ": expr was " + currentExpr +
+                                             " source: " + source);
       }
 
       pis.add(pi);
@@ -597,7 +612,8 @@ public abstract class SimpleFilterParser {
 
     if (pfilter == null) {
       error(new CalFacadeException(CalFacadeException.filterBadProperty,
-                                   listProps(pis)));
+                                   listProps(pis) +
+                                           " source: " + source));
       return false;
     }
 
@@ -639,7 +655,7 @@ public abstract class SimpleFilterParser {
     }
 
     boolean paren = false;
-    ArrayList<String> res = new ArrayList<>();
+    final ArrayList<String> res = new ArrayList<>();
 
     if (tkn == '(') {
       push(openParen);
@@ -654,7 +670,8 @@ public abstract class SimpleFilterParser {
       if ((tkn != '"') && (tkn != '\'')) {
         throw new CalFacadeException(CalFacadeException.filterBadList,
                                      "Expected quoted string: found" +
-                                             String.valueOf(tkn));
+                                             String.valueOf(tkn) +
+                                             " source: " + source);
       }
 
       res.add(tokenizer.sval);
@@ -664,7 +681,8 @@ public abstract class SimpleFilterParser {
       if (tkn == ',') {
         if (!paren) {
           throw new CalFacadeException(CalFacadeException.filterBadList,
-                                       String.valueOf(tkn));
+                                       String.valueOf(tkn) +
+                                               " source: " + source);
         }
         continue;
       }
@@ -684,18 +702,19 @@ public abstract class SimpleFilterParser {
   }
 
   private void popOpenParen() throws CalFacadeException {
-    Token tkn = pop();
+    final Token tkn = pop();
 
     if (tkn != openParen) {
       throw new CalFacadeException(CalFacadeException.filterSyntax,
-                                   "Expected openParen on stack");
+                                   "Expected openParen on stack." +
+                                           " source: " + source);
     }
   }
 
   private FilterBase makePropFilter(final List<PropertyInfoIndex> pis,
                                     final int oper)
           throws CalFacadeException {
-    PropertyInfoIndex pi = pis.get(0);
+    final PropertyInfoIndex pi = pis.get(0);
     FilterBase filter = null;
     final boolean exact = (oper != like) && (oper != notLike);
 
@@ -723,10 +742,10 @@ public abstract class SimpleFilterParser {
     if (pi.equals(PropertyInfoIndex.VIEW)) {
       checkSub(pis, 1);
       // expect list of views.
-      ArrayList<String> views = doWordList();
+      final ArrayList<String> views = doWordList();
 
-      for (String view: views) {
-        FilterBase vpf = viewFilter(view);
+      for (final String view: views) {
+        final FilterBase vpf = viewFilter(view);
 
         if (vpf == null) {
           continue;
@@ -741,10 +760,10 @@ public abstract class SimpleFilterParser {
     if (pi.equals(PropertyInfoIndex.VPATH)) {
       checkSub(pis, 1);
       // expect list of virtual paths.
-      ArrayList<String> vpaths = doWordList();
+      final ArrayList<String> vpaths = doWordList();
 
-      for (String vpath: vpaths) {
-        FilterBase vpf = resolveVpath(vpath);
+      for (final String vpath: vpaths) {
+        final FilterBase vpf = resolveVpath(vpath);
 
         if (vpf == null) {
           continue;
@@ -769,11 +788,12 @@ public abstract class SimpleFilterParser {
 
           if (cat == null) {
             error(new CalFacadeException(CalFacadeException.filterBadProperty,
-                                         "category uid: " + uid));
+                                         "category uid: " + uid +
+                                         " source: " + source));
             return null;
           }
 
-          ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
+          final ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
 
           f.setEntity(uid);
 
@@ -788,10 +808,10 @@ public abstract class SimpleFilterParser {
 
       if (subPi.equals(PropertyInfoIndex.HREF)) {
         // No match and category - expect list of paths.
-        ArrayList<String> paths = doWordList();
+        final ArrayList<String> paths = doWordList();
 
-        for (String path: paths) {
-          ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
+        for (final String path: paths) {
+          final ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
           f.setEntity(path);
 
           f.setCaseless(false);
@@ -809,10 +829,10 @@ public abstract class SimpleFilterParser {
     if (pi.equals(PropertyInfoIndex.COLLECTION) ||
             pi.equals(PropertyInfoIndex.COLPATH)) {
       checkSub(pis, 1);
-      ArrayList<String> paths = doWordList();
+      final ArrayList<String> paths = doWordList();
 
-      for (String path: paths) {
-        FilterBase pf = resolveColPath(path, true, true);
+      for (final String path: paths) {
+        final FilterBase pf = resolveColPath(path, true, true);
 
         if (pf == null) {
           continue;
@@ -824,16 +844,16 @@ public abstract class SimpleFilterParser {
       return filter;
     }
 
-    TextMatchType match = getMatch(oper);
+    final TextMatchType match = getMatch(oper);
 
     if (pi.equals(PropertyInfoIndex.CATEGORIES)) {
       checkSub(pis, 1);
-      String val = match.getValue();
+      final String val = match.getValue();
 
       if (val.startsWith("/")) {
         pis.add(PropertyInfoIndex.HREF);
         // Assume a path match
-        ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
+        final ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
         f.setEntity(val);
 
         f.setCaseless(false);
@@ -846,15 +866,16 @@ public abstract class SimpleFilterParser {
 
       // Try for name
 
-      BwCategory cat = getCategoryByName(val);
+      final BwCategory cat = getCategoryByName(val);
 
       if (cat == null) {
         throw new CalFacadeException(CalFacadeException.filterBadProperty,
-                                     "category name: " + match.getValue());
+                                     "category name: " + match.getValue() +
+                                     " source: " + source);
       }
 
       pis.add(PropertyInfoIndex.UID);
-      ObjectFilter<BwCategory> f = new BwCategoryFilter(null, pis);
+      final ObjectFilter<BwCategory> f = new BwCategoryFilter(null, pis);
 
       f.setEntity(cat);
 
@@ -865,7 +886,7 @@ public abstract class SimpleFilterParser {
     }
 
     checkSub(pis, 2);
-    ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
+    final ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
     f.setEntity(match.getValue());
 
     f.setCaseless(Filters.caseless(match));
@@ -880,24 +901,25 @@ public abstract class SimpleFilterParser {
    * number. i.e. 1 means no subfields, 2 = only subfield e.g. a.b
    * 3 means 2, a.b.c etc.
    *
-   * @param pis
-   * @param depth
+   * @param pis list of PropertyInfoIndex
+   * @param depth we expect this and nothing else
    * @throws CalFacadeException
    */
   private void checkSub(final List<PropertyInfoIndex> pis,
-                        int depth) throws CalFacadeException {
+                        final int depth) throws CalFacadeException {
     if (depth != pis.size()) {
       throw new CalFacadeException(CalFacadeException.filterBadProperty,
-                                   listProps(pis));
+                                   listProps(pis) +
+                                   " source: " + source);
     }
   }
 
   private String listProps(final List<PropertyInfoIndex> pis) {
     String delim = "";
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
-    for (PropertyInfoIndex pi: pis) {
+    for (final PropertyInfoIndex pi: pis) {
       sb.append(delim);
       sb.append(BwIcalPropertyInfo.getPinfo(pi).getJname());
       delim = ".";
@@ -907,7 +929,7 @@ public abstract class SimpleFilterParser {
   }
 
   private TextMatchType getMatch(final int oper) throws CalFacadeException {
-    TextMatchType tm;
+    final TextMatchType tm;
 
     // Expect a value
     tokenizer.assertString();
@@ -927,7 +949,7 @@ public abstract class SimpleFilterParser {
   private FilterBase entityFilter(final String val) throws CalFacadeException {
     try {
       return EntityTypeFilter.makeEntityTypeFilter(null, val, false);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -938,7 +960,7 @@ public abstract class SimpleFilterParser {
 
       if (view == null) {
         throw new CalFacadeException(CalFacadeException.filterUnknownView,
-                                     val);
+                                     val + " source: " + source);
       }
 
       FilterBase filter = view.getFilter();
@@ -1083,7 +1105,9 @@ public abstract class SimpleFilterParser {
           subParser = getParser();
         }
 
-        final ParseResult pr = subParser.parse(col.getFilterExpr(), false);
+        final ParseResult pr = subParser.parse(col.getFilterExpr(),
+                                               false,
+                                               col.getPath());
         if (pr.cfe != null) {
           throw pr.cfe;
         }
@@ -1101,7 +1125,9 @@ public abstract class SimpleFilterParser {
     }
 
     if (vpathTarget == null) {
-      throw new CalFacadeException("Bad vpath - no calendar collection");
+      throw new CalFacadeException("Bad vpath - no calendar collection" +
+                                           " vpath: " + vpath +
+                                           " source: " + source);
     }
 
     return and(vfilter,
@@ -1111,7 +1137,7 @@ public abstract class SimpleFilterParser {
 
   /**
    *
-   * @param path
+   * @param path to be resolved
    * @param applyFilter - filter may already have been applied
    * @return filter or null
    * @throws CalFacadeException
@@ -1126,7 +1152,7 @@ public abstract class SimpleFilterParser {
 
   private TimeRange getTimeRange() throws CalFacadeException {
     tokenizer.assertString();
-    String startStr = tokenizer.sval;
+    final String startStr = tokenizer.sval;
 
     tokenizer.assertToken("to");
 
@@ -1150,7 +1176,7 @@ public abstract class SimpleFilterParser {
       }
 
       return new TimeRange(start, end);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -1201,7 +1227,8 @@ public abstract class SimpleFilterParser {
 
     if (tkn != StreamTokenizer.TT_WORD) {
       throw new CalFacadeException(CalFacadeException.filterBadOperator,
-                                   tokenizer.sval);
+                                   tokenizer.sval +
+                                           " source: " + source);
     }
 
     if (tokenizer.sval.equals("in")) {
@@ -1217,7 +1244,8 @@ public abstract class SimpleFilterParser {
     }
 
     throw new CalFacadeException(CalFacadeException.filterBadOperator,
-                                 tokenizer.sval);
+                                 tokenizer.sval +
+                                         " source: " + source);
   }
 
   private boolean topLOp() {
@@ -1246,7 +1274,8 @@ public abstract class SimpleFilterParser {
 
   private void assertNotEmpty() throws CalFacadeException {
     if (stack.empty()) {
-      throw new CalFacadeException(CalFacadeException.filterSyntax);
+      throw new CalFacadeException(CalFacadeException.filterSyntax,
+                                           " source: " + source);
     }
   }
 
@@ -1265,7 +1294,8 @@ public abstract class SimpleFilterParser {
 
   private void assertFiltersNotEmpty() throws CalFacadeException {
     if (filterStack.empty()) {
-      throw new CalFacadeException(CalFacadeException.filterSyntax);
+      throw new CalFacadeException(CalFacadeException.filterSyntax,
+                                           " source: " + source);
     }
   }
 
@@ -1282,7 +1312,7 @@ public abstract class SimpleFilterParser {
   }
 
   private int nextToken(final String tr) throws CalFacadeException {
-    int tkn = tokenizer.next();
+    final int tkn = tokenizer.next();
 
     if (!debug) {
       return tkn;
