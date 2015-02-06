@@ -72,6 +72,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
+  public String getPublicCalendarsRootPath() throws CalFacadeException {
+    return publicCalendarRootPath;
+  }
+
+  @Override
   public BwCalendar getPublicCalendars() throws CalFacadeException {
     return getCal().getCalendar(publicCalendarRootPath,
                                 PrivilegeDefs.privRead, true);

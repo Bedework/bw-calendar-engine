@@ -42,10 +42,16 @@ import java.util.Set;
  * @author Mike Douglass
  */
 public interface CalendarsI extends Serializable {
-  /** Returns the tree of public calendars. The returned objects are those to
-   * which the current user has access.
+  /** Returns the href of the root of the public calendars tree.
    *
-   * @return BwCalendar   root with all children attached
+   * @return String   root path
+   * @throws CalFacadeException
+   */
+  String getPublicCalendarsRootPath() throws CalFacadeException;
+
+  /** Returns the root of the tree of public calendars.
+   *
+   * @return BwCalendar   root
    * @throws CalFacadeException
    */
   BwCalendar getPublicCalendars() throws CalFacadeException;
