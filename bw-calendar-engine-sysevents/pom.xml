@@ -30,6 +30,16 @@
 		</dependency>
     <dependency>
       <groupId>org.bedework</groupId>
+      <artifactId>bw-calendar-engine-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-calendar-engine-facade</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
       <artifactId>bw-caldav-server</artifactId>
     </dependency>
 		<!-- Third Party Dependencies -->
