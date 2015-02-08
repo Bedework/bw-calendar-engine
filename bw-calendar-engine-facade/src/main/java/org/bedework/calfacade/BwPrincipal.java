@@ -63,6 +63,8 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
   protected Timestamp created;
 
+  private String description;
+
   /** Last time we saw this principal appear in our system.
    */
   protected Timestamp logon;
@@ -117,7 +119,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
    * ==================================================================== */
 
   /**
-   * @param whoType
+   * @param whoType - type of principal
    * @return a principal based on type - null if unknown.
    */
   public static BwPrincipal makePrincipal(final int whoType) {
@@ -161,25 +163,15 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
    *                   Bean methods
    * ==================================================================== */
 
-  /**
-   * @return int kind
-   */
   @Override
   @NoDump
   public abstract int getKind();
 
-  /** Set the unauthenticated state.
-   *
-   * @param val
-   */
   @Override
   public void setUnauthenticated(final boolean val) {
     unauthenticated = val;
   }
 
-  /**
-   * @return  boolean authenticated state
-   */
   @Override
   @NoDump
   public boolean getUnauthenticated() {
@@ -190,17 +182,11 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
     return unauthenticated;
   }
 
-  /**
-   * @param val
-   */
   @Override
   public void setAccount(final String val) {
     account = val;
   }
 
-  /**
-   * @return  String account name
-   */
   @Override
   public String getAccount() {
     return account;
@@ -211,16 +197,23 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
     principalRef = val;
   }
 
-  /**
-   * @return  String principal reference
-   */
+  @Override
+  public void setDescription(final String val) {
+    description = val;
+  }
+
+  @Override
+  public String getDescription() {
+    return description;
+  }
+
   @Override
   public String getPrincipalRef() {
     return principalRef;
   }
 
   /**
-   * @param val
+   * @param val timestamp
    */
   public void setCreated(final Timestamp val) {
     created = val;
@@ -234,7 +227,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   }
 
   /**
-   * @param val
+   * @param val timestamp
    */
   public void setLogon(final Timestamp val) {
     logon = val;
@@ -248,7 +241,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   }
 
   /**
-   * @param val
+   * @param val timestamp
    */
   public void setLastAccess(final Timestamp val) {
     lastAccess = val;
@@ -262,7 +255,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   }
 
   /**
-   * @param val
+   * @param val timestamp
    */
   public void setLastModify(final Timestamp val) {
     lastModify = val;
@@ -277,7 +270,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
   /** Quota for this user. This will have to be an estimate I imagine.
    *
-   * @param val
+   * @param val quota
    */
   public void setQuota(final long val) {
     quota = val;
@@ -343,7 +336,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   public String[] getAccountSplit() {
     String res = getAccount();
 
-    if (res.indexOf("/") < 0) {
+    if (!res.contains("/")) {
       return new String[]{res};
     }
 
@@ -370,13 +363,13 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   @NoDump
   public Collection<BwGroup> getGroups() {
     if (groups == null) {
-      groups = new TreeSet<BwGroup>();
+      groups = new TreeSet<>();
     }
     return groups;
   }
 
   /**
-   * @param val
+   * @param val info
    */
   public void setPrincipalInfo(final BwPrincipalInfo val) {
     principalInfo = val;
@@ -409,7 +402,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   @NoDump
   public Collection<String> getGroupNames() {
     if (groupNames == null) {
-      groupNames = new TreeSet<String>();
+      groupNames = new TreeSet<>();
       for (BwGroup group: getGroups()) {
         groupNames.add(group.getPrincipalRef());
       }
@@ -433,7 +426,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
   /** Add a principal to the ToString object
    *
-   * @param ts
+   * @param ts ToString object
    * @param name  tag
    * @param val   BwPrincipal
    */

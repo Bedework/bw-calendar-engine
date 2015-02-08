@@ -791,12 +791,21 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     return getProps(propertyPreferredGroup);
   }
 
+  /** Add a preferred group.
+   *
+   * @param href group href
+   */
+  @NoDump
+  public void addPreferredGroup(final String href) {
+    addProperty(new BwProperty(propertyPreferredGroup, href));
+  }
+
   /* ====================================================================
    *                   Convenience methods
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val - the view
    * @return boolean true if removed
    */
   public boolean addView(final BwView val) {

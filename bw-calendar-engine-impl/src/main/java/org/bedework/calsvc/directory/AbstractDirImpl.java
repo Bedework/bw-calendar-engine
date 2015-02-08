@@ -66,6 +66,8 @@ import java.io.LineNumberReader;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -665,13 +667,9 @@ public abstract class AbstractDirImpl implements Directories {
     }
 
     for (String root: toWho.keySet()) {
-      String pfx = root;
+      final String pfx = root;
       if (val.startsWith(pfx)) {
-        if (val.equals(pfx)) {
-          // It IS a root
-          return false;
-        }
-        return true;
+        return !val.equals(pfx);
       }
     }
 
@@ -717,7 +715,10 @@ public abstract class AbstractDirImpl implements Directories {
   @Override
   public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
     try {
-      final String uri = new URI(href).getPath();
+      final String uri =
+              URLDecoder.decode(new URI(
+                      URLEncoder.encode(href, "UTF-8")
+              ).getPath(), "UTF-8");
 
       if (!isPrincipal(uri)) {
         return null;
@@ -737,12 +738,12 @@ public abstract class AbstractDirImpl implements Directories {
 
         int whoType = toWho.get(prefix);
         String who = null;
-        start = prefix.length();
 
         if ((whoType == WhoDefs.whoTypeUser) ||
             (whoType == WhoDefs.whoTypeGroup)) {
           /* Strip off the principal prefix for real users.
            */
+          start = uri.lastIndexOf("/", uri.length() - 1) + 1;
           who = uri.substring(start, uri.length() - 1); // Remove trailing "/"
         } else {
           who = uri;
@@ -1136,7 +1137,7 @@ public abstract class AbstractDirImpl implements Directories {
 
   /** Add a principal we have validated.
    *
-   * @param href
+   * @param href principal href
    */
   protected void addValidPrincipal(final String href) {
     validPrincipals.put(href, href);

@@ -31,7 +31,7 @@ import java.util.TreeSet;
 /** An implementation of AdminGroups which stores the groups in the calendar
  * database.
  *
- * @author Mike Douglass douglm@bedework.edu
+ * @author Mike Douglass douglm@rpi.edu
  * @version 1.0
  */
 public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
@@ -74,13 +74,13 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
 
   @Override
   public Collection<BwGroup> getGroups(final BwPrincipal val) throws CalFacadeException {
-    return new TreeSet<BwGroup>(cb.getGroups(val, true));
+    return new TreeSet<>(cb.getGroups(val, true));
   }
 
   @Override
   public Collection<BwGroup> getAllGroups(final BwPrincipal val) throws CalFacadeException {
     Collection<BwGroup> groups = getGroups(val);
-    Collection<BwGroup> allGroups = new TreeSet<BwGroup>(groups);
+    Collection<BwGroup> allGroups = new TreeSet<>(groups);
 
     for (BwGroup adgrp: groups) {
 //      BwGroup grp = new BwGroup(adgrp.getAccount());

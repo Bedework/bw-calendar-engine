@@ -3858,13 +3858,18 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   /** Add a suggested to value.
    *
    * @param val suggested to object
+   * @return x-property added to event
    */
   @NoProxy
   @NoDump
   @NoWrap
-  public void addSuggested(final SuggestedTo val) {
-    addXproperty(new BwXproperty(BwXproperty.bedeworkSuggestedTo, null,
-                                 val.toString()));
+  public BwXproperty addSuggested(final SuggestedTo val) {
+    BwXproperty res = new BwXproperty(BwXproperty.bedeworkSuggestedTo,
+                                      null,
+                                      val.toString());
+    addXproperty(res);
+
+    return res;
   }
 
   /** Scheduling assistant?

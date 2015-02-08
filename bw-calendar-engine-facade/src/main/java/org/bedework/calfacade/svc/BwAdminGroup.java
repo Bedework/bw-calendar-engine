@@ -30,8 +30,6 @@ import org.bedework.util.misc.ToString;
 @Dump(elementName="adminGroup", keyFields={"account"},
       firstFields = {"account","principalRef"})
 public class BwAdminGroup extends BwGroup {
-  private String description;
-
   private String groupOwnerHref;
 
   private String ownerHref;
@@ -45,22 +43,6 @@ public class BwAdminGroup extends BwGroup {
   /* ====================================================================
    *                      Bean methods
    * ==================================================================== */
-
-  /** Set the description of the group.
-   *
-   * @param   val     String group description.
-   */
-  public void setDescription(final String val) {
-    description = val;
-  }
-
-  /** Return the description of the group.
-   *
-   * @return String        group description
-   */
-  public String getDescription() {
-    return description;
-  }
 
   /** Set the group owner.
    *
