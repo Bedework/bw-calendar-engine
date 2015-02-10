@@ -907,10 +907,10 @@ public abstract class SimpleFilterParser {
    */
   private void checkSub(final List<PropertyInfoIndex> pis,
                         final int depth) throws CalFacadeException {
-    if (depth != pis.size()) {
+    if (depth < pis.size()) {
       throw new CalFacadeException(CalFacadeException.filterBadProperty,
                                    listProps(pis) +
-                                   " source: " + source);
+                                   " (exceeds allowable depth) source: " + source);
     }
   }
 
