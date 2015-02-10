@@ -100,6 +100,9 @@ public class DocBuilder {
                           getJname(PropertyInfoIndex.EVENTREG_START));
     interestingXprops.put(BwXproperty.bedeworkEventRegEnd,
                           getJname(PropertyInfoIndex.EVENTREG_END));
+
+    interestingXprops.put(BwXproperty.bedeworkSuggestedTo,
+                          getJname(PropertyInfoIndex.SUGGESTED_TO));
   }
 
   /**
