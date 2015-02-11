@@ -679,6 +679,11 @@ public class DocBuilder {
         builder.startArray(interestingXprops.get(nm));
 
         for (final BwXproperty xp: props) {
+          if (xp.getName().equals(BwXproperty.bedeworkSuggestedTo)) {
+            builder.value(xp.getValue());
+            continue;
+          }
+
           String pars = xp.getPars();
           if (pars == null) {
             pars = "";
