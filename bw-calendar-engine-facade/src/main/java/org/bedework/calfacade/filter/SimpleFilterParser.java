@@ -936,12 +936,20 @@ public abstract class SimpleFilterParser {
 
     tm = new TextMatchType();
     tm.setValue(tokenizer.sval);
-    if (oper == notEqual) {
+    if ((oper == notEqual) ||
+            (oper == notLike)) {
       tm.setNegateCondition("yes");
     } else {
       tm.setNegateCondition("no");
     }
-    tm.setCollation("i;ascii-casemap");
+
+    if ((oper == notLike) || (oper == like)) {
+      // case insensitive
+      tm.setCollation("i;ascii-casemap");
+    } else {
+      // case sensitive
+      tm.setCollation("i;octet");
+    }
 
     return tm;
   }
