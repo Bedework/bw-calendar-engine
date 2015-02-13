@@ -70,7 +70,7 @@ public interface EventsI extends Serializable {
    *
    * @param  colPath   String collection path
    * @param name       String possible name
-   * @param recurRetrieval
+   * @param recurRetrieval mode for recurrences
    * @return EventInfo or null
    * @throws CalFacadeException
    */
@@ -159,7 +159,7 @@ public interface EventsI extends Serializable {
    * @param scheduling   True if this is to be added to an inbox - affects required
    *                     access.
    * @param autoCreateCollection - true if we should add a missing collection
-   * @param rollbackOnError
+   * @param rollbackOnError true to roll back if we get an error
    * @return UpdateResult Counts of changes.
    * @throws CalFacadeException
    */
@@ -198,7 +198,7 @@ public interface EventsI extends Serializable {
    *
    * <p>Otherwise we add an annotation maarking the event as deleted.
    *
-   * @param event
+   * @param event the event
    * @throws CalFacadeException
    */
   void markDeleted(BwEvent event) throws CalFacadeException;
