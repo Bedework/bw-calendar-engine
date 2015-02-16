@@ -60,7 +60,7 @@ public class BwAdminGroup extends BwGroup {
     return groupOwnerHref;
   }
 
-  /** Set the owner of the group.
+  /** Set the owner of the groups resources and entities.
    *
    * @param   val     String group event owner.
    */
@@ -68,7 +68,7 @@ public class BwAdminGroup extends BwGroup {
     ownerHref = val;
   }
 
-  /** Return the owner of the group.
+  /** Return the owner of the groups resources and entities.
    *
    * @return String        group owner
    */

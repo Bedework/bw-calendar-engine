@@ -30,7 +30,7 @@ import org.bedework.access.Acl.CurrentAccess;
  * share common data but have their own set of preferences associated with a
  * run-as user.
  *
- *  @author Mike Douglass douglm@bedework.edu
+ *  @author Mike Douglass douglm@rpi.edu
  *  @version 1.0
  */
 public class BwCalSuiteWrapper extends BwCalSuite
@@ -41,7 +41,7 @@ public class BwCalSuiteWrapper extends BwCalSuite
    */
   private CurrentAccess currentAccess;
 
-  /* Path to the calednar home of the owning principal
+  /* Path to the calendar home of the owning principal
    */
   private String resourcesHome;
 
@@ -54,7 +54,7 @@ public class BwCalSuiteWrapper extends BwCalSuite
 
   /** Constructor
    *
-   * @param entity
+   * @param entity the wrapped entity
    */
   public BwCalSuiteWrapper(final BwCalSuite entity) {
     super();
@@ -63,10 +63,11 @@ public class BwCalSuiteWrapper extends BwCalSuite
 
   /** Constructor
    *
-   * @param entity
-   * @param currentAccess
+   * @param entity the wrapped entity
+   * @param currentAccess access
    */
-  public BwCalSuiteWrapper(final BwCalSuite entity, final CurrentAccess currentAccess) {
+  public BwCalSuiteWrapper(final BwCalSuite entity,
+                           final CurrentAccess currentAccess) {
     super();
     this.entity = entity;
     this.currentAccess = currentAccess;
@@ -76,17 +77,11 @@ public class BwCalSuiteWrapper extends BwCalSuite
    *                   EntityWrapper methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.wrappers.EntityWrapper#putEntity(org.bedework.calfacade.base.BwDbentity)
-   */
   @Override
   public void putEntity(final BwCalSuite val) {
     entity = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.wrappers.EntityWrapper#fetchEntity()
-   */
   @Override
   public BwCalSuite fetchEntity() {
     return entity;
@@ -139,7 +134,7 @@ public class BwCalSuiteWrapper extends BwCalSuite
   }
 
   /**
-   * @param val
+   * @param val - true for public
    */
   @Override
   public void setPublick(final Boolean val) {
@@ -324,6 +319,17 @@ public class BwCalSuiteWrapper extends BwCalSuite
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */
+
+  @Override
+  public Object clone() {
+    final BwCalSuite cs = (BwCalSuite)entity.clone();
+    final BwCalSuiteWrapper csw = new BwCalSuiteWrapper(cs,
+                                                        getCurrentAccess());
+
+    csw.setResourcesHome(getResourcesHome());
+
+    return csw;
+  }
 
   @Override
   public int compareTo(final BwCalSuite that) {
