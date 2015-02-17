@@ -114,6 +114,10 @@ class Events extends CalSvcDb implements EventsI {
       num = res.size();
     }
 
+    if (num == 0) {
+      return res;
+    }
+
     getSvc().postNotification(new EntityFetchEvent(SysCode.ENTITY_FETCHED, num));
 
     if ((recurrenceId == null) &&

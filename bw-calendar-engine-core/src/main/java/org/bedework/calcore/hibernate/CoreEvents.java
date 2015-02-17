@@ -984,7 +984,11 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     final DelEventResult der = new DelEventResult(false, 0);
     BwEvent ev = ei.getEvent();
 
-    if (ev.unsaved()) {
+    final boolean isMaster = ev.testRecurring() && (ev.getRecurrenceId() == null);
+    final boolean isInstance = (ev.getRecurrenceId() != null) &&
+            (ev instanceof BwEventProxy);
+
+    if (!isInstance && ev.unsaved()) {
       final CoreEventInfo cei = getEvent(ev.getColPath(),
                                          ev.getName(),
                                          RecurringRetrievalMode.overrides);
@@ -1031,7 +1035,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       return der;
     }
 
-    if (ev.testRecurring() && (ev.getRecurrenceId() == null)) {
+    if (isMaster) {
       // Master event - delete all instances and overrides.
       deleteInstances(ev, new UpdateEventResult(), der, shared);
 
@@ -1051,15 +1055,26 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
       return der;
     }
 
-    if ((ev.getRecurrenceId() != null) &&
-        (ev instanceof BwEventProxy)) {
+    if (isInstance) {
       /* Deleting a single instance. Delete any overrides, delete the instance
        * and add an exdate to the master.
        */
 
       final BwEventProxy proxy = (BwEventProxy)ev;
       final BwEventAnnotation ann = proxy.getRef();
-      final BwEvent master = ann.getMaster();
+      BwEvent master = ann.getMaster();
+
+      if (master.unsaved()) {
+        final CoreEventInfo cei = getEvent(master.getColPath(),
+                                           master.getName(),
+                                           RecurringRetrievalMode.overrides);
+
+        if (cei == null) {
+          return der;
+        }
+
+        master = cei.getEvent();
+      }
 
       /* Fetch the instance so we can delete it */
       makeQuery(new String[]{"from ",
