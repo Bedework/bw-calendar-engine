@@ -84,6 +84,9 @@ public class Sharing extends CalSvcDb implements SharingI {
                                final BwCalendar col,
                                final ShareType share) throws CalFacadeException {
     try {
+      /* Switch identity to the sharer then reget the handler
+       * and do the share
+       */
       pushPrincipal(principalHref);
       return getSvc().getSharingHandler().share(col, share);
     } catch (final CalFacadeException cfe) {
@@ -95,6 +98,17 @@ public class Sharing extends CalSvcDb implements SharingI {
     }
   }
 
+  private final static class AddPrincipal {
+    final BwPrincipal pr;
+    final boolean forRead;
+
+    private AddPrincipal(final BwPrincipal pr,
+                         final boolean forRead) {
+      this.pr = pr;
+      this.forRead = forRead;
+    }
+  }
+
   @Override
   public ShareResultType share(final BwCalendar col,
                                final ShareType share) throws CalFacadeException {
@@ -103,9 +117,8 @@ public class Sharing extends CalSvcDb implements SharingI {
     }
 
     final ShareResultType sr = new ShareResultType();
-    final Acl acl = col.getCurrentAccess().getAcl();
-    final Holder<Acl> hacl = new Holder<>();
-    hacl.value = acl;
+    final List<String> removePrincipalHrefs = new ArrayList<>();
+    final List<AddPrincipal> addPrincipals = new ArrayList<>();
 
     final String calAddr = principalToCaladdr(getPrincipal());
 
@@ -120,11 +133,12 @@ public class Sharing extends CalSvcDb implements SharingI {
     /* If there are any removal elements in the invite, remove those
      * sharees. We'll flag hrefs as bad if they are not actually sharees.
      *
-     * If we do remove a sharees we'll add notifications to the list
+     * If we do remove a sharee we'll add notifications to the list
      * to send later.
      */
     for (final RemoveType rem: share.getRemove()) {
-      final InviteNotificationType n = doRemove(col, rem, hacl, calAddr, invite);
+      final InviteNotificationType n = doRemove(col, rem,
+                                                calAddr, invite);
 
       if (n != null) {
         removedSharee = true;
@@ -134,6 +148,7 @@ public class Sharing extends CalSvcDb implements SharingI {
           notifications.add(n);
         }
         sr.addGood(rem.getHref());
+        removePrincipalHrefs.add(rem.getHref());
       } else {
         sr.addBad(rem.getHref());
       }
@@ -142,7 +157,9 @@ public class Sharing extends CalSvcDb implements SharingI {
     /* Now deal with the added sharees if there are any.
      */
     for(final SetType set: share.getSet()) {
-      final InviteNotificationType n = doSet(col, set, hacl, calAddr, invite);
+      final InviteNotificationType n = doSet(col, set,
+                                             addPrincipals,
+                                             calAddr, invite);
 
       if (n != null) {
         addedSharee = true;
@@ -231,7 +248,13 @@ public class Sharing extends CalSvcDb implements SharingI {
       col.setQproperty(AppleServerTags.invite, invite.toXml());
       getCols().update(col);
 
-      getSvc().changeAccess(col, hacl.value.getAces(), true);
+      for (final String principalHref: removePrincipalHrefs) {
+        removeAccess(col, principalHref);
+      }
+
+      for (final AddPrincipal ap: addPrincipals) {
+        setAccess(col, ap);
+      }
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
@@ -377,21 +400,16 @@ public class Sharing extends CalSvcDb implements SharingI {
       throw new CalFacadeForbidden("Cannot publish");
     }
 
-    /* Set access to read for everybody */
-
-    final Acl acl = setAccess(col,
-                              null,
-                              WhoDefs.whoTypeAll,
-                              col.getCurrentAccess().getAcl(),
-                              true);  // Read access
-
     // Mark the collection as shared and published
     col.setQproperty(AppleServerTags.publishUrl, col.getPath());
 
     try {
       getCols().update(col);
 
-      getSvc().changeAccess(col, acl.getAces(), true);
+      /* Set access to read for everybody */
+
+      setAccess(col,
+                new AddPrincipal(null, true));
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
@@ -417,7 +435,6 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     try {
       getCols().update(col);
-
 
       if (acl != null) {
         getSvc().changeAccess(col, acl.getAces(), true);
@@ -722,15 +739,8 @@ public class Sharing extends CalSvcDb implements SharingI {
    */
   private InviteNotificationType doRemove(final BwCalendar col,
                                           final RemoveType rem,
-                                          final Holder<Acl> hacl,
                                           final String calAddr,
                                           final InviteType invite) throws CalFacadeException {
-    Acl acl = hacl.value;
-
-    if (acl == null) {
-      return null;
-    }
-
     final String href = getSvc().getDirectories().normalizeCua(rem.getHref());
 
     final UserType uentry = invite.finduser(href);
@@ -742,30 +752,62 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     invite.getUsers().remove(uentry);
 
+    final InviteNotificationType note =
+            deletedNotification(href, col.getPath(), calAddr);
+
+    note.setPreviousStatus(uentry.getInviteStatus());
+
+    removeAlias(col, uentry.getHref());
+
+    return note;
+  }
+
+  private boolean removeAccess(final BwCalendar col,
+                               final String principalHref) throws CalFacadeException {
+    Acl acl = col.getCurrentAccess().getAcl();
+
     try {
       if (Util.isEmpty(acl.getAces())) {
-        return null;
+        return false;
       }
 
-      final BwPrincipal pr = caladdrToPrincipal(href);
+      final BwPrincipal pr = caladdrToPrincipal(principalHref);
 
       acl = removeAccess(acl, pr.getAccount(), pr.getKind());
 
       if (acl == null) {
         // no change
-        return null;
+        return false;
       }
 
-      hacl.value = acl;
+      getSvc().changeAccess(col, acl.getAces(), true);
 
-      final InviteNotificationType note =
-              deletedNotification(href, col.getPath(), calAddr);
+      if (!col.getInternalAlias()) {
+        return true;
+      }
 
-      note.setPreviousStatus(uentry.getInviteStatus());
+      final BwCalendar target =
+              getSvc().getCalendarsHandler().resolveAlias(col,
+                                                          false,
+                                                          false);
 
-      removeAlias(col, uentry.getHref());
+      if (target == null) {
+        return false;
+      }
 
-      return note;
+      try {
+        /* Switch identity to the sharee then reget the handler
+       * and do the share
+       */
+        pushPrincipal(target.getOwnerHref());
+        return removeAccess(target, principalHref);
+      } catch (final CalFacadeException cfe) {
+        throw cfe;
+      } catch (final Throwable t) {
+        throw new CalFacadeException(t);
+      } finally {
+        popPrincipal();
+      }
     } catch (final AccessException ae) {
       throw new CalFacadeException(ae);
     }
@@ -820,7 +862,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
   private InviteNotificationType doSet(final BwCalendar col,
                                        final SetType s,
-                                       final Holder<Acl> hacl,
+                                       final List<AddPrincipal> addPrincipals,
                                        final String calAddr,
                                        final InviteType invite) throws CalFacadeException {
     final Sharee sh = getSharee(s.getHref());
@@ -859,16 +901,13 @@ public class Sharing extends CalSvcDb implements SharingI {
             }
 
             /* Delete the old notification - we're changing the access */
-            deleteInvite(sh.pr,n);
+            deleteInvite(sh.pr, n);
           }
         }
       }
 
-      hacl.value = setAccess(col,
-                             sh.pr.getAccount(),
-                             sh.pr.getKind(),
-                             hacl.value,
-                             s.getAccess().testRead());
+      addPrincipals.add(new AddPrincipal(sh.pr,
+                                         s.getAccess().testRead()));
     }
 
     final InviteNotificationType in = new InviteNotificationType();
@@ -946,18 +985,27 @@ public class Sharing extends CalSvcDb implements SharingI {
     readWritePrivs.add(scheduleDeliverPriv);
   }
 
-  private Acl setAccess(final BwCalendar col,
-                        final String whoHref,
-                        final int whoKind,
-                        final Acl theAcl,
-                        final boolean forRead) throws CalFacadeException {
+  private void setAccess(final BwCalendar col,
+                         final AddPrincipal ap) throws CalFacadeException {
     try {
-      Acl acl = theAcl;
+      final String whoHref;
+      final int whoKind;
+
+      if (ap.pr != null) {
+        whoHref = ap.pr.getPrincipalRef();
+        whoKind = ap.pr.getKind();
+      } else {
+        // Read to all
+        whoHref = null;
+        whoKind = WhoDefs.whoTypeAll;
+      }
+
+      Acl acl = col.getCurrentAccess().getAcl();
       final AceWho who = AceWho.getAceWho(whoHref, whoKind, false);
 
       final Collection<Privilege> desiredPriv;
 
-      if (forRead) {
+      if (ap.forRead) {
         desiredPriv = readPrivs;
       } else {
         desiredPriv = readWritePrivs;
@@ -1004,7 +1052,32 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       aces.add(Ace.makeAce(ownerWho, allPrivs, null));
 
-      return new Acl(aces);
+      getSvc().changeAccess(col, aces, true);
+
+      if (!col.getInternalAlias()) {
+        return;
+      }
+
+      final BwCalendar target =
+              getSvc().getCalendarsHandler().resolveAlias(col,
+                                                          false,
+                                                          false);
+
+      if (target != null) {
+        try {
+      /* Switch identity to the sharee then reget the handler
+       * and do the share
+       */
+          pushPrincipal(target.getOwnerHref());
+          setAccess(target, ap);
+        } catch (final CalFacadeException cfe) {
+          throw cfe;
+        } catch (final Throwable t) {
+          throw new CalFacadeException(t);
+        } finally {
+          popPrincipal();
+        }
+      }
     } catch (final AccessException ae) {
       throw new CalFacadeException(ae);
     }
