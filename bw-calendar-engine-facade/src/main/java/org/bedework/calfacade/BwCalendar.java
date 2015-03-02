@@ -1144,7 +1144,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /** Set the admin can create event properties flag for synch
    *
-   * @param val
+   * @param val if set the admin can create event properties during synch
    */
   public void setSynchAdminCreateEprops(final boolean val) {
     setProperty(BedeworkServerTags.synchAdminCreateEpropsProperty.getLocalPart(),
@@ -1159,6 +1159,25 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   public boolean getSynchAdminCreateEprops() {
     return Boolean.valueOf(getProperty(
             BedeworkServerTags.synchAdminCreateEpropsProperty.getLocalPart()));
+  }
+
+  /** Set the admin can create event properties flag for synch
+   *
+   * @param val if set the admin can create event properties during synch
+   */
+  public void setSynchXlocXcontacts(final boolean val) {
+    setProperty(BedeworkServerTags.synchXlocXcontacts.getLocalPart(),
+                String.valueOf(val));
+  }
+
+  /** Get the admin can create event properties flag for synch
+   *
+   * @return boolean on/off
+   */
+  @NoDump
+  public boolean getSynchXlocXcontacts() {
+    return Boolean.valueOf(getProperty(
+            BedeworkServerTags.synchXlocXcontacts.getLocalPart()));
   }
 
   /** Set the calendar timezone property

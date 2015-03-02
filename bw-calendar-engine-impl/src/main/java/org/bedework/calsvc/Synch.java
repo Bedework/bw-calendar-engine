@@ -196,6 +196,10 @@ class Synch extends CalSvcDb implements SynchI {
 
     aos.getProperty().add(makeSynchProperty("alarm-processing", "REMOVE"));
     aos.getProperty().add(makeSynchProperty("scheduling-processing", "REMOVE"));
+    if (val.getSynchXlocXcontacts()) {
+      aos.getProperty().add(makeSynchProperty("xlocxcontacts",
+                                              "true"));
+    }
 
     final SubscribeResponseType sresp =
             getPort(synchConf.getManagerUri()).subscribe(
