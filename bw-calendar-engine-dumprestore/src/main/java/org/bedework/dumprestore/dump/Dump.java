@@ -89,11 +89,17 @@ public class Dump implements Defs {
   }
 
   /**
+   * @param noOutput  we don't intend doing any output (extsubs)
    * @throws Throwable
    */
-  public void open() throws Throwable {
+  public void open(final boolean noOutput) throws Throwable {
     globals.svci.open();
     globals.di = globals.svci.getDumpHandler();
+
+    if (noOutput) {
+      return;
+    }
+
     boolean error = false;
 
     if (fileName == null) {
