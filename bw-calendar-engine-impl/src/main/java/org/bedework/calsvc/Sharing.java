@@ -83,11 +83,12 @@ public class Sharing extends CalSvcDb implements SharingI {
   public ShareResultType share(final String principalHref,
                                final BwCalendar col,
                                final ShareType share) throws CalFacadeException {
+    /* Switch identity to the sharer then reget the handler
+     * and do the share
+     */
+    pushPrincipal(principalHref);
+
     try {
-      /* Switch identity to the sharer then reget the handler
-       * and do the share
-       */
-      pushPrincipal(principalHref);
       return getSvc().getSharingHandler().share(col, share);
     } catch (final CalFacadeException cfe) {
       throw cfe;
@@ -563,8 +564,9 @@ public class Sharing extends CalSvcDb implements SharingI {
     final String sharerHref = shared.getOwnerHref();
     final BwPrincipal sharee = getSvc().getPrincipal();
 
+    pushPrincipal(sharerHref);
+
     try {
-      pushPrincipal(sharerHref);
 
       /* Get the invite property and locate and update this sharee */
 
@@ -657,8 +659,9 @@ public class Sharing extends CalSvcDb implements SharingI {
                                       final String path,
                                       final InviteReplyType reply,
                                       final Holder<AccessType> access) throws CalFacadeException {
+    pushPrincipal(sharerHref);
+
     try {
-      pushPrincipal(sharerHref);
       final BwCalendar col = getCols().get(path);
 
       if (col == null) {
@@ -795,11 +798,12 @@ public class Sharing extends CalSvcDb implements SharingI {
         return false;
       }
 
-      try {
-        /* Switch identity to the sharee then reget the handler
+      /* Switch identity to the sharee then reget the handler
        * and do the share
        */
-        pushPrincipal(target.getOwnerHref());
+      pushPrincipal(target.getOwnerHref());
+
+      try {
         return removeAccess(target, principalHref);
       } catch (final CalFacadeException cfe) {
         throw cfe;
@@ -1064,11 +1068,11 @@ public class Sharing extends CalSvcDb implements SharingI {
                                                           false);
 
       if (target != null) {
+        /* Switch identity to the sharee then reget the handler
+         * and do the share
+         */
+        pushPrincipal(target.getOwnerHref());
         try {
-      /* Switch identity to the sharee then reget the handler
-       * and do the share
-       */
-          pushPrincipal(target.getOwnerHref());
           setAccess(target, ap);
         } catch (final CalFacadeException cfe) {
           throw cfe;
@@ -1098,9 +1102,9 @@ public class Sharing extends CalSvcDb implements SharingI {
 
   private void removeAlias(final BwCalendar col,
                            final String shareeHref) throws CalFacadeException {
-    try {
-      pushPrincipal(shareeHref);
+    pushPrincipal(shareeHref);
 
+    try {
       final List<BwCalendar> cols =
               ((Calendars)getCols()).findUserAlias(col.getPath());
 
