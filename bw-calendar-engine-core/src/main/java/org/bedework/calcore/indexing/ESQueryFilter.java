@@ -633,6 +633,10 @@ public class ESQueryFilter implements CalintfDefs {
     for (FilterBase f: fs) {
       FilterBuilder fb = makeFilter(f);
 
+      if (fb == null) {
+        continue;
+      }
+
       if (lastFb == null) {
         if (!(fb instanceof TermOrTerms)) {
           fbs.add(fb);
