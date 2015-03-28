@@ -130,11 +130,20 @@ public class DumpGlobals extends Counters {
    */
   public void close() throws CalFacadeException {
     try {
-      xml.flush();
-      out.close();
+      if (xml != null) {
+        xml.flush();
+      }
+      if (out != null) {
+        out.close();
+      }
 
-      aliasesXml.flush();
-      aliasesOut.close();
+      if (aliasesXml != null) {
+        aliasesXml.flush();
+      }
+
+      if (aliasesOut != null) {
+        aliasesOut.close();
+      }
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }

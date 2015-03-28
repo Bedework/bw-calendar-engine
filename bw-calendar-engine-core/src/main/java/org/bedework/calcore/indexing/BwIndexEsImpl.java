@@ -1522,22 +1522,18 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   private boolean deleteEvent(final EventInfo ei) throws CalFacadeException {
-    final BwEvent ev = ei.getEvent();
+    return deleteEvent(ei.getEvent().getHref());
+  }
 
+  private boolean deleteEvent(final String href) throws CalFacadeException {
     final DeleteByQueryRequestBuilder delQreq =
             getClient().prepareDeleteByQuery(targetIndex).
                     setTypes(docTypeEvent,docTypePoll);
 
     final ESQueryFilter esq= getFilters(null);
 
-    /*
-    FilterBuilder fb = esq.addTerm(null, PropertyInfoIndex.COLLECTION,
-                                   ev.getColPath());
-    fb = esq.addTerm(fb, PropertyInfoIndex.UID, ev.getUid());
-    */
-
     final FilterBuilder fb = esq.addTerm(PropertyInfoIndex.HREF,
-                                         ev.getHref());
+                                         href);
 
     delQreq.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(),
                                                  fb));
@@ -1548,8 +1544,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
     for (final IndexDeleteByQueryResponse idqr: delResp.getIndices().values()) {
       if (idqr.getFailedShards() > 0) {
-        warn("Failing shards for recurrence delete uid: " + ev.getUid() +
-                     " colPath: " + ev.getColPath() +
+        warn("Failing shards for delete href: " + href +
                      " index: " + idqr.getIndex());
 
         ok = false;

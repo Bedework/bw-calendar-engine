@@ -28,7 +28,6 @@ import org.bedework.calfacade.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.CalFacadeDefs;
-import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -523,17 +522,13 @@ class Calendars extends CalSvcDb implements CalendarsI {
      */
     if (!val.getInternalAlias() && emptyIt) {
       if (val.getCalendarCollection()) {
-        for (final EventInfo ei: getSvc().getEventsHandler().
-                getEvents(val,
-                          null,
-                          null,
-                          null,
-                          null, // retrieveList
-                          RecurringRetrievalMode.overrides)) {
-          ((Events)getSvc().getEventsHandler()).delete(ei,
-                                                       false,
-                                                       sendSchedulingMessage,
-                                                       true);
+        final Events events = ((Events)getSvc().getEventsHandler());
+        for (final EventInfo ei: events.getSynchEvents(val.getPath(),
+                                                       null)) {
+          events.delete(ei,
+                        false,
+                        sendSchedulingMessage,
+                        true);
         }
       }
 

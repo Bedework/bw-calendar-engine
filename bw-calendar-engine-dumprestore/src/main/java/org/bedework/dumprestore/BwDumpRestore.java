@@ -180,12 +180,12 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
           d.setFilename(makeFilename(getDataOutPrefix()));
           d.setAliasesFilename(makeFilename("aliases-" + getDataOutPrefix()));
 
-          d.open();
+          d.open(false);
 
           d.doDump();
         } else {
           infoLines.addLn("Started search for external subscriptions");
-          d.open();
+          d.open(true);
 
           d.doExtSubs();
         }
