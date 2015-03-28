@@ -517,8 +517,8 @@ public class BwUpdates {
    */
   private UpdateResult updateEventsProperties(final List<EventInfo> eis,
                                          final PropertiesSelectionType sel) throws WebdavException {
-    for (EventInfo ei: eis) {
-      UpdateResult ur = updateEventProperties(ei, null, sel);
+    for (final EventInfo ei: eis) {
+      final UpdateResult ur = updateEventProperties(ei, null, sel);
       if (!ur.getOk()) {
         return ur;
       }
@@ -545,7 +545,7 @@ public class BwUpdates {
     /* First deal with all the changes
      */
 
-    for (PropertySelectionType psel: sel.getProperty()) {
+    for (final PropertySelectionType psel: sel.getProperty()) {
       /* psel represents a selection on a property which must exist and for
        * which we must have an updater.
        *
@@ -553,8 +553,8 @@ public class BwUpdates {
        * updating the parameters through one or more a selections on the
        * parameters.
        */
-      BasePropertyType bprop;
-      QName pname;
+      final BasePropertyType bprop;
+      final QName pname;
 
       if (psel.getBaseProperty() == null) {
         return new UpdateResult("No selection property supplied");
@@ -563,7 +563,7 @@ public class BwUpdates {
       bprop = psel.getBaseProperty().getValue();
       pname = psel.getBaseProperty().getName();
 
-      PropertyUpdater pu = getUpdater(bprop);
+      final PropertyUpdater pu = getUpdater(bprop);
       if (pu == null) {
         return new UpdateResult("No updater for property: " + pname);
       }
@@ -1085,6 +1085,11 @@ public class BwUpdates {
 
     @Override
     public ChangeTableEntry getCte() {
+      return chg.getEntry(pi);
+    }
+
+    @Override
+    public ChangeTableEntry getCte(final PropertyInfoIndex pi) {
       return chg.getEntry(pi);
     }
 

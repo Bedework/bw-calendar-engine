@@ -37,6 +37,7 @@ import ietf.params.xml.ns.icalendar_2.TextPropertyType;
  * @author douglm
  *
  */
+@SuppressWarnings("UnusedDeclaration")
 public class LocationPropUpdater implements PropertyUpdater {
   @Override
   public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {

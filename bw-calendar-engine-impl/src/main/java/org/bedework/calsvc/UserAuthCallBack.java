@@ -45,24 +45,19 @@ public class UserAuthCallBack extends UserAuth.CallBack {
     return svci.getUserAuth();
   }
 
-  /** Delete the entry
-   *
-   * @param val
-   * @throws CalFacadeException
-   */
   @Override
   public void delete(final BwAuthUser val) throws CalFacadeException {
     svci.getCal().delete(val);
   }
 
-  /** Save a new entry or update an existing entry
-   *
-   * @param val
-   * @throws CalFacadeException
-   */
   @Override
-  public void saveOrUpdate(final BwAuthUser val) throws CalFacadeException {
-    svci.getCal().saveOrUpdate(val);
+  public void add(final BwAuthUser val) throws CalFacadeException {
+    svci.getCal().addAuthUser(val);
+  }
+
+  @Override
+  public void update(final BwAuthUser val) throws CalFacadeException {
+    svci.getCal().updateAuthUser(val);
   }
 
   @Override

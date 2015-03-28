@@ -103,6 +103,11 @@ public class SAICalCallback implements IcalCallback {
   }
 
   @Override
+  public BwLocation getLocation(final BwString address) throws CalFacadeException {
+    return null;
+  }
+
+  @Override
   public BwLocation findLocation(final BwString address) throws CalFacadeException {
     return null;
   }

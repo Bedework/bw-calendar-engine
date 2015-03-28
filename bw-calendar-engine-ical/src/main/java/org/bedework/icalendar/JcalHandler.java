@@ -90,7 +90,7 @@ public class JcalHandler implements Serializable {
                              final IcalendarType pattern,
                              final EventTimeZonesRegistry tzreg) throws CalFacadeException {
     try {
-      JsonGenerator jgen = jsonFactory.createJsonGenerator(wtr);
+      JsonGenerator jgen = jsonFactory.createGenerator(wtr);
 
       if (Logger.getLogger(JcalHandler.class).isDebugEnabled()) {
         jgen.useDefaultPrettyPrinter();

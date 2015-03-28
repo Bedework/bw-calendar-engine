@@ -54,6 +54,9 @@ import ietf.params.xml.ns.icalendar_2.TriggerPropType;
 import ietf.params.xml.ns.icalendar_2.UidPropType;
 import ietf.params.xml.ns.icalendar_2.UrlPropType;
 import ietf.params.xml.ns.icalendar_2.VersionPropType;
+import ietf.params.xml.ns.icalendar_2.XBwCategoriesPropType;
+import ietf.params.xml.ns.icalendar_2.XBwContactPropType;
+import ietf.params.xml.ns.icalendar_2.XBwLocationPropType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -229,6 +232,11 @@ public class PropertyUpdaterRegistry {
     immutableProp(ActionPropType.class);
     standardPropUpdater(RepeatPropType.class, "RepeatPropUpdater");
     standardPropUpdater(TriggerPropType.class, "TriggerPropUpdater");
+
+    /* ==== public event synch x-properties ==== */
+    standardPropUpdater(XBwCategoriesPropType.class, "XbwCategoryPropUpdater");
+    standardPropUpdater(XBwContactPropType.class, "XbwContactPropUpdater");
+    standardPropUpdater(XBwLocationPropType.class, "XbwLocPropUpdater");
 
     /* All classes
     standardPropUpdater(AttachPropType.class, "AttachPropUpdater");

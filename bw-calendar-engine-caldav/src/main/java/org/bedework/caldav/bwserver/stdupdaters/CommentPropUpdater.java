@@ -35,21 +35,22 @@ import java.util.Set;
  * @author douglm
  *
  */
+@SuppressWarnings("UnusedDeclaration")
 public class CommentPropUpdater implements PropertyUpdater {
   public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
-    ChangeTableEntry cte = ui.getCte();
-    BwEvent ev = ui.getEvent();
+    final ChangeTableEntry cte = ui.getCte();
+    final BwEvent ev = ui.getEvent();
 
-    Set<BwString> comments = ev.getComments();
+    final Set<BwString> comments = ev.getComments();
 
-    BwString cstr = new BwString(UpdaterUtil.getLang(ui.getProp()),
+    final BwString cstr = new BwString(UpdaterUtil.getLang(ui.getProp()),
                                  ((TextPropertyType)ui.getProp()).getText());
 
     if (ui.isAdd()) {
       if (Util.isEmpty(comments)) {
         ev.addComment(cstr);
       } else {
-        for (BwString s: comments) {
+        for (final BwString s: comments) {
           if (s.equals(cstr)) {
             // Already there
             return UpdateResult.getOkResult();
@@ -83,11 +84,11 @@ public class CommentPropUpdater implements PropertyUpdater {
         return new UpdateResult("No comment to change");
       }
 
-      for (BwString s: comments) {
+      for (final BwString s: comments) {
         if (s.equals(cstr)) {
           // Found
 
-          BwString newcstr = new BwString(UpdaterUtil.getLang(ui.getUpdprop()),
+          final BwString newcstr = new BwString(UpdaterUtil.getLang(ui.getUpdprop()),
                                           ((TextPropertyType)ui.getUpdprop()).getText());
 
           if (s.update(newcstr)) {

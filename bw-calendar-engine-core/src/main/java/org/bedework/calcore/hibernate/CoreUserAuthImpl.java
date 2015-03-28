@@ -30,17 +30,17 @@ import java.util.List;
 
 /** Implementation of UserAuthI that handles Bedwork DB tables for authorisation.
  *
- * @author Mike Douglass    douglm@bedework.edu
+ * @author Mike Douglass    douglm@rpi.edu
  * @version 1.0
  */
 public class CoreUserAuthImpl extends CalintfHelperHib implements CoreUserAuthI {
   /** Constructor
    *
-   * @param chcb
-   * @param cb
-   * @param access
-   * @param currentMode
-   * @param sessionless
+   * @param chcb helper
+   * @param cb calback
+   * @param access access util
+   * @param currentMode how we are running
+   * @param sessionless true for sessionless
    */
   public CoreUserAuthImpl(final CalintfHelperHibCb chcb,
                           final Callback cb,

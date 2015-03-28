@@ -1311,8 +1311,18 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
    * ==================================================================== */
 
   @Override
+  public void addAuthUser(final BwAuthUser val) throws CalFacadeException {
+    userauth.addAuthUser(val);
+  }
+
+  @Override
   public BwAuthUser getAuthUser(final String href) throws CalFacadeException {
     return userauth.getAuthUser(href);
+  }
+
+  @Override
+  public void updateAuthUser(final BwAuthUser val) throws CalFacadeException {
+    userauth.updateAuthUser(val);
   }
 
   @Override
@@ -1324,7 +1334,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
    *                       principals + prefs
    * ==================================================================== */
 
-  private static String getPrincipalQuery =
+  private final static String getPrincipalQuery =
     "from " + BwUser.class.getName() +
       " as u where u.principalRef = :href";
 

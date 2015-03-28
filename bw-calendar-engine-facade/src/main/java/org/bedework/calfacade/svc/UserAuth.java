@@ -87,12 +87,19 @@ public interface UserAuth extends Serializable {
      */
     public abstract void delete(final BwAuthUser val) throws CalFacadeException;
 
-    /** Save a new entry or update an existing entry
+    /** Save a new entry
      *
      * @param val the authuser object
      * @throws CalFacadeException
      */
-    public abstract void saveOrUpdate(final BwAuthUser val) throws CalFacadeException;
+    public abstract void add(final BwAuthUser val) throws CalFacadeException;
+
+    /** Update an existing entry
+     *
+     * @param val the authuser object
+     * @throws CalFacadeException
+     */
+    public abstract void update(final BwAuthUser val) throws CalFacadeException;
 
     /**
      * @param href - principal href for the entry
@@ -125,7 +132,7 @@ public interface UserAuth extends Serializable {
    * @param  cb        CallBack object
    * @exception CalFacadeException If there's a problem
    */
-  public void initialise(CallBack cb) throws CalFacadeException;
+  void initialise(CallBack cb) throws CalFacadeException;
 
   /** ===================================================================
    *  The following should not change the state of the current users
@@ -141,14 +148,21 @@ public interface UserAuth extends Serializable {
    *
    * @return boolean    true if user maintenance is implemented.
    */
-  public boolean getUserMaintOK();
+  boolean getUserMaintOK();
+
+  /** Add the user entry
+   *
+   * @param  val      AuthUserVO users entry
+   * @throws CalFacadeException
+   */
+  void addUser(BwAuthUser val) throws CalFacadeException;
 
   /** Update the user entry
    *
    * @param  val      AuthUserVO users entry
    * @throws CalFacadeException
    */
-  public void updateUser(BwAuthUser val) throws CalFacadeException;
+  void updateUser(BwAuthUser val) throws CalFacadeException;
 
   /** Return the given authorised user. Will always return an entry (except for
    * exceptional conditions.) An unauthorised user will have a usertype of
@@ -165,5 +179,5 @@ public interface UserAuth extends Serializable {
    * @return Collection      of BwAuthUser for users with any special authorisation.
    * @throws CalFacadeException
    */
-  public Collection<BwAuthUser> getAll() throws CalFacadeException;
+  Collection<BwAuthUser> getAll() throws CalFacadeException;
 }

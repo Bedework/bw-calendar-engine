@@ -64,9 +64,16 @@ public class UserAuthUWDbImpl implements UserAuth {
    *  access which is set and retrieved with the above methods.
    *  =================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.svc.UserAuth#getUserMaintOK()
-   */
+  @Override
+  public void addUser(final BwAuthUser val) throws CalFacadeException {
+    if (val.isUnauthorized()) {
+      // We don't need an entry for a user with no special rights
+      return;
+    }
+
+    cb.add(val);
+  }
+
   @Override
   public boolean getUserMaintOK() {
     return true;
@@ -81,7 +88,7 @@ public class UserAuthUWDbImpl implements UserAuth {
       return;
     }
 
-    cb.saveOrUpdate(val);
+    cb.update(val);
   }
 
   @Override

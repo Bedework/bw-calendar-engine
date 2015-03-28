@@ -1616,21 +1616,20 @@ public class CalSvc extends CalSvcI {
       return getLocationsHandler().get(uid);
     }
 
-    /* (non-Javadoc)
-     * @see org.bedework.icalendar.IcalCallback#findLocation(org.bedework.calfacade.BwString)
-     */
+    @Override
+    public BwLocation getLocation(final BwString address) throws CalFacadeException {
+      return getLocationsHandler().findPersistent(address);
+    }
+
     @Override
     public BwLocation findLocation(final BwString address) throws CalFacadeException {
-      BwLocation loc = BwLocation.makeLocation();
+      final BwLocation loc = BwLocation.makeLocation();
       loc.setAddress(address);
 
       return getLocationsHandler().ensureExists(loc,
                                                 getOwner().getPrincipalRef()).entity;
     }
 
-    /* (non-Javadoc)
-     * @see org.bedework.icalendar.IcalCallback#addLocation(org.bedework.calfacade.BwLocation)
-     */
     @Override
     public void addLocation(final BwLocation val) throws CalFacadeException {
       getLocationsHandler().add(val);

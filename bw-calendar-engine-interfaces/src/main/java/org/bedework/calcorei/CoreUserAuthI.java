@@ -26,16 +26,28 @@ import java.util.List;
 
 /** Handle db interactions for user authorisation.
  *
- * @author Mike Douglass    douglm@bedework.edu
+ * @author Mike Douglass    douglm@rpi.edu
  * @version 1.0
  */
 public interface CoreUserAuthI {
+  /**
+   * @param val auth user object
+   * @throws CalFacadeException
+   */
+  void addAuthUser(BwAuthUser val) throws CalFacadeException;
+
   /**
    * @param href - principal href for the entry
    * @return auth user with preferences or null
    * @throws CalFacadeException
    */
   BwAuthUser getAuthUser(final String href) throws CalFacadeException;
+
+  /**
+   * @param val auth user object
+   * @throws CalFacadeException
+   */
+  void updateAuthUser(BwAuthUser val) throws CalFacadeException;
 
   /**
    * @return list of all auth user entries

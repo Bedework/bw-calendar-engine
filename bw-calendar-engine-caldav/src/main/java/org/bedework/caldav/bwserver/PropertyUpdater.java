@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.icalendar.IcalCallback;
+import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.XcalUtil.TzGetter;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
@@ -145,16 +146,21 @@ public interface PropertyUpdater {
      */
     public ChangeTableEntry getCte();
 
+    /**
+     * @return a change table entry for the given property
+     */
+    public ChangeTableEntry getCte(PropertyIndex.PropertyInfoIndex pi);
+
     /** Allows saving of arbitrary state information. The state is global to
      * the whole update process - not just the current update.
      *
-     * @param name
-     * @param val
+     * @param name of state
+     * @param val object to save
      */
     public void saveState(String name, Object val);
 
     /**
-     * @param name
+     * @param name of state
      * @return state-info
      */
     public Object getState(String name);

@@ -33,7 +33,7 @@ import java.util.Collection;
 /** Allow the translation process to retrieve objects and information it might
  * need from the system.
  *
- * @author Mike Douglass douglm@bedework.edu
+ * @author Mike Douglass douglm@rpi.edu
  * @version 1.0
  */
 public interface IcalCallback extends Serializable {
@@ -136,6 +136,14 @@ public interface IcalCallback extends Serializable {
    * @throws CalFacadeException
    */
   BwLocation getLocation(String uid) throws CalFacadeException;
+
+  /** Get the location with the given address.
+   *
+   * @param address to find
+   * @return Location object or null if not found
+   * @throws CalFacadeException
+   */
+  BwLocation getLocation(BwString address) throws CalFacadeException;
 
   /** Find the location given the address.
    *

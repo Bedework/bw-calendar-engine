@@ -200,6 +200,10 @@ class Synch extends CalSvcDb implements SynchI {
       aos.getProperty().add(makeSynchProperty("xlocxcontacts",
                                               "true"));
     }
+    if (val.getSynchXcategories()) {
+      aos.getProperty().add(makeSynchProperty("xcategories",
+                                              "true"));
+    }
 
     final SubscribeResponseType sresp =
             getPort(synchConf.getManagerUri()).subscribe(

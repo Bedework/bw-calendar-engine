@@ -2240,7 +2240,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
       if (!Util.isEmpty(overrides)) {
         for (BwEventProxy pxy: overrides) {
-          BwEventAnnotation ann = pxy.getRef();
+          final BwEventAnnotation ann = pxy.getRef();
 
           if (!ann.getRecurrenceId().equals(ri.getRecurrenceId())) {
             continue;

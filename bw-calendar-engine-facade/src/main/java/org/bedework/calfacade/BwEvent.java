@@ -1355,6 +1355,30 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                   journalProperty = true,
                   freeBusyProperty = true,
                   timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.X_BEDEWORK_CONTACT,
+                  jname = "xbwcontact",
+                  adderName = "xproperty",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.X_BEDEWORK_LOCATION,
+                  jname = "xbwlocation",
+                  adderName = "xproperty",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.X_BEDEWORK_CATEGORIES,
+                  jname = "xbwcategories",
+                  adderName = "xproperty",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
     @IcalProperty(pindex = PropertyInfoIndex.EVENTREG_END,
                   jname = "eventregEnd",
                   eventProperty = true,
@@ -1504,7 +1528,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public List<BwXproperty> getXproperties(final String val) {
-    final List<BwXproperty> res = new ArrayList<BwXproperty>();
+    final List<BwXproperty> res = new ArrayList<>();
     final List<BwXproperty> xs = getXproperties();
     if (xs == null) {
       return res;

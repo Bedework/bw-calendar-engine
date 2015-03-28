@@ -193,6 +193,16 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   public final static String pollItemId = "X-BW-POLL-ITEMID";
 
   /* ====================================================================
+   *                        Synch properties
+   * ==================================================================== */
+
+  public final static String xBedeworkCategories = "X-BEDEWORK-CATEGORIES";
+
+  public final static String xBedeworkLocation = "X-BEDEWORK-LOCATION";
+
+  public final static String xBedeworkContact = "X-BEDEWORK-CONTACT";
+
+  /* ====================================================================
    *                        Misc properties
    * ==================================================================== */
 
@@ -308,7 +318,10 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   public BwXproperty(final String name, final String pars, final String value) {
     super();
     this.name = name;
-    this.pars = pars;
+
+    if ((pars != null) && (pars.length() > 0)) {
+      this.pars = pars;
+    }
     this.value = value;
   }
 
@@ -368,7 +381,11 @@ public class BwXproperty extends BwDbentity<BwXproperty>
    * @param val    String pars
    */
   public void setPars(final String val) {
-    pars = val;
+    if ((pars != null) && (pars.length() > 0)) {
+      pars = val;
+    } else {
+      pars = null;
+    }
     parameters = null;
   }
 

@@ -40,6 +40,10 @@ import ietf.params.xml.ns.icalendar_2.XBedeworkMaxTicketsPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkRegistrationEndPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkRegistrationStartPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkUidParamType;
+import ietf.params.xml.ns.icalendar_2.XBwCategoriesPropType;
+import ietf.params.xml.ns.icalendar_2.XBwContactPropType;
+import ietf.params.xml.ns.icalendar_2.XBwLocationPropType;
+import net.fortuna.ical4j.model.NumberList;
 import net.fortuna.ical4j.model.NumberList;
 import org.apache.log4j.Logger;
 
@@ -56,7 +60,6 @@ import javax.xml.bind.JAXBElement;
  */
 public class Xutil {
   protected static ObjectFactory of = new ObjectFactory();
-
 
   protected static void listFromNumberList(final List<String> l,
                                            final NumberList nl) {
@@ -330,7 +333,48 @@ public class Xutil {
         continue;
       }
 
-      continue;
+      if (xname.equals(BwXproperty.xBedeworkCategories)) {
+        if (!emit(pattern, masterClass, XBwCategoriesPropType.class)) {
+          continue;
+        }
+
+        XBwCategoriesPropType p = new XBwCategoriesPropType();
+
+        p.getText().add(val);
+
+        pl.add(of.createXBedeworkCategories(p));
+        continue;
+      }
+
+      if (xname.equals(BwXproperty.xBedeworkContact)) {
+        if (!emit(pattern, masterClass, XBwContactPropType.class)) {
+          continue;
+        }
+
+        XBwContactPropType p = new XBwContactPropType();
+
+        p.setText(val);
+
+        pl.add(of.createXBedeworkContact(p));
+        continue;
+      }
+
+      if (xname.equals(BwXproperty.xBedeworkLocation)) {
+        if (!emit(pattern, masterClass, XBwLocationPropType.class)) {
+          continue;
+        }
+
+        final XBwLocationPropType p = new XBwLocationPropType();
+
+        p.setText(val);
+
+        pl.add(of.createXBedeworkLocation(p));
+        continue;
+      }
+
+      if (getLog().isDebugEnabled()) {
+        warn("Not handing x-property " + xname);
+      }
     }
   }
 
