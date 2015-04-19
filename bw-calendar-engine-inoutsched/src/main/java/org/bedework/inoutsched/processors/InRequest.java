@@ -28,7 +28,7 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwFreeBusyComponent;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwOrganizer;
-import org.bedework.calfacade.BwPreferences;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.configs.AuthProperties;

@@ -18,7 +18,7 @@
 */
 package org.bedework.dumprestore.restore;
 
-import org.bedework.calfacade.BwAuthUser;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.svc.BwAdminGroup;

@@ -19,7 +19,7 @@
 
 package org.bedework.calcorei;
 
-import org.bedework.calfacade.BwAuthUser;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.util.List;

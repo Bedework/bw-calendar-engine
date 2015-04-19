@@ -126,7 +126,7 @@ class Synch extends CalSvcDb implements SynchI {
   public boolean subscribe(final BwCalendar val) throws CalFacadeException {
     final SConnection sconn = (SConnection)getSynchConnection();
 
-    if (sconn == null) {
+    if ((sconn == null) || (sconn.sc == null)) {
       throw new CalFacadeException("No active synch connection");
     }
 

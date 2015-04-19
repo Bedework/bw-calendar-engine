@@ -22,7 +22,7 @@ import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.calfacade.BwGroup;
-import org.bedework.calfacade.BwPreferences;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;

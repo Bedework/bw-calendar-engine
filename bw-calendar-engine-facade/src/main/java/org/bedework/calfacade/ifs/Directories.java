@@ -19,7 +19,7 @@
 package org.bedework.calfacade.ifs;
 
 import org.bedework.calfacade.BwGroup;
-import org.bedework.calfacade.BwPreferences;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.DirectoryInfo;

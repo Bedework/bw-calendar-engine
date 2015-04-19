@@ -19,7 +19,7 @@
 
 package org.bedework.dumprestore.restore.rules;
 
-import org.bedework.calfacade.BwAuthUser;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
 import org.bedework.calfacade.svc.prefs.CalendarPref;
 import org.bedework.calfacade.svc.prefs.CategoryPref;

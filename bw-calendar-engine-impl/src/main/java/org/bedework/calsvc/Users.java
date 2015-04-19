@@ -20,7 +20,7 @@ package org.bedework.calsvc;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwGroup;
-import org.bedework.calfacade.BwPreferences;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.DirectoryInfo;

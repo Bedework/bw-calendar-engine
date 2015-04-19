@@ -18,7 +18,7 @@
 */
 package org.bedework.calsvci;
 
-import org.bedework.calfacade.BwPreferences;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 

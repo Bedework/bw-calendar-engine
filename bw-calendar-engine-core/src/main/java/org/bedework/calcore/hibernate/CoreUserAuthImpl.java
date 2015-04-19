@@ -22,7 +22,7 @@ package org.bedework.calcore.hibernate;
 import org.bedework.calcore.AccessUtil;
 import org.bedework.calcorei.CoreUserAuthI;
 import org.bedework.calcorei.HibSession;
-import org.bedework.calfacade.BwAuthUser;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
 

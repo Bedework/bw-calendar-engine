@@ -20,7 +20,7 @@ package org.bedework.calsvc.directory;
 
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.WhoDefs;
-import org.bedework.calfacade.BwPreferences;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwPrincipalInfo.BooleanPrincipalProperty;

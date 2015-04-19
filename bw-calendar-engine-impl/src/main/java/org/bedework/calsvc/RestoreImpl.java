@@ -19,14 +19,13 @@
 package org.bedework.calsvc;
 
 import org.bedework.access.PrivilegeDefs;
-import org.bedework.access.PrivilegeSet;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
 import org.bedework.caldav.util.sharing.AccessType;
 import org.bedework.caldav.util.sharing.InviteType;
 import org.bedework.caldav.util.sharing.UserType;
-import org.bedework.calfacade.BwAuthUser;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -35,7 +34,7 @@ import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.BwPreferences;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;

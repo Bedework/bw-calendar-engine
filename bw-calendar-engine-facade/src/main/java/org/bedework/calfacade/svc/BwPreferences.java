@@ -16,14 +16,14 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calfacade;
+package org.bedework.calfacade.svc;
 
+import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.PropertiesEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;

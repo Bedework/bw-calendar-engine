@@ -18,7 +18,6 @@
 */
 package org.bedework.calfacade.svc;
 
-import org.bedework.calfacade.BwAuthUser;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 

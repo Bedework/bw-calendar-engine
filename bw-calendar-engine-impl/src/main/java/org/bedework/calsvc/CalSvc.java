@@ -25,14 +25,14 @@ import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeSet;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfFactory;
-import org.bedework.calfacade.BwAuthUser;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.BwPreferences;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwStats;
@@ -371,7 +371,7 @@ public class CalSvc extends CalSvcI {
 
   @Override
   public void setCalSuite(final String name) throws CalFacadeException {
-    BwCalSuiteWrapper cs = getCalSuitesHandler().get(name);
+    final BwCalSuiteWrapper cs = getCalSuitesHandler().get(name);
 
     if (cs == null) {
       error("******************************************************");
@@ -384,7 +384,8 @@ public class CalSvc extends CalSvcI {
 
     getCalSuitesHandler().set(cs);
 
-    BwPrincipal user = getUsersHandler().getPrincipal(cs.getGroup().getOwnerHref());
+    final BwPrincipal user = getUsersHandler().getPrincipal(cs.getGroup().getOwnerHref());
+    user.setGroups(getDirectories().getAllGroups(user));
 
     if (!user.equals(principalInfo.getPrincipal())) {
       ((SvciPrincipalInfo)principalInfo).setPrincipal(user);

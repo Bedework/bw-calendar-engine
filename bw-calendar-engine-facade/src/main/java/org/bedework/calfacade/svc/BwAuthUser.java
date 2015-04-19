@@ -16,11 +16,10 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calfacade;
+package org.bedework.calfacade.svc;
 
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.base.BwDbentity;
-import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
 import org.bedework.util.misc.ToString;
 

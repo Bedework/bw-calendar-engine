@@ -19,7 +19,7 @@
 
 package org.bedework.dumprestore.restore.rules;
 
-import org.bedework.calfacade.BwPreferences;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
 /**
