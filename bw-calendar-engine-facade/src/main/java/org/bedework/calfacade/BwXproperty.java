@@ -381,7 +381,7 @@ public class BwXproperty extends BwDbentity<BwXproperty>
    * @param val    String pars
    */
   public void setPars(final String val) {
-    if ((pars != null) && (pars.length() > 0)) {
+    if ((val != null) && (val.length() > 0)) {
       pars = val;
     } else {
       pars = null;
