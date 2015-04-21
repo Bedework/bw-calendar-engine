@@ -34,7 +34,7 @@ import java.util.Set;
  *
  */
 public class BwIndexApp extends JmsSysEventListener {
-  private IndexProperties props;
+  private final IndexProperties props;
 
   private long messageCount;
 
@@ -110,23 +110,23 @@ public class BwIndexApp extends JmsSysEventListener {
    */
   public String purgeIndexes() {
     try {
-      List<String> is = getCrawler().purgeIndexes();
+      final List<String> is = getCrawler().purgeIndexes();
 
       if (Util.isEmpty(is)) {
         return "No indexes purged";
       }
 
-      StringBuilder res = new StringBuilder("Purged indexes");
+      final StringBuilder res = new StringBuilder("Purged indexes");
 
       res.append("------------------------\n");
 
-      for (String i: is) {
+      for (final String i: is) {
         res.append(i);
         res.append("\n");
       }
 
       return res.toString();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
 
       return t.getLocalizedMessage();
@@ -134,7 +134,7 @@ public class BwIndexApp extends JmsSysEventListener {
   }
 
   void crawl() throws Throwable {
-    Crawl c = getCrawler();
+    final Crawl c = getCrawler();
 
     c.crawl();
 
@@ -183,7 +183,7 @@ public class BwIndexApp extends JmsSysEventListener {
       }
 
       msgProc.processMessage(ev);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new NotificationException(t);
     }
   }
