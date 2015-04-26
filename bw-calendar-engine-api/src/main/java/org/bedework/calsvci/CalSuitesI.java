@@ -36,7 +36,7 @@ import java.util.List;
 public interface CalSuitesI extends Serializable {
   /** Create a new calendar suite
    *
-   * @param name
+   * @param name of calsuite
    * @param adminGroupName - name of the admin group
    * @param rootCollectionPath
    * @param submissionsPath
@@ -53,14 +53,14 @@ public interface CalSuitesI extends Serializable {
    * @param val   BwCalSuiteWrapper
    * @throws CalFacadeException
    */
-  public void set(BwCalSuiteWrapper val) throws CalFacadeException;
+  void set(BwCalSuiteWrapper val) throws CalFacadeException;
 
   /** Get the current calendar suite.
    *
    * @return BwCalSuiteWrapper null for unknown calendar suite
    * @throws CalFacadeException
    */
-  public BwCalSuiteWrapper get() throws CalFacadeException;
+  BwCalSuiteWrapper get() throws CalFacadeException;
 
   /** Get a calendar suite given the name
    *
@@ -76,7 +76,7 @@ public interface CalSuitesI extends Serializable {
    * @return BwCalSuiteWrapper null for unknown calendar suite
    * @throws CalFacadeException
    */
-  public BwCalSuiteWrapper get(BwAdminGroup group)
+  BwCalSuiteWrapper get(BwAdminGroup group)
           throws CalFacadeException;
 
   /** Get calendar suites to which this user has access
@@ -84,7 +84,7 @@ public interface CalSuitesI extends Serializable {
    * @return Collection     of BwCalSuiteWrapper
    * @throws CalFacadeException
    */
-  public Collection<BwCalSuite> getAll() throws CalFacadeException;
+  Collection<BwCalSuite> getAll() throws CalFacadeException;
 
   /** Update a calendar suite. Any of the parameters to be changed may be null
    * or the current value to indicate no change.
@@ -109,7 +109,7 @@ public interface CalSuitesI extends Serializable {
 
   /** Define class of resource
    */
-  public enum ResourceClass {
+  enum ResourceClass {
     /** managed by calsuite admin and stored as a calsuite resource */
     calsuite,
 
@@ -120,6 +120,16 @@ public interface CalSuitesI extends Serializable {
     global;
   }
 
+  /** Get the path to the resources directory for the calsuite
+   *
+   * @param suite - the suite
+   * @param cl - class of resource
+   * @return path
+   * @throws CalFacadeException
+   */
+  String getResourcesPath(final BwCalSuite suite,
+                          final ResourceClass cl) throws CalFacadeException;
+
   /** Get a list of resources. The content is not fetched.
    *
    * @param suite - calendar suite
@@ -127,19 +137,19 @@ public interface CalSuitesI extends Serializable {
    * @return list
    * @throws CalFacadeException
    */
-  public List<BwResource> getResources(BwCalSuite suite,
-                                       ResourceClass cl) throws CalFacadeException;
+  List<BwResource> getResources(BwCalSuite suite,
+                                ResourceClass cl) throws CalFacadeException;
 
   /** Get named resource. The content is fetched.
    *
    * @param suite - calendar suite
-   * @param name
+   * @param name of resource
    * @param cl - define class of resource
    * @return resource or null
    * @throws CalFacadeException
    */
-  public BwResource getResource(BwCalSuite suite,
-                                String name,
+  BwResource getResource(BwCalSuite suite,
+                         String name,
                                 ResourceClass cl) throws CalFacadeException;
 
   /** Add a resource. The supplied object has all fields set except for the
@@ -148,22 +158,22 @@ public interface CalSuitesI extends Serializable {
    * <p>The parent collection will be created if necessary.
    *
    * @param suite - calendar suite
-   * @param res
+   * @param res to add
    * @param cl - define class of resource
    * @throws CalFacadeException
    */
-  public void addResource(BwCalSuite suite,
-                          BwResource res,
-                          ResourceClass cl) throws CalFacadeException;
+  void addResource(BwCalSuite suite,
+                   BwResource res,
+                   ResourceClass cl) throws CalFacadeException;
 
   /** Delete named resource
    *
    * @param suite - calendar suite
-   * @param name
+   * @param name of resource
    * @param cl - define class of resource
    * @throws CalFacadeException
    */
-  public void deleteResource(BwCalSuite suite,
-                             String name,
-                             ResourceClass cl) throws CalFacadeException;
+  void deleteResource(BwCalSuite suite,
+                      String name,
+                      ResourceClass cl) throws CalFacadeException;
 }

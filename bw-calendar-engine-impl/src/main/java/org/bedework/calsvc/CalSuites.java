@@ -196,6 +196,41 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
    *                   Resource methods
    *  =================================================================== */
 
+  public String getResourcesPath(final BwCalSuite suite,
+                                 final ResourceClass cl) throws CalFacadeException {
+    if (cl == ResourceClass.global) {
+      return getBasicSyspars().getGlobalResourcesPath();
+    }
+
+    final BwPrincipal eventsOwner = getPrincipal(suite.getGroup().getOwnerHref());
+
+    final String home = getSvc().getPrincipalInfo().getCalendarHomePath(eventsOwner);
+
+    final BwPreferences prefs = getSvc().getPrefsHandler().get(eventsOwner);
+
+    String col = null;
+
+    if (cl == ResourceClass.admin) {
+      col = prefs.getAdminResourcesDirectory();
+
+      if (col == null) {
+        col = ".adminResources";
+      }
+    } else if (cl == ResourceClass.calsuite) {
+      col = prefs.getSuiteResourcesDirectory();
+
+      if (col == null) {
+        col = ".csResources";
+      }
+    }
+
+    if (col != null) {
+      return Util.buildPath(false, home, "/", col);
+    }
+
+    throw new RuntimeException("System error");
+  }
+
   @Override
   public List<BwResource> getResources(final BwCalSuite suite,
                                        final ResourceClass cl) throws CalFacadeException {
@@ -300,41 +335,6 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     }
 
     return resCol;
-  }
-
-  private String getResourcesPath(final BwCalSuite suite,
-                                  final ResourceClass cl) throws CalFacadeException {
-    if (cl == ResourceClass.global) {
-      return getBasicSyspars().getGlobalResourcesPath();
-    }
-
-    BwPrincipal eventsOwner = getPrincipal(suite.getGroup().getOwnerHref());
-
-    String home = getSvc().getPrincipalInfo().getCalendarHomePath(eventsOwner);
-
-    BwPreferences prefs = getSvc().getPrefsHandler().get(eventsOwner);
-
-    String col = null;
-
-    if (cl == ResourceClass.admin) {
-      col = prefs.getAdminResourcesDirectory();
-
-      if (col == null) {
-        col = ".adminResources";
-      }
-    } else if (cl == ResourceClass.calsuite) {
-      col = prefs.getSuiteResourcesDirectory();
-
-      if (col == null) {
-        col = ".csResources";
-      }
-    }
-
-    if (col != null) {
-      return Util.buildPath(true, home, "/", col);
-    }
-
-    throw new RuntimeException("System error");
   }
 
   /** Set root collection if supplied
