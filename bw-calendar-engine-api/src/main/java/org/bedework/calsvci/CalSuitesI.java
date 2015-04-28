@@ -148,9 +148,9 @@ public interface CalSuitesI extends Serializable {
    * @return resource or null
    * @throws CalFacadeException
    */
-  BwResource getResource(BwCalSuite suite,
-                         String name,
-                         ResourceClass cl) throws CalFacadeException;
+  public BwResource getResource(BwCalSuite suite,
+                                String name,
+                                ResourceClass cl) throws CalFacadeException;
 
   /** Add a resource. The supplied object has all fields set except for the
    * path. This will be determined by the cl parameter and set in the object.
