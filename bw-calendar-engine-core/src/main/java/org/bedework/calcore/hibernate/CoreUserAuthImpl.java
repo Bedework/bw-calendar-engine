@@ -72,12 +72,23 @@ public class CoreUserAuthImpl extends CalintfHelperHib implements CoreUserAuthI 
           "where au.userHref = :userHref";
 
   @Override
+  public void addAuthUser(final BwAuthUser val) throws CalFacadeException {
+    final BwAuthUser ck = getAuthUser(val.getUserHref());
+
+    if (ck != null) {
+      throw new CalFacadeException(CalFacadeException.targetExists);
+    }
+
+    getSess().save(val);
+  }
+
+  @Override
   public BwAuthUser getAuthUser(final String href) throws CalFacadeException {
-    HibSession sess = getSess();
+    final HibSession sess = getSess();
     sess.createQuery(getUserQuery);
     sess.setString("userHref", href);
 
-    BwAuthUser au = (BwAuthUser)sess.getUnique();
+    final BwAuthUser au = (BwAuthUser)sess.getUnique();
 
     if (au == null) {
       // Not an authorised user
@@ -94,15 +105,21 @@ public class CoreUserAuthImpl extends CalintfHelperHib implements CoreUserAuthI 
     return au;
   }
 
+  @Override
+  public void updateAuthUser(final BwAuthUser val) throws CalFacadeException {
+    getSess().update(val);
+  }
+
   private final static String getAllQuery =
       "from " +
           BwAuthUser.class.getName() +
           " au " +
           "order by au.userHref";
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<BwAuthUser> getAll() throws CalFacadeException {
-    HibSession sess = getSess();
+    final HibSession sess = getSess();
 
     sess.createQuery(getAllQuery);
 

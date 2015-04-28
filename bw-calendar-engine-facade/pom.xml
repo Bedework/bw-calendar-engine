@@ -156,13 +156,13 @@
             <configuration>
               <excludes>
                 <!--
+                <exclude>**/ifs/**/*.java</exclude>
                 <exclude>**/mail/**/*.java</exclude>
                 -->
+                <exclude>**/indexing/**/*.java</exclude>
                 <exclude>**/synch/**/*.java</exclude>
                 <exclude>**/timezonesImpl/**/*.java</exclude>
                 <exclude>**/filter/**/*.java</exclude>
-                <exclude>**/ifs/**/*.java</exclude>
-                <exclude>**/indexing/**/*.java</exclude>
                 <!--
                 <exclude>**/svc/**/*.java</exclude>
                 <exclude>**/util/**/*.java</exclude>

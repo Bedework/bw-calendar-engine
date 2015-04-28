@@ -20,13 +20,17 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
+import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.CollatableEntity;
 import org.bedework.calfacade.base.SizedEntity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.QuotaUtil;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
+
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.util.Comparator;
 
@@ -317,6 +321,54 @@ public class BwCategory extends BwEventProperty<BwCategory>
     }
 
     return changed;
+  }
+
+  public void toJson(final JsonGenerator jgen) throws CalFacadeException {
+    try {
+      jgen.writeStartObject();
+
+      outJsonField("name", getName(), jgen);
+      outJsonField("href", getHref(), jgen);
+      outJsonField("colPath", getColPath(), jgen);
+      outJsonField("uid", getUid(), jgen);
+
+      outJsonBwString("word", getWord(), jgen);
+      outJsonBwString("description", getDescription(), jgen);
+
+      jgen.writeEndObject(); // category
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  private void outJsonField(final String name,
+                            final String value,
+                            final JsonGenerator jgen) throws CalFacadeException {
+    try {
+      if (value == null) {
+        return;
+      }
+      jgen.writeObjectField(name, value);
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  private void outJsonBwString(final String name,
+                               final BwStringBase value,
+                               final JsonGenerator jgen) throws CalFacadeException {
+    try {
+      if (value == null) {
+        return;
+      }
+      jgen.writeFieldName(name);
+      jgen.writeStartObject();
+      outJsonField("lang", value.getLang(), jgen);
+      outJsonField("value", value.getValue(), jgen);
+      jgen.writeEndObject();
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
   }
 
   /* ====================================================================
