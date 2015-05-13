@@ -1445,7 +1445,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     sb.append(" ev where ev.colPath=:colPath");
     // No deleted events
     sb.append(" and ev.tombstoned = false");
-    sb.append(" order by ev.name");
+    sb.append(" order by ev.created");
 
     sess.createQuery(sb.toString());
 
