@@ -738,12 +738,12 @@ public abstract class AbstractDirImpl implements Directories {
 
         int whoType = toWho.get(prefix);
         String who = null;
+        start = prefix.length();
 
         if ((whoType == WhoDefs.whoTypeUser) ||
             (whoType == WhoDefs.whoTypeGroup)) {
           /* Strip off the principal prefix for real users.
            */
-          start = uri.lastIndexOf("/", uri.length() - 1) + 1;
           who = uri.substring(start, uri.length() - 1); // Remove trailing "/"
         } else {
           who = uri;
