@@ -129,6 +129,7 @@ public class ToXEvent extends Xutil {
   public static JAXBElement<? extends BaseComponentType>
                     toComponent(final BwEvent val,
                                 final boolean isOverride,
+                                final boolean wrapXprops,
                                 final BaseComponentType pattern) throws CalFacadeException {
     if (val == null) {
       return null;
@@ -621,7 +622,9 @@ public class ToXEvent extends Xutil {
         /* This event has x-props */
 
         try {
-          xpropertiesToXcal(pl, val.getXproperties(), pattern, masterClass);
+          xpropertiesToXcal(pl, val.getXproperties(),
+                            pattern, masterClass,
+                            wrapXprops);
         } catch (Throwable t) {
           // XXX For the moment swallow these.
           error(t);
@@ -635,9 +638,9 @@ public class ToXEvent extends Xutil {
       }
 
       return el;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }

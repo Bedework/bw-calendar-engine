@@ -988,14 +988,38 @@ public class BwEventUtil extends IcalUtil {
                               pval)) {
                 ev.setCost(pval);
               }
-            } else {
-              XProperty xp = (XProperty)prop;
-              chg.addValue(PropertyInfoIndex.XPROP,
-                           new BwXproperty(name,
-                                           xp.getParameters()
-                                                   .toString(),
-                                           pval));
+
+              break;
             }
+
+            if (name.equalsIgnoreCase(BwXproperty.xBedeworkCategories)) {
+              if (checkCategory(cb, chg, ev, null, pval)) {
+                break;
+              }
+            }
+
+            if (name.equalsIgnoreCase(BwXproperty.xBedeworkLocation)) {
+              if (checkLocation(cb, chg, ev, null, pval)) {
+                break;
+              }
+            }
+
+            if (name.equalsIgnoreCase(BwXproperty.xBedeworkContact)) {
+              if (checkContact(cb, chg, ev, null, pval)) {
+                break;
+              }
+            }
+
+            /* See if this is an x-category that can be
+               converted to a real category
+              */
+
+            final XProperty xp = (XProperty)prop;
+            chg.addValue(PropertyInfoIndex.XPROP,
+                         new BwXproperty(name,
+                                         xp.getParameters()
+                                                 .toString(),
+                                         pval));
 
             break;
 
@@ -1082,6 +1106,101 @@ public class BwEventUtil extends IcalUtil {
       }
       throw new CalFacadeException(t);
     }
+  }
+
+  /* Return true if value matches a category - which may be added as
+   * a result
+   */
+  private static boolean checkCategory(final IcalCallback cb,
+                                       final ChangeTable chg,
+                                       final BwEvent ev,
+                                       final String lang,
+                                       final String val) throws CalFacadeException {
+    final BwString sval = new BwString(lang, val);
+
+    final BwCategory cat = cb.findCategory(sval);
+
+    if (cat == null) {
+      return false;
+    }
+
+    final Set<BwCategory> cats = ev.getCategories();
+
+    if (cats != null) {
+      for (final BwCategory c : cats) {
+        if (c.getWord().equals(sval)) {
+          // Already present
+          return true;
+        }
+      }
+    }
+
+    ev.addCategory(cat);
+
+    chg.addValue(PropertyIndex.PropertyInfoIndex.CATEGORIES,
+                 cat);
+
+    return true;
+  }
+
+  /* Return true if value matches a location - which may be added as
+   * a result
+   */
+  private static boolean checkLocation(final IcalCallback cb,
+                                       final ChangeTable chg,
+                                       final BwEvent ev,
+                                       final String lang,
+                                       final String val) throws CalFacadeException {
+    final BwString sval = new BwString(lang, val);
+    final BwLocation evloc = ev.getLocation();
+
+    final BwLocation loc = cb.findLocation(sval);
+
+    if (loc == null) {
+      return false;
+    }
+
+    ev.setLocation(loc);
+
+    chg.changed(PropertyIndex.PropertyInfoIndex.LOCATION,
+                evloc, loc);
+
+    return true;
+  }
+
+  /* Return true if value matches a contact - which may be added as
+   * a result
+   */
+  private static boolean checkContact(final IcalCallback cb,
+                                      final ChangeTable chg,
+                                      final BwEvent ev,
+                                      final String lang,
+                                      final String val) throws CalFacadeException {
+    final BwString sval = new BwString(lang, val);
+    final BwContact evC = ev.getContact();
+
+    final BwContact c = cb.findContact(sval);
+
+    if (c == null) {
+      return false;
+    }
+
+    final Set<BwContact> cs = ev.getContacts();
+
+    if (cs != null) {
+      for (final BwContact c1 : cs) {
+        if (c.getCn().equals(sval)) {
+          // Already present
+          return true;
+        }
+      }
+    }
+
+    ev.addContact(c);
+
+    chg.addValue(PropertyInfoIndex.CONTACT, c);
+
+    return true;
   }
 
   /* ====================================================================

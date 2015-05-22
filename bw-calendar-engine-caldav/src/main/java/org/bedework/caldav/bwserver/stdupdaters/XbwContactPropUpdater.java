@@ -100,11 +100,12 @@ public class XbwContactPropUpdater implements PropertyUpdater {
           }
         }
 
-        final BwXproperty xp = makeXprop(lang, xval);
-        ev.addXproperty(xp);
-        cte.addAddedValue(xp);
-
-        checkContact(ui, ev, contacts, lang, xval);
+        /* Add the xprop or a contact */
+        if (!checkContact(ui, ev, contacts, lang, xval)) {
+          final BwXproperty xp = makeXprop(lang, xval);
+          ev.addXproperty(xp);
+          cte.addAddedValue(xp);
+        }
 
         return UpdateResult.getOkResult();
       }
@@ -122,11 +123,11 @@ public class XbwContactPropUpdater implements PropertyUpdater {
             final String nxval = ((TextPropertyType)ui.getUpdprop())
                     .getText();
 
-            final BwXproperty nxp = makeXprop(nlang, nxval);
-            ev.addXproperty(nxp);
-            cte.addAddedValue(nxp);
-
-            checkContact(ui, ev, contacts, nlang, nxval);
+            if (!checkContact(ui, ev, contacts, nlang, nxval)) {
+              final BwXproperty nxp = makeXprop(nlang, nxval);
+              ev.addXproperty(nxp);
+              cte.addAddedValue(nxp);
+            }
 
             return UpdateResult.getOkResult();
           }
@@ -152,28 +153,30 @@ public class XbwContactPropUpdater implements PropertyUpdater {
                            pars, val);
   }
 
-  private void checkContact(final UpdateInfo ui,
-                            final BwEvent ev,
-                            final Set<BwContact> contacts,
-                            final String lang,
-                            final String val) throws CalFacadeException {
+  private boolean checkContact(final UpdateInfo ui,
+                               final BwEvent ev,
+                               final Set<BwContact> contacts,
+                               final String lang,
+                               final String val) throws CalFacadeException {
     final BwString sval = new BwString(lang, val);
 
     final BwContact contact = ui.getIcalCallback().findContact(sval);
 
     if (contact == null) {
-      return;
+      return false;
     }
 
     for (final BwContact c: contacts) {
       if (c.getCn().equals(sval)) {
         // Already present
-        return;
+        return true;
       }
     }
 
     ev.addContact(contact);
 
     ui.getCte(PropertyIndex.PropertyInfoIndex.CONTACT).addAddedValue(contact);
+
+    return true;
   }
 }

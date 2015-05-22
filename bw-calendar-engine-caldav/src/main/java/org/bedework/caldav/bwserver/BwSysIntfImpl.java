@@ -154,7 +154,7 @@ public class BwSysIntfImpl implements SysIntf {
   private BwPreferences prefs;
 
   private static byte[] key;
-  private static volatile Object keyPairLock = new Object();
+  private static final Object keyPairLock = new Object();
 
   /* These two set after a call to getSvci()
    */
@@ -173,12 +173,14 @@ public class BwSysIntfImpl implements SysIntf {
 
   private boolean calWs;
 
+  private boolean synchWs;
+
   private static Configurations configs;
 
   static {
     try {
       configs = new CalSvcFactoryDefault().getSystemConfig();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       t.printStackTrace();
     }
   }
@@ -188,9 +190,11 @@ public class BwSysIntfImpl implements SysIntf {
                      final String account,
                      final boolean service,
                      final boolean calWs,
+                     final boolean synchWs,
                      final String opaqueData) throws WebdavException {
     try {
       this.calWs = calWs;
+      this.synchWs = synchWs;
       debug = getLogger().isDebugEnabled();
 
       principalInfo = null; // In case we reinit
@@ -1950,7 +1954,8 @@ public class BwSysIntfImpl implements SysIntf {
         meth = getEvent(ev).getScheduleMethod();
       }
 
-      return trans.toXMLIcalendar(getEvinfo(ev), meth, pattern);
+      return trans.toXMLIcalendar(getEvinfo(ev), meth, pattern,
+                                  synchWs);
     } catch (Throwable t) {
       throw new WebdavException(t);
     }

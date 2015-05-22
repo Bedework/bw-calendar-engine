@@ -1022,7 +1022,8 @@ public class IcalTranslator implements Serializable {
    */
   public IcalendarType toXMLIcalendar(final EventInfo val,
                                       final int methodType,
-                                      final IcalendarType pattern) throws CalFacadeException {
+                                      final IcalendarType pattern,
+                                      final boolean wrapXprops) throws CalFacadeException {
     IcalendarType ical = new IcalendarType();
     VcalendarType vcal = new VcalendarType();
 
@@ -1071,9 +1072,9 @@ public class IcalTranslator implements Serializable {
 
     if (!ev.getSuppressed()) {
       if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
-        el = ToXEvent.toComponent(ev, false, bc);
+        el = ToXEvent.toComponent(ev, false, wrapXprops, bc);
       } else {
-        el = ToXEvent.toComponent(ev, false, bc);
+        el = ToXEvent.toComponent(ev, false, wrapXprops, bc);
       }
 
       if (el != null) {
@@ -1087,7 +1088,7 @@ public class IcalTranslator implements Serializable {
 
     for (EventInfo oei: val.getOverrides()) {
       ev = oei.getEvent();
-      el = ToXEvent.toComponent(ev, true, bc);
+      el = ToXEvent.toComponent(ev, true, wrapXprops, bc);
 
       if (el != null) {
         aoc.getBaseComponent().add(el);
@@ -1097,7 +1098,7 @@ public class IcalTranslator implements Serializable {
     if (val.getNumContainedItems() > 0) {
       for (EventInfo aei: val.getContainedItems()) {
         ev = aei.getEvent();
-        el = ToXEvent.toComponent(ev, true, bc);
+        el = ToXEvent.toComponent(ev, true, wrapXprops, bc);
 
         if (el != null) {
           aoc.getBaseComponent().add(el);

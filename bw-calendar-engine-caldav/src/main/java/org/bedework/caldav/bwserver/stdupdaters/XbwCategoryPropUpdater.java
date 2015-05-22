@@ -105,11 +105,12 @@ public class XbwCategoryPropUpdater implements PropertyUpdater {
           }
         }
 
-        final BwXproperty xp = makeXprop(lang, xval);
-        ev.addXproperty(xp);
-        cte.addValue(xp);
-
-        checkCategory(ui, ev, cats, lang, xval);
+        /* Add the xprop or a category */
+        if (!checkCategory(ui, ev, cats, lang, xval)) {
+          final BwXproperty xp = makeXprop(lang, xval);
+          ev.addXproperty(xp);
+          cte.addValue(xp);
+        }
 
         return UpdateResult.getOkResult();
       }
@@ -126,11 +127,11 @@ public class XbwCategoryPropUpdater implements PropertyUpdater {
                     .getLang(ui.getUpdprop());
             final String nxval = getValue(ui.getUpdprop());
 
-            final BwXproperty nxp = makeXprop(nlang, nxval);
-            ev.addXproperty(nxp);
-            cte.addValue(nxp);
-
-            checkCategory(ui, ev, cats, nlang, nxval);
+            if (!checkCategory(ui, ev, cats, nlang, nxval)) {
+              final BwXproperty nxp = makeXprop(nlang, nxval);
+              ev.addXproperty(nxp);
+              cte.addValue(nxp);
+            }
 
             return UpdateResult.getOkResult();
           }
@@ -167,28 +168,33 @@ public class XbwCategoryPropUpdater implements PropertyUpdater {
                            pars, val);
   }
 
-  private void checkCategory(final UpdateInfo ui,
-                             final BwEvent ev,
-                             final Set<BwCategory> cats,
-                             final String lang,
-                             final String val) throws CalFacadeException {
+  /* Return true if value matches a category - which may be added as
+   * a result
+   */
+  private boolean checkCategory(final UpdateInfo ui,
+                                final BwEvent ev,
+                                final Set<BwCategory> cats,
+                                final String lang,
+                                final String val) throws CalFacadeException {
     final BwString sval = new BwString(lang, val);
 
     final BwCategory cat = ui.getIcalCallback().findCategory(sval);
 
     if (cat == null) {
-      return;
+      return false;
     }
 
     for (final BwCategory c: cats) {
       if (c.getWord().equals(sval)) {
         // Already present
-        return;
+        return true;
       }
     }
 
     ev.addCategory(cat);
 
     ui.getCte(PropertyIndex.PropertyInfoIndex.CATEGORIES).addValue(cat);
+
+    return true;
   }
 }

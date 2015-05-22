@@ -100,11 +100,11 @@ public class Xutil {
       return prop;
     }
 
-    ArrayOfParameters pars = getAop(prop);
+    final ArrayOfParameters pars = getAop(prop);
 
-    TzidParamType tzid = new TzidParamType();
+    final TzidParamType tzid = new TzidParamType();
     tzid.setText(val);
-    JAXBElement<TzidParamType> t = of.createTzid(tzid);
+    final JAXBElement<TzidParamType> t = of.createTzid(tzid);
     pars.getBaseParameter().add(t);
 
     return prop;
@@ -116,11 +116,11 @@ public class Xutil {
       return prop;
     }
 
-    ArrayOfParameters pars = getAop(prop);
+    final ArrayOfParameters pars = getAop(prop);
 
-    AltrepParamType a = new AltrepParamType();
+    final AltrepParamType a = new AltrepParamType();
     a.setUri(val);
-    JAXBElement<AltrepParamType> param = of.createAltrep(a);
+    final JAXBElement<AltrepParamType> param = of.createAltrep(a);
     pars.getBaseParameter().add(param);
 
     return prop;
@@ -136,7 +136,8 @@ public class Xutil {
 
     XBedeworkUidParamType x = new XBedeworkUidParamType();
     x.setText(uid);
-    JAXBElement<XBedeworkUidParamType> param = of.createXBedeworkUid(x);
+    JAXBElement<XBedeworkUidParamType> param = of.createXBedeworkUid(
+            x);
     pars.getBaseParameter().add(param);
 
     return prop;
@@ -210,18 +211,21 @@ public class Xutil {
    * @param xprops
    * @param pattern
    * @param masterClass
+   * @param wrapXprops wrap x-properties in bedework object - allows
+   *                   us to push them through soap
    * @throws Throwable
    */
   @SuppressWarnings("deprecation")
   public static void xpropertiesToXcal(final List<JAXBElement<? extends BasePropertyType>> pl,
                                        final List<BwXproperty> xprops,
                                        final BaseComponentType pattern,
-                                       final Class masterClass)
+                                       final Class masterClass,
+                                       final boolean wrapXprops)
       throws Throwable {
-    for (BwXproperty x: xprops) {
+    for (final BwXproperty x: xprops) {
       // Skip any timezone we saved in the event.
-      String xname = x.getName();
-      String val = x.getValue();
+      final String xname = x.getName();
+      final String val = x.getValue();
 
       if (xname.startsWith(BwXproperty.bedeworkTimezonePrefix)) {
         continue;
@@ -232,7 +236,8 @@ public class Xutil {
           continue;
         }
 
-        XBedeworkExsynchEndtzidPropType p = new XBedeworkExsynchEndtzidPropType();
+        final XBedeworkExsynchEndtzidPropType p =
+                new XBedeworkExsynchEndtzidPropType();
         p.setText(val);
 
         pl.add(of.createXBedeworkExsynchEndtzid(p));
@@ -244,7 +249,8 @@ public class Xutil {
           continue;
         }
 
-        XBedeworkExsynchLastmodPropType p = new XBedeworkExsynchLastmodPropType();
+        final XBedeworkExsynchLastmodPropType p =
+                new XBedeworkExsynchLastmodPropType();
         p.setText(val);
 
         pl.add(of.createXBedeworkExsynchLastmod(p));
@@ -260,7 +266,8 @@ public class Xutil {
           continue;
         }
 
-        XBedeworkExsynchStarttzidPropType p = new XBedeworkExsynchStarttzidPropType();
+        final XBedeworkExsynchStarttzidPropType p =
+                new XBedeworkExsynchStarttzidPropType();
         p.setText(val);
 
         pl.add(of.createXBedeworkExsynchStarttzid(p));
@@ -272,9 +279,10 @@ public class Xutil {
           continue;
         }
 
-        XBedeworkRegistrationStartPropType p = new XBedeworkRegistrationStartPropType();
+        final XBedeworkRegistrationStartPropType p =
+                new XBedeworkRegistrationStartPropType();
         String tzid = null;
-        for (Xpar xp: x.getParameters()) {
+        for (final Xpar xp: x.getParameters()) {
           if (xp.getName().equalsIgnoreCase("TZID")) {
             tzid = xp.getValue();
             break;
@@ -292,9 +300,10 @@ public class Xutil {
           continue;
         }
 
-        XBedeworkRegistrationEndPropType p = new XBedeworkRegistrationEndPropType();
+        final XBedeworkRegistrationEndPropType p =
+                new XBedeworkRegistrationEndPropType();
         String tzid = null;
-        for (Xpar xp: x.getParameters()) {
+        for (final Xpar xp: x.getParameters()) {
           if (xp.getName().equalsIgnoreCase("TZID")) {
             tzid = xp.getValue();
             break;
@@ -312,7 +321,8 @@ public class Xutil {
           continue;
         }
 
-        XBedeworkMaxTicketsPropType p = new XBedeworkMaxTicketsPropType();
+        final XBedeworkMaxTicketsPropType p =
+                new XBedeworkMaxTicketsPropType();
 
         p.setInteger(BigInteger.valueOf(Long.valueOf(val)));
 
@@ -325,7 +335,8 @@ public class Xutil {
           continue;
         }
 
-        XBedeworkMaxTicketsPerUserPropType p = new XBedeworkMaxTicketsPerUserPropType();
+        final XBedeworkMaxTicketsPerUserPropType p =
+                new XBedeworkMaxTicketsPerUserPropType();
 
         p.setInteger(BigInteger.valueOf(Long.valueOf(val)));
 
@@ -338,7 +349,7 @@ public class Xutil {
           continue;
         }
 
-        XBwCategoriesPropType p = new XBwCategoriesPropType();
+        final XBwCategoriesPropType p = new XBwCategoriesPropType();
 
         p.getText().add(val);
 
@@ -351,7 +362,7 @@ public class Xutil {
           continue;
         }
 
-        XBwContactPropType p = new XBwContactPropType();
+        final XBwContactPropType p = new XBwContactPropType();
 
         p.setText(val);
 
@@ -372,9 +383,52 @@ public class Xutil {
         continue;
       }
 
-      if (getLog().isDebugEnabled()) {
-        warn("Not handing x-property " + xname);
+      if (!wrapXprops) {
+        if (getLog().isDebugEnabled()) {
+          warn("Not handing x-property " + xname);
+        }
+        continue;
       }
+
+      final XBedeworkWrapperPropType wrapper =
+              new XBedeworkWrapperPropType();
+      for (final Xpar xp: x.getParameters()) {
+        xparam(wrapper, xp);
+      }
+
+      final XBedeworkWrappedNameParamType wnp =
+              new XBedeworkWrappedNameParamType();
+      wnp.setText(x.getName());
+      if (wrapper.getParameters() == null) {
+        wrapper.setParameters(new ArrayOfParameters());
+      }
+      wrapper.getParameters().getBaseParameter().add(
+              of.createXBedeworkWrappedName(wnp));
+
+      pl.add(of.createXBedeworkWrapper(wrapper));
+    }
+  }
+
+  /** Convert a parameter
+   * @param prop - parameters go here
+   * @param xp - a parameter
+   * @throws Throwable
+   */
+  protected static void xparam(final BasePropertyType prop,
+                               final Xpar xp) throws Throwable {
+    ArrayOfParameters aop = prop.getParameters();
+
+    if (aop == null) {
+      aop = new ArrayOfParameters();
+      prop.setParameters(aop);
+    }
+
+    if (xp.getName().equalsIgnoreCase("tzid")) {
+      final TzidParamType tz = new TzidParamType();
+      tz.setText(xp.getValue());
+
+      aop.getBaseParameter().add(of.createTzid(tz));
+      return;
     }
   }
 
@@ -389,7 +443,7 @@ public class Xutil {
       return false;
     }
 
-    if ((cl == null) | (cl.length == 0)) {
+    if ((cl == null) || (cl.length == 0)) {
       // Any property
       return true;
     }

@@ -80,8 +80,8 @@ public class PropertyUpdaterRegistry {
     }
   }
 
-  private static Map<Class, UpdaterEntry> standardUpdaters =
-      new HashMap<Class, UpdaterEntry>();
+  private static final Map<Class, UpdaterEntry> standardUpdaters =
+      new HashMap<>();
 
   private Map<Class, UpdaterEntry> nonStandardUpdaters;
 
@@ -92,8 +92,8 @@ public class PropertyUpdaterRegistry {
    */
   public void registerUpdater(final Class cl,
                               final String updCl) {
-    if (nonStandardUpdaters != null) {
-      nonStandardUpdaters = new HashMap<Class, UpdaterEntry>();
+    if (nonStandardUpdaters == null) {
+      nonStandardUpdaters = new HashMap<>();
     }
 
     nonStandardUpdaters.put(cl, new UpdaterEntry(updCl));
@@ -105,8 +105,8 @@ public class PropertyUpdaterRegistry {
   }
 
   PropertyUpdater getUpdater(final Object o) {
-    PropertyUpdater pu;
-    Class cl = o.getClass();
+    final PropertyUpdater pu;
+    final Class cl = o.getClass();
 
     if (nonStandardUpdaters != null) {
       pu = findUpdater(cl, nonStandardUpdaters);
@@ -124,17 +124,17 @@ public class PropertyUpdaterRegistry {
     Class lcl = cl;
 
     while (lcl != null) {
-      UpdaterEntry ue = updaters.get(lcl);
+      final UpdaterEntry ue = updaters.get(lcl);
 
       if (ue != null) {
         if (ue.updater != null) {
           return ue.updater;
         }
 
-        Object o;
+        final Object o;
         try {
           o = Class.forName(ue.className).newInstance();
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
           throw new RuntimeException("PropertyUpdater class " +
                                      ue.className +
                                      " cannot be instantiated");
