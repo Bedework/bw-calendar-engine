@@ -150,7 +150,7 @@ public class XbwLocPropUpdater implements PropertyUpdater {
     final BwString sval = new BwString(lang, val);
     final boolean locPresent = ev.getLocation() != null;
 
-    final BwLocation loc = ui.getIcalCallback().findLocation(sval);
+    final BwLocation loc = ui.getIcalCallback().getLocation(sval);
 
     if (loc == null) {
       return false;

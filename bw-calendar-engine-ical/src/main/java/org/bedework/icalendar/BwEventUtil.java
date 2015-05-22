@@ -1154,7 +1154,7 @@ public class BwEventUtil extends IcalUtil {
     final BwString sval = new BwString(lang, val);
     final BwLocation evloc = ev.getLocation();
 
-    final BwLocation loc = cb.findLocation(sval);
+    final BwLocation loc = cb.getLocation(sval);
 
     if (loc == null) {
       return false;
