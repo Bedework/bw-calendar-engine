@@ -981,7 +981,7 @@ public class BwEventUtil extends IcalUtil {
           case XPROP:
             /* ------------------------- x-property --------------------------- */
 
-            String name = prop.getName();
+            final String name = prop.getName();
 
             if (name.equalsIgnoreCase(BwXproperty.bedeworkCost)) {
               if (chg.changed(PropertyInfoIndex.COST, ev.getCost(),
@@ -1177,8 +1177,6 @@ public class BwEventUtil extends IcalUtil {
                                       final String lang,
                                       final String val) throws CalFacadeException {
     final BwString sval = new BwString(lang, val);
-    final BwContact evC = ev.getContact();
-
     final BwContact c = cb.findContact(sval);
 
     if (c == null) {

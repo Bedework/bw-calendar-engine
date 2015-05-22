@@ -53,6 +53,7 @@ import ietf.params.xml.ns.icalendar_2.VavailabilityType;
 import ietf.params.xml.ns.icalendar_2.VeventType;
 import ietf.params.xml.ns.icalendar_2.VjournalType;
 import ietf.params.xml.ns.icalendar_2.VtodoType;
+import ietf.params.xml.ns.icalendar_2.XBedeworkWrapperPropType;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.TimeZone;
@@ -917,7 +918,11 @@ public class BwUpdates {
       this.state = state;
       this.userHref = userHref;
 
-      pi = PropertyInfoIndex.fromName(pname.getLocalPart());
+      if (prop instanceof XBedeworkWrapperPropType) {
+        pi = PropertyInfoIndex.XPROP;
+      } else {
+        pi = PropertyInfoIndex.fromName(pname.getLocalPart());
+      }
       if (pi == null) {
         throw new RuntimeException("unknown property " + pname);
       }

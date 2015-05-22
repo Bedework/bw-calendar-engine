@@ -59,6 +59,22 @@ public class UpdaterUtil {
     return null;
   }
 
+  static String getWrapperName(final BasePropertyType p) {
+    final ArrayOfParameters pars = p.getParameters();
+    if (pars == null) {
+      return null;
+    }
+
+    for (final JAXBElement<? extends BaseParameterType> parEl:
+            pars.getBaseParameter()) {
+      if (parEl.getName().getLocalPart().equalsIgnoreCase("x-bedework-wrapped-name")) {
+        return ((TextParameterType)parEl.getValue()).getText();
+      }
+    }
+
+    return null;
+  }
+
   /** See if there is an altrep parameter attached to the property
    *
    * @param p

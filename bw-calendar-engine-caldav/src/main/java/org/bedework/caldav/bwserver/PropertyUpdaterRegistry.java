@@ -54,6 +54,7 @@ import ietf.params.xml.ns.icalendar_2.TriggerPropType;
 import ietf.params.xml.ns.icalendar_2.UidPropType;
 import ietf.params.xml.ns.icalendar_2.UrlPropType;
 import ietf.params.xml.ns.icalendar_2.VersionPropType;
+import ietf.params.xml.ns.icalendar_2.XBedeworkWrapperPropType;
 import ietf.params.xml.ns.icalendar_2.XBwCategoriesPropType;
 import ietf.params.xml.ns.icalendar_2.XBwContactPropType;
 import ietf.params.xml.ns.icalendar_2.XBwLocationPropType;
@@ -237,6 +238,9 @@ public class PropertyUpdaterRegistry {
     standardPropUpdater(XBwCategoriesPropType.class, "XbwCategoryPropUpdater");
     standardPropUpdater(XBwContactPropType.class, "XbwContactPropUpdater");
     standardPropUpdater(XBwLocationPropType.class, "XbwLocPropUpdater");
+
+    standardPropUpdater(XBedeworkWrapperPropType.class,
+                        "XbwWrapperPropUpdater");
 
     /* All classes
     standardPropUpdater(AttachPropType.class, "AttachPropUpdater");

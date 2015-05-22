@@ -40,10 +40,11 @@ import ietf.params.xml.ns.icalendar_2.XBedeworkMaxTicketsPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkRegistrationEndPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkRegistrationStartPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkUidParamType;
+import ietf.params.xml.ns.icalendar_2.XBedeworkWrappedNameParamType;
+import ietf.params.xml.ns.icalendar_2.XBedeworkWrapperPropType;
 import ietf.params.xml.ns.icalendar_2.XBwCategoriesPropType;
 import ietf.params.xml.ns.icalendar_2.XBwContactPropType;
 import ietf.params.xml.ns.icalendar_2.XBwLocationPropType;
-import net.fortuna.ical4j.model.NumberList;
 import net.fortuna.ical4j.model.NumberList;
 import org.apache.log4j.Logger;
 
@@ -392,8 +393,11 @@ public class Xutil {
 
       final XBedeworkWrapperPropType wrapper =
               new XBedeworkWrapperPropType();
-      for (final Xpar xp: x.getParameters()) {
-        xparam(wrapper, xp);
+
+      if (x.getParameters() != null) {
+        for (final Xpar xp : x.getParameters()) {
+          xparam(wrapper, xp);
+        }
       }
 
       final XBedeworkWrappedNameParamType wnp =
@@ -404,6 +408,7 @@ public class Xutil {
       }
       wrapper.getParameters().getBaseParameter().add(
               of.createXBedeworkWrappedName(wnp));
+      wrapper.setText(val);
 
       pl.add(of.createXBedeworkWrapper(wrapper));
     }
