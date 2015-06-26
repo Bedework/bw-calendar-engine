@@ -124,11 +124,6 @@ public class SAICalCallback implements IcalCallback {
   }
 
   @Override
-  public URIgen getURIgen() throws CalFacadeException {
-    return null;
-  }
-
-  @Override
   public boolean getTimezonesByReference() throws CalFacadeException {
     return false;
   }

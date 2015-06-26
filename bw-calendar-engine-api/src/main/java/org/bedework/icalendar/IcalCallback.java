@@ -170,13 +170,6 @@ public interface IcalCallback extends Serializable {
   Collection<EventInfo> getEvent(BwCalendar cal, String guid)
           throws CalFacadeException;
 
-  /** URIgen object used to provide ALTREP values - or null for no altrep
-   *
-   * @return object or null
-   * @throws CalFacadeException
-   */
-  URIgen getURIgen() throws CalFacadeException;
-
   /**
    * @return true if we are not including the full tz specification
    * @throws CalFacadeException

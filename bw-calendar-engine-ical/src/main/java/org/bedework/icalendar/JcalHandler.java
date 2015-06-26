@@ -78,7 +78,7 @@ public class JcalHandler implements Serializable {
   public static String toJcal(final Calendar cal,
                               final IcalendarType pattern,
                               final EventTimeZonesRegistry tzreg) throws CalFacadeException {
-    StringWriter sw = new StringWriter();
+    final StringWriter sw = new StringWriter();
 
     outJcal(sw, cal, pattern, tzreg);
 
@@ -90,7 +90,7 @@ public class JcalHandler implements Serializable {
                              final IcalendarType pattern,
                              final EventTimeZonesRegistry tzreg) throws CalFacadeException {
     try {
-      JsonGenerator jgen = jsonFactory.createGenerator(wtr);
+      final JsonGenerator jgen = jsonFactory.createGenerator(wtr);
 
       if (Logger.getLogger(JcalHandler.class).isDebugEnabled()) {
         jgen.useDefaultPrettyPrinter();
@@ -101,7 +101,7 @@ public class JcalHandler implements Serializable {
       jgen.writeString("vcalendar");
       jgen.writeStartArray();
 
-      for (Object o: cal.getProperties()) {
+      for (final Object o: cal.getProperties()) {
         JsonProperty.addFields(jgen, (Property)o);
       }
 
@@ -133,11 +133,10 @@ public class JcalHandler implements Serializable {
                              final Collection<EventInfo> vals,
                              final int methodType,
                              final IcalendarType pattern,
-                             final URIgen uriGen,
                              final String currentPrincipal,
                              final EventTimeZonesRegistry tzreg) throws CalFacadeException {
     try {
-      JsonGenerator jgen = jsonFactory.createJsonGenerator(wtr);
+      final JsonGenerator jgen = jsonFactory.createJsonGenerator(wtr);
 
       if (Logger.getLogger(JcalHandler.class).isDebugEnabled()) {
         jgen.useDefaultPrettyPrinter();
@@ -149,26 +148,25 @@ public class JcalHandler implements Serializable {
 
       jgen.writeStartArray(); // for components
 
-      for (EventInfo ei: vals) {
+      for (final EventInfo ei: vals) {
         BwEvent ev = ei.getEvent();
 
-        Component comp;
+        final Component comp;
         if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
           comp = VFreeUtil.toVFreeBusy(ev);
         } else {
-          comp = VEventUtil.toIcalComponent(ei, false, tzreg, uriGen,
+          comp = VEventUtil.toIcalComponent(ei, false, tzreg,
                                             currentPrincipal);
         }
 
         outComp(jgen, comp);
 
         if (ei.getNumOverrides() > 0) {
-          for (EventInfo oei: ei.getOverrides()) {
+          for (final EventInfo oei: ei.getOverrides()) {
             ev = oei.getEvent();
             outComp(jgen, VEventUtil.toIcalComponent(oei,
                                                      true,
                                                      tzreg,
-                                                     uriGen,
                                                      currentPrincipal));
           }
         }
@@ -179,9 +177,9 @@ public class JcalHandler implements Serializable {
       jgen.writeEndArray();
 
       jgen.flush();
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -256,7 +254,7 @@ public class JcalHandler implements Serializable {
       }
 
       jgen.writeEndArray();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }

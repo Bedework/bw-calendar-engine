@@ -124,6 +124,10 @@ public class BwXproperty extends BwDbentity<BwXproperty>
    */
   public final static String bedeworkCost = "X-BEDEWORK-COST";
 
+  /** The deleted flag
+   */
+  public final static String bedeworkDeleted = "X-BEDEWORK-DELETED";
+
   /** Holds an encoded array of related to - until schema gets updated
    */
   public final static String bedeworkRelatedTo = "X-BEDEWORK-RELATED-TO";

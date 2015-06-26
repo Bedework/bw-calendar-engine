@@ -150,7 +150,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
   }
 
   @Override
-  @JsonIgnore
   public String getHref(){
     return href;
   }
@@ -184,9 +183,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *                   Action methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.BwDbentity#afterDeletion()
-   */
   @Override
   public void afterDeletion() {
     addDeletedEntity(getAddress());

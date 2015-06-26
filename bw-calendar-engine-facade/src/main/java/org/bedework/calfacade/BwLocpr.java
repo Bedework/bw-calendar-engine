@@ -23,7 +23,7 @@ import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 
-/** loation principal.
+/** location principal.
  *
  *   @author Mike Douglass
  *  @version 1.0

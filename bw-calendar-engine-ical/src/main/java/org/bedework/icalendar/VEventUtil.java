@@ -124,10 +124,9 @@ public class VEventUtil extends IcalUtil {
   /** Make an Icalendar component from a BwEvent object. This may produce a
    * VEvent, VTodo, VJournal or VPoll.
    *
-   * @param ei
+   * @param ei the event
    * @param isOverride - true if event object is an override
-   * @param tzreg
-   * @param uriGen
+   * @param tzreg - timezone registry
    * @param currentPrincipal - href for current authenticated user
    * @return Component
    * @throws CalFacadeException
@@ -135,13 +134,12 @@ public class VEventUtil extends IcalUtil {
   public static Component toIcalComponent(final EventInfo ei,
                                           final boolean isOverride,
                                           final TimeZoneRegistry tzreg,
-                                          final URIgen uriGen,
                                           final String currentPrincipal) throws CalFacadeException {
     if ((ei == null) || (ei.getEvent() == null)) {
       return null;
     }
 
-    BwEvent val = ei.getEvent();
+    final BwEvent val = ei.getEvent();
 
     boolean isInstance = false;
 
@@ -149,14 +147,14 @@ public class VEventUtil extends IcalUtil {
       Component xcomp = null;
       Calendar cal = null;
 
-      List<BwXproperty> xcompProps = val.getXproperties(BwXproperty.bedeworkIcal);
+      final List<BwXproperty> xcompProps = val.getXproperties(BwXproperty.bedeworkIcal);
       if (!Util.isEmpty(xcompProps)) {
-        BwXproperty xcompProp = xcompProps.get(0);
-        String xcompPropVal = xcompProp.getValue();
+        final BwXproperty xcompProp = xcompProps.get(0);
+        final String xcompPropVal = xcompProp.getValue();
 
         if (xcompPropVal != null) {
-          StringBuilder sb = new StringBuilder();
-          Icalendar ic = new Icalendar();
+          final StringBuilder sb = new StringBuilder();
+          final Icalendar ic = new Icalendar();
 
           try {
             sb.append("BEGIN:VCALENDAR\n");
@@ -266,7 +264,7 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Class -------------------- */
 
-      String pval = val.getClassification();
+      final String pval = val.getClassification();
       if (pval != null) {
         pl.add(new Clazz(pval));
       }
@@ -274,7 +272,7 @@ public class VEventUtil extends IcalUtil {
       /* ------------------- Comments -------------------- */
 
       if (val.getNumComments() > 0) {
-        for (BwString str: val.getComments()) {
+        for (final BwString str: val.getComments()) {
           pl.add(langProp(new Comment(str.getValue()), str));
         }
       }
@@ -289,10 +287,10 @@ public class VEventUtil extends IcalUtil {
       /* ------------------- Contact -------------------- */
 
       if (val.getNumContacts() > 0) {
-        for (BwContact c: val.getContacts()) {
+        for (final BwContact c: val.getContacts()) {
           // LANG
           prop = new Contact(c.getCn().getValue());
-          String l = c.getLink();
+          final String l = c.getLink();
 
           if (l != null) {
             prop.getParameters().add(new AltRep(l));
@@ -315,6 +313,13 @@ public class VEventUtil extends IcalUtil {
 //        prop.getParameters().add(Value.DATE_TIME);
 //      }
       pl.add(prop);
+
+      /* ------------------- Deleted -------------------- */
+
+      if (val.getDeleted()) {
+        IcalUtil.addXproperty(pl, BwXproperty.bedeworkDeleted,
+                              null, String.valueOf(val.getDeleted()));
+      }
 
       /* ------------------- Description -------------------- */
 
@@ -600,10 +605,10 @@ public class VEventUtil extends IcalUtil {
 
       if (vavail) {
         if (ei.getNumContainedItems() > 0) {
-          VAvailability va = (VAvailability)comp;
-          for (EventInfo aei: ei.getContainedItems()) {
+          final VAvailability va = (VAvailability)comp;
+          for (final EventInfo aei: ei.getContainedItems()) {
             va.getAvailable().add(toIcalComponent(aei, false, tzreg,
-                                                  uriGen, currentPrincipal));
+                                                  currentPrincipal));
           }
         }
 

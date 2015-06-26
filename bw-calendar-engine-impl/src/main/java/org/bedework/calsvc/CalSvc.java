@@ -91,7 +91,6 @@ import org.bedework.calsvci.TimeZonesStoreI;
 import org.bedework.calsvci.UsersI;
 import org.bedework.calsvci.ViewsI;
 import org.bedework.icalendar.IcalCallback;
-import org.bedework.icalendar.URIgen;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.jmx.MBeanUtil;
@@ -384,12 +383,15 @@ public class CalSvc extends CalSvcI {
 
     getCalSuitesHandler().set(cs);
 
+    /* This is wrong. The calsuite doesn't always represent the group
+       It may be a sub-group.
     final BwPrincipal user = getUsersHandler().getPrincipal(cs.getGroup().getOwnerHref());
     user.setGroups(getDirectories().getAllGroups(user));
 
     if (!user.equals(principalInfo.getPrincipal())) {
       ((SvciPrincipalInfo)principalInfo).setPrincipal(user);
     }
+    */
   }
 
   @Override
@@ -1643,11 +1645,6 @@ public class CalSvc extends CalSvcI {
       return getEventsHandler().get(cal.getPath(), guid,
                                     null,
                                     RecurringRetrievalMode.overrides);
-    }
-
-    @Override
-    public URIgen getURIgen() throws CalFacadeException {
-      return null;
     }
 
     @Override

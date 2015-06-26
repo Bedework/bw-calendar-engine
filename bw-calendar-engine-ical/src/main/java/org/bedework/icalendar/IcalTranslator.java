@@ -286,7 +286,6 @@ public class IcalTranslator implements Serializable {
 
     JcalHandler.outJcal(wtr,
                         vals, methodType, null,
-                        cb.getURIgen(),
                         currentPrincipal,
                         new EventTimeZonesRegistry(this, null));
   }
@@ -337,29 +336,26 @@ public class IcalTranslator implements Serializable {
         }
       }
 
-      URIgen uriGen = cb.getURIgen();
       String currentPrincipal = null;
-      BwPrincipal principal = cb.getPrincipal();
+      final BwPrincipal principal = cb.getPrincipal();
 
       if (principal != null) {
         currentPrincipal = principal.getPrincipalRef();
       }
 
-      Iterator it = vals.iterator();
-      while (it.hasNext()) {
-        Object o = it.next();
-
+      for (final Object o : vals) {
         if (o instanceof EventInfo) {
-          EventInfo ei = (EventInfo)o;
+          final EventInfo ei = (EventInfo)o;
           BwEvent ev = ei.getEvent();
 
-          EventTimeZonesRegistry tzreg = new EventTimeZonesRegistry(this, ev);
+          final EventTimeZonesRegistry tzreg = new EventTimeZonesRegistry(
+                  this, ev);
 
-          Component comp;
+          final Component comp;
           if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
             comp = VFreeUtil.toVFreeBusy(ev);
           } else {
-            comp = VEventUtil.toIcalComponent(ei, false, tzreg, uriGen,
+            comp = VEventUtil.toIcalComponent(ei, false, tzreg,
                                               currentPrincipal);
           }
 
@@ -371,12 +367,11 @@ public class IcalTranslator implements Serializable {
           xmlComponent(xml, comp);
 
           if (ei.getNumOverrides() > 0) {
-            for (EventInfo oei: ei.getOverrides()) {
+            for (final EventInfo oei : ei.getOverrides()) {
               ev = oei.getEvent();
               xmlComponent(xml, VEventUtil.toIcalComponent(oei,
                                                            true,
                                                            tzreg,
-                                                           uriGen,
                                                            currentPrincipal));
             }
           }
@@ -1163,7 +1158,6 @@ public class IcalTranslator implements Serializable {
 
     eis.add(val);
     return JcalHandler.toJcal(eis, methodType, pattern,
-                              cb.getURIgen(),
                               currentPrincipal,
                               new EventTimeZonesRegistry(this, val.getEvent()));
   }
@@ -1187,7 +1181,6 @@ public class IcalTranslator implements Serializable {
   private void addToCalendar(final Calendar cal,
                              final EventInfo val,
                              final TreeSet<String> added) throws CalFacadeException {
-    URIgen uriGen = cb.getURIgen();
     String currentPrincipal = null;
     BwPrincipal principal = cb.getPrincipal();
 
@@ -1211,16 +1204,15 @@ public class IcalTranslator implements Serializable {
       if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
         comp = VFreeUtil.toVFreeBusy(ev);
       } else {
-        comp = VEventUtil.toIcalComponent(val, false, tzreg, uriGen,
+        comp = VEventUtil.toIcalComponent(val, false, tzreg,
                                           currentPrincipal);
       }
       cal.getComponents().add(comp);
     }
 
     if (val.getNumOverrides() > 0) {
-      for (EventInfo oei: val.getOverrides()) {
+      for (final EventInfo oei: val.getOverrides()) {
         cal.getComponents().add(VEventUtil.toIcalComponent(oei, true, tzreg,
-                                                           uriGen,
                                                            currentPrincipal));
       }
     }
