@@ -39,6 +39,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.icalendar.Icalendar.TimeZoneInfo;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;

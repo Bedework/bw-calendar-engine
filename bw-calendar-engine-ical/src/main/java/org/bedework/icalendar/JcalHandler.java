@@ -65,12 +65,11 @@ public class JcalHandler implements Serializable {
   public static String toJcal(final Collection<EventInfo> vals,
                               final int methodType,
                               final IcalendarType pattern,
-                              final URIgen uriGen,
                               final String currentPrincipal,
                               final EventTimeZonesRegistry tzreg) throws CalFacadeException {
     StringWriter sw = new StringWriter();
 
-    outJcal(sw, vals, methodType, pattern, uriGen, currentPrincipal, tzreg);
+    outJcal(sw, vals, methodType, pattern, currentPrincipal, tzreg);
 
     return sw.toString();
   }
