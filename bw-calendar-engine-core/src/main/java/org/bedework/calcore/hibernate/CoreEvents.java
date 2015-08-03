@@ -533,16 +533,18 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     final Collection<BwEventProxy> overrides = ei.getOverrideProxies();
     final long startTime = System.currentTimeMillis();
     RecuridTable recurids = null;
-    HibSession sess = getSess();
-    UpdateEventResult uer = new UpdateEventResult();
+    final HibSession sess = getSess();
+    final UpdateEventResult uer = new UpdateEventResult();
 
     uer.addedUpdated = true;
 
-    BwCalendar cal = getEntityCollection(val.getColPath(), privBind,
-                                         scheduling, false);
-    boolean shared = cal.getShared();
+    final BwCalendar cal = getEntityCollection(val.getColPath(), privBind,
+                                               scheduling, false);
 
-    CollectionInfo collInf = cal.getCollectionInfo();
+    /* Indicate if we want sharing notifications of changes */
+    final boolean shared = cal.getPublick() || cal.getShared();
+
+    final CollectionInfo collInf = cal.getCollectionInfo();
 
     if (!Util.isEmpty(overrides)) {
       if (!val.testRecurring()) {
@@ -773,7 +775,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     }
 
     BwCalendar col = getCollection(val.getColPath());
-    boolean shared = col.getShared();
+    boolean shared = col.getPublick() || col.getShared();
 
     /* Don't allow name and uid changes for overrides */
 
@@ -1008,7 +1010,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     try {
       final BwCalendar col = getEntityCollection(ev.getColPath(),
                                                  privAny, scheduling, false);
-      shared = col.getShared();
+      shared = col.getPublick() || col.getShared();
 
       if (!scheduling) {
         desiredAccess = privUnbind;

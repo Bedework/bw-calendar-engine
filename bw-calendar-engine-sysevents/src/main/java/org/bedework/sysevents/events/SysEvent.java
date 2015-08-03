@@ -97,7 +97,9 @@ public class SysEvent implements SysEventBase, Comparable<SysEvent> {
     attrs.add(new Attribute("indexed",
                             String.valueOf(getIndexed())));
     attrs.add(new Attribute("changeEvent",
-                            String.valueOf(getSysCode().getChangeEvent())));
+                            String.valueOf(getSysCode().getNotifiableEvent() ||
+                                                   (getSysCode() == SysCode.SUGGESTED) ||
+                                                   (getSysCode() == SysCode.SUGGESTED_RESPONSE))));
 
     return attrs;
   }

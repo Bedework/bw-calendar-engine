@@ -60,15 +60,15 @@ public class Notifier extends AbstractScheduler {
 
     private void addSharee(final String val) {
       if (enabledSharees == null) {
-        enabledSharees = new TreeSet<String>();
+        enabledSharees = new TreeSet<>();
       }
 
       enabledSharees.add(val);
     }
   }
 
-  private static Map<String, ColInfo> colInfo =
-      new FlushMap<String, ColInfo>(100, // size
+  private static final Map<String, ColInfo> colInfo =
+      new FlushMap<>(100, // size
           60 * 1000 * 3,
           500);
 
@@ -78,30 +78,135 @@ public class Notifier extends AbstractScheduler {
     super();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.inoutsched.ScheduleMesssageHandler#processMessage(org.bedework.sysevents.events.SysEvent)
-   */
   @Override
   public ProcessMessageResult processMessage(final SysEvent msg) {
-    if (msg.getSysCode().getChangeEvent()) {
-      return processChangeEvent(msg);
+    final SysCode sysCode = msg.getSysCode();
+
+    if ((sysCode == SysCode.SUGGESTED) ||
+            (sysCode == SysCode.SUGGESTED_RESPONSE)) {
+      return processSuggested(msg);
     }
 
-    // Ignore it
-    return ProcessMessageResult.IGNORED;
+    if (!sysCode.getNotifiableEvent()) {
+      // Ignore it
+      return ProcessMessageResult.IGNORED;
+    }
+
+    return processChangeEvent(msg);
+  }
+
+  private ProcessMessageResult processSuggested(final SysEvent msg) {
+    try {
+      final SysCode sysCode = msg.getSysCode();
+      String targetPrincipal = null;
+      SuggestBaseNotificationType sbnt = null;
+
+      if (sysCode == SysCode.SUGGESTED) {
+        final EntitySuggestedEvent ese = (EntitySuggestedEvent)msg;
+
+        final SuggestNotificationType snt =
+                new SuggestNotificationType();
+
+        snt.setUid(Uid.getUid());
+        snt.setHref(ese.getHref());
+        snt.setSuggesterHref(ese.getAuthPrincipalHref());
+        snt.setSuggesteeHref(ese.getTargetPrincipalHref());
+
+        targetPrincipal = ese.getTargetPrincipalHref();
+        sbnt = snt;
+      } else if (sysCode == SysCode.SUGGESTED_RESPONSE) {
+        final EntitySuggestedResponseEvent esre = (EntitySuggestedResponseEvent)msg;
+
+        final SuggestResponseNotificationType srnt =
+                new SuggestResponseNotificationType();
+
+        srnt.setUid(Uid.getUid());
+        srnt.setHref(esre.getHref());
+        srnt.setSuggesteeHref(esre.getAuthPrincipalHref());
+        srnt.setSuggesterHref(esre.getTargetPrincipalHref());
+        srnt.setAccepted(esre.getAccepted());
+
+        targetPrincipal = srnt.getSuggesterHref();
+        sbnt = srnt;
+      }
+
+      if (sbnt == null) {
+        return ProcessMessageResult.IGNORED;
+      }
+
+      try {
+        getSvci(targetPrincipal);
+
+          /* See if we have any notifications for this entity
+           *
+           * SCHEMA: If we could store the entire encoded path in the name we
+           * could just do a get
+           */
+        NotificationType storedNote = null;
+
+        for (final NotificationType n:
+                getNotes().getMatching(sbnt.getElementName())) {
+          if ((n == null) || (n.getNotification() == null)) {
+            // Bad notiifcation?
+            continue;
+          }
+
+          final SuggestBaseNotificationType ns =
+                  (SuggestBaseNotificationType)n.getNotification();
+
+          if (sbnt.getHref().equals(ns.getHref())) {
+            // Suggested resource
+            storedNote = n;
+            break;
+          }
+        }
+
+        /* If we already have a suggestion we don't add another
+           */
+
+        if (storedNote == null) {
+          // save this one
+          sbnt.setName(getEncodedUuid());
+
+          final NotificationType n = new NotificationType();
+          n.setNotification(sbnt);
+
+          getNotes().add(n);
+          return ProcessMessageResult.PROCESSED;
+        }
+
+        return ProcessMessageResult.IGNORED;
+      } finally {
+        closeSvci(getSvc());
+      }
+    } catch (final CalFacadeStaleStateException csse) {
+      if (debug) {
+        trace("Stale state exception");
+      }
+
+      return ProcessMessageResult.STALE_STATE;
+    } catch (final Throwable t) {
+      rollback(getSvc());
+      error(t);
+    } finally {
+      try {
+        closeSvci(getSvc());
+      } catch (final Throwable ignored) {
+      }
+    }
+
+    return ProcessMessageResult.FAILED;
   }
 
   private ProcessMessageResult processChangeEvent(final SysEvent msg) {
-    CalSvcI svci = null;
-
-    boolean collection = msg.getSysCode().getCollectionRef();
+    final boolean collection = msg.getSysCode().getCollectionRef();
 
     try {
       if (!(msg instanceof OwnedHrefEvent)) {
         return ProcessMessageResult.IGNORED;
       }
 
-      OwnedHrefEvent oheMsg = (OwnedHrefEvent)msg;
+      final OwnedHrefEvent oheMsg = (OwnedHrefEvent)msg;
 
       if (!inSharedCollection(oheMsg)) {
         return ProcessMessageResult.IGNORED;
@@ -112,19 +217,19 @@ public class Notifier extends AbstractScheduler {
       } else {
         return processEntity(oheMsg);
       }
-    } catch (CalFacadeStaleStateException csse) {
+    } catch (final CalFacadeStaleStateException csse) {
       if (debug) {
         trace("Stale state exception");
       }
 
       return ProcessMessageResult.STALE_STATE;
-    } catch (Throwable t) {
-      rollback(svci);
+    } catch (final Throwable t) {
+      rollback(getSvc());
       error(t);
     } finally {
       try {
-        closeSvci(svci);
-      } catch (Throwable t) {}
+        closeSvci(getSvc());
+      } catch (final Throwable ignored) {}
     }
 
     return ProcessMessageResult.FAILED;
@@ -142,7 +247,7 @@ public class Notifier extends AbstractScheduler {
    */
   private ProcessMessageResult processEntity(final OwnedHrefEvent msg) throws CalFacadeException {
     try {
-      NotificationType note = getNotification(msg);
+      final NotificationType note = getNotification(msg);
 
       if (note == null) {
         return ProcessMessageResult.PROCESSED;
@@ -154,7 +259,7 @@ public class Notifier extends AbstractScheduler {
       }
 
       return ProcessMessageResult.PROCESSED;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
       return ProcessMessageResult.FAILED_NORETRIES;
     }
@@ -168,8 +273,8 @@ public class Notifier extends AbstractScheduler {
       getSvci(msg.getOwnerHref());
 
       // Normalized
-      String ownerHref = getPrincipalHref();
-      String href = msg.getHref();
+      final String ownerHref = getPrincipalHref();
+      final String href = msg.getHref();
 
       if (debug) {
         trace(msg.toString());
@@ -177,9 +282,13 @@ public class Notifier extends AbstractScheduler {
               " owner principal " + ownerHref);
       }
 
-      String colPath = getPathTo(href);
+      final String colPath = getPathTo(href);
 
-      ColInfo ci = getColInfo(colPath);
+      final ColInfo ci = getColInfo(colPath);
+      if (ci == null) {
+        // path pointing to non-existent collection
+        return ProcessMessageResult.PROCESSED;
+      }
 
       if (!ci.shared || Util.isEmpty(ci.enabledSharees)) {
         return ProcessMessageResult.PROCESSED;
@@ -190,7 +299,7 @@ public class Notifier extends AbstractScheduler {
         return ProcessMessageResult.PROCESSED;
       }
 
-      ResourceChangeType rc = (ResourceChangeType)note.getNotification();
+      final ResourceChangeType rc = (ResourceChangeType)note.getNotification();
 
       // SCHEMA
       if (rc.getEncoding() == null) {
@@ -202,8 +311,11 @@ public class Notifier extends AbstractScheduler {
        * sharee that made the change.
        */
 
-      for (String sh: ci.enabledSharees) {
-        String shareeHref = getSvc().getDirectories().normalizeCua(sh);
+      for (final String sh: ci.enabledSharees) {
+        final String shareeHref = getSvc().getDirectories().normalizeCua(sh);
+
+        /* No notification if this is the owner of the changed resource
+         */
         if (shareeHref.equals(msg.getAuthPrincipalHref())) {
           continue;
         }
@@ -218,7 +330,8 @@ public class Notifier extends AbstractScheduler {
            */
           NotificationType storedNote = null;
 
-          for (NotificationType n: getNotes().getMatching(AppleServerTags.resourceChange)) {
+          for (final NotificationType n:
+                  getNotes().getMatching(AppleServerTags.resourceChange)) {
             if (rc.getEncoding().equals(n.getNotification().getEncoding())) {
               storedNote = n;
               break;
@@ -270,7 +383,8 @@ public class Notifier extends AbstractScheduler {
             continue;
           }
 
-          ResourceChangeType storedRc = (ResourceChangeType)storedNote.getNotification();
+          final ResourceChangeType storedRc =
+                  (ResourceChangeType)storedNote.getNotification();
 
           if (rc.getCreated() != null) {
             // Choice 2 above - update the old one
@@ -312,7 +426,7 @@ public class Notifier extends AbstractScheduler {
             storedRc.setCreated(null);
             storedRc.setCollectionChanges(null);
 
-            for (UpdatedType u: rc.getUpdated()) {
+            for (final UpdatedType u: rc.getUpdated()) {
               storedRc.addUpdate(u);
             }
 
@@ -339,7 +453,7 @@ public class Notifier extends AbstractScheduler {
       if (msg instanceof NotificationEvent) {
         return Parser.fromXml(((NotificationEvent)msg).getNotification());
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
     return null;
@@ -355,7 +469,25 @@ public class Notifier extends AbstractScheduler {
     ci = new ColInfo();
     colInfo.put(path, ci);
 
-    BwCalendar col = getCols().get(path);
+    final BwCalendar col = getCols().get(path);
+    if (col == null) {
+      return null;
+    }
+
+    /* If this is a public collection we always send change notifications.
+     * The notifications form part of the navigation.
+     */
+
+    if (col.getPublick()) {
+      /* We need to notify all admin group event owners. There might
+       * be a lot of these.
+       * /
+       NOT DOING THAT YET
+      ci.shared = true;
+      ci.enabledSharees = adminGroupOwners();
+      */
+      return ci;
+    }
 
     if (!Boolean.valueOf(col.getQproperty(AppleServerTags.shared))) {
       ci.shared = false;
@@ -366,7 +498,8 @@ public class Notifier extends AbstractScheduler {
      * collection and add the sharee if any are enabled for notifications.
      */
 
-    InviteType invite = getSvc().getSharingHandler().getInviteStatus(col);
+    final InviteType invite =
+            getSvc().getSharingHandler().getInviteStatus(col);
 
     if (invite == null) {
       // No sharees
@@ -375,17 +508,21 @@ public class Notifier extends AbstractScheduler {
 
     ci.shared = true;
 
-    boolean defaultEnabled = getAuthpars().getDefaultChangesNotifications();
+    final boolean defaultEnabled =
+            getAuthpars().getDefaultChangesNotifications();
 
     if (notificationsEnabled(col, defaultEnabled)) {
       ci.addSharee(col.getOwnerHref());
     }
 
-    for (UserType u: invite.getUsers()) {
+    /* for sharees - it's the alias which points at this collection
+     * which holds the status.
+     */
+    for (final UserType u: invite.getUsers()) {
       try {
         pushPrincipal(u.getHref());
 
-        List<BwCalendar> cols;
+        final List<BwCalendar> cols;
 
         cols = findAlias(path);
 
@@ -393,7 +530,7 @@ public class Notifier extends AbstractScheduler {
           return ci;
         }
 
-        for (BwCalendar c: cols) {
+        for (final BwCalendar c: cols) {
           if (notificationsEnabled(c, defaultEnabled)) {
             ci.addSharee(u.getHref());
           }
@@ -406,19 +543,49 @@ public class Notifier extends AbstractScheduler {
     return ci;
   }
 
+  private Set<String> adminGroupOwners() throws CalFacadeException {
+    final Set<String> hrefs = new TreeSet<>();
+    adminGroupOwners(hrefs,
+                     getSvc().getAdminDirectories().getAll(true));
+
+    return hrefs;
+  }
+
+  private void adminGroupOwners(final Set<String> hrefs,
+                                final Collection<? extends BwPrincipal> prs) throws CalFacadeException {
+    if (Util.isEmpty(prs)) {
+      return;
+    }
+
+    for (final BwPrincipal pr: prs) {
+      if (pr instanceof BwAdminGroup) {
+        final BwAdminGroup adGrp = (BwAdminGroup)pr;
+
+        hrefs.add(adGrp.getOwnerHref());
+
+        adminGroupOwners(hrefs, adGrp.getGroupMembers());
+      }
+    }
+  }
+
+  /* For private collections we'll use the AppleServerTags.notifyChanges
+   * property to indicate if we should notify the sharee.
+   *
+   * For public collections we always notify
+   */
   private boolean notificationsEnabled(final BwCalendar col,
                                        final boolean defaultEnabled) {
-    String enabledVal = col.getQproperty(AppleServerTags.notifyChanges);
+    if (col.getPublick()) {
+      return true;
+    }
+
+    final String enabledVal = col.getQproperty(AppleServerTags.notifyChanges);
 
     if (enabledVal == null) {
       return defaultEnabled;
     }
 
-    if (Boolean.valueOf(enabledVal)) {
-      return true;
-    }
-
-    return false;
+    return Boolean.valueOf(enabledVal);
   }
 
   private boolean inSharedCollection(final OwnedHrefEvent msg) {
@@ -442,7 +609,7 @@ public class Notifier extends AbstractScheduler {
       return null;
     }
 
-    int pos = href.lastIndexOf("/");
+    final int pos = href.lastIndexOf("/");
 
     if (pos == 0) {
       return null;

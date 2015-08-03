@@ -82,10 +82,7 @@ public interface SysEventBase extends Serializable {
   static final boolean notIndexable = false;
 
   /** */
-  static final boolean isChangeEvent = true;
-
-  /** */
-  static final boolean notChangeEvent = false;
+  static final boolean isNotifiableEvent = true;
 
   /**
    * Define system events.
@@ -145,19 +142,19 @@ public interface SysEventBase extends Serializable {
     /* ========= Collections =========== */
 
     /** A collection was added */
-    COLLECTION_ADDED(info, user, isIndexable, isChangeEvent, true),
+    COLLECTION_ADDED(info, user, isIndexable, isNotifiableEvent, true),
 
     /** A collection was tombstoned */
-    COLLECTION_TOMBSTONED(info, user, isIndexable, isChangeEvent, true),
+    COLLECTION_TOMBSTONED(info, user, isIndexable, isNotifiableEvent, true),
 
     /** A collection was deleted */
-    COLLECTION_DELETED(info, user, isIndexable, isChangeEvent, true),
+    COLLECTION_DELETED(info, user, isIndexable, isNotifiableEvent, true),
 
     /** A collection was moved */
-    COLLECTION_MOVED(info, user, isIndexable, isChangeEvent, true),
+    COLLECTION_MOVED(info, user, isIndexable, isNotifiableEvent, true),
 
     /** A collection was updated */
-    COLLECTION_UPDATED(info, user, isIndexable, isChangeEvent, true),
+    COLLECTION_UPDATED(info, user, isIndexable, isNotifiableEvent, true),
 
     /* ========= Entities =========== */
 
@@ -165,19 +162,19 @@ public interface SysEventBase extends Serializable {
     ENTITY_FETCHED(info, user),
 
     /** An event, task etc was added */
-    ENTITY_ADDED(info, user, isIndexable, isChangeEvent, false),
+    ENTITY_ADDED(info, user, isIndexable, isNotifiableEvent, false),
 
     /** An event, task etc was tombstoned */
-    ENTITY_TOMBSTONED(info, user, isIndexable, isChangeEvent, false),
+    ENTITY_TOMBSTONED(info, user, isIndexable, isNotifiableEvent, false),
 
     /** An event, task etc was deleted */
-    ENTITY_DELETED(info, user, isIndexable, isChangeEvent, false),
+    ENTITY_DELETED(info, user, isIndexable, isNotifiableEvent, false),
 
     /** An event, task etc was updated */
-    ENTITY_UPDATED(info, user, isIndexable, isChangeEvent, false),
+    ENTITY_UPDATED(info, user, isIndexable, isNotifiableEvent, false),
 
     /** An entity was moved */
-    ENTITY_MOVED(info, user, isIndexable, isChangeEvent, false),
+    ENTITY_MOVED(info, user, isIndexable, isNotifiableEvent, false),
 
     /* ========= Scheduling =========== */
 
@@ -187,15 +184,23 @@ public interface SysEventBase extends Serializable {
     /* ========= Services =========== */
 
     /** Service initialised as a user */
-    SERVICE_USER_LOGIN(info, priv);
+    SERVICE_USER_LOGIN(info, priv),
 
-    private int severity;
+    /* ========= Public events =========== */
 
-    private int privLevel;
+    /** Event is suggested to another group */
+    SUGGESTED(info, priv),
 
-    private boolean indexable;
+    /** Response from suggestion to another group */
+    SUGGESTED_RESPONSE(info, priv);
 
-    private boolean changeEvent;
+    private final int severity;
+
+    private final int privLevel;
+
+    private final boolean indexable;
+
+    private boolean notifiableEvent;
 
     private boolean collectionRef;
 
@@ -204,7 +209,7 @@ public interface SysEventBase extends Serializable {
      *
      * @param severity
      *          - numeric code for the event severity.
-     * @param privLevel
+     * @param privLevel numeric privilege level
      */
     SysCode(final int severity, final int privLevel) {
       this(severity, privLevel, notIndexable);
@@ -215,8 +220,8 @@ public interface SysEventBase extends Serializable {
      *
      * @param severity
      *          - numeric code for the event severity.
-     * @param privLevel
-     * @param indexable
+     * @param privLevel numeric privilege level
+     * @param indexable true if this indicates an indexable change may have occurred
      */
     SysCode(final int severity,
             final int privLevel,
@@ -231,20 +236,20 @@ public interface SysEventBase extends Serializable {
      *
      * @param severity
      *          - numeric code for the event severity.
-     * @param privLevel
-     * @param indexable
-     * @param changeEvent
+     * @param privLevel numeric privilege level
+     * @param indexable true if this indicates an indexable change may have occurred
+     * @param notifiableEvent true if this indicates a notifiable event occurred
      * @param collectionRef - true if we are referring to a collection
      */
     SysCode(final int severity,
             final int privLevel,
             final boolean indexable,
-            final boolean changeEvent,
+            final boolean notifiableEvent,
             final boolean collectionRef) {
       this.severity = severity;
       this.privLevel = privLevel;
       this.indexable = indexable;
-      this.changeEvent = changeEvent;
+      this.notifiableEvent = isNotifiableEvent;
       this.collectionRef = collectionRef;
     }
 
@@ -270,14 +275,14 @@ public interface SysEventBase extends Serializable {
     }
 
     /**
-     * @return true if this indicates a changeEvent occurred
+     * @return true if this indicates a notifiableEvent occurred
      */
-    public boolean getChangeEvent() {
-      return changeEvent;
+    public boolean getNotifiableEvent() {
+      return notifiableEvent;
     }
 
     /**
-     * @return true if this indicates a changeEvent occurred to a collection
+     * @return true if this indicates a notifiableEvent occurred to a collection
      */
     public boolean getCollectionRef() {
       return collectionRef;

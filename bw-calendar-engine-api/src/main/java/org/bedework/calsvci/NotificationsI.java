@@ -90,6 +90,14 @@ public interface NotificationsI extends Serializable {
    */
   void remove(NotificationType val) throws CalFacadeException;
 
+  /** Remove all the notification from the notification collection for the
+   * given calendar user.
+   *
+   * @param principalHref - the principal
+   * @throws CalFacadeException
+   */
+  void removeAll(String principalHref) throws CalFacadeException;
+
   /**
    * @return all notifications for this user
    * @throws CalFacadeException

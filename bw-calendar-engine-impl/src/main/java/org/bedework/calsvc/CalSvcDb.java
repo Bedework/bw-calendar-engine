@@ -121,7 +121,7 @@ public class CalSvcDb implements Serializable {
   }
 
   protected void pushPrincipal(final String href) throws CalFacadeException {
-    BwPrincipal pr = getSvc().getDirectories().caladdrToPrincipal(href);
+    final BwPrincipal pr = getSvc().getDirectories().caladdrToPrincipal(href);
 
     if (pr == null) {
       throw new CalFacadeException(CalFacadeException.badRequest,

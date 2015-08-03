@@ -27,6 +27,7 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.NotificationsI;
+import org.bedework.calsvci.ResourcesI;
 import org.bedework.util.misc.Util;
 
 import java.io.InputStream;
@@ -94,7 +95,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
     noteRsrc.setContent(rc);
 
     try {
-      final String xml = val.toXml();
+      final String xml = val.toXml(true);
 
       if (xml == null) {
         return false;
@@ -133,7 +134,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
     }
 
     try {
-      final String xml = val.toXml();
+      final String xml = val.toXml(true);
 
       if (xml == null) {
         return false;
@@ -230,6 +231,35 @@ class Notifications extends CalSvcDb implements NotificationsI {
   }
 
   @Override
+  public void removeAll(final String principalHref) throws CalFacadeException {
+    if (principalHref == null) {
+      return;
+    }
+
+    try {
+      pushPrincipal(principalHref);
+
+      final BwCalendar ncol = getCols().getSpecial(BwCalendar.calTypeNotifications,
+                                                   true);
+
+      if (ncol == null) {
+        return;
+      }
+
+      /* Remove resources */
+      final ResourcesI resI = getSvc().getResourcesHandler();
+      final Collection<BwResource> rs = resI.getAll(ncol.getPath());
+      if (!Util.isEmpty(rs)) {
+        for (final BwResource r: rs) {
+          resI.delete(Util.buildPath(false, r.getColPath(), "/", r.getName()));
+        }
+      }
+    } finally {
+      popPrincipal();
+    }
+  }
+
+  @Override
   public List<NotificationType> getAll() throws CalFacadeException {
     return getMatching(null);
   }
@@ -319,7 +349,12 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
       return note;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      if (debug) {
+        error(t);
+      }
+      error("Unable to parse notification " + rsrc.getColPath() +
+                    " " + rsrc.getName());
+      return null;
     }
   }
 }

@@ -56,6 +56,7 @@ import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.mail.MailerIntf;
+import org.bedework.calfacade.notifications.parse.SuggestParsers;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
@@ -127,6 +128,7 @@ public class CalSvc extends CalSvcI {
   static {
     try {
       configs = new CalSvcFactoryDefault().getSystemConfig();
+      new SuggestParsers(); // force load
     } catch (final Throwable t) {
       t.printStackTrace();
     }
