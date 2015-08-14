@@ -128,4 +128,18 @@ public interface NotificationsI extends Serializable {
    */
   List<NotificationType> getMatching(String href,
                                      QName type) throws CalFacadeException;
+
+  /** Subscribe to a notification service.
+   *
+   * @throws CalFacadeException
+   */
+  void subscribe(String principalHref,
+                 List<String> emails) throws CalFacadeException;
+
+  /** Subscribe to a notification service.
+   *
+   * @throws CalFacadeException
+   */
+  void unsubscribe(String principalHref,
+                   List<String> emails) throws CalFacadeException;
 }

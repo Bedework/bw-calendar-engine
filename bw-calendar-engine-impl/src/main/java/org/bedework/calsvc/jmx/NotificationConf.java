@@ -72,6 +72,16 @@ public class NotificationConf extends ConfBase<NotificationPropertiesImpl>
   }
 
   @Override
+  public void setNotifierURI(final String val) {
+    getConfig().setNotifierURI(val);
+  }
+
+  @Override
+  public String getNotifierURI() {
+    return getConfig().getNotifierURI();
+  }
+
+  @Override
   public void setNotifierId(final String val) {
     getConfig().setNotifierId(val);
   }

@@ -50,7 +50,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwOrganizer;
-import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwResource;
@@ -71,6 +70,7 @@ import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.calfacade.filter.RetrieveList;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
@@ -98,6 +98,7 @@ import org.bedework.util.xml.tagdefs.WebdavTags;
 import org.bedework.util.xml.tagdefs.XcalTags;
 import org.bedework.webdav.servlet.shared.PrincipalPropertySearch;
 import org.bedework.webdav.servlet.shared.UrlHandler;
+import org.bedework.webdav.servlet.shared.WdCollection;
 import org.bedework.webdav.servlet.shared.WdEntity;
 import org.bedework.webdav.servlet.shared.WebdavBadRequest;
 import org.bedework.webdav.servlet.shared.WebdavException;
@@ -287,9 +288,9 @@ public class BwSysIntfImpl implements SysIntf {
   }
 
   @Override
-  public boolean allowsSyncReport(final CalDAVCollection col) throws WebdavException {
+  public boolean allowsSyncReport(final WdCollection col) throws WebdavException {
     /* This - or any target if an alias - cannot be filtered at the moment. */
-    BwCalendar bwcol = ((BwCalDAVCollection)col).getCol();
+    final BwCalendar bwcol = ((BwCalDAVCollection)col).getCol();
 
     if (bwcol.getFilterExpr() != null) {
       return false;
@@ -318,7 +319,7 @@ public class BwSysIntfImpl implements SysIntf {
       uhome = uhome.substring(1);
     }
 
-    String[] els = bwcol.getPath().split("/");
+    final String[] els = bwcol.getPath().split("/");
 
     // First element should be "" for the leading "/"
 
@@ -342,9 +343,13 @@ public class BwSysIntfImpl implements SysIntf {
     return "text/calendar";
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#getPrincipal()
-   */
+  @Override
+  public String getNotificationURL() throws WebdavException {
+    final CalPrincipalInfo cpi =
+            getCalPrincipalInfo(currentPrincipal);
+    return cpi.notificationsPath;
+  }
+
   @Override
   public AccessPrincipal getPrincipal() throws WebdavException {
     return currentPrincipal;

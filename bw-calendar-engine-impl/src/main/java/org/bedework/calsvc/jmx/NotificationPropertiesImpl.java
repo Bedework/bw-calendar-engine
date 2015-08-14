@@ -35,6 +35,7 @@ public class NotificationPropertiesImpl
         extends ConfigBase<NotificationPropertiesImpl>
         implements NotificationProperties {
   private boolean outboundEnabled;
+  private String notifierURI;
   private String notifierId;
   private String notifierToken;
   private String notificationDirHref;
@@ -47,6 +48,16 @@ public class NotificationPropertiesImpl
   @Override
   public boolean getOutboundEnabled() {
     return outboundEnabled;
+  }
+
+  @Override
+  public void setNotifierURI(final String val) {
+    notifierURI = val;
+  }
+
+  @Override
+  public String getNotifierURI() {
+    return notifierURI;
   }
 
   @Override
@@ -90,6 +101,7 @@ public class NotificationPropertiesImpl
     ts.newLine();
     ts.append("name", getName());
     ts.append("outboundEnabled", getOutboundEnabled());
+    ts.append("notifierURI", getNotifierURI());
     ts.append("notifierId", getNotifierId());
     ts.append("notifierToken", getNotifierToken());
     ts.append("notificationDirHref", getNotificationDirHref());
@@ -106,5 +118,10 @@ public class NotificationPropertiesImpl
 
 
     return clone;
+  }
+
+  @Override
+  public int compareTo(final NotificationPropertiesImpl o) {
+    return 0;
   }
 }

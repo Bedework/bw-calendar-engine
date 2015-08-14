@@ -44,6 +44,19 @@ public interface NotificationProperties {
   @MBeanInfo("Show if outbound notifications enabled")
   boolean getOutboundEnabled();
 
+  /** Notification engine URI - null for no service
+   *
+   * @param val    String
+   */
+  void setNotifierURI(final String val);
+
+  /** Notification engine URI - null for no service
+   *
+   * @return String
+   */
+  @MBeanInfo("Notification system URI")
+  String getNotifierURI();
+
   /** Notification system id - null for no service
    *
    * @param val    String
