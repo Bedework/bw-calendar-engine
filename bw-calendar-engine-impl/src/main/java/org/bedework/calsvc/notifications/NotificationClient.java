@@ -16,19 +16,17 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calsvc;
+package org.bedework.calsvc.notifications;
 
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.http.BasicHttpClient;
 import org.bedework.util.misc.Logged;
-import org.bedework.util.misc.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.StringWriter;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -37,7 +35,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author Mike Douglass       douglm - rpi.edu
  */
-class NotificationClient extends Logged {
+public class NotificationClient extends Logged {
   final NotificationProperties np;
 
   private static final ObjectMapper om = new ObjectMapper();
@@ -48,56 +46,53 @@ class NotificationClient extends Logged {
    * Constructor
    *
    */
-  NotificationClient(final NotificationProperties np) {
+  public NotificationClient(final NotificationProperties np) {
     this.np = np;
   }
 
-  private static class NotifyMessage {
-    String system;
-    String token;
-    List<String> hrefs = new ArrayList<>();
-  }
+  /**
+   *
+   * @param principalHref owner of changed notifications
+   * @throws CalFacadeException
+   */
+  public void informNotifier(final String principalHref) throws CalFacadeException {
+    final NotifyMessage nm = new NotifyMessage(np.getNotifierId(),
+                                               np.getNotifierToken());
 
-  private static class SubscribeMessage {
-    String system;
-    String token;
-    String href;
-    List<String> emailAddresses = new ArrayList<>();
-  }
-
-  void informNotifier(final String principalHref) throws CalFacadeException {
-    final NotifyMessage nm = new NotifyMessage();
-
-    nm.system = np.getNotifierId();
-    nm.token = np.getNotifierToken();
-    nm.hrefs.add(principalHref);
+    nm.getHrefs().add(principalHref);
 
     sendRequest(nm, "notification/");
   }
 
-  void subscribe(final String principalHref,
+  /**
+   *
+   * @param principalHref identify who
+   * @param emails non-empty list
+   * @throws CalFacadeException
+   */
+  public void subscribe(final String principalHref,
                  final List<String> emails) throws CalFacadeException {
-    final SubscribeMessage sm = new SubscribeMessage();
-
-    sm.system = np.getNotifierId();
-    sm.token = np.getNotifierToken();
-    sm.href= principalHref;
-    sm.emailAddresses = emails;
+    final SubscribeMessage sm =
+            new SubscribeMessage(np.getNotifierId(),
+                                 np.getNotifierToken(),
+                                 principalHref,
+                                 emails);
 
     sendRequest(sm, "subscribe/");
   }
 
-  void unsubscribe(final String principalHref,
+  /**
+   *
+   * @param principalHref identify who
+   * @param emails null to remove entire subscription
+   * @throws CalFacadeException
+   */
+  public void unsubscribe(final String principalHref,
                    final List<String> emails) throws CalFacadeException {
-    final SubscribeMessage sm = new SubscribeMessage();
-
-    sm.system = np.getNotifierId();
-    sm.token = np.getNotifierToken();
-    sm.href= principalHref;
-
-    if (!Util.isEmpty(emails)) {
-      sm.emailAddresses = emails;
-    }
+    final SubscribeMessage sm = new SubscribeMessage(np.getNotifierId(),
+                                                     np.getNotifierToken(),
+                                                     principalHref,
+                                                     emails);
 
     sendRequest(sm, "unsubscribe/");
   }
