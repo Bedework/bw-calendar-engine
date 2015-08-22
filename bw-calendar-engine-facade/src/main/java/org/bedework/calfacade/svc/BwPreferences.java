@@ -178,6 +178,9 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   /** preferred group - admin suggest event - this may occur multiple times */
   public static final String propertyPreferredGroup = "userpref:preferrred-group";
 
+  /** Notification token */
+  public static final String propertyNotificationToken = "userpref:notification-token";
+
   /** XXX Only here till we update schema
       max entity size for this user -only settable by admin */
   public static final String propertyMaxEntitySize = "NOTuserpref:max-entity-size";
@@ -798,6 +801,21 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   @NoDump
   public void addPreferredGroup(final String href) {
     addProperty(new BwProperty(propertyPreferredGroup, href));
+  }
+
+  /**
+   * @param val  String Notification Token.
+   */
+  public void setNotificationToken(final String val) {
+    setProp(propertyNotificationToken, val);
+  }
+
+  /**
+   * @return String Notification Token.
+   */
+  @NoDump
+  public String getNotificationToken() {
+    return getProp(propertyNotificationToken);
   }
 
   /* ====================================================================

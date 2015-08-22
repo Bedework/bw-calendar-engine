@@ -26,6 +26,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvc.notifications.NotificationClient;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.ResourcesI;
@@ -36,6 +37,7 @@ import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import javax.xml.namespace.QName;
 
@@ -355,14 +357,28 @@ class Notifications extends CalSvcDb implements NotificationsI {
   public void subscribe(final String principalHref,
                         final List<String> emails)
           throws CalFacadeException {
-    getNoteClient().subscribe(principalHref, emails);
+    try {
+      pushPrincipal(principalHref);
+      final BwPreferences prefs = getSvc().getPrefsHandler().get();
+
+      prefs.setNotificationToken(UUID.randomUUID().toString());
+      getNoteClient().subscribe(principalHref, emails,
+                                prefs.getNotificationToken());
+    } finally {
+      popPrincipal();
+    }
   }
 
   @Override
   public void unsubscribe(final String principalHref,
                           final List<String> emails)
           throws CalFacadeException {
-    getNoteClient().unsubscribe(principalHref, emails);
+    try {
+      pushPrincipal(principalHref);
+      getNoteClient().unsubscribe(principalHref, emails);
+    } finally {
+      popPrincipal();
+    }
   }
 
   private NotificationType makeNotification(final BwResource rsrc)

@@ -192,6 +192,7 @@ public class BwSysIntfImpl implements SysIntf {
                      final boolean service,
                      final boolean calWs,
                      final boolean synchWs,
+                     final boolean notifyWs,
                      final String opaqueData) throws WebdavException {
     try {
       this.calWs = calWs;
@@ -211,8 +212,15 @@ public class BwSysIntfImpl implements SysIntf {
       //  throw new WebdavException("bwappname is not set in web.xml");
       //}
 
-      final String id = doNoteHeader(req.getHeader("X-BEDEWORK-NOTE"),
-                                     account);
+      // Notification service calling?
+      final String id;
+
+      if (notifyWs) {
+        id = doNoteHeader(req.getHeader("X-BEDEWORK-NOTE"),
+                          req.getHeader("X-BEDEWORK-NOTEPR"));
+      } else {
+        id = account;
+      }
 
       doBedeworkExtensions(req.getHeader("X-BEDEWORK-EXTENSIONS"));
 
@@ -225,8 +233,8 @@ public class BwSysIntfImpl implements SysIntf {
       boolean publicAdmin = false;
       boolean adminCreateEprops = false;
 
-      if (opaqueData != null) {
-        String[] vals = opaqueData.split("\t");
+      if (!notifyWs && (opaqueData != null)) {
+        final String[] vals = opaqueData.split("\t");
 
         for (final String val: vals) {
           if (val.startsWith("public-admin=")) {
@@ -254,6 +262,20 @@ public class BwSysIntfImpl implements SysIntf {
 
       currentPrincipal = svci.getUsersHandler().getUser(id);
 
+      if (notifyWs) {
+        final String principalToken = req.getHeader("X-BEDEWORK-PT");
+        if (principalToken == null) {
+          throw new WebdavUnauthorized();
+        }
+
+        final BwPreferences prefs = svci.getPrefsHandler().get();
+
+        if ((prefs == null) ||
+                (prefs.getNotificationToken() == null) ||
+                !principalToken.equals(prefs.getNotificationToken())) {
+          throw new WebdavUnauthorized();
+        }
+      }
       return id;
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -2338,6 +2360,10 @@ public class BwSysIntfImpl implements SysIntf {
               (token == null) ||
               !token.equals(nprops.getNotifierToken())) {
         throw new WebdavBadRequest();
+      }
+
+      if (account != null) {
+        return account;
       }
 
       return id;

@@ -65,15 +65,12 @@ class Users extends CalSvcDb implements UsersI {
 
     setRoots(getSvc());
 
-    String href = getSvc().getDirectories().makePrincipalUri(account,
+    final String href = getSvc().getDirectories().makePrincipalUri(account,
                                                              WhoDefs.whoTypeUser);
 
     return getPrincipal(href);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.UsersI#getAlways(java.lang.String)
-   */
   @Override
   public BwPrincipal getAlways(final String account) throws CalFacadeException {
     if (account == null) {
@@ -81,7 +78,7 @@ class Users extends CalSvcDb implements UsersI {
       return BwPrincipal.makeUserPrincipal();
     }
 
-    BwPrincipal u = getUser(account);
+    final BwPrincipal u = getUser(account);
     if (u == null) {
       add(account);
     }
@@ -92,7 +89,7 @@ class Users extends CalSvcDb implements UsersI {
   /* Make this session specific for the moment. We could make it static possibly
    * Also flush every few minutes
    */
-  private Map<String, BwPrincipal> principalMap = new HashMap<String, BwPrincipal>();
+  private final Map<String, BwPrincipal> principalMap = new HashMap<>();
 
   private long lastFlush = System.currentTimeMillis();
   private static final long flushInt = 1000 * 30 * 5; // 5 minutes
@@ -110,7 +107,7 @@ class Users extends CalSvcDb implements UsersI {
       return;
     }
 
-    DirectoryInfo di =  svc.getDirectories().getDirectoryInfo();
+    final DirectoryInfo di =  svc.getDirectories().getDirectoryInfo();
     principalRoot = di.getPrincipalRoot();
     userPrincipalRoot = di.getUserPrincipalRoot();
     groupPrincipalRoot = di.getGroupPrincipalRoot();
@@ -121,7 +118,7 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   private BwPrincipal mappedPrincipal(final String val) {
-    long now = System.currentTimeMillis();
+    final long now = System.currentTimeMillis();
 
     if ((now - lastFlush) > flushInt) {
       principalMap.clear();
@@ -167,9 +164,6 @@ class Users extends CalSvcDb implements UsersI {
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.UsersI#add(java.lang.String)
-   */
   @Override
   public void add(final String val) throws CalFacadeException {
     getSvc().addUser(val);
@@ -188,7 +182,7 @@ class Users extends CalSvcDb implements UsersI {
 
     setRoots(getSvc());
 
-    BwPrincipal user = BwPrincipal.makeUserPrincipal();
+    final BwPrincipal user = BwPrincipal.makeUserPrincipal();
     user.setAccount(account);
 
     user.setCategoryAccess(Access.getDefaultPersonalAccess());
@@ -204,7 +198,7 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   void createUser(final String val) throws CalFacadeException {
-    BwPrincipal user = initUserObject(val);
+    final BwPrincipal user = initUserObject(val);
 
     setRoots(getSvc());
 
@@ -234,7 +228,7 @@ class Users extends CalSvcDb implements UsersI {
     try {
       getSvc().postNotification(SysEvent.makePrincipalEvent(SysEvent.SysCode.NEW_USER,
                                                             user, 0));
-    } catch (NotificationException ne) {
+    } catch (final NotificationException ne) {
       throw new CalFacadeException(ne);
     }
 

@@ -68,13 +68,16 @@ public class NotificationClient extends Logged {
    *
    * @param principalHref identify who
    * @param emails non-empty list
+   * @param userToken per-user token
    * @throws CalFacadeException
    */
   public void subscribe(final String principalHref,
-                 final List<String> emails) throws CalFacadeException {
+                        final List<String> emails,
+                        final String userToken) throws CalFacadeException {
     final SubscribeMessage sm =
             new SubscribeMessage(np.getNotifierId(),
                                  np.getNotifierToken(),
+                                 userToken,
                                  principalHref,
                                  emails);
 
@@ -91,6 +94,7 @@ public class NotificationClient extends Logged {
                    final List<String> emails) throws CalFacadeException {
     final SubscribeMessage sm = new SubscribeMessage(np.getNotifierId(),
                                                      np.getNotifierToken(),
+                                                     null,
                                                      principalHref,
                                                      emails);
 

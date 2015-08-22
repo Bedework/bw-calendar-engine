@@ -26,15 +26,18 @@ import java.util.List;
 public class SubscribeMessage {
   private final String system;
   private final String token;
+  private final String userToken;
   private final String href;
   private final List<String> emailAddresses;
 
   public SubscribeMessage(final String system,
                           final String token,
+                          final String userToken,
                           final String href,
                           final List<String> emailAddresses) {
     this.system = system;
     this.token = token;
+    this.userToken = userToken;
     this.href = href;
     this.emailAddresses = emailAddresses;
   }
@@ -45,6 +48,10 @@ public class SubscribeMessage {
 
   public String getToken() {
     return token;
+  }
+
+  public String getUserToken() {
+    return userToken;
   }
 
   public String getHref() {
