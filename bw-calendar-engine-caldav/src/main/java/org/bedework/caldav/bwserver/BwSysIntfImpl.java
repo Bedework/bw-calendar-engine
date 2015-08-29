@@ -214,10 +214,11 @@ public class BwSysIntfImpl implements SysIntf {
 
       // Notification service calling?
       final String id;
+      final String notePr = req.getHeader("X-BEDEWORK-NOTEPR");
 
       if (notifyWs) {
         id = doNoteHeader(req.getHeader("X-BEDEWORK-NOTE"),
-                          req.getHeader("X-BEDEWORK-NOTEPR"));
+                          notePr);
       } else {
         id = account;
       }
@@ -262,7 +263,7 @@ public class BwSysIntfImpl implements SysIntf {
 
       currentPrincipal = svci.getUsersHandler().getUser(id);
 
-      if (notifyWs) {
+      if (notifyWs && (notePr != null)) {
         final String principalToken = req.getHeader("X-BEDEWORK-PT");
         if (principalToken == null) {
           throw new WebdavUnauthorized();
@@ -828,7 +829,7 @@ public class BwSysIntfImpl implements SysIntf {
   @Override
   public boolean sendNotification(final String href,
                                   final NotificationType val) throws WebdavException {
-    AccessPrincipal pr = caladdrToPrincipal(href);
+    final AccessPrincipal pr = caladdrToPrincipal(href);
 
     if (pr == null) {
       return false;
@@ -836,7 +837,7 @@ public class BwSysIntfImpl implements SysIntf {
 
     try {
       return svci.getNotificationsHandler().send((BwPrincipal)pr, val);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
