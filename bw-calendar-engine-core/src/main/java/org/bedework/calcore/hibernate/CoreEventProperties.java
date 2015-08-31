@@ -187,11 +187,22 @@ public class CoreEventProperties <T extends BwEventProperty>
 
     sess.createQuery(qstr.toString());
 
+    if (debug) {
+      debugMsg("getAll: q=" + qstr.toString() + " owner=" + ownerHref);
+    }
+
     if (ownerHref != null) {
       sess.setString("ownerHref", ownerHref);
     }
 
-    Collection c = access.checkAccess(sess.getList(), privRead, true);
+    final List eps = sess.getList();
+
+    final Collection c = access.checkAccess(eps, privRead, true);
+
+    if (debug) {
+      debugMsg("getAll: found: " + eps.size() + " returning: " + c.size());
+    }
+
     return c;
   }
 
