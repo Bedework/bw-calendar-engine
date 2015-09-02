@@ -20,6 +20,8 @@ package org.bedework.calfacade.mail;
 
 import org.bedework.util.config.ConfInfo;
 import org.bedework.util.config.ConfigBase;
+import org.bedework.util.jmx.MBeanInfo;
+import org.bedework.util.misc.ToString;
 
 /** Properties for mailers.
  *
@@ -32,11 +34,15 @@ public class MailConfigPropertiesImpl extends ConfigBase<MailConfigPropertiesImp
         implements MailConfigProperties {
   private String protocol;
 
-  private String protocolClass;
-
   private String serverUri;
 
   private String serverPort;
+
+  private boolean starttls;
+
+  private String serverUsername;
+
+  private String serverPassword;
 
   private String from;
 
@@ -52,16 +58,6 @@ public class MailConfigPropertiesImpl extends ConfigBase<MailConfigPropertiesImp
   @Override
   public String getProtocol()  {
     return protocol;
-  }
-
-  @Override
-  public void setProtocolClass(final String val)  {
-    protocolClass  = val;
-  }
-
-  @Override
-  public String getProtocolClass()  {
-    return protocolClass;
   }
 
   @Override
@@ -82,6 +78,38 @@ public class MailConfigPropertiesImpl extends ConfigBase<MailConfigPropertiesImp
   @Override
   public String getServerPort()  {
     return serverPort;
+  }
+
+  @Override
+  public void setStarttls(final boolean val) {
+    starttls = val;
+  }
+
+  @Override
+  public boolean getStarttls() {
+    return starttls;
+  }
+
+  @Override
+  public void setServerUsername(final String val) {
+    serverUsername = val;
+  }
+
+  @Override
+  @MBeanInfo("User name if authentication is required.")
+  public String getServerUsername() {
+    return serverUsername;
+  }
+
+  @Override
+  public void setServerPassword(final String val) {
+    serverPassword = val;
+  }
+
+  @Override
+  @MBeanInfo("User password if authentication is required.")
+  public String getServerPassword() {
+    return serverPassword;
   }
 
   @Override
@@ -112,5 +140,24 @@ public class MailConfigPropertiesImpl extends ConfigBase<MailConfigPropertiesImp
   @Override
   public boolean getDisabled()  {
     return disabled;
+  }
+
+  @Override
+  public void toStringSegment(final ToString ts) {
+    super.toStringSegment(ts);
+
+    ts.append("protocol", getProtocol());
+    ts.append("serverUri", getServerUri());
+    ts.append("serverPort", getServerPort());
+    ts.append("starttls", getStarttls());
+    ts.append("from", getFrom());
+  }
+
+  public String toString() {
+    final ToString ts = new ToString(this);
+
+    toStringSegment(ts);
+
+    return ts.toString();
   }
 }

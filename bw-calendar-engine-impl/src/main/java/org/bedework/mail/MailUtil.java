@@ -32,7 +32,7 @@ import java.text.DateFormat;
 
 /** Some useful methods used when mailing calendar objects..
  *
- * @author Mike Douglass douglm@bedework.edu
+ * @author Mike Douglass douglm@rpi.edu
  */
 public class MailUtil {
   /** make event printable

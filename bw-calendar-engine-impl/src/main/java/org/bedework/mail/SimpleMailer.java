@@ -40,6 +40,8 @@ import java.util.Properties;
 
 import javax.activation.CommandMap;
 import javax.activation.MailcapCommandMap;
+import javax.mail.Authenticator;
+import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
@@ -49,7 +51,7 @@ import javax.mail.internet.MimeMessage;
  * We do not consider many issues such as spam prevention, efficiency in
  * mailing to large lists, etc.
  *
- * @author  Mike Douglass douglm@bedework.edu
+ * @author  Mike Douglass douglm@rpi.edu
  */
 public class SimpleMailer implements MailerIntf {
   private boolean debug;
@@ -65,17 +67,20 @@ public class SimpleMailer implements MailerIntf {
     debug = getLog().isDebugEnabled();
     this.config = config;
 
-    Properties props = new Properties();
+    final Properties props = new Properties();
 
-    props.put("mail." + config.getProtocol() + ".class", config.getProtocolClass());
+    props.put("mail.transport.protocol", config.getProtocol());
     props.put("mail." + config.getProtocol() + ".host", config.getServerUri());
     if (config.getServerPort() != null) {
       props.put("mail." + config.getProtocol() + ".port",
                 config.getServerPort());
     }
 
+    props.put("mail." + config.getProtocol() + ".starttls.enable",
+              String.valueOf(config.getStarttls()));
+
     //  add handlers for main MIME types
-    MailcapCommandMap mc = (MailcapCommandMap)CommandMap.getDefaultCommandMap();
+    final MailcapCommandMap mc = (MailcapCommandMap)CommandMap.getDefaultCommandMap();
     mc.addMailcap("text/html;; x-java-content-handler=com.sun.mail.handlers.text_html");
     mc.addMailcap("text/xml;; x-java-content-handler=com.sun.mail.handlers.text_xml");
     mc.addMailcap("text/plain;; x-java-content-handler=com.sun.mail.handlers.text_plain");
@@ -84,13 +89,25 @@ public class SimpleMailer implements MailerIntf {
     mc.addMailcap("message/rfc822;; x-java-content-handler=com.sun.mail.handlers.message_rfc822");
     CommandMap.setDefaultCommandMap(mc);
 
-    sess = Session.getInstance(props);
+
+    final String username;
+    final String pw;
+    username = config.getServerUsername();
+    pw = config.getServerPassword();
+
+    if (username != null) {
+      // Authentication required.
+      final MailerAuthenticator authenticator =
+              new MailerAuthenticator(username, pw);
+      props.put("mail." + config.getProtocol() + ".auth", "true");
+      sess = Session.getInstance(props, authenticator);
+    } else {
+      sess = Session.getInstance(props);
+    }
+
     sess.setDebug(debug);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.mail.MailerIntf#mailEntity(net.fortuna.ical4j.model.Calendar, java.lang.String, java.util.Collection, java.lang.String)
-   */
   @Override
   public boolean mailEntity(final Calendar cal,
                             String originator,
@@ -255,6 +272,18 @@ public class SimpleMailer implements MailerIntf {
       }
 
       throw new CalFacadeException(t);
+    }
+  }
+
+  private class MailerAuthenticator extends Authenticator {
+    private final PasswordAuthentication authentication;
+
+    MailerAuthenticator(final String user, final String password) {
+      authentication = new PasswordAuthentication(user, password);
+    }
+
+    protected PasswordAuthentication getPasswordAuthentication() {
+      return authentication;
     }
   }
 

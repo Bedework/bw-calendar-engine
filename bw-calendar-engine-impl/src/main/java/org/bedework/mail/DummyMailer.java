@@ -36,7 +36,7 @@ import java.util.Collection;
 
 /** A dummy mailer which just writes to the log.
  *
- * @author  Mike Douglass douglm@bedework.edu
+ * @author  Mike Douglass douglm@rpi.edu
  */
 public class DummyMailer implements MailerIntf {
   //private boolean debug;

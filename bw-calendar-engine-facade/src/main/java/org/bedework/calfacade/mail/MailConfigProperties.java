@@ -40,18 +40,6 @@ public interface MailConfigProperties {
   @MBeanInfo("valid protocol for which an implementation exists, e.g \"imap\", \"smtp\".")
   String getProtocol();
 
-  /** Implementation for the selected protocol
-   *
-   * @param val
-   */
-  void setProtocolClass(String val);
-
-  /**
-   * @return String
-   */
-  @MBeanInfo("Implementation for the selected protocol.")
-  String getProtocolClass();
-
   /** Where we send it.
    *
    * @param val
@@ -74,6 +62,36 @@ public interface MailConfigProperties {
    */
   @MBeanInfo("The server port.")
   String getServerPort();
+
+  /**
+   * @param val start tls
+   */
+  void setStarttls(final boolean val);
+
+  /**
+   * @return flag
+   */
+  @MBeanInfo("Starttls?")
+  boolean getStarttls();
+
+  /**
+   * @param val server Username
+   */
+  void setServerUsername(final String val);
+
+  @MBeanInfo("User name if authentication is required.")
+  String getServerUsername();
+
+  /**
+   * @param val server Password
+   */
+  void setServerPassword(final String val);
+
+  /**
+   * @return password
+   */
+  @MBeanInfo("User password if authentication is required.")
+  String getServerPassword();
 
   /** Address we use when none supplied
    *

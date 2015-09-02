@@ -32,7 +32,6 @@ public class MailerConf extends ConfBase<MailConfigPropertiesImpl>
   public static final String confuriPname = "org.bedework.bwengine.confuri";
 
   /**
-   * @param name
    */
   public MailerConf() {
     super(getServiceName("mailer"));
@@ -65,16 +64,6 @@ public class MailerConf extends ConfBase<MailConfigPropertiesImpl>
   }
 
   @Override
-  public void setProtocolClass(final String val)  {
-    getConfig().setProtocolClass(val);
-  }
-
-  @Override
-  public String getProtocolClass()  {
-    return getConfig().getProtocolClass();
-  }
-
-  @Override
   public void setServerUri(final String val)  {
     getConfig().setServerUri(val);
   }
@@ -92,6 +81,36 @@ public class MailerConf extends ConfBase<MailConfigPropertiesImpl>
   @Override
   public String getServerPort()  {
     return getConfig().getServerPort();
+  }
+
+  @Override
+  public void setStarttls(final boolean val) {
+    getConfig().setStarttls(val);
+  }
+
+  @Override
+  public boolean getStarttls() {
+    return getConfig().getStarttls();
+  }
+
+  @Override
+  public void setServerUsername(final String val) {
+    getConfig().setServerUsername(val);
+  }
+
+  @Override
+  public String getServerUsername() {
+    return getConfig().getServerUsername();
+  }
+
+  @Override
+  public void setServerPassword(final String val) {
+    getConfig().setServerPassword(val);
+  }
+
+  @Override
+  public String getServerPassword() {
+    return getConfig().getServerPassword();
   }
 
   @Override
