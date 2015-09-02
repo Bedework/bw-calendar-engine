@@ -3776,18 +3776,19 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   }
 
   /** Get the event's transparency
-   * @param userHref
+   * @param userHref or null
    *
    * @return String   the event's transparency
    * @throws CalFacadeException
    */
   @NoProxy
   public String getPeruserTransparency(final String userHref) throws CalFacadeException {
-    if (userHref.equals(getOwnerHref())) {
+    if ((userHref == null) ||
+            userHref.equals(getOwnerHref())) {
       return getTransparency();
     }
 
-    BwXproperty pu = findPeruserXprop(userHref, BwXproperty.peruserPropTransp);
+    final BwXproperty pu = findPeruserXprop(userHref, BwXproperty.peruserPropTransp);
 
     if (pu == null) {
       return getTransparency();
