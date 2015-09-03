@@ -20,6 +20,7 @@ package org.bedework.calfacade.svc;
 
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.annotations.Dump;
+import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.util.misc.ToString;
 
 /** An object representing a calendar admin group.
@@ -43,6 +44,13 @@ public class BwAdminGroup extends BwGroup {
   /* ====================================================================
    *                      Bean methods
    * ==================================================================== */
+
+  @Override
+  @NoDump
+  public String getAclAccount() {
+    // TODO - fix this whole mess
+    return "bwadmin/" + getAccount();
+  }
 
   /** Set the group owner.
    *

@@ -193,6 +193,12 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   }
 
   @Override
+  @NoDump
+  public String getAclAccount() {
+    return account;
+  }
+
+  @Override
   public void setPrincipalRef(final String val) {
     principalRef = val;
   }
