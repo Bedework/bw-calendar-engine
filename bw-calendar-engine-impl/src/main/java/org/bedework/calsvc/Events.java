@@ -100,10 +100,10 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   @Override
-  public Collection<EventInfo> get(final String colPath,
-                                   final String guid,
-                                   final String recurrenceId,
-                                   final RecurringRetrievalMode recurRetrieval)
+  public Collection<EventInfo> getByUid(final String colPath,
+                                        final String guid,
+                                        final String recurrenceId,
+                                        final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
     Collection<EventInfo> res = postProcess(getCal().getEvent(colPath,
                                                               guid));
@@ -126,7 +126,7 @@ class Events extends CalSvcDb implements EventsI {
       return res;
     }
 
-    /* For an expansion replace the resultwith a set of expansions
+    /* For an expansion replace the result with a set of expansions
      */
     if (recurrenceId == null) {
       return processExpanded(res, recurRetrieval);
@@ -136,7 +136,14 @@ class Events extends CalSvcDb implements EventsI {
       throw new CalFacadeException("cannot return rid for multiple events");
     }
 
-    return makeInstance(res, recurrenceId);
+    final Collection<EventInfo> eis = new ArrayList<>();
+
+    final EventInfo ei = makeInstance(res.iterator().next(), recurrenceId);
+
+    if (ei != null) {
+      eis.add(ei);
+    }
+    return eis;
   }
 
   private Collection<EventInfo> processExpanded(final Collection<EventInfo> events,
@@ -202,16 +209,13 @@ class Events extends CalSvcDb implements EventsI {
     return res;
   }
 
-  private Collection<EventInfo> makeInstance(final Collection<EventInfo> events,
-                                             final String recurrenceId)
+  private EventInfo makeInstance(final EventInfo ei,
+                                 final String recurrenceId)
           throws CalFacadeException {
-    Collection<EventInfo> res = new ArrayList<>();
-
-    EventInfo ei = events.iterator().next();
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
 
     if (!ev.getRecurring()) {
-      return res;
+      return ei;
     }
 
     /* See if it's in the overrides */
@@ -220,14 +224,13 @@ class Events extends CalSvcDb implements EventsI {
       for (final EventInfo oei: ei.getOverrides()) {
         if (oei.getEvent().getRecurrenceId().equals(recurrenceId)) {
           oei.setRetrievedEvent(ei);
-          res.add(oei);
-          return res;
+          return oei;
         }
       }
     }
 
     /* Not in the overrides - generate an instance */
-    BwDateTime rstart;
+    final BwDateTime rstart;
     final boolean dateOnly = ev.getDtstart().getDateType();
 
     if (dateOnly) {
@@ -269,17 +272,24 @@ class Events extends CalSvcDb implements EventsI {
     oei.setCurrentAccess(ei.getCurrentAccess());
 
     oei.setRetrievedEvent(ei);
-    res.add(oei);
-    return res;
+    return oei;
   }
 
   @Override
-  public EventInfo get(final String colPath, final String name,
-                       final RecurringRetrievalMode recurRetrieval)
+  public EventInfo get(final String colPath,
+                       final String name) throws CalFacadeException {
+    return get(colPath, name, null);
+  }
+
+  @Override
+  public EventInfo get(final String colPath,
+                       final String name,
+                       final String recurrenceId)
           throws CalFacadeException {
-    EventInfo res = postProcess(getCal().getEvent(colPath,
-                                                  name,
-                                                  recurRetrieval));
+    final EventInfo res =
+            postProcess(getCal().getEvent(colPath,
+                                          name,
+                                          RecurringRetrievalMode.overrides));
 
     int num = 0;
 
@@ -288,7 +298,15 @@ class Events extends CalSvcDb implements EventsI {
     }
     getSvc().postNotification(new EntityFetchEvent(SysCode.ENTITY_FETCHED, num));
 
-    return res;
+    if (res == null) {
+      return null;
+    }
+
+    if (recurrenceId == null) {
+      return res;
+    }
+
+    return makeInstance(res, recurrenceId);
   }
 
   /* (non-Javadoc)
@@ -868,8 +886,7 @@ class Events extends CalSvcDb implements EventsI {
 
     try {
       // Get the target
-      EventInfo destEi = get(to.getPath(), name,
-                             RecurringRetrievalMode.overrides);
+      final EventInfo destEi = get(to.getPath(), name);
 
       if (destEi != null) {
         if (!overwrite) {
@@ -1438,48 +1455,108 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       ChangeTable chg = ev.getChangeset(getPrincipalHref());
+      try {
+        /* If this is a vpoll we need the vvoters as we are going to
+           have to remove the group vvoter entry and clone it for the
+           attendees we add.
 
-      for (final BwAttendee att: groups) {
-        /* If the group is in one of our domains we cn try to expand it.
-         * We should leave it if it's an external id.
+           I think this will work for any poll mode - if not we may
+           have to rethink this approach.
          */
+        Map<String, VVoter> voters = null;
+        final boolean vpoll;
 
-        final Holder<Boolean> trunc = new Holder<>();
-        final List<BwPrincipalInfo> groupPis =
-                dirs.find(att.getAttendeeUri(),
-                          att.getCuType(),
-                          true,  // expand
-                          trunc);
-
-        if ((groupPis == null) || (groupPis.size() != 1)) {
-          continue;
+        if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
+          voters = IcalUtil.parseVpollVvoters(ev);
+          ev.clearVvoters(); // We'll add them all back
+          vpoll = true;
+        } else {
+          vpoll = false;
         }
 
-        final BwPrincipalInfo pi = groupPis.get(0);
+        for (final BwAttendee att : groups) {
+          /* If the group is in one of our domains we can try to expand it.
+           * We should leave it if it's an external id.
+           */
 
-        if (pi.getMembers() == null) {
-          continue;
-        }
+          final Holder<Boolean> trunc = new Holder<>();
+          final List<BwPrincipalInfo> groupPis =
+                  dirs.find(att.getAttendeeUri(),
+                            att.getCuType(),
+                            true,  // expand
+                            trunc);
 
-        ev.removeAttendee(att); // Remove the group
-        chg.changed(PropertyInfoIndex.ATTENDEE, att, null);
-
-        for (final BwPrincipalInfo mbrPi: pi.getMembers()) {
-          if (mbrPi.getCaladruri() == null) {
+          if ((groupPis == null) || (groupPis.size() != 1)) {
             continue;
           }
 
-          final BwAttendee mbrAtt = new BwAttendee();
+          final BwPrincipalInfo pi = groupPis.get(0);
 
-          mbrAtt.setType(att.getType());
-          mbrAtt.setAttendeeUri(mbrPi.getCaladruri());
-          mbrAtt.setCn(mbrPi.getEmail());
-          mbrAtt.setCuType(mbrPi.getKind());
-          mbrAtt.setMember(att.getAttendeeUri());
+          if (pi.getMembers() == null) {
+            continue;
+          }
 
-          ev.addAttendee(mbrAtt);
-          chg.addValue(PropertyInfoIndex.ATTENDEE, mbrAtt);
+          VVoter groupVvoter = null;
+          Voter groupVoter = null;
+          PropertyList pl = null;
+
+          if (vpoll) {
+            groupVvoter = voters.get(att.getAttendeeUri());
+
+            if (groupVvoter == null) {
+              if (debug) {
+                warn("No vvoter found for " + att.getAttendeeUri());
+              }
+              continue;
+            }
+
+            voters.remove(att.getAttendeeUri());
+            groupVoter = groupVvoter.getVoter();
+            pl = groupVvoter.getProperties();
+          }
+
+          ev.removeAttendee(att); // Remove the group
+
+          chg.changed(PropertyInfoIndex.ATTENDEE, att, null);
+
+          for (final BwPrincipalInfo mbrPi : pi.getMembers()) {
+            if (mbrPi.getCaladruri() == null) {
+              continue;
+            }
+
+            final BwAttendee mbrAtt = new BwAttendee();
+
+            mbrAtt.setType(att.getType());
+            mbrAtt.setAttendeeUri(mbrPi.getCaladruri());
+            mbrAtt.setCn(mbrPi.getEmail());
+            mbrAtt.setCuType(mbrPi.getKind());
+            mbrAtt.setMember(att.getAttendeeUri());
+
+            ev.addAttendee(mbrAtt);
+            chg.addValue(PropertyInfoIndex.ATTENDEE, mbrAtt);
+
+            if (vpoll) {
+              pl.remove(groupVoter);
+
+              groupVoter = IcalUtil.setVoter(mbrAtt);
+
+              pl.add(groupVoter);
+
+              ev.addVvoter(groupVvoter.toString());
+            }
+          }
         }
+
+        if (vpoll) {
+          // Add back any remaining vvoters
+          for (VVoter vv: voters.values()) {
+            ev.addVvoter(vv.toString());
+          }
+        }
+      } catch (final CalFacadeException cfe) {
+        throw cfe;
+      } catch (final Throwable t) {
+        throw new CalFacadeException(t);
       }
 
       if (ev instanceof BwEventProxy) {

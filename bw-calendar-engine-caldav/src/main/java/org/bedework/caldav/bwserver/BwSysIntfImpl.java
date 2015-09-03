@@ -1165,12 +1165,9 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#getEvent(org.bedework.caldav.server.CalDAVCollection, java.lang.String, org.bedework.caldav.server.SysIntf.RetrievalMode)
-   */
   @Override
-  public CalDAVEvent getEvent(final CalDAVCollection col, final String val,
-                              final RetrievalMode recurRetrieval)
+  public CalDAVEvent getEvent(final CalDAVCollection col,
+                              final String val)
               throws WebdavException {
     try {
       BwCalendar resolved = unwrap(col);
@@ -1205,8 +1202,7 @@ public class BwSysIntfImpl implements SysIntf {
         } // findHref
       }
 
-      EventInfo ei = getSvci().getEventsHandler().get(path, val,
-                                                      getRrm(recurRetrieval));
+      final EventInfo ei = getSvci().getEventsHandler().get(path, val);
 
       if (ei == null) {
         return null;

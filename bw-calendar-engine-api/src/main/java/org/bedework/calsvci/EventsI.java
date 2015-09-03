@@ -58,10 +58,10 @@ public interface EventsI extends Serializable {
    * @return  Collection of EventInfo objects representing event(s).
    * @throws CalFacadeException
    */
-  public Collection<EventInfo> get(String colPath,
-                                   String guid,
-                                   String recurrenceId,
-                                   RecurringRetrievalMode recurRetrieval)
+  Collection<EventInfo> getByUid(String colPath,
+                                 String guid,
+                                 String recurrenceId,
+                                 RecurringRetrievalMode recurRetrieval)
         throws CalFacadeException;
 
   /** Get events given the calendar and String name. Return null for not
@@ -70,13 +70,25 @@ public interface EventsI extends Serializable {
    *
    * @param  colPath   String collection path
    * @param name       String possible name
-   * @param recurRetrieval mode for recurrences
+   * @return EventInfo or null
+   * @throws CalFacadeException
+   */
+  public EventInfo get(String colPath,
+                       String name) throws CalFacadeException;
+
+  /** Get events given the calendar and String name. Return null for not
+   * found. There should be only one event or none. For recurring, the
+   * overrides and possibly the instances will be attached.
+   *
+   * @param  colPath   String collection path
+   * @param name       String possible name
+   * @param recurrenceId non-null for single instance
    * @return EventInfo or null
    * @throws CalFacadeException
    */
   public EventInfo get(String colPath,
                        String name,
-                       RecurringRetrievalMode recurRetrieval)
+                       String recurrenceId)
           throws CalFacadeException;
 
   /** Return the events for the current user within the given date and time

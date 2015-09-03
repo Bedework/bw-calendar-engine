@@ -18,7 +18,6 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
@@ -88,8 +87,7 @@ public class EntityProcessor extends Crawler {
 
             status.stats.inc(StatType.entities);
             final EventInfo ent =
-                    svci.getEventsHandler().get(path, name,
-                                                RecurringRetrievalMode.overrides);
+                    svci.getEventsHandler().get(path, name);
 
             if (ent == null) {
               status.stats.inc(StatType.unreachableEntities);

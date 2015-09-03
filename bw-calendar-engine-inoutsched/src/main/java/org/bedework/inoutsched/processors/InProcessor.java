@@ -120,8 +120,8 @@ public abstract class InProcessor extends CalSvcDb {
          * be processed. Still an opportunity to improve this though.
          */
 
-        final Collection<EventInfo> inevs = getEvents(inbox.getPath(),
-                                                      ev.getUid());
+        final Collection<EventInfo> inevs = getEventsByUid(inbox.getPath(),
+                                                           ev.getUid());
 
         for (final EventInfo inei : inevs) {
           final BwEvent inev = inei.getEvent();

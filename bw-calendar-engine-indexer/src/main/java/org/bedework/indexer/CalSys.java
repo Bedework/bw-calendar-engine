@@ -20,7 +20,6 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -492,8 +491,7 @@ public abstract class CalSys {
                                final String name) throws CalFacadeException {
     final EventsI evhandler = svci.getEventsHandler();
 
-    return evhandler.get(colPath, name,
-                         RecurringRetrievalMode.overrides);
+    return evhandler.get(colPath, name);
   }
 
   /**

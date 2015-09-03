@@ -26,7 +26,6 @@ import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -187,9 +186,8 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
       EventsI events = getSvc().getEventsHandler();
 
       BwCalendar inbox = getSvc().getCalendarsHandler().getSpecial(BwCalendar.calTypeInbox, true);
-      EventInfo inboxei = events.get(inbox.getPath(),
-                                     ei.getInboxEventName(),
-                                     RecurringRetrievalMode.overrides);
+      final EventInfo inboxei = events.get(inbox.getPath(),
+                                           ei.getInboxEventName());
 
       if (inboxei != null) {
         events.delete(inboxei, false);

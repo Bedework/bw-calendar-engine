@@ -242,8 +242,8 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     final int smethod = ev.getScheduleMethod();
 
     if (Icalendar.itipRequestMethodType(smethod)) {
-      final Collection<EventInfo> inevs = getEvents(inboxPath,
-                                                    ev.getUid());
+      final Collection<EventInfo> inevs = getEventsByUid(inboxPath,
+                                                         ev.getUid());
 
       for (final EventInfo inei: inevs) {
         final BwEvent inev = inei.getEvent();
