@@ -69,8 +69,9 @@ public class SimpleMailer implements MailerIntf {
 
     final Properties props = new Properties();
 
-    props.put("mail.transport.protocol", config.getProtocol());
-    props.put("mail." + config.getProtocol() + ".host", config.getServerUri());
+    setNonNull(props, "mail.transport.protocol", config.getProtocol());
+    setNonNull(props, "mail." + config.getProtocol() + ".host",
+               config.getServerUri());
     if (config.getServerPort() != null) {
       props.put("mail." + config.getProtocol() + ".port",
                 config.getServerPort());
@@ -285,6 +286,16 @@ public class SimpleMailer implements MailerIntf {
     protected PasswordAuthentication getPasswordAuthentication() {
       return authentication;
     }
+  }
+
+  private void setNonNull(final Properties props,
+                          final String name,
+                          final String val) throws CalFacadeException {
+    if (val == null) {
+      throw new CalFacadeException("Null property value for " + name);
+    }
+
+    props.setProperty(name, val);
   }
 
   private Logger getLog() {
