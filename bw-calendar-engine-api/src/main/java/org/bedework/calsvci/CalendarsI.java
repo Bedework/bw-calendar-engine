@@ -147,7 +147,7 @@ public interface CalendarsI extends Serializable {
    */
   BwCalendar get(String path) throws CalFacadeException;
 
-  /** Get a special calendar (e.g. Trash) for the current user. If it does not
+  /** Get a special calendar (e.g. Notifications) for the current user. If it does not
    * exist and is supported by the target system it will be created.
    *
    * @param  calType   int special calendar type.
@@ -156,6 +156,19 @@ public interface CalendarsI extends Serializable {
    * @throws CalFacadeException
    */
   BwCalendar getSpecial(int calType,
+                        boolean create) throws CalFacadeException;
+
+  /** Get a special calendar (e.g. Notifications) for the given user. If it does not
+   * exist and is supported by the target system it will be created.
+   *
+   * @param  principal the principal href.
+   * @param  calType   int special calendar type.
+   * @param  create    true if we should create it if non-existent.
+   * @return BwCalendar null for unknown calendar
+   * @throws CalFacadeException
+   */
+  BwCalendar getSpecial(String principal,
+                        int calType,
                         boolean create) throws CalFacadeException;
 
   /** set the default calendar for the current user.

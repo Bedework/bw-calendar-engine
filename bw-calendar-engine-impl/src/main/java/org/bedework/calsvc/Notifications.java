@@ -319,7 +319,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
       }
 
       final NotificationType nt = makeNotification(r);
-      if (r != null) {
+      if (nt != null) {
         res.add(nt);
       }
     }
@@ -402,8 +402,10 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
       final NotificationType note = Parser.fromXml(is);
 
-      note.setName(rsrc.getName());
-      note.getNotification().setEncoding(rsrc.getEncoding());
+      if (note != null) {
+        note.setName(rsrc.getName());
+        note.getNotification().setEncoding(rsrc.getEncoding());
+      }
 
       return note;
     } catch (final Throwable t) {

@@ -287,15 +287,32 @@ class Calendars extends CalSvcDb implements CalendarsI {
   @Override
   public BwCalendar getSpecial(final int calType,
                                final boolean create) throws CalFacadeException {
-    final Calintf.GetSpecialCalendarResult gscr =
-            getSvc().getCal().getSpecialCalendar(
-                             getPrincipal(), calType, create,
-                                       PrivilegeDefs.privAny);
-    if (gscr.noUserHome) {
-      getSvc().getUsersHandler().add(getPrincipal().getAccount());
+    return getSpecial(null, calType, create);
+  }
+
+  @Override
+  public BwCalendar getSpecial(final String principal,
+                               final int calType,
+                               final boolean create) throws CalFacadeException {
+    final BwPrincipal pr;
+
+    if (principal == null) {
+      pr = getPrincipal();
+    } else {
+      pr = getPrincipal(principal);
     }
 
-    return getCal().getSpecialCalendar(getPrincipal(), calType, create,
+    final Calintf.GetSpecialCalendarResult gscr =
+            getSvc().getCal().getSpecialCalendar(
+                             pr, calType, create,
+                                       PrivilegeDefs.privAny);
+    if (!gscr.noUserHome) {
+      return gscr.cal;
+    }
+
+    getSvc().getUsersHandler().add(getPrincipal().getAccount());
+
+    return getCal().getSpecialCalendar(pr, calType, create,
                                        PrivilegeDefs.privAny).cal;
   }
 
