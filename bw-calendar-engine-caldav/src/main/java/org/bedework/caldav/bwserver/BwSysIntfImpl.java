@@ -826,6 +826,33 @@ public class BwSysIntfImpl implements SysIntf {
    *                   Notifications
    * ==================================================================== */
 
+  public boolean subscribeNotification(final String principalHref,
+                                       final String action,
+                                       final List<String> emails) throws WebdavException {
+    final boolean add = "add".equals(action);
+    final boolean remove = "remove".equals(action);
+
+    if (!add && !remove) {
+      return false;
+    }
+
+    try {
+      if (remove) {
+        svci.getNotificationsHandler().unsubscribe(principalHref, emails);
+        return true;
+      }
+
+      if (Util.isEmpty(emails)) {
+        return false;
+      }
+
+      svci.getNotificationsHandler().subscribe(principalHref, emails);
+      return true;
+    } catch (final CalFacadeException cfe) {
+      throw new WebdavException(cfe);
+    }
+  }
+
   @Override
   public boolean sendNotification(final String href,
                                   final NotificationType val) throws WebdavException {
