@@ -34,12 +34,17 @@ public class EntityApprovalResponseEvent extends OwnedHrefEvent {
 
   private final String comment;
 
+  private final String calsuiteHref;
+
   /**
    * @param code the system event code
    * @param authPrincipalHref authenticated principal
-   * @param ownerHref principal href of the owner (the calsuite)
+   * @param ownerHref principal href of the owner (the group)
    * @param href of the entity
    * @param rid recurrence id
+   * @param approved rtrue if the event was accepted
+   * @param comment a message
+   * @param calsuiteHref href of calsuite group
    */
   public EntityApprovalResponseEvent(final SysCode code,
                                      final String authPrincipalHref,
@@ -47,12 +52,14 @@ public class EntityApprovalResponseEvent extends OwnedHrefEvent {
                                      final String href,
                                      final String rid,
                                      final boolean approved,
-                                     final String comment) {
+                                     final String comment,
+                                     final String calsuiteHref) {
     super(code, authPrincipalHref, ownerHref, href, false);
 
     this.rid = rid;
     this.approved = approved;
     this.comment = comment;
+    this.calsuiteHref = calsuiteHref;
   }
 
   /**
@@ -76,6 +83,10 @@ public class EntityApprovalResponseEvent extends OwnedHrefEvent {
     return comment;
   }
 
+  public String getCalsuiteHref() {
+    return calsuiteHref;
+  }
+
   /** Add our stuff to the ToString object
    *
    * @param ts    ToString for result
@@ -89,5 +100,6 @@ public class EntityApprovalResponseEvent extends OwnedHrefEvent {
     }
     ts.append("approved", getApproved());
     ts.append("comment", getComment());
+    ts.append("calsuiteHref", getCalsuiteHref());
   }
 }

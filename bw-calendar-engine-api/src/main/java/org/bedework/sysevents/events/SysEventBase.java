@@ -189,15 +189,15 @@ public interface SysEventBase extends Serializable {
     /* ========= Public events workflow =========== */
 
     /** Event is approved */
-    APPROVAL_STATUS(info, priv),
+    APPROVAL_STATUS(info, priv, notIndexable, isNotifiableEvent, false),
 
     /* ========= Public events =========== */
 
     /** Event is suggested to another group */
-    SUGGESTED(info, priv),
+    SUGGESTED(info, priv, notIndexable, isNotifiableEvent, false),
 
     /** Response from suggestion to another group */
-    SUGGESTED_RESPONSE(info, priv);
+    SUGGESTED_RESPONSE(info, priv, notIndexable, isNotifiableEvent, false);
 
     private final int severity;
 

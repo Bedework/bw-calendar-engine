@@ -122,10 +122,12 @@ public class Notifier extends AbstractScheduler {
 
       arnt.setUid(Uid.getUid());
       arnt.setHref(eare.getHref());
+      arnt.setPrincipalHref(eare.getOwnerHref());
       arnt.setAccepted(eare.getApproved());
       arnt.setComment(eare.getComment());
+      arnt.setCalsuiteHref(eare.getCalsuiteHref());
 
-      targetPrincipal = eare.getOwnerHref();
+      targetPrincipal = eare.getCalsuiteHref();
       ant = arnt;
 
       try {
