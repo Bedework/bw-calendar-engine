@@ -23,6 +23,7 @@ import org.bedework.caldav.util.notifications.ResourceChangeType;
 import org.bedework.caldav.util.notifications.UpdatedType;
 import org.bedework.caldav.util.notifications.admin.AdminNotificationType;
 import org.bedework.caldav.util.notifications.admin.ApprovalResponseNotificationType;
+import org.bedework.caldav.util.notifications.admin.AwaitingApprovalNotificationType;
 import org.bedework.caldav.util.notifications.parse.Parser;
 import org.bedework.caldav.util.sharing.InviteType;
 import org.bedework.caldav.util.sharing.UserType;
@@ -43,6 +44,7 @@ import org.bedework.sysevents.events.NotificationEvent;
 import org.bedework.sysevents.events.OwnedHrefEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
+import org.bedework.sysevents.events.publicAdmin.EntityApprovalNeededEvent;
 import org.bedework.sysevents.events.publicAdmin.EntityApprovalResponseEvent;
 import org.bedework.sysevents.events.publicAdmin.EntitySuggestedEvent;
 import org.bedework.sysevents.events.publicAdmin.EntitySuggestedResponseEvent;
@@ -98,7 +100,8 @@ public class Notifier extends AbstractScheduler {
       return processSuggested(msg);
     }
 
-    if (sysCode == SysCode.APPROVAL_STATUS) {
+    if ((sysCode == SysCode.APPROVAL_STATUS) ||
+            (sysCode == SysCode.APPROVAL_NEEDED)) {
       return processApproved(msg);
     }
 
@@ -112,23 +115,46 @@ public class Notifier extends AbstractScheduler {
 
   private ProcessMessageResult processApproved(final SysEvent msg) {
     try {
-      final String targetPrincipal;
-      final AdminNotificationType ant;
-      final EntityApprovalResponseEvent eare =
-              (EntityApprovalResponseEvent)msg;
+      String targetPrincipal = null;
+      final SysCode sysCode = msg.getSysCode();
+      AdminNotificationType ant = null;
 
-      final ApprovalResponseNotificationType arnt =
-              new ApprovalResponseNotificationType();
+      if (sysCode == SysCode.APPROVAL_STATUS) {
+        final EntityApprovalResponseEvent eare =
+                (EntityApprovalResponseEvent)msg;
 
-      arnt.setUid(Uid.getUid());
-      arnt.setHref(eare.getHref());
-      arnt.setPrincipalHref(eare.getOwnerHref());
-      arnt.setAccepted(eare.getApproved());
-      arnt.setComment(eare.getComment());
-      arnt.setCalsuiteHref(eare.getCalsuiteHref());
+        final ApprovalResponseNotificationType arnt =
+                new ApprovalResponseNotificationType();
 
-      targetPrincipal = eare.getCalsuiteHref();
-      ant = arnt;
+        arnt.setUid(Uid.getUid());
+        arnt.setHref(eare.getHref());
+        arnt.setPrincipalHref(eare.getOwnerHref());
+        arnt.setAccepted(eare.getApproved());
+        arnt.setComment(eare.getComment());
+        arnt.setCalsuiteHref(eare.getCalsuiteHref());
+
+        targetPrincipal = eare.getCalsuiteHref();
+        ant = arnt;
+      } else if (sysCode == SysCode.APPROVAL_NEEDED) {
+        final EntityApprovalNeededEvent eane =
+                (EntityApprovalNeededEvent)msg;
+
+        final AwaitingApprovalNotificationType aant =
+                new AwaitingApprovalNotificationType();
+
+        aant.setUid(Uid.getUid());
+        aant.setHref(eane.getHref());
+        aant.setPrincipalHref(eane.getOwnerHref());
+        aant.setComment(eane.getComment());
+        aant.setCalsuiteHref(eane.getCalsuiteHref());
+
+        targetPrincipal = eane.getCalsuiteHref();
+        ant = aant;
+      }
+
+      if (ant == null) {
+        return ProcessMessageResult.IGNORED;
+      }
 
       try {
         getSvci(targetPrincipal);
@@ -165,10 +191,10 @@ public class Notifier extends AbstractScheduler {
         }
 
         // save this one
-        arnt.setName(getEncodedUuid());
+        ant.setName(getEncodedUuid());
 
         final NotificationType n = new NotificationType();
-        n.setNotification(arnt);
+        n.setNotification(ant);
 
         getNotes().add(n);
         return ProcessMessageResult.PROCESSED;

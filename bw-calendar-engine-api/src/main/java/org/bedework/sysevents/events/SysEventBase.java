@@ -188,6 +188,9 @@ public interface SysEventBase extends Serializable {
 
     /* ========= Public events workflow =========== */
 
+    /** Event is awaiting approval */
+    APPROVAL_NEEDED(info, priv, notIndexable, isNotifiableEvent, false),
+
     /** Event is approved */
     APPROVAL_STATUS(info, priv, notIndexable, isNotifiableEvent, false),
 
