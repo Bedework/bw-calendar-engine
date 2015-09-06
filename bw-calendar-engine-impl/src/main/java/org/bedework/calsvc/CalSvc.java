@@ -25,7 +25,9 @@ import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeSet;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfFactory;
+import org.bedework.caldav.util.notifications.admin.AdminNoteParsers;
 import org.bedework.caldav.util.notifications.eventreg.EventregParsers;
+import org.bedework.caldav.util.notifications.suggest.SuggestParsers;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -57,7 +59,6 @@ import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.mail.MailerIntf;
-import org.bedework.caldav.util.notifications.suggest.SuggestParsers;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
@@ -131,6 +132,7 @@ public class CalSvc extends CalSvcI {
       configs = new CalSvcFactoryDefault().getSystemConfig();
       new SuggestParsers(); // force load
       new EventregParsers(); // force load
+      new AdminNoteParsers(); // force load
     } catch (final Throwable t) {
       t.printStackTrace();
     }

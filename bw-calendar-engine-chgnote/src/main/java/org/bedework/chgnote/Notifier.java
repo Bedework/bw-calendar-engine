@@ -21,6 +21,8 @@ package org.bedework.chgnote;
 import org.bedework.caldav.util.notifications.NotificationType;
 import org.bedework.caldav.util.notifications.ResourceChangeType;
 import org.bedework.caldav.util.notifications.UpdatedType;
+import org.bedework.caldav.util.notifications.admin.AdminNotificationType;
+import org.bedework.caldav.util.notifications.admin.ApprovalResponseNotificationType;
 import org.bedework.caldav.util.notifications.parse.Parser;
 import org.bedework.caldav.util.sharing.InviteType;
 import org.bedework.caldav.util.sharing.UserType;
@@ -28,9 +30,9 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
-import org.bedework.calfacade.notifications.SuggestBaseNotificationType;
-import org.bedework.calfacade.notifications.SuggestNotificationType;
-import org.bedework.calfacade.notifications.SuggestResponseNotificationType;
+import org.bedework.caldav.util.notifications.suggest.SuggestBaseNotificationType;
+import org.bedework.caldav.util.notifications.suggest.SuggestNotificationType;
+import org.bedework.caldav.util.notifications.suggest.SuggestResponseNotificationType;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calsvc.AbstractScheduler;
 import org.bedework.sysevents.events.CollectionMovedEvent;
@@ -41,6 +43,7 @@ import org.bedework.sysevents.events.NotificationEvent;
 import org.bedework.sysevents.events.OwnedHrefEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
+import org.bedework.sysevents.events.publicAdmin.EntityApprovalResponseEvent;
 import org.bedework.sysevents.events.publicAdmin.EntitySuggestedEvent;
 import org.bedework.sysevents.events.publicAdmin.EntitySuggestedResponseEvent;
 import org.bedework.util.caching.FlushMap;
@@ -95,12 +98,92 @@ public class Notifier extends AbstractScheduler {
       return processSuggested(msg);
     }
 
+    if (sysCode == SysCode.APPROVAL_STATUS) {
+      return processApproved(msg);
+    }
+
     if (!sysCode.getNotifiableEvent()) {
       // Ignore it
       return ProcessMessageResult.IGNORED;
     }
 
     return processChangeEvent(msg);
+  }
+
+  private ProcessMessageResult processApproved(final SysEvent msg) {
+    try {
+      final String targetPrincipal;
+      final AdminNotificationType ant;
+      final EntityApprovalResponseEvent eare =
+              (EntityApprovalResponseEvent)msg;
+
+      final ApprovalResponseNotificationType arnt =
+              new ApprovalResponseNotificationType();
+
+      arnt.setUid(Uid.getUid());
+      arnt.setHref(eare.getHref());
+      arnt.setAccepted(eare.getApproved());
+      arnt.setComment(eare.getComment());
+
+      targetPrincipal = eare.getOwnerHref();
+      ant = arnt;
+
+      try {
+        getSvci(targetPrincipal);
+
+        /* See if we have any notifications for this entity
+           *
+           * SCHEMA: If we could store the entire encoded path in the name we
+           * could just do a get
+           */
+        NotificationType storedNote = null;
+
+        for (final NotificationType n:
+                getNotes().getMatching(ant.getElementName())) {
+          if ((n == null) || (n.getNotification() == null)) {
+            // Bad notiifcation?
+            continue;
+          }
+
+          final AdminNotificationType ns =
+                  (AdminNotificationType)n.getNotification();
+
+          if (ant.getHref().equals(ns.getHref())) {
+            // Already have a notification for resource
+            storedNote = n;
+            break;
+          }
+        }
+
+        /* If we already have a notification we should delete it
+           */
+
+        if (storedNote != null) {
+          getNotes().remove(storedNote);
+        }
+
+        // save this one
+        arnt.setName(getEncodedUuid());
+
+        final NotificationType n = new NotificationType();
+        n.setNotification(arnt);
+
+        getNotes().add(n);
+        return ProcessMessageResult.PROCESSED;
+      } finally {
+        closeSvci(getSvc());
+      }
+    } catch (final Throwable t) {
+      rollback(getSvc());
+      error(t);
+    } finally {
+      try {
+        closeSvci(getSvc());
+      } catch (final Throwable ignored) {
+      }
+    }
+
+    return ProcessMessageResult.FAILED;
   }
 
   private ProcessMessageResult processSuggested(final SysEvent msg) {

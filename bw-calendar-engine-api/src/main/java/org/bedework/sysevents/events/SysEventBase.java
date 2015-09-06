@@ -186,6 +186,11 @@ public interface SysEventBase extends Serializable {
     /** Service initialised as a user */
     SERVICE_USER_LOGIN(info, priv),
 
+    /* ========= Public events workflow =========== */
+
+    /** Event is approved */
+    APPROVAL_STATUS(info, priv),
+
     /* ========= Public events =========== */
 
     /** Event is suggested to another group */
