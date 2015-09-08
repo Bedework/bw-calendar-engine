@@ -67,7 +67,7 @@ public class JcalHandler implements Serializable {
                               final IcalendarType pattern,
                               final String currentPrincipal,
                               final EventTimeZonesRegistry tzreg) throws CalFacadeException {
-    StringWriter sw = new StringWriter();
+    final StringWriter sw = new StringWriter();
 
     outJcal(sw, vals, methodType, pattern, currentPrincipal, tzreg);
 

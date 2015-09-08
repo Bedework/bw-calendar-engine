@@ -106,6 +106,7 @@ import org.bedework.webdav.servlet.shared.WebdavForbidden;
 import org.bedework.webdav.servlet.shared.WebdavNotFound;
 import org.bedework.webdav.servlet.shared.WebdavNsNode.PropertyTagEntry;
 import org.bedework.webdav.servlet.shared.WebdavProperty;
+import org.bedework.webdav.servlet.shared.WebdavUnauthorized;
 
 import ietf.params.xml.ns.caldav.ExpandType;
 import ietf.params.xml.ns.caldav.LimitRecurrenceSetType;

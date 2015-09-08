@@ -54,7 +54,7 @@ import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Period;
 import org.apache.log4j.Logger;
-import org.elasticsearch.ElasticSearchException;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequestBuilder;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
@@ -62,8 +62,8 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
-import org.elasticsearch.action.admin.indices.alias.get.IndicesGetAliasesRequestBuilder;
-import org.elasticsearch.action.admin.indices.alias.get.IndicesGetAliasesResponse;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequestBuilder;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
@@ -105,6 +105,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchHits;
@@ -330,6 +331,11 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     @Override
+    public int getLastPageStart() {
+      return lastPageStart;
+    }
+
+    @Override
     public int getPageStart() {
       return pageStart;
     }
@@ -374,7 +380,8 @@ public class BwIndexEsImpl implements BwIndexer {
                     setRetryOnConflict(20).
                     setRefresh(true);
 
-    urb.setScript("ctx._source.count += 1");
+    urb.setScript("ctx._source.count += 1",
+                  ScriptService.ScriptType.INLINE);
     final UpdateResponse ur = urb.execute().actionGet();
   }
 
@@ -810,7 +817,7 @@ public class BwIndexEsImpl implements BwIndexer {
       markUpdated();
 
       // TODO check response?
-    } catch (final ElasticSearchException ese) {
+    } catch (final ElasticsearchException ese) {
       // Failed somehow
       error(ese);
     } catch (final CalFacadeException cfe) {
@@ -850,7 +857,7 @@ public class BwIndexEsImpl implements BwIndexer {
       info("Index created: change token set to " + currentChangeToken());
 
       return newName;
-    } catch (final ElasticSearchException ese) {
+    } catch (final ElasticsearchException ese) {
       // Failed somehow
       error(ese);
       return null;
@@ -882,9 +889,9 @@ public class BwIndexEsImpl implements BwIndexer {
 
         final ClusterStateRequest clusterStateRequest = Requests
                 .clusterStateRequest()
-                .filterRoutingTable(true)
-                .filterNodes(true)
-                .filteredIndices(inm);
+                .routingTable(true)
+                .nodes(true)
+                .indices(inm);
 
         final Iterator<String> it =
                 getAdminCluster().state(clusterStateRequest).
@@ -950,12 +957,12 @@ public class BwIndexEsImpl implements BwIndexer {
 
       final IndicesAdminClient idx = getAdminIdx();
 
-      final IndicesGetAliasesRequestBuilder igarb = idx.prepareGetAliases(
+      final GetAliasesRequestBuilder igarb = idx.prepareGetAliases(
               other);
 
-      final ActionFuture<IndicesGetAliasesResponse> getAliasesAf =
+      final ActionFuture<GetAliasesResponse> getAliasesAf =
               idx.getAliases(igarb.request());
-      final IndicesGetAliasesResponse garesp = getAliasesAf.actionGet();
+      final GetAliasesResponse garesp = getAliasesAf.actionGet();
 
       final ImmutableOpenMap<String, List<AliasMetaData>> aliasesmeta =
               garesp.getAliases();
@@ -982,7 +989,7 @@ public class BwIndexEsImpl implements BwIndexer {
       /*resp = */af.actionGet();
 
       return 0;
-    } catch (final ElasticSearchException ese) {
+    } catch (final ElasticsearchException ese) {
       // Failed somehow
       error(ese);
       return -1;

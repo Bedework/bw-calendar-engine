@@ -22,7 +22,7 @@
 		<bw-caldav-util.version>4.0.1-SNAPSHOT</bw-caldav-util.version>
 		<bw-caldav-server.version>4.0.1-SNAPSHOT</bw-caldav-server.version>
 		<!-- Third Party Library Versions -->
-    <elasticsearch.version>0.90.10</elasticsearch.version>
+    <elasticsearch.version>1.5.2</elasticsearch.version>
 		<hibernate.version>3.6.9.Final</hibernate.version>
 		<hibernate-validator.version>3.1.0.GA</hibernate-validator.version>
 		<ical4j.version>1.1-BW-SNAPSHOT</ical4j.version>

@@ -19,6 +19,11 @@ public interface SearchResult extends Serializable {
   long getFound();
 
   /**
+   * @return for a paged request the record index of last page retrieved
+   */
+  int getLastPageStart();
+
+  /**
    * @return for a paged request the next record index
    */
   int getPageStart();

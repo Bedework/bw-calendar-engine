@@ -65,7 +65,6 @@ import net.fortuna.ical4j.model.parameter.FmtType;
 import net.fortuna.ical4j.model.parameter.Language;
 import net.fortuna.ical4j.model.parameter.Member;
 import net.fortuna.ical4j.model.parameter.PartStat;
-import net.fortuna.ical4j.model.parameter.Response;
 import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.parameter.ScheduleStatus;
@@ -372,21 +371,43 @@ public class IcalUtil {
 
   /** make an attendee
    *
-   * @param val
+   * @param val BwAttendee to build from
    * @return Attendee
    * @throws Throwable
    */
   public static Attendee setAttendee(final BwAttendee val) throws Throwable {
-    Attendee prop = new Attendee(val.getAttendeeUri());
+    final Attendee prop = new Attendee(val.getAttendeeUri());
 
-    ParameterList pars = prop.getParameters();
+    final ParameterList pars = prop.getParameters();
 
     setAttendeeVoter(val, pars);
 
-    String temp = val.getPartstat();
-    if (temp == null) {
-      temp = IcalDefs.partstatValNeedsAction;
+    final String temp = val.getPartstat();
+
+    //pars.add(new PartStat(temp));
+    if ((temp != null) && !temp.equals(IcalDefs.partstatValNeedsAction)) {
+      // Not default value.
+      pars.add(new PartStat(temp));
     }
+
+    return prop;
+  }
+
+  /** make a voter
+   *
+   * @param val BwAttendee to build from
+   * @return Attendee
+   * @throws Throwable
+   */
+  public static Voter setVoter(final BwAttendee val) throws Throwable {
+    final Voter prop = new Voter(val.getAttendeeUri());
+
+    final ParameterList pars = prop.getParameters();
+
+    setAttendeeVoter(val, pars);
+
+    final String temp = val.getPartstat();
+
     //pars.add(new PartStat(temp));
     if ((temp != null) && !temp.equals(IcalDefs.partstatValNeedsAction)) {
       // Not default value.
@@ -603,12 +624,7 @@ public class IcalUtil {
 
     att.setType(BwAttendee.typeVoter);
 
-    Parameter par = pars.getParameter("RESPONSE");
-    if (par != null) {
-      att.setResponse(((Response)par).getResponse());
-    }
-
-    par = pars.getParameter("STAY-INFORMED");
+    Parameter par = pars.getParameter("STAY-INFORMED");
     if (par != null) {
       att.setStayInformed(((StayInformed)par).getStayInformed().booleanValue());
     }
