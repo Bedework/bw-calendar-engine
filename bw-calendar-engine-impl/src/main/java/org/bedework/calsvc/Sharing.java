@@ -181,7 +181,8 @@ public class Sharing extends CalSvcDb implements SharingI {
      * accepted then just delete the current invitation
      */
 
-    final NotificationsI notify = getSvc().getNotificationsHandler();
+    final Notifications notify =
+            (Notifications)getSvc().getNotificationsHandler();
 
     sendNotifications:
     for (final InviteNotificationType in: notifications) {
@@ -375,7 +376,6 @@ public class Sharing extends CalSvcDb implements SharingI {
         final String calAddr = principalToCaladdr(getPrincipal());
 
         final InviteNotificationType in = deletedNotification(u.getHref(),
-                                                              col.getPath(),
                                                               calAddr);
         final NotificationType note = new NotificationType();
 
@@ -756,7 +756,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     invite.getUsers().remove(uentry);
 
     final InviteNotificationType note =
-            deletedNotification(href, col.getPath(), calAddr);
+            deletedNotification(href, calAddr);
 
     note.setPreviousStatus(uentry.getInviteStatus());
 
@@ -818,7 +818,6 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   private InviteNotificationType deletedNotification(final String shareeHref,
-                                                     final String sharedUrl,
                                                      final String sharerHref) throws CalFacadeException {
     final InviteNotificationType in = new InviteNotificationType();
 
@@ -846,7 +845,10 @@ public class Sharing extends CalSvcDb implements SharingI {
      */
     String href;
     BwPrincipal pr;
-    boolean exists;
+
+    /* This is an external sharee
+     */
+    boolean external;
   }
 
   private Sharee getSharee(final String cua) throws CalFacadeException {
@@ -854,10 +856,18 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     sh.href = getSvc().getDirectories().normalizeCua(cua);
     sh.pr = caladdrToPrincipal(sh.href);
-    sh.exists = sh.pr != null &&
-            getUsers().getPrincipal(sh.pr.getPrincipalRef()) != null;
-
-    if ((sh.pr == null) && getNoteProps().getOutboundEnabled()) {
+    if ((sh.pr != null) &&
+            (getUsers().getPrincipal(sh.pr.getPrincipalRef()) == null)) {
+      /* One of our principals but doesn't yet exist in the system
+       * Create the principal so we can store their notifications.
+       */
+      // GROUP-PRINCIPAL needs fixing here
+      sh.pr = getUsers().getAlways(sh.pr.getAccount());
+    } else if ((sh.pr == null) && getNoteProps().getOutboundEnabled()) {
+      /* This is an external user - we are going to send a notification so
+       * ensure we have the global notification id.
+       */
+      sh.external = true;
       sh.pr = getUsers().getAlways(getNoteProps().getNotifierId());
     }
 
@@ -883,35 +893,24 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     UserType uentry = invite.finduser(sh.href);
 
-    if (!sh.exists) {
-      if (!getNoteProps().getOutboundEnabled()) {
-        // Cannot invite - need to set a good response
+    if (uentry != null) {
+      if (uentry.getInviteStatus().equals(Parser.inviteNoresponseTag)) {
+        // Already an outstanding invitation
+        final NotificationType n = findInvite(sh.pr, col.getPath());
 
-        return null;
-      }
-    } else {
-      if (uentry != null) {
-        if (uentry.getInviteStatus().equals(Parser.inviteNoresponseTag)) {
-          // Already an outstanding invitation
-          final NotificationType n = findInvite(sh.pr, col.getPath());
+        if (n != null) {
+          final InviteNotificationType in =
+                  (InviteNotificationType)n.getNotification();
 
-          if (n != null) {
-            final InviteNotificationType in =
-                    (InviteNotificationType)n.getNotification();
-
-            if (in.getAccess().equals(s.getAccess())) {
-              // In their collection - no need to resend.
-              return null;
-            }
-
-            /* Delete the old notification - we're changing the access */
-            deleteInvite(sh.pr, n);
+          if (in.getAccess().equals(s.getAccess())) {
+            // In their collection - no need to resend.
+            return null;
           }
+
+          /* Delete the old notification - we're changing the access */
+          deleteInvite(sh.pr, n);
         }
       }
-
-      addPrincipals.add(new AddPrincipal(sh.pr,
-                                         s.getAccess().testRead()));
     }
 
     final InviteNotificationType in = new InviteNotificationType();
@@ -947,7 +946,12 @@ public class Sharing extends CalSvcDb implements SharingI {
       invite.getUsers().add(uentry);
     }
 
-    uentry.setExternalUser(!sh.exists);
+    uentry.setExternalUser(!sh.external);
+
+    if (!sh.external) {
+      addPrincipals.add(new AddPrincipal(sh.pr,
+                                         s.getAccess().testRead()));
+    }
 
     return in;
   }
@@ -1137,6 +1141,6 @@ public class Sharing extends CalSvcDb implements SharingI {
 
   private void deleteInvite(final BwPrincipal pr,
                             final NotificationType n) throws CalFacadeException {
-    getSvc().getNotificationsHandler().remove(pr, n);
+    ((Notifications)getSvc().getNotificationsHandler()).remove(pr, n);
   }
 }

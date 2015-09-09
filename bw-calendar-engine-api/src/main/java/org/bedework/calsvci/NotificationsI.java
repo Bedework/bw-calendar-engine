@@ -72,14 +72,25 @@ public interface NotificationsI extends Serializable {
    */
   NotificationType find(String name) throws CalFacadeException;
 
-  /** Remove the given notification from the notification collection for the
-   * indicated calendar user.
+  /** Find a notification in the notification collection for the
+   * given principal with the given name.
    *
-   * @param pr - target
+   * @param principalHref - target
+   * @param name - of the notification
+   * @return null for no notification or the notification with that name
+   * @throws CalFacadeException
+   */
+  NotificationType find(String principalHref,
+                        String name) throws CalFacadeException;
+
+  /** Remove the given notification from the notification collection for the
+   * indicated calendar user. Must have access to the collection.
+   *
+   * @param principalHref - target
    * @param val - the notification
    * @throws CalFacadeException
    */
-  void remove(BwPrincipal pr,
+  void remove(String principalHref,
               NotificationType val) throws CalFacadeException;
 
   /** Remove the given notification from the notification collection for the

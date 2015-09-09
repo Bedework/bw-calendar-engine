@@ -873,15 +873,9 @@ public class BwSysIntfImpl implements SysIntf {
   @Override
   public void removeNotification(final String href,
                                  final NotificationType val) throws WebdavException {
-    AccessPrincipal pr = caladdrToPrincipal(href);
-
-    if (pr == null) {
-      return;
-    }
-
     try {
-      svci.getNotificationsHandler().remove((BwPrincipal)pr, val);
-    } catch (Throwable t) {
+      svci.getNotificationsHandler().remove(href, val);
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
@@ -890,7 +884,7 @@ public class BwSysIntfImpl implements SysIntf {
   public List<NotificationType> getNotifications() throws WebdavException {
     try {
       return prefix(svci.getNotificationsHandler().getAll());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
@@ -900,15 +894,15 @@ public class BwSysIntfImpl implements SysIntf {
                                                  final QName type) throws WebdavException {
     try {
       return prefix(svci.getNotificationsHandler().getMatching(href, type));
-    } catch (WebdavException wde) {
+    } catch (final WebdavException wde) {
       throw wde;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
 
   private List<NotificationType> prefix(final List<NotificationType> notes) throws Throwable {
-    for (NotificationType n: notes) {
+    for (final NotificationType n: notes) {
       n.getNotification().prefixHrefs(getUrlHandler());
     }
 

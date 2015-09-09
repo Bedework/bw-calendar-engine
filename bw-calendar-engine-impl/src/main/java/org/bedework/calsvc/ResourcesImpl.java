@@ -142,9 +142,6 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ResourcesI#delete(java.lang.String)
-   */
   @Override
   public void delete(final String path) throws CalFacadeException {
     final CollectionAndName cn = getCollectionAndName(path);
