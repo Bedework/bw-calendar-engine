@@ -617,7 +617,9 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     try {
       final FromXml fxml = new FromXml();
 
-      final Element el = fxml.parseXml(new FileInputStream(path));
+      final Document doc = fxml.parseXml(new FileInputStream(path));
+
+      final Element el = doc.getDocumentElement();
 
       if (!el.getTagName().equals(Defs.aliasInfoTag)) {
         return "Not an alias-info dump file - incorrect root element " +
