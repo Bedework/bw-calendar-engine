@@ -36,6 +36,7 @@ import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.xml.FromXml;
 import org.bedework.util.xml.XmlUtil;
 
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.FileInputStream;
