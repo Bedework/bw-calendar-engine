@@ -37,22 +37,24 @@ import java.util.Set;
  * @author douglm
  *
  */
+@SuppressWarnings("unused")
 public class ContactPropUpdater implements PropertyUpdater {
   public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
     try {
-      ChangeTableEntry cte = ui.getCte();
-      BwEvent ev = ui.getEvent();
+      final ChangeTableEntry cte = ui.getCte();
+      final BwEvent ev = ui.getEvent();
 
-      Set<BwContact> contacts = ev.getContacts();
+      final Set<BwContact> contacts = ev.getContacts();
 
-      BwString nm = new BwString(UpdaterUtil.getLang(ui.getProp()),
-                                 ((TextPropertyType)ui.getProp()).getText());
+      final BwString nm =
+              new BwString(UpdaterUtil.getLang(ui.getProp()),
+                           ((TextPropertyType)ui.getProp()).getText());
 
-      String altrep = UpdaterUtil.getAltrep(ui.getProp());
+      final String altrep = UpdaterUtil.getAltrep(ui.getProp());
 
       if (ui.isAdd()) {
         if (!Util.isEmpty(contacts)) {
-          for (BwContact cnct: contacts) {
+          for (final BwContact cnct: contacts) {
             if (cnct.getCn().equals(nm)) {
               // Already there
               return UpdateResult.getOkResult();
@@ -64,7 +66,7 @@ public class ContactPropUpdater implements PropertyUpdater {
         BwContact cnct = ui.getIcalCallback().findContact(nm);
 
         if (cnct == null) {
-          cnct = new BwContact();
+          cnct = BwContact.makeContact();
           cnct.setCn(nm);
           cnct.setLink(altrep);
 
@@ -83,7 +85,7 @@ public class ContactPropUpdater implements PropertyUpdater {
           return UpdateResult.getOkResult();
         }
 
-        for (BwContact cnct: contacts) {
+        for (final BwContact cnct: contacts) {
           if (cnct.getCn().equals(nm)) {
             if (ev.removeContact(cnct)) {
               cte.addRemovedValue(cnct);
@@ -103,11 +105,12 @@ public class ContactPropUpdater implements PropertyUpdater {
           return new UpdateResult("No contact to change");
         }
 
-        for (BwContact evcnct: contacts) {
+        for (final BwContact evcnct: contacts) {
           if (evcnct.getCn().equals(nm)) {
             // Found - remove that one and add a new one.
-            BwString newnm = new BwString(UpdaterUtil.getLang(ui.getUpdprop()),
-                                          ((TextPropertyType)ui.getUpdprop()).getText());
+            final BwString newnm =
+                    new BwString(UpdaterUtil.getLang(ui.getUpdprop()),
+                                 ((TextPropertyType)ui.getUpdprop()).getText());
 
             BwContact cnct = ui.getIcalCallback().findContact(newnm);
 
@@ -132,7 +135,7 @@ public class ContactPropUpdater implements PropertyUpdater {
       }
 
       return UpdateResult.getOkResult();
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw new WebdavException(cfe);
     }
   }
