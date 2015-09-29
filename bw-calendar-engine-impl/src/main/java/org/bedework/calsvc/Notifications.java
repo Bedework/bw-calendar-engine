@@ -267,6 +267,29 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
   @Override
   public void remove(final String principalHref,
+                     final String name)
+          throws CalFacadeException {
+    if (name == null) {
+      return;
+    }
+
+    final BwCalendar ncol = getCols()
+            .getSpecial(principalHref,
+                        BwCalendar.calTypeNotifications,
+                        true);
+
+    if (ncol == null) {
+      return;
+    }
+
+    final String path = Util
+            .buildPath(false, ncol.getPath(), "/", name);
+
+    getSvc().getResourcesHandler().delete(path);
+  }
+
+  @Override
+  public void remove(final String principalHref,
                      final NotificationType val)
           throws CalFacadeException {
     if ((val == null) ||
