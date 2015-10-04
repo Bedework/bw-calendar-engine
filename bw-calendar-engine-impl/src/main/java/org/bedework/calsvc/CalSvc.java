@@ -1475,10 +1475,16 @@ public class CalSvc extends CalSvcI {
   /** Switch to the given principal to allow us to update their stuff - for
    * example - send a notification.
    *
-   * @param principal
+   * @param principal a principal object
    */
   void pushPrincipal(final BwPrincipal principal) throws CalFacadeException {
-    ((SvciPrincipalInfo)principalInfo).pushPrincipal(principal);
+    BwPrincipal pr = getUsersHandler().getUser(principal.getPrincipalRef());
+
+    if (pr == null) {
+      pr = addUser(principal.getPrincipalRef());
+    }
+
+    ((SvciPrincipalInfo)principalInfo).pushPrincipal(pr);
     getCal().principalChanged();
   }
 
