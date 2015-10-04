@@ -1495,7 +1495,8 @@ public class CalSvc extends CalSvcI {
    *
    */
   BwPrincipal addUser(final String val) throws CalFacadeException {
-    Users users = (Users)getUsersHandler();
+    boolean closed = false;
+    final Users users = (Users)getUsersHandler();
 
     /* Run this in a separate transaction to ensure we don't fail if the user
      * gets created by a concurrent process.
@@ -1506,7 +1507,7 @@ public class CalSvc extends CalSvcI {
       return users.initUserObject(val);
     }
 
-    CalSvc nsvc = new CalSvc();
+    final CalSvc nsvc = new CalSvc();
 
     nsvc.init(pars, true);
 
@@ -1514,33 +1515,50 @@ public class CalSvc extends CalSvcI {
       nsvc.open();
       nsvc.beginTransaction();
 
-      Users nusers = (Users)nsvc.getUsersHandler();
+      final Users nusers = (Users)nsvc.getUsersHandler();
 
       nusers.createUser(val);
-    } catch (CalFacadeException cfe) {
-      nsvc.rollbackTransaction();
-      if (debug) {
-        cfe.printStackTrace();
+    } catch (final CalFacadeException cfe) {
+      if (cfe.getCause() instanceof ConstraintViolationException) {
+        // We'll assume it was created by another process.
+        warn("ConstraintViolationException trying to create " + val);
+        try {
+          nsvc.endTransaction();
+        } catch (final Throwable ignored) {}
+        try {
+          nsvc.close();
+        } catch (final Throwable ignored) {}
+      } else {
+        nsvc.rollbackTransaction();
+        if (debug) {
+          cfe.printStackTrace();
+        }
+        throw cfe;
       }
-      throw cfe;
-    } catch (Throwable t) {
+      closed = true;
+    } catch (final Throwable t) {
       nsvc.rollbackTransaction();
       if (debug) {
         t.printStackTrace();
       }
       throw new CalFacadeException(t);
     } finally {
-      try {
-        nsvc.endTransaction();
-      } catch (CalFacadeException cfe) {
-        if (!(cfe.getCause() instanceof ConstraintViolationException)) {
-          throw cfe;
-        }
+      if (!closed) {
+        try {
+          nsvc.endTransaction();
+        } catch (final CalFacadeException cfe) {
+          if (!(cfe.getCause() instanceof ConstraintViolationException)) {
+            throw cfe;
+          }
 
-        //Othewise we'll assume it was created by another process.
-        warn("ConstraintViolationException trying to create " + val);
-      } finally {
-        nsvc.close();
+          //Othewise we'll assume it was created by another process.
+          warn("ConstraintViolationException trying to create " + val);
+        } finally {
+          try {
+            nsvc.close();
+          } catch (final Throwable ignored) {
+          }
+        }
       }
     }
 

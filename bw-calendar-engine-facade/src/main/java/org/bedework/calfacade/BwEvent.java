@@ -3826,22 +3826,32 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
     private final String groupHref;
 
+    private final String suggestedByHref;
+
     public SuggestedTo(final char status,
-                       final String groupHref) {
+                       final String groupHref,
+                       final String suggestedByHref) {
       this.status = status;
       this.groupHref = groupHref;
+      this.suggestedByHref = suggestedByHref;
     }
 
     public SuggestedTo(final String val) {
-      if ((val.length() > 4) &&
+      if ((val.length() > 6) &&
           (val.charAt(1) == ':')) {
         status = val.charAt(0);
 
         if ((status == accepted) ||
                 (status == rejected) ||
                 (status == pending)) {
-          groupHref = val.substring(2);
-          return;
+          final String hrefs = val.substring(2);
+          final int pos = hrefs.indexOf(":");
+
+          if ((pos > 0) && (pos < hrefs.length() - 1)) {
+            groupHref = hrefs.substring(0, pos);
+            suggestedByHref = hrefs.substring(pos + 1);
+            return;
+          }
         }
       }
 
@@ -3860,12 +3870,18 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       return groupHref;
     }
 
+    public String getSuggestedByHref() {
+      return suggestedByHref;
+    }
+
     public String toString() {
       final StringBuilder sb = new StringBuilder(getGroupHref().length() + 2);
 
       return sb.append(getStatus()).
               append(':').
-              append(getGroupHref()).
+                       append(getGroupHref()).
+                       append(':').
+                       append(getSuggestedByHref()).
               toString();
     }
   }
