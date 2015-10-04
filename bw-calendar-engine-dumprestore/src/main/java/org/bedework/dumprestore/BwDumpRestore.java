@@ -19,6 +19,7 @@
 package org.bedework.dumprestore;
 
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.DumpRestoreProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -781,6 +782,35 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     return dump.infoLines;
   }
 
+  @Override
+  public String deleteUser(final String account) {
+    try {
+      final CalSvcI svci = getSvci(getConfig().getAccount(), true);
+
+      final BwPrincipal pr = svci.getUsersHandler().getUser(account);
+
+      if (pr == null) {
+        return "No principal for " + account;
+      }
+
+      svci.getUsersHandler().remove(pr);
+
+      return "ok";
+    } catch (final Throwable t) {
+      error(t);
+
+      return "Exception: " + t.getLocalizedMessage();
+    } finally {
+      try {
+        closeSvci();
+      } catch (final Throwable t) {
+        error(t);
+
+        return "Exception: " + t.getLocalizedMessage();
+      }
+    }
+  }
+
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
@@ -848,6 +878,40 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
       curSvciOwner = ai.getOwner();
       publicAdmin = ai.getPublick();
+    }
+
+    if (svci == null) {
+      final CalSvcIPars pars = CalSvcIPars.getIndexerPars(curSvciOwner,
+                                                          publicAdmin);
+      //CalSvcIPars pars = CalSvcIPars.getServicePars(curSvciOwner,
+      //                                              publicAdmin,   // publicAdmin
+      //                                              true);   // Allow super user
+      svci = new CalSvcFactoryDefault().getSvc(pars);
+    }
+
+    svci.open();
+    svci.beginTransaction();
+
+    return svci;
+  }
+
+  /** Get an svci object and return it. Also embed it in this object.
+   *
+   * @return svci object
+   * @throws CalFacadeException
+   */
+  private CalSvcI getSvci(final String owner, final boolean publick) throws CalFacadeException {
+    if ((svci != null) && svci.isOpen()) {
+      return svci;
+    }
+
+    boolean publicAdmin = false;
+
+    if ((curSvciOwner == null) || !curSvciOwner.equals(owner)) {
+      svci = null;
+
+      curSvciOwner = owner;
+      publicAdmin = publick;
     }
 
     if (svci == null) {

@@ -499,14 +499,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                          PrivilegeDefs.privAny).cal;
   }
 
-  /* ====================================================================
-   *                   private methods
-   * ==================================================================== */
-
-  private boolean delete(final BwCalendar val,
-                         final boolean emptyIt,
-                         final boolean reallyDelete,
-                         final boolean sendSchedulingMessage) throws CalFacadeException {
+  boolean delete(final BwCalendar val,
+                 final boolean emptyIt,
+                 final boolean reallyDelete,
+                 final boolean sendSchedulingMessage) throws CalFacadeException {
     if (!emptyIt) {
       /** Only allow delete if not in use
        */
@@ -572,8 +568,12 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     /* Attempt to tombstone it
      */
-    return getSvc().getCal().deleteCalendar(val, false);
+    return getSvc().getCal().deleteCalendar(val, reallyDelete);
   }
+
+  /* ====================================================================
+   *                   private methods
+   * ==================================================================== */
 
   private void getAddContentCalendarCollections(final boolean includeAliases,
                                                 final BwCalendar root,

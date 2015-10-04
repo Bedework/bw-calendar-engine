@@ -130,4 +130,12 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
    */
   @MBeanInfo("Show status of current data dump")
   List<String> dumpStatus();
+
+  /** Delete all traces of a user.
+   *
+   * @param account of user.
+   * @return Completion messages and stats
+   */
+  @MBeanInfo("Delete all traces of a user - WARNING this is unrecoverable")
+  String deleteUser(@MBeanInfo("account")String account);
 }
