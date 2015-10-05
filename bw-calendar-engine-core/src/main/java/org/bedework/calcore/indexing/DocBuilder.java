@@ -680,7 +680,17 @@ public class DocBuilder {
 
         for (final BwXproperty xp: props) {
           if (xp.getName().equals(BwXproperty.bedeworkSuggestedTo)) {
-            builder.value(xp.getValue());
+            final String val = xp.getValue();
+
+            // Find the second ":" delimiter
+
+            int pos = val.indexOf(":", 2);
+
+            if (pos < 0) {
+              // Bad value
+              continue;
+            }
+            builder.value(val.substring(0, pos));
             continue;
           }
 
