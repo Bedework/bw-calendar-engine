@@ -519,6 +519,8 @@ public class EntityBuilder  {
                                           false));
         c.setUid(getString(PropertyInfoIndex.UID));
         c.setLink(getString(ParameterInfoIndex.ALTREP));
+        c.setEmail(getString(PropertyInfoIndex.EMAIL));
+        c.setPhone(getString(PropertyInfoIndex.PHONE));
 
         cs.add(c);
       } finally {

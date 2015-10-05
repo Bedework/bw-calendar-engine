@@ -771,12 +771,14 @@ public class DocBuilder {
 
       builder.startArray(getJname(PropertyInfoIndex.CONTACT));
 
-      for (BwContact c: val) {
+      for (final BwContact c: val) {
         c.fixNames(basicSysprops, principal);
 
         builder.startObject();
         makeField(PropertyInfoIndex.HREF, c.getHref());
         makeField(PropertyInfoIndex.CN, c.getCn());
+        makeField(PropertyInfoIndex.EMAIL, c.getEmail());
+        makeField(PropertyInfoIndex.PHONE, c.getPhone());
 
         if (c.getUid() != null) {
           builder.field(ParameterInfoIndex.UID.getJname(),
