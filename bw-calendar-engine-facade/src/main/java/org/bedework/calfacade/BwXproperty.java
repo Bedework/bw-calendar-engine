@@ -265,6 +265,8 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   private static final Set<String> xskipJsp = new TreeSet<>();
 
   static {
+    xskipJsp.add(bedeworkSuggestedTo);
+
     xskipJsp.add(bedeworkXTimezone);
 
     xskipJsp.add(bedeworkChanges);

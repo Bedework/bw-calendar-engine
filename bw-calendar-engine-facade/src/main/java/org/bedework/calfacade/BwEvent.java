@@ -3836,6 +3836,19 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       this.suggestedByHref = suggestedByHref;
     }
 
+    public static SuggestedTo make(final String val) {
+      if ((val.length() < 6) ||
+              (val.charAt(1) != ':')) {
+        return null;
+      }
+
+      try {
+        return new SuggestedTo(val);
+      } catch (final Throwable ignored) {
+        return null;
+      }
+    }
+
     public SuggestedTo(final String val) {
       if ((val.length() > 6) &&
           (val.charAt(1) == ':')) {
@@ -3897,7 +3910,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     final List<SuggestedTo> ss = new ArrayList<>();
 
     for (final BwXproperty xp: getXproperties(BwXproperty.bedeworkSuggestedTo)) {
-      ss.add(new SuggestedTo(xp.getValue()));
+      // Ignore bad values
+      final SuggestedTo st = SuggestedTo.make(xp.getValue());
+
+      if (st != null) {
+        ss.add(st);
+      }
     }
 
     return ss;
@@ -3912,9 +3930,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoDump
   @NoWrap
   public BwXproperty addSuggested(final SuggestedTo val) {
-    BwXproperty res = new BwXproperty(BwXproperty.bedeworkSuggestedTo,
-                                      null,
-                                      val.toString());
+    final BwXproperty res = new BwXproperty(BwXproperty.bedeworkSuggestedTo,
+                                            null,
+                                            val.toString());
     addXproperty(res);
 
     return res;
