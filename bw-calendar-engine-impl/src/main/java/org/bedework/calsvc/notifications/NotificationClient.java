@@ -107,8 +107,8 @@ public class NotificationClient extends Logged {
       return;  // Assume not enabled
     }
 
-    try {
-      synchronized (this) {
+    synchronized (this) {
+      try {
         final BasicHttpClient cl = getClient();
 
         cl.setBaseURI(new URI(np.getNotifierURI()));
@@ -129,13 +129,20 @@ public class NotificationClient extends Logged {
         if (status != HttpServletResponse.SC_OK) {
           warn("Unable to post notification");
         }
+      } catch (final Throwable t) {
+        if (debug) {
+          error(t);
+        }
+        error("Unable to contact notification engine " +
+                      t.getLocalizedMessage());
+      } finally {
+        try {
+          getClient().release();
+        } catch (final Throwable t) {
+          warn("Error on close " +
+                       t.getLocalizedMessage());
+        }
       }
-    } catch (final Throwable t) {
-      if (debug) {
-        error(t);
-      }
-      error("Unable to contact notification engine " +
-                    t.getLocalizedMessage());
     }
   }
 
