@@ -619,7 +619,7 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     if (res.requiresSecondaryFetch) {
-      hits = multiFetch(hits);
+      hits = multiFetch(hits, res.recurRetrieval);
 
       if (hits == null) {
         return entities;
@@ -1082,7 +1082,8 @@ public class BwIndexEsImpl implements BwIndexer {
    *                   private methods
    * ======================================================================== */
 
-  private SearchHits multiFetch(final SearchHits hits) throws CalFacadeException {
+  private SearchHits multiFetch(final SearchHits hits,
+                                final RecurringRetrievalMode rmode) throws CalFacadeException {
     // Make an ored filter from keys
 
     final Set<String> hrefs = new TreeSet<>(); // Dedup
@@ -1109,7 +1110,8 @@ public class BwIndexEsImpl implements BwIndexer {
     final SearchRequestBuilder srb = getClient().prepareSearch(searchIndexes);
 
     srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setPostFilter(getFilters(null).multiHrefFilter(hrefs));
+            .setPostFilter(getFilters(null).multiHrefFilter(hrefs,
+                                                            rmode));
     srb.setFrom(0);
     srb.setSize(hrefs.size());
 

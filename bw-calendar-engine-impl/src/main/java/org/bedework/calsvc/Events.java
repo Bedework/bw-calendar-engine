@@ -229,6 +229,7 @@ class Events extends CalSvcDb implements EventsI {
       for (final EventInfo oei: ei.getOverrides()) {
         if (oei.getEvent().getRecurrenceId().equals(recurrenceId)) {
           oei.setRetrievedEvent(ei);
+          oei.setCurrentAccess(ei.getCurrentAccess());
           return oei;
         }
       }
@@ -248,19 +249,19 @@ class Events extends CalSvcDb implements EventsI {
       DateTime dt = null;
       try {
         dt = new DateTime(recurrenceId);
-      } catch (ParseException pe) {
+      } catch (final ParseException pe) {
         throw new CalFacadeException(pe);
       }
-      DtStart ds = ev.getDtstart().makeDtStart();
+      final DtStart ds = ev.getDtstart().makeDtStart();
       dt.setTimeZone(ds.getTimeZone());
 
       rstart = BwDateTime.makeBwDateTime(dt);
     }
 
-    BwDateTime rend = rstart.addDuration(
+    final BwDateTime rend = rstart.addDuration(
             BwDuration.makeDuration(ev.getDuration()));
 
-    BwEventAnnotation ann = new BwEventAnnotation();
+    final BwEventAnnotation ann = new BwEventAnnotation();
 
     ann.setDtstart(rstart);
     ann.setDtend(rend);

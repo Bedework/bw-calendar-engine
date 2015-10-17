@@ -165,11 +165,22 @@ public class ESQueryFilter implements CalintfDefs {
     return fb;
   }
 
-  public FilterBuilder multiHrefFilter(final Set<String> hrefs) throws CalFacadeException {
+  public FilterBuilder multiHrefFilter(final Set<String> hrefs,
+                                       final RecurringRetrievalMode rmode) throws CalFacadeException {
     FilterBuilder fb = null;
 
     for (final String href: hrefs) {
       fb = or(fb, addTerm(hrefJname, href));
+    }
+
+    if (rmode.mode == Rmode.entityOnly) {
+      FilterBuilder limit = not(addTerm("_type",
+                                        BwIndexer.docTypeEvent));
+
+      limit = or(limit,
+                 addTerm(PropertyInfoIndex.MASTER, "true"));
+
+      return and(fb, limit);
     }
 
     return fb;
@@ -212,6 +223,16 @@ public class ESQueryFilter implements CalintfDefs {
       limit = or(limit,
                  and(addTerm(PropertyInfoIndex.MASTER, "true"),
                      addTerm(PropertyInfoIndex.RECURRING, "false")));
+
+      return and(fb, limit);
+    }
+
+    if (recurRetrieval.mode == Rmode.entityOnly) {
+      FilterBuilder limit = not(addTerm("_type",
+                                        BwIndexer.docTypeEvent));
+
+      limit = or(limit,
+                 addTerm(PropertyInfoIndex.MASTER, "true"));
 
       return and(fb, limit);
     }

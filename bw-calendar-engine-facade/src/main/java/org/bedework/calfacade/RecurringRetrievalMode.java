@@ -71,6 +71,9 @@ public class RecurringRetrievalMode implements Serializable {
   public static final RecurringRetrievalMode overrides =
           new RecurringRetrievalMode(Rmode.overrides);
 
+  public static final RecurringRetrievalMode entityOnly =
+          new RecurringRetrievalMode(Rmode.entityOnly);
+
   /** Default constructor - mode = Rmode.expanded, no date limits.
    */
   public RecurringRetrievalMode() {
