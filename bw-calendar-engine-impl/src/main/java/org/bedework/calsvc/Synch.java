@@ -219,7 +219,8 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   @Override
-  public boolean unsubscribe(final BwCalendar val) throws CalFacadeException {
+  public boolean unsubscribe(final BwCalendar val,
+                             final boolean forDelete) throws CalFacadeException {
     if (val.getSubscriptionId() == null) {
       return true; // just noop it
     }
@@ -245,7 +246,10 @@ class Synch extends CalSvcDb implements SynchI {
       return false;
     }
 
-    val.setSubscriptionId(null);
+    if (!forDelete) {
+      // It's always delete at the moment - this is an Oracle LONG workround
+      val.setSubscriptionId(null);
+    }
 
     return true;
   }

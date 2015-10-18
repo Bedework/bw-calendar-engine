@@ -39,7 +39,7 @@ public interface SynchI extends Serializable {
    * @author douglm
    *
    */
-  public interface Connection {
+  interface Connection {
   }
 
   /** Is synchronization active?
@@ -58,7 +58,7 @@ public interface SynchI extends Serializable {
 
   /** Make a default file subscription for the given collection.
    *
-   * @param val
+   * @param val the collection representing the subscription
    * @return true if subscribed OK.
    * @throws CalFacadeException
    */
@@ -70,25 +70,27 @@ public interface SynchI extends Serializable {
    * @return status - never null.
    * @throws CalFacadeException
    */
-  public SynchStatusResponse getSynchStatus(BwCalendar val) throws CalFacadeException;
+  SynchStatusResponse getSynchStatus(BwCalendar val) throws CalFacadeException;
 
   /** Check the subscription if this is an external subscription. Will contact
    * the synch server and check the validity. If there is no subscription
    * on the synch server will attempt to resubscribe.
    *
-   * @param val
+   * @param val the collection representing the subscription
    * @return result of call
    * @throws CalFacadeException
    */
-  public CheckSubscriptionResult checkSubscription(BwCalendar val) throws CalFacadeException;
+  CheckSubscriptionResult checkSubscription(BwCalendar val) throws CalFacadeException;
 
   /** Remove a subscription for the given collection.
    *
-   * @param val
+   * @param val the collection representing the subscription
+   * @param forDelete - we're deleting the collection - use Oracle workround
    * @return true if unsubscribed OK.
    * @throws CalFacadeException
    */
-  boolean unsubscribe(final BwCalendar val) throws CalFacadeException;
+  boolean unsubscribe(final BwCalendar val,
+                      boolean forDelete) throws CalFacadeException;
 
   /** Returns the synch service information.
    *

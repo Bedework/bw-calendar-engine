@@ -564,7 +564,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
       }
     }
 
-    getSvc().getSynch().unsubscribe(val);
+    getSvc().getSynch().unsubscribe(val, true);
+
+    val.getProperties().clear();
 
     /* Attempt to tombstone it
      */
