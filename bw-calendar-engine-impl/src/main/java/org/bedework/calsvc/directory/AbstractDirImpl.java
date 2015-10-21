@@ -483,8 +483,7 @@ public abstract class AbstractDirImpl implements Directories {
     }
 
 
-    final WebdavProperty emailProp = new WebdavProperty(
-            BedeworkServerTags.emailProp,
+    final WebdavProperty emailProp = new WebdavProperty(BedeworkServerTags.emailProp,
                                                         ca.getNoScheme());
 
     props.add(emailProp);
@@ -973,7 +972,7 @@ public abstract class AbstractDirImpl implements Directories {
 
       String acc = null;
       String ca = caladdr;
-      int atPos = ca.indexOf("@");
+      final int atPos = ca.indexOf("@");
 
       if (atPos > 0) {
         ca = ca.toLowerCase();
@@ -993,7 +992,7 @@ public abstract class AbstractDirImpl implements Directories {
       } else if (anyDomain) {
         acc = ca;
       } else {
-        for (DomainMatcher dm: domains) {
+        for (final DomainMatcher dm: domains) {
           if (dm.matches(ca, atPos)) {
             acc = ca;
             break;
