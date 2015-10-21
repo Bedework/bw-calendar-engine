@@ -1529,9 +1529,10 @@ public abstract class AbstractDirImpl implements Directories {
 
      props.add(CarddavTags.principalAddress);
 
-     DavChild dc = du.getProps(cl, context + p.getPrincipalRef(), props);
+     final DavChild dc = du.getProps(cl, context + p.getPrincipalRef(), props);
 
-     if (dc == null) {
+     if ((dc == null) ||
+             (dc.status != HttpServletResponse.SC_OK)){
        return null;
      }
 
