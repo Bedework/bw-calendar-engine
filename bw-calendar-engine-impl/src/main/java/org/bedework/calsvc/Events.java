@@ -178,19 +178,23 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       /* Generate non-overridden instances. */
-      Collection<Recurrence> instances =
+      final Collection<Recurrence> instances =
               RecurUtil.getRecurrences(ei,
                                        getAuthpars().getMaxYears(),
                                        getAuthpars().getMaxInstances(),
-                                       recurRetrieval.start.getDate(),
-                                       recurRetrieval.end.getDate());
+                                       recurRetrieval.getStartDate(),
+                                       recurRetrieval.getEndDate());
 
-      for (Recurrence rec: instances) {
+      if (instances == null) {
+        return res;
+      }
+
+      for (final Recurrence rec: instances) {
         if (rec.override != null) {
           continue;
         }
 
-        BwEventAnnotation ann = new BwEventAnnotation();
+        final BwEventAnnotation ann = new BwEventAnnotation();
 
         ann.setDtstart(rec.start);
         ann.setDtend(rec.end);
@@ -202,8 +206,8 @@ class Events extends CalSvcDb implements EventsI {
         ann.setUid(ev.getUid());
         ann.setTarget(ev);
         ann.setMaster(ev);
-        BwEvent proxy = new BwEventProxy(ann);
-        EventInfo oei = new EventInfo(proxy);
+        final BwEvent proxy = new BwEventProxy(ann);
+        final EventInfo oei = new EventInfo(proxy);
         oei.setCurrentAccess(ei.getCurrentAccess());
         oei.setRetrievedEvent(ei);
 

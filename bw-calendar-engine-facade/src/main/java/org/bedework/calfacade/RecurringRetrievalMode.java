@@ -32,7 +32,7 @@ public class RecurringRetrievalMode implements Serializable {
    * we have the following choices (derived from caldav)
    */
 
-  public static enum Rmode {
+  public enum Rmode {
     /** return all instances within the time range as
      *  individual events.
      *
@@ -81,7 +81,7 @@ public class RecurringRetrievalMode implements Serializable {
 
   /** Constructor
    *
-   * @param mode
+   * @param mode the Rmode
    */
   public RecurringRetrievalMode(final Rmode mode) {
     this.mode = mode;
@@ -89,9 +89,9 @@ public class RecurringRetrievalMode implements Serializable {
 
   /** Constructor
    *
-   * @param mode
-   * @param start
-   * @param end
+   * @param mode the Rmode
+   * @param start of recurring period
+   * @param end if period
    */
   public RecurringRetrievalMode(final Rmode mode,
                                 final BwDateTime start,
@@ -101,13 +101,37 @@ public class RecurringRetrievalMode implements Serializable {
     this.end = end;
   }
 
+  /**
+   *
+   * @return null or start date
+   */
+  public String getStartDate() {
+    if (start == null) {
+      return null;
+    }
+
+    return start.getDate();
+  }
+
+  /**
+   *
+   * @return null or end date
+   */
+  public String getEndDate() {
+    if (end == null) {
+      return null;
+    }
+
+    return end.getDate();
+  }
+
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     ts.append("mode", mode);
-    ts.append("start", start);
-    ts.append("end", end);
+    ts.append("start", getStartDate());
+    ts.append("end", getEndDate());
 
     return ts.toString();
   }
