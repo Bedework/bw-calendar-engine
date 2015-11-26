@@ -229,7 +229,6 @@ public interface IndexProperties {
    * @return Paths to skip - ":" separated
    */
   @MBeanInfo("Paths to skip - \":\" separated")
-  @ConfInfo(dontSave = true)
   String getSkipPaths();
 
   /** Paths to skip as a list
@@ -242,6 +241,7 @@ public interface IndexProperties {
    * @return Paths to skip as a list
    */
   @MBeanInfo("Paths to skip - \":\" separated")
+  @ConfInfo(dontSave = true)
   List<String> getSkipPathsList();
 
   /**
