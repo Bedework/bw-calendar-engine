@@ -24,6 +24,7 @@ import org.bedework.util.config.ConfigBase;
 import org.bedework.util.misc.ToString;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /** These are the system properties that the server needs to know about, either
@@ -221,22 +222,18 @@ public class IndexPropertiesImpl
 
   @Override
   public void setSkipPaths(final String val) {
-    String[] paths = val.split(":");
-
     skipPaths.clear();
 
-    for (String path:paths) {
-      skipPaths.add(path);
-    }
+    Collections.addAll(skipPaths, val.split(":"));
   }
 
   @Override
   @ConfInfo(dontSave = true)
   public String getSkipPaths() {
     String delim = "";
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
-    for (String s: skipPaths) {
+    for (final String s: skipPaths) {
       sb.append(delim);
       sb.append(s);
 
@@ -247,7 +244,7 @@ public class IndexPropertiesImpl
   }
 
   @Override
-  public void setSkipPathsList(List<String> val) {
+  public void setSkipPathsList(final List<String> val) {
     skipPaths = val;
   }
 
@@ -262,7 +259,7 @@ public class IndexPropertiesImpl
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     ts.append("indexerURL", getIndexerURL());
     ts.append("embeddedIndexer", getEmbeddedIndexer());
@@ -285,7 +282,7 @@ public class IndexPropertiesImpl
 
   @Override
   public IndexProperties cloneIt() {
-    IndexPropertiesImpl clone = new IndexPropertiesImpl();
+    final IndexPropertiesImpl clone = new IndexPropertiesImpl();
 
     clone.setName(getName());
 
@@ -301,7 +298,7 @@ public class IndexPropertiesImpl
     clone.setIndexPublic(getIndexPublic());
     clone.setIndexUsers(getIndexUsers());
     clone.setDiscardMessages(getDiscardMessages());
-    clone.setSkipPathsList(getSkipPathsList());
+    clone.setSkipPaths(getSkipPaths());
 
     return clone;
   }
