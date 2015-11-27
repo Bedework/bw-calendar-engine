@@ -34,7 +34,7 @@ public interface DbConfMBean extends ConfBaseMBean {
 
   /** Export schema to database?
    *
-   * @param val
+   * @param val true to export
    */
   public void setExport(boolean val);
 
@@ -44,9 +44,9 @@ public interface DbConfMBean extends ConfBaseMBean {
   @MBeanInfo("Export (write) schema to database?")
   public boolean getExport();
 
-  /** Output file name - full path
+  /**
    *
-   * @param val
+   * @param val Output file name - full path
    */
   public void setSchemaOutFile(String val);
 
@@ -80,7 +80,7 @@ public interface DbConfMBean extends ConfBaseMBean {
   public List<String> schemaStatus();
 
   /**
-   * @param value
+   * @param value the hibernate dialect
    */
   @MBeanInfo("Set the hibernate dialect")
   void setHibernateDialect(@MBeanInfo("value: a valid hibernate dialect class") final String value);
@@ -100,7 +100,7 @@ public interface DbConfMBean extends ConfBaseMBean {
 
   /** Display the named property
    *
-   * @param name
+   * @param name of property
    * @return value
    */
   @MBeanInfo("Display the named hibernate property")
@@ -108,22 +108,22 @@ public interface DbConfMBean extends ConfBaseMBean {
 
   /** Remove the named property
    *
-   * @param name
+   * @param name of property
    */
   @MBeanInfo("Remove the named hibernate property")
   void removeHibernateProperty(@MBeanInfo("name") final String name);
 
   /**
-   * @param name
-   * @param value
+   * @param name of property
+   * @param value of property
    */
   @MBeanInfo("Add a hibernate property")
   void addHibernateProperty(@MBeanInfo("name") final String name,
                               @MBeanInfo("value") final String value);
 
   /**
-   * @param name
-   * @param value
+   * @param name of property
+   * @param value of property
    */
   @MBeanInfo("Set a hibernate property")
   void setHibernateProperty(@MBeanInfo("name") final String name,
