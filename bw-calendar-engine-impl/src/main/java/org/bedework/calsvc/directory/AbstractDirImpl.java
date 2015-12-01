@@ -57,6 +57,7 @@ import net.fortuna.ical4j.vcard.Property;
 import net.fortuna.ical4j.vcard.Property.Id;
 import net.fortuna.ical4j.vcard.VCard;
 import net.fortuna.ical4j.vcard.property.Kind;
+import org.apache.http.message.BasicHeader;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
 
@@ -577,6 +578,10 @@ public abstract class AbstractDirImpl implements Directories {
     final String msg = cutypeMap.init(cdi.getCutypeMapping());
     if (msg.length() > 0) {
       warn(msg);
+    }
+
+    if (cutype == null) {
+      return cutypeMap.getDefaultPath();
     }
 
     final String cutypePath = cutypeMap.get(cutype.toLowerCase());
@@ -1359,7 +1364,7 @@ public abstract class AbstractDirImpl implements Directories {
       final byte[] content = sw.toString().getBytes();
 
       final int res = du.sendRequest(cl, "REPORT", url,
-                                     null,
+                                     new BasicHeader("depth", "infinity"),
                                      "text/xml", // contentType,
                                      content.length, // contentLen,
                                      content);
