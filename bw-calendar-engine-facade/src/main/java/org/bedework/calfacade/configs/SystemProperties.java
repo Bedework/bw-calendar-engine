@@ -161,7 +161,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
 
   /** Set the token for event reg admins
    *
-   * @param val
+   * @param val the token for event reg admins
    */
   void setEventregAdminToken(String val);
 
@@ -174,7 +174,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
 
   /** Set the url for event reg service
    *
-   * @param val
+   * @param val the url for event reg service
    */
   void setEventregUrl(String val);
 
@@ -187,7 +187,7 @@ public interface SystemProperties extends CalDAVSystemProperties {
 
   /** Set the url prefix for the cache
    *
-   * @param val
+   * @param val the url prefix for the cache
    */
   void setCacheUrlPrefix(String val);
 
