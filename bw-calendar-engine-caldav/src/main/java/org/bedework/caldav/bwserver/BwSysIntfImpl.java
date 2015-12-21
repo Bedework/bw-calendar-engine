@@ -279,6 +279,8 @@ public class BwSysIntfImpl implements SysIntf {
         }
       }
       return id;
+    } catch (final WebdavException we) {
+      throw we;
     } catch (final Throwable t) {
       throw new WebdavException(t);
     }
