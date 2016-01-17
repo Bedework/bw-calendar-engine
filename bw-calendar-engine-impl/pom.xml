@@ -67,12 +67,12 @@
     </dependency>
 		<!-- Third Party Dependencies -->
     <dependency>
-      <groupId>net.fortuna.ical4j</groupId>
-      <artifactId>ical4j</artifactId>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-ical4j-cl</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.mnode.ical4j</groupId>
-      <artifactId>ical4j-vcard</artifactId>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-ical4j-vcard</artifactId>
     </dependency>
 		<dependency>
 			<groupId>org.apache.james.jdkim</groupId>

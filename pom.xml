@@ -16,17 +16,17 @@
 		<bedework.releases.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.releases.repo.url>
 		<bedework.snapshots.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.snapshots.repo.url>
 		<bw-ws.version>4.0.1-SNAPSHOT</bw-ws.version>
-		<bw-util.version>4.0.1-SNAPSHOT</bw-util.version>
-		<bw-access.version>4.0.1-SNAPSHOT</bw-access.version>
-		<bw-webdav.version>4.0.1-SNAPSHOT</bw-webdav.version>
-		<bw-caldav-util.version>4.0.1-SNAPSHOT</bw-caldav-util.version>
+		<bw-util.version>4.0.3-SNAPSHOT</bw-util.version>
+		<bw-access.version>4.0.2-SNAPSHOT</bw-access.version>
+		<bw-webdav.version>4.0.2-SNAPSHOT</bw-webdav.version>
+		<bw-caldav-util.version>4.0.3-SNAPSHOT</bw-caldav-util.version>
 		<bw-caldav-server.version>4.0.1-SNAPSHOT</bw-caldav-server.version>
 		<!-- Third Party Library Versions -->
     <elasticsearch.version>1.5.2</elasticsearch.version>
 		<hibernate.version>3.6.9.Final</hibernate.version>
 		<hibernate-validator.version>3.1.0.GA</hibernate-validator.version>
-		<ical4j.version>1.1-BW-SNAPSHOT</ical4j.version>
-		<ical4j-vcard.version>0.9.6a-BW-SNAPSHOT</ical4j-vcard.version>
+		<ical4j.version>1.1.2-SNAPSHOT</ical4j.version>
+		<ical4j-vcard.version>1.0.2-SNAPSHOT</ical4j-vcard.version>
     <jackson.version>2.3.1</jackson.version>
     <javax.mail.version>1.5.4</javax.mail.version>
 		<junit.version>4.8.2</junit.version>
@@ -72,7 +72,8 @@
 		<module>bw-calendar-engine-inoutsched</module>
 		<module>bw-calendar-engine-interfaces</module>
 		<module>bw-calendar-engine-sysevents</module>
-	</modules>
+    <module>bw-calendar-engine-cli</module>
+  </modules>
 
 	<repositories>
     <repository>
@@ -162,6 +163,11 @@
       </dependency>
       <dependency>
         <groupId>org.bedework</groupId>
+        <artifactId>bw-util-jolokia</artifactId>
+        <version>${bw-util.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bedework</groupId>
         <artifactId>bw-util-misc</artifactId>
         <version>${bw-util.version}</version>
       </dependency>
@@ -216,6 +222,18 @@
 				<artifactId>bw-ws-calws-soap</artifactId>
 				<version>${bw-ws.version}</version>
 			</dependency>
+
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-ical4j-cl</artifactId>
+        <version>${ical4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-ical4j-vcard</artifactId>
+        <version>${ical4j-vcard.version}</version>
+      </dependency>
+
 			<!-- Third Party Libraries -->
 			<dependency>
 				<groupId>org.hibernate</groupId>
@@ -236,16 +254,6 @@
 				<groupId>org.apache.james.jdkim</groupId>
 				<artifactId>apache-jdkim-library</artifactId>
 				<version>${apache-jdkim-library.version}</version>
-			</dependency>
-			<dependency>
-        <groupId>net.fortuna.ical4j</groupId>
-				<artifactId>ical4j</artifactId>
-				<version>${ical4j.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mnode.ical4j</groupId>
-				<artifactId>ical4j-vcard</artifactId>
-				<version>${ical4j-vcard.version}</version>
 			</dependency>
 
       <dependency>

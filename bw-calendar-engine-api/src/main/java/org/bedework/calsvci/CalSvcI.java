@@ -205,7 +205,13 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   public interface IfInfo {
     /**
      *
-     * @return a label
+     * @return a label identifying this type of service
+     */
+    String getLogid();
+
+    /**
+     *
+     * @return a label identifying this actual interface
      */
     String getId();
 

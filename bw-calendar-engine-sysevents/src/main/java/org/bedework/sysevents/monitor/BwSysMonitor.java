@@ -22,6 +22,7 @@ import org.bedework.calfacade.MonitorStat;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
+import org.bedework.util.jmx.ConfBase;
 
 import org.apache.log4j.Logger;
 
@@ -32,12 +33,12 @@ import java.util.List;
  * @author douglm
  *
  */
-public class BwSysMonitor implements BwSysMonitorMBean {
+public class BwSysMonitor extends ConfBase implements BwSysMonitorMBean {
   private transient Logger log;
 
-  private DataCounts dataCounts = new DataCounts();
+  private final DataCounts dataCounts = new DataCounts();
 
-  private DataValues dataValues = new DataValues();
+  private final DataValues dataValues = new DataValues();
 
   private class BedeworkListener extends JmsSysEventListener {
     BedeworkListener() throws NotificationException {
@@ -60,9 +61,11 @@ public class BwSysMonitor implements BwSysMonitorMBean {
     @Override
     public void run() {
       try {
-        BedeworkListener bwl = new BedeworkListener();
+        final BedeworkListener bwl = new BedeworkListener();
+        setStatus(statusRunning);
         bwl.process(false);
-      } catch (NotificationException ne) {
+      } catch (final NotificationException ne) {
+        setStatus(statusStopped);
         ne.printStackTrace();
         //error(ne);
       }
@@ -82,11 +85,18 @@ public class BwSysMonitor implements BwSysMonitorMBean {
   }
 
   @Override
+  public String loadConfig() {
+    return "Ok";
+  }
+
+  @Override
   public synchronized void start() {
     if (processor != null) {
       error("Already started");
       return;
     }
+
+    setStatus(statusStopped);
 
     info("************************************************************");
     info(" * Starting " + serviceName);
@@ -110,12 +120,13 @@ public class BwSysMonitor implements BwSysMonitorMBean {
     processor.interrupt();
     try {
       processor.join();
-    } catch (InterruptedException ie) {
-    } catch (Throwable t) {
+    } catch (final InterruptedException ignored) {
+    } catch (final Throwable t) {
       error("Error waiting for processor termination");
       error(t);
     }
 
+    setStatus(statusStopped);
     processor = null;
 
     info("************************************************************");
@@ -124,7 +135,7 @@ public class BwSysMonitor implements BwSysMonitorMBean {
   }
 
   public List<String> showValues() {
-    List<String> vals = new ArrayList<String>();
+    final List<String> vals = new ArrayList<>();
 
     dataCounts.getValues(vals);
 
@@ -134,7 +145,7 @@ public class BwSysMonitor implements BwSysMonitorMBean {
   }
 
   public List<MonitorStat> getStats() {
-    List<MonitorStat> stats = new ArrayList<MonitorStat>();
+    final List<MonitorStat> stats = new ArrayList<>();
 
     dataCounts.getStats(stats);
 

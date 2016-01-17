@@ -476,10 +476,16 @@ public class CalSvc extends CalSvcI {
   }
 
   private static class InterfaceInfo implements IfInfo {
+    String logid;
     String id;
     String lastStateTime;
     String state;
     long seconds;
+
+    @Override
+    public String getLogid() {
+      return logid;
+    }
 
     @Override
     public String getId() {
@@ -510,6 +516,7 @@ public class CalSvc extends CalSvcI {
     for (final Calintf ci: getCal().active()) {
       final InterfaceInfo ii = new InterfaceInfo();
 
+      ii.logid = ci.getLogId();
       ii.id = ci.getTraceId();
       ii.lastStateTime = ci.getLastStateTime();
       ii.state = ci.getState();

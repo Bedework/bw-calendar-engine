@@ -35,8 +35,8 @@
 
     <!-- Third Party Libraries -->
     <dependency>
-      <groupId>net.fortuna.ical4j</groupId>
-      <artifactId>ical4j</artifactId>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-ical4j-cl</artifactId>
     </dependency>
 	</dependencies>
 </project>

@@ -27,6 +27,14 @@ import java.io.Serializable;
  * @author Mike Douglass       douglm  rpi.edu
  */
 public class CalSvcIPars implements Serializable {
+  /** The id for the indexer process
+   */
+  public final static String logIdIndexer = "indexer";
+
+  /** The id for the restore process
+   */
+  public final static String logIdRestore = "restore";
+
   /** The authenticated user - null for guest
    */
   private String authUser;
@@ -156,7 +164,7 @@ public class CalSvcIPars implements Serializable {
    */
   public static CalSvcIPars getIndexerPars(final String account,
                                            final boolean publicAdmin) {
-    final CalSvcIPars pars = new CalSvcIPars("indexer",
+    final CalSvcIPars pars = new CalSvcIPars(logIdIndexer,
                                              account,
                                              null,    // user
                                              null,   // calsuite
@@ -181,7 +189,7 @@ public class CalSvcIPars implements Serializable {
    * @return CalSvcIPars
    */
   public static CalSvcIPars getRestorePars(final String account) {
-    final CalSvcIPars p = new CalSvcIPars("restore",
+    final CalSvcIPars p = new CalSvcIPars(logIdRestore,
                                           account,
                                           null,    // user
                                           null,   // calsuite

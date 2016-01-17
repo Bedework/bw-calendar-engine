@@ -29,6 +29,8 @@ import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.ConfigHolder;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author douglm
@@ -42,6 +44,13 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   private CalSvcI svci;
 
   private boolean running;
+
+  private static final Set<String> dontKill = new TreeSet<>();
+
+  static {
+    dontKill.add(CalSvcIPars.logIdIndexer);
+    dontKill.add(CalSvcIPars.logIdRestore);
+  }
 
   private class AutoKillThread extends Thread {
     int ctr;
@@ -112,6 +121,11 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
         if (svci != null) {
           for (final CalSvcI.IfInfo ifInfo: svci.getIfInfo()) {
             if (ifInfo.getSeconds() > waitSecs) {
+              if (dontKill.contains(ifInfo.getLogid())) {
+                warn("Skipping long running task: " + ifInfo.getId());
+                continue;
+              }
+
               try {
                 if (debug) {
                   debug("About to shut down interface " +

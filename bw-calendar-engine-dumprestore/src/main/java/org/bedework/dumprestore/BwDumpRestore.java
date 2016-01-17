@@ -100,6 +100,8 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
         final long startTime = System.currentTimeMillis();
 
+        setStatus(statusRunning);
+
         restorer = new Restore();
 
         restorer.getConfigProperties();
@@ -130,9 +132,11 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
                                 Restore.twoDigits(seconds - (minutes * 60)));
 
         infoLines.add("Restore complete" + "\n");
+        setStatus(statusDone);
       } catch (final Throwable t) {
         error(t);
         infoLines.exceptionMsg(t);
+        setStatus(statusFailed);
       } finally {
         if (!closed) {
           try {
@@ -589,12 +593,14 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   @Override
   public synchronized String restoreData() {
     try {
+      setStatus(statusStopped);
       restore = new RestoreThread();
 
       restore.start();
 
       return "OK";
     } catch (final Throwable t) {
+      setStatus(statusFailed);
       error(t);
 
       return "Exception: " + t.getLocalizedMessage();

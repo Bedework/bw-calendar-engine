@@ -64,6 +64,7 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
         Make sure it refers to a non-existant file */
         //se.setImportFile("not-a-file.sql");
 
+        setStatus(statusRunning);
         se.execute(false, // script - causes write to System.out if true
                    getExport(),
                    false,   // drop
@@ -75,9 +76,11 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
 
         infoLines.addLn("Elapsed time: " + minutes + ":" +
                                 twoDigits(seconds - (minutes * 60)));
+        setStatus(statusDone);
       } catch (final Throwable t) {
         error(t);
         infoLines.exceptionMsg(t);
+        setStatus(statusFailed);
       } finally {
         infoLines.addLn("Schema build completed");
         export = false;
@@ -85,7 +88,7 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
     }
   }
 
-  private SchemaThread buildSchema = new SchemaThread();
+  private final SchemaThread buildSchema = new SchemaThread();
 
   /**
    */
@@ -132,10 +135,12 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
     try {
 //      buildSchema = new SchemaThread();
 
+      setStatus(statusStopped);
+
       buildSchema.start();
 
       return "OK";
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
 
       return "Exception: " + t.getLocalizedMessage();
@@ -145,7 +150,7 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
   @Override
   public synchronized List<String> schemaStatus() {
     if (buildSchema == null) {
-      InfoLines infoLines = new InfoLines();
+      final InfoLines infoLines = new InfoLines();
 
       infoLines.addLn("Schema build has not been started");
 
@@ -167,11 +172,12 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
 
   @Override
   public String listHibernateProperties() {
-    StringBuilder res = new StringBuilder();
+    final StringBuilder res = new StringBuilder();
 
-    List<String> ps = getConfig().getHibernateProperties();
+    @SuppressWarnings("unchecked")
+    final List<String> ps = getConfig().getHibernateProperties();
 
-    for (String p: ps) {
+    for (final String p: ps) {
       res.append(p);
       res.append("\n");
     }
@@ -181,7 +187,7 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
 
   @Override
   public String displayHibernateProperty(final String name) {
-    String val = getConfig().getHibernateProperty(name);
+    final String val = getConfig().getHibernateProperty(name);
 
     if (val != null) {
       return val;
@@ -239,6 +245,7 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
 
         final StringBuilder sb = new StringBuilder();
 
+        @SuppressWarnings("unchecked")
         final List<String> ps = getConfig().getHibernateProperties();
 
         for (final String p: ps) {
@@ -264,7 +271,7 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val the number
    * @return 2 digit val
    */
   private static String twoDigits(final long val) {
