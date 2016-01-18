@@ -423,7 +423,14 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
   private Collection<BwGroup> getGroups(final DirConfigProperties dirProps,
                                         final BwPrincipal principal)
           throws CalFacadeException {
-    LdapConfigProperties props = (LdapConfigProperties)dirProps;
+    final ArrayList<BwGroup> groups = new ArrayList<>();
+    final LdapConfigProperties props = (LdapConfigProperties)dirProps;
+
+    if (props.getGroupMemberAttr() == null) {
+      warn("No group member attribute set - assuming no groups");
+      return groups;
+    }
+
     InitialLdapContext ctx = null;
     String member = null;
 
@@ -438,34 +445,33 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
     try {
       try {
         ctx = createLdapInitContext(props);
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         warn("*******************************************");
         warn("No group information available");
         error(t);
-        return new ArrayList<BwGroup>();
+        return groups;
       }
 
-      BasicAttributes matchAttrs = new BasicAttributes(true);
+      final BasicAttributes matchAttrs = new BasicAttributes(true);
 
       if (member != null) {
         matchAttrs.put(props.getGroupMemberAttr(), member);
       }
 
-      String[] idAttr = {props.getGroupIdAttr()};
+      final String[] idAttr = {props.getGroupIdAttr()};
 
-      ArrayList<BwGroup> groups = new ArrayList<BwGroup>();
-      NamingEnumeration response = ctx.search(props.getGroupContextDn(),
+      final NamingEnumeration response = ctx.search(props.getGroupContextDn(),
                                               matchAttrs, idAttr);
       while (response.hasMore()) {
-        SearchResult sr = (SearchResult)response.next();
-        Attributes attrs = sr.getAttributes();
+        final SearchResult sr = (SearchResult)response.next();
+        final Attributes attrs = sr.getAttributes();
 
-        Attribute nmAttr = attrs.get(props.getGroupIdAttr());
+        final Attribute nmAttr = attrs.get(props.getGroupIdAttr());
         if (nmAttr.size() != 1) {
           throw new CalFacadeException("org.bedework.ldap.groups.multiple.result");
         }
 
-        BwGroup group = new BwGroup();
+        final BwGroup group = new BwGroup();
         group.setAccount(nmAttr.get(0).toString());
         group.setPrincipalRef(makePrincipalUri(group.getAccount(),
                                                WhoDefs.whoTypeGroup));
@@ -474,7 +480,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
       }
 
       return groups;
-    } catch(Throwable t) {
+    } catch(final Throwable t) {
       if (debug) {
         error(t);
       }
