@@ -383,7 +383,7 @@ public class IscheduleClient {
         if (cio != null) {
           cio.release();
         }
-      } catch (Throwable t) {
+      } catch (final Throwable ignored) {
       }
     }
   }
@@ -584,12 +584,18 @@ public class IscheduleClient {
         resp.setClient(cio);
         return;
       }
-    } catch (NoHttpResponseException nhre) {
+    } catch (final NoHttpResponseException nhre) {
       resp.setNoResponse(true);
-      return;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       resp.setException(t);
       throw new CalFacadeException(t);
+    } finally {
+      try {
+        if (cio != null) {
+          cio.release();
+        }
+      } catch (final Throwable ignored) {
+      }
     }
   }
 

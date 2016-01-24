@@ -315,6 +315,10 @@ public class BwSysIntfImpl implements SysIntf {
 
   @Override
   public boolean allowsSyncReport(final WdCollection col) throws WebdavException {
+    if (col == null) {
+      return false;
+    }
+
     /* This - or any target if an alias - cannot be filtered at the moment. */
     final BwCalendar bwcol = ((BwCalDAVCollection)col).getCol();
 
@@ -2030,11 +2034,22 @@ public class BwSysIntfImpl implements SysIntf {
   public String toIcalString(final Calendar cal,
                              final String contentType) throws WebdavException {
     try {
-      if (contentType.equals("text/calendar")) {
+      String ctype = null;
+
+      if (contentType != null) {
+        final String[] contentTypePars = contentType.split(";");
+        ctype = contentTypePars[0];
+      }
+
+      if (ctype == null) {
+        throw new WebdavException("Null content type");
+      }
+
+      if (ctype.equals("text/calendar")) {
         return IcalTranslator.toIcalString(cal);
       }
 
-      if (contentType.equals("application/calendar+json")) {
+      if (ctype.equals("application/calendar+json")) {
         return IcalTranslator.toJcal(cal, null);
       }
 
@@ -2123,8 +2138,9 @@ public class BwSysIntfImpl implements SysIntf {
     boolean rollback = true;
 
       /* (CALDAV:supported-calendar-data) */
-    if (!contentType.equals("text/calendar") &&
-            !contentType.equals("application/calendar+json")) {
+    if ((contentType == null) ||
+            (!contentType.equals("text/calendar") &&
+                     !contentType.equals("application/calendar+json"))) {
       if (debug) {
         debugMsg("Bad content type: " + contentType);
       }
@@ -2145,15 +2161,15 @@ public class BwSysIntfImpl implements SysIntf {
 
       if (rtype == IcalResultType.OneComponent) {
         if (ic.getComponents().size() != 1) {
-          throw new WebdavBadRequest(CaldavTags.validCalendarObjectResource);
+          throw new WebdavForbidden(CaldavTags.validCalendarObjectResource);
         }
 
         if (!(ic.getComponents().iterator().next() instanceof EventInfo)) {
-          throw new WebdavBadRequest(CaldavTags.validCalendarObjectResource);
+          throw new WebdavForbidden(CaldavTags.validCalendarObjectResource);
         }
       } else if (rtype == IcalResultType.TimeZone) {
         if (ic.getTimeZones().size() != 1) {
-          throw new WebdavBadRequest("Expected one timezone");
+          throw new WebdavForbidden("Expected one timezone");
         }
       }
       SysiIcalendar sic = new MySysiIcalendar(this, ic);

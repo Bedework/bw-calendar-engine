@@ -622,9 +622,7 @@ public abstract class CalintfHelper
         return;
       }
 
-      final boolean indexed = (getSyspars().getTestMode() /* &&
-                                       (val.getRecurrenceId() == null)*/);
-
+      final boolean indexed = true;
 
       postNotification(
               SysEvent.makeEntityUpdateEvent(code,
