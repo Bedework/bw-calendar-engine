@@ -55,6 +55,7 @@ import net.fortuna.ical4j.model.property.DtStamp;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.namespace.QName;
@@ -376,7 +377,9 @@ public class Sharing extends CalSvcDb implements SharingI {
         final String calAddr = principalToCaladdr(getPrincipal());
 
         final InviteNotificationType in = deletedNotification(u.getHref(),
-                                                              calAddr);
+                                                              calAddr,
+                                                              col.getSummary(),
+                                                              u.getAccess());
         final NotificationType note = new NotificationType();
 
         note.setDtstamp(new DtStamp(new DateTime(true)).getValue());
@@ -756,7 +759,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     invite.getUsers().remove(uentry);
 
     final InviteNotificationType note =
-            deletedNotification(href, calAddr);
+            deletedNotification(href, calAddr, col.getSummary(), uentry.getAccess());
 
     note.setPreviousStatus(uentry.getInviteStatus());
 
@@ -818,19 +821,22 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   private InviteNotificationType deletedNotification(final String shareeHref,
-                                                     final String sharerHref) throws CalFacadeException {
+                                                     final String sharerHref,
+                                                     final String summary,
+                                                     final AccessType access) throws CalFacadeException {
     final InviteNotificationType in = new InviteNotificationType();
 
     in.setUid(Uid.getUid());
     in.setHref(shareeHref);
     in.setInviteStatus(removeStatus);
-    // in.setAccess(xxx); <-- current access from sharing status?
+    in.setAccess(access);
     in.setHostUrl(shareeHref);
 
     final OrganizerType org = new OrganizerType();
     org.setHref(sharerHref);
 
     in.setOrganizer(org);
+    in.setSummary(summary);
 
     return in;
   }
@@ -870,6 +876,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       sh.external = true;
       sh.pr = getUsers().getAlways(getNoteProps().getNotifierId());
     }
+    subscribeToNotifications(sh);
 
     return sh;
   }
@@ -1142,5 +1149,14 @@ public class Sharing extends CalSvcDb implements SharingI {
   private void deleteInvite(final BwPrincipal pr,
                             final NotificationType n) throws CalFacadeException {
     ((Notifications)getSvc().getNotificationsHandler()).remove(pr, n);
+  }
+
+  private void subscribeToNotifications(final Sharee sh) throws CalFacadeException {
+    if (sh.href.startsWith("mailto:")) {
+      final List<String> emails =
+              Collections.singletonList(sh.href.substring("mailto:".length()));
+      final Notifications notify = (Notifications)getSvc().getNotificationsHandler();
+      notify.subscribe(sh.pr.getPrincipalRef(), emails);
+    }
   }
 }
