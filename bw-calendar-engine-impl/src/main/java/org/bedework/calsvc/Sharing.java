@@ -55,7 +55,6 @@ import net.fortuna.ical4j.model.property.DtStamp;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.namespace.QName;
@@ -876,7 +875,6 @@ public class Sharing extends CalSvcDb implements SharingI {
       sh.external = true;
       sh.pr = getUsers().getAlways(getNoteProps().getNotifierId());
     }
-    subscribeToNotifications(sh);
 
     return sh;
   }
@@ -1149,14 +1147,5 @@ public class Sharing extends CalSvcDb implements SharingI {
   private void deleteInvite(final BwPrincipal pr,
                             final NotificationType n) throws CalFacadeException {
     ((Notifications)getSvc().getNotificationsHandler()).remove(pr, n);
-  }
-
-  private void subscribeToNotifications(final Sharee sh) throws CalFacadeException {
-    if (sh.href.startsWith("mailto:")) {
-      final List<String> emails =
-              Collections.singletonList(sh.href.substring("mailto:".length()));
-      final Notifications notify = (Notifications)getSvc().getNotificationsHandler();
-      notify.subscribe(sh.pr.getPrincipalRef(), emails);
-    }
   }
 }

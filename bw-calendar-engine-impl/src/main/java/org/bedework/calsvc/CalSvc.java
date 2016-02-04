@@ -109,6 +109,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -1575,7 +1576,14 @@ public class CalSvc extends CalSvcI {
       }
     }
 
-    return users.getUser(val);
+    final BwPrincipal principal = users.getUser(val);
+    String caladdr = getDirectories().userToCaladdr(principal.getPrincipalRef());
+    if (caladdr != null) {
+      final List<String> emails = Collections.singletonList(caladdr.substring("mailto:".length()));
+      final Notifications notify = (Notifications)getNotificationsHandler();
+      notify.subscribe(principal.getPrincipalRef(), emails);
+    }
+    return principal;
   }
 
   private UserAuthCallBack getUserAuthCallBack() {
