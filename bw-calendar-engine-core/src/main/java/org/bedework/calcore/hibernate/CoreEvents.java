@@ -1391,7 +1391,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     StringBuilder sb = new StringBuilder();
 
     sb.append("from ");
-    sb.append(BwEvent.class.getName());
+    sb.append(BwEventObj.class.getName());
     sb.append(" ev where ev.colPath = :path and ");
 
     if (token != null) {

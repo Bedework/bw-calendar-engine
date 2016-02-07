@@ -1044,6 +1044,24 @@ public class BwEventUtil extends IcalUtil {
         }
       }
 
+      /* Fix up timestamps. */
+      if (ev.getCreated() == null) {
+        if (ev.getLastmod() != null) {
+          ev.setCreated(ev.getLastmod());
+          chg.changed(PropertyInfoIndex.CREATED, null, ev.getCreated());
+        } else {
+          ev.updateDtstamp();
+          chg.changed(PropertyInfoIndex.CREATED, null, ev.getCreated());
+          chg.changed(PropertyInfoIndex.LAST_MODIFIED, null, ev.getLastmod());
+        }
+      }
+
+      if (ev.getLastmod() == null) {
+        // created cannot be null now
+        ev.setLastmod(ev.getCreated());
+        chg.changed(PropertyInfoIndex.LAST_MODIFIED, null, ev.getLastmod());
+      }
+
       processTimezones(ev, ical, chg);
 
       /* Remove any recipients and originator
