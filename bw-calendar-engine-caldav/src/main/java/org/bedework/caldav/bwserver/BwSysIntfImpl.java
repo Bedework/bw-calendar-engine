@@ -1916,7 +1916,7 @@ public class BwSysIntfImpl implements SysIntf {
 
       if (token != null) {
         if (!token.startsWith("data:,")) {
-          throw new CalFacadeInvalidSynctoken(token);
+          throw new WebdavForbidden(WebdavTags.validSyncToken, token);
         }
 
         syncToken = token.substring(6);
@@ -1966,13 +1966,15 @@ public class BwSysIntfImpl implements SysIntf {
       }
 
       return srd;
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
-    } catch (CalFacadeInvalidSynctoken cist) {
+    } catch (final CalFacadeInvalidSynctoken cist) {
       throw new WebdavBadRequest(WebdavTags.validSyncToken);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw new WebdavException(cfe);
-    } catch (Throwable t) {
+    } catch (final WebdavException we) {
+      throw we;
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
