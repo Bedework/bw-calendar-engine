@@ -42,6 +42,13 @@ import java.util.Comparator;
 public class BwLocation extends BwEventProperty<BwLocation>
         implements CollatableEntity, Comparator<BwLocation>,
                    SizedEntity {
+  /** To avoid schema changes we are packing a subfield into the
+   * address field. Currently both address and subaddress have a
+   * unique constraint. To accommodate room numbers we are putting
+   * them on the end of the address field with a delimiter
+   */
+  public static final String roomDelimiter = "\t";
+
   private BwString address;
   private BwString subaddress;
   private String link;
@@ -67,8 +74,116 @@ public class BwLocation extends BwEventProperty<BwLocation>
    * @return the main address of the location
    */
   @IcalProperty(pindex = PropertyInfoIndex.ADDRESS)
+  @JsonIgnore
   public BwString getAddress() {
     return address;
+  }
+
+  /** Set the building part of the main address of the location. This is
+   * up to the room delimiter
+   *
+   * @param val the building part of the location
+   */
+  public void setAddressField(final String val) {
+    if (val == null) {
+      // Remove all
+      setAddress(null);
+      return;
+    }
+
+    BwString addr = getAddress();
+
+    if (addr == null) {
+      addr = new BwString(null, val);
+      setAddress(addr);
+      return;
+    }
+
+    final int pos = addr.getValue().lastIndexOf(roomDelimiter);
+
+    if (pos < 0) {
+      addr.setValue(val);
+    } else {
+      addr.setValue(
+              val + addr.getValue().substring(pos));
+    }
+  }
+
+  /** Get the main address of the location for json output. This is
+   * up to the room delimiter
+   *
+   * @return the main address of the location
+   */
+  @NoDump
+  public String getAddressField() {
+    if (getAddress() == null) {
+      return null;
+    }
+
+    final String val = getAddress().getValue();
+
+    if ((val == null) || !val.contains(roomDelimiter)) {
+      return val;
+    }
+
+    return val.substring(0, val.lastIndexOf(roomDelimiter));
+  }
+
+  /** Set the room part of the main address of the location. This is
+   * after the room delimiter
+   *
+   * @param val the room part of the location
+   */
+  public void setRoomField(final String val) {
+    if (val == null) {
+      // Remove any room part
+      if (getRoomField() == null) {
+        return;
+      }
+
+      final BwString addr = getAddress();
+      final int pos = addr.getValue().lastIndexOf(roomDelimiter);
+      addr.setValue(addr.getValue().substring(0, pos));
+
+      return;
+    }
+
+    BwString addr = getAddress();
+
+    if (addr == null) {
+      addr = new BwString(null, "");
+      setAddress(addr);
+    }
+
+    final int pos = addr.getValue().lastIndexOf(roomDelimiter);
+
+    if (pos < 0) {
+      addr.setValue(
+              addr.getValue() + BwLocation.roomDelimiter + val);
+    } else {
+      addr.setValue(
+              addr.getValue().substring(0, pos + 1) + val);
+    }
+  }
+
+  /** get the room part of the main address of the location for json output. This is
+   * after the room delimiter
+   *
+   * @return the room part of the location
+   */
+  @NoDump
+  public String getRoomField() {
+    if (getAddress() == null) {
+      return null;
+    }
+
+    final String val = getAddress().getValue();
+
+    if ((val == null) || !val.contains(roomDelimiter)) {
+      return null;
+    }
+
+    return val.substring(val.lastIndexOf(roomDelimiter) + 1);
   }
 
   /**
