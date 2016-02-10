@@ -1750,11 +1750,14 @@ public class CalSvc extends CalSvcI {
       }
     }
 
-    Set<SynchReportItem> colItems = new TreeSet<SynchReportItem>();
-    Set<BwCalendar> cols = colsH.getSynchCols(resolvedCol.getPath(), token);
+    final Set<SynchReportItem> colItems = new TreeSet<>();
+    final Set<BwCalendar> cols = colsH.getSynchCols(resolvedCol.getPath(), token);
 
-    for (BwCalendar c: cols) {
-      SynchReportItem sri = new SynchReportItem(vpath, c, canSync(c));
+    for (final BwCalendar c: cols) {
+      if (c.getCalType() == BwCalendar.calTypePendingInbox) {
+        continue;
+      }
+      final SynchReportItem sri = new SynchReportItem(vpath, c, canSync(c));
       colItems.add(sri);
       items.add(sri);
 
