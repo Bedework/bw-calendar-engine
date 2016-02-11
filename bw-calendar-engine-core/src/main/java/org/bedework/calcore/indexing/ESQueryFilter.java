@@ -183,6 +183,14 @@ public class ESQueryFilter implements CalintfDefs {
       return and(fb, limit);
     }
 
+    if (rmode.mode == Rmode.overrides) {
+      final FilterBuilder limit =
+              or(addTerm(PropertyInfoIndex.MASTER, "true"),
+                 addTerm(PropertyInfoIndex.OVERRIDE, "true"));
+
+      return and(fb, limit);
+    }
+
     return fb;
   }
 

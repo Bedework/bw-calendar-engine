@@ -1088,6 +1088,8 @@ public class BwIndexEsImpl implements BwIndexer {
 
     final Set<String> hrefs = new TreeSet<>(); // Dedup
 
+    int batchSize = (int)hits.getTotalHits();
+
     for (final SearchHit hit : hits) {
       final String dtype = hit.getType();
 
@@ -1113,7 +1115,7 @@ public class BwIndexEsImpl implements BwIndexer {
             .setPostFilter(getFilters(null).multiHrefFilter(hrefs,
                                                             rmode));
     srb.setFrom(0);
-    srb.setSize(hrefs.size());
+    srb.setSize(batchSize);
 
     if (debug) {
       debug("MultiFetch: targetIndex=" + targetIndex +
