@@ -18,9 +18,9 @@
 */
 package org.bedework.dumprestore.restore.rules;
 
-import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.base.CategorisedEntity;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 

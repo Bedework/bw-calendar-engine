@@ -31,7 +31,7 @@ import java.util.Collection;
 
 /** Flag start and end of a section
  *
- * @author Mike Douglass   douglm @ bedework.edu
+ * @author Mike Douglass   douglm @ rpi.edu
  * @version 1.0
  */
 public class SectionRule extends RestoreRule {

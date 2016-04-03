@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * @author Mike Douglass   douglm bedework.edu
+ * @author Mike Douglass   douglm rpi.edu
  * @version 1.0
  */
 public class AdminGroupFieldRule extends EntityFieldRule {

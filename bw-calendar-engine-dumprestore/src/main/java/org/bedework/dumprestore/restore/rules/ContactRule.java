@@ -23,7 +23,7 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
 /**
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm@rpi.edu
  * @version 1.0
  */
 public class ContactRule extends EntityRule {

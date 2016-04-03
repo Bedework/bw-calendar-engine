@@ -23,8 +23,6 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
-import org.bedework.access.WhoDefs;
-
 import java.util.Collection;
 
 /**

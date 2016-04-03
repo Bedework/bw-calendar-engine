@@ -18,19 +18,18 @@
 */
 package org.bedework.dumprestore.restore.rules;
 
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.dumprestore.restore.PrincipalHref;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
-import org.bedework.access.WhoDefs;
-
 import org.xml.sax.Attributes;
 
 /** Retrieve a creator and leave on the stack.
  *
- * @author Mike Douglass   douglm @ bedework.edu
+ * @author Mike Douglass   douglm @ rpi.edu
  * @version 1.0
  */
 public class CreatorRule extends RestoreRule {

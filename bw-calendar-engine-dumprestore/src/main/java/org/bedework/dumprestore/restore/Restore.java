@@ -18,10 +18,17 @@
 */
 package org.bedework.dumprestore.restore;
 
-import org.bedework.calfacade.svc.BwAuthUser;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl;
+import org.bedework.access.Privilege;
+import org.bedework.access.PrivilegeDefs;
+import org.bedework.access.Privileges;
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.svc.BwAdminGroup;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
 import org.bedework.calsvci.CalSvcFactoryDefault;
@@ -33,14 +40,6 @@ import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.InfoLines;
 import org.bedework.dumprestore.restore.rules.RestoreRuleSet;
 import org.bedework.util.misc.Util;
-
-import org.bedework.access.Ace;
-import org.bedework.access.AceWho;
-import org.bedework.access.Acl;
-import org.bedework.access.Privilege;
-import org.bedework.access.PrivilegeDefs;
-import org.bedework.access.Privileges;
-import org.bedework.access.WhoDefs;
 
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RegexMatcher;

@@ -18,10 +18,9 @@
 */
 package org.bedework.dumprestore.restore.rules;
 
+import org.bedework.access.WhoDefs;
 import org.bedework.dumprestore.restore.PrincipalHref;
 import org.bedework.dumprestore.restore.RestoreGlobals;
-
-import org.bedework.access.WhoDefs;
 
 /**
  * @author Mike Douglass   douglm@bedework.edu

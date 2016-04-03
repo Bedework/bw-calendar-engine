@@ -25,7 +25,7 @@ import org.bedework.dumprestore.restore.RestoreGlobals;
 import org.xml.sax.Attributes;
 
 /**
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm@rpi.edu
  * @version 1.0
  */
 public class SysparsRule extends EntityRule {

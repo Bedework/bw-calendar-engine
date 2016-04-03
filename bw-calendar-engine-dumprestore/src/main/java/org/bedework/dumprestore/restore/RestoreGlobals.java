@@ -18,6 +18,9 @@
 */
 package org.bedework.dumprestore.restore;
 
+import org.bedework.access.AccessException;
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwGroup;
@@ -38,10 +41,6 @@ import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.InfoLines;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.Timezones;
-
-import org.bedework.access.AccessException;
-import org.bedework.access.AccessPrincipal;
-import org.bedework.access.WhoDefs;
 
 import org.apache.commons.digester.Digester;
 

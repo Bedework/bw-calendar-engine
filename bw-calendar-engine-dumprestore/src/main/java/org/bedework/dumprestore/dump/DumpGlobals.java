@@ -54,7 +54,6 @@ import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.InfoLines;
-
 import org.bedework.util.xml.XmlEmit;
 
 import java.io.Writer;

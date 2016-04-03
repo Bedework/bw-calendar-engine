@@ -783,8 +783,26 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
       if (tokeniser.nextToken() == '"') {
         paramValue.append(tokeniser.sval);
-      } else {
+      } else if (tokeniser.sval != null) {
         paramValue.append(tokeniser.sval);
+        // check for additional words to account for equals (=) in param-value
+        int nextToken = tokeniser.nextToken();
+
+        while (nextToken > 0 &&
+                nextToken != ';' &&
+                nextToken != ':' &&
+                nextToken != ',') {
+          if (tokeniser.ttype == StreamTokenizer.TT_WORD) {
+            paramValue.append(tokeniser.sval);
+          } else {
+            paramValue.append((char) tokeniser.ttype);
+          }
+
+          nextToken = tokeniser.nextToken();
+        }
+        tokeniser.pushBack();
+      } else {
+        tokeniser.pushBack();
       }
 
       pars.add(new Xpar(paramName, paramValue.toString()));

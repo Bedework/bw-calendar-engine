@@ -18,12 +18,12 @@
 */
 package org.bedework.dumprestore.restore.rules;
 
-import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
 import org.bedework.calfacade.svc.prefs.CalendarPref;
 import org.bedework.calfacade.svc.prefs.CategoryPref;
@@ -33,7 +33,7 @@ import org.bedework.dumprestore.restore.RestoreGlobals;
 import org.bedework.util.misc.Util;
 
 /**
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm@rpi.edu
  * @version 1.0
  */
 public class AuthUserFieldRule extends EntityFieldRule {

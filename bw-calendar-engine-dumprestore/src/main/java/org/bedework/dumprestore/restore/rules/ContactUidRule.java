@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-
+        
     http://www.apache.org/licenses/LICENSE-2.0
-
+        
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,14 +18,14 @@
 */
 package org.bedework.dumprestore.restore.rules;
 
-import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.BwContact;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
 /** Build an OwnerUidKey then retrieve and store the object..
  *
- * @author Mike Douglass   douglm @ bedework.edu
+ * @author Mike Douglass   douglm @ rpi.edu
  * @version 1.0
  */
 public class ContactUidRule extends StringKeyRule {

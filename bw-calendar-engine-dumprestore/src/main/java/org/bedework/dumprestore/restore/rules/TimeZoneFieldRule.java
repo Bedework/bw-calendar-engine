@@ -21,7 +21,7 @@ package org.bedework.dumprestore.restore.rules;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
 /**
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm@rpi.edu
  * @version 1.0
  */
 public class TimeZoneFieldRule extends EntityFieldRule {

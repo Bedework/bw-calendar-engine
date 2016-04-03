@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StreamTokenizer;
+import java.util.regex.Pattern;
 
 /**
  * @author douglm
@@ -43,6 +44,8 @@ public class SfpTokenizer extends StreamTokenizer {
   private static final int WHITESPACE_CHAR_START = 0;
 
   private static final int WHITESPACE_CHAR_END = ' ';
+
+  private static final Pattern quotePattern = Pattern.compile("([\"'])");
 
   /**
    * @param rdr
@@ -255,6 +258,10 @@ public class SfpTokenizer extends StreamTokenizer {
     while (true) {
       assertToken(StreamTokenizer.TT_EOL);
     }
+  }
+
+  public static String escapeQuotes(String s) {
+         return quotePattern.matcher(s).replaceFirst("\\\\$1");
   }
 
   protected Logger getLogger() {
