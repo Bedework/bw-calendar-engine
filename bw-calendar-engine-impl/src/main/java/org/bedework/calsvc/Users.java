@@ -18,6 +18,9 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.access.Access;
+import org.bedework.access.PrivilegeDefs;
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -31,10 +34,6 @@ import org.bedework.calsvci.UsersI;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.misc.Util;
-
-import org.bedework.access.Access;
-import org.bedework.access.PrivilegeDefs;
-import org.bedework.access.WhoDefs;
 
 import java.sql.Timestamp;
 import java.util.Collection;

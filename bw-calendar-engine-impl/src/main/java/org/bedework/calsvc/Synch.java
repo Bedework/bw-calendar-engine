@@ -44,7 +44,6 @@ import org.bedework.synch.wsmessages.SynchRemoteService;
 import org.bedework.synch.wsmessages.SynchRemoteServicePortType;
 import org.bedework.synch.wsmessages.UnsubscribeRequestType;
 import org.bedework.synch.wsmessages.UnsubscribeResponseType;
-
 import org.bedework.util.jmx.MBeanUtil;
 
 import org.oasis_open.docs.ws_calendar.ns.soap.StatusType;

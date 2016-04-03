@@ -18,13 +18,12 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.SysparsI;
-
-import org.bedework.access.WhoDefs;
 
 import java.util.ArrayList;
 import java.util.Collection;

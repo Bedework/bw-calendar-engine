@@ -18,13 +18,12 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.ResourcesI;
-
-import org.bedework.access.PrivilegeDefs;
 
 import java.util.List;
 

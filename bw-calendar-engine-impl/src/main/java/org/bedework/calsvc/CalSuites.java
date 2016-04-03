@@ -18,6 +18,15 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.access.Access;
+import org.bedework.access.AccessException;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.Privilege;
+import org.bedework.access.PrivilegeDefs;
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
@@ -28,16 +37,6 @@ import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper;
 import org.bedework.calsvci.CalSuitesI;
 import org.bedework.util.misc.Util;
-
-import org.bedework.access.Access;
-import org.bedework.access.AccessException;
-import org.bedework.access.Ace;
-import org.bedework.access.AceWho;
-import org.bedework.access.Acl;
-import org.bedework.access.Acl.CurrentAccess;
-import org.bedework.access.Privilege;
-import org.bedework.access.PrivilegeDefs;
-import org.bedework.access.WhoDefs;
 
 import java.util.ArrayList;
 import java.util.Collection;

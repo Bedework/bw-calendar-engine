@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc;
 
+import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.calcorei.Calintf;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
@@ -46,8 +47,6 @@ import org.bedework.calsvci.UsersI;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.security.PwEncryptionIntf;
-
-import org.bedework.access.Acl.CurrentAccess;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;

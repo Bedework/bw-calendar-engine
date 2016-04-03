@@ -350,43 +350,28 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
     // Not actually saved
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#getPath()
-   */
   @Override
   public String getPath() throws WebdavException {
     return Util.buildPath(false, getRsrc().getColPath(), "/",
                           getRsrc().getName());
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#setParentPath(java.lang.String)
-   */
   @Override
   public void setParentPath(final String val) throws WebdavException {
     getRsrc().setColPath(val);
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#getParentPath()
-   */
   @Override
   public String getParentPath() throws WebdavException {
     return getRsrc().getColPath();
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#setOwner(AccessPrincipal)
-   */
   @Override
   public void setOwner(final AccessPrincipal val) throws WebdavException {
     super.setOwner(val);
     getRsrc().setOwnerHref(val.getPrincipalRef());
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdCollection#getOwner()
-   */
   @Override
   public AccessPrincipal getOwner() throws WebdavException {
     return intf.getPrincipal(getRsrc().getOwnerHref());
@@ -422,17 +407,11 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
     return getRsrc().getPreviousEtag();
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdEntity#setDescription(java.lang.String)
-   */
   @Override
   public void setDescription(final String val) throws WebdavException {
     // No description
   }
 
-  /* (non-Javadoc)
-   * @see edu.bedework.cct.webdav.servlet.shared.WdEntity#getDescription()
-   */
   @Override
   public String getDescription() throws WebdavException {
     return getRsrc().getName();

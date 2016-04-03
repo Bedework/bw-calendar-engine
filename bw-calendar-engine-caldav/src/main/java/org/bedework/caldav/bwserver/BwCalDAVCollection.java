@@ -70,6 +70,11 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
+  public void setAliasUri(String val) throws WebdavException {
+    getCol().setAliasUri(val);
+  }
+
+  @Override
   public String getAliasUri() throws WebdavException {
     if (!isAlias()) {
       return null;
@@ -223,6 +228,26 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   @Override
   public List<String> getVpollSupportedComponents() throws WebdavException {
     return getCol().getVpollSupportedComponents();
+  }
+
+  @Override
+  public void setRemoteId(String val) throws WebdavException {
+    getCol().setRemoteId(val);
+  }
+
+  @Override
+  public String getRemoteId() throws WebdavException {
+    return getCol().getRemoteId();
+  }
+
+  @Override
+  public void setRemotePw(String val) throws WebdavException {
+    getCol().setRemotePw(val);
+  }
+
+  @Override
+  public String getRemotePw() throws WebdavException {
+    return getCol().getRemotePw();
   }
 
   /* ====================================================================

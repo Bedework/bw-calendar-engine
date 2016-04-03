@@ -23,7 +23,6 @@ import org.bedework.caldav.bwserver.PropertyUpdater;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
-
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.ArrayList;
