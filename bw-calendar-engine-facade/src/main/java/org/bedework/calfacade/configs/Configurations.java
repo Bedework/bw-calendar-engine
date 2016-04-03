@@ -20,7 +20,6 @@ package org.bedework.calfacade.configs;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
-
 import org.bedework.util.http.service.HttpConfig;
 
 import java.io.Serializable;

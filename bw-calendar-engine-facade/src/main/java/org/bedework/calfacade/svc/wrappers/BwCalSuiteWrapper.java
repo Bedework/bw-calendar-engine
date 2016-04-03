@@ -18,13 +18,12 @@
 */
 package org.bedework.calfacade.svc.wrappers;
 
+import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.wrappers.EntityWrapper;
 import org.bedework.util.misc.ToString;
-
-import org.bedework.access.Acl.CurrentAccess;
 
 /** This object represents a calendar suite in bedework. The calendar suites all
  * share common data but have their own set of preferences associated with a

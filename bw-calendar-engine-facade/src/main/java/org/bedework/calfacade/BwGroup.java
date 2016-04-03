@@ -19,11 +19,10 @@
 
 package org.bedework.calfacade;
 
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.util.misc.ToString;
-
-import org.bedework.access.WhoDefs;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -28,16 +28,16 @@ import java.util.Set;
  */
 public interface CategorisedEntity {
   /** Set the categories uids Set
-  *
-  * @param val    Set of category uids
-  */
- void setCategoryUids(Set<String> val);
+   *
+   * @param val    Set of category uids
+   */
+  void setCategoryUids(Set<String> val);
 
- /** Get the categories
-  *
-  *  @return Set of category uids
-  */
- Set<String> getCategoryUids();
+  /** Get the categories
+   *
+   *  @return Set of category uids
+   */
+  Set<String> getCategoryUids();
 
   /** Set the categories Set
    *

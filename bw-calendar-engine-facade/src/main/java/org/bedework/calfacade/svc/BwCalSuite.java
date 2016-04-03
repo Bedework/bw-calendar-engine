@@ -196,7 +196,7 @@ public class BwCalSuite extends BwShareableDbentity<BwCalSuite> {
   }
 
   /**
-   * @param context
+   * @param context the web context
    */
   public void setContext(final String context) {
     this.context = context;
@@ -210,7 +210,7 @@ public class BwCalSuite extends BwShareableDbentity<BwCalSuite> {
   }
 
   /**
-   * @param defaultContext
+   * @param defaultContext the default web context
    */
   public void setDefaultContext(final boolean defaultContext) {
     this.defaultContext = defaultContext;
@@ -218,7 +218,7 @@ public class BwCalSuite extends BwShareableDbentity<BwCalSuite> {
 
   /** Add our stuff to the StringBuilder
    *
-   * @param sb    StringBuilder for result
+   * @param ts    StringBuilder for result
    */
    @Override
    protected void toStringSegment(final ToString ts) {
@@ -250,7 +250,7 @@ public class BwCalSuite extends BwShareableDbentity<BwCalSuite> {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 
@@ -259,7 +259,7 @@ public class BwCalSuite extends BwShareableDbentity<BwCalSuite> {
 
   @Override
   public Object clone() {
-    BwCalSuite cs = new BwCalSuite();
+    final BwCalSuite cs = new BwCalSuite();
 
     copyTo(cs);
     cs.setName(getName());

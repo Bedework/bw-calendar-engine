@@ -19,7 +19,6 @@
 package org.bedework.calfacade.filter;
 
 import org.bedework.caldav.util.filter.ObjectFilter;
-
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 /** A filter that selects events that have a certain user href

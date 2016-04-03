@@ -18,15 +18,14 @@
  */
 package org.bedework.calfacade.svc;
 
-import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.configs.BasicSystemProperties;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.util.misc.Util;
-
 import org.bedework.access.Access.AccessCb;
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.PrivilegeSet;
 import org.bedework.access.WhoDefs;
+import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
 

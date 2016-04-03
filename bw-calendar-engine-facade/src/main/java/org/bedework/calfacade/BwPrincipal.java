@@ -18,14 +18,13 @@
 */
 package org.bedework.calfacade;
 
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
-
-import org.bedework.access.AccessPrincipal;
-import org.bedework.access.WhoDefs;
 
 import java.sql.Timestamp;
 import java.util.Collection;

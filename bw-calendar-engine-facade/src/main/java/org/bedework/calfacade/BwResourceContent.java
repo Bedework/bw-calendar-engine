@@ -113,14 +113,14 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val the content
    * @throws CalFacadeException
    */
   @NoDump
   public void setContent(final byte[] val) throws CalFacadeException {
     try {
       setValue(Hibernate.createBlob(val));
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -132,7 +132,7 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
   public void setEncodedContent(final String val) throws CalFacadeException {
     try {
       setContent(Base64.decodeBase64(val.getBytes()));
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -151,20 +151,20 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
       }
 
       int len = -1;
-      int chunkSize = 1024;
+      final int chunkSize = 1024;
 
-      byte buffer[] = new byte[chunkSize];
+      final byte buffer[] = new byte[chunkSize];
 
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      final ByteArrayOutputStream baos = new ByteArrayOutputStream();
       b64out = new Base64OutputStream(baos);
-      InputStream str = b.getBinaryStream();
+      final InputStream str = b.getBinaryStream();
 
       while((len = str.read(buffer)) != -1) {
         b64out.write(buffer, 0, len);
       }
 
       return new String(baos.toByteArray());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     } finally {
       try {
@@ -180,25 +180,25 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
   @NoDump
   public String getStringContent() throws CalFacadeException {
     try {
-      Blob b = getValue();
+      final Blob b = getValue();
       if (b == null) {
         return null;
       }
 
       int len = -1;
-      int chunkSize = 1024;
+      final int chunkSize = 1024;
 
-      byte buffer[] = new byte[chunkSize];
+      final byte buffer[] = new byte[chunkSize];
 
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      InputStream str = b.getBinaryStream();
+      final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      final InputStream str = b.getBinaryStream();
 
       while((len = str.read(buffer)) != -1) {
         baos.write(buffer, 0, len);
       }
 
       return new String(baos.toByteArray());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -277,7 +277,7 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
     ts.append("path", getColPath());
@@ -288,7 +288,7 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
 
   @Override
   public Object clone() {
-    BwResourceContent nobj = new BwResourceContent();
+    final BwResourceContent nobj = new BwResourceContent();
     copyTo(nobj);
 
     return nobj;

@@ -20,7 +20,6 @@ package org.bedework.calfacade.filter;
 
 import org.bedework.caldav.util.filter.ObjectFilter;
 import org.bedework.calfacade.BwCalendar;
-
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 /** A filter that selects entities in a certain collection

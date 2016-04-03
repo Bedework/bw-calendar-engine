@@ -19,7 +19,6 @@
 package org.bedework.calfacade.configs;
 
 import org.bedework.caldav.server.sysinterface.CalDAVSystemProperties;
-
 import org.bedework.util.config.ConfInfo;
 import org.bedework.util.jmx.MBeanInfo;
 

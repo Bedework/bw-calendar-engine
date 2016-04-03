@@ -48,7 +48,6 @@ package org.bedework.calfacade.filter;
 
 import org.bedework.caldav.util.filter.ObjectFilter;
 import org.bedework.calfacade.BwString;
-
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 /** A filter for internationalized strings, i.e. BwString

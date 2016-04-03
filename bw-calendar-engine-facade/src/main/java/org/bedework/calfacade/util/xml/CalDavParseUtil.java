@@ -18,10 +18,10 @@
 */
 package org.bedework.calfacade.util.xml;
 
+import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.base.BwTimeRange;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.util.BwDateTimeUtil;
 
 import org.w3c.dom.NamedNodeMap;

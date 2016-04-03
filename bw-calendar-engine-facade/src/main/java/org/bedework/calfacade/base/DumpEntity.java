@@ -250,6 +250,10 @@ public class DumpEntity<T> {
     }
   }
 
+  /* ====================================================================
+   *                   Private methods
+   * ==================================================================== */
+
   private boolean dumpValue(final XmlEmit xml, final Method m, final Dump d,
                             final Object methVal,
                             final boolean fromCollection) throws Throwable {

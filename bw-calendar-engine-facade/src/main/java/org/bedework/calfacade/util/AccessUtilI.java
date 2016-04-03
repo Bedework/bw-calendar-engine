@@ -18,16 +18,15 @@
 */
 package org.bedework.calfacade.util;
 
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
-
-import org.bedework.access.Ace;
-import org.bedework.access.AceWho;
-import org.bedework.access.Acl.CurrentAccess;
-import org.bedework.access.PrivilegeDefs;
 
 import java.io.Serializable;
 import java.util.Collection;

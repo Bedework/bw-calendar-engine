@@ -26,13 +26,12 @@ import org.bedework.calfacade.svc.EventInfo;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
+import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-
-import org.apache.log4j.Logger;
 
 /** Select periods in the Collection of periods which fall within a given
  * time period. By incrementing that time period we can break up the given

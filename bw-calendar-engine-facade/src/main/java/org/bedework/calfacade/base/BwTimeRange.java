@@ -20,9 +20,8 @@ package org.bedework.calfacade.base;
 
 import org.bedework.calfacade.BwDateTime;
 
-import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.Property;
-
+import net.fortuna.ical4j.model.property.DateProperty;
 import org.apache.log4j.Logger;
 
 /** Timerange element for filters. Either start or end may be absent but

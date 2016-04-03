@@ -18,8 +18,6 @@
 */
 package org.bedework.calfacade.locale;
 
-import org.bedework.calfacade.exc.CalFacadeException;
-
 import java.util.Collection;
 import java.util.Locale;
 

@@ -18,6 +18,8 @@
 */
 package org.bedework.calfacade.wrappers;
 
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwCollectionLastmod;
@@ -25,9 +27,6 @@ import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.AccessUtilI;
-
-import org.bedework.access.Acl.CurrentAccess;
-import org.bedework.access.PrivilegeDefs;
 
 import java.sql.Timestamp;
 import java.util.Collection;

@@ -72,9 +72,9 @@ public class ScheduleMessage extends BwDbentity<ScheduleMessage> {
    * @param rid
    */
   public ScheduleMessage(final boolean inBox,
-                             final String principalHref,
-                             final String eventName,
-                             final String rid) {
+                         final String principalHref,
+                         final String eventName,
+                         final String rid) {
     super();
 
     this.inBox = inBox;

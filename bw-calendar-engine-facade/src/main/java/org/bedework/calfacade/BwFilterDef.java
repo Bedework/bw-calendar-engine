@@ -133,26 +133,17 @@ public class BwFilterDef extends BwOwnedDbentity<BwFilterDef>
    *               DisplayNameEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DisplayNameEntity#setDisplayNames(java.util.Collection)
-   */
   @Override
   public void setDisplayNames(final Collection<BwString> val) {
     displayNames = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DisplayNameEntity#getDisplayNames()
-   */
   @Override
   @Dump(collectionElementName = "displayName")
   public Collection<BwString> getDisplayNames() {
     return displayNames;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DisplayNameEntity#getNumDisplayNames()
-   */
   @Override
   @NoDump
   public int getNumDisplayNames() {
@@ -164,17 +155,11 @@ public class BwFilterDef extends BwOwnedDbentity<BwFilterDef>
     return rs.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DisplayNameEntity#addDisplayName(java.lang.String, java.lang.String)
-   */
   @Override
   public void addDisplayName(final String lang, final String val) {
     addDisplayName(new BwString(lang, val));
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DisplayNameEntity#addDisplayName(org.bedework.calfacade.BwString)
-   */
   @Override
   public void addDisplayName(final BwString val) {
     Collection<BwString> rs = getDisplayNames();
@@ -377,7 +362,7 @@ public class BwFilterDef extends BwOwnedDbentity<BwFilterDef>
 
   /** Add our stuff to the StringBuilder
    *
-   * @param sb    StringBuilder for result
+   * @param ts    StringBuilder for result
    */
   @Override
   protected void toStringSegment(final ToString ts) {
@@ -393,21 +378,21 @@ public class BwFilterDef extends BwOwnedDbentity<BwFilterDef>
 
   @Override
   public int compare(final BwFilterDef f1, final BwFilterDef f2) {
-     return f1.compareTo(f2);
-   }
+    return f1.compareTo(f2);
+  }
 
-   @Override
+  @Override
   public int compareTo(final BwFilterDef that) {
-     int cmp = CalFacadeUtil.cmpObjval(getOwnerHref(), that.getOwnerHref());
-     if (cmp != 0) {
-       return cmp;
-     }
+    int cmp = CalFacadeUtil.cmpObjval(getOwnerHref(), that.getOwnerHref());
+    if (cmp != 0) {
+      return cmp;
+    }
 
-     return CalFacadeUtil.cmpObjval(getName(), that.getName());
-   }
+    return CalFacadeUtil.cmpObjval(getName(), that.getName());
+  }
 
-   @Override
+  @Override
   public int hashCode() {
-     return getName().hashCode();
-   }
+    return getName().hashCode();
+  }
 }

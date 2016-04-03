@@ -18,12 +18,12 @@
 */
 package org.bedework.calfacade.locale;
 
+import org.apache.log4j.Logger;
+
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.ResourceBundle;
 import java.util.Locale;
-
-import org.apache.log4j.Logger;
+import java.util.ResourceBundle;
 
 /** Object to provide internationalized resources for the calendar suite.
  *

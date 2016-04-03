@@ -19,10 +19,9 @@
 
 package org.bedework.calfacade;
 
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
-
-import org.bedework.access.WhoDefs;
 
 /** Value object to represent a calendar user.
  *
@@ -96,7 +95,7 @@ public class BwUser extends BwPrincipal {
     /* We do not clone the attached subscriptions if present. These need to
        be cloned explicitly or we might set up a clone loop.
     */
-    BwUser u = new BwUser();
+    final BwUser u = new BwUser();
     copyTo(u);
 
     return u;

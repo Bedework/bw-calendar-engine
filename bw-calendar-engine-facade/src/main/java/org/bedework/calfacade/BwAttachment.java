@@ -136,7 +136,7 @@ public class BwAttachment extends BwDbentity<BwAttachment> {
 
   /** Copy this objects values into the parameter
    *
-   * @param val
+   * @param val to be updated
    */
   public void copyTo(final BwAttachment val) {
     val.setFmtType(getFmtType());
@@ -152,7 +152,7 @@ public class BwAttachment extends BwDbentity<BwAttachment> {
 
   @Override
   public int hashCode() {
-    int hc = 7;
+    final int hc = 7;
 
     if (getUri() != null) {
       return hc * getUri().hashCode();
@@ -182,7 +182,7 @@ public class BwAttachment extends BwDbentity<BwAttachment> {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
     ts.append("fmttype", getFmtType());
@@ -200,7 +200,7 @@ public class BwAttachment extends BwDbentity<BwAttachment> {
 
   @Override
   public Object clone() {
-    BwAttachment nobj = new BwAttachment();
+    final BwAttachment nobj = new BwAttachment();
     copyTo(nobj);
 
     return nobj;
