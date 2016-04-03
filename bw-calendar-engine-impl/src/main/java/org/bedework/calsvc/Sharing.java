@@ -610,6 +610,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       reply.setAccepted(false);
       reply.setHostUrl(shared.getPath());
       reply.setInReplyTo(col.getName());
+      reply.setSummary(col.getSummary());
 
       note.setNotification(reply);
 
@@ -726,6 +727,9 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       note.setDtstamp(new DtStamp(new DateTime(true)).getValue());
       note.setNotification(reply);
+      
+      /* Fill in the summary (the sharer's summary) on the reply. */
+      reply.setSummary(col.getSummary());
 
       getSvc().getNotificationsHandler().add(note);
 

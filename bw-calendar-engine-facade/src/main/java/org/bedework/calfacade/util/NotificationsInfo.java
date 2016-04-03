@@ -30,14 +30,17 @@ import org.bedework.caldav.util.notifications.RecurrenceType;
 import org.bedework.caldav.util.notifications.ResourceChangeType;
 import org.bedework.caldav.util.notifications.UpdatedType;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.IcalDefs;
-import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 
 import java.util.Collection;
+
+import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 /** Generate change notification messages from event and other information.
  * Output is an XML object following the Apple extensions.
@@ -133,6 +136,47 @@ public class NotificationsInfo {
 
       dd.setDeletedComponent(getType(ev));
       dd.setDeletedSummary(ev.getSummary());
+      if (ev.isRecurringEntity()) {
+          // TODO: Set these correctly.
+          //dd.setDeletedNextInstance(val);
+          //dd.setDeletedNextInstanceTzid(val);
+          //dd.setDeletedHadMoreInstances(val);
+      }
+        
+      if (ev.getDtstart() != null) {
+        ChangedPropertyType start = new ChangedPropertyType();
+        start.setName(PropertyInfoIndex.DTSTART.name());
+        start.setDataFrom(String.valueOf(ev.getDtstart()));
+        dd.getDeletedProps().add(start);
+      }
+        
+      if (ev.getDtend() != null) {
+        ChangedPropertyType end = new ChangedPropertyType();
+        end.setName(PropertyInfoIndex.DTEND.name());
+        end.setDataFrom(String.valueOf(ev.getDtend()));
+        dd.getDeletedProps().add(end);
+      }
+       
+      if (ev.getDuration() != null && !ev.getDuration().isEmpty()) {
+        ChangedPropertyType dur = new ChangedPropertyType();
+        dur.setName(PropertyInfoIndex.DURATION.name());
+        dur.setDataFrom(ev.getDuration());
+        dd.getDeletedProps().add(dur);
+      }
+        
+      if (ev.getLocation() != null) {
+        ChangedPropertyType loc = new ChangedPropertyType();
+        loc.setName(PropertyInfoIndex.LOCATION.name());
+        loc.setDataFrom(String.valueOf(ev.getLocation()));
+        dd.getDeletedProps().add(loc);
+      }
+        
+      if (ev.getDescription() != null) {
+        ChangedPropertyType desc = new ChangedPropertyType();
+        desc.setName(PropertyInfoIndex.DESCRIPTION.name());
+        desc.setDataFrom(String.valueOf(ev.getDescription()));
+        dd.getDeletedProps().add(desc);
+      }
 
       del.setDeletedDetails(dd);
 
@@ -244,7 +288,7 @@ public class NotificationsInfo {
         continue;
       }
 
-      if (cte.getIndex() == PropertyIndex.PropertyInfoIndex.XPROP) {
+      if (cte.getIndex() == PropertyInfoIndex.XPROP) {
         /* Reflected a a set of removes and adds. */
         if (!Util.isEmpty(cte.getRemovedValues())) {
           for (BwXproperty xp: ((Collection<BwXproperty>)cte.getRemovedValues())) {
@@ -301,10 +345,26 @@ public class NotificationsInfo {
     }
 
     if (!cte.getIndex().getDbMultiValued()) {
-      return String.valueOf(o);
+      if (o instanceof BwString) {
+        return ((BwString)o).getValue();  
+      } else if (o instanceof BwLocation) {
+        return ((BwLocation)o).getAddress().getValue();  
+      } else if (o instanceof BwXproperty) {
+        return ((BwXproperty)o).getValue();  
+      } else {
+        return String.valueOf(o);
+      }
     }
 
-    return String.valueOf(o);
+    if (o instanceof BwString) {
+      return ((BwString)o).getValue();  
+    } else if (o instanceof BwLocation) {
+      return ((BwLocation)o).getAddress().getValue();  
+    } else if (o instanceof BwXproperty) {
+      return ((BwXproperty)o).getValue();  
+    } else {
+      return String.valueOf(o);
+    }
   }
 
 

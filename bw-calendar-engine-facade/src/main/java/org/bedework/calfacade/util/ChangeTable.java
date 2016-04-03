@@ -833,6 +833,12 @@ public class ChangeTable implements Serializable {
         break;
       }
     }
+    /* Added any deleted items to the change table. */
+    for (ChangeTableEntry ent: fullmap.values()) {
+      if (ent.getDeleted()) {
+        ev.getChangeset(null).changed(ent.getIndex(), ent.getOldVal(), null);
+      }
+    }
   }
 
   /** mark the addition or removal of members of a collection
