@@ -19,7 +19,6 @@
 package org.bedework.inoutsched;
 
 import org.bedework.calsvc.scheduling.hosts.BwHosts;
-
 import org.bedework.util.jmx.ConfBase;
 
 import javax.management.ObjectName;

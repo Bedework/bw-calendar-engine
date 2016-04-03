@@ -19,7 +19,6 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-
 import org.bedework.util.jmx.ConfBase;
 
 import org.apache.log4j.Logger;

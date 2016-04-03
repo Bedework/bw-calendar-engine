@@ -18,6 +18,11 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.access.Access;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.AccessUtil;
 import org.bedework.calcore.AccessUtil.CollectionGetter;
 import org.bedework.calcorei.CoreCalendarsI;
@@ -41,12 +46,6 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.misc.Util;
-
-import org.bedework.access.Access;
-import org.bedework.access.Ace;
-import org.bedework.access.AceWho;
-import org.bedework.access.Acl.CurrentAccess;
-import org.bedework.access.PrivilegeDefs;
 
 import java.io.Serializable;
 import java.util.ArrayList;

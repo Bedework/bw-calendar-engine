@@ -43,7 +43,6 @@ import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
-
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;

@@ -19,9 +19,9 @@
 
 package org.bedework.calsvc.directory;
 
-import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.UserAuth;
 
 import org.apache.log4j.Logger;

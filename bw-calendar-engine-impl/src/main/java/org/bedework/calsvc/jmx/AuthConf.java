@@ -19,7 +19,6 @@
 package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.AuthProperties;
-
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.ConfigHolder;
 

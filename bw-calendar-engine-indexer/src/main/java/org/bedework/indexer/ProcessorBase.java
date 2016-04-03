@@ -21,8 +21,8 @@ package org.bedework.indexer;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.CalSvcI;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calsvci.CalSvcI;
 import org.bedework.indexer.IndexStats.StatType;
 import org.bedework.util.misc.Util;
 

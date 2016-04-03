@@ -18,6 +18,13 @@
 */
 package org.bedework.calcore;
 
+import org.bedework.access.Access;
+import org.bedework.access.AccessPrincipal;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl;
+import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeSet;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -32,14 +39,6 @@ import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.util.misc.Util;
-
-import org.bedework.access.Access;
-import org.bedework.access.AccessPrincipal;
-import org.bedework.access.Ace;
-import org.bedework.access.AceWho;
-import org.bedework.access.Acl;
-import org.bedework.access.Acl.CurrentAccess;
-import org.bedework.access.PrivilegeSet;
 
 import org.apache.log4j.Logger;
 

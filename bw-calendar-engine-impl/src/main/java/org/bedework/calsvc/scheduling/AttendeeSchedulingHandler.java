@@ -37,13 +37,6 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
-import net.fortuna.ical4j.model.Component;
-import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.PropertyList;
-import net.fortuna.ical4j.model.property.PollItemId;
-import net.fortuna.ical4j.model.property.Voter;
-
 import net.fortuna.ical4j.model.component.VVoter;
 
 import java.util.Map;

@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc.scheduling;
 
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
@@ -30,8 +31,6 @@ import org.bedework.icalendar.Icalendar;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
-
-import org.bedework.access.PrivilegeDefs;
 
 /** Rather than have a single class steering calls to a number of smaller classes
  * we will build up a full implementation by progressively implementing abstract

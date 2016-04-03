@@ -18,9 +18,9 @@
 */
 package org.bedework.calsvci;
 
-import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.BwPreferences;
 
 import java.io.Serializable;
 

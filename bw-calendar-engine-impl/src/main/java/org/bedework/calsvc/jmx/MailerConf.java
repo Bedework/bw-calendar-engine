@@ -19,7 +19,6 @@
 package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.mail.MailConfigPropertiesImpl;
-
 import org.bedework.util.jmx.ConfBase;
 
 /**

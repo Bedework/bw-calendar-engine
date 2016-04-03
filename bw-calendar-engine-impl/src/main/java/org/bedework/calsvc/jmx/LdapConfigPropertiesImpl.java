@@ -19,7 +19,6 @@
 package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.LdapConfigProperties;
-
 import org.bedework.util.config.ConfInfo;
 
 /** This class defines the various properties we need to make a connection

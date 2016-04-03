@@ -18,7 +18,6 @@
 */
 package org.bedework.dumprestore.dump.dumpling;
 
-import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -26,12 +25,13 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.svc.BwAdminGroup;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.dumprestore.dump.DumpGlobals;
 
 import java.util.ArrayList;

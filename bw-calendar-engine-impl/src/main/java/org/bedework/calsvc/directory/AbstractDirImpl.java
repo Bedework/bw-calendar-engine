@@ -20,7 +20,6 @@ package org.bedework.calsvc.directory;
 
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.WhoDefs;
-import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwPrincipalInfo.BooleanPrincipalProperty;
@@ -34,6 +33,7 @@ import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.dav.DavUtil;

@@ -19,8 +19,8 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.CalSvcI;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calsvci.CalSvcI;
 import org.bedework.indexer.IndexStats.StatType;
 
 import java.util.List;

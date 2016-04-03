@@ -19,9 +19,8 @@
 
 package org.bedework.calcorei;
 
-import org.bedework.calfacade.BwEvent;
-
 import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.calfacade.BwEvent;
 
 import java.io.Serializable;
 import java.util.Collection;

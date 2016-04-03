@@ -19,7 +19,6 @@
 package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.DirConfigProperties;
-
 import org.bedework.util.jmx.ConfBaseMBean;
 
 /** Configure a connector for the Bedework synch engine service

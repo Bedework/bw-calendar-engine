@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc.directory;
 
+import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
@@ -25,8 +26,6 @@ import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.LdapConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeUnimplementedException;
-
-import org.bedework.access.WhoDefs;
 
 import java.net.URI;
 import java.util.ArrayList;

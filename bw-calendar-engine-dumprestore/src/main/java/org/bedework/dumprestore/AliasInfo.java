@@ -20,7 +20,6 @@ package org.bedework.dumprestore;
 
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.base.DumpEntity;
-
 import org.bedework.util.misc.ToString;
 
 /** Information about an alias

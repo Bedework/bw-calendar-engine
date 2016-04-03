@@ -27,7 +27,6 @@ import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.mail.Message;
 
 import net.fortuna.ical4j.model.Calendar;
-
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;

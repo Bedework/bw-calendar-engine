@@ -18,16 +18,16 @@
 */
 package org.bedework.calsvc;
 
-import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.BwAuthUser;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.prefs.BwCommonUserPrefs;
 import org.bedework.calfacade.svc.prefs.CalendarPref;
 import org.bedework.calfacade.svc.prefs.CategoryPref;

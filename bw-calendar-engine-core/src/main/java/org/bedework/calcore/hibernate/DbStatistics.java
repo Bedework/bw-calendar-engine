@@ -18,26 +18,25 @@
 */
 package org.bedework.calcore.hibernate;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwStats;
-import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.BwStats.StatsEntry;
+import org.bedework.calfacade.BwUser;
 
 import org.apache.log4j.Logger;
-
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /** Class to help display statistics.
  *

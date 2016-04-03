@@ -22,7 +22,6 @@ import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.annotations.NoWrap;
 import org.bedework.calfacade.exc.CalFacadeException;
-
 import org.bedework.util.xml.XmlEmit;
 
 import org.apache.log4j.Logger;

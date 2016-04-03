@@ -28,7 +28,6 @@ import org.bedework.calfacade.mail.Message;
 
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Calendar;
-
 import org.apache.log4j.Logger;
 
 import java.io.StringWriter;

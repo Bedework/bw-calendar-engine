@@ -23,11 +23,9 @@ import org.bedework.calfacade.annotations.Dump.DumpFormat;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.annotations.NoWrap;
 import org.bedework.calfacade.exc.CalFacadeException;
-
 import org.bedework.util.xml.XmlEmit;
 
 import net.fortuna.ical4j.vcard.VCard;
-
 import org.apache.log4j.Logger;
 
 import java.io.File;

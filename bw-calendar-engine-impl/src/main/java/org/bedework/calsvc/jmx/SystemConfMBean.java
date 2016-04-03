@@ -20,7 +20,6 @@ package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.configs.SystemProperties;
-
 import org.bedework.util.jmx.ConfBaseMBean;
 import org.bedework.util.jmx.MBeanInfo;
 

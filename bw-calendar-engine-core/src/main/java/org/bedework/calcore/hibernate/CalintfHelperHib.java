@@ -18,12 +18,11 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.CalintfHelper;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import org.bedework.access.PrivilegeDefs;
 
 import java.io.Serializable;
 

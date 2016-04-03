@@ -84,7 +84,6 @@ import net.fortuna.ical4j.model.property.XProperty;
 import net.fortuna.ical4j.util.CompatibilityHints;
 import net.fortuna.ical4j.util.Constants;
 import net.fortuna.ical4j.util.Strings;
-
 import org.apache.log4j.Logger;
 
 import java.io.IOException;

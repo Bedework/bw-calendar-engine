@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc.scheduling;
 
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.caldav.server.sysinterface.Host;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
@@ -36,8 +37,6 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleStates;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.misc.Util;
-
-import org.bedework.access.PrivilegeDefs;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -19,7 +19,6 @@
 package org.bedework.calsvc.jmx;
 
 import org.bedework.calfacade.configs.CardDavInfo;
-
 import org.bedework.util.config.ConfInfo;
 import org.bedework.util.config.ConfigBase;
 

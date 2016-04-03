@@ -34,7 +34,6 @@ import org.bedework.calsvci.TimeZonesStoreI;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.LastModified;
-
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;

@@ -40,9 +40,6 @@ import org.bedework.sysevents.events.EntityQueuedEvent;
 import org.bedework.sysevents.events.ScheduleUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.ScheduleMethods;
-import org.bedework.util.misc.Util;
-
-import java.util.Collection;
 
 /** Handles a queue of scheduling requests. We need to delay
  * processing until after the initiating request is processed. In addition,

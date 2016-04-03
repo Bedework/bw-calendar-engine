@@ -27,7 +27,6 @@ import org.bedework.calfacade.mail.Message;
 import org.bedework.calfacade.mail.ObjectAttachment;
 import org.bedework.calfacade.util.BwDateTimeUtil;
 
-
 import java.text.DateFormat;
 
 /** Some useful methods used when mailing calendar objects..
