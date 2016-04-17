@@ -1581,7 +1581,7 @@ public class CalSvc extends CalSvcI {
     if (caladdr != null) {
       final List<String> emails = Collections.singletonList(caladdr.substring("mailto:".length()));
       final Notifications notify = (Notifications)getNotificationsHandler();
-      notify.subscribe(principal.getPrincipalRef(), emails);
+      notify.subscribe(principal, emails);
     }
     return principal;
   }

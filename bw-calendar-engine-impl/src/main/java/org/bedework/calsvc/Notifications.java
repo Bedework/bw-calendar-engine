@@ -425,6 +425,16 @@ class Notifications extends CalSvcDb implements NotificationsI {
     }
   }
 
+  public void subscribe(final BwPrincipal principal,
+                        final List<String> emails)
+          throws CalFacadeException {
+      final BwPreferences prefs = getSvc().getPrefsHandler().get(principal);
+
+      prefs.setNotificationToken(UUID.randomUUID().toString());
+      getNoteClient().subscribe(principal.getPrincipalRef(), emails,
+                                prefs.getNotificationToken());
+  }
+
   @Override
   public void unsubscribe(final String principalHref,
                           final List<String> emails)
