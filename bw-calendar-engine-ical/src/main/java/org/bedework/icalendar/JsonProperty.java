@@ -19,7 +19,6 @@
 package org.bedework.icalendar;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.util.calendar.PropertyIndex.DataType;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.XcalUtil;
 
@@ -54,6 +53,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+
+import static org.bedework.util.calendar.PropertyIndex.DataType;
 
 /**
  *
