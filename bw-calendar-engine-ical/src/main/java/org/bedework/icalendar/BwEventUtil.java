@@ -494,7 +494,7 @@ public class BwEventUtil extends IcalUtil {
             if (evinfo.getNewEvent() || !mergeAttendees) {
               chg.addValue(pi, getAttendee(cb, attPr));
             } else {
-              String pUri = cb.getCaladdr(attPr.getValue());
+              final String pUri = cb.getCaladdr(attPr.getValue());
 
               if (pUri.equals(attUri)) {
                 /* Only update for our own attendee
@@ -505,11 +505,21 @@ public class BwEventUtil extends IcalUtil {
                 chg.addValue(pi, getAttendee(cb, attPr));
               } else {
                 // Use the value we currently have
-                for (BwAttendee att: ev.getAttendees()) {
+                boolean found = false;
+                
+                for (final BwAttendee att: ev.getAttendees()) {
                   if (pUri.equals(att.getAttendeeUri())) {
                     chg.addValue(pi, att.clone());
+                    found = true;
                     break;
                   }
+                }
+                
+                if (!found) {
+                  // An added attendee
+                  final BwAttendee att = getAttendee(cb, attPr);
+                  att.setPartstat(IcalDefs.partstatValNeedsAction);
+                  chg.addValue(pi, att);
                 }
               }
             }
@@ -784,10 +794,17 @@ public class BwEventUtil extends IcalUtil {
           case ORGANIZER:
             /* ------------------- Organizer -------------------- */
 
-            BwOrganizer org = getOrganizer(cb, (Organizer)prop);
-            BwOrganizer evorg = ev.getOrganizer();
+            final BwOrganizer org = getOrganizer(cb, (Organizer)prop);
+            final BwOrganizer evorg = ev.getOrganizer();
+            final BwOrganizer evorgCopy;
+            
+            if (evorg == null) {
+              evorgCopy = null;
+            } else {
+              evorgCopy = (BwOrganizer)evorg.clone();
+            }
 
-            if (chg.changed(pi, evorg, org)) {
+            if (chg.changed(pi, evorgCopy, org)) {
               if (evorg == null) {
                 ev.setOrganizer(org);
               } else {
