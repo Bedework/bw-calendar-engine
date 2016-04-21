@@ -387,7 +387,8 @@ class Events extends CalSvcDb implements EventsI {
 
       updateEntities(updResult, event);
 
-      BwCalendar cal = validate(event, autoCreateCollection);
+      BwCalendar cal = validate(event, true, 
+                                autoCreateCollection);
 
       BwEventProxy proxy = null;
       BwEvent override = null;
@@ -465,7 +466,7 @@ class Events extends CalSvcDb implements EventsI {
       Collection<BwEventProxy> overrides = ei.getOverrideProxies();
       if (overrides != null) {
         for (BwEventProxy ovei: overrides) {
-          setScheduleState(ovei);
+          setScheduleState(ovei, true);
 
           ovei.setDtstamps(getCurrentTimestamp());
 
@@ -570,7 +571,7 @@ class Events extends CalSvcDb implements EventsI {
 
       updateEntities(updResult, event);
 
-      final BwCalendar cal = validate(event,false);
+      final BwCalendar cal = validate(event, false, false);
       adjustEntities(ei);
 
       boolean organizerSchedulingObject = false;
@@ -602,7 +603,7 @@ class Events extends CalSvcDb implements EventsI {
 
       if (ei.getNumOverrides() > 0) {
         for (final EventInfo oei: ei.getOverrides()) {
-          setScheduleState(oei.getEvent());
+          setScheduleState(oei.getEvent(), false);
 
           if (cal.getCollectionInfo().scheduling &&
                oei.getEvent().getAttendeeSchedulingObject()) {
@@ -753,9 +754,16 @@ class Events extends CalSvcDb implements EventsI {
 
       if (!organizerSchedulingObject &&
           pi.equals(PropertyInfoIndex.ORGANIZER)) {
-        // Never valid
-        throw new CalFacadeForbidden(CaldavTags.attendeeAllowed,
-                                     "Cannot change organizer");
+        final BwOrganizer oldOrg = (BwOrganizer)cte.getOldVal();
+        final BwOrganizer newOrg = (BwOrganizer)cte.getNewVal();
+        
+        if ((oldOrg == null) ||
+                (newOrg == null) ||
+                !oldOrg.getOrganizerUri().equals(newOrg.getOrganizerUri())) {
+          // Never valid
+          throw new CalFacadeForbidden(CaldavTags.attendeeAllowed,
+                                       "Cannot change organizer");
+        }
       }
 
       if (pi.equals(PropertyInfoIndex.ATTENDEE) ||
@@ -1328,6 +1336,7 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   private BwCalendar validate(final BwEvent ev,
+                              final boolean adding,
                               final boolean autoCreateCollection) throws CalFacadeException {
     if (ev.getColPath() == null) {
       throw new CalFacadeException(CalFacadeException.noEventCalendar);
@@ -1358,7 +1367,7 @@ class Events extends CalSvcDb implements EventsI {
                                    "recurring");
     }
 
-    setScheduleState(ev);
+    setScheduleState(ev, adding);
 
     Preferences prefs = null;
 
@@ -1426,7 +1435,8 @@ class Events extends CalSvcDb implements EventsI {
 
   /* Flag this as an attendee scheduling object or an organizer scheduling object
    */
-  private void setScheduleState(final BwEvent ev) throws CalFacadeException {
+  private void setScheduleState(final BwEvent ev,
+                                final boolean adding) throws CalFacadeException {
     ev.setOrganizerSchedulingObject(false);
     ev.setAttendeeSchedulingObject(false);
 
@@ -1457,14 +1467,51 @@ class Events extends CalSvcDb implements EventsI {
 
       /* If we are expanding groups do so here */
 
+      final ChangeTable chg = ev.getChangeset(getPrincipalHref());
       final Set<BwAttendee> groups = new TreeSet<>();
+
+      final ChangeTableEntry cte = chg.getEntry(PropertyInfoIndex.ATTENDEE);
+
+      checkAttendees:
       for (final BwAttendee att: atts) {
         if (CuType.GROUP.getValue().equals(att.getCuType())) {
           groups.add(att);
         }
+        
+        final AccessPrincipal attPrincipal =
+                getSvc().getDirectories().
+                        caladdrToPrincipal(att.getAttendeeUri());
+        if ((attPrincipal != null) &&
+                (attPrincipal.getPrincipalRef()
+                              .equals(curPrincipal))) {
+          // It's us 
+          continue;
+        }
+        
+        if (att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
+          continue;
+        }
+
+        if (adding) {
+          // Can't add an event with attendees set to accepted
+          att.setPartstat(IcalDefs.partstatValNeedsAction);
+          continue;
+        }
+        
+        // Not adding event. Did we add attendee?
+        if (cte != null) {
+          for (final Object o: cte.getAddedValues()) {
+            final BwAttendee chgAtt = (BwAttendee)o;
+            
+            if (chgAtt.getCn().equals(att.getCn())) {
+              att.setPartstat(IcalDefs.partstatValNeedsAction);
+              continue checkAttendees;
+            }
+          }
+        }
+        
       }
 
-      ChangeTable chg = ev.getChangeset(getPrincipalHref());
       try {
         /* If this is a vpoll we need the vvoters as we are going to
            have to remove the group vvoter entry and clone it for the
