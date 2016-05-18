@@ -82,6 +82,8 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   private boolean suggestionEnabled;
   private boolean workflowEnabled;
   private String workflowRoot;
+  
+  private boolean userSubscriptionsOnly; 
 
   private Integer vpollMaxItems;
   private Integer vpollMaxActive;
@@ -322,6 +324,16 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   @Override
   public String getWorkflowRoot() {
     return workflowRoot;
+  }
+
+  @Override
+  public void setUserSubscriptionsOnly(final boolean val) {
+    userSubscriptionsOnly = val;
+  }
+
+  @Override
+  public boolean getUserSubscriptionsOnly() {
+    return userSubscriptionsOnly;
   }
 
   @Override

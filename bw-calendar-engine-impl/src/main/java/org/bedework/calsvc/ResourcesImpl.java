@@ -23,6 +23,8 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.exc.CalFacadeForbidden;
+import org.bedework.calfacade.svc.NotificationResource;
 import org.bedework.calsvci.ResourcesI;
 
 import java.util.List;
@@ -51,6 +53,15 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
       if (coll == null) {
         throw new CalFacadeException(CalFacadeException.collectionNotFound, path);
+      }
+      
+      if (val instanceof NotificationResource) {
+        // We allow this for subscription only
+        if (coll.getCalType() != BwCalendar.calTypeNotifications) {
+          throw new CalFacadeException(CalFacadeException.badRequest, path);
+        }
+      } else if (getPrincipalInfo().getSubscriptionsOnly()) {
+        throw new CalFacadeForbidden("User has read only access");
       }
 
       final BwResource r = getCal().getResource(val.getName(),

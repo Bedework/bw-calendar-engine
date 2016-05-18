@@ -258,7 +258,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
                       final BwPrincipal principal,
                       final BwPrincipal authPrincipal,
                       final PrivilegeSet maxAllowedPrivs) {
-      super(principal, authPrincipal, maxAllowedPrivs);
+      super(principal, authPrincipal, maxAllowedPrivs, false);
       this.dump = dump;
 
       initWhoMaps(dump.sysRoots.getUserPrincipalRoot(), WhoDefs.whoTypeUser);
@@ -273,9 +273,6 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
       superUser = val;
     }
 
-    /* (non-Javadoc)
-     * @see org.bedework.calfacade.util.AccessUtilI.CallBack#getPrincipal(java.lang.String)
-     */
     @Override
     public AccessPrincipal getPrincipal(final String href) throws CalFacadeException {
       BwPrincipal p = principals.get(href);

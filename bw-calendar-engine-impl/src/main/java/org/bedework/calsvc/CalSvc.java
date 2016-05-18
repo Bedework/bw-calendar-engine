@@ -35,6 +35,7 @@ import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.CacheStats;
@@ -1315,7 +1316,7 @@ public class CalSvc extends CalSvcI {
                                                System.currentTimeMillis() - start));
 
       synchronized (synchlock) {
-        Users users = (Users)getUsersHandler();
+        final Users users = (Users)getUsersHandler();
 
         if (runAsUser == null) {
           runAsUser = authenticatedUser;
@@ -1324,11 +1325,13 @@ public class CalSvc extends CalSvcI {
         BwPrincipal currentPrincipal;
         final BwPrincipal authPrincipal;
         PrivilegeSet maxAllowedPrivs = null;
+        boolean subscriptionsOnly = getSystemProperties().getUserSubscriptionsOnly();
 
         if (pars.getForRestore()) {
           authenticated = true;
           currentPrincipal = dir.caladdrToPrincipal(pars.getAuthUser());
           authPrincipal = currentPrincipal;
+          subscriptionsOnly = false;
         } else if (authenticatedUser == null) {
           authenticated = false;
           // Unauthenticated use
@@ -1379,18 +1382,26 @@ public class CalSvc extends CalSvcI {
           postNotification(SysEvent.makeTimedEvent("Login: after get Groups",
                                                    System.currentTimeMillis() - start));
 
-          if (!pars.getService()) {
-            currentPrincipal.setPrincipalInfo(dir.getDirInfo(currentPrincipal));
+          if (pars.getService()) {
+            subscriptionsOnly = false;
+          } else {
+            final BwPrincipalInfo bwpi = dir.getDirInfo(currentPrincipal);
+            currentPrincipal.setPrincipalInfo(bwpi);
+
+            if (pars.getPublicAdmin() || bwpi.getHasFullAccess()) {
+              subscriptionsOnly = false;
+            }
 
             postNotification(SysEvent.makeTimedEvent("Login: got Dirinfo",
                                                      System.currentTimeMillis() - start));
           }
         }
-
+        
         principalInfo = new SvciPrincipalInfo(this,
                                               currentPrincipal,
                                               authPrincipal,
-                                              maxAllowedPrivs);
+                                              maxAllowedPrivs,
+                                              subscriptionsOnly);
 
         cali.init(pars.getLogId(),
                   configs,
@@ -1461,7 +1472,7 @@ public class CalSvc extends CalSvcI {
 
         return cali;
       }
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       error(cfe);
       throw cfe;
     } catch (Throwable t) {

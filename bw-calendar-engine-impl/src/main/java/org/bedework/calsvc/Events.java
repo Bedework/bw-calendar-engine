@@ -365,6 +365,10 @@ class Events extends CalSvcDb implements EventsI {
                           final boolean autoCreateCollection,
                           final boolean rollbackOnError) throws CalFacadeException {
     try {
+      if (getPrincipalInfo().getSubscriptionsOnly()) {
+        throw new CalFacadeForbidden("User has read only access");
+      }
+      
       final UpdateResult updResult = ei.getUpdResult();
       updResult.adding = true;
       updResult.hasChanged = true;

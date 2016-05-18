@@ -316,6 +316,16 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
+  public void setUserSubscriptionsOnly(final boolean val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public boolean getUserSubscriptionsOnly() {
+    return getConfig().getUserSubscriptionsOnly();
+  }
+
+  @Override
   public void setVpollMaxItems(final Integer val) {
     throw new RuntimeException("Immutable");
   }

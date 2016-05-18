@@ -27,6 +27,7 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.calfacade.svc.NotificationResource;
 import org.bedework.calsvc.notifications.NotificationClient;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.ResourcesI;
@@ -95,13 +96,8 @@ class Notifications extends CalSvcDb implements NotificationsI {
       return false;
     }
 
-    final BwResource noteRsrc = new BwResource();
-
-    noteRsrc.setName(val.getName());
-    noteRsrc.setEncoding(val.getNotification().getEncoding());
-
-    final BwResourceContent rc = new BwResourceContent();
-    noteRsrc.setContent(rc);
+    final NotificationResource noteRsrc = 
+            new NotificationResource(val);
 
     try {
       final String xml = val.toXml(true);
@@ -112,7 +108,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
       final byte[] xmlData = xml.getBytes();
 
-      rc.setContent(xmlData);
+      noteRsrc.getContent().setContent(xmlData);
 
       noteRsrc.setContentLength(xmlData.length);
       noteRsrc.setContentType(val.getContentType());

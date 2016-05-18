@@ -36,6 +36,8 @@ import java.io.Serializable;
 public abstract class PrincipalInfo implements AccessCb, Serializable {
   protected boolean superUser;
 
+  protected boolean subscriptionsOnly;
+
   protected BwPrincipal principal;
 
   /* associated with principal */
@@ -53,13 +55,16 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
    * @param authPrincipal the authenticated principal
    * @param maxAllowedPrivs - used to filter access - e.g. force read only in
    *                   public client
+   * @param subscriptionsOnly - true if this user is limited to internal subscriptions 
    */
   public PrincipalInfo(final BwPrincipal principal,
                        final BwPrincipal authPrincipal,
-                       final PrivilegeSet maxAllowedPrivs) {
+                       final PrivilegeSet maxAllowedPrivs,
+                       final boolean subscriptionsOnly) {
     this.principal = principal;
     this.authPrincipal = authPrincipal;
     this.maxAllowedPrivs = maxAllowedPrivs;
+    this.subscriptionsOnly = subscriptionsOnly;
   }
 
   /**
@@ -120,6 +125,10 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
    */
   public boolean getSuperUser() {
     return superUser;
+  }
+
+  public boolean getSubscriptionsOnly() {
+    return subscriptionsOnly;
   }
 
   /**

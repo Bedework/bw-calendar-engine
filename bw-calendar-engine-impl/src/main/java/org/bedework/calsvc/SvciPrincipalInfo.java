@@ -34,7 +34,7 @@ import java.util.Deque;
  *
  */
 final class SvciPrincipalInfo extends PrincipalInfo {
-  private CalSvc svci;
+  private final CalSvc svci;
 
   private static class StackedState {
     BwPrincipal principal;
@@ -43,18 +43,20 @@ final class SvciPrincipalInfo extends PrincipalInfo {
     PrivilegeSet maxAllowedPrivs;
   }
 
-  private Deque<SvciPrincipalInfo.StackedState> stack = new ArrayDeque<SvciPrincipalInfo.StackedState>();
+  private final Deque<SvciPrincipalInfo.StackedState> stack = new ArrayDeque<>();
 
   SvciPrincipalInfo(final CalSvc svci,
                     final BwPrincipal principal,
                     final BwPrincipal authPrincipal,
-                    final PrivilegeSet maxAllowedPrivs) {
-    super(principal, authPrincipal, maxAllowedPrivs);
+                    final PrivilegeSet maxAllowedPrivs,
+                    final boolean subscriptionsOnly) {
+    super(principal, authPrincipal, maxAllowedPrivs, subscriptionsOnly);
     this.svci = svci;
   }
 
   void setSuperUser(final boolean val) {
     superUser = val;
+    subscriptionsOnly = false;
   }
 
   /* (non-Javadoc)
@@ -76,7 +78,7 @@ final class SvciPrincipalInfo extends PrincipalInfo {
   }
 
   void pushPrincipal(final BwPrincipal principal) {
-    SvciPrincipalInfo.StackedState ss = new StackedState();
+    final SvciPrincipalInfo.StackedState ss = new StackedState();
     ss.principal = this.principal;
     ss.superUser = superUser;
     ss.calendarHomePath = calendarHomePath;
@@ -90,7 +92,7 @@ final class SvciPrincipalInfo extends PrincipalInfo {
   }
 
   void popPrincipal() throws CalFacadeException {
-    SvciPrincipalInfo.StackedState ss = stack.pop();
+    final SvciPrincipalInfo.StackedState ss = stack.pop();
 
     if (ss == null) {
       throw new CalFacadeException("Nothing to pop");
@@ -106,7 +108,7 @@ final class SvciPrincipalInfo extends PrincipalInfo {
   public String makeHref(final String id, final int whoType) throws AccessException {
     try {
       return svci.getDirectories().makePrincipalUri(id, whoType);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }

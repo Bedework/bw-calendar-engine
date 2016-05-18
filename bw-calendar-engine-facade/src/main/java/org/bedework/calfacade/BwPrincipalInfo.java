@@ -76,6 +76,8 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
 
   private String kind;
 
+  private boolean hasFullAccess;
+  
   private List<BwPrincipalInfo> members;
 
   /** Class for properties collection.
@@ -446,6 +448,14 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
     return kind;
   }
 
+  /**
+   * 
+   * @return true if this user has full access - even if system default is subscriptions only
+   */
+  public boolean getHasFullAccess() {
+    return hasFullAccess;
+  }
+  
   /**
    * @param val
    */

@@ -444,6 +444,16 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   }
 
   @Override
+  public void setUserSubscriptionsOnly(final boolean val) {
+    getConfig().setUserSubscriptionsOnly(val);
+  }
+
+  @Override
+  public boolean getUserSubscriptionsOnly() {
+    return getConfig().getUserSubscriptionsOnly();
+  }
+
+  @Override
   public int getAutoKillTerminated() {
     return autoKiller.terminated;
   }

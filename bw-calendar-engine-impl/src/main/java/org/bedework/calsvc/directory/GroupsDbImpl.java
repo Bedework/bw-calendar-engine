@@ -29,7 +29,7 @@ import java.util.TreeSet;
  * database. It is assumed a production system will use the ldap implementation
  * or something like it.
  *
- * @author Mike Douglass douglm@bedework.edu
+ * @author Mike Douglass douglm@rpi.edu
  * @version 1.0
  */
 public class GroupsDbImpl extends AbstractDirImpl {

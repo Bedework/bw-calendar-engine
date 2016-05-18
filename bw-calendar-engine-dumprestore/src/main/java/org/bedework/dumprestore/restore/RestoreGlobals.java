@@ -610,17 +610,14 @@ public class RestoreGlobals extends Counters {
   private class RestorePrincipalInfo extends PrincipalInfo {
     RestorePrincipalInfo(final BwPrincipal principal,
                          final BwPrincipal authPrincipal) {
-      super(principal, authPrincipal, null);
+      super(principal, authPrincipal, null, false);
     }
 
-    /* (non-Javadoc)
-     * @see org.bedework.calfacade.util.AccessUtilI.CallBack#getPrincipal(java.lang.String)
-     */
     @Override
     public AccessPrincipal getPrincipal(final String href) throws CalFacadeException {
       try {
-        return getPrincipal(href);
-      } catch (Throwable t) {
+        return RestoreGlobals.this.getPrincipal(href);
+      } catch (final Throwable t) {
         throw new CalFacadeException(t);
       }
     }
@@ -647,7 +644,7 @@ public class RestoreGlobals extends Counters {
     public String makeHref(final String id, final int whoType) throws AccessException {
       try {
         return getPrincipalHref(id, whoType);
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         throw new AccessException(t);
       }
     }

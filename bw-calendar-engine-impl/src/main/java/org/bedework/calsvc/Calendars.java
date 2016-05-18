@@ -29,6 +29,7 @@ import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
@@ -358,12 +359,22 @@ class Calendars extends CalSvcDb implements CalendarsI {
   @Override
   public BwCalendar add(BwCalendar val,
                         final String parentPath) throws CalFacadeException {
+    if (getPrincipalInfo().getSubscriptionsOnly()) {
+      // Only allow the creation of an alias
+      if (val.getCalType() != BwCalendar.calTypeAlias) {
+        throw new CalFacadeForbidden("User has read only access");
+      }
+    }
     updateOK(val);
 
     setupSharableEntity(val, getPrincipal().getPrincipalRef());
     val.adjustCategories();
 
-    if (val.getPwNeedsEncrypt()) {
+    if (val.getExternalSub()) {
+      val.setRefreshRate(60*15);
+    }
+
+    if (val.getPwNeedsEncrypt() || (val.getExternalSub() && val.getRemotePw() != null)) {
       encryptPw(val);
     }
 

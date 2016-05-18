@@ -248,6 +248,19 @@ public interface SystemProperties extends CalDAVSystemProperties {
   String getWorkflowRoot();
 
   /**
+   *
+   * @param val True if default logged in user access limited to subscriptions
+   */
+  void setUserSubscriptionsOnly(boolean val);
+
+  /**
+   *
+   * @return True if default logged in user access limited to subscriptions
+   */
+  @MBeanInfo("True if default logged in user access limited to subscriptions")
+  boolean getUserSubscriptionsOnly();
+
+  /**
    * @return copy of this
    */
   SystemProperties cloneIt();

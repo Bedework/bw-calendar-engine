@@ -241,9 +241,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
                                 final String name,
                                 final ResourceClass cl) throws CalFacadeException {
     try {
-      BwResource r = getRess().get(Util.buildPath(false,
-                                                  getResourcesPath(
-                                                          suite, cl),
+      BwResource r = getRess().get(Util.buildPath(false, getResourcesPath(suite, cl),
                                                   "/",
                                                   name));
       if (r != null) {
