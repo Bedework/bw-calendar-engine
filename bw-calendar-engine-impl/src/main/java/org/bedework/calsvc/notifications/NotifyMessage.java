@@ -18,16 +18,14 @@
 */
 package org.bedework.calsvc.notifications;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * User: mike Date: 8/16/15 Time: 11:31
  */
 public class NotifyMessage {
   private final String system;
   private final String token;
-  private final List<String> hrefs = new ArrayList<>();
+  private String href;
+  private String resourceName;
 
   public NotifyMessage(final String system,
                        final String token) {
@@ -43,7 +41,19 @@ public class NotifyMessage {
     return token;
   }
 
-  public List<String> getHrefs() {
-    return hrefs;
+  public String getHref() {
+    return href;
+  }
+
+  public void setHref(final String val) {
+    href = val;
+  }
+
+  public String getResourceName() {
+    return resourceName;
+  }
+
+  public void setResourceName(final String val) {
+    resourceName = val;
   }
 }

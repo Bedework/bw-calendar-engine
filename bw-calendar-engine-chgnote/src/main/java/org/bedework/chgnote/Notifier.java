@@ -430,8 +430,7 @@ public class Notifier extends AbstractScheduler {
        * sharee that made the change.
        */
 
-      for (final String sh: ci.enabledSharees) {
-        final String shareeHref = getSvc().getDirectories().normalizeCua(sh);
+      for (final String shareeHref: ci.enabledSharees) {
 
         /* No notification if this is the owner of the changed resource
          */
@@ -651,7 +650,12 @@ public class Notifier extends AbstractScheduler {
 
         for (final BwCalendar c: cols) {
           if (notificationsEnabled(c, defaultEnabled)) {
-            ci.addSharee(u.getHref());
+            final BwPrincipal principal = getSvc().getDirectories().caladdrToPrincipal(u.getHref());
+            if (principal != null) {
+              ci.addSharee(principal.getPrincipalRef());
+            } else {
+              ci.addSharee(u.getHref());
+            }
           }
         }
       } finally {

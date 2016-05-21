@@ -55,11 +55,12 @@ public class NotificationClient extends Logged {
    * @param principalHref owner of changed notifications
    * @throws CalFacadeException
    */
-  public void informNotifier(final String principalHref) throws CalFacadeException {
+  public void informNotifier(final String principalHref, final String resourceName) throws CalFacadeException {
     final NotifyMessage nm = new NotifyMessage(np.getNotifierId(),
                                                np.getNotifierToken());
 
-    nm.getHrefs().add(principalHref);
+    nm.setHref(principalHref);
+    nm.setResourceName(resourceName);
 
     sendRequest(nm, "notification/");
   }

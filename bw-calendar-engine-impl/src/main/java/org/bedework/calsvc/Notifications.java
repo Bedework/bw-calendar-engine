@@ -120,7 +120,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
       if (getSvc().getResourcesHandler().save(ncol.getPath(),
                                               noteRsrc,
                                               true)) {
-        getNoteClient().informNotifier(getPrincipalHref());
+        getNoteClient().informNotifier(getPrincipalHref(), noteRsrc.getName());
 
         return true;
       }
@@ -180,7 +180,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
       noteRsrc.setContentType(val.getContentType());
 
       getSvc().getResourcesHandler().update(noteRsrc, true);
-      getNoteClient().informNotifier(getPrincipalHref());
+      getNoteClient().informNotifier(getPrincipalHref(), noteRsrc.getName());
 
       return true;
     } catch (final CalFacadeException cfe) {

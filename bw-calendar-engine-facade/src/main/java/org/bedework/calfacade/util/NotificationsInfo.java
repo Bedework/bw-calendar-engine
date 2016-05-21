@@ -31,6 +31,7 @@ import org.bedework.caldav.util.notifications.ResourceChangeType;
 import org.bedework.caldav.util.notifications.UpdatedType;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.BwLongString;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -167,14 +168,14 @@ public class NotificationsInfo {
       if (ev.getLocation() != null) {
         ChangedPropertyType loc = new ChangedPropertyType();
         loc.setName(PropertyInfoIndex.LOCATION.name());
-        loc.setDataFrom(String.valueOf(ev.getLocation()));
+        loc.setDataFrom(ev.getLocation().getAddress().getValue());
         dd.getDeletedProps().add(loc);
       }
         
       if (ev.getDescription() != null) {
         ChangedPropertyType desc = new ChangedPropertyType();
         desc.setName(PropertyInfoIndex.DESCRIPTION.name());
-        desc.setDataFrom(String.valueOf(ev.getDescription()));
+        desc.setDataFrom(ev.getDescription());
         dd.getDeletedProps().add(desc);
       }
 
@@ -347,6 +348,8 @@ public class NotificationsInfo {
     if (!cte.getIndex().getDbMultiValued()) {
       if (o instanceof BwString) {
         return ((BwString)o).getValue();  
+      } else if (o instanceof BwLongString) {
+        return ((BwLongString)o).getValue();  
       } else if (o instanceof BwLocation) {
         return ((BwLocation)o).getAddress().getValue();  
       } else if (o instanceof BwXproperty) {
@@ -358,6 +361,8 @@ public class NotificationsInfo {
 
     if (o instanceof BwString) {
       return ((BwString)o).getValue();  
+    } else if (o instanceof BwLongString) {
+      return ((BwLongString)o).getValue();  
     } else if (o instanceof BwLocation) {
       return ((BwLocation)o).getAddress().getValue();  
     } else if (o instanceof BwXproperty) {
