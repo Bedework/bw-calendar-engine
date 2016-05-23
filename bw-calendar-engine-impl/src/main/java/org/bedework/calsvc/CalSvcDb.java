@@ -120,7 +120,7 @@ public class CalSvcDb implements Serializable {
   }
 
   protected void pushPrincipal(final String href) throws CalFacadeException {
-    final BwPrincipal pr = getSvc().getDirectories().caladdrToPrincipal(href);
+    final BwPrincipal pr = caladdrToPrincipal(href);
 
     if (pr == null) {
       throw new CalFacadeException(CalFacadeException.badRequest,
@@ -228,6 +228,13 @@ public class CalSvcDb implements Serializable {
     return events.getMatching(cols, filter, startDate, endDate,
                               retrieveList,
                               recurRetrieval, freeBusy);
+  }
+  
+  protected EventInfo getEvent(final String colPath,
+                               final String name,
+                               final String recurrenceId)
+          throws CalFacadeException {
+    return getSvc().getEventsHandler().get(colPath, name, recurrenceId);
   }
 
   /** Result of calling getCollectionAndName with a path */

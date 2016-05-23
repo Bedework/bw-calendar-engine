@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvci;
 
+import org.bedework.calfacade.AliasesInfo;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -304,6 +305,17 @@ public interface CalendarsI extends Serializable {
       return subscriptionStatus;
     }
   }
+
+  /** Called to get information about aliases to a collection 
+   * containing the named entity. 
+   *
+   * @param collectionHref the collection
+   * @param entityName the entity
+   * @return the information
+   * @throws CalFacadeException
+   */
+  AliasesInfo getAliasesInfo(final String collectionHref,
+                             final String entityName) throws CalFacadeException;
 
   /**
    *

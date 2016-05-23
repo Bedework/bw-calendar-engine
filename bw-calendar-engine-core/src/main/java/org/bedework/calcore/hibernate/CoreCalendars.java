@@ -333,13 +333,13 @@ public class CoreCalendars extends CalintfHelperHib
 
     List<BwCalendar> aliases = sess.getList();
 
+    final List<BwCalendar> waliases = new ArrayList<>();
+
     if (Util.isEmpty(aliases)) {
-      return aliases;
+      return waliases;
     }
 
-    List<BwCalendar> waliases = new ArrayList<BwCalendar>();
-
-    for (BwCalendar alias: aliases) {
+    for (final BwCalendar alias: aliases) {
       waliases.add(wrap(alias));
     }
 

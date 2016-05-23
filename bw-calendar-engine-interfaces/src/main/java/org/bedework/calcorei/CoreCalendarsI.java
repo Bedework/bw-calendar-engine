@@ -55,16 +55,16 @@ public interface CoreCalendarsI extends Serializable {
    *
    * @throws CalFacadeException
    */
-  public void principalChanged() throws CalFacadeException;
+  void principalChanged() throws CalFacadeException;
 
   /**
-   * @param path
+   * @param path to collection
    * @param token or null if first call
    * @return CollectionSynchInfo
    * @throws CalFacadeException
    */
-  public CollectionSynchInfo getSynchInfo(String path,
-                                          String token) throws CalFacadeException;
+  CollectionSynchInfo getSynchInfo(String path,
+                                   String token) throws CalFacadeException;
 
   /** Returns children of the given calendar to which the current user has
    * some access.
@@ -73,7 +73,7 @@ public interface CoreCalendarsI extends Serializable {
    * @return Collection   of BwCalendar
    * @throws CalFacadeException
    */
-  public Collection<BwCalendar> getCalendars(BwCalendar cal) throws CalFacadeException;
+  Collection<BwCalendar> getCalendars(BwCalendar cal) throws CalFacadeException;
 
   /** Attempt to get calendar referenced by the alias. For an internal alias
    * the result will also be set in the aliasTarget property of the parameter.
@@ -95,7 +95,7 @@ public interface CoreCalendarsI extends Serializable {
    * @return list of aliases
    * @throws CalFacadeException
    */
-  public List<BwCalendar> findAlias(String val) throws CalFacadeException;
+  List<BwCalendar> findAlias(String val) throws CalFacadeException;
 
   /** Get a calendar given the path. If the path is that of a 'special'
    * calendar, for example the deleted calendar, it may not exist if it has

@@ -1119,7 +1119,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     try {
       final List<BwCalendar> cols =
-              ((Calendars)getCols()).findUserAlias(col.getPath());
+              findAlias(col.getPath());
 
       if (!Util.isEmpty(cols)) {
         for (final BwCalendar alias: cols) {

@@ -22,6 +22,9 @@ import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
+import org.bedework.caldav.util.sharing.InviteType;
+import org.bedework.caldav.util.sharing.UserType;
+import org.bedework.calfacade.AliasesInfo;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
@@ -36,7 +39,9 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.SynchI;
+import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
+import org.bedework.util.xml.tagdefs.AppleServerTags;
 
 import net.fortuna.ical4j.model.Component;
 
@@ -46,6 +51,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -144,7 +150,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     final String[] pathEls = normalizeUri(vpath).split("/");
 
-    if ((pathEls == null) || (pathEls.length == 0)) {
+    if (pathEls.length == 0) {
       return cols;
     }
 
@@ -451,14 +457,62 @@ class Calendars extends CalSvcDb implements CalendarsI {
            (ss[1].equals(getBasicSyspars().getUserCalendarRoot()));
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#resolveAlias(org.bedework.calfacade.BwCalendar, boolean, boolean)
-   */
   @Override
   public BwCalendar resolveAlias(final BwCalendar val,
                                  final boolean resolveSubAlias,
                                  final boolean freeBusy) throws CalFacadeException {
     return getCal().resolveAlias(val, resolveSubAlias, freeBusy);
+  }
+
+  /* The key will be the full href of the entity based on the 
+     real collection containing it.
+   */
+  private static final Map<String, AliasesInfo> aliasesInfoMap =
+          new FlushMap<>(100, // size
+                         60 * 1000 * 3,
+                         500);
+
+  @Override
+  public AliasesInfo getAliasesInfo(final String collectionHref,
+                                    final String entityName) throws CalFacadeException {
+    AliasesInfo ai = aliasesInfoMap.get(AliasesInfo.makeKey(collectionHref,
+                                                            entityName));
+
+    if (ai != null) {
+      return ai;
+    }
+
+    /* First get the info without the name
+     */
+
+    ai = getAliasesInfo(collectionHref);
+    if (ai == null) {
+      return null;
+    }
+
+    if (!ai.getShared()) {
+      return ai;
+    }
+
+    /* Check again for the full path - it might have appeared 
+     */
+    final AliasesInfo mapAi = aliasesInfoMap.get(AliasesInfo.makeKey(collectionHref,
+                                                                     entityName));
+
+    if (mapAi != null) {
+      return mapAi;
+    }
+
+    /* Now clone the structure we got and test the visibility of the entity
+     */
+    
+    final AliasesInfo eai = ai.copyForEntity(entityName,
+                                             isVisible(collectionHref, 
+                                                       entityName));
+    
+    checkAliases(eai, entityName);
+    
+    return updateAliasInfoMap(eai);
   }
 
   @Override
@@ -587,6 +641,184 @@ class Calendars extends CalSvcDb implements CalendarsI {
   /* ====================================================================
    *                   private methods
    * ==================================================================== */
+
+  private void checkAliases(final AliasesInfo rootAi,
+                            final String entityName) throws CalFacadeException {
+    for (final AliasesInfo ai: rootAi.getAliases()) {
+      final AliasesInfo eai = ai.copyForEntity(entityName,
+                                               isVisible(ai.getCollectionHref(),
+                                                         entityName));
+      rootAi.addSharee(eai);
+      checkAliases(eai, entityName);
+    }
+  }
+
+  private boolean isVisible(final String collectionHref,
+                            final String entityName) throws CalFacadeException {
+    // This should do a cheap test of access - not retrieve the entire event
+    return getEvent(collectionHref, entityName, null) != null;
+  }
+
+  private AliasesInfo getAliasesInfo(final String collectionHref) throws CalFacadeException {
+    AliasesInfo ai = aliasesInfoMap.get(AliasesInfo.makeKey(collectionHref,
+                                                            null));
+
+    if (ai != null) {
+      return ai;
+    }
+
+    final BwCalendar col = getCal().getCalendar(collectionHref,
+                                                PrivilegeDefs.privAny,
+                                                true);
+    if (col == null) {
+      return null;
+    }
+
+    if (!col.getPublick() && !Boolean.valueOf(col.getQproperty(
+            AppleServerTags.shared))) {
+      // Not public (always shared) and not explicitly shared
+      return updateAliasInfoMap(
+              new AliasesInfo(getPrincipal().getPrincipalRef(),
+                              collectionHref,
+                              null));
+    }
+
+    ai = new AliasesInfo(getPrincipal().getPrincipalRef(),
+                         collectionHref,
+                         null);
+    findAliases(col, ai);
+    return updateAliasInfoMap(ai);
+  }
+
+  private void findAliases(final BwCalendar col,
+                           final AliasesInfo rootAi) throws CalFacadeException {
+    final String collectionHref = col.getPath();
+    
+    /* For a public collection we just try to locate all the aliases
+       without reference to a sharee list
+     */
+    if (col.getPublick()) {
+      for (final BwCalendar alias: findAlias(collectionHref)) {
+        final AliasesInfo ai = new AliasesInfo(getPrincipal().getPrincipalRef(),
+                                               alias.getPath(),
+                                               null);
+
+        rootAi.addSharee(ai);
+        findAliases(alias, ai);
+      }
+
+      return;
+    }
+    
+    /* for each sharee in the list find user collection(s) pointing to this
+     * collection and add the sharee if any are enabled for notifications.
+     */
+
+    final InviteType invite =
+            getSvc().getSharingHandler().getInviteStatus(col);
+
+    if (invite == null) {
+      // No sharees
+      return;
+    }
+
+    final boolean defaultEnabled =
+            getAuthpars().getDefaultChangesNotifications();
+
+    if (notificationsEnabled(col, defaultEnabled)) {
+      rootAi.setNotificationsEnabled(true);
+    }
+
+    /* for sharees - it's the alias which points at this collection
+     * which holds the status.
+     */
+    for (final UserType u: invite.getUsers()) {
+      final BwPrincipal principal = caladdrToPrincipal(u.getHref());
+
+      if (principal == null) {
+        final AliasesInfo ai = new AliasesInfo(u.getHref(),
+                                               collectionHref,
+                                               null);
+
+        ai.setExternalCua(true);
+        rootAi.addSharee(ai);
+        continue;
+      }
+
+      try {
+        pushPrincipal(principal);
+
+        for (final BwCalendar alias: findAlias(collectionHref)) {
+          if (!notificationsEnabled(alias, defaultEnabled)) {
+            continue;
+          }
+
+          final AliasesInfo ai = new AliasesInfo(principal.getPrincipalRef(),
+                                                 alias.getPath(),
+                                                 null);
+
+          rootAi.addSharee(ai);
+          findAliases(alias, ai);
+        }
+      } finally {
+        popPrincipal();
+      }
+    }
+  }
+
+  /* For private collections we'll use the AppleServerTags.notifyChanges
+   * property to indicate if we should notify the sharee.
+   *
+   * For public collections we always notify
+   */
+  private boolean notificationsEnabled(final BwCalendar col,
+                                       final boolean defaultEnabled) {
+    if (col.getPublick()) {
+      return true;
+    }
+
+    final String enabledVal = col.getQproperty(AppleServerTags.notifyChanges);
+
+    if (enabledVal == null) {
+      return defaultEnabled;
+    }
+
+    return Boolean.valueOf(enabledVal);
+  }
+
+  private AliasesInfo updateAliasInfoMap(final AliasesInfo ai) {
+    synchronized (aliasesInfoMap) {
+      final String key = ai.makeKey();
+      final AliasesInfo mapAi = aliasesInfoMap.get(key);
+
+      if (mapAi != null) {
+        // Somebody got there before us.
+        return mapAi;
+      }
+
+      aliasesInfoMap.put(key, ai);
+
+      return ai;
+    }
+  }
+
+  /* Check to see if we need to remove entries from the alias info map
+   */
+  private void checkAliasInfo(final String val) {
+    synchronized (aliasesInfoMap) {
+      final List<AliasesInfo> removals = new ArrayList<>();
+
+      for (final AliasesInfo ai: aliasesInfoMap.values()) {
+        if (ai.referencesCollection(val)) {
+          removals.add(ai);
+        }
+      }
+
+      for (final AliasesInfo ai: removals) {
+        aliasesInfoMap.remove(ai.makeKey());
+      }
+    }
+  }
 
   private void getAddContentCalendarCollections(final boolean includeAliases,
                                                 final BwCalendar root,
