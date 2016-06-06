@@ -24,7 +24,6 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
-import org.bedework.calfacade.svc.NotificationResource;
 import org.bedework.calsvci.ResourcesI;
 
 import java.util.List;
@@ -44,70 +43,16 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     super(svci);
   }
 
+  public boolean saveNotification(final String path,
+                           final BwResource val) throws CalFacadeException {
+    return save(path, val, true, true);
+  }
+
   @Override
   public boolean save(final String path,
                       final BwResource val,
                       final boolean returnIfExists) throws CalFacadeException {
-    try {
-      final BwCalendar coll = getCols().get(path);
-
-      if (coll == null) {
-        throw new CalFacadeException(CalFacadeException.collectionNotFound, path);
-      }
-      
-      if (val instanceof NotificationResource) {
-        // We allow this for subscription only
-        if (coll.getCalType() != BwCalendar.calTypeNotifications) {
-          throw new CalFacadeException(CalFacadeException.badRequest, path);
-        }
-      } else if (getPrincipalInfo().getSubscriptionsOnly()) {
-        throw new CalFacadeForbidden("User has read only access");
-      }
-
-      final BwResource r = getCal().getResource(val.getName(),
-                                                coll, PrivilegeDefs.privAny);
-
-      if (r != null) {
-        if (returnIfExists) {
-          return false;
-        }
-
-        throw new CalFacadeException(CalFacadeException.duplicateResource,
-                                     val.getName());
-      }
-
-      final BwResourceContent rc = val.getContent();
-
-      if (rc == null) {
-        throw new CalFacadeException(CalFacadeException.missingResourceContent);
-      }
-
-      setupSharableEntity(val, getPrincipal().getPrincipalRef());
-
-      val.setColPath(path);
-
-      if ((coll.getCalType() == BwCalendar.calTypeCalendarCollection) ||
-          (coll.getCalType() == BwCalendar.calTypeExtSub)) {
-        throw new CalFacadeException(CalFacadeException.badRequest, path);
-      }
-
-      checkAccess(coll, PrivilegeDefs.privBind, false);
-
-      val.updateLastmod(getCurrentTimestamp());
-      getCal().saveOrUpdate(val);
-
-      rc.setColPath(val.getColPath());
-      rc.setName(val.getName());
-
-      getCal().saveOrUpdate(rc);
-
-      touchCalendar(coll);
-
-      return true;
-    } catch (final CalFacadeException cfe) {
-      getSvc().rollbackTransaction();
-      throw cfe;
-    }
+    return save(path, val, false, returnIfExists);
   }
 
   @Override
@@ -319,5 +264,71 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
   List<BwResource> getSynchResources(final String path,
                                      final String lastmod) throws CalFacadeException {
     return getCal().getAllResources(path, true, lastmod);
+  }
+
+  private boolean save(final String path,
+                       final BwResource val,
+                       final boolean forNotification,
+                       final boolean returnIfExists) throws CalFacadeException {
+    try {
+      final BwCalendar coll = getCols().get(path);
+
+      if (coll == null) {
+        throw new CalFacadeException(CalFacadeException.collectionNotFound, path);
+      }
+
+      if (forNotification) {
+        // We allow this for subscription only
+        if (coll.getCalType() != BwCalendar.calTypeNotifications) {
+          throw new CalFacadeException(CalFacadeException.badRequest, path);
+        }
+      } else if (getPrincipalInfo().getSubscriptionsOnly()) {
+        throw new CalFacadeForbidden("User has read only access");
+      }
+
+      final BwResource r = getCal().getResource(val.getName(),
+                                                coll, PrivilegeDefs.privAny);
+
+      if (r != null) {
+        if (returnIfExists) {
+          return false;
+        }
+
+        throw new CalFacadeException(CalFacadeException.duplicateResource,
+                                     val.getName());
+      }
+
+      final BwResourceContent rc = val.getContent();
+
+      if (rc == null) {
+        throw new CalFacadeException(CalFacadeException.missingResourceContent);
+      }
+
+      setupSharableEntity(val, getPrincipal().getPrincipalRef());
+
+      val.setColPath(path);
+
+      if ((coll.getCalType() == BwCalendar.calTypeCalendarCollection) ||
+              (coll.getCalType() == BwCalendar.calTypeExtSub)) {
+        throw new CalFacadeException(CalFacadeException.badRequest, path);
+      }
+
+      checkAccess(coll, PrivilegeDefs.privBind, false);
+
+      val.updateLastmod(getCurrentTimestamp());
+      getCal().saveOrUpdate(val);
+
+      rc.setColPath(val.getColPath());
+      rc.setName(val.getName());
+
+      getCal().saveOrUpdate(rc);
+
+      touchCalendar(coll);
+
+      return true;
+    } catch (final CalFacadeException cfe) {
+      getSvc().rollbackTransaction();
+      throw cfe;
+    }
   }
 }

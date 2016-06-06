@@ -27,7 +27,6 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
-import org.bedework.calfacade.svc.NotificationResource;
 import org.bedework.calsvc.notifications.NotificationClient;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.ResourcesI;
@@ -96,8 +95,12 @@ class Notifications extends CalSvcDb implements NotificationsI {
       return false;
     }
 
-    final NotificationResource noteRsrc = 
-            new NotificationResource(val);
+    final BwResource noteRsrc = new BwResource();
+    noteRsrc.setName(val.getName());
+    noteRsrc.setEncoding(val.getNotification().getEncoding());
+
+    final BwResourceContent rc = new BwResourceContent();
+    noteRsrc.setContent(rc);
 
     try {
       final String xml = val.toXml(true);
@@ -108,7 +111,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
       final byte[] xmlData = xml.getBytes();
 
-      noteRsrc.getContent().setContent(xmlData);
+      rc.setContent(xmlData);
 
       noteRsrc.setContentLength(xmlData.length);
       noteRsrc.setContentType(val.getContentType());
@@ -117,10 +120,10 @@ class Notifications extends CalSvcDb implements NotificationsI {
     }
 
     for (int i = 0; i <= 100; i++) {
-      if (getSvc().getResourcesHandler().save(ncol.getPath(),
-                                              noteRsrc,
-                                              true)) {
-        getNoteClient().informNotifier(getPrincipalHref(), noteRsrc.getName());
+      if (getRess().saveNotification(ncol.getPath(),
+                                     noteRsrc)) {
+        getNoteClient().informNotifier(getPrincipalHref(), 
+                                       noteRsrc.getName());
 
         return true;
       }

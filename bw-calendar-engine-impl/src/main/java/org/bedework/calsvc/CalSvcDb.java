@@ -321,6 +321,10 @@ public class CalSvcDb implements Serializable {
     return svci.getIndexer();
   }
 
+  public BwIndexer getIndexer(final boolean publick) throws CalFacadeException {
+    return svci.getIndexer(publick);
+  }
+
   public BwIndexer getPublicIndexer() throws CalFacadeException {
     return svci.getIndexer(true);
   }

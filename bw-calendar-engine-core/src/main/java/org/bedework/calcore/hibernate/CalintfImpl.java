@@ -797,6 +797,17 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   }
 
   @Override
+  public BwCalendar getCollectionIdx(final BwIndexer indexer,
+                                     final String path,
+                                     final int desiredAccess,
+                                     final boolean alwaysReturnResult) throws CalFacadeException {
+    checkOpen();
+
+    return calendars.getCollectionIdx(indexer, 
+                                      path, desiredAccess, alwaysReturnResult);
+  }
+  
+  @Override
   public GetSpecialCalendarResult getSpecialCalendar(final BwPrincipal owner,
                                        final int calType,
                                        final boolean create,

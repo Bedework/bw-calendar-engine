@@ -381,7 +381,7 @@ public abstract class CalintfHelper
                                            final int nonSchedAccess,
                                            final boolean scheduling,
                                            final boolean alwaysReturn) throws CalFacadeException {
-    int desiredAccess;
+    final int desiredAccess;
 
     if (!scheduling) {
       desiredAccess = nonSchedAccess;
@@ -389,10 +389,10 @@ public abstract class CalintfHelper
       desiredAccess = privAny;
     }
 
-    BwCalendar cal = getCollection(path, desiredAccess,
-                                   alwaysReturn | scheduling);
+    final BwCalendar cal = getCollection(path, desiredAccess,
+                                         alwaysReturn | scheduling);
     if (cal == null) {
-      return cal;
+      return null;
     }
 
     if (!cal.getCalendarCollection()) {

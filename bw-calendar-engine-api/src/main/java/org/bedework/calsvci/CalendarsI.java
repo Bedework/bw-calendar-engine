@@ -82,13 +82,31 @@ public interface CalendarsI extends Serializable {
    * entry in the /user calendar tree, e.g. for user smithj it would return
    * an entry smithj with path /user/smithj
    *
-   * @param  principal
+   * Note: the returned object is NOT a live hibernate object.
+   *
+   * @param  principal whose home we want
    * @param freeBusy      true if this is for freebusy access
    * @return BwCalendar   user home.
    * @throws CalFacadeException
    */
   BwCalendar getHome(BwPrincipal principal,
                      boolean freeBusy) throws CalFacadeException;
+
+  /** Returns root of calendars owned by the given principal.
+   *
+   * <p>For authenticated, personal access this always returns the user
+   * entry in the /user calendar tree, e.g. for user smithj it would return
+   * an entry smithj with path /user/smithj
+   *
+   * Note: the returned object is a live hibernate object.
+   *
+   * @param  principal whose home we want
+   * @param freeBusy      true if this is for freebusy access
+   * @return BwCalendar   user home.
+   * @throws CalFacadeException
+   */
+  BwCalendar getHomeDb(BwPrincipal principal,
+                       boolean freeBusy) throws CalFacadeException;
 
   /** A virtual path might be for example "/user/adgrp_Eng/Lectures/Lectures"
    * which has two two components<ul>

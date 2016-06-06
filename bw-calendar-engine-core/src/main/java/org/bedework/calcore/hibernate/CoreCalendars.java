@@ -41,10 +41,12 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeInvalidSynctoken;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
@@ -418,6 +420,30 @@ public class CoreCalendars extends CalintfHelperHib
     BwCalendar col = getCollection(path);
 
     col = checkAccess((CalendarWrapper)col, desiredAccess, alwaysReturnResult);
+
+    return col;
+  }
+
+  @Override
+  public BwCalendar getCollectionIdx(final BwIndexer indexer,
+                                     final String path,
+                                     final int desiredAccess,
+                                     final boolean alwaysReturnResult) throws CalFacadeException {
+    BwCalendar col = colCache.get(path);
+
+    if (col != null) {
+      return col;
+    }
+
+    col = indexer.fetchCol(path,
+                           PropertyIndex.PropertyInfoIndex.HREF);;
+
+    final CalendarWrapper wcol = wrap(col);
+    if (wcol != null) {
+      colCache.put(wcol);
+    }
+
+    col = checkAccess(wcol, desiredAccess, alwaysReturnResult);
 
     return col;
   }

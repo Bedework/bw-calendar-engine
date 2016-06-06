@@ -128,8 +128,22 @@ class Calendars extends CalSvcDb implements CalendarsI {
     } else {
       priv = PrivilegeDefs.privRead;
     }
+    return getCal().getCollectionIdx(getIndexer(false),
+                                     getSvc().getPrincipalInfo().getCalendarHomePath(principal),
+                                     priv, true);
+  }
+
+  @Override
+  public BwCalendar getHomeDb(final BwPrincipal principal,
+                              final boolean freeBusy) throws CalFacadeException {
+    final int priv;
+    if (freeBusy) {
+      priv = PrivilegeDefs.privReadFreeBusy;
+    } else {
+      priv = PrivilegeDefs.privRead;
+    }
     return getCal().getCalendar(getSvc().getPrincipalInfo().getCalendarHomePath(principal),
-                                         priv, true);
+                                priv, true);
   }
 
   @Override

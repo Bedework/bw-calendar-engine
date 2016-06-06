@@ -38,7 +38,7 @@ import java.util.List;
  */
 public interface ResourcesI extends Serializable {
   /** Save a resource at the given collection path. The collection MUST exist.
-   * The named resource MUST NOT exist
+   * The named resource MUST NOT exist.
    *
    * @param  path      String path to containing collection
    * @param  val       resource with attached content
@@ -49,6 +49,18 @@ public interface ResourcesI extends Serializable {
   boolean save(String path,
                BwResource val,
                boolean returnIfExists) throws CalFacadeException;
+
+  /** Save a notification resource at the given collection path. 
+   * The collection MUST exist and MUST be a notification collection.
+   * The named resource MUST NOT exist
+   *
+   * @param  path      String path to containing collection
+   * @param  val       resource with attached content
+   * @throws CalFacadeException for errors including duplicate name
+   * @return true if created, false if already exists
+   */
+  boolean saveNotification(String path,
+                           BwResource val) throws CalFacadeException;
 
   /** Get a resource given the path - does not get content
    *

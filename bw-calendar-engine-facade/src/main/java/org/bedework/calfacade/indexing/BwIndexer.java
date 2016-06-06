@@ -20,6 +20,7 @@ package org.bedework.calfacade.indexing;
 
 import org.bedework.access.Acl;
 import org.bedework.caldav.util.filter.FilterBase;
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
@@ -323,6 +324,17 @@ public interface BwIndexer extends Serializable {
    * @throws CalFacadeException
    */
   BwCategory fetchCat(String val,
+                      PropertyInfoIndex... index) throws CalFacadeException;
+
+  /** Find a collection owned by the current user which has a named
+   * field which matches the value.
+   *
+   * @param val - expected full value
+   * @param index e.g. HREF, UID or CN, VALUE
+   * @return null or collection object
+   * @throws CalFacadeException
+   */
+  BwCalendar fetchCol(String val,
                       PropertyInfoIndex... index) throws CalFacadeException;
 
   /** Fetch all for the current principal.

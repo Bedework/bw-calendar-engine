@@ -1014,6 +1014,19 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   @Override
+  public BwCalendar fetchCol(final String val,
+                             final PropertyInfoIndex... index)
+          throws CalFacadeException {
+    final EntityBuilder eb = fetchEntity(docTypeCollection, val, index);
+
+    if (eb == null) {
+      return null;
+    }
+
+    return eb.makeCollection();
+  }
+
+  @Override
   public BwContact fetchContact(final String val,
                                 final PropertyInfoIndex... index)
           throws CalFacadeException {
