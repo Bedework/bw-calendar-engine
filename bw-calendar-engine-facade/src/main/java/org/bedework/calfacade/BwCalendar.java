@@ -1040,7 +1040,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
       if ((ctype != calTypeCalendarCollection) &&
           (ctype != calTypeInbox) &&
-          (ctype != calTypeOutbox)) {
+          (ctype != calTypeOutbox) &&
+          (ctype != calTypeExtSub)) {
         return supportedComponents;
       }
 
