@@ -29,6 +29,7 @@ import org.bedework.calfacade.BwGeo;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.BwRelatedTo;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwXproperty;
@@ -213,7 +214,7 @@ public class DocBuilder {
     }
 
     public String toString() {
-      ToString ts = new ToString(this);
+      final ToString ts = new ToString(this);
 
       ts.append("type", type);
       ts.append("version", version);
@@ -233,7 +234,7 @@ public class DocBuilder {
     }
 
     if (val instanceof FixNamesEntity) {
-      FixNamesEntity ent = (FixNamesEntity)val;
+      final FixNamesEntity ent = (FixNamesEntity)val;
 
       ent.fixNames(basicSysprops, principal);
       return ent.getHref();
@@ -245,7 +246,7 @@ public class DocBuilder {
   private void startObject() throws CalFacadeException {
     try {
       builder.startObject();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -339,9 +340,9 @@ public class DocBuilder {
 
       return new DocInfo(builder,
                          BwIndexer.docTypeContact, 0, ent.getHref());
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -398,13 +399,40 @@ public class DocBuilder {
       makeField(PropertyInfoIndex.NAME, col.getName());
       makeField(PropertyInfoIndex.HREF, col.getPath());
 
-      indexCategories(col.getCategories());
-
-      // Doing collection - we're almost done
       makeField(PropertyInfoIndex.SUMMARY, col.getSummary());
       makeField(PropertyInfoIndex.DESCRIPTION,
                 col.getDescription());
 
+      makeField(PropertyInfoIndex.AFFECTS_FREE_BUSY,
+                col.getAffectsFreeBusy());
+      makeField(PropertyInfoIndex.ALIAS_URI,
+                col.getAliasUri());
+      makeField(PropertyInfoIndex.CALTYPE,
+                col.getCalType());
+      makeField(PropertyInfoIndex.DISPLAY,
+                col.getDisplay());
+      makeField(PropertyInfoIndex.FILTER_EXPR,
+                col.getFilterExpr());
+      makeField(PropertyInfoIndex.IGNORE_TRANSP,
+                col.getIgnoreTransparency());
+      makeField(PropertyInfoIndex.LAST_REFRESH,
+                col.getLastRefresh());
+      makeField(PropertyInfoIndex.LAST_REFRESH_STATUS,
+                col.getLastRefreshStatus());
+      makeField(PropertyInfoIndex.REFRESH_RATE,
+                col.getRefreshRate());
+      makeField(PropertyInfoIndex.REMOTE_ID,
+                col.getRemoteId());
+      makeField(PropertyInfoIndex.REMOTE_PW,
+                col.getRemotePw());
+      makeField(PropertyInfoIndex.UNREMOVEABLE,
+                col.getUnremoveable());
+                
+      // mailListId
+
+      indexProperties(col.getProperties());
+      indexCategories(col.getCategories());
+      
       endObject();
 
       return new DocInfo(builder,
@@ -669,8 +697,8 @@ public class DocBuilder {
       }
 
       /* First output ones we know about with our own name */
-      for (String nm: interestingXprops.keySet()) {
-        List<BwXproperty> props = ent.getXproperties(nm);
+      for (final String nm: interestingXprops.keySet()) {
+        final List<BwXproperty> props = ent.getXproperties(nm);
 
         if (Util.isEmpty(props)) {
           continue;
@@ -684,7 +712,7 @@ public class DocBuilder {
 
             // Find the second ":" delimiter
 
-            int pos = val.indexOf(":", 2);
+            final int pos = val.indexOf(":", 2);
 
             if (pos < 0) {
               // Bad value
@@ -710,7 +738,7 @@ public class DocBuilder {
       builder.startArray(getJname(PropertyInfoIndex.XPROP));
 
       for (final BwXproperty xp: ent.getXproperties()) {
-        String nm = interestingXprops.get(xp.getName());
+        final String nm = interestingXprops.get(xp.getName());
 
         if (nm != null) {
           continue;
@@ -730,7 +758,28 @@ public class DocBuilder {
       }
 
       builder.endArray();
-    } catch (IOException e) {
+    } catch (final IOException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void indexProperties(final Set<BwProperty> props) throws CalFacadeException {
+    if (props == null) {
+      return;
+    }
+
+    try {
+      builder.startArray(getJname(PropertyInfoIndex.COL_PROPERTIES));
+      
+      for (final BwProperty prop: props) {
+        builder.startObject();
+        makeField(PropertyInfoIndex.NAME, prop.getName());
+        makeField(PropertyInfoIndex.VALUE, prop.getValue());
+        builder.endObject();
+      }
+
+      builder.endArray();
+    } catch (final IOException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -743,7 +792,7 @@ public class DocBuilder {
     try {
       builder.startArray(getJname(PropertyInfoIndex.CATEGORIES));
 
-      for (BwCategory cat: cats) {
+      for (final BwCategory cat: cats) {
         builder.startObject();
 
         cat.fixNames(basicSysprops, principal);
@@ -758,7 +807,7 @@ public class DocBuilder {
       }
 
       builder.endArray();
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new CalFacadeException(e);
     }
   }

@@ -842,6 +842,32 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return link;
   }
 
+  /** Set the event's publish URL
+   *
+   *
+   * @param val   string URL
+   */
+  @IcalProperty(pindex = PropertyInfoIndex.PUBLISH_URL,
+          eventProperty = true,
+          todoProperty = true,
+          journalProperty = true,
+          freeBusyProperty = true)
+  @NoProxy
+  public void setPublishUrl(final String val) {
+    replaceXproperty(BwXproperty.bedeworkPublishUrl, val);
+  }
+
+  /**
+   *
+   *  @return the event's publish URL
+   */ 
+  @NoProxy
+  @NoDump
+  public String getPublishUrl() {
+    return getXproperty(BwXproperty.bedeworkPublishUrl);
+  }
+
+
   /** Set the event's geo
    *
    *  @param val   BwGeo
@@ -1355,6 +1381,98 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                   journalProperty = true,
                   freeBusyProperty = true,
                   timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.AFFECTS_FREE_BUSY,
+            jname = "affectsFreeBusy",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.ALIAS_URI,
+            jname = "aliasURI",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.CALTYPE,
+            jname = "caltype",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.COL_PROPERTIES,
+            jname = "colProperties",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.DISPLAY,
+            jname = "display",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.FILTER_EXPR,
+            jname = "filterExpr",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.IGNORE_TRANSP,
+            jname = "ignoreTransp",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.LAST_REFRESH,
+            jname = "lastRefresh",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.LAST_REFRESH_STATUS,
+            jname = "lastRefreshStatus",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.REFRESH_RATE,
+            jname = "refreshRate",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.REMOTE_ID,
+            jname = "remoteId",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.REMOTE_PW,
+            jname = "remotePw",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.UNREMOVEABLE,
+            jname = "unremoveable",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    
     @IcalProperty(pindex = PropertyInfoIndex.X_BEDEWORK_CONTACT,
                   jname = "xbwcontact",
                   adderName = "xproperty",

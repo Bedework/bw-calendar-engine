@@ -42,7 +42,6 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.util.calendar.IcalDefs;
-import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import org.apache.log4j.Logger;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -60,6 +59,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
+import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 /** Build filters for ES searching
  *

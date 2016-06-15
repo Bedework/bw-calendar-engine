@@ -177,6 +177,13 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   public final static String bedeworkEventRegForm = "X-BEDEWORK-REGISTRATION-FORM";
 
   /* ====================================================================
+   *                        Sharing/publishing properties
+   * ==================================================================== */
+
+  /** */
+  public final static String bedeworkPublishUrl = "X-BEDEWORK-PUBLISH-URL";
+
+  /* ====================================================================
    *                        Sharing peruser properties
    * calendar sharing spec defines peruser properties. Alarms are handled
    * by ownership. The remainder are stored as x-properties with a param of

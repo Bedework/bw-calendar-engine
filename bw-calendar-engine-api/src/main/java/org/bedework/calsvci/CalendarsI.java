@@ -50,7 +50,8 @@ public interface CalendarsI extends Serializable {
    */
   String getPublicCalendarsRootPath() throws CalFacadeException;
 
-  /** Returns the root of the tree of public calendars.
+  /** Returns the root of the tree of public calendars. This is NOT a
+   * live hibernate object.
    *
    * @return BwCalendar   root
    * @throws CalFacadeException

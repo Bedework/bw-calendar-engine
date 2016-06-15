@@ -33,6 +33,7 @@ import org.bedework.calfacade.BwGeo;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwLongString;
 import org.bedework.calfacade.BwOrganizer;
+import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.BwRelatedTo;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
@@ -95,7 +96,7 @@ public class EntityBuilder  {
   UpdateInfo makeUpdateInfo() throws CalFacadeException {
     Long l = getLong("count");
     if (l == null) {
-      l = 0l;
+      l = 0L;
     }
 
     return new UpdateInfo(String.valueOf(getFirstValue("_timestamp")),
@@ -158,14 +159,28 @@ public class EntityBuilder  {
     col.setName(getString(PropertyInfoIndex.NAME));
     col.setPath(getString(PropertyInfoIndex.HREF));
 
-    restoreCategories(col);
-
     col.setCreated(getString(PropertyInfoIndex.CREATED));
     col.setLastmod(new BwCollectionLastmod(col,
                                            getString(PropertyInfoIndex.LAST_MODIFIED)));
     col.setSummary(getString(PropertyInfoIndex.SUMMARY));
     col.setDescription(getString(PropertyInfoIndex.DESCRIPTION));
 
+    col.setAffectsFreeBusy(getBool(PropertyInfoIndex.AFFECTS_FREE_BUSY));
+    col.setAliasUri(getString(PropertyInfoIndex.ALIAS_URI));
+    col.setCalType(getInt(PropertyInfoIndex.CALTYPE));
+    col.setDisplay(getBool(PropertyInfoIndex.DISPLAY));
+    col.setFilterExpr(getString(PropertyInfoIndex.FILTER_EXPR));
+    col.setIgnoreTransparency(getBool(PropertyInfoIndex.IGNORE_TRANSP));
+    col.setLastRefresh(getString(PropertyInfoIndex.LAST_REFRESH));
+    col.setLastRefreshStatus(getString(PropertyInfoIndex.LAST_REFRESH_STATUS));
+    col.setRefreshRate(getInt(PropertyInfoIndex.REFRESH_RATE));
+    col.setRemoteId(getString(PropertyInfoIndex.REMOTE_ID));
+    col.setRemotePw(getString(PropertyInfoIndex.REMOTE_PW));
+    col.setUnremoveable(getBool(PropertyInfoIndex.UNREMOVEABLE));
+
+    restoreProperties(col);
+    restoreCategories(col);
+    
     return col;
   }
 
@@ -335,8 +350,8 @@ public class EntityBuilder  {
     try {
       final BwGeo geo = new BwGeo();
 
-      geo.setLatitude(BigDecimal.valueOf(getLong("lat")));
-      geo.setLongitude(BigDecimal.valueOf(getLong("lon")));
+      geo.setLatitude(BigDecimal.valueOf(getLongVal("lat")));
+      geo.setLongitude(BigDecimal.valueOf(getLongVal("lon")));
 
       return geo;
     } finally {
@@ -617,7 +632,7 @@ public class EntityBuilder  {
         final String date = getString(PropertyInfoIndex.LOCAL);
         final String utcDate = getString(PropertyInfoIndex.UTC);
         final String tzid = getString(PropertyInfoIndex.TZID);
-        final boolean floating = getBoolean(PropertyInfoIndex.FLOATING);
+        final boolean floating = getBool(PropertyInfoIndex.FLOATING);
         final boolean dateType = date.length() == 8;
 
         final BwDateTime tm = BwDateTime.makeBwDateTime(dateType,
@@ -747,6 +762,28 @@ public class EntityBuilder  {
     ent.setColPath(getString(PropertyInfoIndex.COLLECTION));
     ent.setAccess(getString(PropertyInfoIndex.ACL));
     ent.setPublick(getBooleanNotNull(PropertyInfoIndex.PUBLIC));
+  }
+
+  private void restoreProperties(final BwCalendar col) throws CalFacadeException {
+    final Collection<Object> vals = getFieldValues(PropertyInfoIndex.COL_PROPERTIES);
+    if (Util.isEmpty(vals)) {
+      return;
+    }
+
+    final Set<BwProperty> props = new TreeSet<>();
+
+    for (final Object o: vals) {
+      pushFields(o);
+      try {
+        final String name = getString(PropertyInfoIndex.NAME);
+        final String val = getString(PropertyInfoIndex.VALUE);
+        props.add(new BwProperty(name, val));
+      } finally {
+        popFields();
+      }
+    }
+
+    col.setProperties(props);
   }
 
   private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
@@ -919,6 +956,16 @@ public class EntityBuilder  {
     }
 
     return Integer.valueOf(s);
+  }
+
+  private long getLongVal(final String name) {
+    final Long l = getLong(name);
+    
+    if (l == null) {
+      return 0;
+    }
+    
+    return l;
   }
 
   private Long getLong(final String name) {

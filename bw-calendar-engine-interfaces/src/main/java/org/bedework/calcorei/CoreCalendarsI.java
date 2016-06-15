@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.indexing.BwIndexer;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -108,13 +109,30 @@ public interface CoreCalendarsI extends Serializable {
    * @return BwCalendar null for unknown calendar
    * @throws CalFacadeException
    */
-  public BwCalendar getCalendar(String path,
-                                int desiredAccess,
-                                boolean alwaysReturnResult) throws CalFacadeException;
+  BwCalendar getCalendar(String path,
+                         int desiredAccess,
+                         boolean alwaysReturnResult) throws CalFacadeException;
+
+  /** Get a calendar given the path. If the path is that of a 'special'
+   * calendar, for example the deleted calendar, it may not exist if it has
+   * not been used.
+   *
+   * @param  indexer       Used to retrieve the object
+   * @param  path          String path of calendar
+   * @param  desiredAccess int access we need
+   * @param  alwaysReturnResult  false to raise access exceptions
+   *                             true to return only those we have access to
+   * @return BwCalendar null for unknown calendar
+   * @throws CalFacadeException
+   */
+  BwCalendar getCollectionIdx(BwIndexer indexer,
+                              String path,
+                              int desiredAccess,
+                              boolean alwaysReturnResult) throws CalFacadeException;
 
   /** Returned by getSpecialCalendar
    */
-  public static class GetSpecialCalendarResult {
+  class GetSpecialCalendarResult {
     /** True if user does not exist
      */
     public boolean noUserHome;
@@ -130,17 +148,17 @@ public interface CoreCalendarsI extends Serializable {
   /** Get a special calendar (e.g. Trash) for the given user. If it does not
    * exist and is supported by the target system it will be created.
    *
-   * @param  owner
+   * @param  owner     of the entity
    * @param  calType   int special calendar type.
    * @param  create    true if we should create it if non-existant.
    * @param  access    int desired access - from PrivilegeDefs
    * @return GetSpecialCalendarResult null for unknown calendar
    * @throws CalFacadeException
    */
-  public GetSpecialCalendarResult getSpecialCalendar(BwPrincipal owner,
-                                                     int calType,
-                                                     boolean create,
-                                                     int access) throws CalFacadeException;
+  GetSpecialCalendarResult getSpecialCalendar(BwPrincipal owner,
+                                              int calType,
+                                              boolean create,
+                                              int access) throws CalFacadeException;
 
   /** Add a calendar object
    *
