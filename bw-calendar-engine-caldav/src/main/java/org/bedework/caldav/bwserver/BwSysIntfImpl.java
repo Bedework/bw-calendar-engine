@@ -71,6 +71,7 @@ import org.bedework.calfacade.filter.RetrieveList;
 import org.bedework.calfacade.filter.SfpTokenizer;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
+import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
@@ -454,14 +455,24 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#getPrincipal(java.lang.String)
-   */
+  @Override
+  public AccessPrincipal getPrincipalForUser(final String account) throws WebdavException {
+    try {
+      final Directories dir = getSvci().getDirectories();
+      return dir.getPrincipal(dir.makePrincipalUri(account, WhoDefs.whoTypeUser));
+    } catch (final CalFacadeException cfe) {
+      if (cfe.getMessage().equals(CalFacadeException.principalNotFound)) {
+        throw new WebdavNotFound(account);
+      }
+      throw new WebdavException(cfe);
+    }
+  }
+  
   @Override
   public AccessPrincipal getPrincipal(final String href) throws WebdavException {
     try {
       return getSvci().getDirectories().getPrincipal(href);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       if (cfe.getMessage().equals(CalFacadeException.principalNotFound)) {
         throw new WebdavNotFound(href);
       }
