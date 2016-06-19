@@ -19,7 +19,6 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.access.Acl.CurrentAccess;
-import org.bedework.calcore.AccessUtil;
 import org.bedework.calcore.hibernate.EventQueryBuilder.EventsQueryResult;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI;
@@ -49,6 +48,7 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.SearchResult;
 import org.bedework.calfacade.indexing.SearchResultEntry;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
@@ -202,17 +202,17 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
    *
    * @param chcb
    * @param cb
-   * @param access
+   * @param ac
    * @param currentMode
    * @param sessionless
    */
   public CoreEvents(final CalintfHelperHibCb chcb,
                     final Callback cb,
-                    final AccessUtil access,
+                    final AccessChecker ac,
                     final int currentMode,
                     final boolean sessionless) {
     super(chcb);
-    super.init(cb, access, currentMode, sessionless);
+    super.init(cb, ac, currentMode, sessionless);
   }
 
   /* (non-Javadoc)
@@ -308,7 +308,6 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     for (final CoreEventInfo cei: ceis) {
       final BwEvent master = cei.getEvent();
-      final CurrentAccess ca = cei.getCurrentAccess();
 
       if (master.getEntityType() == IcalDefs.entityTypeVavailability) {
         for (final String auid : master.getAvailableUids()) {
@@ -495,7 +494,6 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
                                     start,
                                     end,
                                     -1,
-                                    getAccessChecker(),
                                     recurRetrieval);
 
     final List<SearchResultEntry> sres =
@@ -758,11 +756,11 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     HibSession sess = getSess();
     UpdateEventResult ue = new UpdateEventResult();
 
-    if (!access.checkAccess(val, privWrite, true).getAccessAllowed()) {
+    if (!ac.checkAccess(val, privWrite, true).getAccessAllowed()) {
       // See if we get write content
       // XXX Is this correct?
       try {
-        access.checkAccess(val, privWriteContent, false);
+        ac.checkAccess(val, privWriteContent, false);
       } catch (CalFacadeException cfe) {
         throwException(cfe);
       }
@@ -1023,7 +1021,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
         desiredAccess = cw.getLastDesiredAccess();
       }
 
-      access.checkAccess(ev, desiredAccess, false);
+      ac.checkAccess(ev, desiredAccess, false);
     } catch (final CalFacadeException cfe) {
       sess.rollback();
       throw cfe;
@@ -1039,7 +1037,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
 
     if (isMaster) {
       // Master event - delete all instances and overrides.
-      deleteInstances(ev, new UpdateEventResult(), der, shared);
+      deleteInstances(ev, der, shared);
 
       notifyDelete(reallyDelete, ev, shared);
 
@@ -1386,7 +1384,7 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
     }
 
     BwCalendar col = getCollection(path);
-    access.checkAccess(col, privAny, false);
+    ac.checkAccess(col, privAny, false);
 
     StringBuilder sb = new StringBuilder();
 
@@ -1961,7 +1959,6 @@ public class CoreEvents extends CalintfHelperHib implements CoreEventsI {
   }
 */
   private void deleteInstances(final BwEvent val,
-                               final UpdateEventResult uc,
                                final DelEventResult der,
                                final boolean shared) throws CalFacadeException {
 

@@ -18,7 +18,6 @@
 */
 package org.bedework.calfacade.indexing;
 
-import org.bedework.access.Acl;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -26,12 +25,12 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -42,19 +41,19 @@ import java.util.TreeSet;
  */
 public interface BwIndexer extends Serializable {
   // Types of entity we index
-  static final String docTypeUnknown = "unknown";
-  static final String docTypeUpdateTracker = "updateTracker";
-  static final String docTypeCollection = "collection";
-  static final String docTypeCategory = "category";
-  static final String docTypeLocation = "location";
-  static final String docTypeContact = "contact";
-  static final String docTypeEvent = "event";
+  String docTypeUnknown = "unknown";
+  String docTypeUpdateTracker = "updateTracker";
+  String docTypeCollection = "collection";
+  String docTypeCategory = "category";
+  String docTypeLocation = "location";
+  String docTypeContact = "contact";
+  String docTypeEvent = "event";
   //        IcalDefs.entityTypeNames[IcalDefs.entityTypeEvent];
-  static final String docTypePoll = "vpoll";
+  String docTypePoll = "vpoll";
   //        IcalDefs.entityTypeNames[IcalDefs.entityTypeVpoll];
 
   /* Following used for the id */
-  static final String[] masterDocTypes = {
+  String[] masterDocTypes = {
           "masterEvent",
           null,  // alarm
           "masterTask",
@@ -65,7 +64,7 @@ public interface BwIndexer extends Serializable {
           "masterVpoll",   // vpoll
   };
 
-  static final String[] overrideDocTypes = {
+  String[] overrideDocTypes = {
           "overrideEvent",
           null,  // alarm
           "overrideTask",
@@ -79,7 +78,7 @@ public interface BwIndexer extends Serializable {
   /** Used for fetching master + override
    *
    */
-  static final String[] masterOverrideEventTypes = {
+  String[] masterOverrideEventTypes = {
           "masterEvent",
           "masterTask",
           "overrideEvent",
@@ -88,25 +87,9 @@ public interface BwIndexer extends Serializable {
           "overrideAvailable",
   };
 
-  static final String updateTrackerId = "updateTracker";
+  String updateTrackerId = "updateTracker";
 
   /* Other types are those defined in IcalDefs.entityTypeNames */
-
-  interface AccessChecker extends Serializable {
-    /** Check the access for the given entity. Returns the current access
-     * or null or optionally throws a no access exception.
-     *
-     * @param ent to check
-     * @param desiredAccess access we want
-     * @param returnResult true for a result even if access denied
-     * @return CurrentAccess
-     * @throws CalFacadeException if returnResult false and no access
-     */
-    Acl.CurrentAccess checkAccess(BwShareableDbentity ent,
-                                  int desiredAccess,
-                                  boolean returnResult)
-            throws CalFacadeException;
-  }
 
   /**
    * @return true if this is a public indexer
@@ -146,7 +129,6 @@ public interface BwIndexer extends Serializable {
    * @param start - if non-null limit to this and after
    * @param end - if non-null limit to before this
    * @param pageSize - stored in the search result for future calls.
-   * @param accessCheck  - required - lets us check access
    * @param recurRetrieval How recurring event is returned.
    * @return  SearchResult - never null
    * @throws CalFacadeException
@@ -159,7 +141,6 @@ public interface BwIndexer extends Serializable {
                       String start,
                       String end,
                       int pageSize,
-                      AccessChecker accessCheck,
                       RecurringRetrievalMode recurRetrieval) throws CalFacadeException;
 
   enum Position {
@@ -326,7 +307,14 @@ public interface BwIndexer extends Serializable {
   BwCategory fetchCat(String val,
                       PropertyInfoIndex... index) throws CalFacadeException;
 
-  /** Find a collection owned by the current user which has a named
+  /** Fetch all for the current principal.
+   *
+   * @return possibly empty list
+   * @throws CalFacadeException
+   */
+  List<BwCategory> fetchAllCats() throws CalFacadeException;
+
+  /** Find a collection which has a named
    * field which matches the value.
    *
    * @param val - expected full value
@@ -337,12 +325,13 @@ public interface BwIndexer extends Serializable {
   BwCalendar fetchCol(String val,
                       PropertyInfoIndex... index) throws CalFacadeException;
 
-  /** Fetch all for the current principal.
+  /** Fetch children of the collection with the given href.
    *
-   * @return possibly empty list
+   * @param href of parent
+   * @return possibly empty list of children
    * @throws CalFacadeException
    */
-  List<BwCategory> fetchAllCats() throws CalFacadeException;
+  Collection<BwCalendar> fetchChildren(String href) throws CalFacadeException;
 
   /** Find a contact owned by the current user which has a named
    * field which matches the value.

@@ -19,12 +19,12 @@
 
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calcore.AccessUtil;
 import org.bedework.calcorei.CoreUserAuthI;
 import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
+import org.bedework.calfacade.util.AccessChecker;
 
 import java.util.List;
 
@@ -38,17 +38,17 @@ public class CoreUserAuthImpl extends CalintfHelperHib implements CoreUserAuthI 
    *
    * @param chcb helper
    * @param cb calback
-   * @param access access util
+   * @param ac access util
    * @param currentMode how we are running
    * @param sessionless true for sessionless
    */
   public CoreUserAuthImpl(final CalintfHelperHibCb chcb,
                           final Callback cb,
-                          final AccessUtil access,
+                          final AccessChecker ac,
                           final int currentMode,
                           final boolean sessionless) {
     super(chcb);
-    super.init(cb, access, currentMode, sessionless);
+    super.init(cb, ac, currentMode, sessionless);
   }
 
   /* (non-Javadoc)

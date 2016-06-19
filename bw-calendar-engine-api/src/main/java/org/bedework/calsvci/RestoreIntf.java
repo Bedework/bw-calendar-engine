@@ -302,7 +302,7 @@ public interface RestoreIntf {
     reshared,
 
     /** failed */
-    failed;
+    failed
   }
 
   /** Restore sharing for the given principal href

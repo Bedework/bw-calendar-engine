@@ -195,6 +195,19 @@ public class ESQueryFilter implements CalintfDefs {
     return fb;
   }
 
+  /** This method adds extra limits to the search if they are necessary.
+   * If the search is already limited to one or more collections or 
+   * specific href(s) then we don't need to add anything.
+   * 
+   * <p>Otherwise we apply a default search context (if any). If the 
+   * result is still not limited we limit to entities owned by the 
+   * current principal</p>
+   * 
+   * @param f current filter
+   * @param defaultFilterContext set if we have one
+   * @return augmented filter
+   * @throws CalFacadeException on error
+   */
   public FilterBuilder addLimits(final FilterBuilder f,
                                  final FilterBase defaultFilterContext) throws CalFacadeException {
     FilterBuilder fb = f;
@@ -377,29 +390,20 @@ public class ESQueryFilter implements CalintfDefs {
    * @throws CalFacadeException
    */
   public FilterBuilder principalFilter(final FilterBuilder filter) throws CalFacadeException {
-    boolean publicEvents = publick ||
+    final boolean publicEvents = publick ||
             (currentMode == guestMode) ||
             (currentMode == publicAdminMode);
 
     //boolean all = (currentMode == guestMode) || ignoreCreator;
-    boolean all = publicEvents || superUser;
 
-    /* While we have public/user indexes we don't need to filter on
-       the public flag
-
-    FilterBuilder fb = and(filter,
-                           FilterBuilders.termFilter(
-                                   publicJname,
-                                   String.valueOf(publicEvents)));
-
-    if (all) {
-      return fb;
+    if (publicEvents) {
+      return and(filter,
+               FilterBuilders.termFilter(
+                       publicJname,
+                       String.valueOf(true)));
     }
 
-    return and(fb, FilterBuilders.termFilter(ownerJname,
-                                             principal.getPrincipalRef()));
-                                             */
-    if (all) {
+    if (superUser) {
       return filter;
     }
 
@@ -515,7 +519,7 @@ public class ESQueryFilter implements CalintfDefs {
     return ofb;
   }
 
-  private static String getJname(PropertyInfoIndex pi) {
+  static String getJname(PropertyInfoIndex pi) {
     BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
 
     if (ipie == null) {

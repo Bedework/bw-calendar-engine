@@ -18,7 +18,6 @@
 */
 package org.bedework.icalendar;
 
-import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwLocation;
@@ -117,7 +116,7 @@ public class SAICalCallback implements IcalCallback {
   }
 
   @Override
-  public Collection getEvent(final BwCalendar cal,
+  public Collection getEvent(final String colPath,
                              final String guid)
           throws CalFacadeException {
     return null;

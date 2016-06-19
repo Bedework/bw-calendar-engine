@@ -38,8 +38,6 @@ public abstract class ProcessorBase extends CalSys implements Processor {
   protected long batchDelay;
   protected long entityDelay;
 
-  private String currentPath;
-
   private final List<String> skipPaths;
 
   private List<String> unprefixedSkipPaths;
@@ -111,11 +109,6 @@ public abstract class ProcessorBase extends CalSys implements Processor {
     return status;
   }
 
-  @Override
-  public String getCurrentPath() throws CalFacadeException {
-    return currentPath;
-  }
-
   protected boolean skipThis(final String path) {
     if (unprefixedSkipPaths == null) {
       return false;
@@ -176,6 +169,11 @@ public abstract class ProcessorBase extends CalSys implements Processor {
       indexer.indexEntity(col);
 //      close();
 
+      final BwCalendar.CollectionInfo ci = col.getCollectionInfo();
+      if (!ci.childrenAllowed) {
+        return;
+      }
+      
       Refs refs = null;
 
       for (;;) {
@@ -190,8 +188,8 @@ public abstract class ProcessorBase extends CalSys implements Processor {
         }
       }
 
-      if (!col.getCollectionInfo().onlyCalEntities ||
-          !col.getCollectionInfo().indexable) {
+      if (!ci.onlyCalEntities ||
+          !ci.indexable) {
         return;
       }
 

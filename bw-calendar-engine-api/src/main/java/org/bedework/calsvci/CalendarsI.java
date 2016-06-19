@@ -134,6 +134,18 @@ public interface CalendarsI extends Serializable {
    */
   Collection<BwCalendar> getChildren(BwCalendar cal) throws CalFacadeException;
 
+  /** Returns children of the given collection to which the current user has
+   * some access.
+   * 
+   * <p>The returned objects are from the indexer and are not live 
+   * hibernate objects</p>
+   *
+   * @param  col          parent collection
+   * @return Collection   of BwCalendar
+   * @throws CalFacadeException
+   */
+  Collection<BwCalendar> getChildrenIdx(BwCalendar col) throws CalFacadeException;
+
   /** Return a list of calendars in which calendar objects can be
    * placed by the current user.
    *
@@ -276,16 +288,33 @@ public interface CalendarsI extends Serializable {
   /** Attempt to get calendar referenced by the alias. For an internal alias
    * the result will also be set in the aliasTarget property of the parameter.
    *
-   * @param val
+   * @param val the alias
    * @param resolveSubAlias - if true and the alias points to an alias, resolve
    *                  down to a non-alias.
-   * @param freeBusy
-   * @return BwCalendar
+   * @param freeBusy to determine trequired access
+   * @return a BwCalendar object
    * @throws CalFacadeException
    */
   BwCalendar resolveAlias(BwCalendar val,
                           boolean resolveSubAlias,
                           boolean freeBusy) throws CalFacadeException;
+
+  /** Attempt to get calendar referenced by the alias. For an internal alias
+   * the result will also be set in the aliasTarget property of the parameter.
+   * 
+   * <p>This uses the index only. The returned object will not be a 
+   * live hibernate object</p>
+   *
+   * @param val the alias
+   * @param resolveSubAlias - if true and the alias points to an alias, resolve
+   *                  down to a non-alias.
+   * @param freeBusy to determine trequired access
+   * @return a BwCalendar object
+   * @throws CalFacadeException
+   */
+  BwCalendar resolveAliasIdx(BwCalendar val,
+                             boolean resolveSubAlias,
+                             boolean freeBusy) throws CalFacadeException;
 
   /** */
   enum CheckSubscriptionResult {

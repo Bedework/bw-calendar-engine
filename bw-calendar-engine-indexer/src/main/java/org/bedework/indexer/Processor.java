@@ -73,10 +73,4 @@ public interface Processor {
    * @throws CalFacadeException
    */
   public void process() throws CalFacadeException;
-
-  /**
-   * @return path we are currently processing.
-   * @throws CalFacadeException
-   */
-  public String getCurrentPath() throws CalFacadeException;
 }

@@ -95,7 +95,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
       return this;
     }
 
-    BwCalendar c = intf.resolveAlias(col, true);
+    final BwCalendar c = intf.resolveAlias(col, true);
     if (c == null) {
       return null;
     }
@@ -123,7 +123,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
 
   @Override
   public int getCalType() throws WebdavException {
-    int calType;
+    final int calType;
     BwCalendar c = getCol();
 
     if (isAlias()) {

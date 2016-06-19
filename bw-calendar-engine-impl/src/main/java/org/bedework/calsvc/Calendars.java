@@ -271,7 +271,15 @@ class Calendars extends CalSvcDb implements CalendarsI {
     if (col.getCalType() == BwCalendar.calTypeAlias) {
       resolveAlias(col, true, false);
     }
-    return getCal().getCalendars(col.getAliasedEntity());
+    return getCal().getCalendars(col.getAliasedEntity(), null);
+  }
+
+  @Override
+  public Collection<BwCalendar> getChildrenIdx(final BwCalendar col) throws CalFacadeException {
+    if (col.getCalType() == BwCalendar.calTypeAlias) {
+      resolveAliasIdx(col, true, false);
+    }
+    return getCal().getCalendars(col.getAliasedEntity(), getIndexer());
   }
 
   @Override
@@ -476,7 +484,16 @@ class Calendars extends CalSvcDb implements CalendarsI {
   public BwCalendar resolveAlias(final BwCalendar val,
                                  final boolean resolveSubAlias,
                                  final boolean freeBusy) throws CalFacadeException {
-    return getCal().resolveAlias(val, resolveSubAlias, freeBusy);
+    return getCal().resolveAlias(val, resolveSubAlias, freeBusy,
+                                 null);
+  }
+
+  @Override
+  public BwCalendar resolveAliasIdx(final BwCalendar val,
+                                    final boolean resolveSubAlias,
+                                    final boolean freeBusy) throws CalFacadeException {
+    return getCal().resolveAlias(val, resolveSubAlias, freeBusy,
+                                 getIndexer());
   }
 
   /* The key will be the full href of the entity based on the 

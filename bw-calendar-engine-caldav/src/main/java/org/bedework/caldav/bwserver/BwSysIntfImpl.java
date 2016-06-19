@@ -657,7 +657,8 @@ public class BwSysIntfImpl implements SysIntf {
                                     0);
       }
 
-      final BwPrincipal p = getSvci().getDirectories().getPrincipal(pi.getPrincipalHref());
+      final BwPrincipal p = getSvci().getDirectories().getPrincipal(
+              pi.getPrincipalHref());
 
       if (pi.getPrincipalHref().startsWith(basicSysProperties.getUserPrincipalRoot())) {
         userHomePath = Util.buildPath(true, userHomePath,
@@ -1228,10 +1229,10 @@ public class BwSysIntfImpl implements SysIntf {
 
       if (resolved.getCalType() == BwCalendar.calTypeEventList) {
         /* Find the event in the list using the name */
-        SortedSet<EventListEntry> eles = resolved.getEventList();
+        final SortedSet<EventListEntry> eles = resolved.getEventList();
 
         findHref: {
-          for (EventListEntry ele: eles) {
+          for (final EventListEntry ele: eles) {
             if (ele.getName().equals(val)) {
               path = ele.getPath();
               break findHref;
@@ -1249,7 +1250,7 @@ public class BwSysIntfImpl implements SysIntf {
       }
 
       return new BwCalDAVEvent(this, ei);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }

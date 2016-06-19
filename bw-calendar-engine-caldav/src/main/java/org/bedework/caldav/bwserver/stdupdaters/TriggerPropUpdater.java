@@ -67,8 +67,7 @@ public class TriggerPropUpdater extends AlarmPropUpdater {
     pr = (TriggerPropType)ui.getUpdprop();
 
     if (pr.getDateTime() != null) {
-      alarm.setTrigger(XcalUtil.getIcalFormatDateTime(
-              pr.getDateTime()));
+      alarm.setTrigger(XcalUtil.getIcalFormatDateTime(pr.getDateTime()));
       alarm.setTriggerDateTime(true);
     } else {
       alarm.setTrigger(pr.getDuration());

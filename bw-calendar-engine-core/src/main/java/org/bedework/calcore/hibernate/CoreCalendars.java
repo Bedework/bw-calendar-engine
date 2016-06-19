@@ -23,7 +23,6 @@ import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
-import org.bedework.calcore.AccessUtil;
 import org.bedework.calcore.AccessUtil.CollectionGetter;
 import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calcorei.HibSession;
@@ -43,6 +42,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeInvalidSynctoken;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar;
+import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
@@ -210,18 +210,19 @@ public class CoreCalendars extends CalintfHelperHib
    *
    * @param chcb
    * @param cb
-   * @param access
+   * @param ac
    * @param currentMode
    * @param sessionless
    * @throws CalFacadeException
    */
-  public CoreCalendars(final CalintfHelperHibCb chcb, final Callback cb,
-                       final AccessUtil access,
+  public CoreCalendars(final CalintfHelperHibCb chcb, 
+                       final Callback cb,
+                       final AccessChecker ac,
                        final int currentMode,
                        final boolean sessionless)
                   throws CalFacadeException {
     super(chcb);
-    super.init(cb, access, currentMode, sessionless);
+    super.init(cb, ac, currentMode, sessionless);
 
     userCalendarRootPath = Util.buildPath(true, "/", getSyspars()
             .getUserCalendarRoot());
@@ -289,34 +290,39 @@ public class CoreCalendars extends CalintfHelperHib
   }
 
   @Override
-  public Collection<BwCalendar> getCalendars(final BwCalendar cal) throws CalFacadeException {
-    Collection<BwCalendar> ch = getChildren(cal);
+  public Collection<BwCalendar> getCalendars(final BwCalendar col,
+                                             final BwIndexer indexer) throws CalFacadeException {
+    if (indexer == null) {
+      final Collection<BwCalendar> ch = getChildren(col);
 
-    return checkAccess(ch, privAny, true);
+      return checkAccess(ch, privAny, true);
+    } else {
+      return indexer.fetchChildren(col.getPath());
+    }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreCalendarsI#resolveAlias(org.bedework.calfacade.BwCalendar, boolean, boolean)
-   */
   @Override
   public BwCalendar resolveAlias(final BwCalendar val,
                                  final boolean resolveSubAlias,
-                                 final boolean freeBusy) throws CalFacadeException {
+                                 final boolean freeBusy,
+                                 final BwIndexer indexer) throws CalFacadeException {
     if ((val == null) || !val.getInternalAlias()) {
       return val;
     }
 
-    ArrayList<String> pathElements = new ArrayList<String>();
+    // Create list of paths so we can detect a loop
+    final ArrayList<String> pathElements = new ArrayList<>();
     pathElements.add(val.getPath());
 
-    return resolveAlias(val, resolveSubAlias, freeBusy, pathElements);
+    return resolveAlias(val, resolveSubAlias, freeBusy, 
+                        pathElements, indexer);
   }
 
   @Override
   public List<BwCalendar> findAlias(final String val) throws CalFacadeException {
-    HibSession sess = getSess();
+    final HibSession sess = getSess();
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     sb.append("from org.bedework.calfacade.BwCalendar as cal");
     sb.append(" where cal.calType=:caltype");
@@ -429,23 +435,14 @@ public class CoreCalendars extends CalintfHelperHib
                                      final String path,
                                      final int desiredAccess,
                                      final boolean alwaysReturnResult) throws CalFacadeException {
-    BwCalendar col = colCache.get(path);
+    final BwCalendar col = colCache.get(path);
 
     if (col != null) {
       return col;
     }
 
-    col = indexer.fetchCol(path,
-                           PropertyIndex.PropertyInfoIndex.HREF);;
-
-    final CalendarWrapper wcol = wrap(col);
-    if (wcol != null) {
-      colCache.put(wcol);
-    }
-
-    col = checkAccess(wcol, desiredAccess, alwaysReturnResult);
-
-    return col;
+    return indexer.fetchCol(path,
+                            PropertyIndex.PropertyInfoIndex.HREF);
   }
 
   private GetSpecialCalendarResult getIfSpecial(final BwPrincipal owner,
@@ -616,9 +613,6 @@ public class CoreCalendars extends CalintfHelperHib
     colCache.flush();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CalendarsI#moveCalendar(org.bedework.calfacade.BwCalendar, org.bedework.calfacade.BwCalendar)
-   */
   @Override
   public void moveCalendar(BwCalendar val,
                            final BwCalendar newParent) throws CalFacadeException {
@@ -626,8 +620,8 @@ public class CoreCalendars extends CalintfHelperHib
 
     /* check access - privbind on new parent privunbind on val?
      */
-    access.checkAccess(val, privUnbind, false);
-    access.checkAccess(newParent, privBind, false);
+    ac.checkAccess(val, privUnbind, false);
+    ac.checkAccess(newParent, privBind, false);
 
     if (newParent.getCalType() != BwCalendar.calTypeFolder) {
       throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
@@ -656,9 +650,6 @@ public class CoreCalendars extends CalintfHelperHib
     colCache.flush();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreCalendarsI#touchCalendar(java.lang.String)
-   */
   @Override
   public void touchCalendar(final String path) throws CalFacadeException {
     BwCalendar col = getCollection(path);
@@ -700,7 +691,7 @@ public class CoreCalendars extends CalintfHelperHib
    */
   @Override
   public void updateCalendar(final BwCalendar val) throws CalFacadeException {
-    access.checkAccess(val, privWriteProperties, false);
+    ac.checkAccess(val, privWriteProperties, false);
 
     // CALWRAPPER - did I need this?
     //val = (BwCalendar)getSess().merge(val);
@@ -725,7 +716,7 @@ public class CoreCalendars extends CalintfHelperHib
     HibSession sess = getSess();
 
     try {
-      access.changeAccess(cal, aces, replaceAll);
+      ac.getAccessUtil().changeAccess(cal, aces, replaceAll);
 
       // Clear the cache - inheritance makes it difficult to be sure of the effects.
       colCache.clear();
@@ -747,7 +738,7 @@ public class CoreCalendars extends CalintfHelperHib
                             final AceWho who) throws CalFacadeException {
     HibSession sess = getSess();
 
-    access.defaultAccess(cal, who);
+    ac.getAccessUtil().defaultAccess(cal, who);
     sess.saveOrUpdate(unwrap(cal));
 
     colCache.flush();
@@ -766,7 +757,7 @@ public class CoreCalendars extends CalintfHelperHib
 
     final HibSession sess = getSess();
 
-    access.checkAccess(val, privUnbind, false);
+    ac.checkAccess(val, privUnbind, false);
 
     final String parentPath = val.getColPath();
     if (parentPath == null) {
@@ -1011,7 +1002,7 @@ public class CoreCalendars extends CalintfHelperHib
 
     for (BwCalendar col: cols) {
       BwCalendar wcol = wrap(col);
-      CurrentAccess ca = access.checkAccess(wcol, privAny, true);
+      CurrentAccess ca = ac.checkAccess(wcol, privAny, true);
       if (!ca.getAccessAllowed()) {
         continue;
       }
@@ -1046,7 +1037,7 @@ public class CoreCalendars extends CalintfHelperHib
 
     for (BwCalendar col: cols) {
       BwCalendar wcol = wrap(col);
-      CurrentAccess ca = access.checkAccess(wcol, privAny, true);
+      CurrentAccess ca = ac.checkAccess(wcol, privAny, true);
       if (!ca.getAccessAllowed()) {
         continue;
       }
@@ -1112,21 +1103,25 @@ public class CoreCalendars extends CalintfHelperHib
    *                   Private methods
    * ==================================================================== */
 
+  /*
+    indexer != null => Use ES for the searches
+   */
   private BwCalendar resolveAlias(final BwCalendar val,
                                   final boolean resolveSubAlias,
                                   final boolean freeBusy,
-                                  final ArrayList<String> pathElements) throws CalFacadeException {
+                                  final ArrayList<String> pathElements,
+                                  final BwIndexer indexer) throws CalFacadeException {
     if ((val == null) || !val.getInternalAlias()) {
       return val;
     }
 
-    BwCalendar c = val.getAliasTarget();
+    final BwCalendar c = val.getAliasTarget();
     if (c != null) {
       if (!resolveSubAlias) {
         return c;
       }
 
-      return resolveAlias(c, true, freeBusy, pathElements);
+      return resolveAlias(c, true, freeBusy, pathElements, indexer);
     }
 
     if (val.getDisabled()) {
@@ -1138,9 +1133,7 @@ public class CoreCalendars extends CalintfHelperHib
       desiredAccess = privReadFreeBusy;
     }
 
-    BwCalendar calendar;
-
-    String path = val.getInternalAliasPath();
+    final String path = val.getInternalAliasPath();
 
     if (pathElements.contains(path)) {
       disableAlias(val);
@@ -1153,13 +1146,19 @@ public class CoreCalendars extends CalintfHelperHib
     //  trace("Search for calendar \"" + path + "\"");
     //}
 
+    BwCalendar col;
+
     try {
-      calendar = getCalendar(path, desiredAccess, false);
-    } catch (CalFacadeAccessException cfae) {
-      calendar = null;
+      if (indexer != null) {
+        col = getCollectionIdx(indexer, path, desiredAccess, false);
+      } else {
+        col = getCalendar(path, desiredAccess, false);
+      }
+    } catch (final CalFacadeAccessException cfae) {
+      col = null;
     }
 
-    if (calendar == null) {
+    if (col == null) {
       /* Assume deleted - flag in the subscription if it's ours or a temp.
        */
       if ((val.getId() == CalFacadeDefs.unsavedItemKey) ||
@@ -1167,14 +1166,14 @@ public class CoreCalendars extends CalintfHelperHib
         disableAlias(val);
       }
     } else {
-      val.setAliasTarget(calendar);
+      val.setAliasTarget(col);
     }
 
     if (!resolveSubAlias) {
-      return calendar;
+      return col;
     }
 
-    return resolveAlias(calendar, true, freeBusy, pathElements);
+    return resolveAlias(col, true, freeBusy, pathElements, indexer);
   }
 
   private void disableAlias(final BwCalendar val) throws CalFacadeException {
@@ -1424,7 +1423,7 @@ public class CoreCalendars extends CalintfHelperHib
                                              final int desiredAccess,
                                              final boolean nullForNoAccess)
           throws CalFacadeException {
-    TreeSet<BwCalendar> out = new TreeSet<BwCalendar>();
+    final TreeSet<BwCalendar> out = new TreeSet<>();
     if (ents == null) {
       return out;
     }
@@ -1447,10 +1446,11 @@ public class CoreCalendars extends CalintfHelperHib
       return null;
     }
 
-    boolean noAccessNeeded = desiredAccess == privNone;
+    final boolean noAccessNeeded = desiredAccess == privNone;
 
-    CurrentAccess ca = access.checkAccess(col, desiredAccess,
-                                          alwaysReturnResult || noAccessNeeded);
+    final CurrentAccess ca = 
+            ac.checkAccess(col, desiredAccess,
+                           alwaysReturnResult || noAccessNeeded);
 
     if (!noAccessNeeded && !ca.getAccessAllowed()) {
       return null;

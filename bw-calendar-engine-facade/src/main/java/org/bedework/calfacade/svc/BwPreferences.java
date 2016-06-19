@@ -733,9 +733,9 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
    * @param val Set of category uids.
    */
   public void setDefaultCategoryUids(final Set<String> val) {
-    Set<BwProperty> catuids = getProperties(propertyDefaultCategory);
+    final Set<BwProperty> catuids = getProperties(propertyDefaultCategory);
 
-    boolean noprops = Util.isEmpty(catuids);
+    final boolean noprops = Util.isEmpty(catuids);
 
     if (Util.isEmpty(val)) {
       if (noprops) {
@@ -750,8 +750,8 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     }
 
     // Work out what we have to add/remove
-    for (String uid: val) {
-      BwProperty p = new BwProperty(propertyDefaultCategory, uid);
+    for (final String uid: val) {
+      final BwProperty p = new BwProperty(propertyDefaultCategory, uid);
 
       if (noprops) {
         addProperty(p);
@@ -771,7 +771,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     }
 
     // If any left in catuids remove them from properties
-    for (BwProperty p: catuids) {
+    for (final BwProperty p: catuids) {
       removeProperty(p);
     }
   }

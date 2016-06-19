@@ -71,24 +71,28 @@ public interface CoreCalendarsI extends Serializable {
    * some access.
    *
    * @param  cal          parent calendar
+   * @param indexer not null means use indexer
    * @return Collection   of BwCalendar
    * @throws CalFacadeException
    */
-  Collection<BwCalendar> getCalendars(BwCalendar cal) throws CalFacadeException;
+  Collection<BwCalendar> getCalendars(BwCalendar cal,
+                                      BwIndexer indexer) throws CalFacadeException;
 
   /** Attempt to get calendar referenced by the alias. For an internal alias
    * the result will also be set in the aliasTarget property of the parameter.
    *
-   * @param val
+   * @param val the alias
    * @param resolveSubAlias - if true and the alias points to an alias, resolve
    *                  down to a non-alias.
-   * @param freeBusy
+   * @param freeBusy determines required access
+   * @param indexer not null means use indexer
    * @return BwCalendar
    * @throws CalFacadeException
    */
-  public BwCalendar resolveAlias(BwCalendar val,
-                                 boolean resolveSubAlias,
-                                 boolean freeBusy) throws CalFacadeException;
+  BwCalendar resolveAlias(BwCalendar val,
+                          boolean resolveSubAlias,
+                          boolean freeBusy,
+                          BwIndexer indexer) throws CalFacadeException;
 
   /** Find any aliases to the given collection.
    *

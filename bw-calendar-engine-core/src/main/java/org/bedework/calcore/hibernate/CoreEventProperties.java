@@ -19,7 +19,6 @@
 
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calcore.AccessUtil;
 import org.bedework.calcorei.CoreEventPropertiesI;
 import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwCategory;
@@ -29,6 +28,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.util.AccessChecker;
 
 import java.util.Collection;
 import java.util.List;
@@ -136,19 +136,19 @@ public class CoreEventProperties <T extends BwEventProperty>
    *
    * @param chcb
    * @param cb
-   * @param access
+   * @param ac
    * @param currentMode
    * @param sessionless
    * @param className
    */
   public CoreEventProperties(final CalintfHelperHibCb chcb,
                              final Callback cb,
-                             final AccessUtil access,
+                             final AccessChecker ac,
                              final int currentMode,
                              final boolean sessionless,
                              final String className) {
     super(chcb);
-    super.init(cb, access, currentMode, sessionless);
+    super.init(cb, ac, currentMode, sessionless);
 
     this.className = className;
 
@@ -197,7 +197,7 @@ public class CoreEventProperties <T extends BwEventProperty>
 
     final List eps = sess.getList();
 
-    final Collection c = access.checkAccess(eps, privRead, true);
+    final Collection c = ac.getAccessUtil().checkAccess(eps, privRead, true);
 
     if (debug) {
       debugMsg("getAll: found: " + eps.size() + " returning: " + c.size());

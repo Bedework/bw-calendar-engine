@@ -45,6 +45,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.SearchResult;
 import org.bedework.calfacade.indexing.SearchResultEntry;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -102,6 +103,8 @@ import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermFilterBuilder;
+import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.elasticsearch.rest.RestStatus;
@@ -171,6 +174,8 @@ public class BwIndexEsImpl implements BwIndexer {
   private final boolean publick;
   private final BwPrincipal principal;
   private final boolean superUser;
+  
+  private final AccessChecker accessCheck;
 
   private final String host;
   private int port = 9300;
@@ -201,9 +206,10 @@ public class BwIndexEsImpl implements BwIndexer {
    *
    * @param configs - the configurations object
    * @param publick - if false we add an owner term to the searches
-   * @param principal - who we are searching for - only for non-public
+   * @param principal - who is doing the searching - only for non-public
    * @param superUser - true if the principal is a superuser.
    * @param currentMode - guest, user,publicAdmin
+   * @param accessCheck  - required - lets us check access
    * @param indexName - explicitly specified
    * @throws CalFacadeException
    */
@@ -212,6 +218,7 @@ public class BwIndexEsImpl implements BwIndexer {
                        final BwPrincipal principal,
                        final boolean superUser,
                        final int currentMode,
+                       final AccessChecker accessCheck,
                        final String indexName) throws CalFacadeException {
     debug = getLog().isDebugEnabled();
 
@@ -219,6 +226,7 @@ public class BwIndexEsImpl implements BwIndexer {
     this.principal = principal;
     this.superUser = superUser;
     this.currentMode = currentMode;
+    this.accessCheck = accessCheck;
 
     idxpars = configs.getIndexProperties();
     authpars = configs.getAuthProperties(true);
@@ -243,29 +251,15 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     if (indexName == null) {
-      if (publick) {
-        targetIndex = idxpars.getPublicIndexName();
-      } else {
-        targetIndex = idxpars.getUserIndexName();
-      }
-      targetIndex = Util.buildPath(false, targetIndex);
-
-      if (publick) {
-        /* Search public only */
-        searchIndexes = new String[]{targetIndex};
-      } else {
-        /* Search public and user */
-        searchIndexes = new String[]{Util.buildPath(false, idxpars.getPublicIndexName()),
-                                     targetIndex};
-      }
+      targetIndex = Util.buildPath(false, idxpars.getUserIndexName());
     } else {
       targetIndex = Util.buildPath(false, indexName);
-      searchIndexes = new String[]{targetIndex};
     }
+    searchIndexes = new String[]{targetIndex};
 
-    if (updateInfo.get(targetIndex) == null) {
+    //if (updateInfo.get(targetIndex) == null) {
       // Need to get the info from the index
-    }
+    //}
   }
 
   @Override
@@ -423,7 +417,6 @@ public class BwIndexEsImpl implements BwIndexer {
                              final String start,
                              final String end,
                              final int pageSize,
-                             final AccessChecker accessCheck,
                              final RecurringRetrievalMode recurRetrieval) throws CalFacadeException {
     if (basicSysprops.getTestMode()) {
       final long timeSinceIndex = System.currentTimeMillis() - lastIndexTime;
@@ -1023,7 +1016,24 @@ public class BwIndexEsImpl implements BwIndexer {
       return null;
     }
 
-    return eb.makeCollection();
+    final BwCalendar col = eb.makeCollection();
+    
+    return accessCheck.checkAccess(col);
+  }
+  
+  @Override
+  public Collection<BwCalendar> fetchChildren(final String href) throws CalFacadeException {
+    return fetchAllEntities(docTypeCollection,
+                            new BuildEntity<BwCalendar>() {
+                              @Override
+                              BwCalendar make(final EntityBuilder eb)
+                                      throws CalFacadeException {
+                                return accessCheck.checkAccess(eb.makeCollection());
+                              }
+                            },
+                            new TermFilterBuilder(
+                                    EntityBuilder.getJname(PropertyInfoIndex.COLPATH),
+                                    href));
   }
 
   @Override
@@ -1095,13 +1105,57 @@ public class BwIndexEsImpl implements BwIndexer {
    *                   private methods
    * ======================================================================== */
 
+  private SearchHits multiColFetch(final List<String> hrefs) throws CalFacadeException {
+    final int batchSize = hrefs.size();
+
+    final SearchRequestBuilder srb = getClient().prepareSearch(searchIndexes);
+
+    final TermsQueryBuilder tqb = 
+            new TermsQueryBuilder(ESQueryFilter.getJname(PropertyInfoIndex.HREF),
+                                  hrefs);
+    
+    srb.setSearchType(SearchType.QUERY_THEN_FETCH)
+       .setQuery(tqb);
+    srb.setFrom(0);
+    srb.setSize(batchSize);
+
+    if (debug) {
+      debug("MultiColFetch: targetIndex=" + targetIndex +
+                    "; srb=" + srb);
+    }
+
+    final SearchResponse resp = srb.execute().actionGet();
+
+    if (resp.status() != RestStatus.OK) {
+      if (debug) {
+        debug("Search returned status " + resp.status());
+      }
+
+      return null;
+    }
+
+    final SearchHits hits = resp.getHits();
+
+    if ((hits.getHits() == null) ||
+            (hits.getHits().length == 0)) {
+      return null;
+    }
+
+    //Break condition: No hits are returned
+    if (hits.hits().length == 0) {
+      return null;
+    }
+
+    return hits;
+  }
+
   private SearchHits multiFetch(final SearchHits hits,
                                 final RecurringRetrievalMode rmode) throws CalFacadeException {
     // Make an ored filter from keys
 
     final Set<String> hrefs = new TreeSet<>(); // Dedup
 
-    int batchSize = (int)hits.getTotalHits();
+    final int batchSize = (int)hits.getTotalHits();
 
     for (final SearchHit hit : hits) {
       final String dtype = hit.getType();
@@ -1180,6 +1234,13 @@ public class BwIndexEsImpl implements BwIndexer {
 
   private <T> List<T> fetchAllEntities(final String docType,
                                        final BuildEntity<T> be) throws CalFacadeException {
+    return fetchAllEntities(docType, be, 
+                            getFilters(null).principalFilter(null));
+  }
+
+  private <T> List<T> fetchAllEntities(final String docType,
+                                       final BuildEntity<T> be,
+                                       final FilterBuilder filter) throws CalFacadeException {
     final SearchRequestBuilder srb = getClient().prepareSearch(targetIndex);
 
     srb.setTypes(docType);
@@ -1196,7 +1257,7 @@ public class BwIndexEsImpl implements BwIndexer {
 
     SearchResponse scrollResp = srb.setSearchType(SearchType.SCAN)
             .setScroll(new TimeValue(60000))
-            .setPostFilter(getFilters(null).principalFilter(null))
+            .setPostFilter(filter)
             .setSize(ourCount).execute().actionGet(); //ourCount hits per shard will be returned for each scroll
 
     if (scrollResp.status() != RestStatus.OK) {
@@ -1230,6 +1291,10 @@ public class BwIndexEsImpl implements BwIndexer {
       for (final SearchHit hit : hits) {
         //Handle the hit...
         final T ent = be.make(getEntityBuilder(hit.sourceAsMap()));
+        if (ent == null) {
+          // No access
+          continue;
+        }
         res.add(ent);
         //ourPos++;
       }

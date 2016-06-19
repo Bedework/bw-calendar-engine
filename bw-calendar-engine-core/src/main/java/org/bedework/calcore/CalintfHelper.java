@@ -36,7 +36,6 @@ import org.bedework.calfacade.base.AttachmentsEntity;
 import org.bedework.calfacade.base.AttendeesEntity;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
-import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.base.CommentedEntity;
 import org.bedework.calfacade.base.ContactedEntity;
@@ -53,6 +52,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
+import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.util.NotificationsInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
@@ -124,9 +124,9 @@ public abstract class CalintfHelper
 
     /** Used to fetch a calendar from the cache
      *
-     * @param path
-     * @param desiredAccess
-     * @param alwaysReturn
+     * @param path of collection
+     * @param desiredAccess minimum
+     * @param alwaysReturn false will throw exception on no access
      * @return BwCalendar
      * @throws CalFacadeException
      */
@@ -138,7 +138,7 @@ public abstract class CalintfHelper
      * queue up notifications until after transaction commit as consumers
      * should only receive notifications when the actual data has been written.
      *
-     * @param ev
+     * @param ev the system event
      * @throws CalFacadeException
      */
     void postNotification(SysEvent ev) throws CalFacadeException;
@@ -156,25 +156,13 @@ public abstract class CalintfHelper
     BwIndexer getIndexer(BwOwnedDbentity entity) throws CalFacadeException;
   }
 
-  protected class AccessChecker implements BwIndexer.AccessChecker {
-    @Override
-    public Acl.CurrentAccess checkAccess(final BwShareableDbentity ent,
-                                         final int desiredAccess,
-                                         final boolean returnResult)
-            throws CalFacadeException {
-      return access.checkAccess(ent, desiredAccess, returnResult);
-    }
-  }
-
-  private AccessChecker ac = new AccessChecker();
+  protected AccessChecker ac;
 
   protected boolean debug;
 
   protected boolean collectTimeStats;
 
   protected Callback cb;
-
-  protected AccessUtilI access;
 
   protected int currentMode = guestMode;
 
@@ -189,16 +177,16 @@ public abstract class CalintfHelper
   /** Initialize
    *
    * @param cb
-   * @param access
+   * @param ac
    * @param currentMode
    * @param sessionless
    */
   public void init(final Callback cb,
-                   final AccessUtilI access,
+                   final AccessChecker ac,
                    final int currentMode,
                    final boolean sessionless) {
     this.cb = cb;
-    this.access = access;
+    this.ac = ac;
     this.currentMode = currentMode;
     this.sessionless = sessionless;
     debug = getLogger().isDebugEnabled();
@@ -360,7 +348,7 @@ public abstract class CalintfHelper
       // CALWRAPPER get this from getEvents with an internal temp calendar
       return (CalendarWrapper)val;
     }
-    return new CalendarWrapper(val, access);
+    return new CalendarWrapper(val, ac.getAccessUtil());
   }
 
   protected BwCalendar unwrap(final BwCalendar val) throws CalFacadeException {
@@ -404,6 +392,7 @@ public abstract class CalintfHelper
     }
 
     CurrentAccess ca;
+    final AccessUtilI access = ac.getAccessUtil();
 
     if ((cal.getCalType() == BwCalendar.calTypeInbox) ||
         (cal.getCalType() == BwCalendar.calTypePendingInbox)) {
@@ -511,7 +500,9 @@ public abstract class CalintfHelper
       return null;
     }
 
-    CurrentAccess ca = access.checkAccess(ev, desiredAccess, nullForNoAccess);
+    final CurrentAccess ca = ac.checkAccess(ev, 
+                                            desiredAccess, 
+                                            nullForNoAccess);
 
     if (!ca.getAccessAllowed()) {
       return null;

@@ -858,7 +858,7 @@ public class EntityBuilder  {
     return getFirstValue(id.getJname());
   }
 
-  private static String getJname(final PropertyInfoIndex pi) {
+  public static String getJname(final PropertyInfoIndex pi) {
     final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
 
     if (ipie == null) {

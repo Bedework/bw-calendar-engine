@@ -171,6 +171,13 @@ public class BwEventUtil extends IcalUtil {
       // We'll need this later.
       attUri = cb.getCaladdr(cb.getPrincipal().getPrincipalRef());
     }
+    
+    final String colPath;
+    if (cal == null) {
+      colPath = null;
+    } else {
+      colPath = cal.getPath();
+    }
 
     try {
       final PropertyList pl = val.getProperties();
@@ -321,7 +328,7 @@ public class BwEventUtil extends IcalUtil {
           debugMsg("TRANS-TO_EVENT: try to fetch event with guid=" + guid);
         }
 
-        final Collection<EventInfo> eis = cb.getEvent(cal, guid);
+        final Collection<EventInfo> eis = cb.getEvent(colPath, guid);
         if (Util.isEmpty(eis)) {
           // do nothing
         } else if (eis.size() > 1) {
@@ -355,7 +362,7 @@ public class BwEventUtil extends IcalUtil {
           }
         } else if (rid != null) {
           /* Manufacture a master for the instance */
-          masterEI = makeNewEvent(cb, entityType, guid, cal);
+          masterEI = makeNewEvent(cb, entityType, guid, colPath);
           final BwEvent e = masterEI.getEvent();
 
           // XXX This seems bogus
@@ -392,7 +399,7 @@ public class BwEventUtil extends IcalUtil {
       }
 
       if (evinfo == null) {
-        evinfo = makeNewEvent(cb, entityType, guid, cal);
+        evinfo = makeNewEvent(cb, entityType, guid, colPath);
       } else if (evinfo.getEvent().getEntityType() != entityType) {
         throw new CalFacadeException("org.bedework.mismatched.entity.type",
                                      val.toString());
@@ -1296,7 +1303,7 @@ public class BwEventUtil extends IcalUtil {
                                        final EventInfo vavail) throws CalFacadeException {
 
     try {
-      ComponentList avls = val.getAvailable();
+      final ComponentList avls = val.getAvailable();
 
       if ((avls == null) || avls.isEmpty()) {
         return;
@@ -1476,9 +1483,9 @@ public class BwEventUtil extends IcalUtil {
   private static EventInfo makeNewEvent(final IcalCallback cb,
                                         final int entityType,
                                         final String uid,
-                                        final BwCalendar col) throws CalFacadeException {
-    BwEvent ev = new BwEventObj();
-    EventInfo evinfo = new EventInfo(ev);
+                                        final String colPath) throws CalFacadeException {
+    final BwEvent ev = new BwEventObj();
+    final EventInfo evinfo = new EventInfo(ev);
 
     //ev.setDtstamps();
     ev.setEntityType(entityType);
@@ -1486,11 +1493,9 @@ public class BwEventUtil extends IcalUtil {
     ev.setOwnerHref(cb.getOwner().getPrincipalRef());
     ev.setUid(uid);
 
-    if (col != null) {
-      ev.setColPath(col.getPath());
-    }
+    ev.setColPath(colPath);
 
-    ChangeTable chg = evinfo.getChangeset(cb.getPrincipal().getPrincipalRef());
+    final ChangeTable chg = evinfo.getChangeset(cb.getPrincipal().getPrincipalRef());
     chg.changed(PropertyInfoIndex.UID, null, uid); // get that out of the way
 
     evinfo.setNewEvent(true);

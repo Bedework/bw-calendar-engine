@@ -23,7 +23,6 @@ import org.bedework.access.AceWho;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;
-import org.bedework.calcore.AccessUtil;
 import org.bedework.calcore.CalintfBase;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
@@ -148,10 +147,6 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   protected static final Map<String, CalintfBase> openIfs = new HashMap<>();
 
-  /** For evaluating access control
-   */
-  private AccessUtil access;
-
   private CoreEventsI events;
 
   private CoreCalendars calendars;
@@ -212,28 +207,21 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
                    final boolean sessionless) throws CalFacadeException {
     super.init(logId, configs, principalInfo, url,
                publicAdmin, publicSubmission, sessionless);
-
-    try {
-      access = new AccessUtil();
-      access.init(principalInfo);
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    }
-
+    
     cb = new CalintfHelperCallback(this);
     chcb = new CalintfHelperHibCb(this);
 
     events = new CoreEvents(chcb, cb,
-                            access, currentMode, sessionless);
+                            ac, currentMode, sessionless);
 
     calendars = new CoreCalendars(chcb, cb,
-                                  access, currentMode, sessionless);
+                                  ac, currentMode, sessionless);
 
     filterDefs = new FilterDefs(chcb, cb,
-                                access, currentMode, sessionless);
+                                ac, currentMode, sessionless);
 
     userauth = new CoreUserAuthImpl(chcb, cb,
-                                    access, currentMode, sessionless);
+                                    ac, currentMode, sessionless);
 
     access.setCollectionGetter(calendars);
   }
@@ -761,23 +749,23 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     return calendars.getSynchInfo(path, token);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreCalendarsI#getCalendars(org.bedework.calfacade.BwCalendar)
-   */
   @Override
-  public Collection<BwCalendar> getCalendars(final BwCalendar cal) throws CalFacadeException {
+  public Collection<BwCalendar> getCalendars(final BwCalendar cal,
+                                             final BwIndexer indexer) throws CalFacadeException {
     checkOpen();
 
-    return calendars.getCalendars(cal);
+    return calendars.getCalendars(cal, indexer);
   }
 
   @Override
   public BwCalendar resolveAlias(final BwCalendar val,
                                  final boolean resolveSubAlias,
-                                 final boolean freeBusy) throws CalFacadeException {
+                                 final boolean freeBusy,
+                                 final BwIndexer indexer) throws CalFacadeException {
     checkOpen();
 
-    return calendars.resolveAlias(val, resolveSubAlias, freeBusy);
+    return calendars.resolveAlias(val, resolveSubAlias, 
+                                  freeBusy, indexer);
   }
 
   @Override
@@ -1845,7 +1833,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       if (categoriesHandler == null) {
         categoriesHandler =
             new CoreEventProperties<BwCategory>(chcb, cb,
-                access, currentMode, sessionless,
+                ac, currentMode, sessionless,
                       BwCategory.class.getName());
       }
 
@@ -1856,7 +1844,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       if (contactsHandler == null) {
         contactsHandler =
             new CoreEventProperties<BwContact>(chcb, cb,
-                access, currentMode, sessionless,
+                ac, currentMode, sessionless,
                 BwContact.class.getName());
       }
 
@@ -1867,7 +1855,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       if (locationsHandler == null) {
         locationsHandler =
             new CoreEventProperties<BwLocation>(chcb, cb,
-                access, currentMode, sessionless,
+                ac, currentMode, sessionless,
                 BwLocation.class.getName());
       }
 

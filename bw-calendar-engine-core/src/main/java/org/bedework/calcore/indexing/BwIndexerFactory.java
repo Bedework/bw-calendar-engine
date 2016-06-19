@@ -22,6 +22,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.util.AccessChecker;
 
 /** Create an instance of an indexer for bedework.
  *
@@ -38,15 +39,18 @@ public class BwIndexerFactory {
    *
    * @param configs
    * @param currentMode - guest, user,publicAdmin
+   * @param accessCheck  - required - lets us check access
    * @return indexer
    * @throws CalFacadeException
    */
   public static BwIndexer getPublicIndexer(final Configurations configs,
-                                           final int currentMode) throws CalFacadeException {
+                                           final int currentMode,
+                                           final AccessChecker accessCheck) throws CalFacadeException {
     return new BwIndexEsImpl(configs, true,
                              null,    // principal
                              false,   // super user
                              currentMode,
+                             accessCheck,
                              null); // No explicit name
   }
 
@@ -56,17 +60,20 @@ public class BwIndexerFactory {
    * @param principal - who we are searching for
    * @param superUser - true if the principal is a superuser.
    * @param currentMode - guest, user,publicAdmin
+   * @param accessCheck  - required - lets us check access
    * @return indexer
    * @throws CalFacadeException
    */
   public static BwIndexer getIndexer(final Configurations configs,
                                      final BwPrincipal principal,
                                      final boolean superUser,
-                                     final int currentMode) throws CalFacadeException {
+                                     final int currentMode,
+                                     final AccessChecker accessCheck) throws CalFacadeException {
     return new BwIndexEsImpl(configs, false,
                              principal,
                              superUser,
                              currentMode,
+                             accessCheck,
                              null); // No explicit name
   }
 
@@ -75,8 +82,9 @@ public class BwIndexerFactory {
    * index.
    *
    * @param configs
-   * @param principal
+   * @param principal - who we are searching for
    * @param currentMode - guest, user,publicAdmin
+   * @param accessCheck  - required - lets us check access
    * @param indexRoot
    * @return indexer
    * @throws CalFacadeException
@@ -84,11 +92,13 @@ public class BwIndexerFactory {
   public static BwIndexer getIndexer(final Configurations configs,
                                      final BwPrincipal principal,
                                      final int currentMode,
+                                     final AccessChecker accessCheck,
                                      final String indexRoot) throws CalFacadeException {
     return new BwIndexEsImpl(configs, true,
                              principal,
                              false,
                              currentMode,
+                             accessCheck,
                              indexRoot); // Explicit name
   }
 }

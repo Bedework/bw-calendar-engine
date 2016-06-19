@@ -50,17 +50,17 @@ public interface AccessUtilI extends PrivilegeDefs, Serializable {
    * @param cb
    * @throws CalFacadeException
    */
-  public void init(PrincipalInfo cb) throws CalFacadeException;
+  void init(PrincipalInfo cb) throws CalFacadeException;
 
   /** Called at request start
    *
    */
-  public void open();
+  void open();
 
   /** Called at request end
    *
    */
-  public void close();
+  void close();
 
   /** Called to get the parent object for a shared entity. This method should be
    * overriden if explicit calls to the back end calendar are required.
@@ -69,7 +69,7 @@ public interface AccessUtilI extends PrivilegeDefs, Serializable {
    * @return parent calendar or null.
    * @throws CalFacadeException
    */
-  public BwCalendar getParent(BwShareableContainedDbentity<? extends Object> val)
+  BwCalendar getParent(BwShareableContainedDbentity<? extends Object> val)
         throws CalFacadeException;
 
   /* ====================================================================
@@ -80,13 +80,13 @@ public interface AccessUtilI extends PrivilegeDefs, Serializable {
    *
    * @return String value for default access
    */
-  public String getDefaultPublicAccess();
+  String getDefaultPublicAccess();
 
   /**
    *
    * @return String default user access
    */
-  public String getDefaultPersonalAccess();
+  String getDefaultPersonalAccess();
 
   /** Change the access to the given calendar entity using the supplied aces.
    * We are changing access so we remove all access for each who in the list and
@@ -97,7 +97,7 @@ public interface AccessUtilI extends PrivilegeDefs, Serializable {
    * @param replaceAll true to replace the entire access list.
    * @throws CalFacadeException
    */
-  public void changeAccess(BwShareableDbentity<? extends Object> ent,
+  void changeAccess(BwShareableDbentity<? extends Object> ent,
                            Collection<Ace> aces,
                            boolean replaceAll) throws CalFacadeException;
 
@@ -107,7 +107,7 @@ public interface AccessUtilI extends PrivilegeDefs, Serializable {
   * @param who      AceWho
   * @throws CalFacadeException
   */
- public void defaultAccess(BwShareableDbentity<? extends Object> ent,
+ void defaultAccess(BwShareableDbentity<? extends Object> ent,
                            AceWho who) throws CalFacadeException;
 
   /** Return a Collection of the objects after checking access
@@ -118,7 +118,7 @@ public interface AccessUtilI extends PrivilegeDefs, Serializable {
    * @return Collection   of checked objects
    * @throws CalFacadeException for no access or other failure
    */
-  public Collection<? extends BwShareableDbentity<? extends Object>>
+  Collection<? extends BwShareableDbentity<? extends Object>>
                  checkAccess(Collection<? extends BwShareableDbentity<? extends Object>> ents,
                                 int desiredAccess,
                                 boolean alwaysReturn)
@@ -145,6 +145,6 @@ public interface AccessUtilI extends PrivilegeDefs, Serializable {
    * @return  CurrentAccess
    * @throws CalFacadeException
    */
-  public CurrentAccess checkAccess(BwShareableDbentity<? extends Object> ent, int desiredAccess,
+  CurrentAccess checkAccess(BwShareableDbentity<? extends Object> ent, int desiredAccess,
                         boolean alwaysReturnResult) throws CalFacadeException;
 }

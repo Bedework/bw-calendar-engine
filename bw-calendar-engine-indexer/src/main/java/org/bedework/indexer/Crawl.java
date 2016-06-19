@@ -87,12 +87,6 @@ public class Crawl extends CalSys {
     */
   }
 
-  static class Indexes {
-    String publicIndex;
-
-    String userIndex;
-  }
-
   /**
    * @throws CalFacadeException
    */
@@ -108,7 +102,7 @@ public class Crawl extends CalSys {
 
     final CrawlStatus status = new CrawlStatus("Overall status");
     statuses.add(status);
-    final Indexes idxs = newIndexes(status);
+    final String indexName = newIndexes(status);
 
     /* Now we can reindex into the new directory */
 
@@ -122,7 +116,7 @@ public class Crawl extends CalSys {
                                        2000,   // batchDelay,
                                        100,    // entityDelay,
                                        props.getSkipPathsList(),
-                                       idxs.userIndex);
+                                       indexName);
       prProc.start();
     }
 
@@ -133,7 +127,7 @@ public class Crawl extends CalSys {
                                     2000,   // batchDelay,
                                     100,    // entityDelay,
                                     props.getSkipPathsList(),
-                                    idxs.publicIndex);
+                                    indexName);
       pubProc.start();
     }
 
@@ -149,7 +143,7 @@ public class Crawl extends CalSys {
       setStatus(status, "Public indexing completed");
     }
 
-    endIndexing(idxs);
+    endIndexing(indexName);
 
     final long millis = System.currentTimeMillis() - start;
     status.infoLines.add("Indexing took " +
@@ -193,65 +187,34 @@ public class Crawl extends CalSys {
     }
   }
 
-  private Indexes newIndexes(final CrawlStatus cr) throws CalFacadeException {
-    final Indexes idxs = new Indexes();
-
+  private String newIndexes(final CrawlStatus cr) throws CalFacadeException {
     try (BwSvc bw = getAdminBw()) {
-      if (props.getIndexUsers()) {
-        // Switch user indexes.
+        // Switch indexes.
 
-        if (props.getUserIndexName() == null) {
-          outErr(cr,
-                 "No user index core defined in system properties");
-          throw new CalFacadeException(
-                  "No user index core defined in system properties");
-        }
-
-        final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
-                                                      idxs.userIndex);
-
-        idxs.userIndex = idx.newIndex(props.getUserIndexName());
-
-        setStatus(cr, "Switched user index to " + idxs.userIndex);
+      if (props.getUserIndexName() == null) {
+        outErr(cr,
+               "No index name defined in system properties");
+        throw new CalFacadeException(
+                "No index name defined in system properties");
       }
 
-      if (props.getIndexPublic()) {
-        // Switch public indexes.
+      final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
+                                                    null);
 
-        if (props.getPublicIndexName() == null) {
-          outErr(cr,
-                 "No public index core defined in system properties");
-          throw new CalFacadeException(
-                  "No public index core defined in system properties");
-        }
+      final String indexName = idx.newIndex(props.getUserIndexName());
 
-        final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
-                                                      idxs.publicIndex);
+      setStatus(cr, "Switched index to " + indexName);
 
-        idxs.publicIndex = idx.newIndex(props.getPublicIndexName());
-
-        setStatus(cr, "Switched public index to " + idxs.publicIndex);
-      }
+      return indexName;
     }
-
-    return idxs;
   }
 
-  private void endIndexing(final Indexes idxs) throws CalFacadeException {
+  private void endIndexing(final String indexName) throws CalFacadeException {
     try (BwSvc bw = getAdminBw()) {
-      if (props.getIndexUsers()) {
-        final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
-                                                      idxs.userIndex);
+      final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
+                                                    indexName);
 
-        idx.swapIndex(idxs.userIndex, props.getUserIndexName());
-      }
-
-      if (props.getIndexPublic()) {
-        final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
-                                                      idxs.publicIndex);
-
-        idx.swapIndex(idxs.publicIndex, props.getPublicIndexName());
-      }
+      idx.swapIndex(indexName, props.getUserIndexName());
     }
   }
 

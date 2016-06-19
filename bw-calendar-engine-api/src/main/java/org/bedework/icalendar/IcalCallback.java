@@ -18,7 +18,6 @@
 */
 package org.bedework.icalendar;
 
-import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwLocation;
@@ -162,12 +161,12 @@ public interface IcalCallback extends Serializable {
   /** Return a Collection of EventInfo objects. There should only be
    * one returned.
    *
-   * @param cal       calendar to search
+   * @param colPath of collection to search
    * @param guid
    * @return Collection of EventInfo
    * @throws CalFacadeException
    */
-  Collection<EventInfo> getEvent(BwCalendar cal, String guid)
+  Collection<EventInfo> getEvent(String colPath, String guid)
           throws CalFacadeException;
 
   /**

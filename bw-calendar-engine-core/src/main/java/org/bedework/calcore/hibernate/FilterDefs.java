@@ -18,35 +18,35 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calcore.AccessUtil;
 import org.bedework.calcorei.CoreFilterDefsI;
 import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.util.AccessChecker;
 
 import java.util.Collection;
 
 /** This acts as an interface to the database for filters.
  *
- * @author Mike Douglass       douglm - bedework.edu
+ * @author Mike Douglass       douglm - rpi.edu
  */
 class FilterDefs  extends CalintfHelperHib implements CoreFilterDefsI {
   /** Constructor
   *
   * @param chcb
   * @param cb
-  * @param access
+  * @param ac
   * @param currentMode
   * @param sessionless
   */
  public FilterDefs(final CalintfHelperHibCb chcb,
                    final Callback cb,
-                   final AccessUtil access,
+                   final AccessChecker ac,
                    final int currentMode,
                    final boolean sessionless) {
    super(chcb);
-   super.init(cb, access, currentMode, sessionless);
+   super.init(cb, ac, currentMode, sessionless);
  }
 
   /* (non-Javadoc)

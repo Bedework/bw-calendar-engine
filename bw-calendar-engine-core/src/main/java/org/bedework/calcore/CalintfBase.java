@@ -18,15 +18,22 @@
 */
 package org.bedework.calcore;
 
+import org.bedework.access.Acl;
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.indexing.BwIndexerFactory;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.PrincipalInfo;
+import org.bedework.calfacade.util.AccessChecker;
+import org.bedework.calfacade.util.AccessUtilI;
+import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.NotificationsHandlerFactory;
 import org.bedework.sysevents.events.SysEventBase;
 
@@ -81,6 +88,53 @@ public abstract class CalintfBase implements Calintf {
 
   protected final LinkedTransferQueue<SysEventBase> queuedNotifications = new LinkedTransferQueue<>();
 
+  /** For evaluating access control
+   */
+  protected AccessUtil access;
+
+  public class CIAccessChecker implements AccessChecker {
+    @Override
+    public Acl.CurrentAccess checkAccess(final BwShareableDbentity ent,
+                                         final int desiredAccess,
+                                         final boolean returnResult)
+            throws CalFacadeException {
+      return access.checkAccess(ent, desiredAccess, returnResult);
+    }
+
+    @Override
+    public CalendarWrapper checkAccess(final BwCalendar val)
+            throws CalFacadeException {
+      if (val == null) {
+        return null;
+      }
+
+      if (val instanceof CalendarWrapper) {
+        // CALWRAPPER get this from getEvents with an internal temp calendar
+        return (CalendarWrapper)val;
+      }
+
+      final CalendarWrapper cw =
+              new CalendarWrapper(val,
+                                  ac.getAccessUtil());
+      final Acl.CurrentAccess ca =
+              checkAccess(cw,
+                          PrivilegeDefs.privAny,
+                          true);
+      if (!ca.getAccessAllowed()) {
+        return null;
+      }
+
+      return cw;
+    }
+
+    @Override
+    public AccessUtilI getAccessUtil() {
+      return access;
+    }
+  }
+
+  protected AccessChecker ac;
+
   /* ====================================================================
    *                   initialisation
    * ==================================================================== */
@@ -112,6 +166,15 @@ public abstract class CalintfBase implements Calintf {
     this.url = url;
     this.sessionless = sessionless;
     debug = getLogger().isDebugEnabled();
+
+    try {
+      access = new AccessUtil();
+      access.init(principalInfo);
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+
+    ac = new CIAccessChecker();
 
     if (principalInfo.getPrincipal().getUnauthenticated()) {
       currentMode = CalintfDefs.guestMode;
@@ -170,14 +233,16 @@ public abstract class CalintfBase implements Calintf {
   @Override
   public BwIndexer getPublicIndexer() throws CalFacadeException {
     return BwIndexerFactory.getPublicIndexer(configs,
-                                             currentMode);
+                                             currentMode,
+                                             ac);
   }
 
   @Override
   public BwIndexer getIndexer(final BwPrincipal principal) throws CalFacadeException {
     return BwIndexerFactory.getIndexer(configs, principal,
                                        getPrincipalInfo().getSuperUser(),
-                                       currentMode);
+                                       currentMode,
+                                       ac);
   }
 
   @Override
@@ -185,6 +250,7 @@ public abstract class CalintfBase implements Calintf {
                               final String indexRoot) throws CalFacadeException {
     return BwIndexerFactory.getIndexer(configs, principal,
                                        currentMode,
+                                       ac,
                                        indexRoot);
   }
 

@@ -850,7 +850,7 @@ public class CalSvc extends CalSvcI {
   @Override
   public BwIndexer getIndexer(final String principal,
                               final String indexRoot) throws CalFacadeException {
-    BwPrincipal pr;
+    final BwPrincipal pr;
 
     if (principal == null) {
       pr = getPrincipal();
@@ -1695,10 +1695,10 @@ public class CalSvc extends CalSvcI {
     }
 
     @Override
-    public Collection getEvent(final BwCalendar cal,
+    public Collection getEvent(final String colPath,
                                final String guid)
             throws CalFacadeException {
-      return getEventsHandler().getByUid(cal.getPath(), guid,
+      return getEventsHandler().getByUid(colPath, guid,
                                          null,
                                          RecurringRetrievalMode.overrides);
     }

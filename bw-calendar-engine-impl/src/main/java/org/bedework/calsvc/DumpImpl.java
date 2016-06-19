@@ -111,7 +111,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
 
   @Override
   public Collection<BwCalendar> getChildren(final BwCalendar val) throws CalFacadeException {
-    return getCal().getCalendars(val);
+    return getCal().getCalendars(val, null);
   }
 
   @Override

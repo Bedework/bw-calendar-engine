@@ -448,7 +448,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
 
       paths.add(curCol.getPath());
       try {
-        curCol = getCols().resolveAlias(curCol, false, false);
+        curCol = getCols().resolveAliasIdx(curCol, false, false);
       } catch (final CalFacadeAccessException ignored) {
         return FixAliasResult.noAccess;
       }
