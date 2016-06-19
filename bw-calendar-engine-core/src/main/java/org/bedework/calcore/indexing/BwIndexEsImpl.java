@@ -1023,17 +1023,28 @@ public class BwIndexEsImpl implements BwIndexer {
   
   @Override
   public Collection<BwCalendar> fetchChildren(final String href) throws CalFacadeException {
-    return fetchAllEntities(docTypeCollection,
-                            new BuildEntity<BwCalendar>() {
-                              @Override
-                              BwCalendar make(final EntityBuilder eb)
-                                      throws CalFacadeException {
-                                return accessCheck.checkAccess(eb.makeCollection());
-                              }
-                            },
-                            new TermFilterBuilder(
-                                    EntityBuilder.getJname(PropertyInfoIndex.COLPATH),
-                                    href));
+    if (debug) {
+      debug("fetchChildren for " + href);
+    }
+    
+    final List<BwCalendar> cols = 
+            fetchAllEntities(docTypeCollection,
+                             new BuildEntity<BwCalendar>() {
+                               @Override
+                               BwCalendar make(final EntityBuilder eb)
+                                       throws CalFacadeException {
+                                 return accessCheck.checkAccess(eb.makeCollection());
+                               }
+                             },
+                             new TermFilterBuilder(
+                                     EntityBuilder.getJname(PropertyInfoIndex.COLPATH),
+                                     href));
+    
+    if (Util.isEmpty(cols)) {
+      return cols;
+    }
+    
+    return new TreeSet<>(cols); // Sort the result
   }
 
   @Override
