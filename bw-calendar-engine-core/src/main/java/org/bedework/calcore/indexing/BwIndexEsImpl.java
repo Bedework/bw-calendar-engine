@@ -454,12 +454,20 @@ public class BwIndexEsImpl implements BwIndexer {
     final ESQueryFilter ef = getFilters(recurRetrieval);
 
     res.curFilter = ef.buildFilter(filter);
+    if (res.curFilter instanceof ESQueryFilter.MatchNone) {
+      res.setFound(0);
+      return res;
+    }
 
     res.curFilter = ef.addDateRangeFilter(res.curFilter,
                                           start,
                                           end);
 
     res.curFilter = ef.addLimits(res.curFilter, defaultFilterContext);
+    if (res.curFilter instanceof ESQueryFilter.MatchNone) {
+      res.setFound(0);
+      return res;
+    }
 
     res.requiresSecondaryFetch = ef.requiresSecondaryFetch();
     //res.canPage = ef.canPage();

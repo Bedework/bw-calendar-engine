@@ -21,6 +21,7 @@ package org.bedework.calcore.indexing;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.caldav.util.TimeRange;
 import org.bedework.caldav.util.filter.AndFilter;
+import org.bedework.caldav.util.filter.BooleanFilter;
 import org.bedework.caldav.util.filter.EntityTimeRangeFilter;
 import org.bedework.caldav.util.filter.EntityTypeFilter;
 import org.bedework.caldav.util.filter.FilterBase;
@@ -49,6 +50,7 @@ import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.BaseFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.MatchAllFilterBuilder;
 import org.elasticsearch.index.query.NotFilterBuilder;
 import org.elasticsearch.index.query.OrFilterBuilder;
 import org.elasticsearch.index.query.RangeFilterBuilder;
@@ -214,7 +216,12 @@ public class ESQueryFilter implements CalintfDefs {
 
     if (!queryLimited) {
       if (defaultFilterContext != null) {
-        fb = and(fb, buildFilter(defaultFilterContext));
+        final FilterBuilder limFb = buildFilter(defaultFilterContext);
+        if (fb instanceof MatchNone) {
+          return fb;
+        }
+        
+        fb = and(fb, limFb);
       }
 
       if (!queryLimited) {
@@ -571,10 +578,22 @@ public class ESQueryFilter implements CalintfDefs {
     return rfb;
   }
 
+  /**
+   * Corresponds to a boolean(false) filter
+   */
+  class MatchNone extends BaseFilterBuilder {
+    @Override
+    protected void doXContent(final XContentBuilder xContentBuilder,
+                              final Params params)
+            throws IOException {
+    }
+  }
+  
   private class TermOrTerms extends BaseFilterBuilder {
     String fldName;
     Object value;
     private String exec;
+    private boolean anding;
     boolean isTerms;
     boolean not;
 
@@ -593,6 +612,7 @@ public class ESQueryFilter implements CalintfDefs {
     }
 
     TermOrTerms anding(final boolean anding) {
+      this.anding = anding;
       if (anding) {
         exec = "and";
       } else {
@@ -603,15 +623,40 @@ public class ESQueryFilter implements CalintfDefs {
     }
 
     FilterBuilder makeFb() {
-      FilterBuilder fb;
-      boolean hrefOrPath = fldName.equals(hrefJname) ||
+      final FilterBuilder fb;
+      final boolean hrefOrPath = fldName.equals(hrefJname) ||
               fldName.equals(colpathJname);
 
       if (!isTerms) {
         fb = FilterBuilders.termFilter(fldName, value);
       } else {
-        fb = FilterBuilders.termsFilter(fldName,
-                                        (Iterable <?>)value).execution(exec);
+        List vals = (List)value;
+        FilterBuilder newFb = null;
+        if (anding) {
+          for (final Object o: vals) {
+            if (o instanceof MatchNone) {
+              // and false is always false
+              newFb = (FilterBuilder)o;
+              break;
+            }
+          }
+        } else {
+          for (final Object o: vals) {
+            if (o instanceof MatchAllFilterBuilder) {
+              // or true is always true
+              newFb = (FilterBuilder)o;
+              break;
+            }
+          }
+        }
+        
+        if (newFb != null) {
+          fb = newFb;
+        } else {
+          fb = FilterBuilders.termsFilter(fldName,
+                                          (Iterable<?>)value)
+                             .execution(exec);
+        }
       }
 
       queryFiltered |= !hrefOrPath;
@@ -621,6 +666,14 @@ public class ESQueryFilter implements CalintfDefs {
         return fb;
       }
 
+      if (fb instanceof MatchAllFilterBuilder) {
+        return new MatchNone();
+      }
+
+      if (fb instanceof MatchNone) {
+        return new MatchAllFilterBuilder();
+      }
+      
       return new NotFilterBuilder(fb);
     }
 
@@ -715,8 +768,17 @@ public class ESQueryFilter implements CalintfDefs {
       return null;
     }
 
+    if (f instanceof BooleanFilter) {
+      final BooleanFilter bf = (BooleanFilter)f;
+      if (!bf.getValue()) {
+        return new MatchNone();
+      } else {
+        return new MatchAllFilterBuilder();
+      }
+    }
+    
     if (f instanceof AndFilter) {
-      List<FilterBuilder> fbs = makeFilters(f.getChildren(), true);
+      final List<FilterBuilder> fbs = makeFilters(f.getChildren(), true);
 
       if (fbs.size() == 1) {
         return fbs.get(0);
