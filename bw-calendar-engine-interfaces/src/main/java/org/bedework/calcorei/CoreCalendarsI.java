@@ -282,20 +282,20 @@ public interface CoreCalendarsI extends Serializable {
    * @param path - must be non-null
    * @param lastmod - limit search, may be null
    * @return list of collection paths.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public Set<BwCalendar> getSynchCols(String path,
-                                      String lastmod) throws CalFacadeException;
+  Set<BwCalendar> getSynchCols(String path,
+                               String lastmod) throws CalFacadeException;
 
-  /** Return the value to be used as the sync-token property for th egiven path.
+  /** Return the value to be used as the sync-token property for the given path.
    * This is effectively the max sync-token of the collection and any child
    * collections.
    *
-   * @param path
+   * @param path of collection
    * @return a sync-token
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public String getSyncToken(String path) throws CalFacadeException;
+  String getSyncToken(String path) throws CalFacadeException;
 
   /* ====================================================================
    *                  Admin support
@@ -304,13 +304,13 @@ public interface CoreCalendarsI extends Serializable {
   /** Obtain the next batch of children paths for the supplied path. A path of
    * null will return the system roots.
    *
-   * @param parentPath
+   * @param parentPath of parent collection
    * @param start start index in the batch - 0 for the first
    * @param count count of results we want
    * @return collection of String paths or null for no more
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public Collection<String> getChildCollections(String parentPath,
-                                        int start,
-                                        int count) throws CalFacadeException;
+  Collection<String> getChildCollections(String parentPath,
+                                         int start,
+                                         int count) throws CalFacadeException;
 }
