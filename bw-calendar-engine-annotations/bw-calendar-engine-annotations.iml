@@ -9,13 +9,13 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="bw-util-calendar" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util-calendar:4.0.6-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-ws-icalendar" />
-    <orderEntry type="module" module-name="bw-util-misc" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util-misc:4.0.6-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.15" level="project" />
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
-    <orderEntry type="module" module-name="bw-util-xml" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util-xml:4.0.6-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-ws-tzsvr" />
     <orderEntry type="module" module-name="bw-ws-calws-soap" />
     <orderEntry type="library" name="Maven: jtidy:jtidy:4aug2000r7-dev" level="project" />
