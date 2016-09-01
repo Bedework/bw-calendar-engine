@@ -176,6 +176,9 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   /** */
   public final static String bedeworkEventRegForm = "X-BEDEWORK-REGISTRATION-FORM";
 
+  /** */
+  public final static String bedeworkEventRegWaitListLimit = "X-BEDEWORK-WAIT-LIST-LIMIT";
+
   /* ====================================================================
    *                        Sharing/publishing properties
    * ==================================================================== */
