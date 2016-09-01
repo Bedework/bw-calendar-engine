@@ -40,6 +40,7 @@ import ietf.params.xml.ns.icalendar_2.XBedeworkMaxTicketsPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkRegistrationEndPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkRegistrationStartPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkUidParamType;
+import ietf.params.xml.ns.icalendar_2.XBedeworkWaitListLimitPropType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkWrappedNameParamType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkWrapperPropType;
 import ietf.params.xml.ns.icalendar_2.XBwCategoriesPropType;
@@ -342,6 +343,19 @@ public class Xutil {
         p.setInteger(BigInteger.valueOf(Long.valueOf(val)));
 
         pl.add(of.createXBedeworkMaxTicketsPerUser(p));
+        continue;
+      }
+
+      if (xname.equals(BwXproperty.bedeworkEventRegWaitListLimit)) {
+        if (!emit(pattern, masterClass, XBedeworkWaitListLimitPropType.class)) {
+          continue;
+        }
+
+        final XBedeworkWaitListLimitPropType p =
+                new XBedeworkWaitListLimitPropType();
+        p.setText(val);
+
+        pl.add(of.createXBedeworkWaitListLimit(p));
         continue;
       }
 
