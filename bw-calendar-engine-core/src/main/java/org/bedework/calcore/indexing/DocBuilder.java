@@ -101,6 +101,8 @@ public class DocBuilder {
                           getJname(PropertyInfoIndex.EVENTREG_START));
     interestingXprops.put(BwXproperty.bedeworkEventRegEnd,
                           getJname(PropertyInfoIndex.EVENTREG_END));
+    interestingXprops.put(BwXproperty.bedeworkEventRegWaitListLimit,
+                          getJname(PropertyInfoIndex.EVENTREG_WAIT_LIST_LIMIT));
 
     interestingXprops.put(BwXproperty.bedeworkSuggestedTo,
                           getJname(PropertyInfoIndex.SUGGESTED_TO));
