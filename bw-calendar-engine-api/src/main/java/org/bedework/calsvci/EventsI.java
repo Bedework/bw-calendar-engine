@@ -67,8 +67,10 @@ public interface EventsI extends Serializable {
   /** Get events given the calendar and String name. Return null for not
    * found. There should be only one event or none. For recurring, the
    * overrides and possibly the instances will be attached.
+   * 
+   * NOTE: this does not provide alias filtering. 
    *
-   * @param  colPath   String collection path
+   * @param  colPath   String collection path fully resolved to target
    * @param name       String possible name
    * @return EventInfo or null
    * @throws CalFacadeException
@@ -80,6 +82,8 @@ public interface EventsI extends Serializable {
    * found. There should be only one event or none. For recurring, the
    * overrides and possibly the instances will be attached.
    *
+   * NOTE: this does not provide alias filtering. 
+   *
    * @param  colPath   String collection path
    * @param name       String possible name
    * @param recurrenceId non-null for single instance
@@ -89,6 +93,25 @@ public interface EventsI extends Serializable {
   public EventInfo get(String colPath,
                        String name,
                        String recurrenceId)
+          throws CalFacadeException;
+
+  /** Get events given the calendar and String name. Return null for not
+   * found. There should be only one event or none. For recurring, the
+   * overrides and possibly the instances will be attached.
+   *
+   * This does not provide alias filtering. 
+   *
+   * @param col   Collection - possibly a filtered alias
+   * @param name  String name
+   * @param recurrenceId non-null for single instance
+   * @param retrieveList List of properties to retrieve or null for a full event.
+   * @return EventInfo or null
+   * @throws CalFacadeException
+   */
+  public EventInfo get(BwCalendar col,
+                       String name,
+                       String recurrenceId,
+                       List<String> retrieveList)
           throws CalFacadeException;
 
   /** Return the events for the current user within the given date and time

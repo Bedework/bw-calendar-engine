@@ -539,7 +539,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
      */
     
     final AliasesInfo eai = ai.copyForEntity(entityName,
-                                             isVisible(collectionHref, 
+                                             isVisible(mapAi.getCollection(), 
                                                        entityName));
     
     checkAliases(eai, entityName);
@@ -678,17 +678,17 @@ class Calendars extends CalSvcDb implements CalendarsI {
                             final String entityName) throws CalFacadeException {
     for (final AliasesInfo ai: rootAi.getAliases()) {
       final AliasesInfo eai = ai.copyForEntity(entityName,
-                                               isVisible(ai.getCollectionHref(),
+                                               isVisible(ai.getCollection(),
                                                          entityName));
       rootAi.addSharee(eai);
       checkAliases(eai, entityName);
     }
   }
 
-  private boolean isVisible(final String collectionHref,
+  private boolean isVisible(final BwCalendar col,
                             final String entityName) throws CalFacadeException {
     // This should do a cheap test of access - not retrieve the entire event
-    return getEvent(collectionHref, entityName, null) != null;
+    return getEvent(col, entityName, null) != null;
   }
 
   private AliasesInfo getAliasesInfo(final String collectionHref) throws CalFacadeException {
@@ -711,12 +711,12 @@ class Calendars extends CalSvcDb implements CalendarsI {
       // Not public (always shared) and not explicitly shared
       return updateAliasInfoMap(
               new AliasesInfo(getPrincipal().getPrincipalRef(),
-                              collectionHref,
+                              col,
                               null));
     }
 
     ai = new AliasesInfo(getPrincipal().getPrincipalRef(),
-                         collectionHref,
+                         col,
                          null);
     findAliases(col, ai);
     return updateAliasInfoMap(ai);
@@ -732,7 +732,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     if (col.getPublick()) {
       for (final BwCalendar alias: findAlias(collectionHref)) {
         final AliasesInfo ai = new AliasesInfo(getPrincipal().getPrincipalRef(),
-                                               alias.getPath(),
+                                               alias,
                                                null);
 
         rootAi.addSharee(ai);
@@ -769,7 +769,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
       if (principal == null) {
         final AliasesInfo ai = new AliasesInfo(u.getHref(),
-                                               collectionHref,
+                                               col,
                                                null);
 
         ai.setExternalCua(true);
@@ -786,7 +786,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
           }
 
           final AliasesInfo ai = new AliasesInfo(principal.getPrincipalRef(),
-                                                 alias.getPath(),
+                                                 alias,
                                                  null);
 
           rootAi.addSharee(ai);

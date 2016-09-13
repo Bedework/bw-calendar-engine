@@ -230,11 +230,13 @@ public class CalSvcDb implements Serializable {
                               recurRetrieval, freeBusy);
   }
   
-  protected EventInfo getEvent(final String colPath,
+  protected EventInfo getEvent(final BwCalendar col,
                                final String name,
                                final String recurrenceId)
           throws CalFacadeException {
-    return getSvc().getEventsHandler().get(colPath, name, recurrenceId);
+    return getSvc().getEventsHandler().get(col, name, 
+                                           recurrenceId,
+                                           null);
   }
 
   /** Result of calling getCollectionAndName with a path */

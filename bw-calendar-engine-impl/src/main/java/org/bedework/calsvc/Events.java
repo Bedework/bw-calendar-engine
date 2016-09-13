@@ -29,6 +29,7 @@ import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCalendar.EventListEntry;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
@@ -46,6 +47,10 @@ import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
+import org.bedework.calfacade.filter.RetrieveList;
+import org.bedework.calfacade.filter.SfpTokenizer;
+import org.bedework.calfacade.filter.SimpleFilterParser;
+import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.ifs.Directories;
@@ -87,6 +92,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletResponse;
@@ -319,9 +325,75 @@ class Events extends CalSvcDb implements EventsI {
     return makeInstance(res, recurrenceId);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventsI#getEvents(org.bedework.calfacade.BwCalendar, org.bedework.caldav.util.filter.Filter, org.bedework.calfacade.BwDateTime, org.bedework.calfacade.BwDateTime, java.util.List, org.bedework.calfacade.RecurringRetrievalMode)
-   */
+  @Override
+  public EventInfo get(final BwCalendar col,
+                       final String name,
+                       final String recurrenceId,
+                       final List<String> retrieveList)
+          throws CalFacadeException {
+    if ((col == null) || (name == null)) {
+      throw new CalFacadeException(CalFacadeException.badRequest);
+    }
+
+
+    if (col.getAlias()) {
+      final String expr = 
+              "(colPath='" + 
+                      SfpTokenizer.escapeQuotes(col.getPath()) + 
+                      "') and (name='" +
+                      SfpTokenizer.escapeQuotes(name) + 
+                      "')";
+
+      final SimpleFilterParser sfp = getSvc().getFilterParser();
+      final ParseResult pr = sfp.parse(expr, true, null);
+      if (!pr.ok) {
+        throw new CalFacadeException("Failed to parse " +
+                                           expr);
+      }
+
+      final Collection<EventInfo> evs =
+              getEvents(null, pr.filter,
+                        null,  // start
+                        null,  // end
+                        RetrieveList.getRetrieveList(retrieveList),
+                        RecurringRetrievalMode.overrides);
+      if (evs.size() == 0) {
+        return null;
+      }
+
+      if (evs.size() == 1) {
+        return evs.iterator().next();
+      }
+
+      throw new CalFacadeException("Multiple results");
+    }
+
+    String path = col.getPath();
+
+      /* If the collection is an event list collection we need to change the
+       * path part to be the path of the actual event
+       */
+
+    if (col.getCalType() == BwCalendar.calTypeEventList) {
+        /* Find the event in the list using the name */
+      final SortedSet<EventListEntry> eles = 
+              col.getEventList();
+
+      findHref: {
+        for (final EventListEntry ele: eles) {
+          if (ele.getName().equals(name)) {
+            path = ele.getPath();
+            break findHref;
+          }
+        }
+
+        return null; // Not in list
+      } // findHref
+    }
+
+    return get(path, name, null);
+  }
+
   @Override
   public Collection<EventInfo> getEvents(final BwCalendar cal, final FilterBase filter,
                                          final BwDateTime startDate, final BwDateTime endDate,
