@@ -359,9 +359,13 @@ public class CalFacadeException extends Exception {
   public static final String schedulingAttendeeAccessDisallowed =
       "org.bedework.error.scheduling.attendeeaccessdisallowed";
 
+  /** Too many attendees */
+  public static final String schedulingTooManyAttendees =
+          "org.bedework.error.scheduling.toomany.attendees";
+
   /** Attendee bad */
   public static final String schedulingBadAttendees =
-      "org.bedework.error.scheduling.badttendees";
+      "org.bedework.error.scheduling.bad.attendees";
 
   /** Entity had a  bad method set */
   public static final String schedulingBadMethod =
@@ -574,6 +578,13 @@ public class CalFacadeException extends Exception {
       return super.getMessage() + "\t" + getExtra();
     }
 
+    return super.getMessage();
+  }
+
+  /**
+   * @return String message without 'extra'
+   */
+  public String getDetailMessage() {
     return super.getMessage();
   }
 }

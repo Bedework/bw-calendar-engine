@@ -90,6 +90,7 @@ public class ESQueryFilter implements CalintfDefs {
      These can only be satisfied by searching the instances */
   private boolean queryFiltered;
 
+  private static final String entityTypeJname = getJname(PropertyInfoIndex.ENTITY_TYPE);
   private static final String colpathJname = getJname(PropertyInfoIndex.COLLECTION);
   //private static final String dtendJname = getJname(PropertyInfoIndex.DTEND);
   //private static final String dtstartJname = getJname(PropertyInfoIndex.DTSTART);
@@ -902,7 +903,7 @@ public class ESQueryFilter implements CalintfDefs {
     if (pf instanceof EntityTypeFilter) {
       final EntityTypeFilter etf = (EntityTypeFilter)pf;
 
-      return new TermOrTerms("_type",
+      return new TermOrTerms(entityTypeJname,
                              IcalDefs.entityTypeNames[etf.getEntity()],
                              pf.getNot());
     }

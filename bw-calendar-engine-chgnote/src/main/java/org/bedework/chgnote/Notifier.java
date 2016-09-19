@@ -430,7 +430,7 @@ public class Notifier extends AbstractScheduler {
     boolean processed = false;
     
     // We need this a lot
-    final String colHref = ai.getCollectionHref();
+    final String colHref = ai.getCollection().getPath();
 
     // We need to push if this is not the current user
     final boolean doPushPrincipal =

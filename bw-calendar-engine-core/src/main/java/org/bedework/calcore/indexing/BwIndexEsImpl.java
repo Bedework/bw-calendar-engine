@@ -117,6 +117,7 @@ import org.elasticsearch.search.sort.SortOrder;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -607,24 +608,27 @@ public class BwIndexEsImpl implements BwIndexer {
       }
     }
 
-    SearchHits hits = resp.getHits();
+    SearchHits hitsResp = resp.getHits();
 
-    if ((hits.getHits() == null) ||
-            (hits.getHits().length == 0)) {
+    if ((hitsResp.getHits() == null) ||
+            (hitsResp.getHits().length == 0)) {
       return entities;
     }
 
     //Break condition: No hits are returned
-    if (hits.hits().length == 0) {
+    if (hitsResp.hits().length == 0) {
       return entities;
     }
 
+    final List<SearchHit> hits;
     if (res.requiresSecondaryFetch) {
-      hits = multiFetch(hits, res.recurRetrieval);
+      hits = multiFetch(hitsResp, res.recurRetrieval);
 
       if (hits == null) {
         return entities;
       }
+    } else {
+      hits = Arrays.asList(hitsResp.getHits());
     }
 
     final Map<String, Collection<BwEventAnnotation>> overrides = new HashMap<>();
@@ -1168,13 +1172,16 @@ public class BwIndexEsImpl implements BwIndexer {
     return hits;
   }
 
-  private SearchHits multiFetch(final SearchHits hits,
-                                final RecurringRetrievalMode rmode) throws CalFacadeException {
+  private List<SearchHit> multiFetch(final SearchHits hits,
+                                     final RecurringRetrievalMode rmode) throws CalFacadeException {
     // Make an ored filter from keys
 
     final Set<String> hrefs = new TreeSet<>(); // Dedup
-
-    final int batchSize = (int)hits.getTotalHits();
+    
+    /* We may get many more entrie than the hits we got for the first search.
+       Each href may have many entries that don't match the original search term
+       We need to keep fetching until nothign is returned
+     */
 
     for (final SearchHit hit : hits) {
       final String dtype = hit.getType();
@@ -1195,42 +1202,46 @@ public class BwIndexEsImpl implements BwIndexer {
       hrefs.add((String)hrefField.getValue());
     }
 
-    final SearchRequestBuilder srb = getClient().prepareSearch(searchIndexes);
+    final int batchSize = (int)hits.getTotalHits() * 100;
+    int start = 0;
+    final List<SearchHit> res = new ArrayList<>();
 
-    srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setPostFilter(getFilters(null).multiHrefFilter(hrefs,
-                                                            rmode));
-    srb.setFrom(0);
-    srb.setSize(batchSize);
+    while (true) {
+      final SearchRequestBuilder srb = getClient()
+              .prepareSearch(searchIndexes);
 
-    if (debug) {
-      debug("MultiFetch: targetIndex=" + targetIndex +
-                    "; srb=" + srb);
-    }
+      srb.setSearchType(SearchType.QUERY_THEN_FETCH)
+         .setPostFilter(getFilters(null).multiHrefFilter(hrefs,
+                                                         rmode));
+      srb.setFrom(start);
+      srb.setSize(batchSize);
 
-    final SearchResponse resp = srb.execute().actionGet();
-
-    if (resp.status() != RestStatus.OK) {
       if (debug) {
-        debug("Search returned status " + resp.status());
+        debug("MultiFetch: targetIndex=" + targetIndex +
+                      "; srb=" + srb);
       }
 
-      return null;
+      final SearchResponse resp = srb.execute().actionGet();
+
+      if (resp.status() != RestStatus.OK) {
+        if (debug) {
+          debug("Search returned status " + resp.status());
+        }
+
+        return null;
+      }
+
+      final SearchHits hits2 = resp.getHits();
+
+      if ((hits2.getHits() == null) ||
+              (hits2.getHits().length == 0)) {
+        // No more data - we're done
+        return res;
+      }
+
+      res.addAll(Arrays.asList(hits2.getHits()));
+      start += batchSize;
     }
-
-    final SearchHits hits2 = resp.getHits();
-
-    if ((hits2.getHits() == null) ||
-            (hits2.getHits().length == 0)) {
-      return null;
-    }
-
-    //Break condition: No hits are returned
-    if (hits2.hits().length == 0) {
-      return null;
-    }
-
-    return hits2;
   }
 
   private void deleteIndexes(final List<String> names) throws CalFacadeException {

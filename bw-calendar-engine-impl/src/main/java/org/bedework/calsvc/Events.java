@@ -532,6 +532,15 @@ class Events extends CalSvcDb implements EventsI {
         schedulingObject = true;
       }
 
+      final Integer maxAttendees =
+              getSvc().getAuthProperties().getMaxAttendeesPerInstance();
+
+      if ((maxAttendees != null) &&
+              !Util.isEmpty(event.getAttendees()) &&
+              (event.getAttendees().size() > maxAttendees)) {
+        throw new CalFacadeException(CalFacadeException.schedulingTooManyAttendees);
+      }
+
       event.setDtstamps(getCurrentTimestamp());
       if (schedulingObject) {
         event.updateStag(getCurrentTimestamp());
@@ -539,10 +548,16 @@ class Events extends CalSvcDb implements EventsI {
 
       /* All Overrides go in same calendar and have same name */
 
-      Collection<BwEventProxy> overrides = ei.getOverrideProxies();
+      final Collection<BwEventProxy> overrides = ei.getOverrideProxies();
       if (overrides != null) {
-        for (BwEventProxy ovei: overrides) {
+        for (final BwEventProxy ovei: overrides) {
           setScheduleState(ovei, true);
+
+          if ((maxAttendees != null) &&
+                  !Util.isEmpty(ovei.getAttendees()) &&
+                  (ovei.getAttendees().size() > maxAttendees)) {
+            throw new CalFacadeException(CalFacadeException.schedulingTooManyAttendees);
+          }
 
           ovei.setDtstamps(getCurrentTimestamp());
 
@@ -556,7 +571,7 @@ class Events extends CalSvcDb implements EventsI {
             ovei.updateStag(getCurrentTimestamp());
           }
 
-          BwEventAnnotation ann = ovei.getRef();
+          final BwEventAnnotation ann = ovei.getRef();
           ann.setColPath(event.getColPath());
           ann.setName(event.getName());
         }

@@ -1057,8 +1057,8 @@ public class BwSysIntfImpl implements SysIntf {
     try {
       /* Is the event a scheduling object? */
 
-      EventInfo ei = getEvinfo(ev);
-      Collection<BwEventProxy> bwevs =
+      final EventInfo ei = getEvinfo(ev);
+      final Collection<BwEventProxy> bwevs =
              getSvci().getEventsHandler().add(ei, noInvites,
                                               false,  // scheduling - inbox
                                               false,  // autocreate
@@ -1068,25 +1068,29 @@ public class BwSysIntfImpl implements SysIntf {
         return null;
       }
 
-      Collection<CalDAVEvent> evs = new ArrayList<CalDAVEvent>();
+      final Collection<CalDAVEvent> evs = new ArrayList<CalDAVEvent>();
 
-      for (BwEvent bwev: bwevs) {
+      for (final BwEvent bwev: bwevs) {
         evs.add(new BwCalDAVEvent(this, new EventInfo(bwev)));
       }
 
       return evs;
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
-    } catch (CalFacadeException cfe) {
-      if (CalFacadeException.invalidOverride.equals(cfe.getMessage())) {
+    } catch (final CalFacadeException cfe) {
+      if (CalFacadeException.schedulingTooManyAttendees.equals(cfe.getDetailMessage())) {
+        throw new WebdavForbidden(CaldavTags.maxAttendeesPerInstance,
+                                  ev.getParentPath() + "/" + cfe.getExtra());
+      }
+      if (CalFacadeException.invalidOverride.equals(cfe.getDetailMessage())) {
         throw new WebdavForbidden(CaldavTags.validCalendarData,
                                   ev.getParentPath() + "/" + cfe.getExtra());
       }
-      if (CalFacadeException.duplicateGuid.equals(cfe.getMessage())) {
+      if (CalFacadeException.duplicateGuid.equals(cfe.getDetailMessage())) {
         throw new WebdavForbidden(CaldavTags.noUidConflict,
                                   ev.getParentPath() + "/" + cfe.getExtra());
       }
-      if (CalFacadeException.duplicateName.equals(cfe.getMessage())) {
+      if (CalFacadeException.duplicateName.equals(cfe.getDetailMessage())) {
         throw new WebdavForbidden(CaldavTags.noUidConflict,
                                   ev.getParentPath() + "/" + ev.getName());
       }
@@ -1211,40 +1215,14 @@ public class BwSysIntfImpl implements SysIntf {
                               final String val)
               throws WebdavException {
     try {
-      BwCalendar resolved = unwrap(col);
-
-      if (resolved.getAlias()) {
-        resolved = resolveAlias(resolved, true);
-
-        if (resolved == null) {
-          return null;
-        }
+      if ((col == null) || (val == null)) {
+        throw new WebdavBadRequest();
       }
 
-      String path = resolved.getPath();
-
-      /* If the collection is an event list collection we need to change the
-       * path part to be the path of the actual event
-       */
-
-      if (resolved.getCalType() == BwCalendar.calTypeEventList) {
-        /* Find the event in the list using the name */
-        final SortedSet<EventListEntry> eles = resolved.getEventList();
-
-        findHref: {
-          for (final EventListEntry ele: eles) {
-            if (ele.getName().equals(val)) {
-              path = ele.getPath();
-              break findHref;
-            }
-          }
-
-          return null; // Not in list
-        } // findHref
-      }
-
-      final EventInfo ei = getSvci().getEventsHandler().get(path, val);
-
+      final EventInfo ei = 
+              getSvci().getEventsHandler().get(unwrap(col),
+                                               val, null, null);
+      
       if (ei == null) {
         return null;
       }
@@ -2169,10 +2147,11 @@ public class BwSysIntfImpl implements SysIntf {
         bwcol = unwrap(col);
       }
 
-      Icalendar ic = trans.fromIcal(bwcol, new SysIntfReader(rdr),
-                                    contentType,
-                                    true,  // diff the contents
-                                    mergeAttendees);
+      final Icalendar ic = 
+              trans.fromIcal(bwcol, new SysIntfReader(rdr),
+                             contentType,
+                             true,  // diff the contents
+                             mergeAttendees);
 
       if (rtype == IcalResultType.OneComponent) {
         if (ic.getComponents().size() != 1) {
@@ -2187,16 +2166,24 @@ public class BwSysIntfImpl implements SysIntf {
           throw new WebdavForbidden("Expected one timezone");
         }
       }
-      SysiIcalendar sic = new MySysiIcalendar(this, ic);
+      final SysiIcalendar sic = new MySysiIcalendar(this, ic);
       rollback = false;
 
       return sic;
-    } catch (WebdavException wde) {
-      throw wde;
-    } catch (IcalMalformedException ime) {
+    } catch (final IcalMalformedException ime) {
       throw new WebdavForbidden(CaldavTags.validCalendarData,
                                 ime.getMessage());
-    } catch (Throwable t) {
+    } catch (final CalFacadeException cfe) {
+      if (CalFacadeException.unknownTimezone.equals(
+              cfe.getDetailMessage())) {
+        throw new WebdavForbidden(CaldavTags.validTimezone,
+                                  cfe.getMessage());
+      }
+      throw new WebdavForbidden(CaldavTags.validCalendarObjectResource,
+                                cfe.getMessage());
+    } catch (final WebdavException wde) {
+      throw wde;
+    } catch (final Throwable t) {
       if (debug) {
         error(t);
       }
@@ -2207,7 +2194,7 @@ public class BwSysIntfImpl implements SysIntf {
       if (rollback) {
         try {
           getSvci().rollbackTransaction();
-        } catch (Throwable t) {
+        } catch (final Throwable ignored) {
         }
       }
     }
