@@ -1994,24 +1994,21 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return recurring;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.RecurrenceEntity#setRecurrenceId(java.lang.String)
-   */
   @Override
-  @IcalProperty(pindex = PropertyInfoIndex.RECURRENCE_ID,
-                jname = "recurrenceId",
-                eventProperty = true,
-                todoProperty = true,
-                journalProperty = true,
-                freeBusyProperty = true
-                )
+  @IcalProperties({
+          @IcalProperty(pindex = PropertyInfoIndex.RECURRENCE_ID,
+                  jname = "recurrenceId",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true
+          ),
+          @IcalProperty(pindex = PropertyInfoIndex.RANGE)}
+  )
   public void setRecurrenceId(final String val) {
-     recurrenceId = val;
+    recurrenceId = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.RecurrenceEntity#getRecurrenceId()
-   */
   @Override
   public String getRecurrenceId() {
     return recurrenceId;
@@ -2410,9 +2407,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.VALARM,
-                adderName = "alarm",
-                eventProperty = true,
-                todoProperty = true)
+          jname = "alarms",
+          adderName = "alarm",
+          eventProperty = true,
+          todoProperty = true)
   public void setAlarms(final Set<BwAlarm> val) {
     alarms = val;
   }

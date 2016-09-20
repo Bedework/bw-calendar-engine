@@ -48,6 +48,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.RecurPeriods;
+import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
@@ -461,6 +462,7 @@ public class BwIndexEsImpl implements BwIndexer {
     }
 
     res.curFilter = ef.addDateRangeFilter(res.curFilter,
+                                          IcalDefs.entityTypeEvent,
                                           start,
                                           end);
 
@@ -1231,15 +1233,21 @@ public class BwIndexEsImpl implements BwIndexer {
         return null;
       }
 
-      final SearchHits hits2 = resp.getHits();
+      final SearchHit[] hits2 = resp.getHits().getHits();
 
-      if ((hits2.getHits() == null) ||
-              (hits2.getHits().length == 0)) {
+      if ((hits2 == null) ||
+              (hits2.length < 0)) {
         // No more data - we're done
         return res;
       }
 
-      res.addAll(Arrays.asList(hits2.getHits()));
+      res.addAll(Arrays.asList(hits2));
+
+      if (hits2.length < batchSize) {
+        // All remaining in this batch - we're done
+        return res;
+      }
+      
       start += batchSize;
     }
   }

@@ -117,6 +117,10 @@ public class ESQueryFilter implements CalintfDefs {
           PropertyInfoIndex.INDEX_START,
           PropertyInfoIndex.UTC);
 
+  private final static String nextTriggerRef = makePropertyRef(
+          PropertyInfoIndex.VALARM,
+          PropertyInfoIndex.NEXT_TRIGGER_DATE_TIME);
+          
   /**
    *
    * @param publick true for a public indexer
@@ -328,12 +332,14 @@ public class ESQueryFilter implements CalintfDefs {
    * range. For these we search on the index start/end</p>
    *
    * @param filter
+   * @param entityType
    * @param start
    * @param end
    * @return
    * @throws CalFacadeException
    */
   public FilterBuilder addDateRangeFilter(final FilterBuilder filter,
+                                          final int entityType,
                                           final String start,
                                           final String end) throws CalFacadeException {
     if ((start == null) && (end == null)) {
@@ -341,11 +347,14 @@ public class ESQueryFilter implements CalintfDefs {
     }
 
     queryFiltered = true;
-
+    
     final String startRef;
     final String endRef;
 
-    if (recurRetrieval.mode == Rmode.expanded) {
+    if (entityType == IcalDefs.entityTypeAlarm) {
+      startRef = nextTriggerRef;
+      endRef = nextTriggerRef;
+    } else if (recurRetrieval.mode == Rmode.expanded) {
       startRef = dtStartUTCRef;
       endRef = dtEndUTCRef;
     } else {
@@ -923,7 +932,8 @@ public class ESQueryFilter implements CalintfDefs {
         end = tr.getEnd().toString();
       }
 
-      return addDateRangeFilter(null, start, end);
+      return addDateRangeFilter(null, etrf.getEntityType(),
+                                start, end);
     }
 
     if (pii == PropertyInfoIndex.COLLECTION) {

@@ -50,6 +50,7 @@ import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
+import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.parameter.Related;
 import org.apache.log4j.Logger;
@@ -58,6 +59,7 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -876,6 +878,16 @@ public class DocBuilder {
         }
 
         makeField(PropertyInfoIndex.ACTION, action);
+        
+        try {
+          final Date dt = al.getNextTriggerDate();
+
+          makeField(PropertyInfoIndex.NEXT_TRIGGER_DATE_TIME,
+                    DateTimeUtil.isoDateTimeUTC(dt));
+        } catch (final Throwable t) {
+          error("Exception calculating next trigger");
+          error(t);
+        }
         makeField(PropertyInfoIndex.TRIGGER, al.getTrigger());
 
         if (al.getTriggerDateTime()) {

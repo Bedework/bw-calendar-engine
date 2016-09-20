@@ -343,6 +343,9 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    *  @param val     UTC trigger time
    *  @throws CalFacadeException
    */
+  @IcalProperty(pindex = PropertyInfoIndex.NEXT_TRIGGER_DATE_TIME,
+          jname = "nextTrigger",
+          alarmProperty = true)
   public void setTriggerTime(final String val) throws CalFacadeException {
     triggerTime = val;
   }
