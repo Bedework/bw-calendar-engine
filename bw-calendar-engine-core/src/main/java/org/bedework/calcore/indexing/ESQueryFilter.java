@@ -89,6 +89,9 @@ public class ESQueryFilter implements CalintfDefs {
 
      These can only be satisfied by searching the instances */
   private boolean queryFiltered;
+  
+  private String latestStart;
+  private String earliestEnd;
 
   private static final String entityTypeJname = getJname(PropertyInfoIndex.ENTITY_TYPE);
   private static final String colpathJname = getJname(PropertyInfoIndex.COLLECTION);
@@ -291,6 +294,22 @@ public class ESQueryFilter implements CalintfDefs {
     return and(fb, limit);
   }
 
+  /**
+   * 
+   * @return non null if we have a start date/time limitation
+   */
+  public String getLatestStart() {
+    return latestStart;
+  }
+
+  /**
+   *
+   * @return non null if we have an end date/time limitation
+   */
+  public String getEarliestEnd() {
+    return earliestEnd;
+  }
+
   /** If we have a filtered query the search result will only contain
    * the master and/or overrides that match the query.
    *
@@ -335,8 +354,8 @@ public class ESQueryFilter implements CalintfDefs {
    * @param entityType
    * @param start
    * @param end
-   * @return
-   * @throws CalFacadeException
+   * @return the filter or a filter with anded date range
+   * @throws CalFacadeException on error
    */
   public FilterBuilder addDateRangeFilter(final FilterBuilder filter,
                                           final int entityType,
@@ -352,9 +371,10 @@ public class ESQueryFilter implements CalintfDefs {
     final String endRef;
 
     if (entityType == IcalDefs.entityTypeAlarm) {
-      startRef = nextTriggerRef;
-      endRef = nextTriggerRef;
-    } else if (recurRetrieval.mode == Rmode.expanded) {
+      return and(filter, range(nextTriggerRef, start, end));
+    }      
+     
+    if (recurRetrieval.mode == Rmode.expanded) {
       startRef = dtStartUTCRef;
       endRef = dtEndUTCRef;
     } else {
@@ -382,6 +402,8 @@ public class ESQueryFilter implements CalintfDefs {
 
       fb = and(fb, rfb);
     }
+    
+    adjustTimeLimits(start, end);
 
     return fb;
   }
@@ -536,8 +558,8 @@ public class ESQueryFilter implements CalintfDefs {
     return ofb;
   }
 
-  static String getJname(PropertyInfoIndex pi) {
-    BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
+  static String getJname(final PropertyInfoIndex pi) {
+    final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
 
     if (ipie == null) {
       return null;
@@ -547,6 +569,10 @@ public class ESQueryFilter implements CalintfDefs {
   }
 
   private String dateTimeUTC(final String dt) {
+    if (dt == null) {
+      return null;
+    }
+    
     if (dt.length() == 16) {
       return dt;
     }
@@ -566,26 +592,67 @@ public class ESQueryFilter implements CalintfDefs {
                                     final boolean dateTimeField,
                                     final String fld,
                                     final String subfld) {
-    RangeFilterBuilder rfb = FilterBuilders.rangeFilter(fld);
+    final RangeFilterBuilder rfb = FilterBuilders.rangeFilter(fld);
+    final String start;
+    final String end;
 
     if (tr.getEnd() == null) {
-      rfb.gte(tr.getStart().toString());
-
-      return rfb;
+      end = null;
+    } else {
+      end = tr.getEnd().toString();
     }
-
+      
     if (tr.getStart() == null) {
-      rfb.lt(tr.getEnd().toString());
-
-      return rfb;
+      start = null;
+    } else {
+      start = tr.getStart().toString();
     }
 
-    rfb.from(tr.getStart().toString());
-    rfb.to(tr.getEnd().toString());
+    return range(fld, start, end);
+  }
+  
+  private RangeFilterBuilder range(final String fld, 
+                                   final String start, 
+                                   final String end) {
+    if ((start == null) && (end == null)) {
+      return null;
+    }
+    
+    final RangeFilterBuilder rfb = FilterBuilders.rangeFilter(fld);
+    
+    if (end == null) {
+      rfb.gte(start);
+    } else if (start == null) {
+      rfb.lt(end);
+    } else {
+      rfb.from(start);
+      rfb.to(end);
+    }
     rfb.includeLower(true);
     rfb.includeUpper(false);
 
+    adjustTimeLimits(start, end);
+
     return rfb;
+  }
+  
+  private void adjustTimeLimits(final String start, final String end) {
+    final String s = dateTimeUTC(start);
+    final String e = dateTimeUTC(end);
+    
+    if (s != null) {
+      if ((latestStart == null) ||
+              (s.compareTo(latestStart) > 0)) {
+        latestStart = s;
+      }
+    }
+
+    if (e != null) {
+      if ((earliestEnd == null) ||
+              (e.compareTo(earliestEnd) < 0)) {
+        earliestEnd = e;
+      }
+    }
   }
 
   /**

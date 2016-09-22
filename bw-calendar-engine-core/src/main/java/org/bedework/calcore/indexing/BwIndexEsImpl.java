@@ -128,6 +128,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calcore.indexing.DocBuilder.DocInfo;
+import static org.bedework.calcore.indexing.DocBuilder.ItemKind.entity;
 
 /** Implementation of indexer for ElasticSearch
  *
@@ -303,6 +304,10 @@ public class BwIndexEsImpl implements BwIndexer {
     private FilterBuilder curFilter;
     private List<SortTerm> curSort;
     private RecurringRetrievalMode recurRetrieval;
+
+    /* Used for time-ranged queries */
+    private String latestStart;
+    private String earliestEnd;
 
     private AccessChecker accessCheck;
 
@@ -503,8 +508,13 @@ public class BwIndexEsImpl implements BwIndexer {
       }
     }
 
+    res.latestStart = ef.getLatestStart();
+    res.earliestEnd = ef.getEarliestEnd();
+    
     if (debug) {
-      debug("Search: targetIndex=" + targetIndex +
+      debug("Search: latestStart=" + res.latestStart +
+              " earliestEnd=" + res.earliestEnd +
+                    " targetIndex=" + targetIndex +
                     "; srb=" + srb);
     }
 
@@ -610,7 +620,7 @@ public class BwIndexEsImpl implements BwIndexer {
       }
     }
 
-    SearchHits hitsResp = resp.getHits();
+    final SearchHits hitsResp = resp.getHits();
 
     if ((hitsResp.getHits() == null) ||
             (hitsResp.getHits().length == 0)) {
@@ -635,6 +645,16 @@ public class BwIndexEsImpl implements BwIndexer {
 
     final Map<String, Collection<BwEventAnnotation>> overrides = new HashMap<>();
     final Collection<EventInfo> masters = new TreeSet<>();
+      
+      /* If we are retrieving events with a time range query and we are asking for the 
+      * master + overrides then we need to check that the master really has an 
+      * instance in the given time range */
+    final boolean checkTimeRange =
+            (res.recurRetrieval.mode == Rmode.overrides) &&
+                    ((res.latestStart != null) ||
+                             (res.earliestEnd != null));
+    
+    final Set<String> excluded = new TreeSet<>();
 
     for (final SearchHit hit : hits) {
       res.pageStart++;
@@ -684,6 +704,10 @@ public class BwIndexEsImpl implements BwIndexer {
           ei.setCurrentAccess(ca);
 
           if (ev instanceof BwEventAnnotation) {
+            if (excluded.contains(ev.getUid())) {
+              continue;
+            }
+            
             // Treat as override
             Collection<BwEventAnnotation> ov = overrides.get(
                     ev.getHref());
@@ -698,6 +722,17 @@ public class BwIndexEsImpl implements BwIndexer {
             continue;
           }
 
+          if (checkTimeRange && dtype.equals(docTypeEvent) && ev.getRecurring()) {
+            if (Util.isEmpty(RecurUtil.getPeriods(ev, 
+                                                  99, 
+                                                  1, 
+                                                  res.latestStart, 
+                                                  res.earliestEnd).instances)) {
+              excluded.add(ev.getUid());
+              continue;
+            }
+          }
+          
           masters.add(ei);
           break;
       }
@@ -1610,7 +1645,7 @@ public class BwIndexEsImpl implements BwIndexer {
                 BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
         /*iresp = */indexEvent(ei,
-                               ItemKind.entity,
+                               entity,
                                rstart,
                                rend,
                                recurrenceId,

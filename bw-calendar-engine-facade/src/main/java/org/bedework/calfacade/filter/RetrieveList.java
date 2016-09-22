@@ -43,12 +43,12 @@ public class RetrieveList {
     }
 
     // Convert property names to field names
-    List<BwIcalPropertyInfoEntry> retrieveListFields =
+    final List<BwIcalPropertyInfoEntry> retrieveListFields =
             new ArrayList<>(retrieveList.size() +
                                     BwIcalPropertyInfo.requiredPindexes.size());
 
-    for (String pname: retrieveList) {
-      PropertyInfoIndex pi;
+    for (final String pname: retrieveList) {
+      final PropertyInfoIndex pi;
 
       /* Special case etag for the moment */
       if (pname.equals(etagName)) {
@@ -56,12 +56,13 @@ public class RetrieveList {
       } else {
         pi = PropertyInfoIndex.fromName(pname);
         if (pi == null) {
-          throw new CalFacadeException(CalFacadeException.unknownProperty,
-                                       pname);
+          continue;
+//          throw new CalFacadeException(CalFacadeException.unknownProperty,
+//                                       pname);
         }
       }
 
-      BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
+      final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
 
       if ((ipie == null) || (ipie.getMultiValued())) {
         // At this stage it seems better to be inefficient
@@ -72,10 +73,8 @@ public class RetrieveList {
       retrieveListFields.add(ipie);
     }
 
-    if (retrieveListFields != null) {
-      for (PropertyInfoIndex pi: BwIcalPropertyInfo.requiredPindexes) {
-        retrieveListFields.add(BwIcalPropertyInfo.getPinfo(pi));
-      }
+    for (final PropertyInfoIndex pi: BwIcalPropertyInfo.requiredPindexes) {
+      retrieveListFields.add(BwIcalPropertyInfo.getPinfo(pi));
     }
 
     return retrieveListFields;

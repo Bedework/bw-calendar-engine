@@ -21,6 +21,7 @@ package org.bedework.calfacade;
 import org.bedework.calfacade.BwXproperty.Xpar;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
+import org.bedework.calfacade.annotations.ical.IcalProperties;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.annotations.ical.NoProxy;
 import org.bedework.calfacade.base.AttendeesEntity;
@@ -35,7 +36,6 @@ import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
-import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.property.Duration;
@@ -108,8 +108,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   protected String duration;
   protected int repeat;
 
-  protected String triggerTime;
-  protected String previousTrigger;
   protected int repeatCount;
   protected boolean expired;
 
@@ -157,8 +155,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * @param trigger       Trigger info
    * @param duration      External form of duration
    * @param repeat        number of repetitions
-   * @param triggerTime   This specifies the time for the next alarm in UTC
-   * @param previousTrigger   Used to determine if we missed an alarm
    * @param repeatCount   Repetition we are currently handling
    * @param expired       Set to true when we're done
    * @param attach        String audio file or attachment or exec
@@ -173,8 +169,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
                   final TriggerVal trigger,
                   final String duration,
                   final int repeat,
-                  final String triggerTime,
-                  final String previousTrigger,
                   final int repeatCount,
                   final boolean expired,
                   final String attach,
@@ -191,16 +185,12 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     this.triggerDateTime = trigger.triggerDateTime;
     this.duration = duration;
     this.repeat = repeat;
-    this.triggerTime = triggerTime;
-    this.previousTrigger = previousTrigger;
     this.repeatCount = repeatCount;
     this.expired = expired;
     this.attach = attach;
     addDescription(new BwString(null, description));
     addSummary(new BwString(null, summary));
     setAttendees(attendees);
-
-    setTriggerTime(DateTimeUtil.isoDateTimeUTC(getTriggerDate()));
   }
 
   /* ====================================================================
@@ -289,13 +279,18 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    *
    *  @return boolean    true if we trigger off DateTime
    */
-  @IcalProperty(pindex = PropertyInfoIndex.TRIGGER_DATE_TIME,
-                jname = "triggerDateTime",
-                eventProperty = true,
-                todoProperty = true,
-                journalProperty = true,
-                freeBusyProperty = true,
-                timezoneProperty = true)
+  @IcalProperties({
+          @IcalProperty(pindex = PropertyInfoIndex.TRIGGER_DATE_TIME,
+                  jname = "triggerDateTime",
+                  eventProperty = true,
+                  todoProperty = true,
+                  journalProperty = true,
+                  freeBusyProperty = true,
+                  timezoneProperty = true),
+          @IcalProperty(pindex = PropertyInfoIndex.NEXT_TRIGGER_DATE_TIME,
+                  jname = "nextTrigger",
+                  alarmProperty = true)
+  })
   public boolean getTriggerDateTime() {
     return triggerDateTime;
   }
@@ -336,47 +331,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    */
   public int getRepeat() {
     return repeat;
-  }
-
-  /** set the trigger time value
-   *
-   *  @param val     UTC trigger time
-   *  @throws CalFacadeException
-   */
-  @IcalProperty(pindex = PropertyInfoIndex.NEXT_TRIGGER_DATE_TIME,
-          jname = "nextTrigger",
-          alarmProperty = true)
-  public void setTriggerTime(final String val) throws CalFacadeException {
-    triggerTime = val;
-  }
-
-  /** Get the UTC trigger time value. This is the next time for the
-   * alarm. This is th eString milliseconds value. It should have been stored as
-   * a long but avoid the schema change for now.
-   *
-   *  @return String   UTC trigger time
-   *  @throws CalFacadeException
-   */
-  public String getTriggerTime() throws CalFacadeException {
-    return triggerTime;
-  }
-
-  /** set the UTC previousTrigger time value
-   *
-   *  @param val     UTC lastTrigger time
-   *  @throws CalFacadeException
-   */
-  public void setPreviousTrigger(final String val) throws CalFacadeException {
-    previousTrigger = val;
-  }
-
-  /** get the UTC previousTrigger time value
-   *
-   *  @return String    previousTrigger time
-   *  @throws CalFacadeException
-   */
-  public String getPreviousTrigger() throws CalFacadeException {
-    return previousTrigger;
   }
 
   /** Set the current repetition count for this alarm.
@@ -998,17 +952,19 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * <p>Can be called repeatedly for the same result. To move to the next
    * trigger time, update repeatCount.
    *
+   * @param start for instance to base this on 
+   * @param previousTrigger null for first 
    *  @return Date   next trigger time as a date object
-   *  @throws CalFacadeException
+   *  @throws CalFacadeException on error
    */
   @NoDump
-  public Date getNextTriggerDate() throws CalFacadeException {
+  public Date getNextTriggerDate(final BwDateTime start,
+                                 final Date previousTrigger) throws CalFacadeException {
     if (previousTrigger == null) {
       // First time
-      return getTriggerDate();
+      triggerDate = null;
+      return getTriggerDate(start);
     }
-
-    triggerTime = null; // Force refresh
 
     if (repeat == 0) {
       // No next trigger
@@ -1020,65 +976,50 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
       return null;
     }
 
-    Dur dur = new Duration(null, duration).getDuration();
-    return dur.getTime(getTriggerDate());
+    repeatCount++;
+    
+    final Dur dur = new Duration(null, duration).getDuration();
+    triggerDate = dur.getTime(previousTrigger);
+    return triggerDate;
   }
 
   /** Get the trigger Date value. This is the earliest time for the
    * alarm.
    *
    *  @return Date   trigger time as a date object
-   *  @throws CalFacadeException
+   *  @throws CalFacadeException on error
    */
   @NoDump
-  public Date getTriggerDate() throws CalFacadeException {
+  public Date getTriggerDate(final BwDateTime start) throws CalFacadeException {
     try {
       if (triggerDate != null) {
         return triggerDate;
       }
 
-      Trigger tr = new Trigger();
+      final Trigger tr = new Trigger();
       tr.setValue(getTrigger());
 
       /* if dt is null then it's a duration????
        */
       Date dt = tr.getDateTime();
       if (dt == null) {
-        Dur dur = tr.getDuration();
+        final Dur dur = tr.getDuration();
 
-        if (getEvent() == null) {
-          throw new CalFacadeException("No event for alarm " + this);
+        if (start == null) {
+          throw new CalFacadeException("No start date for alarm " + this);
         }
 
-        dt = dur.getTime(BwDateTimeUtil.getDate(getEvent().getDtstart()));
+        dt = dur.getTime(BwDateTimeUtil.getDate(start));
       }
 
       triggerDate = dt;
 
       return dt;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
-  }
-
-  /** Get the next long trigger time value. This is the next time for the
-   * alarm and is based on the value in previousTrigger. Set that field with the
-   * previous trigger time value and save the new value in triggerTime.
-   *
-   *  @return long   trigger time value in millisecs
-   *  @throws CalFacadeException
-   */
-  @NoDump
-  public long getNextTriggerTime() throws CalFacadeException {
-    //if (triggerTime != 0) {
-    //  return triggerTime;
-    //}
-
-    /*triggerTime =*/return getNextTriggerDate().getTime();
-
-    //return triggerTime;
   }
 
   /* ====================================================================
@@ -1105,7 +1046,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return new BwAlarm(event, owner, alarmTypeAudio,
                        trigger,
                        duration, repeat,
-                       null, null, 0, false,
+                       0, false,
                        attach,
                        null, null, null);
   }
@@ -1130,7 +1071,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return new BwAlarm(event, owner, alarmTypeDisplay,
                        trigger,
                        duration, repeat,
-                       null, null, 0, false,
+                       0, false,
                        null, description, null, null);
   }
 
@@ -1160,7 +1101,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return new BwAlarm(event, owner, alarmTypeEmail,
                        trigger,
                        duration, repeat,
-                       null, null, 0, false,
+                       0, false,
                        attach,
                        description, summary, attendees);
   }
@@ -1187,7 +1128,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return new BwAlarm(event, owner, alarmTypeProcedure,
                        trigger,
                        duration, repeat,
-                       null, null, 0, false,
+                       0, false,
                        attach,
                        description, null, null);
   }
@@ -1212,7 +1153,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return new BwAlarm(event, owner, alarmTypeNone,
                        trigger,
                        duration, repeat,
-                       null, null, 0, false,
+                       0, false,
                        null,
                        description, null, null);
   }
@@ -1239,7 +1180,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     BwAlarm al = new BwAlarm(event, owner, alarmTypeOther,
                              trigger,
                              duration, repeat,
-                             null, null, 0, false,
+                             0, false,
                              null,
                              description, null, null);
     al.addXproperty(BwXproperty.makeIcalProperty("ACTION",
@@ -1540,34 +1481,30 @@ Example
   @Override
   public Object clone() {
     try {
-      TriggerVal trigger = new TriggerVal();
+      final TriggerVal trigger = new TriggerVal();
       trigger.trigger = getTrigger();
       trigger.triggerStart = getTriggerStart();
       trigger.triggerDateTime = getTriggerDateTime();
 
-      BwAlarm a = new BwAlarm(null,  //event
-                              null, // user
-                              getAlarmType(),
-                              trigger,
-                              getDuration(),
-                              getRepeat(),
-                              getTriggerTime(),
-                              getPreviousTrigger(),
-                              getRepeatCount(),
-                              getExpired(),
-                              getAttach(),
-                              getDescription(),
-                              getSummary(),
-                              cloneAttendees());
-
-      a.setTriggerTime(getTriggerTime());
+      final BwAlarm a = new BwAlarm(null,  //event
+                                    null, // user
+                                    getAlarmType(),
+                                    trigger,
+                                    getDuration(),
+                                    getRepeat(),
+                                    getRepeatCount(),
+                                    getExpired(),
+                                    getAttach(),
+                                    getDescription(),
+                                    getSummary(),
+                                    cloneAttendees());
 
       // Don't clone event , they are cloning us
 
       a.setOwnerHref(getOwnerHref());
 
       return a;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }

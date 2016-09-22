@@ -64,6 +64,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /** Build documents for ElasticSearch
  *
@@ -623,7 +624,7 @@ public class DocBuilder {
 
       makeField(PropertyInfoIndex.DURATION, ev.getDuration());
 
-      indexAlarms(ev.getAlarms());
+      indexAlarms(start, ev.getAlarms());
 
       /* Attachment */
 
@@ -847,32 +848,33 @@ public class DocBuilder {
       }
 
       builder.endArray();
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new CalFacadeException(e);
     }
   }
 
-  private void indexAlarms(final Set<BwAlarm> val) throws CalFacadeException {
+  private void indexAlarms(final BwDateTime start,
+                           final Set<BwAlarm> alarms) throws CalFacadeException {
     try {
-      if (Util.isEmpty(val)) {
+      if (Util.isEmpty(alarms)) {
         return;
       }
 
       builder.startArray(getJname(PropertyInfoIndex.VALARM));
 
-      for (BwAlarm al: val) {
+      for (final BwAlarm al: alarms) {
         builder.startObject();
 
         makeField(PropertyInfoIndex.OWNER, al.getOwnerHref());
         makeField(PropertyInfoIndex.PUBLIC, al.getPublick());
 
-        int atype = al.getAlarmType();
-        String action;
+        final int atype = al.getAlarmType();
+        final String action;
 
         if (atype != BwAlarm.alarmTypeOther) {
           action = BwAlarm.alarmTypes[atype];
         } else {
-          List<BwXproperty> xps = al.getXicalProperties("ACTION");
+          final List<BwXproperty> xps = al.getXicalProperties("ACTION");
 
           action = xps.get(0).getValue();
         }
@@ -880,10 +882,23 @@ public class DocBuilder {
         makeField(PropertyInfoIndex.ACTION, action);
         
         try {
-          final Date dt = al.getNextTriggerDate();
+          final Set<String> triggerTimes = new TreeSet<>();
+          Date dt = null;
+          
+          for (int i = 0; i < 100; i++) {  // Arb limit
+            dt = al.getNextTriggerDate(start, dt);
+            
+            if (dt == null) {
+              break;
+            }
+            
+            triggerTimes.add(DateTimeUtil.isoDateTimeUTC(dt));
+          }
 
-          makeField(PropertyInfoIndex.NEXT_TRIGGER_DATE_TIME,
-                    DateTimeUtil.isoDateTimeUTC(dt));
+          if (!Util.isEmpty(triggerTimes)) {
+            makeField(PropertyInfoIndex.NEXT_TRIGGER_DATE_TIME,
+                      triggerTimes);
+          }
         } catch (final Throwable t) {
           error("Exception calculating next trigger");
           error(t);
@@ -1226,12 +1241,12 @@ public class DocBuilder {
 
       builder.startArray(getJname(pi));
 
-      for (String s: vals) {
+      for (final String s: vals) {
         builder.value(s);
       }
 
       builder.endArray();
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new CalFacadeException(e);
     }
   }

@@ -157,17 +157,39 @@ public class RecurUtil {
    *
    * @param ev        the recurring event
    * @param maxYears  Provide an upper limit
-   * @param maxInstances
+   * @param maxInstances to limit
    * @return a list of periods for this event
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   @SuppressWarnings("unchecked")
   public static RecurPeriods getPeriods(final BwEvent ev,
                                         final int maxYears,
                                         final int maxInstances) throws CalFacadeException {
-    PropertyList evprops = new PropertyList();
+    return getPeriods(ev, maxYears, maxInstances, null, null);
+  }
+
+  /**
+   * Returns a list of instances for this recurring event possibly bounded by
+   * the supplied maximum end date.
+   *
+   * <p>This is mostly a copy of VEvent.getConsumedTime()
+   *
+   * @param ev        the recurring event
+   * @param maxYears  Provide an upper limit
+   * @param maxInstances to limit
+   * @param startRange null or set earliest
+   * @param endRange null or set latest
+   * @return a list of periods for this event
+   * @throws CalFacadeException on error
+   */
+  public static RecurPeriods getPeriods(final BwEvent ev,
+                                        final int maxYears,
+                                        final int maxInstances,
+                                        final String startRange, 
+                                        final String endRange) throws CalFacadeException {
+    final PropertyList evprops = new PropertyList();
     VEventUtil.doRecurring(ev, evprops);
-    RecurPeriods rp = new RecurPeriods();
+    final RecurPeriods rp = new RecurPeriods();
 
     //DtStart vstart = (DtStart)IcalUtil.getProperty(comp, Property.DTSTART);
     /* BwDateTime evstart = ev.getDtstart();
@@ -185,23 +207,29 @@ public class RecurUtil {
       throw new CalFacadeException(t);
     }*/
 
-    DtStart start = ev.getDtstart().makeDtStart();
-    DtEnd end = ev.getDtend().makeDtEnd();
-    Duration duration = new Duration(null, ev.getDuration());
+    final DtStart start = ev.getDtstart().makeDtStart();
 
-    //boolean durSpecified = ev.getEndType() == BwEvent.endTypeDuration;
+    if (startRange != null) {
+      try {
+        rp.rangeStart = new DateTime(startRange);
+      } catch (final Throwable t) {
+        throw new CalFacadeException(t);
+      }
+    } else {
+      //boolean durSpecified = ev.getEndType() == BwEvent.endTypeDuration;
 
-    rp.rangeStart = start.getDate();
+      rp.rangeStart = start.getDate();
 
-    for (Object o: evprops){
-      if (o instanceof RDate) {
-        RDate rd = (RDate)o;
+      for (final Object o : evprops) {
+        if (o instanceof RDate) {
+          final RDate rd = (RDate)o;
 
-        for (Object o1: rd.getDates()) {
-          Date d = (Date)o1;
+          for (final Object o1 : rd.getDates()) {
+            final Date d = (Date)o1;
 
-          if (d.before(rp.rangeStart)) {
-            rp.rangeStart = d;
+            if (d.before(rp.rangeStart)) {
+              rp.rangeStart = d;
+            }
           }
         }
       }
@@ -209,15 +237,15 @@ public class RecurUtil {
 
     /* Limit date according to system settings
      */
-    Dur dur = new Dur(maxYears * 365, 0, 0, 0);
+    final Dur dur = new Dur(maxYears * 365, 0, 0, 0);
 
     Date maxRangeEnd = new Date(dur.getTime(rp.rangeStart));
 
     if (ev.getParent() != null) {
-      BwDateTime pend = ev.getParent().getDtend();
+      final BwDateTime pend = ev.getParent().getDtend();
 
       if (pend != null) {
-        Date dt = pend.makeDate();
+        final Date dt = pend.makeDate();
 
         if (dt.before(maxRangeEnd)) {
           maxRangeEnd = dt;
@@ -225,13 +253,25 @@ public class RecurUtil {
       }
     }
 
-    rp.rangeEnd = getLatestRecurrenceDate(evprops,  start, end, duration,
-                                          maxRangeEnd);
+    final DtEnd end = ev.getDtend().makeDtEnd();
+    
+    if (endRange != null) {
+      try {
+        rp.rangeEnd = new DateTime(endRange);
+      } catch (final Throwable t) {
+        throw new CalFacadeException(t);
+      }
+    } else {
+      final Duration duration = new Duration(null, ev.getDuration());
+      rp.rangeEnd = getLatestRecurrenceDate(evprops, start, end,
+                                            duration,
+                                            maxRangeEnd);
 
-    if ((rp.rangeEnd == null) || (rp.rangeEnd.after(maxRangeEnd))) {
-      rp.rangeEnd = maxRangeEnd;
+      if ((rp.rangeEnd == null) || (rp.rangeEnd.after(maxRangeEnd))) {
+        rp.rangeEnd = maxRangeEnd;
+      }
     }
-
+    
     Period rangePeriod = new Period(new DateTime(rp.rangeStart),
                                     new DateTime(rp.rangeEnd));
 

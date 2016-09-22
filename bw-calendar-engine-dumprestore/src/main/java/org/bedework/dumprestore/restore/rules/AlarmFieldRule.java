@@ -57,7 +57,7 @@ public class AlarmFieldRule extends EntityFieldRule {
       str = (BwString)pop();
     }
 
-    BwAlarm ent = (BwAlarm)top();
+    final BwAlarm ent = (BwAlarm)top();
 
     if (ownedEntityTags(ent, name)) {
       return;
@@ -106,7 +106,7 @@ public class AlarmFieldRule extends EntityFieldRule {
     }
 
     if (name.equals("triggerTime")) {
-      ent.setTriggerTime(stringFld());
+      // ignore
       return;
     }
 
@@ -116,7 +116,7 @@ public class AlarmFieldRule extends EntityFieldRule {
     }
 
     if (name.equals("previousTrigger")) {
-      ent.setPreviousTrigger(stringFld());
+      // ignore
       return;
     }
 
