@@ -762,6 +762,12 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   @NoWrap
   public void setAliasUri(final String val) {
     aliasUri = val;
+    if (val != null) {
+      setCalType (calTypeAlias);
+      if (getInternalAliasPath() == null) {
+        setCalType (calTypeExtSub);
+      }
+    }
   }
 
   /** Get the alias uri
@@ -1049,8 +1055,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
       if (slist == null) {
         supportedComponents.add("VEVENT");
-        supportedComponents.add("VTODO");
-        supportedComponents.add("VAVAILABILITY");
+        //supportedComponents.add("VTODO");
+        //supportedComponents.add("VAVAILABILITY");
       } else {
         String[] ss = slist.split(",");
         for (String s: ss) {
@@ -1080,8 +1086,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
       if (slist == null) {
         vpollSupportedComponents.add("VEVENT");
-        vpollSupportedComponents.add("VTODO");
-        vpollSupportedComponents.add("VAVAILABILITY");
+        //vpollSupportedComponents.add("VTODO");
+        //vpollSupportedComponents.add("VAVAILABILITY");
       } else {
         String[] ss = slist.split(",");
         for (String s: ss) {

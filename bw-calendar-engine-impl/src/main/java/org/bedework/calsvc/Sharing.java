@@ -125,6 +125,12 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     final InviteType invite = getInviteStatus(col);
 
+    if (invite.getOrganizer() == null) {
+      final OrganizerType org = new OrganizerType();
+      org.setHref(calAddr);
+      invite.setOrganizer(org);
+    }
+
     final List<InviteNotificationType> notifications =
         new ArrayList<>();
 
@@ -726,14 +732,16 @@ public class Sharing extends CalSvcDb implements SharingI {
       final NotificationType note = new NotificationType();
 
       note.setDtstamp(new DtStamp(new DateTime(true)).getValue());
-      note.setNotification(reply);
+      
+      final InviteReplyType irt = (InviteReplyType)reply.clone();
+      note.setNotification(irt);
       
       /* Fill in the summary (the sharer's summary) on the reply. */
-      reply.setSummary(col.getSummary());
+      irt.setSummary(col.getSummary());
 
       getSvc().getNotificationsHandler().add(note);
 
-      return reply.testAccepted();
+      return irt.testAccepted();
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {

@@ -1160,6 +1160,11 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
    * ==================================================================== */
 
   @Override
+  public void add(final BwUnversionedDbentity val) throws CalFacadeException {
+    sess.save(val);
+  }
+
+  @Override
   public void saveOrUpdate(final BwUnversionedDbentity val) throws CalFacadeException {
     sess.saveOrUpdate(val);
   }
@@ -1349,6 +1354,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
      * principal table and allow any principal to log on and own entities.
      */
 
+    if (sess == null) {
+      warn("Null sesssion");
+      throw new NullPointerException("No session");
+    }
     sess.createQuery(getPrincipalQuery);
 
     sess.setString("href", href);

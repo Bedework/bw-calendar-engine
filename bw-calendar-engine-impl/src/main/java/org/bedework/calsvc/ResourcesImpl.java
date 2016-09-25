@@ -316,12 +316,12 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       checkAccess(coll, PrivilegeDefs.privBind, false);
 
       val.updateLastmod(getCurrentTimestamp());
-      getCal().saveOrUpdate(val);
+      getCal().add(val);
 
       rc.setColPath(val.getColPath());
       rc.setName(val.getName());
 
-      getCal().saveOrUpdate(rc);
+      getCal().add(rc);
 
       touchCalendar(coll);
 

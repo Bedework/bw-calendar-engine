@@ -412,6 +412,12 @@ public interface Calintf
    * ==================================================================== */
 
   /**
+   * @param val to add
+   * @throws CalFacadeException on error
+   */
+  void add(final BwUnversionedDbentity val) throws CalFacadeException;
+
+  /**
    * @param val
    * @throws CalFacadeException
    */
