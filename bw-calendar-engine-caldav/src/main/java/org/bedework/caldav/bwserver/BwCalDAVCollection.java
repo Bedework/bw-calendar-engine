@@ -95,7 +95,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
       return this;
     }
 
-    final BwCalendar c = intf.resolveAlias(col, true);
+    final BwCalendar c = intf.resolveAlias(col, resolveSubAlias);
     if (c == null) {
       return null;
     }
