@@ -1149,7 +1149,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val    String uid
    */
   @IcalProperty(pindex = PropertyInfoIndex.UID,
-                jname = "guid",
                 required = true,
                 eventProperty = true,
                 todoProperty = true,

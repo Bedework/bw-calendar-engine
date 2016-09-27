@@ -788,10 +788,10 @@ public abstract class SimpleFilterParser {
           final BwCategory cat = getCategory(uid);
 
           if (cat == null) {
-            error(new CalFacadeException(CalFacadeException.filterBadProperty,
-                                         "category uid: " + uid +
-                                         " source: " + source));
-            return null;
+            // Deleted category?
+            error("Category uid references missing category: " + uid +
+                          " Filter will always fail to match");
+            continue;
           }
 
           final ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
@@ -1360,6 +1360,10 @@ public abstract class SimpleFilterParser {
 
   protected void debugMsg(final String msg) {
     getLogger().debug(msg);
+  }
+
+  protected void error(final String msg) {
+    getLogger().error(msg);
   }
 
   protected void error(final Throwable t) {
