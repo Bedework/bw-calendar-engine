@@ -539,7 +539,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
      */
     
     final AliasesInfo eai = ai.copyForEntity(entityName,
-                                             isVisible(mapAi.getCollection(), 
+                                             isVisible(ai.getCollection(), 
                                                        entityName));
     
     checkAliases(eai, entityName);
