@@ -275,6 +275,10 @@ public interface CoreCalendarsI extends Serializable {
   /** Return all collections on the given path with a lastmod GREATER
    * THAN that supplied. The path may not be null. A null lastmod will
    * return all collections in the collection.
+   * 
+   * <p>Also returned are those collections that are internal or 
+   * external aliases. It is up to the caller to decide if they will 
+   * be resolved and returned in the report</p>
    *
    * <p>Note that this is used only for synch reports and purging of tombstoned
    * collections. The returned objects are NOT to be delivered to clients.
@@ -286,6 +290,16 @@ public interface CoreCalendarsI extends Serializable {
    */
   Set<BwCalendar> getSynchCols(String path,
                                String lastmod) throws CalFacadeException;
+
+  /** Return true if the collection has changed as defined by the sync token.
+   *
+   * @param col - must be non-null
+   * @param lastmod - the token
+   * @return true if changes made.
+   * @throws CalFacadeException on error
+   */
+  boolean testSynchCol(BwCalendar col,
+                       String lastmod) throws CalFacadeException;
 
   /** Return the value to be used as the sync-token property for the given path.
    * This is effectively the max sync-token of the collection and any child

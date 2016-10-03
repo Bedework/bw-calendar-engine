@@ -569,7 +569,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   /**
    * @param val an href
    * @return list of any aliases for the current user pointing at the given href
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   List<BwCalendar> findUserAlias(final String val) throws CalFacadeException {
     return getCal().findAlias(val);
@@ -601,7 +601,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
                  final boolean reallyDelete,
                  final boolean sendSchedulingMessage) throws CalFacadeException {
     if (!emptyIt) {
-      /** Only allow delete if not in use
+      /* Only allow delete if not in use
        */
       if (!getCal().isEmpty(val)) {
         throw new CalFacadeException(CalFacadeException.collectionNotEmpty);

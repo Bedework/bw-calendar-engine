@@ -975,8 +975,14 @@ public class CoreCalendars extends CalintfHelperHib
     sb.append("where col.colPath=:path ");
 
     if (token != null) {
-      sb.append(" and (col.lastmod.timestamp>:lastmod");
-      sb.append(" or (col.lastmod.timestamp=:lastmod and col.lastmod.sequence>:seq))");
+      /* We want any undeleted alias or external subscription or 
+         any collection with a later change token.
+       */
+      sb.append(" and (((col.calType=7 or col.calType=8) and " +
+                        "(col.filterExpr is null or col.filterExpr <> :tsfilter)) or " +
+                        "(col.lastmod.timestamp>:lastmod" +
+                        "   or (col.lastmod.timestamp=:lastmod and " +
+                        "  col.lastmod.sequence>:seq)))");
     } else {
       // No deleted collections for null sync-token
       sb.append("and (col.filterExpr is null or col.filterExpr <> :tsfilter)");
@@ -984,13 +990,13 @@ public class CoreCalendars extends CalintfHelperHib
 
     sess.createQuery(sb.toString());
 
-    sess.setString("path", path);
+    sess.setString("path", fixPath(path));
+
+    sess.setString("tsfilter", BwCalendar.tombstonedFilter);
 
     if (token != null) {
       sess.setString("lastmod", token.substring(0, 16));
       sess.setInt("seq", Integer.parseInt(token.substring(17), 16));
-    } else {
-      sess.setString("tsfilter", BwCalendar.tombstonedFilter);
     }
 
     sess.cacheableQuery();
@@ -1011,6 +1017,30 @@ public class CoreCalendars extends CalintfHelperHib
     }
 
     return res;
+  }
+
+  @Override
+  public boolean testSynchCol(final BwCalendar col,
+                              final String token)
+          throws CalFacadeException {
+    if (token == null) {
+      return true;
+    }
+
+    final String lastmod = token.substring(0, 16);
+    final int seq = Integer.parseInt(token.substring(17), 16);
+
+    final BwCollectionLastmod cl = col.getLastmod();
+    final int cmp = cl.getTimestamp().compareTo(lastmod);
+    if (cmp > 0) {
+      return true;
+    }
+    
+    if (cmp < 0) {
+      return false;
+    }
+    
+    return cl.getSequence() > seq;
   }
 
   @Override
@@ -1090,7 +1120,7 @@ public class CoreCalendars extends CalintfHelperHib
     sess.setFirstResult(start);
     sess.setMaxResults(count);
 
-    List res = sess.getList();
+    final List res = sess.getList();
 
     if (Util.isEmpty(res)) {
       return null;

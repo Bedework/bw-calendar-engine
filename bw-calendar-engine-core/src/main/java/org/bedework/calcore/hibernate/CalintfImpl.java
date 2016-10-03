@@ -899,6 +899,13 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   }
 
   @Override
+  public boolean testSynchCol(final BwCalendar col,
+                              final String lastmod)
+          throws CalFacadeException {
+    return calendars.testSynchCol(col, lastmod);
+  }
+
+  @Override
   public String getSyncToken(final String path) throws CalFacadeException {
     return calendars.getSyncToken(path);
   }

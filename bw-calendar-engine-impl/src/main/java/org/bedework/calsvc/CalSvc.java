@@ -1149,24 +1149,24 @@ public class CalSvc extends CalSvcI {
                                     final String token,
                                     final int limit,
                                     final boolean recurse) throws CalFacadeException {
-    BwCalendar col = getCalendarsHandler().get(path);
+    final BwCalendar col = getCalendarsHandler().get(path);
     if (col == null) {
       throw new CalFacadeAccessException();
     }
 
     Set<SynchReportItem> items = new TreeSet<SynchReportItem>();
     String resToken = getSynchItems(col, path, token, items, recurse);
-    SynchReport res = new SynchReport(items, resToken);
+    final SynchReport res = new SynchReport(items, resToken);
 
     if ((limit > 0) && (res.size() >= limit)) {
       if (res.size() == limit) {
         return res;
       }
 
-      items = new TreeSet<SynchReportItem>();
+      items = new TreeSet<>();
       resToken = "";
 
-      for (SynchReportItem item: res.getItems()) {
+      for (final SynchReportItem item: res.getItems()) {
         if (item.getToken().compareTo(resToken) > 0) {
           resToken = item.getToken();
         }
@@ -1191,9 +1191,9 @@ public class CalSvc extends CalSvcI {
     //  return false;
     //}
 
-    //if (col.getCalType() == BwCalendar.calTypeExtSub) {
-    //  return false;
-    //}
+    if (col.getCalType() == BwCalendar.calTypeExtSub) {
+      return false;
+    }
 
     return true;
   }

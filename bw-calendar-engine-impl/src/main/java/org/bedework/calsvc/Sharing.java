@@ -737,7 +737,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       note.setNotification(irt);
       
       /* Fill in the summary (the sharer's summary) on the reply. */
-      irt.setSummary(col.getSummary());
+      irt.setSummary(reply.getSummary());
 
       getSvc().getNotificationsHandler().add(note);
 
