@@ -1674,7 +1674,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   public CollectionInfo getCollectionInfo(final int type) {
     return collectionInfo[type];
   }
-
+  
   /** Make this thing a tombstoned collection. Non-reversible
    */
   public void tombstone() {

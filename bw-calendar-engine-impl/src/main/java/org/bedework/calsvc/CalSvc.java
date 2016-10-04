@@ -1714,9 +1714,9 @@ public class CalSvc extends CalSvcI {
                                final String token,
                                final Set<SynchReportItem> items,
                                final boolean recurse) throws CalFacadeException {
-    Events eventsH = (Events)getEventsHandler();
-    ResourcesImpl resourcesH = (ResourcesImpl)getResourcesHandler();
-    Calendars colsH = (Calendars)getCalendarsHandler();
+    final Events eventsH = (Events)getEventsHandler();
+    final ResourcesImpl resourcesH = (ResourcesImpl)getResourcesHandler();
+    final Calendars colsH = (Calendars)getCalendarsHandler();
     String newToken = "";
     BwCalendar resolvedCol = col;
 
@@ -1724,8 +1724,16 @@ public class CalSvc extends CalSvcI {
       trace("sync token: " + token + " col: " + resolvedCol.getPath());
     }
 
+    if (col.getTombstoned()) {
+      return token;
+    }
+    
     if (col.getInternalAlias()) {
       resolvedCol = getCalendarsHandler().resolveAlias(col, true, false);
+    }
+    
+    if (resolvedCol.getTombstoned()) {
+      return token;
     }
 
     /* Each collection could be:
@@ -1734,12 +1742,12 @@ public class CalSvc extends CalSvcI {
      *    b. Other collections. Need to look for events, resources and collections.
      */
 
-    boolean eventsOnly = resolvedCol.getCollectionInfo().onlyCalEntities;
+    final boolean eventsOnly = resolvedCol.getCollectionInfo().onlyCalEntities;
 
-    Set<EventInfo> evs = eventsH.getSynchEvents(resolvedCol.getPath(), token);
+    final Set<EventInfo> evs = eventsH.getSynchEvents(resolvedCol.getPath(), token);
 
-    for (EventInfo ei: evs) {
-      SynchReportItem sri = new SynchReportItem(vpath, ei);
+    for (final EventInfo ei: evs) {
+      final SynchReportItem sri = new SynchReportItem(vpath, ei);
       items.add(sri);
 
       if (sri.getToken().compareTo(newToken) > 0) {
@@ -1749,10 +1757,10 @@ public class CalSvc extends CalSvcI {
 
     if (!eventsOnly) {
       // Look for resources
-      List<BwResource> ress = resourcesH.getSynchResources(resolvedCol.getPath(), token);
+      final List<BwResource> ress = resourcesH.getSynchResources(resolvedCol.getPath(), token);
 
-      for (BwResource r: ress) {
-        SynchReportItem sri = new SynchReportItem(vpath, r);
+      for (final BwResource r: ress) {
+        final SynchReportItem sri = new SynchReportItem(vpath, r);
         items.add(sri);
 
         if (sri.getToken().compareTo(newToken) > 0) {
@@ -1763,11 +1771,21 @@ public class CalSvc extends CalSvcI {
 
     final Set<SynchReportItem> colItems = new TreeSet<>();
     final Set<BwCalendar> cols = colsH.getSynchCols(resolvedCol.getPath(), token);
+    
+    final List<BwCalendar> aliases = new ArrayList<>();
 
     for (final BwCalendar c: cols) {
-      if (c.getCalType() == BwCalendar.calTypePendingInbox) {
+      final int calType = c.getCalType();
+      
+      if (calType == BwCalendar.calTypePendingInbox) {
         continue;
       }
+
+      if ((token != null) && (calType == BwCalendar.calTypeAlias)) {
+        aliases.add(c);
+        continue;
+      }
+
       final SynchReportItem sri = new SynchReportItem(vpath, c, canSync(c));
       colItems.add(sri);
       items.add(sri);
@@ -1780,6 +1798,34 @@ public class CalSvc extends CalSvcI {
         trace("     add col: " + c.getPath());
       }
     }
+    
+    if (!Util.isEmpty(aliases)) {
+      /* Resolve each one and see if the target is a candidate
+       */
+      for (final BwCalendar c: aliases) {
+        final BwCalendar resolved = getCalendarsHandler().resolveAlias(c, true, false);
+        
+        if (resolved == null) {
+          continue;
+        }
+        
+        if (c.getTombstoned() && !getCal().testSynchCol(c, token)) {
+          continue;
+        }
+        
+        if (!getCal().testSynchCol(resolved, token)) {
+          continue;
+        }
+
+        final SynchReportItem sri = new SynchReportItem(vpath, c, canSync(c));
+        colItems.add(sri);
+        items.add(sri);
+
+        if (sri.getToken().compareTo(newToken) > 0) {
+          newToken = sri.getToken();
+        }
+      }
+    }
 
     if (!recurse) {
       return newToken;
@@ -1789,15 +1835,15 @@ public class CalSvc extends CalSvcI {
       return newToken;
     }
 
-    for (SynchReportItem sri: colItems) {
+    for (final SynchReportItem sri: colItems) {
       if (!sri.getCanSync()) {
         continue;
       }
 
-      BwCalendar sricol = sri.getCol();
-      String t = getSynchItems(sricol,
-                               Util.buildPath(true, vpath, "/", sricol.getName()),
-                               token, items, true);
+      final BwCalendar sricol = sri.getCol();
+      final String t = getSynchItems(sricol,
+                                     Util.buildPath(true, vpath, "/", sricol.getName()),
+                                     token, items, true);
 
       if (t.compareTo(newToken) > 0) {
         newToken = t;

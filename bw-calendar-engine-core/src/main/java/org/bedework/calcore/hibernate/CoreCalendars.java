@@ -807,6 +807,7 @@ public class CoreCalendars extends CalintfHelperHib
       tombstoneEntity(unwrapped);
       unwrapped.tombstone();
       sess.update(unwrapped);
+      touchCalendar(unwrapped);
     }
 
     colCache.remove(path);
@@ -955,9 +956,9 @@ public class CoreCalendars extends CalintfHelperHib
   @Override
   public Set<BwCalendar> getSynchCols(final String path,
                                       final String token) throws CalFacadeException {
-    HibSession sess = getSess();
+    final HibSession sess = getSess();
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     if (path == null) {
       sess.rollback();
@@ -978,8 +979,7 @@ public class CoreCalendars extends CalintfHelperHib
       /* We want any undeleted alias or external subscription or 
          any collection with a later change token.
        */
-      sb.append(" and (((col.calType=7 or col.calType=8) and " +
-                        "(col.filterExpr is null or col.filterExpr <> :tsfilter)) or " +
+      sb.append(" and ((col.calType=7 or col.calType=8) or " +
                         "(col.lastmod.timestamp>:lastmod" +
                         "   or (col.lastmod.timestamp=:lastmod and " +
                         "  col.lastmod.sequence>:seq)))");
@@ -992,11 +992,11 @@ public class CoreCalendars extends CalintfHelperHib
 
     sess.setString("path", fixPath(path));
 
-    sess.setString("tsfilter", BwCalendar.tombstonedFilter);
-
     if (token != null) {
       sess.setString("lastmod", token.substring(0, 16));
       sess.setInt("seq", Integer.parseInt(token.substring(17), 16));
+    } else {
+      sess.setString("tsfilter", BwCalendar.tombstonedFilter);
     }
 
     sess.cacheableQuery();
