@@ -1190,7 +1190,13 @@ class Events extends CalSvcDb implements EventsI {
 
     return ts;
   }
-
+  
+  boolean isVisible(final BwCalendar col,
+                    final String entityName) throws CalFacadeException {
+    // This should do a cheap test of access - not retrieve the entire event
+    return getEvent(col, entityName, null) != null;
+  }
+  
   Set<EventInfo> getSynchEvents(final String path,
                                 final String lastmod) throws CalFacadeException {
     return postProcess(getCal().getSynchEvents(path, lastmod));

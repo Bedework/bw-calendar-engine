@@ -537,10 +537,13 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     /* Now clone the structure we got and test the visibility of the entity
      */
+    final Events eventsH = (Events)getSvc().getEventsHandler();
+
+    final boolean isVisible = eventsH.isVisible(ai.getCollection(),
+                                                  entityName);
     
     final AliasesInfo eai = ai.copyForEntity(entityName,
-                                             isVisible(ai.getCollection(), 
-                                                       entityName));
+                                             isVisible);
     
     checkAliases(eai, entityName);
     
@@ -676,19 +679,16 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   private void checkAliases(final AliasesInfo rootAi,
                             final String entityName) throws CalFacadeException {
+    final Events eventsH = (Events)getSvc().getEventsHandler();
+
     for (final AliasesInfo ai: rootAi.getAliases()) {
+      final boolean isVisible = eventsH.isVisible(ai.getCollection(),
+                                                  entityName);
       final AliasesInfo eai = ai.copyForEntity(entityName,
-                                               isVisible(ai.getCollection(),
-                                                         entityName));
+                                               isVisible);
       rootAi.addSharee(eai);
       checkAliases(eai, entityName);
     }
-  }
-
-  private boolean isVisible(final BwCalendar col,
-                            final String entityName) throws CalFacadeException {
-    // This should do a cheap test of access - not retrieve the entire event
-    return getEvent(col, entityName, null) != null;
   }
 
   private AliasesInfo getAliasesInfo(final String collectionHref) throws CalFacadeException {

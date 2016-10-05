@@ -99,7 +99,7 @@ public interface EventsI extends Serializable {
    * found. There should be only one event or none. For recurring, the
    * overrides and possibly the instances will be attached.
    *
-   * This does not provide alias filtering. 
+   * This does provide alias filtering. 
    *
    * @param col   Collection - possibly a filtered alias
    * @param name  String name

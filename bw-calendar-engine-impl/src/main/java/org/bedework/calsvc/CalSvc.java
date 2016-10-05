@@ -1747,6 +1747,18 @@ public class CalSvc extends CalSvcI {
     final Set<EventInfo> evs = eventsH.getSynchEvents(resolvedCol.getPath(), token);
 
     for (final EventInfo ei: evs) {
+      // May be a filtered alias. Remove all those that aren't visible.
+      // TODO - if the filter changes this may result in an invalid response. Should force a resynch
+      // Could add an earliest valid sync token property.
+      
+      // TODO - ALso tombstoned items need to be stored in the index.
+      // For the moment just let any tombstoned event through
+      
+      if (!ei.getEvent().getTombstoned() &&
+              !eventsH.isVisible(col, ei.getEvent().getName())) {
+        continue;
+      }
+      
       final SynchReportItem sri = new SynchReportItem(vpath, ei);
       items.add(sri);
 
