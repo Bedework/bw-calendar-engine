@@ -1151,7 +1151,7 @@ public class CalSvc extends CalSvcI {
                                     final boolean recurse) throws CalFacadeException {
     final BwCalendar col = getCalendarsHandler().get(path);
     if (col == null) {
-      throw new CalFacadeAccessException();
+      return null;
     }
 
     Set<SynchReportItem> items = new TreeSet<SynchReportItem>();

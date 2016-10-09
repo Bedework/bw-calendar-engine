@@ -1921,17 +1921,21 @@ public class BwSysIntfImpl implements SysIntf {
         syncToken = null; // Force a full reload
       }
 
-      SynchReportData srd = new SynchReportData();
+      final SynchReport sr = 
+              getSvci().getSynchReport(path, syncToken, limit, recurse);
+      if (sr == null) {
+        return null;
+      }
 
-      srd.items = new ArrayList<SynchReportDataItem>();
+      final SynchReportData srd = new SynchReportData();
 
-      SynchReport sr = getSvci().getSynchReport(path, syncToken, limit, recurse);
+      srd.items = new ArrayList<>();
 
       srd.token = "data:," + sr.getToken();
       srd.truncated = sr.getTruncated();
 
-      for (SynchReportItem sri: sr.getItems()) {
-        SynchReportDataItem srdi;
+      for (final SynchReportItem sri: sr.getItems()) {
+        final SynchReportDataItem srdi;
 
         if (sri.getEvent() != null) {
           srdi = new SynchReportDataItem(sri.getVpath(),
