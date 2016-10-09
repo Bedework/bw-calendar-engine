@@ -652,7 +652,7 @@ public class CoreCalendars extends CalintfHelperHib
 
   @Override
   public void touchCalendar(final String path) throws CalFacadeException {
-    BwCalendar col = getCollection(path);
+    final BwCalendar col = getCollection(path);
     if (col == null) {
       return;
     }

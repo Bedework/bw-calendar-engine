@@ -34,7 +34,7 @@ import org.bedework.util.misc.Util;
 public class SynchReportItem implements Comparable<SynchReportItem> {
   /**
    */
-  private String token;
+  private final String token;
 
   /** Non-null if this is for an event */
   private EventInfo event;
@@ -44,14 +44,14 @@ public class SynchReportItem implements Comparable<SynchReportItem> {
 
   private BwCalendar col;
 
-  private String vpath;
+  private final String vpath;
 
   /** true if we can provide sync info for this - usually false for aliases */
   private boolean canSync;
 
   /**
-   * @param vpath
-   * @param event
+   * @param vpath the virtual path
+   * @param event the event
    */
   public SynchReportItem(final String vpath,
                          final EventInfo event) {
@@ -61,8 +61,8 @@ public class SynchReportItem implements Comparable<SynchReportItem> {
   }
 
   /**
-   * @param vpath
-   * @param resource
+   * @param vpath the virtual path
+   * @param resource the resource
    */
   public SynchReportItem(final String vpath,
                          final BwResource resource) {
@@ -72,9 +72,9 @@ public class SynchReportItem implements Comparable<SynchReportItem> {
   }
 
   /**
-   * @param vpath
-   * @param col
-   * @param canSync
+   * @param vpath the virtual path
+   * @param col the collection
+   * @param canSync false if this cannot do sync report
    */
   public SynchReportItem(final String vpath,
                          final BwCalendar col,
@@ -83,6 +83,23 @@ public class SynchReportItem implements Comparable<SynchReportItem> {
     this.col = col;
     this.canSync = canSync;
     token = col.getLastmod().getTagValue();
+  }
+
+  /** For an alias where the target lastmod is the token
+   * 
+   * @param vpath the virtual path
+   * @param col the collection
+   * @param canSync false if this cannot do sync report
+   * @param token to use
+   */
+  public SynchReportItem(final String vpath,
+                         final BwCalendar col,
+                         final boolean canSync,
+                         final String token) {
+    this.vpath = vpath;
+    this.col = col;
+    this.canSync = canSync;
+    this.token = token;
   }
 
   /**
@@ -174,6 +191,9 @@ public class SynchReportItem implements Comparable<SynchReportItem> {
 
   @Override
   public boolean equals(final Object o) {
+    if (!(o instanceof SynchReportItem)) {
+      return false;
+    }
     return compareTo((SynchReportItem)o) == 0;
   }
 }

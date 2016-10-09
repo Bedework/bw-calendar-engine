@@ -755,6 +755,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     final boolean defaultEnabled =
+            !Boolean.valueOf(System.getProperty("org.bedework.nochangenote", "false")) &&
             getAuthpars().getDefaultChangesNotifications();
 
     if (notificationsEnabled(col, defaultEnabled)) {

@@ -1807,7 +1807,7 @@ public class CalSvc extends CalSvcI {
       }
 
       if (debug) {
-        trace("     add col: " + c.getPath());
+        trace("     token=" + sri.getToken() + " for " + c.getPath());
       }
     }
     
@@ -1829,7 +1829,10 @@ public class CalSvc extends CalSvcI {
           continue;
         }
 
-        final SynchReportItem sri = new SynchReportItem(vpath, c, canSync(c));
+        final SynchReportItem sri = new SynchReportItem(vpath, 
+                                                        c, 
+                                                        canSync(c),
+                                                        resolved.getLastmod().getTagValue());
         colItems.add(sri);
         items.add(sri);
 
