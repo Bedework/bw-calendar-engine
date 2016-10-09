@@ -464,7 +464,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   public boolean delete(final BwCalendar val,
                         final boolean emptyIt,
                         final boolean sendSchedulingMessage) throws CalFacadeException {
-    return delete(val, emptyIt, false, sendSchedulingMessage);
+    return delete(val, emptyIt, false, sendSchedulingMessage, true);
   }
 
   @Override
@@ -602,7 +602,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
   boolean delete(final BwCalendar val,
                  final boolean emptyIt,
                  final boolean reallyDelete,
-                 final boolean sendSchedulingMessage) throws CalFacadeException {
+                 final boolean sendSchedulingMessage,
+                 final boolean unsubscribe) throws CalFacadeException {
     if (!emptyIt) {
       /* Only allow delete if not in use
        */
@@ -622,7 +623,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
       getSvc().getSharingHandler().delete(val);
     }
 
-    getSvc().getSharingHandler().unsubscribe(val);
+    if (unsubscribe) {
+      getSvc().getSharingHandler().unsubscribe(val);
+    }
 
     /* Remove from preferences */
     ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true,
@@ -655,7 +658,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       }
 
       for (final BwCalendar cal: getChildren(val)) {
-        if (!delete(cal, true, true, sendSchedulingMessage)) {
+        if (!delete(cal, true, true, sendSchedulingMessage, true)) {
           // Somebody else at it
           getSvc().rollbackTransaction();
           throw new CalFacadeException(CalFacadeException.collectionNotFound,

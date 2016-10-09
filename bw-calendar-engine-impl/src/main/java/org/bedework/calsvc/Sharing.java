@@ -399,7 +399,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       /* Now we need to remove the alias - in theory we shouldn't have any
        * but do this anyway to clean up */
 
-      removeAlias(col, u.getHref());
+      removeAlias(col, u.getHref(), true);
     }
   }
 
@@ -774,7 +774,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     note.setPreviousStatus(uentry.getInviteStatus());
 
-    removeAlias(col, uentry.getHref());
+    removeAlias(col, uentry.getHref(), false);
 
     return note;
   }
@@ -1122,7 +1122,8 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   private void removeAlias(final BwCalendar col,
-                           final String shareeHref) throws CalFacadeException {
+                           final String shareeHref,
+                           final boolean unsubscribe) throws CalFacadeException {
     pushPrincipal(shareeHref);
 
     try {
@@ -1131,7 +1132,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       if (!Util.isEmpty(cols)) {
         for (final BwCalendar alias: cols) {
-          getCols().delete(alias, false, true);
+          ((Calendars)getCols()).delete(alias, false, false, true, unsubscribe);
         }
       }
     } finally {

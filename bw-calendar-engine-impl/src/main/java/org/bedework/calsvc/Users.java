@@ -261,7 +261,7 @@ class Users extends CalSvcDb implements UsersI {
 
     final BwCalendar home = getSvc().getCalendarsHandler().get(userRoot);
     if (home != null) {
-      ((Calendars)getCols()).delete(home, true, true, false);
+      ((Calendars)getCols()).delete(home, true, true, false, true);
     }
 
     /* Remove preferences */
