@@ -697,9 +697,9 @@ public class CoreCalendars extends CalintfHelperHib
     //val = (BwCalendar)getSess().merge(val);
 
     //val = (BwCalendar)getSess().merge(val);
-    val.updateLastmod(getCurrentTimestamp());
+    //val.updateLastmod(getCurrentTimestamp());
     getSess().update(unwrap(val));
-    //touchCalendar(val.getPath());
+    touchCalendar(val.getPath());
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
 
