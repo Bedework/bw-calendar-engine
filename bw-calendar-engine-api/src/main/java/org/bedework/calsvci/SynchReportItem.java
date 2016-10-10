@@ -99,7 +99,15 @@ public class SynchReportItem implements Comparable<SynchReportItem> {
     this.vpath = vpath;
     this.col = col;
     this.canSync = canSync;
-    this.token = token;
+
+    // token is the greater of the collection token or the supplied token.
+    final String colToken =  col.getLastmod().getTagValue();
+    
+    if (colToken.compareTo(token) > 0) {
+      this.token = colToken;
+    } else {
+      this.token = token;
+    }
   }
 
   /**
