@@ -73,12 +73,12 @@ public class AuthUserRule extends EntityRule {
 
   @Override
   public void end(final String ns, final String name) throws Exception {
-    BwAuthUser au = (BwAuthUser)pop();
+    final BwAuthUser au = (BwAuthUser)pop();
     globals.counts[globals.authusers]++;
 
     try {
       globals.rintf.restoreAuthUser(au);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error("Error restoring " + au);
       throw new Exception(t);
     }

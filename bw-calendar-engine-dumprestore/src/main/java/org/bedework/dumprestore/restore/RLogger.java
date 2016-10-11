@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 
 /** Logger for restore class.
  *
- * @author Mike Douglass   douglm@bedework.edu
+ * @author Mike Douglass   douglm@rpi.edu
  * @version 3.1
  */
 public class RLogger implements RestoreLogger {
