@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.dumprestore.dump;
+package org.bedework.dumprestore.prdump;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
@@ -27,6 +27,7 @@ import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.InfoLines;
+import org.bedework.dumprestore.dump.DumpGlobals;
 import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
@@ -96,15 +97,15 @@ public class DumpPrincipal {
 
   private final static String collectionsDirName = "collections";
 
-  /** ===================================================================
+  /* ===================================================================
    *                       Constructor
-   *  =================================================================== */
+   * =================================================================== */
 
   /**
-   * @param pr
-   * @param dirPath
-   * @param info
-   * @throws CalFacadeException
+   * @param pr the principal
+   * @param dirPath root of the dump
+   * @param info for progress
+   * @throws CalFacadeException on error
    */
   public DumpPrincipal(final BwPrincipal pr,
                        final String dirPath,
@@ -117,7 +118,7 @@ public class DumpPrincipal {
   }
 
   /**
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public void open() throws CalFacadeException {
     globals.svci.open();
@@ -152,7 +153,7 @@ public class DumpPrincipal {
   }
 
   /**
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public void close() throws CalFacadeException {
     if (globals.svci != null) {
@@ -163,7 +164,7 @@ public class DumpPrincipal {
 
   /** Dump everything owned by this principal
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public void doDump() throws CalFacadeException {
     File f = makeFile(dirPath, pr.getAccount() + ".xml");
@@ -223,7 +224,7 @@ public class DumpPrincipal {
 
   /**
    * @param args
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public void getConfigProperties(final String[] args) throws CalFacadeException {
     globals.init(new CalSvcFactoryDefault().getSystemConfig().getBasicSystemProperties());
@@ -300,7 +301,7 @@ public class DumpPrincipal {
                                        true,  // adminCanEditAllPublicLocations
                                        true,  // adminCanEditAllPublicSponsors
                                        false);    // sessionless
-    CalSvcI svci = new CalSvcFactoryDefault().getSvc(pars);
+    final CalSvcI svci = new CalSvcFactoryDefault().getSvc(pars);
 
     return svci;
   }

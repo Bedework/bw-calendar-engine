@@ -16,7 +16,7 @@
 		<bedework.releases.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.releases.repo.url>
 		<bedework.snapshots.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.snapshots.repo.url>
 		<bw-ws.version>4.0.4-SNAPSHOT</bw-ws.version>
-		<bw-util.version>4.0.6-SNAPSHOT</bw-util.version>
+		<bw-util.version>4.0.11-SNAPSHOT</bw-util.version>
 		<bw-access.version>4.0.2-SNAPSHOT</bw-access.version>
 		<bw-webdav.version>4.0.2-SNAPSHOT</bw-webdav.version>
 		<bw-caldav.version>4.0.3-SNAPSHOT</bw-caldav.version>
@@ -221,6 +221,11 @@
 				<artifactId>bw-ws-tzsvr</artifactId>
 				<version>${bw-ws.version}</version>
 			</dependency>
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-ws-synchws</artifactId>
+        <version>${bw-ws.version}</version>
+      </dependency>
 			<dependency>
 				<groupId>org.bedework</groupId>
 				<artifactId>bw-ws-calws-soap</artifactId>

@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvci;
 
+import org.bedework.caldav.util.sharing.AccessType;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -309,10 +310,12 @@ public interface RestoreIntf {
    *
    * @param col - the target collection
    * @param shareeHref - the sharee
+   * @param a          - access
    * @return indication of how it went
    * @throws CalFacadeException
    */
   FixAliasResult fixSharee(BwCalendar col,
-                           String shareeHref) throws CalFacadeException;
+                           String shareeHref,
+                           AccessType a) throws CalFacadeException;
 }
 

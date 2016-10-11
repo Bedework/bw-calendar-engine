@@ -18,7 +18,6 @@
 */
 package org.bedework.calsvc;
 
-import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
@@ -435,7 +434,8 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
 
   @Override
   public FixAliasResult fixSharee(final BwCalendar col,
-                                  final String shareeHref) throws CalFacadeException {
+                                  final String shareeHref,
+                                  final AccessType a) throws CalFacadeException {
     /* First ensure this alias is not circular */
 
     final Set<String> paths = new TreeSet<>();
@@ -450,7 +450,9 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       try {
         curCol = getCols().resolveAliasIdx(curCol, false, false);
       } catch (final CalFacadeAccessException ignored) {
-        return FixAliasResult.noAccess;
+    	// Just exit the loop here. We may have multiple levels of aliases and one or more may not be accessible,
+    	// but we can still check for circularity and broken aliases.
+        break;
       }
 
       if (curCol == null) {
@@ -461,7 +463,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     // See if we are in the invite list
 
     final InviteType invite =
-            getSvc().getSharingHandler().getInviteStatus(curCol);
+            getSvc().getSharingHandler().getInviteStatus(col);
     final String shareeCua =
             getSvc().getDirectories().userToCaladdr(shareeHref);
 
@@ -470,33 +472,6 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     if (uentry != null) {
       // Already in list of sharers
       return FixAliasResult.ok;
-    }
-
-
-    final boolean write = checkAccess(curCol,
-                                      PrivilegeDefs.privWrite,
-                                      true).getAccessAllowed();
-
-    final boolean read = checkAccess(curCol,
-                                     PrivilegeDefs.privRead,
-                                     true).getAccessAllowed();
-
-    if (!write && !read) {
-      // No appropriate access
-      return FixAliasResult.noAccess;
-    }
-
-    if (write && !read) {
-      // Incompatible with current sharing
-      return FixAliasResult.wrongAccess;
-    }
-
-    final AccessType a = new AccessType();
-
-    if (write) {
-      a.setReadWrite(true);
-    } else {
-      a.setRead(true);
     }
 
     /* Now fix the sharing invite info */
@@ -512,8 +487,8 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     invite.getUsers().add(uentry);
 
     try {
-      curCol.setQproperty(AppleServerTags.invite, invite.toXml());
-      getCols().update(curCol);
+      col.setQproperty(AppleServerTags.invite, invite.toXml());
+      getCols().update(col);
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {

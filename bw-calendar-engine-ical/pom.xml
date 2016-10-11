@@ -32,6 +32,14 @@
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-timezones</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-ws-icalendar</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-ws-synchws</artifactId>
+    </dependency>
 
     <!-- Third Party Libraries -->
     <dependency>

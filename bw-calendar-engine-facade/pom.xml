@@ -159,6 +159,10 @@
                 <exclude>**/synch/**/*.java</exclude>
                 <exclude>**/timezonesImpl/**/*.java</exclude>
                 <exclude>**/filter/**/*.java</exclude>
+                <exclude>**/svc/EventInfo.java</exclude>
+                <exclude>**/svc/EventOverride.java</exclude>
+                <exclude>**//util/EventPeriods.java</exclude>
+                <exclude>**//util/Granulator.java</exclude>
                 <!--
                 <exclude>**/svc/**/*.java</exclude>
                 <exclude>**/util/**/*.java</exclude>

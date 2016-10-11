@@ -18,6 +18,8 @@
 */
 package org.bedework.dumprestore;
 
+import org.bedework.access.PrivilegeDefs;
+import org.bedework.caldav.util.sharing.AccessType;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.DumpRestoreProperties;
@@ -53,7 +55,7 @@ import java.util.Map;
 public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         implements BwDumpRestoreMBean {
   /* Name of the property holding the location of the config data */
-  public static final String confuriPname = "org.bedework.bwengine.confuri";
+  private static final String confuriPname = "org.bedework.bwengine.confuri";
 
   private List<AliasInfo> externalSubs;
 
@@ -238,19 +240,19 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
           return;
         }
 
-        /** Number for which no action was required */
+        /* Number for which no action was required */
         int okCt = 0;
 
-        /** Number not found */
+        /* Number not found */
         int notFoundCt = 0;
 
-        /** Number for which no action was required */
+        /* Number for which no action was required */
         int notExternalCt = 0;
 
-        /** Number resubscribed */
+        /* Number resubscribed */
         int resubscribedCt = 0;
 
-        /** Number of failures */
+        /* Number of failures */
         int failedCt = 0;
 
         if (debug) {
@@ -264,7 +266,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
         resubscribe:
         for (final AliasInfo ai: externalSubs) {
-          getSvci(ai);
+          getSvci(ai.getOwner(), ai.getPublick());
 
           try {
             final CheckSubscriptionResult csr =
@@ -358,22 +360,22 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
           return;
         }
 
-        /** Number for which no action was required */
+        /* Number for which no action was required */
         int okCt = 0;
 
-        /** Number of public aliases */
+        /* Number of public aliases */
         int publicCt = 0;
 
-        /** Number not found - broken links */
+        /* Number not found - broken links */
         int notFoundCt = 0;
 
-        /** Number for which no access */
+        /* Number for which no access */
         int noAccessCt = 0;
 
-        /** Number fixed */
+        /* Number fixed */
         int fixedCt = 0;
 
-        /** Number of failures */
+        /* Number of failures */
         int failedCt = 0;
 
         if (debug) {
@@ -383,44 +385,101 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
         int ct = 0;
         int errorCt = 0;
+        
+        /* We need the owner field in the alias XML as the fix alias 
+           process needs to be that user to determine the permissions 
+           available to the sharee.
+
+           The fix alias process runs in two phases. The first phase 
+           becomes the alias owner (sharee) and determines the 
+           permission that the sharee has on the target calendar. 
+           
+           The second phase becomes the target calendar owner (sharer) 
+           and updates the invitation XML with the sharee information 
+           and permissions. 
+
+         */
 
         for (final String target: aliasInfo.keySet()) {
           final AliasEntry ae = aliasInfo.get(target);
 
           fix:
           for (final AliasInfo ai: ae.getAliases()) {
-            final CalSvcI svci = getSvci(ai);
-
-            if (ai.getPublick()) {
-              publicCt++;
-              continue fix;
-            }
-
-            /* Try to fetch as current user */
-            final BwCalendar targetCol;
-            try {
-              targetCol = svci.getCalendarsHandler().get(target);
-            } catch (final CalFacadeAccessException ignored) {
-              ai.setNoAccess(true);
-              noAccessCt++;
-              continue fix;
-            }
-
-            if (targetCol == null) {
-              ai.setNoAccess(true);
-              noAccessCt++;
-              continue fix;
-            }
-
-            if (targetCol.getPublick()) {
-              publicCt++;
-              continue fix;
-            }
+            BwCalendar targetCol = null;
+            final AccessType a = new AccessType();
 
             try {
+              final CalSvcI svci = getSvci(ai.getOwner(), ai.getPublick());
+
+              if (ai.getPublick()) {
+                publicCt++;
+                continue fix;
+              }
+
+              /* Try to fetch as sharee */
+              try {
+                targetCol = svci.getCalendarsHandler().get(target);
+              } catch (final CalFacadeAccessException ignored) {
+                ai.setNoAccess(true);
+                noAccessCt++;
+                continue fix;
+              }
+
+              if (targetCol == null) {
+                ai.setNoAccess(true);
+                noAccessCt++;
+                continue fix;
+              }
+
+              if (targetCol.getPublick()) {
+                publicCt++;
+                continue fix;
+              }
+
+              final boolean write = svci.checkAccess(targetCol,
+                                                     PrivilegeDefs.privWrite,
+                                                     true).getAccessAllowed();
+
+              final boolean read = svci.checkAccess(targetCol,
+                                                    PrivilegeDefs.privRead,
+                                                    true).getAccessAllowed();
+
+              if (!write && !read) {
+                // No appropriate access
+                noAccessCt++;
+                continue fix;
+              }
+
+              if (write && !read) {
+                // Incompatible with current sharing
+                warn("Incompatible access for " + ai.getPath());
+                continue fix;
+              }
+
+              if (write) {
+                a.setReadWrite(true);
+              } else {
+                a.setRead(true);
+              }
+
+            } catch (final Throwable t) {
+              error(t);
+              errorCt++;
+
+              if ((errorCt % 100) == 0) {
+                info("Had " + errorCt + " errors");
+              }
+            } finally {
+              closeSvci();
+            }
+
+            try {
+              final CalSvcI svci = getSvci(targetCol.getOwnerHref(), false);
+
               final FixAliasResult far =
                       svci.getRestoreHandler().fixSharee(targetCol,
-                                                         ai.getOwner());
+                                                         ai.getOwner(),
+                                                         a);
 
               switch (far) {
                 case ok:
@@ -512,6 +571,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
    * @param name of the service
    * @return object name value for the mbean with this name
    */
+  @SuppressWarnings("WeakerAccess")
   public static String getServiceName(final String name) {
     return "org.bedework.bwengine:service=" + name;
   }
@@ -811,8 +871,6 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         closeSvci();
       } catch (final Throwable t) {
         error(t);
-
-        return "Exception: " + t.getLocalizedMessage();
       }
     }
   }
@@ -870,41 +928,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   /** Get an svci object and return it. Also embed it in this object.
    *
    * @return svci object
-   * @throws CalFacadeException
-   */
-  private CalSvcI getSvci(final AliasInfo ai) throws CalFacadeException {
-    if ((svci != null) && svci.isOpen()) {
-      return svci;
-    }
-
-    boolean publicAdmin = false;
-
-    if ((curSvciOwner == null) || !curSvciOwner.equals(ai.getOwner())) {
-      svci = null;
-
-      curSvciOwner = ai.getOwner();
-      publicAdmin = ai.getPublick();
-    }
-
-    if (svci == null) {
-      final CalSvcIPars pars = CalSvcIPars.getIndexerPars(curSvciOwner,
-                                                          publicAdmin);
-      //CalSvcIPars pars = CalSvcIPars.getServicePars(curSvciOwner,
-      //                                              publicAdmin,   // publicAdmin
-      //                                              true);   // Allow super user
-      svci = new CalSvcFactoryDefault().getSvc(pars);
-    }
-
-    svci.open();
-    svci.beginTransaction();
-
-    return svci;
-  }
-
-  /** Get an svci object and return it. Also embed it in this object.
-   *
-   * @return svci object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   private CalSvcI getSvci(final String owner, final boolean publick) throws CalFacadeException {
     if ((svci != null) && svci.isOpen()) {
@@ -936,9 +960,9 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   }
 
   /**
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
-  public void closeSvci() throws CalFacadeException {
+  private void closeSvci() throws CalFacadeException {
     if ((svci == null) || !svci.isOpen()) {
       return;
     }

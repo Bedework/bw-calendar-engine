@@ -27,7 +27,7 @@ import org.bedework.util.misc.ToString;
  * @author Mike Douglass
  * @version 1.0
  */
-@Dump(elementName="alias", keyFields={"path"})
+@Dump(elementName="alias", keyFields={"path", "owner"})
 public class AliasInfo extends DumpEntity<AliasInfo> {
   private String path;
 
