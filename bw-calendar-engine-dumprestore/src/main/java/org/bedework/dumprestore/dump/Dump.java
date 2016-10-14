@@ -18,6 +18,7 @@
 */
 package org.bedework.dumprestore.dump;
 
+import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
@@ -28,11 +29,14 @@ import org.bedework.dumprestore.InfoLines;
 import org.bedework.dumprestore.dump.dumpling.DumpAliases;
 import org.bedework.dumprestore.dump.dumpling.DumpAll;
 import org.bedework.dumprestore.dump.dumpling.ExtSubs;
-
-import org.apache.log4j.Logger;
+import org.bedework.dumprestore.prdump.DumpPrincipal;
+import org.bedework.dumprestore.prdump.DumpPublic;
+import org.bedework.dumprestore.prdump.DumpSystem;
+import org.bedework.util.misc.Logged;
 
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -41,9 +45,7 @@ import java.util.Map;
  * @author Mike Douglass   douglm rpi.edu
  * @version 3.1
  */
-public class Dump implements Defs {
-  private transient Logger log;
-
+public class Dump extends Logged implements Defs {
   /* Where we dump to.
    */
   private String fileName;
@@ -57,25 +59,32 @@ public class Dump implements Defs {
   @SuppressWarnings("FieldCanBeLocal")
   private final String adminUserAccount = "admin";
 
-  /** ===================================================================
+  private final boolean newDumpFormat;
+
+  /* ===================================================================
    *                       Constructor
-   *  =================================================================== */
+   * =================================================================== */
 
   /**
    * @param info lines
-   * @throws Throwable
+   * @throws Throwable on error
    */
-  public Dump(final InfoLines info) throws Throwable {
+  public Dump(final InfoLines info,
+              final boolean newDumpFormat) throws Throwable {
+    this.newDumpFormat = newDumpFormat;
     globals.info = info;
-    globals.svci = getSvci();
   }
 
-  /** ===================================================================
+  /* ===================================================================
    *                       Dump methods
-   *  =================================================================== */
+   * =================================================================== */
+
+  public void setDirPath(final String val) {
+    globals.setDirPath(val);
+  }
 
   /**
-   * @param val - filename to dump to
+   * @param val - filename for old style dump
    */
   public void setFilename(final String val) {
     fileName = val;
@@ -90,9 +99,10 @@ public class Dump implements Defs {
 
   /**
    * @param noOutput  we don't intend doing any output (extsubs)
-   * @throws Throwable
+   * @throws Throwable on error
    */
   public void open(final boolean noOutput) throws Throwable {
+    globals.svci = getSvci();
     globals.svci.open();
     globals.di = globals.svci.getDumpHandler();
 
@@ -100,30 +110,34 @@ public class Dump implements Defs {
       return;
     }
 
-    boolean error = false;
+    if (!newDumpFormat) {
+      boolean error = false;
 
-    if (fileName == null) {
-      error("Must have an output file set");
-      error = true;
+      if (fileName == null) {
+        error("Must have an output file set");
+        error = true;
+      }
+
+      if (aliasesFileName == null) {
+        error("Must have an output file for aliases set");
+        error = true;
+      }
+
+      if (error) {
+        return;
+      }
+
+      globals.setOut(
+              new OutputStreamWriter(new FileOutputStream(fileName),
+                                     "UTF-8"),
+              new OutputStreamWriter(
+                      new FileOutputStream(aliasesFileName),
+                      "UTF-8"));
     }
-
-    if (aliasesFileName == null) {
-      error("Must have an output file for aliases set");
-      error = true;
-    }
-
-    if (error) {
-      return;
-    }
-
-    globals.setOut(new OutputStreamWriter(new FileOutputStream(fileName),
-                                          "UTF-8"),
-                   new OutputStreamWriter(new FileOutputStream(aliasesFileName),
-                                          "UTF-8"));
   }
 
   /**
-   * @throws Throwable
+   * @throws Throwable on error
    */
   public void close() throws Throwable {
     if (globals.svci != null) {
@@ -133,16 +147,42 @@ public class Dump implements Defs {
   }
 
   /**
-   * @throws Throwable
+   * @throws Throwable on error
    */
   public void doDump() throws Throwable {
-    new DumpAll(globals).dumpSection(null);
-    new DumpAliases(globals).dumpSection(null);
+    if (newDumpFormat) {
+      // TODO - start a separate thread for public
+      final DumpPublic dumpPub = new DumpPublic(globals);
+      if (dumpPub.open()) {
+        dumpPub.doDump();
+        dumpPub.close();
+      }
+
+      final DumpSystem dumpSys = new DumpSystem(globals);
+      if (dumpSys.open()) {
+        dumpSys.doDump();
+        dumpSys.close();
+      }
+
+      final DumpPrincipal dumpPr = new DumpPrincipal(globals);
+
+      final Iterator<BwPrincipal> it = globals.di.getAllPrincipals();
+      while (it.hasNext()) {
+        final BwPrincipal pr = it.next();
+        if (dumpPr.open(pr)) {
+          dumpPr.doDump();
+          dumpPr.close();
+        }
+      }
+    } else {
+      new DumpAll(globals).dumpSection(null);
+      new DumpAliases(globals).dumpSection(null);
+    }
   }
 
   /** Just get list of external subscriptions
    *
-   * @throws Throwable
+   * @throws Throwable on error
    */
   public void doExtSubs() throws Throwable {
     new ExtSubs(globals).getSubs();
@@ -171,30 +211,10 @@ public class Dump implements Defs {
  }
 
   /**
-   * @throws Throwable
+   * @throws Throwable on error
    */
   public void getConfigProperties() throws Throwable {
     globals.init(new CalSvcFactoryDefault().getSystemConfig().getBasicSystemProperties());
-  }
-
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void error(final String msg) {
-    getLog().error(msg);
-  }
-
-  protected void info(final String msg) {
-    getLog().info(msg);
-  }
-
-  protected void trace(final String msg) {
-    getLog().debug(msg);
   }
 
   private CalSvcI getSvci() throws Throwable {
@@ -203,8 +223,8 @@ public class Dump implements Defs {
                             adminUserAccount,
                             null,    // user
                             null,   // calsuite
-                            true,   // publicAdmin
-                            true,   // superUser,
+                            !newDumpFormat,   // publicAdmin
+                            !newDumpFormat,   // superUser,
                             true,   // service
                             false,  // public submission
                             true,  // adminCanEditAllPublicCategories

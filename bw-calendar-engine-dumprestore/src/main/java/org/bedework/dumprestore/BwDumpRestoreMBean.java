@@ -52,6 +52,17 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
   @MBeanInfo("Set true to fix aliases - false to list only")
   boolean getFixAliases();
 
+  /**
+   * @param val true to fix aliases only
+   */
+  void setNewDumpFormat(boolean val);
+
+  /**
+   * @return  true to list aliases only
+   */
+  @MBeanInfo("Set true to dump in new format - not for production use yet")
+  boolean getNewDumpFormat();
+
   /* ========================================================================
    * Operations
    * ======================================================================== */

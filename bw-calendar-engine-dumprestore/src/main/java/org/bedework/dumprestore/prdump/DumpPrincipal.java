@@ -21,24 +21,13 @@ package org.bedework.dumprestore.prdump;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.CalSvcFactoryDefault;
-import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalSvcIPars;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvci.CalendarsI;
-import org.bedework.dumprestore.AliasInfo;
-import org.bedework.dumprestore.InfoLines;
 import org.bedework.dumprestore.dump.DumpGlobals;
 import org.bedework.util.misc.Util;
 
-import org.apache.log4j.Logger;
-
 import java.io.File;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.Deque;
-import java.util.List;
 
 /** Dump all calendar data for the supplied principal.
  *
@@ -82,84 +71,67 @@ import java.util.List;
  * @author Mike Douglass   douglm @ bedework.edu
  * @version 4.0
  */
-public class DumpPrincipal {
-  private transient Logger log;
-
+public class DumpPrincipal extends Dumper {
   private BwPrincipal pr;
-
-  /* Where we dump to.
-   */
-  private String dirPath;
-
-  private Deque<String> pathStack = new ArrayDeque<String>();
-
-  private DumpGlobals globals = new DumpGlobals();
-
-  private final static String collectionsDirName = "collections";
+  
+  private boolean doingDup; // Extra stack level
 
   /* ===================================================================
    *                       Constructor
    * =================================================================== */
 
   /**
-   * @param pr the principal
-   * @param dirPath root of the dump
-   * @param info for progress
+   * @param globals for dump
    * @throws CalFacadeException on error
    */
-  public DumpPrincipal(final BwPrincipal pr,
-                       final String dirPath,
-                       final InfoLines info) throws CalFacadeException {
-    globals.info = info;
-    globals.svci = getSvci();
-
-    this.dirPath = dirPath;
-    this.pr = pr;
+  public DumpPrincipal(final DumpGlobals globals) throws CalFacadeException {
+    super(globals);
   }
 
   /**
+   * @param pr the principal
+   * @return true if ok
    * @throws CalFacadeException on error
    */
-  public void open() throws CalFacadeException {
-    globals.svci.open();
-    globals.di = globals.svci.getDumpHandler();
-
-    if (dirPath == null) {
-      throw new CalFacadeException("Null directory name");
+  public boolean open(final BwPrincipal pr) throws CalFacadeException {
+    this.pr = pr;
+    if (!open(pr.getPrincipalRef())) {
+      return false;
     }
 
+    getDi().startPrincipal(pr);
+    return true;
+  }
+  
+  public boolean open(final String dirName) throws CalFacadeException {
+    super.open();
     /* Create a directory for the principal */
 
-    if (File.pathSeparator.equals("/")) {
-      dirPath = Util.buildPath(true, dirPath, "/", pr.getPrincipalRef());
-    } else {
-      if (!dirPath.endsWith(File.pathSeparator)) {
-        dirPath += File.pathSeparator;
+    if (!makeDir(dirName, true)) {
+      // Duplicte user entry?
+      
+      for (int i = 0; i < 100; i++) {
+        if (makeDir(dirName + "-dup-" + i, true)) {
+          break;
+        }
+        
+        if (i == 99) {
+          addLn("Too many duplicates for " + dirName);
+          return false;
+        }
+        
+        popPath();
       }
-
-      String prPath = pr.getPrincipalRef().replace('/', File.pathSeparatorChar);
-      dirPath += prPath.substring(1); // Drop leading path separator
     }
-
-    File f = new File(dirPath);
-
-    if (f.exists()) {
-      throw new CalFacadeException("Path " + dirPath + " already exists.");
-    }
-
-    f.mkdirs();
-
-    pathStack.push(dirPath);
+    
+    return true;
   }
 
   /**
    * @throws CalFacadeException on error
    */
   public void close() throws CalFacadeException {
-    if (globals.svci != null) {
-      globals.svci.close();
-    }
-    globals.close();
+    getDi().endPrincipal(pr);
   }
 
   /** Dump everything owned by this principal
@@ -167,142 +139,66 @@ public class DumpPrincipal {
    * @throws CalFacadeException on error
    */
   public void doDump() throws CalFacadeException {
-    File f = makeFile(dirPath, pr.getAccount() + ".xml");
+    final File f = makeFile("principal.xml");
 
     pr.dump(f);
+
+    final BwPreferences prefs = getSvc().getPrefsHandler().get();
+    if (prefs == null) {
+      warn("No preferences for " + pr.getPrincipalRef());
+    } else {
+      prefs.dump(makeFile("preferences.xml"));
+    }
 
     /* Dump calendar collections - as we go we will create location, contact and
      * category directories.
      */
 
-    pathStack.push(makeDir(dirPath, collectionsDirName));
-
-    CalendarsI cols = globals.svci.getCalendarsHandler();
-
-    dumpCol(cols.getHome());
-
-    pathStack.pop();
-  }
-
-  private void dumpCol(final BwCalendar col) throws CalFacadeException {
-    CalendarsI colsI = globals.svci.getCalendarsHandler();
-
-    pathStack.push(makeDir(pathStack.peek(), col.getName()));
-
-    col.dump(makeFile(pathStack.peek(), col.getName() + ".xml"));
-
-    /* Dump any events in this collection */
-
-    /* Now dump any children */
-    Collection<BwCalendar> cols = colsI.getChildren(col);
-
-    if (Util.isEmpty(cols)){
-      return;
-    }
-
-    for (BwCalendar ch: cols) {
-      dumpCol(ch);
-    }
-
-    pathStack.pop();
-  }
-
-  /**
-   * @return list of external subscriptions
-   */
-  public List<AliasInfo> getExternalSubs() {
-    return globals.externalSubs;
-  }
-
-  /**
-  *
-  * @param infoLines - null for logged output only
-  */
- public void stats(final List<String> infoLines) {
-   globals.stats(infoLines);
- }
-
-  /**
-   * @param args
-   * @throws CalFacadeException on error
-   */
-  public void getConfigProperties(final String[] args) throws CalFacadeException {
-    globals.init(new CalSvcFactoryDefault().getSystemConfig().getBasicSystemProperties());
-  }
-
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void error(final String msg) {
-    getLog().error(msg);
-  }
-
-  protected void info(final String msg) {
-    getLog().info(msg);
-  }
-
-  protected void trace(final String msg) {
-    getLog().debug(msg);
-  }
-
-  protected File makeFile(final String dirPath,
-                          final String name) throws CalFacadeException {
     try {
-      Path p =  FileSystems.getDefault().getPath(dirPath, name);
+      makeDir(collectionsDirName, false);
 
-      File f = p.toFile();
+      final CalendarsI cols = getSvc().getCalendarsHandler();
 
-      if (!f.createNewFile()) {
-        throw new CalFacadeException("Unable to create file " + p);
+      final BwCalendar home = cols.getHome();
+
+      if (home == null) {
+        warn("No home for " + pr.getPrincipalRef());
+        return;
+      }
+      dumpCol(home, true);
+    } finally {
+      popPath();
+    }
+  }
+
+  protected void dumpCol(final BwCalendar col, 
+                         final boolean doChildren) throws CalFacadeException {
+    final CalendarsI colsI = getSvc().getCalendarsHandler();
+
+    try {
+      makeDir(col.getName(), false);
+
+      col.dump(makeFile(col.getName() + ".xml"));
+
+      /* Dump any events in this collection */
+
+      /* Now dump any children */
+
+      if (!doChildren || !col.getCollectionInfo().childrenAllowed) {
+        return;
+      }
+      
+      final Collection<BwCalendar> cols = colsI.getChildren(col);
+
+      if (Util.isEmpty(cols)) {
+        return;
       }
 
-      return f;
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  protected String makeDir(final String dirPath,
-                          final String name) throws CalFacadeException {
-    try {
-      Path p =  FileSystems.getDefault().getPath(dirPath, name);
-
-      File f = p.toFile();
-
-      if (!f.mkdir()) {
-        throw new CalFacadeException("Unable to create directory " + p);
+      for (final BwCalendar ch : cols) {
+        dumpCol(ch, true);
       }
-
-      return p.toString();
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    } finally {
+      popPath();
     }
-  }
-
-  private CalSvcI getSvci() throws CalFacadeException {
-    CalSvcIPars pars = new CalSvcIPars("dump-principal",
-                                       pr.getAccount(), // Need to use href
-                                       null,   // user
-                                       null,   // calsuite
-                                       true,   // publicAdmin
-                                       true,   // superUser,
-                                       true,   // service
-                                       false,  // publicSubmission
-                                       true,  // adminCanEditAllPublicCategories
-                                       true,  // adminCanEditAllPublicLocations
-                                       true,  // adminCanEditAllPublicSponsors
-                                       false);    // sessionless
-    final CalSvcI svci = new CalSvcFactoryDefault().getSvc(pars);
-
-    return svci;
   }
 }

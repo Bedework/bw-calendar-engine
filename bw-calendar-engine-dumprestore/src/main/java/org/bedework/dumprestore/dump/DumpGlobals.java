@@ -68,8 +68,11 @@ import java.util.Map;
  */
 public class DumpGlobals extends Counters {
   /** Used to build hrefs */
-  public BasicSystemProperties sysRoots;
+  private BasicSystemProperties sysRoots;
 
+  /** Where we do new style dump */
+  private String dirPath;
+  
   /** Use this to output xml */
   public XmlEmit xml;
 
@@ -108,9 +111,9 @@ public class DumpGlobals extends Counters {
   }
 
   /**
-   * @param val output writer for dump
+   * @param val output writer for old style dump
    * @param aliases output writer for aliases
-   * @throws Throwable
+   * @throws Throwable on error
    */
   public void setOut(final Writer val,
                      final Writer aliases) throws Throwable {
@@ -123,9 +126,17 @@ public class DumpGlobals extends Counters {
     aliasesXml = new XmlEmit();
     aliasesXml.startEmit(aliases);
   }
+  
+  public void setDirPath(final String val) {
+    dirPath = val;
+  }
+  
+  public String getDirPath() {
+    return dirPath;
+  }
 
   /**
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public void close() throws CalFacadeException {
     try {
@@ -153,5 +164,9 @@ public class DumpGlobals extends Counters {
    */
   public void init(final BasicSystemProperties sysRoots) {
     this.sysRoots = sysRoots;
+  }
+
+  public BasicSystemProperties getSysRoots() {
+    return sysRoots;
   }
 }

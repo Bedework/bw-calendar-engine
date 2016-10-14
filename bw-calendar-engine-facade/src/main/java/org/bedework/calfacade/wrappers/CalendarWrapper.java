@@ -28,6 +28,7 @@ import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.AccessUtilI;
 
+import java.io.File;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashMap;
@@ -745,6 +746,10 @@ public class CalendarWrapper extends BwCalendar
     return entity.getTombstoned();
   }
 
+  public void dump(final File f) throws CalFacadeException {
+    entity.dump(f);
+  }
+  
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */

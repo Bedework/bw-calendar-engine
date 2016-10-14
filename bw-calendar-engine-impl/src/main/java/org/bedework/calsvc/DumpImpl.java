@@ -216,6 +216,18 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     return getObjects(BwView.class.getName());
   }
 
+  @Override
+  public void startPrincipal(final BwPrincipal val)
+          throws CalFacadeException {
+    pushPrincipal(val);
+  }
+
+  @Override
+  public void endPrincipal(final BwPrincipal val)
+          throws CalFacadeException {
+    popPrincipal();
+  }
+
   private Iterator getObjects(final String className) throws CalFacadeException {
     return getCal().getObjectIterator(className);
   }

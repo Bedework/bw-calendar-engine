@@ -35,6 +35,7 @@ import org.bedework.dumprestore.restore.Restore;
 import org.bedework.indexer.BwIndexCtlMBean;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.MBeanUtil;
+import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.xml.FromXml;
 import org.bedework.util.xml.XmlUtil;
@@ -66,6 +67,8 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   private boolean allowRestore;
 
   private boolean fixAliases;
+  
+  private boolean newDumpFormat;
 
   private String curSvciOwner;
 
@@ -178,15 +181,20 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
       try {
         final long startTime = System.currentTimeMillis();
 
-        final Dump d = new Dump(infoLines);
+        final Dump d = new Dump(infoLines, newDumpFormat);
 
         d.getConfigProperties();
 
         if (dumpAll) {
           infoLines.addLn("Started dump of data");
 
-          d.setFilename(makeFilename(getDataOutPrefix()));
-          d.setAliasesFilename(makeFilename("aliases-" + getDataOutPrefix()));
+          if (newDumpFormat) {
+            d.setDirPath(makeDirname());
+          } else {
+            d.setFilename(makeFilename(getDataOutPrefix()));
+            d.setAliasesFilename(
+                    makeFilename("aliases-" + getDataOutPrefix()));
+          }
 
           d.open(false);
 
@@ -651,6 +659,16 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   }
 
   @Override
+  public void setNewDumpFormat(final boolean val) {
+    newDumpFormat = true;
+  }
+
+  @Override
+  public boolean getNewDumpFormat() {
+    return newDumpFormat;
+  }
+
+  @Override
   public synchronized String restoreData() {
     try {
       setStatus(statusStopped);
@@ -908,6 +926,11 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
       error(t);
       return false;
     }
+  }
+
+  private String makeDirname() throws Throwable {
+    return Util.buildPath(true, getDataOut(), "/", 
+                          DateTimeUtil.isoDateTime());
   }
 
   private String makeFilename(final String val) throws Throwable {

@@ -253,7 +253,7 @@ public class CoreCalendars extends CalintfHelperHib
 
   @Override
   public void principalChanged() throws CalFacadeException {
-    colCache.flushAccess(this);
+    colCache.clear();
   }
 
   /* (non-Javadoc)
