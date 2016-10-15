@@ -899,7 +899,7 @@ public class CoreCalendars extends CalintfHelperHib
         continue;
       }
 
-      path = Util.buildPath(true, path, "/", pathSeg);
+      path = Util.buildPath(colPathEndsWithSlash, path, "/", pathSeg);
 
       sess.createQuery(getCalendarByPathQuery);
 
@@ -1088,32 +1088,24 @@ public class CoreCalendars extends CalintfHelperHib
    *                  Admin support
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreCalendarsI#getChildren(java.lang.String, int, int)
-   */
+  private final static String getChildCollectionsQuery =
+          "select col.path from " +
+                  BwCalendar.class.getName() +
+                  " col where " +
+                  "(col.filterExpr is null or col.filterExpr <> :tsfilter) and " +
+                  "col.colPath";
+          
   @Override
   @SuppressWarnings("unchecked")
   public Collection<String> getChildCollections(final String parentPath,
                                         final int start,
                                         final int count) throws CalFacadeException {
-    HibSession sess = getSess();
-
-    StringBuilder sb = new StringBuilder("select col.path from ");
-    sb.append(BwCalendar.class.getName());
-    sb.append(" col where col.colPath");
+    final HibSession sess = getSess();
 
     if (parentPath == null) {
-      sb.append(" is null");
+      sess.createQuery(getChildCollectionsQuery + " is null");
     } else {
-      sb.append("=:colPath");
-    }
-
-    // XXX tombstone-schema
-    sb.append(" and (col.filterExpr is null or col.filterExpr <> :tsfilter)");
-
-    sess.createQuery(sb.toString());
-
-    if (parentPath != null) {
+      sess.createQuery(getChildCollectionsQuery + "=:colPath");
       sess.setString("colPath", parentPath);
     }
 
