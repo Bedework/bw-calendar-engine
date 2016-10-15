@@ -58,6 +58,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+
 /** Class to encapsulate most of what we do with collections
  *
  * @author douglm
@@ -224,24 +226,20 @@ public class CoreCalendars extends CalintfHelperHib
     super(chcb);
     super.init(cb, ac, currentMode, sessionless);
 
-    userCalendarRootPath = Util.buildPath(true, "/", getSyspars()
-            .getUserCalendarRoot());
+    userCalendarRootPath = 
+            Util.buildPath(colPathEndsWithSlash, 
+                           "/", getSyspars()
+                                   .getUserCalendarRoot());
     //groupCalendarRootPath = userCalendarRootPath + "/" + "groups";
 
     colCache = new CollectionCache(this, cb.getStats());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcore.CalintfHelper#startTransaction()
-   */
   @Override
   public void startTransaction() throws CalFacadeException {
     colCache.flush();  // Just in case
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcore.CalintfHelper#endTransaction()
-   */
   @Override
   public void endTransaction() throws CalFacadeException {
     colCache.flush();
@@ -256,9 +254,6 @@ public class CoreCalendars extends CalintfHelperHib
     colCache.clear();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CoreCalendarsI#getSynchInfo(java.lang.String, java.lang.String)
-   */
   @Override
   public CollectionSynchInfo getSynchInfo(final String path,
                                           final String token) throws CalFacadeException {
@@ -451,32 +446,38 @@ public class CoreCalendars extends CalintfHelperHib
 
     final BasicSystemProperties sys = getSyspars();
 
-    if (Util.buildPath(true, pathTo, "/", sys.getUserInbox()).equals(path)) {
+    if (Util.buildPath(colPathEndsWithSlash, pathTo, "/", 
+                       sys.getUserInbox()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeInbox,
                                 true, false, PrivilegeDefs.privAny);
     }
 
-    if (Util.buildPath(true, pathTo, "/", ".pendingInbox").equals(path)) {
+    if (Util.buildPath(colPathEndsWithSlash, pathTo, "/", 
+                       ".pendingInbox").equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypePendingInbox,
                                 true, false, PrivilegeDefs.privAny);
     }
 
-    if (Util.buildPath(true, pathTo, "/", sys.getUserOutbox()).equals(path)) {
+    if (Util.buildPath(colPathEndsWithSlash, pathTo, "/", 
+                       sys.getUserOutbox()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeOutbox,
                                 true, false, PrivilegeDefs.privAny);
     }
 
-    if (Util.buildPath(true, pathTo, "/", sys.getDefaultNotificationsName()).equals(path)) {
+    if (Util.buildPath(colPathEndsWithSlash, pathTo, "/", 
+                       sys.getDefaultNotificationsName()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeNotifications,
                                 true, false, PrivilegeDefs.privAny);
     }
 
-    if (Util.buildPath(true, pathTo, "/", sys.getDefaultReferencesName()).equals(path)) {
+    if (Util.buildPath(colPathEndsWithSlash, pathTo, "/", 
+                       sys.getDefaultReferencesName()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeEventList,
                                 true, false, PrivilegeDefs.privAny);
     }
 
-    if (Util.buildPath(true, pathTo, "/", sys.getUserDefaultPollsCalendar()).equals(path)) {
+    if (Util.buildPath(colPathEndsWithSlash, pathTo, "/", 
+                       sys.getUserDefaultPollsCalendar()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypePoll,
                                 true, false, PrivilegeDefs.privAny);
     }
@@ -538,7 +539,8 @@ public class CoreCalendars extends CalintfHelperHib
     }
 
     if (tryFetch){
-      gscr.cal = getCalendar(Util.buildPath(true, pathTo, "/", name),
+      gscr.cal = getCalendar(Util.buildPath(colPathEndsWithSlash, 
+                                            pathTo, "/", name),
                              access, false);
 
       if ((gscr.cal != null) || !create) {
@@ -943,7 +945,7 @@ public class CoreCalendars extends CalintfHelperHib
     cal.setCreatorHref(user.getPrincipalRef());
     cal.setOwnerHref(user.getPrincipalRef());
     cal.setPublick(false);
-    cal.setPath(Util.buildPath(true, path, "/", cal.getName()));
+    cal.setPath(Util.buildPath(colPathEndsWithSlash, path, "/", cal.getName()));
     cal.setColPath(usercal.getPath());
     cal.setCalType(BwCalendar.calTypeCalendarCollection);
     cal.setAffectsFreeBusy(true);
@@ -1298,7 +1300,7 @@ public class CoreCalendars extends CalintfHelperHib
       path = parent.getPath();
     }
 
-    path = Util.buildPath(true, path, "/", name);
+    path = Util.buildPath(colPathEndsWithSlash, path, "/", name);
     HibSession sess = getSess();
 
     StringBuilder sb = new StringBuilder();
@@ -1333,7 +1335,7 @@ public class CoreCalendars extends CalintfHelperHib
 
     if ("/".equals(parentPath)) {
       // creating a new root
-      newPath = Util.buildPath(true, "/", val.getName());
+      newPath = Util.buildPath(colPathEndsWithSlash, "/", val.getName());
     } else {
       parent = getCalendar(parentPath, access, false);
 
@@ -1359,7 +1361,8 @@ public class CoreCalendars extends CalintfHelperHib
         throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
       }
 
-      newPath = Util.buildPath(true, parent.getPath(), "/", val.getName());
+      newPath = Util.buildPath(colPathEndsWithSlash, parent.getPath(), 
+                               "/", val.getName());
     }
 
     /* Ensure the name isn't reserved and is unique */
@@ -1425,7 +1428,8 @@ public class CoreCalendars extends CalintfHelperHib
     val = unwrap(val);
 
     String ppath = newParent.getPath();
-    val.setPath(Util.buildPath(true, ppath, "/", val.getName()));
+    val.setPath(Util.buildPath(colPathEndsWithSlash, ppath, "/", 
+                               val.getName()));
     val.setColPath(ppath);
 
     val.getLastmod().setPath(val.getPath());

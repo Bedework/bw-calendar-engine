@@ -33,6 +33,10 @@ import java.io.Serializable;
  */
 @ConfInfo(elementName = "basic-properties")
 public interface BasicSystemProperties extends Serializable {
+  /** Before 4.0 internal paths did not end with "/". 4.0 and above they will
+   */
+  boolean colPathEndsWithSlash = true;
+  
   /** Set the principal root e.g. "/principals"
    *
    * @param val    String

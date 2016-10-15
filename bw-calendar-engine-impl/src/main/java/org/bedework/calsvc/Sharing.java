@@ -60,6 +60,8 @@ import java.util.List;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+
 /** This type of object will handle sharing operations.
  *
  * @author Mike Douglass
@@ -283,7 +285,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     /* We must have at least read access to the shared collection */
 
-    final BwCalendar sharerCol = getCols().get(Util.buildPath(true, reply.getHostUrl()));
+    final BwCalendar sharerCol = getCols().get(Util.buildPath(colPathEndsWithSlash, reply.getHostUrl()));
 
     if (sharerCol == null) {
       // Bad hosturl

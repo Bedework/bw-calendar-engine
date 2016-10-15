@@ -53,6 +53,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+
 /** Class which implements the functions needed to dump the
  * calendar using a jdbc connection.
  *
@@ -98,13 +100,14 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   public Iterator getCalendars() throws CalFacadeException {
     final Collection<BwCalendar> cols = new ArrayList<>();
 
-    cols.add(getCal().getCalendar(Util.buildPath(true, "/",
-                                                 getBasicSyspars()
-                                                         .getPublicCalendarRoot()),
-                              PrivilegeDefs.privAny, false));
-    cols.add(getCal().getCalendar(Util.buildPath(true, "/",
-                                                 getBasicSyspars().getUserCalendarRoot()),
-                              PrivilegeDefs.privAny, false));
+    cols.add(getCal().getCalendar(
+            Util.buildPath(colPathEndsWithSlash, "/",
+                           getBasicSyspars().getPublicCalendarRoot()),
+            PrivilegeDefs.privAny, false));
+    cols.add(getCal().getCalendar(
+            Util.buildPath(colPathEndsWithSlash, "/",
+                           getBasicSyspars().getUserCalendarRoot()),
+            PrivilegeDefs.privAny, false));
 
     return cols.iterator();
   }

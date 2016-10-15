@@ -41,6 +41,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+
 /** This acts as an interface to the database for user objects.
  *
  * @author Mike Douglass       douglm - rpi.edu
@@ -190,8 +192,8 @@ class Users extends CalSvcDb implements UsersI {
 
     ((BwUser)user).setQuota(getSvc().getAuthProperties().getDefaultUserQuota());
 
-    user.setPrincipalRef(Util.buildPath(true, userPrincipalRoot, "/",
-                                        account));
+    user.setPrincipalRef(Util.buildPath(colPathEndsWithSlash, 
+                                        userPrincipalRoot, "/", account));
 
     return user;
   }
@@ -308,7 +310,7 @@ class Users extends CalSvcDb implements UsersI {
     prefs.setOwnerHref(principal.getPrincipalRef());
 
     prefs.setDefaultCalendarPath(
-      Util.buildPath(true,
+      Util.buildPath(colPathEndsWithSlash, 
                      getSvc().getPrincipalInfo().getCalendarHomePath(principal),
                      "/",
                      getBasicSyspars().getUserDefaultCalendar()));

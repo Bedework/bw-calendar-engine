@@ -82,6 +82,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+
 /** A base implementation of Directories which handles some generic directory
  * methods.
  *
@@ -786,7 +788,7 @@ public abstract class AbstractDirImpl implements Directories {
       throw new CalFacadeException(CalFacadeException.unknownPrincipalType);
     }
 
-    return Util.buildPath(true, root, "/", id);
+    return Util.buildPath(colPathEndsWithSlash, root, "/", id);
   }
 
   @Override
@@ -810,7 +812,8 @@ public abstract class AbstractDirImpl implements Directories {
         return urls;
       }
 
-      urls.add(Util.buildPath(true, getSystemRoots().getUserPrincipalRoot(), "/",
+      urls.add(Util.buildPath(colPathEndsWithSlash, 
+                              getSystemRoots().getUserPrincipalRoot(), "/",
                               cb.getCurrentUser().getAccount()));
     } else {
       // XXX incomplete

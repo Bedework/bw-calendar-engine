@@ -43,6 +43,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
 
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+
 /** This acts as an interface to the database for calendar suites.
  *
  * @author Mike Douglass       douglm - rpi.edu
@@ -224,7 +226,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     }
 
     if (col != null) {
-      return Util.buildPath(false, home, "/", col);
+      return Util.buildPath(colPathEndsWithSlash, home, "/", col);
     }
 
     throw new RuntimeException("System error");

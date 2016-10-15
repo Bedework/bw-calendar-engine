@@ -55,6 +55,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+
 /** This acts as an interface to the database for calendars.
  *
  * @author Mike Douglass       douglm - rpi.edu
@@ -71,7 +73,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   Calendars(final CalSvc svci) throws CalFacadeException {
     super(svci);
 
-    publicCalendarRootPath = Util.buildPath(true, "/",
+    publicCalendarRootPath = Util.buildPath(colPathEndsWithSlash, "/",
                                             getBasicSyspars()
                                                     .getPublicCalendarRoot());
     //userCalendarRootPath = "/" + getBasicSyspars().getUserCalendarRoot();
@@ -108,7 +110,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
         return publicCalendarRootPath;
       }
 
-      return Util.buildPath(true, getSyspars().getWorkflowRoot()); // "/",
+      return Util.buildPath(colPathEndsWithSlash, getSyspars().getWorkflowRoot()); // "/",
 //                            getPrincipal().getAccountNoSlash());
     }
 
@@ -178,7 +180,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     int pathi = 1;  // Element 0 is a zero length string
 
     while (pathi < pathEls.length) {
-      startPath = Util.buildPath(true, startPath, "/", pathEls[pathi]);
+      startPath = Util.buildPath(colPathEndsWithSlash, startPath, "/", pathEls[pathi]);
 
       pathi++;
 

@@ -45,6 +45,8 @@ import org.apache.log4j.Logger;
 import java.util.Collection;
 import java.util.TreeSet;
 
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+
 /** An access helper class. This class makes some assumptions about the
  * classes it deals with but there are no explicit hibernate, or other
  * persistence engine, dependencies.
@@ -304,8 +306,7 @@ public class AccessUtil implements AccessUtilI {
             ca = new CurrentAccess();
 
             ca = Acl.defaultNonOwnerAccess;
-          } else if (path.equals(Util.buildPath(true,
-                                                cb.getUserHomePath(),
+          } else if (path.equals(Util.buildPath(colPathEndsWithSlash, cb.getUserHomePath(),
                                                 "/",
                                                 owner.getAccount()))) {
             // Accessing user home directory
