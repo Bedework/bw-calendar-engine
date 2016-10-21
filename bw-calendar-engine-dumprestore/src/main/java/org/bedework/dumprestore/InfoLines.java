@@ -27,16 +27,26 @@ import java.util.ArrayList;
  */
 public class InfoLines extends ArrayList<String> {
   /** Appends newline
-   * @param ln
+   * @param ln line content
    */
   public void addLn(final String ln) {
     add(ln + "\n");
   }
 
   /** Emit the exception message
-   * @param t
+   * @param t Throwable
    */
   public void exceptionMsg(final Throwable t) {
     addLn("Exception - check logs: " + t.getMessage());
+  }
+  
+  public String toString() {
+    final StringBuilder sb = new StringBuilder();
+
+    for (final String s : this) {
+      sb.append(s).append('\n');
+    }
+    
+    return sb.toString();
   }
 }

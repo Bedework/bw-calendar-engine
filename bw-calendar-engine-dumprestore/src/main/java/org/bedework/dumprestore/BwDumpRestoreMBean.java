@@ -53,12 +53,12 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
   boolean getFixAliases();
 
   /**
-   * @param val true to fix aliases only
+   * @param val true for the new hierarchical dump format
    */
   void setNewDumpFormat(boolean val);
 
   /**
-   * @return  true to list aliases only
+   * @return  true for the new hierarchical dump format
    */
   @MBeanInfo("Set true to dump in new format - not for production use yet")
   boolean getNewDumpFormat();
@@ -149,4 +149,12 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
    */
   @MBeanInfo("Delete all traces of a user - WARNING this is unrecoverable")
   String deleteUser(@MBeanInfo("account")String account);
+
+  /** Restore a user. Requires the data path refer to the new dump format. 
+   *
+   * @param account of user.
+   * @return Completion messages and stats
+   */
+  @MBeanInfo("Restore a user")
+  String restoreUser(@MBeanInfo("account")String account);
 }

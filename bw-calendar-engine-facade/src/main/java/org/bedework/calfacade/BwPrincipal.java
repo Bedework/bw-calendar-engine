@@ -25,6 +25,7 @@ import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.xml.FromXml;
 
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -469,6 +470,34 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
     val.setGroups(getGroups());  // XXX this should be cloned
   }
 
+  /* ====================================================================
+   *                   Restore callback
+   * ==================================================================== */
+
+  public static FromXml.Callback getRestoreCallback() {
+    final FromXml.Callback cb = new FromXml.Callback() {
+      protected Timestamp lastAccess;
+
+      /** Last time principal modified something in our system.
+       */
+      protected Timestamp lastModify;
+      @Override
+      public Object simpleValue(final Class cl,
+                                final String val) throws Throwable {
+        if (cl.getCanonicalName().equals(Timestamp.class.getCanonicalName())) {
+          return Timestamp.valueOf(val);
+        }
+        
+        return null;
+      }
+    };
+
+    cb.addSkips("id",
+                "seq");
+    
+    return cb;
+  }
+  
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */

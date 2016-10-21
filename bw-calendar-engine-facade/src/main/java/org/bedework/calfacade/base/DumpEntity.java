@@ -38,7 +38,7 @@ import java.util.TreeSet;
 
 import javax.xml.namespace.QName;
 
-/** An entity which can be dumped..
+/** An entity which can be dumped.
  *
  * @author Mike Douglass
  * @version 1.0

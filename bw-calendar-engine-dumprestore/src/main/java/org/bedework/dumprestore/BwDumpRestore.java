@@ -91,10 +91,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         return;
       }
 
-      boolean closed = true;
-      Restore restorer = null;
-
-      try {
+      try (final Restore restorer = new Restore()) {
         if (!disableIndexer()) {
           infoLines.add("***********************************\n");
           infoLines.add("********* Unable to disable indexer\n");
@@ -107,8 +104,6 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
         setStatus(statusRunning);
 
-        restorer = new Restore();
-
         restorer.getConfigProperties();
 
         infoLines.addLn("Restore file: " + getDataIn());
@@ -116,16 +111,12 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
         restorer.setFilename(getDataIn());
 
-        closed = false;
-        restorer.open();
+        restorer.open(true);
 
         restorer.doRestore(infoLines);
 
         externalSubs = restorer.getExternalSubs();
         aliasInfo = restorer.getAliasInfo();
-
-        closed = true;
-        restorer.close();
 
         restorer.stats(infoLines);
 
@@ -143,11 +134,6 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         infoLines.exceptionMsg(t);
         setStatus(statusFailed);
       } finally {
-        if (!closed) {
-          try {
-            restorer.close();
-          } catch (final Throwable ignored) {}
-        }
         infoLines.addLn("Restore completed - about to start indexer");
 
         try {
@@ -734,7 +720,9 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
         if (child.getTagName().equals(Defs.extsubsTag)) {
           for (final Element extSubEl: XmlUtil.getElementsArray(child)) {
-            externalSubs.add((AliasInfo)fxml.fromXml(extSubEl, AliasInfo.class));
+            externalSubs.add(fxml.fromXml(extSubEl, 
+                                          AliasInfo.class,
+                                          null));
           }
 
           continue;
@@ -742,8 +730,9 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
         if (child.getTagName().equals(Defs.aliasesTag)) {
           for (final Element aliasEl: XmlUtil.getElementsArray(child)) {
-            final AliasEntry ae = (AliasEntry)fxml.fromXml(aliasEl,
-                                                           AliasEntry.class);
+            final AliasEntry ae = fxml.fromXml(aliasEl,
+                                               AliasEntry.class,
+                                               null);
             aliasInfo.put(ae.getTargetPath(), ae);
           }
 
@@ -890,6 +879,31 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
       } catch (final Throwable t) {
         error(t);
       }
+    }
+  }
+
+  @Override
+  public String restoreUser(final String account) {
+    final InfoLines infoLines = new InfoLines();
+
+    try (final Restore restorer = new Restore()) {
+      restorer.getConfigProperties();
+
+      infoLines.addLn("Restore file: " + getDataIn());
+      info("Restore file: " + getDataIn());
+
+      restorer.setFilename(getDataIn());
+
+      restorer.open(false);
+
+      restorer.restoreUser(account, infoLines);
+      
+      return infoLines.toString();
+    } catch (final Throwable t) {
+      error(t);
+
+      return "Exception: " + t.getLocalizedMessage() + 
+              "|nInfo: " + infoLines;
     }
   }
 

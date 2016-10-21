@@ -459,25 +459,22 @@ public class RestoreGlobals extends Counters {
 
   /**
    * @return principal root
-   * @throws Throwable
    */
-  public static String getUserPrincipalRoot() throws Throwable {
+  public static String getUserPrincipalRoot() {
     return getBasicSyspars().getUserPrincipalRoot();
   }
 
   /**
    * @return principal root
-   * @throws Throwable
    */
-  public static String getGroupPrincipalRoot() throws Throwable {
+  public static String getGroupPrincipalRoot()  {
     return getBasicSyspars().getGroupPrincipalRoot();
   }
 
   /**
    * @return principal root
-   * @throws Throwable
    */
-  public static String getBwadmingroupPrincipalRoot() throws Throwable {
+  public static String getBwadmingroupPrincipalRoot() {
     return getBasicSyspars().getBwadmingroupPrincipalRoot();
   }
 
@@ -508,10 +505,9 @@ public class RestoreGlobals extends Counters {
   private static int badUserCount = 0;
 
   /**
-   * @param p
-   * @throws Throwable
+   * @param p a principal
    */
-  public void setPrincipalHref(final BwPrincipal p) throws Throwable {
+  public void setPrincipalHref(final BwPrincipal p) {
     String account = p.getAccount();
 
     if (account == null) {
@@ -534,18 +530,17 @@ public class RestoreGlobals extends Counters {
     }
 
     if (p instanceof BwUser) {
-      p.setPrincipalRef(Util.buildPath(true, getUserPrincipalRoot(),
-                                       "/", p.getAccount()));
+      p.setPrincipalRef(Util.buildPath(false, getUserPrincipalRoot(), "/", p.getAccount()));
       return;
     }
 
     if (p instanceof BwAdminGroup) {
-      p.setPrincipalRef(Util.buildPath(true, getBwadmingroupPrincipalRoot(), "/", p.getAccount()));
+      p.setPrincipalRef(Util.buildPath(false, getBwadmingroupPrincipalRoot(), "/", p.getAccount()));
       return;
     }
 
     if (p instanceof BwGroup) {
-      p.setPrincipalRef(Util.buildPath(true, getGroupPrincipalRoot(), "/", p.getAccount()));
+      p.setPrincipalRef(Util.buildPath(false, getGroupPrincipalRoot(), "/", p.getAccount()));
       return;
     }
   }
@@ -564,11 +559,11 @@ public class RestoreGlobals extends Counters {
     }
 
     if (whoType == WhoDefs.whoTypeUser) {
-      return Util.buildPath(true, getUserPrincipalRoot(), "/", id);
+      return Util.buildPath(false, getUserPrincipalRoot(), "/", id);
     }
 
     if (whoType == WhoDefs.whoTypeGroup) {
-      return Util.buildPath(true, getBwadmingroupPrincipalRoot(), "/", id);
+      return Util.buildPath(false, getBwadmingroupPrincipalRoot(), "/", id);
     }
 
     return id;

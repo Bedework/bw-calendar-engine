@@ -27,6 +27,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
+import org.bedework.util.xml.FromXml;
 
 import java.util.Collection;
 import java.util.Set;
@@ -845,7 +846,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
    * @param val  String time value
    * @throws CalFacadeException
    */
-  public void setWorkdayStart(final String val) throws CalFacadeException{
+  public void setWorkdayStartTime(final String val) throws CalFacadeException{
     setWorkdayStart(makeMinutesFromTime(val));
   }
 
@@ -863,7 +864,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
    * @param val  String time value
    * @throws CalFacadeException
    */
-  public void setWorkdayEnd(final String val) throws CalFacadeException{
+  public void setWorkdayEndTime(final String val) throws CalFacadeException{
     setWorkdayEnd(makeMinutesFromTime(val));
   }
 
@@ -916,7 +917,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 
@@ -926,12 +927,40 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     ts.append("skinStyle", getSkinStyle());
     ts.append("preferredView", getPreferredView());
     ts.append("preferredViewPeriod", getPreferredViewPeriod());
+    ts.append("pageSize", getPageSize());
     ts.append("workDays", getWorkDays());
     ts.append("workdayStart", getWorkdayStart());
     ts.append("workdayEnd", getWorkdayEnd());
+    ts.append("preferredEndType", getPreferredEndType());
+    ts.append("userMode", getUserMode());
+    ts.append("hour24", getHour24());
+    ts.append("scheduleAutoRespond", getScheduleAutoRespond());
+    ts.append("scheduleAutoCancelAction",
+              getScheduleAutoCancelAction());
+    ts.append("scheduleDoubleBook", getScheduleDoubleBook());
+    ts.append("scheduleAutoProcessResponses",
+              getScheduleAutoProcessResponses());
 
     ts.append("views", getViews());
     ts.append("properties", getProperties());
+/*  
+    private Set<BwProperty> properties;
+
+    public static final String propertyPreferredLocale = "userpref:preferrred-locale";
+    public static final String propertyDefaultViewMode = "userpref:default-view-mode";
+    public static final String propertyLastLocale = "userpref:last-locale";
+    public static final String propertyAttachmentsFolder = "userpref:attachments-folder";
+    public static final String propertyDefaultTzid = "userpref:default-tzid";
+    public static final String propertyDefaultCategory = "userpref:default-category";
+    public static final String propertyScheduleMaxinstances = "userpref:schedule-max-instances";
+    public static final String propertyDefaultImageDirectory = "userpref:default-image-directory";
+    public static final String propertyAdminResourcesDirectory = "userpref:admin-resources-directory";
+    public static final String propertySuiteResourcesDirectory = "userpref:suite-resources-directory";
+    public static final String propertyPreferredGroup = "userpref:preferrred-group";
+    public static final String propertyNotificationToken = "userpref:notification-token";
+    public static final String propertyMaxEntitySize = "NOTuserpref:max-entity-size";
+    public static final String propertyQuotaUsed = "NOTuserpref:quota-used-bytes";
+*/
 
     return ts.toString();
   }
@@ -1058,5 +1087,22 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     }
 
     return vals;
+  }
+
+  /* ====================================================================
+   *                   Restore callback
+   * ==================================================================== */
+
+  public static FromXml.Callback getRestoreCallback() {
+    final FromXml.Callback cb = new FromXml.Callback();
+
+    cb.addClassForName("view", BwView.class);
+    cb.addClassForName("property", BwProperty.class);
+    
+    cb.addSkips("byteSize",
+                "id",
+                "seq");
+
+    return cb;
   }
 }
