@@ -35,6 +35,7 @@ import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 import org.bedework.util.misc.Util.AdjustCollectionResult;
 import org.bedework.util.timezones.DateTimeUtil;
+import org.bedework.util.xml.FromXmlCallback;
 import org.bedework.util.xml.tagdefs.AppleIcalTags;
 import org.bedework.util.xml.tagdefs.AppleServerTags;
 import org.bedework.util.xml.tagdefs.BedeworkServerTags;
@@ -42,11 +43,11 @@ import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
 import net.fortuna.ical4j.model.property.LastModified;
+import org.w3c.dom.Element;
 
 import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -301,11 +302,14 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     final Map<Integer, List<String>> et = new HashMap<>();
 
     et.put(calTypeCalendarCollection,
-           Collections.unmodifiableList(Arrays.asList(new String[]{"VEVENT"})));
+           Collections.unmodifiableList(
+                   Collections.singletonList("VEVENT")));
     et.put(calTypePoll,
-           Collections.unmodifiableList(Arrays.asList(new String[]{"VPOLL"})));
+           Collections.unmodifiableList(
+                   Collections.singletonList("VPOLL")));
     et.put(calTypeTasks,
-           Collections.unmodifiableList(Arrays.asList(new String[]{"VTODO"})));
+           Collections.unmodifiableList(
+                   Collections.singletonList("VTODO")));
 
     entityTypes = Collections.unmodifiableMap(et);
   }
@@ -1891,9 +1895,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    *                   CollatableEntity methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CollatableEntity#getCollateValue()
-   */
   @Override
   @NoDump
   public String getCollateValue() {
@@ -1904,29 +1905,62 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    * @return a copy for tombstoning.
    */
   public BwCalendar makeTombstoneCopy() {
-    BwCalendar cal = new BwCalendar();
+    final BwCalendar col = new BwCalendar();
 
-    super.copyTo(cal);
+    super.copyTo(col);
 
-    cal.setName(getName());
-    cal.setPath(getPath());
+    col.setName(getName());
+    col.setPath(getPath());
 
-    cal.setCalType(getCalType());
-    cal.setCreated(getCreated());
-    cal.setLastmod((BwCollectionLastmod)getLastmod().clone());
+    col.setCalType(getCalType());
+    col.setCreated(getCreated());
+    col.setLastmod((BwCollectionLastmod)getLastmod().clone());
 
-    cal.setAliasUri(getAliasUri());
+    col.setAliasUri(getAliasUri());
 
-    return cal;
+    return col;
+  }
+
+  /* ====================================================================
+   *                   Restore callback
+   * ==================================================================== */
+
+  private static FromXmlCallback fromXmlCb;
+
+  @NoDump
+  public static FromXmlCallback getRestoreCallback() {
+    if (fromXmlCb == null) {
+      fromXmlCb = new FromXmlCallback() {
+        @Override
+        public boolean save(final Element el,
+                            final Object theObject,
+                            final Object theValue) throws Throwable {
+          if ("col-lastmod".equals(el.getTagName())) {
+            ((BwCalendar)theObject).setLastmod(
+                    (BwCollectionLastmod)theValue);
+            return true;
+          }
+
+          return false;
+        }
+      };
+
+      fromXmlCb.addClassForName("col-lastmod",
+                                BwCollectionLastmod.class);
+      fromXmlCb.addClassForName("property", BwProperty.class);
+
+      fromXmlCb.addSkips("byteSize",
+                         "id",
+                         "seq");
+    }
+    
+    return fromXmlCb;
   }
 
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.BwDbentity#compareTo(java.lang.Object)
-   */
   @Override
   public int compareTo(final BwCalendar that) {
     if (that == this) {
@@ -1950,7 +1984,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
     ts.append("name", getName());

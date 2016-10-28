@@ -19,6 +19,7 @@
 package org.bedework.dumprestore.dump;
 
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
@@ -61,6 +62,8 @@ public class Dump extends Logged implements Defs {
 
   private final boolean newDumpFormat;
 
+  private boolean lowercaseAccounts;
+
   /* ===================================================================
    *                       Constructor
    * =================================================================== */
@@ -81,6 +84,10 @@ public class Dump extends Logged implements Defs {
 
   public void setDirPath(final String val) {
     globals.setDirPath(val);
+  }
+
+  public void setLowercaseAccounts(final boolean val) {
+    lowercaseAccounts = val;
   }
 
   /**
@@ -105,6 +112,7 @@ public class Dump extends Logged implements Defs {
     globals.svci = getSvci();
     globals.svci.open();
     globals.di = globals.svci.getDumpHandler();
+    globals.lowercaseAccounts = lowercaseAccounts;
 
     if (noOutput) {
       return;
@@ -169,9 +177,30 @@ public class Dump extends Logged implements Defs {
       final Iterator<BwPrincipal> it = globals.di.getAllPrincipals();
       while (it.hasNext()) {
         final BwPrincipal pr = it.next();
-        if (dumpPr.open(pr)) {
-          dumpPr.doDump();
-          dumpPr.close();
+        
+        final String account = pr.getAccount().toLowerCase().trim();
+        
+        if (!account.equals(pr.getAccount())) {
+          globals.info.addLn("WARNING: Principal " + pr + 
+                                     " has possible invalid account");
+        }
+
+        boolean open = false;
+        try {
+          if (dumpPr.open(pr)) {
+            open = true;
+            dumpPr.doDump();
+          }
+        } catch (final CalFacadeException cfe) {
+          error(cfe);
+        } finally {
+          if (open) {
+            try {
+              dumpPr.close();
+            } catch (final CalFacadeException cfe){
+              error(cfe);
+            }
+          }
         }
       }
     } else {

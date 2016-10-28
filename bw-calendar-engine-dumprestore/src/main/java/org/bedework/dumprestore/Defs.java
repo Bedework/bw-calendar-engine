@@ -34,162 +34,169 @@ package org.bedework.dumprestore;
  */
 public interface Defs {
   /* ====================================================================
+   *                Collection names for hierarchical dump
+   * ==================================================================== */
+
+  String categoriesDirName = "categories";
+  String collectionsDirName = "collections";
+
+  /* ====================================================================
    *                      Tag names for entire dump
    * ==================================================================== */
 
   /** */
-  public static final String dumpTag = "caldata";
+  String dumpTag = "caldata";
 
   /** */
-  public static final String majorVersionTag = "majorVersion";
+  String majorVersionTag = "majorVersion";
 
   /** */
-  public static final String minorVersionTag = "minorVersion";
+  String minorVersionTag = "minorVersion";
 
   /** */
-  public static final String updateVersionTag = "updateVersion";
+  String updateVersionTag = "updateVersion";
 
   /** */
-  public static final String patchLevelTag = "patchLevel";
+  String patchLevelTag = "patchLevel";
 
   /** */
-  public static final String versionTag = "version";
+  String versionTag = "version";
 
   /** */
-  public static final String dumpDateTag = "dumpDate";
+  String dumpDateTag = "dumpDate";
 
   /* ====================================================================
    *                      Tag names for each section
    * ==================================================================== */
 
   /** */
-  public static final String sectionSyspars = "syspars";
+  String sectionSyspars = "syspars";
   /** */
-  public static final String sectionTimeZones = "timezones";
+  String sectionTimeZones = "timezones";
   /** */
-  public static final String sectionFilters = "filters";
+  String sectionFilters = "filters";
   /** */
-  public static final String sectionUsers = "users";
+  String sectionUsers = "users";
   /** */
-  public static final String sectionUserInfo = "user-info";
+  String sectionUserInfo = "user-info";
   /** */
-  public static final String sectionCollections = "collections";
+  String sectionCollections = "collections";
   /** */
-  public static final String sectionSubscriptions = "subscriptions";
+  String sectionSubscriptions = "subscriptions";
   /** */
-  public static final String sectionViews = "views";
+  String sectionViews = "views";
   /** */
-  public static final String sectionLocations = "locations";
+  String sectionLocations = "locations";
   /** */
-  public static final String sectionContacts = "contacts";
+  String sectionContacts = "contacts";
   /** */
-  public static final String sectionOrganizers = "organizers";
+  String sectionOrganizers = "organizers";
   /** */
-  public static final String sectionAttendees = "attendees";
+  String sectionAttendees = "attendees";
   /** */
-  public static final String sectionAlarms = "alarms";
+  String sectionAlarms = "alarms";
   /** */
-  public static final String sectionCategories = "categories";
+  String sectionCategories = "categories";
   /** */
-  public static final String sectionAuthUsers = "authusers";
+  String sectionAuthUsers = "authusers";
   /** */
-  public static final String sectionEvents = "events";
+  String sectionEvents = "events";
   /** */
-  public static final String sectionEventAnnotations = "event-annotations";
+  String sectionEventAnnotations = "event-annotations";
   /** */
-  public static final String sectionAdminGroups = "adminGroups";
+  String sectionAdminGroups = "adminGroups";
   /** */
-  public static final String sectionUserPrefs = "user-preferences";
+  String sectionUserPrefs = "user-preferences";
   /** */
-  public static final String sectionResources = "resources";
+  String sectionResources = "resources";
   /** */
-  public static final String sectionDbLastmods = "dblastmods";
+  String sectionDbLastmods = "dblastmods";
   /** */
-  public static final String sectionCalSuites = "cal-suites";
+  String sectionCalSuites = "cal-suites";
 
   /* ====================================================================
    *                      Tag names for each object
    * ==================================================================== */
 
   /** */
-  public static final String objectSystem = "system";
+  String objectSystem = "system";
   /** */
-  public static final String objectUser = "user";
+  String objectUser = "user";
   /** */
-  public static final String objectTimeZone = "timezone";
+  String objectTimeZone = "timezone";
   /** */
-  public static final String objectFilter = "filter";
+  String objectFilter = "filter";
   /** */
-  public static final String objectUserInfo = "user-info";
+  String objectUserInfo = "user-info";
   /** */
-  public static final String objectCalendar = "calendar";  // PRE3.5
+  String objectCalendar = "calendar";  // PRE3.5
   /** */
-  public static final String objectCollection = "collection";
+  String objectCollection = "collection";
   /** */
-  public static final String objectCalSuite = "cal-suite";
+  String objectCalSuite = "cal-suite";
   /** */
-  public static final String objectSubscription = "subscription";
+  String objectSubscription = "subscription";
   /** */
-  public static final String objectView = "view";
+  String objectView = "view";
   /** */
-  public static final String objectLocation = "location";
+  String objectLocation = "location";
   /** */
-  public static final String objectContact = "contact";
+  String objectContact = "contact";
   /** */
-  public static final String objectOrganizer = "organizer";
+  String objectOrganizer = "organizer";
   /** */
-  public static final String objectAttachment = "attachment";
+  String objectAttachment = "attachment";
   /** */
-  public static final String objectAttendee = "attendee";
+  String objectAttendee = "attendee";
   /** */
-  public static final String objectAlarm = "alarm";
+  String objectAlarm = "alarm";
   /** */
-  public static final String objectCategory = "category";
+  String objectCategory = "category";
   /** */
-  public static final String objectAuthUser = "authuser";
+  String objectAuthUser = "authuser";
   /** */
-  public static final String objectAdminGroup = "adminGroup";
+  String objectAdminGroup = "adminGroup";
   /** */
-  public static final String objectUserPrefs = "user-prefs"; // PRE3.5
+  String objectUserPrefs = "user-prefs"; // PRE3.5
   /** */
-  public static final String objectPreferences = "preferences";
+  String objectPreferences = "preferences";
 
   /** */
-  public static final String objectEvent = "event";
+  String objectEvent = "event";
   /** */
-  public static final String objectOverride = "override";
+  String objectOverride = "override";
   /** */
-  public static final String objectEventAnnotation = "event-annotation";
+  String objectEventAnnotation = "event-annotation";
 
   /** */
-  public static final String objectGeo = "geo";
+  String objectGeo = "geo";
 
   /** */
-  public static final String objectRelatedTo = "relatedTo";
+  String objectRelatedTo = "relatedTo";
 
   /** */
-  public static final String objectResource = "resource";
+  String objectResource = "resource";
 
   /** */
-  public static final String objectContent = "content";
+  String objectContent = "content";
 
   /** */
-  public static final String objectDateTime = "date-time";
+  String objectDateTime = "date-time";
 
   /** */
-  public static final String objectColLastmod = "col-lastmod";
+  String objectColLastmod = "col-lastmod";
 
   /* ====================================================================
    *                      Tag names for aliases dump
    * ==================================================================== */
 
   /** */
-  public static final String aliasInfoTag = "alias-info";
+  String aliasInfoTag = "alias-info";
 
   /** */
-  public static final String aliasesTag = "aliases";
+  String aliasesTag = "aliases";
 
   /** */
-  public static final String extsubsTag = "extsubs";
+  String extsubsTag = "extsubs";
 
 }

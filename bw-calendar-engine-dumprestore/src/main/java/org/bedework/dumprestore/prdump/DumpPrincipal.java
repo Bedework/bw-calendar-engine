@@ -23,6 +23,8 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvci.CalendarsI;
+import org.bedework.dumprestore.Defs;
+import org.bedework.dumprestore.Utils;
 import org.bedework.dumprestore.dump.DumpGlobals;
 import org.bedework.util.misc.Util;
 
@@ -36,8 +38,12 @@ import java.util.Collection;
  * /data/dumps <br/>
  * and we are dumping principal "/principals/user/mike" we will build the dumped
  * data under <br/>
- * /data/dumps/principals/user/mike <br/>
+ * /data/dumps/principals/user/m/mike <br/>
  * which we can refer to as dump-home
+ * 
+ * <p>The directory with the name "m" is the first lowercased character 
+ * of the principal if in the set 0-9a-z. Anything else goes in "_". This
+ * is all to reduce the number of files in directories so it is navigable</p>
  *
  * <p>We dump the data in standard forms where possible. These forms are:
  * <ul>
@@ -73,8 +79,6 @@ import java.util.Collection;
  */
 public class DumpPrincipal extends Dumper {
   private BwPrincipal pr;
-  
-  private boolean doingDup; // Extra stack level
 
   /* ===================================================================
    *                       Constructor
@@ -95,9 +99,11 @@ public class DumpPrincipal extends Dumper {
    */
   public boolean open(final BwPrincipal pr) throws CalFacadeException {
     this.pr = pr;
-    if (!open(pr.getPrincipalRef())) {
+    if (!open(Utils.principalDirPath(pr))) {
       return false;
     }
+    
+    incCount(DumpGlobals.users);
 
     getDi().startPrincipal(pr);
     return true;
@@ -108,7 +114,9 @@ public class DumpPrincipal extends Dumper {
     /* Create a directory for the principal */
 
     if (!makeDir(dirName, true)) {
-      // Duplicte user entry?
+      // Duplicate user entry?
+
+      incCount(DumpGlobals.duplicateUsers);
       
       for (int i = 0; i < 100; i++) {
         if (makeDir(dirName + "-dup-" + i, true)) {
@@ -147,15 +155,18 @@ public class DumpPrincipal extends Dumper {
     if (prefs == null) {
       warn("No preferences for " + pr.getPrincipalRef());
     } else {
+      incCount(DumpGlobals.userPrefs);
       prefs.dump(makeFile("preferences.xml"));
     }
+    
+    dumpCategories();
 
     /* Dump calendar collections - as we go we will create location, contact and
      * category directories.
      */
 
     try {
-      makeDir(collectionsDirName, false);
+      makeDir(Defs.collectionsDirName, false);
 
       final CalendarsI cols = getSvc().getCalendarsHandler();
 
@@ -176,6 +187,8 @@ public class DumpPrincipal extends Dumper {
     final CalendarsI colsI = getSvc().getCalendarsHandler();
 
     try {
+      incCount(DumpGlobals.collections);
+      
       makeDir(col.getName(), false);
 
       col.dump(makeFile(col.getName() + ".xml"));

@@ -53,6 +53,17 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
   boolean getFixAliases();
 
   /**
+   * @param val true to force accounts to lower case on dump
+   */
+  void setLowercaseAccounts(boolean val);
+
+  /**
+   * @return  true to force accounts to lower case on dump
+   */
+  @MBeanInfo("Set true to force accounts to lower case on dump")
+  boolean getLowercaseAccounts();
+
+  /**
    * @param val true for the new hierarchical dump format
    */
   void setNewDumpFormat(boolean val);

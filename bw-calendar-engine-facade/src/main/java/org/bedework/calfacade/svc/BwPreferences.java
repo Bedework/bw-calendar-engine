@@ -27,7 +27,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
-import org.bedework.util.xml.FromXml;
+import org.bedework.util.xml.FromXmlCallback;
 
 import java.util.Collection;
 import java.util.Set;
@@ -1093,16 +1093,21 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
    *                   Restore callback
    * ==================================================================== */
 
-  public static FromXml.Callback getRestoreCallback() {
-    final FromXml.Callback cb = new FromXml.Callback();
+  private static FromXmlCallback fromXmlCb;
 
-    cb.addClassForName("view", BwView.class);
-    cb.addClassForName("property", BwProperty.class);
-    
-    cb.addSkips("byteSize",
-                "id",
-                "seq");
+  @NoDump
+  public static FromXmlCallback getRestoreCallback() {
+    if (fromXmlCb == null) {
+      fromXmlCb = new FromXmlCallback();
 
-    return cb;
+      fromXmlCb.addClassForName("view", BwView.class);
+      fromXmlCb.addClassForName("property", BwProperty.class);
+
+      fromXmlCb.addSkips("byteSize",
+                         "id",
+                         "seq");
+    }
+
+    return fromXmlCb;
   }
 }

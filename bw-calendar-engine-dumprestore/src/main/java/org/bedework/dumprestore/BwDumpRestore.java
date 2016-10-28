@@ -67,6 +67,8 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   private boolean allowRestore;
 
   private boolean fixAliases;
+
+  private boolean lowercaseAccounts;
   
   private boolean newDumpFormat;
 
@@ -176,6 +178,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
           if (newDumpFormat) {
             d.setDirPath(makeDirname());
+            d.setLowercaseAccounts(lowercaseAccounts);
           } else {
             d.setFilename(makeFilename(getDataOutPrefix()));
             d.setAliasesFilename(
@@ -642,6 +645,16 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   @Override
   public boolean getFixAliases() {
     return fixAliases;
+  }
+
+  @Override
+  public void setLowercaseAccounts(final boolean val) {
+    lowercaseAccounts = val;
+  }
+
+  @Override
+  public boolean getLowercaseAccounts() {
+    return lowercaseAccounts;
   }
 
   @Override

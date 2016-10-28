@@ -31,64 +31,67 @@ public class Counters {
   private transient Logger log;
 
   /** */
-  public final int syspars = 0;
+  public final static int syspars = 0;
 
   /** */
-  public final int users = 1;
+  public final static int users = 1;
 
   /** */
-  public final int timezones = 2;
+  public final static int timezones = 2;
 
   /** */
-  public final int collections = 3;
+  public final static int collections = 3;
 
   /** */
-  public final int locations = 4;
+  public final static int locations = 4;
 
   /** */
-  public final int contacts = 5;
+  public final static int contacts = 5;
 
   /** */
-  public final int valarms = 6;
+  public final static int valarms = 6;
 
   /** */
-  public final int categories = 7;
+  public final static int categories = 7;
 
   /** */
-  public final int authusers = 8;
+  public final static int authusers = 8;
 
   /** */
-  public final int events = 9;
+  public final static int events = 9;
 
   /** */
-  public final int eventOverrides = 10;
+  public final static int eventOverrides = 10;
 
   /** */
-  public final int eventAnnotations = 11;
+  public final static int eventAnnotations = 11;
 
   /** */
-  public final int adminGroups = 12;
+  public final static int adminGroups = 12;
 
   /** */
-  public final int userPrefs = 13;
+  public final static int userPrefs = 13;
 
   /** */
-  public final int filters = 14;
+  public final static int filters = 14;
 
   /** */
-  public final int calSuites = 15;
+  public final static int calSuites = 15;
 
   /** */
-  public final int resources = 16;
+  public final static int resources = 16;
 
   /** */
-  public final int externalSubscriptions = 17;
+  public final static int externalSubscriptions = 17;
 
   /** */
-  public final int aliases = 18;
+  public final static int aliases = 18;
+
+  /** */
+  public final static int duplicateUsers = 19;
 
   /**   */
-  public int[] counts = new int[19];
+  public int[] counts = new int[20];
 
   /** */
   public String[] countNames = {
@@ -111,6 +114,7 @@ public class Counters {
              "resources",
              "external subscriptions",
              "aliases",
+             "duplicate users",
   };
 
   /**
@@ -127,9 +131,9 @@ public class Counters {
   private final int paddedNmLen = 18;
 
   private void stat(final List<String> infoLines, final int cti) {
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
-    String name = countNames[cti];
+    final String name = countNames[cti];
 
     if (name.length() < paddedNmLen) {
       sb.append(blanks.substring(0, paddedNmLen - name.length()));

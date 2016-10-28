@@ -26,6 +26,7 @@ import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.Privileges;
 import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -147,7 +148,7 @@ public class Restore extends Logged implements Defs, AutoCloseable {
     try {
       final String prPath = Util.buildPath(true,
                                            filename, "/",
-                                           userPr.getPrincipalRef());
+                                           Utils.principalDirPath(userPr));
       final File pdir = 
               Utils.directory(prPath);
       if (pdir == null) {
@@ -171,14 +172,112 @@ public class Restore extends Logged implements Defs, AutoCloseable {
                            BwPreferences.getRestoreCallback());
       
       info(pr.toString());
+      info(prefs.toString());
+      
+      /* Look for categories */
+      final String catsPath =
+              Util.buildPath(true, prPath,
+                             Defs.categoriesDirName);
+      final File catsdir = Utils.directory(catsPath);
+      if (catsdir == null) {
+        info.addLn("No categories data at " + catsPath);
+      } else {
+        final String[] cats = catsdir.list();
+        
+        if (cats != null) {
+          for (final String catName : cats) {
+            if (!catName.endsWith(".xml")) {
+              warn("Unexpected file in " + catsPath +
+                           ": " + catName);
+              continue;
+            }
+
+            final XmlFile catXml =
+                    new XmlFile(catsdir, catName, false);
+
+            final BwCategory cat =
+                    fxml.fromXml(catXml.getRoot(),
+                                 BwCategory.class,
+                                 BwCategory.getRestoreCallback());
+            info(cat.toString());
+          }
+        }
+      }
       
       /* Look for collections */
+      final String colsPath =
+              Util.buildPath(true, prPath,
+                             Defs.collectionsDirName);
+      final File colsdir = Utils.directory(colsPath);
+      if (colsdir == null) {
+        info.addLn("No collections data at " + colsPath);
+        return false;
+      }
+
+      restoreCollections(colsdir, true, info, fxml);
     } catch (final CalFacadeException ce) {
       throw ce;
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
     return true;
+  }
+  
+  private void restoreCollections(final File colsdir,
+                                  final boolean home,
+                                  final InfoLines info,
+                                  final FromXml fxml) throws CalFacadeException {
+    final File[] files = colsdir.listFiles();
+
+    if (files == null) {
+      if (home) {
+        info.addLn("Expected collections under " + colsdir);
+        warn("Expected collections under " + colsdir);
+      }
+      return;
+    }
+
+    try {
+      /* We may have a mixture of resources, an xml file for the collection
+        and sub-collections.
+     */
+    
+      final String colXmlName = colsdir.getName() + ".xml";
+      boolean colXmlProcessed = false;
+      
+      for (final File f: files) {
+        final String name = f.getName();
+        
+        if (name.equals(colXmlName)) {
+          colXmlProcessed = true;
+          final XmlFile colXml =
+                  new XmlFile(f, false);
+
+          final BwCalendar col =
+                  fxml.fromXml(colXml.getRoot(),
+                               BwCalendar.class,
+                               BwCalendar.getRestoreCallback());
+          info(col.toString());
+          continue;
+        }
+        
+        if (home && ("Trash".equals(name))) {
+          // Skip this one - old stuff
+          continue;
+        }
+        
+        if (f.isDirectory()) {
+          restoreCollections(f, false, info, fxml);
+          continue;
+        }
+        
+        /* Restore a resource */
+      }
+    } catch (final CalFacadeException ce) {
+      throw ce;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
   }
   
   /** 'Classic' restore - single XML file.

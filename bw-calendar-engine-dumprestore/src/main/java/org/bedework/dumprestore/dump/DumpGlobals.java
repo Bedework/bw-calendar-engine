@@ -84,6 +84,9 @@ public class DumpGlobals extends Counters {
 
   /** Handler for access to our data */
   public DumpIntf di;
+  
+  /** Force accounts to lower case on dump */
+  public boolean lowercaseAccounts;
 
   /** */
   private Writer out;

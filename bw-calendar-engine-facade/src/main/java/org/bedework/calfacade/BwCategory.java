@@ -29,6 +29,7 @@ import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.QuotaUtil;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
+import org.bedework.util.xml.FromXmlCallback;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
@@ -69,6 +70,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
    *
    * @return BwString   word
    */
+  @Dump(compound = true)
   public BwString getWord() {
     return word;
   }
@@ -94,6 +96,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
    *
    *  @return BwString   category's description
    */
+  @Dump(compound = true)
   public BwString getDescription() {
     return description;
   }
@@ -369,6 +372,25 @@ public class BwCategory extends BwEventProperty<BwCategory>
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
+  }
+
+  /* ====================================================================
+   *                   Restore callback
+   * ==================================================================== */
+
+  private static FromXmlCallback fromXmlCb;
+  
+  @NoDump
+  public static FromXmlCallback getRestoreCallback() {
+    if (fromXmlCb == null) {
+      fromXmlCb = new FromXmlCallback();
+
+      fromXmlCb.addSkips("byteSize",
+                         "id",
+                         "seq");
+    }
+    
+    return fromXmlCb;
   }
 
   /* ====================================================================
