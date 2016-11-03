@@ -1596,7 +1596,8 @@ class Events extends CalSvcDb implements EventsI {
         }
         
         // Not adding event. Did we add attendee?
-        if (cte != null) {
+        if ((cte != null) &&
+                !Util.isEmpty(cte.getAddedValues())) {
           for (final Object o: cte.getAddedValues()) {
             final BwAttendee chgAtt = (BwAttendee)o;
             
@@ -1606,7 +1607,6 @@ class Events extends CalSvcDb implements EventsI {
             }
           }
         }
-        
       }
 
       try {

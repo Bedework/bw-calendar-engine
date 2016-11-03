@@ -532,7 +532,16 @@ public class CoreCalendars extends CalintfHelperHib
 
     final GetSpecialCalendarResult gscr = new GetSpecialCalendarResult();
 
-    final BwCalendar userHome = getCalendar(pathTo, access, false);
+    final int homeAccess;
+    
+    // Get user home even if no access.
+    // Some gyratons because this seems to be breaking things later
+    if (cb.getPrincipalInfo().getAuthPrincipal().getPrincipalRef().equals(owner.getPrincipalRef())) {
+      homeAccess = privAny;  
+    } else {
+      homeAccess = privNone;
+    }
+    final BwCalendar userHome = getCalendar(pathTo, homeAccess, false);
     if (userHome == null) {
       gscr.noUserHome = true;
       return gscr;
@@ -708,31 +717,28 @@ public class CoreCalendars extends CalintfHelperHib
     colCache.put((CalendarWrapper)val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CalendarsI#changeAccess(org.bedework.calfacade.BwCalendar, java.util.Collection)
-   */
   @Override
-  public void changeAccess(final BwCalendar cal,
+  public void changeAccess(final BwCalendar col,
                            final Collection<Ace> aces,
                            final boolean replaceAll) throws CalFacadeException {
-    HibSession sess = getSess();
+    final HibSession sess = getSess();
 
     try {
-      ac.getAccessUtil().changeAccess(cal, aces, replaceAll);
+      ac.getAccessUtil().changeAccess(col, aces, replaceAll);
 
       // Clear the cache - inheritance makes it difficult to be sure of the effects.
       colCache.clear();
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       sess.rollback();
       throw cfe;
     }
 
-    sess.saveOrUpdate(unwrap(cal));
+    sess.saveOrUpdate(unwrap(col));
 
-    ((CalendarWrapper)cal).clearCurrentAccess(); // force recheck
-    colCache.put((CalendarWrapper)cal);
+    ((CalendarWrapper)col).clearCurrentAccess(); // force recheck
+    colCache.put((CalendarWrapper)col);
 
-    notify(SysEvent.SysCode.COLLECTION_UPDATED, cal);
+    notify(SysEvent.SysCode.COLLECTION_UPDATED, col);
   }
 
   @Override
@@ -1103,9 +1109,9 @@ public class CoreCalendars extends CalintfHelperHib
     final HibSession sess = getSess();
 
     if (parentPath == null) {
-      sess.createQuery(getChildCollectionsQuery + " is null");
+      sess.createQuery(getChildCollectionsQuery + " is null order by col.path");
     } else {
-      sess.createQuery(getChildCollectionsQuery + "=:colPath");
+      sess.createQuery(getChildCollectionsQuery + "=:colPath order by col.path");
       sess.setString("colPath", parentPath);
     }
 

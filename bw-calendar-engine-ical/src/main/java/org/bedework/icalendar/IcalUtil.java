@@ -384,12 +384,10 @@ public class IcalUtil {
 
     final String temp = val.getPartstat();
 
-    pars.add(new PartStat(temp));
-    /*
     if ((temp != null) && !temp.equals(IcalDefs.partstatValNeedsAction)) {
       // Not default value.
       pars.add(new PartStat(temp));
-    }*/
+    }
 
     return prop;
   }

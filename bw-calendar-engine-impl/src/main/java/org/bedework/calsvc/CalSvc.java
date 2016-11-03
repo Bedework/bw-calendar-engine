@@ -1112,8 +1112,22 @@ public class CalSvc extends CalSvcI {
     getCal().changeAccess(ent, aces, replaceAll);
 
     if (ent instanceof BwCalendar) {
+      final BwCalendar col = (BwCalendar)ent;
+
+      if (col.getCalType() == BwCalendar.calTypeInbox) {
+        // Same access as inbox
+        final BwCalendar pendingInbox = 
+                getCalendarsHandler().getSpecial(BwCalendar.calTypePendingInbox,
+                                                 true);
+        if (pendingInbox == null) {
+          warn("Unable to update pending inbox access");
+        } else {
+          getCal().changeAccess(pendingInbox, aces, replaceAll);
+        }
+      }
+
       ((Preferences)getPrefsHandler()).updateAdminPrefs(false,
-                                         (BwCalendar)ent,
+                                         col,
                                          null,
                                          null,
                                          null);
