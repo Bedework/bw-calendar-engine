@@ -25,9 +25,11 @@ import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calsvc.CalSvcDb;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex;
 
 import java.util.Collection;
 
@@ -114,7 +116,7 @@ public abstract class InProcessor extends CalSvcDb {
         return;
       }
 
-      if (vpoll) {
+//      if (vpoll) {
         /* Delete other notifications for the same event
          * NOTE: DON'T for non-vpoll - this was deleting changes that had to
          * be processed. Still an opportunity to improve this though.
@@ -138,12 +140,19 @@ public abstract class InProcessor extends CalSvcDb {
           }
           deleteEvent(inei, true, false);
         }
-      }
+//      }
 
       if (debug) {
         trace("set event to scheduleStateProcessed: " + ev.getName());
       }
+
+      final ChangeTable chg = ei.getChangeset(inboxOwnerHref);
+
+      chg.changed(PropertyIndex.PropertyInfoIndex.SCHEDULE_STATE,
+                  ev.getScheduleState(), BwEvent.scheduleStateProcessed);
       ev.setScheduleState(BwEvent.scheduleStateProcessed);
+      chg.changed(PropertyIndex.PropertyInfoIndex.COLPATH,
+                  ev.getColPath(), inbox.getPath());
       ev.setColPath(inbox.getPath());
       getSvc().getEventsHandler().update(ei, true, null);
     }

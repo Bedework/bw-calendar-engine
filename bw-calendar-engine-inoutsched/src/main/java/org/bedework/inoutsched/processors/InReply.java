@@ -27,10 +27,13 @@ import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calfacade.util.ChangeTable;
+import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
 import org.bedework.icalendar.IcalUtil;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.timezones.Timezones;
 
@@ -49,20 +52,16 @@ import java.util.Map;
  * @author Mike Douglass
  */
 public class InReply extends InProcessor {
-  private static String acceptPartstat = IcalDefs.partstats[IcalDefs.partstatAccepted];
+  private static final String acceptPartstat = 
+          IcalDefs.partstats[IcalDefs.partstatAccepted];
 
   /**
-   * @param svci
+   * @param svci the interface
    */
   public InReply(final CalSvcI svci) {
     super(svci);
   }
 
-  /**
-   * @param ei
-   * @return ScheduleResult
-   * @throws CalFacadeException
-   */
   @Override
   public ProcessResult process(final EventInfo ei) throws CalFacadeException {
     /* Process a response we as the organizer, or their proxy, received from
@@ -147,10 +146,10 @@ public class InReply extends InProcessor {
       final boolean vpoll = colEi.getEvent().getEntityType() ==
               IcalDefs.entityTypeVpoll;
       if (vpoll) {
-        if (!updateOrganizerPollCopy(colEi, ei, attUri, pr.sr, 0)) {
+        if (!updateOrganizerPollCopy(colEi, ei, attUri, pr.sr)) {
           break check;
         }
-      } else if (!updateOrganizerCopy(colEi, ei, attUri, pr.sr, 0)) {
+      } else if (!updateOrganizerCopy(colEi, ei, attUri, pr.sr)) {
         break check;
       }
 
@@ -167,8 +166,7 @@ public class InReply extends InProcessor {
   private boolean updateOrganizerPollCopy(final EventInfo colEi,
                                           final EventInfo inBoxEi,
                                           final String attUri,
-                                          final ScheduleResult sr,
-                                          final int action) throws CalFacadeException {
+                                          @SuppressWarnings("UnusedParameters") final ScheduleResult sr) throws CalFacadeException {
     /* We have a single voter and their responses to each item.
        Replace the VVOTER component for that respondee.
      */
@@ -216,10 +214,10 @@ public class InReply extends InProcessor {
   private boolean updateOrganizerCopy(final EventInfo colEi,
                                       final EventInfo inBoxEi,
                                       final String attUri,
-                                      final ScheduleResult sr,
-                                      final int action) throws CalFacadeException {
+                                      final ScheduleResult sr) throws CalFacadeException {
     final BwEvent inBoxEv = inBoxEi.getEvent();
     final BwEvent calEv = colEi.getEvent();
+    final ChangeTable chg = calEv.getChangeset(getPrincipalHref());
 
     /* Only set true if the inbox copy needs to stay as notification.
      * Do not set true for status updates
@@ -240,7 +238,10 @@ public class InReply extends InProcessor {
      */
     /* Update the participation status from the incoming attendee */
 
-    BwAttendee calAtt = null;
+    BwAttendee calAtt;
+
+    final ChangeTableEntry cte = chg.getEntry(
+            PropertyIndex.PropertyInfoIndex.ATTENDEE);
 
     if (!inBoxEv.getSuppressed()) {
       calAtt = calEv.findAttendee(attUri);
@@ -267,6 +268,7 @@ public class InReply extends InProcessor {
         } else {
           att.copyTo(calAtt);
         }
+        cte.addChangedValue(calAtt);
       }
 
       calAtt.setScheduleStatus(getRstat(inBoxEv));
@@ -317,23 +319,23 @@ public class InReply extends InProcessor {
               }
             }
 
-            DtStart st = new DtStart(dt);
-            String tzid = calEv.getDtstart().getTzid();
+            final DtStart st = new DtStart(dt);
+            final String tzid = calEv.getDtstart().getTzid();
             if (tzid != null) {
-              TimeZone tz = Timezones.getTz(tzid);
+              final TimeZone tz = Timezones.getTz(tzid);
               st.setTimeZone(tz);
             }
             ocalEv.setDtstart(BwDateTime.makeBwDateTime(st));
             ocalEv.setDuration(calEv.getDuration());
             ocalEv.setDtend(ocalEv.getDtstart().addDur(new Dur(calEv.getDuration())));
-          } catch (CalFacadeException cfe) {
+          } catch (final CalFacadeException cfe) {
             throw cfe;
-          } catch (Throwable t) {
+          } catch (final Throwable t) {
             throw new CalFacadeException(t);
           }
         }
 
-        BwAttendee ovatt = oev.findAttendee(attUri);
+        final BwAttendee ovatt = oev.findAttendee(attUri);
         calAtt = ocalEv.findAttendee(attUri);
 
         if (calAtt == null) {
@@ -354,11 +356,12 @@ public class InReply extends InProcessor {
           calAtt.setScheduleStatus(getRstat(oev));
 
           ocalEv.addAttendee(calAtt);
+          cte.addChangedValue(calAtt);
         }
       }
     }
 
-    boolean noinvites = !changed;
+    final boolean noinvites = !changed;
 
     colEi.setReplyUpdate(true);
 
@@ -373,7 +376,7 @@ public class InReply extends InProcessor {
   private String getRstat(final BwEvent ev) {
     String rstat = null;
 
-    for (BwRequestStatus bwrstat: ev.getRequestStatuses()) {
+    for (final BwRequestStatus bwrstat: ev.getRequestStatuses()) {
       if (rstat != null) {
         rstat += ",";
         rstat += bwrstat.getCode();

@@ -198,7 +198,7 @@ public class InRequest extends InProcessor {
     }
 
     if (adding) {
-      String namePrefix = ourCopy.getEvent().getUid();
+      final String namePrefix = ourCopy.getEvent().getUid();
 
       pr.sr.errorCode = sched.addEvent(ourCopy, namePrefix,
                                        BwCalendar.calTypeCalendarCollection,
@@ -212,9 +212,15 @@ public class InRequest extends InProcessor {
         return pr;
       }
     } else {
-      UpdateResult ur = getSvc().getEventsHandler().update(ourCopy,
-                                                       noInvites,
-                                                       null);
+      final UpdateResult ur = 
+              getSvc().getEventsHandler().update(ourCopy,
+                                                 noInvites,
+                                                 null);
+
+      if (debug) {
+        trace("Schedule - update result " + pr.sr +
+                      " for event" + ourCopy.getEvent());
+      }
 
       if (ur.schedulingResult != null) {
         pr.sr = ur.schedulingResult;
@@ -1015,6 +1021,7 @@ public class InRequest extends InProcessor {
             BwAttendee att = (BwAttendee)inAtt.clone();
             att.setScheduleStatus(null);
             String inAttUri = att.getAttendeeUri();
+            BwAttendee evAtt = ourEv.findAttendee(inAttUri);
 
             if (inAttUri.equals(attUri)) {
               // It's ours
@@ -1040,7 +1047,12 @@ public class InRequest extends InProcessor {
                 }
               }
             }*/
-            chg.addValue(PropertyInfoIndex.ATTENDEE, att);
+            final ChangeTableEntry cte = chg.getEntry(PropertyInfoIndex.ATTENDEE);
+            if (evAtt != null) {
+              cte.addChangedValue(att);
+            } else {
+              cte.addAddedValue(att);
+            }
           }
 
           if (ourAtt == null) {
@@ -1166,7 +1178,44 @@ public class InRequest extends InProcessor {
         case LANG: // Param
         case TZIDPAR: // Param
           break;
-
+        
+        case PUBLISH_URL:
+        case POLL_ITEM_ID:
+        case END_TYPE:
+        case ETAG:
+        case HREF:
+        case XBEDEWORK_COST:
+        case CALSCALE:
+        case METHOD:
+        case PRODID:
+        case VERSION:
+        case ACL:
+        case AFFECTS_FREE_BUSY:
+        case ALIAS_URI:
+        case ATTENDEE_SCHEDULING_OBJECT:
+        case CALTYPE:
+        case COL_PROPERTIES:
+        case COLPATH:
+        case CTOKEN:
+        case DISPLAY:
+        case DOCTYPE:
+        case EVENTREG_END:
+        case EVENTREG_MAX_TICKETS:
+        case EVENTREG_MAX_TICKETS_PER_USER:
+        case EVENTREG_START:
+        case EVENTREG_WAIT_LIST_LIMIT:
+        case FILTER_EXPR:
+        case IGNORE_TRANSP:
+        case IMAGE:
+        case INDEX_END:
+        case INDEX_START:
+        case INSTANCE:
+        case LAST_REFRESH:
+        case LAST_REFRESH_STATUS:
+        case LOCATION_UID:
+        case LOCATION_STR:
+          break;
+        
         default:
           warn("Not handling icalendar property " + ipi);
       } // switch

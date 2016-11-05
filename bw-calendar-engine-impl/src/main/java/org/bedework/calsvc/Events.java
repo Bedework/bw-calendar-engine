@@ -421,9 +421,6 @@ class Events extends CalSvcDb implements EventsI {
     return res;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventsI#delete(org.bedework.calfacade.svc.EventInfo, boolean)
-   */
   @Override
   public boolean delete(final EventInfo ei,
                         final boolean sendSchedulingMessage) throws CalFacadeException {
@@ -433,7 +430,7 @@ class Events extends CalSvcDb implements EventsI {
   @Override
   public UpdateResult add(final EventInfo ei,
                           final boolean noInvites,
-                          final boolean scheduling,
+                          final boolean schedulingInbox,
                           final boolean autoCreateCollection,
                           final boolean rollbackOnError) throws CalFacadeException {
     try {
@@ -463,7 +460,7 @@ class Events extends CalSvcDb implements EventsI {
 
       updateEntities(updResult, event);
 
-      BwCalendar cal = validate(event, true, 
+      BwCalendar cal = validate(event, true, schedulingInbox, 
                                 autoCreateCollection);
 
       BwEventProxy proxy = null;
@@ -551,7 +548,7 @@ class Events extends CalSvcDb implements EventsI {
       final Collection<BwEventProxy> overrides = ei.getOverrideProxies();
       if (overrides != null) {
         for (final BwEventProxy ovei: overrides) {
-          setScheduleState(ovei, true);
+          setScheduleState(ovei, true, schedulingInbox);
 
           if ((maxAttendees != null) &&
                   !Util.isEmpty(ovei.getAttendees()) &&
@@ -587,7 +584,7 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       UpdateEventResult uer = getCal().addEvent(ei,
-                                                scheduling,
+                                                schedulingInbox,
                                                 rollbackOnError);
 
       if (ei.getNumContainedItems() > 0) {
@@ -595,7 +592,7 @@ class Events extends CalSvcDb implements EventsI {
           oei.getEvent().setName(event.getName());
           final UpdateEventResult auer =
                   getCal().addEvent(oei,
-                                    scheduling, rollbackOnError);
+                                    schedulingInbox, rollbackOnError);
           if (auer.errorCode != null) {
             //?
           }
@@ -662,7 +659,7 @@ class Events extends CalSvcDb implements EventsI {
 
       updateEntities(updResult, event);
 
-      final BwCalendar cal = validate(event, false, false);
+      final BwCalendar cal = validate(event, false, false, false);
       adjustEntities(ei);
 
       boolean organizerSchedulingObject = false;
@@ -694,7 +691,7 @@ class Events extends CalSvcDb implements EventsI {
 
       if (ei.getNumOverrides() > 0) {
         for (final EventInfo oei: ei.getOverrides()) {
-          setScheduleState(oei.getEvent(), false);
+          setScheduleState(oei.getEvent(), false, false);
 
           if (cal.getCollectionInfo().scheduling &&
                oei.getEvent().getAttendeeSchedulingObject()) {
@@ -719,6 +716,9 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       if (!changed) {
+        if (debug) {
+          trace("No changes to event: returning");
+        }
         return ei.getUpdResult();
       }
 
@@ -901,13 +901,14 @@ class Events extends CalSvcDb implements EventsI {
       }
     }
 
+    /*
     BwEvent ev = ei.getEvent();
 
     if (!(ev instanceof BwEventProxy)) {
       if (organizerSchedulingObject && !sequenceChanged) {
         ev.setSequence(ev.getSequence() + 1);
       }
-    }
+    }*/
 
     return updResult.hasChanged;
   }
@@ -1434,6 +1435,7 @@ class Events extends CalSvcDb implements EventsI {
 
   private BwCalendar validate(final BwEvent ev,
                               final boolean adding,
+                              final boolean schedulingInbox,
                               final boolean autoCreateCollection) throws CalFacadeException {
     if (ev.getColPath() == null) {
       throw new CalFacadeException(CalFacadeException.noEventCalendar);
@@ -1464,7 +1466,7 @@ class Events extends CalSvcDb implements EventsI {
                                    "recurring");
     }
 
-    setScheduleState(ev, adding);
+    setScheduleState(ev, adding, schedulingInbox);
 
     Preferences prefs = null;
 
@@ -1533,7 +1535,8 @@ class Events extends CalSvcDb implements EventsI {
   /* Flag this as an attendee scheduling object or an organizer scheduling object
    */
   private void setScheduleState(final BwEvent ev,
-                                final boolean adding) throws CalFacadeException {
+                                final boolean adding,
+                                final boolean schedulingInbox) throws CalFacadeException {
     ev.setOrganizerSchedulingObject(false);
     ev.setAttendeeSchedulingObject(false);
 
@@ -1567,43 +1570,47 @@ class Events extends CalSvcDb implements EventsI {
       final ChangeTable chg = ev.getChangeset(getPrincipalHref());
       final Set<BwAttendee> groups = new TreeSet<>();
 
-      final ChangeTableEntry cte = chg.getEntry(PropertyInfoIndex.ATTENDEE);
+      if (!schedulingInbox) {
+        final ChangeTableEntry cte = chg
+                .getEntry(PropertyInfoIndex.ATTENDEE);
 
-      checkAttendees:
-      for (final BwAttendee att: atts) {
-        if (CuType.GROUP.getValue().equals(att.getCuType())) {
-          groups.add(att);
-        }
-        
-        final AccessPrincipal attPrincipal =
-                getSvc().getDirectories().
-                        caladdrToPrincipal(att.getAttendeeUri());
-        if ((attPrincipal != null) &&
-                (attPrincipal.getPrincipalRef()
-                              .equals(curPrincipal))) {
-          // It's us 
-          continue;
-        }
-        
-        if (att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
-          continue;
-        }
+        checkAttendees:
+        for (final BwAttendee att : atts) {
+          if (CuType.GROUP.getValue().equals(att.getCuType())) {
+            groups.add(att);
+          }
 
-        if (adding) {
-          // Can't add an event with attendees set to accepted
-          att.setPartstat(IcalDefs.partstatValNeedsAction);
-          continue;
-        }
-        
-        // Not adding event. Did we add attendee?
-        if ((cte != null) &&
-                !Util.isEmpty(cte.getAddedValues())) {
-          for (final Object o: cte.getAddedValues()) {
-            final BwAttendee chgAtt = (BwAttendee)o;
-            
-            if (chgAtt.getCn().equals(att.getCn())) {
-              att.setPartstat(IcalDefs.partstatValNeedsAction);
-              continue checkAttendees;
+          final AccessPrincipal attPrincipal =
+                  getSvc().getDirectories().
+                          caladdrToPrincipal(att.getAttendeeUri());
+          if ((attPrincipal != null) &&
+                  (attPrincipal.getPrincipalRef()
+                               .equals(curPrincipal))) {
+            // It's us 
+            continue;
+          }
+
+          if (att.getPartstat()
+                 .equals(IcalDefs.partstatValNeedsAction)) {
+            continue;
+          }
+
+          if (adding) {
+            // Can't add an event with attendees set to accepted
+            att.setPartstat(IcalDefs.partstatValNeedsAction);
+            continue;
+          }
+
+          // Not adding event. Did we add attendee?
+          if ((cte != null) &&
+                  !Util.isEmpty(cte.getAddedValues())) {
+            for (final Object o : cte.getAddedValues()) {
+              final BwAttendee chgAtt = (BwAttendee)o;
+
+              if (chgAtt.getCn().equals(att.getCn())) {
+                att.setPartstat(IcalDefs.partstatValNeedsAction);
+                continue checkAttendees;
+              }
             }
           }
         }
