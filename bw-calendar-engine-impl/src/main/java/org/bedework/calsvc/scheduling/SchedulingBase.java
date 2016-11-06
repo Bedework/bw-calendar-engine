@@ -218,8 +218,7 @@ public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf 
     boolean masterSuppressed = false;
     boolean significant = ei.getChangeset(getPrincipalHref()).getSignificantChange();
 
-    if ((fromOrganizer && !attendeeInMaster) ||
-        (significantChangesOnly && !ei.getNewEvent() && !significant)) {
+    if (fromOrganizer && !attendeeInMaster) {
       masterSuppressed = true;
     }
 
