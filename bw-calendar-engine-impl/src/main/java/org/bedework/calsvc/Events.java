@@ -681,6 +681,7 @@ class Events extends CalSvcDb implements EventsI {
                                      organizerSchedulingObject,
                                      attendeeSchedulingObject) ||
                         ei.getOverridesChanged();
+      boolean sequenceChange = ei.getUpdResult().sequenceChange;
 
       /* TODO - this is wrong.
          At the very least we should only reschedule the override that changed.
@@ -705,6 +706,9 @@ class Events extends CalSvcDb implements EventsI {
                            organizerSchedulingObject,
                            attendeeSchedulingObject)) {
             changed = true;
+            if (oei.getUpdResult().sequenceChange) {
+              sequenceChange = true;
+            }
           }
 
           if (schedulingObject) {
@@ -726,6 +730,10 @@ class Events extends CalSvcDb implements EventsI {
 //      if (doReschedule) {
   //      getSvc().getScheduler().setupReschedule(ei);
     //  }
+      
+      if (organizerSchedulingObject && sequenceChange) {
+        event.setSequence(event.getSequence() + 1);
+      }
 
       final UpdateEventResult uer = getCal().updateEvent(ei);
 
@@ -830,10 +838,10 @@ class Events extends CalSvcDb implements EventsI {
       ei.getChangeset(getPrincipalHref()).dumpEntries();
     }
 
-    final Collection<ChangeTableEntry> ctes =
-            ei.getChangeset(getPrincipalHref()).getEntries();
+    final ChangeTable ct = ei.getChangeset(getPrincipalHref());
+    final Collection<ChangeTableEntry> ctes = ct.getEntries();
 
-    boolean sequenceChanged = false;
+    updResult.sequenceChange = ct.getSequenceChangeNeeded();
 
     for (final ChangeTableEntry cte: ctes) {
       if (!cte.getChanged()) {
@@ -867,6 +875,11 @@ class Events extends CalSvcDb implements EventsI {
           /* XXX We should really check to see if the value changed here -
            */
           updResult.reply = true;
+        } else {
+          if (!Util.isEmpty(updResult.deletedAttendees)) {
+            // Bump sequence as we are sending out cancels
+            updResult.sequenceChange = true;
+          }
         }
       }
 
@@ -889,10 +902,6 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       if (organizerSchedulingObject) {
-        if (pi.equals(PropertyInfoIndex.SEQUENCE)) {
-          sequenceChanged = true;
-        }
-
         final BwIcalPropertyInfoEntry pie =
                 BwIcalPropertyInfo.getPinfo(cte.getIndex());
         if (pie.getReschedule()) {
@@ -900,15 +909,6 @@ class Events extends CalSvcDb implements EventsI {
         }
       }
     }
-
-    /*
-    BwEvent ev = ei.getEvent();
-
-    if (!(ev instanceof BwEventProxy)) {
-      if (organizerSchedulingObject && !sequenceChanged) {
-        ev.setSequence(ev.getSequence() + 1);
-      }
-    }*/
 
     return updResult.hasChanged;
   }
@@ -1259,6 +1259,7 @@ class Events extends CalSvcDb implements EventsI {
             UpdateResult uer = ei.getUpdResult();
             uer.deleting = true;
 
+            event.setSequence(event.getSequence() + 1);
             sched.implicitSchedule(ei, false);
           }
         } catch (CalFacadeException cfe) {

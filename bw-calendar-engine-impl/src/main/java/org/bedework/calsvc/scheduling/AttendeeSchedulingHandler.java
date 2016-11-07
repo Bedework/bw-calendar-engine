@@ -57,9 +57,6 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     super(svci);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SchedulingI#requestRefresh(org.bedework.calfacade.BwEvent, java.lang.String)
-   */
   @Override
   public ScheduleResult requestRefresh(final EventInfo ei,
                                        final String comment) throws CalFacadeException {
@@ -108,9 +105,6 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     return sr;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SchedulingI#attendeeRespond(org.bedework.calfacade.svc.EventInfo)
-   */
   @Override
   public ScheduleResult attendeeRespond(final EventInfo ei,
                                         final int method) throws CalFacadeException {
@@ -224,11 +218,11 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
         att.setDelegatedTo(delegate);
 
         // XXX Not sure if this is correct
-        schedule(delegateEi, ScheduleMethods.methodTypeRequest, null, null, false);
+        schedule(delegateEi, null, null, false);
       } else if (method == ScheduleMethods.methodTypeReply) {
         // Only attendee should be us
 
-        setOnlyAttendee(outEi, ei, att.getAttendeeUri());
+        ei.setOnlyAttendee(outEi, att.getAttendeeUri());
 
         if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
           setPollResponse(outEi, ei, att.getAttendeeUri());
@@ -238,7 +232,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       } else if (method == ScheduleMethods.methodTypeCounter) {
         // Only attendee should be us
 
-        setOnlyAttendee(outEi, ei, att.getAttendeeUri());
+        ei.setOnlyAttendee(outEi, att.getAttendeeUri());
 
         /* Not sure how much we can change - at least times of the meeting.
          */
@@ -453,43 +447,6 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     return newEv;
   }
 
-  /** Set the attendee in the output event from the corresponding component in
-   * the calendar event.
-   *
-   * @param outEi - destined for somebodies inbox
-   * @param ei
-   * @param attUri
-   * @throws CalFacadeException
-   */
-  private void setOnlyAttendee(final EventInfo outEi,
-                               final EventInfo ei,
-                               final String attUri) throws CalFacadeException {
-    if (!ei.getEvent().getSuppressed()) {
-      BwEvent ev = ei.getEvent();
-      BwEvent outEv = outEi.getEvent();
-
-      if (!Util.isEmpty(outEv.getAttendees())) {
-        outEv.getAttendees().clear();
-      }
-      final BwAttendee att = ev.findAttendee(attUri);
-      outEv.addAttendee((BwAttendee)att.clone());
-    }
-
-    if (ei.getNumOverrides() > 0) {
-      for (final EventInfo oei: ei.getOverrides()) {
-        final BwEvent ev = oei.getEvent();
-        final EventInfo oOutEi = outEi.findOverride(ev.getRecurrenceId());
-        final BwEvent outEv = oOutEi.getEvent();
-
-        if (!Util.isEmpty(outEv.getAttendees())) {
-          outEv.getAttendees().clear();
-        }
-        final BwAttendee att = ev.findAttendee(attUri);
-        outEv.addAttendee((BwAttendee)att.clone());
-      }
-    }
-  }
-
   /** Set the poll response for the given voter in the output event
    * from the voting state in the incoming event. The output event
    * should only have one VVOTER sub-component for this voter with
@@ -498,7 +455,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
    * @param outEi - destined for somebodies inbox
    * @param ei - the voters copy
    * @param attUri - uri of the voter
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   private void setPollResponse(final EventInfo outEi,
                                final EventInfo ei,

@@ -37,18 +37,15 @@ import org.bedework.util.misc.Util;
  */
 public class SchedAttendeeUpdate extends SchedProcessor {
   /**
-   * @param svci
+   * @param svci the interface
    */
   public SchedAttendeeUpdate(final CalSvcI svci) {
     super(svci);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.inoutsched.processors.SchedProcessor#process(org.bedework.calfacade.svc.EventInfo)
-   */
   @Override
   public SchedProcResult process(final EventInfo ei) throws CalFacadeException {
-    SchedProcResult pr = new SchedProcResult();
+    final SchedProcResult pr = new SchedProcResult();
 
     pr.sr = attendeeRespond(ei, Icalendar.methodTypeReply);
     return pr;
@@ -115,7 +112,7 @@ public class SchedAttendeeUpdate extends SchedProcessor {
       outEv.updateDtstamp();
       outEv.getOrganizer().setDtstamp(outEv.getDtstamp());
 
-      String delegate = att.getDelegatedTo();
+      final String delegate = att.getDelegatedTo();
       if (delegate != null) {
         /* RFC 2446 4.2.5 - Delegating an event
          *
@@ -147,7 +144,7 @@ public class SchedAttendeeUpdate extends SchedProcessor {
         outEv.setScheduleMethod(Icalendar.methodTypeReply);
 
         // Additional attendee
-        BwAttendee delAtt = new BwAttendee();
+        final BwAttendee delAtt = new BwAttendee();
         delAtt.setAttendeeUri(delegate);
         delAtt.setDelegatedFrom(att.getAttendeeUri());
         delAtt.setPartstat(IcalDefs.partstatValNeedsAction);
@@ -156,8 +153,8 @@ public class SchedAttendeeUpdate extends SchedProcessor {
         outEv.addAttendee(delAtt);
 
         // ei is 'original "REQUEST"'. */
-        EventInfo delegateEi = sched.copyEventInfo(ei, getPrincipal());
-        BwEvent delegateEv = delegateEi.getEvent();
+        final EventInfo delegateEi = sched.copyEventInfo(ei, getPrincipal());
+        final BwEvent delegateEv = delegateEi.getEvent();
 
         delegateEv.addRecipient(delegate);
         delegateEv.addAttendee((BwAttendee)delAtt.clone()); // Not in RFC
@@ -168,18 +165,18 @@ public class SchedAttendeeUpdate extends SchedProcessor {
         att.setDelegatedTo(delegate);
 
         // XXX Not sure if this is correct
-        sched.schedule(delegateEi, Icalendar.methodTypeRequest,
+        sched.schedule(delegateEi, 
                        null, null, false);
       } else if (method == Icalendar.methodTypeReply) {
         // Only attendee should be us
 
-        setOnlyAttendee(outEi, ei, att.getAttendeeUri());
+        ei.setOnlyAttendee(outEi, att.getAttendeeUri());
 
         outEv.setScheduleMethod(Icalendar.methodTypeReply);
       } else if (method == Icalendar.methodTypeCounter) {
         // Only attendee should be us
 
-        setOnlyAttendee(outEi, ei, att.getAttendeeUri());
+        ei.setOnlyAttendee(outEi, att.getAttendeeUri());
 
         /* Not sure how much we can change - at least times of the meeting.
          */
@@ -196,42 +193,5 @@ public class SchedAttendeeUpdate extends SchedProcessor {
     }
 
     return sr;
-  }
-
-  /** Set the attendee in the output event from the corresponding component in
-   * the calendar event.
-   *
-   * @param outEi - destined for somebodies inbox
-   * @param ei
-   * @param attUri
-   * @throws CalFacadeException
-   */
-  private void setOnlyAttendee(final EventInfo outEi,
-                               final EventInfo ei,
-                               final String attUri) throws CalFacadeException {
-    if (!ei.getEvent().getSuppressed()) {
-      BwEvent ev = ei.getEvent();
-      BwEvent outEv = outEi.getEvent();
-
-      if (!Util.isEmpty(outEv.getAttendees())) {
-        outEv.getAttendees().clear();
-      }
-      BwAttendee att = ev.findAttendee(attUri);
-      outEv.addAttendee((BwAttendee)att.clone());
-    }
-
-    if (ei.getNumOverrides() > 0) {
-      for (EventInfo oei: ei.getOverrides()) {
-        BwEvent ev = oei.getEvent();
-        EventInfo oOutEi = outEi.findOverride(ev.getRecurrenceId());
-        BwEvent outEv = oOutEi.getEvent();
-
-        if (!Util.isEmpty(outEv.getAttendees())) {
-          outEv.getAttendees().clear();
-        }
-        BwAttendee att = ev.findAttendee(attUri);
-        outEv.addAttendee((BwAttendee)att.clone());
-      }
-    }
   }
 }

@@ -55,6 +55,9 @@ public class EventInfo
     /** False if the update method(s) could find no changes */
     public boolean hasChanged;
 
+    /** False if the suence doesn't need updating */
+    public boolean sequenceChange;
+
     /** true if we need to reschedule after add/update
      * (Handled by add/update)
      */
@@ -765,6 +768,41 @@ public class EventInfo
    */
   public String getInboxEventName() {
     return inboxEventName;
+  }
+
+  /** Set the attendee in the output event from the corresponding component in
+   * this calendar event.
+   *
+   * @param outEi - destined for somebodies inbox
+   * @param attUri - the attendee URI
+   * @throws CalFacadeException on error
+   */
+  public void setOnlyAttendee(final EventInfo outEi,
+                              final String attUri) throws CalFacadeException {
+    if (!getEvent().getSuppressed()) {
+      final BwEvent ev = getEvent();
+      final BwEvent outEv = outEi.getEvent();
+
+      if (!Util.isEmpty(outEv.getAttendees())) {
+        outEv.getAttendees().clear();
+      }
+      final BwAttendee att = ev.findAttendee(attUri);
+      outEv.addAttendee((BwAttendee)att.clone());
+    }
+
+    if (getNumOverrides() > 0) {
+      for (final EventInfo oei: getOverrides()) {
+        final BwEvent ev = oei.getEvent();
+        final EventInfo oOutEi = outEi.findOverride(ev.getRecurrenceId());
+        final BwEvent outEv = oOutEi.getEvent();
+
+        if (!Util.isEmpty(outEv.getAttendees())) {
+          outEv.getAttendees().clear();
+        }
+        final BwAttendee att = ev.findAttendee(attUri);
+        outEv.addAttendee((BwAttendee)att.clone());
+      }
+    }
   }
 
   /* ====================================================================

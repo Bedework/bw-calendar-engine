@@ -44,7 +44,6 @@ import org.bedework.caldav.util.sharing.ShareResultType;
 import org.bedework.caldav.util.sharing.ShareType;
 import org.bedework.caldav.util.sharing.UserType;
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwCalendar.EventListEntry;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
@@ -131,7 +130,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -1023,7 +1021,6 @@ public class BwSysIntfImpl implements SysIntf {
         sr = getSvci().getScheduler().scheduleResponse(getEvinfo(ev));
       } else {
         sr = getSvci().getScheduler().schedule(getEvinfo(ev),
-                                               event.getScheduleMethod(),
                                                null, null,
                                                true); // iSchedule
       }
@@ -1262,7 +1259,6 @@ public class BwSysIntfImpl implements SysIntf {
         sr = getSvci().getScheduler().scheduleResponse(getEvinfo(val));
       } else {
         sr = getSvci().getScheduler().schedule(getEvinfo(val),
-                                               ev.getScheduleMethod(),
                                                null, null, iSchedule);
       }
 

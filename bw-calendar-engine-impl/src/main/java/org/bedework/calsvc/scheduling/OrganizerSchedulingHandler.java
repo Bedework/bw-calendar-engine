@@ -52,7 +52,6 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
 
   @Override
   public ScheduleResult schedule(final EventInfo ei,
-                                 final int method,
                                  final String recipient,
                                  final String fromAttUri,
                                  final boolean iSchedule) throws CalFacadeException {
@@ -77,11 +76,11 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
      * If any external recipients - leave in outbox with unprocessed status.
      * </pre>
      */
-    ScheduleResult sr = new ScheduleResult();
-    BwEvent ev = ei.getEvent();
+    final ScheduleResult sr = new ScheduleResult();
+    final BwEvent ev = ei.getEvent();
 
     try {
-      if (!Icalendar.itipRequestMethodType(method)) {
+      if (!Icalendar.itipRequestMethodType(ev.getScheduleMethod())) {
         sr.errorCode = CalFacadeException.schedulingBadMethod;
         return sr;
       }
@@ -92,8 +91,8 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
        * mailed to the recipients.
        */
 
-      int outAccess;
-      boolean freeBusyRequest = ev.getEntityType() ==
+      final int outAccess;
+      final boolean freeBusyRequest = ev.getEntityType() ==
         IcalDefs.entityTypeFreeAndBusy;
 
       if (freeBusyRequest) {
@@ -113,7 +112,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
        */
       BwCalendar outBox = null;
 
-      BwPrincipal currentUser = getPrincipal();
+      final BwPrincipal currentUser = getPrincipal();
       if (!currentUser.getUnauthenticated()) {
         outBox = getSpecialCalendar(getPrincipal(),
                                     BwCalendar.calTypeOutbox,
@@ -139,7 +138,7 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
       }
 
       return sr;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       getSvc().rollbackTransaction();
       if (t instanceof CalFacadeException) {
         throw (CalFacadeException)t;
@@ -148,17 +147,12 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SchedulingI#declineCounter(org.bedework.calfacade.svc.EventInfo, java.lang.String, org.bedework.calfacade.BwAttendee)
-   */
   @Override
   public ScheduleResult declineCounter(final EventInfo ei,
                                        final String comment,
                                        final BwAttendee fromAtt) throws CalFacadeException {
-    BwEvent ev = ei.getEvent();
-
-    EventInfo outEi = copyEventInfo(ei, getPrincipal());
-    ev = outEi.getEvent();
+    final EventInfo outEi = copyEventInfo(ei, getPrincipal());
+    final BwEvent ev = outEi.getEvent();
     ev.setScheduleMethod(ScheduleMethods.methodTypeDeclineCounter);
 
     if (comment != null) {
@@ -166,7 +160,6 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
     }
 
     return schedule(outEi,
-                    ScheduleMethods.methodTypeDeclineCounter,
                     fromAtt.getAttendeeUri(), null, false);
   }
 

@@ -141,7 +141,6 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
     if (!noInvites) {
       uer.schedulingResult = schedule(ei,
-                                      ev.getScheduleMethod(),
                                       ei.getReplyAttendeeURI(),
                                       uer.fromAttUri, false);
     }
@@ -173,7 +172,6 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
         EventInfo cei = new EventInfo(cncl);
 
         ScheduleResult cnclr = schedule(cei,
-                                        ScheduleMethods.methodTypeCancel,
                                         null, null, false);
         if (debug) {
           trace(cnclr.toString());

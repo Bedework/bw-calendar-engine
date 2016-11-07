@@ -23,10 +23,9 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
-
-import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -45,8 +44,9 @@ import java.util.Set;
  *
  * @author Mike Douglass
  */
-public class ChangeTable implements Serializable {
-  private HashMap<PropertyInfoIndex, ChangeTableEntry> map = new HashMap<>();
+public class ChangeTable extends Logged implements Serializable {
+  private final HashMap<PropertyInfoIndex, ChangeTableEntry> map = 
+          new HashMap<>();
 
   private boolean collectionSetChanged;
 
@@ -54,18 +54,20 @@ public class ChangeTable implements Serializable {
 
   private String userHref;
 
-  private boolean debug;
-
   /** List of properties considered insignificant for scheduling. This should be
    * a system configuration option.
    *
    * <p>If only these properties are modified then a scheduling message will
    * not be sent as a result of an update.
    */
-  public static final List<PropertyInfoIndex> schedulingInsignificantProperties;
+  private static final List<PropertyInfoIndex> schedulingInsignificantProperties;
+
+  /** List of properties iTip specifies require a SEQUENCE update when changed.
+   */
+  private static final List<PropertyInfoIndex> schedulingSequenceChangeProperties;
 
   static {
-    List<PropertyInfoIndex> sip = new ArrayList<PropertyInfoIndex>();
+    final List<PropertyInfoIndex> sip = new ArrayList<>();
 
     sip.add(PropertyInfoIndex.CLASS);
     sip.add(PropertyInfoIndex.CREATED);
@@ -80,13 +82,26 @@ public class ChangeTable implements Serializable {
     sip.add(PropertyInfoIndex.COST);
 
     schedulingInsignificantProperties = Collections.unmodifiableList(sip);
+
+    final List<PropertyInfoIndex> sscp = new ArrayList<>();
+
+    sscp.add(PropertyInfoIndex.DTSTART);
+    sscp.add(PropertyInfoIndex.DTEND);
+    sscp.add(PropertyInfoIndex.DURATION);
+    sscp.add(PropertyInfoIndex.DUE);
+    sscp.add(PropertyInfoIndex.RRULE);
+    sscp.add(PropertyInfoIndex.RDATE);
+    sscp.add(PropertyInfoIndex.EXDATE);
+    sscp.add(PropertyInfoIndex.STATUS);
+
+    schedulingSequenceChangeProperties = Collections.unmodifiableList(sscp);
   }
 
   /** Constructor
-   * @param userHref
+   * @param userHref principal href
    */
   public ChangeTable(final String userHref) {
-    debug = getLog().isDebugEnabled();
+    super();
 
     this.userHref = userHref;
   }
@@ -112,6 +127,19 @@ public class ChangeTable implements Serializable {
    */
   public boolean getSignificantChange() {
     return collectionSetChanged || significantPropertyChanged;
+  }
+
+  /**
+   * @return true if a change requires the sequence be updated
+   */
+  public boolean getSequenceChangeNeeded() {
+    for (final ChangeTableEntry cte: getEntries()) {
+      if (cte.getChanged() &&
+              schedulingSequenceChangeProperties.contains(cte.getIndex())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /** Set the present flag on the named entry.
@@ -880,11 +908,11 @@ public class ChangeTable implements Serializable {
    *
    */
   public void dumpEntries() {
-    debugMsg("ChangeTable: ----------------------------");
-    for (ChangeTableEntry cte: getEntries()) {
-      debugMsg(cte.toString());
+    debug("ChangeTable: ----------------------------");
+    for (final ChangeTableEntry cte: getEntries()) {
+      debug(cte.toString());
     }
-    debugMsg("end ChangeTable -------------------------");
+    debug("end ChangeTable -------------------------");
   }
 
   /* ====================================================================
@@ -953,27 +981,6 @@ public class ChangeTable implements Serializable {
     }
 
     return false;
-  }
-
-  /**
-   * @return Logger
-   */
-  public Logger getLog() {
-    return Logger.getLogger(this.getClass());
-  }
-
-  /**
-   * @param msg
-   */
-  public void warn(final String msg) {
-    getLog().warn(msg);
-  }
-
-  /**
-   * @param msg
-   */
-  public void debugMsg(final String msg) {
-    getLog().debug(msg);
   }
 
   /* ====================================================================

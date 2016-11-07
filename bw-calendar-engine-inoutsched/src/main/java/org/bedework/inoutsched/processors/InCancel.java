@@ -31,16 +31,16 @@ import org.bedework.calsvci.SchedulingI;
  */
 public class InCancel extends InProcessor {
   /**
-   * @param svci
+   * @param svci the interface
    */
   public InCancel(final CalSvcI svci) {
     super(svci);
   }
 
   /**
-   * @param ei
+   * @param ei the incoming event
    * @return ScheduleResult
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   @Override
   public ProcessResult process(final EventInfo ei) throws CalFacadeException {
@@ -48,9 +48,9 @@ public class InCancel extends InProcessor {
      *
      */
 
-    ProcessResult pr = new ProcessResult();
-    BwEvent ev = ei.getEvent();
-    SchedulingI sched = getSvc().getScheduler();
+    final ProcessResult pr = new ProcessResult();
+    final BwEvent ev = ei.getEvent();
+    final SchedulingI sched = getSvc().getScheduler();
 
     pr.removeInboxEntry = true;
 
@@ -60,25 +60,28 @@ public class InCancel extends InProcessor {
         break check;
       }
 
-      BwPreferences prefs = getSvc().getPrefsHandler().get();
-      EventInfo colEi = sched.getStoredMeeting(ei.getEvent());
+      final BwPreferences prefs = getSvc().getPrefsHandler().get();
+      final EventInfo colEi = sched.getStoredMeeting(ei.getEvent());
 
       if (colEi == null) {
         break check;
       }
 
-      BwEvent colEv = colEi.getEvent();
+      final BwEvent colEv = colEi.getEvent();
 
       if (prefs.getScheduleAutoCancelAction() ==
         BwPreferences.scheduleAutoCancelSetStatus) {
         if (colEv.getSuppressed()) {
           if (colEi.getOverrides() != null) {
-            for (EventInfo oei: colEi.getOverrides()) {
-              oei.getEvent().setStatus(BwEvent.statusCancelled);
+            for (final EventInfo oei: colEi.getOverrides()) {
+              final BwEvent oev = oei.getEvent();
+              oev.setStatus(BwEvent.statusCancelled);
+              oev.setSequence(ev.getSequence());
             }
           }
         } else {
           colEv.setStatus(BwEvent.statusCancelled);
+          colEv.setSequence(ev.getSequence());
         }
         getSvc().getEventsHandler().update(colEi, true, null);
       } else {

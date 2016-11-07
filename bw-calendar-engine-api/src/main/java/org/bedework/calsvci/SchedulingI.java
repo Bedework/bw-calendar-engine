@@ -58,9 +58,8 @@ public interface SchedulingI extends Serializable {
    * request will be immediately addded to the recipients inbox. For external
    * users they are sent via ischedule or mail.
    *
-   * @param ei         EventInfo object containing with method=REQUEST, CANCEL,
+   * @param ei         EventInfo object containing event with method=REQUEST, CANCEL,
    *                              ADD, DECLINECOUNTER or PUBLISH
-   * @param method - the scheduling method
    * @param recipient - non null to send to this recipient only (for REFRESH)
    * @param fromAttUri
    * @param iSchedule  true if it's an iSchedule request.
@@ -68,7 +67,6 @@ public interface SchedulingI extends Serializable {
    * @throws CalFacadeException
    */
   public ScheduleResult schedule(EventInfo ei,
-                                 int method,
                                  String recipient,
                                  String fromAttUri,
                                  boolean iSchedule) throws CalFacadeException;

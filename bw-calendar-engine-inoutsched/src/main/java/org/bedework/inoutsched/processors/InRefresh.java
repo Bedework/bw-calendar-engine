@@ -24,7 +24,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
-import org.bedework.icalendar.Icalendar;
+import org.bedework.util.calendar.ScheduleMethods;
 
 import java.util.Collection;
 
@@ -72,9 +72,11 @@ public class InRefresh extends InProcessor {
       return null;
     }
 
-    /* Just send it to the attendee. */
+
+    calEi.getEvent().setScheduleMethod(ScheduleMethods.methodTypeRequest);
+
+    /* Just send a copy to the attendee. */
     pr.sr = sched.schedule(calEi,
-                           Icalendar.methodTypeRefresh,
                            att.getAttendeeUri(), null, false);
 
     if (pr.sr.errorCode == null) {
