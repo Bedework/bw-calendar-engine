@@ -27,4 +27,67 @@
       <artifactId>bw-util-misc</artifactId>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>appassembler-maven-plugin</artifactId>
+        <version>1.10</version>
+        <executions>
+          <execution>
+            <id>execution2</id>
+            <phase>package</phase>
+            <goals>
+              <goal>assemble</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <!-- Set the target configuration directory to be used in the bin scripts -->
+          <configurationDirectory>conf</configurationDirectory>
+          <!-- Copy the contents from "/src/main/config" to the target
+               configuration directory in the assembled application -->
+          <copyConfigurationDirectory>true</copyConfigurationDirectory>
+          <!-- Include the target configuration directory in the beginning of
+               the classpath declaration in the bin scripts -->
+          <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+          <!-- set alternative assemble directory -->
+          <assembleDirectory>${project.build.directory}/bwcli</assembleDirectory>
+          <!-- Extra JVM arguments that will be included in the bin scripts
+          <extraJvmArguments>-Xms128m</extraJvmArguments> -->
+          <!-- Generate bin scripts for windows and unix pr default -->
+          <repositoryLayout>flat</repositoryLayout>
+          <platforms>
+            <platform>windows</platform>
+            <platform>unix</platform>
+          </platforms>
+          <programs>
+            <program>
+              <mainClass>org.bedework.bwcli.BwJolokiaCli</mainClass>
+              <id>cli</id>
+            </program>
+          </programs>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.5.3</version>
+        <executions>
+          <execution>
+            <id>client-assembly</id>
+            <phase>install</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/client.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

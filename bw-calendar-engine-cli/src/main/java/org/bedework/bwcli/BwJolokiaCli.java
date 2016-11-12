@@ -3,12 +3,15 @@
 */
 package org.bedework.bwcli;
 
+import org.bedework.bwcli.cmd.CmdCalSchema;
+import org.bedework.bwcli.cmd.CmdListIdx;
+import org.bedework.bwcli.cmd.CmdPurgeIdx;
+import org.bedework.bwcli.cmd.CmdRebuildIdx;
+import org.bedework.bwcli.cmd.CmdRebuildStatus;
+import org.bedework.bwcli.cmd.CmdRestoreCalData;
 import org.bedework.util.args.Args;
-import org.bedework.util.jolokia.CommandInterpreter;
 import org.bedework.util.jolokia.JolokiaCli;
 import org.bedework.util.jolokia.JolokiaClient;
-
-import java.util.List;
 
 /**
  * User: mike
@@ -16,45 +19,6 @@ import java.util.List;
  * Time: 4:26 PM
  */
 public class BwJolokiaCli extends JolokiaCli {
-  private abstract static class Cmd extends CommandInterpreter {
-    protected JolokiaCli cli;
-    protected JolokiaConfigClient jcc;
-
-    Cmd(final String cmdName,
-        final String cmdPars,
-        final String cmdDescription) {
-      super(cmdName, cmdPars, cmdDescription);
-    }
-
-    public void execute(final JolokiaCli cli) {
-      this.cli = cli;
-      try {
-        jcc = (JolokiaConfigClient)cli.getClient();
-
-        doExecute();
-      } catch (final Throwable t) {
-        cli.error(t);
-      }
-    }
-
-    public abstract void doExecute() throws Throwable;
-
-    protected void multiLine(final List<String> resp) {
-      if (resp == null) {
-        info("Null response");
-        return;
-      }
-
-      for (final String s: resp) {
-        info(s);
-      }
-    }
-
-    public void info(final String msg) {
-      cli.info(msg);
-    }
-  }
-
   public BwJolokiaCli(final String url,
                       final boolean debug) throws Throwable {
     super(url, debug);
@@ -69,71 +33,6 @@ public class BwJolokiaCli extends JolokiaCli {
 
   public JolokiaClient makeClient(final String uri) throws Throwable {
     return new JolokiaConfigClient(uri);
-  }
-
-  private static class CmdPurgeIdx extends Cmd {
-    CmdPurgeIdx() {
-      super("purgeidx", null, "Purge the old indexes");
-    }
-
-    public void doExecute() throws Throwable {
-      info(jcc.purgeIndexes());
-    }
-  }
-
-  private static class CmdListIdx extends Cmd {
-    CmdListIdx() {
-      super("listidx", null, "List the indexes");
-    }
-
-    public void doExecute() throws Throwable {
-      info(jcc.listIndexes());
-    }
-  }
-
-  private static class CmdRebuildIdx extends Cmd {
-    CmdRebuildIdx() {
-      super("rebuildidx", null, "Rebuild the indexes");
-    }
-
-    public void doExecute() throws Throwable {
-      info(jcc.rebuildIndexes());
-    }
-  }
-
-  private static class CmdRebuildStatus extends Cmd {
-    CmdRebuildStatus() {
-      super("rebuildstatus", null, "Show status of index rebuild");
-    }
-
-    public void doExecute() throws Throwable {
-      multiLine(jcc.rebuildIdxStatus());
-    }
-  }
-
-  private static class CmdCalSchema extends Cmd {
-    CmdCalSchema() {
-      super("calschema", null, "Create the calendar core schema");
-    }
-
-    public void doExecute() throws Throwable {
-      multiLine(jcc.coreSchema());
-    }
-  }
-
-  private static class CmdRestoreCalData extends Cmd {
-    CmdRestoreCalData() {
-      super("restoreCal", "[\"path\"]",
-            "Restore the calendar data from the default or supplied " +
-                    "data path. If a path is supplied it must be " +
-                    "reachable by the server and will be set as the " +
-                    "input data path.");
-    }
-
-    public void doExecute() throws Throwable {
-      final String path = cli.string(null);
-      multiLine(jcc.restoreCalData(path));
-    }
   }
 
   /**
