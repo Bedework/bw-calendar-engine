@@ -207,6 +207,9 @@ public class AliasesInfo implements Serializable {
                                            entityName);
     
     ai.setVisible(visible);
+    for (final AliasesInfo a: getAliases()) {
+        ai.addSharee(a.copyForEntity(entityName, visible));
+    }
     
     return ai;
   }

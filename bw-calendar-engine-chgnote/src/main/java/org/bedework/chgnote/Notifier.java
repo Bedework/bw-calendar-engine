@@ -422,8 +422,8 @@ public class Notifier extends AbstractScheduler {
 
     final String shareeHref = ai.getPrincipalHref();
 
-    if (!shareeHref.equals(ownerHref)) {
-      // This sharee did not make the change
+    if (shareeHref.equals(ownerHref)) {
+      // This sharee made the change. Do not notify, but process other aliases.
       return checkAliases(ai, ownerHref, rc);
     }
 
@@ -511,7 +511,7 @@ public class Notifier extends AbstractScheduler {
           final NotificationType note = new NotificationType();
 
           note.setNotification(rcCopy);
-          note.setName(rcCopy.getName());
+          note.setName(getEncodedUuid());
           getNotes().add(note);
           processed = true;
           break process;
@@ -587,7 +587,7 @@ public class Notifier extends AbstractScheduler {
     boolean processed = false;
 
     for (final AliasesInfo aai: ai.getAliases()) {
-      if (processAliasInfo(ai, ownerHref, rc)) {
+      if (processAliasInfo(aai, ownerHref, rc)) {
         processed = true;
       }
     }

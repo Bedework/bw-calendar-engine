@@ -1402,7 +1402,7 @@ public class CalSvc extends CalSvcI {
             final BwPrincipalInfo bwpi = dir.getDirInfo(currentPrincipal);
             currentPrincipal.setPrincipalInfo(bwpi);
 
-            if (pars.getPublicAdmin() || bwpi.getHasFullAccess()) {
+            if (pars.getPublicAdmin() || (bwpi != null && bwpi.getHasFullAccess())) {
               subscriptionsOnly = false;
             }
 

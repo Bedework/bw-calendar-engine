@@ -730,21 +730,24 @@ class Calendars extends CalSvcDb implements CalendarsI {
   private void findAliases(final BwCalendar col,
                            final AliasesInfo rootAi) throws CalFacadeException {
     final String collectionHref = col.getPath();
+
+    final boolean defaultEnabled =
+            !Boolean.valueOf(System.getProperty("org.bedework.nochangenote", "false")) &&
+            getAuthpars().getDefaultChangesNotifications();
+
+    if (notificationsEnabled(col, defaultEnabled)) {
+      rootAi.setNotificationsEnabled(true);
+    }
     
-    /* For a public collection we just try to locate all the aliases
-       without reference to a sharee list
+    /* Handle aliases that are not a result of calendar sharing.  These could be public or private.
      */
-    if (col.getPublick()) {
-      for (final BwCalendar alias: findAlias(collectionHref)) {
-        final AliasesInfo ai = new AliasesInfo(getPrincipal().getPrincipalRef(),
-                                               alias,
-                                               null);
+    for (final BwCalendar alias: findAlias(collectionHref)) {
+      final AliasesInfo ai = new AliasesInfo(getPrincipal().getPrincipalRef(),
+                                             alias,
+                                             null);
 
-        rootAi.addSharee(ai);
-        findAliases(alias, ai);
-      }
-
-      return;
+      rootAi.addSharee(ai);
+      findAliases(alias, ai);
     }
     
     /* for each sharee in the list find user collection(s) pointing to this
@@ -757,14 +760,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
     if (invite == null) {
       // No sharees
       return;
-    }
-
-    final boolean defaultEnabled =
-            !Boolean.valueOf(System.getProperty("org.bedework.nochangenote", "false")) &&
-            getAuthpars().getDefaultChangesNotifications();
-
-    if (notificationsEnabled(col, defaultEnabled)) {
-      rootAi.setNotificationsEnabled(true);
     }
 
     /* for sharees - it's the alias which points at this collection
@@ -945,7 +940,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
       uri = new URI(URLEncoder.encode(uri, "UTF-8")).normalize().getPath();
 
-      uri = Util.buildPath(true, URLDecoder.decode(uri, "UTF-8"));
+      uri = Util.buildPath(colPathEndsWithSlash, URLDecoder.decode(uri, "UTF-8"));
 
       if (debug) {
         trace("Normalized uri=" + uri);
