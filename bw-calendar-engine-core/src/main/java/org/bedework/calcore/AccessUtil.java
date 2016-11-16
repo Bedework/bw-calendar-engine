@@ -77,9 +77,9 @@ public class AccessUtil implements AccessUtilI {
      *
      * @param  path          String path of calendar
      * @return BwCalendar null for unknown calendar
-     * @throws CalFacadeException
+     * @throws CalFacadeException on error
      */
-    public abstract BwCalendar getCollection(String path) throws CalFacadeException;
+    BwCalendar getCollection(String path) throws CalFacadeException;
   }
 
   private CollectionGetter cg;

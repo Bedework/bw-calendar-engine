@@ -190,6 +190,11 @@
         <artifactId>bw-util-vcard</artifactId>
         <version>${bw-util.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-util-xml</artifactId>
+        <version>${bw-util.version}</version>
+      </dependency>
 			<dependency>
 				<groupId>org.bedework</groupId>
 				<artifactId>bw-access</artifactId>

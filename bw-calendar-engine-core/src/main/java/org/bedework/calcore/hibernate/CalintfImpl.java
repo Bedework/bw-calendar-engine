@@ -870,14 +870,12 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     return calendars.isEmpty(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CalendarsI#addNewCalendars(org.bedework.calfacade.BwUser)
-   */
   @Override
   public void addNewCalendars(final BwPrincipal user) throws CalFacadeException {
     checkOpen();
 
     calendars.addNewCalendars(user);
+    chcb.getSess().update(user);
   }
 
   /* (non-Javadoc)

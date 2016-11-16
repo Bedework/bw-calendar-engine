@@ -54,7 +54,7 @@ public interface CoreCalendarsI extends Serializable {
   /** Called whenever we start running under a new principal. May require a
    * flush of some cached information.
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   void principalChanged() throws CalFacadeException;
 
@@ -62,7 +62,7 @@ public interface CoreCalendarsI extends Serializable {
    * @param path to collection
    * @param token or null if first call
    * @return CollectionSynchInfo
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   CollectionSynchInfo getSynchInfo(String path,
                                    String token) throws CalFacadeException;
@@ -73,7 +73,7 @@ public interface CoreCalendarsI extends Serializable {
    * @param  cal          parent calendar
    * @param indexer not null means use indexer
    * @return Collection   of BwCalendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   Collection<BwCalendar> getCalendars(BwCalendar cal,
                                       BwIndexer indexer) throws CalFacadeException;
@@ -87,7 +87,7 @@ public interface CoreCalendarsI extends Serializable {
    * @param freeBusy determines required access
    * @param indexer not null means use indexer
    * @return BwCalendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   BwCalendar resolveAlias(BwCalendar val,
                           boolean resolveSubAlias,
@@ -98,7 +98,7 @@ public interface CoreCalendarsI extends Serializable {
    *
    * @param val - the alias
    * @return list of aliases
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   List<BwCalendar> findAlias(String val) throws CalFacadeException;
 
@@ -111,7 +111,7 @@ public interface CoreCalendarsI extends Serializable {
    * @param  alwaysReturnResult  false to raise access exceptions
    *                             true to return only those we have access to
    * @return BwCalendar null for unknown calendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   BwCalendar getCalendar(String path,
                          int desiredAccess,
@@ -127,7 +127,7 @@ public interface CoreCalendarsI extends Serializable {
    * @param  alwaysReturnResult  false to raise access exceptions
    *                             true to return only those we have access to
    * @return BwCalendar null for unknown calendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   BwCalendar getCollectionIdx(BwIndexer indexer,
                               String path,
@@ -157,7 +157,7 @@ public interface CoreCalendarsI extends Serializable {
    * @param  create    true if we should create it if non-existant.
    * @param  access    int desired access - from PrivilegeDefs
    * @return GetSpecialCalendarResult null for unknown calendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   GetSpecialCalendarResult getSpecialCalendar(BwPrincipal owner,
                                               int calType,
@@ -180,69 +180,69 @@ public interface CoreCalendarsI extends Serializable {
    * @param  val     BwCalendar new object
    * @param  parentPath  String path to parent.
    * @return BwCalendar object as added. Parameter val MUST be discarded
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public BwCalendar add(BwCalendar val,
-                                String parentPath) throws CalFacadeException;
+  BwCalendar add(BwCalendar val,
+                 String parentPath) throws CalFacadeException;
 
   /** Change the name (path segment) of a calendar object.
    *
    * @param  val         BwCalendar object
    * @param  newName     String name
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public void renameCalendar(BwCalendar val,
-                             String newName) throws CalFacadeException;
+  void renameCalendar(BwCalendar val,
+                      String newName) throws CalFacadeException;
 
   /** Move a calendar object from one parent to another
    *
    * @param  val         BwCalendar object
    * @param  newParent   BwCalendar potential parent
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public void moveCalendar(BwCalendar val,
-                           BwCalendar newParent) throws CalFacadeException;
+  void moveCalendar(BwCalendar val,
+                    BwCalendar newParent) throws CalFacadeException;
 
   /** Mark collection as modified
    *
    * @param  path    String path for the collection
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public void touchCalendar(final String path) throws CalFacadeException;
+  void touchCalendar(final String path) throws CalFacadeException;
 
   /** Mark collection as modified
    *
    * @param  col         BwCalendar object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public void touchCalendar(final BwCalendar col) throws CalFacadeException;
+  void touchCalendar(final BwCalendar col) throws CalFacadeException;
 
   /** Update a calendar object
    *
    * @param  val     BwCalendar object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public void updateCalendar(BwCalendar val) throws CalFacadeException;
+  void updateCalendar(BwCalendar val) throws CalFacadeException;
 
   /** Change the access to the given calendar entity.
    *
    * @param cal      Bwcalendar
    * @param aces     Collection of ace
    * @param replaceAll true to replace the entire access list.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public void changeAccess(BwCalendar cal,
-                           Collection<Ace> aces,
-                           boolean replaceAll) throws CalFacadeException;
+  void changeAccess(BwCalendar cal,
+                    Collection<Ace> aces,
+                    boolean replaceAll) throws CalFacadeException;
 
   /** Remove any explicit access for the given who to the given calendar entity.
    *
    * @param cal      Bwcalendar
    * @param who      AceWho
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public abstract void defaultAccess(BwCalendar cal,
-                                     AceWho who) throws CalFacadeException;
+  void defaultAccess(BwCalendar cal,
+                     AceWho who) throws CalFacadeException;
 
   /** Delete the given calendar
    *
@@ -251,26 +251,26 @@ public interface CoreCalendarsI extends Serializable {
    * @param val      BwCalendar object to be deleted
    * @param reallyDelete Really delete it - otherwise it's tombstoned
    * @return boolean false if it didn't exist, true if it was deleted.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public boolean deleteCalendar(BwCalendar val,
-                                boolean reallyDelete) throws CalFacadeException;
+  boolean deleteCalendar(BwCalendar val,
+                         boolean reallyDelete) throws CalFacadeException;
 
   /** Check to see if a collection is empty. A collection is not empty if it
    * contains other collections or calendar entities.
    *
    * @param val      BwCalendar object to check
    * @return boolean true if the calendar is empty
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public boolean isEmpty(BwCalendar val) throws CalFacadeException;
+  boolean isEmpty(BwCalendar val) throws CalFacadeException;
 
   /** Called after a principal has been added to the system.
    *
-   * @param principal
-   * @throws CalFacadeException
+   * @param principal the new principal
+   * @throws CalFacadeException on error
    */
-  public void addNewCalendars(BwPrincipal principal) throws CalFacadeException;
+  void addNewCalendars(BwPrincipal principal) throws CalFacadeException;
 
   /** Return all collections on the given path with a lastmod GREATER
    * THAN that supplied. The path may not be null. A null lastmod will

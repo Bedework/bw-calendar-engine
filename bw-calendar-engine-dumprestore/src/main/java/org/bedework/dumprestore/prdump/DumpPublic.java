@@ -21,6 +21,7 @@ package org.bedework.dumprestore.prdump;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalendarsI;
+import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.dump.DumpGlobals;
 
 /** Dump all calendar data for the public events.
@@ -69,7 +70,7 @@ public class DumpPublic extends DumpPrincipal {
      */
 
     try {
-      makeDir(collectionsDirName, false);
+      makeDir(Defs.collectionsDirName, false);
 
       final CalendarsI cols = getSvc().getCalendarsHandler();
 

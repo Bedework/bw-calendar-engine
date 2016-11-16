@@ -35,7 +35,7 @@ import java.util.List;
 
 /** Interface to do hibernate interactions.
  *
- * @author Mike Douglass douglm at bedework.edu
+ * @author Mike Douglass douglm at rpi.edu
  */
 public interface HibSession extends Serializable {
   /** Set up for a hibernate interaction. Throw the object away on exception.
@@ -115,14 +115,6 @@ public interface HibSession extends Serializable {
    * @throws CalFacadeException
    */
   public Timestamp getCurrentTimestamp() throws CalFacadeException;
-
-  /** Create a Criteria ready for the additon of Criterion.
-   *
-   * @param cl           Class for criteria
-   * @return Criteria    created Criteria
-   * @throws CalFacadeException
-   * /
-  public Criteria createCriteria(Class<?> cl) throws CalFacadeException;
 
   /** Evict an object from the session.
    *
