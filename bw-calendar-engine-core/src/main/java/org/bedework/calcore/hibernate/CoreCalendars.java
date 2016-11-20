@@ -498,6 +498,10 @@ class CoreCalendars extends CoreCalendarsDAO
       parentCal = usercal;
     }
 
+    if (usercal == null) {
+      throw new CalFacadeException("Invalid user " + user);
+    }
+
     /* Create a default calendar */
     final BwCalendar cal = new BwCalendar();
     cal.setName(getSyspars().getUserDefaultCalendar());
@@ -753,7 +757,10 @@ class CoreCalendars extends CoreCalendarsDAO
         return c;
       }
 
-      return resolveAlias(c, true, freeBusy, pathElements, indexer);
+      final BwCalendar res = resolveAlias(c, true, freeBusy, pathElements, indexer);
+      res.setAliasOrigin(val);
+      
+      return res;
     }
 
     if (val.getDisabled()) {
@@ -797,15 +804,21 @@ class CoreCalendars extends CoreCalendarsDAO
           val.getOwnerHref().equals(getPrincipal().getPrincipalRef())) {
         disableAlias(val);
       }
-    } else {
-      val.setAliasTarget(col);
+
+      return null;
     }
+    
+    val.setAliasTarget(col);
 
     if (!resolveSubAlias) {
+      col.setAliasOrigin(val);
       return col;
     }
 
-    return resolveAlias(col, true, freeBusy, pathElements, indexer);
+    final BwCalendar res = resolveAlias(col, true, freeBusy, pathElements, indexer);
+    res.setAliasOrigin(val);
+
+    return res;
   }
 
   private void disableAlias(final BwCalendar val) throws CalFacadeException {

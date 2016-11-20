@@ -183,7 +183,7 @@ public abstract class SimpleFilterParser {
    *
    * @param path of collection
    * @return collection object or null.
-   * @throws org.bedework.calfacade.exc.CalFacadeException
+   * @throws CalFacadeException on error
    */
   public abstract BwCalendar getCollection(String path) throws CalFacadeException;
 
@@ -194,7 +194,7 @@ public abstract class SimpleFilterParser {
    * @param resolveSubAlias - if true and the alias points to an alias, resolve
    *                  down to a non-alias.
    * @return BwCalendar
-   * @throws org.bedework.calfacade.exc.CalFacadeException
+   * @throws CalFacadeException on error
    */
   public abstract BwCalendar resolveAlias(BwCalendar val,
                                           boolean resolveSubAlias) throws CalFacadeException;
@@ -204,7 +204,7 @@ public abstract class SimpleFilterParser {
    *
    * @param  col          parent collection
    * @return Collection   of BwCalendar
-   * @throws org.bedework.calfacade.exc.CalFacadeException
+   * @throws CalFacadeException on error
    */
   public abstract Collection<BwCalendar> getChildren(BwCalendar col)
           throws CalFacadeException;
@@ -218,7 +218,7 @@ public abstract class SimpleFilterParser {
    *
    * @param name of category
    * @return category entity or null.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public abstract BwCategory getCategoryByName(String name) throws CalFacadeException;
 
@@ -234,7 +234,7 @@ public abstract class SimpleFilterParser {
    *
    * @param uid of the category
    * @return category entity or null.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public abstract BwCategory getCategory(String uid) throws CalFacadeException;
 
@@ -242,7 +242,7 @@ public abstract class SimpleFilterParser {
    *
    * @param path for view
    * @return view or null
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public abstract BwView getView(String path) throws CalFacadeException;
 
@@ -258,7 +258,7 @@ public abstract class SimpleFilterParser {
    *
    * @param vpath the virtual path
    * @return collection of collection objects - null for bad vpath
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public abstract Collection<BwCalendar> decomposeVirtualPath(final String vpath)
           throws CalFacadeException;
@@ -266,7 +266,7 @@ public abstract class SimpleFilterParser {
   /**
    *
    * @return a parser so we can parse out sub-filters
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public abstract SimpleFilterParser getParser() throws CalFacadeException;
 
@@ -281,7 +281,7 @@ public abstract class SimpleFilterParser {
    *                          path or paths
    * @param source            Where the expression came from - for errors
    * @return ParseResult
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public ParseResult parse(final String expr,
                            final boolean explicitSelection,
@@ -346,7 +346,7 @@ public abstract class SimpleFilterParser {
    * @param sexpr - search expression
    * @return list of terms in order of application. Empty for no sort
    *         terms.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public List<SortTerm> parseSort(final String sexpr) throws CalFacadeException {
     final List<SortTerm> res = new ArrayList<>();
@@ -646,7 +646,7 @@ public abstract class SimpleFilterParser {
    * word
    *
    * @return list of word values
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   private ArrayList<String> doWordList() throws CalFacadeException {
     int tkn = nextToken("doWordList(1)");
@@ -752,7 +752,7 @@ public abstract class SimpleFilterParser {
           continue;
         }
 
-        filter = and(filter, vpf);
+        filter = and(null, filter, vpf);
       }
 
       return filter;
@@ -770,7 +770,7 @@ public abstract class SimpleFilterParser {
           continue;
         }
 
-        filter = and(filter, vpf);
+        filter = and(null, filter, vpf);
       }
 
       return filter;
@@ -801,7 +801,7 @@ public abstract class SimpleFilterParser {
           f.setExact(exact);
           f.setNot(oper == notEqual);
 
-          filter = and(filter, f);
+          filter = and(null, filter, f);
         }
 
         return filter;
@@ -820,7 +820,7 @@ public abstract class SimpleFilterParser {
           f.setExact(exact);
           f.setNot(oper == notEqual);
 
-          filter = and(filter, f);
+          filter = and(null, filter, f);
         }
 
         return filter;
@@ -839,7 +839,7 @@ public abstract class SimpleFilterParser {
           continue;
         }
 
-        filter = and(filter, pf);
+        filter = and(null, filter, pf);
       }
 
       return filter;
@@ -904,7 +904,7 @@ public abstract class SimpleFilterParser {
    *
    * @param pis list of PropertyInfoIndex
    * @param depth we expect this and nothing else
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   private void checkSub(final List<PropertyInfoIndex> pis,
                         final int depth) throws CalFacadeException {
@@ -923,7 +923,7 @@ public abstract class SimpleFilterParser {
     for (final PropertyInfoIndex pi: pis) {
       sb.append(delim);
 
-      BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
+      final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
 
       if (ipie == null) {
         sb.append("bad-index(").append(pi).append("(");
@@ -1026,22 +1026,28 @@ public abstract class SimpleFilterParser {
     return nof;
   }
 
-  private FilterBase and(final FilterBase af,
+  private FilterBase and(final String name, 
+                         final FilterBase af,
                          final FilterBase f) {
+    final FilterBase res;
+    
     if (af == null) {
-      return f;
+      res = f;
+    } else {
+      if (af instanceof AndFilter) {
+        res = af;
+      } else {
+        res = new AndFilter();
+        res.addChild(af);
+      }
+      res.addChild(f);
     }
 
-    if (af instanceof AndFilter) {
-      af.addChild(f);
-      return af;
+    if (name != null) {
+      res.setName(name);
     }
-
-    final AndFilter naf = new AndFilter();
-    naf.addChild(af);
-    naf.addChild(f);
-
-    return naf;
+    
+    return res;
   }
 
   /** A virtual path is the apparent path for a user looking at an explorer
@@ -1077,7 +1083,7 @@ public abstract class SimpleFilterParser {
    *
    * @param  vpath  a String virtual path
    * @return FilterBase object or null for bad path
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   private FilterBase resolveVpath(final String vpath) throws CalFacadeException {
     /* We decompose the virtual path into it's elements and then try to
@@ -1129,7 +1135,7 @@ public abstract class SimpleFilterParser {
         }
 
         if (pr.filter != null) {
-          vfilter = and(vfilter, pr.filter);
+          vfilter = and(null, vfilter, pr.filter);
         }
       }
 
@@ -1146,7 +1152,14 @@ public abstract class SimpleFilterParser {
                                            " source: " + source);
     }
 
-    return and(vfilter,
+    final String name;
+    if (vpathTarget.getAliasOrigin() != null) {
+      name = vpathTarget.getAliasOrigin().getPath();
+    } else {
+      name = vpathTarget.getPath();
+    }
+    return and(name,
+               vfilter,
                resolveColPath(vpathTarget.getPath(),
                               false, false));
   }
@@ -1156,7 +1169,7 @@ public abstract class SimpleFilterParser {
    * @param path to be resolved
    * @param applyFilter - filter may already have been applied
    * @return filter or null
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   private FilterBase resolveColPath(final String path,
                                     final boolean applyFilter,

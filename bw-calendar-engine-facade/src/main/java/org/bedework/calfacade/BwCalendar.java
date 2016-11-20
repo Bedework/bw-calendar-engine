@@ -82,7 +82,7 @@ import javax.xml.namespace.QName;
  * calendars.
  *
  * Collections may be tombstoned - that is they are effectively deleted but
- * remain for thew purpose of synchronization reports. Currently we indicate a
+ * remain for the purpose of synchronization reports. Currently we indicate a
  * tombstoned collection by setting the filter value to "--TOMBSTONED--".
  *
  * XXX We suffix the name and path also to avoid some ugly clashes related to
@@ -362,6 +362,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   private Set<BwCategory> categories = null;
 
   private BwCalendar aliasTarget;
+
+  private BwCalendar aliasOrigin;
 
   private int aliasCalType;
 
@@ -1517,7 +1519,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return collectionInfo[getCalType()].canAlias;
   }
 
-  /** Set the aliased entity
+  /** Set the aliased entity - this is usualy the end of the chain of
+   * aliases, e.g. in a->b->c this would be c.
    *
    * @param val    BwCalendar object's alias target
    */
@@ -1532,6 +1535,24 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   @NoDump
   public BwCalendar getAliasTarget() {
     return aliasTarget;
+  }
+
+  /** Set the collection that was the root of the chain that referred
+   * to this collection, e.g. in a->b->c this would be a.
+   *
+   * @param val    BwCalendar object's alias target
+   */
+  public void setAliasOrigin(final BwCalendar val) {
+    aliasOrigin = val;
+  }
+
+  /** Get the aliased entity
+   *
+   * @return BwCalendar   the object's alias target
+   */
+  @NoDump
+  public BwCalendar getAliasOrigin() {
+    return aliasOrigin;
   }
 
   /** the aliased entity type
@@ -2028,7 +2049,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   @Override
   public Object clone() {
-    BwCalendar cal = shallowClone();
+    final BwCalendar cal = shallowClone();
 
     cal.setCategories(cloneCategories());
     cal.setProperties(cloneProperties());
@@ -2037,7 +2058,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   public BwCalendar shallowClone() {
-    BwCalendar cal = new BwCalendar();
+    final BwCalendar cal = new BwCalendar();
 
     super.copyTo(cal);
 

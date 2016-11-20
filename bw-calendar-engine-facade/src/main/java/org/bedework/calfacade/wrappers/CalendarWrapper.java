@@ -54,6 +54,8 @@ public class CalendarWrapper extends BwCalendar
 
   private BwCalendar aliasTarget;
 
+  private BwCalendar aliasOrigin;
+
   /* Current access for the user.
    */
   private CurrentAccess currentAccess;
@@ -708,18 +710,12 @@ public class CalendarWrapper extends BwCalendar
    *                   Non-db methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setAliasTarget(org.bedework.calfacade.BwCalendar)
-   */
   @Override
   public void setAliasTarget(final BwCalendar val) {
     entity.setAliasTarget(val);
     aliasTarget = null;  // Force refetch
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getAliasTarget()
-   */
   @Override
   public BwCalendar getAliasTarget() {
     if (aliasTarget == null) {
@@ -734,6 +730,28 @@ public class CalendarWrapper extends BwCalendar
     }
 
     return aliasTarget;
+  }
+
+  @Override
+  public void setAliasOrigin(final BwCalendar val) {
+    entity.setAliasOrigin(val);
+    aliasOrigin = null;  // Force refetch
+  }
+
+  @Override
+  public BwCalendar getAliasOrigin() {
+    if (aliasOrigin == null) {
+      aliasOrigin = entity.getAliasOrigin();
+      if (aliasOrigin == null) {
+        return null;
+      }
+
+      if (!(aliasOrigin instanceof CalendarWrapper)) {
+        aliasOrigin = new CalendarWrapper(aliasOrigin, accessUtil);
+      }
+    }
+
+    return aliasOrigin;
   }
 
   @Override

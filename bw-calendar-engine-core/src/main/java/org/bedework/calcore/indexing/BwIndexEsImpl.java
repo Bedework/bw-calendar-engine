@@ -461,7 +461,7 @@ public class BwIndexEsImpl implements BwIndexer {
     final ESQueryFilter ef = getFilters(recurRetrieval);
 
     res.curFilter = ef.buildFilter(filter);
-    if (res.curFilter instanceof ESQueryFilter.MatchNone) {
+    if (res.curFilter instanceof MatchNone) {
       res.setFound(0);
       return res;
     }
@@ -472,7 +472,7 @@ public class BwIndexEsImpl implements BwIndexer {
                                           end);
 
     res.curFilter = ef.addLimits(res.curFilter, defaultFilterContext);
-    if (res.curFilter instanceof ESQueryFilter.MatchNone) {
+    if (res.curFilter instanceof MatchNone) {
       res.setFound(0);
       return res;
     }
@@ -742,7 +742,7 @@ public class BwIndexEsImpl implements BwIndexer {
                                          hit.getScore()));
     }
 
-    // Finish off the events
+    //<editor-fold desc="Finish off events by setting master, target and overrides">
 
     for (final EventInfo ei: masters) {
       final BwEvent ev = ei.getEvent();
@@ -763,6 +763,7 @@ public class BwIndexEsImpl implements BwIndexer {
         }
       }
     }
+    //</editor-fold>
 
     return entities;
   }
@@ -1618,7 +1619,7 @@ public class BwIndexEsImpl implements BwIndexer {
         }
       }
 
-      /* Emit all instances that aren't overridden. */
+      //<editor-fold desc="Emit all instances that aren't overridden">
 
       for (final Period p: rp.instances) {
         String dtval = p.getStart().toString();
@@ -1657,11 +1658,9 @@ public class BwIndexEsImpl implements BwIndexer {
           break;
         }
       }
+      //</editor-fold>
 
-      /* Emit the master event with a date range covering the entire
-       * period.
-       */
-
+      //<editor-fold desc="Emit the master event with a date range covering the entire period.">
       final BwDateTime start =
               BwDateTime.makeBwDateTime(dateOnly,
                                         dl.minStart, stzid);
@@ -1674,6 +1673,7 @@ public class BwIndexEsImpl implements BwIndexer {
                          end,
                          null,
                          null);
+      //</editor-fold>
 
       return iresp;
     } catch (final CalFacadeException cfe) {

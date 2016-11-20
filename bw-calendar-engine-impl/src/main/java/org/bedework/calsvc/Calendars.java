@@ -157,10 +157,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
      * personal calendar users.
      */
 
-    BwCalendar curCol = get(vpath);
+    BwCalendar startCol = get(vpath);
 
-    if ((curCol != null) && !curCol.getAlias()) {
-      cols.add(curCol);
+    if ((startCol != null) && !startCol.getAlias()) {
+      cols.add(startCol);
 
       return cols;
     }
@@ -175,7 +175,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
      * This handles the user root not being accessible
      */
 
-    curCol = null;
+    startCol = null;
     String startPath = "";
     int pathi = 1;  // Element 0 is a zero length string
 
@@ -185,25 +185,27 @@ class Calendars extends CalSvcDb implements CalendarsI {
       pathi++;
 
       try {
-        curCol = get(startPath);
+        startCol = get(startPath);
       } catch (final CalFacadeAccessException cfae) {
-        curCol = null;
+        startCol = null;
       }
 
-      if (curCol != null) {
+      if (startCol != null) {
         // Found the start collection
         if (debug) {
-          trace("Start vpath collection:" + curCol.getPath());
+          trace("Start vpath collection:" + startCol.getPath());
         }
         break;
       }
     }
 
-    if (curCol == null) {
+    if (startCol == null) {
       // Bad vpath
       return null;
     }
 
+    BwCalendar curCol = startCol;
+    
     buildCollection:
     for (;;) {
       cols.add(curCol);
@@ -254,7 +256,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
         }
       }
       */
-      final BwCalendar col = get(curCol.getPath() + "/" + pathEls[pathi]);
+      final BwCalendar col = get(Util.buildPath(colPathEndsWithSlash, 
+                                                curCol.getPath(),
+                                                "/",
+                                                pathEls[pathi]));
 
       if (col == null) {
         /* Child not found - bad vpath */
@@ -265,6 +270,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
       curCol = col;
     }
 
+    curCol.setAliasOrigin(startCol);
+    
     return cols;
   }
 

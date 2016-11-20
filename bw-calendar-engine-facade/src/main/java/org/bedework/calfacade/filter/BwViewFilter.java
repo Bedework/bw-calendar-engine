@@ -56,7 +56,7 @@ public class BwViewFilter extends ObjectFilter<BwView> {
   }
 
   public FilterBase getFilter() {
-    List<FilterBase> c = getChildren();
+    final List<FilterBase> c = getChildren();
     if (Util.isEmpty(c)) {
       return null;
     }
