@@ -18,19 +18,15 @@
 */
 package org.bedework.calsvc;
 
-import org.bedework.calcorei.CoreEventInfo;
-import org.bedework.calcorei.CoreEventsI.InternalEventKey;
 import org.bedework.calfacade.BwDateTime;
-import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwEventKey;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo.UnknownTimezoneInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.BwDateTimeUtil;
 import org.bedework.calsvci.TimeZonesStoreI;
+import org.bedework.util.misc.ToString;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.LastModified;
@@ -48,7 +44,7 @@ import java.util.TreeSet;
 public class TimeZonesStoreImpl implements TimeZonesStoreI {
   protected boolean debug;
 
-  private CalSvc svci;
+  private final CalSvc svci;
 
   private transient Logger log;
 
@@ -59,14 +55,14 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
     debug = getLogger().isDebugEnabled();
   }
 
-  /** Extended info clas which has internal state information.
+  /** Extended info class which has internal state information.
    *
    */
   private static class UpdateFromTimeZonesInfoInternal implements
           UpdateFromTimeZonesInfo {
     /* Event ids */
-    Collection<? extends InternalEventKey> ids;
-    Iterator<? extends InternalEventKey> idIterator;
+    Collection<String> names;
+    Iterator<String> iterator;
 
     long lastmod = 0;
 
@@ -74,27 +70,18 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
 
     int totalEventsUpdated;
 
-    Collection<UnknownTimezoneInfo> unknownTzids = new TreeSet<UnknownTimezoneInfo>();
+    Collection<UnknownTimezoneInfo> unknownTzids = new TreeSet<>();
 
-    Collection<BwEventKey> updatedList = new ArrayList<BwEventKey>();
+    Collection<BwEventKey> updatedList = new ArrayList<>();
 
-    /* (non-Javadoc)
-     * @see org.bedework.calfacade.base.UpdateFromTimeZonesInfo#getTotalEventsToCheck()
-     */
     public int getTotalEventsToCheck() {
-      return ids.size();
+      return names.size();
     }
 
-    /* (non-Javadoc)
-     * @see org.bedework.calfacade.base.UpdateFromTimeZonesInfo#getTotalEventsChecked()
-     */
     public int getTotalEventsChecked() {
       return totalEventsChecked;
     }
 
-    /* (non-Javadoc)
-     * @see org.bedework.calfacade.base.UpdateFromTimeZonesInfo#getTotalEventsUpdated()
-     */
     public int getTotalEventsUpdated() {
       return totalEventsUpdated;
     }
@@ -109,26 +96,25 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
 
     @Override
     public String toString() {
-      StringBuffer sb = new StringBuffer();
+      final ToString ts = new ToString(this);
 
-      sb.append("------------------------------------------");
-      sb.append("\nUpdateFromTimeZonesInfoInternal:");
-      sb.append("\ntotalEventsToCheck: ");
-      sb.append(getTotalEventsToCheck());
-      sb.append("\ntotalEventsChecked: ");
-      sb.append(totalEventsChecked);
-      sb.append("\ntotalEventsUpdated: ");
-      sb.append(totalEventsUpdated);
-      sb.append("\n------------------------------------------");
+      ts.append("------------------------------------------");
+      ts.newLine();
+      ts.append("totalEventsToCheck", getTotalEventsToCheck());
+      ts.newLine();
+      ts.append("totalEventsChecked", totalEventsChecked);
+      ts.newLine();
+      ts.append("totalEventsUpdated", totalEventsUpdated);
+      ts.newLine();
+      ts.append("------------------------------------------");
 
-      return sb.toString();
+      return ts.toString();
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.Calintf#updateFromTimeZones(int, boolean, org.bedework.calfacade.base.UpdateFromTimeZonesInfo)
-   */
-  public UpdateFromTimeZonesInfo updateFromTimeZones(final int limit,
+  @Override
+  public UpdateFromTimeZonesInfo updateFromTimeZones(final String colHref,
+                                                     final int limit,
                                                      final boolean checkOnly,
                                                      final UpdateFromTimeZonesInfo info
                                                      ) throws CalFacadeException {
@@ -147,7 +133,7 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
 
     boolean redo = false;
 
-    UpdateFromTimeZonesInfoInternal iinfo;
+    final UpdateFromTimeZonesInfoInternal iinfo;
 
     if (info != null) {
       if (info.getTotalEventsToCheck() == info.getTotalEventsChecked()) {
@@ -159,7 +145,7 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
       iinfo = new UpdateFromTimeZonesInfoInternal();
     }
 
-    if (redo || (iinfo.ids == null)) {
+    if (redo || (iinfo.names == null)) {
       String lastmod = null;
 
       if (redo) {
@@ -167,24 +153,28 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
       }
       // Get event ids from db.
       iinfo.lastmod = System.currentTimeMillis();
+      /* This is what we used to do - replace this with a search
       iinfo.ids = ((Events)svci.getEventsHandler()).getEventKeysForTzupdate(lastmod);
+       The code below also needs to be updated to do schedulign where necessary
+       */
 
-      if (iinfo.ids == null) {
-        iinfo.ids = new ArrayList<InternalEventKey>();
+      if (iinfo.names == null) {
+        iinfo.names = new ArrayList<>();
       }
 
       iinfo.totalEventsChecked = 0;
       iinfo.totalEventsUpdated = 0;
-      iinfo.idIterator = iinfo.ids.iterator();
+      iinfo.iterator = iinfo.names.iterator();
     }
 
     for (int i = 0; i < limit; i++) {
-      if (!iinfo.idIterator.hasNext()) {
+      if (!iinfo.iterator.hasNext()) {
         break;
       }
 
-      InternalEventKey ikey = iinfo.idIterator.next();
+      final String name = iinfo.iterator.next();
 
+      /*
       // See if event needs update
       BwPrincipal owner = svci.getUsersHandler().getPrincipal(ikey.getOwnerHref());
 
@@ -248,6 +238,7 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
           }
         }
       }
+      */
 
       iinfo.totalEventsChecked++;
     }
@@ -279,15 +270,16 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
     }
 
     try {
-      BwDateTime newVal = BwDateTimeUtil.getDateTime(val.getDtval(), false,
-                                                   false, val.getTzid());
+      final BwDateTime newVal = 
+              BwDateTimeUtil.getDateTime(val.getDtval(), false,
+                                         false, val.getTzid());
 
       if (newVal.getDate().equals(val.getDate())) {
         return null;
       }
 
       return newVal;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       if (cfe.getMessage().equals(CalFacadeException.unknownTimezone)) {
         iinfo.unknownTzids.add(new UnknownTimezoneInfo(owner, val.getTzid()));
         return null;

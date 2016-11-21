@@ -713,7 +713,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * @return UpdateFromTimeZonesInfo staus of the update
    * @throws CalFacadeException
    */
-  public abstract UpdateFromTimeZonesInfo updateFromTimeZones(int limit,
+  public abstract UpdateFromTimeZonesInfo updateFromTimeZones(String colHref,
+                                                              int limit,
                                                      boolean checkOnly,
                                                      UpdateFromTimeZonesInfo info
                                                      ) throws CalFacadeException;

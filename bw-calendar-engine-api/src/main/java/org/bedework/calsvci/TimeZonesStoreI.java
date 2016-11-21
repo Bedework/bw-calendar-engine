@@ -29,7 +29,7 @@ import java.io.Serializable;
  *
  */
 public interface TimeZonesStoreI extends Serializable {
-  /** Update the system after changes to timezones. This is a lengthy process
+  /** Update the system after changes to timezones. This may be a lengthy process
    * so the method allows the caller to specify how many updates are to take place
    * before returning.
    *
@@ -40,13 +40,15 @@ public interface TimeZonesStoreI extends Serializable {
    * redone using timestamps to limit the check to events added or updated since
    * the first check. Keep calling until the number of updated events is zero.
    *
+   * @param colHref collection to fix
    * @param limit   -1 for no limit
    * @param checkOnly  don't update if true.
    * @param info    null on first call, returned object from previous calls.
    * @return UpdateFromTimeZonesInfo staus of the update
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public UpdateFromTimeZonesInfo updateFromTimeZones(int limit,
+  public UpdateFromTimeZonesInfo updateFromTimeZones(String colHref,
+                                                     int limit,
                                                      boolean checkOnly,
                                                      UpdateFromTimeZonesInfo info
                                                      ) throws CalFacadeException;

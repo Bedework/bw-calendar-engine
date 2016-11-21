@@ -22,6 +22,7 @@ import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.CalintfHelper;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.HibSession;
+import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
@@ -37,15 +38,15 @@ public abstract class CalintfHelperHib extends CalintfHelper
   public interface CalintfHelperHibCb extends Serializable {
     /**
      * @return HibSession
-     * @throws CalFacadeException
+     * @throws CalFacadeException on error
      */
     HibSession getSess() throws CalFacadeException;
   }
 
-  private CalintfHelperHibCb calintfCb;
+  private final CalintfHelperHibCb calintfCb;
 
   /**
-   * @param calintfCb
+   * @param calintfCb the callback
    */
   public CalintfHelperHib(final CalintfHelperHibCb calintfCb) {
     this.calintfCb = calintfCb;
@@ -55,23 +56,28 @@ public abstract class CalintfHelperHib extends CalintfHelper
     return calintfCb.getSess();
   }
 
+  protected void rollback() throws CalFacadeException {
+    getSess().rollback();
+  }
+
   protected CalintfHelperHibCb getCalintfCb() throws CalFacadeException {
     return calintfCb;
   }
 
-  /** Just encapsulate building a query out of a number of parts
-   *
-   * @param parts
-   * @throws CalFacadeException
-   */
-  public void makeQuery(final String[] parts) throws CalFacadeException {
-    StringBuilder sb = new StringBuilder();
+  protected void saveOrUpdate(final BwDbentity val) throws CalFacadeException {
+    getSess().saveOrUpdate(val);
+  }
 
-    for (String s: parts) {
-      sb.append(s);
-    }
+  protected void save(final BwDbentity val) throws CalFacadeException {
+    getSess().save(val);
+  }
 
-    getSess().createQuery(sb.toString());
+  protected void update(final BwDbentity val) throws CalFacadeException {
+    getSess().update(val);
+  }
+
+  protected void delete(final BwDbentity val) throws CalFacadeException {
+    getSess().delete(val);
   }
 
   @Override

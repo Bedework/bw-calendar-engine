@@ -238,51 +238,6 @@ public interface CoreEventsI extends Serializable {
                         BwCalendar from,
                         BwCalendar to) throws CalFacadeException;
 
-  /** This represents an internal key to an event.
-   *
-   */
-  public abstract static class InternalEventKey implements Serializable {
-    /**
-     * @return start time for indexed event
-     */
-    public abstract BwDateTime getStart();
-
-    /**
-     * @return end time for indexed event
-     */
-    public abstract BwDateTime getEnd();
-
-    /**
-     * @return owner href for indexed event
-     */
-    public abstract String getOwnerHref();
-  }
-
-  /** Return all keys or all with a lastmod greater than or equal to that supplied.
-   *
-   * <p>The lastmod allows us to redo the search after we have updated timezones
-   * to find all events added after we made the last call.
-   *
-   * <p>Note the lastmod has a coarse granularity so it may need to be backed off
-   * to ensure all events are covered if doing batches.
-   *
-   * @param lastmod the date
-   * @return collection of opaque key objects.
-   * @throws CalFacadeException
-   */
-  public Collection<? extends InternalEventKey> getEventKeysForTzupdate(String lastmod)
-          throws CalFacadeException;
-
-  /** Get an event given the internal key. Returns null if event no longer
-   * exists.
-   *
-   * @param key to event
-   * @return CoreEventInfo
-   * @throws CalFacadeException
-   */
-  public CoreEventInfo getEvent(InternalEventKey key)
-          throws CalFacadeException;
-
   /** Return all events on the given path with a lastmod GREATER
    * THAN that supplied. The path may not be null. A null lastmod will
    * return all events in the collection.

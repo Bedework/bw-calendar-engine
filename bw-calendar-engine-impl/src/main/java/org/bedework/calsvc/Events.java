@@ -22,7 +22,6 @@ import org.bedework.access.AccessPrincipal;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.CoreEventInfo;
-import org.bedework.calcorei.CoreEventsI.InternalEventKey;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
 import org.bedework.caldav.util.filter.BooleanFilter;
 import org.bedework.caldav.util.filter.FilterBase;
@@ -1127,25 +1126,6 @@ class Events extends CalSvcDb implements EventsI {
       // XXX only do this if we know it changed
       event.setLocation(eeerl.entity);
     }
-  }
-
-  /** Return all keys or all with a lastmod greater than or equal to that supplied.
-   *
-   * <p>Note the lastmod has a coarse granularity so it may need to be backed off
-   * to ensure all events are covered if doing batches.
-   *
-   * @param lastmod allows us to redo the search after we have updated timezones
-   *                 to find all events added after we made the last call.
-   * @return collection of opaque key objects.
-   * @throws CalFacadeException
-   */
-  Collection<? extends InternalEventKey> getEventKeysForTzupdate(final String lastmod)
-          throws CalFacadeException {
-    return getCal().getEventKeysForTzupdate(lastmod);
-  }
-
-  CoreEventInfo getEvent(final InternalEventKey key) throws CalFacadeException {
-    return getCal().getEvent(key);
   }
 
   /** Method which allows us to flag it as a scheduling action

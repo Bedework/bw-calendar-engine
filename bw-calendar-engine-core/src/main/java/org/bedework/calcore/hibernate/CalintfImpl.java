@@ -1122,30 +1122,6 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     events.moveEvent(val, from, to);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.EventsI#getEventKeys()
-   */
-  @Override
-  public Collection<? extends InternalEventKey> getEventKeysForTzupdate(final String lastmod)
-          throws CalFacadeException {
-    return events.getEventKeysForTzupdate(lastmod);
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.EventsI#getEvent(org.bedework.calcorei.EventsI.InternalEventKey)
-   */
-  @Override
-  public CoreEventInfo getEvent(final InternalEventKey key)
-          throws CalFacadeException {
-    // Only for super user?
-
-    if (!getSuperUser()) {
-      throw new CalFacadeAccessException();
-    }
-
-    return events.getEvent(key);
-  }
-
   @Override
   public Set<CoreEventInfo> getSynchEvents(final String path,
                                            final String lastmod) throws CalFacadeException {
