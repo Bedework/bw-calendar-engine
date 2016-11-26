@@ -22,6 +22,7 @@ import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.RecurringRetrievalMode;
@@ -32,6 +33,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -267,4 +269,26 @@ public interface CoreEventsI extends Serializable {
   public Collection<String> getChildEntities(String parentPath,
                                              int start,
                                              int count) throws CalFacadeException;
+
+  /* ====================================================================
+   *                       dump/restore methods
+   *
+   * These are used to handle the needs of dump/restore. Perhaps we
+   * can eliminate the need at some point...
+   * ==================================================================== */
+
+  /**
+   * @return annotations - not recurrence overrides
+   * @throws CalFacadeException on error
+   * @deprecated - remove in 4.0 with new dump process
+   */
+  Iterator<BwEventAnnotation> getEventAnnotations() throws CalFacadeException;
+
+  /**
+   * @param ev the master
+   * @return overrides for event
+   * @throws CalFacadeException on error
+   * @deprecated - remove in 4.0 with new dump process
+   */
+  Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) throws CalFacadeException;
 }

@@ -24,7 +24,10 @@ import org.bedework.access.AceWho;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.AccessUtil;
+import org.bedework.calcore.CalintfHelper;
+import org.bedework.calcore.Transactions;
 import org.bedework.calcorei.CoreCalendarsI;
+import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwPrincipal;
@@ -55,8 +58,10 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
  * @author douglm
  *
  */
-class CoreCalendars extends CoreCalendarsDAO
-         implements AccessUtil.CollectionGetter, CoreCalendarsI {
+class CoreCalendars extends CalintfHelper
+         implements AccessUtil.CollectionGetter, Transactions,
+        CoreCalendarsI {
+  private final CoreCalendarsDAO dao;
   private final String userCalendarRootPath;
   //private String groupCalendarRootPath;
   
@@ -64,20 +69,21 @@ class CoreCalendars extends CoreCalendarsDAO
 
   /** Constructor
    *
-   * @param chcb helper callback
+   * @param sess persistance session
    * @param cb callback
    * @param ac access checker
    * @param currentMode of access
    * @param sessionless if true
    * @throws CalFacadeException on fatal error
    */
-  CoreCalendars(final CalintfHelperHibCb chcb, 
+  CoreCalendars(final HibSession sess, 
                 final Callback cb,
                 final AccessChecker ac,
                 final int currentMode,
                 final boolean sessionless)
           throws CalFacadeException {
-    super(chcb);
+    dao = new CoreCalendarsDAO(sess);
+    cb.registerDao(dao);
     super.init(cb, ac, currentMode, sessionless);
 
     userCalendarRootPath = 
@@ -100,6 +106,18 @@ class CoreCalendars extends CoreCalendarsDAO
   }
 
   @Override
+  public void rollback() throws CalFacadeException {
+    dao.rollback();
+  }
+
+  @Override
+  public void throwException(final CalFacadeException cfe)
+          throws CalFacadeException {
+    dao.rollback();
+    throw cfe;
+  }
+
+  @Override
   public BwCalendar getCollection(final String path) throws CalFacadeException {
     if (path == null) {
       return null;
@@ -111,7 +129,7 @@ class CoreCalendars extends CoreCalendarsDAO
       return col;
     }
 
-    col = getCollectionNoAccessCheck(path);
+    col = dao.getCollectionNoAccessCheck(path);
 
     if (col == null) {
       if (path.equals("/")) {
@@ -165,7 +183,7 @@ class CoreCalendars extends CoreCalendarsDAO
   @Override
   public CollectionSynchInfo getSynchInfo(final String path,
                                           final String token) throws CalFacadeException {
-    return super.getSynchInfo(path, token);
+    return dao.getSynchInfo(path, token);
   }
   
   @Override
@@ -199,7 +217,20 @@ class CoreCalendars extends CoreCalendarsDAO
 
   @Override
   public List<BwCalendar> findAlias(final String val) throws CalFacadeException {
-    return findCollectionAlias(val);
+    final List<BwCalendar> aliases = dao.findCollectionAlias(val,
+                                                             currentPrincipal());
+
+    final List<BwCalendar> waliases = new ArrayList<>();
+
+    if (Util.isEmpty(aliases)) {
+      return waliases;
+    }
+
+    for (final BwCalendar alias: aliases) {
+      waliases.add(wrap(alias));
+    }
+
+    return waliases;
   }
 
   @Override
@@ -250,7 +281,7 @@ class CoreCalendars extends CoreCalendarsDAO
     /* update will check access
      */
 
-    final BwCalendar parent = getCollectionNoAccessCheck(val.getColPath());
+    final BwCalendar parent = dao.getCollectionNoAccessCheck(val.getColPath());
 
     /* Ensure the name isn't reserved and the path is unique */
     checkNewCalendarName(newName, false, parent);
@@ -267,7 +298,7 @@ class CoreCalendars extends CoreCalendarsDAO
     updatePaths(val, parent);
 
     /* Remove any tombstoned collection with the same name */
-    removeTombstonedVersion(val);
+    dao.removeTombstonedVersion(val);
 
     // Flush it again
     colCache.flush();
@@ -295,7 +326,7 @@ class CoreCalendars extends CoreCalendarsDAO
     final BwCalendar tombstoned = val.makeTombstoneCopy();
 
     tombstoned.tombstone();
-    getSess().save(tombstoned);
+    dao.save(tombstoned);
 
     /* This triggers off a cascade of updates down the tree as we are storing the
      * path in the calendar objects. This may be preferable to calculating the
@@ -304,7 +335,7 @@ class CoreCalendars extends CoreCalendarsDAO
     updatePaths(val, newParent);
 
     /* Remove any tombstoned collection with the same name */
-    removeTombstonedVersion(val);
+    dao.removeTombstonedVersion(val);
 
     // Flush it again
     colCache.flush();
@@ -312,7 +343,7 @@ class CoreCalendars extends CoreCalendarsDAO
 
   @Override
   public void touchCalendar(final String path) throws CalFacadeException {
-    final BwCalendar col = getCollectionNoAccessCheck(path);
+    final BwCalendar col = dao.getCollectionNoAccessCheck(path);
     if (col == null) {
       return;
     }
@@ -322,14 +353,14 @@ class CoreCalendars extends CoreCalendarsDAO
 
   @Override
   public void touchCalendar(final BwCalendar col) throws CalFacadeException {
-    touchCollection(col);
+    dao.touchCollection(col, getCurrentTimestamp());
   }
 
   @Override
   public void updateCalendar(final BwCalendar val) throws CalFacadeException {
     ac.checkAccess(val, privWriteProperties, false);
 
-    updateCollection(unwrap(val));
+    dao.updateCollection(unwrap(val));
     touchCalendar(val.getPath());
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
@@ -346,7 +377,7 @@ class CoreCalendars extends CoreCalendarsDAO
     // Clear the cache - inheritance makes it difficult to be sure of the effects.
     colCache.clear();
 
-    saveOrUpdateCollection(unwrap(col));
+    dao.saveOrUpdateCollection(unwrap(col));
 
     ((CalendarWrapper)col).clearCurrentAccess(); // force recheck
     colCache.put((CalendarWrapper)col);
@@ -358,7 +389,7 @@ class CoreCalendars extends CoreCalendarsDAO
   public void defaultAccess(final BwCalendar cal,
                             final AceWho who) throws CalFacadeException {
     ac.getAccessUtil().defaultAccess(cal, who);
-    saveOrUpdateCollection(unwrap(cal));
+    dao.saveOrUpdateCollection(unwrap(cal));
 
     colCache.flush();
 
@@ -406,17 +437,17 @@ class CoreCalendars extends CoreCalendarsDAO
     
     /* Ensure it's not in any (auth)user preferences */
 
-    removeCalendarFromAuthPrefs(unwrapped);
+    dao.removeCalendarFromAuthPrefs(unwrapped);
 
     /* Ensure no tombstoned events or childen */
-    removeTombstoned(val.getPath());
+    dao.removeTombstoned(path);
 
     if (reallyDelete) {
-      deleteCalendar(unwrapped);
+      dao.deleteCalendar(unwrapped);
     } else {
       tombstoneEntity(unwrapped);
       unwrapped.tombstone();
-      updateCollection(unwrapped);
+      dao.updateCollection(unwrapped);
       touchCalendar(unwrapped);
     }
 
@@ -431,7 +462,7 @@ class CoreCalendars extends CoreCalendarsDAO
 
   @Override
   public boolean isEmpty(final BwCalendar val) throws CalFacadeException {
-    return isEmptyCollection(val);
+    return dao.isEmptyCollection(val);
   }
   
   @Override
@@ -479,7 +510,7 @@ class CoreCalendars extends CoreCalendarsDAO
         usercal.setPath(path);
         usercal.setColPath(parentCal.getPath());
 
-        saveCollection(usercal);
+        dao.saveCollection(usercal);
       } else if (usercal == null) {
         /* Create a new system owned folder for part of the principal
          * hierarchy
@@ -492,7 +523,7 @@ class CoreCalendars extends CoreCalendarsDAO
         usercal.setPath(path);
         usercal.setColPath(parentCal.getPath());
 
-        saveCollection(usercal);
+        dao.saveCollection(usercal);
       }
 
       parentCal = usercal;
@@ -513,14 +544,14 @@ class CoreCalendars extends CoreCalendarsDAO
     cal.setCalType(BwCalendar.calTypeCalendarCollection);
     cal.setAffectsFreeBusy(true);
 
-    saveCollection(cal);
+    dao.saveCollection(cal);
   }
 
   @Override
   public Set<BwCalendar> getSynchCols(final String path,
                                       final String token) throws CalFacadeException {
     @SuppressWarnings("unchecked")
-    final List<BwCalendar> cols = getSynchCollections(path, token);
+    final List<BwCalendar> cols = dao.getSynchCollections(path, token);
 
     final Set<BwCalendar> res = new TreeSet<>();
 
@@ -570,7 +601,7 @@ class CoreCalendars extends CoreCalendarsDAO
     }
 
     @SuppressWarnings("unchecked")
-    final List<BwCalendar> cols = getPathPrefix(thisCol.getPath());
+    final List<BwCalendar> cols = dao.getPathPrefix(thisCol.getPath());
 
     String token = thisCol.getLastmod().getTagValue();
 
@@ -596,7 +627,7 @@ class CoreCalendars extends CoreCalendarsDAO
   public Collection<String> getChildCollections(final String parentPath,
                                                 final int start,
                                                 final int count) throws CalFacadeException {
-    return getChildrenCollections(parentPath, start, count);
+    return dao.getChildrenCollections(parentPath, start, count);
   }
   
   /* ====================================================================
@@ -826,7 +857,7 @@ class CoreCalendars extends CoreCalendarsDAO
     if (val.getId() != CalFacadeDefs.unsavedItemKey) {
       // Save the state
       val.updateLastmod(getCurrentTimestamp());
-      updateCollection(unwrap(val));
+      dao.updateCollection(unwrap(val));
       //touchCalendar(val.getPath());
 
       notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
@@ -880,7 +911,7 @@ class CoreCalendars extends CoreCalendarsDAO
         throw new CalFacadeException(CalFacadeException.duplicateCalendar);
       }
 
-      super.deleteCalendar(unwrap(col));
+      dao.deleteCalendar(unwrap(col));
     }
   }
 
@@ -938,10 +969,10 @@ class CoreCalendars extends CoreCalendarsDAO
     }
 
     /* Remove any tombstoned collection with the same name */
-    removeTombstonedVersion(val);
+    dao.removeTombstonedVersion(val);
 
     // No cascades - explicitly save child
-    saveCollection(unwrap(val));
+    dao.saveCollection(unwrap(val));
 
     if (parent != null) {
       touchCalendar(parent);
@@ -1096,14 +1127,14 @@ class CoreCalendars extends CoreCalendarsDAO
          we're just working our way down a tree. The 2 phase might be slower.
        */
 
-      ch = getChildCollections(col.getPath());
+      ch = dao.getChildCollections(col.getPath());
     } else {
       /* Fetch the lastmod and paths of all children then fetch those we haven't
        * got in the cache.
        */
 
-      final List<LastModAndPath> lmps = 
-              getChildLastModsAndPaths(col.getPath());
+      final List<CoreCalendarsDAO.LastModAndPath> lmps =
+              dao.getChildLastModsAndPaths(col.getPath());
 
       final List<String> paths = new ArrayList<>();
 
@@ -1111,7 +1142,7 @@ class CoreCalendars extends CoreCalendarsDAO
         return wch;
       }
 
-      for (final LastModAndPath lmp: lmps) {
+      for (final CoreCalendarsDAO.LastModAndPath lmp: lmps) {
         final String token = BwLastMod.getTagValue(lmp.timestamp, 
                                                    lmp.sequence);
 
@@ -1131,7 +1162,7 @@ class CoreCalendars extends CoreCalendarsDAO
 
       /* paths lists those we couldn't find in the cache. */
 
-      ch = getCollections(paths);
+      ch = dao.getCollections(paths);
     }
 
     /* Wrap the resulting objects. */

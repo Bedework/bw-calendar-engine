@@ -21,6 +21,7 @@ package org.bedework.calcore;
 import org.bedework.access.Acl;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
+import org.bedework.calcore.hibernate.DAOBase;
 import org.bedework.calcore.hibernate.Filters;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
@@ -76,33 +77,30 @@ public abstract class CalintfHelper
   /**
    */
   public static interface Callback extends Serializable {
-    /**
-     * @throws CalFacadeException
-     */
-    void rollback() throws CalFacadeException;
-
+    void registerDao(DAOBase dao);
+    
     /**
      * @return BasicSystemProperties object
-     * @throws CalFacadeException
+     * @throws CalFacadeException on error
      */
     BasicSystemProperties getSyspars() throws CalFacadeException;
 
     /**
      * @return PrincipalInfo object
-     * @throws CalFacadeException
+     * @throws CalFacadeException on error
      */
     PrincipalInfo getPrincipalInfo() throws CalFacadeException;
 
     /** Only valid during a transaction.
      *
      * @return a timestamp from the db
-     * @throws CalFacadeException
+     * @throws CalFacadeException on error
      */
     Timestamp getCurrentTimestamp() throws CalFacadeException;
 
     /**
      * @return BwStats
-     * @throws CalFacadeException
+     * @throws CalFacadeException on error
      */
     BwStats getStats() throws CalFacadeException;
 
@@ -110,7 +108,7 @@ public abstract class CalintfHelper
      *
      * @param path
      * @return BwCalendar
-     * @throws CalFacadeException
+     * @throws CalFacadeException on error
      */
     BwCalendar getCollection(String path) throws CalFacadeException;
 
@@ -118,7 +116,7 @@ public abstract class CalintfHelper
      *
      * @param uid
      * @return BwCategory
-     * @throws CalFacadeException
+     * @throws CalFacadeException on error
      */
     BwCategory getCategory(String uid) throws CalFacadeException;
 
@@ -128,7 +126,7 @@ public abstract class CalintfHelper
      * @param desiredAccess minimum
      * @param alwaysReturn false will throw exception on no access
      * @return BwCalendar
-     * @throws CalFacadeException
+     * @throws CalFacadeException on error
      */
     BwCalendar getCollection(String path,
                              int desiredAccess,
@@ -139,7 +137,7 @@ public abstract class CalintfHelper
      * should only receive notifications when the actual data has been written.
      *
      * @param ev the system event
-     * @throws CalFacadeException
+     * @throws CalFacadeException on error
      */
     void postNotification(SysEvent ev) throws CalFacadeException;
 
@@ -151,7 +149,7 @@ public abstract class CalintfHelper
     /**
      * @param entity may influence choice of indexer
      * @return BwIndexer
-     * @throws CalFacadeException
+     * @throws CalFacadeException on error
      */
     BwIndexer getIndexer(BwOwnedDbentity entity) throws CalFacadeException;
   }
@@ -193,20 +191,19 @@ public abstract class CalintfHelper
     collectTimeStats = Logger.getLogger("org.bedework.collectTimeStats").isDebugEnabled();
   }
 
-  /** Called to allow setup
-   *
-   * @throws CalFacadeException
-   */
-  public abstract void startTransaction() throws CalFacadeException;
-
-  /** Called to allow cleanup
-   *
-   * @throws CalFacadeException
-   */
-  public abstract void endTransaction() throws CalFacadeException;
-
-  protected abstract void throwException(final CalFacadeException cfe)
+  public abstract void throwException(final CalFacadeException cfe)
           throws CalFacadeException;
+
+  public void throwException(final String err)
+          throws CalFacadeException {
+    throwException(new CalFacadeException(err));
+  }
+
+  public void throwException(final String err,
+                             final String extra)
+          throws CalFacadeException {
+    throwException(new CalFacadeException(err, extra));
+  }
 
   /** Used to fetch a calendar from the cache
    *
@@ -252,7 +249,7 @@ public abstract class CalintfHelper
     return p.getPrincipalRef();
   }
 
-  protected String currentPrincipal() throws CalFacadeException {
+  public String currentPrincipal() throws CalFacadeException {
     if (cb == null) {
       return null;
     }

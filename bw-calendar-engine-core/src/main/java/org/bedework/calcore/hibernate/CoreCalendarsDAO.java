@@ -30,6 +30,7 @@ import org.bedework.calfacade.exc.CalFacadeInvalidSynctoken;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar;
 import org.bedework.util.misc.Util;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,15 +39,15 @@ import java.util.List;
  * @author douglm
  *
  */
-abstract class CoreCalendarsDAO extends CalintfHelperHib {
+class CoreCalendarsDAO extends DAOBase {
   /** Constructor
    *
-   * @param chcb helper callback
+   * @param sess the session
    * @throws CalFacadeException on fatal error
    */
-  CoreCalendarsDAO(final CalintfHelperHibCb chcb)
+  CoreCalendarsDAO(final HibSession sess)
           throws CalFacadeException {
-    super(chcb);
+    super(sess);
   }
 
   /* ====================================================================
@@ -89,32 +90,21 @@ abstract class CoreCalendarsDAO extends CalintfHelperHib {
                   " and aliasUri=:alias" +
                   " and (cal.filterExpr = null or cal.filterExpr <> :tsfilter)";
           
-  public List<BwCalendar> findCollectionAlias(final String val) throws CalFacadeException {
+  public List<BwCalendar> findCollectionAlias(final String aliasPath,
+                                              final String ownerHref) throws CalFacadeException {
     final HibSession sess = getSess();
 
     sess.createQuery(findAliasQuery);
 
-    sess.setString("owner", currentPrincipal());
-    sess.setString("alias", "bwcal://" + val);
+    sess.setString("owner", ownerHref);
+    sess.setString("alias", "bwcal://" + aliasPath);
     sess.setInt("caltype", BwCalendar.calTypeAlias);
     sess.setString("tsfilter", BwCalendar.tombstonedFilter);
 
     sess.cacheableQuery();
 
-    @SuppressWarnings("unchecked")
-    final List<BwCalendar> aliases = sess.getList();
-
-    final List<BwCalendar> waliases = new ArrayList<>();
-
-    if (Util.isEmpty(aliases)) {
-      return waliases;
-    }
-
-    for (final BwCalendar alias: aliases) {
-      waliases.add(wrap(alias));
-    }
-
-    return waliases;
+    //noinspection unchecked
+    return sess.getList();
   }
 
   private static final String getCalendarByPathQuery =
@@ -138,14 +128,15 @@ abstract class CoreCalendarsDAO extends CalintfHelperHib {
                   " set timestamp=:timestamp, sequence=:sequence" +
                   " where path=:path";
           
-  protected void touchCollection(final BwCalendar col) throws CalFacadeException {
+  protected void touchCollection(final BwCalendar col,
+                                 final Timestamp ts) throws CalFacadeException {
     // CALWRAPPER - if we're not cloning can we avoid this?
     //val = (BwCalendar)getSess().merge(val);
 
     //val = (BwCalendar)getSess().merge(val);
 
     final BwLastMod lm = col.getLastmod();
-    lm.updateLastmod(getCurrentTimestamp());
+    lm.updateLastmod(ts);
 
     final HibSession sess = getSess();
 
@@ -208,7 +199,7 @@ abstract class CoreCalendarsDAO extends CalintfHelperHib {
     Long res = (Long)sess.getUnique();
 
     if (debug) {
-      trace(" ----------- count = " + res);
+      debug(" ----------- count = " + res);
     }
 
     if ((res != null) && (res.intValue() > 0)) {
@@ -221,7 +212,7 @@ abstract class CoreCalendarsDAO extends CalintfHelperHib {
     res = (Long)sess.getUnique();
 
     if (debug) {
-      trace(" ----------- count children = " + res);
+      debug(" ----------- count children = " + res);
     }
 
     return (res == null) || (res.intValue() == 0);
@@ -460,7 +451,7 @@ abstract class CoreCalendarsDAO extends CalintfHelperHib {
   }
 
   protected void removeTombstonedVersion(final BwCalendar val) throws CalFacadeException {
-    final BwCalendar col = getCollection(val.getPath() + BwCalendar.tombstonedSuffix);
+    final BwCalendar col = getCollectionNoAccessCheck(val.getPath() + BwCalendar.tombstonedSuffix);
 
     if (col != null) {
       deleteCalendar(col);

@@ -19,12 +19,10 @@
 
 package org.bedework.calcore.hibernate;
 
+import org.bedework.calcore.CalintfHelper;
 import org.bedework.calcorei.CoreEventPropertiesI;
 import org.bedework.calcorei.HibSession;
-import org.bedework.calfacade.BwCategory;
-import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
-import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -40,162 +38,40 @@ import java.util.List;
  * @param <T> type of property, Location, contact etc.
  */
 public class CoreEventProperties <T extends BwEventProperty>
-        extends CalintfHelperHib implements CoreEventPropertiesI<T> {
-  private String className;
-
-  /* This was easier with named queries */
-  private static class ClassString {
-    private String catQuery;
-    private String contactQuery;
-    private String locQuery;
-
-    ClassString(final String catQuery,
-                final String contactQuery,
-                final String locQuery){
-      this.catQuery = catQuery;
-      this.contactQuery = contactQuery;
-      this.locQuery = locQuery;
-    }
-
-    String get(final String className) {
-      if (className.equals(BwCategory.class.getName())) {
-        return catQuery;
-      }
-
-      if (className.equals(BwContact.class.getName())) {
-        return contactQuery;
-      }
-
-      if (className.equals(BwLocation.class.getName())) {
-        return locQuery;
-      }
-
-      throw new RuntimeException("Should never happen");
-    }
-  }
-
-  private static final ClassString refsQuery;
-
-  private static final ClassString refsCountQuery;
-
-  private static final ClassString delPrefsQuery;
-
-  private static final ClassString keyFields;
-
-  private static final ClassString finderFields;
-
-  static {
-    refsQuery = new ClassString(
-         "select new org.bedework.calfacade.EventPropertiesReference(ev.colPath, ev.uid)" +
-             "from org.bedework.calfacade.BwEvent as ev " +
-             "where :ent in elements(ev.categories)",
-
-         "select new org.bedework.calfacade.EventPropertiesReference(ev.colPath, ev.uid)" +
-             "from org.bedework.calfacade.BwEvent as ev " +
-             "where :ent in elements(ev.contacts)",
-
-         "select new org.bedework.calfacade.EventPropertiesReference(ev.colPath, ev.uid)" +
-             "from org.bedework.calfacade.BwEvent as ev " +
-             "where ev.location = :ent"
-                            );
-    refsCountQuery = new ClassString(
-         "select count(*) from org.bedework.calfacade.BwEvent as ev " +
-           "where :ent in elements(ev.categories)",
-
-         "select count(*) from org.bedework.calfacade.BwEvent as ev " +
-           "where :ent in elements(ev.contacts)",
-
-         "select count(*) from org.bedework.calfacade.BwEvent as ev " +
-           "where ev.location = :ent");
-
-    delPrefsQuery = new ClassString(
-        "delete from org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCategory " +
-               "where categoryid=:id",
-
-        "delete from org.bedework.calfacade.svc.prefs.BwAuthUserPrefsContact " +
-               "where contactid=:id",
-
-        "delete from org.bedework.calfacade.svc.prefs.BwAuthUserPrefsLocation " +
-               "where locationid=:id");
-
-    keyFields = new ClassString("word",
-                                "uid",
-                                "uid");
-
-    finderFields = new ClassString("word",
-                                   "cn",
-                                   "address");
-
-  }
-
-  private String keyFieldName;
-
-  private String finderFieldName;
+        extends CalintfHelper implements CoreEventPropertiesI<T> {
+  private final CoreEventPropertiesDAO dao;
 
   /** Constructor
    *
-   * @param chcb
-   * @param cb
-   * @param ac
-   * @param currentMode
-   * @param sessionless
-   * @param className
+   * @param sess persistance session
+   * @param cb callback
+   * @param ac access checker
+   * @param currentMode of access
+   * @param sessionless if true
+   * @throws CalFacadeException on fatal error
    */
-  public CoreEventProperties(final CalintfHelperHibCb chcb,
+  public CoreEventProperties(final HibSession sess,
                              final Callback cb,
                              final AccessChecker ac,
                              final int currentMode,
                              final boolean sessionless,
-                             final String className) {
-    super(chcb);
+                             final String className)
+          throws CalFacadeException {
+    dao = new CoreEventPropertiesDAO(sess, className);
     super.init(cb, ac, currentMode, sessionless);
-
-    this.className = className;
-
-    keyFieldName = keyFields.get(className);
-    finderFieldName = finderFields.get(className);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcore.CalintfHelper#startTransaction()
-   */
   @Override
-  public void startTransaction() throws CalFacadeException {
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.calcore.CalintfHelper#endTransaction()
-   */
-  @Override
-  public void endTransaction() throws CalFacadeException {
+  public void throwException(final CalFacadeException cfe)
+          throws CalFacadeException {
+    dao.rollback();
+    throw cfe;
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public Collection<T> getAll(final String ownerHref) throws CalFacadeException {
-    HibSession sess = getSess();
-
-    StringBuilder qstr = new StringBuilder("from ");
-    qstr.append(className);
-    qstr.append(" ent where ");
-    if (ownerHref != null) {
-      qstr.append(" ent.ownerHref=:ownerHref");
-    }
-
-    qstr.append(" order by ent.");
-    qstr.append(keyFieldName);
-
-    sess.createQuery(qstr.toString());
-
-    if (debug) {
-      debugMsg("getAll: q=" + qstr.toString() + " owner=" + ownerHref);
-    }
-
-    if (ownerHref != null) {
-      sess.setString("ownerHref", ownerHref);
-    }
-
-    final List eps = sess.getList();
+    final List eps = dao.getAll(ownerHref);
 
     final Collection c = ac.getAccessUtil().checkAccess(eps, privRead, true);
 
@@ -209,141 +85,43 @@ public class CoreEventProperties <T extends BwEventProperty>
   @SuppressWarnings("unchecked")
   @Override
   public T get(final String uid) throws CalFacadeException {
-    HibSession sess = getSess();
-
-    StringBuilder qstr = new StringBuilder("from ");
-    qstr.append(className);
-    qstr.append(" ent where uid=:uid");
-
-    sess.createQuery(qstr.toString());
-
-    sess.setString("uid", uid);
-
-    return check((T)sess.getUnique());
+    return check((T)dao.get(uid));
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public T find(final BwString val,
                 final String ownerHref) throws CalFacadeException {
-    findQuery(false, val, ownerHref);
+    final BwEventProperty p = dao.find(val, ownerHref);
 
-    return check((T)getSess().getUnique());
+    return check((T)p);
   }
 
   @Override
   public void checkUnique(final BwString val,
                           final String ownerHref) throws CalFacadeException {
-    HibSession sess = getSess();
-
-    findQuery(true, val, ownerHref);
-
-    @SuppressWarnings("unchecked")
-    Collection<Long> counts = sess.getList();
-    if (counts.iterator().next() > 1) {
-      sess.rollback();
-      throw new CalFacadeException("org.bedework.duplicate.object");
-    }
+    dao.checkUnique(val, ownerHref);
   }
 
   @Override
   public void deleteProp(final T val) throws CalFacadeException {
-    HibSession sess = getSess();
-
-    @SuppressWarnings("unchecked")
-    BwEventProperty v = (T)sess.merge(val);
-
-    sess.createQuery(delPrefsQuery.get(className));
-    sess.setInt("id", v.getId());
-    sess.executeUpdate();
-
-    sess.delete(v);
+    dao.delete(val);
   }
 
   @Override
   public List<EventPropertiesReference> getRefs(final T val)
                           throws CalFacadeException {
-    List<EventPropertiesReference> refs = getRefs(val,
-                                                  refsQuery.get(className));
-
-    /* The parameterization doesn't quite cut it for categories. They can appear
-     * on collections as well
-     */
-    if (val instanceof BwCategory) {
-      refs.addAll(getRefs(val,
-                          "select new org.bedework.calfacade.EventPropertiesReference(col.path) " +
-                              "from org.bedework.calfacade.BwCalendar as col " +
-                              "where :ent in elements(col.categories)"));
-    }
-
-    return refs;
-  }
-
-  @SuppressWarnings("unchecked")
-  private List<EventPropertiesReference> getRefs(final T val,
-                                                final String query)
-                                                            throws CalFacadeException {
-    HibSession sess = getSess();
-
-    sess.createQuery(query);
-    sess.setEntity("ent", val);
-
-    /* May get multiple counts back for events and annotations. */
-    List<EventPropertiesReference> refs = sess.getList();
-
-    if (debug) {
-      trace(" ----------- count = " + refs.size());
-    }
-
-    return refs;
+    return dao.getRefs(val);
   }
 
   @Override
   public long getRefsCount(final T val) throws CalFacadeException {
-    long total = getRefsCount(val, refsCountQuery.get(className));
-
-    /* The parameterization doesn't quite cut it for categories. They can appear
-     * on collections as well
-     */
-    if (val instanceof BwCategory) {
-      total += getRefsCount(val,
-                            "select count(*) from org.bedework.calfacade.BwCalendar as col " +
-                               "where :ent in elements(col.categories)");
-    }
-
-    return total;
+    return dao.getRefsCount(val);
   }
 
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
-
-  private long getRefsCount(final T val,
-                            final String query) throws CalFacadeException {
-    HibSession sess = getSess();
-
-    sess.createQuery(query);
-    sess.setEntity("ent", val);
-
-    /* May get multiple counts back for events and annotations. */
-    @SuppressWarnings("unchecked")
-    Collection<Long> counts = sess.getList();
-
-    long total = 0;
-
-    if (debug) {
-      trace(" ----------- count = " + counts.size());
-      if (counts.size() > 0) {
-        trace(" ---------- first el class is " + counts.iterator().next().getClass().getName());
-      }
-    }
-
-    for (Long l: counts) {
-      total += l;
-    }
-
-    return total;
-  }
 
   private T check(final T ent) throws CalFacadeException {
     if (ent == null) {
@@ -369,72 +147,5 @@ public class CoreEventProperties <T extends BwEventProperty>
     return null;
      */
     return ent;
-  }
-
-  private void findQuery(final boolean count,
-                         final BwString val,
-                         final String ownerHref) throws CalFacadeException {
-    if (val == null) {
-      throw new CalFacadeException("Missing key value");
-    }
-
-    if (ownerHref == null) {
-      throw new CalFacadeException("Missing owner value");
-    }
-
-    HibSession sess = getSess();
-
-    StringBuilder qstr = new StringBuilder();
-    if (count) {
-      qstr.append("select count(*) ");
-    }
-
-    qstr.append("from ");
-    qstr.append(className);
-    qstr.append(" ent where ");
-    addBwStringKeyTerms(val, finderFieldName, qstr);
-    qstr.append("and ent.ownerHref=:ownerHref");
-
-    sess.createQuery(qstr.toString());
-
-    addBwStringKeyvals(val);
-
-    sess.setString("ownerHref", ownerHref);
-  }
-
-  private void addBwStringKeyTerms(final BwString key,
-                                   final String keyName,
-                                   final StringBuilder sb) throws CalFacadeException {
-    sb.append("((ent.");
-    sb.append(keyName);
-    sb.append(".lang");
-
-    if (key.getLang() == null) {
-      sb.append(" is null) and");
-    } else {
-      sb.append("=:langval) and");
-    }
-
-    sb.append("(ent.");
-    sb.append(keyName);
-    sb.append(".value");
-
-    if (key.getValue() == null) {
-      sb.append(" is null)) ");
-    } else {
-      sb.append("=:val)) ");
-    }
-  }
-
-  private void addBwStringKeyvals(final BwString key) throws CalFacadeException {
-    HibSession sess = getSess();
-
-    if (key.getLang() != null) {
-      sess.setString("langval", key.getLang());
-    }
-
-    if (key.getValue() != null) {
-      sess.setString("val", key.getValue());
-    }
   }
 }

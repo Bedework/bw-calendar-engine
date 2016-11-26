@@ -19,9 +19,11 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.calcore.CalintfHelper;
 import org.bedework.calcore.hibernate.EventQueryBuilder.EventsQueryResult;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI;
+import org.bedework.calcorei.HibSession;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
@@ -67,6 +69,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -194,30 +197,34 @@ import java.util.TreeSet;
  *
  * @author Mike Douglass   douglm  - rpi.edu
  */
-public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
+public class CoreEvents extends CalintfHelper implements CoreEventsI {
+  private final CoreEventsDAO dao;
+  
   /** Constructor
    *
-   * @param chcb helper callback
+   * @param sess persistance session
    * @param cb callback
    * @param ac access checker
    * @param currentMode of access
    * @param sessionless if true
+   * @throws CalFacadeException on fatal error
    */
-  public CoreEvents(final CalintfHelperHibCb chcb,
+  public CoreEvents(final HibSession sess,
                     final Callback cb,
                     final AccessChecker ac,
                     final int currentMode,
-                    final boolean sessionless) {
-    super(chcb);
+                    final boolean sessionless)
+          throws CalFacadeException {
+    dao = new CoreEventsDAO(sess);
+    cb.registerDao(dao);
     super.init(cb, ac, currentMode, sessionless);
   }
 
   @Override
-  public void startTransaction() throws CalFacadeException {
-  }
-
-  @Override
-  public void endTransaction() throws CalFacadeException {
+  public void throwException(final CalFacadeException cfe)
+          throws CalFacadeException {
+    dao.rollback();
+    throw cfe;
   }
 
   @Override
@@ -255,10 +262,10 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
 
     // First look in the events table for the master(s).
     Collection evs = 
-            eventQuery(BwEventObj.class, colPath, uid,
-                       null, null,
-                       null,  // overrides
-                       null); //recurRetrieval);
+            dao.eventQuery(BwEventObj.class, colPath, uid,
+                           null, null,
+                           null,  // overrides
+                           null); //recurRetrieval);
 
     /* The uid and recurrence id is a unique key for calendar collections
      * other than some special ones, Inbox and Outbox.
@@ -270,11 +277,11 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     if (Util.isEmpty(evs)) {
       /* Look for an annotation to that event by the current user.
        */
-      evs = eventQuery(BwEventAnnotation.class, 
-                       colPath, uid, /*null*/
-                       null, null,
-                       false,  // overrides
-                       null); //recurRetrieval);
+      evs = dao.eventQuery(BwEventAnnotation.class, 
+                           colPath, uid, /*null*/
+                           null, null,
+                           false,  // overrides
+                           null); //recurRetrieval);
     }
 
     if (Util.isEmpty(evs)) {
@@ -329,7 +336,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
                                 final String name,
                                 final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
-    final List<BwEvent> evs = getEventsByName(colPath, name);
+    final List<BwEvent> evs = dao.getEventsByName(colPath, name);
 
     /* If this is availability we should have one vavailability and a number of
      * available. Otherwise just a single event.
@@ -367,7 +374,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     if (ev == null) {
       // Try annotation
 
-      ev = getEventsAnnotationName(colPath, name);
+      ev = dao.getEventsAnnotationName(colPath, name);
     }
 
     if (ev == null) {
@@ -568,7 +575,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
      * and retrieval
      */
     if ((val instanceof BwEventAnnotation) || !val.getRecurring()) {
-      save(val);
+      dao.save(val);
 
       if (!getForRestore()) {
         notify(SysEvent.SysCode.ENTITY_ADDED, val, shared);
@@ -608,7 +615,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     }
 
     /* We can save the master at this point */
-    save(val);
+    dao.save(val);
 
     final String stzid = val.getDtstart().getTzid();
     final TimeZone stz = null;
@@ -688,7 +695,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
         }
       }
 
-      save(ri);
+      dao.save(ri);
       maxInstances--;
       if (maxInstances == 0) {
         // That's all you're getting from me
@@ -789,12 +796,12 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     }
 
     if (!(val instanceof BwEventProxy)) {
-      update(val);
+      dao.update(val);
 
       final Collection<BwDbentity<?>> deleted = val.getDeletedEntities();
       if (deleted != null) {
         for (final BwDbentity ent: deleted) {
-          delete(ent);
+          dao.delete(ent);
         }
 
         deleted.clear();
@@ -821,7 +828,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
             }
 
             if (ann.unsaved()) {
-              save(ann);
+              dao.save(ann);
             } else if (updated) {
               updateProxy(new BwEventProxy(ann));
             }
@@ -874,12 +881,12 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
           if (!ann.unsaved()) {
             updateProxy(new BwEventProxy(ann));
           } else {
-            save(ann);
+            dao.save(ann);
 
             /* See if there is an instance for this override
              */
-            BwRecurrenceInstance ri = 
-                    getInstance(val, ann.getRecurrenceId());
+            BwRecurrenceInstance ri =
+                    dao.getInstance(val, ann.getRecurrenceId());
 
             if (ri == null) {
               final BwDateTime rid = 
@@ -897,11 +904,11 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
               ri.setMaster(val);
               ri.setOverride(ann);
 
-              save(ri);
+              dao.save(ri);
             } else {
               ri.setOverride(ann);
 
-              update(ri);
+              dao.update(ri);
             }
           }
 
@@ -986,7 +993,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
 
       ac.checkAccess(ev, desiredAccess, false);
     } catch (final CalFacadeException cfe) {
-      rollback();
+      dao.rollback();
       throw cfe;
     }
 
@@ -1005,7 +1012,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
       notifyDelete(reallyDelete, ev, shared);
 
       if (reallyDelete) {
-        delete(ev);
+        dao.delete(ev);
       } else {
         tombstoneEvent(ev);
       }
@@ -1040,9 +1047,9 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
       }
 
       /* Fetch the instance so we can delete it */
-      final BwRecurrenceInstance inst = 
-              getInstance(master,
-                          ev.getRecurrenceId());
+      final BwRecurrenceInstance inst =
+              dao.getInstance(master,
+                              ev.getRecurrenceId());
 
       if (inst == null) {
         stat(StatsEvent.deleteTime, startTime);
@@ -1052,13 +1059,13 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
 
       notifyDelete(true, ev, shared);
 
-      delete(inst);
+      dao.delete(inst);
 
       if (!ann.unsaved()) {
         //der.alarmsDeleted = deleteAlarms(ann);
 
         ann.getAttendees().clear();
-        delete(ann);
+        dao.delete(ann);
       }
 
       final BwDateTime instDate = inst.getDtstart();
@@ -1068,7 +1075,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
         master.addExdate(instDate);
       }
       master.updateLastmod();
-      update(master);
+      dao.update(master);
 
       der.eventDeleted = true;
 
@@ -1102,7 +1109,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     if (reallyDelete) {
       clearCollection(ev.getAttendees());
 
-      delete(deletee);
+      dao.delete(deletee);
     } else {
       tombstoneEvent(deletee);
     }
@@ -1127,7 +1134,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
 
     //tombstoneEvent(tombstone);
 
-    save(tombstone);
+    dao.save(tombstone);
 
     notifyMove(SysEvent.SysCode.ENTITY_MOVED,
                tombstone.getHref(),
@@ -1166,19 +1173,19 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     val.setDtstamps(getCurrentTimestamp());
     val.setTombstoned(true);
 
-    update(val);
+    dao.update(val);
   }
 
   private void deleteTombstoned(final String colPath,
                                 final String uid) throws CalFacadeException {
-    deleteTombstonedEvent(colPath, uid);
+    dao.deleteTombstonedEvent(colPath, uid);
   }
 
   @Override
   public Set<CoreEventInfo> getSynchEvents(final String path,
                                            final String token) throws CalFacadeException {
     if (path == null) {
-      rollback();
+      dao.rollback();
       throw new CalFacadeBadRequest("Missing path");
     }
 
@@ -1186,7 +1193,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     ac.checkAccess(col, privAny, false);
 
     @SuppressWarnings("unchecked")
-    final List<BwEvent> evs = getSynchEventObjects(path, token);
+    final List<BwEvent> evs = dao.getSynchEventObjects(path, token);
 
     if (debug) {
       trace(" ----------- number evs = " + evs.size());
@@ -1212,15 +1219,25 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
   public Collection<String> getChildEntities(final String parentPath,
                                              final int start,
                                              final int count) throws CalFacadeException {
-    final Collection<String> res = getChildrenEntities(parentPath, 
-                                                       start, 
-                                                       count);
+    final Collection<String> res = dao.getChildrenEntities(parentPath, 
+                                                           start, 
+                                                           count);
 
     if (Util.isEmpty(res)) {
       return null;
     }
 
     return res;
+  }
+
+  @Override
+  public Iterator<BwEventAnnotation> getEventAnnotations() throws CalFacadeException {
+    return dao.getEventAnnotations();
+  }
+
+  @Override
+  public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) throws CalFacadeException {
+    return dao.getEventOverrides(ev);
   }
 
   /* ====================================================================
@@ -1269,9 +1286,9 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     if (mstr.testRecurring()) {
       // A recurring event - retrieve the instance
 
-      final BwRecurrenceInstance inst = 
-              getInstance(mstr, 
-                          override.getRecurrenceId());
+      final BwRecurrenceInstance inst =
+              dao.getInstance(mstr, 
+                              override.getRecurrenceId());
       if (inst == null) {
         if (debug) {
           debugMsg("Cannot locate instance for " +
@@ -1283,18 +1300,18 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
       }
 
       override.setOwnerHref(mstr.getOwnerHref()); // XXX Force owner????
-      saveOrUpdate(override);
+      dao.saveOrUpdate(override);
 //      sess.flush();
       if (inst.getOverride() == null) {
         inst.setOverride(override);
-        save(inst);
+        dao.save(inst);
       }
 
       /* Update the lastmod on the master event */
       mstr.setDtstamps(getCurrentTimestamp());
-      update(mstr);
+      dao.update(mstr);
     } else {
-      saveOrUpdate(override);
+      dao.saveOrUpdate(override);
     }
 
     proxy.setChangeFlag(false);
@@ -1327,10 +1344,10 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     final CurrentAccess ca = cei.getCurrentAccess();
 
     // Always fetch all overrides
-    final Collection<BwEventAnnotation> ovs = 
-            eventQuery(BwEventAnnotation.class, null, null, null, master,
-               true,  // overrides
-               null); //recurRetrieval);
+    final Collection<BwEventAnnotation> ovs =
+            dao.eventQuery(BwEventAnnotation.class, null, null, null, master,
+                           true,  // overrides
+                           null); //recurRetrieval);
 
     if (ovs != null) {
       for (final BwEventAnnotation override: ovs) {
@@ -1501,7 +1518,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     override.setOverride(true);
     override.setTombstoned(false);
 
-    saveOrUpdate(override);
+    dao.saveOrUpdate(override);
     inst.setOverride(override);
   }
 
@@ -1537,7 +1554,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     // First some notifications
 
     //noinspection unchecked
-    final List<BwRecurrenceInstance> current = getInstances(val);
+    final List<BwRecurrenceInstance> current = dao.getInstances(val);
 
     for (final BwRecurrenceInstance ri: current) {
       notifyInstanceChange(SysEvent.SysCode.ENTITY_DELETED,
@@ -1545,7 +1562,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
                            ri.getRecurrenceId());
     }
 
-    deleteInstances(val);
+    dao.deleteInstances(val);
 
     fixReferringAnnotations(val);
   }
@@ -1660,14 +1677,14 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
       }
     }
 
-    final List<BwRecurrenceInstance> current = getInstances(val);
+    final List<BwRecurrenceInstance> current = dao.getInstances(val);
 
     for (final BwRecurrenceInstance ri: current) {
       final BwRecurrenceInstance updri = updated.get(ri.getRecurrenceId());
 
       if (updri == null) {
         // Not in the new instance set - delete from db
-        delete(ri);
+        dao.delete(ri);
         uc.addDeleted(ri);
 
         notifyInstanceChange(SysEvent.SysCode.ENTITY_DELETED, val, shared,
@@ -1682,7 +1699,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
         ri.setDtstart(updri.getDtstart());
         ri.setDtend(updri.getDtend());
 
-        update(ri);
+        dao.update(ri);
         uc.addUpdated(ri);
 
         notifyInstanceChange(SysEvent.SysCode.ENTITY_UPDATED, val, shared,
@@ -1696,7 +1713,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     /* updated only contains recurrence ids that don't exist */
 
     for (final BwRecurrenceInstance ri: updated.values()) {
-      save(ri);
+      dao.save(ri);
       uc.addAdded(ri);
 
       notifyInstanceChange(SysEvent.SysCode.ENTITY_ADDED, val, shared,
@@ -1751,9 +1768,9 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
       }
     }
 
-    final BwRecurrenceInstance inst = getInstance(master, rid);
+    final BwRecurrenceInstance inst = dao.getInstance(master, rid);
     if (inst != null) {
-      delete(inst);
+      dao.delete(inst);
       uc.addDeleted(inst);
     }
   }
@@ -1795,7 +1812,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
           if (!ann.unsaved()) {
             updateProxy(new BwEventProxy(ann));
           } else {
-            save(ann);
+            dao.save(ann);
           }
 
           ri.setOverride(ann);
@@ -1803,7 +1820,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
         }
       }
 
-      save(ri);
+      dao.save(ri);
 
       notifyInstanceChange(SysEvent.SysCode.ENTITY_ADDED, master,
                            shared,
@@ -1818,7 +1835,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
      * the leaf entries first.
      */
 
-    for (final BwEventAnnotation ev: getAnnotations(val, false)) {
+    for (final BwEventAnnotation ev: dao.getAnnotations(val, false)) {
       /* The recursive call is intended to allow annotations to annotatiuons.
        * Unfortunately this in't going to work as the reference in the
        * annotation class is always to the master event. We need an extra column
@@ -1832,7 +1849,7 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
       //if (ev.getAttendees() != null) {
       //  ev.getAttendees().clear();
       //}
-      delete(ev);
+      dao.delete(ev);
     }
   }
 
@@ -1934,6 +1951,28 @@ public class CoreEvents extends CoreEventsDAO implements CoreEventsI {
     }
 
     return outevs;
+  }
+
+  private boolean calendarNameExists(final BwEvent val,
+                                     final boolean annotation,
+                                     final boolean adding) throws CalFacadeException {
+    final long startTime = System.currentTimeMillis();
+    try {
+      return dao.calendarNameExists(val, annotation, adding);
+    } finally {
+      stat(StatsEvent.checkNameTime, startTime);
+    }
+  }
+
+  private String calendarGuidExists(final BwEvent val,
+                                     final boolean annotation,
+                                     final boolean adding) throws CalFacadeException {
+    final long startTime = System.currentTimeMillis();
+    try {
+      return dao.calendarGuidExists(val, annotation, adding);
+    } finally {
+      stat(StatsEvent.checkUidTime, startTime);
+    }
   }
 
   private Collection<CoreEventInfo> buildVavail(final Collection<CoreEventInfo> ceis)

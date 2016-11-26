@@ -25,7 +25,6 @@ import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
@@ -451,19 +450,6 @@ public interface Calintf
    */
   Iterator getObjectIterator(final String className) throws CalFacadeException;
 
-  /**
-   * @return annotations - not recurrence overrides
-   * @throws CalFacadeException
-   */
-  Iterator<BwEventAnnotation> getEventAnnotations() throws CalFacadeException;
-
-  /**
-   * @param ev the master
-   * @return overrides for event
-   * @throws CalFacadeException
-   */
-  Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) throws CalFacadeException;
-
   /* ====================================================================
    *                       principals + prefs
    * ==================================================================== */
@@ -527,10 +513,10 @@ public interface Calintf
                     boolean admin) throws CalFacadeException;
 
   /**
-   * @param group
+   * @param group the group
    * @param admin          true for an admin group
    * @return Collection
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   Collection<BwGroup> findGroupParents(final BwGroup group,
                                        boolean admin) throws CalFacadeException;

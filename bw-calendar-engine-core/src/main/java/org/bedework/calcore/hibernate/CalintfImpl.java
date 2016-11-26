@@ -24,14 +24,12 @@ import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;
 import org.bedework.calcore.CalintfBase;
+import org.bedework.calcore.CalintfHelper;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CalintfInfo;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventPropertiesI;
-import org.bedework.calcorei.CoreEventsI;
-import org.bedework.calcorei.CoreFilterDefsI;
-import org.bedework.calcorei.CoreUserAuthI;
 import org.bedework.calcorei.HibSession;
 import org.bedework.caldav.util.filter.EntityTypeFilter;
 import org.bedework.caldav.util.filter.FilterBase;
@@ -52,11 +50,9 @@ import org.bedework.calfacade.BwGroupEntry;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
-import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.BwSystem;
-import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
@@ -66,7 +62,6 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -78,9 +73,6 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsContact;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsLocation;
 import org.bedework.calfacade.util.Granulator.EventPeriod;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.events.SysEvent;
@@ -147,24 +139,27 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   protected static final Map<String, CalintfBase> openIfs = new HashMap<>();
 
-  private CoreEventsI events;
+  private EntityDAO entityDao;
+
+  private PrincipalsAndPrefsDAO principalsAndPrefs;
+
+  private CoreEvents events;
 
   private CoreCalendars calendars;
 
-  private CoreFilterDefsI filterDefs;
-
-  private CoreUserAuthI userauth;
+  private FilterDefsDAO filterDefs;
 
   private CoreEventPropertiesI<BwCategory> categoriesHandler;
 
   private CoreEventPropertiesI<BwLocation> locationsHandler;
 
   private CoreEventPropertiesI<BwContact> contactsHandler;
+  
+  private final Map<String, DAOBase> daos = new HashMap<>();
 
   CalintfHelperCallback cb;
-  CalintfHelperHib.CalintfHelperHibCb chcb;
 
-  /** Prevent updates.
+  /* Prevent updates.
    */
   //sprivate boolean readOnly;
 
@@ -208,38 +203,16 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     super.init(logId, configs, principalInfo, url,
                publicAdmin, publicSubmission, sessionless);
     
-    cb = new CalintfHelperCallback(this);
-    chcb = new CalintfHelperHibCb(this);
-
-    events = new CoreEvents(chcb, cb,
+    events = new CoreEvents(sess, cb,
                             ac, currentMode, sessionless);
 
-    calendars = new CoreCalendars(chcb, cb,
+    calendars = new CoreCalendars(sess, cb,
                                   ac, currentMode, sessionless);
-
-    filterDefs = new FilterDefs(chcb, cb,
-                                ac, currentMode, sessionless);
-
-    userauth = new CoreUserAuthImpl(chcb, cb,
-                                    ac, currentMode, sessionless);
 
     access.setCollectionGetter(calendars);
   }
 
-  private static class CalintfHelperHibCb implements CalintfHelperHib.CalintfHelperHibCb {
-    protected CalintfImpl intf;
-
-    CalintfHelperHibCb(final CalintfImpl intf) {
-      this.intf = intf;
-    }
-
-    @Override
-    public HibSession getSess() throws CalFacadeException {
-      return intf.sess;
-    }
-  }
-
-  private static class CalintfHelperCallback implements CalintfHelperHib.Callback {
+  private static class CalintfHelperCallback implements CalintfHelper.Callback {
     private final CalintfImpl intf;
 
     CalintfHelperCallback(final CalintfImpl intf) {
@@ -247,8 +220,8 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     }
 
     @Override
-    public void rollback() throws CalFacadeException {
-      intf.rollbackTransaction();
+    public void registerDao(final DAOBase dao) {
+      intf.daos.put(dao.getClass().getName(), dao);
     }
 
     @Override
@@ -275,7 +248,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     public BwCalendar getCollection(final String path) throws CalFacadeException {
       try {
         return intf.calendars.getCalendar(path, PrivilegeDefs.privAny, true);
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         if (t instanceof CalFacadeException) {
           throw (CalFacadeException)t;
         }
@@ -409,7 +382,11 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       warn("Session is not null. Will close");
       try {
         close();
-      } finally {
+      } catch (final Throwable t) {
+        if (debug) {
+          warn("Ignoring the following error");
+          error(t);
+        }
       }
     }
 
@@ -428,6 +405,27 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
     if (access != null) {
       access.open();
+    }
+
+    cb = new CalintfHelperCallback(this);
+    
+    if (entityDao == null) {
+      entityDao = new EntityDAO(sess);
+      cb.registerDao(entityDao);
+    }
+
+    if (principalsAndPrefs == null) {
+      principalsAndPrefs = new PrincipalsAndPrefsDAO(sess);
+      cb.registerDao(principalsAndPrefs);
+    }
+
+    if (filterDefs == null) {
+      filterDefs = new FilterDefsDAO(sess);
+      cb.registerDao(filterDefs);
+    }
+    
+    for (final DAOBase dao: daos.values()) {
+      dao.setSess(sess);
     }
   }
 
@@ -464,7 +462,9 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
         }
       } catch (final Throwable t) {
         try {
-          sess.close();
+          if (sess != null) {
+            sess.close();
+          }
         } catch (final Throwable ignored) {}
         sess = null; // Discard on error
       } finally {
@@ -507,12 +507,8 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
     sess.beginTransaction();
 
-    if (events != null) {
-      ((CalintfHelperHib)events).startTransaction();
-    }
-
     if (calendars != null) {
-      ((CalintfHelperHib)calendars).startTransaction();
+      calendars.startTransaction();
     }
 
     curTimestamp = sess.getCurrentTimestamp();
@@ -529,10 +525,6 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
       if (!sess.rolledback()) {
         sess.commit();
-      }
-
-      if (events != null) {
-        ((CalintfHelperHib)events).endTransaction();
       }
 
       if (calendars != null) {
@@ -608,7 +600,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   @Override
   public void reAttach(BwDbentity val) throws CalFacadeException {
     if (val instanceof CalendarWrapper) {
-      CalendarWrapper ccw = (CalendarWrapper)val;
+      final CalendarWrapper ccw = (CalendarWrapper)val;
       val = ccw.fetchEntity();
     }
     sess.reAttach(val);
@@ -618,9 +610,6 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
    *                   Access
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.Calintf#changeAccess(org.bedework.calfacade.base.BwShareableDbentity, java.util.Collection, boolean)
-   */
   @Override
   public void changeAccess(final BwShareableDbentity ent,
                            final Collection<Ace> aces,
@@ -631,12 +620,9 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     }
     checkOpen();
     access.changeAccess(ent, aces, replaceAll);
-    sess.saveOrUpdate(ent);
+    entityDao.saveOrUpdate(ent);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.CalendarsI#changeAccess(org.bedework.calfacade.BwCalendar, java.util.Collection)
-   */
   @Override
   public void changeAccess(final BwCalendar cal,
                            final Collection<Ace> aces,
@@ -655,7 +641,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     checkOpen();
     checkAccess(ent, privWriteAcl, false);
     access.defaultAccess(ent, who);
-    sess.saveOrUpdate(ent);
+    entityDao.saveOrUpdate(ent);
   }
 
   @Override
@@ -666,8 +652,8 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   }
 
   @Override
-  public Collection<? extends BwShareableDbentity<? extends Object>>
-                  checkAccess(final Collection<? extends BwShareableDbentity<? extends Object>> ents,
+  public Collection<? extends BwShareableDbentity<?>>
+                  checkAccess(final Collection<? extends BwShareableDbentity<?>> ents,
                                          final int desiredAccess,
                                          final boolean alwaysReturn)
                                          throws CalFacadeException {
@@ -687,46 +673,20 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
    *                   Alarms
    * ==================================================================== */
 
-  private static final String getUnexpiredAlarmsQuery =
-    "from " + BwAlarm.class.getName() + " as al " +
-      "where al.expired = false";
-
-  /* Return all unexpired alarms before the given time */
-  private static final String getUnexpiredAlarmsTimeQuery =
-    "from " + BwAlarm.class.getName() + " as al " +
-      "where al.expired = false and " +
-      "al.triggerTime <= :tt";
-
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<BwAlarm> getUnexpiredAlarms(final long triggerTime)
           throws CalFacadeException {
     checkOpen();
 
-    if (triggerTime == 0) {
-      sess.createQuery(getUnexpiredAlarmsQuery);
-    } else {
-      sess.createQuery(getUnexpiredAlarmsTimeQuery);
-      sess.setString("tt", String.valueOf(triggerTime));
-    }
-
-    return sess.getList();
+    return entityDao.getUnexpiredAlarms(triggerTime);
   }
 
-  private static final String eventByAlarmQuery =
-      "select count(*) from " + BwEventObj.class.getName() + " as ev " +
-      "where ev.tombstoned=false and :alarm in alarms";
-
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm)
           throws CalFacadeException {
     checkOpen();
 
-    sess.createQuery(eventByAlarmQuery);
-    sess.setInt("alarmId", alarm.getId());
-
-    return sess.getList();
+    return entityDao.getEventsByAlarm(alarm);
   }
 
   /* ====================================================================
@@ -875,7 +835,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     checkOpen();
 
     calendars.addNewCalendars(user);
-    chcb.getSess().update(user);
+    entityDao.update(user);
   }
 
   /* (non-Javadoc)
@@ -931,8 +891,9 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       throw new CalFacadeException("Unsupported: non user principal for free-busy");
     }
 
-    Collection<CoreEventInfo> events = getFreeBusyEntities(cals, start, end, ignoreTransparency);
-    BwEvent fb = new BwEventObj();
+    final Collection<CoreEventInfo> events = 
+            getFreeBusyEntities(cals, start, end, ignoreTransparency);
+    final BwEvent fb = new BwEventObj();
 
     fb.setEntityType(IcalDefs.entityTypeFreeAndBusy);
     fb.setOwnerHref(who.getPrincipalRef());
@@ -941,20 +902,20 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     //assignGuid(fb);
 
     try {
-      TreeSet<EventPeriod> eventPeriods = new TreeSet<EventPeriod>();
+      final TreeSet<EventPeriod> eventPeriods = new TreeSet<>();
 
-      for (CoreEventInfo ei: events) {
-        BwEvent ev = ei.getEvent();
+      for (final CoreEventInfo ei: events) {
+        final BwEvent ev = ei.getEvent();
 
         // Ignore if times were specified and this event is outside the times
 
-        BwDateTime estart = ev.getDtstart();
-        BwDateTime eend = ev.getDtend();
+        final BwDateTime estart = ev.getDtstart();
+        final BwDateTime eend = ev.getDtend();
 
         /* Don't report out of the requested period */
 
-        String dstart;
-        String dend;
+        final String dstart;
+        final String dend;
 
         if (estart.before(start)) {
           dstart = start.getDtval();
@@ -968,8 +929,8 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
           dend = eend.getDtval();
         }
 
-        DateTime psdt = new DateTime(dstart);
-        DateTime pedt = new DateTime(dend);
+        final DateTime psdt = new DateTime(dstart);
+        final DateTime pedt = new DateTime(dend);
 
         psdt.setUtc(true);
         pedt.setUtc(true);
@@ -993,7 +954,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       BwFreeBusyComponent fbc = null;
       int lastType = 0;
 
-      for (EventPeriod ep: eventPeriods) {
+      for (final EventPeriod ep: eventPeriods) {
         if (debug) {
           trace(ep.toString());
         }
@@ -1030,7 +991,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
         }
         fbc.addPeriod(p.getStart(), p.getEnd());
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug) {
         error(t);
       }
@@ -1069,8 +1030,9 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
                                     final boolean scheduling,
                                     final boolean rollbackOnError) throws CalFacadeException {
     checkOpen();
-    UpdateEventResult uer = events.addEvent(ei, scheduling,
-                                            rollbackOnError);
+    final UpdateEventResult uer = 
+            events.addEvent(ei, scheduling,
+                            rollbackOnError);
 
     if (!forRestore) {
       calendars.touchCalendar(ei.getEvent().getColPath());
@@ -1082,13 +1044,13 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   @Override
   public UpdateEventResult updateEvent(final EventInfo ei) throws CalFacadeException {
     checkOpen();
-    UpdateEventResult ue = null;
+    final UpdateEventResult ue;
 
     try {
       calendars.touchCalendar(ei.getEvent().getColPath());
 
       ue = events.updateEvent(ei);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       rollbackTransaction();
       throw cfe;
     }
@@ -1101,11 +1063,11 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
                                     final boolean scheduling,
                                     final boolean reallyDelete) throws CalFacadeException {
     checkOpen();
-    String colPath = ei.getEvent().getColPath();
+    final String colPath = ei.getEvent().getColPath();
     try {
       try {
         return events.deleteEvent(ei, scheduling, reallyDelete);
-      } catch (CalFacadeException cfe) {
+      } catch (final CalFacadeException cfe) {
         rollbackTransaction();
         throw cfe;
       }
@@ -1142,22 +1104,22 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   @Override
   public void add(final BwUnversionedDbentity val) throws CalFacadeException {
-    sess.save(val);
+    entityDao.save(val);
   }
 
   @Override
   public void saveOrUpdate(final BwUnversionedDbentity val) throws CalFacadeException {
-    sess.saveOrUpdate(val);
+    entityDao.saveOrUpdate(val);
   }
 
   @Override
   public void delete(final BwUnversionedDbentity val) throws CalFacadeException {
-    sess.delete(val);
+    entityDao.delete(val);
   }
 
   @Override
   public BwUnversionedDbentity merge(final BwUnversionedDbentity val) throws CalFacadeException {
-    return (BwUnversionedDbentity)sess.merge(val);
+    return entityDao.merge(val);
   }
 
   private class ObjectIterator implements Iterator {
@@ -1230,32 +1192,14 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     return new ObjectIterator(className);
   }
 
-  private static String getEventAnnotationsQuery =
-      "from " + BwEventAnnotation.class.getName() +
-      " where recurrenceId=null";
-
   @Override
   public Iterator<BwEventAnnotation> getEventAnnotations() throws CalFacadeException {
-    sess.createQuery(getEventAnnotationsQuery);
-
-    @SuppressWarnings("unchecked")
-    Collection<BwEventAnnotation> anns = sess.getList();
-
-    return anns.iterator();
+    return events.getEventAnnotations();
   }
 
-  private static String getEventOverridesQuery =
-      "from " + BwEventAnnotation.class.getName() +
-      " where recurrenceId<>null " +
-       " and target=:target";
-
-  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) throws CalFacadeException {
-    sess.createQuery(getEventOverridesQuery);
-    sess.setEntity("target", ev);
-
-    return sess.getList();
+    return events.getEventOverrides(ev);
   }
 
   /* ====================================================================
@@ -1265,13 +1209,20 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   @Override
   public void save(final BwFilterDef val,
                    final BwPrincipal owner) throws CalFacadeException {
-    filterDefs.save(val, owner);
+    final BwFilterDef fd = filterDefs.fetch(val.getName(), owner);
+
+    if (fd != null) {
+      throw new CalFacadeException(CalFacadeException.duplicateFilter,
+                                   val.getName());
+    }
+
+    entityDao.save(val);
   }
 
   @Override
   public BwFilterDef getFilterDef(final String name,
                                   final BwPrincipal owner) throws CalFacadeException {
-    return filterDefs.getFilterDef(name, owner);
+    return filterDefs.fetch(name, owner);
   }
 
   @Override
@@ -1281,13 +1232,19 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   @Override
   public void update(final BwFilterDef val) throws CalFacadeException {
-    filterDefs.update(val);
+    entityDao.update(val);
   }
 
   @Override
   public void deleteFilterDef(final String name,
                               final BwPrincipal owner) throws CalFacadeException {
-    filterDefs.deleteFilterDef(name, owner);
+    final BwFilterDef fd = filterDefs.fetch(name, owner);
+
+    if (fd == null) {
+      throw new CalFacadeException(CalFacadeException.unknownFilter, name);
+    }
+
+    entityDao.delete(fd);
   }
 
   /* ====================================================================
@@ -1296,288 +1253,106 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   @Override
   public void addAuthUser(final BwAuthUser val) throws CalFacadeException {
-    userauth.addAuthUser(val);
+    final BwAuthUser ck = getAuthUser(val.getUserHref());
+
+    if (ck != null) {
+      throw new CalFacadeException(CalFacadeException.targetExists);
+    }
+
+    entityDao.save(val);
   }
 
   @Override
   public BwAuthUser getAuthUser(final String href) throws CalFacadeException {
-    return userauth.getAuthUser(href);
+    final BwAuthUser au = principalsAndPrefs.getAuthUser(href);
+
+    if (au == null) {
+      // Not an authorised user
+      return null;
+    }
+
+    BwAuthUserPrefs prefs = au.getPrefs();
+
+    if (prefs == null) {
+      prefs = BwAuthUserPrefs.makeAuthUserPrefs();
+      au.setPrefs(prefs);
+    }
+
+    return au;
   }
 
   @Override
   public void updateAuthUser(final BwAuthUser val) throws CalFacadeException {
-    userauth.updateAuthUser(val);
+    entityDao.update(val);
   }
 
   @Override
   public List<BwAuthUser> getAll() throws CalFacadeException {
-    return userauth.getAll();
+    return principalsAndPrefs.getAllAuthUsers();
   }
 
   /* ====================================================================
    *                       principals + prefs
    * ==================================================================== */
 
-  private final static String getPrincipalQuery =
-    "from " + BwUser.class.getName() +
-      " as u where u.principalRef = :href";
-
   @Override
   public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
-    if (href == null) {
-      return null;
-    }
-
-    /* XXX We should cache these as a static map and return detached objects only.
-     * Updating the user for logon etc should be a separate method,
-     *
-     * Also - we are searching the user table at the moment. Make this into a
-     * principal table and allow any principal to log on and own entities.
-     */
-
-    if (sess == null) {
-      warn("Null sesssion");
-      throw new NullPointerException("No session");
-    }
-    sess.createQuery(getPrincipalQuery);
-
-    sess.setString("href", href);
-
-    return (BwPrincipal)sess.getUnique();
+    return principalsAndPrefs.getPrincipal(href);
   }
-
-  private static final String getPrincipalHrefsQuery =
-      "select u.principalRef from " + BwUser.class.getName() +
-        " u order by u.principalRef";
 
   @Override
   public List<String> getPrincipalHrefs(final int start,
                                         final int count) throws CalFacadeException {
-    sess.createQuery(getPrincipalHrefsQuery);
-
-    sess.setFirstResult(start);
-    sess.setMaxResults(count);
-
-    @SuppressWarnings("unchecked")
-    final List<String> res = sess.getList();
-
-    if (Util.isEmpty(res)) {
-      return null;
-    }
-
-    return res;
+    return principalsAndPrefs.getPrincipalHrefs(start, count);
   }
-
-  private static final String getOwnerPreferencesQuery =
-      "from " + BwPreferences.class.getName() + " p " +
-        "where p.ownerHref=:ownerHref";
 
   @Override
   public BwPreferences getPreferences(final String principalHref) throws CalFacadeException {
-    sess.createQuery(getOwnerPreferencesQuery);
-    sess.setString("ownerHref", principalHref);
-    sess.cacheableQuery();
-
-    return (BwPreferences)sess.getUnique();
+    return principalsAndPrefs.getPreferences(principalHref);
   }
 
   /* ====================================================================
    *                       adminprefs
    * ==================================================================== */
-
-  private static final String removeCalendarPrefForAllQuery =
-      "delete from " + BwAuthUserPrefsCalendar.class.getName() +
-      " where calendarid=:id";
-
-  //private static final String removeCategoryPrefForAllQuery =
-    //  "delete from " + BwAuthUserPrefsCategory.class.getName() +
-      //" where uid=:uid";
-
-  private static final String getCategoryPrefForAllQuery =
-      "from " + BwAuthUserPrefs.class.getName() +
-      " where (:uid in categoryPrefs.preferred)";
-
-  private static final String removeLocationPrefForAllQuery =
-      "delete from " + BwAuthUserPrefsLocation.class.getName() +
-      " where locationid=:id";
-
-  private static final String removeContactPrefForAllQuery =
-      "delete from " + BwAuthUserPrefsContact.class.getName() +
-      " where contactid=:id";
-
+  
   @Override
   public void removeFromAllPrefs(final BwShareableDbentity val) throws CalFacadeException {
-    String q;
-
-    if (val instanceof BwCategory) {
-      /* Try to do this without cheating. We can't do this deletion in nosql anyway
-       */
-      String uid = ((BwCategory)val).getUid();
-      q = getCategoryPrefForAllQuery;
-
-      sess.createQuery(q);
-      sess.setString("uid", uid);
-
-      @SuppressWarnings("unchecked")
-      List<BwAuthUserPrefs> prefs = sess.getList();
-
-      if (!Util.isEmpty(prefs)) {
-        for (BwAuthUserPrefs pref: prefs) {
-          pref.getCategoryPrefs().remove(uid);
-          sess.update(pref);
-        }
-      }
-    } else {
-      if (val instanceof BwCalendar) {
-        q = removeCalendarPrefForAllQuery;
-      } else if (val instanceof BwContact) {
-        q = removeContactPrefForAllQuery;
-      } else if (val instanceof BwLocation) {
-        q = removeLocationPrefForAllQuery;
-      } else {
-        throw new CalFacadeException("Can't handle " + val);
-      }
-
-      sess.createQuery(q);
-      sess.setInt("id", val.getId());
-
-      sess.executeUpdate();
-    }
+    principalsAndPrefs.removeFromAllPrefs(val);
   }
 
   /* ====================================================================
    *                       groups
    * ==================================================================== */
 
-  private static final String getAdminGroupQuery =
-      "from " + BwAdminGroup.class.getName() + " ag " +
-          "where ag.account = :account";
-
-  private static final String getGroupQuery =
-      "from " + BwGroup.class.getName() + " g " +
-          "where g.account = :account";
-
   @Override
   public BwGroup findGroup(final String account,
                            final boolean admin) throws CalFacadeException {
-    if (admin) {
-      sess.createQuery(getAdminGroupQuery);
-    } else {
-      sess.createQuery(getGroupQuery);
-    }
-
-    sess.setString("account", account);
-
-    return (BwGroup)sess.getUnique();
+    return principalsAndPrefs.findGroup(account, admin);
   }
 
-  private static final String getAdminGroupParentsQuery =
-      "select ag from " +
-          "org.bedework.calfacade.svc.BwAdminGroupEntry age, " +
-          "org.bedework.calfacade.svc.BwAdminGroup ag " +
-          "where ag.id = age.groupId and " +
-          "age.memberId=:grpid and age.memberIsGroup=true";
-
-  private static final String getGroupParentsQuery =
-      "select g from " +
-          "org.bedework.calfacade.BwGroupEntry ge, " +
-          "org.bedework.calfacade.BwGroup g " +
-          "where g.id = ge.groupId and " +
-          "ge.memberId=:grpid and ge.memberIsGroup=true";
-
-  /**
-   * @param group
-   * @param admin          true for an admin group
-   * @return Collection
-   * @throws CalFacadeException
-   */
-  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwGroup> findGroupParents(final BwGroup group,
                                        final boolean admin) throws CalFacadeException {
-
-    if (admin) {
-      sess.createQuery(getAdminGroupParentsQuery);
-    } else {
-      sess.createQuery(getGroupParentsQuery);
-    }
-
-    sess.setInt("grpid", group.getId());
-
-    return sess.getList();
+    return principalsAndPrefs.findGroupParents(group, admin);
  }
-  /**
-   * @param group
-   * @param admin          true for an admin group
-   * @throws CalFacadeException
-   */
+ 
   @Override
   public void updateGroup(final BwGroup group,
                           final boolean admin) throws CalFacadeException {
-    sess.saveOrUpdate(group);
+    principalsAndPrefs.saveOrUpdate(group);
   }
 
-  private static final String removeAllAdminGroupMemberRefsQuery =
-      "delete from " +
-          "org.bedework.calfacade.svc.BwAdminGroupEntry " +
-          "where grp=:gr";
-
-  private static final String removeAllGroupMembersQuery =
-      "delete from " +
-          "org.bedework.calfacade.BwGroupEntry " +
-          "where grp=:gr";
-
-  private static final String removeFromAllAdminGroupsQuery =
-      "delete from " +
-          "org.bedework.calfacade.svc.BwAdminGroupEntry " +
-          "where memberId=:mbrId and memberIsGroup=:isgroup";
-
-  private static final String removeFromAllGroupsQuery =
-      "delete from " +
-          "org.bedework.calfacade.BwGroupEntry " +
-          "where memberId=:mbrId and memberIsGroup=:isgroup";
-
-  /** Delete a group
-   *
-   * @param  group           BwGroup group object to delete
-   * @exception CalFacadeException If there's a problem
-   */
   @Override
-  public  void removeGroup(final BwGroup group,
-                           final boolean admin) throws CalFacadeException {
-    if (admin) {
-      sess.createQuery(removeAllAdminGroupMemberRefsQuery);
-    } else {
-      sess.createQuery(removeAllGroupMembersQuery);
-    }
-
-    sess.setEntity("gr", group);
-    sess.executeUpdate();
-
-    // Remove from any groups
-
-    if (admin) {
-      sess.createQuery(removeFromAllAdminGroupsQuery);
-    } else {
-      sess.createQuery(removeFromAllGroupsQuery);
-    }
-
-    sess.setInt("mbrId", group.getId());
-
-    /* This is what I want to do but it inserts 'true' or 'false'
-    sess.setBool("isgroup", (val instanceof BwGroup));
-    */
-    sess.setString("isgroup", "T");
-    sess.executeUpdate();
-
-    sess.delete(group);
+  public void removeGroup(final BwGroup group,
+                          final boolean admin) throws CalFacadeException {
+    principalsAndPrefs.removeGroup(group, admin);
   }
 
   @Override
   public void addMember(final BwGroup group,
                         final BwPrincipal val,
                         final boolean admin) throws CalFacadeException {
-    BwGroupEntry ent;
+    final BwGroupEntry ent;
 
     if (admin) {
       ent = new BwAdminGroupEntry();
@@ -1588,243 +1363,66 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     ent.setGrp(group);
     ent.setMember(val);
 
-    sess.saveOrUpdate(ent);
+    principalsAndPrefs.saveOrUpdate(ent);
   }
-
-  private static final String findAdminGroupEntryQuery =
-      "from org.bedework.calfacade.svc.BwAdminGroupEntry " +
-          "where grp=:grp and memberId=:mbrId and memberIsGroup=:isgroup";
-
-  private static final String findGroupEntryQuery =
-      "from org.bedework.calfacade.BwGroupEntry " +
-          "where grp=:grp and memberId=:mbrId and memberIsGroup=:isgroup";
 
   @Override
   public void removeMember(final BwGroup group,
                            final BwPrincipal val,
                            final boolean admin) throws CalFacadeException {
-    if (admin) {
-      sess.createQuery(findAdminGroupEntryQuery);
-    } else {
-      sess.createQuery(findGroupEntryQuery);
-    }
-
-    sess.setEntity("grp", group);
-    sess.setInt("mbrId", val.getId());
-
-    /* This is what I want to do but it inserts 'true' or 'false'
-    sess.setBool("isgroup", (val instanceof BwGroup));
-    */
-    if (val instanceof BwGroup) {
-      sess.setString("isgroup", "T");
-    } else {
-      sess.setString("isgroup", "F");
-    }
-
-    Object ent = sess.getUnique();
-
-    if (ent == null) {
-      return;
-    }
-
-    sess.delete(ent);
+    principalsAndPrefs.removeMember(group, val, admin);
   }
 
-  private static final String getAdminGroupUserMembersQuery =
-      "select u from " +
-          "org.bedework.calfacade.svc.BwAdminGroupEntry age, " +
-          "org.bedework.calfacade.BwUser u " +
-          "where u.id = age.memberId and " +
-          "age.grp=:gr and age.memberIsGroup=false";
-
-  private static final String getAdminGroupGroupMembersQuery =
-      "select ag from " +
-          "org.bedework.calfacade.svc.BwAdminGroupEntry age, " +
-          "org.bedework.calfacade.svc.BwAdminGroup ag " +
-          "where ag.id = age.memberId and " +
-          "age.grp=:gr and age.memberIsGroup=true";
-
-  private static final String getGroupUserMembersQuery =
-      "select u from " +
-          "org.bedework.calfacade.BwGroupEntry ge, " +
-          "org.bedework.calfacade.BwUser u " +
-          "where u.id = ge.memberId and " +
-             "ge.grp=:gr and ge.memberIsGroup=false";
-
-  private static final String getGroupGroupMembersQuery =
-      "select g from " +
-          "org.bedework.calfacade.BwGroupEntry ge, " +
-          "org.bedework.calfacade.BwGroup g " +
-          "where g.id = ge.memberId and " +
-          "ge.grp=:gr and ge.memberIsGroup=true";
-
-  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwPrincipal> getMembers(final BwGroup group,
                                             final boolean admin) throws CalFacadeException {
-    if (admin) {
-      sess.createQuery(getAdminGroupUserMembersQuery);
-    } else {
-      sess.createQuery(getGroupUserMembersQuery);
-    }
-
-    sess.setEntity("gr", group);
-
-    Collection<BwPrincipal> ms = new TreeSet<BwPrincipal>();
-    ms.addAll(sess.getList());
-
-    if (admin) {
-      sess.createQuery(getAdminGroupGroupMembersQuery);
-    } else {
-      sess.createQuery(getGroupGroupMembersQuery);
-    }
-
-    sess.setEntity("gr", group);
-
-    ms.addAll(sess.getList());
-
-    return ms;
+    return principalsAndPrefs.getMembers(group, admin);
   }
 
-  private static final String getAllAdminGroupsQuery =
-      "from " + BwAdminGroup.class.getName() + " ag " +
-        "order by ag.account";
-
-  private static final String getAllGroupsQuery =
-      "from " + BwGroup.class.getName() + " g " +
-        "order by g.account";
-
-  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwGroup> getAllGroups(final boolean admin) throws CalFacadeException {
-    if (admin) {
-      sess.createQuery(getAllAdminGroupsQuery);
-    } else {
-      sess.createQuery(getAllGroupsQuery);
-    }
-
-    return sess.getList();
+    return principalsAndPrefs.getAllGroups(admin);
   }
 
-  /* Groups principal is a member of */
-  private static final String getAdminGroupsQuery =
-      "select ag.grp from org.bedework.calfacade.svc.BwAdminGroupEntry ag " +
-        "where ag.memberId=:entId and ag.memberIsGroup=:isgroup";
-
-  /* Groups principal is a event owner for */
-  private static final String getAdminGroupsByEventOwnerQuery =
-      "from org.bedework.calfacade.svc.BwAdminGroup ag " +
-        "where ag.ownerHref=:ownerHref";
-
-  private static final String getGroupsQuery =
-      "select g.grp from org.bedework.calfacade.BwGroupEntry g " +
-        "where g.memberId=:entId and g.memberIsGroup=:isgroup";
-
-  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwGroup> getGroups(final BwPrincipal val,
                                        final boolean admin) throws CalFacadeException {
-    if (admin) {
-      sess.createQuery(getAdminGroupsQuery);
-    } else {
-      sess.createQuery(getGroupsQuery);
-    }
-
-    sess.setInt("entId", val.getId());
-
-    /* This is what I want to do but it inserts 'true' or 'false'
-    sess.setBool("isgroup", (val instanceof BwGroup));
-    */
-    if (val.getKind() == WhoDefs.whoTypeGroup) {
-      sess.setString("isgroup", "T");
-    } else {
-      sess.setString("isgroup", "F");
-    }
-
-    Set<BwGroup> gs = new TreeSet<BwGroup>(sess.getList());
-
-    if (admin && (val.getKind() == WhoDefs.whoTypeUser)) {
-      /* Event owner for group is implicit member of group. */
-
-      sess.createQuery(getAdminGroupsByEventOwnerQuery);
-      sess.setString("ownerHref", val.getPrincipalRef());
-
-      gs.addAll(sess.getList());
-    }
-
-    return gs;
+    return principalsAndPrefs.getGroups(val, admin);
   }
 
   /* ====================================================================
    *                       calendar suites
    * ==================================================================== */
 
-  private static final String getCalSuiteByGroupQuery =
-    "from org.bedework.calfacade.svc.BwCalSuite cal " +
-      "where cal.group=:group";
-
   @Override
   public BwCalSuite get(final BwAdminGroup group) throws CalFacadeException {
-    sess.createQuery(getCalSuiteByGroupQuery);
-
-    sess.setEntity("group", group);
-    sess.cacheableQuery();
-
-    BwCalSuite cs = (BwCalSuite)sess.getUnique();
-
-    if (cs != null){
-      sess.evict(cs);
-    }
-
-    return cs;
+    return entityDao.get(group);
   }
-
-  private static final String getCalSuiteQuery =
-    "from org.bedework.calfacade.svc.BwCalSuite cal " +
-      "where cal.name=:name";
-
+  
   @Override
   public BwCalSuite getCalSuite(final String name) throws CalFacadeException {
-    sess.createQuery(getCalSuiteQuery);
-
-    sess.setString("name", name);
-    sess.cacheableQuery();
-
-    return (BwCalSuite)sess.getUnique();
+    return entityDao.getCalSuite(name);
   }
 
-  private static final String getAllCalSuitesQuery =
-      "from " + BwCalSuite.class.getName();
-
-  @SuppressWarnings("unchecked")
   @Override
   public Collection<BwCalSuite> getAllCalSuites() throws CalFacadeException {
-    sess.createQuery(getAllCalSuitesQuery);
-
-    sess.cacheableQuery();
-
-    return sess.getList();
+    return entityDao.getAllCalSuites();
   }
 
   /* ====================================================================
    *                   Event Properties Factories
    * ==================================================================== */
 
-  /** Return an event properties handler.
-   *
-   * @return EventProperties
-   * @throws CalFacadeException
-   */
   @SuppressWarnings("unchecked")
   @Override
-  public <T extends BwEventProperty> CoreEventPropertiesI<T>  getEvPropsHandler(final Class<T> cl)
+  public <T extends BwEventProperty> CoreEventPropertiesI<T> getEvPropsHandler(final Class<T> cl)
         throws CalFacadeException {
     if (cl.equals(BwCategory.class)) {
       if (categoriesHandler == null) {
         categoriesHandler =
-            new CoreEventProperties<BwCategory>(chcb, cb,
-                ac, currentMode, sessionless,
-                      BwCategory.class.getName());
+            new CoreEventProperties<>(sess, cb,
+                                      ac, currentMode, sessionless,
+                                      BwCategory.class.getName());
       }
 
       return (CoreEventPropertiesI<T>)categoriesHandler;
@@ -1833,9 +1431,9 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     if (cl.equals(BwContact.class)) {
       if (contactsHandler == null) {
         contactsHandler =
-            new CoreEventProperties<BwContact>(chcb, cb,
-                ac, currentMode, sessionless,
-                BwContact.class.getName());
+                new CoreEventProperties<>(sess, cb,
+                                          ac, currentMode, sessionless,
+                                          BwContact.class.getName());
       }
 
       return (CoreEventPropertiesI<T>)contactsHandler;
@@ -1844,9 +1442,9 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     if (cl.equals(BwLocation.class)) {
       if (locationsHandler == null) {
         locationsHandler =
-            new CoreEventProperties<BwLocation>(chcb, cb,
-                ac, currentMode, sessionless,
-                BwLocation.class.getName());
+                new CoreEventProperties<>(sess, cb,
+                                          ac, currentMode, sessionless,
+                                          BwLocation.class.getName());
       }
 
       return (CoreEventPropertiesI<T>)locationsHandler;
@@ -1859,28 +1457,17 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
    *                       resources
    * ==================================================================== */
 
-  private static final String getResourceQuery =
-      "from " + BwResource.class.getName() +
-          " where name=:name and colPath=:path" +
-          " and (encoding is null or encoding <> :tsenc)";
-
   @Override
   public BwResource getResource(final String name,
                                 final BwCalendar coll,
                                 final int desiredAccess) throws CalFacadeException {
-    sess.createQuery(getResourceQuery);
-
-    sess.setString("name", name);
-    sess.setString("path", coll.getPath());
-    sess.setString("tsenc", BwResource.tombstoned);
-    sess.cacheableQuery();
-
-    BwResource res = (BwResource)sess.getUnique();
+    final BwResource res = entityDao.getResource(name, coll, 
+                                                 desiredAccess);
     if (res == null) {
-      return res;
+      return null;
     }
 
-    CurrentAccess ca = checkAccess(res, desiredAccess, true);
+    final CurrentAccess ca = checkAccess(res, desiredAccess, true);
 
     if (!ca.getAccessAllowed()) {
       return null;
@@ -1889,78 +1476,21 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     return res;
   }
 
-  private static final String getResourceContentQuery =
-      "from " + BwResourceContent.class.getName() +
-      " as rc where rc.colPath=:path and rc.name=:name";
-
   @Override
   public void getResourceContent(final BwResource val) throws CalFacadeException {
-    sess.createQuery(getResourceContentQuery);
-    sess.setString("path", val.getColPath());
-    sess.setString("name", val.getName());
-    sess.cacheableQuery();
-
-    BwResourceContent rc = (BwResourceContent)sess.getUnique();
-    if (rc == null) {
-      throw new CalFacadeException(CalFacadeException.missingResourceContent);
-    }
-
-    val.setContent(rc);
+    entityDao.getResourceContent(val);
   }
 
-  private static final String getAllResourcesQuery =
-      "from " + BwResource.class.getName() +
-      " as r where r.colPath=:path" +
-      // No deleted collections for null sync-token or not sync
-      " and (r.encoding is null or r.encoding <> :tsenc)";
-
-  private static final String getAllResourcesSynchQuery =
-      "from " + BwResource.class.getName() +
-      " as r where r.colPath=:path" +
-      // Include deleted resources after the token.
-      " and (r.lastmod>:lastmod" +
-      " or (r.lastmod=:lastmod and r.sequence>:seq))";
-
-  @SuppressWarnings("unchecked")
   @Override
   public List<BwResource> getAllResources(final String path,
                                           final boolean forSynch,
                                           final String token) throws CalFacadeException {
-    if (forSynch && (token != null)) {
-      sess.createQuery(getAllResourcesSynchQuery);
-    } else {
-      sess.createQuery(getAllResourcesQuery);
-    }
-
-    sess.setString("path", path);
-
-    if (forSynch && (token != null)) {
-      sess.setString("lastmod", token.substring(0, 16));
-      sess.setInt("seq", Integer.parseInt(token.substring(17), 16));
-    } else {
-      sess.setString("tsenc", BwResource.tombstoned);
-    }
-
-    sess.cacheableQuery();
-
-    return postProcess(sess.getList());
+    return postProcess(entityDao.getAllResources(path, forSynch, token));
   }
-
-  /* ====================================================================
-   *                       system parameters
-   * ==================================================================== */
-
-  private static final String getSystemParsQuery =
-      "from " + BwSystem.class.getName() + " as sys " +
-      "where sys.name = :name";
 
   @Override
   public BwSystem getSyspars(final String name) throws CalFacadeException {
-    sess.createQuery(getSystemParsQuery);
-
-    sess.setString("name", name);
-
-    return (BwSystem)sess.getUnique();
+    return entityDao.getSyspars(name);
   }
 
   /* ====================================================================
@@ -1968,9 +1498,9 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
    * ==================================================================== */
 
   private List<BwResource> postProcess(final Collection<BwResource> ress) throws CalFacadeException {
-    List<BwResource> resChecked = new ArrayList<BwResource>();
+    final List<BwResource> resChecked = new ArrayList<>();
 
-    for (BwResource res: ress) {
+    for (final BwResource res: ress) {
       if (checkAccess(res, PrivilegeDefs.privRead, true).getAccessAllowed()) {
         resChecked.add(res);
       }
@@ -1989,24 +1519,24 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
         return sessionFactory;
       }
 
-      /** Get a new hibernate session factory. This is configured from an
+      /* Get a new hibernate session factory. This is configured from an
        * application resource hibernate.cfg.xml together with some run time values
        */
       try {
-        DbConfig dbConf = CoreConfigurations.getConfigs().getDbConfig();
-        Configuration conf = new Configuration();
+        final DbConfig dbConf = CoreConfigurations.getConfigs().getDbConfig();
+        final Configuration conf = new Configuration();
 
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
 
         @SuppressWarnings("unchecked")
-        List<String> ps = dbConf.getHibernateProperties();
+        final List<String> ps = dbConf.getHibernateProperties();
 
-        for (String p: ps) {
+        for (final String p: ps) {
           sb.append(p);
           sb.append("\n");
         }
 
-        Properties hprops = new Properties();
+        final Properties hprops = new Properties();
         hprops.load(new StringReader(sb.toString()));
 
         conf.addProperties(hprops).configure();
@@ -2014,7 +1544,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
         sessionFactory = conf.buildSessionFactory();
 
         return sessionFactory;
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         // Always bad.
         error(t);
         throw new CalFacadeException(t);
@@ -2027,7 +1557,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
                                          final boolean ignoreTransparency)
           throws CalFacadeException {
     /* Only events and freebusy for freebusy reports. */
-    FilterBase filter = new OrFilter();
+    final FilterBase filter = new OrFilter();
     try {
       filter.addChild(EntityTypeFilter.makeEntityTypeFilter(null,
                                                             "event",
@@ -2035,21 +1565,24 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       filter.addChild(EntityTypeFilter.makeEntityTypeFilter(null,
                                                             "freeAndBusy",
                                                             false));
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
 
-    RecurringRetrievalMode rrm = new RecurringRetrievalMode(
+    final RecurringRetrievalMode rrm = new RecurringRetrievalMode(
                         Rmode.expanded, start, end);
-    Collection<CoreEventInfo> evs = getEvents(cals, filter, start, end,
-                                              null, rrm, true);
+    final Collection<CoreEventInfo> evs = getEvents(cals, 
+                                                    filter, 
+                                                    start, 
+                                                    end,
+                                                    null, rrm, true);
 
     // Filter out transparent and cancelled events
 
-    Collection<CoreEventInfo> events = new TreeSet<CoreEventInfo>();
+    final Collection<CoreEventInfo> events = new TreeSet<>();
 
-    for (CoreEventInfo cei: evs) {
-      BwEvent ev = cei.getEvent();
+    for (final CoreEventInfo cei: evs) {
+      final BwEvent ev = cei.getEvent();
 
       if (!ignoreTransparency &&
           IcalDefs.transparencyTransparent.equals(ev.getPeruserTransparency(this.getPrincipal().getPrincipalRef()))) {
