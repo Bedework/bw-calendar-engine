@@ -222,9 +222,6 @@ public class AccessUtil implements AccessUtilI {
     return out;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.AccessUtilI#checkAccess(org.bedework.calfacade.base.BwShareableDbentity, int, boolean)
-   */
   @Override
   public CurrentAccess checkAccess(final BwShareableDbentity<?> ent,
                                    final int desiredAccess,
@@ -234,9 +231,9 @@ public class AccessUtil implements AccessUtilI {
     }
 
     if (ent instanceof CalendarWrapper) {
-      CalendarWrapper col = (CalendarWrapper)ent;
+      final CalendarWrapper col = (CalendarWrapper)ent;
 
-      CurrentAccess ca = col.getCurrentAccess(desiredAccess);
+      final CurrentAccess ca = col.getCurrentAccess(desiredAccess);
 
       if (ca != null) {
         // Checked already
@@ -250,8 +247,8 @@ public class AccessUtil implements AccessUtilI {
     }
 
     if (debug) {
-      String cname = ent.getClass().getName();
-      String ident;
+      final String cname = ent.getClass().getName();
+      final String ident;
       if (ent instanceof BwCalendar) {
         ident = ((BwCalendar)ent).getPath();
       } else {
@@ -264,16 +261,20 @@ public class AccessUtil implements AccessUtilI {
     }
 
     try {
+      final long startTime = System.currentTimeMillis();
       CurrentAccess ca = null;
 
-      AccessPrincipal owner = cb.getPrincipal(ent.getOwnerHref());
+      final AccessPrincipal owner = cb.getPrincipal(ent.getOwnerHref());
+      if (debug) {
+        getLog().debug("After getPrincipal: " + (System.currentTimeMillis() - startTime));
+      }
       PrivilegeSet maxPrivs = null;
 
       char[] aclChars = null;
 
       if (ent instanceof BwCalendar) {
-        BwCalendar cal = (BwCalendar)ent;
-        String path = cal.getPath();
+        final BwCalendar cal = (BwCalendar)ent;
+        final String path = cal.getPath();
 
         /* Special case the access to the user root e.g /user and
          * the 'home' directory, e.g. /user/douglm

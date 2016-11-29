@@ -149,7 +149,13 @@ class Users extends CalSvcDb implements UsersI {
     }
 
     if (val.startsWith(userPrincipalRoot)) {
-      return getSvc().getPrincipal(val);
+      final BwPrincipal u = getSvc().getPrincipal(href);
+
+      if (u != null) {
+        principalMap.put(href, u);
+      }
+
+      return u;
     }
 
     if (val.startsWith(groupPrincipalRoot)) {

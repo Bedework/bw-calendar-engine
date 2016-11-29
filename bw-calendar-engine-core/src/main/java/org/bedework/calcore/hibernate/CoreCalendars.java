@@ -904,7 +904,7 @@ class CoreCalendars extends CalintfHelper
     }
 
     path = Util.buildPath(colPathEndsWithSlash, path, "/", name);
-    final BwCalendar col = super.getCollection(path);
+    final BwCalendar col = dao.getCollectionNoAccessCheck(path);
 
     if (col != null) {
       if (!col.getTombstoned()) {
