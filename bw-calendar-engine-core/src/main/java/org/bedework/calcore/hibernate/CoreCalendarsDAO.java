@@ -112,7 +112,7 @@ class CoreCalendarsDAO extends DAOBase {
            "where cal.path=:path and " +
            "(cal.filterExpr = null or cal.filterExpr <> '--TOMBSTONED--')";
 
-  public BwCalendar getCollectionNoAccessCheck(final String path) throws CalFacadeException {
+  public BwCalendar getCollection(final String path) throws CalFacadeException {
     final HibSession sess = getSess();
 
     sess.createQuery(getCalendarByPathQuery);
@@ -451,7 +451,7 @@ class CoreCalendarsDAO extends DAOBase {
   }
 
   protected void removeTombstonedVersion(final BwCalendar val) throws CalFacadeException {
-    final BwCalendar col = getCollectionNoAccessCheck(val.getPath() + BwCalendar.tombstonedSuffix);
+    final BwCalendar col = getCollection(val.getPath() + BwCalendar.tombstonedSuffix);
 
     if (col != null) {
       deleteCalendar(col);

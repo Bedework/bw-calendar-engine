@@ -129,7 +129,7 @@ class CoreCalendars extends CalintfHelper
       return col;
     }
 
-    col = dao.getCollectionNoAccessCheck(path);
+    col = dao.getCollection(path);
 
     if (col == null) {
       if (path.equals("/")) {
@@ -281,7 +281,7 @@ class CoreCalendars extends CalintfHelper
     /* update will check access
      */
 
-    final BwCalendar parent = dao.getCollectionNoAccessCheck(val.getColPath());
+    final BwCalendar parent = dao.getCollection(val.getColPath());
 
     /* Ensure the name isn't reserved and the path is unique */
     checkNewCalendarName(newName, false, parent);
@@ -343,7 +343,7 @@ class CoreCalendars extends CalintfHelper
 
   @Override
   public void touchCalendar(final String path) throws CalFacadeException {
-    final BwCalendar col = dao.getCollectionNoAccessCheck(path);
+    final BwCalendar col = dao.getCollection(path);
     if (col == null) {
       return;
     }
@@ -471,7 +471,7 @@ class CoreCalendars extends CalintfHelper
        calendar collection. */
 
     String path =  userCalendarRootPath;
-    final BwCalendar userrootcal = super.getCollection(path);
+    final BwCalendar userrootcal = dao.getCollection(path);
 
     if (userrootcal == null) {
       throw new CalFacadeException("No user root at " + path);
@@ -495,7 +495,7 @@ class CoreCalendars extends CalintfHelper
 
       path = Util.buildPath(colPathEndsWithSlash, path, "/", pathSeg);
 
-      usercal = super.getCollection(path);
+      usercal = dao.getCollection(path);
       if (i == (upath.length - 1)) {
         if (usercal != null) {
           throw new CalFacadeException("User calendar already exists at " + path);
@@ -904,7 +904,7 @@ class CoreCalendars extends CalintfHelper
     }
 
     path = Util.buildPath(colPathEndsWithSlash, path, "/", name);
-    final BwCalendar col = dao.getCollectionNoAccessCheck(path);
+    final BwCalendar col = dao.getCollection(path);
 
     if (col != null) {
       if (!col.getTombstoned()) {
