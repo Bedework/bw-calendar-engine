@@ -383,7 +383,8 @@ public class Sharing extends CalSvcDb implements SharingI {
          */
         final String calAddr = principalToCaladdr(getPrincipal());
 
-        final InviteNotificationType in = deletedNotification(u.getHref(),
+        final InviteNotificationType in = deletedNotification(col.getPath(),
+                                                              u.getHref(),
                                                               calAddr,
                                                               col.getSummary(),
                                                               u.getAccess());
@@ -772,7 +773,11 @@ public class Sharing extends CalSvcDb implements SharingI {
     invite.getUsers().remove(uentry);
 
     final InviteNotificationType note =
-            deletedNotification(href, calAddr, col.getSummary(), uentry.getAccess());
+            deletedNotification(col.getPath(),
+                                href, 
+                                calAddr, 
+                                col.getSummary(), 
+                                uentry.getAccess());
 
     note.setPreviousStatus(uentry.getInviteStatus());
 
@@ -833,7 +838,8 @@ public class Sharing extends CalSvcDb implements SharingI {
     }
   }
 
-  private InviteNotificationType deletedNotification(final String shareeHref,
+  private InviteNotificationType deletedNotification(final String colPath,
+                                                     final String shareeHref,
                                                      final String sharerHref,
                                                      final String summary,
                                                      final AccessType access) throws CalFacadeException {
@@ -843,7 +849,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     in.setHref(shareeHref);
     in.setInviteStatus(removeStatus);
     in.setAccess(access);
-    in.setHostUrl(shareeHref);
+    in.setHostUrl(colPath);
 
     final OrganizerType org = new OrganizerType();
     org.setHref(sharerHref);
@@ -900,6 +906,12 @@ public class Sharing extends CalSvcDb implements SharingI {
                                        final InviteType invite) throws CalFacadeException {
     final Sharee sh = getSharee(s.getHref());
 
+    if ((sh.pr != null) &&
+            sh.pr.equals(getPrincipal())) {
+      // Inviting ourself
+      return null;
+    }
+    
     /*
        pr != null means this is potentially one of our users.
 
@@ -1126,7 +1138,10 @@ public class Sharing extends CalSvcDb implements SharingI {
   private void removeAlias(final BwCalendar col,
                            final String shareeHref,
                            final boolean unsubscribe) throws CalFacadeException {
-    pushPrincipal(shareeHref);
+    if (!pushPrincipalReturn(shareeHref)) {
+      // Ignore this - it's a bad href
+      return;
+    }
 
     try {
       final List<BwCalendar> cols =

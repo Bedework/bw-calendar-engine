@@ -130,6 +130,17 @@ public class CalSvcDb implements Serializable {
     getSvc().pushPrincipal(pr);
   }
 
+  protected boolean pushPrincipalReturn(final String href) throws CalFacadeException {
+    final BwPrincipal pr = caladdrToPrincipal(href);
+
+    if (pr == null) {
+      return false;
+    }
+
+    getSvc().pushPrincipal(pr);
+    return true;
+  }
+
   protected void pushPrincipal(final BwPrincipal pr) throws CalFacadeException {
     getSvc().pushPrincipal(pr);
   }
