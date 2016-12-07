@@ -1,0 +1,86 @@
+/* ********************************************************************
+    Licensed to Jasig under one or more contributor license
+    agreements. See the NOTICE file distributed with this work
+    for additional information regarding copyright ownership.
+    Jasig licenses this file to you under the Apache License,
+    Version 2.0 (the "License"); you may not use this file
+    except in compliance with the License. You may obtain a
+    copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on
+    an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
+package org.bedework.calcore.hibernate;
+
+import org.bedework.calcorei.HibSession;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
+import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.misc.Logged;
+
+/** Class used as basis for a number of DAO classes.
+ *
+ * @author Mike Douglass   douglm  bedework.org
+ */
+public class DAOBase extends Logged {
+  private HibSession sess;
+
+  /**
+   * @param sess the session
+   */
+  public DAOBase(final HibSession sess) {
+    this.sess = sess;
+  }
+
+  public void setSess(final HibSession val) throws CalFacadeException {
+    sess = val;
+  }
+
+  protected HibSession getSess() throws CalFacadeException {
+    return sess;
+  }
+
+  protected void rollback() throws CalFacadeException {
+    getSess().rollback();
+  }
+
+  protected void saveOrUpdate(final BwUnversionedDbentity val) throws CalFacadeException {
+    getSess().saveOrUpdate(val);
+  }
+
+  protected void save(final BwUnversionedDbentity val) throws CalFacadeException {
+    getSess().save(val);
+  }
+
+  protected void update(final BwUnversionedDbentity val) throws CalFacadeException {
+    getSess().update(val);
+  }
+
+  protected void delete(final BwUnversionedDbentity val) throws CalFacadeException {
+    getSess().delete(val);
+  }
+
+  public BwUnversionedDbentity merge(final BwUnversionedDbentity val) throws CalFacadeException {
+    return (BwUnversionedDbentity)sess.merge(val);
+  }
+
+  protected void throwException(final CalFacadeException cfe) throws CalFacadeException {
+    getSess().rollback();
+    throw cfe;
+  }
+
+  protected void throwException(final String pname) throws CalFacadeException {
+    getSess().rollback();
+    throw new CalFacadeException(pname);
+  }
+
+  protected void throwException(final String pname, final String extra) throws CalFacadeException {
+    getSess().rollback();
+    throw new CalFacadeException(pname, extra);
+  }
+}

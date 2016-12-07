@@ -58,6 +58,7 @@ public class CoreEventProperties <T extends BwEventProperty>
                              final String className)
           throws CalFacadeException {
     dao = new CoreEventPropertiesDAO(sess, className);
+    cb.registerDao(dao);
     super.init(cb, ac, currentMode, sessionless);
   }
 
