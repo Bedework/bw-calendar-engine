@@ -720,15 +720,7 @@ class CoreCalendars extends CalintfHelper
 
     final int homeAccess;
 
-    // Get user home even if no access.
-    // Some gyratons because this seems to be breaking things later
-    if (cb.getPrincipalInfo().getAuthPrincipal().getPrincipalRef().equals(owner.getPrincipalRef())) {
-      homeAccess = privAny;
-    } else {
-      homeAccess = privNone;
-    }
-    final BwCalendar userHome = getCalendar(pathTo, homeAccess, false);
-    if (userHome == null) {
+    if (dao.getCollection(pathTo) == null) {
       gscr.noUserHome = true;
       return gscr;
     }
