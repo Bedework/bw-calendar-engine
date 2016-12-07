@@ -21,6 +21,7 @@ package org.bedework.calsvc.jmx;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CardDavInfo;
+import org.bedework.calfacade.configs.CmdUtilProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.configs.DumpRestoreProperties;
@@ -91,10 +92,15 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   private final Map<String, DirConfigProperties> dirConfigs = new HashMap<>();
 
+  private static final String cmdUtilClass =
+          "org.bedework.tools.cmdutil.CmdUtil";
+
   private static final String dumpRestoreClass =
           "org.bedework.dumprestore.BwDumpRestore";
 
   private static ConfBase dumpRestore;
+
+  private static CmdUtilProperties cmdUtilProperties;
 
   private static DumpRestoreProperties dumpRestoreProperties;
 
@@ -112,7 +118,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
           "org.bedework.inoutsched.BwInoutSched";
 
   /**
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public ConfigurationsImpl() throws CalFacadeException {
     super("org.bedework.bwengine:service=System");
@@ -206,7 +212,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   /**
    * @return name for unauthenticated properties mbean
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public static ObjectName getUnauthpropsName() throws CalFacadeException {
     try {
@@ -218,7 +224,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   /**
    * @return name for authenticated properties mbean
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public static ObjectName getAuthpropsName() throws CalFacadeException {
     try {
@@ -230,7 +236,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   /**
    * @return name for system properties mbean
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public static ObjectName getSyspropsName() throws CalFacadeException {
     try {
@@ -325,6 +331,9 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       /* ------------- Carddav ------------------------------------ */
       loadCardDav();
 
+      /* ------------- CmdUtil --------------------- */
+      loadCmdUtil();
+
       /* ------------- DumpRestore properties --------------------- */
       loadDumpRestore();
 
@@ -355,6 +364,11 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
     authCardDavInfo = (CardDavInfo)load(
             new CardDavInfoConf(authCardDavInfoNamePart), false);
+  }
+
+  private void loadCmdUtil() throws Throwable {
+    cmdUtilProperties = (CmdUtilProperties)load(
+            loadInstance(cmdUtilClass), false);
   }
 
   private void loadDumpRestore() throws Throwable {
