@@ -1330,7 +1330,7 @@ public class CalSvc extends CalSvcI {
       postNotification(SysEvent.makeTimedEvent("Login: before user fetch",
                                                System.currentTimeMillis() - start));
 
-      synchronized (synchlock) {
+      //synchronized (synchlock) {
         final Users users = (Users)getUsersHandler();
 
         if (runAsUser == null) {
@@ -1486,11 +1486,11 @@ public class CalSvc extends CalSvcI {
         }
 
         return cali;
-      }
+      //}
     } catch (final CalFacadeException cfe) {
       error(cfe);
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
       throw new CalFacadeException(t);
     } finally {
