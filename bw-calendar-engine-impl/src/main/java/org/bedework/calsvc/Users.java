@@ -278,20 +278,23 @@ class Users extends CalSvcDb implements UsersI {
     getCal().delete(pr);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.UsersI#logon(org.bedework.calfacade.BwPrincipal)
-   */
   @Override
   public void logon(final BwPrincipal val) throws CalFacadeException {
-    final Timestamp now = new Timestamp(System.currentTimeMillis());
+    //final Timestamp now = new Timestamp(System.currentTimeMillis());
 
+    /* TODO - add unversioned login table
+       this can cause stale state exceptions - 
     val.setLogon(now);
     val.setLastAccess(now);
     getCal().saveOrUpdate(val);
+    */
 
-    /* Ensure we have a polls collection. */
+    /* Ensure we have a polls collection. 
+    I think this was a short-term fix that hung around. 
+    It's not a good idea. Makes session start inefficient.
     getSvc().getCal().getSpecialCalendar(val, BwCalendar.calTypePoll,
                                          true, PrivilegeDefs.privAny);
+                                         */
   }
 
   /*
