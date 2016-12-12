@@ -32,6 +32,7 @@ import org.bedework.util.misc.Util;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /** The actual collections interactions with the database.
@@ -120,6 +121,33 @@ class CoreCalendarsDAO extends DAOBase {
     sess.cacheableQuery();
 
     return (BwCalendar)sess.getUnique();
+  }
+
+  private final static String collectionExistsQuery =
+          "select count(*) from " + BwCalendar.class.getName() + " col " +
+                  "where col.path=:path and " +
+                  "(col.filterExpr = null or col.filterExpr <> '--TOMBSTONED--')";
+
+  public boolean collectionExists(final String path) throws CalFacadeException {
+    final HibSession sess = getSess();
+
+    sess.createQuery(collectionExistsQuery);
+
+    sess.setString("path", path);
+
+    final Collection refs = sess.getList();
+
+    final Object o = refs.iterator().next();
+
+    /* Apparently some get a Long - others get Integer */
+    if (o instanceof Long) {
+      final Long ct = (Long)o;
+      return ct > 0;
+    }
+    
+    final Integer ct = (Integer)o;
+
+    return ct > 0;
   }
 
   private final static String touchCalendarQuery =

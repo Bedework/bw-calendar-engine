@@ -718,9 +718,7 @@ class CoreCalendars extends CalintfHelper
 
     final GetSpecialCalendarResult gscr = new GetSpecialCalendarResult();
 
-    final int homeAccess;
-
-    if (dao.getCollection(pathTo) == null) {
+    if (!dao.collectionExists(pathTo)) {
       gscr.noUserHome = true;
       return gscr;
     }
