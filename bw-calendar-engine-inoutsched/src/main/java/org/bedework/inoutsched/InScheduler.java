@@ -206,10 +206,11 @@ public class InScheduler extends AbstractScheduler {
       }
 
       if (proc == null) {
+        getSvc().getEventsHandler().delete(ei, false);
         return ProcessMessageResult.PROCESSED;
       }
 
-      ProcessResult pr = proc.process(ei);
+      final ProcessResult pr = proc.process(ei);
 
       if (debug) {
         trace("InSchedule " + pr.sr);
