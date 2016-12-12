@@ -61,6 +61,9 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
     sender = conn.getProducer();
   }
 
+  private static long sends = 0;
+  private static long sendTime = 0;
+
   @Override
   public void post(final SysEventBase ev) throws NotificationException {
     if (debug) {
@@ -68,16 +71,23 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
     }
 
     try {
-      ObjectMessage msg = conn.getSession().createObjectMessage();
+      final ObjectMessage msg = conn.getSession().createObjectMessage();
 
       msg.setObject(ev);
 
-      for (Attribute attr: ev.getMessageAttributes()) {
+      for (final Attribute attr: ev.getMessageAttributes()) {
         msg.setStringProperty(attr.name, attr.value);
       }
 
+      long start = System.currentTimeMillis();
       sender.send(msg);
-    } catch (JMSException je) {
+      sends++;
+      sendTime += System.currentTimeMillis() - start;
+
+//      if ((sends % 100) == 0) {
+//        System.out.println("Sends: " + sends + " avg: " + sendTime / sends);
+//      }
+    } catch (final JMSException je) {
       throw new NotificationException(je);
     }
   }
@@ -85,13 +95,13 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
   @Override
   public void registerListener(final SysEventListener l,
                                final boolean persistent)
-                                                        throws NotificationException {
+          throws NotificationException {
 
   }
 
   @Override
   public void removeListener(final SysEventListener l)
-                                                      throws NotificationException {
+          throws NotificationException {
 
   }
 

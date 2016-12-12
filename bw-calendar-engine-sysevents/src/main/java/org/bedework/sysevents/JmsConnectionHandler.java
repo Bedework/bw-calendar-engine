@@ -257,7 +257,7 @@ public class JmsConnectionHandler implements JmsDefs {
         sysProps = new CalSvcFactoryDefault().getSystemConfig()
                 .getSystemProperties();
 
-        /** Load properties file */
+        /* Load properties file */
 
         pr = new Properties();
 

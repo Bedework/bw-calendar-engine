@@ -38,7 +38,7 @@ public class EntityDeletedEvent extends OwnedHrefEvent
 
   /**
    * @param code the system event code
-   * @param authPrincipalHref
+   * @param authPrincipalHref authenticated principal
    * @param ownerHref principal href of the owner
    * @param href
    * @param shared
