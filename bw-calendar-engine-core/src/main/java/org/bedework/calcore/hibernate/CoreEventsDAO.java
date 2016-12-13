@@ -76,7 +76,8 @@ public class CoreEventsDAO extends DAOBase {
           "from " + BwEventAnnotation.class.getName() + " as ev " +
                   "where ev.name = :name and " +
                   "ev.colPath = :colPath and " +
-                  "ev.tombstoned=false";
+                  "ev.tombstoned=false and " +
+                  "ev.override=false";
 
   protected BwEventAnnotation getEventsAnnotationName(final String colPath,
                                                       final String name)
