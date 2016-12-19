@@ -40,7 +40,6 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
-import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.misc.Util;
@@ -1053,52 +1052,44 @@ class CoreCalendars extends CalintfHelper
 
   private void notify(final SysEvent.SysCode code,
                       final BwCalendar val) throws CalFacadeException {
-    try {
-      final boolean indexed = true;
-      if (code.equals(SysEvent.SysCode.COLLECTION_DELETED)) {
-        postNotification(
-           SysEvent.makeCollectionDeletedEvent(code,
-                                               authenticatedPrincipal(),
-                                               val.getOwnerHref(),
-                                               val.getPath(),
-                                               val.getShared(),
-                                               val.getPublick(),
-                                               indexed));
-      } else {
-        indexEntity(val);
-        postNotification(
-           SysEvent.makeCollectionUpdateEvent(code,
-                                              authenticatedPrincipal(),
-                                              val.getOwnerHref(),
-                                              val.getPath(),
-                                              val.getShared(),
-                                              indexed));
-      }
-    } catch (final NotificationException ne) {
-      throw new CalFacadeException(ne);
+    final boolean indexed = true;
+    if (code.equals(SysEvent.SysCode.COLLECTION_DELETED)) {
+      postNotification(
+              SysEvent.makeCollectionDeletedEvent(code,
+                                                  authenticatedPrincipal(),
+                                                  val.getOwnerHref(),
+                                                  val.getPath(),
+                                                  val.getShared(),
+                                                  val.getPublick(),
+                                                  indexed));
+    } else {
+      indexEntity(val);
+      postNotification(
+              SysEvent.makeCollectionUpdateEvent(code,
+                                                 authenticatedPrincipal(),
+                                                 val.getOwnerHref(),
+                                                 val.getPath(),
+                                                 val.getShared(),
+                                                 indexed));
     }
   }
 
   private void notifyMove(final SysEvent.SysCode code,
                           final String oldHref,
                           final BwCalendar val) throws CalFacadeException {
-    try {
-      final boolean indexed = true;
-      getIndexer(val).unindexEntity(oldHref);
-      indexEntity(val);
+    final boolean indexed = true;
+    getIndexer(val).unindexEntity(oldHref);
+    indexEntity(val);
 
-      postNotification(
-         SysEvent.makeCollectionMovedEvent(code,
-                                           authenticatedPrincipal(),
-                                           val.getOwnerHref(),
-                                           val.getPath(),
-                                           val.getShared(),
-                                           indexed,
-                                           oldHref,
-                                           false)); // XXX wrong
-    } catch (final NotificationException ne) {
-      throw new CalFacadeException(ne);
-    }
+    postNotification(
+            SysEvent.makeCollectionMovedEvent(code,
+                                              authenticatedPrincipal(),
+                                              val.getOwnerHref(),
+                                              val.getPath(),
+                                              val.getShared(),
+                                              indexed,
+                                              oldHref,
+                                              false)); // XXX wrong
   }
 
   /* No access checks performed */

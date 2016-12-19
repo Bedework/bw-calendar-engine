@@ -58,7 +58,6 @@ import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.util.NotificationsInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.calsvci.CalSvcFactoryDefault;
-import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
 
@@ -546,12 +545,8 @@ public abstract class CalintfHelper
       return;
     }
 
-    try {
-      postNotification(SysEvent.makeStatsEvent(name,
-                                               System.currentTimeMillis() - startTime));
-    } catch (NotificationException ne) {
-      throw new CalFacadeException(ne);
-    }
+    postNotification(SysEvent.makeStatsEvent(name,
+                                             System.currentTimeMillis() - startTime));
   }
 
   protected void notifyDelete(final boolean reallyDelete,
@@ -570,49 +565,41 @@ public abstract class CalintfHelper
       return;
     }
 
-    try {
-      postNotification(
-              SysEvent.makeEntityDeletedEvent(code,
-                                              authenticatedPrincipal(),
-                                              val.getOwnerHref(),
-                                              val.getHref(),
-                                              shared,
-                                              val.getPublick(),
-                                              true, // indexed,
-                                              IcalDefs.fromEntityType(
-                                                      val.getEntityType()),
-                                              val.getRecurrenceId(),
-                                              note,
-                                              null)); // XXX Emit multiple targted?
-    } catch (NotificationException ne) {
-      throw new CalFacadeException(ne);
-    }
+    postNotification(
+            SysEvent.makeEntityDeletedEvent(code,
+                                            authenticatedPrincipal(),
+                                            val.getOwnerHref(),
+                                            val.getHref(),
+                                            shared,
+                                            val.getPublick(),
+                                            true, // indexed,
+                                            IcalDefs.fromEntityType(
+                                                    val.getEntityType()),
+                                            val.getRecurrenceId(),
+                                            note,
+                                            null)); // XXX Emit multiple targted?
   }
 
   protected void notify(final SysEvent.SysCode code,
                         final BwEvent val,
                         final boolean shared) throws CalFacadeException {
-    try {
-      final String note = getChanges(code, val);
-      if (note == null) {
-        return;
-      }
-
-      final boolean indexed = true;
-
-      postNotification(
-              SysEvent.makeEntityUpdateEvent(code,
-                                             authenticatedPrincipal(),
-                                             val.getOwnerHref(),
-                                             val.getHref(),
-                                             shared,
-                                             indexed,
-                                             val.getRecurrenceId(),
-                                             note,
-                                             null)); // XXX Emit multiple targeted?
-    } catch (NotificationException ne) {
-      throw new CalFacadeException(ne);
+    final String note = getChanges(code, val);
+    if (note == null) {
+      return;
     }
+
+    final boolean indexed = true;
+
+    postNotification(
+            SysEvent.makeEntityUpdateEvent(code,
+                                           authenticatedPrincipal(),
+                                           val.getOwnerHref(),
+                                           val.getHref(),
+                                           shared,
+                                           indexed,
+                                           val.getRecurrenceId(),
+                                           note,
+                                           null)); // XXX Emit multiple targeted?
   }
 
   protected void notifyMove(final SysEvent.SysCode code,
@@ -620,63 +607,55 @@ public abstract class CalintfHelper
                             final boolean oldShared,
                             final BwEvent val,
                             final boolean shared) throws CalFacadeException {
-    try {
-      postNotification(
-              SysEvent.makeEntityMovedEvent(code,
-                                            currentPrincipal(),
-                                            val.getOwnerHref(),
-                                            val.getHref(),
-                                            shared,
-                                            false,
-                                            oldHref,
-                                            oldShared));
-    } catch (NotificationException ne) {
-      throw new CalFacadeException(ne);
-    }
+    postNotification(
+            SysEvent.makeEntityMovedEvent(code,
+                                          currentPrincipal(),
+                                          val.getOwnerHref(),
+                                          val.getHref(),
+                                          shared,
+                                          false,
+                                          oldHref,
+                                          oldShared));
   }
 
   protected void notifyInstanceChange(final SysEvent.SysCode code,
                                       final BwEvent val,
                                       final boolean shared,
                                       final String recurrenceId) throws CalFacadeException {
-    try {
-      String note = getChanges(code, val);
-      if (note == null) {
-        return;
-      }
+    final String note = getChanges(code, val);
+    if (note == null) {
+      return;
+    }
 
-      /* We flag these as indexed. They get handled by the update for
+    /* We flag these as indexed. They get handled by the update for
          the master
        */
-      if (code.equals(SysEvent.SysCode.ENTITY_DELETED) ||
-              code.equals(SysEvent.SysCode.ENTITY_TOMBSTONED)) {
-        postNotification(
-                SysEvent.makeEntityDeletedEvent(code,
-                                                authenticatedPrincipal(),
-                                                val.getOwnerHref(),
-                                                val.getHref(),
-                                                shared,
-                                                val.getPublick(),
-                                                true, // Indexed
-                                                IcalDefs.fromEntityType(
-                                                        val.getEntityType()),
-                                                recurrenceId,
-                                                note,
-                                                null)); // XXX Emit multiple targted?
-      } else {
-        postNotification(
-                SysEvent.makeEntityUpdateEvent(code,
-                                               authenticatedPrincipal(),
-                                               val.getOwnerHref(),
-                                               val.getHref(),
-                                               shared,
-                                               true, // Indexed
-                                               val.getRecurrenceId(),
-                                               note,  // changes
-                                               null)); // XXX Emit multiple targted?
-      }
-    } catch (NotificationException ne) {
-      throw new CalFacadeException(ne);
+    if (code.equals(SysEvent.SysCode.ENTITY_DELETED) ||
+            code.equals(SysEvent.SysCode.ENTITY_TOMBSTONED)) {
+      postNotification(
+              SysEvent.makeEntityDeletedEvent(code,
+                                              authenticatedPrincipal(),
+                                              val.getOwnerHref(),
+                                              val.getHref(),
+                                              shared,
+                                              val.getPublick(),
+                                              true, // Indexed
+                                              IcalDefs.fromEntityType(
+                                                      val.getEntityType()),
+                                              recurrenceId,
+                                              note,
+                                              null)); // XXX Emit multiple targted?
+    } else {
+      postNotification(
+              SysEvent.makeEntityUpdateEvent(code,
+                                             authenticatedPrincipal(),
+                                             val.getOwnerHref(),
+                                             val.getHref(),
+                                             shared,
+                                             true, // Indexed
+                                             val.getRecurrenceId(),
+                                             note,  // changes
+                                             null)); // XXX Emit multiple targted?
     }
   }
 

@@ -232,12 +232,8 @@ class Users extends CalSvcDb implements UsersI {
     getCal().getSpecialCalendar(user, BwCalendar.calTypeTasks,
                                 true, PrivilegeDefs.privAny);
 
-    try {
-      getSvc().postNotification(SysEvent.makePrincipalEvent(SysEvent.SysCode.NEW_USER,
-                                                            user, 0));
-    } catch (final NotificationException ne) {
-      throw new CalFacadeException(ne);
-    }
+    getSvc().postNotification(SysEvent.makePrincipalEvent(SysEvent.SysCode.NEW_USER,
+                                                          user, 0));
 
   }
 

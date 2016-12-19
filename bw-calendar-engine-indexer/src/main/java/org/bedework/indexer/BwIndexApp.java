@@ -20,6 +20,7 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
+import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
@@ -162,7 +163,7 @@ public class BwIndexApp extends JmsSysEventListener {
   }
 
   void listen() throws Throwable {
-    open(crawlerQueueName);
+    open(crawlerQueueName, CalSvcFactoryDefault.getPr());
 
     msgProc = new MessageProcessor(props);
 

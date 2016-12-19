@@ -26,6 +26,7 @@ import org.bedework.sysevents.events.SysEvent;
 import org.apache.log4j.Logger;
 
 import java.io.InvalidClassException;
+import java.util.Properties;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -56,6 +57,20 @@ public abstract class JmsSysEventListener
     conn = new JmsConnectionHandler();
 
     conn.open(queueName);
+
+    consumer = conn.getConsumer();
+  }
+
+  /**
+   * @param queueName
+   * @param pr the properties
+   * @throws NotificationException
+   */
+  public void open(final String queueName,
+                   final Properties pr) throws NotificationException {
+    conn = new JmsConnectionHandler();
+
+    conn.open(queueName, pr);
 
     consumer = conn.getConsumer();
   }

@@ -19,7 +19,14 @@
 package org.bedework.calsvci;
 
 import org.bedework.calfacade.configs.Configurations;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.misc.Util;
+
+import java.io.InputStream;
+import java.io.StringReader;
+import java.util.List;
+import java.util.Properties;
 
 /** Default svc factory - just gets an instance of the default class.
  *
@@ -36,10 +43,16 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
 
   private static Configurations conf;
 
+  public static SystemProperties getSystemProperties() throws CalFacadeException {
+    return new CalSvcFactoryDefault().getSystemConfig()
+                                     .getSystemProperties();
+  }
+  
   @Override
   public CalSvcI getSvc(final CalSvcIPars pars) throws CalFacadeException {
-    CalSvcI svc = (CalSvcI)loadInstance(defaultSvciClass,
-                                        CalSvcI.class);
+    final CalSvcI svc = 
+            (CalSvcI)loadInstance(defaultSvciClass,
+                                  CalSvcI.class);
 
     svc.init(pars);
 
@@ -67,6 +80,48 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
                                           Configurations.class);
 
       return conf;
+    }
+  }
+
+  public static Properties getPr() throws CalFacadeException {
+    final InputStream is = null;
+
+    try {
+      final SystemProperties sysProps = 
+              CalSvcFactoryDefault.getSystemProperties();
+
+      /* Load properties file */
+
+      final Properties pr = new Properties();
+
+      if (Util.isEmpty(sysProps.getSyseventsProperties())) {
+        throw new CalFacadeException("No sysevent properties defined");
+      }
+      
+      final StringBuilder sb = new StringBuilder();
+
+      @SuppressWarnings("unchecked")
+      final List<String> ps = sysProps.getSyseventsProperties();
+
+      for (final String p: ps) {
+        sb.append(p);
+        sb.append("\n");
+      }
+
+      pr.load(new StringReader(sb.toString()));
+
+      return pr;
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      //Logger.getLogger(CalSvcFactoryDefault.class.getName()).throwing(CalSvcFactory.class, t);
+      throw new CalFacadeException(t.getMessage());
+    } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (final Throwable ignored) {}
+      }
     }
   }
 

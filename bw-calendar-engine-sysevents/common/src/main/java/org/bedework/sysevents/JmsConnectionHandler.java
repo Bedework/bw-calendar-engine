@@ -83,10 +83,21 @@ public class JmsConnectionHandler implements JmsDefs {
    * @throws NotificationException
    */
   public void open(final String queueName) throws NotificationException {
+    open(queueName, getPr());
+  }
+
+  /** Open a connection to the named queue ready to create a producer or
+   * consumer.
+   *
+   * @param queueName the queue
+   * @param pr propeties                 
+   * @throws NotificationException
+   */
+  public void open(final String queueName,
+                   final Properties pr) throws NotificationException {
     try {
       final ConnectionFactory connFactory;
 
-      final Properties pr = getPr();
       final Context ctx = new InitialContext(pr);
       /*
       try {
@@ -103,7 +114,7 @@ public class JmsConnectionHandler implements JmsDefs {
 
       try {
         connFactory = (ConnectionFactory)ctx.lookup(
-                    pr.getProperty("org.bedework.connection.factory.name"));
+                pr.getProperty("org.bedework.connection.factory.name"));
 
 //        connFactory = (ConnectionFactory)ctx.lookup(connFactoryName);
 
@@ -254,8 +265,7 @@ public class JmsConnectionHandler implements JmsDefs {
       InputStream is = null;
 
       try {
-        sysProps = new CalSvcFactoryDefault().getSystemConfig()
-                .getSystemProperties();
+        sysProps = CalSvcFactoryDefault.getSystemProperties();
 
         /* Load properties file */
 

@@ -21,6 +21,7 @@ package org.bedework.inoutsched;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvc.MesssageHandler;
 import org.bedework.calsvc.MesssageHandler.ProcessMessageResult;
+import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.EntityQueuedEvent;
 import org.bedework.sysevents.events.SysEvent;
@@ -91,15 +92,15 @@ public class InoutSched extends JmsSysEventListener implements Runnable {
   public void run() {
     try {
       if (in) {
-        open(schedulerInQueueName);
+        open(schedulerInQueueName, CalSvcFactoryDefault.getPr());
         handler = new InScheduler();
       } else {
-        open(schedulerOutQueueName);
+        open(schedulerOutQueueName, CalSvcFactoryDefault.getPr());
         handler = new OutScheduler();
       }
 
       process(false);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error("Scheduler(" + in + ") terminating with exception:");
       error(t);
     }

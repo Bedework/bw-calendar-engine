@@ -21,6 +21,7 @@ package org.bedework.chgnote;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvc.MesssageHandler;
 import org.bedework.calsvc.MesssageHandler.ProcessMessageResult;
+import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
@@ -85,7 +86,7 @@ public class ChgProc extends JmsSysEventListener implements Runnable {
   @Override
   public void run() {
     try {
-      open(changesQueueName);
+      open(changesQueueName, CalSvcFactoryDefault.getPr());
       handler = new Notifier();
 
       process(false);

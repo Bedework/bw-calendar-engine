@@ -1,4 +1,6 @@
-/* ********************************************************************
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
     Licensed to Jasig under one or more contributor license
     agreements. See the NOTICE file distributed with this work
     for additional information regarding copyright ownership.
@@ -15,20 +17,25 @@
     KIND, either express or implied. See the License for the
     specific language governing permissions and limitations
     under the License.
-*/
-package org.bedework.sysevents.events;
+-->
 
-/** Inbound or outbound http event.
- * @author douglm
- *
- */
-public class HttpEvent extends SysEvent {
-  private static final long serialVersionUID = 1L;
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-  /**
-   * @param code
-   */
-  public HttpEvent(final SysCode code) {
-    super(code);
-  }
-}
+  <parent>
+    <groupId>org.bedework</groupId>
+    <artifactId>bw-sysevents</artifactId>
+    <version>4.0</version>
+    <relativePath>../</relativePath>
+  </parent>
+
+  <groupId>org.bedework.bwsysevents</groupId>
+  <artifactId>bwsysev-common</artifactId>
+
+  <name>Bedework sysevents common classes</name>
+  <description>Bedework sysevents common classes</description>
+  <url>http://bedework.org/</url>
+</project>
