@@ -43,6 +43,7 @@ import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
+import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
@@ -88,6 +89,7 @@ import java.io.StringReader;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -99,6 +101,7 @@ import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
 import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
+import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 
 /** This acts as an interface to the database for subscriptions.
  *
@@ -1088,6 +1091,174 @@ class Events extends CalSvcDb implements EventsI {
     ev.setOwnerHref(null);
     ev.setCreatorHref(null);
     setupSharableEntity(ev, getPrincipal().getPrincipalRef());
+  }
+
+  @Override
+  public Set<BwCategory> reAlias(final BwEvent ev) throws CalFacadeException {
+    /* The set of categories referenced by the aliases and their parents */
+    final ChangeTable changes = ev.getChangeset(getPrincipalHref());
+
+    final Collection<BwXproperty> aliases = ev.getXproperties(BwXproperty.bedeworkAlias);
+
+    if (Util.isEmpty(aliases)) {
+      return null;
+    }
+
+    final ChangeTableEntry cte = changes.getEntry(PropertyInfoIndex.CATEGORIES);
+
+    final Set<BwCategory> allcats = new TreeSet<>();
+    
+    for (final BwXproperty alias: aliases) {
+      final Set<BwCategory> cats = getCols().getCategorySet(alias.getValue());
+
+      if (Util.isEmpty(cats)) {
+        continue;
+      }
+
+      allcats.addAll(cats);
+      
+      for (final BwCategory cat: cats) {
+        if (ev.addCategory(cat)) {
+          cte.addAddedValue(cat);
+        }
+      }
+    }
+    
+    return allcats;
+  }
+
+  @Override
+  public SetEntityCategoriesResult setEntityCategories(final CategorisedEntity ent,
+                                                       final Set<BwCategory> extraCats,
+                                                       final Set<String> defCatUids,
+                                                       final Set<String> allDefCatUids,
+                                                       final Collection<String> strCatUids,
+                                                       final ChangeTable changes) 
+          throws CalFacadeException {
+    // XXX We should use the change table code for this.
+    final SetEntityCategoriesResult secr = new SetEntityCategoriesResult();
+
+    /* categories already set in event */
+    final Set<BwCategory> entcats = ent.getCategories();
+    final Map<String, BwCategory> entcatMap = new HashMap<>();
+    if (!Util.isEmpty(entcats)) {
+      for (final BwCategory entcat: entcats) {
+        entcatMap.put(entcat.getUid(), entcat);
+      }
+    }
+
+    /* Remove all categories if we don't supply any
+     */
+
+    if (Util.isEmpty(strCatUids) &&
+            Util.isEmpty(extraCats) &&
+            Util.isEmpty(defCatUids) &&
+            Util.isEmpty(allDefCatUids)) {
+      if (!Util.isEmpty(entcats)) {
+        if (changes != null) {
+          final ChangeTableEntry cte = changes.getEntry(PropertyInfoIndex.CATEGORIES);
+          cte.setRemovedValues(new ArrayList<>(entcats));
+        }
+
+        secr.numRemoved = entcats.size();
+        entcats.clear();
+      }
+      secr.rcode = success;
+      return secr;
+    }
+
+    final Set<BwCategory> cats = new TreeSet<>();
+
+    if (extraCats != null) {
+      cats.addAll(extraCats);
+    }
+
+    if (!Util.isEmpty(defCatUids)) {
+      for (final String uid: defCatUids) {
+        final BwCategory cat = getSvc().getCategoriesHandler().getPersistent(uid);
+
+        if (cat != null) {
+          cats.add(cat);
+        }
+      }
+    }
+
+    if (!Util.isEmpty(allDefCatUids) &&
+            (entcats != null)) {
+      for (final String catUid: allDefCatUids) {
+        /* If it's in the event add it to the list we're building then move on
+         * to the next requested category.
+         */
+        final BwCategory entcat = entcatMap.get(catUid);
+        if (entcat != null) {
+          cats.add(entcat);
+        }
+      }
+    }
+
+    if (!Util.isEmpty(strCatUids)) {
+      buildList:
+      for (final String catUid: strCatUids) {
+        /* If it's in the event add it to the list we're building then move on
+         * to the next requested category.
+         */
+        final BwCategory entcat = entcatMap.get(catUid);
+        if (entcat != null) {
+          cats.add(entcat);
+          continue buildList;
+        }
+
+        final BwCategory cat = getSvc().getCategoriesHandler().getPersistent(catUid);
+
+        if (cat != null) {
+          cats.add(cat);
+        }
+      }
+    }
+    
+    /* cats now contains category objects corresponding to the parameters
+     *
+     * Now we need to add or remove any in the event but not in our list.
+     */
+
+    /* First make a list to remove - to avoid concurrent update
+     * problems with the iterator
+     */
+
+    final ArrayList<BwCategory> toRemove = new ArrayList<>();
+
+    if (entcats != null) {
+      for (final BwCategory evcat: entcats) {
+        if (cats.contains(evcat)) {
+          cats.remove(evcat);
+          continue;
+        }
+
+        toRemove.add(evcat);
+      }
+    }
+
+    for (final BwCategory cat: cats) {
+      ent.addCategory(cat);
+      secr.numAdded++;
+    }
+
+    for (final BwCategory cat: toRemove) {
+      if (entcats.remove(cat)) {
+        secr.numRemoved++;
+      }
+    }
+
+    if ((changes != null)  &&
+            (secr.numAdded > 0) && (secr.numRemoved > 0)) {
+      final ChangeTableEntry cte = changes.getEntry(PropertyInfoIndex.CATEGORIES);
+      cte.setRemovedValues(toRemove);
+      cte.setAddedValues(cats);
+    }
+
+    secr.rcode = success;
+
+    return secr;
   }
 
   /* ====================================================================

@@ -26,6 +26,7 @@ import org.bedework.caldav.util.sharing.InviteType;
 import org.bedework.caldav.util.sharing.UserType;
 import org.bedework.calfacade.AliasesInfo;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.CalFacadeDefs;
@@ -110,7 +111,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
         return publicCalendarRootPath;
       }
 
-      return Util.buildPath(colPathEndsWithSlash, getSyspars().getWorkflowRoot()); // "/",
+      return Util.buildPath(colPathEndsWithSlash,
+                            getSyspars().getWorkflowRoot()); // "/",
 //                            getPrincipal().getAccountNoSlash());
     }
 
@@ -180,7 +182,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
     int pathi = 1;  // Element 0 is a zero length string
 
     while (pathi < pathEls.length) {
-      startPath = Util.buildPath(colPathEndsWithSlash, startPath, "/", pathEls[pathi]);
+      startPath = Util.buildPath(colPathEndsWithSlash, startPath, "/",
+                                 pathEls[pathi]);
 
       pathi++;
 
@@ -205,7 +208,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     BwCalendar curCol = startCol;
-    
+
     buildCollection:
     for (;;) {
       cols.add(curCol);
@@ -276,7 +279,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public Collection<BwCalendar> getChildren(final BwCalendar col) throws CalFacadeException {
+  public Collection<BwCalendar> getChildren(final BwCalendar col)
+          throws CalFacadeException {
     if (col.getCalType() == BwCalendar.calTypeAlias) {
       resolveAlias(col, true, false);
     }
@@ -284,7 +288,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public Collection<BwCalendar> getChildrenIdx(final BwCalendar col) throws CalFacadeException {
+  public Collection<BwCalendar> getChildrenIdx(final BwCalendar col)
+          throws CalFacadeException {
     if (col.getCalType() == BwCalendar.calTypeAlias) {
       resolveAliasIdx(col, true, false);
     }
@@ -356,12 +361,15 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public void setPreferred(final BwCalendar  val) throws CalFacadeException {
-    getSvc().getPrefsHandler().get().setDefaultCalendarPath(val.getPath());
+  public void setPreferred(final BwCalendar val)
+          throws CalFacadeException {
+    getSvc().getPrefsHandler().get()
+            .setDefaultCalendarPath(val.getPath());
   }
 
   @Override
-  public String getPreferred(final String entityType) throws CalFacadeException {
+  public String getPreferred(final String entityType)
+          throws CalFacadeException {
     final int calType;
 
     switch (entityType) {
@@ -396,7 +404,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   @Override
   public BwCalendar add(BwCalendar val,
-                        final String parentPath) throws CalFacadeException {
+                        final String parentPath)
+          throws CalFacadeException {
     if (getPrincipalInfo().getSubscriptionsOnly()) {
       // Only allow the creation of an alias
       if (val.getCalType() != BwCalendar.calTypeAlias) {
@@ -427,7 +436,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     if (val.getExternalSub()) {
       if (!synch.subscribe(val)) {
-        throw new CalFacadeException(CalFacadeException.subscriptionFailed);
+        throw new CalFacadeException(
+                CalFacadeException.subscriptionFailed);
       }
     }
 
@@ -442,7 +452,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   @Override
   public void move(final BwCalendar val,
-                   final BwCalendar newParent) throws CalFacadeException {
+                   final BwCalendar newParent)
+          throws CalFacadeException {
     getSvc().getCal().moveCalendar(val, newParent);
   }
 
@@ -472,7 +483,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
   @Override
   public boolean delete(final BwCalendar val,
                         final boolean emptyIt,
-                        final boolean sendSchedulingMessage) throws CalFacadeException {
+                        final boolean sendSchedulingMessage)
+          throws CalFacadeException {
     return delete(val, emptyIt, false, sendSchedulingMessage, true);
   }
 
@@ -492,7 +504,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
   @Override
   public BwCalendar resolveAlias(final BwCalendar val,
                                  final boolean resolveSubAlias,
-                                 final boolean freeBusy) throws CalFacadeException {
+                                 final boolean freeBusy)
+          throws CalFacadeException {
     return getCal().resolveAlias(val, resolveSubAlias, freeBusy,
                                  null);
   }
@@ -500,7 +513,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
   @Override
   public BwCalendar resolveAliasIdx(final BwCalendar val,
                                     final boolean resolveSubAlias,
-                                    final boolean freeBusy) throws CalFacadeException {
+                                    final boolean freeBusy)
+          throws CalFacadeException {
     return getCal().resolveAlias(val, resolveSubAlias, freeBusy,
                                  getIndexer());
   }
@@ -515,7 +529,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   @Override
   public AliasesInfo getAliasesInfo(final String collectionHref,
-                                    final String entityName) throws CalFacadeException {
+                                    final String entityName)
+          throws CalFacadeException {
     AliasesInfo ai = aliasesInfoMap.get(AliasesInfo.makeKey(collectionHref,
                                                             entityName));
 
@@ -560,18 +575,69 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public SynchStatusResponse getSynchStatus(final String path) throws CalFacadeException {
+  public SynchStatusResponse getSynchStatus(final String path)
+          throws CalFacadeException {
     return getSvc().getSynch().getSynchStatus(get(path));
   }
 
   @Override
-  public CheckSubscriptionResult checkSubscription(final String path) throws CalFacadeException {
+  public CheckSubscriptionResult checkSubscription(final String path)
+          throws CalFacadeException {
     return getSvc().getSynch().checkSubscription(get(path));
   }
 
   @Override
-  public String getSyncToken(final String path) throws CalFacadeException {
+  public String getSyncToken(final String path)
+          throws CalFacadeException {
     return getCal().getSyncToken(path);
+  }
+
+  @Override
+  public Set<BwCategory> getCategorySet(final String href)
+          throws CalFacadeException {
+    /* The set of categories referenced by the alias and its parents */
+
+    Collection<BwCalendar> cols = null;
+
+    cols = getCols().decomposeVirtualPath(href);
+
+    if (Util.isEmpty(cols)) {
+      return null;
+    }
+
+    /* For each entry in the returned list add any category to the set.
+     *
+     * For the last alias entry in the list work up to the root adding any
+     * categories in.
+     */
+
+    BwCalendar curCol = null;
+    final Set<BwCategory> cats = new TreeSet<>();
+
+    for (final BwCalendar col : cols) {
+      if (!Util.isEmpty(col.getCategories())) {
+        cats.addAll(col.getCategories());
+      }
+      if (col.getAlias()) {
+        curCol = col;
+      }
+    }
+
+    while (curCol != null) {
+      try {
+        curCol = getCols().get(curCol.getPath());
+        if (curCol != null) {
+          if (!Util.isEmpty(curCol.getCategories())) {
+            cats.addAll(curCol.getCategories());
+          }
+        }
+      } catch (final CalFacadeAccessException cfae) {
+        // We'll assume that's OK. We'll get that for /user at least.
+        break;
+      }
+    }
+    
+    return cats;
   }
 
   /* ====================================================================

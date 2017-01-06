@@ -20,17 +20,21 @@ package org.bedework.calsvci;
 
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
+import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
+import org.bedework.calfacade.util.ChangeTable;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /** Interface for handling bedework event objects.
  *
@@ -56,7 +60,7 @@ public interface EventsI extends Serializable {
    * @param   recurrenceId String recurrence id or null
    * @param recurRetrieval How recurring event is returned.
    * @return  Collection of EventInfo objects representing event(s).
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   Collection<EventInfo> getByUid(String colPath,
                                  String guid,
@@ -73,9 +77,9 @@ public interface EventsI extends Serializable {
    * @param  colPath   String collection path fully resolved to target
    * @param name       String possible name
    * @return EventInfo or null
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public EventInfo get(String colPath,
+  EventInfo get(String colPath,
                        String name) throws CalFacadeException;
 
   /** Get events given the calendar and String name. Return null for not
@@ -88,9 +92,9 @@ public interface EventsI extends Serializable {
    * @param name       String possible name
    * @param recurrenceId non-null for single instance
    * @return EventInfo or null
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public EventInfo get(String colPath,
+  EventInfo get(String colPath,
                        String name,
                        String recurrenceId)
           throws CalFacadeException;
@@ -106,9 +110,9 @@ public interface EventsI extends Serializable {
    * @param recurrenceId non-null for single instance
    * @param retrieveList List of properties to retrieve or null for a full event.
    * @return EventInfo or null
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public EventInfo get(BwCalendar col,
+  EventInfo get(BwCalendar col,
                        String name,
                        String recurrenceId,
                        List<String> retrieveList)
@@ -126,9 +130,9 @@ public interface EventsI extends Serializable {
    * @param retrieveList List of properties to retrieve or null for a full event.
    * @param recurRetrieval How recurring event is returned.
    * @return Collection  populated event value objects
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public Collection<EventInfo> getEvents(BwCalendar cal,
+  Collection<EventInfo> getEvents(BwCalendar cal,
                                          FilterBase filter,
                                          BwDateTime startDate,
                                          BwDateTime endDate,
@@ -136,31 +140,12 @@ public interface EventsI extends Serializable {
                                          RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException;
 
-  /* * Return the events for the current user within the given date and time
-   * range.
-   *
-   * @param cals         BwCalendar objects - non-null means limit to given calendars
-   *                     null is limit to current user
-   * @param filter       BwFilter object restricting search or null.
-   * @param startDate    BwDateTime start - may be null
-   * @param endDate      BwDateTime end - may be null.
-   * @param recurRetrieval How recurring event is returned.
-   * @return Collection  populated event value objects
-   * @throws CalFacadeException
-   * /
-  public Collection<EventInfo> getEvents(Collection<BwCalendar> cals,
-                                         BwFilter filter,
-                                         BwDateTime startDate,
-                                         BwDateTime endDate,
-                                         RecurringRetrievalMode recurRetrieval)
-          throws CalFacadeException;
-*/
   /** Delete an event.
    *
    * @param ei                 BwEvent object to be deleted
    * @param sendSchedulingMessage   Send a declined or cancel scheduling message
    * @return true if event deleted
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   boolean delete(EventInfo ei,
                  boolean sendSchedulingMessage) throws CalFacadeException;
@@ -196,9 +181,9 @@ public interface EventsI extends Serializable {
    * @param autoCreateCollection - true if we should add a missing collection
    * @param rollbackOnError true to roll back if we get an error
    * @return UpdateResult Counts of changes.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public UpdateResult add(EventInfo ei,
+  UpdateResult add(EventInfo ei,
                           boolean noInvites,
                           boolean scheduling,
                           boolean autoCreateCollection,
@@ -209,9 +194,9 @@ public interface EventsI extends Serializable {
    * @param ei           EventInfo object to be added
    * @param noInvites    True for don't send invitations.
    * @return UpdateResult Counts of changes.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public UpdateResult update(final EventInfo ei,
+  UpdateResult update(final EventInfo ei,
                              final boolean noInvites) throws CalFacadeException;
 
   /** Update an event in response to an attendee. Exactly as normal update if
@@ -223,9 +208,9 @@ public interface EventsI extends Serializable {
    * @param noInvites    True for don't send invitations.
    * @param fromAttUri   attendee responding
    * @return UpdateResult Counts of changes.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public UpdateResult update(final EventInfo ei,
+  UpdateResult update(final EventInfo ei,
                              final boolean noInvites,
                              String fromAttUri) throws CalFacadeException;
 
@@ -234,12 +219,12 @@ public interface EventsI extends Serializable {
    * <p>Otherwise we add an annotation maarking the event as deleted.
    *
    * @param event the event
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   void markDeleted(BwEvent event) throws CalFacadeException;
 
   /** Result from copy or move operations. */
-  public static enum CopyMoveStatus {
+  enum CopyMoveStatus {
     /** */
     ok,
 
@@ -268,27 +253,84 @@ public interface EventsI extends Serializable {
    * @param overwrite if destination exists replace it.
    * @param newGuidOK   set a new guid if needed (e.g. copy in same collection)
    * @return CopyMoveStatus
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public CopyMoveStatus copyMoveNamed(EventInfo from,
-                                      BwCalendar to,
-                                      String name,
-                                      boolean copy,
-                                      boolean overwrite,
-                                      boolean newGuidOK) throws CalFacadeException;
+  CopyMoveStatus copyMoveNamed(EventInfo from,
+                               BwCalendar to,
+                               String name,
+                               boolean copy,
+                               boolean overwrite,
+                               boolean newGuidOK) throws CalFacadeException;
 
   /** Claim ownership of this event
    *
    * @param ev  event
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public void claim(BwEvent ev) throws CalFacadeException;
+  void claim(BwEvent ev) throws CalFacadeException;
 
-  /** Add cached or retrieved entities to the events in the list. These are
-   * entities such as locations, categories etc.
+  /** Realias the event - set categories according to the set of aliases.
+   * 
+   * <p>This is a bedework function in which we specify which set of aliases
+   * we used to add the event. Aliases are used to filter the data and provide a
+   * view for users, e.g category="Films"
    *
-   * @param events  to have cached entities
-   * @throws CalFacadeException
+   * <p>We need these aliases to provide a way of informing the user what they can
+   * subscribe to in order to see the events of interest.
+   *
+   * <p>We also use them to set and unset categories, allowing event submitters to
+   * consider only topic areas and leave it up to system administrators to
+   * define which categories get set
+   *
+   * <p>Each alias is a virtual path. For example "/user/adgrp_Eng/Lectures/Lectures"
+   * might be a real path with two components<br/>
+   * "/user/adgrp_Eng/Lectures" and<br/>
+   * "Lectures"
+   *
+   * <p>"/user/adgrp_Eng/Lectures" is aliased to "/public/aliases/Lectures" which
+   * is a folder containing the alias "/public/aliases/Lectures/Lectures" which
+   * is aliased to the single calendar.
+   *
+   * @param ev  event
+   * @return set of categories referenced by the aliases           
+   * @throws CalFacadeException on unknown alias
    */
-  public void implantEntities(Collection<EventInfo> events) throws CalFacadeException;
+  Set<BwCategory> reAlias(BwEvent ev) throws CalFacadeException;
+
+  class SetEntityCategoriesResult {
+    /** rc */
+    public static final int success = 0;
+    
+    public int rcode = -1;
+
+    /** Number of BwCategory created */
+    public int numCreated;
+
+    /** Number of BwCategory added */
+    public int numAdded;
+
+    /** Number of BwCategory removed */
+    public int numRemoved;
+  }
+
+  /** Set the entity categories based on multivalued request parameter "categoryKey".
+   *
+   * <p>We build a list of categories then update the membership of the entity
+   * category collection to correspond.
+   *
+   * @param ent categorised entity to be adjusted
+   * @param extraCats Categories to add as a result of other operations
+   * @param defCatUids uids of default categories for current user
+   * @param allDefCatUids uids of all public default categories
+   * @param strCatUids Categories to add from request
+   * @param changes a change table
+   * @return setEventCategoriesResult
+   * @throws CalFacadeException on error
+   */
+  SetEntityCategoriesResult setEntityCategories(CategorisedEntity ent,
+                                                Set<BwCategory> extraCats,
+                                                Set<String> defCatUids,
+                                                Set<String> allDefCatUids,
+                                                Collection<String> strCatUids,
+                                                ChangeTable changes) throws CalFacadeException;
 }

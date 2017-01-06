@@ -20,6 +20,7 @@ package org.bedework.calsvci;
 
 import org.bedework.calfacade.AliasesInfo;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.synch.wsmessages.SubscriptionStatusResponseType;
@@ -392,4 +393,6 @@ public interface CalendarsI extends Serializable {
    * @throws CalFacadeException
    */
   String getSyncToken(String path) throws CalFacadeException;
+  
+  Set<BwCategory> getCategorySet(final String href) throws CalFacadeException;
 }

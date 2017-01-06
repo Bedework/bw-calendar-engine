@@ -2875,7 +2875,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   @Override
   @NoProxy
-  public void addCategory(final BwCategory val) {
+  public boolean addCategory(final BwCategory val) {
     if (val == null) {
       throw new RuntimeException("Attempting to store null");
     }
@@ -2888,7 +2888,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
     if (!cats.contains(val)) {
       cats.add(val);
+      return true;
     }
+    
+    return false;
   }
 
   @Override

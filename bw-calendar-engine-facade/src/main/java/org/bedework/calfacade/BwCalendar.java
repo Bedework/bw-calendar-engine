@@ -314,6 +314,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     entityTypes = Collections.unmodifiableMap(et);
   }
 
+  public final static String internalAliasUriPrefix = "bwcal://";
+
   /** UTC datetime */
   private String created;
 
@@ -667,8 +669,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   @Override
-  @NoProxy
-  public void addCategory(final BwCategory val) {
+  public boolean addCategory(final BwCategory val) {
     Set<BwCategory> cats = getCategories();
     if (cats == null) {
       cats = new TreeSet<BwCategory>();
@@ -677,7 +678,10 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
     if (!cats.contains(val)) {
       cats.add(val);
+      return true;
     }
+    
+    return false;
   }
 
   @Override
