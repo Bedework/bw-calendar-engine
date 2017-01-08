@@ -93,5 +93,9 @@
     <role-name>bedework.user</role-name>
   </security-role>
 
+  <security-role>
+    <role-name>*</role-name>
+  </security-role>
+
   <!-- Insert ejb-ref here -->
 </web-app>
