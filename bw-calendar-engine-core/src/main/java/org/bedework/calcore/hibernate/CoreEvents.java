@@ -835,7 +835,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           }
         }
 
-        updateRecurrences(val, ue, overrides, shared);
+        updateRecurrences(ei, ue, overrides, shared);
       }
 
       // XXX I don't think we want this updateRefs(val);
@@ -1576,10 +1576,11 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
    * they match.
    */
   @SuppressWarnings("unchecked")
-  private void updateRecurrences(final BwEvent val,
+  private void updateRecurrences(final EventInfo ei,
                                  final UpdateEventResult uc,
                                  final Collection<BwEventProxy> overrides,
                                  final boolean shared) throws CalFacadeException {
+    final BwEvent val = ei.getEvent();
     final ChangeTable changes = val.getChangeset(currentPrincipal());
 
     if (!changes.isEmpty()) {
@@ -1684,6 +1685,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
       if (updri == null) {
         // Not in the new instance set - delete from db
+        ei.removeOverride(ri.getRecurrenceId());
         dao.delete(ri);
         uc.addDeleted(ri);
 

@@ -739,6 +739,27 @@ public class EventInfo
 
     return oei;
   }
+  
+  public boolean removeOverride(final String rid) throws CalFacadeException {
+    EventOverride ov = null;
+    if (Util.isEmpty(overrides)) {
+      return false;
+    }
+    
+    for (final EventOverride eo: overrides) {
+      if (eo.getEvent().getRecurrenceId().equals(rid)) {
+        ov = eo;
+        break;
+      }
+    }
+
+    if (ov == null) {
+      return false;
+    }
+    
+    overrides.remove(ov);
+    return true;
+  }
 
   /** An attendee we need to send a reply to
    *
