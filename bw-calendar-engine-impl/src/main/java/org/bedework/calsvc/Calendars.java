@@ -625,7 +625,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     while (curCol != null) {
       try {
-        curCol = getCols().get(curCol.getPath());
+        curCol = getCols().get(curCol.getColPath());
         if (curCol != null) {
           if (!Util.isEmpty(curCol.getCategories())) {
             cats.addAll(curCol.getCategories());
