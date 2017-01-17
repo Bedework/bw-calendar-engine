@@ -227,6 +227,12 @@ public interface Calintf
    */
   Collection<? extends Calintf> active() throws CalFacadeException;
 
+  /** Kill an errant interface.
+   *
+   * @throws CalFacadeException on error
+   */
+  void kill() throws CalFacadeException;
+
   /**
    *
    * @return time in millis we started the transaction

@@ -159,7 +159,9 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   CalintfHelperCallback cb;
 
-  /* Prevent updates.
+  private boolean killed;
+  
+  /** Prevent updates.
    */
   //sprivate boolean readOnly;
 
@@ -431,6 +433,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   @Override
   public synchronized void close() throws CalFacadeException {
+    if (killed) {
+      return;
+    }
+
     if (!isOpen) {
       if (debug) {
         debug("Close for " + getTraceId() + " closed session");
@@ -517,6 +523,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   @Override
   public void endTransaction() throws CalFacadeException {
     try {
+      if (killed) {
+        return;
+      }
+      
       checkOpen();
 
       if (debug) {
@@ -550,6 +560,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   @Override
   public void rollbackTransaction() throws CalFacadeException {
     try {
+      if (killed) {
+        return;
+      }
+
       checkOpen();
       sess.rollback();
     } finally {
@@ -562,6 +576,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   @Override
   public boolean isRolledback() throws CalFacadeException {
+    if (killed) {
+      return true;
+    }
+
     if (!isOpen) {
       return false;
     }
@@ -571,6 +589,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   @Override
   public void flush() throws CalFacadeException {
+    if (killed) {
+      return;
+    }
+
     if (debug) {
       getLogger().debug("flush for " + getTraceId());
     }
@@ -582,6 +604,21 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   @Override
   public Collection<? extends Calintf> active() throws CalFacadeException {
     return openIfs.values();
+  }
+
+  @Override
+  public void kill() throws CalFacadeException {
+    try {
+      rollbackTransaction();
+    } catch (final Throwable ignored) {
+    }
+    
+    try {
+      close();
+    } catch (final Throwable ignored) {
+    }
+    
+    killed = true;
   }
 
   @Override

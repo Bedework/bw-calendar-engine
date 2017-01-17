@@ -539,8 +539,7 @@ public class CalSvc extends CalSvcI {
         if (ci.getTraceId().equals(id)) {
           warn("Stopping interface with id " + id);
 
-          ci.rollbackTransaction();
-          ci.close();
+          ci.kill();
           break;
         }
       }

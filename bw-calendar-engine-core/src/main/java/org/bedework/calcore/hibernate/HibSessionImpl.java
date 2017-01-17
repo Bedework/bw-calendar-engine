@@ -956,7 +956,7 @@ public class HibSessionImpl implements HibSession {
 
 //    throw new CalFacadeException("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX");/*
     try {
-      if (sess.isDirty()) {
+      if (!rolledback() && sess.isDirty()) {
         sess.flush();
       }
       if ((tx != null) && !rolledback()) {
