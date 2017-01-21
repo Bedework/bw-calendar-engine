@@ -2,12 +2,13 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.bedework</groupId>
+		<groupId>org.bedework.caleng</groupId>
 		<artifactId>bw-calendar-engine</artifactId>
 		<version>4.0.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<artifactId>bw-calendar-engine-facade</artifactId>
+  
+	<artifactId>bw-caleng-facade</artifactId>
 
   <pluginRepositories>
     <!-- THIS REPOSITORY IS NOT LONGER VALID
@@ -36,8 +37,8 @@
 	<dependencies>
 		<!-- Project Dependencies -->
 		<dependency>
-			<groupId>org.bedework</groupId>
-			<artifactId>bw-calendar-engine-annotations</artifactId>
+			<groupId>org.bedework.caleng</groupId>
+			<artifactId>bw-caleng-annotations</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<!-- Bedework Dependencies -->

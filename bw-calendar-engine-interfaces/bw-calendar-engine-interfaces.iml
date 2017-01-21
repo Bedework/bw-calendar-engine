@@ -50,10 +50,7 @@
     <orderEntry type="library" name="Maven: backport-util-concurrent:backport-util-concurrent:3.1" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-ical4j-vcard:1.0.2-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.3" level="project" />
-    <orderEntry type="module" module-name="bw-calendar-engine-sysevents" />
-    <orderEntry type="module" module-name="bw-calendar-engine-api" />
-    <orderEntry type="module" module-name="bw-util-args" />
-    <orderEntry type="library" name="Maven: javax.jms:jms:1.1" level="project" />
+    <orderEntry type="module" module-name="bw-msg-sysevmsgs" />
     <orderEntry type="module" module-name="bw-caldav-util" />
     <orderEntry type="module" module-name="bw-ws-synchws" />
     <orderEntry type="library" name="Maven: org.bedework:bw-ws-caldav:4.0.3" level="project" />

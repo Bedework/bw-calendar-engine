@@ -58,8 +58,9 @@ public interface CategorisedEntity {
 
   /**
    * @param val
+   * @return boolean true if added.
    */
-  void addCategory(BwCategory val);
+  boolean addCategory(BwCategory val);
 
   /**
    * @param val

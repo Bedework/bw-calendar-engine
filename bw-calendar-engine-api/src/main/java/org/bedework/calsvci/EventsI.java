@@ -269,6 +269,14 @@ public interface EventsI extends Serializable {
    */
   void claim(BwEvent ev) throws CalFacadeException;
 
+  /** Add cached or retrieved entities to the events in the list. These are
+   * entities such as locations, categories etc.
+   *
+   * @param events  to have cached entities
+   * @throws CalFacadeException
+   */
+  public void implantEntities(Collection<EventInfo> events) throws CalFacadeException;
+
   /** Realias the event - set categories according to the set of aliases.
    * 
    * <p>This is a bedework function in which we specify which set of aliases

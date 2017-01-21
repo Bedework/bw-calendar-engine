@@ -31,11 +31,9 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.UsersI;
-import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.misc.Util;
 
-import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -149,10 +147,10 @@ class Users extends CalSvcDb implements UsersI {
     }
 
     if (val.startsWith(userPrincipalRoot)) {
-      final BwPrincipal u = getSvc().getPrincipal(href);
+      final BwPrincipal u = getSvc().getPrincipal(val);
 
       if (u != null) {
-        principalMap.put(href, u);
+        principalMap.put(val, u);
       }
 
       return u;
