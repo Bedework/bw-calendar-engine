@@ -28,6 +28,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
 import java.io.Serializable;
+import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Date;
@@ -116,6 +117,12 @@ public interface HibSession extends Serializable {
    */
   public Timestamp getCurrentTimestamp() throws CalFacadeException;
 
+  /**
+   * @return a blob
+   * @throws CalFacadeException on fatal error
+   */
+  Blob getBlob(final byte[] val) throws CalFacadeException;
+  
   /** Evict an object from the session.
    *
    * @param val          Object to evict

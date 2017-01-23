@@ -21,6 +21,8 @@ package org.bedework.dumprestore.restore.rules;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
+import org.apache.commons.codec.binary.Base64;
+
 /**
  * @author Mike Douglass
  * @version 1.0
@@ -47,7 +49,7 @@ public class ResourceContentFieldRule extends EntityFieldRule {
     } else if (name.equals("name")) {
       rc.setName(stringFld());
     } else if (name.equals("encodedContent")) {
-      rc.setEncodedContent(stringFld());
+      rc.setValue(globals.svci.getBlob(Base64.decodeBase64(stringFld())));
     } else {
       unknownTag(name);
     }

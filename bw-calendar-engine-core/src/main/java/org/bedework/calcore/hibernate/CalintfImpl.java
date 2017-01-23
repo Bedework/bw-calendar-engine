@@ -87,6 +87,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.Statistics;
 
 import java.io.StringReader;
+import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -183,6 +184,8 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
    */
   private static SessionFactory sessionFactory;
   private static Statistics dbStats;
+  
+  private final static Object syncher = new Object();
 
   /* ====================================================================
    *                   initialisation
@@ -1159,6 +1162,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     return entityDao.merge(val);
   }
 
+  public Blob getBlob(final byte[] val) throws CalFacadeException {
+    return entityDao.getBlob(val);
+  }
+  
   private class ObjectIterator implements Iterator {
     private final String className;
     private List batch;
@@ -1551,7 +1558,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       return sessionFactory;
     }
 
-    synchronized (this) {
+    synchronized (syncher) {
       if (sessionFactory != null) {
         return sessionFactory;
       }

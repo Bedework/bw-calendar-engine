@@ -29,6 +29,7 @@ import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Query;
@@ -39,6 +40,7 @@ import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 
 import java.io.Serializable;
+import java.sql.Blob;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -247,19 +249,19 @@ public class HibSessionImpl implements HibSession {
     }
     try {
       if ((tx != null) &&
-          !tx.wasCommitted() &&
-          !tx.wasRolledBack()) {
+          !rolledBack) {
         if (getLogger().isDebugEnabled()) {
           getLogger().debug("About to rollback");
         }
         tx.rollback();
         tx = null;
         sess.clear();
-        rolledBack = true;
       }
     } catch (Throwable t) {
       exc = t;
       throw new CalFacadeException(t);
+    } finally {
+      rolledBack = true;
     }
   }
 
@@ -287,9 +289,11 @@ public class HibSessionImpl implements HibSession {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.HibSession#evict(java.lang.Object)
-   */
+  @Override
+  public Blob getBlob(final byte[] val) throws CalFacadeException {
+    return Hibernate.getLobCreator(sess).createBlob(val);
+  }
+  
   @Override
   public void evict(final Object val) throws CalFacadeException {
     if (exc != null) {

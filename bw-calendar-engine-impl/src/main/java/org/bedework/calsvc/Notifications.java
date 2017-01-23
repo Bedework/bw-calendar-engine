@@ -111,7 +111,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
       final byte[] xmlData = xml.getBytes();
 
-      rc.setContent(xmlData);
+      rc.setValue(getSvc().getBlob(xmlData));
 
       noteRsrc.setContentLength(xmlData.length);
       noteRsrc.setContentType(val.getContentType());
@@ -177,7 +177,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
       final byte[] xmlData = xml.getBytes();
 
-      rc.setContent(xmlData);
+      rc.setValue(getSvc().getBlob(xmlData));
 
       noteRsrc.setContentLength(xmlData.length);
       noteRsrc.setContentType(val.getContentType());

@@ -21,10 +21,15 @@ package org.bedework.calcore.hibernate;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.InfoLines;
 
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.TargetType;
 
 import java.io.StringReader;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -34,7 +39,7 @@ import java.util.Properties;
  */
 public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
   /* Be safe - default to false */
-  private boolean export;
+  private TargetType target = TargetType.SCRIPT;
 
   private String schemaOutFile;
 
@@ -54,7 +59,7 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
 
         final long startTime = System.currentTimeMillis();
 
-        final SchemaExport se = new SchemaExport(getHibConfiguration());
+        final SchemaExport se = new SchemaExport();
 
         se.setFormat(true);       // getFormat());
         se.setHaltOnError(false); // getHaltOnError());
@@ -65,10 +70,20 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
         //se.setImportFile("not-a-file.sql");
 
         setStatus(statusRunning);
-        se.execute(false, // script - causes write to System.out if true
-                   getExport(),
-                   false,   // drop
-                   true);   //   getCreate());
+
+        final EnumSet<TargetType> targets = EnumSet.noneOf(TargetType.class );
+
+        targets.add(target);
+        
+        Properties prop = getHibConfiguration().getProperties();
+
+        final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+        final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder(bsr);
+
+        ssrBuilder.applySettings(prop);
+
+        se.execute(targets, SchemaExport.Action.BOTH, null, 
+                   ssrBuilder.getBootstrapServiceRegistry());
 
         final long millis = System.currentTimeMillis() - startTime;
         final long seconds = millis / 1000;
@@ -83,7 +98,7 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
         setStatus(statusFailed);
       } finally {
         infoLines.addLn("Schema build completed");
-        export = false;
+        target = TargetType.SCRIPT;
       }
     }
   }
@@ -104,12 +119,12 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
 
   @Override
   public void setExport(final boolean val) {
-    export = val;
+    target = TargetType.DATABASE;
   }
 
   @Override
   public boolean getExport() {
-    return export;
+    return target == TargetType.DATABASE;
   }
 
   @Override

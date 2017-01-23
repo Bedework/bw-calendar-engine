@@ -25,9 +25,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Base64OutputStream;
-import org.hibernate.Hibernate;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -111,31 +109,6 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
   /* ====================================================================
    *                   non-db methods
    * ==================================================================== */
-
-  /**
-   * @param val the content
-   * @throws CalFacadeException
-   */
-  @NoDump
-  public void setContent(final byte[] val) throws CalFacadeException {
-    try {
-      setValue(Hibernate.createBlob(val));
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  /** Used during dump and restore
-   * @param val base64 encoded value
-   * @throws CalFacadeException
-   */
-  public void setEncodedContent(final String val) throws CalFacadeException {
-    try {
-      setContent(Base64.decodeBase64(val.getBytes()));
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
 
   /**
    * @return base64 encoded value

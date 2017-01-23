@@ -21,9 +21,14 @@ package org.bedework.calcore.hibernate;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.SchemaBuilder;
 
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.schema.TargetType;
 
+import java.util.EnumSet;
 import java.util.Properties;
 
 /** Implementation of interface which defines a schema builder.
@@ -38,7 +43,7 @@ public class SchemaBuilderImpl implements SchemaBuilder {
                       final boolean export,
                       final String delimiter) throws CalFacadeException {
     try {
-      SchemaExport se = new SchemaExport(getConfiguration(props));
+      SchemaExport se = new SchemaExport();
 
       if (delimiter != null) {
         se.setDelimiter(delimiter);
@@ -48,10 +53,23 @@ public class SchemaBuilderImpl implements SchemaBuilder {
       se.setHaltOnError(false);
       se.setOutputFile(outputFile);
 
-      se.execute(false, // script - causes write to System.out if true
-                 export,
-                 false,  // drop
-                 true);  // create
+      final EnumSet<TargetType> targets = EnumSet.noneOf(TargetType.class );
+
+      if (export) {
+        targets.add(TargetType.DATABASE);
+      } else {
+        targets.add(TargetType.SCRIPT);
+      }
+      
+      Properties allProps = getConfiguration(props).getProperties();
+
+      final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+      final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder(bsr);
+
+      ssrBuilder.applySettings(allProps);
+
+      se.execute(targets, SchemaExport.Action.BOTH, null,
+                 ssrBuilder.getBootstrapServiceRegistry());
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }

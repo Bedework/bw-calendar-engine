@@ -173,8 +173,8 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
       if (clen > maxSize) {
         throw new WebdavForbidden(CaldavTags.maxResourceSize);
       }
-
-      rc.setContent(outBuff.toByteArray());
+      
+      rc.setValue(intf.getBlob(outBuff.toByteArray()));
       r.setContentLength(clen);
 
       if (!intf.updateQuota(getOwner(),

@@ -23,6 +23,8 @@ import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.misc.Logged;
 
+import java.sql.Blob;
+
 /** Class used as basis for a number of DAO classes.
  *
  * @author Mike Douglass   douglm  bedework.org
@@ -67,6 +69,10 @@ public class DAOBase extends Logged {
 
   public BwUnversionedDbentity merge(final BwUnversionedDbentity val) throws CalFacadeException {
     return (BwUnversionedDbentity)sess.merge(val);
+  }
+
+  public Blob getBlob(final byte[] val) throws CalFacadeException {
+    return sess.getBlob(val);
   }
 
   protected void throwException(final CalFacadeException cfe) throws CalFacadeException {

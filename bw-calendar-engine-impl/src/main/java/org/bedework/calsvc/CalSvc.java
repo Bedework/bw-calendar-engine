@@ -107,6 +107,7 @@ import net.fortuna.ical4j.model.property.DtStamp;
 import org.apache.log4j.Logger;
 import org.hibernate.exception.ConstraintViolationException;
 
+import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -623,6 +624,10 @@ public class CalSvc extends CalSvcI {
   @Override
   public Timestamp getCurrentTimestamp() throws CalFacadeException {
     return getCal().getCurrentTimestamp();
+  }
+
+  public Blob getBlob(final byte[] val) throws CalFacadeException {
+    return getCal().getBlob(val);
   }
 
   /* (non-Javadoc)

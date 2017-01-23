@@ -123,6 +123,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -2365,6 +2366,14 @@ public class BwSysIntfImpl implements SysIntf {
   @Override
   public void close() throws WebdavException {
     close(svci);
+  }
+
+  public Blob getBlob(final byte[] val) throws WebdavException {
+    try {
+      return getSvci().getBlob(val);
+    } catch (final CalFacadeException cfe) {
+      throw new WebdavException(cfe);
+    }
   }
 
   /* ====================================================================

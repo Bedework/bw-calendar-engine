@@ -46,6 +46,7 @@ import org.bedework.icalendar.IcalCallback;
 import org.bedework.sysevents.events.SysEventBase;
 
 import java.io.Serializable;
+import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;
@@ -339,6 +340,12 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * @throws CalFacadeException
    */
   public abstract Timestamp getCurrentTimestamp() throws CalFacadeException;
+
+  /**
+   * @return a blob
+   * @throws CalFacadeException on fatal error
+   */
+  public abstract Blob getBlob(final byte[] val) throws CalFacadeException;
 
   /** Call to reassociate an entity with the current database session
    *
