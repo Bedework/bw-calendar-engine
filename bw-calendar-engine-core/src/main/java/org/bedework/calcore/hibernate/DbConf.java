@@ -18,18 +18,11 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.util.hibernate.HibConfig;
+import org.bedework.util.hibernate.SchemaThread;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.InfoLines;
 
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.TargetType;
-
-import java.io.StringReader;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -39,71 +32,26 @@ import java.util.Properties;
  */
 public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
   /* Be safe - default to false */
-  private TargetType target = TargetType.SCRIPT;
+  private boolean export;
 
   private String schemaOutFile;
 
-  private Configuration hibCfg;
+  private class SchemaBuilder extends SchemaThread {
 
-  private class SchemaThread extends Thread {
-    InfoLines infoLines = new InfoLines();
-
-    SchemaThread() {
-      super("BuildSchema");
+    SchemaBuilder(final String outFile,
+                  final boolean export,
+                  final Properties hibConfig) {
+      super(outFile, export, hibConfig);
     }
 
     @Override
-    public void run() {
-      try {
-        infoLines.addLn("Started export of schema");
-
-        final long startTime = System.currentTimeMillis();
-
-        final SchemaExport se = new SchemaExport();
-
-        se.setFormat(true);       // getFormat());
-        se.setHaltOnError(false); // getHaltOnError());
-        se.setOutputFile(getSchemaOutFile());
-        /* There appears to be a bug in the hibernate code. Everybody initialises
-        this to /import.sql. Set to null causes an NPE
-        Make sure it refers to a non-existant file */
-        //se.setImportFile("not-a-file.sql");
-
-        setStatus(statusRunning);
-
-        final EnumSet<TargetType> targets = EnumSet.noneOf(TargetType.class );
-
-        targets.add(target);
-        
-        Properties prop = getHibConfiguration().getProperties();
-
-        final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
-        final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder(bsr);
-
-        ssrBuilder.applySettings(prop);
-
-        se.execute(targets, SchemaExport.Action.BOTH, null, 
-                   ssrBuilder.getBootstrapServiceRegistry());
-
-        final long millis = System.currentTimeMillis() - startTime;
-        final long seconds = millis / 1000;
-        final long minutes = seconds / 60;
-
-        infoLines.addLn("Elapsed time: " + minutes + ":" +
-                                twoDigits(seconds - (minutes * 60)));
-        setStatus(statusDone);
-      } catch (final Throwable t) {
-        error(t);
-        infoLines.exceptionMsg(t);
-        setStatus(statusFailed);
-      } finally {
-        infoLines.addLn("Schema build completed");
-        target = TargetType.SCRIPT;
-      }
+    public void completed(final String status) {
+      setExport(false);
+      info("Schema build completed with status " + status);
     }
   }
 
-  private final SchemaThread buildSchema = new SchemaThread();
+  private SchemaBuilder buildSchema;
 
   /**
    */
@@ -119,12 +67,12 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
 
   @Override
   public void setExport(final boolean val) {
-    target = TargetType.DATABASE;
+    export = val;
   }
 
   @Override
   public boolean getExport() {
-    return target == TargetType.DATABASE;
+    return export;
   }
 
   @Override
@@ -148,7 +96,11 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
   @Override
   public String schema() {
     try {
-//      buildSchema = new SchemaThread();
+      final HibConfig hc = new HibConfig(getConfig());
+      
+      buildSchema = new SchemaBuilder(getSchemaOutFile(),
+                                      getExport(),
+                                      hc.getHibConfiguration().getProperties());
 
       setStatus(statusStopped);
 
@@ -250,52 +202,9 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
     return loadConfig(DbConfig.class);
   }
 
-  /**
-   * @return Configuration based on the properties
-   */
-  public synchronized Configuration getHibConfiguration() {
-    if (hibCfg == null) {
-      try {
-        hibCfg = new Configuration();
-
-        final StringBuilder sb = new StringBuilder();
-
-        @SuppressWarnings("unchecked")
-        final List<String> ps = getConfig().getHibernateProperties();
-
-        for (final String p: ps) {
-          sb.append(p);
-          sb.append("\n");
-        }
-
-        final Properties hprops = new Properties();
-        hprops.load(new StringReader(sb.toString()));
-
-        hibCfg.addProperties(hprops).configure();
-      } catch (final Throwable t) {
-        // Always bad.
-        error(t);
-      }
-    }
-
-    return hibCfg;
-  }
-
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
-
-  /**
-   * @param val the number
-   * @return 2 digit val
-   */
-  private static String twoDigits(final long val) {
-    if (val < 10) {
-      return "0" + val;
-    }
-
-    return String.valueOf(val);
-  }
 
   /* ====================================================================
    *                   Protected methods
