@@ -478,32 +478,6 @@ public class CalSvc extends CalSvcI {
     logIt(getStats().toString());
   }
 
-    @Override
-    public String getLogid() {
-      return logid;
-    }
-
-    @Override
-    public String getId() {
-      return id;
-    }
-
-    @Override
-    public String getLastStateTime() {
-      return lastStateTime;
-    }
-
-    @Override
-    public String getState() {
-      return state;
-    }
-
-    @Override
-    public long getSeconds() {
-      return seconds;
-    }
-  }
-
   @Override
   public IfInfo getIfInfo() throws CalFacadeException {
     return getCal().getIfInfo();
