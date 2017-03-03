@@ -42,6 +42,8 @@ import org.bedework.util.xml.tagdefs.BedeworkServerTags;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import net.fortuna.ical4j.model.property.LastModified;
 import org.w3c.dom.Element;
 
@@ -93,6 +95,7 @@ import javax.xml.namespace.QName;
  */
 @Wrapper(quotas = true)
 @Dump(elementName="collection", keyFields={"path"})
+@JsonIgnoreProperties({"aliasTarget", "aliasOrigin"})
 public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
         implements CollatableEntity, CategorisedEntity, PropertiesEntity {
   /** The internal name of the calendar
@@ -1487,6 +1490,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    * @return a version value in microseconds.
    */
   @NoDump
+  @JsonIgnore
   public long getMicrosecsVersion() throws CalFacadeException {
     try {
       return new LastModified(getLastmod().getTimestamp()).getDate().getTime() * 1000000 +
@@ -1603,6 +1607,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    */
   @NoProxy
   @NoDump
+  @JsonIgnore
   public BwCalendar getAliasedEntity() {
     BwCalendar coll = this;
     while ((coll != null) && coll.getInternalAlias()) {
@@ -1893,6 +1898,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    * @throws CalFacadeException
    */
   @NoDump
+  @JsonIgnore
   public CurrentAccess getCurrentAccess() throws CalFacadeException {
     throw new CalFacadeException("org.bedework.wrapper.method.called");
   }

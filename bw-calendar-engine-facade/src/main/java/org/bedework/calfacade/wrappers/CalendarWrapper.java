@@ -28,6 +28,8 @@ import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.AccessUtilI;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.File;
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -555,10 +557,8 @@ public class CalendarWrapper extends BwCalendar
     currentAccess = null;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getCurrentAccess()
-   */
   @Override
+  @JsonIgnore
   public CurrentAccess getCurrentAccess() throws CalFacadeException {
     if (currentAccess != null) {
       return currentAccess;
@@ -604,29 +604,21 @@ public class CalendarWrapper extends BwCalendar
   /**
    * @return int last desiredAccess
    */
+  @JsonIgnore
   public int getLastDesiredAccess() {
     return lastDesiredAccess;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setOpen(boolean)
-   */
   @Override
   public void setOpen(final boolean val) {
     open = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getOpen()
-   */
   @Override
   public boolean getOpen() {
     return open;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setDisabled(boolean)
-   */
   @Override
   public void setDisabled(final boolean val) {
     disabled = val;
@@ -645,6 +637,7 @@ public class CalendarWrapper extends BwCalendar
    * ==================================================================== */
 
   @Override
+  @JsonIgnore
   public BwCalendar getAliasedEntity() {
     BwCalendar ent = entity.getAliasedEntity();
     if (ent == entity) {
@@ -676,7 +669,7 @@ public class CalendarWrapper extends BwCalendar
   }
 
   @Override
-  public void setChildren(Collection<BwCalendar> val) {
+  public void setChildren(final Collection<BwCalendar> val) {
     entity.setChildren(val);
   }
 
@@ -685,9 +678,6 @@ public class CalendarWrapper extends BwCalendar
     return entity.getChildren();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getCollectionInfo()
-   */
   @Override
   public CollectionInfo getCollectionInfo() {
     return getCollectionInfo(entity.getCalType());

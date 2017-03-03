@@ -31,6 +31,7 @@ import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.FromXmlCallback;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 import java.util.Comparator;
@@ -41,6 +42,11 @@ import java.util.Comparator;
  *  @version 1.0
  */
 @Dump(elementName="category", keyFields={"uid"})
+@JsonIgnoreProperties({"size", 
+                       "wordVal", 
+                       "collateValue", 
+                       "finderKeyValue", 
+                       "descriptionVal"})
 public class BwCategory extends BwEventProperty<BwCategory>
         implements CollatableEntity, Comparator<BwCategory>,
                    SizedEntity {
