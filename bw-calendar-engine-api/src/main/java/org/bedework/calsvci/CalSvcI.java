@@ -37,6 +37,7 @@ import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
+import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -203,52 +204,25 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    */
   public abstract void logStats() throws CalFacadeException;
 
-  public interface IfInfo {
-    /**
-     *
-     * @return a label identifying this type of service
-     */
-    String getLogid();
-
-    /**
-     *
-     * @return a label identifying this actual interface
-     */
-    String getId();
-
-    /** Updated every time state is changed. Not necessarily an
-     * indication of idleness - it depends on state being updated,
-     *
-     * @return UTC time state was last changed.
-     */
-    String getLastStateTime();
-
-    /**
-     *
-     * @return a hopefully informative message
-     */
-    String getState();
-
-    /**
-     *
-     * @return Seconds since transaction started
-     */
-    long getSeconds();
-  }
+  /**
+   *
+   * @return info for this interface
+   * @throws CalFacadeException on fatal error
+   */
+  public abstract IfInfo getIfInfo() throws CalFacadeException;
 
   /**
    *
    * @return list of info about open interfaces
    * @throws CalFacadeException
    */
-  public abstract List<IfInfo> getIfInfo() throws CalFacadeException;
+  public abstract List<IfInfo> getActiveIfInfos() throws CalFacadeException;
 
   /** Kill an errant interface.
    *
-   * @param id id from IfInfo
-   * @throws CalFacadeException
+   * @param ifInfo IfInfo for process
    */
-  public abstract void kill(String id) throws CalFacadeException;
+  public abstract void kill(IfInfo ifInfo);
 
   /**
    *
