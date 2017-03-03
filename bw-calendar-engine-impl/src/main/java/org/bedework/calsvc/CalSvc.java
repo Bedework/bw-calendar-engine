@@ -56,6 +56,7 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
+import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.svc.BwAuthUser;
@@ -103,7 +104,6 @@ import org.bedework.util.security.PwEncryptionIntf;
 import org.bedework.util.security.keys.GenKeysMBean;
 import org.bedework.util.timezones.Timezones;
 
-import net.fortuna.ical4j.model.property.DtStamp;
 import org.apache.log4j.Logger;
 import org.hibernate.exception.ConstraintViolationException;
 
@@ -478,13 +478,6 @@ public class CalSvc extends CalSvcI {
     logIt(getStats().toString());
   }
 
-  private static class InterfaceInfo implements IfInfo {
-    String logid;
-    String id;
-    String lastStateTime;
-    String state;
-    long seconds;
-
     @Override
     public String getLogid() {
       return logid;
@@ -512,33 +505,31 @@ public class CalSvc extends CalSvcI {
   }
 
   @Override
-  public List<IfInfo> getIfInfo() throws CalFacadeException {
+  public IfInfo getIfInfo() throws CalFacadeException {
+    return getCal().getIfInfo();
+  }
+
+  @Override
+  public List<IfInfo> getActiveIfInfos() throws CalFacadeException {
     final List<IfInfo> ifs = new ArrayList<>();
-    final long now = System.currentTimeMillis();
 
     for (final Calintf ci: getCal().active()) {
-      final InterfaceInfo ii = new InterfaceInfo();
-
-      ii.logid = ci.getLogId();
-      ii.id = ci.getTraceId();
-      ii.lastStateTime = ci.getLastStateTime();
-      ii.state = ci.getState();
-      ii.seconds = (now - ci.getStartMillis()) / 1000;
-
-      ifs.add(ii);
+      ifs.add(ci.getIfInfo());
     }
 
     return ifs;
   }
 
   @Override
-  public void kill(final String id) throws CalFacadeException {
+  public void kill(final IfInfo ifInfo) {
     // We could probably use some sort of kill listener to clean up after this
 
     try {
       for (final Calintf ci: getCal().active()) {
-        if (ci.getTraceId().equals(id)) {
-          warn("Stopping interface with id " + id);
+        final IfInfo calIfInfo = ci.getIfInfo();
+        
+        if (calIfInfo.getId().equals(ifInfo.getId())) {
+          warn("Stopping interface with id " + ifInfo.getId());
 
           ci.kill();
           break;
@@ -1198,7 +1189,7 @@ public class CalSvc extends CalSvcI {
     }
 
     if (resToken.length() == 0) {
-      resToken = new DtStamp().getValue() + "-0000";
+      resToken = Util.icalUTCTimestamp() + "-0000";
     }
 
     return new SynchReport(items, resToken);

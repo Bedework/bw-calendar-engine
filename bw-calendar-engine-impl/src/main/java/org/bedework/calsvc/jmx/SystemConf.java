@@ -21,6 +21,7 @@ package org.bedework.calsvc.jmx;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
@@ -119,7 +120,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
         getSvci();
 
         if (svci != null) {
-          for (final CalSvcI.IfInfo ifInfo: svci.getIfInfo()) {
+          for (final IfInfo ifInfo: svci.getActiveIfInfos()) {
             if (ifInfo.getSeconds() > waitSecs) {
               if (dontKill.contains(ifInfo.getLogid())) {
                 warn("Skipping long running task: " + ifInfo.getId());
@@ -131,7 +132,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
                   debug("About to shut down interface " +
                                 ifInfo.getId());
                 }
-                svci.kill(ifInfo.getId());
+                svci.kill(ifInfo);
                 terminated++;
               } catch (final Throwable t) {
                 warn("Failed to terminate " +
@@ -601,7 +602,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
       getSvci();
 
       if (svci != null) {
-        for (final CalSvcI.IfInfo ifInfo: svci.getIfInfo()) {
+        for (final IfInfo ifInfo: svci.getActiveIfInfos()) {
           sb.append(ifInfo.getId());
           sb.append("\t");
           sb.append(ifInfo.getLastStateTime());
