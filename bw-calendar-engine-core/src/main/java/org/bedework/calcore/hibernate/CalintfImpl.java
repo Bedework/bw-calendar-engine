@@ -64,6 +64,7 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAdminGroupEntry;
@@ -138,6 +139,8 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
        true      // handlesCategories
      );
 
+  private final IfInfo ifInfo = new IfInfo();
+  
   protected static final Map<String, CalintfBase> openIfs = new HashMap<>();
 
   private EntityDAO entityDao;
@@ -217,6 +220,18 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     access.setCollectionGetter(calendars);
   }
 
+  public IfInfo getIfInfo() {
+    final long now = System.currentTimeMillis();
+    
+    ifInfo.setLogid(getLogId());
+    ifInfo.setId(getTraceId());
+    ifInfo.setLastStateTime(getLastStateTime());
+    ifInfo.setState(getState());
+    ifInfo.setSeconds((now - getStartMillis()) / 1000);
+    
+    return ifInfo;
+  }
+  
   private static class CalintfHelperCallback implements CalintfHelper.Callback {
     private final CalintfImpl intf;
 
@@ -625,12 +640,12 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   }
 
   @Override
-  public long getStartMillis() throws CalFacadeException {
+  public long getStartMillis() {
     return objMillis;
   }
 
   @Override
-  public Timestamp getCurrentTimestamp() throws CalFacadeException {
+  public Timestamp getCurrentTimestamp() {
     return curTimestamp;
   }
 
