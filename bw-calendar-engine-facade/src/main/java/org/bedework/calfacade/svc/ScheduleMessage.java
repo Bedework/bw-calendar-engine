@@ -21,9 +21,7 @@ package org.bedework.calfacade.svc;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.util.misc.ToString;
-
-import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.property.LastModified;
+import org.bedework.util.misc.Util;
 
 /** Messages relating to automatic and implicit scheduling. Each message refers
  * to an event placed in the inbox or outbox.
@@ -200,7 +198,7 @@ public class ScheduleMessage extends BwDbentity<ScheduleMessage> {
   /** Update last mod fields
    */
   public void updateTimestamp() {
-    setTimestamp(new LastModified(new DateTime(true)).getValue());
+    setTimestamp(Util.icalUTCTimestamp());
     setSequence(getSequence() + 1);
   }
 
