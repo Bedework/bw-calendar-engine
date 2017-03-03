@@ -38,6 +38,7 @@ import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -89,6 +90,12 @@ public interface Calintf
             boolean publicSubmission,
             boolean sessionless) throws CalFacadeException;
 
+  /**
+   * 
+   * @return info for this interface
+   */
+  IfInfo getIfInfo();
+  
   /**
    *
    * @return boolean true if super user
@@ -237,16 +244,14 @@ public interface Calintf
   /**
    *
    * @return time in millis we started the transaction
-   * @throws CalFacadeException
    */
-  long getStartMillis() throws CalFacadeException;
+  long getStartMillis();
 
   /** Only valid during a transaction.
    *
    * @return a timestamp from the db
-   * @throws CalFacadeException
    */
-  Timestamp getCurrentTimestamp() throws CalFacadeException;
+  Timestamp getCurrentTimestamp();
 
   /** Call to reassociate an entity with the current database session
    *
