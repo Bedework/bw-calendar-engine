@@ -18,8 +18,6 @@
 */
 package org.bedework.calfacade.indexing;
 
-import org.bedework.util.indexing.IndexException;
-
 import java.io.CharArrayWriter;
 
 /** Create keys for indexing
@@ -38,11 +36,10 @@ public class IndexKeys {
    * @param   href of the record
    * @param   recurid of the record or null
    * @return  String   String which uniquely identifies the record
-   * @throws IndexException
    */
   public String makeKeyVal(final String type,
                            final String href,
-                           final String recurid) throws IndexException {
+                           final String recurid) {
     startEncoding();
     encodeString(type);
     encodeString(href);
@@ -65,17 +62,12 @@ public class IndexKeys {
   /** Encode a blank terminated, 0 prefixed length.
    *
    * @param len of field
-   * @throws IndexException
    */
-  private void encodeLength(final int len) throws IndexException {
-    try {
-      final String slen = String.valueOf(len);
-      caw.write('0');
-      caw.write(slen, 0, slen.length());
-      caw.write(' ');
-    } catch (Throwable t) {
-      throw new IndexException(t);
-    }
+  private void encodeLength(final int len) {
+    final String slen = String.valueOf(len);
+    caw.write('0');
+    caw.write(slen, 0, slen.length());
+    caw.write(' ');
   }
 
   /** Encode a String with length prefix. String is encoded as <ul>
@@ -85,20 +77,13 @@ public class IndexKeys {
    * </ul>
    *
    * @param val the string
-   * @throws IndexException
    */
-  private void encodeString(final String val) throws IndexException {
-    try {
-      if (val == null) {
-        caw.write('N'); // flag null
-      } else {
-        encodeLength(val.length());
-        caw.write(val, 0, val.length());
-      }
-    } catch (IndexException ie) {
-      throw ie;
-    } catch (Throwable t) {
-      throw new IndexException(t);
+  private void encodeString(final String val) {
+    if (val == null) {
+      caw.write('N'); // flag null
+    } else {
+      encodeLength(val.length());
+      caw.write(val, 0, val.length());
     }
   }
 
