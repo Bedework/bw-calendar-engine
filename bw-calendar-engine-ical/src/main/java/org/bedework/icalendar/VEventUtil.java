@@ -41,7 +41,6 @@ import org.bedework.util.misc.Util;
 import net.fortuna.ical4j.data.CalendarParserImpl;
 import net.fortuna.ical4j.data.UnfoldingReader;
 import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.CategoryList;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateList;
@@ -53,7 +52,7 @@ import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
-import net.fortuna.ical4j.model.ResourceList;
+import net.fortuna.ical4j.model.TextList;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.component.Available;
@@ -88,6 +87,7 @@ import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.ExDate;
 import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.FreeBusy;
+import net.fortuna.ical4j.model.property.Geo;
 import net.fortuna.ical4j.model.property.LastModified;
 import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.PercentComplete;
@@ -254,7 +254,7 @@ public class VEventUtil extends IcalUtil {
         // LANG - filter on language - group language in one cat list?
         for (BwCategory cat: val.getCategories()) {
           prop = new Categories();
-          CategoryList cl = ((Categories)prop).getCategories();
+          TextList cl = ((Categories)prop).getCategories();
 
           cl.add(cat.getWord().getValue());
 
@@ -407,8 +407,9 @@ public class VEventUtil extends IcalUtil {
       /* ------------------- Geo -------------------- */
 
       if (!vpoll) {
-        BwGeo geo = val.getGeo();
-        if (geo != null) {
+        BwGeo bwgeo = val.getGeo();
+        if (bwgeo != null) {
+          Geo geo = new Geo(bwgeo.getLatitude(), bwgeo.getLongitude());
           pl.add(geo);
         }
       }
@@ -520,7 +521,7 @@ public class VEventUtil extends IcalUtil {
         /* This event has a resource */
 
         prop = new Resources();
-        ResourceList rl = ((Resources)prop).getResources();
+        TextList rl = ((Resources)prop).getResources();
 
         for (BwString str: val.getResources()) {
           // LANG
@@ -607,7 +608,7 @@ public class VEventUtil extends IcalUtil {
         if (ei.getNumContainedItems() > 0) {
           final VAvailability va = (VAvailability)comp;
           for (final EventInfo aei: ei.getContainedItems()) {
-            va.getAvailable().add(toIcalComponent(aei, false, tzreg,
+            va.getAvailable().add((Available)toIcalComponent(aei, false, tzreg,
                                                   currentPrincipal));
           }
         }

@@ -44,7 +44,6 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
-import net.fortuna.ical4j.model.CategoryList;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Date;
@@ -54,7 +53,7 @@ import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
-import net.fortuna.ical4j.model.ResourceList;
+import net.fortuna.ical4j.model.TextList;
 import net.fortuna.ical4j.model.component.Available;
 import net.fortuna.ical4j.model.component.VAvailability;
 import net.fortuna.ical4j.model.component.VEvent;
@@ -547,7 +546,7 @@ public class BwEventUtil extends IcalUtil {
             /* ------------------- Categories -------------------- */
 
             Categories cats = (Categories)prop;
-            CategoryList cl = cats.getCategories();
+            TextList cl = cats.getCategories();
             String lang = getLang(cats);
 
             if (cl != null) {
@@ -916,7 +915,7 @@ public class BwEventUtil extends IcalUtil {
           case RESOURCES:
             /* ------------------- Resources -------------------- */
 
-            final ResourceList rl = ((Resources)prop).getResources();
+            final TextList rl = ((Resources)prop).getResources();
 
             if (rl != null) {
               /* Got some resources */

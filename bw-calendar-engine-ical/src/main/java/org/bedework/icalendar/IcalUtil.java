@@ -52,6 +52,7 @@ import net.fortuna.ical4j.model.ParameterFactoryImpl;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
+import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.component.VVoter;
 import net.fortuna.ical4j.model.parameter.AltRep;
@@ -769,7 +770,7 @@ public class IcalUtil {
    * @param comp
    */
   public static void addComponent(final Calendar cal, final Component comp) {
-    cal.getComponents().add(comp);
+    cal.getComponents().add((CalendarComponent)comp);
   }
 
   /**

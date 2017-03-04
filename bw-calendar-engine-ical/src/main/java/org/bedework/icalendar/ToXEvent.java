@@ -700,8 +700,8 @@ public class ToXEvent extends Xutil {
           if (r.getDayList() != null) {
             List<String> l = rt.getByday();
 
-            for (Object o: r.getDayList()) {
-              l.add(((WeekDay)o).getDay());
+            for (WeekDay wd: r.getDayList()) {
+              l.add(wd.getDay().name());
             }
           }
 

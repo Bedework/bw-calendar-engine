@@ -46,6 +46,10 @@
     </dependency>
     <dependency>
       <groupId>org.bedework</groupId>
+      <artifactId>bw-util-hibernate</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
       <artifactId>bw-util-misc</artifactId>
     </dependency>
     <dependency>

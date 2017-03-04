@@ -23,7 +23,6 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.XcalUtil;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import net.fortuna.ical4j.model.CategoryList;
 import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.NumberList;
 import net.fortuna.ical4j.model.Parameter;
@@ -31,6 +30,7 @@ import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.Recur;
+import net.fortuna.ical4j.model.TextList;
 import net.fortuna.ical4j.model.WeekDay;
 import net.fortuna.ical4j.model.WeekDayList;
 import net.fortuna.ical4j.model.parameter.Value;
@@ -225,14 +225,14 @@ public class JsonProperty implements Serializable {
       jgen.writeFieldName(name);
 
       if (val.size() == 1) {
-        jgen.writeNumber((Integer)val.iterator().next());
+        jgen.writeNumber(val.get(0).getOffset());
         return;
       }
 
       jgen.writeStartArray();
 
-      for (final Object o: val) {
-        jgen.writeString(((WeekDay)o).getDay().toLowerCase());
+      for (final WeekDay wd: val) {
+        jgen.writeString(wd.getDay().name().toLowerCase());
       }
 
       jgen.writeEndArray();
@@ -394,7 +394,7 @@ public class JsonProperty implements Serializable {
 
       jgen.writeStartArray();
 
-      final CategoryList cl = p.getCategories();
+      final TextList cl = p.getCategories();
       final Iterator it = cl.iterator();
       while (it.hasNext()){
         jgen.writeString(it.next().toString());
@@ -454,7 +454,7 @@ public class JsonProperty implements Serializable {
 
       //noinspection ConstantConditions
       outField(jgen, "freq", r.getFrequency());
-      outField(jgen, "wkst", r.getWeekStartDay());
+      outField(jgen, "wkst", r.getWeekStartDay().name());
       if (r.getUntil() != null) {
         outField(jgen, "until", r.getUntil().toString());
       }

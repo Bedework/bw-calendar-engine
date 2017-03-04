@@ -483,7 +483,7 @@ public class IcalTranslator implements Serializable {
         }
 
         xml.property(XcalTags.freq, r.getFrequency());
-        xmlProp(xml, XcalTags.wkst, r.getWeekStartDay());
+        xmlProp(xml, XcalTags.wkst, r.getWeekStartDay().name());
         if (r.getUntil() != null) {
           xmlProp(xml, XcalTags.until, r.getUntil().toString());
         }
@@ -743,7 +743,7 @@ public class IcalTranslator implements Serializable {
 
       final Calendar cal = new Calendar();
 
-      cal.getComponents().add(comp);
+      cal.getComponents().add((CalendarComponent)comp);
 
       return makeIc(col, ic, cal, diff, mergeAttendees);
     } catch (final CalFacadeException cfe) {
@@ -1207,12 +1207,13 @@ public class IcalTranslator implements Serializable {
         comp = VEventUtil.toIcalComponent(val, false, tzreg,
                                           currentPrincipal);
       }
-      cal.getComponents().add(comp);
+      cal.getComponents().add((CalendarComponent)comp);
     }
 
     if (val.getNumOverrides() > 0) {
       for (final EventInfo oei: val.getOverrides()) {
-        cal.getComponents().add(VEventUtil.toIcalComponent(oei, true, tzreg,
+        cal.getComponents().add(
+                (CalendarComponent)VEventUtil.toIcalComponent(oei, true, tzreg,
                                                            currentPrincipal));
       }
     }
