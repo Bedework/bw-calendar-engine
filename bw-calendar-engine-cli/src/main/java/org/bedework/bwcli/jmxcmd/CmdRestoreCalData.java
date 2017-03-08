@@ -1,14 +1,14 @@
 /* ********************************************************************
     Appropriate copyright notice
 */
-package org.bedework.bwcli.cmd;
+package org.bedework.bwcli.jmxcmd;
 
 /**
  * User: mike
  * Date: 11/11/16
  * Time: 21:48
  */
-public class CmdRestoreCalData extends Cmd {
+public class CmdRestoreCalData extends JmxCmd {
   public CmdRestoreCalData() {
     super("restoreCal", "[\"path\"]",
           "Restore the calendar data from the default or supplied " +

@@ -24,6 +24,8 @@ import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.util.misc.ToString;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.TreeSet;
@@ -35,6 +37,7 @@ import java.util.TreeSet;
  */
 @Dump(elementName="group", keyFields={"account"})
 @NoDump({"byteSize"})
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 public class BwGroup extends BwPrincipal {
   /** members of the group
    */

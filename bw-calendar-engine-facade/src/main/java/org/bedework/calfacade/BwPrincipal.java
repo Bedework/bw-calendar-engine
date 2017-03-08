@@ -27,6 +27,10 @@ import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.xml.FromXmlCallback;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Comparator;
@@ -51,6 +55,8 @@ import java.util.TreeSet;
  *  @version 1.0
  */
 @Dump(firstFields = {"account","principalRef"})
+@JsonIgnoreProperties({"aclAccount"})
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
                                   implements AccessPrincipal,
                                   Comparator<BwPrincipal> {
@@ -167,6 +173,9 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   @NoDump
   public abstract int getKind();
 
+  // Keep jackson happy
+  public void setKind(final int val) {}
+  
   @Override
   public void setUnauthenticated(final boolean val) {
     unauthenticated = val;
@@ -339,8 +348,9 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
    * @return  String[] account name split on "/"
    */
   @NoDump
+  @JsonIgnore
   public String[] getAccountSplit() {
-    String res = getAccount();
+    final String res = getAccount();
 
     if (!res.contains("/")) {
       return new String[]{res};
@@ -367,6 +377,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
    * @return Collection    of BwGroup
    */
   @NoDump
+  @JsonIgnore
   public Collection<BwGroup> getGroups() {
     if (groups == null) {
       groups = new TreeSet<>();
@@ -384,6 +395,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   /**
    * @return  BwPrincipalInfo principal info
    */
+  @JsonIgnore
   public BwPrincipalInfo getPrincipalInfo() {
     return principalInfo;
   }
@@ -406,10 +418,11 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
   @Override
   @NoDump
+  @JsonIgnore
   public Collection<String> getGroupNames() {
     if (groupNames == null) {
       groupNames = new TreeSet<>();
-      for (BwGroup group: getGroups()) {
+      for (final BwGroup group: getGroups()) {
         groupNames.add(group.getPrincipalRef());
       }
     }

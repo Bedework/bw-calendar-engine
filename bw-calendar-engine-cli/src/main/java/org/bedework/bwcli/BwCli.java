@@ -1,0 +1,159 @@
+/* ********************************************************************
+    Appropriate copyright notice
+*/
+package org.bedework.bwcli;
+
+import org.bedework.bwcli.bwcmd.CmdAdminGroups;
+import org.bedework.bwcli.bwcmd.HttpClient;
+import org.bedework.bwcli.jmxcmd.CmdCalSchema;
+import org.bedework.bwcli.jmxcmd.CmdListIdx;
+import org.bedework.bwcli.jmxcmd.CmdPurgeIdx;
+import org.bedework.bwcli.jmxcmd.CmdRebuildIdx;
+import org.bedework.bwcli.jmxcmd.CmdRebuildStatus;
+import org.bedework.bwcli.jmxcmd.CmdRestoreCalData;
+import org.bedework.calfacade.responses.AdminGroupsResponse;
+import org.bedework.util.args.Args;
+import org.bedework.util.jolokia.JolokiaCli;
+import org.bedework.util.jolokia.JolokiaClient;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.net.URI;
+
+/**
+ * User: mike
+ * Date: 5/5/15
+ * Time: 4:26 PM
+ */
+public class BwCli extends JolokiaCli {
+  private WebClient webClient;
+  private final String url;
+  
+  // Last response
+  private AdminGroupsResponse adgrs;
+  
+  public BwCli(final String url,
+               final String jmxUrl,
+               final boolean debug) throws Throwable {
+    super(jmxUrl, debug);
+    
+    this.url = url;
+
+    register(new CmdAdminGroups());
+    
+    // jmx
+    register(new CmdCalSchema());
+    register(new CmdListIdx());
+    register(new CmdPurgeIdx());
+    register(new CmdRebuildIdx());
+    register(new CmdRebuildStatus());
+    register(new CmdRestoreCalData());
+  }
+
+  public JolokiaClient makeClient(final String uri) throws Throwable {
+    return new JolokiaConfigClient(uri);
+  }
+
+  public WebClient getWebClient() {
+    if (webClient == null) {
+      webClient = new WebClient(url);
+    }
+    
+    return webClient;
+  }
+
+  public HttpClient getCl() throws Throwable {
+    return getWebClient().getCl();
+  }
+  
+  public void setAdgrs(final AdminGroupsResponse val) {
+    adgrs = val;
+  }
+  
+  public AdminGroupsResponse getAdgrs() {
+    return adgrs;
+  }
+
+  /**
+   * <p>Arguments<ul>
+   *     <li>url: the url of the jolokia service</li>
+   * </ul>
+   * </p>
+   *
+   * @param args program arguments.
+   */
+  public static void main(final String[] args) {
+    String url = null;
+    String jmxUrl = null;
+    boolean debug = false;
+
+    try {
+      final Args pargs = new Args(args);
+
+      while (pargs.more()) {
+        if (pargs.ifMatch("debug")) {
+          debug = true;
+          continue;
+        }
+
+        if (pargs.ifMatch("url")) {
+          url = pargs.next();
+          continue;
+        }
+
+        if (pargs.ifMatch("jmxUrl")) {
+          jmxUrl = pargs.next();
+          continue;
+        }
+
+        usage("Illegal argument: " +
+                      pargs.current());
+        return;
+      }
+
+      final BwCli jc = new BwCli(url, jmxUrl, debug);
+
+      jc.processCmds();
+    } catch (final Throwable t) {
+      t.printStackTrace();
+    }
+  }
+
+  /**
+   * Client to interact with the bedework web interfaces
+   */
+  public static class WebClient {
+    private final String url;
+    
+    private HttpClient cl;
+    private final ObjectMapper om;
+
+    WebClient(final String url) {
+      this.url = url;
+      om = new JsonMapper();
+    }
+
+    public HttpClient getCl() throws Throwable {
+      if (cl != null) {
+        return cl;
+      }
+
+      cl = new HttpClient(new URI(url));
+      return cl;
+    }
+
+  }
+
+  private static void usage(final String msg) {
+    if (msg != null) {
+      System.err.println();
+      System.err.println(msg);
+    }
+
+    System.err.println();
+    System.err.println("Optional arguments:");
+    System.err.println("   url <url>         Url of the jolokia jmx service");
+    System.err.println("   debug             To enable debug traces");
+  }
+
+}

@@ -30,21 +30,9 @@ import org.bedework.util.jmx.MBeanInfo;
  */
 @ConfInfo(elementName = "cmdutil-properties")
 public interface CmdUtilProperties {
-  /** Account we run under
-   *
-   * @param val
-   */
-  void setAccount(String val);
-
-  /**
-   * @return String account we use
-   */
-  @MBeanInfo("account indexer runs as")
-  String getAccount();
-
   /** data output directory name - full path.
    *
-   * @param val
+   * @param val path
    */
   void setDataOut(String val);
 

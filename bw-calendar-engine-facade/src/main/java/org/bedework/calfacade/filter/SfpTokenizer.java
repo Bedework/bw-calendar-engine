@@ -183,9 +183,8 @@ public class SfpTokenizer extends StreamTokenizer {
 
   /**
    * @return boolean true if eof flagged
-   * @throws CalFacadeException
    */
-  public boolean atEof() throws CalFacadeException {
+  public boolean atEof() {
     return ttype == StreamTokenizer.TT_EOF;
   }
 

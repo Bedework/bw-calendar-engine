@@ -63,7 +63,7 @@
           </platforms>
           <programs>
             <program>
-              <mainClass>org.bedework.bwcli.BwJolokiaCli</mainClass>
+              <mainClass>org.bedework.bwcli.BwCli</mainClass>
               <id>cli</id>
             </program>
           </programs>

@@ -23,6 +23,9 @@ import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.util.misc.ToString;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 /** An object representing a calendar admin group.
  *
  * @author Mike Douglass
@@ -30,6 +33,8 @@ import org.bedework.util.misc.ToString;
  */
 @Dump(elementName="adminGroup", keyFields={"account"},
       firstFields = {"account","principalRef"})
+@JsonIgnoreProperties({"aclAccount"})
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 public class BwAdminGroup extends BwGroup {
   private String groupOwnerHref;
 

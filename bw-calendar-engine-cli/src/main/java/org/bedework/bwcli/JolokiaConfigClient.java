@@ -32,6 +32,9 @@ public class JolokiaConfigClient extends JolokiaClient {
   public static final String bwdumpRestoreMbean =
           "org.bedework.bwengine:service=dumprestore";
 
+  public static final String cmdutilMbean =
+          "org.bedework.bwengine:service=cmdutil";
+
   public static final String indexMbean =
           "org.bedework.bwengine:service=indexing";
 
@@ -41,6 +44,10 @@ public class JolokiaConfigClient extends JolokiaClient {
    */
   public JolokiaConfigClient(final String url) {
     super(url);
+  }
+
+  public void setCmdutilUser(final String account) throws Throwable {
+    execute(cmdutilMbean, "exec", "user " + account);
   }
 
   public List<String> coreSchema() throws Throwable {
