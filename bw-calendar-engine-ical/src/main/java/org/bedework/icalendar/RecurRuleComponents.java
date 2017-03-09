@@ -459,10 +459,10 @@ public class RecurRuleComponents {
             c.add(wd.getDay().name());
           }
 
-          Collection<PosDays> pds = new ArrayList<PosDays>();
+          final Collection<PosDays> pds = new ArrayList<>();
 
-          Set<Integer> poss = hm.keySet();
-          for (Integer pos: poss) {
+          final Set<Integer> poss = hm.keySet();
+          for (final Integer pos: poss) {
             pds.add(new PosDays(pos, hm.get(pos)));
           }
 
@@ -475,7 +475,9 @@ public class RecurRuleComponents {
         rrc.setByMonth(checkNumList(recur.getMonthList()));
         rrc.setBySetPos(checkNumList(recur.getSetPosList()));
 
-        rrc.setWkst(recur.getWeekStartDay().name());
+        if (recur.getWeekStartDay() != null) {
+          rrc.setWkst(recur.getWeekStartDay().name());
+        }
 
         rrcs.add(rrc);
       }
