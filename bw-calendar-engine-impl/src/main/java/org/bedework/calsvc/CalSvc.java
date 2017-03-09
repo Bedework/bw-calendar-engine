@@ -680,7 +680,7 @@ public class CalSvc extends CalSvcI {
   }
 
   @Override
-  public SimpleFilterParser getFilterParser() throws CalFacadeException {
+  public SimpleFilterParser getFilterParser() {
     return new SvcSimpleFilterParser();
   }
 
@@ -757,7 +757,7 @@ public class CalSvc extends CalSvcI {
   }
 
   @Override
-  public FiltersI getFiltersHandler() throws CalFacadeException {
+  public FiltersI getFiltersHandler() {
     if (filtersHandler == null) {
       filtersHandler = new Filters(this);
       handlers.add((CalSvcDb)filtersHandler);

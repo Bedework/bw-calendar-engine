@@ -1166,7 +1166,8 @@ public class BwSysIntfImpl implements SysIntf {
       final ParseResult pr = sfp.parse(expr, true, null);
       if (!pr.ok) {
         throw new WebdavBadRequest("Failed to reference collection " +
-                                           col.getPath());
+                                           col.getPath() + 
+                                           ": message was " + pr.message);
       }
 
       final FilterBase f = FilterBase.addAndChild(filter,

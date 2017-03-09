@@ -362,9 +362,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Obtain a filter parser
    *
    * @return SimpleFilterParser handler
-   * @throws CalFacadeException
    */
-  public abstract SimpleFilterParser getFilterParser() throws CalFacadeException;
+  public abstract SimpleFilterParser getFilterParser();
 
   /** Obtain an object which handles system parameters
    *
@@ -404,9 +403,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Obtain an object which handles filters
    *
    * @return FiltersI   filters handler
-   * @throws CalFacadeException
    */
-  public abstract FiltersI getFiltersHandler() throws CalFacadeException;
+  public abstract FiltersI getFiltersHandler();
 
   /** Obtain an object which handles calendars
   *

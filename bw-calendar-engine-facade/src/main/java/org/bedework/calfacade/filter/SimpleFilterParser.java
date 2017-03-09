@@ -143,10 +143,18 @@ public abstract class SimpleFilterParser {
 
   private final Stack<FilterBase> filterStack = new Stack<>();
 
+  // This lets us unwind the parse
+  private static class ParseFailed extends Exception {
+    
+  }
+  
   /** */
   public static class ParseResult {
     /** true if the parse went ok */
-    public boolean ok;
+    public boolean ok = true;
+    
+    /** Explain what went wrong */
+    public String message;
 
     /** result of a successful parse */
     public FilterBase filter;
@@ -154,13 +162,39 @@ public abstract class SimpleFilterParser {
     /**  */
     public CalFacadeException cfe;
 
-    ParseResult(final FilterBase filter) {
-      ok = true;
+    /** Result from parseSort
+     * 
+     */
+    public List<SortTerm> sortTerms;
+
+    public ParseResult() {
+    }
+
+    public void SetFilter(final FilterBase filter) {
       this.filter = filter;
     }
 
-    ParseResult(final CalFacadeException cfe) {
+    public ParseFailed fail(final String message) throws ParseFailed {
+      ok = false;
+      this.message = message;
+
+      throw new ParseFailed();
+    }
+
+    public ParseFailed setCfe(final CalFacadeException cfe) throws ParseFailed {
+      ok = false;
+      message = cfe.getMessage();
       this.cfe = cfe;
+      
+      throw new ParseFailed();
+    }
+
+    public ParseFailed fromPr(final ParseResult pr) throws ParseFailed {
+      ok = false;
+      message = pr.message;
+      cfe = pr.cfe;
+
+      throw new ParseFailed();
     }
 
     @Override
@@ -178,6 +212,8 @@ public abstract class SimpleFilterParser {
       return ts.toString();
     }
   }
+  
+  private final ParseResult parseResult = new ParseResult();
 
   /**
    *
@@ -281,14 +317,14 @@ public abstract class SimpleFilterParser {
    *                          path or paths
    * @param source            Where the expression came from - for errors
    * @return ParseResult
-   * @throws CalFacadeException on error
    */
   public ParseResult parse(final String expr,
                            final boolean explicitSelection,
-                           final String source) throws CalFacadeException {
+                           final String source) {
     this.explicitSelection = explicitSelection;
     this.source = source;
     debug = getLogger().isDebugEnabled();
+    parseResult.ok = true;
 
     try {
       if (debug) {
@@ -310,15 +346,15 @@ public abstract class SimpleFilterParser {
       }
 
       if (!stackEmpty()) {
-        throw new CalFacadeException(CalFacadeException.filterSyntax,
-                                     "source: " + source);
+        throw parseResult.fail("Filter syntax: " +
+                                       "source: " + source);
       }
 
       /* We should be left with just the filter on the stack. */
 
       if (filterStack.size() != 1) {
-        throw new CalFacadeException(CalFacadeException.filterSyntax,
-                                     " source: " + source);
+        throw parseResult.fail("Filter syntax: " +
+                                       " source: " + source);
       }
 
       final FilterBase f = popFilters();
@@ -327,13 +363,12 @@ public abstract class SimpleFilterParser {
         debugMsg(f.toString());
       }
 
-      return new ParseResult(f);
-    } catch (final CalFacadeException cfe) {
-      if (debug) {
-        error(cfe);
-      }
-      return new ParseResult(cfe);
+      parseResult.SetFilter(f);
+    } catch (final ParseFailed ignored) {
+      // Result set      
     }
+
+    return parseResult;
   }
 
   /** Parse a comma list of sort terms. Each term is a property name
@@ -346,60 +381,65 @@ public abstract class SimpleFilterParser {
    * @param sexpr - search expression
    * @return list of terms in order of application. Empty for no sort
    *         terms.
-   * @throws CalFacadeException on error
    */
-  public List<SortTerm> parseSort(final String sexpr) throws CalFacadeException {
-    final List<SortTerm> res = new ArrayList<>();
+  public ParseResult parseSort(final String sexpr) {
+    parseResult.ok = true;
+    parseResult.sortTerms = new ArrayList<>();
 
     if (sexpr == null) {
-      return res;
+      return parseResult;
     }
 
-    tokenizer = new SfpTokenizer(new StringReader(sexpr));
-    for (;;) {
-      int tkn = nextToken("parseSort()");
+    try {
+      tokenizer = new SfpTokenizer(new StringReader(sexpr));
+      for (; ; ) {
+        int tkn = nextToken("parseSort()");
 
-      if (tkn == StreamTokenizer.TT_EOF) {
-        return res;
-      }
-
-      final List<PropertyInfoIndex> pis = getProperty(tkn);
-
-      tkn = nextToken("parseSort() - :");
-
-      boolean ascending = false;
-
-      if (tkn == ':') {
-        tkn = nextToken("parseSort() - asc/desc");
-
-        if (tkn != StreamTokenizer.TT_WORD) {
-          throw new CalFacadeException(CalFacadeException.filterExpectedAscDesc,
-                                       String.valueOf(tkn) +
-                                               " source: " + source);
+        if (tkn == StreamTokenizer.TT_EOF) {
+          return parseResult;
         }
 
-        if ("asc".equalsIgnoreCase(tokenizer.sval)) {
-          ascending = true;
-        } else if ("asc".equalsIgnoreCase(tokenizer.sval)) {
-          ascending = false;
-        } else {
-          throw new CalFacadeException(CalFacadeException.filterExpectedAscDesc,
-                                       String.valueOf(tkn) +
-                                               " source: " + source);
-        }
-      } else if (tkn == StreamTokenizer.TT_EOF) {
-        tokenizer.pushBack();
-      } else if (tkn != ',') {
-        throw new CalFacadeException(CalFacadeException.filterBadSort,
-                                     String.valueOf(tkn) + " from " + sexpr +
-                                             " source: " + source);
-      }
+        final List<PropertyInfoIndex> pis = getProperty(tkn);
 
-      res.add(new SortTerm(pis, ascending));
+        tkn = nextToken("parseSort() - :");
+
+        boolean ascending = false;
+
+        if (tkn == ':') {
+          tkn = nextToken("parseSort() - asc/desc");
+
+          if (tkn != StreamTokenizer.TT_WORD) {
+            throw parseResult.fail("Expected Asc Desc: " +
+                                           String.valueOf(tkn) +
+                                           " source: " + source);
+          }
+
+          if ("asc".equalsIgnoreCase(tokenizer.sval)) {
+            ascending = true;
+          } else if ("asc".equalsIgnoreCase(tokenizer.sval)) {
+            ascending = false;
+          } else {
+            throw parseResult.fail("Expected Asc Desc: " +
+                                           String.valueOf(tkn) +
+                                           " source: " + source);
+          }
+        } else if (tkn == StreamTokenizer.TT_EOF) {
+          tokenizer.pushBack();
+        } else if (tkn != ',') {
+          throw parseResult.fail("Bad sort: " +
+                                         String.valueOf(
+                                                 tkn) + " from " + sexpr +
+                                         " source: " + source);
+        }
+
+        parseResult.sortTerms.add(new SortTerm(pis, ascending));
+      }
+    } catch (final ParseFailed ignored) {
+      return parseResult;
     }
   }
 
-  private boolean doFactor() throws CalFacadeException {
+  private boolean doFactor() throws ParseFailed {
     if (debug) {
       debugMsg("doFactor: " + tokenizer.toString());
     }
@@ -415,8 +455,8 @@ public abstract class SimpleFilterParser {
       doExpr();
 
       if (nextToken("doFactor(2)") != ')') {
-        throw new CalFacadeException(CalFacadeException.filterExpectedCloseParen,
-                                             " source: " + source);
+        throw parseResult.fail("Expected close paren: " +
+                                       " source: " + source);
       }
 
       popOpenParen();
@@ -445,7 +485,7 @@ public abstract class SimpleFilterParser {
     return true;
   }
 
-  private boolean doExpr() throws CalFacadeException {
+  private boolean doExpr() throws ParseFailed {
     // Don't seem quite right
     if (debug) {
       debugMsg("doExpr: " + tokenizer.toString());
@@ -453,7 +493,7 @@ public abstract class SimpleFilterParser {
     return doTerm();
   }
 
-  private boolean doTerm() throws CalFacadeException {
+  private boolean doTerm() throws ParseFailed {
     if (!doFactor()) {
       return false;
     }
@@ -509,7 +549,7 @@ public abstract class SimpleFilterParser {
     return true;
   }
 
-  private void doLop(final int tkn) throws CalFacadeException {
+  private boolean doLop(final int tkn) throws ParseFailed {
     LogicalOperator oper = null;
 
     if (topLOp()) {
@@ -520,12 +560,12 @@ public abstract class SimpleFilterParser {
       // Must match - not allowed to mix logical operators
       if (tkn == '&') {
         if (oper.op != andOp) {
-          throw new CalFacadeException(CalFacadeException.filterMixedLogicalOperators,
-                                               " source: " + source);
+          throw parseResult.fail("Mixed Logical Operators: " +
+                                         " source: " + source);
         }
       } else if (oper.op != orOp) {
-        throw new CalFacadeException(CalFacadeException.filterMixedLogicalOperators,
-                                             " source: " + source);
+        throw parseResult.fail("Mixed Logical Operators: " +
+                                       " source: " + source);
       }
 
       push(oper);
@@ -534,6 +574,7 @@ public abstract class SimpleFilterParser {
     } else {
       push(orOperator);
     }
+    return true;
   }
 
   private int checkLop(final int tkn) {
@@ -562,15 +603,15 @@ public abstract class SimpleFilterParser {
     return tkn;
   }
 
-  private List<PropertyInfoIndex> getProperty(final int curtkn) throws CalFacadeException {
+  private List<PropertyInfoIndex> getProperty(final int curtkn) throws ParseFailed {
     int tkn = curtkn;
     final List<PropertyInfoIndex> pis = new ArrayList<>();
 
     for (;;) {
       if (tkn != StreamTokenizer.TT_WORD) {
-        throw new CalFacadeException(CalFacadeException.filterExpectedPropertyName,
-                                     String.valueOf(tkn) +
-                                     " source: " + source);
+        throw parseResult.fail("Expected Property Name: " +
+                                       String.valueOf(tkn) +
+                                       " source: " + source);
       }
 
       final String pname = tokenizer.sval;
@@ -586,9 +627,9 @@ public abstract class SimpleFilterParser {
 
       final PropertyInfoIndex pi = PropertyInfoIndex.fromName(pname);
       if (pi == null) {
-        throw new CalFacadeException(CalFacadeException.unknownProperty,
-                                     pname + ": expr was " + currentExpr +
-                                             " source: " + source);
+        throw parseResult.fail("unknown Property: " +
+                                       pname + ": expr was " + currentExpr +
+                                       " source: " + source);
       }
 
       pis.add(pi);
@@ -604,7 +645,7 @@ public abstract class SimpleFilterParser {
     }
   }
 
-  private boolean doPropertyComparison() throws CalFacadeException {
+  private boolean doPropertyComparison() throws ParseFailed {
     final List<PropertyInfoIndex> pis = getProperty(nextToken("getProperty()"));
 
     final Operator oper = nextOperator();
@@ -615,7 +656,8 @@ public abstract class SimpleFilterParser {
       error(new CalFacadeException(CalFacadeException.filterBadProperty,
                                    listProps(pis) +
                                            " source: " + source));
-      return false;
+      throw parseResult.fail("Bad property: " + listProps(pis) +
+                                     " source: " + source);
     }
 
     /* If there is a logical operator on the stack top (and/or) then we create
@@ -646,9 +688,9 @@ public abstract class SimpleFilterParser {
    * word
    *
    * @return list of word values
-   * @throws CalFacadeException on error
+   * @throws ParseFailed on error
    */
-  private ArrayList<String> doWordList() throws CalFacadeException {
+  private ArrayList<String> doWordList() throws ParseFailed {
     int tkn = nextToken("doWordList(1)");
 
     if (tkn == StreamTokenizer.TT_EOF) {
@@ -669,10 +711,9 @@ public abstract class SimpleFilterParser {
       tkn = nextToken("doWordList(2)");
 
       if ((tkn != '"') && (tkn != '\'')) {
-        throw new CalFacadeException(CalFacadeException.filterBadList,
-                                     "Expected quoted string: found" +
-                                             String.valueOf(tkn) +
-                                             " source: " + source);
+        throw parseResult.fail("Expected quoted string: found" +
+                                       String.valueOf(tkn) +
+                                       " source: " + source);
       }
 
       res.add(tokenizer.sval);
@@ -681,9 +722,8 @@ public abstract class SimpleFilterParser {
 
       if (tkn == ',') {
         if (!paren) {
-          throw new CalFacadeException(CalFacadeException.filterBadList,
-                                       String.valueOf(tkn) +
-                                               " source: " + source);
+          throw parseResult.fail("Bad list: " + String.valueOf(tkn) +
+                                         " source: " + source);
         }
         continue;
       }
@@ -702,19 +742,19 @@ public abstract class SimpleFilterParser {
     }
   }
 
-  private void popOpenParen() throws CalFacadeException {
+  private void popOpenParen() throws ParseFailed {
     final Token tkn = pop();
 
     if (tkn != openParen) {
-      throw new CalFacadeException(CalFacadeException.filterSyntax,
-                                   "Expected openParen on stack." +
-                                           " source: " + source);
+      throw parseResult.fail("filterSyntax: " +
+                                     "Expected openParen on stack." +
+                                     " source: " + source);
     }
   }
 
   private FilterBase makePropFilter(final List<PropertyInfoIndex> pis,
                                     final int oper)
-          throws CalFacadeException {
+          throws ParseFailed {
     final PropertyInfoIndex pi = pis.get(0);
     FilterBase filter = null;
     final boolean exact = (oper != like) && (oper != notLike);
@@ -748,10 +788,6 @@ public abstract class SimpleFilterParser {
       for (final String view: views) {
         final FilterBase vpf = viewFilter(view);
 
-        if (vpf == null) {
-          continue;
-        }
-
         filter = and(null, filter, vpf);
       }
 
@@ -765,10 +801,6 @@ public abstract class SimpleFilterParser {
 
       for (final String vpath: vpaths) {
         final FilterBase vpf = resolveVpath(vpath);
-
-        if (vpf == null) {
-          continue;
-        }
 
         filter = and(null, filter, vpf);
       }
@@ -785,13 +817,12 @@ public abstract class SimpleFilterParser {
         final ArrayList<String> uids = doWordList();
 
         for (final String uid: uids) {
-          final BwCategory cat = getCategory(uid);
+          final BwCategory cat = callGetCategory(uid);
 
           if (cat == null) {
             // Deleted category?
-            error("Category uid references missing category: " + uid +
-                          " Filter will always fail to match");
-            continue;
+            throw parseResult.fail("Category uid references missing category: " + uid +
+                                           " Filter will always fail to match");
           }
 
           final ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
@@ -867,12 +898,12 @@ public abstract class SimpleFilterParser {
 
       // Try for name
 
-      final BwCategory cat = getCategoryByName(val);
+      final BwCategory cat = callGetCategoryByName(val);
 
       if (cat == null) {
-        throw new CalFacadeException(CalFacadeException.filterBadProperty,
-                                     "category name: " + match.getValue() +
-                                     " source: " + source);
+        throw parseResult.fail("Bad property: " +
+                                       "category name: " + match.getValue() +
+                                       " source: " + source);
       }
 
       pis.add(PropertyInfoIndex.UID);
@@ -904,14 +935,14 @@ public abstract class SimpleFilterParser {
    *
    * @param pis list of PropertyInfoIndex
    * @param depth we expect this and nothing else
-   * @throws CalFacadeException on error
+   * @throws ParseFailed on error
    */
   private void checkSub(final List<PropertyInfoIndex> pis,
-                        final int depth) throws CalFacadeException {
+                        final int depth) throws ParseFailed {
     if (depth < pis.size()) {
-      throw new CalFacadeException(CalFacadeException.filterBadProperty,
-                                   listProps(pis) +
-                                   " (exceeds allowable depth) source: " + source);
+      throw parseResult.fail("Bad Property: " +
+                                     listProps(pis) +
+                                     " (exceeds allowable depth) source: " + source);
     }
   }
 
@@ -936,11 +967,11 @@ public abstract class SimpleFilterParser {
     return sb.toString();
   }
 
-  private TextMatchType getMatch(final int oper) throws CalFacadeException {
+  private TextMatchType getMatch(final int oper) throws ParseFailed {
     final TextMatchType tm;
 
     // Expect a value
-    tokenizer.assertString();
+    assertString();
 
     tm = new TextMatchType();
     tm.setValue(tokenizer.sval);
@@ -962,21 +993,20 @@ public abstract class SimpleFilterParser {
     return tm;
   }
 
-  private FilterBase entityFilter(final String val) throws CalFacadeException {
+  private FilterBase entityFilter(final String val) throws ParseFailed {
     try {
       return EntityTypeFilter.makeEntityTypeFilter(null, val, false);
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw parseResult.setCfe(new CalFacadeException(t));
     }
   }
 
-  private FilterBase viewFilter(final String val) throws CalFacadeException {
-    try {
-      final BwView view = getView(val);
+  private FilterBase viewFilter(final String val) throws ParseFailed {
+      final BwView view = callGetView(val);
 
       if (view == null) {
-        throw new CalFacadeException(CalFacadeException.filterUnknownView,
-                                     val + " source: " + source);
+        throw parseResult.fail("Unknown view: " +
+                                       val + " source: " + source);
       }
 
       FilterBase filter = view.getFilter();
@@ -987,10 +1017,6 @@ public abstract class SimpleFilterParser {
 
       for (final String vpath: view.getCollectionPaths()) {
         final FilterBase vpf = resolveVpath(vpath);
-
-        if (vpf == null) {
-          continue;
-        }
 
         filter = or(filter, vpf);
       }
@@ -1003,9 +1029,6 @@ public abstract class SimpleFilterParser {
       view.setFilter(filter);
 
       return vf;
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    }
   }
 
   private FilterBase or(final FilterBase of,
@@ -1083,9 +1106,9 @@ public abstract class SimpleFilterParser {
    *
    * @param  vpath  a String virtual path
    * @return FilterBase object or null for bad path
-   * @throws CalFacadeException on error
+   * @throws ParseFailed on error
    */
-  private FilterBase resolveVpath(final String vpath) throws CalFacadeException {
+  private FilterBase resolveVpath(final String vpath) throws ParseFailed {
     /* We decompose the virtual path into it's elements and then try to
      * build a sequence of collections that include the aliases and their
      * targets until we reach the last element in the path.
@@ -1107,11 +1130,10 @@ public abstract class SimpleFilterParser {
      * folder or calendar collection.
      */
 
-    final Collection<BwCalendar> cols = decomposeVirtualPath(vpath);
+    final Collection<BwCalendar> cols = callDecomposeVirtualPath(vpath);
 
     if (cols == null) {
-      // Bad vpath
-      return null;
+      throw parseResult.fail("Bad virtual path: " + vpath);
     }
 
     FilterBase vfilter = null;
@@ -1124,14 +1146,14 @@ public abstract class SimpleFilterParser {
 
       if (col.getFilterExpr() != null) {
         if (subParser == null) {
-          subParser = getParser();
+          subParser = callGetParser();
         }
 
         final ParseResult pr = subParser.parse(col.getFilterExpr(),
                                                false,
                                                col.getPath());
-        if (pr.cfe != null) {
-          throw pr.cfe;
+        if (!pr.ok) {
+          throw parseResult.fromPr(pr);
         }
 
         if (pr.filter != null) {
@@ -1147,9 +1169,9 @@ public abstract class SimpleFilterParser {
     }
 
     if (vpathTarget == null) {
-      throw new CalFacadeException("Bad vpath - no calendar collection" +
-                                           " vpath: " + vpath +
-                                           " source: " + source);
+      throw parseResult.fail("Bad vpath - no calendar collection" +
+                                     " vpath: " + vpath +
+                                     " source: " + source);
     }
 
     final String name;
@@ -1158,6 +1180,7 @@ public abstract class SimpleFilterParser {
     } else {
       name = vpathTarget.getPath();
     }
+
     return and(name,
                vfilter,
                resolveColPath(vpathTarget.getPath(),
@@ -1169,29 +1192,33 @@ public abstract class SimpleFilterParser {
    * @param path to be resolved
    * @param applyFilter - filter may already have been applied
    * @return filter or null
-   * @throws CalFacadeException on error
+   * @throws ParseFailed on error
    */
   private FilterBase resolveColPath(final String path,
                                     final boolean applyFilter,
-                                    final boolean explicitSelection) throws CalFacadeException {
-    return new FilterBuilder(this).buildFilter(path,
-                                               applyFilter,
-                                               explicitSelection);
+                                    final boolean explicitSelection) throws ParseFailed {
+    try {
+      return new FilterBuilder(this).buildFilter(path,
+                                                 applyFilter,
+                                                 explicitSelection);
+    } catch (final Throwable t) {
+      throw parseResult.setCfe(new CalFacadeException(t));
+    }
   }
 
-  private TimeRange getTimeRange() throws CalFacadeException {
-    tokenizer.assertString();
-    final String startStr = tokenizer.sval;
+  private TimeRange getTimeRange() throws ParseFailed {
+      assertString();
+      final String startStr = tokenizer.sval;
 
-    tokenizer.assertToken("to");
+      assertToken("to");
 
-    tokenizer.assertString();
+      assertString();
 
-    return makeTimeRange(startStr, tokenizer.sval);
+      return makeTimeRange(startStr, tokenizer.sval);
   }
 
   private TimeRange makeTimeRange(final String startStr,
-                                  final String endStr) throws CalFacadeException {
+                                  final String endStr) throws ParseFailed {
     try {
       DateTime start = null;
       DateTime end = null;
@@ -1206,11 +1233,11 @@ public abstract class SimpleFilterParser {
 
       return new TimeRange(start, end);
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw parseResult.setCfe(new CalFacadeException(t));
     }
   }
 
-  private Operator nextOperator() throws CalFacadeException {
+  private Operator nextOperator() throws ParseFailed {
     int tkn = nextToken("nextOperator(1)");
 
     if (tkn == '=') {
@@ -1222,11 +1249,11 @@ public abstract class SimpleFilterParser {
     }
 
     if (tkn == '!') {
-      if (tokenizer.testToken('~')) {
+      if (testToken('~')) {
         return new Operator(notLike);
       }
 
-      tokenizer.assertToken('=');
+      assertToken('=');
       return new Operator(notEqual);
     }
 
@@ -1255,9 +1282,9 @@ public abstract class SimpleFilterParser {
     }
 
     if (tkn != StreamTokenizer.TT_WORD) {
-      throw new CalFacadeException(CalFacadeException.filterBadOperator,
-                                   tokenizer.sval +
-                                           " source: " + source);
+      throw parseResult.fail("Bad operator: " +
+                                     tokenizer.sval +
+                                     " source: " + source);
     }
 
     if (tokenizer.sval.equals("in")) {
@@ -1272,9 +1299,10 @@ public abstract class SimpleFilterParser {
       return new Operator(notDefined);
     }
 
-    throw new CalFacadeException(CalFacadeException.filterBadOperator,
-                                 tokenizer.sval +
-                                         " source: " + source);
+    throw parseResult.fail("Bad operator: " +
+                                   tokenizer.sval +
+                                   " source: " + source);
+    
   }
 
   private boolean topLOp() {
@@ -1301,10 +1329,10 @@ public abstract class SimpleFilterParser {
     return (LogicalOperator)stack.pop();
   }
 
-  private void assertNotEmpty() throws CalFacadeException {
+  private void assertNotEmpty() throws ParseFailed {
     if (stack.empty()) {
-      throw new CalFacadeException(CalFacadeException.filterSyntax,
-                                           " source: " + source);
+      throw parseResult.fail("Filter Syntax: " +
+                                     " source: " + source);
     }
   }
 
@@ -1316,19 +1344,19 @@ public abstract class SimpleFilterParser {
     stack.push(val);
   }
 
-  private Token pop() throws CalFacadeException {
+  private Token pop() throws ParseFailed {
     assertNotEmpty();
     return stack.pop();
   }
 
-  private void assertFiltersNotEmpty() throws CalFacadeException {
+  private void assertFiltersNotEmpty() throws ParseFailed {
     if (filterStack.empty()) {
-      throw new CalFacadeException(CalFacadeException.filterSyntax,
-                                           " source: " + source);
+      throw parseResult.fail("FilterSyntax: " +
+                                     " source: " + source);
     }
   }
 
-  private FilterBase popFilters() throws CalFacadeException {
+  private FilterBase popFilters() throws ParseFailed {
     assertFiltersNotEmpty();
     return filterStack.pop();
   }
@@ -1340,27 +1368,116 @@ public abstract class SimpleFilterParser {
     }
   }
 
-  private int nextToken(final String tr) throws CalFacadeException {
-    final int tkn = tokenizer.next();
+  private int nextToken(final String tr) throws ParseFailed {
+    try {
+      final int tkn = tokenizer.next();
 
-    if (!debug) {
+      if (!debug) {
+        return tkn;
+      }
+
+      showStack(tr);
+      //showFilterStack();
+
+      if (tkn == StreamTokenizer.TT_WORD) {
+        debugMsg("nextToken(" + tr + ") = word: " + tokenizer.sval);
+      } else if (tkn == '\'') {
+        debugMsg("nextToken(" + tr + ") = '" + tokenizer.sval + "'");
+      } else if (tkn > 0) {
+        debugMsg("nextToken(" + tr + ") = " + (char)tkn);
+      } else {
+        debugMsg("nextToken(" + tr + ") = " + tkn);
+      }
+
       return tkn;
+    } catch (final CalFacadeException cfe) {
+      throw parseResult.setCfe(cfe);
     }
+  }
+  
+  /* Wrappers 
+   */
 
-    showStack(tr);
-    //showFilterStack();
-
-    if (tkn == StreamTokenizer.TT_WORD) {
-      debugMsg("nextToken(" + tr + ") = word: " + tokenizer.sval);
-    } else if (tkn == '\'') {
-      debugMsg("nextToken(" + tr + ") = '" + tokenizer.sval + "'");
-    } else if (tkn > 0) {
-      debugMsg("nextToken(" + tr + ") = " + (char)tkn);
-    } else {
-      debugMsg("nextToken(" + tr + ") = " + tkn);
+  private void assertString() throws ParseFailed {
+    try {
+      tokenizer.assertString();
+    } catch (final CalFacadeException cfe) {
+      throw parseResult.setCfe(cfe);
     }
+  }
 
-    return tkn;
+  private void assertToken(final String val) throws ParseFailed {
+    try {
+      tokenizer.assertToken(val);
+    } catch (final CalFacadeException cfe) {
+      throw parseResult.setCfe(cfe);
+    }
+  }
+
+  private void assertToken(final int val) throws ParseFailed {
+    try {
+      tokenizer.assertToken(val);
+    } catch (final CalFacadeException cfe) {
+      throw parseResult.setCfe(cfe);
+    }
+  }
+
+  private boolean testToken(final String val) throws ParseFailed {
+    try {
+      return tokenizer.testToken(val);
+    } catch (final CalFacadeException cfe) {
+      throw parseResult.setCfe(cfe);
+    }
+  }
+
+  private boolean testToken(final int val) throws ParseFailed {
+    try {
+      return tokenizer.testToken(val);
+    } catch (final CalFacadeException cfe) {
+      parseResult.setCfe(cfe);
+      return false;
+    }
+  }
+
+  private BwCategory callGetCategoryByName(final String name) throws ParseFailed {
+    try {
+      return getCategoryByName(name);
+    } catch (final CalFacadeException cfe) {
+      throw parseResult.setCfe(cfe);
+    }
+  }
+
+  private BwCategory callGetCategory(final String uid) throws ParseFailed {
+    try {
+      return getCategory(uid);
+    } catch (final CalFacadeException cfe) {
+      throw parseResult.setCfe(cfe);
+    }
+  }
+
+  private BwView callGetView(final String path) throws ParseFailed {
+    try {
+      return getView(path);
+    } catch (final CalFacadeException cfe) {
+      throw parseResult.setCfe(cfe);
+    }
+  }
+
+  private Collection<BwCalendar> callDecomposeVirtualPath(final String vpath)
+          throws ParseFailed {
+    try {
+      return decomposeVirtualPath(vpath);
+    } catch (final CalFacadeException cfe) {
+      throw parseResult.setCfe(cfe);
+    }
+  }
+
+  private SimpleFilterParser callGetParser() throws ParseFailed {
+    try {
+      return getParser();
+    } catch (final CalFacadeException cfe) {
+      throw parseResult.setCfe(cfe);
+    }
   }
 
   protected Logger getLogger() {

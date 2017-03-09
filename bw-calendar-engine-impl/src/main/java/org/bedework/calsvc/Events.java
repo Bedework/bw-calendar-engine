@@ -350,7 +350,8 @@ class Events extends CalSvcDb implements EventsI {
       final ParseResult pr = sfp.parse(expr, true, null);
       if (!pr.ok) {
         throw new CalFacadeException("Failed to parse " +
-                                           expr);
+                                           expr + ": message was " + 
+                                             pr.message);
       }
 
       final Collection<EventInfo> evs =

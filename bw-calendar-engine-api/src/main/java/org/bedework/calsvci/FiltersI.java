@@ -20,11 +20,10 @@ package org.bedework.calsvci;
 
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.filter.SortTerm;
+import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.List;
 
 /** Interface for handling bedework filters.
  *
@@ -44,9 +43,9 @@ public interface FiltersI extends Serializable {
   /** Parse the xml definition in the given filter object
    *
    * @param  val       BwFilterDef
-   * @throws CalFacadeException
+   * @return result of parsing - check the ok flag.
    */
-  void parse(BwFilterDef val) throws CalFacadeException;
+  ParseResult parse(BwFilterDef val);
 
   /** Validate a filter definition.
    *
@@ -94,7 +93,7 @@ public interface FiltersI extends Serializable {
   /** Parse the sort expression
    *
    * @param  val  String sort expression
-   * @throws CalFacadeException
+   * @return result - check the status
    */
-  List<SortTerm> parseSort(String val) throws CalFacadeException;
+  ParseResult parseSort(String val);
 }
