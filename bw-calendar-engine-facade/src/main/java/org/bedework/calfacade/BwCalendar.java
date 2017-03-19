@@ -95,7 +95,12 @@ import javax.xml.namespace.QName;
  */
 @Wrapper(quotas = true)
 @Dump(elementName="collection", keyFields={"path"})
-@JsonIgnoreProperties({"aliasTarget", "aliasOrigin"})
+@JsonIgnoreProperties({"aliasTarget", 
+                       "aliasOrigin", 
+                       "collectionInfo", 
+                       "numProperties",
+                       "pwNeedsEncrypt", 
+                       "tombstoned"})
 public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
         implements CollatableEntity, CategorisedEntity, PropertiesEntity {
   /** The internal name of the calendar
@@ -776,9 +781,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   public void setAliasUri(final String val) {
     aliasUri = val;
     if (val != null) {
-      setCalType (calTypeAlias);
+      setCalType(calTypeAlias);
       if (getInternalAliasPath() == null) {
-        setCalType (calTypeExtSub);
+        setCalType(calTypeExtSub);
       }
     }
   }
