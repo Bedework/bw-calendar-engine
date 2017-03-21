@@ -1892,37 +1892,48 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   /**
    *
    * @param val CurrentAccess
-   * @throws CalFacadeException
    */
-  public void setCurrentAccess(final CurrentAccess val) throws CalFacadeException {
-    throw new CalFacadeException("org.bedework.wrapper.method.called");
+  public void setCurrentAccess(final CurrentAccess val) {
+    throw new RuntimeException("org.bedework.wrapper.method.called");
   }
 
   /**
    * @return CurrentAccess
-   * @throws CalFacadeException
    */
   @NoDump
   @JsonIgnore
-  public CurrentAccess getCurrentAccess() throws CalFacadeException {
-    throw new CalFacadeException("org.bedework.wrapper.method.called");
+  public CurrentAccess getCurrentAccess() {
+    throw new RuntimeException("org.bedework.wrapper.method.called");
+  }
+
+  /**
+   * @param val virtual path for searches
+   */
+  public void setVirtualPath(final String val) {
+    throw new RuntimeException("org.bedework.wrapper.method.called");
+  }
+
+  /**
+   * @return virtual path for searches
+   */
+  @NoDump
+  public String getVirtualPath() {
+    // Allow this - may be called while creating?
+    return null;
   }
 
   /**
    * @param val ui open state
-   * @throws CalFacadeException
    */
-  public void setOpen(final boolean val) throws CalFacadeException {
-    throw new CalFacadeException("org.bedework.wrapper.method.called");
+  public void setOpen(final boolean val) {
+    throw new RuntimeException("org.bedework.wrapper.method.called");
   }
 
   /**
    * @return ui open state
-   * @throws CalFacadeException
    */
   @NoDump
-  public boolean getOpen() throws CalFacadeException {
-    //throw new CalFacadeException("org.bedework.wrapper.method.called");
+  public boolean getOpen() {
     // Allow this - may be called while creating?
     return false;
   }
@@ -2062,6 +2073,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return ts.toString();
   }
 
+  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     final BwCalendar cal = shallowClone();
@@ -2070,6 +2082,14 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     cal.setProperties(cloneProperties());
 
     return cal;
+  }
+
+  /** Used to provide a new wrapper for an entity
+   * 
+   * @return Same entity with new wrapper
+   */
+  public BwCalendar cloneWrapper() {
+    throw new RuntimeException("org.bedework.wrapper.method.called");
   }
 
   public BwCalendar shallowClone() {
