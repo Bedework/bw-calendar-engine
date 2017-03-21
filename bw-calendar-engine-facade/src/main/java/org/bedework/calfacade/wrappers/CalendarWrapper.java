@@ -25,13 +25,16 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.CalFacadeDefs;
+import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.AccessUtilI;
+import org.bedework.util.misc.ToString;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.File;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +53,7 @@ import java.util.Set;
  */
 public class CalendarWrapper extends BwCalendar
         implements EntityWrapper<BwCalendar> {
-  private AccessUtilI accessUtil;
+  private final AccessUtilI accessUtil;
 
   private BwCalendar entity;
 
@@ -62,10 +65,12 @@ public class CalendarWrapper extends BwCalendar
    */
   private CurrentAccess currentAccess;
 
-  private Map<Integer, CurrentAccess> caMap =
-    new HashMap<Integer, CurrentAccess>(20);
+  private Map<Integer, CurrentAccess> caMap = new HashMap<>(20);
 
   private int lastDesiredAccess;
+
+  // ui support
+  private String virtualPath;
 
   // ui support
   private boolean open;
@@ -73,27 +78,23 @@ public class CalendarWrapper extends BwCalendar
   /* True if we cannot reach the target - once per session and not saved. */
   private boolean disabled;
 
+  private Collection<BwCalendar> children;
+
   /** Constructor
    *
-   * @param entity
-   * @param accessUtil
+   * @param entity to be wrapped
+   * @param accessUtil for access checks
    */
   public CalendarWrapper(final BwCalendar entity, final AccessUtilI accessUtil) {
     this.entity = entity;
     this.accessUtil = accessUtil;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.wrappers.EntityWrapper#putEntity(org.bedework.calfacade.base.BwDbentity)
-   */
   @Override
   public void putEntity(final BwCalendar val) {
     entity = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.wrappers.EntityWrapper#fetchEntity()
-   */
   @Override
   public BwCalendar fetchEntity() {
     return entity;
@@ -146,7 +147,7 @@ public class CalendarWrapper extends BwCalendar
   }
 
   /**
-   * @param val
+   * @param val public flag
    */
   @Override
   public void setPublick(final Boolean val) {
@@ -312,7 +313,7 @@ public class CalendarWrapper extends BwCalendar
   }
 
   /**
-   * @param val
+   * @param val lastmod info
    */
   @Override
   public void setLastmod(final BwCollectionLastmod val) {
@@ -330,13 +331,10 @@ public class CalendarWrapper extends BwCalendar
     return entity.getLastmod();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setAliasUri(java.lang.String)
-   */
   @Override
   public void setAliasUri(final String val) {
     if (val != null) {
-      boolean internal = val.startsWith(CalFacadeDefs.bwUriPrefix);
+      final boolean internal = val.startsWith(CalFacadeDefs.bwUriPrefix);
       if (internal) {
         entity.setCalType(BwCalendar.calTypeAlias);
       } else {
@@ -346,17 +344,11 @@ public class CalendarWrapper extends BwCalendar
     entity.setAliasUri(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getAliasUri()
-   */
   @Override
   public String getAliasUri() {
     return entity.getAliasUri();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setPwNeedsEncrypt(boolean)
-   */
   @Override
   public void setPwNeedsEncrypt(final boolean val) {
     entity.setPwNeedsEncrypt(val);
@@ -381,49 +373,31 @@ public class CalendarWrapper extends BwCalendar
     return entity.getFilterExpr();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setRefreshRate(int)
-   */
   @Override
   public void setRefreshRate(final int val) {
     entity.setRefreshRate(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getRefreshRate()
-   */
   @Override
   public int getRefreshRate() {
     return entity.getRefreshRate();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setLastRefresh(java.lang.String)
-   */
   @Override
   public void setLastRefresh(final String val) {
     entity.setLastRefresh(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getLastRefresh()
-   */
   @Override
   public String getLastRefresh() {
     return entity.getLastRefresh();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setLastEtag(java.lang.String)
-   */
   @Override
   public void setLastEtag(final String val) {
     entity.setLastEtag(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getLastEtag()
-   */
   @Override
   public String getLastEtag() {
     return entity.getLastEtag();
@@ -449,49 +423,31 @@ public class CalendarWrapper extends BwCalendar
     return entity.getRemotePw();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setDisplay(boolean)
-   */
   @Override
   public void setDisplay(final boolean val) {
     entity.setDisplay(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getDisplay()
-   */
   @Override
   public boolean getDisplay() {
     return entity.getDisplay();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setAffectsFreeBusy(boolean)
-   */
   @Override
   public void setAffectsFreeBusy(final boolean val) {
     entity.setAffectsFreeBusy(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getAffectsFreeBusy()
-   */
   @Override
   public boolean getAffectsFreeBusy() {
     return entity.getAffectsFreeBusy();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setUnremoveable(boolean)
-   */
   @Override
   public void setUnremoveable(final boolean val) {
     entity.setUnremoveable(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getUnremoveable()
-   */
   @Override
   public boolean getUnremoveable() {
     return entity.getUnremoveable();
@@ -501,17 +457,11 @@ public class CalendarWrapper extends BwCalendar
    *               CategorisedEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CategorisedEntity#setCategories(java.util.Collection)
-   */
   @Override
   public void setCategories(final Set<BwCategory> val) {
     entity.setCategories(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CategorisedEntity#getCategories()
-   */
   @Override
   public Set<BwCategory> getCategories() {
     return entity.getCategories();
@@ -521,9 +471,6 @@ public class CalendarWrapper extends BwCalendar
    *                   Property methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#setProperties(java.util.Set)
-   */
   @Override
   public void setProperties(final Set<BwProperty> val) {
     entity.setProperties(val);
@@ -550,16 +497,15 @@ public class CalendarWrapper extends BwCalendar
    * ==================================================================== */
 
   /**
-   * @throws CalFacadeException
    */
-  public void clearCurrentAccess() throws CalFacadeException {
+  public void clearCurrentAccess() {
     caMap.clear();
     currentAccess = null;
   }
 
   @Override
   @JsonIgnore
-  public CurrentAccess getCurrentAccess() throws CalFacadeException {
+  public CurrentAccess getCurrentAccess() {
     if (currentAccess != null) {
       return currentAccess;
     }
@@ -568,11 +514,10 @@ public class CalendarWrapper extends BwCalendar
   }
 
   /**
-   * @param desiredAccess
-   * @return currentAccess;
-   * @throws CalFacadeException
+   * @param desiredAccess as key to access objects
+   * @return currentAccess 
    */
-  public CurrentAccess getCurrentAccess(final int desiredAccess) throws CalFacadeException {
+  public CurrentAccess getCurrentAccess(final int desiredAccess) {
     if ((desiredAccess == lastDesiredAccess) &&
         (currentAccess != null)) {
       return currentAccess;
@@ -584,9 +529,14 @@ public class CalendarWrapper extends BwCalendar
     return currentAccess;
   }
 
+  @Override
+  public void setCurrentAccess(final CurrentAccess val) {
+    entity.setCurrentAccess(val);
+  }
+  
   /**
-   * @param ca
-   * @param desiredAccess
+   * @param ca CurrentAccess object
+   * @param desiredAccess associated access
    */
   public void setCurrentAccess(final CurrentAccess ca, final int desiredAccess) {
     currentAccess = ca;
@@ -607,6 +557,17 @@ public class CalendarWrapper extends BwCalendar
   @JsonIgnore
   public int getLastDesiredAccess() {
     return lastDesiredAccess;
+  }
+
+  @Override
+  public void setVirtualPath(final String val) {
+    virtualPath = val;
+  }
+
+  @Override
+  @NoDump
+  public String getVirtualPath() {
+    return virtualPath;
   }
 
   @Override
@@ -639,7 +600,7 @@ public class CalendarWrapper extends BwCalendar
   @Override
   @JsonIgnore
   public BwCalendar getAliasedEntity() {
-    BwCalendar ent = entity.getAliasedEntity();
+    final BwCalendar ent = entity.getAliasedEntity();
     if (ent == entity) {
       // Not aliased - return this wrapper
       return this;
@@ -670,12 +631,12 @@ public class CalendarWrapper extends BwCalendar
 
   @Override
   public void setChildren(final Collection<BwCalendar> val) {
-    entity.setChildren(val);
+    children = val;
   }
 
   @Override
   public Collection<BwCalendar> getChildren() {
-    return entity.getChildren();
+    return children;
   }
 
   @Override
@@ -777,44 +738,55 @@ public class CalendarWrapper extends BwCalendar
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("CalendarWrapper{");
+    final ToString ts = new ToString(this);
 
-    sb.append(entity.toString());
+    ts.append(entity);
 
-    try {
-      if (getCurrentAccess() != null) {
-        sb.append(", currentAccess=");
-        sb.append(getCurrentAccess());
-      }
-    } catch (CalFacadeException cfe) {
-      sb.append("exception");
-      sb.append(cfe.getMessage());
-    }
-    sb.append("}");
+    ts.append("currentAccess", getCurrentAccess());
+    ts.append("virtualPath", getVirtualPath());
 
-    return sb.toString();
+    return ts.toString();
   }
 
+  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
-    CalendarWrapper cw = new CalendarWrapper((BwCalendar)entity.clone(),
-                                             accessUtil);
+    final CalendarWrapper cw = new CalendarWrapper((BwCalendar)entity.clone(),
+                                                   accessUtil);
 
     cw.currentAccess = currentAccess;
     cw.caMap = caMap;
     cw.lastDesiredAccess = lastDesiredAccess;
+    cw.open = open;
+
+    return cw;
+  }
+
+  @Override
+  public BwCalendar cloneWrapper() {
+    final CalendarWrapper cw = new CalendarWrapper(entity,
+                                                   accessUtil);
+
+    cw.currentAccess = currentAccess;
+    cw.caMap = caMap;
+    cw.lastDesiredAccess = lastDesiredAccess;
+    cw.open = open;
+    if (children != null) {
+      cw.children = new ArrayList<>(children);
+    }
 
     return cw;
   }
 
   @Override
   public BwCalendar shallowClone() {
-    CalendarWrapper cw = new CalendarWrapper(entity.shallowClone(),
-                                             accessUtil);
+    final CalendarWrapper cw = new CalendarWrapper(entity.shallowClone(),
+                                                   accessUtil);
 
     cw.currentAccess = currentAccess;
     cw.caMap = caMap;
     cw.lastDesiredAccess = lastDesiredAccess;
+    cw.open = open;
 
     return cw;
   }

@@ -22,6 +22,9 @@ import org.bedework.util.misc.ToString;
 
 import java.io.Serializable;
 
+import static org.bedework.calfacade.responses.Response.Status.failed;
+import static org.bedework.calfacade.responses.Response.Status.ok;
+
 /** Base for web service responses
  *
  * @author Mike Douglass douglm - spherical cow
@@ -64,6 +67,18 @@ public class Response implements Serializable {
    */
   public String getMessage() {
     return message;
+  }
+  
+  public boolean isOk() {
+    return status == ok;
+  }
+
+  public static <T extends Response> T error(final T resp, 
+                                      final String msg) {
+    resp.setStatus(failed);
+    resp.setMessage(msg);
+    
+    return resp;
   }
   
   public void toStringSegment(final ToString ts) {

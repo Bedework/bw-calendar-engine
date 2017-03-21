@@ -161,6 +161,11 @@
 			</dependency>
       <dependency>
         <groupId>org.bedework</groupId>
+        <artifactId>bw-util-cli</artifactId>
+        <version>${bw-util.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bedework</groupId>
         <artifactId>bw-util-dav</artifactId>
         <version>${bw-util.version}</version>
       </dependency>
