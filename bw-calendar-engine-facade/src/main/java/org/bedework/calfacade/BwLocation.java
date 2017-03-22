@@ -32,7 +32,10 @@ import org.bedework.util.misc.Util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 /** The location of an <code>Event</code>
  *
@@ -42,15 +45,32 @@ import java.util.Comparator;
 public class BwLocation extends BwEventProperty<BwLocation>
         implements CollatableEntity, Comparator<BwLocation>,
                    SizedEntity {
-  /** To avoid schema changes we are packing a subfield into the
-   * address field. Currently both address and subaddress have a
-   * unique constraint. To accommodate room numbers we are putting
-   * them on the end of the address field with a delimiter
+  /** Currently both address and subaddress have a
+   * unique constraint. 
+   * 
+   * To avoid schema changes we are packing subfields into the
+   * address field with a delimiter.
+   * 
+   * The fields in order are:
+   *    addressField
+   *    room number
+   *    subField1
+   *    subField2
+   *    accessible flag "T"
    */
   public static final String roomDelimiter = "\t";
 
   private BwString address;
+  private Splitter addressSplit;
+  
+  private static final int addrIndex = 0;
+  private static final int roomIndex = 1;
+  private static final int subf1Index = 2;
+  private static final int subf2Index = 3;
+  private static final int accessibleIndex = 4;
+  
   private BwString subaddress;
+
   private String link;
 
   private String href;
@@ -63,7 +83,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
   }
 
   /**
-   * @param val the main address
+   * @param val the main address value
    */
   public void setAddress(final BwString val) {
     address = val;
@@ -84,29 +104,14 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @param val the building part of the location
    */
+  @SuppressWarnings("unused")
   public void setAddressField(final String val) {
-    if (val == null) {
-      // Remove all
-      setAddress(null);
-      return;
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
     }
-
-    BwString addr = getAddress();
-
-    if (addr == null) {
-      addr = new BwString(null, val);
-      setAddress(addr);
-      return;
-    }
-
-    final int pos = addr.getValue().lastIndexOf(roomDelimiter);
-
-    if (pos < 0) {
-      addr.setValue(val);
-    } else {
-      addr.setValue(
-              val + addr.getValue().substring(pos));
-    }
+    
+    addressSplit.setFld(addrIndex, val);
+    address = addressSplit.getString(address);
   }
 
   /** Get the main address of the location for json output. This is
@@ -116,74 +121,121 @@ public class BwLocation extends BwEventProperty<BwLocation>
    */
   @NoDump
   public String getAddressField() {
-    if (getAddress() == null) {
-      return null;
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
     }
 
-    final String val = getAddress().getValue();
-
-    if ((val == null) || !val.contains(roomDelimiter)) {
-      return val;
-    }
-
-    return val.substring(0, val.lastIndexOf(roomDelimiter));
+    return addressSplit.getFld(addrIndex);
   }
 
-  /** Set the room part of the main address of the location. This is
-   * after the room delimiter
+  /** Set the room part of the main address of the location. 
    *
    * @param val the room part of the location
    */
   public void setRoomField(final String val) {
-    if (val == null) {
-      // Remove any room part
-      if (getRoomField() == null) {
-        return;
-      }
-
-      final BwString addr = getAddress();
-      final int pos = addr.getValue().lastIndexOf(roomDelimiter);
-      addr.setValue(addr.getValue().substring(0, pos));
-
-      return;
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
     }
 
-    BwString addr = getAddress();
-
-    if (addr == null) {
-      addr = new BwString(null, "");
-      setAddress(addr);
-    }
-
-    final int pos = addr.getValue().lastIndexOf(roomDelimiter);
-
-    if (pos < 0) {
-      addr.setValue(
-              addr.getValue() + BwLocation.roomDelimiter + val);
-    } else {
-      addr.setValue(
-              addr.getValue().substring(0, pos + 1) + val);
-    }
+    addressSplit.setFld(roomIndex, val);
+    address = addressSplit.getString(address);
   }
 
-  /** get the room part of the main address of the location for json output. This is
-   * after the room delimiter
+  /** get the room part of the main address of the location.
    *
    * @return the room part of the location
    */
   @NoDump
   public String getRoomField() {
-    if (getAddress() == null) {
-      return null;
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
     }
 
-    final String val = getAddress().getValue();
+    return addressSplit.getFld(roomIndex);
+  }
 
-    if ((val == null) || !val.contains(roomDelimiter)) {
-      return null;
+  /** Set the subfield 1 part of the main address of the location. 
+   *
+   * @param val the subfield 1 part of the location
+   */
+  public void setSubField1(final String val) {
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
     }
 
-    return val.substring(val.lastIndexOf(roomDelimiter) + 1);
+    addressSplit.setFld(subf1Index, val);
+    address = addressSplit.getString(address);
+  }
+
+  /** get the subfield 1 part of the main address of the location.
+   *
+   * @return the subfield 1 part of the location
+   */
+  @NoDump
+  public String getSubField1() {
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
+    }
+
+    return addressSplit.getFld(subf1Index);
+  }
+
+  /** Set the subfield 2 part of the main address of the location. 
+   *
+   * @param val the subfield 2 part of the location
+   */
+  public void setSubField2(final String val) {
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
+    }
+
+    addressSplit.setFld(subf2Index, val);
+    address = addressSplit.getString(address);
+  }
+
+  /** get the subfield 2 part of the main address of the location.
+   *
+   * @return the subfield 2 part of the location
+   */
+  @NoDump
+  public String getSubField2() {
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
+    }
+
+    return addressSplit.getFld(subf2Index);
+  }
+
+  /** Set the accessible part of the main address of the location. 
+   *
+   * @param val the accessible part of the location
+   */
+  public void setAccessible(final boolean val) {
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
+    }
+
+    final String flag;
+    if (val) {
+      flag = "T";
+    } else {
+      flag = null;
+    }
+    addressSplit.setFld(accessibleIndex, flag);
+    address = addressSplit.getString(address);
+  }
+
+  /** get the accessible part of the main address of the location.
+   *
+   * @return the accessible part of the location
+   */
+  @NoDump
+  public boolean getAccessible() {
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
+    }
+
+    return "T".equals(addressSplit.getFld(accessibleIndex));
   }
 
   /**
@@ -391,5 +443,77 @@ public class BwLocation extends BwEventProperty<BwLocation>
     loc.setLink(getLink());
 
     return loc;
+  }
+  
+  private static class Splitter {
+    List<String> flds;
+    
+    Splitter(final BwString fld) {
+      if ((fld != null) && (fld.getValue() != null)) {
+        flds = new ArrayList<>(
+                Arrays.asList(fld.getValue().split(roomDelimiter)));
+      }
+    }
+    
+    void setFld(final int i, final String val) {
+      if (flds == null) {
+        flds = new ArrayList<>(i + 1);
+      }
+      
+      while (i > flds.size() - 1) {
+        flds.add(null);
+      }
+      flds.set(i, val);
+    }
+    
+    String getFld(final int i) {
+      if (flds == null) {
+        return null;
+      }
+      if (i >= flds.size()) {
+        return null;
+      }
+      
+      final String s = flds.get(i);
+      
+      if (s == null) {
+        return null;
+      }
+      
+      if (s.length() == 1) {
+        return null;
+      }
+      
+      return s;
+    }
+    
+    public BwString getString(final BwString val) {
+      if (val != null) {
+        return new BwString(val.getLang(), toString());
+      }
+      
+      return new BwString(null, toString());
+    }
+    
+    public String toString() {
+      if (flds == null) {
+        return null;
+      }
+      
+      String fld = null;
+      for (final String s: flds) {
+        if (fld != null) {
+          fld += roomDelimiter;
+        } else {
+          fld = "";
+        }
+        
+        if (s != null) {
+          fld += s;
+        }
+      }
+      
+      return fld;
+    }
   }
 }
