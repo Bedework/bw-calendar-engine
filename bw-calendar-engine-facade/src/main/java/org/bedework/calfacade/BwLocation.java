@@ -68,6 +68,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
   private static final int subf1Index = 2;
   private static final int subf2Index = 3;
   private static final int accessibleIndex = 4;
+  private static final int geouriIndex = 5; // See rfc5870
   
   private BwString subaddress;
 
@@ -236,6 +237,32 @@ public class BwLocation extends BwEventProperty<BwLocation>
     }
 
     return "T".equals(addressSplit.getFld(accessibleIndex));
+  }
+
+  /** Set the geouri part of the main address of the location. 
+   *
+   * @param val the geouri part of the location
+   */
+  public void setGeouri(final String val) {
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
+    }
+
+    addressSplit.setFld(geouriIndex, val);
+    address = addressSplit.getString(address);
+  }
+
+  /** get the geouri part of the main address of the location.
+   *
+   * @return the geouri part of the location
+   */
+  @NoDump
+  public String getGeouri() {
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
+    }
+
+    return addressSplit.getFld(geouriIndex);
   }
 
   /**
