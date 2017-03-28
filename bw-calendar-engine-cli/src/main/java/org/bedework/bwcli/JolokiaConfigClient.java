@@ -46,8 +46,12 @@ public class JolokiaConfigClient extends JolokiaClient {
     super(url);
   }
 
-  public void setCmdutilUser(final String account) throws Throwable {
-    execute(cmdutilMbean, "exec", "user " + account);
+  public String setCmdutilUser(final String account) throws Throwable {
+    return execString(cmdutilMbean, "exec", "user " + account);
+  }
+
+  public String execCmdutilCmd(final String cmd) throws Throwable {
+    return execString(cmdutilMbean, "exec", cmd);
   }
 
   public List<String> coreSchema() throws Throwable {
