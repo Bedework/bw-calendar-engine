@@ -42,7 +42,8 @@ import java.util.Comparator;
  *  @version 1.0
  */
 @Dump(elementName="category", keyFields={"uid"})
-@JsonIgnoreProperties({"size", 
+@JsonIgnoreProperties({"size",
+                       "word",
                        "wordVal", 
                        "collateValue", 
                        "finderKeyValue", 
