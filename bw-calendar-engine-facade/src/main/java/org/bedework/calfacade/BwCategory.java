@@ -46,7 +46,7 @@ import java.util.Comparator;
                        "wordVal", 
                        "collateValue", 
                        "finderKeyValue", 
-                       "descriptionVal"})
+                       "description"})
 public class BwCategory extends BwEventProperty<BwCategory>
         implements CollatableEntity, Comparator<BwCategory>,
                    SizedEntity {
@@ -183,9 +183,6 @@ public class BwCategory extends BwEventProperty<BwCategory>
    *                   EventProperty methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwEventProperty#getFinderKeyValue()
-   */
   @Override
   @NoDump
   public BwString getFinderKeyValue() {
@@ -196,9 +193,6 @@ public class BwCategory extends BwEventProperty<BwCategory>
    *                   CollatableEntity methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CollatableEntity#getCollateValue()
-   */
   @Override
   @NoDump
   public String getCollateValue() {
@@ -209,9 +203,6 @@ public class BwCategory extends BwEventProperty<BwCategory>
    *                   Action methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.BwDbentity#afterDeletion()
-   */
   @Override
   public void afterDeletion() {
     addDeletedEntity(getWord());
@@ -282,7 +273,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
 
     if (s == null) {
       s = new BwString();
-      setWord(s);
+      setDescription(s);
     }
     s.setValue(val);
   }
@@ -298,6 +289,19 @@ public class BwCategory extends BwEventProperty<BwCategory>
     }
 
     return s.getValue();
+  }
+
+  /**
+   * @return String
+   */
+  @NoDump
+  public String getStatus() {
+    final BwString s = getDescription();
+    if (s == null) {
+      return null;
+    }
+
+    return s.getLang();
   }
 
   /** Size to use for quotas.
