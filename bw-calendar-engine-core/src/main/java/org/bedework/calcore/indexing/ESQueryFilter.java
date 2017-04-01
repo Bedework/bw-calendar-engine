@@ -43,8 +43,8 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.misc.Logged;
 
-import org.apache.log4j.Logger;
 import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
@@ -67,12 +67,8 @@ import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
  * @author Mike Douglass douglm @ rpi.edu
  *
  */
-public class ESQueryFilter implements CalintfDefs {
-  private transient Logger log;
-
-  private boolean debug;
-
-  private boolean publick;
+public class ESQueryFilter extends Logged implements CalintfDefs {
+  private final boolean publick;
   private final int currentMode;
   private final BwPrincipal principal;
   private final boolean superUser;
@@ -135,8 +131,6 @@ public class ESQueryFilter implements CalintfDefs {
                        final BwPrincipal principal,
                        final boolean superUser,
                        final RecurringRetrievalMode recurRetrieval) {
-    debug = getLog().isDebugEnabled();
-
     this.publick = publick;
     this.currentMode = currentMode;
     this.principal = principal;
@@ -1087,21 +1081,5 @@ public class ESQueryFilter implements CalintfDefs {
 
     warn("Fuzzy search for " + of);
     return "";
-  }
-
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void debug(final String msg) {
-    getLog().debug(msg);
-  }
-
-  protected void warn(final String msg) {
-    getLog().warn(msg);
   }
 }

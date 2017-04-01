@@ -33,6 +33,7 @@ import org.bedework.calfacade.BwGeo;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwLongString;
 import org.bedework.calfacade.BwOrganizer;
+import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.BwRelatedTo;
 import org.bedework.calfacade.BwRequestStatus;
@@ -48,10 +49,10 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.property.RequestStatus;
-import org.apache.log4j.Logger;
 import org.elasticsearch.index.get.GetField;
 
 import java.math.BigDecimal;
@@ -65,27 +66,32 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static org.bedework.calcorei.CalintfDefs.guestMode;
+
 /** Implementation of indexer for ElasticSearch
  *
  * @author Mike Douglass douglm - rpi.edu
  *
  */
-public class EntityBuilder  {
-  private transient Logger log;
-
-  @SuppressWarnings({"FieldCanBeLocal", "UnusedDeclaration"})
-  private final boolean debug;
+public class EntityBuilder extends Logged {
+  private final boolean publick;
+  private final int currentMode;
+  private final BwPrincipal principal;
 
   private final Deque<Map<String, Object>> fieldStack = new ArrayDeque<>();
 
   /** Constructor - 1 use per entity
    *
    * @param fields map of fields from index
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
-  EntityBuilder(final Map<String, ?> fields) throws CalFacadeException {
-    debug = getLog().isDebugEnabled();
-
+  EntityBuilder(final boolean publick,
+                final int currentMode,
+                final BwPrincipal principal,
+                final Map<String, ?> fields) throws CalFacadeException {
+    this.publick = publick;
+    this.currentMode = currentMode;
+    this.principal = principal;
     pushFields(fields);
   }
 
@@ -184,17 +190,46 @@ public class EntityBuilder  {
     return col;
   }
 
+  private final static Map<String, EventInfo> eventCache = new HashMap<>();
+  private static long retrievals;
+  private static long hits;
+  
+  static void flushCache() {
+    eventCache.clear();
+  }
+  
   /**
    * @param expanded true if we are doing this for an expanded retrieval
    *                 that is, treat everything as instances.
    * @return an event object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   @SuppressWarnings("unchecked")
-  EventInfo makeEvent(final boolean expanded) throws CalFacadeException {
+  EventInfo makeEvent(final String id,
+                      final boolean expanded) throws CalFacadeException {
     final boolean override = !expanded &&
             getBool(PropertyInfoIndex.OVERRIDE);
 
+    final boolean tryCache = (currentMode == guestMode) && publick;
+    final String cacheKey = id + override;
+
+    retrievals++;
+    
+    EventInfo ei;
+    if (tryCache) {
+      ei = eventCache.get(cacheKey);
+      if (ei != null) {
+        hits++;
+        if (debug && ((retrievals % 500) == 0)) {
+          debug("Retrievals: " + retrievals + 
+                        " hits: " + hits + 
+                        " size: " + eventCache.size());
+        }
+        
+        return ei;
+      }
+    }
+    
     final BwEvent ev;
 
     if (override) {
@@ -206,7 +241,7 @@ public class EntityBuilder  {
       ev= new BwEventObj();
     }
 
-    final EventInfo ei = new  EventInfo(ev);
+    ei = new EventInfo(ev);
 
     /*
     Float score = (Float)sd.getFirstValue("score");
@@ -309,6 +344,10 @@ public class EntityBuilder  {
       ev.setPollMode(getString(PropertyInfoIndex.POLL_MODE));
       ev.setPollWinner(getInteger(PropertyInfoIndex.POLL_WINNER));
       ev.setPollProperties(getString(PropertyInfoIndex.POLL_PROPERTIES));
+    }
+    
+    if (tryCache) {
+      eventCache.put(cacheKey, ei);
     }
 
     return ei;
@@ -1029,33 +1068,5 @@ public class EntityBuilder  {
 
     return BwDateTime.makeBwDateTime(dateType, local, utc, tzid,
                                      floating);
-  }
-
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void info(final String msg) {
-    getLog().info(msg);
-  }
-
-  protected void debug(final String msg) {
-    getLog().debug(msg);
-  }
-
-  protected void warn(final String msg) {
-    getLog().warn(msg);
-  }
-
-  protected void error(final String msg) {
-    getLog().error(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLog().error(this, t);
   }
 }

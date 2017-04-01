@@ -51,11 +51,11 @@ import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.indexing.IndexException;
+import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Period;
-import org.apache.log4j.Logger;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequestBuilder;
@@ -164,11 +164,7 @@ import static org.bedework.calcore.indexing.DocBuilder.ItemKind.entity;
  * @author Mike Douglass douglm - rpi.edu
  *
  */
-public class BwIndexEsImpl implements BwIndexer {
-  private transient Logger log;
-
-  private final boolean debug;
-
+public class BwIndexEsImpl extends Logged implements BwIndexer {
   //private int batchMaxSize = 0;
   //private int batchCurSize = 0;
 
@@ -214,7 +210,7 @@ public class BwIndexEsImpl implements BwIndexer {
    * @param currentMode - guest, user,publicAdmin
    * @param accessCheck  - required - lets us check access
    * @param indexName - explicitly specified
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public BwIndexEsImpl(final Configurations configs,
                        final boolean publick,
@@ -223,8 +219,6 @@ public class BwIndexEsImpl implements BwIndexer {
                        final int currentMode,
                        final AccessChecker accessCheck,
                        final String indexName) throws CalFacadeException {
-    debug = getLog().isDebugEnabled();
-
     this.publick = publick;
     this.principal = principal;
     this.superUser = superUser;
@@ -687,7 +681,7 @@ public class BwIndexEsImpl implements BwIndexer {
           entity = eb.makeLocation();
           break;
         case docTypeEvent: case docTypePoll:
-          entity = eb.makeEvent(
+          entity = eb.makeEvent(kval,
                   res.recurRetrieval.mode == Rmode.expanded);
           final EventInfo ei = (EventInfo)entity;
           final BwEvent ev = ei.getEvent();
@@ -1523,6 +1517,8 @@ public class BwIndexEsImpl implements BwIndexer {
 
       /* If it's not recurring or a stand-alone instance index it */
 
+      EntityBuilder.flushCache();
+      
       final BwEvent ev = ei.getEvent();
 
       if (!ev.testRecurring() && (ev.getRecurrenceId() == null)) {
@@ -1909,39 +1905,11 @@ public class BwIndexEsImpl implements BwIndexer {
   }
 
   private EntityBuilder getEntityBuilder(final Map<String, ?> fields) throws CalFacadeException {
-    return new EntityBuilder(fields);
+    return new EntityBuilder(publick, currentMode, principal, fields);
   }
 
   private DocBuilder getDocBuilder() throws CalFacadeException {
     return new DocBuilder(principal,
                           authpars, unauthpars, basicSysprops);
-  }
-
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void info(final String msg) {
-    getLog().info(msg);
-  }
-
-  protected void debug(final String msg) {
-    getLog().debug(msg);
-  }
-
-  protected void warn(final String msg) {
-    getLog().warn(msg);
-  }
-
-  protected void error(final String msg) {
-    getLog().error(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLog().error(this, t);
   }
 }
