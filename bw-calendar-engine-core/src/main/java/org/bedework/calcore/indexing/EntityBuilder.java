@@ -190,12 +190,77 @@ public class EntityBuilder extends Logged {
     return col;
   }
 
-  private final static Map<String, EventInfo> eventCache = new HashMap<>();
+  static long purgeTime = 15 * 60 * 1000;
+  static long lastPurge = System.currentTimeMillis();
+  
+  private static class EventCacheEntry {
+    long lastRef; // millis when last used
+    long usect; // How many times
+    final String key;
+    final EventInfo ei;
+
+    EventCacheEntry(final String key,
+                    final EventInfo ei) {
+      this.key = key;
+      this.ei = ei;
+      update();
+    }
+    
+    void update() {
+      lastRef = System.currentTimeMillis();
+      usect++;
+    }
+    
+    boolean old(final long curTime) {
+      return (curTime - lastRef) > purgeTime;
+    }
+  }
+
+  private static String currentChangeToken;
+  private final static Map<String, EventCacheEntry> eventCache = new HashMap<>();
   private static long retrievals;
   private static long hits;
+  private static long purges;
+  private static long flushes;
+
+  static void checkPurge() {
+    final long now = System.currentTimeMillis();
+    
+    if (now - lastPurge < purgeTime) {
+      return;
+    }
+    
+    final List<String> toPurge = new ArrayList<>(eventCache.size() / 2);
+    
+    for (final EventCacheEntry ece: eventCache.values()) {
+      if (ece.old(now)) {
+        toPurge.add(ece.key);
+      }
+    }
+    
+    for (final String key: toPurge) {
+      eventCache.remove(key);
+    }
+    
+    lastPurge = now;
+    purges++;
+  }
   
-  static void flushCache() {
-    eventCache.clear();
+  static void checkFlushCache(final String changeToken) {
+    if (changeToken == null) {
+      return;
+    }
+    
+    if (currentChangeToken == null) {
+      currentChangeToken = changeToken;
+      return;
+    }
+
+    if (!currentChangeToken.equals(changeToken)) {
+      currentChangeToken = changeToken;
+      eventCache.clear();
+      flushes++;
+    }
   }
   
   /**
@@ -215,18 +280,22 @@ public class EntityBuilder extends Logged {
 
     retrievals++;
     
-    EventInfo ei;
     if (tryCache) {
-      ei = eventCache.get(cacheKey);
-      if (ei != null) {
+      checkPurge();
+      final EventCacheEntry ece = eventCache.get(cacheKey);
+      if (ece != null) {
         hits++;
+        ece.update();
+        
         if (debug && ((retrievals % 500) == 0)) {
           debug("Retrievals: " + retrievals + 
-                        " hits: " + hits + 
+                        " hits: " + hits +
+                        " purges: " + purges +
+                        " flushes: " + flushes +
                         " size: " + eventCache.size());
         }
         
-        return ei;
+        return ece.ei;
       }
     }
     
@@ -241,7 +310,7 @@ public class EntityBuilder extends Logged {
       ev= new BwEventObj();
     }
 
-    ei = new EventInfo(ev);
+    final EventInfo ei = new EventInfo(ev);
 
     /*
     Float score = (Float)sd.getFirstValue("score");
@@ -347,7 +416,7 @@ public class EntityBuilder extends Logged {
     }
     
     if (tryCache) {
-      eventCache.put(cacheKey, ei);
+      eventCache.put(cacheKey, new EventCacheEntry(cacheKey, ei));
     }
 
     return ei;

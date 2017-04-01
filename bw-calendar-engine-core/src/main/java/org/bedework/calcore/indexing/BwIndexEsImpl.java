@@ -639,10 +639,12 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
     final Map<String, Collection<BwEventAnnotation>> overrides = new HashMap<>();
     final Collection<EventInfo> masters = new TreeSet<>();
+    
+    EntityBuilder.checkFlushCache(currentChangeToken());
       
-      /* If we are retrieving events with a time range query and we are asking for the 
-      * master + overrides then we need to check that the master really has an 
-      * instance in the given time range */
+    /* If we are retrieving events with a time range query and we are asking for the 
+     * master + overrides then we need to check that the master really has an 
+     * instance in the given time range */
     final boolean checkTimeRange =
             (res.recurRetrieval.mode == Rmode.overrides) &&
                     ((res.latestStart != null) ||
@@ -1517,8 +1519,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       /* If it's not recurring or a stand-alone instance index it */
 
-      EntityBuilder.flushCache();
-      
       final BwEvent ev = ei.getEvent();
 
       if (!ev.testRecurring() && (ev.getRecurrenceId() == null)) {
