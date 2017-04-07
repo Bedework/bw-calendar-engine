@@ -2115,6 +2115,11 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     cal.setLastRefresh(getLastRefresh());
     cal.setLastEtag(getLastEtag());
     cal.setFilterExpr(getFilterExpr());
+    
+    if (!Util.isEmpty(getCategoryUids())) {
+      final Set<String> uids = new TreeSet<>(getCategoryUids());
+      cal.setCategoryUids(uids);
+    }
 
     return cal;
   }

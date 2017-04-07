@@ -73,6 +73,13 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
   }
 
   @Override
+  public List<BwResource> get(final String path,
+                              final int start,
+                              final int count) throws CalFacadeException {
+    return getCal().getNResources(path, start, count);
+  }
+
+  @Override
   public void update(final BwResource val,
                      final boolean updateContent) throws CalFacadeException {
     checkAccess(val, PrivilegeDefs.privWrite, false);

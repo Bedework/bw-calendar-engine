@@ -467,6 +467,16 @@ public class CalendarWrapper extends BwCalendar
     return entity.getCategories();
   }
 
+  @Override
+  public void setCategoryUids(final Set<String> val) {
+    entity.setCategoryUids(val);
+  }
+
+  @Override
+  public Set<String> getCategoryUids() {
+    return entity.getCategoryUids();
+  }
+
   /* ====================================================================
    *                   Property methods
    * ==================================================================== */

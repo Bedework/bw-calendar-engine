@@ -684,6 +684,18 @@ public interface Calintf
                                    final boolean forSynch,
                                    final String token) throws CalFacadeException;
 
+  /** Get resources to which this user has access - content is not fetched.
+   *
+   * @param  path           String path to containing collection
+   * @param start   start here    
+   * @param count   return this many
+   * @return List     of BwResource
+   * @throws CalFacadeException
+   */
+  List<BwResource> getNResources(String path,
+                                 final int start,
+                                 final int count) throws CalFacadeException;
+
    /* ====================================================================
     *                       system parameters
     * ==================================================================== */

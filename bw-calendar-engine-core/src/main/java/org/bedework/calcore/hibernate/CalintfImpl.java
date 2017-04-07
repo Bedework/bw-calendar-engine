@@ -1548,6 +1548,13 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   }
 
   @Override
+  public List<BwResource> getNResources(final String path,
+                                        final int start,
+                                        final int count) throws CalFacadeException {
+    return postProcess(entityDao.getNResources(path, start, count));
+  }
+
+  @Override
   public BwSystem getSyspars(final String name) throws CalFacadeException {
     return entityDao.getSyspars(name);
   }

@@ -212,6 +212,31 @@ public class EntityDAO extends DAOBase {
     return sess.getList();
   }
 
+  private static final String getNResourcesQuery =
+          "from " + BwResource.class.getName() +
+                  " as r where r.colPath=:path" +
+                  // No deleted collections for null sync-token or not sync
+                  " and (r.encoding is null or r.encoding <> :tsenc)" +
+                  " order by r.created desc";
+
+  @SuppressWarnings("unchecked")
+  public List<BwResource> getNResources(final String path,
+                                        final int start,
+                                        final int count) throws CalFacadeException {
+    final HibSession sess = getSess();
+
+    sess.createQuery(getNResourcesQuery);
+
+    sess.setString("path", path);
+
+    sess.setString("tsenc", BwResource.tombstoned);
+
+    sess.setFirstResult(start);
+    sess.setMaxResults(count);
+
+    return sess.getList();
+  }
+
   /* ====================================================================
    *                       system parameters
    * ==================================================================== */
