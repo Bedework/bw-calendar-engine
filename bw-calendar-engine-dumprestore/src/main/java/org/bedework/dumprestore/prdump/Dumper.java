@@ -52,9 +52,8 @@ public class Dumper extends Logged {
 
   /**
    * @param globals for dump
-   * @throws CalFacadeException on error
    */
-  public Dumper(final DumpGlobals globals) throws CalFacadeException {
+  public Dumper(final DumpGlobals globals) {
     this.globals = globals;
   }
   
@@ -77,16 +76,22 @@ public class Dumper extends Logged {
     return true;
   }
 
-  protected void dumpCategories() throws CalFacadeException {
+  protected void dumpCategories(final boolean publick) throws CalFacadeException {
     try {
       makeDir(Defs.categoriesDirName, false);
 
-      final Collection<BwCategory> cats =
-              getSvc().getCategoriesHandler().get();
+      final Collection<BwCategory> cats;
+      if (publick) {
+        cats = getSvc().getCategoriesHandler().getPublic();
+      } else {
+        cats = getSvc().getCategoriesHandler().get();
+      }
 
       for (final BwCategory cat: cats) {
         incCount(DumpGlobals.categories);
-        cat.dump(makeFile(cat.getUid() + ".xml"));
+        
+        final File catFile = makeFile(cat.getUid() + ".xml");
+        cat.dump(catFile);
       }
     } finally {
       popPath();

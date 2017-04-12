@@ -1999,6 +1999,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
       fromXmlCb.addSkips("byteSize",
                          "id",
                          "seq");
+
+      fromXmlCb.addMapField("col-lastmod", "lastmod");
+      fromXmlCb.addMapField("public", "publick");
     }
     
     return fromXmlCb;

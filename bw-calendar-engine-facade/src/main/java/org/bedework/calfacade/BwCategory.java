@@ -399,6 +399,8 @@ public class BwCategory extends BwEventProperty<BwCategory>
       fromXmlCb.addSkips("byteSize",
                          "id",
                          "seq");
+      
+      fromXmlCb.addMapField("public", "publick");
     }
     
     return fromXmlCb;

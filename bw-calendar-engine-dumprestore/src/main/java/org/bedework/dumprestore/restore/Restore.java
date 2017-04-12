@@ -81,6 +81,29 @@ public class Restore extends Logged implements Defs, AutoCloseable {
 
   private String rootId;
 
+  private static String principalRoot;
+  private static String userPrincipalRoot;
+  private static String groupPrincipalRoot;
+
+  //private static int principalRootLen;
+//  private static int userPrincipalRootLen;
+  private static int groupPrincipalRootLen;
+
+  private static void setRoots(final CalSvcI svc) throws CalFacadeException {
+    if (principalRoot != null) {
+      return;
+    }
+
+    final DirectoryInfo di =  svc.getDirectories().getDirectoryInfo();
+    principalRoot = di.getPrincipalRoot();
+    userPrincipalRoot = di.getUserPrincipalRoot();
+    groupPrincipalRoot = di.getGroupPrincipalRoot();
+
+    //principalRootLen = principalRoot.length();
+    //userPrincipalRootLen = userPrincipalRoot.length();
+    groupPrincipalRootLen = groupPrincipalRoot.length();
+  }
+
   /* ===================================================================
    *                       Constructor
    *  =================================================================== */
@@ -98,10 +121,11 @@ public class Restore extends Logged implements Defs, AutoCloseable {
    *  =================================================================== */
 
   /**
-   * @param val - filename to restore from
+   * @param val - directory to restore from
    */
   public void setFilename(final String val) {
     filename = val;
+    globals.setDirPath(filename);
   }
 
   /**
@@ -129,155 +153,36 @@ public class Restore extends Logged implements Defs, AutoCloseable {
     }
   }
 
-  /** Restore a single user - which must not exist - from a new style
-   * dump.
+  /** Restore a single user - which must not exist - from a dump.
    * 
    * @param account of user
+   * @param merge don't replace entities - add new ones.
    * @param info - to track status
    * @return true if restored - otherwise there's a message
    * @throws CalFacadeException on error
    */
   public boolean restoreUser(final String account,
+                             final boolean merge,
+                             final boolean dryRun,
                              final InfoLines info) throws CalFacadeException {
+    setRoots(getSvci());
     final BwPrincipal userPr = BwPrincipal.makeUserPrincipal();
 
     userPr.setAccount(account);
+
+    userPr.setPrincipalRef(Util.buildPath(colPathEndsWithSlash,
+                                          userPrincipalRoot, "/", account));
+    globals.info = info;
     globals.setPrincipalHref(userPr);
-    final FromXml fxml = new FromXml();
+    globals.setMerging(merge);
+    globals.setDryRun(dryRun);
 
-    try {
-      final String prPath = Util.buildPath(true,
-                                           filename, "/",
-                                           Utils.principalDirPath(userPr));
-      final File pdir = 
-              Utils.directory(prPath);
-      if (pdir == null) {
-        info.addLn("No user data found at " + prPath);
-        return false;
-      }
-      
-      final XmlFile prXml = 
-              new XmlFile(pdir, "principal.xml", false);
-      final XmlFile prefsXml =
-              new XmlFile(pdir, "preferences.xml", false);
-
-      final BwPrincipal pr = 
-              fxml.fromXml(prXml.getRoot(),
-                           BwUser.class,
-                           BwPrincipal.getRestoreCallback());
-      
-      final BwPreferences prefs =
-              fxml.fromXml(prefsXml.getRoot(),
-                           BwPreferences.class,
-                           BwPreferences.getRestoreCallback());
-      
-      info(pr.toString());
-      info(prefs.toString());
-      
-      /* Look for categories */
-      final String catsPath =
-              Util.buildPath(true, prPath,
-                             Defs.categoriesDirName);
-      final File catsdir = Utils.directory(catsPath);
-      if (catsdir == null) {
-        info.addLn("No categories data at " + catsPath);
-      } else {
-        final String[] cats = catsdir.list();
-        
-        if (cats != null) {
-          for (final String catName : cats) {
-            if (!catName.endsWith(".xml")) {
-              warn("Unexpected file in " + catsPath +
-                           ": " + catName);
-              continue;
-            }
-
-            final XmlFile catXml =
-                    new XmlFile(catsdir, catName, false);
-
-            final BwCategory cat =
-                    fxml.fromXml(catXml.getRoot(),
-                                 BwCategory.class,
-                                 BwCategory.getRestoreCallback());
-            info(cat.toString());
-          }
-        }
-      }
-      
-      /* Look for collections */
-      final String colsPath =
-              Util.buildPath(true, prPath,
-                             Defs.collectionsDirName);
-      final File colsdir = Utils.directory(colsPath);
-      if (colsdir == null) {
-        info.addLn("No collections data at " + colsPath);
-        return false;
-      }
-
-      restoreCollections(colsdir, true, info, fxml);
-    } catch (final CalFacadeException ce) {
-      throw ce;
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+    try (RestorePrincipal restorer = new RestorePrincipal(globals)) {
+      restorer.open(userPr);
+    
+      restorer.doRestore();
     }
     return true;
-  }
-  
-  private void restoreCollections(final File colsdir,
-                                  final boolean home,
-                                  final InfoLines info,
-                                  final FromXml fxml) throws CalFacadeException {
-    final File[] files = colsdir.listFiles();
-
-    if (files == null) {
-      if (home) {
-        info.addLn("Expected collections under " + colsdir);
-        warn("Expected collections under " + colsdir);
-      }
-      return;
-    }
-
-    try {
-      /* We may have a mixture of resources, an xml file for the collection
-        and sub-collections.
-     */
-    
-      final String colXmlName = colsdir.getName() + ".xml";
-      boolean colXmlProcessed = false;
-      
-      for (final File f: files) {
-        final String name = f.getName();
-        
-        if (name.equals(colXmlName)) {
-          colXmlProcessed = true;
-          final XmlFile colXml =
-                  new XmlFile(f, false);
-
-          final BwCalendar col =
-                  fxml.fromXml(colXml.getRoot(),
-                               BwCalendar.class,
-                               BwCalendar.getRestoreCallback());
-          info(col.toString());
-          continue;
-        }
-        
-        if (home && ("Trash".equals(name))) {
-          // Skip this one - old stuff
-          continue;
-        }
-        
-        if (f.isDirectory()) {
-          restoreCollections(f, false, info, fxml);
-          continue;
-        }
-        
-        /* Restore a resource */
-      }
-    } catch (final CalFacadeException ce) {
-      throw ce;
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    }
   }
   
   /** 'Classic' restore - single XML file.
@@ -292,14 +197,6 @@ public class Restore extends Logged implements Defs, AutoCloseable {
     }
 
     globals.info = info;
-    globals.digester = new Digester();
-
-    final RegexMatcher m = new SimpleRegexMatcher();
-    globals.digester.setRules(new RegexRules(m));
-
-    globals.digester.addRuleSet(new RestoreRuleSet(globals));
-    globals.digester.parse(new InputStreamReader(new FileInputStream(filename),
-                                         "UTF-8"));
   }
 
   /**
@@ -459,7 +356,7 @@ public class Restore extends Logged implements Defs, AutoCloseable {
     globals.init();
   }
 
-  private CalSvcI getSvci() throws Throwable {
+  private CalSvcI getSvci() throws CalFacadeException {
     final CalSvcIPars pars = CalSvcIPars.getRestorePars(adminUserAccount);
     return new CalSvcFactoryDefault().getSvc(pars);
   }

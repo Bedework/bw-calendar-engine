@@ -36,9 +36,8 @@ public class DumpPublic extends DumpPrincipal {
 
   /**
    * @param globals for dump
-   * @throws CalFacadeException on error
    */
-  public DumpPublic(final DumpGlobals globals) throws CalFacadeException {
+  public DumpPublic(final DumpGlobals globals) {
     super(globals);
   }
 
@@ -63,7 +62,7 @@ public class DumpPublic extends DumpPrincipal {
    * @throws CalFacadeException on error
    */
   public void doDump() throws CalFacadeException {
-    dumpCategories();
+    dumpCategories(true);
 
     /* Dump calendar collections - as we go we will create location, contact and
      * category directories.

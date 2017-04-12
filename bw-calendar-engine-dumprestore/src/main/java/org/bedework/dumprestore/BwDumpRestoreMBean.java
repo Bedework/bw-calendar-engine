@@ -63,17 +63,6 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
   @MBeanInfo("Set true to force accounts to lower case on dump")
   boolean getLowercaseAccounts();
 
-  /**
-   * @param val true for the new hierarchical dump format
-   */
-  void setNewDumpFormat(boolean val);
-
-  /**
-   * @return  true for the new hierarchical dump format
-   */
-  @MBeanInfo("Set true to dump in new format - not for production use yet")
-  boolean getNewDumpFormat();
-
   /* ========================================================================
    * Operations
    * ======================================================================== */
@@ -167,5 +156,7 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
    * @return Completion messages and stats
    */
   @MBeanInfo("Restore a user")
-  String restoreUser(@MBeanInfo("account")String account);
+  String restoreUser(@MBeanInfo("account")String account,
+                     @MBeanInfo("merge")boolean merge,
+                     @MBeanInfo("dryRun")boolean dryRun);
 }

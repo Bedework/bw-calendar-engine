@@ -86,9 +86,8 @@ public class DumpPrincipal extends Dumper {
 
   /**
    * @param globals for dump
-   * @throws CalFacadeException on error
    */
-  public DumpPrincipal(final DumpGlobals globals) throws CalFacadeException {
+  public DumpPrincipal(final DumpGlobals globals) {
     super(globals);
   }
 
@@ -159,7 +158,7 @@ public class DumpPrincipal extends Dumper {
       prefs.dump(makeFile("preferences.xml"));
     }
     
-    dumpCategories();
+    dumpCategories(false);
 
     /* Dump calendar collections - as we go we will create location, contact and
      * category directories.

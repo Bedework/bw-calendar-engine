@@ -16,6 +16,7 @@
 package org.bedework.dumprestore;
 
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.Util;
@@ -24,12 +25,13 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.nio.file.CopyOption;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemLoopException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -37,16 +39,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
-import java.util.EnumSet;
 import java.util.Formatter;
 import java.util.Properties;
+import java.util.function.Function;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import static java.nio.file.FileVisitResult.CONTINUE;
-import static java.nio.file.FileVisitResult.SKIP_SUBTREE;
 import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -68,6 +68,10 @@ public class Utils extends Logged {
   public static String principalDirPath(final BwPrincipal pr) {
     String s;
     final String account = pr.getAccount();
+
+    if (account.startsWith("agrp_")) {
+      return Util.buildPath(true, "/public/calsuites/", account);
+    }
     
     if (account.length() == 0) {
       s = "_";
@@ -79,7 +83,7 @@ public class Utils extends Logged {
         s = "_";
       }
     }
-    
+
     return Util.buildPath(true, "/", s, pr.getPrincipalRef());
   }
 
@@ -275,48 +279,20 @@ public class Utils extends Logged {
   /**
    * A {@code FileVisitor} that copies a file-tree ("cp -r")
    */
-  private class DirCopier implements FileVisitor<Path> {
+  class DirRestore<T extends BwDbentity>  implements FileVisitor<Path> {
     private final Path in;
-    private final Path out;
-    private final boolean outExists;
+    private final Function<InputStream, T> restore;
 
-    DirCopier(final Path in,
-              final Path out,
-              final boolean outExists) {
+    DirRestore(final Path in,
+               final Function<InputStream, T> restore) {
       this.in = in;
-      this.out = out;
-      this.outExists = outExists;
+      this.restore = restore;
     }
 
     @Override
     public FileVisitResult preVisitDirectory(final Path dir,
                                              final BasicFileAttributes attrs) {
       // before visiting entries in a directory we copy the directory
-      final Path newdir = out.resolve(in.relativize(dir));
-
-      try {
-//        if ((newdir.compareTo(out) == 0) && outExists) {
-  //        return CONTINUE;
-    //    }
-
-        //Utils.debug("**** Visit dir " + dir);
-        final File nd = newdir.toFile();
-        if (nd.exists()) {
-          if (nd.isDirectory()) {
-            return CONTINUE;
-          }
-
-          error(dir.toString() + " already exists and is not a directory");
-          return SKIP_SUBTREE;
-        }
-        //Utils.debug("**** Copy dir " + dir);
-        Files.copy(dir, newdir, copyOptionAttributes);
-      } catch (final FileAlreadyExistsException faee) {
-        error("File already exists" + faee.getFile());
-      } catch (final Throwable t) {
-        error("Unable to create: " + newdir + ": " + t);
-        return SKIP_SUBTREE;
-      }
       return CONTINUE;
     }
 
@@ -324,24 +300,24 @@ public class Utils extends Logged {
     public FileVisitResult visitFile(final Path file,
                                      final BasicFileAttributes attrs) {
       //Utils.debug("**** Copy file " + file);
-      copyFile(file, out.resolve(in.relativize(file)));
+      
+      final File f = file.toFile();
+      final InputStream is;
+      try {
+        is = new FileInputStream(f);
+      } catch (final FileNotFoundException fnfe) {
+        warn("File not found: " + file);
+        return CONTINUE;
+      }
+
+      restore.apply(is);
+
       return CONTINUE;
     }
 
     @Override
     public FileVisitResult postVisitDirectory(final Path dir,
                                               final IOException exc) {
-      // fix up modification time of directory when done
-      if (exc == null) {
-        final Path newdir = out.resolve(in.relativize(dir));
-        try {
-          final FileTime time = Files.getLastModifiedTime(dir);
-          Files.setLastModifiedTime(newdir, time);
-        } catch (final Throwable t) {
-          error("Unable to copy all attributes to: " + newdir +
-                        ": " + t);
-        }
-      }
       return CONTINUE;
     }
 
@@ -355,27 +331,6 @@ public class Utils extends Logged {
       }
       return CONTINUE;
     }
-  }
-
-  public void copy(final Path inPath,
-                   final Path outPath,
-                   final boolean outExists) throws Throwable {
-    final EnumSet<FileVisitOption> opts = EnumSet.of(
-            FileVisitOption.FOLLOW_LINKS);
-    final DirCopier tc = new DirCopier(inPath, outPath, outExists);
-    Files.walkFileTree(inPath, opts, Integer.MAX_VALUE, tc);
-  }
-
-  public void copyFile(final Path in,
-                       final Path out) {
-//    if (Files.notExists(out)) {
-    try {
-      Files.copy(in, out, copyOptionAttributes);
-    } catch (final Throwable t) {
-      error("Unable to copy: " + in + " to " + out +
-                    ": " + t);
-    }
-    //  }
   }
 
   public class DeletingFileVisitor extends SimpleFileVisitor<Path> {

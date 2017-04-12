@@ -69,8 +69,6 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   private boolean fixAliases;
 
   private boolean lowercaseAccounts;
-  
-  private boolean newDumpFormat;
 
   private String curSvciOwner;
 
@@ -658,16 +656,6 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   }
 
   @Override
-  public void setNewDumpFormat(final boolean val) {
-    newDumpFormat = true;
-  }
-
-  @Override
-  public boolean getNewDumpFormat() {
-    return newDumpFormat;
-  }
-
-  @Override
   public synchronized String restoreData() {
     try {
       setStatus(statusStopped);
@@ -896,20 +884,21 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   }
 
   @Override
-  public String restoreUser(final String account) {
+  public String restoreUser(final String account,
+                            final boolean merge,
+                            final boolean dryRun) {
     final InfoLines infoLines = new InfoLines();
 
     try (final Restore restorer = new Restore()) {
       restorer.getConfigProperties();
-
-      infoLines.addLn("Restore file: " + getDataIn());
-      info("Restore file: " + getDataIn());
-
       restorer.setFilename(getDataIn());
 
+      infoLines.addLn("Restore user from: " + getDataIn());
+      info("Restore user from : " + getDataIn());
+      
       restorer.open(false);
 
-      restorer.restoreUser(account, infoLines);
+      restorer.restoreUser(account, merge, dryRun, infoLines);
       
       return infoLines.toString();
     } catch (final Throwable t) {

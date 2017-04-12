@@ -62,6 +62,18 @@ public class RestoreGlobals extends Counters {
    * Properties of the dump, version date etc.
    * ******************************************************************** */
 
+  /** Where we do new style dump */
+  private String dirPath;
+  
+  /* true if we are merging data into existing system */
+  private boolean merging;
+
+  /* true if we don't actually create anything */
+  private boolean dryRun;
+  
+  /* Where collections are in the dumped data - so we knwo if we are restoring home */
+  public String colsHome;
+
   /** */
   public PrincipalInfo principalInfo;
 
