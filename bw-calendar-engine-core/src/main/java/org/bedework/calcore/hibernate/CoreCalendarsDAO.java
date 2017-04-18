@@ -51,6 +51,11 @@ class CoreCalendarsDAO extends DAOBase {
     super(sess);
   }
 
+  @Override
+  public String getName() {
+    return CoreCalendarsDAO.class.getName();
+  }
+  
   /* ====================================================================
    *                   CalendarsI methods
    * ==================================================================== */

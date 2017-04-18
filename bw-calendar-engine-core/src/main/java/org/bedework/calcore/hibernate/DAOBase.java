@@ -29,7 +29,7 @@ import java.sql.Blob;
  *
  * @author Mike Douglass   douglm  bedework.org
  */
-public class DAOBase extends Logged {
+public abstract class DAOBase extends Logged {
   private HibSession sess;
 
   /**
@@ -38,6 +38,12 @@ public class DAOBase extends Logged {
   public DAOBase(final HibSession sess) {
     this.sess = sess;
   }
+
+  /**
+   * 
+   * @return a unique name for the instance.
+   */
+  public abstract String getName();
 
   public void setSess(final HibSession val) throws CalFacadeException {
     sess = val;

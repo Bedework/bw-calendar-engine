@@ -40,6 +40,11 @@ class FilterDefsDAO extends DAOBase {
    super(sess);
  }
 
+  @Override
+  public String getName() {
+    return FilterDefsDAO.class.getName();
+  }
+
   private static final String getAllFilterDefsQuery =
           "from " + BwFilterDef.class.getName() +
                   " where ownerHref=:ownerHref";

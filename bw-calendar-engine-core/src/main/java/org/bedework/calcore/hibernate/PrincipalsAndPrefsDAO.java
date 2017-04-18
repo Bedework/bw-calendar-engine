@@ -42,6 +42,11 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
     super(sess);
   }
 
+  @Override
+  public String getName() {
+    return PrincipalsAndPrefsDAO.class.getName();
+  }
+
   public void saveOrUpdate(final BwGroupEntry val) throws CalFacadeException {
     getSess().saveOrUpdate(val);
   }

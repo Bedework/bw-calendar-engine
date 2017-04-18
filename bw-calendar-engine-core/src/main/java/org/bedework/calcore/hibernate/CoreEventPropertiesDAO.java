@@ -150,6 +150,11 @@ public class CoreEventPropertiesDAO extends DAOBase {
     finderFieldName = finderFields.get(className);
   }
 
+  @Override
+  public String getName() {
+    return CoreEventPropertiesDAO.class.getName() + "-" + className;
+  }
+
   private String getAllQuery;
 
   @SuppressWarnings("unchecked")

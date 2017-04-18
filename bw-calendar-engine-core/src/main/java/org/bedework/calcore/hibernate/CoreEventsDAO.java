@@ -45,6 +45,11 @@ public class CoreEventsDAO extends DAOBase {
     super(sess);
   }
 
+  @Override
+  public String getName() {
+    return CoreEventsDAO.class.getName();
+  }
+
   protected void update(final BwRecurrenceInstance val) throws CalFacadeException {
     getSess().update(val);
   }

@@ -241,7 +241,13 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
     @Override
     public void registerDao(final DAOBase dao) {
-      intf.daos.put(dao.getClass().getName(), dao);
+      final DAOBase entry = intf.daos.get(dao.getName());
+      
+      if (entry != null) {
+        intf.error("******************************************\n" +
+                           "dao: " + dao.getName() + " already registered");
+      }
+      intf.daos.put(dao.getName(), dao);
     }
 
     @Override

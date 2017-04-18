@@ -31,6 +31,11 @@ public class EntityDAO extends DAOBase {
     super(sess);
   }
 
+  @Override
+  public String getName() {
+    return EntityDAO.class.getName();
+  }
+
   /* ====================================================================
    *                       calendar suites
    * ==================================================================== */
