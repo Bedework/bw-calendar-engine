@@ -19,7 +19,9 @@
 package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
+import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwStringBase;
+import org.bedework.util.xml.FromXmlCallback;
 
 import java.util.Collection;
 
@@ -67,6 +69,26 @@ public class BwString extends BwStringBase {
    */
   public static BwString findLang(final String lang, final Collection<BwString> c) {
     return (BwString)BwStringBase.findLanguage(lang, c);
+  }
+
+  /* ====================================================================
+   *                   Restore callback
+   * ==================================================================== */
+
+  private static FromXmlCallback fromXmlCb;
+
+  @NoDump
+  public static FromXmlCallback getRestoreCallback() {
+    if (fromXmlCb == null) {
+      fromXmlCb = new FromXmlCallback();
+
+      fromXmlCb.addSkips("byteSize",
+                         "id",
+                         "seq",
+                         "size");
+    }
+
+    return fromXmlCb;
   }
 
   @Override

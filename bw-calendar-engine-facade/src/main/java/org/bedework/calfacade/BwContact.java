@@ -29,6 +29,9 @@ import org.bedework.calfacade.util.QuotaUtil;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
+import org.bedework.util.xml.FromXmlCallback;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Comparator;
 
@@ -39,6 +42,7 @@ import java.util.Comparator;
  * @version 1.0
  */
 @Dump(elementName="contact", keyFields={"uid"})
+@JsonIgnoreProperties({"size"})
 public class BwContact extends BwEventProperty<BwContact>
         implements CollatableEntity, Comparator<BwContact>,
                    SizedEntity {
@@ -74,7 +78,7 @@ public class BwContact extends BwEventProperty<BwContact>
   }
 
   /**
-   * @param val
+   * @param val phone number
    */
   @IcalProperty(pindex = PropertyInfoIndex.PHONE)
   public void setPhone(final String val) {
@@ -89,7 +93,7 @@ public class BwContact extends BwEventProperty<BwContact>
   }
 
   /**
-   * @param val
+   * @param val email
    */
   @IcalProperty(pindex = PropertyInfoIndex.EMAIL)
   public void setEmail(final String val) {
@@ -151,13 +155,34 @@ public class BwContact extends BwEventProperty<BwContact>
   }
 
   @Override
-  public void setHref(String val) {
+  public void setHref(final String val) {
     href = val;
   }
 
   @Override
   public String getHref(){
     return href;
+  }
+
+  public void setStatus(final String val) {
+    if (getCn() == null) {
+      setCn(new BwString(val, null));
+    } else {
+      getCn().setLang(val);
+    }
+  }
+
+  /**
+   * @return String
+   */
+  @NoDump
+  public String getStatus() {
+    final BwString s = getCn();
+    if (s == null) {
+      return null;
+    }
+
+    return s.getLang();
   }
 
   /* ====================================================================
@@ -177,9 +202,6 @@ public class BwContact extends BwEventProperty<BwContact>
    *                   CollatableEntity methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CollatableEntity#getCollateValue()
-   */
   @Override
   @NoDump
   public String getCollateValue() {
@@ -190,9 +212,6 @@ public class BwContact extends BwEventProperty<BwContact>
    *                   Action methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.BwDbentity#afterDeletion()
-   */
   @Override
   public void afterDeletion() {
     addDeletedEntity(getCn());
@@ -239,6 +258,27 @@ public class BwContact extends BwEventProperty<BwContact>
   }
 
   /* ====================================================================
+   *                   Restore callback
+   * ==================================================================== */
+
+  private static FromXmlCallback fromXmlCb;
+
+  @NoDump
+  public static FromXmlCallback getRestoreCallback() {
+    if (fromXmlCb == null) {
+      fromXmlCb = new FromXmlCallback();
+
+      fromXmlCb.addSkips("byteSize",
+                         "id",
+                         "seq");
+
+      fromXmlCb.addMapField("public", "publick");
+    }
+
+    return fromXmlCb;
+  }
+
+  /* ====================================================================
    *                   Object methods
    * ==================================================================== */
 
@@ -268,7 +308,7 @@ public class BwContact extends BwEventProperty<BwContact>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
     ts.append("uid", getUid());
@@ -282,7 +322,7 @@ public class BwContact extends BwEventProperty<BwContact>
 
   @Override
   public Object clone() {
-    BwContact sp = new BwContact();
+    final BwContact sp = new BwContact();
 
     super.copyTo(sp);
 

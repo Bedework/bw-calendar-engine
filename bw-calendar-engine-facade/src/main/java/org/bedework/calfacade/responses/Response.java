@@ -73,12 +73,30 @@ public class Response implements Serializable {
     return status == ok;
   }
 
-  public static <T extends Response> T error(final T resp, 
-                                      final String msg) {
-    resp.setStatus(failed);
+  public static Response ok() {
+    return ok(new Response(), null);
+  }
+
+  public static <T extends Response> T ok(final T resp,
+                                          final String msg) {
+    resp.setStatus(ok);
     resp.setMessage(msg);
-    
+
     return resp;
+  }
+
+  public static <T extends Response> T notOk(final T resp,
+                                             final Status status,
+                                             final String msg) {
+    resp.setStatus(status);
+    resp.setMessage(msg);
+
+    return resp;
+  }
+
+  public static <T extends Response> T error(final T resp, 
+                                             final String msg) {
+    return notOk(resp, failed, msg);
   }
   
   public void toStringSegment(final ToString ts) {

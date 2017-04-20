@@ -139,7 +139,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
   public String getName() {
     return name;
   }
-
+  
   /* ====================================================================
    *                   FixNamesEntity methods
    * ==================================================================== */
@@ -290,6 +290,14 @@ public class BwCategory extends BwEventProperty<BwCategory>
     }
 
     return s.getValue();
+  }
+
+  public void setStatus(final String val) {
+    if (getDescription() == null) {
+      setDescription(new BwString(val, null));
+    } else {
+      getDescription().setLang(val);
+    }
   }
 
   /**

@@ -29,6 +29,7 @@ import org.bedework.calfacade.util.QuotaUtil;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
+import org.bedework.util.xml.FromXmlCallback;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -236,7 +237,8 @@ public class BwLocation extends BwEventProperty<BwLocation>
       addressSplit = new Splitter(address);
     }
 
-    return "T".equals(addressSplit.getFld(accessibleIndex));
+    final String fld = addressSplit.getFld(accessibleIndex);
+    return "T".equals(fld);
   }
 
   /** Set the geouri part of the main address of the location. 
@@ -263,6 +265,27 @@ public class BwLocation extends BwEventProperty<BwLocation>
     }
 
     return addressSplit.getFld(geouriIndex);
+  }
+
+  public void setStatus(final String val) {
+    if (getAddress() == null) {
+      setAddress(new BwString(val, null));
+    } else {
+      getAddress().setLang(val);
+    }
+  }
+
+  /**
+   * @return String
+   */
+  @NoDump
+  public String getStatus() {
+    final BwString s = getAddress();
+    if (s == null) {
+      return null;
+    }
+
+    return s.getLang();
   }
 
   /**
@@ -415,6 +438,27 @@ public class BwLocation extends BwEventProperty<BwLocation>
   }
 
   /* ====================================================================
+   *                   Restore callback
+   * ==================================================================== */
+
+  private static FromXmlCallback fromXmlCb;
+
+  @NoDump
+  public static FromXmlCallback getRestoreCallback() {
+    if (fromXmlCb == null) {
+      fromXmlCb = new FromXmlCallback();
+
+      fromXmlCb.addSkips("byteSize",
+                         "id",
+                         "seq");
+
+      fromXmlCb.addMapField("public", "publick");
+    }
+
+    return fromXmlCb;
+  }
+
+  /* ====================================================================
    *                   Object methods
    * ==================================================================== */
 
@@ -507,7 +551,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
         return null;
       }
       
-      if (s.length() == 1) {
+      if (s.length() == 0) {
         return null;
       }
       
