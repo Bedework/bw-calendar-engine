@@ -19,6 +19,8 @@
 package org.bedework.dumprestore.prdump;
 
 import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwContact;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcI;
@@ -90,8 +92,52 @@ public class Dumper extends Logged {
       for (final BwCategory cat: cats) {
         incCount(DumpGlobals.categories);
         
-        final File catFile = makeFile(cat.getUid() + ".xml");
+        final File catFile = makeFile(cat.getWordVal() + ".xml");
         cat.dump(catFile);
+      }
+    } finally {
+      popPath();
+    }
+  }
+
+  protected void dumpLocations(final boolean publick) throws CalFacadeException {
+    try {
+      makeDir(Defs.locationsDirName, false);
+
+      final Collection<BwLocation> ents;
+      if (publick) {
+        ents = getSvc().getLocationsHandler().getPublic();
+      } else {
+        ents = getSvc().getLocationsHandler().get();
+      }
+
+      for (final BwLocation ent: ents) {
+        incCount(DumpGlobals.locations);
+
+        final File f = makeFile(ent.getUid() + ".xml");
+        ent.dump(f);
+      }
+    } finally {
+      popPath();
+    }
+  }
+
+  protected void dumpContacts(final boolean publick) throws CalFacadeException {
+    try {
+      makeDir(Defs.contactsDirName, false);
+
+      final Collection<BwContact> ents;
+      if (publick) {
+        ents = getSvc().getContactsHandler().getPublic();
+      } else {
+        ents = getSvc().getContactsHandler().get();
+      }
+
+      for (final BwContact ent: ents) {
+        incCount(DumpGlobals.contacts);
+
+        final File f = makeFile(ent.getUid() + ".xml");
+        ent.dump(f);
       }
     } finally {
       popPath();
@@ -135,25 +181,34 @@ public class Dumper extends Logged {
    */
   protected File makeFile(final String name) throws CalFacadeException {
     try {
-      final Path p =  FileSystems.getDefault().getPath(topPath(), name);
+      String fname = name.replace('/', '_');
+      
+      for (int i = 0; i < 20; i++) {
+        final Path p =
+                FileSystems.getDefault().getPath(topPath(),
+                                                 fname);
 
-      final File f = p.toFile();
+        final File f = p.toFile();
 
-      if (f.exists()) {
-        globals.info.addLn("Path " + p + " already exists.");
-        return null;
+        if (f.exists()) {
+          globals.info.addLn("Path " + p + " already exists.");
+          fname = "dup_" + fname;
+          continue;
+        }
+        
+        if (!f.createNewFile()) {
+          throw new CalFacadeException("Unable to create file " + p);
+        }
+
+        return f;
       }
-
-      if (!f.createNewFile()) {
-        throw new CalFacadeException("Unable to create file " + p);
-      }
-
-      return f;
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
+    
+    throw new CalFacadeException("Unable to create file " + name);
   }
 
   /** Add a directory using stack top as path and pushes the new path

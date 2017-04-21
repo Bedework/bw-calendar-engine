@@ -899,12 +899,41 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
       restorer.open(false);
 
       restorer.restoreUser(account, merge, dryRun, infoLines);
+
+      restorer.stats(infoLines);
       
       return infoLines.toString();
     } catch (final Throwable t) {
       error(t);
 
       return "Exception: " + t.getLocalizedMessage() + 
+              "|nInfo: " + infoLines;
+    }
+  }
+
+  @Override
+  public String restorePublic(final boolean merge,
+                              final boolean dryRun) {
+    final InfoLines infoLines = new InfoLines();
+
+    try (final Restore restorer = new Restore()) {
+      restorer.getConfigProperties();
+      restorer.setFilename(getDataIn());
+
+      infoLines.addLn("Restore public data from: " + getDataIn());
+      info("Restore public data from : " + getDataIn());
+
+      restorer.open(false);
+
+      restorer.restorePublic(merge, dryRun, infoLines);
+
+      restorer.stats(infoLines);
+
+      return infoLines.toString();
+    } catch (final Throwable t) {
+      error(t);
+
+      return "Exception: " + t.getLocalizedMessage() +
               "|nInfo: " + infoLines;
     }
   }

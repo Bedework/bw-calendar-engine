@@ -25,6 +25,7 @@ import org.bedework.calsvci.Contacts;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 /** Class which handles manipulation of Contacts.
  *
@@ -52,7 +53,20 @@ public class ContactsImpl
   Collection<BwContact> fetchAllIndexed(final boolean publick,
                                         final String ownerHref)
           throws CalFacadeException {
-    return getIndexer(publick, ownerHref).fetchAllContacts();
+    return filterDeleted(getIndexer(publick, 
+                                    ownerHref).fetchAllContacts());
+  }
+
+  @Override
+  Collection<BwContact> filterDeleted(final Collection<BwContact> ents)
+          throws CalFacadeException {
+    if (isSuper()) {
+      return ents;
+    }
+
+    return ents.stream().filter(ent -> !ent.getStatus()
+                                           .equals("deleted"))
+               .collect(Collectors.toList());
   }
 
   @Override

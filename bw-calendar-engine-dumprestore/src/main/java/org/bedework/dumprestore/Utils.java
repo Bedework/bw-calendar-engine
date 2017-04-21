@@ -70,7 +70,9 @@ public class Utils extends Logged {
     final String account = pr.getAccount();
 
     if (account.startsWith("agrp_")) {
-      return Util.buildPath(true, "/public/calsuites/", account);
+      return Util.buildPath(true, "/public/" +
+              Defs.adminGroupsDirName +
+              "/", account);
     }
     
     if (account.length() == 0) {

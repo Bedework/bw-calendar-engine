@@ -93,6 +93,9 @@ public class Counters {
   /**   */
   public int[] counts = new int[20];
 
+  /**   */
+  public int[] skipCounts = new int[20];
+
   /** */
   public String[] countNames = {
              "syspars",
@@ -142,6 +145,8 @@ public class Counters {
     sb.append(name);
     sb.append(": ");
     sb.append(counts[cti]);
+    sb.append("  skipped: ");
+    sb.append(skipCounts[cti]);
 
     info(infoLines, sb.toString());
   }

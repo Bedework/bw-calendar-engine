@@ -153,10 +153,22 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
   /** Restore a user. Requires the data path refer to the new dump format. 
    *
    * @param account of user.
+   * @param merge - true if we don't touch existing data but add new.
+   * @param dryRun just pretend to do it.
    * @return Completion messages and stats
    */
   @MBeanInfo("Restore a user")
   String restoreUser(@MBeanInfo("account")String account,
                      @MBeanInfo("merge")boolean merge,
                      @MBeanInfo("dryRun")boolean dryRun);
+
+  /** Restore public data. Requires the data path refer to the new dump format. 
+   *
+   * @param merge - true if we don't touch existing data but add new.
+   * @param dryRun just pretend to do it.
+   * @return Completion messages and stats
+   */
+  @MBeanInfo("Restore public data")
+  String restorePublic(@MBeanInfo("merge")boolean merge,
+                       @MBeanInfo("dryRun")boolean dryRun);
 }

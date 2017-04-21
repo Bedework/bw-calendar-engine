@@ -25,6 +25,7 @@ import org.bedework.calsvci.Locations;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 /** Class which handles manipulation of Locations.
  *
@@ -52,7 +53,20 @@ public class LocationsImpl
   Collection<BwLocation> fetchAllIndexed(final boolean publick,
                                          final String ownerHref)
           throws CalFacadeException {
-    return getIndexer(publick, ownerHref).fetchAllLocations();
+    return filterDeleted(getIndexer(publick, 
+                                    ownerHref).fetchAllLocations());
+  }
+
+  @Override
+  Collection<BwLocation> filterDeleted(final Collection<BwLocation> ents)
+          throws CalFacadeException {
+    if (isSuper()) {
+      return ents;
+    }
+
+    return ents.stream().filter(ent -> !ent.getStatus()
+                                           .equals("deleted"))
+               .collect(Collectors.toList());
   }
 
   @Override

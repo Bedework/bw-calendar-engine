@@ -78,6 +78,8 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   abstract Collection<T> fetchAllIndexed(boolean publick,
                                          String ownerHref) throws CalFacadeException;
 
+  abstract Collection<T> filterDeleted(final Collection<T> ents) throws CalFacadeException;
+  
   abstract T fetchIndexedByUid(String uid) throws CalFacadeException;
 
   /** Find a persistent entry like the one given or return null.
@@ -484,17 +486,17 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     }
 
     if (creatorHref == null) {
-      return ents;
+      return filterDeleted(ents);
     }
 
-    List<T> someEnts = new ArrayList<>();
-    for (T ent: ents) {
+    final List<T> someEnts = new ArrayList<>();
+    for (final T ent: ents) {
       if (ent.getCreatorHref().equals(creatorHref)) {
         someEnts.add(ent);
       }
     }
 
-    return someEnts;
+    return filterDeleted(someEnts);
   }
 
   private String checkHref(String ownerHref) throws CalFacadeException {

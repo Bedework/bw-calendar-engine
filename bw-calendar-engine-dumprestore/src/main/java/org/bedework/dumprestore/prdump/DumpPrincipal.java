@@ -159,6 +159,8 @@ public class DumpPrincipal extends Dumper {
     }
     
     dumpCategories(false);
+    dumpContacts(false);
+    dumpLocations(false);
 
     /* Dump calendar collections - as we go we will create location, contact and
      * category directories.

@@ -37,8 +37,13 @@ public interface Defs {
    *                Collection names for hierarchical dump
    * ==================================================================== */
 
+  String adminGroupsDirName = "adminGroups";
   String categoriesDirName = "categories";
   String collectionsDirName = "collections";
+  String contactsDirName = "contacts";
+  String contentDirName = "content";
+  String locationsDirName = "locations";
+  String resourcesDirName = "resources";
 
   /* ====================================================================
    *                      Tag names for entire dump

@@ -63,10 +63,8 @@ public class DumpPublic extends DumpPrincipal {
    */
   public void doDump() throws CalFacadeException {
     dumpCategories(true);
-
-    /* Dump calendar collections - as we go we will create location, contact and
-     * category directories.
-     */
+    dumpContacts(true);
+    dumpLocations(true);
 
     try {
       makeDir(Defs.collectionsDirName, false);
