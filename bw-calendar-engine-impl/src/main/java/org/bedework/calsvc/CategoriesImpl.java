@@ -64,9 +64,9 @@ public class CategoriesImpl
       return ents;
     }
 
-    return ents.stream().filter(ent -> !ent.getStatus()
-                                            .equals("deleted"))
-                .collect(Collectors.toList());
+    return ents.stream()
+               .filter(ent -> !"deleted".equals(ent.getStatus()))
+               .collect(Collectors.toList());
   }
 
   @Override

@@ -64,8 +64,8 @@ public class LocationsImpl
       return ents;
     }
 
-    return ents.stream().filter(ent -> !ent.getStatus()
-                                           .equals("deleted"))
+    return ents.stream()
+               .filter(ent -> !"deleted".equals(ent.getStatus()))
                .collect(Collectors.toList());
   }
 
