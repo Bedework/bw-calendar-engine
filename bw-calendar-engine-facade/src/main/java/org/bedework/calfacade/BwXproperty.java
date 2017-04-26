@@ -220,6 +220,22 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   public final static String xBedeworkContact = "X-BEDEWORK-CONTACT";
 
   /* ====================================================================
+   *                        location fields
+   * ==================================================================== */
+
+  public final static String xBedeworkLocationAddr = "X-BEDEWORK-LOCATION-ADDR";
+  public final static String xBedeworkLocationRoom = "X-BEDEWORK-LOCATION-ROOM";
+  public final static String xBedeworkLocationAccessible = "X-BEDEWORK-LOCATION-ACCESSIBLE";
+  public final static String xBedeworkLocationSfield1 = "X-BEDEWORK-LOCATION-SFIELD1";
+  public final static String xBedeworkLocationSfield2 = "X-BEDEWORK-LOCATION-SFIELD2";
+  public final static String xBedeworkLocationGeo = "X-BEDEWORK-LOCATION-GEO";
+  public final static String xBedeworkLocationStreet = "X-BEDEWORK-LOCATION-STREET";
+  public final static String xBedeworkLocationCity = "X-BEDEWORK-LOCATION-CITY";
+  public final static String xBedeworkLocationState = "X-BEDEWORK-LOCATION-STATE";
+  public final static String xBedeworkLocationZip = "X-BEDEWORK-LOCATION-ZIP";
+  public final static String xBedeworkLocationLink = "X-BEDEWORK-LOCATION-LINK";
+
+  /* ====================================================================
    *                        Misc properties
    * ==================================================================== */
 

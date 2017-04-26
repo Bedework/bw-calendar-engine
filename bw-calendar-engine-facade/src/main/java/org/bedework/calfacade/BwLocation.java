@@ -59,7 +59,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *    subField2
    *    accessible flag "T"
    */
-  public static final String roomDelimiter = "\t";
+  public static final String fieldDelimiter = "\t";
 
   private BwString address;
   private Splitter addressSplit;
@@ -72,6 +72,12 @@ public class BwLocation extends BwEventProperty<BwLocation>
   private static final int geouriIndex = 5; // See rfc5870
   
   private BwString subaddress;
+  private Splitter subaddressSplit;
+  
+  private static final int streetIndex = 0;
+  private static final int cityIndex = 1;
+  private static final int stateIndex = 2;
+  private static final int zipIndex = 3;
 
   private String link;
 
@@ -108,12 +114,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    */
   @SuppressWarnings("unused")
   public void setAddressField(final String val) {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-    
-    addressSplit.setFld(addrIndex, val);
-    address = addressSplit.getString(address);
+    assignAddressField(addrIndex, val);
   }
 
   /** Get the main address of the location for json output. This is
@@ -123,11 +124,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    */
   @NoDump
   public String getAddressField() {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-
-    return addressSplit.getFld(addrIndex);
+    return fetchAddressSplit().getFld(addrIndex);
   }
 
   /** Set the room part of the main address of the location. 
@@ -135,12 +132,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    * @param val the room part of the location
    */
   public void setRoomField(final String val) {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-
-    addressSplit.setFld(roomIndex, val);
-    address = addressSplit.getString(address);
+    assignAddressField(roomIndex, val);
   }
 
   /** get the room part of the main address of the location.
@@ -149,11 +141,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    */
   @NoDump
   public String getRoomField() {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-
-    return addressSplit.getFld(roomIndex);
+    return fetchAddressSplit().getFld(roomIndex);
   }
 
   /** Set the subfield 1 part of the main address of the location. 
@@ -161,12 +149,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    * @param val the subfield 1 part of the location
    */
   public void setSubField1(final String val) {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-
-    addressSplit.setFld(subf1Index, val);
-    address = addressSplit.getString(address);
+    assignAddressField(subf1Index, val);
   }
 
   /** get the subfield 1 part of the main address of the location.
@@ -175,11 +158,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    */
   @NoDump
   public String getSubField1() {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-
-    return addressSplit.getFld(subf1Index);
+    return fetchAddressSplit().getFld(subf1Index);
   }
 
   /** Set the subfield 2 part of the main address of the location. 
@@ -187,12 +166,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    * @param val the subfield 2 part of the location
    */
   public void setSubField2(final String val) {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-
-    addressSplit.setFld(subf2Index, val);
-    address = addressSplit.getString(address);
+    assignAddressField(subf2Index, val);
   }
 
   /** get the subfield 2 part of the main address of the location.
@@ -201,11 +175,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    */
   @NoDump
   public String getSubField2() {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-
-    return addressSplit.getFld(subf2Index);
+    return fetchAddressSplit().getFld(subf2Index);
   }
 
   /** Set the accessible part of the main address of the location. 
@@ -213,18 +183,13 @@ public class BwLocation extends BwEventProperty<BwLocation>
    * @param val the accessible part of the location
    */
   public void setAccessible(final boolean val) {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-
     final String flag;
     if (val) {
       flag = "T";
     } else {
       flag = null;
     }
-    addressSplit.setFld(accessibleIndex, flag);
-    address = addressSplit.getString(address);
+    assignAddressField(accessibleIndex, flag);
   }
 
   /** get the accessible part of the main address of the location.
@@ -233,11 +198,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    */
   @NoDump
   public boolean getAccessible() {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-
-    final String fld = addressSplit.getFld(accessibleIndex);
+    final String fld = fetchAddressSplit().getFld(accessibleIndex);
     return "T".equals(fld);
   }
 
@@ -246,12 +207,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    * @param val the geouri part of the location
    */
   public void setGeouri(final String val) {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-
-    addressSplit.setFld(geouriIndex, val);
-    address = addressSplit.getString(address);
+    assignAddressField(geouriIndex, val);
   }
 
   /** get the geouri part of the main address of the location.
@@ -260,11 +216,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    */
   @NoDump
   public String getGeouri() {
-    if (addressSplit == null) {
-      addressSplit = new Splitter(address);
-    }
-
-    return addressSplit.getFld(geouriIndex);
+    return fetchAddressSplit().getFld(geouriIndex);
   }
 
   public void setStatus(final String val) {
@@ -300,8 +252,77 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the secondary address of the location
    */
+  @JsonIgnore
   public BwString getSubaddress() {
     return subaddress;
+  }
+
+  /** Set the street part of the subaddress of the location. 
+   *
+   * @param val the street part of the location
+   */
+  public void setStreetField(final String val) {
+    assignSubaddressField(streetIndex, val);
+  }
+
+  /** get the street part of the sub address of the location.
+   *
+   * @return the street part of the location
+   */
+  @NoDump
+  public String getStreetField() {
+    return fetchSubaddressSplit().getFld(streetIndex);
+  }
+
+  /** Set the city part of the subaddress of the location. 
+   *
+   * @param val the city part of the location
+   */
+  public void setCityField(final String val) {
+    assignSubaddressField(cityIndex, val);
+  }
+
+  /** get the city part of the sub address of the location.
+   *
+   * @return the city part of the location
+   */
+  @NoDump
+  public String getCityField() {
+    return fetchSubaddressSplit().getFld(cityIndex);
+  }
+
+  /** Set the state part of the subaddress of the location. 
+   *
+   * @param val the state part of the location
+   */
+  public void setStateField(final String val) {
+    assignSubaddressField(stateIndex, val);
+  }
+
+  /** get the state part of the sub address of the location.
+   *
+   * @return the state part of the location
+   */
+  @NoDump
+  public String getStateField() {
+    return fetchSubaddressSplit().getFld(stateIndex);
+  }
+
+  /** Set the zip part of the subaddress of the location. 
+   *
+   * @param val the zip part of the location
+   */
+  public void setZipField(final String val) {
+    assignSubaddressField(zipIndex, val);
+  }
+
+  /** get the zip part of the sub address of the location.
+   *
+   * @return the zip part of the location
+   */
+  @NoDump
+  public String getZipField() {
+    return fetchSubaddressSplit().getFld(zipIndex);
   }
 
   /** Set the Location's URL
@@ -494,7 +515,17 @@ public class BwLocation extends BwEventProperty<BwLocation>
 
     ts.append("uid", getUid());
     ts.append("address", getAddress());
+    ts.append("addressField", getAddressField());
+    ts.append("roomField", getRoomField());
+    ts.append("accessible", getAccessible());
+    ts.append("subField1", getSubField1());
+    ts.append("subField2", getSubField2());
+    ts.append("geouri", getGeouri());
     ts.append("subaddress", getSubaddress());
+    ts.append("street", getStreetField());
+    ts.append("city", getCityField());
+    ts.append("state", getStateField());
+    ts.append("zip", getZipField());
     ts.append("link", getLink());
 
     return ts.toString();
@@ -515,6 +546,77 @@ public class BwLocation extends BwEventProperty<BwLocation>
 
     return loc;
   }
+
+  /**
+   * 
+   * @return a string for use in the iCalendar LOCATION 
+   */
+  public String combinedValues() {
+    if ((value(getAddress()) == null) && (value(getSubaddress()) == null)) {
+      return null;
+    }
+    
+    final StringBuilder sb = new StringBuilder();
+    if (value(getAddress()) != null) {
+      sb.append(value(getAddress()).replace(fieldDelimiter, "-"));
+    }
+
+    if (value(getSubaddress()) != null) {
+      if (value(getAddress()) != null) {
+        sb.append("-");
+      }
+      
+      sb.append(value(getSubaddress()).replace(fieldDelimiter, "-"));
+    }
+
+    return sb.toString();
+  }
+  
+  private String value(final BwString val) {
+    if (val == null) {
+      return null;
+    }
+    
+    return val.getValue();
+  }
+  
+  private Splitter fetchAddressSplit() {
+    if (addressSplit == null) {
+      addressSplit = new Splitter(address);
+    }
+    
+    return addressSplit;
+  }
+  
+  private void assignAddressField(final int index, final String val) {
+    final String checkVal;
+    if (val == null) {
+      checkVal = null;
+    } else {
+      checkVal = val.replace(fieldDelimiter, "-");
+    }
+    fetchAddressSplit().setFld(index, checkVal);
+    address = fetchAddressSplit().getString(address);
+  }
+
+  private Splitter fetchSubaddressSplit() {
+    if (subaddressSplit == null) {
+      subaddressSplit = new Splitter(subaddress);
+    }
+
+    return subaddressSplit;
+  }
+
+  private void assignSubaddressField(final int index, final String val) {
+    final String checkVal;
+    if (val == null) {
+      checkVal = null;
+    } else {
+      checkVal = val.replace(fieldDelimiter, "-");
+    }
+    fetchSubaddressSplit().setFld(index, checkVal);
+    subaddress = fetchSubaddressSplit().getString(subaddress);
+  }
   
   private static class Splitter {
     List<String> flds;
@@ -522,7 +624,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
     Splitter(final BwString fld) {
       if ((fld != null) && (fld.getValue() != null)) {
         flds = new ArrayList<>(
-                Arrays.asList(fld.getValue().split(roomDelimiter)));
+                Arrays.asList(fld.getValue().split(fieldDelimiter)));
       }
     }
     
@@ -574,7 +676,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
       String fld = null;
       for (final String s: flds) {
         if (fld != null) {
-          fld += roomDelimiter;
+          fld += fieldDelimiter;
         } else {
           fld = "";
         }

@@ -425,11 +425,35 @@ public class VEventUtil extends IcalUtil {
       /* ------------------- Location -------------------- */
 
       if (!vpoll) {
-        BwLocation loc = val.getLocation();
+        final BwLocation loc = val.getLocation();
         if (loc != null) {
-          prop = new Location(loc.getAddress().getValue());
+          prop = new Location(loc.combinedValues());
 
           pl.add(langProp(uidProp(prop, loc.getUid()), loc.getAddress()));
+
+          IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationAddr,
+                                null, loc.getAddressField());
+          IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationRoom,
+                                null, loc.getRoomField());
+          IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationAccessible,
+                                null, String.valueOf(loc.getAccessible()));
+          IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationSfield1,
+                                null, loc.getSubField1());
+          IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationSfield2,
+                                null, loc.getSubField2());
+          IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationGeo,
+                                null, loc.getGeouri());
+          IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationStreet,
+                                null, loc.getStreetField());
+          IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationCity,
+                                null, loc.getCityField());
+          IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationState,
+                                null, loc.getStateField());
+          IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationZip,
+                                null, loc.getZipField());
+          IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationLink,
+                                null, loc.getLink());
+
         }
       }
 

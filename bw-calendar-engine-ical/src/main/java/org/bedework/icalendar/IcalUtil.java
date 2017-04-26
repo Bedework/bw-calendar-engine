@@ -203,6 +203,9 @@ public class IcalUtil {
                                   final String name,
                                   final List<BwXproperty.Xpar> pars,
                                   final String val) throws Throwable {
+    if (val == null) {
+      return;
+    }
     pl.add(new XProperty(name, makeXparlist(pars), val));
   }
 
