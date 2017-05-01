@@ -444,13 +444,13 @@ public class VEventUtil extends IcalUtil {
           IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationGeo,
                                 null, loc.getGeouri());
           IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationStreet,
-                                null, loc.getStreetField());
+                                null, loc.getStreet());
           IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationCity,
-                                null, loc.getCityField());
+                                null, loc.getCity());
           IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationState,
-                                null, loc.getStateField());
+                                null, loc.getState());
           IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationZip,
-                                null, loc.getZipField());
+                                null, loc.getZip());
           IcalUtil.addXproperty(pl, BwXproperty.xBedeworkLocationLink,
                                 null, loc.getLink());
 

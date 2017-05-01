@@ -122,7 +122,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the main address of the location
    */
-  @NoDump
   public String getAddressField() {
     return fetchAddressSplit().getFld(addrIndex);
   }
@@ -139,7 +138,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the room part of the location
    */
-  @NoDump
   public String getRoomField() {
     return fetchAddressSplit().getFld(roomIndex);
   }
@@ -156,7 +154,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the subfield 1 part of the location
    */
-  @NoDump
   public String getSubField1() {
     return fetchAddressSplit().getFld(subf1Index);
   }
@@ -173,7 +170,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the subfield 2 part of the location
    */
-  @NoDump
   public String getSubField2() {
     return fetchAddressSplit().getFld(subf2Index);
   }
@@ -196,7 +192,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the accessible part of the location
    */
-  @NoDump
   public boolean getAccessible() {
     final String fld = fetchAddressSplit().getFld(accessibleIndex);
     return "T".equals(fld);
@@ -214,7 +209,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the geouri part of the location
    */
-  @NoDump
   public String getGeouri() {
     return fetchAddressSplit().getFld(geouriIndex);
   }
@@ -257,11 +251,24 @@ public class BwLocation extends BwEventProperty<BwLocation>
     return subaddress;
   }
 
+  /** Get the secondary address of the location as a string
+   *
+   * @return the secondary address of the location
+   */
+  @JsonIgnore
+  @NoDump
+  public String getSubaddressField() {
+    if (subaddress == null) {
+      return null;
+    }
+    return subaddress.getValue();
+  }
+
   /** Set the street part of the subaddress of the location. 
    *
    * @param val the street part of the location
    */
-  public void setStreetField(final String val) {
+  public void setStreet(final String val) {
     assignSubaddressField(streetIndex, val);
   }
 
@@ -269,8 +276,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the street part of the location
    */
-  @NoDump
-  public String getStreetField() {
+  public String getStreet() {
     return fetchSubaddressSplit().getFld(streetIndex);
   }
 
@@ -278,7 +284,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @param val the city part of the location
    */
-  public void setCityField(final String val) {
+  public void setCity(final String val) {
     assignSubaddressField(cityIndex, val);
   }
 
@@ -286,8 +292,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the city part of the location
    */
-  @NoDump
-  public String getCityField() {
+  public String getCity() {
     return fetchSubaddressSplit().getFld(cityIndex);
   }
 
@@ -295,7 +300,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @param val the state part of the location
    */
-  public void setStateField(final String val) {
+  public void setState(final String val) {
     assignSubaddressField(stateIndex, val);
   }
 
@@ -303,8 +308,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the state part of the location
    */
-  @NoDump
-  public String getStateField() {
+  public String getState() {
     return fetchSubaddressSplit().getFld(stateIndex);
   }
 
@@ -312,7 +316,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @param val the zip part of the location
    */
-  public void setZipField(final String val) {
+  public void setZip(final String val) {
     assignSubaddressField(zipIndex, val);
   }
 
@@ -320,8 +324,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the zip part of the location
    */
-  @NoDump
-  public String getZipField() {
+  public String getZip() {
     return fetchSubaddressSplit().getFld(zipIndex);
   }
 
@@ -522,10 +525,10 @@ public class BwLocation extends BwEventProperty<BwLocation>
     ts.append("subField2", getSubField2());
     ts.append("geouri", getGeouri());
     ts.append("subaddress", getSubaddress());
-    ts.append("street", getStreetField());
-    ts.append("city", getCityField());
-    ts.append("state", getStateField());
-    ts.append("zip", getZipField());
+    ts.append("street", getStreet());
+    ts.append("city", getCity());
+    ts.append("state", getState());
+    ts.append("zip", getZip());
     ts.append("link", getLink());
 
     return ts.toString();
