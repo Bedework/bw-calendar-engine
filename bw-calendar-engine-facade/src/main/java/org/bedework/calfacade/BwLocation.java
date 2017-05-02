@@ -599,7 +599,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
       checkVal = val.replace(fieldDelimiter, "-");
     }
     fetchAddressSplit().setFld(index, checkVal);
-    address = fetchAddressSplit().getString(address);
+    setAddress(fetchAddressSplit().getString(address));
   }
 
   private Splitter fetchSubaddressSplit() {
@@ -618,7 +618,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
       checkVal = val.replace(fieldDelimiter, "-");
     }
     fetchSubaddressSplit().setFld(index, checkVal);
-    subaddress = fetchSubaddressSplit().getString(subaddress);
+    setSubaddress(fetchSubaddressSplit().getString(subaddress));
   }
   
   private static class Splitter {
@@ -665,7 +665,8 @@ public class BwLocation extends BwEventProperty<BwLocation>
     
     public BwString getString(final BwString val) {
       if (val != null) {
-        return new BwString(val.getLang(), toString());
+        val.setValue(toString());
+        return val;
       }
       
       return new BwString(null, toString());
