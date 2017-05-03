@@ -258,10 +258,10 @@ public class BwLocation extends BwEventProperty<BwLocation>
   @JsonIgnore
   @NoDump
   public String getSubaddressField() {
-    if (subaddress == null) {
+    if (getSubaddress() == null) {
       return null;
     }
-    return subaddress.getValue();
+    return getSubaddress().getValue();
   }
 
   /** Set the street part of the subaddress of the location. 
@@ -585,7 +585,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
   
   private Splitter fetchAddressSplit() {
     if (addressSplit == null) {
-      addressSplit = new Splitter(address);
+      addressSplit = new Splitter(getAddress());
     }
     
     return addressSplit;
@@ -599,12 +599,12 @@ public class BwLocation extends BwEventProperty<BwLocation>
       checkVal = val.replace(fieldDelimiter, "-");
     }
     fetchAddressSplit().setFld(index, checkVal);
-    setAddress(fetchAddressSplit().getString(address));
+    setAddress(fetchAddressSplit().getString(getAddress()));
   }
 
   private Splitter fetchSubaddressSplit() {
     if (subaddressSplit == null) {
-      subaddressSplit = new Splitter(subaddress);
+      subaddressSplit = new Splitter(getSubaddress());
     }
 
     return subaddressSplit;
@@ -618,7 +618,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
       checkVal = val.replace(fieldDelimiter, "-");
     }
     fetchSubaddressSplit().setFld(index, checkVal);
-    setSubaddress(fetchSubaddressSplit().getString(subaddress));
+    setSubaddress(fetchSubaddressSplit().getString(getSubaddress()));
   }
   
   private static class Splitter {
