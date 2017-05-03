@@ -427,7 +427,7 @@ public class VEventUtil extends IcalUtil {
       if (!vpoll) {
         final BwLocation loc = val.getLocation();
         if (loc != null) {
-          prop = new Location(loc.combinedValues());
+          prop = new Location(loc.getCombinedValues());
 
           pl.add(langProp(uidProp(prop, loc.getUid()), loc.getAddress()));
 

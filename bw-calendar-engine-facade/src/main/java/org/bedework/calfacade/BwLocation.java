@@ -554,7 +554,9 @@ public class BwLocation extends BwEventProperty<BwLocation>
    * 
    * @return a string for use in the iCalendar LOCATION 
    */
-  public String combinedValues() {
+  @NoDump
+  @JsonIgnore
+  public String getCombinedValues() {
     if ((value(getAddress()) == null) && (value(getSubaddress()) == null)) {
       return null;
     }
