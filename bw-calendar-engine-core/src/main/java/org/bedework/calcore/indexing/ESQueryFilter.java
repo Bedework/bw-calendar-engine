@@ -238,11 +238,15 @@ public class ESQueryFilter extends Logged implements CalintfDefs {
              itself is derived from the collection href.
           */
 
-          for (final FilterBase vfb :
-                  ((BwViewFilter)defaultFilterContext).getFilter()
-                                                      .getChildren()) {
-            nfbs.add(new NamedFilterBuilder(vfb.getName(),
-                                            and(buildFilter(vfb), f, vfb.getName())));
+          final FilterBase fb = 
+                  ((BwViewFilter)defaultFilterContext).getFilter();
+          
+          if (fb != null) {
+            for (final FilterBase vfb : fb.getChildren()) {
+              nfbs.add(new NamedFilterBuilder(vfb.getName(),
+                                              and(buildFilter(vfb), f,
+                                                  vfb.getName())));
+            }
           }
         } else {
           final FilterBuilder limFb = buildFilter(
