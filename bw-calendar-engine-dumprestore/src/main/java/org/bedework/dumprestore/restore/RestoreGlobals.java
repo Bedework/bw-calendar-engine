@@ -26,6 +26,7 @@ import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwUser;
+import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.SystemProperties;
@@ -61,6 +62,35 @@ public class RestoreGlobals extends Counters {
   /* ********************************************************************
    * Properties of the dump, version date etc.
    * ******************************************************************** */
+
+  private static String principalRoot;
+  private static String userPrincipalRoot;
+  private static String groupPrincipalRoot;
+
+  private static int groupPrincipalRootLen;
+
+  public static String getPrincipalRoot() {
+    return principalRoot;
+  }
+
+  public static int getGroupPrincipalRootLen() {
+    return groupPrincipalRootLen;
+  }
+
+  public static void setRoots(final CalSvcI svc) throws CalFacadeException {
+    if (principalRoot != null) {
+      return;
+    }
+
+    final DirectoryInfo di =  svc.getDirectories().getDirectoryInfo();
+    principalRoot = di.getPrincipalRoot();
+    userPrincipalRoot = di.getUserPrincipalRoot();
+    groupPrincipalRoot = di.getGroupPrincipalRoot();
+
+    //principalRootLen = principalRoot.length();
+    //userPrincipalRootLen = userPrincipalRoot.length();
+    groupPrincipalRootLen = groupPrincipalRoot.length();
+  }
 
   /** Where we do new style dump */
   private String dirPath;
@@ -288,7 +318,31 @@ public class RestoreGlobals extends Counters {
   /** */
   public RestoreIntf rintf;
 
-  RestoreGlobals() throws Throwable {
+  public RestoreGlobals() {
+  }
+
+  public void setDirPath(final String val) {
+    dirPath = val;
+  }
+
+  public String getDirPath() {
+    return dirPath;
+  }
+
+  public void setMerging(final boolean val) {
+    merging = val;
+  }
+  
+  public boolean getMerging() {
+    return merging;
+  }
+
+  public void setDryRun(final boolean val) {
+    dryRun = val;
+  }
+
+  public boolean getDryRun() {
+    return dryRun;
   }
 
   private String defaultTzid;

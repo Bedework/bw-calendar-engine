@@ -167,21 +167,15 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
       try {
         final long startTime = System.currentTimeMillis();
 
-        final Dump d = new Dump(infoLines, newDumpFormat);
+        final Dump d = new Dump(infoLines);
 
         d.getConfigProperties();
 
         if (dumpAll) {
           infoLines.addLn("Started dump of data");
 
-          if (newDumpFormat) {
-            d.setDirPath(makeDirname());
-            d.setLowercaseAccounts(lowercaseAccounts);
-          } else {
-            d.setFilename(makeFilename(getDataOutPrefix()));
-            d.setAliasesFilename(
-                    makeFilename("aliases-" + getDataOutPrefix()));
-          }
+          d.setDirPath(makeDirname());
+          d.setLowercaseAccounts(lowercaseAccounts);
 
           d.open(false);
 

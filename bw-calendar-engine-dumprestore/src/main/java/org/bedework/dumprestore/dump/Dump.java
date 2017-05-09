@@ -27,16 +27,12 @@ import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.InfoLines;
-import org.bedework.dumprestore.dump.dumpling.DumpAliases;
-import org.bedework.dumprestore.dump.dumpling.DumpAll;
 import org.bedework.dumprestore.dump.dumpling.ExtSubs;
 import org.bedework.dumprestore.prdump.DumpPrincipal;
 import org.bedework.dumprestore.prdump.DumpPublic;
 import org.bedework.dumprestore.prdump.DumpSystem;
 import org.bedework.util.misc.Logged;
 
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -60,8 +56,6 @@ public class Dump extends Logged implements Defs {
   @SuppressWarnings("FieldCanBeLocal")
   private final String adminUserAccount = "admin";
 
-  private final boolean newDumpFormat;
-
   private boolean lowercaseAccounts;
 
   /* ===================================================================
@@ -72,9 +66,7 @@ public class Dump extends Logged implements Defs {
    * @param info lines
    * @throws Throwable on error
    */
-  public Dump(final InfoLines info,
-              final boolean newDumpFormat) throws Throwable {
-    this.newDumpFormat = newDumpFormat;
+  public Dump(final InfoLines info) throws Throwable {
     globals.info = info;
   }
 
@@ -117,31 +109,6 @@ public class Dump extends Logged implements Defs {
     if (noOutput) {
       return;
     }
-
-    if (!newDumpFormat) {
-      boolean error = false;
-
-      if (fileName == null) {
-        error("Must have an output file set");
-        error = true;
-      }
-
-      if (aliasesFileName == null) {
-        error("Must have an output file for aliases set");
-        error = true;
-      }
-
-      if (error) {
-        return;
-      }
-
-      globals.setOut(
-              new OutputStreamWriter(new FileOutputStream(fileName),
-                                     "UTF-8"),
-              new OutputStreamWriter(
-                      new FileOutputStream(aliasesFileName),
-                      "UTF-8"));
-    }
   }
 
   /**
@@ -158,54 +125,49 @@ public class Dump extends Logged implements Defs {
    * @throws Throwable on error
    */
   public void doDump() throws Throwable {
-    if (newDumpFormat) {
-      // TODO - start a separate thread for public
-      final DumpPublic dumpPub = new DumpPublic(globals);
-      if (dumpPub.open()) {
-        dumpPub.doDump();
-        dumpPub.close();
+    // TODO - start a separate thread for public
+    final DumpPublic dumpPub = new DumpPublic(globals);
+    if (dumpPub.open()) {
+      dumpPub.doDump();
+      dumpPub.close();
+    }
+
+    final DumpSystem dumpSys = new DumpSystem(globals);
+    if (dumpSys.open()) {
+      dumpSys.doDump();
+      dumpSys.close();
+    }
+
+    final DumpPrincipal dumpPr = new DumpPrincipal(globals);
+
+    final Iterator<BwPrincipal> it = globals.di.getAllPrincipals();
+    while (it.hasNext()) {
+      final BwPrincipal pr = it.next();
+        
+      final String account = pr.getAccount().toLowerCase().trim();
+        
+      if (!account.equals(pr.getAccount())) {
+        globals.info.addLn("WARNING: Principal " + pr + 
+                                   " has possible invalid account");
       }
 
-      final DumpSystem dumpSys = new DumpSystem(globals);
-      if (dumpSys.open()) {
-        dumpSys.doDump();
-        dumpSys.close();
-      }
-
-      final DumpPrincipal dumpPr = new DumpPrincipal(globals);
-
-      final Iterator<BwPrincipal> it = globals.di.getAllPrincipals();
-      while (it.hasNext()) {
-        final BwPrincipal pr = it.next();
-        
-        final String account = pr.getAccount().toLowerCase().trim();
-        
-        if (!account.equals(pr.getAccount())) {
-          globals.info.addLn("WARNING: Principal " + pr + 
-                                     " has possible invalid account");
+      boolean open = false;
+      try {
+        if (dumpPr.open(pr)) {
+          open = true;
+          dumpPr.doDump();
         }
-
-        boolean open = false;
-        try {
-          if (dumpPr.open(pr)) {
-            open = true;
-            dumpPr.doDump();
-          }
-        } catch (final CalFacadeException cfe) {
-          error(cfe);
-        } finally {
-          if (open) {
-            try {
-              dumpPr.close();
-            } catch (final CalFacadeException cfe){
-              error(cfe);
-            }
+      } catch (final CalFacadeException cfe) {
+        error(cfe);
+      } finally {
+        if (open) {
+          try {
+            dumpPr.close();
+          } catch (final CalFacadeException cfe){
+            error(cfe);
           }
         }
       }
-    } else {
-      new DumpAll(globals).dumpSection(null);
-      new DumpAliases(globals).dumpSection(null);
     }
   }
 
@@ -252,8 +214,8 @@ public class Dump extends Logged implements Defs {
                             adminUserAccount,
                             null,    // user
                             null,   // calsuite
-                            !newDumpFormat,   // publicAdmin
-                            !newDumpFormat,   // superUser,
+                            false,   // publicAdmin
+                            false,   // superUser,
                             true,   // service
                             false,  // public submission
                             true,  // adminCanEditAllPublicCategories

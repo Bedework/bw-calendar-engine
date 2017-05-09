@@ -224,6 +224,7 @@
         <artifactId>bw-util-xml</artifactId>
         <version>${bw-util.version}</version>
       </dependency>
+      
 			<dependency>
 				<groupId>org.bedework</groupId>
 				<artifactId>bw-access</artifactId>
@@ -291,16 +292,19 @@
 				<artifactId>hibernate-core</artifactId>
 				<version>${hibernate.version}</version>
 			</dependency>
+      
 			<dependency>
 				<groupId>org.hibernate</groupId>
 				<artifactId>hibernate-validator</artifactId>
 				<version>${hibernate-validator.version}</version>
 			</dependency>
+      
 			<dependency>
 				<groupId>javax.servlet</groupId>
 				<artifactId>servlet-api</artifactId>
 				<version>${servlet-api.version}</version>
 			</dependency>
+      
 			<dependency>
 				<groupId>org.apache.james.jdkim</groupId>
 				<artifactId>apache-jdkim-library</artifactId>

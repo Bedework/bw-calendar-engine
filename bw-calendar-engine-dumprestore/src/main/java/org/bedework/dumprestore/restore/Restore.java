@@ -26,13 +26,10 @@ import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.Privileges;
 import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
-import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
 import org.bedework.calsvci.CalSvcFactoryDefault;
@@ -42,20 +39,11 @@ import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.InfoLines;
-import org.bedework.dumprestore.Utils;
-import org.bedework.dumprestore.restore.rules.RestoreRuleSet;
+import org.bedework.dumprestore.nrestore.RestorePrincipal;
+import org.bedework.dumprestore.nrestore.RestorePublic;
 import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.Util;
-import org.bedework.util.xml.FromXml;
 
-import org.apache.commons.digester.Digester;
-import org.apache.commons.digester.RegexMatcher;
-import org.apache.commons.digester.RegexRules;
-import org.apache.commons.digester.SimpleRegexMatcher;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -80,29 +68,6 @@ public class Restore extends Logged implements Defs, AutoCloseable {
   private boolean newSystem;
 
   private String rootId;
-
-  private static String principalRoot;
-  private static String userPrincipalRoot;
-  private static String groupPrincipalRoot;
-
-  //private static int principalRootLen;
-//  private static int userPrincipalRootLen;
-  private static int groupPrincipalRootLen;
-
-  private static void setRoots(final CalSvcI svc) throws CalFacadeException {
-    if (principalRoot != null) {
-      return;
-    }
-
-    final DirectoryInfo di =  svc.getDirectories().getDirectoryInfo();
-    principalRoot = di.getPrincipalRoot();
-    userPrincipalRoot = di.getUserPrincipalRoot();
-    groupPrincipalRoot = di.getGroupPrincipalRoot();
-
-    //principalRootLen = principalRoot.length();
-    //userPrincipalRootLen = userPrincipalRoot.length();
-    groupPrincipalRootLen = groupPrincipalRoot.length();
-  }
 
   /* ===================================================================
    *                       Constructor
@@ -165,13 +130,16 @@ public class Restore extends Logged implements Defs, AutoCloseable {
                              final boolean merge,
                              final boolean dryRun,
                              final InfoLines info) throws CalFacadeException {
-    setRoots(getSvci());
+    globals.setRoots(getSvci());
     final BwPrincipal userPr = BwPrincipal.makeUserPrincipal();
 
     userPr.setAccount(account);
 
-    userPr.setPrincipalRef(Util.buildPath(colPathEndsWithSlash,
-                                          userPrincipalRoot, "/", account));
+    userPr.setPrincipalRef(
+            Util.buildPath(colPathEndsWithSlash,
+                           RestoreGlobals.getUserPrincipalRoot(), 
+                           "/", 
+                           account));
     globals.info = info;
     globals.setPrincipalHref(userPr);
     globals.setMerging(merge);
@@ -180,6 +148,29 @@ public class Restore extends Logged implements Defs, AutoCloseable {
     try (RestorePrincipal restorer = new RestorePrincipal(globals)) {
       restorer.open(userPr);
     
+      restorer.doRestore();
+    }
+    return true;
+  }
+
+  /** Restore public data from a new style dump.
+   *
+   * @param merge don't replace entities - add new ones.
+   * @param dryRun true means just pretend.
+   * @param info - to track status
+   * @return true if restored - otherwise there's a message
+   * @throws CalFacadeException on error
+   */
+  public boolean restorePublic(final boolean merge,
+                               final boolean dryRun,
+                               final InfoLines info) throws CalFacadeException {
+    globals.info = info;
+    globals.setMerging(merge);
+    globals.setDryRun(dryRun);
+
+    try (RestorePublic restorer = new RestorePublic(globals)) {
+      restorer.open();
+
       restorer.doRestore();
     }
     return true;
