@@ -17,10 +17,14 @@
 		<bedework.snapshots.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.snapshots.repo.url>
     <bw-msg.version>4.0.0-SNAPSHOT</bw-msg.version>
 		<bw-ws.version>4.0.4-SNAPSHOT</bw-ws.version>
-		<bw-util.version>4.0.12-SNAPSHOT</bw-util.version>
+		<bw-util.version>4.0.14-SNAPSHOT</bw-util.version>
 		<bw-access.version>4.0.2-SNAPSHOT</bw-access.version>
 		<bw-webdav.version>4.0.2-SNAPSHOT</bw-webdav.version>
 		<bw-caldav.version>4.0.3-SNAPSHOT</bw-caldav.version>
+
+    <commons.csv.version>1.2</commons.csv.version>
+    <commons.io.version>2.0.1</commons.io.version>
+
 
     <ical4j.groupId>org.bedework.ical4j</ical4j.groupId>
     <ical4j.artifactId>ical4j</ical4j.artifactId>
@@ -76,6 +80,7 @@
 		<module>bw-calendar-engine-api</module>
 		<module>bw-calendar-engine-core</module>
 		<module>bw-calendar-engine-caldav</module>
+    <module>bw-calendar-engine-cmdutil</module>
 		<module>bw-calendar-engine-impl</module>
 		<module>bw-calendar-engine-facade</module>
 		<module>bw-calendar-engine-chgnote</module>
@@ -303,6 +308,18 @@
 			</dependency>
 
       <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons.io.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-csv</artifactId>
+        <version>${commons.csv.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>com.sun.mail</groupId>
         <artifactId>javax.mail</artifactId>
         <version>${javax.mail.version}</version>
@@ -387,8 +404,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>${maven.compiler.plugin.version}</version>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>1.8</source>
+					<target>1.8</target>
 					<showDeprecation>false</showDeprecation>
 					<showWarnings>false</showWarnings>
           <!-- This for up-to-date annotation processing
