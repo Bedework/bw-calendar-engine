@@ -224,7 +224,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
   /**
    * @return String
    */
-  @NoDump
   public String getStatus() {
     final BwString s = getAddress();
     if (s == null) {
@@ -562,19 +561,31 @@ public class BwLocation extends BwEventProperty<BwLocation>
     }
     
     final StringBuilder sb = new StringBuilder();
-    if (value(getAddress()) != null) {
-      sb.append(value(getAddress()).replace(fieldDelimiter, "-"));
-    }
 
-    if (value(getSubaddress()) != null) {
-      if (value(getAddress()) != null) {
-        sb.append("-");
-      }
-      
-      sb.append(value(getSubaddress()).replace(fieldDelimiter, "-"));
+    sb.append(getAddressField());
+    addCombined(sb, getRoomField());
+    addCombined(sb, getSubField1());
+    addCombined(sb, getSubField2());
+    addCombined(sb, getStreet());
+    addCombined(sb, getCity());
+    addCombined(sb, getState());
+    addCombined(sb, getZip());
+    
+    if (getAccessible()) {
+      sb.append(" (accessible)");
     }
-
+    
     return sb.toString();
+  }
+  
+  private void addCombined(final StringBuilder sb, 
+                             final String field) {
+    if (field == null) {
+      return;
+    }
+
+    sb.append(" ");
+    sb.append(field);
   }
   
   private String value(final BwString val) {
