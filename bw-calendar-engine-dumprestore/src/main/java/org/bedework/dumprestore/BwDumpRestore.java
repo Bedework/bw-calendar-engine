@@ -169,39 +169,43 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
         final Dump d = new Dump(infoLines);
 
-        d.getConfigProperties();
+        try {
+          d.getConfigProperties();
 
-        if (dumpAll) {
-          infoLines.addLn("Started dump of data");
+          if (dumpAll) {
+            infoLines.addLn("Started dump of data");
 
-          d.setDirPath(makeDirname());
-          d.setLowercaseAccounts(lowercaseAccounts);
+            d.setDirPath(makeDirname());
+            d.setLowercaseAccounts(lowercaseAccounts);
 
-          d.open(false);
+            d.open(false);
 
-          d.doDump();
-        } else {
-          infoLines.addLn("Started search for external subscriptions");
-          d.open(true);
+            d.doDump();
+          } else {
+            infoLines
+                    .addLn("Started search for external subscriptions");
+            d.open(true);
 
-          d.doExtSubs();
+            d.doExtSubs();
+          }
+
+          externalSubs = d.getExternalSubs();
+          aliasInfo = d.getAliasInfo();
+        } finally {
+          d.close();
+
+          d.stats(infoLines);
+
+          final long millis = System.currentTimeMillis() - startTime;
+          final long seconds = millis / 1000;
+          final long minutes = seconds / 60;
+
+          infoLines.addLn("Elapsed time: " + minutes + ":" +
+                                  Restore.twoDigits(
+                                          seconds - (minutes * 60)));
+
+          infoLines.addLn("Complete");
         }
-
-        externalSubs = d.getExternalSubs();
-        aliasInfo = d.getAliasInfo();
-
-        d.close();
-
-        d.stats(infoLines);
-
-        final long millis = System.currentTimeMillis() - startTime;
-        final long seconds = millis / 1000;
-        final long minutes = seconds / 60;
-
-        infoLines.addLn("Elapsed time: " + minutes + ":" +
-                                Restore.twoDigits(seconds - (minutes * 60)));
-
-        infoLines.addLn("Complete");
       } catch (final Throwable t) {
         error(t);
         infoLines.exceptionMsg(t);

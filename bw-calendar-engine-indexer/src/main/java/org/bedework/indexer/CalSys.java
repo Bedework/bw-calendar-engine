@@ -292,7 +292,7 @@ public abstract class CalSys {
       return true;
     }
 
-    return col.getOwnerHref().equals(principal);
+    return col.getCreatorHref().equals(principal);
   }
 
   protected boolean hasAccess(final BwEvent ent) throws CalFacadeException {

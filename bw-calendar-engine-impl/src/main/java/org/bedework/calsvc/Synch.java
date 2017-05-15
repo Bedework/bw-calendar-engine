@@ -342,10 +342,17 @@ class Synch extends CalSvcDb implements SynchI {
 
     final SynchConnection sc = sconn.sc;
 
-    final GetInfoResponseType girt =
-            getPort(synchConf.getManagerUri()).getInfo(
-                    getIdToken(getPrincipal().getPrincipalRef(), sc),
-                    new GetInfoRequestType());
+    GetInfoResponseType girt = null;
+    
+    try {
+      girt = getPort(synchConf.getManagerUri()).getInfo(
+              getIdToken(getPrincipal().getPrincipalRef(), sc),
+              new GetInfoRequestType());
+    } catch (final Throwable t){
+      error(t);
+      warn("Unable to fetch synch info");
+      return null;
+    }
 
     if ((girt == null) || (girt.getInfo() == null)) {
       warn("Unable to fetch synch info");
