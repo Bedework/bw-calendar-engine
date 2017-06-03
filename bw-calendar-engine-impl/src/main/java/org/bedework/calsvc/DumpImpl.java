@@ -29,6 +29,7 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
+import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
@@ -41,6 +42,7 @@ import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
+import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calsvci.DumpIntf;
 import org.bedework.util.misc.Util;
@@ -52,6 +54,8 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 
@@ -129,7 +133,6 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
 
   private class EventIterator implements Iterator<BwEvent> {
     private final Iterator it;
-    private boolean done;
 
     private EventIterator(final Iterator it) {
       this.it = it;
@@ -160,9 +163,70 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     }
   }
 
+  private class EventInfoIterator implements Iterator<EventInfo> {
+    private final Iterator it;
+
+    private EventInfoIterator(final Iterator it) {
+      this.it = it;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return it.hasNext();
+    }
+
+    @Override
+    public EventInfo next() {
+      try {
+        final BwEvent ev = (BwEvent)it.next();
+        
+        final EventInfo evi;
+        
+        if (ev.testRecurring()) {
+          final Set<EventInfo> overrides = new TreeSet<>();
+
+          final Collection<BwEventAnnotation> ovevs = getOverrides(
+                  ev);
+
+          if (!Util.isEmpty(ovevs)) {
+            for (final BwEventAnnotation ovev : ovevs) {
+              overrides.add(new EventInfo(new BwEventProxy(ovev)));
+            }
+          }
+
+          evi = new EventInfo(ev, overrides);
+        } else {
+          evi = new EventInfo(ev);
+        }
+
+        return evi;
+      } catch (final Throwable t) {
+        throw new RuntimeException(t);
+      }
+    }
+
+    @Override
+    public void remove() {
+      throw new RuntimeException("Forbidden");
+    }
+  }
+
   @Override
   public Iterator<BwEvent> getEvents() throws CalFacadeException {
-    return new EventIterator(getCal().getObjectIterator(BwEventObj.class.getName()));
+    return new EventIterator(
+            getCal().getObjectIterator(BwEventObj.class.getName()));
+  }
+
+  @Override
+  public Iterator<EventInfo> getEventInfos() throws CalFacadeException {
+    return new EventInfoIterator(
+            getCal().getObjectIterator(BwEventObj.class.getName()));
+  }
+
+  @Override
+  public Iterator<String> getEventHrefs(final int start)
+          throws CalFacadeException {
+    return getCal().getEventHrefs(start);
   }
 
   @Override

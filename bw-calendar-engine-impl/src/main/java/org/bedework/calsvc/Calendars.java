@@ -51,6 +51,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -150,19 +151,68 @@ class Calendars extends CalSvcDb implements CalendarsI {
     return getCal().getCalendar(getSvc().getPrincipalInfo().getCalendarHomePath(principal),
                                 priv, true);
   }
+  
+  private final Map<String, List<BwCalendar>> vpathCache = new HashMap<>();
+  
+  private long lastVpathFlush = System.currentTimeMillis();
+  
+  private long vpathCalls;
+
+  private long vpathHits;
+  
+  private final long vpathFlushPeriod = 1000 * 60 * 10;
+  
+  private int maxVpathCached = 250;
 
   @Override
   public Collection<BwCalendar> decomposeVirtualPath(final String vpath) throws CalFacadeException {
-    final Collection<BwCalendar> cols = new ArrayList<>();
+    vpathCalls++;
+    if (debug && ((vpathCalls % 250) == 0)) {
+      trace("Vpath calls: " + vpathCalls);
+      trace(" Vpath hits: " + vpathHits);
+      trace(" Vpath size: " + vpathCache.size());
+    }
+    
+    // In the cache?
 
-    /* First see if the vpath is an actual path - generally the case for
+    if ((System.currentTimeMillis() - lastVpathFlush) > vpathFlushPeriod) {
+      vpathCache.clear();
+      lastVpathFlush = System.currentTimeMillis();
+    }
+    
+    if (vpathCache.size() > maxVpathCached) {
+      info("Flushing vpath cache - reached max size of " + maxVpathCached);
+      vpathCache.clear();
+    }
+    
+    final BwPrincipal pr = getPrincipal();
+    final String cacheKey;
+    
+    if (pr.getUnauthenticated()) {
+      cacheKey = "*|" + vpath;
+    } else {
+      cacheKey = pr.getPrincipalRef() + "|" + vpath;
+    }
+    
+    List<BwCalendar> cols = vpathCache.get(cacheKey);
+    
+    if (cols != null) {
+      vpathHits++;
+      return cols;
+    }
+
+    cols = new ArrayList<>();
+
+    /* See if the vpath is an actual path - generally the case for
      * personal calendar users.
      */
 
-    BwCalendar startCol = get(vpath);
+    BwCalendar startCol = getIdx(vpath);
 
     if ((startCol != null) && !startCol.getAlias()) {
       cols.add(startCol);
+      
+      vpathCache.put(cacheKey, cols);
 
       return cols;
     }
@@ -170,6 +220,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
     final String[] pathEls = normalizeUri(vpath).split("/");
 
     if (pathEls.length == 0) {
+      vpathCache.put(cacheKey, cols);
+      
       return cols;
     }
 
@@ -188,7 +240,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       pathi++;
 
       try {
-        startCol = get(startPath);
+        startCol = getIdx(startPath);
       } catch (final CalFacadeAccessException cfae) {
         startCol = null;
       }
@@ -219,7 +271,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
       // Follow the chain of references for curCol until we reach a non-alias
       if (curCol.getInternalAlias()) {
-        final BwCalendar nextCol = resolveAlias(curCol, false, false);
+        final BwCalendar nextCol = resolveAliasIdx(curCol, false, false);
 
         if (nextCol == null) {
           // Bad vpath
@@ -259,7 +311,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
         }
       }
       */
-      final BwCalendar col = get(Util.buildPath(colPathEndsWithSlash, 
+      final BwCalendar col = getIdx(Util.buildPath(colPathEndsWithSlash,
                                                 curCol.getPath(),
                                                 "/",
                                                 pathEls[pathi]));
@@ -274,7 +326,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     curCol.setAliasOrigin(startCol);
-    
+
+    vpathCache.put(cacheKey, cols);
+
     return cols;
   }
 
@@ -311,11 +365,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
     return getSvc().getCal().isEmpty(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalendarsI#get(java.lang.String)
-   */
   @Override
-  public BwCalendar get(String path) throws CalFacadeException{
+  public BwCalendar get(String path) throws CalFacadeException {
     if (path == null) {
       return null;
     }
@@ -326,6 +377,22 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     return getCal().getCalendar(path, PrivilegeDefs.privAny, false);
+  }
+
+  @Override
+  public BwCalendar getIdx(String path) throws CalFacadeException {
+    if (path == null) {
+      return null;
+    }
+
+    if ((path.length() > 1) &&
+            (path.startsWith(CalFacadeDefs.bwUriPrefix))) {
+      path = path.substring(CalFacadeDefs.bwUriPrefix.length());
+    }
+
+    return getCal().getCollectionIdx(getIndexer(), path, 
+                                     PrivilegeDefs.privAny, 
+                                     false);
   }
 
   @Override
@@ -348,8 +415,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     final Calintf.GetSpecialCalendarResult gscr =
             getSvc().getCal().getSpecialCalendar(
-                             pr, calType, create,
-                                       PrivilegeDefs.privAny);
+                    pr, calType, create,
+                    PrivilegeDefs.privAny);
     if (!gscr.noUserHome) {
       return gscr.cal;
     }
@@ -375,7 +442,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     switch (entityType) {
       case Component.VEVENT:
         final String path = getSvc().getPrefsHandler().get()
-                .getDefaultCalendarPath();
+                                    .getDefaultCalendarPath();
 
         if (path != null) {
           return path;
@@ -418,7 +485,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     val.adjustCategories();
 
     if (val.getExternalSub()) {
-      val.setRefreshRate(60*15);
+      val.setRefreshRate(60 * 15);
     }
 
     if (val.getPwNeedsEncrypt() || (val.getExternalSub() && val.getRemotePw() != null)) {
@@ -427,10 +494,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     val = getCal().add(val, parentPath);
     ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false,
-                                                val,
-                                                null,
-                                                null,
-                                                null);
+                                                               val,
+                                                               null,
+                                                               null,
+                                                               null);
 
     final SynchI synch = getSvc().getSynch();
 
@@ -568,9 +635,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
     
     final AliasesInfo eai = ai.copyForEntity(entityName,
                                              isVisible);
-    
+
     checkAliases(eai, entityName);
-    
+
     return updateAliasInfoMap(eai);
   }
 
@@ -599,7 +666,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     Collection<BwCalendar> cols = null;
 
-    cols = getCols().decomposeVirtualPath(href);
+    cols = decomposeVirtualPath(href);
 
     if (Util.isEmpty(cols)) {
       return null;
@@ -625,7 +692,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     while (curCol != null) {
       try {
-        curCol = getCols().get(curCol.getColPath());
+        curCol = get(curCol.getColPath());
         if (curCol != null) {
           if (!Util.isEmpty(curCol.getCategories())) {
             cats.addAll(curCol.getCategories());

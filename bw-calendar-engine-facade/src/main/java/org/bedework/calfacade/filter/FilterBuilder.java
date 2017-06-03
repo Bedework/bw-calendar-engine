@@ -25,14 +25,12 @@ import org.bedework.caldav.util.filter.ObjectFilter;
 import org.bedework.caldav.util.filter.OrFilter;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCalendar.EventListEntry;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeSubscriptionLoopException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.misc.Logged;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -77,11 +75,7 @@ import java.util.Iterator;
  * @author Mike Douglass
  *
  */
-public class FilterBuilder {
-  private boolean debug;
-
-  private transient Logger log;
-
+public class FilterBuilder extends Logged {
   private HashMap<String, BwCalendar> colCache = new HashMap<>();
 
   //private HashMap<String, CalFilter> filterCache = new HashMap<String, CalFilter>();
@@ -113,8 +107,8 @@ public class FilterBuilder {
    * @param parser
    */
   public FilterBuilder(final SimpleFilterParser parser) {
+    super();
     this.parser = parser;
-    debug = getLogger().isDebugEnabled();
   }
 
   /** Build a filter from the given path. The applyFilter flag only
@@ -124,13 +118,12 @@ public class FilterBuilder {
    * @param path
    * @param applyFilter applies only to root of tree
    * @return FilterBase or null
-   * @throws CalFacadeException
    */
   public FilterBase buildFilter(final String path,
                                 final boolean applyFilter,
-                                final boolean explicitSelection) throws CalFacadeException {
+                                final boolean explicitSelection) {
     if (path == null) {
-      return null;
+      return BooleanFilter.falseFilter;
     }
 
     BwCalendar col = colCache.get(path);
@@ -138,13 +131,9 @@ public class FilterBuilder {
     if (col == null) {
       try {
         col = parser.getCollection(path);
-      } catch (final CalFacadeAccessException cae) {
-      }
-
-      if (col == null) {
-        // Presumably inacccessible or possibly deleted
-
-        return null;
+      } catch (CalFacadeException cfe) {
+        error(cfe);
+        return BooleanFilter.falseFilter;
       }
 
       colCache.put(path, col);
@@ -152,10 +141,17 @@ public class FilterBuilder {
 
     final ArrayList<String> pathElements = new ArrayList<>();
     pathElements.add(path);
-    final CalFilter calFilter = makeColFilter(col,
-                                              applyFilter,
-                                              explicitSelection,
-                                              pathElements);
+    final CalFilter calFilter; 
+    
+    try {
+      calFilter = makeColFilter(col,
+                                applyFilter,
+                                explicitSelection,
+                                pathElements);
+    } catch (CalFacadeException cfe) {
+      error(cfe);
+      return BooleanFilter.falseFilter;
+    }
 
     if (calFilter == null) {
       // No valid matches
@@ -171,10 +167,10 @@ public class FilterBuilder {
     final FilterBase f = makeBwFilter(calFilter);
 
     if (debug) {
-      dmsg(" ---------  FilterBuilder result ---------------");
+      debug(" ---------  FilterBuilder result ---------------");
       dump(f, "");
 
-      dmsg(" ---------  end of FilterBuilder result ---------------");
+      debug(" ---------  end of FilterBuilder result ---------------");
     }
 
     return f;
@@ -501,14 +497,14 @@ public class FilterBuilder {
 
   private void dump(final FilterBase f, final String curLine) {
     if (f instanceof OrFilter) {
-      dmsg(curLine + "  OR ");
+      debug(curLine + "  OR ");
       Iterator<FilterBase> it = f.getChildren().iterator();
       dumpChildren(it, curLine);
       return;
     }
 
     if (f instanceof AndFilter) {
-      dmsg(curLine + "  AND ");
+      debug(curLine + "  AND ");
       Iterator<FilterBase> it = f.getChildren().iterator();
       dumpChildren(it, curLine);
       return;
@@ -518,17 +514,17 @@ public class FilterBuilder {
       ObjectFilter of = (ObjectFilter)f;
 
       if (of.getEntity() instanceof BwCalendar) {
-        StringBuilder sb = new StringBuilder(curLine);
+        final StringBuilder sb = new StringBuilder(curLine);
         sb.append(curLine);
         sb.append("  cal=");
         sb.append(((BwCalendar)of.getEntity()).getPath());
 
-        dmsg(sb.toString());
+        debug(sb.toString());
       } else {
-        dmsg(curLine + f.toString());
+        debug(curLine + f.toString());
       }
     } else {
-      dmsg(curLine + f.toString());
+      debug(curLine + f.toString());
     }
   }
 
@@ -560,19 +556,4 @@ public class FilterBuilder {
 
     dump(f, curLine);
   }
-
-  /* Get a logger for messages
-   */
-  private Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  private void dmsg(final String msg) {
-    getLogger().debug(msg);
-  }
-
 }

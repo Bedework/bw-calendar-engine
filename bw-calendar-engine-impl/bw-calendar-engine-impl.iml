@@ -57,7 +57,7 @@
     <orderEntry type="module" module-name="bw-util-args" />
     <orderEntry type="library" name="Maven: javax.jms:jms:1.1" level="project" />
     <orderEntry type="module" module-name="bwsysev-monitor" />
-    <orderEntry type="module" module-name="bw-msg-sysevmsgs" />
+    <orderEntry type="module" module-name="bwsysev-msgs" />
     <orderEntry type="module" module-name="bw-util-caching" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.15" level="project" />
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />

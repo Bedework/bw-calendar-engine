@@ -426,6 +426,16 @@ public class EventInfo
     return event.getChangeset(userHref);
   }
 
+  /** Will force update
+   * 
+   */
+  public void clearChangeset() {
+    if (event == null) {
+      return;
+    }
+    event.clearChangeset();
+  }
+
   /**
    * @return UpdateResult or null
    */

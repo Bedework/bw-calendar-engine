@@ -407,9 +407,6 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexCtlMBean#isStarted()
-   */
   @Override
   public boolean isStarted() {
     return (processor != null) && processor.isAlive();

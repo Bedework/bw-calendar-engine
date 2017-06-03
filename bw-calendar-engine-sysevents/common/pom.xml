@@ -38,4 +38,12 @@
   <name>Bedework sysevents common classes</name>
   <description>Bedework sysevents common classes</description>
   <url>http://bedework.org/</url>
+  
+  <dependencies>
+    <dependency>
+      <groupId>org.bedework.caleng</groupId>
+      <artifactId>bwsysev-msgs</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 </project>

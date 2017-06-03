@@ -241,7 +241,7 @@ public class ESQueryFilter extends Logged implements CalintfDefs {
           final FilterBase fb = 
                   ((BwViewFilter)defaultFilterContext).getFilter();
           
-          if (fb != null) {
+          if ((fb != null) && (fb.getChildren() != null)) {
             for (final FilterBase vfb : fb.getChildren()) {
               nfbs.add(new NamedFilterBuilder(vfb.getName(),
                                               and(buildFilter(vfb), f,

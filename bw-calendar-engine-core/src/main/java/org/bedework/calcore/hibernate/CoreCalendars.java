@@ -248,14 +248,19 @@ class CoreCalendars extends CalintfHelper
                                      final String path,
                                      final int desiredAccess,
                                      final boolean alwaysReturnResult) throws CalFacadeException {
-    final BwCalendar col = colCache.get(path);
+    BwCalendar col = colCache.get(path);
 
     if (col != null) {
       return col;
     }
 
-    return indexer.fetchCol(path,
-                            PropertyIndex.PropertyInfoIndex.HREF);
+    col = indexer.fetchCol(path,
+                           PropertyIndex.PropertyInfoIndex.HREF);
+    if (col != null) {
+      restoreCategories(col);
+    }
+    
+    return col;
   }
 
   @Override
@@ -753,7 +758,7 @@ class CoreCalendars extends CalintfHelper
     /* I think we're allowing privNone here because we don't mind if the
      * calendar gets created even if the caller has no access.
      */
-    gscr.cal = add(gscr.cal, pathTo, true, privNone);
+    gscr.cal = add(gscr.cal, pathTo, true, access);
     gscr.created = true;
 
     return gscr;

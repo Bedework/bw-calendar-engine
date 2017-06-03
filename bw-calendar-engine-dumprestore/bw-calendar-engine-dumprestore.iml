@@ -73,11 +73,11 @@
     <orderEntry type="library" name="Maven: javax.annotation:jsr250-api:1.0" level="project" />
     <orderEntry type="library" name="Maven: javax.inject:javax.inject:1" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
-    <orderEntry type="module" module-name="bw-msg-sysevmsgs" />
+    <orderEntry type="module" module-name="bwsysev-msgs" />
+    <orderEntry type="library" name="Maven: javax.jms:jms:1.1" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
     <orderEntry type="module" module-name="bw-calendar-engine-core" />
     <orderEntry type="module" module-name="bwsysev-common" />
-    <orderEntry type="library" name="Maven: javax.jms:jms:1.1" level="project" />
     <orderEntry type="library" name="Maven: org.elasticsearch:elasticsearch:1.5.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-core:4.10.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-analyzers-common:4.10.4" level="project" />

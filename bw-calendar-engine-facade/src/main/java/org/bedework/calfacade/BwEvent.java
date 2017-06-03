@@ -4373,6 +4373,19 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return changeSet;
   }
 
+  /** Will force update
+   *
+   */
+  @NoProxy
+  @NoWrap
+  @NoDump
+  public void clearChangeset() {
+    if (changeSet == null) {
+      return;
+    }
+    changeSet.clear();
+  }
+
   @NoProxy
   @NoDump
   @IcalProperty(pindex = PropertyInfoIndex.HREF,

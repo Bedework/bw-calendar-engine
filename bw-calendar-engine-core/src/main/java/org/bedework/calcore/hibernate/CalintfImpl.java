@@ -1188,15 +1188,21 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   }
   
   private class ObjectIterator implements Iterator {
-    private final String className;
-    private List batch;
-    private int index;
-    private boolean done;
-    private int start;
-    private final int batchSize = 100;
+    protected final String className;
+    protected List batch;
+    protected int index;
+    protected boolean done;
+    protected int start;
+    protected final int batchSize = 100;
 
     private ObjectIterator(final String className) {
+      this(className, 0);
+    }
+
+    private ObjectIterator(final String className,
+                           final int start) {
       this.className = className;
+      this.start = start;
     }
 
     @Override
@@ -1219,7 +1225,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       throw new RuntimeException("Forbidden");
     }
 
-    private boolean more() {
+    protected boolean more() {
       if (done) {
         return false;
       }
@@ -1231,7 +1237,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       return !done;
     }
 
-    private void nextBatch() {
+    protected void nextBatch() {
       try {
         sess.createQuery("from " + className);
 
@@ -1251,10 +1257,61 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
       }
     }
   }
+  
+  private class EventHrefIterator extends ObjectIterator {
+    private EventHrefIterator(final int start) {
+      super(BwEventObj.class.getName(), start);
+    }
+
+    @Override
+    public Object next() {
+      if (!more()) {
+        return null;
+      }
+
+      Object[] pathName = (Object[])batch.get(index);
+      index++;
+      
+      if ((pathName.length != 2) || 
+              (!(pathName[0] instanceof String)) ||
+              (!(pathName[1] instanceof String))) {
+        throw new RuntimeException("Expected 2 strings");
+      }
+      
+      return pathName[0] + "/" + pathName[1];
+    }
+
+    @Override
+    protected void nextBatch() {
+      try {
+        sess.createQuery("select colPath, name from " + className + 
+                                 " order by dtstart.dtval desc");
+
+        sess.setFirstResult(start);
+        sess.setMaxResults(batchSize);
+
+        start += batchSize;
+
+        batch = sess.getList();
+        index = 0;
+
+        if (Util.isEmpty(batch)) {
+          done = true;
+        }
+      } catch (final Throwable t) {
+        throw new RuntimeException(t);
+      }
+    }
+  }
 
   @Override
-  public Iterator getObjectIterator(final String className) throws CalFacadeException {
+  public Iterator getObjectIterator(final String className) {
     return new ObjectIterator(className);
+  }
+
+  @Override
+  public Iterator<String> getEventHrefs(final int start) {
+    return new EventHrefIterator(start);
   }
 
   @Override

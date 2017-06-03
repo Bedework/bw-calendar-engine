@@ -14,6 +14,7 @@
   <modules>
     <module>common</module>
     <module>monitor</module>
+    <module>sysevmsgs</module>
   </modules>
   
 	<dependencies>
@@ -23,33 +24,36 @@
 			<artifactId>bw-caleng-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+
     <dependency>
       <groupId>org.bedework.caleng</groupId>
       <artifactId>bw-caleng-facade</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.bedework.bw-msg</groupId>
-      <artifactId>bw-msg-sysevmsgs</artifactId>
-    </dependency>
+
 		<!-- Bedework Dependencies -->
     <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-args</artifactId>
     </dependency>
+
 		<dependency>
 			<groupId>org.bedework</groupId>
 			<artifactId>bw-util-misc</artifactId>
 		</dependency>
+
 		<dependency>
 			<groupId>org.bedework</groupId>
 			<artifactId>bw-access</artifactId>
 		</dependency>
+
     <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-caldav-server</artifactId>
     </dependency>
+
 		<!-- Third Party Dependencies -->
+
 		<dependency>
 			<groupId>javax.jms</groupId>
 			<artifactId>jms</artifactId>

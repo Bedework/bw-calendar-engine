@@ -180,6 +180,16 @@ public interface CalendarsI extends Serializable {
    */
   BwCalendar get(String path) throws CalFacadeException;
 
+  /** Get a calendar given the path. If the path is that of a 'special'
+   * calendar, for example the deleted calendar, it may not exist if it has
+   * not been used. Returns the non-persisted version from the index
+   *
+   * @param  path          String path of calendar
+   * @return BwCalendar null for unknown calendar
+   * @throws CalFacadeException
+   */
+  BwCalendar getIdx(String path) throws CalFacadeException;
+
   /** Get a special calendar (e.g. Notifications) for the current user. If it does not
    * exist and is supported by the target system it will be created.
    *

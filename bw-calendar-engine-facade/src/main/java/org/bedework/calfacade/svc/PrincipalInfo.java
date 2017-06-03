@@ -112,12 +112,12 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
    */
   public String getCalendarHomePath(final BwPrincipal pr) throws CalFacadeException {
     if (pr.getKind() == WhoDefs.whoTypeUser) {
-      return Util.buildPath(true, getUserHomePath(), "/",
-                            pr.getAccount());
+      return Util.buildPath(BasicSystemProperties.colPathEndsWithSlash, 
+                            getUserHomePath(), "/", pr.getAccount());
     }
 
-    // GROUP - need a group home?
-    return Util.buildPath(true, getUserHomePath(), "/", pr.getPrincipalRef());
+    return Util.buildPath(BasicSystemProperties.colPathEndsWithSlash, 
+                          getUserHomePath(), "/", pr.getPrincipalRef());
   }
 
   /**

@@ -2029,24 +2029,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     return outevs;
   }
 
-  private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
-    final Set<String> uids = ce.getCategoryUids();
-    if (Util.isEmpty(uids)) {
-      return;
-    }
-
-    for (final String uid: uids) {
-      final BwCategory cat = cb.getCategory(uid);
-
-      if (cat == null) {
-        throw new CalFacadeException("Attempting to store null for cat uid "
-                                             + uid);
-      }
-
-      ce.addCategory(cat);
-    }
-  }
-
   private class RecuridTable extends HashMap<String, BwEventProxy> {
     RecuridTable(final Collection<BwEventProxy> events) {
       for (final BwEventProxy ev: events) {

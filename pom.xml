@@ -15,7 +15,6 @@
 		<!-- Bedework Versions -->
 		<bedework.releases.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.releases.repo.url>
 		<bedework.snapshots.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.snapshots.repo.url>
-    <bw-msg.version>4.0.0-SNAPSHOT</bw-msg.version>
 		<bw-ws.version>4.0.4-SNAPSHOT</bw-ws.version>
 		<bw-util.version>4.0.14-SNAPSHOT</bw-util.version>
 		<bw-access.version>4.0.2-SNAPSHOT</bw-access.version>
@@ -80,7 +79,6 @@
 		<module>bw-calendar-engine-api</module>
 		<module>bw-calendar-engine-core</module>
 		<module>bw-calendar-engine-caldav</module>
-    <module>bw-calendar-engine-cmdutil</module>
 		<module>bw-calendar-engine-impl</module>
 		<module>bw-calendar-engine-facade</module>
 		<module>bw-calendar-engine-chgnote</module>
@@ -91,6 +89,7 @@
 		<module>bw-calendar-engine-interfaces</module>
 		<module>bw-calendar-engine-sysevents</module>
     <module>bw-calendar-engine-cli</module>
+    <module>bw-calendar-engine-tools</module>
   </modules>
 
 	<repositories>
@@ -246,12 +245,6 @@
 				<artifactId>bw-caldav-server</artifactId>
 				<version>${bw-caldav.version}</version>
 			</dependency>
-
-      <dependency>
-        <groupId>org.bedework.bw-msg</groupId>
-        <artifactId>bw-msg-sysevmsgs</artifactId>
-        <version>${bw-msg.version}</version>
-      </dependency>
       
 			<!-- Bedework: Web Services -->
 			<dependency>

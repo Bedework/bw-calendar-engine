@@ -399,6 +399,9 @@ public class BwXproperty extends BwDbentity<BwXproperty>
    * @param val    String name
    */
   public void setName(final String val) {
+    if (val == null) {
+      throw new RuntimeException("Name cannot be null");
+    }
     name = val;
     parameters = null;
   }

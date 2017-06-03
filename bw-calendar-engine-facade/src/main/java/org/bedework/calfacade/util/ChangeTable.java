@@ -113,6 +113,12 @@ public class ChangeTable extends Logged implements Serializable {
     return userHref;
   }
 
+  /** Clear all changes - will force an update
+   */
+  public void clear() {
+    map.clear();
+  }
+
   /**
    * @return true if no change information has been added.
    */

@@ -24,13 +24,11 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
-import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calsvci.FiltersI;
 
 import ietf.params.xml.ns.caldav.FilterType;
 
 import java.util.Collection;
-import java.util.List;
 
 /** This acts as an interface to the database for filters.
  *

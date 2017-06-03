@@ -402,6 +402,10 @@ public class CalSvcDb implements Serializable {
     getLogger().debug("trace: " + msg);
   }
 
+  protected void info(final String msg) {
+    getLogger().info(msg);
+  }
+
   protected void warn(final String msg) {
     getLogger().warn(msg);
   }

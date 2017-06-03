@@ -1621,68 +1621,57 @@ class Events extends CalSvcDb implements EventsI {
 
     setScheduleState(ev, adding, schedulingInbox);
 
-    Preferences prefs = null;
-
-    if (getPars().getPublicAdmin()) {
-      prefs = (Preferences)getSvc().getPrefsHandler();
-
-      Collection<BwCategory> evcats = ev.getCategories();
-
-      if (evcats != null) {
-        for (BwCategory cat: evcats) {
-          prefs.updateAdminPrefs(false, null, cat, null, null);
-        }
+    BwCalendar col = getCols().get(ev.getColPath());
+    
+    if (col == null) {
+      if (!autoCreateCollection) {
+        throw new CalFacadeException(
+                CalFacadeException.collectionNotFound);
       }
 
+      // TODO - need a configurable default display name
+
+      // TODO - this all needs a rework
+
+      final String entityType = IcalDefs.entityTypeIcalNames[ev
+              .getEntityType()];
+      final int calType;
+
+      switch (entityType) {
+        case Component.VEVENT:
+          calType = BwCalendar.calTypeCalendarCollection;
+          break;
+        case Component.VTODO:
+          calType = BwCalendar.calTypeTasks;
+          break;
+        case Component.VPOLL:
+          calType = BwCalendar.calTypePoll;
+          break;
+        default:
+          return null;
+      }
+
+      final GetSpecialCalendarResult gscr =
+              getCal().getSpecialCalendar(getPrincipal(), calType,
+                                          true,
+                                          PrivilegeDefs.privAny);
+
+      col = gscr.cal;
+    }
+
+    Preferences prefs = null;
+
+    if (getPars().getPublicAdmin() && !getPars().getService()) {
+      prefs = (Preferences)getSvc().getPrefsHandler();
+
       prefs.updateAdminPrefs(false,
-                             null,
-                             null,
+                             col,
+                             ev.getCategories(),
                              ev.getLocation(),
                              ev.getContact());
     }
-
-    BwCalendar col = getCols().get(ev.getColPath());
-    if (col != null) {
-      if (prefs != null) {
-        prefs.updateAdminPrefs(false,
-                               col,
-                               null, null, null);
-      }
-
-      return col;
-    }
-
-    if (!autoCreateCollection) {
-      throw new CalFacadeException(CalFacadeException.collectionNotFound);
-    }
-
-    // TODO - need a configurable default display name
-
-    // TODO - this all needs a rework
-
-    final String entityType = IcalDefs.entityTypeIcalNames[ev.getEntityType()];
-    final int calType;
-
-    switch (entityType) {
-      case Component.VEVENT:
-        calType = BwCalendar.calTypeCalendarCollection;
-        break;
-      case Component.VTODO:
-        calType = BwCalendar.calTypeTasks;
-        break;
-      case Component.VPOLL:
-        calType = BwCalendar.calTypePoll;
-        break;
-      default:
-        return null;
-    }
-
-    final GetSpecialCalendarResult gscr =
-            getCal().getSpecialCalendar(getPrincipal(), calType,
-                                        true,
-                                        PrivilegeDefs.privAny);
-
-    return gscr.cal;
+    
+    return col;
   }
 
   /* Flag this as an attendee scheduling object or an organizer scheduling object

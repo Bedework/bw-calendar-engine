@@ -463,10 +463,16 @@ public interface Calintf
   /**
    *
    * @param className of objects
-   * @return collection
-   * @throws CalFacadeException
+   * @return iterator over the objects
    */
-  Iterator getObjectIterator(final String className) throws CalFacadeException;
+  Iterator getObjectIterator(String className);
+
+  /** Return an iterator over hrefs for events.
+   *
+   * @param start first object
+   * @return iterator over the objects
+   */
+  Iterator<String> getEventHrefs(int start);
 
   /* ====================================================================
    *                       principals + prefs

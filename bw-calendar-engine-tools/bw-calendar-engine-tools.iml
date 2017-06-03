@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
+    <output url="file://$MODULE_DIR$/target/classes" />
+    <output-test url="file://$MODULE_DIR$/target/test-classes" />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="bw-calendar-engine-facade" />
+    <orderEntry type="module" module-name="bw-calendar-engine-annotations" />
+    <orderEntry type="module" module-name="bw-access" />
+    <orderEntry type="module" module-name="bw-util-caching" />
+    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.8.2" level="project" />
+    <orderEntry type="library" name="Maven: log4j:log4j:1.2.15" level="project" />
+    <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />
+    <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
+    <orderEntry type="module" module-name="bw-util-calendar" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-ws-icalendar:4.0.4-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.3.1" level="project" />
+    <orderEntry type="module" module-name="bw-util-http" />
+    <orderEntry type="module" module-name="bw-util-config" />
+    <orderEntry type="module" module-name="bw-util-jmx" />
+    <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpclient:4.2.2" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.2.2" level="project" />
+    <orderEntry type="module" module-name="bw-util-indexing" />
+    <orderEntry type="module" module-name="bw-util-misc" />
+    <orderEntry type="module" module-name="bw-util-security" />
+    <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.5" level="project" />
+    <orderEntry type="module" module-name="bw-util-timezones" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.3.1" level="project" />
+    <orderEntry type="module" module-name="bw-webdav" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.0.5" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.struts:struts-core:1.3.10" level="project" />
+    <orderEntry type="library" name="Maven: commons-beanutils:commons-beanutils:1.8.0" level="project" />
+    <orderEntry type="library" name="Maven: commons-chain:commons-chain:1.2" level="project" />
+    <orderEntry type="library" name="Maven: commons-digester:commons-digester:1.8" level="project" />
+    <orderEntry type="library" name="Maven: commons-validator:commons-validator:1.3.1" level="project" />
+    <orderEntry type="library" name="Maven: oro:oro:2.0.8" level="project" />
+    <orderEntry type="module" module-name="bw-util-xml" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-ws-tzsvr:4.0.4-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-ws-calws-soap:4.0.4-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: jtidy:jtidy:4aug2000r7-dev" level="project" />
+    <orderEntry type="module" module-name="bw-util-vcard" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.3.1" level="project" />
+    <orderEntry type="module" module-name="bw-caldav-util" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-ws-synchws:4.0.4-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-ws-caldav:4.0.3" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:apache-jdkim-library:0.4" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.geronimo.specs:geronimo-activation_1.1_spec:1.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.geronimo.javamail:geronimo-javamail_1.4_mail:1.6" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.james:apache-mailet-base:1.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.james:apache-mailet:2.4" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.james:apache-mime4j-core:0.7" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.james:apache-mime4j-dom:0.7" level="project" />
+    <orderEntry type="library" name="Maven: dnsjava:dnsjava:2.1.1" level="project" />
+    <orderEntry type="module" module-name="bw-caldav-server" />
+    <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:2.0.3" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.10" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-collections4:4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.codehaus.groovy:groovy-all:2.3.2" level="project" />
+    <orderEntry type="library" name="Maven: biz.aQute.bnd:bndlib:2.3.0" level="project" />
+    <orderEntry type="library" name="Maven: org.osgi:org.osgi.core:4.3.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-ical4j-vcard:1.0.4" level="project" />
+    <orderEntry type="library" name="Maven: commons-io:commons-io:2.0.1" level="project" />
+    <orderEntry type="library" name="Maven: commons-lang:commons-lang:2.3" level="project" />
+    <orderEntry type="library" name="Maven: commons-logging:commons-logging:1.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.javassist:javassist:3.20.0-GA" level="project" />
+    <orderEntry type="library" name="Maven: antlr:antlr:2.7.7" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
+    <orderEntry type="library" name="Maven: org.jboss:jandex:2.0.3.Final" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml:classmate:1.3.0" level="project" />
+    <orderEntry type="library" name="Maven: dom4j:dom4j:1.6.1" level="project" />
+    <orderEntry type="library" name="Maven: org.hibernate.common:hibernate-commons-annotations:5.0.1.Final" level="project" />
+    <orderEntry type="library" name="Maven: javax.enterprise:cdi-api:1.1" level="project" />
+    <orderEntry type="library" name="Maven: javax.el:el-api:2.2" level="project" />
+    <orderEntry type="library" name="Maven: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
+    <orderEntry type="library" name="Maven: javax.annotation:jsr250-api:1.0" level="project" />
+    <orderEntry type="library" name="Maven: javax.inject:javax.inject:1" level="project" />
+    <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
+    <orderEntry type="module" module-name="bwsysev-msgs" />
+    <orderEntry type="module" module-name="bw-calendar-engine-api" />
+    <orderEntry type="module" module-name="bw-util-args" />
+    <orderEntry type="library" name="Maven: javax.jms:jms:1.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-csv:1.2" level="project" />
+  </component>
+</module>

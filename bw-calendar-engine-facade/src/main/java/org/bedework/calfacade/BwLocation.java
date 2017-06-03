@@ -78,6 +78,8 @@ public class BwLocation extends BwEventProperty<BwLocation>
   private static final int cityIndex = 1;
   private static final int stateIndex = 2;
   private static final int zipIndex = 3;
+  private static final int alternateAddressIndex = 4;
+  private static final int codeIndex = 5;
 
   private String link;
 
@@ -327,6 +329,38 @@ public class BwLocation extends BwEventProperty<BwLocation>
     return fetchSubaddressSplit().getFld(zipIndex);
   }
 
+  /** Set the alternateAddress part of the subaddress of the location. 
+   *
+   * @param val the alternateAddress part of the location
+   */
+  public void setAlternateAddress(final String val) {
+    assignSubaddressField(alternateAddressIndex, val);
+  }
+
+  /** get the alternateAddress part of the sub address of the location.
+   *
+   * @return the alternateAddress part of the location
+   */
+  public String getAlternateAddress() {
+    return fetchSubaddressSplit().getFld(alternateAddressIndex);
+  }
+
+  /** Set the code part of the subaddress of the location. 
+   *
+   * @param val the code part of the location
+   */
+  public void setCode(final String val) {
+    assignSubaddressField(codeIndex, val);
+  }
+
+  /** get the code part of the sub address of the location.
+   *
+   * @return the code part of the location
+   */
+  public String getCode() {
+    return fetchSubaddressSplit().getFld(codeIndex);
+  }
+
   /** Set the Location's URL
    *
    * @param link The new URL
@@ -499,6 +533,10 @@ public class BwLocation extends BwEventProperty<BwLocation>
   public int compareTo(final BwLocation that) {
     if (this == that) {
       return 0;
+    }
+    
+    if (that == null) {
+      return 1;
     }
 
     return CalFacadeUtil.cmpObjval(getUid(), that.getUid());

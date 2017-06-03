@@ -268,6 +268,11 @@ public class AccessUtil implements AccessUtilI {
       if (debug) {
         getLog().debug("After getPrincipal: " + (System.currentTimeMillis() - startTime));
       }
+      
+      if (owner == null) {
+        throw new CalFacadeException("Principal " + ent.getOwnerHref() +
+                                             " does not exist");
+      }
       PrivilegeSet maxPrivs = null;
 
       char[] aclChars = null;

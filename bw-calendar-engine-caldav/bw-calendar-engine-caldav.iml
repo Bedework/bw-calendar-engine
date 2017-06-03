@@ -67,7 +67,9 @@
     <orderEntry type="module" module-name="bw-calendar-engine-ical" />
     <orderEntry type="library" name="Maven: org.bedework:bw-ws-icalendar:4.0.4-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-ws-synchws:4.0.4-SNAPSHOT" level="project" />
-    <orderEntry type="module" module-name="bw-msg-sysevmsgs" />
+    <orderEntry type="module" module-name="bwsysev-msgs" />
+    <orderEntry type="module" module-name="bw-util-args" />
+    <orderEntry type="library" name="Maven: javax.jms:jms:1.1" level="project" />
     <orderEntry type="module" module-name="bw-util-calendar" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.3.1" level="project" />
     <orderEntry type="module" module-name="bw-util-misc" />

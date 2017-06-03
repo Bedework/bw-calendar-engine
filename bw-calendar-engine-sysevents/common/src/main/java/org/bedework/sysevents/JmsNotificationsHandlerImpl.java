@@ -18,11 +18,14 @@
  */
 package org.bedework.sysevents;
 
+import org.bedework.sysevents.events.EntityQueuedEvent;
+import org.bedework.sysevents.events.HttpEvent;
+import org.bedework.sysevents.events.MillisecsEvent;
+import org.bedework.sysevents.events.ScheduleUpdateEvent;
 import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.sysevents.events.SysEventBase.Attribute;
+import org.bedework.sysevents.events.TimedEvent;
 import org.bedework.sysevents.listeners.SysEventListener;
-
-import org.apache.log4j.Logger;
 
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
@@ -36,29 +39,64 @@ import javax.jms.ObjectMessage;
  */
 class JmsNotificationsHandlerImpl extends NotificationsHandler implements
     JmsDefs {
-  private transient Logger log;
-
+  /* Tried camel to multiplex but ran into many problems. We'll just open 
+     multiple connections for the moment.
+   */
+  
   /* Default sysevents queue - everything goes here */
 
-  private JmsConnectionHandler conn;
+  static class JmsConn {
+    private JmsConnectionHandler conn;
 
-  private MessageProducer sender;
+    private MessageProducer sender;
+    
+    JmsConn(final String queueName) throws NotificationException {
+      conn = new JmsConnectionHandler();
 
+      conn.open(queueName);
+
+      sender = conn.getProducer();
+    }
+    
+    public void post(final SysEventBase ev) throws NotificationException {
+      try {
+        final ObjectMessage msg = conn.getSession().createObjectMessage();
+
+        msg.setObject(ev);
+
+        for (final Attribute attr: ev.getMessageAttributes()) {
+          msg.setStringProperty(attr.name, attr.value);
+        }
+
+        long start = System.currentTimeMillis();
+        sender.send(msg);
+        sends++;
+        sendTime += System.currentTimeMillis() - start;
+      } catch (final JMSException je) {
+        throw new NotificationException(je);
+      }
+    }
+  }
+
+  private final JmsConn syslog;
+  private final JmsConn monitor;
+  private final JmsConn changes;
+  private final JmsConn indexer;
+  private final JmsConn scheduleIn;
+  private final JmsConn scheduleOut;
+  
   /*
    * We could use the activemq camel support (I think) to filter out certain
    * events and send them on to another queue.
    */
 
-  private boolean debug;
-
   JmsNotificationsHandlerImpl() throws NotificationException {
-    debug = getLogger().isDebugEnabled();
-
-    conn = new JmsConnectionHandler();
-
-    conn.open(syseventsQueueName);
-
-    sender = conn.getProducer();
+    syslog = new JmsConn(syseventsLogQueueName);
+    monitor = new JmsConn(monitorQueueName);
+    changes = new JmsConn(changesQueueName);
+    indexer = new JmsConn(crawlerQueueName);
+    scheduleIn = new JmsConn(schedulerInQueueName);
+    scheduleOut = new JmsConn(schedulerOutQueueName);
   }
 
   private static long sends = 0;
@@ -67,28 +105,45 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
   @Override
   public void post(final SysEventBase ev) throws NotificationException {
     if (debug) {
-      trace(ev.toString());
+      debug(ev.toString());
     }
 
-    try {
-      final ObjectMessage msg = conn.getSession().createObjectMessage();
-
-      msg.setObject(ev);
-
-      for (final Attribute attr: ev.getMessageAttributes()) {
-        msg.setStringProperty(attr.name, attr.value);
+    long start = System.currentTimeMillis();
+    
+    send: {
+      if (ev instanceof MillisecsEvent) {
+        monitor.post(ev);
+        
+        if ((ev instanceof TimedEvent) || (ev instanceof HttpEvent)) {
+          break send;
+        }
       }
+      
+      syslog.post(ev);
+      changes.post(ev); // TODO - add some filtering option
+      // indexer - not needed?
+      
+      if (ev instanceof EntityQueuedEvent) {
+        final EntityQueuedEvent eqe = (EntityQueuedEvent)ev;
+        
+        if (((EntityQueuedEvent)ev).getInBox()) {
+          scheduleIn.post(ev);
+        } else {
+          scheduleOut.post(ev);
+          break send;
+        }
+      }
+      
+      if (ev instanceof ScheduleUpdateEvent) {
+        scheduleIn.post(ev);
+      }
+    } // send
 
-      long start = System.currentTimeMillis();
-      sender.send(msg);
-      sends++;
-      sendTime += System.currentTimeMillis() - start;
+    sends++;
+    sendTime += System.currentTimeMillis() - start;
 
-//      if ((sends % 100) == 0) {
-//        System.out.println("Sends: " + sends + " avg: " + sendTime / sends);
-//      }
-    } catch (final JMSException je) {
-      throw new NotificationException(je);
+    if ((sends % 100) == 0) {
+      debug("Sends: " + sends + " avg: " + sendTime / sends);
     }
   }
 
@@ -103,30 +158,5 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
   public void removeListener(final SysEventListener l)
           throws NotificationException {
 
-  }
-
-  /*
-   * ====================================================================
-   * Protected methods
-   * ====================================================================
-   */
-
-  protected void info(final String msg) {
-    getLogger().info(msg);
-  }
-
-  protected void trace(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  /*
-   * Get a logger for messages
-   */
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
   }
 }

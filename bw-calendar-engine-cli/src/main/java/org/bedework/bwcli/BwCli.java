@@ -12,6 +12,7 @@ import org.bedework.bwcli.jmxcmd.CmdRebuildIdx;
 import org.bedework.bwcli.jmxcmd.CmdRebuildStatus;
 import org.bedework.bwcli.jmxcmd.CmdRestoreCalData;
 import org.bedework.bwcli.toolcmd.ToolCmd;
+import org.bedework.bwcli.toolcmd.ToolSource;
 import org.bedework.bwcli.toolcmd.ToolUser;
 import org.bedework.calfacade.responses.AdminGroupsResponse;
 import org.bedework.util.args.Args;
@@ -30,16 +31,22 @@ import java.net.URI;
 public class BwCli extends JolokiaCli {
   private WebClient webClient;
   private final String url;
+  private final String id;
+  private final String pw;
   
   // Last response
   private AdminGroupsResponse adgrs;
   
   public BwCli(final String url,
                final String jmxUrl,
+               final String id,
+               final String pw,
                final boolean debug) throws Throwable {
     super(jmxUrl, debug);
     
     this.url = url;
+    this.id = id;
+    this.pw = pw;
 
     register(new CmdAdminGroups());
     
@@ -52,11 +59,12 @@ public class BwCli extends JolokiaCli {
     register(new CmdRestoreCalData());
 
     register(new ToolCmd());
+    register(new ToolSource());
     register(new ToolUser());
   }
 
   public JolokiaClient makeClient(final String uri) throws Throwable {
-    return new JolokiaConfigClient(uri);
+    return new JolokiaConfigClient(uri, id, pw);
   }
 
   public WebClient getWebClient() {
@@ -89,6 +97,8 @@ public class BwCli extends JolokiaCli {
    */
   public static void main(final String[] args) {
     String url = null;
+    String id = null;
+    String pw = null;
     String jmxUrl = null;
     boolean debug = false;
 
@@ -111,12 +121,22 @@ public class BwCli extends JolokiaCli {
           continue;
         }
 
+        if (pargs.ifMatch("-id")) {
+          id = pargs.next();
+          continue;
+        }
+
+        if (pargs.ifMatch("-pw")) {
+          pw = pargs.next();
+          continue;
+        }
+
         usage("Illegal argument: " +
                       pargs.current());
         return;
       }
 
-      final BwCli jc = new BwCli(url, jmxUrl, debug);
+      final BwCli jc = new BwCli(url, jmxUrl, id, pw, debug);
 
       jc.processCmds();
     } catch (final Throwable t) {

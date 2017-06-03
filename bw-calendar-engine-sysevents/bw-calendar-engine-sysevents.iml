@@ -63,7 +63,6 @@
     <orderEntry type="library" name="Maven: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
     <orderEntry type="library" name="Maven: javax.annotation:jsr250-api:1.0" level="project" />
     <orderEntry type="library" name="Maven: javax.inject:javax.inject:1" level="project" />
-    <orderEntry type="module" module-name="bw-msg-sysevmsgs" />
     <orderEntry type="module" module-name="bw-util-args" />
     <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.15" level="project" />

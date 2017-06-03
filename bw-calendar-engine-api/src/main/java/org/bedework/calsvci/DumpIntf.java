@@ -32,6 +32,7 @@ import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.calfacade.svc.EventInfo;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -126,6 +127,23 @@ public interface DumpIntf {
    * @throws CalFacadeException on error
    */
   Iterator<BwEvent> getEvents() throws CalFacadeException;
+
+  /** Will return an Iterator returning EventInfo objects.
+   * All relevent objects, categories, locations, sponsors, creators will
+   * be attached.
+   *
+   * @return Iterator - events may have overrides attached.
+   * @throws CalFacadeException on error
+   */
+  Iterator<EventInfo> getEventInfos() throws CalFacadeException;
+
+  /** Will return an Iterator over event hrefs.
+   *
+   * @param start - position.
+   * @return Iterator over hrefs.
+   * @throws CalFacadeException on error
+   */
+  Iterator<String> getEventHrefs(int start) throws CalFacadeException;
 
   /** Will return an Iterator returning BwEvent objects.
    * All relevent objects, categories, locations, sponsors, creators will

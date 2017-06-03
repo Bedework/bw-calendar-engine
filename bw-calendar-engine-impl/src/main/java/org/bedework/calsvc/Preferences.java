@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -35,6 +36,9 @@ import org.bedework.calfacade.svc.prefs.ContactPref;
 import org.bedework.calfacade.svc.prefs.LocationPref;
 import org.bedework.calsvci.PreferencesI;
 import org.bedework.util.misc.Util;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /** This acts as an interface to the database for user preferences.
  *
@@ -139,7 +143,9 @@ class Preferences extends CalSvcDb implements PreferencesI {
   public void updateAdminPrefs(final boolean remove,
                                final BwEventProperty ent) throws CalFacadeException {
     if (ent instanceof BwCategory) {
-      updateAdminPrefs(remove, null, (BwCategory)ent, null, null);
+      updateAdminPrefs(remove, null, 
+                       Collections.singletonList((BwCategory)ent), 
+                       null, null);
     } else if (ent instanceof BwLocation) {
       updateAdminPrefs(remove, null, null, (BwLocation)ent, null);
     } else if (ent instanceof BwContact) {
@@ -152,7 +158,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
    */
   public void updateAdminPrefs(final boolean remove,
                                final BwCalendar cal,
-                               final BwCategory cat,
+                               final Collection<BwCategory> cats,
                                final BwLocation loc,
                                final BwContact ctct) throws CalFacadeException {
     BwCommonUserPrefs prefs = null;
@@ -174,23 +180,27 @@ class Preferences extends CalSvcDb implements PreferencesI {
 
     if (cal != null) {
       if (!remove) {
-        CalendarPref p = prefs.getCalendarPrefs();
-        if (p.getAutoAdd() && p.add(cal)) {
-          update = true;
+        if (cal.getCalendarCollection()) {
+          CalendarPref p = prefs.getCalendarPrefs();
+          if (p.getAutoAdd() && p.add(cal)) {
+            update = true;
+          }
         }
       } else {
         getSvc().removeFromAllPrefs(cal);
       }
     }
 
-    if (cat != null) {
-      if (!remove) {
-        CategoryPref p = prefs.getCategoryPrefs();
-        if (p.getAutoAdd() && p.add(cat.getUid())) {
-          update = true;
+    if (!Util.isEmpty(cats)) {
+      for (final BwCategory cat: cats) {
+        if (!remove) {
+          CategoryPref p = prefs.getCategoryPrefs();
+          if (p.getAutoAdd() && p.add(cat.getUid())) {
+            update = true;
+          }
+        } else {
+          getSvc().removeFromAllPrefs(cat);
         }
-      } else {
-        getSvc().removeFromAllPrefs(cat);
       }
     }
 
@@ -231,9 +241,8 @@ class Preferences extends CalSvcDb implements PreferencesI {
     String path = get().getAttachmentsPath();
 
     if (path == null) {
-      path = Util.buildPath(true,
-                            getSvc().getCalendarsHandler().getHome()
-                                    .getPath(),
+      path = Util.buildPath(BasicSystemProperties.colPathEndsWithSlash,
+                            getSvc().getCalendarsHandler().getHomePath(),
                             "/",
                             "attachments");
       get().setAttachmentsPath(path);

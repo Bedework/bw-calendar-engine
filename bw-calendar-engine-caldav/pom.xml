@@ -27,10 +27,12 @@
 			<artifactId>bw-caleng-ical</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.bedework.bw-msg</groupId>
-			<artifactId>bw-msg-sysevmsgs</artifactId>
-		</dependency>
+
+    <dependency>
+      <groupId>org.bedework.caleng</groupId>
+      <artifactId>bwsysev-msgs</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 		<!-- Bedework Dependencies -->
     <dependency>
       <groupId>org.bedework</groupId>

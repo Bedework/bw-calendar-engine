@@ -42,12 +42,14 @@ public class JolokiaConfigClient extends JolokiaClient {
    *
    * @param url Usually something like "http://localhost:8080/hawtio/jolokia"
    */
-  public JolokiaConfigClient(final String url) {
-    super(url);
+  public JolokiaConfigClient(final String url,
+                             final String id, 
+                             final String pw) {
+    super(url, id, pw);
   }
 
   public String setCmdutilUser(final String account) throws Throwable {
-    return execString(cmdutilMbean, "exec", "user " + account);
+    return execCmdutilCmd("user " + account);
   }
 
   public String execCmdutilCmd(final String cmd) throws Throwable {

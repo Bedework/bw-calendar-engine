@@ -15,14 +15,17 @@
 			<artifactId>bw-caleng-facade</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.bedework.bw-msg</groupId>
-			<artifactId>bw-msg-sysevmsgs</artifactId>
-		</dependency>
-      <dependency>
-        <groupId>org.bedework</groupId>
-        <artifactId>bw-caldav-util</artifactId>
-      </dependency>
+
+    <dependency>
+      <groupId>org.bedework.caleng</groupId>
+      <artifactId>bwsysev-msgs</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-caldav-util</artifactId>
+    </dependency>
 		<!-- Third Party -->
 		<dependency>
 			<groupId>org.hibernate</groupId>

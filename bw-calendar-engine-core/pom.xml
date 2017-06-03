@@ -34,8 +34,9 @@
     <!-- Bedework Dependencies -->
 
     <dependency>
-      <groupId>org.bedework.bw-msg</groupId>
-      <artifactId>bw-msg-sysevmsgs</artifactId>
+      <groupId>org.bedework.caleng</groupId>
+      <artifactId>bwsysev-msgs</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>

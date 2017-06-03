@@ -60,12 +60,14 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.Set;
 
 /** Class used as basis for a number of helper classes.
  *
@@ -680,6 +682,24 @@ public abstract class CalintfHelper
     } catch (Throwable t) {
       error(t);
       return null;
+    }
+  }
+
+  protected void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
+    final Set<String> uids = ce.getCategoryUids();
+    if (Util.isEmpty(uids)) {
+      return;
+    }
+
+    for (final String uid: uids) {
+      final BwCategory cat = cb.getCategory(uid);
+
+      if (cat == null) {
+        throw new CalFacadeException("Attempting to store null for cat uid "
+                                             + uid);
+      }
+
+      ce.addCategory(cat);
     }
   }
 

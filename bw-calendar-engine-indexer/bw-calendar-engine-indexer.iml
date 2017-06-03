@@ -93,7 +93,7 @@
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
     <orderEntry type="library" name="Maven: javax.mail:javax.mail-api:1.5.4" level="project" />
     <orderEntry type="library" name="Maven: javax.servlet:servlet-api:2.4" level="project" />
-    <orderEntry type="module" module-name="bw-msg-sysevmsgs" />
+    <orderEntry type="module" module-name="bwsysev-msgs" />
     <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.15" level="project" />
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />
