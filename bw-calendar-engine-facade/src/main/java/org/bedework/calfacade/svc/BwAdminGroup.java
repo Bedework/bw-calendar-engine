@@ -89,6 +89,18 @@ public class BwAdminGroup extends BwGroup {
     return ownerHref;
   }
 
+  @Override
+  public BwAdminGroup shallowClone() {
+    final BwAdminGroup ag = new BwAdminGroup();
+    shallowCopyTo(ag);
+
+    ag.setDescription(getDescription());
+    ag.setGroupOwnerHref(getGroupOwnerHref());
+    ag.setOwnerHref(getOwnerHref());
+
+    return ag;
+  }
+
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */

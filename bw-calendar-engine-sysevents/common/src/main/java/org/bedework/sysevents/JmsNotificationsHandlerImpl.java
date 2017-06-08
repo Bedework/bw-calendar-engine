@@ -120,7 +120,21 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
       }
       
       syslog.post(ev);
-      changes.post(ev); // TODO - add some filtering option
+      
+      boolean changeEvent = false;
+      
+      for (final Attribute attr: ev.getMessageAttributes()) {
+        if (!"changeEvent".equals(attr.name)) {
+          continue;
+        }
+        
+        changeEvent = Boolean.valueOf(attr.value);
+        break;
+      }
+      
+      if (changeEvent) {
+        changes.post(ev); 
+      }
       // indexer - not needed?
       
       if (ev instanceof EntityQueuedEvent) {

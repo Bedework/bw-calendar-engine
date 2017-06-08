@@ -171,6 +171,21 @@ public class BwGroup extends BwPrincipal {
     }
   }
 
+  /** Copy this to val without members
+   *
+   * @param val BwGroup target
+   */
+  public void shallowCopyTo(final BwGroup val) {
+    super.copyTo(val);
+  }
+  
+  public BwGroup shallowClone() {
+    BwGroup g = new BwGroup();
+    shallowCopyTo(g);
+
+    return g;
+  }
+
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */
@@ -183,7 +198,7 @@ public class BwGroup extends BwPrincipal {
 
     return ts.toString();
   }
-
+  
   @Override
   public Object clone() {
     /* We do not clone the attached subscriptions if present. These need to
