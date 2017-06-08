@@ -90,13 +90,17 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
    * events and send them on to another queue.
    */
 
-  JmsNotificationsHandlerImpl() throws NotificationException {
-    syslog = new JmsConn(syseventsLogQueueName);
-    monitor = new JmsConn(monitorQueueName);
-    changes = new JmsConn(changesQueueName);
-    indexer = new JmsConn(crawlerQueueName);
-    scheduleIn = new JmsConn(schedulerInQueueName);
-    scheduleOut = new JmsConn(schedulerOutQueueName);
+  JmsNotificationsHandlerImpl() {
+    try {
+      syslog = new JmsConn(syseventsLogQueueName);
+      monitor = new JmsConn(monitorQueueName);
+      changes = new JmsConn(changesQueueName);
+      indexer = new JmsConn(crawlerQueueName);
+      scheduleIn = new JmsConn(schedulerInQueueName);
+      scheduleOut = new JmsConn(schedulerOutQueueName);
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 
   private static long sends = 0;

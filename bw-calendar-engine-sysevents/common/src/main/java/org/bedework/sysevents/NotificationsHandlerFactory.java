@@ -26,26 +26,21 @@ import org.bedework.sysevents.events.SysEventBase;
  * @author Mike Douglass
  */
 public class NotificationsHandlerFactory {
-  private static volatile NotificationsHandler handler;
-
-  private static volatile Object synchit = new Object();
+  private static ThreadLocal<NotificationsHandler> threadLocal =
+          new ThreadLocal<NotificationsHandler>() {
+            @Override
+            protected NotificationsHandler initialValue() {
+              return new JmsNotificationsHandlerImpl();
+            }
+          };
 
   /**
    * Return a handler for the system event
    *
    * @return NotificationsHandler
-   * @throws NotificationException
    */
-  private static NotificationsHandler getHandler() throws NotificationException {
-    if (handler != null) {
-      return handler;
-    }
-
-    synchronized (synchit) {
-      handler = new JmsNotificationsHandlerImpl();
-    }
-
-    return handler;
+  private static NotificationsHandler getHandler() {
+    return threadLocal.get();    
   }
 
   /**
