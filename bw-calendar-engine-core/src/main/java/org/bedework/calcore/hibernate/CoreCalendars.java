@@ -515,6 +515,7 @@ class CoreCalendars extends CalintfHelper
         usercal.setColPath(parentCal.getPath());
 
         dao.saveCollection(usercal);
+        notify(SysEvent.SysCode.COLLECTION_ADDED, usercal);
       } else if (usercal == null) {
         /* Create a new system owned folder for part of the principal
          * hierarchy
@@ -528,6 +529,7 @@ class CoreCalendars extends CalintfHelper
         usercal.setColPath(parentCal.getPath());
 
         dao.saveCollection(usercal);
+        notify(SysEvent.SysCode.COLLECTION_ADDED, usercal);
       }
 
       parentCal = usercal;
@@ -549,6 +551,7 @@ class CoreCalendars extends CalintfHelper
     cal.setAffectsFreeBusy(true);
 
     dao.saveCollection(cal);
+    notify(SysEvent.SysCode.COLLECTION_ADDED, cal);
   }
 
   @Override
