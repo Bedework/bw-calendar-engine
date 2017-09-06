@@ -276,20 +276,24 @@ public abstract class CalintfBase implements Calintf {
 
   @Override
   public void flushNotifications() throws CalFacadeException {
-    while (!queuedNotifications.isEmpty()) {
-      SysEventBase ev = null;
-      try {
-        ev = queuedNotifications.take();
-        NotificationsHandlerFactory.post(ev);
-      } catch (final Throwable t) {
-        /* This could be a real issue as we are currently relying on jms
-           * messages to trigger the scheduling process.
-           *
-           * At this point there's not much we can do about it.
-           */
-        error("Unable to post system notification " + ev);
-        error(t);
+    try {
+      while (!queuedNotifications.isEmpty()) {
+        SysEventBase ev = null;
+        try {
+          ev = queuedNotifications.take();
+          NotificationsHandlerFactory.post(ev);
+        } catch (final Throwable t) {
+          /* This could be a real issue as we are currently relying on jms
+             * messages to trigger the scheduling process.
+             *
+             * At this point there's not much we can do about it.
+             */
+          error("Unable to post system notification " + ev);
+          error(t);
+        }
       }
+    } finally {
+      NotificationsHandlerFactory.close();
     }
   }
 

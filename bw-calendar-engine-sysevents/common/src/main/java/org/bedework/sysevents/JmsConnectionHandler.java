@@ -163,8 +163,8 @@ public class JmsConnectionHandler implements JmsDefs {
    */
   public void close() {
     try {
-      if (session != null) {
-        session.close();
+      if (connection != null) {
+        connection.close();
       }
     } catch (final Throwable t) {
       warn(t.getMessage());

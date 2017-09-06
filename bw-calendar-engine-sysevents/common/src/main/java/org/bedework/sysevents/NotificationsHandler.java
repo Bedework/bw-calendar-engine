@@ -56,9 +56,14 @@ public abstract class NotificationsHandler extends Logged {
   /**
    * Remove a listener. If persistent it will be deleted from the database.
    * 
-   * @param l
-   * @throws NotificationException
+   * @param l the listener
+   * @throws NotificationException on serious error
    */
-  public abstract void removeListener(SysEventListener l)
-                                                         throws NotificationException;
+  public abstract void removeListener(SysEventListener l) throws NotificationException;
+
+  /**
+   * Does its best to close.
+   *
+   */
+  public abstract void close();
 }

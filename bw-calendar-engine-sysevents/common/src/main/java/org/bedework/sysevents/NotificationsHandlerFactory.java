@@ -44,6 +44,15 @@ public class NotificationsHandlerFactory {
   }
 
   /**
+   * Close the handler
+   *
+   */
+  public static void close() {
+    threadLocal.get().close();
+    threadLocal.remove();
+  }
+
+  /**
    * Called to notify container that an event occurred. In general this should
    * not be called directly as consumers may receive the messages immediately,
    * perhaps before the referenced data has been written.

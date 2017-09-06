@@ -76,6 +76,10 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
         throw new NotificationException(je);
       }
     }
+    
+    public void close() {
+      conn.close();
+    }
   }
 
   private final JmsConn syslog;
@@ -176,5 +180,36 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
   public void removeListener(final SysEventListener l)
           throws NotificationException {
 
+  }
+
+  @Override
+  public void close() {
+    if (syslog != null) {
+      close(syslog);
+    }
+    
+    if (monitor != null) {
+      close(monitor);
+    }
+
+    if (changes != null) {
+      close(changes);
+    }
+
+    if (indexer != null) {
+      close(indexer);
+    }
+
+    if (scheduleIn != null) {
+      close(scheduleIn);
+    }
+
+    if (scheduleOut != null) {
+      close(scheduleOut);
+    }
+  }
+  
+  private void close(final JmsConn conn) {
+    conn.close();
   }
 }

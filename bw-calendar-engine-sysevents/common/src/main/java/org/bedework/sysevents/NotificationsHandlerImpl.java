@@ -49,4 +49,9 @@ class NotificationsHandlerImpl extends NotificationsHandler {
                                                       throws NotificationException {
 
   }
+
+  @Override
+  public void close() {
+    
+  }
 }
