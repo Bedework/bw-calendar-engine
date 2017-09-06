@@ -416,7 +416,7 @@ public abstract class SimpleFilterParser {
 
           if ("asc".equalsIgnoreCase(tokenizer.sval)) {
             ascending = true;
-          } else if ("asc".equalsIgnoreCase(tokenizer.sval)) {
+          } else if ("desc".equalsIgnoreCase(tokenizer.sval)) {
             ascending = false;
           } else {
             throw parseResult.fail("Expected Asc Desc: " +

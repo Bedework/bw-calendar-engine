@@ -303,21 +303,21 @@ public class CalSvcDb implements Serializable {
 
   /* See if current authorised is a guest.
    */
-  protected boolean isGuest() throws CalFacadeException {
+  protected boolean isGuest() {
     return pars.isGuest();
   }
 
   /* See if in public admin mode
    */
-  protected boolean isPublicAdmin() throws CalFacadeException {
+  protected boolean isPublicAdmin() {
     return pars.getPublicAdmin();
   }
 
-  protected BwPrincipal getPrincipal() throws CalFacadeException {
+  protected BwPrincipal getPrincipal() {
     return svci.getPrincipal();
   }
 
-  protected String getPrincipalHref() throws CalFacadeException {
+  protected String getPrincipalHref() {
     return svci.getPrincipal().getPrincipalRef();
   }
 
@@ -389,7 +389,7 @@ public class CalSvcDb implements Serializable {
     return svci.getCal(cal);
   }
 
-  protected BwPrincipal getPublicUser() throws CalFacadeException {
+  protected BwPrincipal getPublicUser() {
     return getSvc().getUsersHandler().getPublicUser();
   }
 
@@ -518,9 +518,8 @@ public class CalSvcDb implements Serializable {
    *
    * @param owner - possible owner
    * @return BwPrincipal
-   * @throws CalFacadeException
    */
-  protected BwPrincipal getEntityOwner(final BwPrincipal owner) throws CalFacadeException {
+  protected BwPrincipal getEntityOwner(final BwPrincipal owner) {
     if (isPublicAdmin()) {
       return getPublicUser();
     }
@@ -528,15 +527,15 @@ public class CalSvcDb implements Serializable {
     return owner;
   }
 
-  protected BasicSystemProperties getBasicSyspars() throws CalFacadeException {
+  protected BasicSystemProperties getBasicSyspars() {
     return getSvc().getBasicSystemProperties();
   }
 
-  protected AuthProperties getAuthpars() throws CalFacadeException {
+  protected AuthProperties getAuthpars() {
     return getSvc().getAuthProperties();
   }
 
-  protected SystemProperties getSyspars() throws CalFacadeException {
+  protected SystemProperties getSyspars() {
     return getSvc().getSystemProperties();
   }
 

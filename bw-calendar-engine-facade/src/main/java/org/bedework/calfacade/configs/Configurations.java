@@ -18,7 +18,6 @@
 */
 package org.bedework.calfacade.configs;
 
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.util.http.service.HttpConfig;
 
@@ -31,70 +30,59 @@ import java.io.Serializable;
 public interface Configurations extends Serializable {
   /**
    * @return basic system properties
-   * @throws CalFacadeException
    */
-  BasicSystemProperties getBasicSystemProperties() throws CalFacadeException;
+  BasicSystemProperties getBasicSystemProperties();
 
   /**
-   * @param auth
+   * @param auth true for authenticated user
    * @return appropriate properties
-   * @throws CalFacadeException
    */
-  AuthProperties getAuthProperties(boolean auth) throws CalFacadeException;
+  AuthProperties getAuthProperties(boolean auth);
 
   /**
    * @return system properties
-   * @throws CalFacadeException
    */
-  SystemProperties getSystemProperties() throws CalFacadeException;
+  SystemProperties getSystemProperties();
 
   /**
    * @return http properties
-   * @throws CalFacadeException
    */
-  HttpConfig getHttpConfig() throws CalFacadeException;
+  HttpConfig getHttpConfig();
 
   /**
    * @return dump/restore properties
-   * @throws CalFacadeException
    */
-  DumpRestoreProperties getDumpRestoreProperties() throws CalFacadeException;
+  DumpRestoreProperties getDumpRestoreProperties();
 
   /**
    * @return indexing properties
-   * @throws CalFacadeException
    */
-  IndexProperties getIndexProperties() throws CalFacadeException;
+  IndexProperties getIndexProperties();
 
   /**
    * @return mailer properties
-   * @throws CalFacadeException
    */
-  MailConfigProperties getMailConfigProperties() throws CalFacadeException;
+  MailConfigProperties getMailConfigProperties();
 
   /**
    * @return notification properties
-   * @throws CalFacadeException
    */
-  NotificationProperties getNotificationProps() throws CalFacadeException;
+  NotificationProperties getNotificationProps();
 
   /**
    * @return synch properties
-   * @throws CalFacadeException
    */
-  SynchConfig getSynchConfig() throws CalFacadeException;
+  SynchConfig getSynchConfig();
 
   /**
-   * @param name
+   * @param name of config
    * @return directory interface properties
-   * @throws CalFacadeException
    */
-  DirConfigProperties getDirConfig(String name) throws CalFacadeException;
+  DirConfigProperties getDirConfig(String name);
 
   /**
-   * @param auth
+   * @param auth true for authenticated user
    * @return appropriate carddav info
-   * @throws CalFacadeException
    */
-  CardDavInfo getCardDavInfo(boolean auth) throws CalFacadeException;
+  CardDavInfo getCardDavInfo(boolean auth);
 }

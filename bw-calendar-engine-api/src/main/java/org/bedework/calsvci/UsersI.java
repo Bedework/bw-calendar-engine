@@ -91,9 +91,8 @@ public interface UsersI extends Serializable {
 
   /**
    * @return public entity owner
-   * @throws CalFacadeException
    */
-  public BwPrincipal getPublicUser() throws CalFacadeException;
+  public BwPrincipal getPublicUser();
 
   /** Get a partial list of principal hrefs.
    *

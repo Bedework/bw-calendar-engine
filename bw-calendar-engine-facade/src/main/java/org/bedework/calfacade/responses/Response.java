@@ -33,10 +33,12 @@ public class Response implements Serializable {
   public enum Status {
     ok,
     
+    notFound,
+    
     failed;
   }
   
-  private Status status;
+  private Status status = ok;
   private String message;
 
   /**

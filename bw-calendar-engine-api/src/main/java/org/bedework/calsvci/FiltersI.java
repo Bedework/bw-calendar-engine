@@ -21,6 +21,7 @@ package org.bedework.calsvci;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
+import org.bedework.calfacade.responses.GetFilterDefResponse;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -64,10 +65,9 @@ public interface FiltersI extends Serializable {
   /** Get a filter given the name
    *
    * @param  name     String internal name of filter
-   * @return BwFilter null for unknown filter
-   * @throws CalFacadeException
+   * @return GetFilterDefResponse with status set
    */
-  BwFilterDef get(String name) throws CalFacadeException;
+  GetFilterDefResponse get(String name);
 
   /** Get filter definitions to which this user has access
    *

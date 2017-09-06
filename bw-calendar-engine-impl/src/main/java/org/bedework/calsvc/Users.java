@@ -52,7 +52,7 @@ class Users extends CalSvcDb implements UsersI {
 
   private BwPrincipal publicUser;
 
-  Users(final CalSvc svci) throws CalFacadeException {
+  Users(final CalSvc svci) {
     super(svci);
   }
 
@@ -339,13 +339,19 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public BwPrincipal getPublicUser() throws CalFacadeException {
+  public BwPrincipal getPublicUser() {
     if (publicUser == null) {
-      publicUser = getUser(getPublicUserAccount());
+      try {
+        publicUser = getUser(getPublicUserAccount());
+      } catch (Throwable t) {
+        error(t);
+        throw new RuntimeException(
+                "Unable to get publicUser for " + publicUserAccount);
+      }
     }
 
     if (publicUser == null) {
-      throw new CalFacadeException("No guest user proxy account - expected " + publicUserAccount);
+      throw new RuntimeException("No guest user proxy account - expected " + publicUserAccount);
     }
 
     return publicUser;
@@ -361,7 +367,7 @@ class Users extends CalSvcDb implements UsersI {
    *                   Private methods
    * ==================================================================== */
 
-  private String getPublicUserAccount() throws CalFacadeException {
+  private String getPublicUserAccount() {
     if (publicUserAccount == null) {
       publicUserAccount = getBasicSyspars().getPublicUser();
     }

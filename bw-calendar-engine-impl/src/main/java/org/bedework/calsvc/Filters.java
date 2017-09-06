@@ -24,6 +24,8 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
+import org.bedework.calfacade.responses.GetFilterDefResponse;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calsvci.FiltersI;
 
 import ietf.params.xml.ns.caldav.FilterType;
@@ -107,12 +109,25 @@ class Filters extends CalSvcDb implements FiltersI {
     getCal().save(val, getEntityOwner(getPrincipal()));
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.FiltersI#get(java.lang.String)
-   */
   @Override
-  public BwFilterDef get(final String name) throws CalFacadeException {
-    return getCal().getFilterDef(name, getEntityOwner(getPrincipal()));
+  public GetFilterDefResponse get(final String name) {
+    final GetFilterDefResponse gfdr = new GetFilterDefResponse();
+
+    try {
+      final BwFilterDef fdef = getCal()
+              .getFilterDef(name, getEntityOwner(getPrincipal()));
+      if (fdef == null) {
+        gfdr.setStatus(Response.Status.notFound);
+      } else {
+        gfdr.setStatus(Response.Status.ok);
+        gfdr.setFilterDef(fdef);
+      }
+    } catch (final CalFacadeException cfe) {
+      gfdr.setStatus(Response.Status.failed);
+      gfdr.setMessage(cfe.getLocalizedMessage());
+    }
+    
+    return gfdr;
   }
 
   /* (non-Javadoc)

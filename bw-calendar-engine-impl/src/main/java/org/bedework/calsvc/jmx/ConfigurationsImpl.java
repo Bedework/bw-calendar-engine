@@ -149,12 +149,12 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   }
 
   @Override
-  public BasicSystemProperties getBasicSystemProperties() throws CalFacadeException {
+  public BasicSystemProperties getBasicSystemProperties() {
     return basicProps;
   }
 
   @Override
-  public AuthProperties getAuthProperties(final boolean auth) throws CalFacadeException {
+  public AuthProperties getAuthProperties(final boolean auth) {
     if (auth) {
       return authProperties;
     }
@@ -162,47 +162,47 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   }
 
   @Override
-  public SystemProperties getSystemProperties() throws CalFacadeException {
+  public SystemProperties getSystemProperties() {
     return sysProperties;
   }
 
   @Override
-  public HttpConfig getHttpConfig() throws CalFacadeException {
+  public HttpConfig getHttpConfig() {
     return httpConfig;
   }
 
   @Override
-  public DumpRestoreProperties getDumpRestoreProperties() throws CalFacadeException {
+  public DumpRestoreProperties getDumpRestoreProperties() {
     return dumpRestoreProperties;
   }
 
   @Override
-  public IndexProperties getIndexProperties() throws CalFacadeException {
+  public IndexProperties getIndexProperties() {
     return indexProperties;
   }
 
   @Override
-  public MailConfigProperties getMailConfigProperties() throws CalFacadeException {
+  public MailConfigProperties getMailConfigProperties() {
     return mailProps;
   }
 
   @Override
-  public NotificationProperties getNotificationProps() throws CalFacadeException {
+  public NotificationProperties getNotificationProps() {
     return notificationProps;
   }
 
   @Override
-  public SynchConfig getSynchConfig() throws CalFacadeException {
+  public SynchConfig getSynchConfig() {
     return synchProps;
   }
 
   @Override
-  public DirConfigProperties getDirConfig(final String name) throws CalFacadeException {
+  public DirConfigProperties getDirConfig(final String name) {
     return dirConfigs.get(name);
   }
 
   @Override
-  public CardDavInfo getCardDavInfo(final boolean auth) throws CalFacadeException {
+  public CardDavInfo getCardDavInfo(final boolean auth) {
     if (auth) {
       return authCardDavInfo;
     }
