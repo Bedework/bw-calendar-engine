@@ -81,45 +81,39 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Return basic properties about the system.
    *
    * @return BasicSystemProperties object - never null.
-   * @throws CalFacadeException
    */
-  public abstract BasicSystemProperties getBasicSystemProperties() throws CalFacadeException;
+  public abstract BasicSystemProperties getBasicSystemProperties();
 
   /** Return properties about the system that depend on authentication state.
    *
    * @return AuthProperties object - never null.
-   * @throws CalFacadeException
    */
-  public abstract AuthProperties getAuthProperties() throws CalFacadeException;
+  public abstract AuthProperties getAuthProperties();
 
   /** Return properties about the system that depend on authentication state.
    *
    * @param auth - true for auth proiperties false for unauth
    * @return AuthProperties object - never null.
-   * @throws CalFacadeException
    */
-  public abstract AuthProperties getAuthProperties(boolean auth) throws CalFacadeException;
+  public abstract AuthProperties getAuthProperties(boolean auth);
 
   /** Return properties about the system.
    *
    * @return SystemProperties object - never null.
-   * @throws CalFacadeException
    */
-  public abstract SystemProperties getSystemProperties() throws CalFacadeException;
+  public abstract SystemProperties getSystemProperties();
 
   /** Return notification properties.
    *
    * @return NotificationProperties object - never null.
-   * @throws CalFacadeException
    */
-  public abstract NotificationProperties getNotificationProperties() throws CalFacadeException;
+  public abstract NotificationProperties getNotificationProperties();
 
   /** Return properties for indexing.
    *
    * @return IndexProperties object - never null.
-   * @throws CalFacadeException
    */
-  public abstract IndexProperties getIndexProperties() throws CalFacadeException;
+  public abstract IndexProperties getIndexProperties();
 
   /** Set the calendar suite we are running as. Must be running as an
    * unauthenticated user.
@@ -482,9 +476,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Obtain an object which handles user objects
    *
    * @return UsersI handler
-   * @throws CalFacadeException
    */
-  public abstract UsersI getUsersHandler() throws CalFacadeException;
+  public abstract UsersI getUsersHandler();
 
   /** Obtain an object which handles views
    *
@@ -523,26 +516,20 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Return the categories maintenance object.
    *
    * @return Categories object
-   * @throws CalFacadeException
    */
-  public abstract Categories getCategoriesHandler()
-        throws CalFacadeException;
+  public abstract Categories getCategoriesHandler();
 
   /** Return the locations maintenance object.
    *
    * @return Locations
-   * @throws CalFacadeException
    */
-  public abstract Locations getLocationsHandler()
-        throws CalFacadeException;
+  public abstract Locations getLocationsHandler();
 
   /** Return the contacts maintenance object.
    *
    * @return Contacts
-   * @throws CalFacadeException
    */
-  public abstract Contacts getContactsHandler()
-        throws CalFacadeException;
+  public abstract Contacts getContactsHandler();
 
   /* ====================================================================
    *                   Users and accounts
@@ -551,9 +538,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Returns an object representing the current principal.
    *
    * @return BwPrincipal       representing the current principal
-   * @throws CalFacadeException
    */
-  public abstract BwPrincipal getPrincipal() throws CalFacadeException;
+  public abstract BwPrincipal getPrincipal();
 
   /** Find the principal with the given href.
    *

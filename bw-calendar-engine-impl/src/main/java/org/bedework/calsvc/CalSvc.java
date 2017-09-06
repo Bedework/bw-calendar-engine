@@ -347,33 +347,32 @@ public class CalSvc extends CalSvcI {
   }
 
   @Override
-  public BasicSystemProperties getBasicSystemProperties() throws CalFacadeException {
+  public BasicSystemProperties getBasicSystemProperties() {
     return configs.getBasicSystemProperties();
   }
 
   @Override
-  public AuthProperties getAuthProperties() throws CalFacadeException {
+  public AuthProperties getAuthProperties() {
     return configs.getAuthProperties(authenticated);
   }
 
   @Override
-  public AuthProperties getAuthProperties(final boolean auth) throws CalFacadeException {
+  public AuthProperties getAuthProperties(final boolean auth) {
     return configs.getAuthProperties(auth);
   }
 
   @Override
-  public SystemProperties getSystemProperties() throws CalFacadeException {
+  public SystemProperties getSystemProperties() {
     return configs.getSystemProperties();
   }
 
   @Override
-  public NotificationProperties getNotificationProperties()
-          throws CalFacadeException {
+  public NotificationProperties getNotificationProperties() {
     return configs.getNotificationProps();
   }
 
   @Override
-  public IndexProperties getIndexProperties() throws CalFacadeException {
+  public IndexProperties getIndexProperties() {
     return configs.getIndexProperties();
   }
 
@@ -887,11 +886,8 @@ public class CalSvc extends CalSvcI {
     return synch;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getUsersHandler()
-   */
   @Override
-  public UsersI getUsersHandler() throws CalFacadeException {
+  public UsersI getUsersHandler()  {
     if (usersHandler == null) {
       usersHandler = new Users(this);
       handlers.add((CalSvcDb)usersHandler);
@@ -969,7 +965,7 @@ public class CalSvc extends CalSvcI {
    * @see org.bedework.calsvci.CalSvcI#getCategoriesHandler()
    */
   @Override
-  public Categories getCategoriesHandler() throws CalFacadeException {
+  public Categories getCategoriesHandler() {
     if (categoriesHandler == null) {
       categoriesHandler = new CategoriesImpl(this);
       categoriesHandler.init(pars.getAdminCanEditAllPublicCategories());
@@ -980,7 +976,7 @@ public class CalSvc extends CalSvcI {
   }
 
   @Override
-  public Locations getLocationsHandler() throws CalFacadeException {
+  public Locations getLocationsHandler() {
     if (locationsHandler == null) {
       locationsHandler = new LocationsImpl(this);
       locationsHandler.init(pars.getAdminCanEditAllPublicLocations());
@@ -991,7 +987,7 @@ public class CalSvc extends CalSvcI {
   }
 
   @Override
-  public Contacts getContactsHandler() throws CalFacadeException {
+  public Contacts getContactsHandler() {
     if (contactsHandler == null) {
       contactsHandler = new ContactsImpl(this);
       contactsHandler.init(pars.getAdminCanEditAllPublicContacts());
@@ -1006,7 +1002,7 @@ public class CalSvc extends CalSvcI {
    * ==================================================================== */
 
   @Override
-  public BwPrincipal getPrincipal() throws CalFacadeException {
+  public BwPrincipal getPrincipal() {
     return principalInfo.getPrincipal();
   }
 
