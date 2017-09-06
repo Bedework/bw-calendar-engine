@@ -3585,6 +3585,28 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     fbps.add(val);
   }
 
+  /** Set the calsuite name
+   *
+   * @param val    name
+   */
+  @IcalProperty(pindex = PropertyInfoIndex.CALSUITE,
+          jname = "calSuite",
+          eventProperty = true,
+          todoProperty = true,
+          vpollProperty = true
+  )
+  public void setCalSuite(final String val) {
+    replaceXproperty(BwXproperty.bedeworkCalsuite, val);
+  }
+
+  /** Get the calsuite name
+   *
+   *  @return String   name
+   */
+  public String getCalSuite() {
+    return getXproperty(BwXproperty.bedeworkCalsuite);
+  }
+
   /* ====================================================================
    *                   VPoll methods
    * ==================================================================== */

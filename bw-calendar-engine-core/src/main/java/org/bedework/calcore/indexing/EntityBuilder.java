@@ -320,6 +320,7 @@ public class EntityBuilder extends EntityBuilderBase {
     restoreSharedEntity(ev);
 
     ev.setName(getString(PropertyInfoIndex.NAME));
+    ev.setCalSuite(getString(PropertyInfoIndex.CALSUITE));
 
     restoreCategories(ev);
 
