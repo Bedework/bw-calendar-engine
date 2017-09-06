@@ -42,7 +42,6 @@ import java.util.TreeSet;
 public interface BwIndexer extends Serializable {
   // Types of entity we index
   String docTypeUnknown = "unknown";
-  String docTypeUpdateTracker = "updateTracker";
   String docTypeCollection = "collection";
   String docTypeCategory = "category";
   String docTypeLocation = "location";
@@ -86,8 +85,6 @@ public interface BwIndexer extends Serializable {
           "masterAvailable",
           "overrideAvailable",
   };
-
-  String updateTrackerId = "updateTracker";
 
   /* Other types are those defined in IcalDefs.entityTypeNames */
 

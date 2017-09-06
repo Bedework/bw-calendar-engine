@@ -1342,6 +1342,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @IcalProperty(pindex = PropertyInfoIndex.RELATED_TO,
                 jname = "relatedTo",
+                nested = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)
@@ -1369,6 +1370,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     @IcalProperty(pindex = PropertyInfoIndex.XPROP,
                   jname = "xprop",
                   adderName = "xproperty",
+                  nested = true,
                   eventProperty = true,
                   todoProperty = true,
                   journalProperty = true,
@@ -1390,6 +1392,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
             timezoneProperty = true),
     @IcalProperty(pindex = PropertyInfoIndex.ALIAS_URI,
             jname = "aliasURI",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.CALSUITE,
+            jname = "calsuite",
             eventProperty = true,
             todoProperty = true,
             journalProperty = true,
@@ -2985,6 +2994,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.COMMENT,
                 adderName = "comment",
+                analyzed = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
@@ -3214,13 +3224,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *               DescriptionEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#setDescriptions(java.util.Set)
-   */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.DESCRIPTION,
                 jname = "description",
                 adderName = "description",
+                analyzed = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)
@@ -3228,18 +3236,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     descriptions = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#getDescriptions()
-   */
   @Override
   @Dump(collectionElementName = "description")
   public Set<BwLongString> getDescriptions() {
     return descriptions;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#getNumDescriptions()
-   */
   @Override
   @NoProxy
   @NoDump
@@ -3252,18 +3254,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return rs.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#addDescription(java.lang.String, java.lang.String)
-   */
   @Override
   @NoProxy
   public void addDescription(final String lang, final String val) {
     addDescription(new BwLongString(lang, val));
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#addDescription(org.bedework.calfacade.BwString)
-   */
   @Override
   @NoProxy
   public void addDescription(final BwLongString val) {
@@ -3278,9 +3274,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#removeDescription(org.bedework.calfacade.BwString)
-   */
   @Override
   @NoProxy
   public boolean removeDescription(final BwLongString val) {
@@ -3292,9 +3285,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return rs.remove(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#updateDescriptions(java.lang.String, java.lang.String)
-   */
   @Override
   @NoProxy
   public void updateDescriptions(final String lang, final String val) {
@@ -3315,18 +3305,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#findDescription(java.lang.String)
-   */
   @Override
   @NoProxy
   public BwLongString findDescription(final String lang) {
     return BwLongString.findLang(lang, getDescriptions());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#setDescription(java.lang.String)
-   */
   @Override
   @NoProxy
   public void setDescription(final String val) {
@@ -3354,6 +3338,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.RESOURCES,
                 adderName = "resource",
+                analyzed = true,
                 eventProperty = true,
                 todoProperty = true)
   public void setResources(final Set<BwString> val) {
@@ -3434,6 +3419,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @IcalProperty(pindex = PropertyInfoIndex.SUMMARY,
                 jname = "summary",
                 adderName = "summary",
+                analyzed = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)

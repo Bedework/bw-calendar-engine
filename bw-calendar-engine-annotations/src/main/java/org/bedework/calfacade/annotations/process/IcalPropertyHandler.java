@@ -67,6 +67,9 @@ public class IcalPropertyHandler {
     String jname;
 
     String fieldType;
+    
+    boolean nested;
+    boolean analyzed;
 
     boolean isCollectionType;
 
@@ -119,6 +122,8 @@ public class IcalPropertyHandler {
 
       reschedule = p.reschedule();
 
+      nested = p.nested();
+      analyzed = p.analyzed();
       required = p.required();
       annotationRequired = p.annotationRequired();
 
@@ -423,7 +428,7 @@ public class IcalPropertyHandler {
   private static class PinfoField {
     String type;
     String name;
-    String preceding;
+    String comment;
     boolean first;
     boolean last;
 
@@ -436,7 +441,7 @@ public class IcalPropertyHandler {
                final String preceding) {
       this.type = type;
       this.name = name;
-      this.preceding = preceding;
+      this.comment = preceding;
     }
 
     PinfoField(final String type, final String name,
@@ -455,13 +460,15 @@ public class IcalPropertyHandler {
           new PinfoField("String", "adderName"),
           new PinfoField("String", "jname"),
           new PinfoField("Class", "fieldType"),
-          new PinfoField("String", "presenceField", "/* field we test for presence */"),
-          new PinfoField("boolean", "param", "/* It's a parameter   */"),
-          new PinfoField("boolean", "required", "/* Required for a valid event   */"),
-          new PinfoField("boolean", "annotationRequired", "/* Required for a valid annotation   */"),
+          new PinfoField("boolean", "nested", "True for nested types"),
+          new PinfoField("boolean", "analyzed", "True for analyzed types"),
+          new PinfoField("String", "presenceField", "field we test for presence"),
+          new PinfoField("boolean", "param", "It's a parameter"),
+          new PinfoField("boolean", "required", "Required for a valid event"),
+          new PinfoField("boolean", "annotationRequired", "Required for a valid annotation"),
           new PinfoField("boolean", "reschedule",
-                         "/* True if changing this forces a reschedule */"),
-          new PinfoField("boolean", "multiValued", "/* Derived during generation */"),
+                         "True if changing this forces a reschedule"),
+          new PinfoField("boolean", "multiValued", "Derived during generation"),
           new PinfoField("boolean", "eventProperty"),
           new PinfoField("boolean", "todoProperty"),
           new PinfoField("boolean", "journalProperty"),
@@ -492,6 +499,10 @@ public class IcalPropertyHandler {
     } else {
       makePar(parIndent, ip.fieldType + ".class", "fieldType");
     }
+
+    makePar(parIndent, ip.nested, "nested");
+
+    makePar(parIndent, ip.analyzed, "analyzed");
 
     makePar(parIndent, quote(ip.presenceField), "presenceField");
 
@@ -592,8 +603,8 @@ public class IcalPropertyHandler {
 
     /* Emit fields */
     for (PinfoField pif: pinfoFields) {
-      if (pif.preceding != null) {
-        pinfoOut.println("    " + pif.preceding);
+      if (pif.comment != null) {
+        pinfoOut.println("    /* " + pif.comment + " */");
       }
       pinfoOut.println("    private " + pif.type + " " + pif.name + ";");
     }
@@ -603,6 +614,11 @@ public class IcalPropertyHandler {
     pinfoOut.println("    /**");
 
     for (PinfoField pif: pinfoFields) {
+      if (pif.comment != null) {
+        pinfoOut.println("     * @param " + pif.name + "  " + pif.comment);
+        continue;
+      }
+      
       pinfoOut.println("     * @param " + pif.name);
     }
 

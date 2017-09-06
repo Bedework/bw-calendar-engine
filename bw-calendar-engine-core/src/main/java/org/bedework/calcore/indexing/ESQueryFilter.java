@@ -43,16 +43,22 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.util.calendar.IcalDefs;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.elasticsearch.ESQueryFilterBase;
 
 import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.MatchAllFilterBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.NestedFilterBuilder;
 import org.elasticsearch.index.query.NotFilterBuilder;
 import org.elasticsearch.index.query.OrFilterBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryFilterBuilder;
 import org.elasticsearch.index.query.RangeFilterBuilder;
 import org.elasticsearch.index.query.TermFilterBuilder;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.query.TermsFilterBuilder;
 
 import java.util.ArrayList;
@@ -67,7 +73,7 @@ import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
  * @author Mike Douglass douglm @ rpi.edu
  *
  */
-public class ESQueryFilter extends Logged implements CalintfDefs {
+public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
   private final boolean publick;
   private final int currentMode;
   private final BwPrincipal principal;
@@ -164,6 +170,65 @@ public class ESQueryFilter extends Logged implements CalintfDefs {
 
     if (fb instanceof TermOrTerms) {
       fb = makeFilter((TermOrTerms)fb);
+    }
+
+    return fb;
+  }
+
+  public FilterBuilder makeFilter(final List<PropertyInfoIndex> pis,
+                                  final Object val,
+                                  final OperationType opType,
+                                  final boolean negate) throws CalFacadeException {
+    /* Work backwards through the property list building a path.
+       When the head of the path is a nested type:
+         If it's the first we found:
+            generate a match or term query based on the leaf
+         otherwise:
+            we already have a nested query to push inside a new one
+    
+     */
+
+    FilterBuilder fb = null;
+    NestedFilterBuilder nfb = null; // current nested level
+    PropertyInfoIndex leafPii = null;
+
+    for (int plistIndex = pis.size() - 1; plistIndex >= 0; plistIndex--) {
+      final PropertyInfoIndex pii = pis.get(plistIndex);
+
+      if (leafPii == null) {
+        leafPii = pii;
+      }
+      
+      final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pii);
+
+      if (bwPie.getNested()) {
+        final NestedFilterBuilder nested;
+        final String path = makePropertyRef(pis, plistIndex);
+
+        if (nfb != null) {
+          nested = new NestedFilterBuilder(path, nfb);
+        } else {
+          // Not had a filter yet
+          nested = new NestedFilterBuilder(path,
+                                           makeQuery(leafPii,
+                                                     makePropertyRef(pis, pis.size() - 1),
+                                                     val, opType, 1));
+        }
+
+        nfb = nested;
+      } else if (plistIndex == 0) {
+        // No nested types found
+        fb = makeFilter(leafPii, makePropertyRef(pis, pis.size() - 1),
+                        val, opType);
+      }
+    }
+
+    if (nfb != null) {
+      fb = nfb;
+    }
+
+    if (negate) {
+      return FilterBuilders.notFilter(fb);
     }
 
     return fb;
@@ -534,15 +599,26 @@ public class ESQueryFilter extends Logged implements CalintfDefs {
 
   /**
    *
-   * @param pis
+   * @param pis the refs
    * @return dot delimited property reference
    */
   public static String makePropertyRef(final List<PropertyInfoIndex> pis) {
+    return makePropertyRef(pis, pis.size());
+  }
+
+  /**
+   *
+   * @param pis the refs
+   * @return dot delimited property reference
+   */
+  public static String makePropertyRef(final List<PropertyInfoIndex> pis,
+                                       final int numElements) {
     String delim = "";
 
     StringBuilder sb = new StringBuilder();
 
-    for (PropertyInfoIndex pi: pis) {
+    for (int i = 0; i < numElements; i++) {
+      final PropertyInfoIndex pi = pis.get(i);
       sb.append(delim);
       sb.append(getJname(pi));
       delim = ".";
@@ -568,6 +644,114 @@ public class ESQueryFilter extends Logged implements CalintfDefs {
     }
 
     return sb.toString();
+  }
+
+  private QueryBuilder makeQuery(final PropertyInfoIndex pii,
+                                 final String path,
+                                 final Object val,
+                                 final OperationType opType,
+                                 final float boost) throws CalFacadeException {
+    final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pii);
+
+    switch (opType) {
+      case compare:
+        if (bwPie.getAnalyzed()) {
+          final MatchQueryBuilder mqb = new MatchQueryBuilder(path, val);
+          if (boost != 1) {
+            mqb.boost(boost);
+          }
+          return mqb;
+        }
+
+        final TermQueryBuilder tqb = new TermQueryBuilder(path, val);
+        if (boost != 1) {
+          tqb.boost(boost);
+        }
+        return tqb;
+      case prefix:
+      case timeRange:
+      case absence:
+      case presence:
+        throw new CalFacadeException(CalFacadeException.filterBadOperator,
+                                     opType.toString());
+      default:
+        throw new CalFacadeException(CalFacadeException.filterBadOperator,
+                                     opType.toString());
+    }
+  }
+
+  private FilterBuilder makeFilter(final PropertyInfoIndex pii,
+                                   final String path,
+                                   final Object val,
+                                   final OperationType opType) throws CalFacadeException {
+    final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pii);
+
+    switch (opType) {
+      case compare:
+        if (bwPie.getAnalyzed()) {
+          if (val instanceof Collection) {
+            final String[] vals;
+
+            try {
+              final Collection valsC = (Collection)val;
+              vals = (String[]) (valsC).toArray(new String[valsC.size()]);
+            } catch (final Throwable t) {
+              throw new CalFacadeException(CalFacadeException.filterBadOperator,
+                                           "Invalid query. Multi match only allowed on strings");
+            }
+            final MultiMatchQueryBuilder mmqb =
+                    new MultiMatchQueryBuilder(path, vals);
+            return new QueryFilterBuilder(mmqb);
+          }
+          return new QueryFilterBuilder(new MatchQueryBuilder(path, val));
+        }
+
+        if (val instanceof Collection) {
+          final TermsFilterBuilder tfb =
+                  FilterBuilders.termsFilter(path, (Collection) val);
+          tfb.execution("or");
+
+          return tfb;
+        }
+
+        return new TermFilterBuilder(path, val);
+
+      case timeRange:
+        final RangeFilterBuilder rfb = FilterBuilders.rangeFilter(path);
+
+        final TimeRange tr = (TimeRange)val;
+        if (tr.getEnd() == null) {
+          rfb.gte(tr.getStart().toString());
+
+          return rfb;
+        }
+
+        if (tr.getStart() == null) {
+          rfb.lt(tr.getEnd().toString());
+
+          return rfb;
+        }
+
+        rfb.from(tr.getStart().toString());
+        rfb.to(tr.getEnd().toString());
+        rfb.includeLower(true);
+        rfb.includeUpper(false);
+
+        return rfb;
+
+      case absence:
+        return FilterBuilders.missingFilter(path);
+
+      case presence:
+        return FilterBuilders.existsFilter(path);
+
+      case prefix:
+        return FilterBuilders.prefixFilter(path, (String)val);
+
+      default:
+        throw new CalFacadeException(CalFacadeException.filterBadOperator,
+                                     opType.toString());
+    }
   }
 
   private FilterBuilder not(final FilterBuilder filter) {

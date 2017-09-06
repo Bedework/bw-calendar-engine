@@ -20,7 +20,6 @@ package org.bedework.calcore.indexing;
 
 import org.bedework.access.Acl;
 import org.bedework.calcore.indexing.DocBuilder.ItemKind;
-import org.bedework.calcore.indexing.DocBuilder.UpdateInfo;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -50,6 +49,8 @@ import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.elasticsearch.DocBuilderBase.UpdateInfo;
+import org.bedework.util.elasticsearch.EsDocInfo;
 import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.Util;
@@ -127,8 +128,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static org.bedework.calcore.indexing.DocBuilder.DocInfo;
 import static org.bedework.calcore.indexing.DocBuilder.ItemKind.entity;
+import static org.bedework.util.elasticsearch.DocBuilderBase.docTypeUpdateTracker;
+import static org.bedework.util.elasticsearch.DocBuilderBase.updateTrackerId;
 
 /** Implementation of indexer for ElasticSearch
  *
@@ -368,37 +370,54 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       return;
     }
 
-    final UpdateRequestBuilder urb =
-            getClient().prepareUpdate(targetIndex,
-                                      docTypeUpdateTracker,
-                                      updateTrackerId).
-                    setRetryOnConflict(20).
-                    setRefresh(true);
+    try {
+      final UpdateRequestBuilder urb =
+              getClient().prepareUpdate(targetIndex,
+                                        docTypeUpdateTracker,
+                                        updateTrackerId).
+                                 setRetryOnConflict(20).
+                                 setRefresh(true);
 
-    urb.setScript("ctx._source.count += 1",
-                  ScriptService.ScriptType.INLINE);
-    final UpdateResponse ur = urb.execute().actionGet();
+      urb.setScript("ctx._source.count += 1",
+                    ScriptService.ScriptType.INLINE);
+      final UpdateResponse ur = urb.execute().actionGet();
+    } catch (final ElasticsearchException ese) {
+      warn("Exception updating UpdateInfo: " + ese.getLocalizedMessage());
+      index(new UpdateInfo());
+    }
   }
 
   @Override
   public String currentChangeToken() throws CalFacadeException {
-    final GetRequestBuilder grb = getClient().prepareGet(targetIndex,
-                                                         docTypeUpdateTracker,
-                                                         updateTrackerId).
-            setFields("count", "_timestamp");
+    UpdateInfo ui;
+    try {
+      final GetRequestBuilder grb = getClient()
+              .prepareGet(targetIndex,
+                          docTypeUpdateTracker,
+                          updateTrackerId).
+                      setFields("count", "_timestamp");
 
-    final GetResponse gr = grb.execute().actionGet();
+      final GetResponse gr = grb.execute().actionGet();
 
-    if (!gr.isExists()) {
-      return null;
+      if (!gr.isExists()) {
+        return null;
+      }
+
+      final EntityBuilder er = getEntityBuilder(gr.getFields());
+      ui = er.makeUpdateInfo();
+    } catch (final ElasticsearchException ese) {
+      warn("Exception getting UpdateInfo: " + ese.getLocalizedMessage());
+      ui = new UpdateInfo();
     }
-
-    final EntityBuilder er = getEntityBuilder(gr.getFields());
-    UpdateInfo ui = er.makeUpdateInfo();
-
+    
     synchronized (updateInfo) {
-      final UpdateInfo tui = updateInfo.get(targetIndex);
+      UpdateInfo tui = updateInfo.get(targetIndex);
 
+      if ((tui != null) && (tui.getCount() >= (Long.MAX_VALUE - 1000))) {
+        // Reset before we overflow
+        tui = null;
+      }
+      
       if ((tui == null) || (tui.getCount() < ui.getCount())) {
         updateInfo.put(targetIndex, ui);
       } else {
@@ -1464,7 +1483,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
   /* Return the response after indexing */
   private IndexResponse index(final Object rec) throws CalFacadeException {
-    DocInfo di = null;
+    EsDocInfo di = null;
 
     try {
       if (rec instanceof EventInfo) {
@@ -1504,8 +1523,9 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       throw cfe;
     } catch (final VersionConflictEngineException vcee) {
       if (vcee.getCurrentVersion() == vcee.getProvidedVersion()) {
-        warn("Failed index with equal version for type " + di.type +
-                     " and id " + di.id);
+        warn("Failed index with equal version for type " + 
+                     di.getType() +
+                     " and id " + di.getId());
       }
 
       return null;
@@ -1722,11 +1742,11 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
     try {
       final DocBuilder db = getDocBuilder();
-      final DocInfo di = db.makeDoc(ei,
-                                    kind,
-                                    start,
-                                    end,
-                                    recurid);
+      final EsDocInfo di = db.makeDoc(ei,
+                                      kind,
+                                      start,
+                                      end,
+                                      recurid);
 
       if (dl != null) {
         dl.checkMin(start);
@@ -1748,15 +1768,15 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
   }
 
-  private IndexResponse indexDoc(final DocInfo di) throws Throwable {
+  private IndexResponse indexDoc(final EsDocInfo di) throws Throwable {
     //batchCurSize++;
     final IndexRequestBuilder req = getClient().
-            prepareIndex(targetIndex, di.type, di.id);
+            prepareIndex(targetIndex, di.getType(), di.getId());
 
-    req.setSource(di.source);
+    req.setSource(di.getSource());
 
-    if (di.version != 0) {
-      req.setVersion(di.version).setVersionType(VersionType.EXTERNAL);
+    if (di.getVersion() != 0) {
+      req.setVersion(di.getVersion()).setVersionType(VersionType.EXTERNAL);
     }
 
     if (debug) {
@@ -1905,11 +1925,19 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   }
 
   private EntityBuilder getEntityBuilder(final Map<String, ?> fields) throws CalFacadeException {
-    return new EntityBuilder(publick, currentMode, principal, fields);
+    try {
+      return new EntityBuilder(publick, currentMode, principal, fields);
+    } catch (IndexException ie) {
+      throw new CalFacadeException(ie);
+    }
   }
 
   private DocBuilder getDocBuilder() throws CalFacadeException {
-    return new DocBuilder(principal,
-                          authpars, unauthpars, basicSysprops);
+    try {
+      return new DocBuilder(principal,
+                            authpars, unauthpars, basicSysprops);
+    } catch (IndexException ie) {
+      throw new CalFacadeException(ie);
+    }
   }
 }

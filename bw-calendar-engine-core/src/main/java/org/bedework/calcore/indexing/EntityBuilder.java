@@ -18,7 +18,6 @@
 */
 package org.bedework.calcore.indexing;
 
-import org.bedework.calcore.indexing.DocBuilder.UpdateInfo;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
@@ -49,11 +48,12 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.elasticsearch.DocBuilderBase;
+import org.bedework.util.elasticsearch.EntityBuilderBase;
+import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.property.RequestStatus;
-import org.elasticsearch.index.get.GetField;
 
 import java.math.BigDecimal;
 import java.util.ArrayDeque;
@@ -73,7 +73,7 @@ import static org.bedework.calcorei.CalintfDefs.guestMode;
  * @author Mike Douglass douglm - rpi.edu
  *
  */
-public class EntityBuilder extends Logged {
+public class EntityBuilder extends EntityBuilderBase {
   private final boolean publick;
   private final int currentMode;
   private final BwPrincipal principal;
@@ -88,7 +88,9 @@ public class EntityBuilder extends Logged {
   EntityBuilder(final boolean publick,
                 final int currentMode,
                 final BwPrincipal principal,
-                final Map<String, ?> fields) throws CalFacadeException {
+                final Map<String, ?> fields)
+          throws CalFacadeException, IndexException {
+    super(fields, 0);
     this.publick = publick;
     this.currentMode = currentMode;
     this.principal = principal;
@@ -99,14 +101,9 @@ public class EntityBuilder extends Logged {
    *                   package private methods
    * ======================================================================== */
 
-  UpdateInfo makeUpdateInfo() throws CalFacadeException {
-    Long l = getLong("count");
-    if (l == null) {
-      l = 0L;
-    }
-
-    return new UpdateInfo(String.valueOf(getFirstValue("_timestamp")),
-                          l);
+  DocBuilderBase.UpdateInfo makeUpdateInfo() {
+    return DocBuilder.makeUpdateInfo(String.valueOf(getFirstValue("_timestamp")),
+                                     getLong("count"));
   }
 
   BwCategory makeCat() throws CalFacadeException {
@@ -427,27 +424,11 @@ public class EntityBuilder extends Logged {
    * ======================================================================== */
 
   private boolean pushFields(final PropertyInfoIndex pi) throws CalFacadeException {
-    return pushFields(getFirstValue(pi));
-  }
-
-  private boolean pushFields(final Object objFlds) throws CalFacadeException {
-    if (objFlds == null) {
-      return false;
+    try {
+      return pushFields(getFirstValue(pi));
+    } catch (IndexException ie) {
+      throw new CalFacadeException(ie);
     }
-
-    /* Should be a Map of fields. */
-
-    if (!(objFlds instanceof Map)) {
-      throw new CalFacadeException(CalFacadeException.illegalObjectClass);
-    }
-
-    //noinspection unchecked
-    fieldStack.push((Map<String, Object>)objFlds);
-    return true;
-  }
-
-  private void popFields() {
-    fieldStack.pop();
   }
 
   private BwGeo restoreGeo() throws CalFacadeException {
@@ -543,6 +524,8 @@ public class EntityBuilder extends Logged {
         att.setAttendeeUri(getString(PropertyInfoIndex.URI));
 
         atts.add(att);
+      } catch (IndexException ie) {
+        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -615,6 +598,8 @@ public class EntityBuilder extends Logged {
         xp.setValue(getString(PropertyInfoIndex.VALUE));
 
         xprops.add(xp);
+      } catch (IndexException ie) {
+        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -646,6 +631,8 @@ public class EntityBuilder extends Logged {
         c.setPhone(getString(PropertyInfoIndex.PHONE));
 
         cs.add(c);
+      } catch (IndexException ie) {
+        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -699,6 +686,8 @@ public class EntityBuilder extends Logged {
         pushFields(o);
 
         ss.add(restoreBwString(longStrings));
+      } catch (IndexException ie) {
+        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -750,6 +739,8 @@ public class EntityBuilder extends Logged {
                                                         floating);
 
         tms.add(tm);
+      } catch (IndexException ie) {
+        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -832,6 +823,8 @@ public class EntityBuilder extends Logged {
         alarm.setXproperties(restoreXprops());
 
         alarms.add(alarm);
+      } catch (IndexException ie) {
+        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -881,11 +874,13 @@ public class EntityBuilder extends Logged {
     final Set<BwProperty> props = new TreeSet<>();
 
     for (final Object o: vals) {
-      pushFields(o);
       try {
+        pushFields(o);
         final String name = getString(PropertyInfoIndex.NAME);
         final String val = getString(PropertyInfoIndex.VALUE);
         props.add(new BwProperty(name, val));
+      } catch (IndexException ie) {
+        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -903,10 +898,12 @@ public class EntityBuilder extends Logged {
     final Set<String> catUids = new TreeSet<>();
 
     for (final Object o: vals) {
-      pushFields(o);
       try {
+        pushFields(o);
         final String uid = getString(PropertyInfoIndex.UID);
         catUids.add(uid);
+      } catch (IndexException ie) {
+        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -918,27 +915,6 @@ public class EntityBuilder extends Logged {
   @SuppressWarnings("unchecked")
   private List<Object> getFieldValues(final PropertyInfoIndex id) {
     return getFieldValues(getJname(id));
-  }
-
-  private List getFieldValues(final String name) {
-    final Object val = fieldStack.peek().get(name);
-
-    if (val == null) {
-      return null;
-    }
-
-    if (val instanceof List) {
-      return (List)val;
-    }
-
-    if (val instanceof GetField) {
-      return ((GetField)val).getValues();
-    }
-
-    final List<Object> vals = new ArrayList<>();
-    vals.add(val);
-
-    return vals;
   }
 
   private Set<String> getStringSet(final PropertyInfoIndex pi) {
@@ -974,30 +950,6 @@ public class EntityBuilder extends Logged {
     }
 
     return ipie.getJname();
-  }
-
-  private Object getFirstValue(final String id) {
-    final Object val = fieldStack.peek().get(id);
-
-    if (val == null) {
-      return null;
-    }
-
-    final List vals;
-
-    if (val instanceof GetField) {
-      vals = ((GetField)val).getValues();
-    } else if (val instanceof List) {
-      vals = (List)val;
-    } else {
-      return val;
-    }
-
-    if (Util.isEmpty(vals)) {
-      return null;
-    }
-
-    return vals.get(0);
   }
 
   private Boolean getBoolean(final PropertyInfoIndex id) {
@@ -1074,26 +1026,6 @@ public class EntityBuilder extends Logged {
     }
     
     return l;
-  }
-
-  private Long getLong(final String name) {
-    final Object o = getFirstValue(name);
-
-    if (o == null) {
-      return null;
-    }
-
-    if (o instanceof Integer) {
-      return (long)o;
-    }
-
-    if (o instanceof Long) {
-      return (Long)o;
-    }
-
-    final String s = (String)o;
-
-    return Long.valueOf(s);
   }
 
   private int getInt(final PropertyInfoIndex id) {

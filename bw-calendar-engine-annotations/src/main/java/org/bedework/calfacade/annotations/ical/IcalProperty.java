@@ -48,6 +48,12 @@ public @interface IcalProperty {
   /** java/json camel cased name */
   String jname() default "";
 
+  /** Required for a valid event   */
+  boolean nested() default false;
+
+  /** Required for a valid event   */
+  boolean analyzed() default false;
+
   /** field we test for presence */
   String presenceField() default "";
 

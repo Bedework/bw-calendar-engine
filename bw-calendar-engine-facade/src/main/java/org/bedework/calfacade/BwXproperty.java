@@ -240,6 +240,9 @@ public class BwXproperty extends BwDbentity<BwXproperty>
    * ==================================================================== */
 
   /** */
+  public final static String bedeworkCalsuite = "X-BEDEWORK-CALSUITE";
+
+  /** */
   public final static String bedeworkSchedAssist = "X-BEDEWORK-SCHED-ASSIST";
 
   /** */

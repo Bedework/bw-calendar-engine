@@ -48,16 +48,14 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.misc.ToString;
+import org.bedework.util.elasticsearch.DocBuilderBase;
+import org.bedework.util.elasticsearch.EsDocInfo;
+import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.parameter.Related;
-import org.apache.log4j.Logger;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -71,13 +69,7 @@ import java.util.TreeSet;
  * @author Mike Douglass douglm - rpi.edu
  *
  */
-public class DocBuilder {
-  private transient Logger log;
-
-  private boolean debug;
-
-  private XContentBuilder builder;
-
+public class DocBuilder extends DocBuilderBase {
   private BwPrincipal principal;
 
   private AuthProperties authpars;
@@ -121,113 +113,18 @@ public class DocBuilder {
   DocBuilder(final BwPrincipal principal,
              final AuthProperties authpars,
              final AuthProperties unauthpars,
-             final BasicSystemProperties basicSysprops) throws CalFacadeException {
-    debug = getLog().isDebugEnabled();
-
+             final BasicSystemProperties basicSysprops)
+          throws CalFacadeException, IndexException {
+    super();
     this.principal = principal;
     this.authpars = authpars;
     this.unauthpars = unauthpars;
     this.basicSysprops = basicSysprops;
-
-    builder = newBuilder();
   }
 
   /* ===================================================================
    *                   package private methods
    * =================================================================== */
-
-  private XContentBuilder newBuilder() throws CalFacadeException {
-    try {
-      XContentBuilder builder = XContentFactory.jsonBuilder();
-
-      if (debug) {
-        builder = builder.prettyPrint();
-      }
-
-      return builder;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  static class UpdateInfo {
-    private String dtstamp;
-    private Long count = 0l;
-
-    /* Set this true if we write something to the index */
-    private boolean update;
-
-    UpdateInfo() {
-    }
-
-    UpdateInfo(final String dtstamp,
-               final Long count) {
-      this.dtstamp = dtstamp;
-      this.count = count;
-    }
-
-    /**
-     * @return dtstamp last time this object type saved
-     */
-    public String getDtstamp() {
-      return dtstamp;
-    }
-
-    /**
-     * @return count of updates
-     */
-    public Long getCount() {
-      return count;
-    }
-
-    /**
-     * @param update true to indicate update occurred
-     */
-    public void setUpdate(final boolean update) {
-      this.update = update;
-    }
-
-    /**
-     * @return true to indicate update occurred
-     */
-    public boolean isUpdate() {
-      return update;
-    }
-
-    /**
-     * @return a change token for the index.
-     */
-    public String getChangeToken() {
-      return dtstamp + ";" + count;
-    }
-  }
-
-  static class DocInfo {
-    XContentBuilder source;
-    String type;
-    long version;
-    String id;
-
-    DocInfo(final XContentBuilder source,
-            final String type,
-            final long version,
-            final String id) {
-      this.source = source;
-      this.type = type;
-      this.version = version;
-      this.id = id;
-    }
-
-    public String toString() {
-      final ToString ts = new ToString(this);
-
-      ts.append("type", type);
-      ts.append("version", version);
-      ts.append("id", id);
-
-      return ts.toString();
-    }
-  }
 
   String getHref(final BwShareableContainedDbentity val) throws CalFacadeException {
     if (val instanceof BwEvent) {
@@ -248,43 +145,8 @@ public class DocBuilder {
     throw new CalFacadeException("Unhandled class " + val);
   }
 
-  private void startObject() throws CalFacadeException {
-    try {
-      builder.startObject();
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  private void endObject() throws CalFacadeException {
-    try {
-      builder.endObject();
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
   /* Return the docinfo for the indexer */
-  DocInfo makeDoc(final UpdateInfo ent) throws CalFacadeException {
-    try {
-      startObject();
-
-      builder.field("count", ent.getCount());
-
-      endObject();
-
-      return new DocInfo(builder,
-                         BwIndexer.docTypeUpdateTracker, 0,
-                         BwIndexer.updateTrackerId);
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  /* Return the docinfo for the indexer */
-  DocInfo makeDoc(final BwCategory ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwCategory ent) throws CalFacadeException {
     try {
       /* We don't have real collections. It's been the practice to
          create "/" delimited names to emulate a hierarchy. Look out
@@ -307,8 +169,7 @@ public class DocBuilder {
 
       endObject();
 
-      return new DocInfo(builder,
-                         BwIndexer.docTypeCategory, 0, ent.getHref());
+      return makeDocInfo(BwIndexer.docTypeCategory, 0, ent.getHref());
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
@@ -317,7 +178,7 @@ public class DocBuilder {
   }
 
   /* Return the docinfo for the indexer */
-  DocInfo makeDoc(final BwContact ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwContact ent) throws CalFacadeException {
     try {
       /* We don't have real collections. It's been the practice to
          create "/" delimited names to emulate a hierarchy. Look out
@@ -343,8 +204,7 @@ public class DocBuilder {
 
       endObject();
 
-      return new DocInfo(builder,
-                         BwIndexer.docTypeContact, 0, ent.getHref());
+      return makeDocInfo(BwIndexer.docTypeContact, 0, ent.getHref());
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
@@ -353,7 +213,7 @@ public class DocBuilder {
   }
 
   /* Return the docinfo for the indexer */
-  DocInfo makeDoc(final BwLocation ent) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwLocation ent) throws CalFacadeException {
     try {
       /* We don't have real collections. It's been the practice to
          create "/" delimited names to emulate a hierarchy. Look out
@@ -377,8 +237,7 @@ public class DocBuilder {
 
       endObject();
 
-      return new DocInfo(builder,
-                         BwIndexer.docTypeLocation, 0, ent.getHref());
+      return makeDocInfo(BwIndexer.docTypeLocation, 0, ent.getHref());
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
@@ -387,7 +246,7 @@ public class DocBuilder {
   }
 
   /* Return the docinfo for the indexer */
-  DocInfo makeDoc(final BwCalendar col) throws CalFacadeException {
+  EsDocInfo makeDoc(final BwCalendar col) throws CalFacadeException {
     try {
       final long version = col.getMicrosecsVersion();
 
@@ -440,8 +299,7 @@ public class DocBuilder {
       
       endObject();
 
-      return new DocInfo(builder,
-                         BwIndexer.docTypeCollection,
+      return makeDocInfo(BwIndexer.docTypeCollection,
                          version, col.getPath());
     } catch (final CalFacadeException cfe) {
       throw cfe;
@@ -472,7 +330,7 @@ public class DocBuilder {
   }
 
   /* Return the docinfo for the indexer */
-  DocInfo makeDoc(final EventInfo ei,
+  EsDocInfo makeDoc(final EventInfo ei,
                   final ItemKind kind,
                   final BwDateTime start,
                   final BwDateTime end,
@@ -664,8 +522,7 @@ public class DocBuilder {
 
       endObject();
 
-      return new DocInfo(builder,
-                         docType,
+      return makeDocInfo(docType,
                          version,
                          keys.makeKeyVal(getItemType(ei, kind),
                                          ei.getEvent().getHref(),
@@ -709,7 +566,7 @@ public class DocBuilder {
           continue;
         }
 
-        builder.startArray(interestingXprops.get(nm));
+        startArray(interestingXprops.get(nm));
 
         for (final BwXproperty xp: props) {
           if (xp.getName().equals(BwXproperty.bedeworkSuggestedTo)) {
@@ -723,7 +580,7 @@ public class DocBuilder {
               // Bad value
               continue;
             }
-            builder.value(val.substring(0, pos));
+            value(val.substring(0, pos));
             continue;
           }
 
@@ -732,15 +589,15 @@ public class DocBuilder {
             pars = "";
           }
 
-          builder.value(pars + "\t" + xp.getValue());
+          value(pars + "\t" + xp.getValue());
         }
 
-        builder.endArray();
+        endArray();
       }
 
       /* Now ones we don't know or care about */
 
-      builder.startArray(getJname(PropertyInfoIndex.XPROP));
+      startArray(getJname(PropertyInfoIndex.XPROP));
 
       for (final BwXproperty xp: ent.getXproperties()) {
         final String nm = interestingXprops.get(xp.getName());
@@ -749,21 +606,21 @@ public class DocBuilder {
           continue;
         }
 
-        builder.startObject();
+        startObject();
         makeField(PropertyInfoIndex.NAME, xp.getName());
 
         if (xp.getPars() != null) {
-          builder.field(getJname(PropertyInfoIndex.PARAMETERS),
+          makeField(getJname(PropertyInfoIndex.PARAMETERS),
                         xp.getPars());
         }
 
-        builder.field(getJname(PropertyInfoIndex.VALUE),
+        makeField(getJname(PropertyInfoIndex.VALUE),
                       xp.getValue());
-        builder.endObject();
+        endObject();
       }
 
-      builder.endArray();
-    } catch (final IOException e) {
+      endArray();
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -774,17 +631,17 @@ public class DocBuilder {
     }
 
     try {
-      builder.startArray(getJname(PropertyInfoIndex.COL_PROPERTIES));
+      startArray(getJname(PropertyInfoIndex.COL_PROPERTIES));
       
       for (final BwProperty prop: props) {
-        builder.startObject();
+        startObject();
         makeField(PropertyInfoIndex.NAME, prop.getName());
         makeField(PropertyInfoIndex.VALUE, prop.getValue());
-        builder.endObject();
+        endObject();
       }
 
-      builder.endArray();
-    } catch (final IOException e) {
+      endArray();
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -795,24 +652,24 @@ public class DocBuilder {
     }
 
     try {
-      builder.startArray(getJname(PropertyInfoIndex.CATEGORIES));
+      startArray(getJname(PropertyInfoIndex.CATEGORIES));
 
       for (final BwCategory cat: cats) {
-        builder.startObject();
+        startObject();
 
         cat.fixNames(basicSysprops, principal);
 
         makeField(PropertyInfoIndex.UID, cat.getUid());
         makeField(PropertyInfoIndex.HREF, cat.getHref());
-        builder.startArray(getJname(PropertyInfoIndex.VALUE));
+        startArray(getJname(PropertyInfoIndex.VALUE));
         // Eventually may be more of these
-        makeField(null, cat.getWord());
-        builder.endArray();
-        builder.endObject();
+        makeField((PropertyInfoIndex)null, cat.getWord());
+        endArray();
+        endObject();
       }
 
-      builder.endArray();
-    } catch (final IOException e) {
+      endArray();
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -823,32 +680,28 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(getJname(PropertyInfoIndex.CONTACT));
+      startArray(getJname(PropertyInfoIndex.CONTACT));
 
       for (final BwContact c: val) {
         c.fixNames(basicSysprops, principal);
 
-        builder.startObject();
+        startObject();
         makeField(PropertyInfoIndex.HREF, c.getHref());
         makeField(PropertyInfoIndex.CN, c.getCn());
         makeField(PropertyInfoIndex.EMAIL, c.getEmail());
         makeField(PropertyInfoIndex.PHONE, c.getPhone());
 
-        if (c.getUid() != null) {
-          builder.field(ParameterInfoIndex.UID.getJname(),
-                        c.getUid());
-        }
+        makeField(ParameterInfoIndex.UID.getJname(),
+                  c.getUid());
 
-        if (c.getLink() != null) {
-          builder.field(ParameterInfoIndex.ALTREP.getJname(),
-                        c.getLink());
-        }
+        makeField(ParameterInfoIndex.ALTREP.getJname(),
+                  c.getLink());
 
-        builder.endObject();
+        endObject();
       }
 
-      builder.endArray();
-    } catch (final IOException e) {
+      endArray();
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -860,10 +713,10 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(getJname(PropertyInfoIndex.VALARM));
+      startArray(getJname(PropertyInfoIndex.VALARM));
 
       for (final BwAlarm al: alarms) {
-        builder.startObject();
+        startObject();
 
         makeField(PropertyInfoIndex.OWNER, al.getOwnerHref());
         makeField(PropertyInfoIndex.PUBLIC, al.getPublick());
@@ -908,7 +761,7 @@ public class DocBuilder {
         if (al.getTriggerDateTime()) {
           makeField(PropertyInfoIndex.TRIGGER_DATE_TIME, true);
         } else if (!al.getTriggerStart()) {
-          builder.field(ParameterInfoIndex.RELATED.getJname(),
+          makeField(ParameterInfoIndex.RELATED.getJname(),
                         Related.END.getValue());
         }
 
@@ -942,11 +795,11 @@ public class DocBuilder {
 
         indexXprops(al);
 
-        builder.endObject();
+        endObject();
       }
 
-      builder.endArray();
-    } catch (IOException e) {
+      endArray();
+    } catch (IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -957,14 +810,14 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(getJname(PropertyInfoIndex.REQUEST_STATUS));
+      startArray(getJname(PropertyInfoIndex.REQUEST_STATUS));
 
       for (BwRequestStatus rs: val) {
-        builder.value(rs.strVal());
+        value(rs.strVal());
       }
 
-      builder.endArray();
-    } catch (IOException e) {
+      endArray();
+    } catch (IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -975,11 +828,11 @@ public class DocBuilder {
         return;
       }
 
-      builder.startObject(getJname(PropertyInfoIndex.GEO));
-      builder.field("lat", val.getLatitude().toPlainString());
-      builder.field("lon", val.getLongitude().toPlainString());
-      builder.endObject();
-    } catch (IOException e) {
+      startObject(getJname(PropertyInfoIndex.GEO));
+      makeField("lat", val.getLatitude().toPlainString());
+      makeField("lon", val.getLongitude().toPlainString());
+      endObject();
+    } catch (IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -990,12 +843,12 @@ public class DocBuilder {
         return;
       }
 
-      builder.startObject(getJname(PropertyInfoIndex.RELATED_TO));
-      builder.field(ParameterInfoIndex.RELTYPE.getJname(),
+      startObject(getJname(PropertyInfoIndex.RELATED_TO));
+      makeField(ParameterInfoIndex.RELTYPE.getJname(),
                     val.getRelType());
-      builder.field(getJname(PropertyInfoIndex.VALUE), val.getValue());
-      builder.endObject();
-    } catch (IOException e) {
+      makeField(getJname(PropertyInfoIndex.VALUE), val.getValue());
+      endObject();
+    } catch (IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1006,40 +859,25 @@ public class DocBuilder {
         return;
       }
 
-      builder.startObject(getJname(PropertyInfoIndex.ORGANIZER));
-      builder.startObject(getJname(PropertyInfoIndex.PARAMETERS));
-      String temp = val.getScheduleStatus();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
-                      temp);
-      }
+      startObject(getJname(PropertyInfoIndex.ORGANIZER));
+      startObject(getJname(PropertyInfoIndex.PARAMETERS));
+      makeField(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
+                val.getScheduleStatus());
 
-      temp = val.getCn();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.CN.getJname(), temp);
-      }
+      makeField(ParameterInfoIndex.CN.getJname(), val.getCn());
 
-      temp = val.getDir();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.DIR.getJname(), temp);
-      }
+      makeField(ParameterInfoIndex.DIR.getJname(), val.getDir());
 
-      temp = val.getLanguage();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.LANGUAGE.getJname(), temp);
-      }
+      makeField(ParameterInfoIndex.LANGUAGE.getJname(), val.getLanguage());
 
-      temp = val.getSentBy();
-      if (temp != null) {
-        builder.field(ParameterInfoIndex.SENT_BY.getJname(), temp);
-      }
+      makeField(ParameterInfoIndex.SENT_BY.getJname(), val.getSentBy());
 
-      builder.endObject();
+      endObject();
 
-      builder.field(getJname(PropertyInfoIndex.URI),
+      makeField(getJname(PropertyInfoIndex.URI),
                     val.getOrganizerUri());
-      builder.endObject();
-    } catch (final IOException e) {
+      endObject();
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1052,92 +890,63 @@ public class DocBuilder {
       }
 
       if (vpoll) {
-        builder.startArray(getJname(PropertyInfoIndex.VOTER));
+        startArray(getJname(PropertyInfoIndex.VOTER));
       } else {
-        builder.startArray(getJname(PropertyInfoIndex.ATTENDEE));
+        startArray(getJname(PropertyInfoIndex.ATTENDEE));
       }
 
       for (BwAttendee val: atts) {
-        builder.startObject();
-        builder.startObject("pars");
+        startObject();
+        startObject("pars");
 
         if (val.getRsvp()) {
-          builder.field(ParameterInfoIndex.RSVP.getJname(),
+          makeField(ParameterInfoIndex.RSVP.getJname(),
                         val.getRsvp());
         }
 
         if (vpoll && val.getStayInformed()) {
-          builder.field(ParameterInfoIndex.STAY_INFORMED.getJname(),
+          makeField(ParameterInfoIndex.STAY_INFORMED.getJname(),
                         val.getStayInformed());
         }
 
-        String temp = val.getCn();
-        if (temp != null) {
-          builder.field(ParameterInfoIndex.CN.getJname(), temp);
-        }
+        makeField(ParameterInfoIndex.CN.getJname(), val.getCn());
 
-        temp = val.getPartstat();
+        String temp = val.getPartstat();
         if (temp == null) {
           temp = IcalDefs.partstatValNeedsAction;
         }
-        builder.field(ParameterInfoIndex.PARTSTAT.getJname(), temp);
+        makeField(ParameterInfoIndex.PARTSTAT.getJname(), temp);
 
-        temp = val.getScheduleStatus();
-        if (temp != null) {
-          builder.field(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
-                        temp);
-        }
+        makeField(ParameterInfoIndex.SCHEDULE_STATUS.getJname(),
+                  val.getScheduleStatus());
 
-        temp = val.getCuType();
-        if (temp != null) {
-          builder.field(ParameterInfoIndex.CUTYPE.getJname(), temp);
-        }
+        makeField(ParameterInfoIndex.CUTYPE.getJname(), val.getCuType());
 
-        temp = val.getDelegatedFrom();
-        if (temp != null) {
-          builder.field(ParameterInfoIndex.DELEGATED_FROM.getJname(),
-                        temp);
-        }
+        makeField(ParameterInfoIndex.DELEGATED_FROM.getJname(),
+                  val.getDelegatedFrom());
 
-        temp = val.getDelegatedTo();
-        if (temp != null) {
-          builder.field(ParameterInfoIndex.DELEGATED_TO.getJname(),
-                        temp);
-        }
+        makeField(ParameterInfoIndex.DELEGATED_TO.getJname(),
+                  val.getDelegatedTo());
 
-        temp = val.getDir();
-        if (temp != null) {
-          builder.field(ParameterInfoIndex.DIR.getJname(), temp);
-        }
+        makeField(ParameterInfoIndex.DIR.getJname(), val.getDir());
 
-        temp = val.getLanguage();
-        if (temp != null) {
-          builder.field(ParameterInfoIndex.LANGUAGE.getJname(), temp);
-        }
+        makeField(ParameterInfoIndex.LANGUAGE.getJname(), 
+                  val.getLanguage());
 
-        temp = val.getMember();
-        if (temp != null) {
-          builder.field(ParameterInfoIndex.MEMBER.getJname(), temp);
-        }
+        makeField(ParameterInfoIndex.MEMBER.getJname(), val.getMember());
 
-        temp = val.getRole();
-        if (temp != null) {
-          builder.field(ParameterInfoIndex.ROLE.getJname(), temp);
-        }
+        makeField(ParameterInfoIndex.ROLE.getJname(), val.getRole());
 
-        temp = val.getSentBy();
-        if (temp != null) {
-          builder.field(ParameterInfoIndex.SENT_BY.getJname(), temp);
-        }
+        makeField(ParameterInfoIndex.SENT_BY.getJname(), val.getSentBy());
+        
+        endObject();
 
-        builder.endObject();
-
-        builder.field("uri", val.getAttendeeUri());
-        builder.endObject();
+        makeField("uri", val.getAttendeeUri());
+        endObject();
       }
 
-      builder.endArray();
-    } catch (final IOException e) {
+      endArray();
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1150,9 +959,9 @@ public class DocBuilder {
       }
 
       if (dtype == null) {
-        builder.startObject();
+        startObject();
       } else {
-        builder.startObject(getJname(dtype));
+        startObject(getJname(dtype));
       }
 
       makeField(PropertyInfoIndex.UTC, dt.getDate());
@@ -1161,8 +970,8 @@ public class DocBuilder {
       makeField(PropertyInfoIndex.FLOATING,
                 String.valueOf(dt.getFloating()));
 
-      builder.endObject();
-    } catch (IOException e) {
+      endObject();
+    } catch (IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1174,14 +983,14 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(getJname(pi));
+      startArray(getJname(pi));
 
       for (final BwStringBase s: val) {
-        makeField(null, s);
+        makeField((PropertyInfoIndex)null, s);
       }
 
-      builder.endArray();
-    } catch (IOException e) {
+      endArray();
+    } catch (IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1194,14 +1003,14 @@ public class DocBuilder {
 
     try {
       if (pi == null) {
-        builder.startObject();
+        startObject();
       } else {
-        builder.startObject(getJname(pi));
+        startObject(getJname(pi));
       }
       makeField(PropertyInfoIndex.LANG, val.getLang());
       makeField(PropertyInfoIndex.VALUE, val.getValue());
-      builder.endObject();
-    } catch (IOException e) {
+      endObject();
+    } catch (IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1213,8 +1022,8 @@ public class DocBuilder {
     }
 
     try {
-      builder.field(getJname(pi), val);
-    } catch (IOException e) {
+      makeField(getJname(pi), val);
+    } catch (IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1226,8 +1035,8 @@ public class DocBuilder {
     }
 
     try {
-      builder.field(getJname(pi), String.valueOf(val));
-    } catch (IOException e) {
+      makeField(getJname(pi), val);
+    } catch (IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1239,14 +1048,14 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(getJname(pi));
+      startArray(getJname(pi));
 
       for (final String s: vals) {
-        builder.value(s);
+        value(s);
       }
 
-      builder.endArray();
-    } catch (final IOException e) {
+      endArray();
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1258,14 +1067,14 @@ public class DocBuilder {
         return;
       }
 
-      builder.startArray(getJname(pi));
+      startArray(getJname(pi));
 
       for (BwDateTime dt: vals) {
         indexDate(null, dt);
       }
 
-      builder.endArray();
-    } catch (IOException e) {
+      endArray();
+    } catch (IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1295,32 +1104,4 @@ public class DocBuilder {
     }
   }
   */
-
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void info(final String msg) {
-    getLog().info(msg);
-  }
-
-  protected void debug(final String msg) {
-    getLog().debug(msg);
-  }
-
-  protected void warn(final String msg) {
-    getLog().warn(msg);
-  }
-
-  protected void error(final String msg) {
-    getLog().error(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLog().error(this, t);
-  }
 }

@@ -64,7 +64,8 @@ public class BwContact extends BwEventProperty<BwContact>
    *
    * @param val    BwString name
    */
-  @IcalProperty(pindex = PropertyInfoIndex.CN)
+  @IcalProperty(pindex = PropertyInfoIndex.CN,                 
+                analyzed = true)
   public void setCn(final BwString val) {
     cn = val;
   }
