@@ -1397,13 +1397,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
             journalProperty = true,
             freeBusyProperty = true,
             timezoneProperty = true),
-    @IcalProperty(pindex = PropertyInfoIndex.CALSUITE,
-            jname = "calsuite",
-            eventProperty = true,
-            todoProperty = true,
-            journalProperty = true,
-            freeBusyProperty = true,
-            timezoneProperty = true),
     @IcalProperty(pindex = PropertyInfoIndex.CALTYPE,
             jname = "caltype",
             eventProperty = true,
@@ -3595,6 +3588,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
           todoProperty = true,
           vpollProperty = true
   )
+  @NoProxy
   public void setCalSuite(final String val) {
     replaceXproperty(BwXproperty.bedeworkCalsuite, val);
   }
@@ -3603,6 +3597,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    *  @return String   name
    */
+  @NoProxy
   public String getCalSuite() {
     return getXproperty(BwXproperty.bedeworkCalsuite);
   }
