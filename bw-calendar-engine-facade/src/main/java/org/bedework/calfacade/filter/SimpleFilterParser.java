@@ -33,11 +33,11 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.ToString;
 
 import ietf.params.xml.ns.caldav.TextMatchType;
 import net.fortuna.ical4j.model.DateTime;
-import org.apache.log4j.Logger;
 
 import java.io.StreamTokenizer;
 import java.io.StringReader;
@@ -66,11 +66,7 @@ import java.util.Stack;
  * @author Mike Douglass
  *
  */
-public abstract class SimpleFilterParser {
-  private transient Logger log;
-
-  private boolean debug;
-
+public abstract class SimpleFilterParser extends Logged {
   private SfpTokenizer tokenizer;
   private String currentExpr;
   private String source;
@@ -116,6 +112,10 @@ public abstract class SimpleFilterParser {
 
   private final static int orOp = 12;
 
+  private final static int startsWithOp = 13;
+
+  private final static int indexedOp = 14;
+
   private static class Operator extends Token {
     int op;
 
@@ -145,14 +145,14 @@ public abstract class SimpleFilterParser {
 
   // This lets us unwind the parse
   private static class ParseFailed extends Exception {
-    
+
   }
-  
+
   /** */
   public static class ParseResult {
     /** true if the parse went ok */
     public boolean ok = true;
-    
+
     /** Explain what went wrong */
     public String message;
 
@@ -163,7 +163,7 @@ public abstract class SimpleFilterParser {
     public CalFacadeException cfe;
 
     /** Result from parseSort
-     * 
+     *
      */
     public List<SortTerm> sortTerms;
 
@@ -185,7 +185,7 @@ public abstract class SimpleFilterParser {
       ok = false;
       message = cfe.getMessage();
       this.cfe = cfe;
-      
+
       throw new ParseFailed();
     }
 
@@ -212,7 +212,7 @@ public abstract class SimpleFilterParser {
       return ts.toString();
     }
   }
-  
+
   private final ParseResult parseResult = new ParseResult();
 
   /**
@@ -323,13 +323,12 @@ public abstract class SimpleFilterParser {
                            final String source) {
     this.explicitSelection = explicitSelection;
     this.source = source;
-    debug = getLogger().isDebugEnabled();
     parseResult.ok = true;
 
     try {
       if (debug) {
-        debugMsg("About to parse filter expression: " + expr +
-                  " from " + source);
+        debug("About to parse filter expression: " + expr +
+                      " from " + source);
       }
 
       currentExpr = expr;
@@ -360,7 +359,7 @@ public abstract class SimpleFilterParser {
       final FilterBase f = popFilters();
 
       if (debug) {
-        debugMsg(f.toString());
+        debug(f.toString());
       }
 
       parseResult.SetFilter(f);
@@ -399,7 +398,7 @@ public abstract class SimpleFilterParser {
           return parseResult;
         }
 
-        final List<PropertyInfoIndex> pis = getProperty(tkn);
+        final List<PropertyInfo> pis = getProperty(tkn);
 
         tkn = nextToken("parseSort() - :");
 
@@ -432,7 +431,10 @@ public abstract class SimpleFilterParser {
                                          " source: " + source);
         }
 
-        parseResult.sortTerms.add(new SortTerm(pis, ascending));
+        final List<PropertyInfoIndex> pixs = new ArrayList<>();
+
+        pis.forEach(val -> pixs.add(val.pii));
+        parseResult.sortTerms.add(new SortTerm(pixs, ascending));
       }
     } catch (final ParseFailed ignored) {
       return parseResult;
@@ -441,7 +443,7 @@ public abstract class SimpleFilterParser {
 
   private boolean doFactor() throws ParseFailed {
     if (debug) {
-      debugMsg("doFactor: " + tokenizer.toString());
+      debug("doFactor: " + tokenizer.toString());
     }
 
     final int tkn = nextToken("doFactor(1)");
@@ -488,7 +490,7 @@ public abstract class SimpleFilterParser {
   private boolean doExpr() throws ParseFailed {
     // Don't seem quite right
     if (debug) {
-      debugMsg("doExpr: " + tokenizer.toString());
+      debug("doExpr: " + tokenizer.toString());
     }
     return doTerm();
   }
@@ -499,7 +501,7 @@ public abstract class SimpleFilterParser {
     }
 
     if (debug) {
-      debugMsg("doTerm: " + tokenizer.toString());
+      debug("doTerm: " + tokenizer.toString());
     }
 
     /* If we have a logical operator next then handle that and combine the
@@ -549,6 +551,7 @@ public abstract class SimpleFilterParser {
     return true;
   }
 
+  @SuppressWarnings("UnusedReturnValue")
   private boolean doLop(final int tkn) throws ParseFailed {
     LogicalOperator oper = null;
 
@@ -603,9 +606,23 @@ public abstract class SimpleFilterParser {
     return tkn;
   }
 
-  private List<PropertyInfoIndex> getProperty(final int curtkn) throws ParseFailed {
+  private static class PropertyInfo {
+    final PropertyInfoIndex pii;
+    final Integer intKey;
+    final String strKey;
+
+    private PropertyInfo(final PropertyInfoIndex pii,
+                         final Integer intKey,
+                         final String strKey) {
+      this.pii = pii;
+      this.intKey = intKey;
+      this.strKey = strKey;
+    }
+  }
+
+  private List<PropertyInfo> getProperty(final int curtkn) throws ParseFailed {
     int tkn = curtkn;
-    final List<PropertyInfoIndex> pis = new ArrayList<>();
+    final List<PropertyInfo> pis = new ArrayList<>();
 
     for (;;) {
       if (tkn != StreamTokenizer.TT_WORD) {
@@ -620,8 +637,8 @@ public abstract class SimpleFilterParser {
       if ((pis.size() == 0) && pnameUc.equals("CATUID")) {
         // These are stored all over the place.
 
-        pis.add(PropertyInfoIndex.CATEGORIES);
-        pis.add(PropertyInfoIndex.UID);
+        pis.add(new PropertyInfo(PropertyInfoIndex.CATEGORIES, null, null));
+        pis.add(new PropertyInfo(PropertyInfoIndex.UID, null, null));
         return pis;
       }
 
@@ -632,9 +649,41 @@ public abstract class SimpleFilterParser {
                                        " source: " + source);
       }
 
-      pis.add(pi);
+      // Check for indexed property
+      Integer intIndex = null;
+      String strIndex = null;
 
-      tkn = nextToken("getProperty");
+      tkn = nextToken("getProperty(index)");
+      if (tkn == '[') {
+        if (pis.size() > 0) {
+          throw parseResult.fail("Unimplemented - indexing of nested fields: found" +
+                                         String.valueOf(tkn) +
+                                         " source: " + source);
+        }
+        // Expect an index or a quoted string 
+        tkn = nextToken("getProperty(index-1)");
+
+        if (tkn == SfpTokenizer.TT_NUMBER) {
+          intIndex = (int)tokenizer.nval;
+        } else if ((tkn != '"') && (tkn != '\'')) {
+          throw parseResult.fail("Expected number or quoted string: found" +
+                                         String.valueOf(tkn) +
+                                         " source: " + source);
+        } else {
+          strIndex = tokenizer.sval;
+        }
+
+        tkn = nextToken("end-getProperty(index)");
+        if (tkn != ']') {
+          throw parseResult.fail("Expected ']': found" +
+                                         String.valueOf(tkn) +
+                                         " source: " + source);
+        }
+
+        tkn = nextToken("getProperty");
+      }
+
+      pis.add(new PropertyInfo(pi, intIndex, strIndex));
 
       if (tkn != '.') {
         tokenizer.pushBack();
@@ -646,7 +695,7 @@ public abstract class SimpleFilterParser {
   }
 
   private boolean doPropertyComparison() throws ParseFailed {
-    final List<PropertyInfoIndex> pis = getProperty(nextToken("getProperty()"));
+    final List<PropertyInfo> pis = getProperty(nextToken("getProperty()"));
 
     final Operator oper = nextOperator();
 
@@ -668,7 +717,7 @@ public abstract class SimpleFilterParser {
      * WRONG - should be done by doFactor
      */
 //    if (!topLOp()) {
-      filterStack.push(pfilter);
+    filterStack.push(pfilter);
 /*    } else {
       Filter topFilter = popFilters();
       if (anding()) {
@@ -694,7 +743,8 @@ public abstract class SimpleFilterParser {
     int tkn = nextToken("doWordList(1)");
 
     if (tkn == StreamTokenizer.TT_EOF) {
-      return null;
+      throw parseResult.fail("Expected word list: found EOF" +
+                                     " source: " + source);
     }
 
     boolean paren = false;
@@ -752,35 +802,43 @@ public abstract class SimpleFilterParser {
     }
   }
 
-  private FilterBase makePropFilter(final List<PropertyInfoIndex> pis,
+  private FilterBase makePropFilter(final List<PropertyInfo> pis,
                                     final int oper)
           throws ParseFailed {
-    final PropertyInfoIndex pi = pis.get(0);
+    final PropertyInfo pi = pis.get(0);
     FilterBase filter = null;
+    final List<PropertyInfoIndex> pixs = new ArrayList<>();
+    
+    pis.forEach(val -> pixs.add(val.pii));
+    
     final boolean exact = (oper != like) && (oper != notLike);
 
-    if (pi.equals(PropertyInfoIndex.ENTITY_TYPE)) {
+    if (pi.pii == PropertyInfoIndex.ENTITY_TYPE) {
       checkSub(pis, 1);
       return entityFilter(getMatch(oper).getValue());
     }
-
+    
     if (oper == notDefined) {
       checkSub(pis, 2);
-      return new PresenceFilter(null, pis, false);
+      return new PresenceFilter(null, pixs, false,
+                                pi.intKey, pi.strKey);
     }
 
     if (oper == isDefined) {
       // Presence check
       checkSub(pis, 2);
-      return new PresenceFilter(null, pis, true);
+      return new PresenceFilter(null, pixs, true,
+                                pi.intKey, pi.strKey);
     }
+    
 
     if (oper == inTimeRange) {
       checkSub(pis, 2);
-      return ObjectFilter.makeFilter(null, pis, getTimeRange());
+      return ObjectFilter.makeFilter(null, pixs, getTimeRange(),
+                                     pi.intKey, pi.strKey);
     }
 
-    if (pi.equals(PropertyInfoIndex.VIEW)) {
+    if (pi.pii == PropertyInfoIndex.VIEW) {
       checkSub(pis, 1);
       // expect list of views.
       final ArrayList<String> views = doWordList();
@@ -794,7 +852,7 @@ public abstract class SimpleFilterParser {
       return filter;
     }
 
-    if (pi.equals(PropertyInfoIndex.VPATH)) {
+    if (pi.pii == PropertyInfoIndex.VPATH) {
       checkSub(pis, 1);
       // expect list of virtual paths.
       final ArrayList<String> vpaths = doWordList();
@@ -808,11 +866,11 @@ public abstract class SimpleFilterParser {
       return filter;
     }
 
-    if (pi.equals(PropertyInfoIndex.CATEGORIES) &&
+    if ((pi.pii == PropertyInfoIndex.CATEGORIES) &&
             (pis.size() == 2)) {
-      final PropertyInfoIndex subPi = pis.get(1);
+      final PropertyInfo subPi = pis.get(1);
 
-      if (subPi.equals(PropertyInfoIndex.UID)) {
+      if (subPi.pii == PropertyInfoIndex.UID) {
         // No match and category - expect list of uids.
         final ArrayList<String> uids = doWordList();
 
@@ -825,7 +883,8 @@ public abstract class SimpleFilterParser {
                                            " Filter will always fail to match");
           }
 
-          final ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
+          final ObjectFilter<String> f = new ObjectFilter<String>(null, 
+                                                                  pixs);
 
           f.setEntity(uid);
 
@@ -838,12 +897,13 @@ public abstract class SimpleFilterParser {
         return filter;
       }
 
-      if (subPi.equals(PropertyInfoIndex.HREF)) {
+      if (subPi.pii == PropertyInfoIndex.HREF) {
         // No match and category - expect list of paths.
         final ArrayList<String> paths = doWordList();
 
         for (final String path: paths) {
-          final ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
+          final ObjectFilter<String> f = new ObjectFilter<String>(null, 
+                                                                  pixs);
           f.setEntity(path);
 
           f.setCaseless(false);
@@ -858,8 +918,8 @@ public abstract class SimpleFilterParser {
       }
     }
 
-    if (pi.equals(PropertyInfoIndex.COLLECTION) ||
-            pi.equals(PropertyInfoIndex.COLPATH)) {
+    if ((pi.pii == PropertyInfoIndex.COLLECTION) ||
+            (pi.pii == PropertyInfoIndex.COLPATH)) {
       checkSub(pis, 1);
       final ArrayList<String> paths = doWordList();
 
@@ -876,16 +936,17 @@ public abstract class SimpleFilterParser {
       return filter;
     }
 
-    final TextMatchType match = getMatch(oper);
+    final MatchType match = getMatch(oper);
 
-    if (pi.equals(PropertyInfoIndex.CATEGORIES)) {
+    if (pi.pii == PropertyInfoIndex.CATEGORIES) {
       checkSub(pis, 1);
       final String val = match.getValue();
 
       if (val.startsWith("/")) {
-        pis.add(PropertyInfoIndex.HREF);
+        pixs.add(PropertyInfoIndex.HREF);
         // Assume a path match
-        final ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
+        final ObjectFilter<String> f = new ObjectFilter<String>(null, 
+                                                                pixs);
         f.setEntity(val);
 
         f.setCaseless(false);
@@ -906,8 +967,9 @@ public abstract class SimpleFilterParser {
                                        " source: " + source);
       }
 
-      pis.add(PropertyInfoIndex.UID);
-      final ObjectFilter<BwCategory> f = new BwCategoryFilter(null, pis);
+      pixs.add(PropertyInfoIndex.UID);
+      final ObjectFilter<BwCategory> f = new BwCategoryFilter(null, 
+                                                              pixs);
 
       f.setEntity(cat);
 
@@ -918,13 +980,16 @@ public abstract class SimpleFilterParser {
     }
 
     checkSub(pis, 2);
-    final ObjectFilter<String> f = new ObjectFilter<String>(null, pis);
+    final ObjectFilter<String> f = new ObjectFilter<>(null, pixs,
+                                                      pi.intKey, 
+                                                      pi.strKey);
     f.setEntity(match.getValue());
 
     f.setCaseless(Filters.caseless(match));
 
     f.setExact(exact);
     f.setNot(match.getNegateCondition().equals("yes"));
+    f.setPrefixMatch(match.getPrefixMatch());
 
     return f;
   }
@@ -933,11 +998,11 @@ public abstract class SimpleFilterParser {
    * number. i.e. 1 means no subfields, 2 = only subfield e.g. a.b
    * 3 means 2, a.b.c etc.
    *
-   * @param pis list of PropertyInfoIndex
+   * @param pis list of PropertyInfo
    * @param depth we expect this and nothing else
    * @throws ParseFailed on error
    */
-  private void checkSub(final List<PropertyInfoIndex> pis,
+  private void checkSub(final List<PropertyInfo> pis,
                         final int depth) throws ParseFailed {
     if (depth < pis.size()) {
       throw parseResult.fail("Bad Property: " +
@@ -946,15 +1011,15 @@ public abstract class SimpleFilterParser {
     }
   }
 
-  private String listProps(final List<PropertyInfoIndex> pis) {
+  private String listProps(final List<PropertyInfo> pis) {
     String delim = "";
 
     final StringBuilder sb = new StringBuilder();
 
-    for (final PropertyInfoIndex pi: pis) {
+    for (final PropertyInfo pi: pis) {
       sb.append(delim);
 
-      final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
+      final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi.pii);
 
       if (ipie == null) {
         sb.append("bad-index(").append(pi).append("(");
@@ -966,15 +1031,44 @@ public abstract class SimpleFilterParser {
 
     return sb.toString();
   }
+  
+  private static class MatchType extends TextMatchType {
+    protected boolean prefix;
 
-  private TextMatchType getMatch(final int oper) throws ParseFailed {
-    final TextMatchType tm;
+    /**
+     *
+     * @return boolean true if this is a prefix match.
+     */
+    public boolean getPrefixMatch() {
+      return prefix;
+    }
+
+    /**
+     *
+     * @param val boolean true if this is a prefix match.
+     */
+    public void setPrefixMatch(final boolean val) {
+      prefix = val;
+    }
+  }
+
+  private MatchType getMatch(final int oper) throws ParseFailed {
+    final MatchType tm;
 
     // Expect a value
     assertString();
 
-    tm = new TextMatchType();
+    tm = new MatchType();
     tm.setValue(tokenizer.sval);
+
+    if (oper == startsWithOp) {
+      tm.setPrefixMatch(true);
+      // case sensitive
+      tm.setCollation("i;octet");
+
+      return tm;
+    }
+
     if ((oper == notEqual) ||
             (oper == notLike)) {
       tm.setNegateCondition("yes");
@@ -1002,33 +1096,33 @@ public abstract class SimpleFilterParser {
   }
 
   private FilterBase viewFilter(final String val) throws ParseFailed {
-      final BwView view = callGetView(val);
+    final BwView view = callGetView(val);
 
-      if (view == null) {
-        throw parseResult.fail("Unknown view: " +
-                                       val + " source: " + source);
-      }
+    if (view == null) {
+      throw parseResult.fail("Unknown view: " +
+                                     val + " source: " + source);
+    }
 
-      FilterBase filter = view.getFilter();
+    FilterBase filter = view.getFilter();
 
-      if (filter != null) {
-        return filter;
-      }
+    if (filter != null) {
+      return filter;
+    }
 
-      for (final String vpath: view.getCollectionPaths()) {
-        final FilterBase vpf = resolveVpath(vpath);
+    for (final String vpath: view.getCollectionPaths()) {
+      final FilterBase vpf = resolveVpath(vpath);
 
-        filter = or(filter, vpf);
-      }
+      filter = or(filter, vpf);
+    }
 
-      final BwViewFilter vf = new BwViewFilter(null);
+    final BwViewFilter vf = new BwViewFilter(null);
 
-      vf.setEntity(view);
-      vf.setFilter(filter);
+    vf.setEntity(view);
+    vf.setFilter(filter);
 
-      view.setFilter(filter);
+    view.setFilter(filter);
 
-      return vf;
+    return vf;
   }
 
   private FilterBase or(final FilterBase of,
@@ -1049,11 +1143,11 @@ public abstract class SimpleFilterParser {
     return nof;
   }
 
-  private FilterBase and(final String name, 
+  private FilterBase and(final String name,
                          final FilterBase af,
                          final FilterBase f) {
     final FilterBase res;
-    
+
     if (af == null) {
       res = f;
     } else {
@@ -1069,7 +1163,7 @@ public abstract class SimpleFilterParser {
     if (name != null) {
       res.setName(name);
     }
-    
+
     return res;
   }
 
@@ -1141,7 +1235,7 @@ public abstract class SimpleFilterParser {
 
     for (final BwCalendar col: cols) {
       if (debug) {
-        debugMsg("      vpath collection:" + col.getPath());
+        debug("      vpath collection:" + col.getPath());
       }
 
       if (col.getFilterExpr() != null) {
@@ -1207,14 +1301,14 @@ public abstract class SimpleFilterParser {
   }
 
   private TimeRange getTimeRange() throws ParseFailed {
-      assertString();
-      final String startStr = tokenizer.sval;
+    assertString();
+    final String startStr = tokenizer.sval;
 
-      assertToken("to");
+    assertToken("to");
 
-      assertString();
+    assertString();
 
-      return makeTimeRange(startStr, tokenizer.sval);
+    return makeTimeRange(startStr, tokenizer.sval);
   }
 
   private TimeRange makeTimeRange(final String startStr,
@@ -1239,6 +1333,10 @@ public abstract class SimpleFilterParser {
 
   private Operator nextOperator() throws ParseFailed {
     int tkn = nextToken("nextOperator(1)");
+
+    if (tkn == '[') {
+      return new Operator(indexedOp);
+    }
 
     if (tkn == '=') {
       return new Operator(equal);
@@ -1291,6 +1389,10 @@ public abstract class SimpleFilterParser {
       return new Operator(inTimeRange);
     }
 
+    if (tokenizer.sval.equals("startsWith")) {
+      return new Operator(startsWithOp);
+    }
+
     if (tokenizer.sval.equals("isdefined")) {
       return new Operator(isDefined);
     }
@@ -1302,7 +1404,7 @@ public abstract class SimpleFilterParser {
     throw parseResult.fail("Bad operator: " +
                                    tokenizer.sval +
                                    " source: " + source);
-    
+
   }
 
   private boolean topLOp() {
@@ -1362,9 +1464,9 @@ public abstract class SimpleFilterParser {
   }
 
   private void showStack(final String tr) {
-    debugMsg("nextToken(" + tr + "): Parse stack======");
+    debug("nextToken(" + tr + "): Parse stack======");
     for (int i = 0; i < stack.size(); i++) {
-      debugMsg(stack.elementAt(i).toString());
+      debug(stack.elementAt(i).toString());
     }
   }
 
@@ -1380,13 +1482,13 @@ public abstract class SimpleFilterParser {
       //showFilterStack();
 
       if (tkn == StreamTokenizer.TT_WORD) {
-        debugMsg("nextToken(" + tr + ") = word: " + tokenizer.sval);
+        debug("nextToken(" + tr + ") = word: " + tokenizer.sval);
       } else if (tkn == '\'') {
-        debugMsg("nextToken(" + tr + ") = '" + tokenizer.sval + "'");
+        debug("nextToken(" + tr + ") = '" + tokenizer.sval + "'");
       } else if (tkn > 0) {
-        debugMsg("nextToken(" + tr + ") = " + (char)tkn);
+        debug("nextToken(" + tr + ") = " + (char)tkn);
       } else {
-        debugMsg("nextToken(" + tr + ") = " + tkn);
+        debug("nextToken(" + tr + ") = " + tkn);
       }
 
       return tkn;
@@ -1478,25 +1580,5 @@ public abstract class SimpleFilterParser {
     } catch (final CalFacadeException cfe) {
       throw parseResult.setCfe(cfe);
     }
-  }
-
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void debugMsg(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void error(final String msg) {
-    getLogger().error(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(this.getClass(), t);
   }
 }

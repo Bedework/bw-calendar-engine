@@ -54,6 +54,8 @@ public class IcalPropertyHandler {
   private HashMap<PropertyInfoIndex, MergedIcalProperty> pinfos =
           new HashMap<>();
 
+  private AnnUtil annUtil;
+
   /* There doesn't appear to be a way to modify an annotation object
    * so this is a copy of the object
    */
@@ -69,6 +71,8 @@ public class IcalPropertyHandler {
     String fieldType;
     
     boolean nested;
+    PropertyInfoIndex keyindex;
+
     boolean analyzed;
 
     boolean isCollectionType;
@@ -123,6 +127,7 @@ public class IcalPropertyHandler {
       reschedule = p.reschedule();
 
       nested = p.nested();
+      keyindex = p.keyindex();
       analyzed = p.analyzed();
       required = p.required();
       annotationRequired = p.annotationRequired();
@@ -137,32 +142,25 @@ public class IcalPropertyHandler {
       availableProperty = p.availableProperty();
     }
 
-    boolean check(final ProcessingEnvironment env,
-                  final IcalProperty p, final String fieldName,
+    boolean check(final IcalProperty p, final String fieldName,
                   final boolean isCollectionType) {
       if (!pindex.equals(p.pindex())) {
-        env.getMessager().printMessage(Kind.ERROR,
-                                       "Mismatched indexes " + pindex +
-                                               ", " + p.pindex() +
-                                               " in class " + pstate.getCurrentClassName());
+        annUtil.error("Mismatched indexes " + pindex +
+                              ", " + p.pindex() +
+                              " in class " + pstate.getCurrentClassName());
         return false;
       }
 
       if (!dbFieldName.equals(fieldName)) {
-        env.getMessager().printMessage(Kind.ERROR,
-                                       "Mismatched field names " + pindex +
-                                               ", " + dbFieldName + ", " + fieldName +
-                                               " in class " + pstate
-                                               .getCurrentClassName());
+        annUtil.error("Mismatched field names " + pindex +
+                              ", " + dbFieldName + ", " + fieldName +
+                              " in class " + pstate
+                .getCurrentClassName());
         return false;
       }
 
       if (this.isCollectionType != isCollectionType) {
-        env.getMessager().printMessage(Kind.ERROR,
-                                       "Mismatched method types " + pindex +
-                                               ", " + dbFieldName +
-                                               " in class " + pstate
-                                               .getCurrentClassName());
+        mismatched("method types");
         return false;
       }
 
@@ -172,6 +170,16 @@ public class IcalPropertyHandler {
     void merge(final IcalProperty p) {
       param = merge(param, p.param());
 
+      nested = mergeWarn("nested", nested, p.nested());
+      
+      if (keyindex != p.keyindex()) {
+        mismatched("keyindex");
+        if (p.keyindex() != PropertyInfoIndex.UNKNOWN_PROPERTY) {
+          keyindex = p.keyindex();
+        }
+      } 
+      
+      analyzed = mergeWarn("analyzed", analyzed, p.analyzed());
       required = merge(required, p.required());
       annotationRequired = merge(annotationRequired, p.annotationRequired());
       reschedule = merge(reschedule, p.reschedule());
@@ -186,8 +194,25 @@ public class IcalPropertyHandler {
       availableProperty = merge(availableProperty, p.availableProperty());
     }
 
+    private boolean mergeWarn(final String name, 
+                              final boolean thisval, final boolean thatval) {
+      if (thisval != thatval) {
+        mismatched(name);
+      }
+      
+      return thisval || thatval;
+    }
+
     private boolean merge(final boolean thisval, final boolean thatval) {
       return thisval || thatval;
+    }
+    
+    private void mismatched(final String name) {
+      annUtil.warn("Mismatched " + name +
+                           " values - setting to true " + pindex +
+                           ", " + dbFieldName +
+                           " in class " +
+                           pstate.getCurrentClassName());
     }
   }
 
@@ -199,15 +224,19 @@ public class IcalPropertyHandler {
   }
 
   /**
-   * @param env
-   * @param ip
-   * @param d
+   * @param annUtil for messaging etc
+   * @param env processing env
+   * @param ip the property
+   * @param d the element
    * @return boolean true for OK
    */
-  public boolean property(final ProcessingEnvironment env,
+  public boolean property(final AnnUtil annUtil,
+                          final ProcessingEnvironment env,
                           final IcalProperty ip,
                           final ExecutableElement d) {
     try {
+      this.annUtil = annUtil;
+      
       if (pinfoOut == null) {
         openPinfo(env);
       }
@@ -217,11 +246,10 @@ public class IcalPropertyHandler {
       boolean getter = methName.startsWith("get");
       boolean setter = methName.startsWith("set");
       if (!getter && !setter) {
-        env.getMessager().printMessage(Kind.ERROR,
-                                       "Annotation must be applied to a setter or getter. " +
-                                               "Found on method " + methName +
-                                               " in class " + pstate
-                                               .getCurrentClassName());
+        annUtil.error("Annotation must be applied to a setter or getter. " +
+                              "Found on method " + methName +
+                              " in class " + pstate
+                .getCurrentClassName());
         return false;
       }
 
@@ -231,11 +259,10 @@ public class IcalPropertyHandler {
       if (setter) {
         // Only 1 parameter
         if (pars.size() != 1) {
-          env.getMessager().printMessage(Kind.ERROR,
-                                         "Expect only 1 parameter for setter " +
-                                                 d.getSimpleName() +
-                                                 " in class " + pstate
-                                                 .getCurrentClassName());
+          annUtil.error("Expect only 1 parameter for setter " +
+                                d.getSimpleName() +
+                                " in class " + pstate
+                  .getCurrentClassName());
           return false;
         }
 
@@ -244,11 +271,10 @@ public class IcalPropertyHandler {
       } else {
         // No parameters
         if ((pars != null) && (pars.size() > 0)) {
-          env.getMessager().printMessage(Kind.ERROR,
-                                         "No parameters allowed for getter " +
-                                                 d.getSimpleName() +
-                                                 " in class " + pstate
-                                                 .getCurrentClassName());
+          annUtil.error("No parameters allowed for getter " +
+                                d.getSimpleName() +
+                                " in class " + pstate
+                  .getCurrentClassName());
           return false;
         }
 
@@ -292,7 +318,7 @@ public class IcalPropertyHandler {
       }
 
       /* Already got one. Ensure valid */
-      if (!mip.check(env, ip, fieldName,
+      if (!mip.check(ip, fieldName,
                      isCollectionType)) {
         return false;
       }
@@ -461,6 +487,7 @@ public class IcalPropertyHandler {
           new PinfoField("String", "jname"),
           new PinfoField("Class", "fieldType"),
           new PinfoField("boolean", "nested", "True for nested types"),
+          new PinfoField("PropertyInfoIndex", "keyindex", "!= UNKNOWN_PROPERTY for indexed values"),
           new PinfoField("boolean", "analyzed", "True for analyzed types"),
           new PinfoField("String", "presenceField", "field we test for presence"),
           new PinfoField("boolean", "param", "It's a parameter"),
@@ -501,6 +528,8 @@ public class IcalPropertyHandler {
     }
 
     makePar(parIndent, ip.nested, "nested");
+
+    makePar(parIndent, "PropertyInfoIndex." + ip.keyindex.name(), "keyindex");
 
     makePar(parIndent, ip.analyzed, "analyzed");
 

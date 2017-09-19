@@ -72,6 +72,8 @@ public class SfpTokenizer extends StreamTokenizer {
     ordinaryChar('|');
     ordinaryChar('(');
     ordinaryChar(')');
+    ordinaryChar('[');
+    ordinaryChar(']');
     ordinaryChar('\t');
     eolIsSignificant(false);
     whitespaceChars(0, 0);

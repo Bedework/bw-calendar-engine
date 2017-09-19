@@ -1366,16 +1366,17 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   /**
    * @param val
    */
+  @IcalProperty(pindex = PropertyInfoIndex.XPROP,
+          jname = "xprop",
+          adderName = "xproperty",
+          nested = true,
+          keyindex = PropertyInfoIndex.NAME,
+          eventProperty = true,
+          todoProperty = true,
+          journalProperty = true,
+          freeBusyProperty = true,
+          timezoneProperty = true)
   @IcalProperties({
-    @IcalProperty(pindex = PropertyInfoIndex.XPROP,
-                  jname = "xprop",
-                  adderName = "xproperty",
-                  nested = true,
-                  eventProperty = true,
-                  todoProperty = true,
-                  journalProperty = true,
-                  freeBusyProperty = true,
-                  timezoneProperty = true),
     @IcalProperty(pindex = PropertyInfoIndex.CALSCALE,
                   jname = "calscale",
                   eventProperty = true,

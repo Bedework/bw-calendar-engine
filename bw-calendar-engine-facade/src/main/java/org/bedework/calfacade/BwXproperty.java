@@ -19,10 +19,12 @@
 package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.NoDump;
+import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.BwCloneable;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 
 import java.io.Serializable;
@@ -401,6 +403,8 @@ public class BwXproperty extends BwDbentity<BwXproperty>
    *
    * @param val    String name
    */
+  @IcalProperty(pindex = PropertyInfoIndex.NAME,
+          jname = "name")
   public void setName(final String val) {
     if (val == null) {
       throw new RuntimeException("Name cannot be null");
@@ -442,6 +446,8 @@ public class BwXproperty extends BwDbentity<BwXproperty>
    *
    * @param val    String value
    */
+  @IcalProperty(pindex = PropertyInfoIndex.VALUE,
+          jname = "value")
   public void setValue(final String val) {
     value = val;
     parameters = null;

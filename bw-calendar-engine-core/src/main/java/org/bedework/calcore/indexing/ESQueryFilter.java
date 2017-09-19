@@ -46,6 +46,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.elasticsearch.ESQueryFilterBase;
 
 import org.elasticsearch.index.query.AndFilterBuilder;
+import org.elasticsearch.index.query.BoolFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.MatchAllFilterBuilder;
@@ -175,8 +176,13 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
     return fb;
   }
 
+  /* TODO we need to provide a chain of filters when we have deep paths,
+       e.g. entity[key1].entity[key2].value = "something"
+   */
   public FilterBuilder makeFilter(final List<PropertyInfoIndex> pis,
                                   final Object val,
+                                  final Integer intKey,
+                                  final String strKey,
                                   final OperationType opType,
                                   final boolean negate) throws CalFacadeException {
     /* Work backwards through the property list building a path.
@@ -186,11 +192,18 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
          otherwise:
             we already have a nested query to push inside a new one
     
+       If the top entry has a keyindex we expect a String or Numeric 
+       key value we generate a bool query with 2 must match terms.
      */
 
     FilterBuilder fb = null;
-    NestedFilterBuilder nfb = null; // current nested level
+    FilterBuilder nfb = null; // current nested level
     PropertyInfoIndex leafPii = null;
+
+    /* See if we need to build a nested query */
+    final BwIcalPropertyInfoEntry rootPie = 
+            BwIcalPropertyInfo.getPinfo(pis.get(0));
+    final boolean isNested = rootPie.getNested();
 
     for (int plistIndex = pis.size() - 1; plistIndex >= 0; plistIndex--) {
       final PropertyInfoIndex pii = pis.get(plistIndex);
@@ -201,24 +214,66 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
       
       final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pii);
 
-      if (bwPie.getNested()) {
-        final NestedFilterBuilder nested;
-        final String path = makePropertyRef(pis, plistIndex);
+      if (isNested) {
+        final FilterBuilder nested;
+        String path = makePropertyRef(pis, plistIndex);
 
         if (nfb != null) {
+          if (plistIndex == 0) {
+            // TODO Temp fix this
+            path = "event." + path;
+          }
           nested = new NestedFilterBuilder(path, nfb);
         } else {
-          // Not had a filter yet
-          nested = new NestedFilterBuilder(path,
-                                           makeQuery(leafPii,
-                                                     makePropertyRef(pis, pis.size() - 1),
-                                                     val, opType, 1));
+          fb = makeFilter(leafPii,
+                         makePropertyRef(pis),
+                         val, opType);
+
+          /* Is the parent indexed? */
+          final BwIcalPropertyInfoEntry parentPie;
+          if (plistIndex == 0) {
+            // No parent
+            parentPie = null;
+          } else {
+            parentPie = BwIcalPropertyInfo.getPinfo(pis.get(plistIndex - 1));
+          }
+          
+          if ((parentPie != null) && 
+                  (parentPie.getKeyindex() != PropertyInfoIndex.UNKNOWN_PROPERTY)) {
+            final BoolFilterBuilder bfb = new BoolFilterBuilder();
+
+            if (fb == null) {
+              error("No nested query for " + pii);
+              return null;
+            }
+            bfb.must(fb);
+            
+            final List<PropertyInfoIndex> indexPis = new ArrayList<>();
+            indexPis.add(pis.get(plistIndex - 1));
+            indexPis.add(parentPie.getKeyindex());
+            final String indexPath = makePropertyRef(indexPis);
+
+            if (intKey != null) {
+              bfb.must(new TermFilterBuilder(indexPath, 
+                                            intKey));
+            } else if (strKey != null) {
+              bfb.must(new TermFilterBuilder(indexPath, 
+                                            strKey));
+            } else {
+              error("Missing key for index for " + pii);
+              return null;
+            }
+            
+            fb = bfb;
+          }
+           
+          nested = fb;
         }
 
         nfb = nested;
       } else if (plistIndex == 0) {
         // No nested types found
-        fb = makeFilter(leafPii, makePropertyRef(pis, pis.size() - 1),
+        fb = makeFilter(leafPii, makePropertyRef(pis),
                         val, opType);
       }
     }
@@ -603,7 +658,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
    * @return dot delimited property reference
    */
   public static String makePropertyRef(final List<PropertyInfoIndex> pis) {
-    return makePropertyRef(pis, pis.size());
+    return makePropertyRef(pis, pis.size() - 1);
   }
 
   /**
@@ -617,7 +672,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
 
     StringBuilder sb = new StringBuilder();
 
-    for (int i = 0; i < numElements; i++) {
+    for (int i = 0; i <= numElements; i++) {
       final PropertyInfoIndex pi = pis.get(i);
       sb.append(delim);
       sb.append(getJname(pi));
@@ -629,7 +684,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
 
   /**
    *
-   * @param pis
+   * @param pis list of indexes
    * @return dot delimited property reference
    */
   public static String makePropertyRef(PropertyInfoIndex... pis) {
@@ -829,29 +884,6 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
     }
 
     return dt; // It's probably a bad date
-  }
-
-  private FilterBuilder doTimeRange(final TimeRange tr,
-                                    final boolean dateTimeField,
-                                    final String fld,
-                                    final String subfld) {
-    final RangeFilterBuilder rfb = FilterBuilders.rangeFilter(fld);
-    final String start;
-    final String end;
-
-    if (tr.getEnd() == null) {
-      end = null;
-    } else {
-      end = tr.getEnd().toString();
-    }
-      
-    if (tr.getStart() == null) {
-      start = null;
-    } else {
-      start = tr.getStart().toString();
-    }
-
-    return range(fld, start, end);
   }
   
   private RangeFilterBuilder range(final String fld, 
@@ -1071,15 +1103,24 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
       final PresenceFilter prf = (PresenceFilter)f;
 
       if (prf.getTestPresent()) {
-        return FilterBuilders.existsFilter(fieldName);
+        return makeFilter(pf.getPropertyIndexes(), null,
+                          pf.getIntKey(), pf.getStrKey(),
+                          OperationType.presence,
+                          pf.getNot());
       }
 
-      return FilterBuilders.missingFilter(fieldName);
+      return makeFilter(pf.getPropertyIndexes(), null,
+                        pf.getIntKey(), pf.getStrKey(),
+                        OperationType.absence,
+                        pf.getNot());
     }
 
     if (pf instanceof TimeRangeFilter) {
-      return doTimeRange(((TimeRangeFilter)pf).getEntity(),
-                         false, fieldName, null);
+      return makeFilter(pf.getPropertyIndexes(),
+                        ((TimeRangeFilter)pf).getEntity(),
+                        pf.getIntKey(), pf.getStrKey(),
+                        OperationType.timeRange,
+                        pf.getNot());
     }
 
     /*
@@ -1144,7 +1185,18 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
     }
 
     if (pf instanceof ObjectFilter) {
-      return doObject((ObjectFilter)pf, fieldName, null);
+      final OperationType op;
+      if (((ObjectFilter) pf).getPrefixMatch()) {
+        op = OperationType.prefix;
+      } else {
+        op = OperationType.compare;
+      }
+
+      return makeFilter(pf.getPropertyIndexes(),
+                        getValue((ObjectFilter)pf),
+                        pf.getIntKey(), pf.getStrKey(),
+                        op,
+                        pf.getNot());
     }
 
     return null;
@@ -1165,36 +1217,6 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
     final FilterBuilder fb = makeFilter(vf.getFilter());
 
     return fb;
-  }
-
-  private FilterBuilder doObject(final ObjectFilter of,
-                                 final String fld,
-                                 final String subfld) throws CalFacadeException {
-    String dbfld = fld;
-
-    if (subfld != null) {
-      dbfld += "." + subfld;
-    }
-
-    Object o = of.getEntity();
-
-    Object val = getValue(of);
-    FilterBuilder fb;
-
-    if (val instanceof Collection) {
-      TermsFilterBuilder tfb = FilterBuilders.termsFilter(dbfld, (Collection)val);
-      tfb.execution("or");
-
-      fb = tfb;
-    } else {
-      fb = FilterBuilders.termFilter(dbfld, val);
-    }
-
-    if (!of.getNot()) {
-      return fb;
-    }
-
-    return new NotFilterBuilder(fb);
   }
 
   private Object getValue(final ObjectFilter of) throws CalFacadeException {

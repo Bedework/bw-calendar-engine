@@ -304,10 +304,6 @@ public class Notifier extends AbstractScheduler {
 
       final OwnedHrefEvent oheMsg = (OwnedHrefEvent)msg;
 
-      if (!inSharedCollection(oheMsg)) {
-        return ProcessMessageResult.IGNORED;
-      }
-
       if (collection) {
         return processCollection(msg);
       } else {
@@ -422,8 +418,8 @@ public class Notifier extends AbstractScheduler {
 
     final String shareeHref = ai.getPrincipalHref();
 
-    if (shareeHref.equals(ownerHref)) {
-      // This sharee made the change. Do not notify, but process other aliases.
+    if (shareeHref.equals(ownerHref) || !ai.getVisible()) {
+      // This sharee made the change or the event is not visible to this alias. Do not notify, but process other aliases.
       return checkAliases(ai, ownerHref, rc);
     }
 

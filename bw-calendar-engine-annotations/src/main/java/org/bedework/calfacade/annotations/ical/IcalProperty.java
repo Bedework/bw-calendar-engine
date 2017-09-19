@@ -51,6 +51,9 @@ public @interface IcalProperty {
   /** Required for a valid event   */
   boolean nested() default false;
 
+  /** Property name for key */
+  PropertyInfoIndex keyindex() default PropertyInfoIndex.UNKNOWN_PROPERTY;
+
   /** Required for a valid event   */
   boolean analyzed() default false;
 

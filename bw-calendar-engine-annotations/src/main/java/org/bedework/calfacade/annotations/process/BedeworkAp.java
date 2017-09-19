@@ -195,7 +195,8 @@ public class BedeworkAp extends AbstractProcessor {
 
       final IcalProperty ip = e.getAnnotation(IcalProperty.class);
       if (ip != null) {
-        pstate.getIcalPropertyHandler().property(pstate.getEnv(), ip,
+        pstate.getIcalPropertyHandler().property(annUtil,
+                                                 pstate.getEnv(), ip,
                                                  e);
         if (pstate.debug) {
           annUtil.note("IcalProperty: " + ip.pindex().name());
@@ -207,7 +208,8 @@ public class BedeworkAp extends AbstractProcessor {
         final IcalPropertyHandler iph = pstate.getIcalPropertyHandler();
 
         for (final IcalProperty ip1 : ips.value()) {
-          iph.property(pstate.getEnv(), ip1, e);
+          iph.property(annUtil,
+                       pstate.getEnv(), ip1, e);
           if (pstate.debug) {
             annUtil.note("IcalProperty: " + ip1.pindex().name());
           }

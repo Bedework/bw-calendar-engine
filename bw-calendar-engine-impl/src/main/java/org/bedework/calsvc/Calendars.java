@@ -851,15 +851,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return null;
     }
 
-    if (!col.getPublick() && !Boolean.valueOf(col.getQproperty(
-            AppleServerTags.shared))) {
-      // Not public (always shared) and not explicitly shared
-      return updateAliasInfoMap(
-              new AliasesInfo(getPrincipal().getPrincipalRef(),
-                              col,
-                              null));
-    }
-
     ai = new AliasesInfo(getPrincipal().getPrincipalRef(),
                          col,
                          null);

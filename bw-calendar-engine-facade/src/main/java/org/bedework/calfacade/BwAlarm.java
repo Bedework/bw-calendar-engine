@@ -787,6 +787,8 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @IcalProperty(pindex = PropertyInfoIndex.XPROP,
                 jname = "xprop",
                 adderName = "xproperty",
+                nested = true,
+                keyindex = PropertyInfoIndex.NAME,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true,
