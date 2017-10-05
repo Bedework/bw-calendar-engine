@@ -586,7 +586,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
     res.pageStart = offset;
 
-    final List<SearchResultEntry> entities;
     final SearchRequestBuilder srb = getClient().prepareSearch(searchIndexes);
     if (res.curQuery != null) {
       srb.setQuery(res.curQuery);
@@ -596,13 +595,18 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
             .setPostFilter(res.curFilter)
             .setFrom(res.pageStart);
 
+    final int size;
+    
     if (num < 0) {
-      srb.setSize((int)sres.getFound());
-      entities = new ArrayList<>((int)sres.getFound());
+      size = (int)sres.getFound();
     } else {
-      srb.setSize(num);
-      entities = new ArrayList<>(num);
+      size = num;
     }
+    
+    // TODO - need a configurable absolute max size for fetches
+    
+    srb.setSize(size);
+    final List<SearchResultEntry> entities = new ArrayList<>(size);
 
     if (!Util.isEmpty(res.curSort)) {
       SortOrder so;
