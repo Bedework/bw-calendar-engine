@@ -99,6 +99,7 @@ public class BwCli extends JolokiaCli {
     String url = null;
     String id = null;
     String pw = null;
+    String cmd = null;
     String jmxUrl = null;
     boolean debug = false;
 
@@ -131,12 +132,21 @@ public class BwCli extends JolokiaCli {
           continue;
         }
 
+        if (pargs.ifMatch("-cmds")) {
+          cmd = pargs.next();
+          continue;
+        }
+
         usage("Illegal argument: " +
                       pargs.current());
         return;
       }
 
       final BwCli jc = new BwCli(url, jmxUrl, id, pw, debug);
+      
+      if (cmd != null) {
+        jc.setSingleCmd("sou \"" + cmd + "\"");
+      }
 
       jc.processCmds();
     } catch (final Throwable t) {
@@ -164,6 +174,7 @@ public class BwCli extends JolokiaCli {
       }
 
       cl = new HttpClient(new URI(url));
+      
       return cl;
     }
 
