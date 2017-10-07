@@ -56,18 +56,6 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
         implements Configurations {
   private static boolean configured;
 
-  private static final String basicPropsNamePart = "basicSystem";
-
-  private static final String unauthPropsNamePart = "unauthSystem";
-
-  private static final String authPropsNamePart = "authSystem";
-
-  private static final String systemPropsNamePart = "system";
-
-  private static final String unauthCardDavInfoNamePart = "unauthCardDav";
-
-  private static final String authCardDavInfoNamePart = "authCardDav";
-
   private static BasicSystemProperties basicProps;
 
   private static AuthProperties authProperties;

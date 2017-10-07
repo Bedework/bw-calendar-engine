@@ -31,17 +31,6 @@ import java.util.List;
 public interface BwDumpRestoreMBean extends ConfBaseMBean,
         DumpRestoreProperties {
   /**
-   * @param val current status
-   */
-  void setStatus(final String val);
-
-  /**
-   * @return String status
-   */
-  @MBeanInfo("Stopped, Done, Running")
-  String getStatus();
-
-  /**
    * @param val true to enable restores
    */
   void setAllowRestore(boolean val);

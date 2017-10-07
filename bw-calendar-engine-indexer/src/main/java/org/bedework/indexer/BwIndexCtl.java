@@ -109,8 +109,11 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     public void run() {
       try {
         getIndexApp().crawl();
-      } catch (InterruptedException ie) {
+        setStatus(statusDone);
+      } catch (InterruptedException ignored) {
+        setStatus(statusInterrupted);
       } catch (Throwable t) {
+        setStatus(statusFailed);
         if (!showedTrace) {
           error(t);
           //            showedTrace = true;
@@ -385,6 +388,8 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   @Override
   public String rebuildIndex() {
     try {
+      setStatus(statusStopped);
+      
       if ((crawler != null) && crawler.isAlive()) {
         error("Reindexer already started");
         return "Reindexer already started";
@@ -394,7 +399,8 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       crawler.start();
 
       return "Started";
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
+      setStatus(statusFailed);
       List<String> infoLines = new ArrayList<String>();
 
       infoLines.add("***********************************\n");

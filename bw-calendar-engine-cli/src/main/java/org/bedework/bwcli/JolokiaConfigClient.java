@@ -18,26 +18,20 @@
 */
 package org.bedework.bwcli;
 
+import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jolokia.JolokiaClient;
 
 import java.util.List;
+
+import static org.bedework.calfacade.configs.Configurations.cmdutilMbean;
+import static org.bedework.calfacade.configs.Configurations.dumpRestoreMbean;
+import static org.bedework.calfacade.configs.Configurations.indexMbean;
+import static org.bedework.calfacade.configs.Configurations.systemMbean;
 
 /**
  * User: mike Date: 12/3/15 Time: 00:32
  */
 public class JolokiaConfigClient extends JolokiaClient {
-  public static final String bwcoreMbean =
-          "org.bedework.bwengine.core:service=DbConf";
-
-  public static final String bwdumpRestoreMbean =
-          "org.bedework.bwengine:service=dumprestore";
-
-  public static final String cmdutilMbean =
-          "org.bedework.bwengine:service=cmdutil";
-
-  public static final String indexMbean =
-          "org.bedework.bwengine:service=indexing";
-
   /**
    *
    * @param url Usually something like "http://localhost:8080/hawtio/jolokia"
@@ -57,13 +51,13 @@ public class JolokiaConfigClient extends JolokiaClient {
   }
 
   public List<String> coreSchema() throws Throwable {
-    writeVal(bwcoreMbean, "Export", "true");
+    writeVal(dumpRestoreMbean, "Export", "true");
 
-    execute(bwcoreMbean, "schema");
+    execute(dumpRestoreMbean, "schema");
 
-    waitCompletion(bwcoreMbean);
+    waitCompletion(dumpRestoreMbean);
 
-    return execStringList(bwcoreMbean, "schemaStatus");
+    return execStringList(dumpRestoreMbean, "schemaStatus");
   }
 
   public String listIndexes() throws Throwable {
@@ -74,8 +68,16 @@ public class JolokiaConfigClient extends JolokiaClient {
     return execString(indexMbean, "purgeIndexes");
   }
 
-  public String rebuildIndexes() throws Throwable {
-    return execString(indexMbean, "rebuildIndex");
+  public List<String> rebuildIndexes() throws Throwable {
+    execute(indexMbean, "rebuildIndex");
+
+    String status;
+    do {
+      status = waitCompletion(indexMbean);
+      multiLine(execStringList(indexMbean, "rebuildStatus"));
+    } while (status.equals(ConfBase.statusTimedout));
+
+    return execStringList(indexMbean, "rebuildStatus");
   }
 
   public List<String> rebuildIdxStatus() throws Throwable {
@@ -84,15 +86,42 @@ public class JolokiaConfigClient extends JolokiaClient {
 
   public List<String> restoreCalData(final String path) throws Throwable {
     if (path != null) {
-      writeVal(bwdumpRestoreMbean, "DataIn", path);
+      writeVal(dumpRestoreMbean, "DataIn", path);
     }
 
-    writeVal(bwdumpRestoreMbean, "AllowRestore", "true");
+    writeVal(dumpRestoreMbean, "AllowRestore", "true");
 
-    execute(bwdumpRestoreMbean, "restoreData");
+    execute(dumpRestoreMbean, "restoreData");
 
-    waitCompletion(bwdumpRestoreMbean);
+    waitCompletion(dumpRestoreMbean);
 
-    return execStringList(bwdumpRestoreMbean, "restoreStatus");
+    return execStringList(dumpRestoreMbean, "restoreStatus");
+  }
+  
+  /* System properties */
+
+  public void setSystemTzid(final String val) throws Throwable {
+    writeVal(systemMbean, "Tzid", val);
+  }
+  
+  public String getSystemTzid() throws Throwable {
+    return readString(systemMbean, "Tzid");
+  }
+
+  public void setRootUsers(final String val) throws Throwable {
+    writeVal(systemMbean, "RootUsers", val);
+  }
+
+  public String getRootUsers() throws Throwable {
+    return readString(systemMbean, "RootUsers");
+  }
+
+  public void setAutoKillMinutes(final Integer val) throws Throwable {
+    writeVal(systemMbean, "AutoKillMinutes", val);
+  }
+
+  public Integer getAutoKillMinutes() throws Throwable {
+    String s = readString(systemMbean, "AutoKillMinutes");
+    return new Integer(s);
   }
 }

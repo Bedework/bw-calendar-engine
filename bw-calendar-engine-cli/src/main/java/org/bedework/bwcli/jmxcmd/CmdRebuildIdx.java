@@ -14,6 +14,6 @@ public class CmdRebuildIdx extends JmxCmd {
   }
 
   public void doExecute() throws Throwable {
-    info(jcc.rebuildIndexes());
+    multiLine(jcc.rebuildIndexes());
   }
 }

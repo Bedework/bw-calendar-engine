@@ -28,6 +28,62 @@ import java.io.Serializable;
  * @author Mike Douglass   douglm  rpi.edu
  */
 public interface Configurations extends Serializable {
+  /* The name part of the jmx service name */
+
+  String authCardDavInfoNamePart = "authCardDav";
+
+  String authPropsNamePart = "authSystem";
+
+  String basicPropsNamePart = "basicSystem";
+
+  String cmdutilNamePart = "cmdutil";
+
+  String dbConfNamePart = "DbConf";
+
+  String dumpRestoreNamePart = "dumprestore";
+
+  String indexingNamePart = "indexing";
+
+  String systemPropsNamePart = "system";
+
+  String unauthCardDavInfoNamePart = "unauthCardDav";
+
+  String unauthPropsNamePart = "unauthSystem";
+
+  /* The prefix for each service name */
+  
+  String bwcorePrefix = "org.bedework.bwengine.core:service=";
+
+  String bwenginePrefix =
+          "org.bedework.bwengine:service=";
+  
+  /* Services within each of the above */
+  
+  String service = ":service=";
+
+  String cmdutilServicePrefix = bwenginePrefix + service;
+
+  String dbConfServicePrefix = bwcorePrefix + service;
+
+  String dumpRestoreServicePrefix = bwenginePrefix + service;
+
+  String indexServicePrefix = bwenginePrefix + service;
+
+  String systemServicePrefix = bwenginePrefix + service;
+
+  /* mbeans */
+
+  String dbConfMbean = dbConfServicePrefix + dbConfNamePart;
+
+  String dumpRestoreMbean = 
+          dumpRestoreServicePrefix + dumpRestoreNamePart;
+
+  String cmdutilMbean = cmdutilServicePrefix + cmdutilNamePart;
+
+  String indexMbean = indexServicePrefix + indexingNamePart;
+
+  String systemMbean = systemServicePrefix + systemPropsNamePart;
+
   /**
    * @return basic system properties
    */
