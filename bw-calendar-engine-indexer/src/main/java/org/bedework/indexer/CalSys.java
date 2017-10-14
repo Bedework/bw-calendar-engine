@@ -29,8 +29,7 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.EventsI;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.misc.Logged;
 
 import java.util.Collection;
 
@@ -39,16 +38,12 @@ import java.util.Collection;
  * @author Mike Douglass
  *
  */
-public abstract class CalSys {
+public abstract class CalSys extends Logged {
   protected String name;
 
   protected String adminAccount;
 
   protected String principal;
-
-  protected boolean debug;
-
-  private Logger log;
 
   private String publicCalendarRoot;
 
@@ -70,15 +65,13 @@ public abstract class CalSys {
    * @param name for object
    * @param adminAccount admin account to use
    * @param principal href
-   * @throws CalFacadeException
    */
   public CalSys(final String name,
                 final String adminAccount,
-                final String principal) throws CalFacadeException {
+                final String principal) {
     this.name = name;
     this.adminAccount = adminAccount;
     this.principal = principal;
-    debug = getLogger().isDebugEnabled();
   }
 
   protected void setThreadPools(final int maxEntityThreads,
@@ -316,9 +309,9 @@ public abstract class CalSys {
     if ((col == null) || !hasAccess(col)) {
       if (debug) {
         if (col == null) {
-          debugMsg("No collection");
+          debug("No collection");
         } else {
-          debugMsg("No access to " + path + " for " + showPrincipal());
+          debug("No access to " + path + " for " + showPrincipal());
         }
       }
       throw new CalFacadeAccessException();
@@ -368,9 +361,9 @@ public abstract class CalSys {
 
       if (debug) {
         if (r.refs == null) {
-          debugMsg("getPrincipalHrefs(" + r.index + ") found none");
+          debug("getPrincipalHrefs(" + r.index + ") found none");
         } else {
-          debugMsg("getPrincipalHrefs(" + r.index + ") found " +
+          debug("getPrincipalHrefs(" + r.index + ") found " +
                    r.refs.size());
         }
       }
@@ -395,7 +388,7 @@ public abstract class CalSys {
   protected Refs getChildCollections(final String path,
                                      final Refs refs) throws CalFacadeException {
     if (debug) {
-      debugMsg("getChildCollections(" + path + ")");
+      debug("getChildCollections(" + path + ")");
     }
 
     Refs r = refs;
@@ -411,9 +404,9 @@ public abstract class CalSys {
       if ((col == null) || !hasAccess(col)) {
         if (debug) {
           if (col == null) {
-            debugMsg("No collection");
+            debug("No collection");
           } else {
-            debugMsg("No access");
+            debug("No access");
           }
         }
         throw new CalFacadeAccessException();
@@ -423,9 +416,9 @@ public abstract class CalSys {
 
       if (debug) {
         if (r.refs == null) {
-          debugMsg("getChildCollections(" + path + ") found none");
+          debug("getChildCollections(" + path + ") found none");
         } else {
-          debugMsg("getChildCollections(" + path + ") found " + r.refs.size());
+          debug("getChildCollections(" + path + ") found " + r.refs.size());
         }
       }
 
@@ -449,7 +442,7 @@ public abstract class CalSys {
   protected Refs getChildEntities(final String path,
                                   final Refs refs) throws CalFacadeException {
     if (debug) {
-      debugMsg("getChildEntities(" + path + ")");
+      debug("getChildEntities(" + path + ")");
     }
 
     Refs r = refs;
@@ -470,9 +463,9 @@ public abstract class CalSys {
 
       if (debug) {
         if (r.refs == null) {
-          debugMsg("getChildEntities(" + path + ") found none");
+          debug("getChildEntities(" + path + ") found none");
         } else {
-          debugMsg("getChildEntities(" + path + ") found " + r.refs.size());
+          debug("getChildEntities(" + path + ") found " + r.refs.size());
         }
       }
 
@@ -492,32 +485,5 @@ public abstract class CalSys {
     final EventsI evhandler = svci.getEventsHandler();
 
     return evhandler.get(colPath, name);
-  }
-
-  /**
-   * @return Logger
-   */
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void debugMsg(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void info(final String msg) {
-    getLogger().info(msg);
-  }
-
-  protected void error(final String msg) {
-    getLogger().error(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(this, t);
   }
 }

@@ -68,6 +68,10 @@ public class JolokiaConfigClient extends JolokiaClient {
     return execString(indexMbean, "purgeIndexes");
   }
 
+  public String newIndexes() throws Throwable {
+    return execString(indexMbean, "newIndexes");
+  }
+
   public List<String> rebuildIndexes() throws Throwable {
     execute(indexMbean, "rebuildIndex");
 
@@ -80,8 +84,20 @@ public class JolokiaConfigClient extends JolokiaClient {
     return execStringList(indexMbean, "rebuildStatus");
   }
 
+  public Object indexStats(final String indexName) throws Throwable {
+    return exec(indexMbean, "indexStats", indexName);
+  }
+
+  public String reindex(final String indexName) throws Throwable {
+    return execString(indexMbean, "reindex", indexName);
+  }
+
   public List<String> rebuildIdxStatus() throws Throwable {
     return execStringList(indexMbean, "rebuildStatus");
+  }
+
+  public String makeIdxProd(final String indexName) throws Throwable {
+    return execString(indexMbean, "setProdAlias", indexName);
   }
 
   public List<String> restoreCalData(final String path) throws Throwable {

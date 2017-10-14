@@ -42,6 +42,7 @@ import org.bedework.util.dav.DavUtil.MultiStatusResponse;
 import org.bedework.util.dav.DavUtil.MultiStatusResponseElement;
 import org.bedework.util.dav.DavUtil.PropstatElement;
 import org.bedework.util.http.BasicHttpClient;
+import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.XmlEmit.NameSpace;
@@ -58,7 +59,6 @@ import net.fortuna.ical4j.vcard.Property.Id;
 import net.fortuna.ical4j.vcard.VCard;
 import net.fortuna.ical4j.vcard.property.Kind;
 import org.apache.http.message.BasicHeader;
-import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
 
 import java.io.InputStream;
@@ -67,8 +67,6 @@ import java.io.LineNumberReader;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.net.URI;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -95,9 +93,7 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
  * @author Mike Douglass douglm  rpi.edu
  * @version 1.0
  */
-public abstract class AbstractDirImpl implements Directories {
-  protected boolean debug;
-
+public abstract class AbstractDirImpl extends Logged implements Directories {
   private static BasicSystemProperties sysRoots;
   private CalAddrPrefixes caPrefixes;
   private CardDavInfo authCdinfo;
@@ -193,8 +189,6 @@ public abstract class AbstractDirImpl implements Directories {
 
   protected CallBack cb;
 
-  private transient Logger log;
-
   private final HashMap<String, Integer> toWho = new HashMap<>();
   private final HashMap<Integer, String> fromWho = new HashMap<>();
 
@@ -219,27 +213,26 @@ public abstract class AbstractDirImpl implements Directories {
 
     setDomains();
 
-    initWhoMaps(getSystemRoots().getUserPrincipalRoot(), WhoDefs.whoTypeUser);
-    initWhoMaps(getSystemRoots().getGroupPrincipalRoot(), WhoDefs.whoTypeGroup);
-    initWhoMaps(getSystemRoots().getTicketPrincipalRoot(), WhoDefs.whoTypeTicket);
-    initWhoMaps(getSystemRoots().getResourcePrincipalRoot(), WhoDefs.whoTypeResource);
-    initWhoMaps(getSystemRoots().getVenuePrincipalRoot(), WhoDefs.whoTypeVenue);
-    initWhoMaps(getSystemRoots().getHostPrincipalRoot(), WhoDefs.whoTypeHost);
+    initWhoMaps(BwPrincipal.userPrincipalRoot, WhoDefs.whoTypeUser);
+    initWhoMaps(BwPrincipal.groupPrincipalRoot, WhoDefs.whoTypeGroup);
+    initWhoMaps(BwPrincipal.ticketPrincipalRoot, WhoDefs.whoTypeTicket);
+    initWhoMaps(BwPrincipal.resourcePrincipalRoot, WhoDefs.whoTypeResource);
+    initWhoMaps(BwPrincipal.venuePrincipalRoot, WhoDefs.whoTypeVenue);
+    initWhoMaps(BwPrincipal.hostPrincipalRoot, WhoDefs.whoTypeHost);
   }
 
   @Override
   public DirectoryInfo getDirectoryInfo() throws CalFacadeException {
     final DirectoryInfo info = new DirectoryInfo();
-    final BasicSystemProperties sr = getSystemRoots();
 
-    info.setPrincipalRoot(sr.getPrincipalRoot());
-    info.setUserPrincipalRoot(sr.getUserPrincipalRoot());
-    info.setGroupPrincipalRoot(sr.getGroupPrincipalRoot());
-    info.setBwadmingroupPrincipalRoot(sr.getBwadmingroupPrincipalRoot());
-    info.setTicketPrincipalRoot(sr.getTicketPrincipalRoot());
-    info.setResourcePrincipalRoot(sr.getResourcePrincipalRoot());
-    info.setVenuePrincipalRoot(sr.getVenuePrincipalRoot());
-    info.setHostPrincipalRoot(sr.getHostPrincipalRoot());
+    info.setPrincipalRoot(BwPrincipal.principalRoot);
+    info.setUserPrincipalRoot(BwPrincipal.userPrincipalRoot);
+    info.setGroupPrincipalRoot(BwPrincipal.groupPrincipalRoot);
+    info.setBwadmingroupPrincipalRoot(BwPrincipal.bwadmingroupPrincipalRoot);
+    info.setTicketPrincipalRoot(BwPrincipal.ticketPrincipalRoot);
+    info.setResourcePrincipalRoot(BwPrincipal.resourcePrincipalRoot);
+    info.setVenuePrincipalRoot(BwPrincipal.venuePrincipalRoot);
+    info.setHostPrincipalRoot(BwPrincipal.hostPrincipalRoot);
 
     return info;
   }
@@ -646,55 +639,7 @@ public abstract class AbstractDirImpl implements Directories {
 
   @Override
   public boolean isPrincipal(final String val) throws CalFacadeException {
-    if (val == null) {
-      return false;
-    }
-
-    /* assuming principal root is "principals" we expect something like
-     * "/principals/users/jim".
-     *
-     * Anything with fewer or greater elements is a collection or entity.
-     */
-
-    int pos1 = val.indexOf("/", 1);
-
-    if (pos1 < 0) {
-      return false;
-    }
-
-    if (!val.substring(0, pos1 + 1).equals(getSystemRoots().getPrincipalRoot())) {
-      return false;
-    }
-
-    int pos2 = val.indexOf("/", pos1 + 1);
-
-    if (pos2 < 0) {
-      return false;
-    }
-
-    for (String root: toWho.keySet()) {
-      final String pfx = root;
-      if (val.startsWith(pfx)) {
-        return !val.equals(pfx);
-      }
-    }
-
-    /*
-    int pos3 = val.indexOf("/", pos2 + 1);
-
-    if ((pos3 > 0) && (val.length() > pos3 + 1)) {
-      // More than 3 elements
-      return false;
-    }
-
-    if (!toWho.containsKey(val.substring(0, pos2))) {
-      return false;
-    }
-    */
-
-    /* It's one of our principal hierarchies */
-
-    return false;
+    return BwPrincipal.isPrincipal(val);
   }
 
   @Override
@@ -720,59 +665,7 @@ public abstract class AbstractDirImpl implements Directories {
 
   @Override
   public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
-    try {
-      final String uri =
-              URLDecoder.decode(new URI(
-                      URLEncoder.encode(href, "UTF-8")
-              ).getPath(), "UTF-8");
-
-      if (!isPrincipal(uri)) {
-        return null;
-      }
-
-      int start = -1;
-
-      for (String prefix: toWho.keySet()) {
-        if (!uri.startsWith(prefix)) {
-          continue;
-        }
-
-        if (uri.equals(prefix)) {
-          // Trying to browse user principals?
-          return null;
-        }
-
-        int whoType = toWho.get(prefix);
-        String who = null;
-        start = prefix.length();
-
-        if ((whoType == WhoDefs.whoTypeUser) ||
-            (whoType == WhoDefs.whoTypeGroup)) {
-          /* Strip off the principal prefix for real users.
-           */
-          who = uri.substring(start, uri.length() - 1); // Remove trailing "/"
-        } else {
-          who = uri;
-        }
-
-        if (who == null) {
-          return null;
-        }
-
-        BwPrincipal p = BwPrincipal.makePrincipal(whoType);
-
-        p.setAccount(who);
-        p.setPrincipalRef(uri);
-
-        return p;
-      }
-
-      throw new CalFacadeException(CalFacadeException.principalNotFound);
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    return BwPrincipal.makePrincipal(href);
   }
 
   @Override
@@ -792,11 +685,6 @@ public abstract class AbstractDirImpl implements Directories {
   }
 
   @Override
-  public String getPrincipalRoot() throws CalFacadeException {
-    return getSystemRoots().getPrincipalRoot();
-  }
-
-  @Override
   public Collection<String> getGroups(final String rootUrl,
                                       final String principalUrl) throws CalFacadeException {
     Collection<String> urls = new TreeSet<String>();
@@ -807,13 +695,13 @@ public abstract class AbstractDirImpl implements Directories {
        */
 
       /* ResourceUri should be the principals root or user principal root */
-      if (!rootUrl.equals(getSystemRoots().getPrincipalRoot()) &&
-          !rootUrl.equals(getSystemRoots().getUserPrincipalRoot())) {
+      if (!rootUrl.equals(BwPrincipal.principalRoot) &&
+          !rootUrl.equals(BwPrincipal.userPrincipalRoot)) {
         return urls;
       }
 
-      urls.add(Util.buildPath(colPathEndsWithSlash, 
-                              getSystemRoots().getUserPrincipalRoot(), "/",
+      urls.add(Util.buildPath(colPathEndsWithSlash,
+                              BwPrincipal.userPrincipalRoot, "/",
                               cb.getCurrentUser().getAccount()));
     } else {
       // XXX incomplete
@@ -1208,28 +1096,6 @@ public abstract class AbstractDirImpl implements Directories {
     return unauthCdinfo;
   }
 
-  /* Get a logger for messages
-   */
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(this, t);
-  }
-
-  protected void warn(final String msg) {
-    getLogger().warn(msg);
-  }
-
-  protected void trace(final String msg) {
-    getLogger().debug(msg);
-  }
-
   /* ====================================================================
    *  Private methods.
    * ==================================================================== */
@@ -1375,7 +1241,7 @@ public abstract class AbstractDirImpl implements Directories {
       final int SC_MULTI_STATUS = 207; // not defined for some reason
       if (res != SC_MULTI_STATUS) {
         if (debug) {
-          trace("Got response " + res + " for path " + url);
+          debug("Got response " + res + " for path " + url);
         }
 
         return null;

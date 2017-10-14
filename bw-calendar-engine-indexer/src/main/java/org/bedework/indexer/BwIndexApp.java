@@ -19,7 +19,10 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.IndexProperties;
+import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
+import org.bedework.calfacade.indexing.IndexStatsResponse;
+import org.bedework.calfacade.indexing.ReindexResponse;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
@@ -134,7 +137,29 @@ public class BwIndexApp extends JmsSysEventListener {
     }
   }
 
-  void crawl() throws Throwable {
+  public String newIndexes() throws CalFacadeException {
+    return getCrawler().newIndexes();
+  }
+
+  public ReindexResponse reindex(final String indexName) throws CalFacadeException {
+    return getCrawler().reindex(indexName);
+  }
+
+  public IndexStatsResponse getIndexStats(final String indexName) throws CalFacadeException {
+    return getCrawler().getIndexStats(indexName);
+  }
+
+  /** Move the production index alias to the given index
+   *
+   * @param indexName name of index to be aliased
+   * @return status code- 0 for OK
+   * @throws CalFacadeException on error
+   */
+  public int setProdAlias(final String indexName) throws CalFacadeException {
+    return getCrawler().setProdAlias(indexName);
+  }
+
+  void crawl() throws CalFacadeException {
     final Crawl c = getCrawler();
 
     c.crawl();
@@ -142,7 +167,7 @@ public class BwIndexApp extends JmsSysEventListener {
     c.checkThreads();
   }
 
-  private Crawl getCrawler() throws Throwable {
+  private Crawl getCrawler() {
     if (crawler != null) {
       return crawler;
     }

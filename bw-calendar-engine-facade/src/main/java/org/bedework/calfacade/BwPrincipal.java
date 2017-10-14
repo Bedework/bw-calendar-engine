@@ -18,22 +18,30 @@
 */
 package org.bedework.calfacade;
 
+import org.bedework.access.AccessException;
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwDbentity;
+import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
 import org.bedework.util.xml.FromXmlCallback;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import java.net.URI;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.TreeSet;
 
 /** Value object to represent a calendar principal. Principals may be users,
@@ -60,7 +68,35 @@ import java.util.TreeSet;
 public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
                                   implements AccessPrincipal,
                                   Comparator<BwPrincipal> {
-  /** The name by which this principal is identified, unique within
+  public final static String principalRoot = "/principals/";
+
+  public final static String groupPrincipalRoot = "/principals/groups/";
+  public final static String hostPrincipalRoot = "/principals/hosts/";
+  public final static String resourcePrincipalRoot = "/principals/resources/";
+  public final static String ticketPrincipalRoot = "/principals/tickets/";
+  public final static String userPrincipalRoot = "/principals/users/";
+  public final static String venuePrincipalRoot = "/principals/locations/";
+
+  public final static String bwadmingroupPrincipalRoot =
+          "/principals/groups/bwadmin/";
+
+  public final static String publicUser = "public-user";
+
+  private final static HashMap<String, Integer> toWho = new HashMap<>();
+  private final static HashMap<Integer, String> fromWho = new HashMap<>();
+
+  static {
+    initWhoMaps(userPrincipalRoot, WhoDefs.whoTypeUser);
+    initWhoMaps(groupPrincipalRoot, WhoDefs.whoTypeGroup);
+    initWhoMaps(ticketPrincipalRoot, WhoDefs.whoTypeTicket);
+    initWhoMaps(resourcePrincipalRoot, WhoDefs.whoTypeResource);
+    initWhoMaps(venuePrincipalRoot, WhoDefs.whoTypeVenue);
+    initWhoMaps(hostPrincipalRoot, WhoDefs.whoTypeHost);
+
+    initWhoMaps(bwadmingroupPrincipalRoot, WhoDefs.whoTypeGroup);
+  }
+
+  /* The name by which this principal is identified, unique within
    * its kind
    */
   private String account;  // null for guest
@@ -163,6 +199,139 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
    */
   public static BwPrincipal makeLocationPrincipal() {
     return new BwLocpr();
+  }
+
+  /* ====================================================================
+   *                   Principal methods
+   * ==================================================================== */
+
+  public static boolean isPrincipal(final String href) {
+    if (href == null) {
+      return false;
+    }
+
+    /* assuming principal root is "principals" we expect something like
+     * "/principals/users/jim".
+     *
+     * Anything with fewer or greater elements is a collection or entity.
+     */
+
+    int pos1 = href.indexOf("/", 1);
+
+    if (pos1 < 0) {
+      return false;
+    }
+
+    if (!href.substring(0, pos1 + 1).equals(principalRoot)) {
+      return false;
+    }
+
+    int pos2 = href.indexOf("/", pos1 + 1);
+
+    if (pos2 < 0) {
+      return false;
+    }
+
+    for (String root: toWho.keySet()) {
+      if (href.startsWith(root)) {
+        return !href.equals(root);
+      }
+    }
+
+    /*
+    int pos3 = val.indexOf("/", pos2 + 1);
+
+    if ((pos3 > 0) && (val.length() > pos3 + 1)) {
+      // More than 3 elements
+      return false;
+    }
+
+    if (!toWho.containsKey(val.substring(0, pos2))) {
+      return false;
+    }
+    */
+
+    /* It's one of our principal hierarchies */
+
+    return false;
+  }
+  public static BwPrincipal makePrincipal(final String href) throws CalFacadeException {
+    try {
+      final String uri =
+              URLDecoder.decode(new URI(
+                      URLEncoder.encode(href, "UTF-8")
+              ).getPath(), "UTF-8");
+
+      if (!isPrincipal(uri)) {
+        return null;
+      }
+
+      int start = -1;
+
+      int end = uri.length();
+      if (uri.endsWith("/")) {
+        end--;
+      }
+
+      for (String prefix: toWho.keySet()) {
+        if (!uri.startsWith(prefix)) {
+          continue;
+        }
+
+        if (uri.equals(prefix)) {
+          // Trying to browse user principals?
+          return null;
+        }
+
+        int whoType = toWho.get(prefix);
+        String who;
+
+        if ((whoType == WhoDefs.whoTypeUser) ||
+                (whoType == WhoDefs.whoTypeGroup)) {
+          /* Strip off the principal prefix for real users.
+           */
+          who = uri.substring(prefix.length(), end);
+        } else {
+          who = uri;
+        }
+
+        final BwPrincipal p;
+
+        if ((whoType == WhoDefs.whoTypeGroup) &&
+                prefix.equals(bwadmingroupPrincipalRoot)) {
+          p = new BwAdminGroup();
+        } else {
+          p = BwPrincipal.makePrincipal(whoType);
+        }
+
+        if (p != null) {
+          p.setAccount(who);
+          p.setPrincipalRef(uri);
+          return p;
+        }
+      }
+
+      throw new CalFacadeException(CalFacadeException.principalNotFound);
+    } catch (CalFacadeException cfe) {
+      throw cfe;
+    } catch (Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  public static String makePrincipalHref(final String id,
+                                         final int whoType) throws AccessException {
+    if (isPrincipal(id)) {
+      return id;
+    }
+
+    final String root = fromWho.get(whoType);
+
+    if (root == null) {
+      throw new AccessException(CalFacadeException.unknownPrincipalType);
+    }
+
+    return Util.buildPath(true, root, "/", id);
   }
 
   /* ====================================================================
@@ -457,6 +626,12 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
     } else {
       ts.append(name, "(" + val.getId() + ", " + val.getPrincipalRef() + ")");
     }
+  }
+
+  private static void initWhoMaps(final String prefix,
+                                  final int whoType) {
+    toWho.put(prefix, whoType);
+    fromWho.put(whoType, prefix);
   }
 
   /* ====================================================================

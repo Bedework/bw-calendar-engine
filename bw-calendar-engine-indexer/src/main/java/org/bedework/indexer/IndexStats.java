@@ -18,6 +18,9 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
+import org.bedework.calfacade.indexing.IndexStatistics;
+
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -28,50 +31,21 @@ import java.util.List;
  * @author douglm
  *
  */
-public class IndexStats {
-  private String name;
-
+public class IndexStats extends IndexStatistics {
   private transient Logger log;
-
-  /** */
-  public enum StatType {
-    /** */
-    principals,
-
-    /** */
-    collections,
-
-    /** */
-    entities,
-
-    /** */
-    categories,
-
-    /** */
-    contacts,
-
-    /** */
-    locations,
-
-    /** */
-    unreachableEntities
-  }
 
   /**
    * @param name - name of the statistics
    */
   public IndexStats(final String name) {
-    this.name = name;
+    super(name);
   }
-
-  /**   */
-  private long[] counts = new long[StatType.values().length];
 
   /** */
   public void stats() {
-    info(name);
+    info(getName());
 
-    for (final StatType st: StatType.values()) {
+    for (final IndexedType st: IndexedType.values()) {
       info(stat(st));
     }
   }
@@ -82,35 +56,19 @@ public class IndexStats {
   public List<String> statsList() {
     final List<String> infoLines = new ArrayList<>();
 
-    infoLines.add(name + "\n");
+    infoLines.add(getName() + "\n");
 
-    for (final StatType st: StatType.values()) {
+    for (final IndexedType st: IndexedType.values()) {
       infoLines.add(stat(st) + "\n");
     }
 
     return infoLines;
   }
 
-  /**
-   * @param st - type of count
-   */
-  public synchronized void inc(final StatType st) {
-    counts[st.ordinal()]++;
-  }
-
-  /**
-   * @param st - type of count
-   * @param val - value to add
-   */
-  public synchronized void inc(final StatType st,
-                               final long val) {
-    counts[st.ordinal()] += val;
-  }
-
   private static final String blanks = "                                    ";
   private static final int paddedNmLen = 18;
 
-  private String stat(final StatType st) {
+  private String stat(final IndexedType st) {
     final StringBuilder sb = new StringBuilder();
     final String name = st.toString();
 
@@ -120,7 +78,7 @@ public class IndexStats {
 
     sb.append(name);
     sb.append(": ");
-    sb.append(counts[st.ordinal()]);
+    sb.append(getCount(st));
 
     return sb.toString();
   }

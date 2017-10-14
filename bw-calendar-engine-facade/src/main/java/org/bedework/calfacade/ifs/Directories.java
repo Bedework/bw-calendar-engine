@@ -248,12 +248,6 @@ public interface Directories extends Serializable {
   String makePrincipalUri(String id,
                           int whoType) throws CalFacadeException;
 
-  /** Used by caldav to return the root of the principal hierarchy
-   * @return String principal root
-   * @throws CalFacadeException
-   */
-  String getPrincipalRoot() throws CalFacadeException;
-
   /** Given a uri return a calendar address.
    * This should handle actions such as turning<br/>
    *   auser

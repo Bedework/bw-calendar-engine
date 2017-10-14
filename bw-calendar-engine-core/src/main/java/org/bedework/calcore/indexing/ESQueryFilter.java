@@ -49,6 +49,7 @@ import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.BoolFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.FilteredQueryBuilder;
 import org.elasticsearch.index.query.MatchAllFilterBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
@@ -406,6 +407,14 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
     return fb;
   }
   
+  final FilterBuilder overridesOnly(final String uid) {
+    FilterBuilder flt = new TermFilterBuilder("_type",
+                                              BwIndexer.docTypeEvent);
+    
+    flt = and(flt, addTerm(PropertyInfoIndex.UID, uid), null);
+    return and(flt, addTerm(PropertyInfoIndex.OVERRIDE, "true"), null);
+  }
+  
   final FilterBuilder recurTerms() throws CalFacadeException {
     /* If the search is for expanded events we want instances or
        overrides or non-recurring masters only.
@@ -463,6 +472,41 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
 //    queryFiltered = false; // Reset it.
 
     return limit;
+  }
+  
+  public QueryBuilder getAllForReindex(final String docType) {
+    FilterBuilder limit;
+    if (docType != null) {
+      limit = addTerm("_type", docType);
+    } else {
+      FilterBuilder f = addTerm("_type",
+                                      BwIndexer.docTypeCategory);
+      f = or(f, addTerm("_type",
+                        BwIndexer.docTypeContact));
+      f = or(f, addTerm("_type",
+                        BwIndexer.docTypeLocation));
+      f = or(f, addTerm("_type",
+                        BwIndexer.docTypeEvent));
+      limit = not(f);
+
+      f = addTerm("_type",
+                  BwIndexer.docTypeEvent);
+      f = and(f, addTerm(PropertyInfoIndex.MASTER, "true"), null);
+      limit = or(limit, f);
+    }
+
+    return new FilteredQueryBuilder(null, limit);
+  }
+
+  public QueryBuilder getAllForReindexStats() {
+    FilterBuilder limit = not(addTerm("_type",
+                                      BwIndexer.docTypeEvent));
+
+    limit = or(limit, addTerm(PropertyInfoIndex.MASTER, "true"));
+
+    limit = or(limit, addTerm(PropertyInfoIndex.OVERRIDE, "true"));
+
+    return new FilteredQueryBuilder(null, limit);
   }
 
   /**
@@ -629,10 +673,9 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
    * @param pi property info index
    * @param val value
    * @return TermFilterBuilder or AndFilterBuilder
-   * @throws CalFacadeException on error
    */
   public FilterBuilder addTerm(final PropertyInfoIndex pi,
-                               final String val) throws CalFacadeException {
+                               final String val) {
     if ((pi != PropertyInfoIndex.HREF) &&
             (pi != PropertyInfoIndex.COLLECTION)) {
       queryFiltered = true;
@@ -645,10 +688,9 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
    * @param name
    * @param val
    * @return TermFilterBuilder or AndFilterBuilder
-   * @throws CalFacadeException
    */
   public FilterBuilder addTerm(final String name,
-                               final String val) throws CalFacadeException {
+                               final String val) {
     return FilterBuilders.termFilter(name, val);
   }
 

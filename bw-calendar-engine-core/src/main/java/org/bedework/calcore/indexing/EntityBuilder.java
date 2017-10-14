@@ -395,7 +395,7 @@ public class EntityBuilder extends EntityBuilderBase {
     ev.setRecipients(getStringSet(PropertyInfoIndex.RECIPIENT));
     ev.setComments((Set<BwString>)restoreBwStringSet(
             PropertyInfoIndex.COMMENT, false));
-    ev.setContacts(restoreContacts());
+    restoreContacts(ev);
     ev.setResources((Set<BwString>)restoreBwStringSet(
             PropertyInfoIndex.RESOURCES, false));
 
@@ -609,29 +609,20 @@ public class EntityBuilder extends EntityBuilderBase {
     return xprops;
   }
 
-  private Set<BwContact> restoreContacts() throws CalFacadeException {
+  private void restoreContacts(final BwEvent ev) throws CalFacadeException {
     final List<Object> cFlds = getFieldValues(PropertyInfoIndex.CONTACT);
 
     if (Util.isEmpty(cFlds)) {
-      return null;
+      return;
     }
 
-    final Set<BwContact> cs = new TreeSet<>();
+    final Set<String> uids = new TreeSet<>();
 
     for (final Object o: cFlds) {
       try {
         pushFields(o);
-
-        final BwContact c = new BwContact();
-
-        c.setCn((BwString)restoreBwString(PropertyInfoIndex.CN,
-                                          false));
-        c.setUid(getString(PropertyInfoIndex.UID));
-        c.setLink(getString(ParameterInfoIndex.ALTREP));
-        c.setEmail(getString(PropertyInfoIndex.EMAIL));
-        c.setPhone(getString(PropertyInfoIndex.PHONE));
-
-        cs.add(c);
+        final String uid = getString(PropertyInfoIndex.UID);
+        uids.add(uid);
       } catch (IndexException ie) {
         throw new CalFacadeException(ie);
       } finally {
@@ -639,7 +630,7 @@ public class EntityBuilder extends EntityBuilderBase {
       }
     }
 
-    return cs;
+    ev.setContactUids(uids);
   }
 
   @SuppressWarnings("unchecked")

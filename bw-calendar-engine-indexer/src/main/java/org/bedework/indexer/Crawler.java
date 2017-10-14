@@ -49,7 +49,6 @@ public abstract class Crawler extends ProcessorBase {
    * @param entityDelay
    * @param skipPaths - paths to skip
    * @param indexRootPath - where we build the index
-   * @throws CalFacadeException
    */
   public Crawler(final CrawlStatus status,
                  final String name,
@@ -58,7 +57,7 @@ public abstract class Crawler extends ProcessorBase {
                  final long batchDelay,
                  final long entityDelay,
                  final List<String> skipPaths,
-                 final String indexRootPath) throws CalFacadeException {
+                 final String indexRootPath) {
     super(name, adminAccount, principal, batchDelay, entityDelay,
           skipPaths, indexRootPath);
 

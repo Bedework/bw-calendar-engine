@@ -19,7 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.indexer.IndexStats.StatType;
+import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 
 import java.util.List;
 
@@ -44,7 +44,6 @@ public class PrincipalsProcessor extends Crawler {
    * @param entityDelay
    * @param skipPaths - paths to skip
    * @param indexRootPath - where we build the index
-   * @throws CalFacadeException
    */
   public PrincipalsProcessor(final CrawlStatus status,
                              final String name,
@@ -52,7 +51,7 @@ public class PrincipalsProcessor extends Crawler {
                              final long batchDelay,
                              final long entityDelay,
                              final List<String> skipPaths,
-                             final String indexRootPath) throws CalFacadeException {
+                             final String indexRootPath) {
     super(status,
           name, adminAccount, null, batchDelay, entityDelay,
           skipPaths, indexRootPath);
@@ -74,7 +73,7 @@ public class PrincipalsProcessor extends Crawler {
 
       if (refs == null) {
         if (debug) {
-          debugMsg("Principals: No more");
+          debug("Principals: No more");
         }
 
         break;
@@ -98,7 +97,7 @@ public class PrincipalsProcessor extends Crawler {
 
       for (final String href: refs.refs) {
         if (debug) {
-          debugMsg("Principals: Processing principal " + href);
+          debug("Principals: Processing principal " + href);
         }
 
         getStatus().currentStatus = "Principals: Processing principal " + href;
@@ -115,10 +114,10 @@ public class PrincipalsProcessor extends Crawler {
         final IndexerThread it = getPrincipalThread(p);
 
         if (debug) {
-          debugMsg("Principals: Got thread for " + href);
+          debug("Principals: Got thread for " + href);
         }
 
-        getStatus().stats.inc(StatType.principals);
+        getStatus().stats.inc(IndexedType.principals);
 
         it.start();
       }

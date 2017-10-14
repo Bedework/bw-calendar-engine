@@ -25,7 +25,7 @@ import java.io.Serializable;
 import static org.bedework.calfacade.responses.Response.Status.failed;
 import static org.bedework.calfacade.responses.Response.Status.ok;
 
-/** Base for web service responses
+/** Base for service responses
  *
  * @author Mike Douglass douglm - spherical cow
  */
@@ -34,7 +34,10 @@ public class Response implements Serializable {
     ok,
     
     notFound,
-    
+
+    /** Somethign is currently running */
+    processing,
+
     failed;
   }
   

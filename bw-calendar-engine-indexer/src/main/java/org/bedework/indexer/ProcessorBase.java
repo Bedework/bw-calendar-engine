@@ -22,8 +22,8 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.indexer.IndexStats.StatType;
 import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
@@ -56,7 +56,6 @@ public abstract class ProcessorBase extends CalSys implements Processor {
    * @param entityDelay - delay between entities - milliseconds
    * @param skipPaths - paths to skip
    * @param indexRootPath - where we build the index
-   * @throws CalFacadeException
    */
   public ProcessorBase(final String name,
                        final String adminAccount,
@@ -64,7 +63,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
                        final long batchDelay,
                        final long entityDelay,
                        final List<String> skipPaths,
-                       final String indexRootPath) throws CalFacadeException {
+                       final String indexRootPath) {
     super(name, adminAccount, principal);
 
     this.batchDelay = batchDelay;
@@ -133,18 +132,18 @@ public abstract class ProcessorBase extends CalSys implements Processor {
                                  final String path) throws CalFacadeException {
     if (skipThis(path)) {
       if (debug) {
-        debugMsg("Skipping " + path);
+        debug("Skipping " + path);
       }
       return;
     }
 
     if (debug) {
-      debugMsg("indexCollection(" + path + ")");
+      debug("indexCollection(" + path + ")");
     }
 
     status.currentStatus = "indexCollection(" + path + ")";
 
-    status.stats.inc(StatType.collections);
+    status.stats.inc(IndexedType.collections);
 
     try {
       BwCalendar col = null;
@@ -157,7 +156,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
 
       if ((col == null) || !hasAccess(col)) {
         if (debug) {
-          debugMsg("path " + path + " not found");
+          debug("path " + path + " not found");
         }
 
         return;

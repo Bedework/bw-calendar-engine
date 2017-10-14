@@ -36,10 +36,10 @@ public class CrawlStatus {
   public IndexStats stats;
 
   /** Generated when complete */
-  public List<String> infoLines = new ArrayList<String>();
+  public List<String> infoLines = new ArrayList<>();
 
   /**
-   * @param name
+   * @param name of status
    */
   public CrawlStatus(final String name) {
     this.name = name;

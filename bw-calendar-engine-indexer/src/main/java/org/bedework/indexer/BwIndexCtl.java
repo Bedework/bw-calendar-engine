@@ -20,6 +20,10 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
+import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
+import org.bedework.calfacade.indexing.IndexStatistics;
+import org.bedework.calfacade.indexing.IndexStatsResponse;
+import org.bedework.calfacade.indexing.ReindexResponse;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.misc.AbstractProcessorThread;
@@ -30,6 +34,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.naming.NameNotFoundException;
+
+import static org.bedework.calfacade.responses.Response.Status.failed;
 
 /**
  * @author douglm
@@ -110,8 +116,6 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       try {
         getIndexApp().crawl();
         setStatus(statusDone);
-      } catch (InterruptedException ignored) {
-        setStatus(statusInterrupted);
       } catch (Throwable t) {
         setStatus(statusFailed);
         if (!showedTrace) {
@@ -141,7 +145,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   }
 
   /**
-   * @param name
+   * @param name of mbean
    * @return object name value for the mbean with this name
    */
   public static String getServiceName(final String name) {
@@ -382,9 +386,6 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     return res;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexCtlMBean#rebuildIndex()
-   */
   @Override
   public String rebuildIndex() {
     try {
@@ -410,6 +411,59 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       error(t);
 
       return t.getLocalizedMessage();
+    }
+  }
+
+  @Override
+  public String newIndexes() {
+    try {
+      return getIndexApp().newIndexes();
+    } catch (final Throwable t) {
+      return "Failed: " + t.getLocalizedMessage();
+    }
+  }
+
+  @Override
+  public String reindex(final String indexName) {
+    try {
+      final ReindexResponse resp = getIndexApp().reindex(indexName);
+
+      info(resp.toString());
+
+      return "ok";
+    } catch (final Throwable t) {
+      return "Failed: " + t.getLocalizedMessage();
+    }
+  }
+
+  @Override
+  public String setProdAlias(final String indexName) {
+    try {
+      final int status = getIndexApp().setProdAlias(indexName);
+
+      if (status == 0) {
+        return "ok";
+      }
+
+      return "Failed with status " + status;
+    } catch (final Throwable t) {
+      return "Failed: " + t.getLocalizedMessage();
+    }
+  }
+
+  @Override
+  public IndexStatsResponse indexStats(final String indexName) {
+    try {
+      final IndexStatsResponse resp = getIndexApp().getIndexStats(indexName);
+
+      info(resp.toString());
+
+      return resp;
+    } catch (final Throwable t) {
+      IndexStatsResponse resp = new IndexStatsResponse("Failed");
+      resp.setStatus(failed);
+      resp.setMessage(t.getLocalizedMessage());
+      return resp;
     }
   }
 
@@ -502,6 +556,35 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     if (!status.infoLines.isEmpty()) {
       res.addAll(status.infoLines);
     }
+  }
+
+  private void outputStatus(final ReindexResponse status,
+                            final List<String> res) {
+    outLine(res, "--------------------------------------");
+
+    outLine(res, status.getName());
+
+    outLine(res, "     status: " + status.getStatus());
+
+    if (status.getMessage() != null) {
+      outLine(res, "    message: " + status.getMessage());
+    }
+
+    outLine(res, "processed: " + status.getProcessed());
+
+    outLine(res, "recurring: " + status.getRecurring());
+
+    outLine(res, "totalFailed: " + status.getTotalFailed());
+
+    final IndexStatistics is = status.getStats();
+
+    if (is != null) {
+      for (final IndexedType type: IndexedType.values()) {
+        outLine(res, type.toString() + ": " + is.getCount(type));
+      }
+    }
+
+    outLine(res, "");
   }
 
   private void outLine(final List<String> res,

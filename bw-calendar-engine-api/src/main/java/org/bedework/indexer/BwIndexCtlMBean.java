@@ -19,6 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.configs.IndexProperties;
+import org.bedework.calfacade.indexing.IndexStatsResponse;
 import org.bedework.util.jmx.ConfBaseMBean;
 import org.bedework.util.jmx.MBeanInfo;
 
@@ -60,11 +61,33 @@ public interface BwIndexCtlMBean extends ConfBaseMBean, IndexProperties {
    */
   List<String> rebuildStatus();
 
-  /** Crawl the data and create indexes - listener should have been stopped.
+  /** Crawl the db data and create indexes - listener should have been stopped.
    *
    * @return message
    */
   String rebuildIndex();
+
+  /** Creates a new index for use by reindex
+   * 
+   * @return index name.
+   */
+  String newIndexes();
+
+  /** Reindex the current index into the given index. Used for schema 
+   * changes etc.
+   *
+   * @return result.
+   */
+  String reindex(String indexName);
+
+  /** Move the production index alias to the given index
+   *
+   * @param indexName name of index to be aliased
+   * @return result.
+   */
+  String setProdAlias(final String indexName);
+
+  IndexStatsResponse indexStats(String indexName);
 
   /**
    * @return list of indexes maintained by indexer.

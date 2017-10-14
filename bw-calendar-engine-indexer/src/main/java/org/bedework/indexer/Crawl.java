@@ -22,6 +22,8 @@ import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
+import org.bedework.calfacade.indexing.IndexStatsResponse;
+import org.bedework.calfacade.indexing.ReindexResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,9 +66,8 @@ public class Crawl extends CalSys {
 
   /**
    * @param props - our config
-   * @throws CalFacadeException
    */
-  public Crawl(final IndexProperties props) throws CalFacadeException {
+  public Crawl(final IndexProperties props) {
     super("Crawler", props.getAccount(),
           //true,
           null);
@@ -143,8 +144,6 @@ public class Crawl extends CalSys {
       setStatus(status, "Public indexing completed");
     }
 
-    endIndexing(indexName);
-
     final long millis = System.currentTimeMillis() - start;
     status.infoLines.add("Indexing took " +
       String.format("%d min, %d sec",
@@ -187,13 +186,11 @@ public class Crawl extends CalSys {
     }
   }
 
-  private String newIndexes(final CrawlStatus cr) throws CalFacadeException {
+  public String newIndexes() throws CalFacadeException {
     try (BwSvc bw = getAdminBw()) {
-        // Switch indexes.
+      // Switch indexes.
 
       if (props.getUserIndexName() == null) {
-        outErr(cr,
-               "No index name defined in system properties");
         throw new CalFacadeException(
                 "No index name defined in system properties");
       }
@@ -201,20 +198,58 @@ public class Crawl extends CalSys {
       final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
                                                     null);
 
-      final String indexName = idx.newIndex(props.getUserIndexName());
-
-      setStatus(cr, "Switched index to " + indexName);
-
-      return indexName;
+      return idx.newIndex(props.getUserIndexName());
     }
   }
 
-  private void endIndexing(final String indexName) throws CalFacadeException {
+  public ReindexResponse reindex(final String indexName) throws CalFacadeException {
+    try (BwSvc bw = getAdminBw()) {
+      // Switch indexes.
+
+      if (props.getUserIndexName() == null) {
+        throw new CalFacadeException(
+                "No index name defined in system properties");
+      }
+
+      final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
+                                                    null);
+
+      return idx.reindex(indexName);
+    }
+  }
+
+  public IndexStatsResponse getIndexStats(final String indexName) throws CalFacadeException {
+    try (BwSvc bw = getAdminBw()) {
+      return bw.getSvci().getIndexer(adminAccount,
+                                     null).getIndexStats(indexName);
+    }
+  }
+
+  /** Move the production index alias to the given index
+   *
+   * @param indexName name of index to be aliased
+   * @return status code- 0 for OK
+   * @throws CalFacadeException on error
+   */
+  public int setProdAlias(final String indexName) throws CalFacadeException {
     try (BwSvc bw = getAdminBw()) {
       final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
                                                     indexName);
 
-      idx.swapIndex(indexName, props.getUserIndexName());
+      return idx.setAlias(indexName, props.getUserIndexName());
+    }
+  }
+
+  private String newIndexes(final CrawlStatus cr) throws CalFacadeException {
+    try {
+      final String indexName = newIndexes();
+
+      setStatus(cr, "Switched index to " + indexName);
+
+      return indexName;
+    } catch (final Throwable t) {
+      outErr(cr, t.getLocalizedMessage());
+      throw t;
     }
   }
 

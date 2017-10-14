@@ -42,6 +42,7 @@ import java.util.TreeSet;
 public interface BwIndexer extends Serializable {
   // Types of entity we index
   String docTypeUnknown = "unknown";
+  String docTypePrincipal = "principal";
   String docTypeCollection = "collection";
   String docTypeCategory = "category";
   String docTypeLocation = "location";
@@ -51,6 +52,43 @@ public interface BwIndexer extends Serializable {
   String docTypePoll = "vpoll";
   //        IcalDefs.entityTypeNames[IcalDefs.entityTypeVpoll];
 
+  /** */
+  public enum IndexedType {
+    /** */
+    principals(docTypePrincipal),
+
+    /** */
+    collections(docTypeCollection),
+
+    /** */
+    events(docTypeEvent),
+
+    /** */
+    vpoll(docTypePoll),
+
+    /** */
+    categories(docTypeCategory),
+
+    /** */
+    contacts(docTypeContact),
+
+    /** */
+    locations(docTypeLocation),
+
+    /** */
+    unreachableEntities(docTypeUnknown);
+    
+    private final String docType;
+
+    private IndexedType(final String docType) {
+      this.docType = docType;
+    }
+
+    public String getDocType() {
+      return docType;
+    }
+  }
+  
   /* Following used for the id */
   String[] masterDocTypes = {
           "masterEvent",
@@ -106,6 +144,29 @@ public interface BwIndexer extends Serializable {
    */
   String currentChangeToken() throws CalFacadeException;
 
+  /** Will return a response indicating what happened. An immediate 
+   * response with status processing indicates a process is already 
+   * running.
+   * 
+   * @param name of index
+   * @return final statistics
+   */
+  ReindexResponse reindex(String name);
+
+  /**
+   *
+   * @param indexName of index
+   * @return current statistics
+   */
+  ReindexResponse getReindexStatus(String indexName);
+
+  /**
+   *
+   * @param indexName of index
+   * @return current statistics
+   */
+  IndexStatsResponse getIndexStats(String indexName);
+  
   /** Called to find entries that match the search string. This string may
    * be a simple sequence of keywords or some sort of query the syntax of
    * which is determined by the underlying implementation.
@@ -284,14 +345,14 @@ public interface BwIndexer extends Serializable {
    */
   List<String> purgeIndexes() throws CalFacadeException;
 
-  /** create a new index and start using it.
+  /** Set alias on the given index - usually to make it the production index.
    *
-   * @param index   swap this with the other
-   * @param other   new index
+   * @param index   name of index to be aliased
+   * @param alias   to point at index
    * @return 0 for OK or HTTP status from indexer
    * @throws CalFacadeException
    */
-  int swapIndex(String index, String other) throws CalFacadeException;
+  int setAlias(String index, String alias) throws CalFacadeException;
 
   /** Find a category owned by the current user which has a named
    * field which matches the value.

@@ -34,6 +34,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
+import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
@@ -41,8 +42,11 @@ import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.IndexStatsResponse;
+import org.bedework.calfacade.indexing.ReindexResponse;
 import org.bedework.calfacade.indexing.SearchResult;
 import org.bedework.calfacade.indexing.SearchResultEntry;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.icalendar.RecurUtil;
@@ -74,11 +78,15 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.status.IndicesStatusRequestBuilder;
 import org.elasticsearch.action.admin.indices.status.IndicesStatusResponse;
+import org.elasticsearch.action.bulk.BulkProcessor;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -101,6 +109,8 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.FilterBuilder;
+import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.index.query.FilteredQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -127,8 +137,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 import static org.bedework.calcore.indexing.DocBuilder.ItemKind.entity;
+import static org.bedework.calfacade.indexing.BwIndexer.IndexedType.unreachableEntities;
+import static org.bedework.calfacade.responses.Response.Status.failed;
+import static org.bedework.calfacade.responses.Response.Status.notFound;
+import static org.bedework.calfacade.responses.Response.Status.ok;
+import static org.bedework.calfacade.responses.Response.Status.processing;
 import static org.bedework.util.elasticsearch.DocBuilderBase.docTypeUpdateTracker;
 import static org.bedework.util.elasticsearch.DocBuilderBase.updateTrackerId;
 
@@ -173,7 +189,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   // private Object batchLock = new Object();
 
   private final boolean publick;
-  private final BwPrincipal principal;
+  private BwPrincipal principal;
   private final boolean superUser;
   
   private final AccessChecker accessCheck;
@@ -202,6 +218,28 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   private static long lastIndexTime;
 
   private final static long indexerDelay = 1100;
+  
+  /** String is name of index */
+  private Map<String, ReindexResponse> currentReindexing =
+          new HashMap<>();
+
+  private final static Map<String, IndexedType> docToType =
+          new HashMap<>();
+
+  static {
+    for (final IndexedType it: IndexedType.values()) {
+      docToType.put(it.getDocType(), it);
+    }
+  }
+
+  final static EventPropertiesCache<BwCategory> categories =
+          new EventPropertiesCache<>();
+
+  final static EventPropertiesCache<BwLocation> locations =
+          new EventPropertiesCache<>();
+
+  final static EventPropertiesCache<BwContact> contacts =
+          new EventPropertiesCache<>();
 
   /** Constructor
    *
@@ -418,7 +456,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         tui = null;
       }
       
-      if ((tui == null) || (tui.getCount() < ui.getCount())) {
+      if ((tui == null) || (!tui.getCount().equals(ui.getCount()))) {
         updateInfo.put(targetIndex, ui);
       } else {
         ui = tui;
@@ -426,6 +464,277 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
 
     return ui.getChangeToken();
+  }
+
+  private class BulkListener implements BulkProcessor.Listener {
+
+    @Override
+    public void beforeBulk(final long executionId,
+                           final BulkRequest request) {
+    }
+
+    @Override
+    public void afterBulk(final long executionId,
+                          final BulkRequest request,
+                          final BulkResponse response) {
+    }
+
+    @Override
+    public void afterBulk(final long executionId,
+                          final BulkRequest request,
+                          final Throwable failure) {
+      error(failure);
+    }
+  }
+
+  @Override
+  public ReindexResponse reindex(final String indexName) {
+    final ReindexResponse resp =
+            currentReindexing.getOrDefault(indexName,
+                                           new ReindexResponse(
+                                                   indexName));
+
+    if (resp.getStatus() == processing) {
+      return resp;
+    }
+
+    reindex(resp, indexName, docTypeCategory);
+    if (resp.getStatus() != ok) {
+      return resp;
+    }
+    reindex(resp, indexName, docTypeContact);
+    if (resp.getStatus() != ok) {
+      return resp;
+    }
+    reindex(resp, indexName, docTypeLocation);
+    if (resp.getStatus() != ok) {
+      return resp;
+    }
+    reindex(resp, indexName, null);
+
+    return resp;
+  }
+
+  private void reindex(final ReindexResponse resp,
+                       final String indexName,
+                       final String docType) {
+    // Only retrieve masters - we'll query for the overrides
+    final QueryBuilder qb = 
+            getFilters(RecurringRetrievalMode.entityOnly).getAllForReindex(docType);
+    final int timeoutMillis = 60000;  // 1 minute
+    final TimeValue tv = new TimeValue(timeoutMillis);
+    final int batchSize = 100;
+
+    final Client cl = getClient(resp);
+
+    if (cl == null) {
+      return;
+    }
+
+    // Start with default index as source
+    targetIndex = Util.buildPath(false, idxpars.getUserIndexName());
+
+    final BulkProcessor bulkProcessor =
+            BulkProcessor.builder(cl,
+                                  new BulkListener())
+                         .setBulkActions(batchSize)
+                         .setConcurrentRequests(3)
+                         .setFlushInterval(tv)
+                         .build();
+
+    SearchResponse scrollResp = cl.prepareSearch(targetIndex)
+                                  .setSearchType(SearchType.SCAN)
+                                  .setScroll(tv)
+                                  .setQuery(qb)
+                                  .setSize(batchSize)
+                                  .execute()
+                                  .actionGet(); //100 hits per shard will be returned for each scroll
+
+    // Switch to new index
+    targetIndex = indexName;
+
+    //Scroll until no hits are returned
+    while (true) {
+      for (final SearchHit hit : scrollResp.getHits().getHits()) {
+        final String dtype = hit.getType();
+
+        resp.incProcessed();
+
+        if (dtype.equals(docTypeUpdateTracker)) {
+          continue;
+        }
+
+        resp.getStats().inc(docToType.getOrDefault(dtype,
+                                                   unreachableEntities));
+
+        final ReindexResponse.Failure hitResp = new ReindexResponse.Failure();
+        final Object entity = makeEntity(hitResp, hit, null);
+
+        if (entity == null) {
+          warn("Unable to build entity " + hit.sourceAsString());
+          resp.incTotalFailed();
+          if (resp.getTotalFailed() < 50) {
+            resp.addFailure(hitResp);
+          }
+          continue;
+        }
+
+        if (entity instanceof BwShareableDbentity) {
+          final BwShareableDbentity ent = (BwShareableDbentity)entity;
+
+          try {
+            principal = BwPrincipal.makePrincipal(ent.getOwnerHref());
+          } catch (final CalFacadeException cfe) {
+            errorReturn(resp, cfe);
+            return;
+          }
+        }
+
+        if (entity instanceof EventInfo) {
+          // This might be a single event or a recurring event.
+
+          final EventInfo ei = (EventInfo)entity;
+          final BwEvent ev = ei.getEvent();
+          if (ev.getRecurring()) {
+            resp.incRecurring();
+          }
+
+          if (!reindexEvent(hitResp,
+                            indexName,
+                            hit,
+                            ei,
+                            bulkProcessor)) {
+            warn("Unable to iondex event " + hit.sourceAsString());
+            resp.incTotalFailed();
+            if (resp.getTotalFailed() < 50) {
+              resp.addFailure(hitResp);
+            }
+          }
+        } else {
+          final EsDocInfo doc = makeDoc(resp, entity);
+
+          if (doc == null) {
+            if (resp.getStatus() != ok) {
+              resp.addFailure(hitResp);
+            }
+              
+            continue;
+          }
+
+          final IndexRequest request =
+                  new IndexRequest(indexName, hit.type(), doc.getId());
+
+          request.source(doc.getSource());
+          bulkProcessor.add(request);
+
+          if (entity instanceof BwEventProperty) {
+            if (!cacheEvprop(hitResp, (BwEventProperty)entity)) {
+              resp.addFailure(hitResp);
+            }
+          }
+        }
+      }
+      scrollResp = cl.prepareSearchScroll(scrollResp.getScrollId()).
+              setScroll(tv).
+                             execute().
+                             actionGet();
+      //Break condition: No hits are returned
+      if (scrollResp.getHits().getHits().length == 0) {
+        break;
+      }
+    }
+
+    try {
+      bulkProcessor.awaitClose(10, TimeUnit.MINUTES);
+    } catch (final InterruptedException e) {
+      errorReturn(resp,
+                  "Final bulk close was interrupted. Records may be missing",
+                  failed);
+    }
+  }
+
+  @Override
+  public ReindexResponse getReindexStatus(final String indexName) {
+    return currentReindexing.get(indexName);
+  }
+
+  @Override
+  public IndexStatsResponse getIndexStats(final String indexName) {
+    IndexStatsResponse resp = new IndexStatsResponse(indexName);
+
+    if (indexName == null) {
+      return errorReturn(resp, "indexName must be provided");
+    }
+
+    final QueryBuilder qb = new FilteredQueryBuilder(null,
+                                                     FilterBuilders.matchAllFilter());
+    final int timeoutMillis = 60000;  // 1 minute
+    final TimeValue tv = new TimeValue(timeoutMillis);
+    final int batchSize = 100;
+
+    final Client cl = getClient(resp);
+
+    if (cl == null) {
+      return resp;
+    }
+
+    SearchResponse scrollResp = cl.prepareSearch(indexName)
+                                  .setSearchType(SearchType.SCAN)
+                                  .setScroll(tv)
+                                  .setQuery(qb)
+                                  .setSize(batchSize)
+                                  .execute()
+                                  .actionGet(); //100 hits per shard will be returned for each scroll
+
+    //Scroll until no hits are returned
+    while (true) {
+      for (final SearchHit hit : scrollResp.getHits().getHits()) {
+        resp.incProcessed();
+        final String dtype = hit.getType();
+
+        if (dtype.equals(docTypeEvent)) {
+          final EventInfo entity = (EventInfo)makeEntity(resp, hit, null);
+          if (entity == null) {
+            errorReturn(resp, "Unable to make doc for " + hit.sourceAsString());
+            continue;
+          }
+
+          final BwEvent ev = entity.getEvent();
+
+          if (ev instanceof BwEventAnnotation) {
+            final BwEventAnnotation ann = (BwEventAnnotation)ev;
+
+            if (ann.testOverride()) {
+              resp.incOverrides();
+            }
+          }
+
+          if (ev.getRecurring()) {
+            resp.incRecurring();
+          }
+
+          if (ev.getRecurrenceId() == null) {
+            resp.incMasters();
+          } else {
+            resp.incInstances();
+          }
+        } else {
+          resp.getStats().inc(docToType.getOrDefault(dtype,
+                                                     unreachableEntities));
+        }
+      }
+
+      scrollResp = cl.prepareSearchScroll(scrollResp.getScrollId()).
+              setScroll(tv)
+                     .execute()
+                     .actionGet();
+      //Break condition: No hits are returned
+      if (scrollResp.getHits().getHits().length == 0) {
+        break;
+      }
+    }
+
+    return resp;
   }
 
   @Override
@@ -675,6 +984,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     
     final Set<String> excluded = new TreeSet<>();
 
+    final Response evrestResp = new Response();
+
     for (final SearchHit hit : hits) {
       res.pageStart++;
       final String dtype = hit.getType();
@@ -710,6 +1021,11 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                   res.recurRetrieval.mode == Rmode.expanded);
           final EventInfo ei = (EventInfo)entity;
           final BwEvent ev = ei.getEvent();
+
+          restoreEvProps(evrestResp, ei);
+          if (evrestResp.getStatus() != ok) {
+            warn("Failed restore of ev props: " + evrestResp);
+          }
 
           final Acl.CurrentAccess ca =
                   res.accessCheck.checkAccess(ev,
@@ -819,7 +1135,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       // Unbatched
 
-      markUpdated();
+      markUpdated(docTypeFromClass(rec.getClass()));
 
       final IndexResponse resp = index(rec);
 
@@ -843,7 +1159,382 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
   }
 
-  private void markUpdated() throws CalFacadeException {
+  private boolean reindexEvent(final ReindexResponse.Failure resp,
+                               final String indexName,
+                               final SearchHit sh,
+                               final EventInfo ei,
+                               final BulkProcessor bulkProcessor) {
+    try {
+      /* If it's not recurring or a stand-alone instance index it */
+
+      final BwEvent ev = ei.getEvent();
+      if (!restoreEvProps(resp, ei)) {
+        return false;
+      }
+
+      if (!ev.testRecurring() && (ev.getRecurrenceId() == null)) {
+        final EsDocInfo doc = makeDoc(resp,
+                                      ei,
+                                      ItemKind.master,
+                                      ev.getDtstart(),
+                                      ev.getDtend(),
+                                      null, //ev.getRecurrenceId(),
+                                      null);
+        if (doc == null) {
+          return false;
+        }
+
+        final IndexRequest request =
+                new IndexRequest(indexName, sh.type(), doc.getId());
+
+        request.source(doc.getSource());
+        bulkProcessor.add(request);
+        return true;
+      }
+
+      if (ev.getRecurrenceId() != null) {
+        errorReturn(resp, "Not implemented - index of single override");
+        return false;
+      }
+
+      /* Fetch any overrides. */
+
+      final ESQueryFilter flts = getFilters(null);
+      final int batchSize = 100;
+      int start = 0;
+
+      while (true) {
+        // Search original for overrides
+        final SearchRequestBuilder srb = getClient()
+                .prepareSearch(Util.buildPath(false, idxpars.getUserIndexName()));
+
+        srb.setSearchType(SearchType.QUERY_THEN_FETCH)
+           .setPostFilter(flts.overridesOnly(ev.getUid()));
+        srb.setFrom(start);
+        srb.setSize(batchSize);
+
+        //if (debug) {
+        //  debug("Overrides: targetIndex=" + indexName +
+        //                "; srb=" + srb);
+        //}
+
+        final SearchResponse sresp = srb.execute().actionGet();
+
+        if (sresp.status() != RestStatus.OK) {
+          errorReturn(resp, "Search returned status " + sresp.status());
+
+          return false;
+        }
+
+        final SearchHit[] hits = sresp.getHits().getHits();
+
+        if ((hits == null) ||
+                (hits.length == 0)) {
+          // No more data - we're done
+          break;
+        }
+
+        for (final SearchHit hit : hits) {
+          final String dtype = hit.getType();
+
+          if (dtype == null) {
+            errorReturn(resp, "org.bedework.index.noitemtype");
+            return false;
+          }
+
+          final String kval = hit.getId();
+
+          if (kval == null) {
+            errorReturn(resp, "org.bedework.index.noitemkey");
+            return false;
+          }
+
+          final EntityBuilder eb = getEntityBuilder(
+                  hit.sourceAsMap());
+
+          Object entity = null;
+          switch (dtype) {
+            case docTypeEvent:
+            case docTypePoll:
+              entity = eb.makeEvent(kval, false);
+              final EventInfo oei = (EventInfo)entity;
+              final BwEvent oev = oei.getEvent();
+
+              if (!restoreEvProps(resp, oei)) {
+                return false;
+              }
+
+              if (oev instanceof BwEventAnnotation) {
+                final BwEventAnnotation ann = (BwEventAnnotation)oev;
+                final BwEvent proxy = new BwEventProxy(ann);
+                ann.setTarget(ev);
+                ann.setMaster(ev);
+
+                ei.addOverride(new EventInfo(proxy));
+                continue;
+              }
+          }
+          
+          // Unexpected type
+          errorReturn(resp, "Expected override only: " + dtype);
+          return false;
+        }
+
+        if (hits.length < batchSize) {
+          // All remaining in this batch - we're done
+          break;
+        }
+
+        start += batchSize;
+      }
+
+      final int maxYears;
+      final int maxInstances;
+      final DateLimits dl = new DateLimits();
+
+      if (ev.getPublick()) {
+        maxYears = unauthpars.getMaxYears();
+        maxInstances = unauthpars.getMaxInstances();
+      } else {
+        maxYears = authpars.getMaxYears();
+        maxInstances = authpars.getMaxInstances();
+      }
+
+      final RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
+
+      if (rp.instances.isEmpty()) {
+        errorReturn(resp, "No instances for an alleged recurring event.");
+        return false;
+      }
+
+      final String stzid = ev.getDtstart().getTzid();
+
+      int instanceCt = maxInstances;
+
+      final boolean dateOnly = ev.getDtstart().getDateType();
+
+      /* First build a table of overrides so we can skip these later
+       */
+      final Map<String, String> overrides = new HashMap<>();
+
+      /*
+      if (!Util.isEmpty(ei.getOverrideProxies())) {
+        for (BwEvent ov: ei.getOverrideProxies()) {
+          overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
+        }
+      }
+      */
+
+      if (!Util.isEmpty(ei.getOverrides())) {
+        for (final EventInfo oei: ei.getOverrides()) {
+          final BwEvent ov = oei.getEvent();
+          overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
+
+          final String dtstart;
+          if (ov.getDtstart().getDateType()) {
+            dtstart = ov.getRecurrenceId().substring(0, 8);
+          } else {
+            dtstart = ov.getRecurrenceId();
+          }
+          final BwDateTime rstart =
+                  BwDateTime.makeBwDateTime(ov.getDtstart().getDateType(),
+                                            dtstart,
+                                            stzid);
+          final BwDateTime rend =
+                  rstart.addDuration(BwDuration.makeDuration(ov.getDuration()));
+
+          final EsDocInfo doc = makeDoc(resp,
+                                        oei,
+                                        ItemKind.override,
+                                        rstart,
+                                        rend,
+                                        ov.getRecurrenceId(),
+                                        dl);
+
+          if (doc == null) {
+            return false;
+          }
+
+          final IndexRequest request =
+                  new IndexRequest(indexName, sh.type(), doc.getId());
+
+          request.source(doc.getSource());
+          bulkProcessor.add(request);
+
+          instanceCt--;
+        }
+      }
+
+      //<editor-fold desc="Emit all instances that aren't overridden">
+
+      for (final Period p: rp.instances) {
+        String dtval = p.getStart().toString();
+        if (dateOnly) {
+          dtval = dtval.substring(0, 8);
+        }
+
+        final BwDateTime rstart =
+                BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+
+        if (overrides.get(rstart.getDate()) != null) {
+          // Overrides indexed separately - skip this instance.
+          continue;
+        }
+
+        final String recurrenceId = rstart.getDate();
+
+        dtval = p.getEnd().toString();
+        if (dateOnly) {
+          dtval = dtval.substring(0, 8);
+        }
+
+        final BwDateTime rend =
+                BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+
+        final EsDocInfo doc = makeDoc(resp,
+                                      ei,
+                                      entity,
+                                      rstart,
+                                      rend,
+                                      recurrenceId,
+                                      dl);
+
+        if (doc == null) {
+          return false;
+        }
+
+        final IndexRequest request =
+                new IndexRequest(indexName, sh.type(), doc.getId());
+
+        request.source(doc.getSource());
+        bulkProcessor.add(request);
+
+        instanceCt--;
+        if (instanceCt == 0) {
+          // That's all you're getting from me
+          break;
+        }
+      }
+      //</editor-fold>
+
+      //<editor-fold desc="Emit the master event with a date range covering the entire period.">
+      final BwDateTime dtstart =
+              BwDateTime.makeBwDateTime(dateOnly,
+                                        dl.minStart, stzid);
+      final BwDateTime dtend =
+              BwDateTime.makeBwDateTime(dateOnly,
+                                        dl.maxEnd, stzid);
+      final EsDocInfo doc = makeDoc(resp,
+                                    ei,
+                                    ItemKind.master,
+                                    dtstart,
+                                    dtend,
+                                    null,
+                                    null);
+
+      if (doc == null) {
+        return false;
+      }
+
+      final IndexRequest request =
+              new IndexRequest(indexName, sh.type(), doc.getId());
+
+      request.source(doc.getSource());
+      bulkProcessor.add(request);
+      //</editor-fold>
+      return true;
+    } catch (final Throwable t) {
+      errorReturn(resp, t);
+      return false;
+    }
+  }
+
+  private boolean restoreEvProps(final Response resp,
+                                 final EventInfo ei) {
+    final BwEvent ev = ei.getEvent();
+
+    try {
+      final Set<String> catUids = ev.getCategoryUids();
+      if (!Util.isEmpty(catUids)) {
+        for (final String uid: catUids) {
+          BwCategory evprop = categories.get(uid);
+          if (evprop == null) {
+            evprop = fetchCat(uid, PropertyInfoIndex.UID);
+            if (evprop == null) {
+              errorReturn(resp, "Unable to fetch category " + uid);
+              return false;
+            }
+          }
+
+          ev.addCategory(evprop);
+        }
+      }
+
+      final Set<String> contactUids = ev.getContactUids();
+      if (!Util.isEmpty(contactUids)) {
+        for (final String uid: contactUids) {
+          BwContact evprop = contacts.get(uid);
+          if (evprop == null) {
+            evprop = fetchContact(uid, PropertyInfoIndex.UID);
+            if (evprop == null) {
+              errorReturn(resp, "Unable to fetch contact " + uid);
+              return false;
+            }
+          }
+
+          ev.addContact(evprop);
+        }
+      }
+
+      final String uid = ev.getLocationUid();
+      if (uid != null) {
+        BwLocation evprop = locations.get(uid);
+        if (evprop == null) {
+          evprop = fetchLocation(uid, PropertyInfoIndex.UID);
+          if (evprop == null) {
+            errorReturn(resp, "Unable to fetch location " + uid);
+            return false;
+          }
+        }
+      }
+
+      return true;
+    } catch (final Throwable t) {
+      errorReturn(resp, t);
+      return false;
+    }
+  }
+
+  private EsDocInfo makeDoc(final Response resp,
+                            final EventInfo ei,
+                            final ItemKind kind,
+                            final BwDateTime start,
+                            final BwDateTime end,
+                            final String recurid,
+                            final DateLimits dl) {
+    final BwEvent ev = ei.getEvent();
+
+    try {
+      final DocBuilder db = getDocBuilder();
+      final EsDocInfo di = db.makeDoc(ei,
+                                      kind,
+                                      start,
+                                      end,
+                                      recurid);
+
+      if (dl != null) {
+        dl.checkMin(start);
+        dl.checkMax(end);
+      }
+
+      return di;
+    } catch (final Throwable t) {
+      errorReturn(resp, t);
+      return null;
+    }
+  }
+
+  private void markUpdated(final String docType) throws CalFacadeException {
     UpdateInfo ui = updateInfo.get(targetIndex);
 
     if (ui == null) {
@@ -856,6 +1547,18 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       throw new CalFacadeException("Unable to set updateInfo");
     }
 
+    if ((docType == null) || docType.equals(docTypeUnknown)) {
+      categories.clear();
+      contacts.clear();
+      locations.clear();
+    } else if(docType.equals(docTypeCategory)) {
+      categories.clear();
+    } else if(docType.equals(docTypeContact)) {
+      contacts.clear();
+    } else if(docType.equals(docTypeLocation)) {
+      locations.clear();
+    }
+
     ui.setUpdate(true);
   }
 
@@ -863,7 +1566,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   public void unindexEntity(final BwEventProperty val) throws CalFacadeException {
     unindexEntity(getDocBuilder().getHref(val));
 
-    markUpdated();
+    markUpdated(docTypeFromClass(val.getClass()));
   }
 
   @Override
@@ -876,7 +1579,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       /*final DeleteByQueryResponse resp = */dqrb.execute().actionGet();
 
-      markUpdated();
+      markUpdated(null);
 
       // TODO check response?
     } catch (final ElasticsearchException ese) {
@@ -1010,8 +1713,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   }
 
   @Override
-  public int swapIndex(final String index,
-                       final String other) throws CalFacadeException {
+  public int setAlias(final String index,
+                      final String alias) throws CalFacadeException {
     //IndicesAliasesResponse resp = null;
     try {
       /* Other is the alias name - index is the index we were just indexing into
@@ -1020,7 +1723,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       final IndicesAdminClient idx = getAdminIdx();
 
       final GetAliasesRequestBuilder igarb = idx.prepareGetAliases(
-              other);
+              alias);
 
       final ActionFuture<GetAliasesResponse> getAliasesAf =
               idx.getAliases(igarb.request());
@@ -1037,13 +1740,13 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         final String indexName = it.next();
 
         for (final AliasMetaData amd: aliasesmeta.get(indexName)) {
-          if(amd.getAlias().equals(other)) {
-            iarb.removeAlias(indexName, other);
+          if(amd.getAlias().equals(alias)) {
+            iarb.removeAlias(indexName, alias);
           }
         }
       }
 
-      iarb.addAlias(index, other);
+      iarb.addAlias(index, alias);
 
       final ActionFuture<IndicesAliasesResponse> af =
               idx.aliases(iarb.request());
@@ -1072,7 +1775,13 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       return null;
     }
 
-    return eb.makeCat();
+    final BwCategory entity = eb.makeCat();
+    if (entity == null) {
+      return null;
+    }
+
+    categories.put(entity);
+    return entity;
   }
 
   @Override
@@ -1126,7 +1835,13 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       return null;
     }
 
-    return eb.makeContact();
+    final BwContact entity = eb.makeContact();
+    if (entity == null) {
+      return null;
+    }
+
+    contacts.put(entity);
+    return entity;
   }
 
   @Override
@@ -1139,7 +1854,13 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       return null;
     }
 
-    return eb.makeLocation();
+    final BwLocation entity = eb.makeLocation();
+    if (entity == null) {
+      return null;
+    }
+
+    locations.put(entity);
+    return entity;
   }
 
   private static final int maxFetchCount = 100;
@@ -1235,7 +1956,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
     final Set<String> hrefs = new TreeSet<>(); // Dedup
     
-    /* We may get many more entrie than the hits we got for the first search.
+    /* We may get many more entries than the hits we got for the first search.
        Each href may have many entries that don't match the original search term
        We need to keep fetching until nothign is returned
      */
@@ -1538,6 +2259,66 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
   }
 
+  private EsDocInfo makeDoc(final Response resp,
+                            final Object rec) {
+    try {
+      if (rec instanceof EventInfo) {
+        errorReturn(resp, "Illegal call with event to makeDoc");
+        return null;
+      }
+
+      final DocBuilder db = getDocBuilder();
+
+      if (rec instanceof UpdateInfo) {
+        return db.makeDoc((UpdateInfo)rec);
+      }
+
+      if (rec instanceof BwCalendar) {
+        return db.makeDoc((BwCalendar)rec);
+      }
+
+      if (rec instanceof BwCategory) {
+        return db.makeDoc((BwCategory)rec);
+      }
+
+      if (rec instanceof BwContact) {
+        return db.makeDoc((BwContact)rec);
+      }
+
+      if (rec instanceof BwLocation) {
+        return db.makeDoc((BwLocation)rec);
+      }
+
+      errorReturn(resp, "Unknown record type: " + rec.getClass().getName());
+      return null;
+    } catch (final Throwable t) {
+      errorReturn(resp, t);
+    }
+
+    return null;
+  }
+
+  private boolean cacheEvprop(final Response resp,
+                              final BwEventProperty rec) {
+    if (rec instanceof BwCategory) {
+      categories.put((BwCategory)rec);
+      return true;
+    }
+
+    if (rec instanceof BwContact) {
+      contacts.put((BwContact)rec);
+      return true;
+    }
+
+    if (rec instanceof BwLocation) {
+      locations.put((BwLocation)rec);
+      return true;
+    }
+
+    errorReturn(resp, "Unknown record type: " + rec.getClass().getName());
+    return false;
+  }
+
   private IndexResponse indexEvent(final EventInfo ei) throws CalFacadeException {
     try {
 
@@ -1791,6 +2572,16 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     return req.execute().actionGet();
   }
 
+  private Client getClient(final Response resp) {
+    try {
+      return getClient();
+    } catch (final CalFacadeException cfe) {
+      resp.setStatus(failed);
+      resp.setMessage(cfe.getLocalizedMessage());
+      return null;
+    }
+  }
+
   private Client getClient() throws CalFacadeException {
     if (theClient != null) {
       return theClient;
@@ -1928,6 +2719,72 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     return suffix.toString();
   }
 
+  private static Map<Class, String> classToDoctype = new HashMap<>();
+  static {
+    classToDoctype.put(BwPrincipal.class, docTypePrincipal);
+    classToDoctype.put(BwCalendar.class, docTypeCollection);
+    classToDoctype.put(BwEvent.class, docTypeEvent);
+    classToDoctype.put(BwCategory.class, docTypeCategory);
+    classToDoctype.put(BwContact.class, docTypeContact);
+    classToDoctype.put(BwLocation.class, docTypeLocation);
+  }
+
+  private String docTypeFromClass(final Class cl) {
+    final String docType = classToDoctype.get(cl);
+
+    if (docType != null) {
+      return docType;
+    }
+
+    return docTypeUnknown;
+  }
+
+  private Object makeEntity(final Response resp,
+                            final SearchHit hit,
+                            final RecurringRetrievalMode rrm) {
+    final String dtype = hit.getType();
+
+    if (dtype == null) {
+      errorReturn(resp, "org.bedework.index.noitemtype");
+      return null;
+    }
+
+    final String kval = hit.getId();
+
+    if (kval == null) {
+      errorReturn(resp, "org.bedework.index.noitemkey");
+    }
+
+    try {
+      final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
+
+      Object entity = null;
+      switch (dtype) {
+        case docTypeCollection:
+          entity = eb.makeCollection();
+          break;
+        case docTypeCategory:
+          entity = eb.makeCat();
+          break;
+        case docTypeContact:
+          entity = eb.makeContact();
+          break;
+        case docTypeLocation:
+          entity = eb.makeLocation();
+          break;
+        case docTypeEvent: case docTypePoll:
+          entity = eb.makeEvent(kval,
+                                (rrm != null) && (rrm.mode == Rmode.expanded));
+          break;
+      }
+      
+      return entity;
+    } catch (final CalFacadeException cfe) {
+      errorReturn(resp, cfe);
+      return null;
+    }
+  }
+
   private EntityBuilder getEntityBuilder(final Map<String, ?> fields) throws CalFacadeException {
     try {
       return new EntityBuilder(publick, currentMode, principal, fields);
@@ -1943,5 +2800,42 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     } catch (IndexException ie) {
       throw new CalFacadeException(ie);
     }
+  }
+
+  private <T extends Response> T errorReturn(final T resp,
+                                             final Throwable t) {
+    return errorReturn(resp, t, failed);
+  }
+
+  private <T extends Response> T errorReturn(final T resp,
+                                             final Throwable t,
+                                             final Response.Status st) {
+    if (debug) {
+      error(t);
+    }
+    return errorReturn(resp, t.getLocalizedMessage(), st);
+  }
+
+  private <T extends Response> T errorReturn(final T resp,
+                                             final String msg,
+                                             final Response.Status st) {
+    resp.setMessage(msg);
+    resp.setStatus(st);
+
+    return resp;
+  }
+
+  private <T extends Response> T notFound(final T resp) {
+    resp.setStatus(notFound);
+
+    return resp;
+  }
+
+  private <T extends Response> T errorReturn(final T resp,
+                                             final String msg) {
+    resp.setMessage(msg);
+    resp.setStatus(failed);
+
+    return resp;
   }
 }

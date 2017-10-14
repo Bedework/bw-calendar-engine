@@ -20,9 +20,9 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.indexer.IndexStats.StatType;
 
 import org.apache.log4j.Logger;
 
@@ -81,16 +81,16 @@ public class EntityProcessor extends Crawler {
         for (final String name: entityNames) {
           try {
             if (debug) {
-              debugMsg("Indexing collection " + path +
+              debug("Indexing collection " + path +
                        " entity " + name);
             }
 
-            status.stats.inc(StatType.entities);
+            status.stats.inc(IndexedType.events);
             final EventInfo ent =
                     svci.getEventsHandler().get(path, name);
 
             if (ent == null) {
-              status.stats.inc(StatType.unreachableEntities);
+              status.stats.inc(IndexedType.unreachableEntities);
               continue;
             }
             indexer.indexEntity(ent);

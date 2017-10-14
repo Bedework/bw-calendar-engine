@@ -209,7 +209,7 @@ public class Restore extends Logged implements Defs, AutoCloseable {
 
     final BwPrincipal pu = BwPrincipal.makeUserPrincipal();
 
-    pu.setAccount(RestoreGlobals.getBasicSyspars().getPublicUser());
+    pu.setAccount(BwPrincipal.publicUser);
     globals.setPrincipalHref(pu);
 
     globals.rintf.restorePrincipal(pu);

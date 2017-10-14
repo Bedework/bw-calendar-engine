@@ -681,6 +681,8 @@ public class DocBuilder extends DocBuilderBase {
         return;
       }
 
+      // Only index enough to retrieve the actual contact
+
       startArray(getJname(PropertyInfoIndex.CONTACT));
 
       for (final BwContact c: val) {
@@ -689,8 +691,6 @@ public class DocBuilder extends DocBuilderBase {
         startObject();
         makeField(PropertyInfoIndex.HREF, c.getHref());
         makeField(PropertyInfoIndex.CN, c.getCn());
-        makeField(PropertyInfoIndex.EMAIL, c.getEmail());
-        makeField(PropertyInfoIndex.PHONE, c.getPhone());
 
         makeField(ParameterInfoIndex.UID.getJname(),
                   c.getUid());

@@ -319,9 +319,6 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   private static final class DumpPrincipalInfo extends PrincipalInfo {
     private final DumpImpl dump;
 
-    private final HashMap<String, Integer> toWho = new HashMap<>();
-    private final HashMap<Integer, String> fromWho = new HashMap<>();
-
     private final Map<String, BwPrincipal> principals = new HashMap<>();
 
     private static class StackedState {
@@ -339,13 +336,6 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
                       final PrivilegeSet maxAllowedPrivs) {
       super(principal, authPrincipal, maxAllowedPrivs, false);
       this.dump = dump;
-
-      initWhoMaps(dump.sysRoots.getUserPrincipalRoot(), WhoDefs.whoTypeUser);
-      initWhoMaps(dump.sysRoots.getGroupPrincipalRoot(), WhoDefs.whoTypeGroup);
-      initWhoMaps(dump.sysRoots.getTicketPrincipalRoot(), WhoDefs.whoTypeTicket);
-      initWhoMaps(dump.sysRoots.getResourcePrincipalRoot(), WhoDefs.whoTypeResource);
-      initWhoMaps(dump.sysRoots.getVenuePrincipalRoot(), WhoDefs.whoTypeVenue);
-      initWhoMaps(dump.sysRoots.getHostPrincipalRoot(), WhoDefs.whoTypeHost);
    }
 
     void setSuperUser(final boolean val) {
@@ -407,92 +397,9 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     }
 
     @Override
-    public String makeHref(final String id, final int whoType) throws AccessException {
-      try {
-        if (isPrincipal(id)) {
-          return id;
-        }
-
-        final String root = fromWho.get(whoType);
-
-        if (root == null) {
-          throw new CalFacadeException(CalFacadeException.unknownPrincipalType);
-        }
-
-        return Util.buildPath(true, root, "/", id);
-      } catch (final CalFacadeException cfe) {
-        throw new AccessException(cfe);
-      }
-    }
-
-    private boolean isPrincipal(final String val) throws CalFacadeException {
-      if (val == null) {
-        return false;
-      }
-
-      /* assuming principal root is "principals" we expect something like
-       * "/principals/users/jim".
-       *
-       * Anything with fewer or greater elements is a collection or entity.
-       */
-
-      final int pos1 = val.indexOf("/", 1);
-
-      if (pos1 < 0) {
-        return false;
-      }
-
-      if (!val.substring(0, pos1).equals(dump.sysRoots.getPrincipalRoot())) {
-        return false;
-      }
-
-      final int pos2 = val.indexOf("/", pos1 + 1);
-
-      if (pos2 < 0) {
-        return false;
-      }
-
-      if (val.length() == pos2) {
-        // Trailing "/" on 2 elements
-        return false;
-      }
-
-      for (final String root: toWho.keySet()) {
-        String pfx = root;
-        if (!pfx.endsWith("/")) {
-          pfx += "/";
-        }
-
-        if (val.startsWith(pfx)) {
-          if (val.equals(pfx)) {
-            // It IS a root
-            return false;
-          }
-          return true;
-        }
-      }
-
-      /*
-    int pos3 = val.indexOf("/", pos2 + 1);
-
-    if ((pos3 > 0) && (val.length() > pos3 + 1)) {
-      // More than 3 elements
-      return false;
-    }
-
-    if (!toWho.containsKey(val.substring(0, pos2))) {
-      return false;
-    }
-       */
-
-      /* It's one of our principal hierarchies */
-
-      return false;
-    }
-
-    private void initWhoMaps(final String prefix, final int whoType) {
-      toWho.put(prefix, whoType);
-      fromWho.put(whoType, prefix);
+    public String makeHref(final String id,
+                           final int whoType) throws AccessException {
+      return BwPrincipal.makePrincipalHref(id,whoType);
     }
   }
 }

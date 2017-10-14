@@ -509,8 +509,6 @@ public class RestoreGlobals extends Counters {
   private long lastFlush = System.currentTimeMillis();
   private static final long flushInt = 1000 * 30 * 5; // 5 minutes
 
-  private static BasicSystemProperties sysProps;
-
   private BwPrincipal mappedPrincipal(final String val) {
     long now = System.currentTimeMillis();
 
@@ -527,21 +525,21 @@ public class RestoreGlobals extends Counters {
    * @return principal root
    */
   public static String getUserPrincipalRoot() {
-    return getBasicSyspars().getUserPrincipalRoot();
+    return BwPrincipal.userPrincipalRoot;
   }
 
   /**
    * @return principal root
    */
   public static String getGroupPrincipalRoot()  {
-    return getBasicSyspars().getGroupPrincipalRoot();
+    return BwPrincipal.groupPrincipalRoot;
   }
 
   /**
    * @return principal root
    */
   public static String getBwadmingroupPrincipalRoot() {
-    return getBasicSyspars().getBwadmingroupPrincipalRoot();
+    return BwPrincipal.bwadmingroupPrincipalRoot;
   }
 
   /**
@@ -647,11 +645,11 @@ public class RestoreGlobals extends Counters {
       return p;
     }
 
-    if (!val.startsWith(getBasicSyspars().getPrincipalRoot())) {
+    if (!val.startsWith(BwPrincipal.principalRoot)) {
       return null;
     }
 
-    if (val.startsWith(getUserPrincipalRoot())) {
+    if (val.startsWith(BwPrincipal.userPrincipalRoot)) {
       BwPrincipal pr = rintf.getPrincipal(val);
 
       if (pr != null) {

@@ -35,7 +35,7 @@ public final class ROBasicSystemProperties implements BasicSystemProperties {
   }
 
   /**
-   * @param cfg
+   * @param cfg the rw config
    */
   ROBasicSystemProperties(final BasicSystemProperties cfg) {
     this.cfg = cfg;
@@ -44,86 +44,6 @@ public final class ROBasicSystemProperties implements BasicSystemProperties {
   /* ========================================================================
    * Attributes
    * ======================================================================== */
-
-  @Override
-  public void setPrincipalRoot(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getPrincipalRoot() {
-    return getConfig().getPrincipalRoot();
-  }
-
-  @Override
-  public void setUserPrincipalRoot(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getUserPrincipalRoot() {
-    return getConfig().getUserPrincipalRoot();
-  }
-
-  @Override
-  public void setGroupPrincipalRoot(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getGroupPrincipalRoot() {
-    return getConfig().getGroupPrincipalRoot();
-  }
-
-  @Override
-  public void setBwadmingroupPrincipalRoot(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getBwadmingroupPrincipalRoot() {
-    return getConfig().getBwadmingroupPrincipalRoot();
-  }
-
-  @Override
-  public void setResourcePrincipalRoot(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getResourcePrincipalRoot() {
-    return getConfig().getResourcePrincipalRoot();
-  }
-
-  @Override
-  public void setVenuePrincipalRoot(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getVenuePrincipalRoot() {
-    return getConfig().getVenuePrincipalRoot();
-  }
-
-  @Override
-  public void setTicketPrincipalRoot(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getTicketPrincipalRoot() {
-    return getConfig().getTicketPrincipalRoot();
-  }
-
-  @Override
-  public void setHostPrincipalRoot(final String val) {
-    throw new RuntimeException("Immutable");
-  }
-
-  @Override
-  public String getHostPrincipalRoot() {
-    return getConfig().getHostPrincipalRoot();
-  }
 
   @Override
   public void setPublicCalendarRoot(final String val) {

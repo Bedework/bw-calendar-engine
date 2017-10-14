@@ -659,11 +659,10 @@ public class BwSysIntfImpl implements SysIntf {
       final BwPrincipal p = getSvci().getDirectories().getPrincipal(
               pi.getPrincipalHref());
 
-      if (pi.getPrincipalHref().startsWith(basicSysProperties.getUserPrincipalRoot())) {
+      if (pi.getPrincipalHref().startsWith(BwPrincipal.userPrincipalRoot)) {
         userHomePath = Util.buildPath(true, userHomePath,
                                       pi.getPrincipalHref().
-            substring(basicSysProperties.getUserPrincipalRoot()
-                              .length()));
+            substring(BwPrincipal.userPrincipalRoot.length()));
       } else {
         userHomePath = Util.buildPath(true, userHomePath,
                                       pi.getPrincipalHref());
@@ -700,9 +699,9 @@ public class BwSysIntfImpl implements SysIntf {
   public Collection<String> getPrincipalCollectionSet(final String resourceUri)
           throws WebdavException {
     try {
-      ArrayList<String> al = new ArrayList<String>();
+      ArrayList<String> al = new ArrayList<>();
 
-      al.add(getSvci().getDirectories().getPrincipalRoot());
+      al.add(BwPrincipal.principalRoot);
 
       return al;
     } catch (Throwable t) {
@@ -727,7 +726,7 @@ public class BwSysIntfImpl implements SysIntf {
     }
 
     try {
-      String proot = getSvci().getDirectories().getPrincipalRoot();
+      String proot = BwPrincipal.principalRoot;
 
       if (!proot.endsWith("/")) {
         proot += "/";

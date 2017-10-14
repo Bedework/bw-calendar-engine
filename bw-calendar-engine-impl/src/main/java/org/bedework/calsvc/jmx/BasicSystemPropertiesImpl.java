@@ -37,16 +37,6 @@ import org.bedework.util.misc.ToString;
           type = "org.bedework.calfacade.configs.BasicSystemProperties")
 public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesImpl>
         implements BasicSystemProperties {
-  /* Principals */
-  private String principalRoot;
-  private String userPrincipalRoot;
-  private String groupPrincipalRoot;
-  private String bwadmingroupPrincipalRoot;
-  private String resourcePrincipalRoot;
-  private String venuePrincipalRoot;
-  private String ticketPrincipalRoot;
-  private String hostPrincipalRoot;
-
   /* Default calendar names */
   private String publicCalendarRoot;
   private String userCalendarRoot;
@@ -70,86 +60,6 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
   private String bedeworkResourceDirectory;
 
   private boolean testMode;
-
-  @Override
-  public void setPrincipalRoot(final String val) {
-    principalRoot = val;
-  }
-
-  @Override
-  public String getPrincipalRoot() {
-    return principalRoot;
-  }
-
-  @Override
-  public void setUserPrincipalRoot(final String val) {
-    userPrincipalRoot = val;
-  }
-
-  @Override
-  public String getUserPrincipalRoot() {
-    return userPrincipalRoot;
-  }
-
-  @Override
-  public void setGroupPrincipalRoot(final String val) {
-    groupPrincipalRoot = val;
-  }
-
-  @Override
-  public String getGroupPrincipalRoot() {
-    return groupPrincipalRoot;
-  }
-
-  @Override
-  public void setBwadmingroupPrincipalRoot(final String val) {
-    bwadmingroupPrincipalRoot = val;
-  }
-
-  @Override
-  public String getBwadmingroupPrincipalRoot() {
-    return bwadmingroupPrincipalRoot;
-  }
-
-  @Override
-  public void setResourcePrincipalRoot(final String val) {
-    resourcePrincipalRoot = val;
-  }
-
-  @Override
-  public String getResourcePrincipalRoot() {
-    return resourcePrincipalRoot;
-  }
-
-  @Override
-  public void setVenuePrincipalRoot(final String val) {
-    venuePrincipalRoot = val;
-  }
-
-  @Override
-  public String getVenuePrincipalRoot() {
-    return venuePrincipalRoot;
-  }
-
-  @Override
-  public void setTicketPrincipalRoot(final String val) {
-    ticketPrincipalRoot = val;
-  }
-
-  @Override
-  public String getTicketPrincipalRoot() {
-    return ticketPrincipalRoot;
-  }
-
-  @Override
-  public void setHostPrincipalRoot(final String val) {
-    hostPrincipalRoot = val;
-  }
-
-  @Override
-  public String getHostPrincipalRoot() {
-    return hostPrincipalRoot;
-  }
 
   @Override
   public void setPublicCalendarRoot(final String val) {

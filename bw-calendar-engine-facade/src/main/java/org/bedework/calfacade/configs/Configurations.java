@@ -52,10 +52,10 @@ public interface Configurations extends Serializable {
 
   /* The prefix for each service name */
   
-  String bwcorePrefix = "org.bedework.bwengine.core:service=";
+  String bwcorePrefix = "org.bedework.bwengine.core";
 
   String bwenginePrefix =
-          "org.bedework.bwengine:service=";
+          "org.bedework.bwengine";
   
   /* Services within each of the above */
   

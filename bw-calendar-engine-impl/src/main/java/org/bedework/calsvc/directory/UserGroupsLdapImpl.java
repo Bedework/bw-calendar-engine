@@ -356,7 +356,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
     try {
       ctx = new InitialLdapContext(env, null);
       if (debug) {
-        trace("Logged into LDAP server, " + ctx);
+        debug("Logged into LDAP server, " + ctx);
       }
 
       return ctx;

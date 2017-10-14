@@ -32,8 +32,6 @@ import org.bedework.sysevents.events.EntityDeletedEvent;
 import org.bedework.sysevents.events.EntityUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
 
-import org.apache.log4j.Logger;
-
 /**
  * Class to handle incoming system event messages and fire off index processes
  * <p>
@@ -48,10 +46,6 @@ import org.apache.log4j.Logger;
  * @author douglm
  */
 public class MessageProcessor extends CalSys {
-  private transient Logger log;
-
-  private final boolean debug;
-
   transient private BwIndexer publicIndexer;
 
   transient private BwIndexer userIndexer;
@@ -68,23 +62,19 @@ public class MessageProcessor extends CalSys {
 
   /**
    * @param props index properties
-   * @throws CalFacadeException
    */
-  public MessageProcessor(final IndexProperties props) throws CalFacadeException {
+  public MessageProcessor(final IndexProperties props) {
     super("MessageProcessor", props.getAccount(), null);
-
-    debug = getLog().isDebugEnabled();
   }
 
   /**
    * @param msg the incoming message
-   * @throws CalFacadeException
    */
-  public void processMessage(final SysEvent msg) throws CalFacadeException {
+  public void processMessage(final SysEvent msg) {
     for (int ct = 0; ct < maxRetryCt; ct++) {
       try {
         if (debug) {
-          debugMsg("Event " + msg.getSysCode());
+          debug("Event " + msg.getSysCode());
         }
 
         if (msg instanceof CollectionUpdateEvent) {
@@ -193,7 +183,7 @@ public class MessageProcessor extends CalSys {
                                        getName(ede.getHref()));
         if (val == null) {
           if (debug) {
-            debugMsg("Missing event: " + ede.getHref());
+            debug("Missing event: " + ede.getHref());
           }
         } else {
           add(val);
@@ -217,7 +207,7 @@ public class MessageProcessor extends CalSys {
                                      getName(ece.getHref()));
       if (val == null) {
         if (debug) {
-          debugMsg("Missing event: " + ece.getHref());
+          debug("Missing event: " + ece.getHref());
         }
       } else {
         add(val);
@@ -285,7 +275,7 @@ public class MessageProcessor extends CalSys {
 
     if (ent != null) {
       if (ent.getPublick() == null) {
-        debugMsg("This is wrong");
+        debug("This is wrong");
       }
       publick = ent.getPublick();
       principal = ent.getOwnerHref();
@@ -318,27 +308,5 @@ public class MessageProcessor extends CalSys {
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
-  }
-
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  @Override
-  protected void debugMsg(final String msg) {
-    getLog().debug(msg);
-  }
-
-  @Override
-  protected void info(final String msg) {
-    getLog().info(msg);
-  }
-
-  protected void warn(final String msg) {
-    getLog().warn(msg);
   }
 }

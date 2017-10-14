@@ -20,8 +20,8 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.indexer.IndexStats.StatType;
 import org.bedework.util.misc.Util;
 
 import java.util.List;
@@ -52,7 +52,6 @@ public class PublicProcessor extends Crawler {
    * @param entityDelay millis
    * @param skipPaths - paths to skip
    * @param indexRootPath - where we build the index
-   * @throws CalFacadeException
    */
   public PublicProcessor(final CrawlStatus status,
                          final String name,
@@ -60,7 +59,7 @@ public class PublicProcessor extends Crawler {
                          final long batchDelay,
                          final long entityDelay,
                          final List<String> skipPaths,
-                         final String indexRootPath) throws CalFacadeException {
+                         final String indexRootPath) {
     super(status, name, adminAccount, null, batchDelay, entityDelay,
           skipPaths,
           indexRootPath);
@@ -72,18 +71,18 @@ public class PublicProcessor extends Crawler {
       final CalSvcI svc = bw.getSvci();
 
       /* First index the public collection(s) */
-      indexCollection(svc, Util.buildPath(true, "/", getPublicCalendarRoot()));
+      indexCollection(svc, Util.buildPath(false, "/", getPublicCalendarRoot()));
 
       final BwIndexer indexer = svc.getIndexer(principal,
                                                indexRootPath);
 
-      status.stats.inc(StatType.categories,
+      status.stats.inc(IndexedType.categories,
                        svc.getCategoriesHandler().reindex(indexer));
 
-      status.stats.inc(StatType.contacts,
+      status.stats.inc(IndexedType.contacts,
                        svc.getContactsHandler().reindex(indexer));
 
-      status.stats.inc(StatType.locations,
+      status.stats.inc(IndexedType.locations,
                        svc.getLocationsHandler().reindex(indexer));
     }
   }
