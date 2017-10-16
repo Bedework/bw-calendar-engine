@@ -32,6 +32,8 @@ import static org.bedework.calfacade.configs.Configurations.systemMbean;
  * User: mike Date: 12/3/15 Time: 00:32
  */
 public class JolokiaConfigClient extends JolokiaClient {
+  public final static String syncEngineMbean =
+          "org.bedework.synch:service=SynchConf";
   /**
    *
    * @param url Usually something like "http://localhost:8080/hawtio/jolokia"
@@ -139,5 +141,38 @@ public class JolokiaConfigClient extends JolokiaClient {
   public Integer getAutoKillMinutes() throws Throwable {
     String s = readString(systemMbean, "AutoKillMinutes");
     return new Integer(s);
+  }
+
+  /* ----------- sync engine ----------------- */
+
+  public String getSyncAttr(final String attrName) throws Throwable {
+    return readString(syncEngineMbean, attrName);
+  }
+
+  public void setSyncAttr(final String attrName,
+                          final String val) throws Throwable {
+    writeVal(syncEngineMbean, attrName, val);
+  }
+
+  public List<String> syncSchema() throws Throwable {
+    writeVal(syncEngineMbean, "Export", "true");
+
+    execute(syncEngineMbean, "schema");
+
+    waitCompletion(syncEngineMbean);
+
+    return execStringList(syncEngineMbean, "schemaStatus");
+  }
+
+  public void syncStart() throws Throwable {
+    execute(syncEngineMbean, "start");
+  }
+
+  public void syncStop() throws Throwable {
+    execute(syncEngineMbean, "stop");
+  }
+
+  public void setSyncPrivKeys(final String val) throws Throwable {
+    writeVal(syncEngineMbean, "PrivKeys", val);
   }
 }
