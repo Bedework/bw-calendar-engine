@@ -46,6 +46,11 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
 
     @Override
     public void completed(final String status) {
+      if (status.equals(SchemaThread.statusDone)) {
+        DbConf.this.setStatus(ConfBase.statusDone);
+      } else {
+        DbConf.this.setStatus(ConfBase.statusFailed);
+      }
       setExport(false);
       info("Schema build completed with status " + status);
     }
@@ -102,7 +107,7 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
                                       getExport(),
                                       hc.getHibConfiguration().getProperties());
 
-      setStatus(statusStopped);
+      setStatus(statusRunning);
 
       buildSchema.start();
 
