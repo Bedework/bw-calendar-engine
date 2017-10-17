@@ -34,6 +34,8 @@ import static org.bedework.calfacade.configs.Configurations.systemMbean;
 public class JolokiaConfigClient extends JolokiaClient {
   public final static String syncEngineMbean =
           "org.bedework.synch:service=SynchConf";
+  // synch connector looks like
+  //      org.bedework.synch:service=SynchConf,Type=connector,Name=localBedework
   /**
    *
    * @param url Usually something like "http://localhost:8080/hawtio/jolokia"
