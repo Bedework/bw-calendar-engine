@@ -51,8 +51,6 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
 
   private String indexRoot;
 
-  private String publicUser;
-
   private String globalResourcesPath;
 
   private CalAddrPrefixes calAddrPrefixes;
@@ -172,17 +170,6 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
   }
 
   @Override
-  public void setPublicUser(final String val) {
-    publicUser = val;
-  }
-
-  @Override
-  @MBeanInfo("Account name for public entities - one not in the directory")
-  public String getPublicUser() {
-    return publicUser;
-  }
-
-  @Override
   public void setIndexRoot(final String val) {
     indexRoot = val;
   }
@@ -250,9 +237,6 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
     ts.append("userInbox", getUserInbox());
     ts.append("userOutbox", getUserOutbox());
 
-    ts.newLine();
-    ts.append("publicUser", getPublicUser());
-
     ts.append("calAddrPrefixes", getCalAddrPrefixes());
 
     ts.newLine();
@@ -279,7 +263,6 @@ public class BasicSystemPropertiesImpl extends ConfigBase<BasicSystemPropertiesI
 
     clone.setDefaultNotificationsName(getDefaultNotificationsName());
     clone.setDefaultReferencesName(getDefaultReferencesName());
-    clone.setPublicUser(getPublicUser());
 
     clone.setIndexRoot(getIndexRoot());
 

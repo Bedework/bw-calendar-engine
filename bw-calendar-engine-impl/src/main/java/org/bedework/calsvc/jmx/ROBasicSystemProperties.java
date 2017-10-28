@@ -146,16 +146,6 @@ public final class ROBasicSystemProperties implements BasicSystemProperties {
   }
 
   @Override
-  public void setPublicUser(final String val) {
-    throw new RuntimeException("Immutable"); // getConfig().setPublicUser(val);
-  }
-
-  @Override
-  public String getPublicUser() {
-    return getConfig().getPublicUser();
-  }
-
-  @Override
   public void setIndexRoot(final String val) {
     throw new RuntimeException("Immutable"); // getConfig().setIndexRoot(val);
   }

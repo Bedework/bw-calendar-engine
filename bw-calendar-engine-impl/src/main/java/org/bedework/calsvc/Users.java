@@ -46,10 +46,6 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
  * @author Mike Douglass       douglm - rpi.edu
  */
 class Users extends CalSvcDb implements UsersI {
-  /* The account that owns public entities
-   */
-  private String publicUserAccount;
-
   private BwPrincipal publicUser;
 
   Users(final CalSvc svci) {
@@ -342,16 +338,17 @@ class Users extends CalSvcDb implements UsersI {
   public BwPrincipal getPublicUser() {
     if (publicUser == null) {
       try {
-        publicUser = getUser(getPublicUserAccount());
+        publicUser = getUser(BwPrincipal.publicUser);
       } catch (Throwable t) {
         error(t);
         throw new RuntimeException(
-                "Unable to get publicUser for " + publicUserAccount);
+                "Unable to get publicUser for " + BwPrincipal.publicUser);
       }
     }
 
     if (publicUser == null) {
-      throw new RuntimeException("No guest user proxy account - expected " + publicUserAccount);
+      throw new RuntimeException("No guest user proxy account - expected " +
+                                         BwPrincipal.publicUser);
     }
 
     return publicUser;
@@ -366,12 +363,4 @@ class Users extends CalSvcDb implements UsersI {
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
-
-  private String getPublicUserAccount() {
-    if (publicUserAccount == null) {
-      publicUserAccount = getBasicSyspars().getPublicUser();
-    }
-
-    return publicUserAccount;
-  }
 }

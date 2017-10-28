@@ -167,19 +167,6 @@ public interface BasicSystemProperties extends Serializable {
   @MBeanInfo("user outbox - do not change")
   String getUserOutbox();
 
-  /** Set the public user
-   *
-   * @param val    String
-   */
-  void setPublicUser(String val);
-
-  /**
-   *
-   * @return String
-   */
-  @MBeanInfo("Account name for public entities - one not in the directory")
-  String getPublicUser();
-
   /** Set the path to the root for indexes
    *
    * @param val    String index root
