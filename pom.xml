@@ -15,7 +15,7 @@
 		<!-- Bedework Versions -->
 		<bedework.releases.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.releases.repo.url>
 		<bedework.snapshots.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.snapshots.repo.url>
-		<bw-ws.version>4.0.4-SNAPSHOT</bw-ws.version>
+		<bw-xml.version>4.0.5-SNAPSHOT</bw-xml.version>
 		<bw-util.version>4.0.14-SNAPSHOT</bw-util.version>
 		<bw-access.version>4.0.2-SNAPSHOT</bw-access.version>
 		<bw-webdav.version>4.0.2-SNAPSHOT</bw-webdav.version>
@@ -249,23 +249,23 @@
 			<!-- Bedework: Web Services -->
 			<dependency>
 				<groupId>org.bedework</groupId>
-				<artifactId>bw-ws-icalendar</artifactId>
-				<version>${bw-ws.version}</version>
+				<artifactId>bw-xml-icalendar</artifactId>
+				<version>${bw-xml.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.bedework</groupId>
-				<artifactId>bw-ws-tzsvr</artifactId>
-				<version>${bw-ws.version}</version>
+				<artifactId>bw-xml-tzsvr</artifactId>
+				<version>${bw-xml.version}</version>
 			</dependency>
       <dependency>
         <groupId>org.bedework</groupId>
-        <artifactId>bw-ws-synchws</artifactId>
-        <version>${bw-ws.version}</version>
+        <artifactId>bw-xml-synchws</artifactId>
+        <version>${bw-xml.version}</version>
       </dependency>
 			<dependency>
 				<groupId>org.bedework</groupId>
-				<artifactId>bw-ws-calws-soap</artifactId>
-				<version>${bw-ws.version}</version>
+				<artifactId>bw-xml-calws-soap</artifactId>
+				<version>${bw-xml.version}</version>
 			</dependency>
 
       <dependency>
