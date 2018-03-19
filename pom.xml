@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.bedework.caleng</groupId>
 	<artifactId>bw-calendar-engine</artifactId>
-	<version>4.0.0-SNAPSHOT</version>
+	<version>3.12.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>bw-calendar-engine</name>
 
@@ -16,7 +16,7 @@
 		<bedework.releases.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.releases.repo.url>
 		<bedework.snapshots.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.snapshots.repo.url>
 		<bw-xml.version>4.0.5-SNAPSHOT</bw-xml.version>
-		<bw-util.version>4.0.14-SNAPSHOT</bw-util.version>
+		<bw-util.version>4.0.17-SNAPSHOT</bw-util.version>
 		<bw-access.version>4.0.2-SNAPSHOT</bw-access.version>
 		<bw-webdav.version>4.0.2-SNAPSHOT</bw-webdav.version>
 		<bw-caldav.version>4.0.3-SNAPSHOT</bw-caldav.version>
