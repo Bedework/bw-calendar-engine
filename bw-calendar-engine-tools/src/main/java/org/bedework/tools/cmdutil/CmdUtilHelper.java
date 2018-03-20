@@ -21,6 +21,7 @@ package org.bedework.tools.cmdutil;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.DirectoryInfo;
@@ -94,14 +95,18 @@ public abstract class CmdUtilHelper extends Logged {
     svci.beginTransaction();
   }
 
-  protected void close() throws Throwable {
-    final CalSvcI svci = getSvci();
+  protected void close() {
+    try {
+      final CalSvcI svci = getSvci();
 
-    if (svci == null) {
-      return;
+      if (svci == null) {
+        return;
+      }
+      svci.endTransaction();
+      svci.close();
+    } catch (final Throwable t) {
+      error(t);
     }
-    svci.endTransaction();
-    svci.close();
   }
   
   public BwIndexer getIndexer() throws CalFacadeException {
@@ -137,6 +142,25 @@ public abstract class CmdUtilHelper extends Logged {
     }
 
     return cal;
+  }
+
+  /* expect a quoted uid next
+   */
+  protected BwLocation getPersistentLoc() throws Throwable {
+    final String uid = quotedVal();
+
+    if (uid == null) {
+      error("Expected a quoted uid");
+      return null;
+    }
+
+    final BwLocation loc = getSvci().getLocationsHandler().getPersistent(uid);
+
+    if (loc == null) {
+      error("Unable to access location " + uid);
+    }
+
+    return loc;
   }
 
   protected BwCalendar getAliasTarget(final BwCalendar col) throws Throwable {
@@ -243,6 +267,7 @@ public abstract class CmdUtilHelper extends Logged {
     return ent;
   }
 
+  @SuppressWarnings("unused")
   protected BwCategory getCat(final String ownerHref)  throws Throwable {
     final String catVal = wordOrQuotedVal();
 
@@ -254,6 +279,7 @@ public abstract class CmdUtilHelper extends Logged {
     return getCat(ownerHref, catVal);
   }
 
+  @SuppressWarnings("unused")
   protected boolean expect(final String val) throws Throwable {
     final String next = word();
     
@@ -306,6 +332,7 @@ public abstract class CmdUtilHelper extends Logged {
     return cat;
   }
 
+  @SuppressWarnings("unused")
   protected int nextToken() throws CalFacadeException {
     final int tkn = pstate.getTokenizer().next();
 

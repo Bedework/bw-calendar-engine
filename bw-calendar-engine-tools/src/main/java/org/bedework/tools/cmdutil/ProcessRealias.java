@@ -29,10 +29,14 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.SearchResult;
 import org.bedework.calfacade.indexing.SearchResultEntry;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calsvci.EventsI.RealiasResult;
 import org.bedework.util.misc.Util;
 
 import java.util.List;
 import java.util.Set;
+
+import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.includeDeleted;
+import static org.bedework.calfacade.responses.Response.Status.ok;
 
 /** Reakias events
  * <pre>
@@ -174,10 +178,11 @@ public class ProcessRealias extends CmdUtilHelper {
                                          false,
                                          fltr,
                                          null,
-                                         null, 
-                                         null, 
+                                         null,
+                                         null,
                                          null,
                                          batchSize,
+                                         includeDeleted,
                                          RecurringRetrievalMode.entityOnly);
       if (sr.getFound() == 0) {
         warn("No events found");
@@ -266,16 +271,22 @@ public class ProcessRealias extends CmdUtilHelper {
       changed = true;
     }
 
-    final Set<BwCategory> cats =
+    final RealiasResult resp =
             getSvci().getEventsHandler().reAlias(ei.getEvent());
+
+    if (resp.getStatus() != ok) {
+      warn("Status from reAlias was " + resp.getStatus() +
+                   " message was " + resp.getMessage());
+      return 0;
+    }
           
-          /* Adjusting the categories may not work too well as we don't
-             have any idea what categories appear as a result of the 
-             topical areas. 
-                    
-             It might be worth simplifying this and searching on 
-             topical areas alone.
-           */
+    /* Adjusting the categories may not work too well as we don't
+       have any idea what categories appear as a result of the
+       topical areas.
+
+       It might be worth simplifying this and searching on
+       topical areas alone.
+     */
 
     if (!add) {
       // Remove all the categories for the from alias            
@@ -293,6 +304,8 @@ public class ProcessRealias extends CmdUtilHelper {
           
     /* Now we need to adjust for the new alias
      */
+    final Set<BwCategory> cats = resp.getCats();
+
     if (!Util.isEmpty(cats)) {
       for (final BwCategory cat: cats) {
         ev.addCategory(cat);
@@ -302,7 +315,7 @@ public class ProcessRealias extends CmdUtilHelper {
     
     ei.clearChangeset();
 
-    EventInfo.UpdateResult ur =
+    final EventInfo.UpdateResult ur =
             getSvci().getEventsHandler().update(ei, true);
     
     if (ur.hasChanged) {
