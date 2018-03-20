@@ -85,8 +85,15 @@
 		<module>bw-calendar-engine-indexer</module>
 		<module>bw-calendar-engine-inoutsched</module>
 		<module>bw-calendar-engine-interfaces</module>
-		<module>bw-calendar-engine-sysevents</module>
+    <module>bw-calendar-engine-notifyws</module>
+    <module>bw-calendar-engine-pubcaldav</module>
+    <module>bw-calendar-engine-publicws</module>
+    <module>bw-calendar-engine-synchws</module>
+		<module>bw-calendar-engine-sysevents-common</module>
+    <module>bw-calendar-engine-sysevents-msgs</module>
     <module>bw-calendar-engine-tools</module>
+    <module>bw-calendar-engine-ucaldav</module>
+    <module>bw-calendar-engine-userws</module>
   </modules>
 
   <distributionManagement>

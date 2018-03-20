@@ -83,9 +83,7 @@
     <orderEntry type="module" module-name="bw-calendar-engine-ical" />
     <orderEntry type="module" module-name="bw-xml-icalendar" />
     <orderEntry type="module" module-name="bw-xml-synchws" />
-    <orderEntry type="module" module-name="bwsysev-msgs" />
-    <orderEntry type="module" module-name="bw-util-args" />
-    <orderEntry type="library" name="Maven: javax.jms:jms:1.1" level="project" />
+    <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="module" module-name="bw-caldav-server" />
     <orderEntry type="module" module-name="bw-xml-caldav" />

@@ -18,7 +18,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bwsysev-common</artifactId>
+      <artifactId>bw-calendar-engine-sysevents-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
@@ -30,7 +30,7 @@
 
     <dependency>
       <groupId>org.bedework.caleng</groupId>
-      <artifactId>bwsysev-msgs</artifactId>
+      <artifactId>bw-calendar-engine-sysevents-msgs</artifactId>
       <version>${project.version}</version>
     </dependency>
 
