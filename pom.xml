@@ -12,9 +12,9 @@
 		<!-- Maven Plugin Versions -->
 		<maven.compiler.plugin.version>2.3.2</maven.compiler.plugin.version>
 		<maven.source.plugin.version>2.1.2</maven.source.plugin.version>
+
 		<!-- Bedework Versions -->
-		<bedework.releases.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.releases.repo.url>
-		<bedework.snapshots.repo.url>scp://dev.bedework.org/data/repository/maven/maven2</bedework.snapshots.repo.url>
+
 		<bw-xml.version>4.0.5-SNAPSHOT</bw-xml.version>
 		<bw-util.version>4.0.17-SNAPSHOT</bw-util.version>
     <bw-util2.version>4.0.0-SNAPSHOT</bw-util2.version>
@@ -38,10 +38,6 @@
 
 		<!-- Third Party Library Versions -->
     <elasticsearch.version>1.5.2</elasticsearch.version>
-    <!--
-		<hibernate.version>3.6.9.Final</hibernate.version>
-		<hibernate-validator.version>3.1.0.GA</hibernate-validator.version>
-		-->
     <hibernate.version>5.2.5.Final</hibernate.version>
     <hibernate-validator.version>5.3.4.Final</hibernate-validator.version>
 		<ical4j-vcard.version>1.0.4</ical4j-vcard.version>
@@ -50,7 +46,7 @@
 		<junit.version>4.8.2</junit.version>
 		<log4j.version>1.2.15</log4j.version>
 		<servlet-api.version>2.4</servlet-api.version>
-		<apache-jdkim-library.version>0.2.BEDEWORK-SNAPSHOT</apache-jdkim-library.version>
+		<apache-jdkim-library.version>0.4</apache-jdkim-library.version>
 	</properties>
 
 	<organization>
@@ -93,58 +89,16 @@
     <module>bw-calendar-engine-tools</module>
   </modules>
 
-	<repositories>
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
     <repository>
-      <id>jboss.repository</id>
-      <name>JBoss Public Repository Group</name>
-      <url>http://repository.jboss.org/nexus/content/groups/developer/</url>
-      <layout>default</layout>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
-    <!-- Only needed for JBoss 5 dependencies. We should remove this when we
-      move Bedework off of JBoss 5. -->
-    <repository>
-      <id>jboss-deprecated</id>
-      <name>JBoss Deprecated Repository</name>
-      <url>http://repository.jboss.org/nexus/content/repositories/deprecated</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-		<repository>
-			<id>bedework.repository</id>
-			<name>Bedework Maven Repository</name>
-			<url>http://repository.bedework.org/maven2/</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
-	<distributionManagement>
-		<repository>
-			<id>bedework-releases-repository</id>
-			<name>Bedework Releases Repository</name>
-			<url>${bedework.releases.repo.url}</url>
-		</repository>
-		<snapshotRepository>
-			<id>bedework-snapshots-repository</id>
-			<name>Bedework Snapshots Repository</name>
-			<url>${bedework.snapshots.repo.url}</url>
-		</snapshotRepository>
-	</distributionManagement>
+  </distributionManagement>
 
 	<dependencyManagement>
 		<dependencies>
@@ -321,7 +275,7 @@
 			</dependency>
       
 			<dependency>
-				<groupId>org.apache.james.jdkim</groupId>
+				<groupId>org.bedework</groupId>
 				<artifactId>apache-jdkim-library</artifactId>
 				<version>${apache-jdkim-library.version}</version>
 			</dependency>
@@ -460,7 +414,106 @@
 					</execution>
 				</executions>
 			</plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5</version>
+        <configuration>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <useReleaseProfile>false</useReleaseProfile>
+          <releaseProfiles>release</releaseProfiles>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <configuration>
+          <additionalparam>-Xdoclint:none</additionalparam>
+          <failOnError>false</failOnError>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <version>2.3</version>
+        <configuration>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <version>3.5</version>
+        <executions>
+          <execution>
+            <id>default-descriptor</id>
+            <phase>process-classes</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <goalPrefix>bw-util-deployment</goalPrefix>
+          <!--
+          <outputDirectory>target/dir</outputDirectory>-->
+        </configuration>
+      </plugin>
 		</plugins>
 	</build>
 
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>2.2.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>2.9.1</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <additionalparam>-Xdoclint:none</additionalparam>
+              <failOnError>false</failOnError>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.5</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

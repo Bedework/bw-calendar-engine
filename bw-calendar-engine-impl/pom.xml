@@ -98,7 +98,7 @@
       <artifactId>bw-ical4j-vcard</artifactId>
     </dependency>
 		<dependency>
-			<groupId>org.apache.james.jdkim</groupId>
+			<groupId>org.bedework</groupId>
 			<artifactId>apache-jdkim-library</artifactId>
       <exclusions>
         <exclusion>
