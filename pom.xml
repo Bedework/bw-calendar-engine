@@ -94,6 +94,7 @@
     <module>bw-calendar-engine-tools</module>
     <module>bw-calendar-engine-ucaldav</module>
     <module>bw-calendar-engine-userws</module>
+    <module>bw-calendar-engine-mail</module>
   </modules>
 
   <distributionManagement>
@@ -256,6 +257,7 @@
         <artifactId>${ical4j.artifactId}</artifactId>
         <version>${ical4j.version}</version>
       </dependency>
+
       <dependency>
         <groupId>org.bedework</groupId>
         <artifactId>bw-ical4j-vcard</artifactId>
