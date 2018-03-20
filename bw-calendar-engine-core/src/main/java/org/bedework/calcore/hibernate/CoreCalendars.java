@@ -216,7 +216,7 @@ class CoreCalendars extends CalintfHelper
 
   @Override
   public List<BwCalendar> findAlias(final String val) throws CalFacadeException {
-    final List<BwCalendar> aliases = dao.findCollectionAlias(val,
+    final List<BwCalendar> aliases = dao.findCollectionAlias(fixPath(val),
                                                              currentPrincipal());
 
     final List<BwCalendar> waliases = new ArrayList<>();
@@ -237,6 +237,15 @@ class CoreCalendars extends CalintfHelper
                                 final int desiredAccess,
                                 final boolean alwaysReturnResult) throws CalFacadeException {
     BwCalendar col = getCollection(path);
+    /* TODO - fix on import/export of 4.0. topical areas had wrong owner
+      */
+
+    if ((col != null) &&
+            (col.getCalType() == BwCalendar.calTypeAlias) &&
+            (!col.getOwnerHref().equals(col.getCreatorHref())) &&
+            ("/principals/users/public-user".equals(col.getOwnerHref()))) {
+      col.setOwnerHref(col.getCreatorHref());
+    }
 
     col = checkAccess((CalendarWrapper)col, desiredAccess, alwaysReturnResult);
 
@@ -251,6 +260,7 @@ class CoreCalendars extends CalintfHelper
     BwCalendar col = colCache.get(path);
 
     if (col != null) {
+      debugCol("From cache", col);
       return col;
     }
 
@@ -258,9 +268,36 @@ class CoreCalendars extends CalintfHelper
                            PropertyIndex.PropertyInfoIndex.HREF);
     if (col != null) {
       restoreCategories(col);
+      debugCol("After fetchCol", col);
     }
     
     return col;
+  }
+
+  private void debugCol(final String label,
+                        final BwCalendar col) {
+    if (!debug) {
+      return;
+    }
+
+    if (!"/public/Aliases/Event Category/Arts and Humanities".equals(col.getPath())) {
+      return;
+    }
+
+    String msg;
+    if (Util.isEmpty(col.getCategoryUids())) {
+      msg = "No uids";
+    } else {
+      msg = "Uids: " + col.getCategoryUids().size();
+    }
+
+    if (Util.isEmpty(col.getCategories())) {
+      msg += ": No cats";
+    } else {
+      msg += ": Cats: " + col.getCategories().size();
+    }
+
+    debugMsg(label + ": " + col.getPath() + ": " + msg);
   }
 
   @Override
@@ -444,7 +481,7 @@ class CoreCalendars extends CalintfHelper
     dao.removeCalendarFromAuthPrefs(unwrapped);
 
     /* Ensure no tombstoned events or childen */
-    dao.removeTombstoned(path);
+    dao.removeTombstoned(fixPath(path));
 
     if (reallyDelete) {
       dao.deleteCalendar(unwrapped);
@@ -558,7 +595,8 @@ class CoreCalendars extends CalintfHelper
   public Set<BwCalendar> getSynchCols(final String path,
                                       final String token) throws CalFacadeException {
     @SuppressWarnings("unchecked")
-    final List<BwCalendar> cols = dao.getSynchCollections(path, token);
+    final List<BwCalendar> cols = dao.getSynchCollections(fixPath(path), 
+                                                          token);
 
     final Set<BwCalendar> res = new TreeSet<>();
 
@@ -607,12 +645,29 @@ class CoreCalendars extends CalintfHelper
       return null;
     }
 
+    /* Because we don't have a trailing "/" on the paths the path 
+       prefix may pull in more than we want. We have to check the path on 
+       return.
+       
+       For example - if path is /a/x - we might get /a/x/y but we might
+       also get /a/xxx/y
+     */
+
+    final String fpath = fixPath(path); // Removes "/"
+    final String fpathSlash = fpath + "/";
+    
     @SuppressWarnings("unchecked")
-    final List<BwCalendar> cols = dao.getPathPrefix(thisCol.getPath());
+    final List<BwCalendar> cols = dao.getPathPrefix(fpath);
 
     String token = thisCol.getLastmod().getTagValue();
 
     for (final BwCalendar col: cols) {
+      final String colPath = col.getPath();
+      
+      if (!colPath.equals(fpath) && !colPath.startsWith(fpathSlash)) {
+        continue;
+      }
+      
       final BwCalendar wcol = wrap(col);
       final CurrentAccess ca = ac.checkAccess(wcol, privAny, true);
       if (!ca.getAccessAllowed()) {
@@ -713,7 +768,7 @@ class CoreCalendars extends CalintfHelper
       name = sys.getUserDefaultCalendar();
     } else if (calType == BwCalendar.calTypeTasks) {
       name = sys.getUserDefaultTasksCalendar();
-      ctype = BwCalendar.calTypeCalendarCollection;
+      ctype = BwCalendar.calTypeTasks;
     } else {
       // Not supported
       return null;
@@ -782,6 +837,7 @@ class CoreCalendars extends CalintfHelper
     final BwCalendar c = val.getAliasTarget();
     if (c != null) {
       if (!resolveSubAlias) {
+        debugCol("Resolved already", c);
         return c;
       }
 
@@ -817,8 +873,10 @@ class CoreCalendars extends CalintfHelper
 
     try {
       if (indexer != null) {
+        //debugMsg("Resolve from idx");
         col = getCollectionIdx(indexer, path, desiredAccess, false);
       } else {
+        //debugMsg("Resolve from db");
         col = getCalendar(path, desiredAccess, false);
       }
     } catch (final CalFacadeAccessException cfae) {
@@ -835,7 +893,8 @@ class CoreCalendars extends CalintfHelper
 
       return null;
     }
-    
+
+    debugCol("Resolved", col);
     val.setAliasTarget(col);
 
     if (!resolveSubAlias) {

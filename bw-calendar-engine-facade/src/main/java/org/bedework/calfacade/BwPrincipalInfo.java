@@ -20,6 +20,7 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 import org.bedework.util.vcard.JsonCardBuilder;
@@ -58,7 +59,8 @@ import java.util.Map;
  * @author douglm
  *
  */
-public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializable  {
+public class BwPrincipalInfo extends Logged
+        implements Comparable<BwPrincipalInfo>, Serializable  {
   protected String principalHref;  // Related principal
 
   private VCard card;
@@ -749,7 +751,10 @@ public class BwPrincipalInfo implements Comparable<BwPrincipalInfo>, Serializabl
           }
         }
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
+      if (debug) {
+        debug("CardStr was " + cardStr);
+      }
       throw new CalFacadeException(t);
     }
   }

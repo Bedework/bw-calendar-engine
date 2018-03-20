@@ -34,6 +34,7 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.WsXMLTranslator;
 import org.bedework.util.calendar.XmlCalendarBuilder;
+import org.bedework.util.misc.Logged;
 import org.bedework.util.timezones.Timezones;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.XmlEmit.NameSpace;
@@ -79,7 +80,6 @@ import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.TzId;
 import net.fortuna.ical4j.model.property.Version;
-import org.apache.log4j.Logger;
 
 import java.io.Reader;
 import java.io.Serializable;
@@ -99,9 +99,7 @@ import javax.xml.namespace.QName;
  *
  * @author Mike Douglass   douglm rpi.edu
  */
-public class IcalTranslator implements Serializable {
-  protected boolean debug;
-
+public class IcalTranslator extends Logged implements Serializable {
   /** A class we use to indicate we are skipping stuff. Pushed on to teh stack.
    *
    */
@@ -128,8 +126,6 @@ public class IcalTranslator implements Serializable {
   public static final String prodId = "//Bedework.org//BedeWork V" +
                                          BwVersion.bedeworkVersion + "//EN";
 
-  protected transient Logger log;
-
   protected IcalCallback cb;
 
   protected Pars pars = new Pars();
@@ -140,7 +136,6 @@ public class IcalTranslator implements Serializable {
    */
   public IcalTranslator(final IcalCallback cb) {
     this.cb = cb;
-    debug = getLog().isDebugEnabled();
   }
 
   /* ====================================================================
@@ -671,7 +666,7 @@ public class IcalTranslator implements Serializable {
         (ic.size() != 0) || // No components other than timezones
         (ic.getTimeZones().size() != 1)) {
       if (debug) {
-        debugMsg("Not icalendar");
+        debug("Not icalendar");
       }
       throw new CalFacadeException("Not icalendar");
     }
@@ -1288,7 +1283,7 @@ public class IcalTranslator implements Serializable {
     String id = tzid.getValue();
 
     //if (debug) {
-    //  debugMsg("Got timezone: \n" + vtz.toString() + " with id " + id);
+    //  debug("Got timezone: \n" + vtz.toString() + " with id " + id);
     //}
 
     try {
@@ -1371,9 +1366,9 @@ public class IcalTranslator implements Serializable {
       return;
     }
 
-    if (debug) {
-      debugMsg("Look for timezone with id " + tzid);
-    }
+    //if (debug) {
+    //  debug("Look for timezone with id " + tzid);
+    //}
 
     TimeZone tz = tzreg.getTimeZone(tzid);
 
@@ -1382,12 +1377,12 @@ public class IcalTranslator implements Serializable {
     }
 
     if (vtz != null) {
-      if (debug) {
-        debugMsg("found timezone with id " + tzid);
-      }
+      //if (debug) {
+      //  debug("found timezone with id " + tzid);
+      //}
       cal.getComponents().add(vtz);
     } else if (debug) {
-      debugMsg("Didn't find timezone with id " + tzid);
+      debug("Didn't find timezone with id " + tzid);
     }
 
     if (added != null) {
@@ -1403,27 +1398,6 @@ public class IcalTranslator implements Serializable {
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
-  }
-
-  private Logger getLog() {
-    if (log != null) {
-      return log;
-    }
-
-    log = Logger.getLogger(this.getClass());
-    return log;
-  }
-
-  private void warn(final String msg) {
-    getLog().warn(msg);
-  }
-
-  private void debugMsg(final String msg) {
-    getLog().debug(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLog().error(this, t);
   }
 }
 

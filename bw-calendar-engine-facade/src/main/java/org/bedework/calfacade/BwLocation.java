@@ -25,6 +25,7 @@ import org.bedework.calfacade.base.CollatableEntity;
 import org.bedework.calfacade.base.SizedEntity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.calfacade.util.FieldSplitter;
 import org.bedework.calfacade.util.QuotaUtil;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
@@ -34,9 +35,10 @@ import org.bedework.util.xml.FromXmlCallback;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /** The location of an <code>Event</code>
  *
@@ -73,13 +75,15 @@ public class BwLocation extends BwEventProperty<BwLocation>
   
   private BwString subaddress;
   private Splitter subaddressSplit;
-  
+  private FieldSplitter keysSplit;
+
   private static final int streetIndex = 0;
   private static final int cityIndex = 1;
   private static final int stateIndex = 2;
   private static final int zipIndex = 3;
   private static final int alternateAddressIndex = 4;
   private static final int codeIndex = 5;
+  private static final int keysIndex = 6; // Array delimited by newlines
 
   private String link;
 
@@ -124,6 +128,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the main address of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.ADDRESS_FLD)
   public String getAddressField() {
     return fetchAddressSplit().getFld(addrIndex);
   }
@@ -140,6 +145,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the room part of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.ROOM_FLD)
   public String getRoomField() {
     return fetchAddressSplit().getFld(roomIndex);
   }
@@ -156,6 +162,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the subfield 1 part of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.SUB1_FLD)
   public String getSubField1() {
     return fetchAddressSplit().getFld(subf1Index);
   }
@@ -172,6 +179,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the subfield 2 part of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.SUB2_FLD)
   public String getSubField2() {
     return fetchAddressSplit().getFld(subf2Index);
   }
@@ -194,6 +202,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the accessible part of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.ACCESSIBLE_FLD)
   public boolean getAccessible() {
     final String fld = fetchAddressSplit().getFld(accessibleIndex);
     return "T".equals(fld);
@@ -211,6 +220,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the geouri part of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.GEOURI_FLD)
   public String getGeouri() {
     return fetchAddressSplit().getFld(geouriIndex);
   }
@@ -226,6 +236,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
   /**
    * @return String
    */
+  @IcalProperty(pindex = PropertyInfoIndex.STATUS)
   public String getStatus() {
     final BwString s = getAddress();
     if (s == null) {
@@ -233,6 +244,172 @@ public class BwLocation extends BwEventProperty<BwLocation>
     }
 
     return s.getLang();
+  }
+
+  public static class KeyFld {
+    private final String keyName;
+    private String keyVal;
+
+    public KeyFld(final String keyName, final String keyVal) {
+      this.keyName = keyName;
+      this.keyVal = keyVal;
+    }
+
+    public String getKeyName() {
+      return keyName;
+    }
+
+    public void setKeyVal(final String val) {
+      keyVal = val;
+    }
+
+    public String getKeyVal() {
+      return keyVal;
+    }
+
+    public int hashCode() {
+      return getKeyName().hashCode();
+    }
+
+    public boolean equals(final Object o) {
+      if (!(o instanceof KeyFld)) {
+        return false;
+      }
+
+      if (o == this) {
+        return true;
+      }
+
+      return getKeyName().equals(((KeyFld)o).getKeyName());
+    }
+  }
+
+  Function<KeyFld, String> keyFldToString = val -> {
+    if (val == null) {
+      return null;
+    }
+
+    return val.getKeyName() + ":" + val.getKeyVal();
+  };
+
+  public void setKeys(final List<KeyFld> vals) {
+    final List<String> strVals = vals.stream()
+                                     .map(keyFldToString)
+                                     .collect(Collectors.<String> toList());
+
+    fetchKeysSplit().setFlds(strVals);
+    assignSubaddressField(keysIndex, fetchKeysSplit().getCombined());
+  }
+
+  Function<String, KeyFld> stringToKeyFld = val -> {
+    if (val == null) {
+      return null;
+    }
+
+    String[] vals = val.split(":");
+    if (vals.length != 2) {
+      throw new RuntimeException("Bad keys value: " + val);
+    }
+    return new KeyFld(vals[0], vals[1]);
+  };
+
+  /**
+   * @return KeyFld
+   */
+  @IcalProperty(pindex = PropertyInfoIndex.LOC_KEYS_FLD,
+          nested = true,
+          jname = "locKeys")
+  public List<KeyFld> getKeys() {
+    final List<String> vals = fetchKeysSplit().getFlds();
+    if (Util.isEmpty(vals)) {
+      return null;
+    }
+
+    return vals.stream()
+               .map(stringToKeyFld)
+               .collect(Collectors.<KeyFld> toList());
+  }
+
+  /**
+   * Add the named key with the value.
+   *
+   * @param name of key - non null
+   * @param val of key - non null
+   */
+  public void addKey(final String name, final String val) {
+    assert name != null;
+    assert val != null;
+
+    List<KeyFld> keyFlds = getKeys();
+    if (keyFlds == null) {
+      keyFlds = new ArrayList<>();
+    }
+
+    keyFlds.add(new KeyFld(name, val));
+
+    setKeys(keyFlds);
+  }
+
+  /**
+   * Update the named key with the value. Will add if it is
+   * not present
+   * @param name of key - non null
+   * @param val of key - non null
+   */
+  public void updKey(final String name, final String val) {
+    assert name != null;
+    assert val != null;
+
+    List<KeyFld> keyFlds = getKeys();
+    if (keyFlds == null) {
+      keyFlds = new ArrayList<>();
+    }
+    KeyFld kf = null;
+
+    for (final KeyFld lkf: keyFlds) {
+      if (lkf.getKeyName().equals(name)) {
+        kf = lkf;
+        break;
+      }
+    }
+
+    if (kf == null) {
+      keyFlds.add(new KeyFld(name, val));
+    } else {
+      kf.setKeyVal(val);
+    }
+
+    setKeys(keyFlds);
+  }
+
+  /** Delete the named key from the key set (if it exists)
+   *
+   * @param name of key - non null
+   */
+  public void delKey(final String name) {
+    assert name != null;
+
+    final List<KeyFld> keyFlds = getKeys();
+    if (keyFlds == null) {
+      return;
+    }
+
+    KeyFld kf = null;
+
+    for (final KeyFld lkf: keyFlds) {
+      if (lkf.getKeyName().equals(name)) {
+        kf = lkf;
+        break;
+      }
+    }
+
+    if (kf == null) {
+      return;
+    }
+
+    keyFlds.remove(kf);
+
+    setKeys(keyFlds);
   }
 
   /**
@@ -277,6 +454,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the street part of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.STREET_FLD)
   public String getStreet() {
     return fetchSubaddressSplit().getFld(streetIndex);
   }
@@ -293,6 +471,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the city part of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.CITY_FLD)
   public String getCity() {
     return fetchSubaddressSplit().getFld(cityIndex);
   }
@@ -309,6 +488,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the state part of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.STATE_FLD)
   public String getState() {
     return fetchSubaddressSplit().getFld(stateIndex);
   }
@@ -325,6 +505,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the zip part of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.ZIP_FLD)
   public String getZip() {
     return fetchSubaddressSplit().getFld(zipIndex);
   }
@@ -341,6 +522,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the alternateAddress part of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.ALTADDRESS_FLD)
   public String getAlternateAddress() {
     return fetchSubaddressSplit().getFld(alternateAddressIndex);
   }
@@ -357,6 +539,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the code part of the location
    */
+  @IcalProperty(pindex = PropertyInfoIndex.CODEIDX_FLD)
   public String getCode() {
     return fetchSubaddressSplit().getFld(codeIndex);
   }
@@ -571,6 +754,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
     return ts.toString();
   }
 
+  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     final BwLocation loc = new BwLocation();
@@ -643,14 +827,8 @@ public class BwLocation extends BwEventProperty<BwLocation>
   }
   
   private void assignAddressField(final int index, final String val) {
-    final String checkVal;
-    if (val == null) {
-      checkVal = null;
-    } else {
-      checkVal = val.replace(fieldDelimiter, "-");
-    }
-    fetchAddressSplit().setFld(index, checkVal);
-    setAddress(fetchAddressSplit().getString(getAddress()));
+    fetchAddressSplit().setFld(index, val);
+    setAddress(fetchAddressSplit().getCombined(getAddress()));
   }
 
   private Splitter fetchSubaddressSplit() {
@@ -662,86 +840,35 @@ public class BwLocation extends BwEventProperty<BwLocation>
   }
 
   private void assignSubaddressField(final int index, final String val) {
-    final String checkVal;
-    if (val == null) {
-      checkVal = null;
-    } else {
-      checkVal = val.replace(fieldDelimiter, "-");
-    }
-    fetchSubaddressSplit().setFld(index, checkVal);
-    setSubaddress(fetchSubaddressSplit().getString(getSubaddress()));
+    fetchSubaddressSplit().setFld(index, val);
+    setSubaddress(fetchSubaddressSplit().getCombined(getSubaddress()));
   }
-  
-  private static class Splitter {
-    List<String> flds;
-    
+
+  private FieldSplitter fetchKeysSplit() {
+    if (keysSplit == null) {
+      keysSplit = new FieldSplitter("\b");
+      keysSplit.setVal(fetchSubaddressSplit().getFld(keysIndex));
+    }
+
+    return keysSplit;
+  }
+
+  private static class Splitter extends FieldSplitter {
     Splitter(final BwString fld) {
+      super(fieldDelimiter);
+
       if ((fld != null) && (fld.getValue() != null)) {
-        flds = new ArrayList<>(
-                Arrays.asList(fld.getValue().split(fieldDelimiter)));
+        setVal(fld.getValue());
       }
     }
-    
-    void setFld(final int i, final String val) {
-      if (flds == null) {
-        flds = new ArrayList<>(i + 1);
-      }
-      
-      while (i > flds.size() - 1) {
-        flds.add(null);
-      }
-      flds.set(i, val);
-    }
-    
-    String getFld(final int i) {
-      if (flds == null) {
-        return null;
-      }
-      if (i >= flds.size()) {
-        return null;
-      }
-      
-      final String s = flds.get(i);
-      
-      if (s == null) {
-        return null;
-      }
-      
-      if (s.length() == 0) {
-        return null;
-      }
-      
-      return s;
-    }
-    
-    public BwString getString(final BwString val) {
+
+    public BwString getCombined(final BwString val) {
       if (val != null) {
-        val.setValue(toString());
+        val.setValue(getCombined());
         return val;
       }
       
-      return new BwString(null, toString());
-    }
-    
-    public String toString() {
-      if (flds == null) {
-        return null;
-      }
-      
-      String fld = null;
-      for (final String s: flds) {
-        if (fld != null) {
-          fld += fieldDelimiter;
-        } else {
-          fld = "";
-        }
-        
-        if (s != null) {
-          fld += s;
-        }
-      }
-      
-      return fld;
+      return new BwString(null, getCombined());
     }
   }
 }

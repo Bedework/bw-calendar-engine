@@ -33,7 +33,6 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.Util.AdjustCollectionResult;
 import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.xml.FromXmlCallback;
 import org.bedework.util.xml.tagdefs.AppleIcalTags;
@@ -41,6 +40,7 @@ import org.bedework.util.xml.tagdefs.AppleServerTags;
 import org.bedework.util.xml.tagdefs.BedeworkServerTags;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
+import org.bedework.util.xml.tagdefs.XcalTags;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -50,6 +50,7 @@ import org.w3c.dom.Element;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -223,6 +224,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     /** Shareable/publishable */
     public boolean shareable;
 
+    /** Provision at creation and cehck for them */
+    public boolean provision;
+
     /**
      * @param collectionType the type
      * @param special true for special
@@ -235,6 +239,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
      * @param onlyCalEntities one entities in this
      * @param scheduling a scheduling collection?
      * @param shareable is it shareable?
+     * @param provision do we provision?
      */
     public CollectionInfo(final int collectionType,
                           final boolean special,
@@ -246,7 +251,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
                           final boolean canAlias,
                           final boolean onlyCalEntities,
                           final boolean scheduling,
-                          final boolean shareable) {
+                          final boolean shareable,
+                          final boolean provision) {
       this.collectionType = collectionType;
       this.special = special;
       this.childrenAllowed = childrenAllowed;
@@ -258,6 +264,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
       this.onlyCalEntities = onlyCalEntities;
       this.scheduling = scheduling;
       this.shareable = shareable;
+      this.provision = provision;
     }
   }
 
@@ -267,37 +274,41 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /** The info */
   private static final CollectionInfo[] collectionInfo = {
-    ci(calTypeFolder,             f, T, f, f, f, T, T, f, f, f),
-    ci(calTypeCalendarCollection, f, T, T, T, T, T, T, T, T, T),
-    ci(calTypeTrash,              o, o, o, o, o, o, o, o, o, o),
-    ci(calTypeDeleted,            o, o, o, o, o, o, o, o, o, o),
-    ci(calTypeBusy,               T, f, T, T, T, T, f, T, f, f),
-    ci(calTypeInbox,              T, f, T, f, f, f, f, T, f, f),
-    ci(calTypeOutbox,             T, f, T, f, f, f, f, T, f, f),
-    ci(calTypeAlias,              f, f, f, f, f, T, T, f, f, f),
-    ci(calTypeExtSub,             f, T, T, T, f, T, T, T, f, f),
-    ci(calTypeResourceCollection, f, T, f, f, f, f, f, f, f, f),
-    ci(calTypeNotifications,      T, f, f, f, f, f, f, f, f, f),
-    ci(calTypeEventList,          T, f, T, T, T, T, f, T, f, f),
-    ci(calTypePoll,               f, T, T, T, T, T, T, T, T, T),
-    ci(calTypePendingInbox,       T, f, T, f, f, f, f, T, f, f),
-    ci(calTypeAttachments,        T, f, T, f, f, f, f, f, f, f),
-    ci(calTypeTasks,              f, T, T, T, T, T, T, T, T, T),
+    ci(calTypeFolder,             f, T, f, f, f, T, T, f, f, f, f),
+    ci(calTypeCalendarCollection, f, T, T, T, T, T, T, T, T, T, f),
+    ci(calTypeTrash,              o, o, o, o, o, o, o, o, o, o, o),
+    ci(calTypeDeleted,            o, o, o, o, o, o, o, o, o, o, o),
+    ci(calTypeBusy,               T, f, T, T, T, T, f, T, f, f, f),
+    ci(calTypeInbox,              T, f, T, f, f, f, f, T, f, f, T),
+    ci(calTypeOutbox,             T, f, T, f, f, f, f, T, f, f, T),
+    ci(calTypeAlias,              f, f, f, f, f, T, T, f, f, f, f),
+    ci(calTypeExtSub,             f, T, T, T, f, T, T, T, f, f, f),
+    ci(calTypeResourceCollection, f, T, f, f, f, f, f, f, f, f, f),
+    ci(calTypeNotifications,      T, f, f, f, f, f, f, f, f, f, T),
+    ci(calTypeEventList,          T, f, T, T, T, T, f, T, f, f, f),
+    ci(calTypePoll,               f, T, T, T, T, T, T, T, T, T, T),
+    ci(calTypePendingInbox,       T, f, T, f, f, f, f, T, f, f, f),
+    ci(calTypeAttachments,        T, f, T, f, f, f, f, f, f, f, f),
+    ci(calTypeTasks,              f, T, T, T, T, T, T, T, T, T, T),
   };
-  /*                  ^           1  2  3  4  5  6  7  8  9 10
-                      |           |  |  |  |  |  |  |  |  |  |
-    collectionType ---+           |  |  |  |  |  |  |  |  |  |
-           special  1 ------------+  |  |  |  |  |  |  |  |  |
-   childrenAllowed  2 --------------+|  |  |  |  |  |  |  |  |
-         indexable  3 ------------------+  |  |  |  |  |  |  |
-         uniqueKey  4 ---------------------+  |  |  |  |  |  |
-  allowAnnotations  5 ------------------------+  |  |  |  |  |
-     allowFreeBusy  6 ---------------------------+  |  |  |  |
-          canAlias  7 ------------------------------+  |  |  |
-   onlyCalEntities  8 ---------------------------------+  |  |
-        scheduling  9 ------------------------------------+  |
-         shareable 10 ---------------------------------------+
+  /*                  ^           1  2  3  4  5  6  7  8  9 10 11
+                      |           |  |  |  |  |  |  |  |  |  |  |
+    collectionType ---+           |  |  |  |  |  |  |  |  |  |  |
+           special  1 ------------+  |  |  |  |  |  |  |  |  |  |
+   childrenAllowed  2 --------------+|  |  |  |  |  |  |  |  |  |
+         indexable  3 ------------------+  |  |  |  |  |  |  |  |
+         uniqueKey  4 ---------------------+  |  |  |  |  |  |  |
+  allowAnnotations  5 ------------------------+  |  |  |  |  |  |
+     allowFreeBusy  6 ---------------------------+  |  |  |  |  |
+          canAlias  7 ------------------------------+  |  |  |  |
+   onlyCalEntities  8 ---------------------------------+  |  |  |
+        scheduling  9 ------------------------------------+  |  |
+         shareable 10 ---------------------------------------+  |
+         provision 11 ------------------------------------------+
    */
+
+  private static final List<CollectionInfo> roCollectionInfo =
+     Collections.unmodifiableList(Arrays.asList(collectionInfo));
 
   /* Certain collections should be initialised so that they
      restrict the entity types that can be added to them. The
@@ -339,7 +350,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    */
   public static final String tombstonedSuffix = "(--TOMBSTONED--)";
 
-  private Set<String> categoryUids = null;
+  private Set<BwCategory> categories = null;
 
   private Set<BwProperty> properties;
 
@@ -369,8 +380,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    *                      Non-db fields
    * ==================================================================== */
 
-  private Set<BwCategory> categories = null;
-
   private BwCalendar aliasTarget;
 
   private BwCalendar aliasOrigin;
@@ -384,6 +393,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   private Collection<BwCalendar> children;
 
   private List<String> vpollSupportedComponents;
+
+  private Set<String> categoryUids;
 
   /** Constructor
    */
@@ -636,36 +647,16 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    * ==================================================================== */
 
   @Override
-  public void setCategoryUids(final Set<String> val) {
-    categoryUids = val;
-    categories = null;  // Force refresh
-  }
-
-  @Override
-  public Set<String> getCategoryUids() {
-    return categoryUids;
-  }
-
-  @Override
-  @IcalProperty(pindex = PropertyInfoIndex.CATEGORIES,
-                eventProperty = true,
-                todoProperty = true,
-                journalProperty = true)
-  @NoProxy
-  @NoDump
   public void setCategories(final Set<BwCategory> val) {
     categories = val;
   }
 
   @Override
-  @NoProxy
-  @NoDump
   public Set<BwCategory> getCategories() {
     return categories;
   }
 
   @Override
-  @NoProxy
   @NoDump
   public int getNumCategories() {
     Set<BwCategory> c = getCategories();
@@ -693,9 +684,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   @Override
-  @NoProxy
   public boolean removeCategory(final BwCategory val) {
-    Set cats = getCategories();
+    Set<BwCategory> cats = getCategories();
     if (cats == null) {
       return false;
     }
@@ -704,9 +694,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   @Override
-  @NoProxy
   public boolean hasCategory(final BwCategory val) {
-    Set cats = getCategories();
+    Set<BwCategory> cats = getCategories();
     if (cats == null) {
       return false;
     }
@@ -715,7 +704,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   @Override
-  @NoProxy
   public Set<BwCategory> copyCategories() {
     if (getNumCategories() == 0) {
       return null;
@@ -730,7 +718,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   @Override
-  @NoProxy
   public Set<BwCategory> cloneCategories() {
     if (getNumCategories() == 0) {
       return null;
@@ -742,35 +729,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     }
 
     return ts;
-  }
-
-  @Override
-  @NoProxy
-  public void adjustCategories() {
-    if (Util.isEmpty(getCategories())) {
-      if (getCategoryUids() != null) {
-        getCategoryUids().clear();
-      }
-
-      return;
-    }
-
-    Collection<String> uids = new ArrayList<String>();
-
-    for (BwCategory cat: getCategories()) {
-      if (cat.getUid() == null) {
-        throw new RuntimeException("Attempt to add unsaved category." + cat);
-      }
-      uids.add(cat.getUid());
-    }
-
-    AdjustCollectionResult<String> acr = Util.adjustCollection(uids,
-                                                               getCategoryUids());
-
-    if ((getCategoryUids() == null) &&
-        !acr.added.isEmpty()) {
-      setCategoryUids(new TreeSet<String>(acr.added));
-    }
   }
 
   /** Set the alias uri
@@ -1062,8 +1020,20 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
         return supportedComponents;
       }
 
+      if (ctype == calTypeTasks) {
+        supportedComponents.add("VTODO");
+        return supportedComponents;
+      }
+
+      if (ctype == calTypeInbox) {
+        supportedComponents.add("VPOLL");
+        supportedComponents.add("VEVENT");
+        supportedComponents.add("VTODO");
+        supportedComponents.add("VAVAILABILITY");
+        return supportedComponents;
+      }
+
       if ((ctype != calTypeCalendarCollection) &&
-          (ctype != calTypeInbox) &&
           (ctype != calTypeOutbox) &&
           (ctype != calTypeExtSub)) {
         return supportedComponents;
@@ -1076,10 +1046,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
         //supportedComponents.add("VTODO");
         //supportedComponents.add("VAVAILABILITY");
       } else {
-        String[] ss = slist.split(",");
-        for (String s: ss) {
-          supportedComponents.add(s);
-        }
+        final String[] ss = slist.split(",");
+        supportedComponents.addAll(Arrays.asList(ss));
       }
     }
 
@@ -1246,6 +1214,79 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   @NoDump
   public String getTimezone() {
     return getProperty(CaldavTags.calendarTimezone.getLocalPart());
+  }
+
+  /** Set the subscription target type property
+   *
+   * @param val subscription target type
+   */
+  public void setSubscriptionTargetType(final String val) {
+    if (val == null) {
+      final String p = getQproperty(BedeworkServerTags.subscriptionTargetType);
+      if (p != null) {
+        removeQproperty(BedeworkServerTags.subscriptionTargetType);
+      }
+    } else {
+      setQproperty(BedeworkServerTags.subscriptionTargetType, val);
+    }
+  }
+
+  /** Get the subscription target type property
+   *
+   * @return String subscription target type
+   */
+  @NoDump
+  public String getSubscriptionTargetType() {
+    return getQproperty(BedeworkServerTags.subscriptionTargetType);
+  }
+
+  /** Set the location key property
+   *
+   * @param val location key
+   */
+  public void setLocationKey(final String val) {
+    if (val == null) {
+      final String p = getQproperty(XcalTags.xBedeworkLocationKey);
+      if (p != null) {
+        removeQproperty(XcalTags.xBedeworkLocationKey);
+      }
+    } else {
+      setQproperty(XcalTags.xBedeworkLocationKey, val);
+    }
+  }
+
+  /** Get the location key property
+   *
+   * @return String location key
+   */
+  @NoDump
+  public String getLocationKey() {
+    return getQproperty(XcalTags.xBedeworkLocationKey);
+  }
+
+  /** Set the orgsync public only property
+   *
+   * @param val orgsync public only property
+   */
+  public void setOrgSyncPublicOnly(final Boolean val) {
+    if (val == null) {
+      final String p = getQproperty(BedeworkServerTags.orgSyncPublicOnly);
+      if (p != null) {
+        removeQproperty(BedeworkServerTags.orgSyncPublicOnly);
+      }
+    } else {
+      setQproperty(BedeworkServerTags.orgSyncPublicOnly, String.valueOf(val));
+    }
+  }
+
+  /** Get the orgsync public only property property
+   *
+   * @return boolean subscription target type
+   */
+  @NoDump
+  public boolean getOrgSyncPublicOnly() {
+    return Boolean.valueOf(getQproperty(
+            BedeworkServerTags.orgSyncPublicOnly));
   }
 
   /** Set the topical area property
@@ -1696,6 +1737,30 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return children;
   }
 
+  /** Set list of referenced categories
+   *
+   * @param val list of category uids
+   */
+  @NoProxy
+  @NoWrap
+  @NoDump
+  @Override
+  public void setCategoryUids(final Set<String> val) {
+    categoryUids = val;
+  }
+
+  /**
+   *
+   * @return list of category uids.
+   */
+  @NoProxy
+  @NoWrap
+  @NoDump
+  @Override
+  public Set<String> getCategoryUids() {
+    return categoryUids;
+  }
+
   /**
    * @return CollectionInfo for this entity
    */
@@ -1705,7 +1770,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   /**
-   * @param type
+   * @param type of collection
    * @return CollectionInfo for an entity of the given type
    */
   @NoDump
@@ -1713,7 +1778,16 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   public CollectionInfo getCollectionInfo(final int type) {
     return collectionInfo[type];
   }
-  
+
+  /**
+   * @return CollectionInfo for all types
+   */
+  @NoDump
+  @NoWrap
+  public static List<CollectionInfo> getAllCollectionInfo() {
+    return roCollectionInfo;
+  }
+
   /** Make this thing a tombstoned collection. Non-reversible
    */
   public void tombstone() {
@@ -1729,7 +1803,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
      */
 
     setName(getName() + tombstonedSuffix);
-    setPath(Util.buildPath(true, getPath(), tombstonedSuffix));
+    setPath(getPath() + tombstonedSuffix);
     getLastmod().setPath(getPath());
   }
 
@@ -2137,7 +2211,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
                                    final boolean canAlias,
                                    final boolean onlyCalEntities,
                                    final boolean scheduling,
-                                   final boolean shareable) {
+                                   final boolean shareable,
+                                   final boolean provision) {
     return new CollectionInfo(collectionType,
                               special,
                               childrenAllowed,
@@ -2148,7 +2223,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
                               canAlias,
                               onlyCalEntities,
                               scheduling,
-                              shareable);
+                              shareable,
+                              provision);
   }
 
 }

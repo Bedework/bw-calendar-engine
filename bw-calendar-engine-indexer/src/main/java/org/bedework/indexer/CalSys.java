@@ -119,7 +119,7 @@ public abstract class CalSys extends Logged {
       return null;
     }
 
-    return href.substring(0, pos + 1);
+    return href.substring(0, pos);
   }
 
   protected String getName(final String href) {

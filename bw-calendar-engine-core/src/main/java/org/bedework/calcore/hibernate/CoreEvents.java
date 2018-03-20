@@ -28,7 +28,6 @@ import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCalendar.CollectionInfo;
-import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
@@ -38,7 +37,6 @@ import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
-import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeDupNameException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -74,6 +72,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+
+import static org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 
 /** Class to encapsulate most of what we do with events.
  *
@@ -302,7 +302,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
      */
 
     final EventsQueryResult eqr = new EventsQueryResult();
-    eqr.flt = new Filters(null);
+    eqr.flt = new Filters(cb, null);
     eqr.addColPath(colPath);
 
     for (final CoreEventInfo cei: ceis) {
@@ -419,6 +419,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                                              final BwDateTime startDate,
                                              final BwDateTime endDate,
                                              final List<BwIcalPropertyInfoEntry> retrieveList,
+                                             final DeletedState delState,
                                              RecurringRetrievalMode recurRetrieval,
                                              final boolean freeBusy) throws CalFacadeException {
     /* Ensure dates are limited explicitly or implicitly */
@@ -474,6 +475,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                                     start,
                                     end,
                                     -1,
+                                    delState,
                                     recurRetrieval);
 
     final List<SearchResultEntry> sres =
@@ -1178,7 +1180,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
   private void deleteTombstoned(final String colPath,
                                 final String uid) throws CalFacadeException {
-    dao.deleteTombstonedEvent(colPath, uid);
+    dao.deleteTombstonedEvent(fixPath(colPath), uid);
   }
 
   @Override
@@ -1189,11 +1191,13 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       throw new CalFacadeBadRequest("Missing path");
     }
 
-    final BwCalendar col = getCollection(path);
+    final String fpath = fixPath(path);
+
+    final BwCalendar col = getCollection(fpath);
     ac.checkAccess(col, privAny, false);
 
     @SuppressWarnings("unchecked")
-    final List<BwEvent> evs = dao.getSynchEventObjects(path, token);
+    final List<BwEvent> evs = dao.getSynchEventObjects(fpath, token);
 
     if (debug) {
       trace(" ----------- number evs = " + evs.size());

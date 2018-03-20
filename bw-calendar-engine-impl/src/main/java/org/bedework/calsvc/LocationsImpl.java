@@ -21,11 +21,11 @@ package org.bedework.calsvc;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calsvci.Locations;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 /** Class which handles manipulation of Locations.
  *
@@ -50,23 +50,17 @@ public class LocationsImpl
   }
 
   @Override
+  public GetEntityResponse<BwLocation> fetchLocationByKey(final String keyName,
+                                       final String keyVal) {
+    return getIndexer().fetchLocationByKey(keyName, keyVal);
+  }
+
+  @Override
   Collection<BwLocation> fetchAllIndexed(final boolean publick,
                                          final String ownerHref)
           throws CalFacadeException {
     return filterDeleted(getIndexer(publick, 
                                     ownerHref).fetchAllLocations());
-  }
-
-  @Override
-  Collection<BwLocation> filterDeleted(final Collection<BwLocation> ents)
-          throws CalFacadeException {
-    if (isSuper()) {
-      return ents;
-    }
-
-    return ents.stream()
-               .filter(ent -> !"deleted".equals(ent.getStatus()))
-               .collect(Collectors.toList());
   }
 
   @Override
@@ -87,7 +81,7 @@ public class LocationsImpl
 
   @Override
   public BwLocation find(final BwString val) throws CalFacadeException {
-    return getIndexer().fetchLocation("address.value",
+    return getIndexer().fetchLocation(val.getValue(),
                                       PropertyInfoIndex.ADDRESS,
                                       PropertyInfoIndex.VALUE);
   }

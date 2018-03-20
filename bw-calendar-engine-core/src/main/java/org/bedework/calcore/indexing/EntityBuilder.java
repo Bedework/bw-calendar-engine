@@ -32,7 +32,6 @@ import org.bedework.calfacade.BwGeo;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwLongString;
 import org.bedework.calfacade.BwOrganizer;
-import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.BwRelatedTo;
 import org.bedework.calfacade.BwRequestStatus;
@@ -56,10 +55,8 @@ import org.bedework.util.misc.Util;
 import net.fortuna.ical4j.model.property.RequestStatus;
 
 import java.math.BigDecimal;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,9 +73,6 @@ import static org.bedework.calcorei.CalintfDefs.guestMode;
 public class EntityBuilder extends EntityBuilderBase {
   private final boolean publick;
   private final int currentMode;
-  private final BwPrincipal principal;
-
-  private final Deque<Map<String, Object>> fieldStack = new ArrayDeque<>();
 
   /** Constructor - 1 use per entity
    *
@@ -87,13 +81,11 @@ public class EntityBuilder extends EntityBuilderBase {
    */
   EntityBuilder(final boolean publick,
                 final int currentMode,
-                final BwPrincipal principal,
                 final Map<String, ?> fields)
           throws CalFacadeException, IndexException {
     super(fields, 0);
     this.publick = publick;
     this.currentMode = currentMode;
-    this.principal = principal;
     pushFields(fields);
   }
 
@@ -226,37 +218,42 @@ public class EntityBuilder extends EntityBuilderBase {
     if (now - lastPurge < purgeTime) {
       return;
     }
-    
-    final List<String> toPurge = new ArrayList<>(eventCache.size() / 2);
-    
-    for (final EventCacheEntry ece: eventCache.values()) {
-      if (ece.old(now)) {
-        toPurge.add(ece.key);
+
+    synchronized (eventCache) {
+      final List<String> toPurge = new ArrayList<>(
+              eventCache.size() / 2);
+
+      for (final EventCacheEntry ece : eventCache.values()) {
+        if (ece.old(now)) {
+          toPurge.add(ece.key);
+        }
       }
+
+      for (final String key : toPurge) {
+        eventCache.remove(key);
+      }
+
+      lastPurge = now;
+      purges++;
     }
-    
-    for (final String key: toPurge) {
-      eventCache.remove(key);
-    }
-    
-    lastPurge = now;
-    purges++;
   }
   
   static void checkFlushCache(final String changeToken) {
-    if (changeToken == null) {
-      return;
-    }
-    
-    if (currentChangeToken == null) {
-      currentChangeToken = changeToken;
-      return;
-    }
+    synchronized (eventCache) {
+      if (changeToken == null) {
+        return;
+      }
 
-    if (!currentChangeToken.equals(changeToken)) {
-      currentChangeToken = changeToken;
-      eventCache.clear();
-      flushes++;
+      if (currentChangeToken == null) {
+        currentChangeToken = changeToken;
+        return;
+      }
+
+      if (!currentChangeToken.equals(changeToken)) {
+        currentChangeToken = changeToken;
+        eventCache.clear();
+        flushes++;
+      }
     }
   }
   
@@ -319,6 +316,7 @@ public class EntityBuilder extends EntityBuilderBase {
 
     restoreSharedEntity(ev);
 
+    ev.setDeleted(getBool(PropertyInfoIndex.DELETED));
     ev.setName(getString(PropertyInfoIndex.NAME));
     ev.setCalSuite(getString(PropertyInfoIndex.CALSUITE));
 
@@ -414,7 +412,9 @@ public class EntityBuilder extends EntityBuilderBase {
     }
     
     if (tryCache) {
-      eventCache.put(cacheKey, new EventCacheEntry(cacheKey, ei));
+      synchronized (eventCache) {
+        eventCache.put(cacheKey, new EventCacheEntry(cacheKey, ei));
+      }
     }
 
     return ei;
@@ -427,7 +427,7 @@ public class EntityBuilder extends EntityBuilderBase {
   private boolean pushFields(final PropertyInfoIndex pi) throws CalFacadeException {
     try {
       return pushFields(getFirstValue(pi));
-    } catch (IndexException ie) {
+    } catch (final IndexException ie) {
       throw new CalFacadeException(ie);
     }
   }
@@ -525,7 +525,7 @@ public class EntityBuilder extends EntityBuilderBase {
         att.setAttendeeUri(getString(PropertyInfoIndex.URI));
 
         atts.add(att);
-      } catch (IndexException ie) {
+      } catch (final IndexException ie) {
         throw new CalFacadeException(ie);
       } finally {
         popFields();
@@ -599,7 +599,7 @@ public class EntityBuilder extends EntityBuilderBase {
         xp.setValue(getString(PropertyInfoIndex.VALUE));
 
         xprops.add(xp);
-      } catch (IndexException ie) {
+      } catch (final IndexException ie) {
         throw new CalFacadeException(ie);
       } finally {
         popFields();
@@ -607,30 +607,6 @@ public class EntityBuilder extends EntityBuilderBase {
     }
 
     return xprops;
-  }
-
-  private void restoreContacts(final BwEvent ev) throws CalFacadeException {
-    final List<Object> cFlds = getFieldValues(PropertyInfoIndex.CONTACT);
-
-    if (Util.isEmpty(cFlds)) {
-      return;
-    }
-
-    final Set<String> uids = new TreeSet<>();
-
-    for (final Object o: cFlds) {
-      try {
-        pushFields(o);
-        final String uid = getString(PropertyInfoIndex.UID);
-        uids.add(uid);
-      } catch (IndexException ie) {
-        throw new CalFacadeException(ie);
-      } finally {
-        popFields();
-      }
-    }
-
-    ev.setContactUids(uids);
   }
 
   @SuppressWarnings("unchecked")
@@ -678,7 +654,7 @@ public class EntityBuilder extends EntityBuilderBase {
         pushFields(o);
 
         ss.add(restoreBwString(longStrings));
-      } catch (IndexException ie) {
+      } catch (final IndexException ie) {
         throw new CalFacadeException(ie);
       } finally {
         popFields();
@@ -731,7 +707,7 @@ public class EntityBuilder extends EntityBuilderBase {
                                                         floating);
 
         tms.add(tm);
-      } catch (IndexException ie) {
+      } catch (final IndexException ie) {
         throw new CalFacadeException(ie);
       } finally {
         popFields();
@@ -815,7 +791,7 @@ public class EntityBuilder extends EntityBuilderBase {
         alarm.setXproperties(restoreXprops());
 
         alarms.add(alarm);
-      } catch (IndexException ie) {
+      } catch (final IndexException ie) {
         throw new CalFacadeException(ie);
       } finally {
         popFields();
@@ -871,7 +847,7 @@ public class EntityBuilder extends EntityBuilderBase {
         final String name = getString(PropertyInfoIndex.NAME);
         final String val = getString(PropertyInfoIndex.VALUE);
         props.add(new BwProperty(name, val));
-      } catch (IndexException ie) {
+      } catch (final IndexException ie) {
         throw new CalFacadeException(ie);
       } finally {
         popFields();
@@ -881,27 +857,34 @@ public class EntityBuilder extends EntityBuilderBase {
     col.setProperties(props);
   }
 
+  private void restoreContacts(final BwEvent ev) throws CalFacadeException {
+    ev.setContactUids(getUids(getFieldValues(PropertyInfoIndex.CONTACT)));
+  }
+
   private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
-    final Collection<Object> vals = getFieldValues(PropertyInfoIndex.CATEGORIES);
+    ce.setCategoryUids(getUids(getFieldValues(PropertyInfoIndex.CATEGORIES)));
+  }
+
+  private Set<String> getUids(final List<Object> vals) throws CalFacadeException {
     if (Util.isEmpty(vals)) {
-      return;
+      return null;
     }
 
-    final Set<String> catUids = new TreeSet<>();
+    final Set<String> uids = new TreeSet<>();
 
     for (final Object o: vals) {
       try {
         pushFields(o);
         final String uid = getString(PropertyInfoIndex.UID);
-        catUids.add(uid);
-      } catch (IndexException ie) {
+        uids.add(uid);
+      } catch (final IndexException ie) {
         throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
     }
 
-    ce.setCategoryUids(catUids);
+    return uids;
   }
 
   @SuppressWarnings("unchecked")
@@ -910,19 +893,7 @@ public class EntityBuilder extends EntityBuilderBase {
   }
 
   private Set<String> getStringSet(final PropertyInfoIndex pi) {
-    final List<Object> l = getFieldValues(pi);
-
-    if (Util.isEmpty(l)) {
-      return null;
-    }
-
-    final TreeSet<String> ts = new TreeSet<>();
-
-    for (final Object o: l) {
-      ts.add((String)o);
-    }
-
-    return ts;
+    return getStringSet(getJname(pi));
   }
 
 

@@ -35,6 +35,7 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
@@ -45,11 +46,11 @@ import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.UsersI;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.security.PwEncryptionIntf;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -57,26 +58,24 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.noDeleted;
+import static org.bedework.calfacade.responses.Response.Status.failed;
+
 /** This acts as an interface to the database for more client oriented
  * bedework objects. CalIntf is a more general calendar specific interface.
  *
  * @author Mike Douglass       douglm - rpi.edu
  */
-public class CalSvcDb implements Serializable {
-  protected boolean debug;
-
+public class CalSvcDb extends Logged implements Serializable {
   private CalSvc svci;
 
   private CalSvcIPars pars;
-
-  private transient Logger log;
 
   /**
    * @param svci
    */
   public CalSvcDb(final CalSvc svci) {
     setSvc(svci);
-    debug = getLogger().isDebugEnabled();
   }
 
   /** Call at svci open
@@ -237,7 +236,7 @@ public class CalSvcDb implements Serializable {
     final Events events = (Events)getSvc().getEventsHandler();
 
     return events.getMatching(cols, filter, startDate, endDate,
-                              retrieveList,
+                              retrieveList, noDeleted,
                               recurRetrieval, freeBusy);
   }
   
@@ -330,15 +329,15 @@ public class CalSvcDb implements Serializable {
     return getPrincipal().getPrincipalRef();
   }
 
-  public BwIndexer getIndexer() throws CalFacadeException {
+  public BwIndexer getIndexer() {
     return svci.getIndexer();
   }
 
-  public BwIndexer getIndexer(final boolean publick) throws CalFacadeException {
+  public BwIndexer getIndexer(final boolean publick) {
     return svci.getIndexer(publick);
   }
 
-  public BwIndexer getPublicIndexer() throws CalFacadeException {
+  public BwIndexer getPublicIndexer() {
     return svci.getIndexer(true);
   }
 
@@ -595,14 +594,27 @@ public class CalSvcDb implements Serializable {
    *                   Private methods
    * ==================================================================== */
 
-  /* Get a logger for messages
-   */
-  private Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
+  private <T extends Response> T errorReturn(final T resp,
+                                             final Throwable t) {
+    return errorReturn(resp, t, failed);
+  }
 
-    return log;
+  private <T extends Response> T errorReturn(final T resp,
+                                             final Throwable t,
+                                             final Response.Status st) {
+    if (debug) {
+      error(t);
+    }
+    return errorReturn(resp, t.getLocalizedMessage(), st);
+  }
+
+  private <T extends Response> T errorReturn(final T resp,
+                                             final String msg,
+                                             final Response.Status st) {
+    resp.setMessage(msg);
+    resp.setStatus(st);
+
+    return resp;
   }
 }
 

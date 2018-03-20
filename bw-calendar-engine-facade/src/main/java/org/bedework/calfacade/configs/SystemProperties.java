@@ -158,6 +158,19 @@ public interface SystemProperties extends CalDAVSystemProperties {
   		"The format is rigid, 2 letter language, 2 letter country. No spaces.")
   String getLocaleList();
 
+  /** Set the token for socket service
+   *
+   * @param val the token for socket service
+   */
+  void setSocketToken(String val);
+
+  /** Get the token for socket service
+   *
+   * @return token
+   */
+  @MBeanInfo("The token for socket service")
+  String getSocketToken();
+
   /** Set the token for event reg admins
    *
    * @param val the token for event reg admins

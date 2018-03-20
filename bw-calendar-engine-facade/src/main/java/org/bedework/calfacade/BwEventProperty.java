@@ -19,9 +19,11 @@
 package org.bedework.calfacade;
 
 import org.bedework.access.Ace;
+import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.FixNamesEntity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.misc.Util;
@@ -52,6 +54,22 @@ public abstract class BwEventProperty<T> extends
    * @return Finder Key value from this object.
    */
   public abstract BwString getFinderKeyValue();
+
+  public final static String statusDeleted = "deleted";
+
+  /**
+   * @return String
+   */
+  @IcalProperty(pindex = PropertyInfoIndex.STATUS)
+  public abstract String getStatus();
+
+  /**
+   * @return String
+   */
+  @IcalProperty(pindex = PropertyInfoIndex.DELETED)
+  public boolean getDeleted() {
+    return statusDeleted.equals(getStatus());
+  }
 
   /** Set the uid
    *

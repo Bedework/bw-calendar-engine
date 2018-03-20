@@ -35,6 +35,9 @@ import org.bedework.util.misc.Util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.bedework.calfacade.BwEventProperty.statusDeleted;
 
 /** Class which handles manipulation of BwEventProperty subclasses which are
  * treated in the same manner, these being Category, Location and contact.
@@ -78,8 +81,6 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   abstract Collection<T> fetchAllIndexed(boolean publick,
                                          String ownerHref) throws CalFacadeException;
 
-  abstract Collection<T> filterDeleted(final Collection<T> ents) throws CalFacadeException;
-  
   abstract T fetchIndexedByUid(String uid) throws CalFacadeException;
 
   /** Find a persistent entry like the one given or return null.
@@ -126,6 +127,17 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   public Collection<T> getPublic()
           throws CalFacadeException {
     return get(true, null);
+  }
+
+  Collection<T> filterDeleted(final Collection<T> ents)
+          throws CalFacadeException {
+    if (isSuper()) {
+      return ents;
+    }
+
+    return ents.stream()
+               .filter(ent -> !statusDeleted.equals(ent.getStatus()))
+               .collect(Collectors.toList());
   }
 
   @Override
@@ -481,7 +493,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     }
 
     /* Add them to the uid cache */
-    for (T ent: ents) {
+    for (final T ent: ents) {
       putCachedByUid(ent.getUid(), ent);
     }
 
@@ -499,7 +511,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     return filterDeleted(someEnts);
   }
 
-  private String checkHref(String ownerHref) throws CalFacadeException {
+  private String checkHref(final String ownerHref) throws CalFacadeException {
     if (ownerHref != null) {
       return ownerHref;
     }

@@ -24,7 +24,8 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.scheduling.hosts.Response.ResponseElement;
 import org.bedework.icalendar.IcalTranslator;
 import org.bedework.icalendar.Icalendar;
-import org.bedework.util.http.BasicHttpClient;
+import org.bedework.util.misc.Logged;
+import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlUtil;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.IscheduleTags;
@@ -32,8 +33,14 @@ import org.bedework.util.xml.tagdefs.WebdavTags;
 
 import net.fortuna.ical4j.model.Calendar;
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.NoHttpResponseException;
-import org.apache.log4j.Logger;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -42,14 +49,12 @@ import org.xml.sax.SAXException;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.net.URL;
+import java.net.URI;
 import java.security.PrivateKey;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.servlet.http.HttpServletResponse;
@@ -57,22 +62,26 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import static org.bedework.util.http.HttpUtil.findMethod;
+import static org.bedework.util.http.HttpUtil.getFirstHeaderValue;
+import static org.bedework.util.http.HttpUtil.getStatus;
+import static org.bedework.util.http.HttpUtil.setContent;
+
 /** Handle interactions with ischedule servers.
  *
  * @author Mike Douglass
  */
-public class IscheduleClient {
-  private boolean debug;
-
-  private transient Logger log;
-
+public class IscheduleClient extends Logged {
   private transient IcalTranslator trans;
 
   /* There is one entry per host + port. Because we are likely to make a number
    * of calls to the same host + port combination it makes sense to preserve
    * the objects between calls.
-   */
+   *
   private HashMap<String, BasicHttpClient> cioTable = new HashMap<>();
+  */
+
+  private static CloseableHttpClient cio;
 
   private PrivateKeys pkeys;
 
@@ -108,7 +117,31 @@ public class IscheduleClient {
     this.trans = trans;
     this.pkeys = pkeys;
     this.domain = domain;
-    debug = getLogger().isDebugEnabled();
+
+    if (cio != null) {
+      return;
+    }
+    synchronized (this) {
+      if (cio != null) {
+        return;
+      }
+
+      final HttpClientBuilder clb = HttpClients.custom();
+
+      /* Might need this for authenticated ischedule
+      if (user != null) {
+        final CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        credsProvider.setCredentials(
+                new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT),
+                new UsernamePasswordCredentials(user,
+                                                pw));
+
+        clb.setDefaultCredentialsProvider(credsProvider);
+      }
+      */
+
+      cio = clb.create().disableRedirectHandling().build();
+    }
   }
 
   /** Get the freebusy for the recipients specified in the event object,
@@ -126,14 +159,13 @@ public class IscheduleClient {
 
     Response resp = new Response();
 
-    try {
-      send(iout, hi, resp);
+    send(iout, hi, resp);
 
-      if (resp.getResponseCode() != HttpServletResponse.SC_OK) {
-        return resp;
-      }
+    if (resp.getResponseCode() != HttpServletResponse.SC_OK) {
+      return resp;
+    }
 
-      /* We expect something like...
+    /* We expect something like...
        *
        *    <C:schedule-response xmlns:D="DAV:"
                   xmlns:C="urn:ietf:params:xml:ns:caldav">
@@ -182,17 +214,7 @@ public class IscheduleClient {
      </C:schedule-response>
        */
 
-      parseResponse(hi, resp);
-
-      return resp;
-    } finally {
-      try {
-        if (resp.getClient() != null) {
-          resp.getClient().release();
-        }
-      } catch (Throwable t) {
-      }
-    }
+    return resp;
   }
 
   /** Schedule a meeting with the recipients specified in the event object,
@@ -209,24 +231,13 @@ public class IscheduleClient {
 
     Response resp = new Response();
 
-    try {
-      send(iout, hi, resp);
+    send(iout, hi, resp);
 
-      if (resp.getResponseCode() != HttpServletResponse.SC_OK) {
-        return resp;
-      }
-
-      parseResponse(hi, resp);
-
+    if (resp.getResponseCode() != HttpServletResponse.SC_OK) {
       return resp;
-    } finally {
-      try {
-        if (resp.getClient() != null) {
-          resp.getClient().release();
-        }
-      } catch (Throwable t) {
-      }
     }
+
+    return resp;
   }
 
   /** See if we have a url for the service. If not discover the real one.
@@ -252,8 +263,6 @@ public class IscheduleClient {
 
     int rcode = 0;
 
-    BasicHttpClient cio = null;
-
     try {
       /*
       // XXX ioptest fix - remove
@@ -268,12 +277,12 @@ public class IscheduleClient {
       */
 
       final String scheme;
-      final String port;
+      final int port;
 
       if (hi.getPort() == 0) {
-        port = "";
+        port = 80;
       } else {
-        port = ":" + hi.getPort();
+        port = hi.getPort();
       }
 
       if (hi.getSecure()) {
@@ -282,45 +291,49 @@ public class IscheduleClient {
         scheme = "http://";
       }
 
-      String url = scheme + hi.getHostname() + port + "/.well-known/ischedule";
+      URI uri = new URIBuilder()
+              .setScheme(scheme)
+              .setHost(hi.getHostname())
+              .setPort(port)
+              .setPath(".well-known/ischedule")
+              .addParameter("action", "capabilities")
+              .build();
 
-      cio = getCio(url);
+      final HttpRequestBase req = findMethod("GET", uri);
 
       for (int redirects = 0; redirects < 10; redirects++) {
-        rcode = cio.sendRequest("GET",
-                                url + "?action=capabilities",
-                                null,
-                                "application/xml",
-                                0,
-                                null);
+        try (CloseableHttpResponse resp = cio.execute(req)) {
+          rcode = getStatus(resp);
 
-        if ((rcode == HttpServletResponse.SC_MOVED_PERMANENTLY) ||
-            (rcode == HttpServletResponse.SC_MOVED_TEMPORARILY) ||
-            (rcode == HttpServletResponse.SC_TEMPORARY_REDIRECT)) {
-          //boolean permanent = rcode == HttpServletResponse.SC_MOVED_PERMANENTLY;
+          if ((rcode == HttpServletResponse.SC_MOVED_PERMANENTLY) ||
+                  (rcode == HttpServletResponse.SC_MOVED_TEMPORARILY) ||
+                  (rcode == HttpServletResponse.SC_TEMPORARY_REDIRECT)) {
+            //boolean permanent = rcode == HttpServletResponse.SC_MOVED_PERMANENTLY;
 
-          Header locationHeader = cio.getFirstHeader("location");
-          if (locationHeader != null) {
-            if (debug) {
-              debugMsg("Got redirected to " + locationHeader.getValue() +
-                       " from " + url);
+            final String location =
+                    getFirstHeaderValue(resp,
+                                        "location");
+            if (location != null) {
+              if (debug) {
+                debug("Got redirected to " + location +
+                              " from " + uri);
+              }
+
+              int qpos = location.indexOf("?");
+
+              final String noreq;
+              if (qpos < 0) {
+                noreq = location;
+              } else {
+                noreq = location.substring(0, qpos);
+              }
+              uri = new URIBuilder(noreq)
+                      .addParameter("action", "capabilities")
+                      .build();
+
+              // Try again
+              continue;
             }
-
-            String newLoc = locationHeader.getValue();
-            int qpos = newLoc.indexOf("?");
-
-            cioTable.remove(url);
-
-            if (qpos < 0) {
-              url = newLoc;
-            } else {
-              url = newLoc.substring(0, qpos);
-            }
-
-            cio.release();
-
-            // Try again
-            continue;
           }
         }
 
@@ -331,8 +344,9 @@ public class IscheduleClient {
           if (debug) {
             error("Got response " + rcode +
                   ", host " + hi.getHostname() +
-                  " and url " + url);
+                  " and url " + uri);
 
+            /*
             if (cio.getResponseContentLength() != 0) {
               InputStream is = cio.getResponseBodyAsStream();
 
@@ -349,42 +363,35 @@ public class IscheduleClient {
                 error(l);
               }
               error("End content: ==========================");
-            }
+            }*/
           }
 
           throw new CalFacadeException("Got response " + rcode +
                                        ", host " + hi.getHostname() +
-                                       " and url " + url);
+                                       " and url " + uri);
         }
 
         /* Should have a capabilities record. */
 
-        hi.setIScheduleUrl(url);
+        hi.setIScheduleUrl(uri.toString());
         return;
       }
 
       if (debug) {
         error("Too many redirects: Got response " + rcode +
               ", host " + hi.getHostname() +
-              " and url " + url);
+              " and url " + uri);
       }
 
-      throw new CalFacadeException("Too many redirects on " + url);
-    } catch (CalFacadeException cfe) {
+      throw new CalFacadeException("Too many redirects on " + uri);
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug) {
         error(t);
       }
 
       throw new CalFacadeException(t);
-    } finally {
-      try {
-        if (cio != null) {
-          cio.release();
-        }
-      } catch (final Throwable ignored) {
-      }
     }
   }
 
@@ -397,19 +404,20 @@ public class IscheduleClient {
    */
   private Document parseContent(final Response resp) throws CalFacadeException {
     try {
-      BasicHttpClient cl = resp.getClient();
+      final CloseableHttpResponse hresp = resp.getHttpResponse();
 
-      long len = cl.getResponseContentLength();
+      final HttpEntity entity = hresp.getEntity();
+      final long len = entity.getContentLength();
       if (len == 0) {
         return null;
       }
 
-      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setNamespaceAware(true);
 
-      DocumentBuilder builder = factory.newDocumentBuilder();
+      final DocumentBuilder builder = factory.newDocumentBuilder();
 
-      InputStream in = cl.getResponseBodyAsStream();
+      final InputStream in = entity.getContent();
 
       return builder.parse(new InputSource(new InputStreamReader(in)));
     } catch (SAXException e) {
@@ -422,18 +430,18 @@ public class IscheduleClient {
   private void parseResponse(final HostInfo hi,
                              final Response resp) throws CalFacadeException {
     try {
-      Document doc = parseContent(resp);
+      final Document doc = parseContent(resp);
       if (doc == null){
         throw new CalFacadeException(CalFacadeException.badResponse);
       }
 
-      QName sresponseTag;
-      QName responseTag;
-      QName recipientTag;
-      QName requestStatusTag;
-      QName calendarDataTag;
-      QName errorTag;
-      QName descriptionTag;
+      final QName sresponseTag;
+      final QName responseTag;
+      final QName recipientTag;
+      final QName requestStatusTag;
+      final QName calendarDataTag;
+      final QName errorTag;
+      final QName descriptionTag;
 
       if (hi.getSupportsISchedule()) {
         sresponseTag = IscheduleTags.scheduleResponse;
@@ -453,14 +461,14 @@ public class IscheduleClient {
         descriptionTag = WebdavTags.responseDescription;
       }
 
-      Element root = doc.getDocumentElement();
+      final Element root = doc.getDocumentElement();
 
       if (!XmlUtil.nodeMatches(root, sresponseTag)) {
         throw new CalFacadeException(CalFacadeException.badResponse);
       }
 
-      for (Element el: getChildren(root)) {
-        ResponseElement fbel = new ResponseElement();
+      for (final Element el: getChildren(root)) {
+        final ResponseElement fbel = new ResponseElement();
 
         if (!XmlUtil.nodeMatches(el, responseTag)) {
           throw new CalFacadeException(CalFacadeException.badResponse);
@@ -484,7 +492,7 @@ public class IscheduleClient {
                             response-description?)>
            ================================================================ */
 
-        Iterator<Element> respels = getChildren(el).iterator();
+        final Iterator<Element> respels = getChildren(el).iterator();
 
         Element respel = respels.next();
 
@@ -506,10 +514,10 @@ public class IscheduleClient {
           respel = respels.next();
 
           if (XmlUtil.nodeMatches(respel, calendarDataTag)) {
-            String calData = getElementContent(respel);
+            final String calData = getElementContent(respel);
 
-            Reader rdr = new StringReader(calData);
-            Icalendar ical = trans.fromIcal(null, rdr);
+            final Reader rdr = new StringReader(calData);
+            final Icalendar ical = trans.fromIcal(null, rdr);
 
             fbel.setCalData(ical.getEventInfo());
           } else if (XmlUtil.nodeMatches(respel, errorTag)) {
@@ -523,7 +531,7 @@ public class IscheduleClient {
 
         resp.addResponse(fbel);
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug) {
         error(t);
       }
@@ -541,80 +549,81 @@ public class IscheduleClient {
   public void send(final IscheduleOut iout,
                    final HostInfo hi,
                    final Response resp) throws CalFacadeException {
-    BasicHttpClient cio = null;
-
     try {
       /* We may have to rediscover and retry. */
       for (int failures = 0; failures < 10; failures++) {
-        String url = hi.getIScheduleUrl();
+        //PrivateKey key = pkeys.getKey(url, "isched");
 
-        PrivateKey key = pkeys.getKey(url, "isched");
+        //if (key != null) {
+        //  iout.sign(hi, key);
+        //}
 
-        if (key != null) {
-          iout.sign(hi, key);
+        resp.setHostInfo(hi);
+
+        final URI uri = new URI(hi.getIScheduleUrl());
+        final HttpRequestBase req = findMethod(iout.getMethod(), uri);
+
+        if (req == null) {
+          throw new CalFacadeException("No method " + iout.getMethod());
         }
 
-        cio = getCio(url);
-        resp.setHostInfo(hi);
+        if (!Util.isEmpty(iout.getHeaders())) {
+          for (final Header hdr: iout.getHeaders()) {
+            req.addHeader(hdr);
+          }
+        }
 
         /* Send the ischedule request. If we get a redirect from the other end
          * we need to do the discovery thing again.
          */
 
-        resp.setResponseCode(cio.sendRequest(iout.getMethod(),
-                                             url,
-                                             iout.getHeaders(),
-                                             iout.getContentType(),
-                                             iout.getContentLength(),
-                                             iout.getContentBytes()));
+        setContent(req,
+                   iout.getContentBytes(),
+                   iout.getContentType());
 
-        int rcode = resp.getResponseCode();
+        try (CloseableHttpResponse hresp = cio.execute(req)) {
+          final int rcode = getStatus(hresp);
 
-        if (rcode != HttpServletResponse.SC_OK) {
-          error("Got response " + resp.getResponseCode() +
-                ", host " + hi.getHostname() +
-                " and url " + url);
+          if (rcode != HttpServletResponse.SC_OK) {
+            error("Got response " + resp.getResponseCode() +
+                          ", host " + hi.getHostname() +
+                          " and url " + hi.getIScheduleUrl());
 
 //          hi.setIScheduleUrl(null);
-          cio.release();
-          discover(hi);
-          continue;
-        }
+            discover(hi);
+            continue;
+          }
 
-        resp.setClient(cio);
-        return;
+          resp.setHttpResponse(hresp);
+          parseResponse(hi, resp);
+
+          return;
+        }
       }
     } catch (final NoHttpResponseException nhre) {
       resp.setNoResponse(true);
     } catch (final Throwable t) {
       resp.setException(t);
       throw new CalFacadeException(t);
-    } finally {
-      try {
-        if (cio != null) {
-          cio.release();
-        }
-      } catch (final Throwable ignored) {
-      }
     }
   }
 
   private IscheduleOut makeFreeBusyRequest(final HostInfo hi,
                                            final EventInfo ei) throws CalFacadeException {
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
 
     //if (!iSchedule && (recipients.size() > 1)) {
     //  throw new CalFacadeException(CalFacadeException.schedulingBadRecipients);
     //}
 
-    IscheduleOut iout = makeIout(hi, "text/calendar", "POST");
+    final IscheduleOut iout = makeIout(hi, "text/calendar", "POST");
 
     addOriginator(iout, ev);
     addRecipients(iout, ev);
 
-    Calendar cal = trans.toIcal(ei, ev.getScheduleMethod());
+    final Calendar cal = trans.toIcal(ei, ev.getScheduleMethod());
 
-    StringWriter sw = new StringWriter();
+    final StringWriter sw = new StringWriter();
     IcalTranslator.writeCalendar(cal, sw);
 
     iout.addContentLine(sw.toString());
@@ -634,25 +643,25 @@ public class IscheduleClient {
 
   private void addRecipients(final IscheduleOut iout,
                              final BwEvent ev) throws CalFacadeException {
-    Collection<String> recipients = ev.getRecipients();
+    final Collection<String> recipients = ev.getRecipients();
 
-    for (String recip: recipients) {
+    for (final String recip: recipients) {
       iout.addHeader("Recipient", recip);
     }
   }
 
   private IscheduleOut makeMeetingRequest(final HostInfo hi,
                                           final EventInfo ei) throws CalFacadeException {
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
 
-    IscheduleOut iout = makeIout(hi, "text/calendar", "POST");
+    final IscheduleOut iout = makeIout(hi, "text/calendar", "POST");
 
     addOriginator(iout, ev);
     addRecipients(iout, ev);
 
-    Calendar cal = trans.toIcal(ei, ev.getScheduleMethod());
+    final Calendar cal = trans.toIcal(ei, ev.getScheduleMethod());
 
-    StringWriter sw = new StringWriter();
+    final StringWriter sw = new StringWriter();
     IcalTranslator.writeCalendar(cal, sw);
 
     iout.addContentLine(sw.toString());
@@ -663,34 +672,12 @@ public class IscheduleClient {
   private IscheduleOut makeIout(final HostInfo hi,
                                 final String contentType,
                                 final String method) throws CalFacadeException {
-    IscheduleOut iout = new IscheduleOut(domain);
+    final IscheduleOut iout = new IscheduleOut(domain);
 
     iout.setContentType(contentType);
     iout.setMethod(method);
 
     return iout;
-  }
-
-  private BasicHttpClient getCio(final String urlStr) throws Throwable {
-    URL url = new URL(urlStr);
-
-    String host = url.getHost();
-    int port = url.getPort();
-
-    String proto = url.getProtocol();
-
-    boolean secure = "https".equals(proto);
-
-    BasicHttpClient cio = cioTable.get(host + port + secure);
-
-    if (cio == null) {
-      cio = new BasicHttpClient(30 * 1000,
-                                false);  // followRedirects
-
-      cioTable.put(host + port + secure, cio);
-    }
-
-    return cio;
   }
 
   /* ====================================================================
@@ -700,7 +687,7 @@ public class IscheduleClient {
   protected Collection<Element> getChildren(final Node nd) throws CalFacadeException {
     try {
       return XmlUtil.getElements(nd);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug) {
         getLogger().error(this, t);
       }
@@ -712,40 +699,12 @@ public class IscheduleClient {
   protected String getElementContent(final Element el) throws CalFacadeException {
     try {
       return XmlUtil.getElementContent(el);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug) {
         getLogger().error(this, t);
       }
 
       throw new CalFacadeException(CalFacadeException.badResponse);
     }
-  }
-
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void trace(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void debugMsg(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void warn(final String msg) {
-    getLogger().warn(msg);
-  }
-
-  protected void error(final String msg) {
-    getLogger().error(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(this, t);
   }
 }

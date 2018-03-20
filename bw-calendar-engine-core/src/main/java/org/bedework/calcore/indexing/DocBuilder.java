@@ -37,7 +37,6 @@ import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.FixNamesEntity;
 import org.bedework.calfacade.base.XpropsEntity;
-import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
@@ -70,13 +69,12 @@ import java.util.TreeSet;
  *
  */
 public class DocBuilder extends DocBuilderBase {
-  private BwPrincipal principal;
+  private final BwPrincipal principal;
 
-  private AuthProperties authpars;
-  private AuthProperties unauthpars;
-  private BasicSystemProperties basicSysprops;
+  // Only used for fixNames calls
+  private final BasicSystemProperties basicSysprops;
 
-  private IndexKeys keys = new IndexKeys();
+  private final IndexKeys keys = new IndexKeys();
 
   static Map<String, String> interestingXprops = new HashMap<>();
 
@@ -106,19 +104,13 @@ public class DocBuilder extends DocBuilderBase {
   /**
    *
    * @param principal - only used for building fake non-public entity paths
-   * @param authpars
-   * @param unauthpars
-   * @param basicSysprops
+   * @param basicSysprops -  Only used for fixNames calls
    */
   DocBuilder(final BwPrincipal principal,
-             final AuthProperties authpars,
-             final AuthProperties unauthpars,
              final BasicSystemProperties basicSysprops)
           throws CalFacadeException, IndexException {
     super();
     this.principal = principal;
-    this.authpars = authpars;
-    this.unauthpars = unauthpars;
     this.basicSysprops = basicSysprops;
   }
 
@@ -226,13 +218,34 @@ public class DocBuilder extends DocBuilderBase {
 
       makeShareableContained(ent);
 
-      makeField(PropertyInfoIndex.NAME, ent.getAddress());
+      makeField(PropertyInfoIndex.NAME, ent.getAddressField());
       makeField(PropertyInfoIndex.UID, ent.getUid());
 
       makeField(PropertyInfoIndex.HREF, ent.getHref());
 
+      // These 2 fields are composite fields
       makeField(PropertyInfoIndex.ADDRESS, ent.getAddress());
       makeField(PropertyInfoIndex.SUBADDRESS, ent.getSubaddress());
+
+      // These fields are part of the address field
+      makeField(PropertyInfoIndex.ADDRESS_FLD, ent.getAddressField());
+      makeField(PropertyInfoIndex.ROOM_FLD, ent.getRoomField());
+      makeField(PropertyInfoIndex.SUB1_FLD, ent.getSubField1());
+      makeField(PropertyInfoIndex.SUB2_FLD, ent.getSubField2());
+      makeField(PropertyInfoIndex.ACCESSIBLE_FLD, ent.getAccessible());
+      makeField(PropertyInfoIndex.GEOURI_FLD, ent.getGeouri());
+
+      makeField(PropertyInfoIndex.STATUS, ent.getStatus());
+
+      // These fields are part of the subaddress field
+      makeField(PropertyInfoIndex.STREET_FLD, ent.getStreet());
+      makeField(PropertyInfoIndex.CITY_FLD, ent.getCity());
+      makeField(PropertyInfoIndex.STATE_FLD, ent.getState());
+      makeField(PropertyInfoIndex.ZIP_FLD, ent.getZip());
+      makeField(PropertyInfoIndex.ALTADDRESS_FLD, ent.getAlternateAddress());
+      makeField(PropertyInfoIndex.CODEIDX_FLD, ent.getCode());
+      makeField(PropertyInfoIndex.LOC_KEYS_FLD, ent.getKeys());
+
       makeField(PropertyInfoIndex.URL, ent.getLink());
 
       endObject();
@@ -366,6 +379,7 @@ public class DocBuilder extends DocBuilderBase {
 
       makeShareableContained(ev);
 
+      makeField(PropertyInfoIndex.DELETED, ev.getDeleted());
       makeField(PropertyInfoIndex.NAME, ev.getName());
       makeField(PropertyInfoIndex.HREF, ev.getHref());
       makeField(PropertyInfoIndex.CALSUITE, ev.getCalSuite());
@@ -419,6 +433,12 @@ public class DocBuilder extends DocBuilderBase {
 
         if (s != null) {
           makeField(PropertyInfoIndex.LOCATION_STR, s);
+        }
+      } else {
+        // Try the uid
+        final String locuid = ev.getLocationUid();
+        if (locuid != null) {
+          makeField(PropertyInfoIndex.LOCATION_UID, locuid);
         }
       }
 
@@ -800,7 +820,7 @@ public class DocBuilder extends DocBuilderBase {
       }
 
       endArray();
-    } catch (IndexException e) {
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -813,12 +833,12 @@ public class DocBuilder extends DocBuilderBase {
 
       startArray(getJname(PropertyInfoIndex.REQUEST_STATUS));
 
-      for (BwRequestStatus rs: val) {
+      for (final BwRequestStatus rs: val) {
         value(rs.strVal());
       }
 
       endArray();
-    } catch (IndexException e) {
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -833,7 +853,7 @@ public class DocBuilder extends DocBuilderBase {
       makeField("lat", val.getLatitude().toPlainString());
       makeField("lon", val.getLongitude().toPlainString());
       endObject();
-    } catch (IndexException e) {
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -849,7 +869,7 @@ public class DocBuilder extends DocBuilderBase {
                     val.getRelType());
       makeField(getJname(PropertyInfoIndex.VALUE), val.getValue());
       endObject();
-    } catch (IndexException e) {
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -896,7 +916,7 @@ public class DocBuilder extends DocBuilderBase {
         startArray(getJname(PropertyInfoIndex.ATTENDEE));
       }
 
-      for (BwAttendee val: atts) {
+      for (final BwAttendee val: atts) {
         startObject();
         startObject("pars");
 
@@ -972,7 +992,7 @@ public class DocBuilder extends DocBuilderBase {
                 String.valueOf(dt.getFloating()));
 
       endObject();
-    } catch (IndexException e) {
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -991,7 +1011,7 @@ public class DocBuilder extends DocBuilderBase {
       }
 
       endArray();
-    } catch (IndexException e) {
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1011,7 +1031,7 @@ public class DocBuilder extends DocBuilderBase {
       makeField(PropertyInfoIndex.LANG, val.getLang());
       makeField(PropertyInfoIndex.VALUE, val.getValue());
       endObject();
-    } catch (IndexException e) {
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1024,7 +1044,7 @@ public class DocBuilder extends DocBuilderBase {
 
     try {
       makeField(getJname(pi), val);
-    } catch (IndexException e) {
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
@@ -1037,13 +1057,13 @@ public class DocBuilder extends DocBuilderBase {
 
     try {
       makeField(getJname(pi), val);
-    } catch (IndexException e) {
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
 
   private void makeField(final PropertyInfoIndex pi,
-                         final Set<String> vals) throws CalFacadeException {
+                         final Collection<String> vals) throws CalFacadeException {
     try {
       if (Util.isEmpty(vals)) {
         return;
@@ -1061,6 +1081,29 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
+  private void makeLocKeys(final List<BwLocation.KeyFld> vals) throws CalFacadeException {
+    try {
+      if (Util.isEmpty(vals)) {
+        return;
+      }
+
+      startArray(getJname(PropertyInfoIndex.LOC_KEYS_FLD));
+
+      for (final BwLocation.KeyFld kf: vals) {
+        startObject();
+
+        makeField(PropertyInfoIndex.NAME, kf.getKeyName());
+        makeField(PropertyInfoIndex.VALUE, kf.getKeyVal());
+
+        endObject();
+      }
+
+      endArray();
+    } catch (final IndexException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
   private void makeBwDateTimes(final PropertyInfoIndex pi,
                                final Set<BwDateTime> vals) throws CalFacadeException {
     try {
@@ -1070,17 +1113,17 @@ public class DocBuilder extends DocBuilderBase {
 
       startArray(getJname(pi));
 
-      for (BwDateTime dt: vals) {
+      for (final BwDateTime dt: vals) {
         indexDate(null, dt);
       }
 
       endArray();
-    } catch (IndexException e) {
+    } catch (final IndexException e) {
       throw new CalFacadeException(e);
     }
   }
 
-  private static String getJname(PropertyInfoIndex pi) {
+  private static String getJname(final PropertyInfoIndex pi) {
     final BwIcalPropertyInfoEntry ipie = BwIcalPropertyInfo.getPinfo(pi);
 
     if (ipie == null) {

@@ -195,7 +195,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
       for (final BwCategory cat: cats) {
         if (!remove) {
           CategoryPref p = prefs.getCategoryPrefs();
-          if (p.getAutoAdd() && p.add(cat.getUid())) {
+          if (p.getAutoAdd() && p.add(cat)) {
             update = true;
           }
         } else {

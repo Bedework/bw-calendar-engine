@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.GetEntityResponse;
 
 import java.util.Collection;
 
@@ -103,6 +104,13 @@ public class SAICalCallback implements IcalCallback {
 
   @Override
   public BwLocation getLocation(final BwString address) throws CalFacadeException {
+    return null;
+  }
+
+  @Override
+  public GetEntityResponse<BwLocation> fetchLocationByKey(
+          final String name,
+          final String val) {
     return null;
   }
 

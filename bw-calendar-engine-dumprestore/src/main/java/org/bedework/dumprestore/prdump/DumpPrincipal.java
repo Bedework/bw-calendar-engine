@@ -19,17 +19,34 @@
 package org.bedework.dumprestore.prdump;
 
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.Utils;
 import org.bedework.dumprestore.dump.DumpGlobals;
+import org.bedework.icalendar.IcalTranslator;
+import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
+import net.fortuna.ical4j.model.Calendar;
+
 import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
+import java.nio.file.FileSystems;
 import java.util.Collection;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.Consumer;
+
+import static org.bedework.calfacade.responses.Response.Status.exists;
+import static org.bedework.calfacade.responses.Response.Status.failed;
+import static org.bedework.calfacade.responses.Response.Status.ok;
 
 /** Dump all calendar data for the supplied principal.
  *
@@ -80,6 +97,10 @@ import java.util.Collection;
 public class DumpPrincipal extends Dumper {
   private BwPrincipal pr;
 
+  private IcalTranslator icalTrans;
+
+  private Set<String> created;
+
   /* ===================================================================
    *                       Constructor
    * =================================================================== */
@@ -108,17 +129,30 @@ public class DumpPrincipal extends Dumper {
     return true;
   }
   
-  public boolean open(final String dirName) throws CalFacadeException {
-    super.open();
+  public boolean open(final String dirName) {
+    if (!super.open()) {
+      return false;
+    }
+
     /* Create a directory for the principal */
 
-    if (!makeDir(dirName, true)) {
+    Response resp = makeDir(dirName, true);
+    if (resp.getStatus() == failed) {
+      return false;
+    }
+
+    if (resp.getStatus() == exists) {
       // Duplicate user entry?
 
       incCount(DumpGlobals.duplicateUsers);
       
       for (int i = 0; i < 100; i++) {
-        if (makeDir(dirName + "-dup-" + i, true)) {
+        resp = makeDir(dirName + "-dup-" + i, true);
+        if (resp.getStatus() == failed) {
+          return false;
+        }
+
+        if (resp.getStatus() == ok) {
           break;
         }
         
@@ -130,7 +164,10 @@ public class DumpPrincipal extends Dumper {
         popPath();
       }
     }
-    
+
+    icalTrans = new IcalTranslator(getSvc().getIcalCallback(true));
+    created = new TreeSet<>();
+
     return true;
   }
 
@@ -196,6 +233,10 @@ public class DumpPrincipal extends Dumper {
 
       /* Dump any events in this collection */
 
+      final Iterable<EventInfo> eis = getDi().getEventInfos(col.getPath());
+
+      eis.forEach(new EventConsumer());
+
       /* Now dump any children */
 
       if (!doChildren || !col.getCollectionInfo().childrenAllowed) {
@@ -213,6 +254,70 @@ public class DumpPrincipal extends Dumper {
       }
     } finally {
       popPath();
+    }
+  }
+
+  private class EventConsumer implements Consumer<EventInfo> {
+    @Override
+    public void accept(final EventInfo eventInfo) {
+      /* dump the event as an iCal entity */
+
+      int pushed = 0;
+
+      try {
+        final Calendar cal =
+                icalTrans.toIcal(eventInfo,
+                                 ScheduleMethods.methodTypeNone);
+
+        final BwEvent ev = eventInfo.getEvent();
+        final String year;
+        final String month;
+
+        if (ev.getDtstart() == null) {
+          year = null;
+          month = null;
+        } else {
+          final String start = ev.getDtstart().getDtval();
+          year = start.substring(0, 4);
+          month = start.substring(4, 6);
+        }
+
+        if (year == null) {
+          checkPath("nodate");
+          pushed = 1;
+        } else {
+          checkPath(year);
+          checkPath(month);
+          pushed = 2;
+        }
+
+        final File f = makeFile(ev.getName());
+
+        final Writer wtr = new FileWriter(f);
+        IcalTranslator.writeCalendar(cal, wtr);
+        incCount(DumpGlobals.events);
+        wtr.close();
+      } catch (final Throwable t) {
+        addLn(t.getLocalizedMessage());
+        error(t);
+      } finally {
+        while (pushed > 0) {
+          popPath();
+          pushed--;
+        }
+      }
+    }
+
+    private void checkPath(final String name) {
+      final String p =
+              FileSystems.getDefault().getPath(topPath(), name).toString();
+
+      if (!created.contains(p)) {
+        makeDir(name, true);
+        created.add(p);
+      } else {
+        pushPath(p);
+      }
     }
   }
 }

@@ -246,6 +246,16 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
+  public void setSocketToken(final String val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public String getSocketToken() {
+    return getConfig().getSocketToken();
+  }
+
+  @Override
   public void setEventregAdminToken(final String val) {
     throw new RuntimeException("Immutable"); // getConfig().setEventregAdminToken(val);
   }

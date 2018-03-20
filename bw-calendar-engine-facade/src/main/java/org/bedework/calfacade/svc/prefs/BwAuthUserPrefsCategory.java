@@ -55,7 +55,7 @@ import java.io.Serializable;
  */
 public class BwAuthUserPrefsCategory implements Serializable {
   private int id;
-  private String uid;
+  private int categoryid;
 
   /* ====================================================================
    *                   Bean methods
@@ -64,7 +64,7 @@ public class BwAuthUserPrefsCategory implements Serializable {
   /**
    * @param val
    */
-  public void setId(final int val) {
+  public void setId(int val) {
     id = val;
   }
 
@@ -78,23 +78,22 @@ public class BwAuthUserPrefsCategory implements Serializable {
   /**
    * @param val
    */
-  public void setUid(final String val) {
-    uid = val;
+  public void setCategoryid(int val) {
+    categoryid = val;
   }
 
   /**
-   * @return String uid
+   * @return int db id
    */
-  public String getUid() {
-    return uid;
+  public int getCategoryid() {
+    return categoryid;
   }
 
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */
 
-  @Override
-  public boolean equals(final Object obj) {
+  public boolean equals(Object obj) {
     if (this == obj) {
       return true;
     }
@@ -106,22 +105,20 @@ public class BwAuthUserPrefsCategory implements Serializable {
     BwAuthUserPrefsCategory that = (BwAuthUserPrefsCategory)obj;
 
     return (getId() == that.getId()) &&
-           (getUid().equals(that.getUid()));
+           (getCategoryid() == that.getCategoryid());
   }
 
-  @Override
   public int hashCode() {
-    return getId() * getUid().hashCode();
+    return getId() * getCategoryid();
   }
 
-  @Override
   public String toString() {
     StringBuffer sb = new StringBuffer();
 
     sb.append("BwAuthUserPrefsCategory{id=");
     sb.append(getId());
-    sb.append(", uid=");
-    sb.append(getUid());
+    sb.append(", categoryid=");
+    sb.append(getCategoryid());
     sb.append("}");
 
     return sb.toString();

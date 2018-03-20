@@ -589,7 +589,7 @@ public class ChangeTableEntry {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     ts.append("index", index.toString());
     ts.append("added", added);
@@ -602,6 +602,10 @@ public class ChangeTableEntry {
     if (!deleted) {
       ts.append("newVal", String.valueOf(newVal));
     }
+
+    ts.append("newValues", newValues);
+    ts.append("removedValues", removedValues);
+    ts.append("changedValues", changedValues);
 
     return ts.toString();
   }

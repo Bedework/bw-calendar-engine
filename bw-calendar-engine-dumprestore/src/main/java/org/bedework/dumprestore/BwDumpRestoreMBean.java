@@ -63,6 +63,28 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
   @MBeanInfo("Set true to force accounts to lower case on dump")
   boolean getLowercaseAccounts();
 
+  /**
+   * @param val true for the new hierarchical dump format
+   */
+  void setNewRestoreFormat(boolean val);
+
+  /**
+   * @return  true for the new hierarchical dump format
+   */
+  @MBeanInfo("Set true to restore from new format - not for production use yet")
+  boolean getNewRestoreFormat();
+
+  /**
+   * @param val true for the new hierarchical dump format
+   */
+  void setNewDumpFormat(boolean val);
+
+  /**
+   * @return  true for the new hierarchical dump format
+   */
+  @MBeanInfo("Set true to dump in new format - not for production use yet")
+  boolean getNewDumpFormat();
+
   /* ========================================================================
    * Operations
    * ======================================================================== */
@@ -81,6 +103,20 @@ public interface BwDumpRestoreMBean extends ConfBaseMBean,
    */
   @MBeanInfo("Show state of current restore")
   List<String> restoreStatus();
+
+  /** Starts a (site specific) fix of the current data. 
+   *
+   * @return Completion message
+   */
+  @MBeanInfo("Applies fixes to the data")
+  String fixData(@MBeanInfo("start")int start);
+
+  /** Returns status of the fix.
+   *
+   * @return Completion messages and stats
+   */
+  @MBeanInfo("Show state of current data fix")
+  List<String> fixDataStatus();
 
   /** Load alias and external subscription info from a file.
    *

@@ -25,15 +25,25 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.BwXproperty.Xpar;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.GetEntityResponse;
+import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.calendar.PropertyIndex;
+import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.misc.Util;
+import org.bedework.util.xml.tagdefs.XcalTags;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
+import ietf.params.xml.ns.icalendar_2.BaseParameterType;
+import ietf.params.xml.ns.icalendar_2.TextParameterType;
 import ietf.params.xml.ns.icalendar_2.TextPropertyType;
 
 import java.util.List;
+
+import static org.bedework.calfacade.BwXproperty.xBedeworkLocation;
+import static org.bedework.calfacade.responses.Response.Status.ok;
 
 /** Updates the x-property which saves the original location property
  * for the event.
@@ -51,7 +61,7 @@ public class XbwLocPropUpdater implements PropertyUpdater {
       final BwEvent ev = ui.getEvent();
 
       final List<BwXproperty> xlocs = ev.getXproperties(
-              BwXproperty.xBedeworkLocation);
+              xBedeworkLocation);
       // Should only be one or zero
       final BwXproperty xloc;
 
@@ -63,6 +73,14 @@ public class XbwLocPropUpdater implements PropertyUpdater {
 
       final String lang = UpdaterUtil.getLang(ui.getProp());
       final String xval = ((TextPropertyType)ui.getProp()).getText();
+      final BaseParameterType keyParam = XcalUtil.findParam(ui.getProp(),
+                                                            XcalTags.xBedeworkLocationKey);
+      final String keyName;
+      if (keyParam != null) {
+        keyName = ((TextParameterType)keyParam).getText();
+      } else {
+        keyName = null;
+      }
 
       final BwLocation evLoc = ev.getLocation();
 
@@ -94,7 +112,7 @@ public class XbwLocPropUpdater implements PropertyUpdater {
             replacing one if it exists
           */
 
-        if (!checkLocation(ui, ev, lang, xval)) {
+        if (!checkLocation(ui, ev, lang, xval, null)) {
           final BwXproperty xp = makeXprop(lang, xval);
           ev.addXproperty(xp);
           cte.addAddedValue(xp);
@@ -104,9 +122,12 @@ public class XbwLocPropUpdater implements PropertyUpdater {
       }
 
       if (ui.isChange()) {
-        BwXproperty nxp = makeXprop(lang, xval);
+        if (xloc == null) {
+          return new UpdateResult("Entity has no " + ui.getPropName() +
+                                          " property - cannot change");
+        }
 
-        if (!nxp.equals(xloc)) {
+        if (CalFacadeUtil.cmpObjval(xval, xloc.getValue()) != 0) {
           return new UpdateResult("Values don't match for update to " +
                                           ui.getPropName());
         }
@@ -117,8 +138,14 @@ public class XbwLocPropUpdater implements PropertyUpdater {
         final String nlang = UpdaterUtil.getLang(ui.getUpdprop());
         final String nxval = ((TextPropertyType)ui.getUpdprop()).getText();
 
-        if (!checkLocation(ui, ev, nlang, nxval)) {
-          nxp = makeXprop(nlang, nxval);
+        if (!checkLocation(ui, ev, nlang, nxval, keyName)) {
+          final BwXproperty nxp = makeXprop(nlang, nxval);
+          if (keyName != null) {
+            nxp.getParameters()
+               .add(new Xpar(XcalTags.xBedeworkLocationKey.getLocalPart(),
+                             keyName));
+          }
+
           ev.addXproperty(nxp);
           cte.addAddedValue(nxp);
         }
@@ -139,21 +166,36 @@ public class XbwLocPropUpdater implements PropertyUpdater {
       pars = "lang=" + lang;
     }
 
-    return new BwXproperty(BwXproperty.xBedeworkLocation,
+    return new BwXproperty(xBedeworkLocation,
                            pars, val);
   }
 
   private boolean checkLocation(final UpdateInfo ui,
                                 final BwEvent ev,
                                 final String lang,
-                                final String val) throws CalFacadeException {
-    final BwString sval = new BwString(lang, val);
+                                final String val,
+                                final String keyName) throws CalFacadeException {
     final boolean locPresent = ev.getLocation() != null;
 
-    final BwLocation loc = ui.getIcalCallback().getLocation(sval);
+    final BwLocation loc;
 
-    if (loc == null) {
-      return false;
+    if (keyName == null) {
+      final BwString sval = new BwString(lang, val);
+      loc = ui.getIcalCallback().getLocation(sval);
+
+      if (loc == null) {
+        return false;
+      }
+    } else {
+      final GetEntityResponse<BwLocation> resp =
+              ui.getIcalCallback().fetchLocationByKey(keyName,
+                                                      val);
+
+      if (resp.getStatus() != ok) {
+        return false;
+      }
+
+      loc = resp.getEntity();
     }
 
     ev.setLocation(loc);

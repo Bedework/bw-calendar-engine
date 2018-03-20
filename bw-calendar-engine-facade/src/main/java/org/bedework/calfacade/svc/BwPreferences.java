@@ -29,7 +29,9 @@ import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.FromXmlCallback;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -155,6 +157,9 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   /** last locale */
   public static final String propertyLastLocale = "userpref:last-locale";
 
+  /** approvers for this calsuite  */
+  public static final String propertyCalsuiteApprovers = "userpref:calsuite-approvers";
+
   /** path to attachments folder  */
   public static final String propertyAttachmentsFolder = "userpref:attachments-folder";
 
@@ -181,6 +186,9 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
 
   /** Notification token */
   public static final String propertyNotificationToken = "userpref:notification-token";
+
+  /** User want notifications suppressed? */
+  public static final String propertySuppressNotifications = "userpref:no-notifications";
 
   /** XXX Only here till we update schema
       max entity size for this user -only settable by admin */
@@ -462,9 +470,6 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
    *                   Property methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#setProperties(java.util.Set)
-   */
   @Override
   public void setProperties(final Set<BwProperty> val) {
     properties = val;
@@ -506,9 +511,6 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#getNumProperties()
-   */
   @Override
   @NoDump
   public int getNumProperties() {
@@ -540,14 +542,11 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#addProperty(org.bedework.calfacade.BwProperty)
-   */
   @Override
   public void addProperty(final BwProperty val) {
     Set<BwProperty> c = getProperties();
     if (c == null) {
-      c = new TreeSet<BwProperty>();
+      c = new TreeSet<>();
       setProperties(c);
     }
 
@@ -556,13 +555,19 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#removeProperty(org.bedework.calfacade.BwProperty)
-   */
+  private boolean removeProperty(final String name) {
+    final BwProperty p = findProperty(name);
+    if (p == null) {
+      return false;
+    }
+
+    return removeProperty(p);
+  }
+
   @Override
   public boolean removeProperty(final BwProperty val) {
-    Set<BwProperty> c = getProperties();
-    if (c == null) {
+    final Set<BwProperty> c = getProperties();
+    if (Util.isEmpty(c)) {
       return false;
     }
 
@@ -608,6 +613,46 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   /* ====================================================================
    *                   Property convenience methods
    * ==================================================================== */
+
+  /**
+   * @param val  Comma separated calsuite approvers.
+   */
+  public void setCalsuiteApprovers(final String val) {
+    setProp(propertyCalsuiteApprovers, val);
+  }
+
+  /**
+   * @return Comma separated calsuite approvers.
+   */
+  @NoDump
+  public String getCalsuiteApprovers() {
+    return getProp(propertyCalsuiteApprovers);
+  }
+
+  /**
+   * @return List from approvers.
+   */
+  @NoDump
+  public List<String> getCalsuiteApproversList() {
+    final List<String> approvers = new ArrayList<>();
+
+    final String s = getProp(propertyCalsuiteApprovers);
+    if (s == null) {
+      return approvers;
+    }
+
+    final String[] split = s.split(",");
+
+    for (final String el: split) {
+      if (el == null) {
+        continue;
+      }
+
+      approvers.add(el);
+    }
+
+    return approvers;
+  }
 
   /**
    * @param val  String path.
@@ -819,6 +864,31 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     return getProp(propertyNotificationToken);
   }
 
+  /**
+   * @param val  No Notifications?
+   */
+  public void setNoNotifications(final boolean val) {
+    if (!val) {
+      removeProperty(propertySuppressNotifications);
+      return;
+    }
+    setProp(propertySuppressNotifications, String.valueOf(val));
+  }
+
+  /**
+   * @return No Notifications?
+   */
+  @NoDump
+  public boolean getNoNotifications() {
+    final String s = getProp(propertySuppressNotifications);
+
+    if (s == null) {
+      return false;
+    }
+
+    return Boolean.valueOf(s);
+  }
+
   /* ====================================================================
    *                   Convenience methods
    * ==================================================================== */
@@ -900,7 +970,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
       return -1;
     }
 
-    BwPreferences that = (BwPreferences)o;
+    final BwPreferences that = (BwPreferences)o;
 
     return getOwnerHref().compareTo(that.getOwnerHref());
   }
@@ -912,6 +982,14 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
 
   @Override
   public boolean equals(final Object obj) {
+    if (!(obj instanceof BwPreferences)) {
+      return false;
+    }
+
+    if (obj == this) {
+      return true;
+    }
+
     return compareTo(obj) == 0;
   }
 

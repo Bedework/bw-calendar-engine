@@ -27,6 +27,10 @@ import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
+import org.bedework.calfacade.requests.GetInstancesRequest;
+import org.bedework.calfacade.responses.InstancesResponse;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
 import org.bedework.calfacade.util.ChangeTable;
@@ -133,11 +137,12 @@ public interface EventsI extends Serializable {
    * @throws CalFacadeException on error
    */
   Collection<EventInfo> getEvents(BwCalendar cal,
-                                         FilterBase filter,
-                                         BwDateTime startDate,
-                                         BwDateTime endDate,
-                                         List<BwIcalPropertyInfoEntry> retrieveList,
-                                         RecurringRetrievalMode recurRetrieval)
+                                  FilterBase filter,
+                                  BwDateTime startDate,
+                                  BwDateTime endDate,
+                                  List<BwIcalPropertyInfoEntry> retrieveList,
+                                  DeletedState delState,
+                                  RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException;
 
   /** Delete an event.
@@ -214,6 +219,23 @@ public interface EventsI extends Serializable {
                              final boolean noInvites,
                              String fromAttUri) throws CalFacadeException;
 
+  /** Update an event in response to an attendee. Exactly as normal update if
+   * fromAtt is null. Otherwise no status update is sent to the given attendee
+   *
+   * <p>  Any changeset should be embedded in the event info object.
+   *
+   * @param ei           EventInfo object to be added
+   * @param noInvites    True for don't send invitations.
+   * @param fromAttUri   attendee responding
+   * @param alwaysWrite  write and reindex whatever changetable says
+   * @return UpdateResult Counts of changes.
+   * @throws CalFacadeException on error
+   */
+  UpdateResult update(final EventInfo ei,
+                      final boolean noInvites,
+                      String fromAttUri,
+                      boolean alwaysWrite) throws CalFacadeException;
+
   /** For an event to which we have write access we simply mark it deleted.
    *
    * <p>Otherwise we add an annotation maarking the event as deleted.
@@ -269,13 +291,17 @@ public interface EventsI extends Serializable {
    */
   void claim(BwEvent ev) throws CalFacadeException;
 
-  /** Add cached or retrieved entities to the events in the list. These are
-   * entities such as locations, categories etc.
-   *
-   * @param events  to have cached entities
-   * @throws CalFacadeException
-   */
-  public void implantEntities(Collection<EventInfo> events) throws CalFacadeException;
+  public static class RealiasResult extends Response {
+    private final Set<BwCategory> cats;
+
+    public RealiasResult(final Set<BwCategory> cats) {
+      this.cats = cats;
+    }
+
+    public Set<BwCategory> getCats() {
+      return cats;
+    }
+  }
 
   /** Realias the event - set categories according to the set of aliases.
    * 
@@ -300,10 +326,19 @@ public interface EventsI extends Serializable {
    * is aliased to the single calendar.
    *
    * @param ev  event
-   * @return set of categories referenced by the aliases           
-   * @throws CalFacadeException on unknown alias
+   * @return Response containing set of categories referenced by the aliases. Status unknown for unknown alias(es)
+
    */
-  Set<BwCategory> reAlias(BwEvent ev) throws CalFacadeException;
+  RealiasResult reAlias(BwEvent ev);
+
+  /** Return the instances for a given combination of start date, rrule,
+   * exdates and rdates. A date/time window may be supplied to limit the
+   * result.
+   *
+   * @param req parameters for the method
+   * @return instances or error response
+   */
+  InstancesResponse getInstances(GetInstancesRequest req);
 
   class SetEntityCategoriesResult {
     /** rc */

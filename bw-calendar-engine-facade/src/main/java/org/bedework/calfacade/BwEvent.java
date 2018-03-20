@@ -37,7 +37,6 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.Util.AdjustCollectionResult;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
@@ -397,7 +396,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     /** */
     pfiRecipients,
     /** */
-    pfiCategoryUids,
+    pfiCategories,
     /** */
     pfiComments,
     /** */
@@ -430,7 +429,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     /** */
     pfiPollCandidate,
     /** 58 */
-    pfiPollWinner,
+    pfiPollWinner
   }
 
   private int entityType = IcalDefs.entityTypeEvent;
@@ -539,9 +538,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   private Integer priority;
 
-  /** A Set of category uids
+  /** A Set of BwCategory objects
    */
-  private Set<String> categoryUids;
+  private Set<BwCategory> categories;
 
   private Set<BwContact> contacts;
 
@@ -659,26 +658,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   private List<BwFreeBusyComponent> freeBusyPeriods;
 
   /* ====================================================================
-   *                      VPoll or VPoll related fields
-   * ==================================================================== */
-
-  private Integer pollItemId;
-
-  private Integer pollWinner;
-
-  private String pollAccceptResponse;
-
-  private String pollMode;
-
-  private String pollProperties;
-
-  private Set<String> pollVvotes;
-
-  private Set<String> pollItems;
-
-  private boolean pollCandidate;
-
-  /* ====================================================================
    *                      VAvailability fields
    * ==================================================================== */
 
@@ -709,10 +688,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *                      Non-db fields
    * ==================================================================== */
 
-  /** A Set of BwCategory objects
-   */
-  private Set<BwCategory> categories;
-
   /** If the event is a master recurring event and we asked for the master +
    * overides or for fully expanded, this will hold all the overrides for that
    * event.
@@ -732,6 +707,8 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * to the date range of the enclosing vavailability
    */
   private BwEvent parent;
+
+  private Set<String> categoryUids;
 
   private Set<String> contactUids;
 
@@ -1296,6 +1273,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * <p>When the event is added this flag will be set true if the appropriate
    * conditions are satisfied.
    *
+   * NOTE: these have the NoProxy annotation as we treat them specially
+   * in the proxy until we get a schema update (4.0)
+   *
    * @param val
    */
   @IcalProperty(pindex = PropertyInfoIndex.ORGANIZER_SCHEDULING_OBJECT,
@@ -1304,19 +1284,27 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                 todoProperty = true,
                 journalProperty = true,
                 freeBusyProperty = true)
+  @NoProxy
   public void setOrganizerSchedulingObject(final Boolean val) {
     organizerSchedulingObject = val;
   }
 
   /**
+   *
+   * NOTE: these have the NoProxy annotation as we treat them specially
+   * in the proxy until we get a schema update (4.0)
    * @return Boolean
    */
+  @NoProxy
   public Boolean getOrganizerSchedulingObject() {
     return organizerSchedulingObject;
   }
 
   /** True if this is a valid attendee scheduling object.
    * (See CalDAV scheduling specification)
+   *
+   * NOTE: these have the NoProxy annotation as we treat them specially
+   * in the proxy until we get a schema update (4.0)
    *
    * @param val
    */
@@ -1325,13 +1313,18 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)
+  @NoProxy
   public void setAttendeeSchedulingObject(final Boolean val) {
     attendeeSchedulingObject = val;
   }
 
   /**
+   *
+   * NOTE: these have the NoProxy annotation as we treat them specially
+   * in the proxy until we get a schema update (4.0)
    * @return Boolean
    */
+  @NoProxy
   public Boolean getAttendeeSchedulingObject() {
     return attendeeSchedulingObject;
   }
@@ -2834,32 +2827,17 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * ==================================================================== */
 
   @Override
-  public void setCategoryUids(final Set<String> val) {
-    categoryUids = val;
-    categories = null;  // Force refresh
-  }
-
-  @Override
-  public Set<String> getCategoryUids() {
-    return categoryUids;
-  }
-
-  @Override
   @IcalProperty(pindex = PropertyInfoIndex.CATEGORIES,
                 adderName = "category",
                 jname = "categories",
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)
-  @NoProxy
-  @NoDump
   public void setCategories(final Set<BwCategory> val) {
     categories = val;
   }
 
   @Override
-  @NoProxy
-  @NoDump
   public Set<BwCategory> getCategories() {
     return categories;
   }
@@ -2947,35 +2925,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
 
     return ts;
-  }
-
-  @Override
-  @NoProxy
-  public void adjustCategories() {
-    if (Util.isEmpty(getCategories())) {
-      if (getCategoryUids() != null) {
-        getCategoryUids().clear();
-      }
-
-      return;
-    }
-
-    Collection<String> uids = new ArrayList<String>();
-
-    for (BwCategory cat: getCategories()) {
-      if (cat.getUid() == null) {
-        throw new RuntimeException("Attempt to add unsaved category." + cat);
-      }
-      uids.add(cat.getUid());
-    }
-
-    AdjustCollectionResult<String> acr = Util.adjustCollection(uids,
-                                                               getCategoryUids());
-
-    if ((getCategoryUids() == null) &&
-        !acr.added.isEmpty()) {
-      setCategoryUids(new TreeSet<String>(acr.added));
-    }
   }
 
   /* ====================================================================
@@ -3617,7 +3566,14 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   )
   @NoDump
   public void setPollWinner(final Integer val) {
-    pollWinner = val;
+    if (val == null) {
+      final BwXproperty x = findXproperty(BwXproperty.pollWinner);
+      if (x != null) {
+        removeXproperty(x);
+      }
+    } else {
+      replaceXproperty(BwXproperty.pollWinner, String.valueOf(val));
+    }
   }
 
   /** Get the winning item id
@@ -3625,9 +3581,19 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *  @return Integer   item id
    */
   public Integer getPollWinner() {
-    return pollWinner;
-  }
+    final List<BwXproperty> props = getXproperties(BwXproperty.pollWinner);
 
+    if (Util.isEmpty(props)) {
+      return null;
+    }
+
+    if (props.size() > 1) {
+      return null;
+    }
+
+    final BwXproperty p = props.get(0);
+    return Integer.valueOf(p.getValue());
+  }
 
   @IcalProperty(pindex = PropertyInfoIndex.POLL_ITEM_ID,
                 eventProperty = true,
@@ -3636,7 +3602,16 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   )
   @NoDump
   public void setPollItemId(final Integer val) {
-    pollItemId = val;
+    if (val == null) {
+      final BwXproperty x = findXproperty(BwXproperty.pollItemId);
+      if (x != null) {
+        removeXproperty(x);
+      }
+    } else {
+      final PollItmId pid = new PollItmId(val);
+
+      replaceXproperty(BwXproperty.pollItemId, pid.getVal());
+    }
   }
 
   /** Get the event's poll item id
@@ -3644,18 +3619,31 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *  @return Integer   event's poll item id
    */
   public Integer getPollItemId() {
-    return pollItemId;
+    final List<BwXproperty> props = getXproperties(BwXproperty.pollItemId);
+
+    if (Util.isEmpty(props)) {
+      return null;
+    }
+
+    if (props.size() > 1) {
+      return null;
+    }
+
+    final BwXproperty p = props.get(0);
+    final PollItmId pid = new PollItmId(p.getValue());
+
+    return pid.getId();
   }
 
   /** Set the poll mode
    *
-   * @param val    Integer id
+   * @param val the mode
    */
   @IcalProperty(pindex = PropertyInfoIndex.POLL_MODE,
                 vpollProperty = true
-                )
+  )
   public void setPollMode(final String val) {
-    pollMode = val;
+    replaceXproperty(BwXproperty.pollMode, val);
   }
 
   /** Get the poll mode
@@ -3663,7 +3651,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *  @return String   poll mode
    */
   public String getPollMode() {
-    return pollMode;
+    return getXproperty(BwXproperty.pollMode);
   }
 
   /** Set the poll properties
@@ -3672,9 +3660,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @IcalProperty(pindex = PropertyInfoIndex.POLL_PROPERTIES,
                 vpollProperty = true
-                )
+  )
   public void setPollProperties(final String val) {
-    pollProperties = val;
+    replaceXproperty(BwXproperty.pollProperties, val);
   }
 
   /** Get the poll properties
@@ -3682,7 +3670,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *  @return String   list of interesting properties
    */
   public String getPollProperties() {
-    return pollProperties;
+    return getXproperty(BwXproperty.pollProperties);
   }
 
   /** Set the acceptable poll component types in the reponse
@@ -3691,9 +3679,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @IcalProperty(pindex = PropertyInfoIndex.ACCEPT_RESPONSE,
                 vpollProperty = true
-                )
+  )
   public void setPollAcceptResponse(final String val) {
-    pollAccceptResponse = val;
+    replaceXproperty(BwXproperty.pollAccceptResponse, val);
   }
 
   /** Get the acceptable poll component types in the reponse
@@ -3701,46 +3689,43 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *  @return String   list of acceptable poll component types in the reponse
    */
   public String getPollAcceptResponse() {
-    return pollAccceptResponse;
+    return getXproperty(BwXproperty.pollAccceptResponse);
   }
 
-  /** Set the vpoll items
+  /* * Set the vpoll items
    *
    * @param val    Set<String>
-   */
+   * /
   @IcalProperty(pindex = PropertyInfoIndex.POLL_ITEM,
                 vpollProperty = true
   )
   @NoProxy
   public void setPollItems(final Set<String> val) {
     pollItems = val;
-  }
+  }*/
 
-  /** Get the vpoll item names
+  /** Get the vpoll items (candidates)
    *
-   * @return Set<String>   names
+   * @return Set<String>   candidates
    */
+  @IcalProperty(pindex = PropertyInfoIndex.POLL_ITEM,
+                vpollProperty = true
+  )
   @NoProxy
   public Set<String> getPollItems() {
-    return pollItems;
-  }
+    final List<BwXproperty> props = getXproperties(BwXproperty.pollItem);
 
-  /** Add vpoll item href
-   *
-   * @param val
-   */
-  @NoProxy
-  public void addPollItem(final String val) {
-    Set<String> pis = getPollItems();
-
-    if (pis == null) {
-      pis = new TreeSet<String>();
-      setPollItems(pis);
+    if (Util.isEmpty(props)) {
+      return null;
     }
 
-    if (!pis.contains(val)) {
-      pis.add(val);
+    final Set<String> vals = new TreeSet<>();
+
+    for (final BwXproperty p: props) {
+      vals.add(p.getValue());
     }
+
+    return vals;
   }
 
   /** Clear the vpoll items
@@ -3749,30 +3734,39 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public void clearPollItems() {
-    if (!Util.isEmpty(getPollItems())) {
-      getPollItems().clear();
+    final List<BwXproperty> props = getXproperties(BwXproperty.pollItem);
+
+    if (Util.isEmpty(props)) {
+      return;
+    }
+
+    for (final BwXproperty p: props) {
+      removeXproperty(p);
     }
   }
 
-  /** Set the vpoll items
+  /** Get the vpoll items (candidates)
    *
-   * @param val    Set<String>
+   * @return Set<String>   candidates
    */
   @IcalProperty(pindex = PropertyInfoIndex.VVOTER,
                 vpollProperty = true
   )
   @NoProxy
-  public void setVvoters(final Set<String> val) {
-    pollVvotes = val;
-  }
-
-  /** Get the vpoll vvoters
-   *
-   * @return Set<String>   vvoters
-   */
-  @NoProxy
   public Set<String> getVvoters() {
-    return pollVvotes;
+    final List<BwXproperty> props = getXproperties(BwXproperty.pollVoter);
+
+    if (Util.isEmpty(props)) {
+      return null;
+    }
+
+    final Set<String> vals = new TreeSet<>();
+
+    for (final BwXproperty p: props) {
+      vals.add(p.getValue());
+    }
+
+    return vals;
   }
 
   /** Clear the vpoll voters
@@ -3780,26 +3774,50 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public void clearVvoters() {
-    if (!Util.isEmpty(getVvoters())) {
-      getVvoters().clear();
+    final List<BwXproperty> props = getXproperties(BwXproperty.pollVoter);
+
+    if (Util.isEmpty(props)) {
+      return;
+    }
+
+    for (final BwXproperty p: props) {
+      removeXproperty(p);
     }
   }
 
-  /** Add vpoll vvoter object
+  /** Add vpoll vvoter
    *
-   * @param val
+   * @param val the item
    */
   @NoProxy
   public void addVvoter(final String val) {
-    Set<String> pis = getVvoters();
+    final Set<String> vvs = getVvoters();
 
-    if (pis == null) {
-      pis = new TreeSet<>();
-      setVvoters(pis);
+    if ((vvs == null) || !vvs.contains(val)) {
+      final BwXproperty xp = new BwXproperty(BwXproperty.pollVoter, null, val);
+      addXproperty(xp);
+
+      if (changeSet != null) {
+        changeSet.addValue(PropertyInfoIndex.XPROP, xp);
+      }
     }
+  }
 
-    if (!pis.contains(val)) {
-      pis.add(val);
+  /** Add vpoll item
+   *
+   * @param val the item
+   */
+  @NoProxy
+  public void addPollItem(final String val) {
+    final Set<String> pis = getPollItems();
+
+    if ((pis == null) || !pis.contains(val)) {
+      final BwXproperty xp = new BwXproperty(BwXproperty.pollItem, null, val);
+      addXproperty(xp);
+
+      if (changeSet != null) {
+        changeSet.addValue(PropertyInfoIndex.XPROP, xp);
+      }
     }
   }
 
@@ -3808,7 +3826,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param val    true for a poll candidate
    */
   public void setPollCandidate(final boolean val) {
-    pollCandidate = val;
+    replaceXproperty(BwXproperty.pollCandidate, String.valueOf(val));
   }
 
   /**
@@ -3816,7 +3834,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *  @return true for a poll candidate
    */
   public boolean getPollCandidate() {
-    return pollCandidate;
+    return Boolean.valueOf(getXproperty(BwXproperty.pollCandidate));
   }
 
   /* ====================================================================
@@ -4308,6 +4326,30 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return parent;
   }
 
+  /** Set list of referenced categories
+   *
+   * @param val list of category uids
+   */
+  @NoProxy
+  @NoWrap
+  @NoDump
+  @Override
+  public void setCategoryUids(final Set<String> val) {
+    categoryUids = val;
+  }
+
+  /**
+   *
+   * @return list of category uids.
+   */
+  @NoProxy
+  @NoWrap
+  @NoDump
+  @Override
+  public Set<String> getCategoryUids() {
+    return categoryUids;
+  }
+
   /** Set list of referenced contacts
    *
    * @param val list of contact uids
@@ -4399,7 +4441,19 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                 todoProperty = true,
                 journalProperty = true)
   public String getHref() {
-    return  Util.buildPath(false, getColPath(), "/", getName());
+    return Util.buildPath(false, getColPath(), "/", getName());
+  }
+
+  @NoProxy
+  @NoDump
+  public String getEncodedHref() {
+    final String href = Util.buildPath(false, getColPath(), "/", getName());
+
+    if (getRecurrenceId() == null) {
+      return href;
+    }
+
+    return href + "%23" + getRecurrenceId();
   }
 
   /** Return all timezone ids this event uses. This is used when an event is
@@ -4888,22 +4942,18 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       ev.setRelatedTo((BwRelatedTo)rt.clone());
     }
 
-    ev.setPollItemId(getPollItemId());
+    /* These are in x-props in 3.10
     ev.setPollMode(getPollMode());
     ev.setPollProperties(getPollProperties());
     ev.setPollAcceptResponse(getPollAcceptResponse());
 
-    if (!Util.isEmpty(getVvoters())) {
-      for (final String s: getVvoters()) {
-        ev.addVvoter(s);
-      }
-    }
-
+    ev.setPollItemId(getPollItemId());
     if (!Util.isEmpty(getPollItems())) {
       for (final String s: getPollItems()) {
         ev.addPollItem(s);
       }
     }
+    */
 
     ev.setPollCandidate(getPollCandidate());
   }

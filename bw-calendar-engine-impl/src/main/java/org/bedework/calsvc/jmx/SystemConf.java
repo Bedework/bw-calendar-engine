@@ -122,6 +122,11 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
         if (svci != null) {
           for (final IfInfo ifInfo: svci.getActiveIfInfos()) {
             if (ifInfo.getSeconds() > waitSecs) {
+              if (ifInfo.getDontKill()) {
+                warn("Skipping dontKill task: " + ifInfo.getId());
+                continue;
+              }
+
               if (dontKill.contains(ifInfo.getLogid())) {
                 warn("Skipping long running task: " + ifInfo.getId());
                 continue;
@@ -372,6 +377,16 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
   @Override
   public String getLocaleList() {
     return getConfig().getLocaleList();
+  }
+
+  @Override
+  public void setSocketToken(final String val) {
+    getConfig().setSocketToken(val);
+  }
+
+  @Override
+  public String getSocketToken() {
+    return getConfig().getSocketToken();
   }
 
   @Override

@@ -36,8 +36,7 @@ import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.NotificationsHandlerFactory;
 import org.bedework.sysevents.events.SysEventBase;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.misc.Logged;
 
 import java.sql.Timestamp;
 import java.util.concurrent.LinkedTransferQueue;
@@ -46,7 +45,7 @@ import java.util.concurrent.LinkedTransferQueue;
 *
 * @author Mike Douglass   douglm   rpi.edu
 */
-public abstract class CalintfBase implements Calintf {
+public abstract class CalintfBase extends Logged implements Calintf {
   private Configurations configs;
 
   protected PrincipalInfo principalInfo;
@@ -55,11 +54,13 @@ public abstract class CalintfBase implements Calintf {
 
   protected boolean sessionless;
 
-  protected boolean debug;
+  protected boolean dontKill;
 
   protected boolean forRestore;
 
   protected boolean indexRebuild;
+
+  protected boolean killed;
 
   /** When we were created for debugging */
   protected Timestamp objTimestamp;
@@ -83,8 +84,6 @@ public abstract class CalintfBase implements Calintf {
   /** Ensure we don't open while open
    */
   protected boolean isOpen;
-
-  private transient Logger log;
 
   protected final LinkedTransferQueue<SysEventBase> queuedNotifications = new LinkedTransferQueue<>();
 
@@ -159,12 +158,14 @@ public abstract class CalintfBase implements Calintf {
                    final String url,
                    final boolean publicAdmin,
                    final boolean publicSubmission,
-                   final boolean sessionless) throws CalFacadeException {
+                   final boolean sessionless,
+                   final boolean dontKill) throws CalFacadeException {
     this.logId = logId;
     this.configs = configs;
     this.principalInfo = PrincipalInfo;
     this.url = url;
     this.sessionless = sessionless;
+    this.dontKill = dontKill;
     debug = getLogger().isDebugEnabled();
 
     try {
@@ -190,6 +191,11 @@ public abstract class CalintfBase implements Calintf {
   @Override
   public String getLogId() {
     return logId;
+  }
+
+  @Override
+  public boolean getDontKill() {
+    return dontKill;
   }
 
   @Override
@@ -219,26 +225,25 @@ public abstract class CalintfBase implements Calintf {
 
   /**
    * @return PrincipalInfo
-   * @throws CalFacadeException
    */
-  public PrincipalInfo getPrincipalInfo() throws CalFacadeException {
+  public PrincipalInfo getPrincipalInfo() {
     return principalInfo;
   }
 
   @Override
-  public BasicSystemProperties getSyspars() throws CalFacadeException {
+  public BasicSystemProperties getSyspars() {
     return configs.getBasicSystemProperties();
   }
 
   @Override
-  public BwIndexer getPublicIndexer() throws CalFacadeException {
+  public BwIndexer getPublicIndexer() {
     return BwIndexerFactory.getPublicIndexer(configs,
                                              currentMode,
                                              ac);
   }
 
   @Override
-  public BwIndexer getIndexer(final BwPrincipal principal) throws CalFacadeException {
+  public BwIndexer getIndexer(final BwPrincipal principal) {
     return BwIndexerFactory.getIndexer(configs, principal,
                                        getPrincipalInfo().getSuperUser(),
                                        currentMode,
@@ -247,7 +252,7 @@ public abstract class CalintfBase implements Calintf {
 
   @Override
   public BwIndexer getIndexer(final BwPrincipal principal,
-                              final String indexRoot) throws CalFacadeException {
+                              final String indexRoot) {
     return BwIndexerFactory.getIndexer(configs, principal,
                                        currentMode,
                                        ac,
@@ -297,6 +302,10 @@ public abstract class CalintfBase implements Calintf {
     }
   }
 
+  public void kill() {
+    killed = true;
+  }
+
   @Override
   public void clearNotifications() throws CalFacadeException {
     queuedNotifications.clear();
@@ -304,9 +313,8 @@ public abstract class CalintfBase implements Calintf {
 
   /**
    * @return BwPrincipal object for current principal
-   * @throws CalFacadeException
    */
-  public BwPrincipal getPrincipal() throws CalFacadeException {
+  public BwPrincipal getPrincipal() {
     return principalInfo.getPrincipal();
   }
 
@@ -315,7 +323,7 @@ public abstract class CalintfBase implements Calintf {
    * ==================================================================== */
 
   protected void checkOpen() throws CalFacadeException {
-    if (!isOpen) {
+    if (!killed && !isOpen) {
       throw new CalFacadeException("Calintf call when closed");
     }
   }
@@ -323,35 +331,6 @@ public abstract class CalintfBase implements Calintf {
   /*
   protected void updated(BwUser user) {
     personalModified.add(user);
-  }
+  }*/
 
-  /** Get a logger for messages
-   */
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(getClass());
-    }
-
-    return log;
-  }
-
-  protected void error(final String msg) {
-    getLogger().error(msg);
-  }
-
-  protected void warn(final String msg) {
-    getLogger().warn(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(this, t);
-  }
-
-  protected void trace(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void debug(final String msg) {
-    getLogger().debug(msg);
-  }
 }

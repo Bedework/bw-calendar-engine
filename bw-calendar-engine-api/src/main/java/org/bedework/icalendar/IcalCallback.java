@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.svc.EventInfo;
 
 import java.io.Serializable;
@@ -143,6 +144,16 @@ public interface IcalCallback extends Serializable {
    * @throws CalFacadeException
    */
   BwLocation getLocation(BwString address) throws CalFacadeException;
+
+  /** Find a location owned by the current user which has a named
+   * key field which matches the value.
+   *
+   * @param name - of key field
+   * @param val - expected full value
+   * @return null or location object
+   */
+  GetEntityResponse<BwLocation> fetchLocationByKey(String name,
+                                                   String val);
 
   /** Find the location given the address.
    *

@@ -364,6 +364,10 @@ class Notifications extends CalSvcDb implements NotificationsI {
       return res;
     }
 
+    if (rsrc.size() > 100) {
+      warn("Large resource collection for " + ncol.getPath());
+    }
+
     for (final BwResource r : rsrc) {
       if (type != null) {
         final NotificationInfo ni = NotificationType

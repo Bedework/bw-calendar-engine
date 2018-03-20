@@ -303,7 +303,6 @@ public class BwCategory extends BwEventProperty<BwCategory>
   /**
    * @return String
    */
-  @NoDump
   public String getStatus() {
     final BwString s = getDescription();
     if (s == null) {

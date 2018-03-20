@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-annotations" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-api" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-caldav" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-chgnote" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-dumprestore" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-facade" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-ical" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-impl" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-indexer" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-inoutsched" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-interfaces" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-sysevents" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-sysevents/bwsysev-common" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-sysevents/bwsysev-monitor" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-sysevents/bwsysev-msgs" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bw-calendar-engine-tools" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+</project>

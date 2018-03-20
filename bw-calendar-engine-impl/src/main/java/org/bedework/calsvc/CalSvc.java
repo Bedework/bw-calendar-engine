@@ -59,6 +59,7 @@ import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.mail.MailerIntf;
+import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -112,7 +113,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -256,6 +259,8 @@ public class CalSvc extends CalSvcI {
 
     debug = getLogger().isDebugEnabled();
     final long start = System.currentTimeMillis();
+
+    fixUsers();
 
     try {
       if (configs == null) {
@@ -610,7 +615,16 @@ public class CalSvc extends CalSvcI {
   @Override
   public IcalCallback getIcalCallback() {
     if (icalcb == null) {
-      icalcb = new IcalCallbackcb();
+      icalcb = new IcalCallbackcb(null);
+    }
+
+    return icalcb;
+  }
+
+  @Override
+  public IcalCallback getIcalCallback(final Boolean timezonesByReference) {
+    if (icalcb == null) {
+      icalcb = new IcalCallbackcb(timezonesByReference);
     }
 
     return icalcb;
@@ -746,7 +760,7 @@ public class CalSvc extends CalSvcI {
   }
 
   @Override
-  public EventsI getEventsHandler() throws CalFacadeException {
+  public EventsI getEventsHandler() {
     if (eventsHandler == null) {
       eventsHandler = new Events(this);
       handlers.add((CalSvcDb)eventsHandler);
@@ -788,45 +802,57 @@ public class CalSvc extends CalSvcI {
     return calSuitesHandler;
   }
 
-  public BwIndexer getIndexer() throws CalFacadeException {
+  public BwIndexer getIndexer() {
     return getIndexer(getPars().getPublicAdmin() ||
                               getPars().isGuest());
   }
 
   @Override
-  public BwIndexer getIndexer(final boolean publick) throws CalFacadeException {
-    if (publick) {
-      return getCal().getPublicIndexer();
-    }
+  public BwIndexer getIndexer(final boolean publick) {
+    try {
+      if (publick) {
+        return getCal().getPublicIndexer();
+      }
 
-    return getCal().getIndexer(getPrincipal());
+      return getCal().getIndexer(getPrincipal());
+    } catch (final CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
+    }
   }
 
   @Override
-  public BwIndexer getIndexer(final String principal) throws CalFacadeException {
-    final BwPrincipal pr;
+  public BwIndexer getIndexer(final String principal) {
+    try {
+      final BwPrincipal pr;
 
-    if (principal == null) {
-      pr = getPrincipal();
-    } else {
-      pr = getPrincipal(principal);
+      if (principal == null) {
+        pr = getPrincipal();
+      } else {
+        pr = getPrincipal(principal);
+      }
+
+      return getCal().getIndexer(pr);
+    } catch (final CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
     }
-
-    return getCal().getIndexer(pr);
   }
 
   @Override
   public BwIndexer getIndexer(final String principal,
-                              final String indexRoot) throws CalFacadeException {
-    final BwPrincipal pr;
+                              final String indexRoot) {
+    try {
+      final BwPrincipal pr;
 
-    if (principal == null) {
-      pr = getPrincipal();
-    } else {
-      pr = getPrincipal(principal);
+      if (principal == null) {
+        pr = getPrincipal();
+      } else {
+        pr = getPrincipal(principal);
+      }
+
+      return getCal().getIndexer(pr, indexRoot);
+    } catch (final CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
     }
-
-    return getCal().getIndexer(pr, indexRoot);
   }
 
   @Override
@@ -1206,6 +1232,10 @@ public class CalSvc extends CalSvcI {
    */
   private static volatile Object synchlock = new Object();
 
+  private static final Map<String, BwPrincipal> authUsers = new HashMap<>();
+
+  private static final Map<String, BwPrincipal> unauthUsers = new HashMap<>();
+
   /* Currently this gets a local calintf only. Later we need to use a par to
    * get calintf from a table.
    */
@@ -1244,7 +1274,7 @@ public class CalSvc extends CalSvcI {
       String runAsUser = pars.getUser();
 
       if (pars.getCalSuite() != null) {
-        BwCalSuite cs = cali.getCalSuite(pars.getCalSuite());
+        final BwCalSuite cs = cali.getCalSuite(pars.getCalSuite());
 
         if (cs == null) {
           error("******************************************************");
@@ -1269,13 +1299,13 @@ public class CalSvc extends CalSvcI {
       postNotification(SysEvent.makeTimedEvent("Login: before get dirs",
                                                System.currentTimeMillis() - start));
 
-      Directories dir = getDirectories();
+      final Directories dir = getDirectories();
 
       /* Get ourselves a user object */
       String authenticatedUser = pars.getAuthUser();
 
       if (authenticatedUser != null) {
-        String sv = authenticatedUser;
+        final String sv = authenticatedUser;
 
         if (dir.isPrincipal(authenticatedUser)) {
           authenticatedUser = dir.accountFromPrincipal(authenticatedUser);
@@ -1296,127 +1326,177 @@ public class CalSvc extends CalSvcI {
                                                System.currentTimeMillis() - start));
 
       //synchronized (synchlock) {
-        final Users users = (Users)getUsersHandler();
+      final Users users = (Users)getUsersHandler();
 
-        if (runAsUser == null) {
-          runAsUser = authenticatedUser;
+      if (runAsUser == null) {
+        runAsUser = authenticatedUser;
+      }
+
+      BwPrincipal currentPrincipal;
+      final BwPrincipal authPrincipal;
+      PrivilegeSet maxAllowedPrivs = null;
+      boolean subscriptionsOnly = getSystemProperties().getUserSubscriptionsOnly();
+      boolean userMapHit = false;
+      boolean addingUser = false;
+      boolean addingRunAsUser = false;
+
+      if (pars.getForRestore()) {
+        authenticated = true;
+        currentPrincipal = dir.caladdrToPrincipal(pars.getAuthUser());
+        authPrincipal = currentPrincipal;
+        subscriptionsOnly = false;
+      } else if (authenticatedUser == null) {
+        authenticated = false;
+        // Unauthenticated use
+
+        currentPrincipal = unauthUsers.get(runAsUser);
+
+        if (currentPrincipal == null) {
+          currentPrincipal = users.getUser(runAsUser);
+        } else {
+          userMapHit = true;
+        }
+        if (currentPrincipal == null) {
+          // XXX Should we set this one up?
+          currentPrincipal = BwPrincipal.makeUserPrincipal();
         }
 
-        BwPrincipal currentPrincipal;
-        final BwPrincipal authPrincipal;
-        PrivilegeSet maxAllowedPrivs = null;
-        boolean subscriptionsOnly = getSystemProperties().getUserSubscriptionsOnly();
+        currentPrincipal.setUnauthenticated(true);
 
-        if (pars.getForRestore()) {
-          authenticated = true;
-          currentPrincipal = dir.caladdrToPrincipal(pars.getAuthUser());
-          authPrincipal = currentPrincipal;
-          subscriptionsOnly = false;
-        } else if (authenticatedUser == null) {
-          authenticated = false;
-          // Unauthenticated use
-          currentPrincipal = users.getUser(runAsUser);
-          if (currentPrincipal == null) {
-            // XXX Should we set this one up?
-            currentPrincipal = BwPrincipal.makeUserPrincipal();
-          }
+        if (!userMapHit) {
+          unauthUsers.put(runAsUser, currentPrincipal);
+        }
+        authPrincipal = currentPrincipal;
+        maxAllowedPrivs = PrivilegeSet.readOnlyPrivileges;
+      } else {
+        authenticated = true;
+        currentPrincipal = unauthUsers.get(authenticatedUser);
 
-          currentPrincipal.setUnauthenticated(true);
-          authPrincipal = currentPrincipal;
-          maxAllowedPrivs = PrivilegeSet.readOnlyPrivileges;
-        } else {
-          authenticated = true;
+        if (currentPrincipal == null) {
           currentPrincipal = users.getUser(authenticatedUser);
-          if (currentPrincipal == null) {
-            /* Add the user to the database. Presumably this is first logon
-             */
-            getLogger().debug("Add new user " + authenticatedUser);
+        } else {
+          userMapHit = true;
+        }
 
+        if (currentPrincipal == null) {
+          /* Add the user to the database. Presumably this is first logon
+             */
+          getLogger().debug("Add new user " + authenticatedUser);
+
+          /*
             currentPrincipal = addUser(authenticatedUser);
             if (currentPrincipal == null) {
               error("Failed to find user after adding: " + authenticatedUser);
             }
-          }
-
-          authPrincipal = currentPrincipal;
-
-          if (authenticatedUser.equals(runAsUser)) {
-            getLogger().debug("Authenticated user " + authenticatedUser +
-                                      " logged on");
-          } else {
-            currentPrincipal = users.getUser(runAsUser);
-            if (currentPrincipal == null) {
-              //              throw new CalFacadeException("User " + runAsUser + " does not exist.");
-              /* Add the user to the database. Presumably this is first logon
-               */
-              getLogger().debug("Add new run-as-user " + runAsUser);
-
-              currentPrincipal = addUser(runAsUser);
-            }
-
-            getLogger().debug("Authenticated user " + authenticatedUser +
-                              " logged on - running as " + runAsUser);
-          }
-
-          currentPrincipal.setGroups(dir.getAllGroups(currentPrincipal));
-          postNotification(SysEvent.makeTimedEvent("Login: after get Groups",
-                                                   System.currentTimeMillis() - start));
-
-          if (pars.getService()) {
-            subscriptionsOnly = false;
-          } else {
-            final BwPrincipalInfo bwpi = dir.getDirInfo(currentPrincipal);
-            currentPrincipal.setPrincipalInfo(bwpi);
-
-            if (pars.getPublicAdmin() || (bwpi != null && bwpi.getHasFullAccess())) {
-              subscriptionsOnly = false;
-            }
-
-            postNotification(SysEvent.makeTimedEvent("Login: got Dirinfo",
-                                                     System.currentTimeMillis() - start));
-          }
+            */
+          currentPrincipal = getFakeUser(authenticatedUser);
+          addingUser = true;
         }
-        
-        principalInfo = new SvciPrincipalInfo(this,
-                                              currentPrincipal,
-                                              authPrincipal,
-                                              maxAllowedPrivs,
-                                              subscriptionsOnly);
 
-        cali.init(pars.getLogId(),
-                  configs,
-                  principalInfo,
-                  null,
-                  pars.getPublicAdmin(),
-                  pars.getPublicSubmission(),
-                  pars.getSessionsless());
+        authPrincipal = currentPrincipal;
 
-        if (!currentPrincipal.getUnauthenticated()) {
-          if (pars.getService()) {
-            postNotification(
-                    SysEvent.makePrincipalEvent(SysEvent.SysCode.SERVICE_USER_LOGIN,
-                                                currentPrincipal,
-                                                System.currentTimeMillis() - start));
-          } else if (!creating) {
-            users.logon(currentPrincipal);
-
-            postNotification(
-                    SysEvent.makePrincipalEvent(SysEvent.SysCode.USER_LOGIN,
-                                                currentPrincipal,
-                                                System.currentTimeMillis() - start));
-          }
+        if (authenticatedUser.equals(runAsUser)) {
+          getLogger().debug("Authenticated user " + authenticatedUser +
+                                    " logged on");
         } else {
-          // If we have a runAsUser it's a public client. Pretend we authenticated
-// WHY?          currentPrincipal.setUnauthenticated(runAsUser == null);
-        }
+          currentPrincipal = unauthUsers.get(runAsUser);
 
-        if (pars.getPublicAdmin() || pars.isGuest()) {
-          if (debug) {
-            trace("PublicAdmin: " + pars.getPublicAdmin() + " user: "
-                + runAsUser);
+          if (currentPrincipal == null) {
+            currentPrincipal = users.getUser(runAsUser);
+          } else {
+            userMapHit = true;
           }
 
-          /* We may be running as a different user. The preferences we want to see
+          if (currentPrincipal == null) {
+            //              throw new CalFacadeException("User " + runAsUser + " does not exist.");
+            /* Add the user to the database. Presumably this is first logon
+               */
+            getLogger().debug("Add new run-as-user " + runAsUser);
+
+            //currentPrincipal = addUser(runAsUser);
+            currentPrincipal = getFakeUser(runAsUser);
+            addingRunAsUser = true;
+          }
+
+          getLogger().debug("Authenticated user " + authenticatedUser +
+                                    " logged on - running as " + runAsUser);
+        }
+
+        if (!userMapHit && (currentPrincipal != null)) {
+          currentPrincipal
+                  .setGroups(dir.getAllGroups(currentPrincipal));
+          authUsers.put(currentPrincipal.getAccount(), currentPrincipal);
+        }
+
+        postNotification(SysEvent.makeTimedEvent("Login: after get Groups",
+                                                 System.currentTimeMillis() - start));
+
+        if (pars.getService()) {
+          subscriptionsOnly = false;
+        } else {
+          final BwPrincipalInfo bwpi = dir.getDirInfo(currentPrincipal);
+          currentPrincipal.setPrincipalInfo(bwpi);
+
+          if (pars.getPublicAdmin() || (bwpi != null && bwpi.getHasFullAccess())) {
+            subscriptionsOnly = false;
+          }
+
+          postNotification(SysEvent.makeTimedEvent("Login: got Dirinfo",
+                                                   System.currentTimeMillis() - start));
+        }
+      }
+        
+      principalInfo = new SvciPrincipalInfo(this,
+                                            currentPrincipal,
+                                            authPrincipal,
+                                            maxAllowedPrivs,
+                                            subscriptionsOnly);
+
+      cali.init(pars.getLogId(),
+                configs,
+                principalInfo,
+                null,
+                pars.getPublicAdmin(),
+                pars.getPublicSubmission(),
+                pars.getSessionsless(),
+                pars.getDontKill());
+
+      if (addingUser) {
+        // Do the real work of setting up user
+        addUser(authenticatedUser);
+      }
+
+      if (addingRunAsUser) {
+        // Do the real work of setting up user
+        addUser(runAsUser);
+      }
+
+      if (!currentPrincipal.getUnauthenticated()) {
+        if (pars.getService()) {
+          postNotification(
+                  SysEvent.makePrincipalEvent(SysEvent.SysCode.SERVICE_USER_LOGIN,
+                                              currentPrincipal,
+                                              System.currentTimeMillis() - start));
+        } else if (!creating) {
+          users.logon(currentPrincipal);
+
+          postNotification(
+                  SysEvent.makePrincipalEvent(SysEvent.SysCode.USER_LOGIN,
+                                              currentPrincipal,
+                                              System.currentTimeMillis() - start));
+        }
+      } else {
+        // If we have a runAsUser it's a public client. Pretend we authenticated
+// WHY?          currentPrincipal.setUnauthenticated(runAsUser == null);
+      }
+
+      if (pars.getPublicAdmin() || pars.isGuest()) {
+        if (debug) {
+          trace("PublicAdmin: " + pars.getPublicAdmin() + " user: "
+                        + runAsUser);
+        }
+
+        /* We may be running as a different user. The preferences we want to see
            * are those of the user we are running as - i.e. the 'run.as' user
            * not those of the authenticated user.
            * /
@@ -1448,9 +1528,9 @@ public class CalSvc extends CalSvcI {
           }
 
            */
-        }
+      }
 
-        return cali;
+      return cali;
       //}
     } catch (final CalFacadeException cfe) {
       error(cfe);
@@ -1496,79 +1576,65 @@ public class CalSvc extends CalSvcI {
     getCal().principalChanged();
   }
 
-  /* Create the user. Get a new CalSvc object for that purpose.
-   *
-   */
-  BwPrincipal addUser(final String val) throws CalFacadeException {
-    boolean closed = false;
+  BwPrincipal getFakeUser(final String account) throws CalFacadeException {
     final Users users = (Users)getUsersHandler();
 
     /* Run this in a separate transaction to ensure we don't fail if the user
      * gets created by a concurrent process.
      */
 
-    if (creating) {
-      // Get a fake user
-      return users.initUserObject(val);
-    }
+    // Get a fake user
+    return users.initUserObject(account);
+  }
 
-    final CalSvc nsvc = new CalSvc();
+  /* Create the user. Get a new CalSvc object for that purpose.
+   *
+   */
+  BwPrincipal addUser(final String val) throws CalFacadeException {
+    final Users users = (Users)getUsersHandler();
 
-    nsvc.init(pars, true);
+    /* Run this in a separate transaction to ensure we don't fail if the user
+     * gets created by a concurrent process.
+     */
+
+    //if (creating) {
+    //  // Get a fake user
+    //  return users.initUserObject(val);
+    //}
+
+    getCal().flush(); // In case we need to replace the session
 
     try {
-      nsvc.open();
-      nsvc.beginTransaction();
-
-      final Users nusers = (Users)nsvc.getUsersHandler();
-
-      nusers.createUser(val);
+      users.createUser(val);
     } catch (final CalFacadeException cfe) {
       if (cfe.getCause() instanceof ConstraintViolationException) {
         // We'll assume it was created by another process.
         warn("ConstraintViolationException trying to create " + val);
-        try {
-          nsvc.endTransaction();
-        } catch (final Throwable ignored) {}
-        try {
-          nsvc.close();
-        } catch (final Throwable ignored) {}
+
+        // Does this session still work?
       } else {
-        nsvc.rollbackTransaction();
+        rollbackTransaction();
         if (debug) {
           cfe.printStackTrace();
         }
         throw cfe;
       }
-      closed = true;
     } catch (final Throwable t) {
-      nsvc.rollbackTransaction();
+      rollbackTransaction();
       if (debug) {
         t.printStackTrace();
       }
       throw new CalFacadeException(t);
-    } finally {
-      if (!closed) {
-        try {
-          nsvc.endTransaction();
-        } catch (final CalFacadeException cfe) {
-          if (!(cfe.getCause() instanceof ConstraintViolationException)) {
-            throw cfe;
-          }
-
-          //Othewise we'll assume it was created by another process.
-          warn("ConstraintViolationException trying to create " + val);
-        } finally {
-          try {
-            nsvc.close();
-          } catch (final Throwable ignored) {
-          }
-        }
-      }
     }
 
     final BwPrincipal principal = users.getUser(val);
-    String caladdr = getDirectories().userToCaladdr(principal.getPrincipalRef());
+
+    if (principal == null) {
+      return null;
+    }
+
+    final String caladdr =
+            getDirectories().userToCaladdr(principal.getPrincipalRef());
     if (caladdr != null) {
       final List<String> emails = Collections.singletonList(caladdr.substring("mailto:".length()));
       final Notifications notify = (Notifications)getNotificationsHandler();
@@ -1595,6 +1661,12 @@ public class CalSvc extends CalSvcI {
 
   private class IcalCallbackcb implements IcalCallback {
     private int strictness = conformanceRelaxed;
+
+    private final Boolean timezonesByReference;
+
+    IcalCallbackcb(final Boolean timezonesByReference) {
+      this.timezonesByReference = timezonesByReference;
+    }
 
     @Override
     public void setStrictness(final int val) throws CalFacadeException {
@@ -1661,6 +1733,13 @@ public class CalSvc extends CalSvcI {
     }
 
     @Override
+    public GetEntityResponse<BwLocation> fetchLocationByKey(
+            final String name,
+            final String val) {
+      return getLocationsHandler().fetchLocationByKey(name, val);
+    }
+
+    @Override
     public BwLocation findLocation(final BwString address) throws CalFacadeException {
       final BwLocation loc = BwLocation.makeLocation();
       loc.setAddress(address);
@@ -1685,8 +1764,23 @@ public class CalSvc extends CalSvcI {
 
     @Override
     public boolean getTimezonesByReference() throws CalFacadeException {
+      if (timezonesByReference != null) {
+        return timezonesByReference;
+      }
+
       return getSystemProperties().getTimezonesByReference();
     }
+  }
+
+  /* Remove trailing "/" from user principals.
+   */
+  private void fixUsers() {
+    String auser = pars.getAuthUser();
+    while ((auser != null) && (auser.endsWith("/"))) {
+      auser = auser.substring(0, auser.length() - 1);
+    }
+
+    pars.setAuthUser(auser);
   }
 
   private String getSynchItems(final BwCalendar col,

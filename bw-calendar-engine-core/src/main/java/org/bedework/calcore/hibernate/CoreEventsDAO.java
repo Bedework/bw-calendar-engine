@@ -141,12 +141,22 @@ public class CoreEventsDAO extends DAOBase {
     sess.executeUpdate();
   }
 
+  /* TODO - we get deadlocks (at least with mysql) when
+     we try to do this. For the moment move them to a purged
+     collection until I figure out how to avoid the deadlocks
   private final static String deleteTombstonedEventQuery =
           "delete from " + BwEventObj.class.getName() + " ev " +
                   "where ev.tombstoned = true and " +
                   "ev.colPath = :path and " + 
                   "ev.uid = :uid";
-  
+   */
+  private final static String deleteTombstonedEventQuery =
+          "update " + BwEventObj.class.getName() + " ev " +
+                  "set ev.colPath = '**purged**' " +
+                  "where ev.tombstoned = true and " +
+                  "ev.colPath = :path and " +
+                  "ev.uid = :uid";
+
   protected void deleteTombstonedEvent(final String colPath,
                                      final String uid) throws CalFacadeException {
     final HibSession sess = getSess();

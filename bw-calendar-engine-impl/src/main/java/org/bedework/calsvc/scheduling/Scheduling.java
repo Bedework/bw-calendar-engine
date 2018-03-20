@@ -44,7 +44,7 @@ import java.util.Collection;
 public class Scheduling extends ImplicitSchedulingHandler {
   /** Constructor
    *
-   * @param svci
+   * @param svci service interface
    */
   public Scheduling(final CalSvc svci) {
     super(svci);
@@ -55,13 +55,18 @@ public class Scheduling extends ImplicitSchedulingHandler {
    */
   @Override
   public EventInfo getStoredMeeting(final BwEvent ev) throws CalFacadeException {
-    String preferred = getSvc().getCalendarsHandler().
+    final String preferred = getSvc().getCalendarsHandler().
             getPreferred(IcalDefs.entityTypeIcalNames[ev.getEntityType()]);
     if (preferred == null) {
       throw new CalFacadeException(CalFacadeException.schedulingNoCalendar);
     }
 
-    Collection<EventInfo> evs = getSvc().getEventsHandler().
+    if (debug) {
+      debug("Look for event " + ev.getUid() +
+                    " in " + preferred);
+    }
+
+    final Collection<EventInfo> evs = getSvc().getEventsHandler().
             getByUid(preferred,
                      ev.getUid(),
                      null,
@@ -73,10 +78,10 @@ public class Scheduling extends ImplicitSchedulingHandler {
 
     /* Return the active meeting */
 
-    for (EventInfo ei: evs) {
-      BwEvent e = ei.getEvent();
+    for (final EventInfo ei: evs) {
+      final BwEvent e = ei.getEvent();
       // Skip anything other than a calendar collection
-      BwCalendar evcal = getSvc().getCalendarsHandler().get(e.getColPath());
+      final BwCalendar evcal = getSvc().getCalendarsHandler().get(e.getColPath());
 
       if (!evcal.getCollectionInfo().scheduling) {
         continue;
@@ -88,7 +93,7 @@ public class Scheduling extends ImplicitSchedulingHandler {
 
       if (e.getSuppressed()) {
         // See if the overrrides are scheduling objects
-        for (BwEvent oe: ei.getOverrideProxies()) {
+        for (final BwEvent oe: ei.getOverrideProxies()) {
           if (oe.getOrganizerSchedulingObject() ||
               oe.getAttendeeSchedulingObject()) {
             return ei;

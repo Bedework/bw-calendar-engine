@@ -104,6 +104,9 @@ public class InRequest extends InProcessor {
     EventInfo ourCopy = null;
     boolean adding = false;
 
+    ev.setAttendeeSchedulingObject(true);
+    ev.setOrganizerSchedulingObject(false);
+
     check: {
       ourCopy = sched.getStoredMeeting(ev);
 
@@ -652,12 +655,40 @@ public class InRequest extends InProcessor {
     try {
       final BwEvent ourEv = ourCopy.getEvent();
       final BwEvent inEv = inCopy.getEvent();
+      final boolean statusUpdate;
 
+      if (inEv.getScheduleMethod() ==
+              ScheduleMethods.methodTypeRequest) {
+        if (debug) {
+          trace("Update the poll common fields");
+        }
+        if (!updateAttendeeFields(ourCopy, inCopy, attUri)) {
+          return false;
+        }
+        statusUpdate = false;
+      } else if (inEv.getScheduleMethod() !=
+              ScheduleMethods.methodTypePollStatus) {
+        if (debug) {
+          debug("Bad method " + inEv.getScheduleMethod());
+        }
+        return false;
+      } else {
+        statusUpdate = true;
+      }
+
+      // Now update the vpoll items.
+
+      final ChangeTable chg = ourCopy.getChangeset(getPrincipalHref());
+
+      chg.changed(PropertyInfoIndex.STATUS, ourEv.getStatus(),
+                  inEv.getStatus());
       ourEv.setStatus(inEv.getStatus());
 
       final Integer pw = inEv.getPollWinner();
 
       if (pw != null) {
+        chg.changed(PropertyInfoIndex.POLL_WINNER, ourEv.getPollWinner(),
+                    inEv.getPollWinner());
         ourEv.setPollWinner(pw);
       }
 
@@ -665,17 +696,21 @@ public class InRequest extends InProcessor {
 
       for (final String s: inEv.getVvoters()) {
         ourEv.addVvoter(s);
+        chg.addValue(PropertyInfoIndex.VVOTER, s);
       }
 
-      ourEv.clearPollItems();
+      if (!statusUpdate) {
+        ourEv.clearPollItems();
 
-      for (final String s: inEv.getPollItems()) {
-        ourEv.addPollItem(s);
+        for (final String s : inEv.getPollItems()) {
+          ourEv.addPollItem(s);
+          chg.addValue(PropertyInfoIndex.POLL_ITEM, s);
+        }
       }
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
-    return false;
+    return true;
   }
 
   /** Update our (the attendees) copy of the event from the inbox copy. We

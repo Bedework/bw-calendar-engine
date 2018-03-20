@@ -930,7 +930,7 @@ public class HibSessionImpl implements HibSession {
   }
 
   /**
-   * @throws CalFacadeException
+   * @throws CalFacadeException on hibernate error
    */
   @Override
   public void flush() throws CalFacadeException {
@@ -945,6 +945,26 @@ public class HibSessionImpl implements HibSession {
     try {
       sess.flush();
     } catch (Throwable t) {
+      handleException(t);
+    }
+  }
+
+  /**
+   * @throws CalFacadeException on hibernate error
+   */
+  @Override
+  public void clear() throws CalFacadeException {
+    if (exc != null) {
+      // Didn't hear me last time?
+      throw new CalFacadeException(exc);
+    }
+
+    if (getLogger().isDebugEnabled()) {
+      getLogger().debug("About to flush");
+    }
+    try {
+      sess.clear();
+    } catch (final Throwable t) {
       handleException(t);
     }
   }

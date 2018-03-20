@@ -5,7 +5,7 @@
   <parent>
     <artifactId>bw-calendar-engine</artifactId>
     <groupId>org.bedework.caleng</groupId>
-    <version>4.0.0-SNAPSHOT</version>
+    <version>3.12.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -14,14 +14,19 @@
   <dependencies>
     <dependency>
       <groupId>org.bedework.caleng</groupId>
-      <artifactId>bw-caleng-facade</artifactId>
+      <artifactId>bw-calendar-engine-facade</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>org.bedework.caleng</groupId>
-      <artifactId>bw-caleng-interfaces</artifactId>
+      <artifactId>bw-calendar-engine-interfaces</artifactId>
       <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-xml-bwlicense</artifactId>
     </dependency>
 
     <dependency>

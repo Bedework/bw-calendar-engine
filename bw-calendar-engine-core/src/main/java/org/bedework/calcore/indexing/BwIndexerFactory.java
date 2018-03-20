@@ -20,7 +20,6 @@ package org.bedework.calcore.indexing;
 
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.Configurations;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.util.AccessChecker;
 
@@ -41,11 +40,10 @@ public class BwIndexerFactory {
    * @param currentMode - guest, user,publicAdmin
    * @param accessCheck  - required - lets us check access
    * @return indexer
-   * @throws CalFacadeException
    */
   public static BwIndexer getPublicIndexer(final Configurations configs,
                                            final int currentMode,
-                                           final AccessChecker accessCheck) throws CalFacadeException {
+                                           final AccessChecker accessCheck) {
     return new BwIndexEsImpl(configs, true,
                              null,    // principal
                              false,   // super user
@@ -62,13 +60,12 @@ public class BwIndexerFactory {
    * @param currentMode - guest, user,publicAdmin
    * @param accessCheck  - required - lets us check access
    * @return indexer
-   * @throws CalFacadeException
    */
   public static BwIndexer getIndexer(final Configurations configs,
                                      final BwPrincipal principal,
                                      final boolean superUser,
                                      final int currentMode,
-                                     final AccessChecker accessCheck) throws CalFacadeException {
+                                     final AccessChecker accessCheck) {
     return new BwIndexEsImpl(configs, false,
                              principal,
                              superUser,
@@ -87,13 +84,12 @@ public class BwIndexerFactory {
    * @param accessCheck  - required - lets us check access
    * @param indexRoot
    * @return indexer
-   * @throws CalFacadeException
    */
   public static BwIndexer getIndexer(final Configurations configs,
                                      final BwPrincipal principal,
                                      final int currentMode,
                                      final AccessChecker accessCheck,
-                                     final String indexRoot) throws CalFacadeException {
+                                     final String indexRoot) {
     return new BwIndexEsImpl(configs, true,
                              principal,
                              false,

@@ -18,7 +18,6 @@
 */
 package org.bedework.inoutsched;
 
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvc.MesssageHandler;
 import org.bedework.calsvc.MesssageHandler.ProcessMessageResult;
 import org.bedework.calsvci.CalSvcFactoryDefault;
@@ -47,22 +46,21 @@ import org.bedework.sysevents.listeners.JmsSysEventListener;
  * @author Mike Douglass
  */
 public class InoutSched extends JmsSysEventListener implements Runnable {
-  private ScheduleMesssageCounts counts;
+  private final ScheduleMesssageCounts counts;
 
   private int retryLimit = 10;
 
-  boolean debug;
+  private final boolean in;
 
   /** Constructor to run
    *
-   * @param counts
-   * @param retryLimit
-   * @param in
-   * @throws CalFacadeException
+   * @param counts for stats
+   * @param retryLimit number retries on exception
+   * @param in or out
    */
   InoutSched(final ScheduleMesssageCounts counts,
              final int retryLimit,
-             final boolean in) throws CalFacadeException {
+             final boolean in) {
     this.in = in;
     this.retryLimit = retryLimit;
     this.counts = counts;
@@ -71,7 +69,7 @@ public class InoutSched extends JmsSysEventListener implements Runnable {
   /** Set the number of times we retry a message when we get stale state
    * exceptions.
    *
-   * @param val
+   * @param val retry limit
    */
   public void setRetryLimit(final int val) {
     retryLimit = val;
@@ -80,25 +78,28 @@ public class InoutSched extends JmsSysEventListener implements Runnable {
   /**
    * @return current limit
    */
+  @SuppressWarnings("unused")
   public int getRetryLimit() {
     return retryLimit;
   }
-
-  private boolean in;
 
   private MesssageHandler handler;
 
   @Override
   public void run() {
-    try {
-      if (in) {
-        open(schedulerInQueueName, CalSvcFactoryDefault.getPr());
-        handler = new InScheduler();
-      } else {
-        open(schedulerOutQueueName, CalSvcFactoryDefault.getPr());
-        handler = new OutScheduler();
-      }
+    final String qname;
 
+    if (in) {
+      qname = schedulerInQueueName;
+      handler = new InScheduler();
+    } else {
+      qname = schedulerOutQueueName;
+      handler = new OutScheduler();
+    }
+
+    try (final JmsSysEventListener ignored =
+                 open(qname,
+                      CalSvcFactoryDefault.getPr())) {
       process(false);
     } catch (final Throwable t) {
       error("Scheduler(" + in + ") terminating with exception:");
@@ -114,19 +115,19 @@ public class InoutSched extends JmsSysEventListener implements Runnable {
 
     try {
       if (debug) {
-        trace("Received message" + ev);
+        debug("Received message" + ev);
       }
       if (ev instanceof EntityQueuedEvent) {
         counts.total++;
 
-        EntityQueuedEvent eqe = (EntityQueuedEvent)ev;
+        final EntityQueuedEvent eqe = (EntityQueuedEvent)ev;
 
         for (int ct = 1; ct <= retryLimit; ct++) {
           if ((ct - 1) > counts.maxRetries) {
             counts.maxRetries = ct - 1;
           }
 
-          ProcessMessageResult pmr = handler.processMessage(eqe);
+          final ProcessMessageResult pmr = handler.processMessage(eqe);
 
           if (pmr == ProcessMessageResult.PROCESSED) {
             counts.processed++;
@@ -166,7 +167,7 @@ public class InoutSched extends JmsSysEventListener implements Runnable {
         /* Failed after retries */
         counts.failedRetries++;
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error("Error processing message " + ev);
       error(t);
     }

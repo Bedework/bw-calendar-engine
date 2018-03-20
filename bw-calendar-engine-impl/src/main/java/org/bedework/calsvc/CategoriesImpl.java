@@ -25,7 +25,6 @@ import org.bedework.calsvci.Categories;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 /** Class which handles manipulation of Categories.
  *
@@ -55,18 +54,6 @@ public class CategoriesImpl
           throws CalFacadeException {
     return filterDeleted(getIndexer(publick, 
                                     ownerHref).fetchAllCats());
-  }
-
-  @Override
-  Collection<BwCategory> filterDeleted(final Collection<BwCategory> ents) 
-          throws CalFacadeException {
-    if (isSuper()) {
-      return ents;
-    }
-
-    return ents.stream()
-               .filter(ent -> !"deleted".equals(ent.getStatus()))
-               .collect(Collectors.toList());
   }
 
   @Override

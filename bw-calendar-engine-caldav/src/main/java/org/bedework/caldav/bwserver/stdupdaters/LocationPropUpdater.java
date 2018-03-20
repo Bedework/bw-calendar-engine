@@ -42,12 +42,12 @@ public class LocationPropUpdater implements PropertyUpdater {
   @Override
   public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
     try {
-      BwEvent ev = ui.getEvent();
-      ChangeTableEntry cte = ui.getCte();
+      final BwEvent ev = ui.getEvent();
+      final ChangeTableEntry cte = ui.getCte();
 
       BwString val = new BwString(UpdaterUtil.getLang(ui.getProp()),
                                   ((TextPropertyType)ui.getProp()).getText());
-      BwLocation evLoc = ev.getLocation();
+      final BwLocation evLoc = ev.getLocation();
       BwString evVal = null;
       if (evLoc != null) {
         evVal = evLoc.getAddress();
@@ -65,7 +65,7 @@ public class LocationPropUpdater implements PropertyUpdater {
                                   " property - cannot add");
         }
       } else if (!ui.isChange()) {
-        ParameterUpdater.UpdateInfo langUpd =
+        final ParameterUpdater.UpdateInfo langUpd =
             UpdaterUtil.findLangUpdate(ui.getParamUpdates());
 
         if (langUpd == null) {
@@ -112,7 +112,7 @@ public class LocationPropUpdater implements PropertyUpdater {
       }
 
       return UpdateResult.getOkResult();
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw new WebdavException(cfe);
     }
   }

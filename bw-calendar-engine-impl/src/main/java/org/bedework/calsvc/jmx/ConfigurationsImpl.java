@@ -109,7 +109,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
    * @throws CalFacadeException on error
    */
   public ConfigurationsImpl() throws CalFacadeException {
-    super("org.bedework.bwengine:service=System");
+    super("org.bedework.bwengine:service=Conf");
 
     /* This class acts as the mbean for the basic properties */
 

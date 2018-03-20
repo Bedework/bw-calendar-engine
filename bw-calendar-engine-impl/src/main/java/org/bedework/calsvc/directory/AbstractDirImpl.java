@@ -37,7 +37,6 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.dav.DavUtil;
-import org.bedework.util.dav.DavUtil.DavChild;
 import org.bedework.util.dav.DavUtil.MultiStatusResponse;
 import org.bedework.util.dav.DavUtil.MultiStatusResponseElement;
 import org.bedework.util.dav.DavUtil.PropstatElement;
@@ -59,6 +58,7 @@ import net.fortuna.ical4j.vcard.Property.Id;
 import net.fortuna.ical4j.vcard.VCard;
 import net.fortuna.ical4j.vcard.property.Kind;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HTTP;
 import org.w3c.dom.Element;
 
 import java.io.InputStream;
@@ -67,6 +67,7 @@ import java.io.LineNumberReader;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -77,7 +78,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
@@ -693,10 +693,11 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
       /* for the moment if the root url is the user principal hierarchy root
        * just return the current user principal
        */
+      String r = Util.buildPath(true, rootUrl);
 
       /* ResourceUri should be the principals root or user principal root */
-      if (!rootUrl.equals(BwPrincipal.principalRoot) &&
-          !rootUrl.equals(BwPrincipal.userPrincipalRoot)) {
+      if (!r.equals(BwPrincipal.principalRoot) &&
+          !r.equals(BwPrincipal.userPrincipalRoot)) {
         return urls;
       }
 
@@ -1194,7 +1195,7 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
         }
 
         if (wd.getTag().equals(BedeworkServerTags.emailProp)) {
-          // Match FN
+          // Match Email
           xml.openTag(CarddavTags.propFilter, "name", "EMAIL");
 
           xml.startTagSameLine(CarddavTags.textMatch);
@@ -1298,7 +1299,6 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
    /* Try a propfind on the principal */
 
    try {
-     /*
      StringBuilder sb = new StringBuilder(
          "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
          "<D:propfind xmlns:D=\"DAV:\"\n" +
@@ -1311,8 +1311,7 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
      byte[] content = sb.toString().getBytes();
 
      int res = cl.sendRequest("PROPFIND", context + p.getPrincipalRef(),
-                              null, // hdrs
-                              "0",    // depth
+                              Collections.singletonList(DavUtil.depth0), // hdrs
                               "text/xml",
                               content.length, content);
 
@@ -1336,7 +1335,7 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
       *     </propstat>
       *   </response>
       * </multistatus>
-      * /
+      */
 
      DavUtil du = new DavUtil();
      MultiStatusResponse msr = du.getMultiStatusResponse(cl.getResponseBodyAsStream());
@@ -1349,11 +1348,11 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
 
      MultiStatusResponseElement msre = msr.responses.get(0);
 
-     /* We want one propstat element with successful status * /
+     /* We want one propstat element with successful status */
 
      if (msre.propstats.size() != 1) {
        if (debug) {
-         trace("Found " + msre.propstats.size() + " propstat elements");
+         debug("Found " + msre.propstats.size() + " propstat elements");
        }
 
        return null;
@@ -1362,7 +1361,7 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
      PropstatElement pse = msre.propstats.get(0);
      if (pse.status != HttpServletResponse.SC_OK) {
        if (debug) {
-         trace("propstat status was " + pse.status);
+         debug("propstat status was " + pse.status);
        }
 
        return null;
@@ -1371,32 +1370,38 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
      // We expect one principal-address property
      if (pse.props.size() != 1) {
        if (debug) {
-         trace("Found " + pse.props.size() + " prop elements");
+         debug("Found " + pse.props.size() + " prop elements");
        }
 
        return null;
      }
 
-     Element pr = pse.props.iterator().next();
+     final Element pr = pse.props.iterator().next();
 
      if (!XmlUtil.nodeMatches(pr, CarddavTags.principalAddress)) {
        if (debug) {
-         trace("Expected principal-address - found " + pr);
+         debug("Expected principal-address - found " + pr);
        }
 
        return null;
      }
 
-     /* Expect a single href element * /
-     Element href = DavUtil.getOnlyChild(pr);
-     if (!XmlUtil.nodeMatches(href, WebdavTags.href)) {
+     /* Expect a single href element */
+     final Element hrefEl = DavUtil.getOnlyChild(pr);
+     if (!XmlUtil.nodeMatches(hrefEl, WebdavTags.href)) {
        if (debug) {
-         trace("Expected href element for principal-address - found " + href);
+         debug("Expected href element for principal-address - found " +
+                       hrefEl);
        }
 
        return null;
      }
-     */
+
+     final String href =
+             URLDecoder.decode(XmlUtil.getElementContent((Element)hrefEl),
+                               HTTP.UTF_8); // href should be escaped
+
+     /*
      final DavUtil du = new DavUtil();
      Collection<QName> props = new ArrayList<>();
 
@@ -1409,8 +1414,12 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
        return null;
      }
 
-     /* New request for card */
+     /* New request for card * /
      final InputStream is = cl.get(dc.uri);
+     */
+
+     /* New request for card */
+     final InputStream is = cl.get(href);
 
      if (is == null) {
        return null;
@@ -1426,6 +1435,10 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
        }
        card.append(ln);
        card.append("\n");
+     }
+
+     if (card.length() == 0) {
+       return null;
      }
 
      return card.toString();

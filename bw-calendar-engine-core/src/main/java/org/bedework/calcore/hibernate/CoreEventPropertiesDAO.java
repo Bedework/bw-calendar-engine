@@ -111,13 +111,13 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
     delPrefsQuery = new ClassString(
             "delete from " + BwAuthUserPrefsCategory.class.getName() +
-                    "where categoryid=:id",
+                    " where categoryid=:id",
 
             "delete from " + BwAuthUserPrefsContact.class.getName() +
-                    "where contactid=:id",
+                    " where contactid=:id",
 
             "delete from " + BwAuthUserPrefsLocation.class.getName() +
-                    "where locationid=:id");
+                    " where locationid=:id");
 
     keyFields = new ClassString("word",
                                 "uid",

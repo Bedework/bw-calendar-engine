@@ -24,7 +24,6 @@ import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -39,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.bedework.calfacade.BwCalendar.*;
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 
 /** This acts as an interface to the database for user objects.
@@ -67,7 +67,7 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public BwPrincipal getAlways(final String account) throws CalFacadeException {
+  public BwPrincipal getAlways(String account) throws CalFacadeException {
     if (account == null) {
       // Return guest user
       return BwPrincipal.makeUserPrincipal();
@@ -75,6 +75,10 @@ class Users extends CalSvcDb implements UsersI {
 
     final BwPrincipal u = getUser(account);
     if (u == null) {
+      if (account.endsWith("/")) {
+        account = account.substring(0, account.length() - 1);
+      }
+
       add(account);
     }
 
@@ -130,7 +134,15 @@ class Users extends CalSvcDb implements UsersI {
       return null;
     }
 
-    BwPrincipal p = mappedPrincipal(val);
+    final String href;
+
+    if (val.endsWith("/")) {
+      href = val.substring(0, val.length() - 1);
+    } else {
+      href = val;
+    }
+
+    final BwPrincipal p = mappedPrincipal(href);
 
     if (p != null) {
       return p;
@@ -138,25 +150,25 @@ class Users extends CalSvcDb implements UsersI {
 
     setRoots(getSvc());
 
-    if (!val.startsWith(principalRoot)) {
+    if (!href.startsWith(principalRoot)) {
       return null;
     }
 
-    if (val.startsWith(userPrincipalRoot)) {
-      final BwPrincipal u = getSvc().getPrincipal(val);
+    if (href.startsWith(userPrincipalRoot)) {
+      final BwPrincipal u = getSvc().getPrincipal(href);
 
       if (u != null) {
-        principalMap.put(val, u);
+        principalMap.put(href, u);
       }
 
       return u;
     }
 
-    if (val.startsWith(groupPrincipalRoot)) {
-      BwGroup g = getSvc().getDirectories().findGroup(val.substring(groupPrincipalRootLen));
+    if (href.startsWith(groupPrincipalRoot)) {
+      final BwGroup g = getSvc().getDirectories().findGroup(href.substring(groupPrincipalRootLen));
 
       if (g != null) {
-        principalMap.put(val, g);
+        principalMap.put(href, g);
       }
 
       return g;
@@ -167,11 +179,15 @@ class Users extends CalSvcDb implements UsersI {
 
   @Override
   public void add(final String val) throws CalFacadeException {
+    principalMap.clear();
     getSvc().addUser(val);
   }
 
   BwPrincipal initUserObject(final String val) throws CalFacadeException {
     String account = val;
+    if (account.endsWith("/")) {
+      account = account.substring(0, account.length() - 1);
+    }
 
     if (getSvc().getDirectories().isPrincipal(val)) {
       account = getSvc().getDirectories().accountFromPrincipal(val);
@@ -190,7 +206,7 @@ class Users extends CalSvcDb implements UsersI {
     user.setLocationAccess(Access.getDefaultPersonalAccess());
     user.setContactAccess(Access.getDefaultPersonalAccess());
 
-    ((BwUser)user).setQuota(getSvc().getAuthProperties().getDefaultUserQuota());
+    user.setQuota(getSvc().getAuthProperties().getDefaultUserQuota());
 
     user.setPrincipalRef(Util.buildPath(colPathEndsWithSlash, 
                                         userPrincipalRoot, "/", account));
@@ -208,23 +224,14 @@ class Users extends CalSvcDb implements UsersI {
     getSvc().initPrincipal(user);
     initPrincipal(user, getSvc());
 
-    getCal().getSpecialCalendar(user, BwCalendar.calTypeInbox,
-                                true, PrivilegeDefs.privAny);
+    for (final CollectionInfo ci: BwCalendar.getAllCollectionInfo()) {
+      if (!ci.provision) {
+        continue;
+      }
 
-    getCal().getSpecialCalendar(user, BwCalendar.calTypePendingInbox,
-                                true, PrivilegeDefs.privAny);
-
-    getCal().getSpecialCalendar(user, BwCalendar.calTypeOutbox,
-                                true, PrivilegeDefs.privAny);
-
-    getCal().getSpecialCalendar(user, BwCalendar.calTypeNotifications,
-                                true, PrivilegeDefs.privAny);
-
-    getCal().getSpecialCalendar(user, BwCalendar.calTypePoll,
-                                true, PrivilegeDefs.privAny);
-
-    getCal().getSpecialCalendar(user, BwCalendar.calTypeTasks,
-                                true, PrivilegeDefs.privAny);
+      getCal().getSpecialCalendar(user, ci.collectionType,
+                                  true, PrivilegeDefs.privAny);
+    }
 
     getSvc().postNotification(SysEvent.makePrincipalEvent(SysEvent.SysCode.NEW_USER,
                                                           user, 0));

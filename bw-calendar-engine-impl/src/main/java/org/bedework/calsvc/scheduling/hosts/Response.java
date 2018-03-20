@@ -19,7 +19,8 @@
 package org.bedework.calsvc.scheduling.hosts;
 
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.util.http.BasicHttpClient;
+
+import org.apache.http.client.methods.CloseableHttpResponse;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public class Response implements Serializable {
 
   private Throwable exception;
 
-  private BasicHttpClient client;
+  private CloseableHttpResponse resp;
 
   private int redirects;
 
@@ -172,15 +173,15 @@ public class Response implements Serializable {
    *
    * @param val
    */
-  public void setClient(final BasicHttpClient val) {
-    client = val;
+  public void setHttpResponse(final CloseableHttpResponse val) {
+    resp = val;
   }
 
   /**
-   * @return BasicHttpClient
+   * @return CloseableHttpResponse
    */
-  public BasicHttpClient getClient() {
-    return client;
+  public CloseableHttpResponse getHttpResponse() {
+    return resp;
   }
 
   /**

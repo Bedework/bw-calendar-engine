@@ -28,7 +28,18 @@ import org.bedework.util.misc.Util;
 /** Represent an attendee. An attendee entry is associated with a single event
  * and gives the participation status of the attendee for that event.
  *
- *  @author Mike Douglass   douglm - bedework.edu
+ * <p>For 3.10 the sentBy column is used to store the type, response and
+ * stay-informed parameters. If the first char is not "\t" it's all sentBy</p>
+ *
+ * <p>If it is - it has form<ul>
+ *    <li>":"</li>
+ *    <li>"F" or "T"</li>
+ *    <li>int string value</li>
+ *    <li>":"</li>
+ *    <li>Remainder is sent-by</li>
+ *    </ul>
+ *
+ *  @author Mike Douglass   douglm - rpi.edu
  */
 public class BwAttendee extends BwDbentity<BwAttendee>
          implements BwCloneable, Differable<BwAttendee> {
@@ -37,8 +48,6 @@ public class BwAttendee extends BwDbentity<BwAttendee>
 
   /** Could be a voter */
   public final static int typeVoter = 1;
-
-  private int type;
 
   /* Params fields */
 
@@ -112,9 +121,6 @@ public class BwAttendee extends BwDbentity<BwAttendee>
 
   private String scheduleStatus;
 
-  private int response;
-  private boolean stayInformed;
-
   /* Non-db values */
 
   /** Constructor
@@ -129,18 +135,54 @@ public class BwAttendee extends BwDbentity<BwAttendee>
 
   /** Set the type
    *
-   *  @param  val
+   *  @param  val the type
    */
   public void setType(final int val) {
-    type = val;
+    final String sb = getSentByVal();
+
+    if (val == typeAttendee) {
+      // Ensure sent by val is plain
+      if (sb == null) {
+        return;
+      }
+
+      if (!sb.startsWith(":")) {
+        return;
+      }
+
+      final String sbpart = sb.substring(sb.indexOf(":", 2));
+
+      if (sbpart.length() == 0) {
+        setSentByVal(null);
+      } else {
+        setSentByVal(sbpart);
+      }
+
+      return;
+    }
+
+    if (sb == null) {
+      setSentByVal(":F0:");
+      return;
+    }
+
+    if (!sb.startsWith(":")) {
+      setSentByVal(":F0:" + sb);
+    }
   }
 
-  /** Get the type
+  /** Get the type - attendee/voter
    *
    *  @return int
    */
   public int getType() {
-    return type;
+    final String sb = getSentByVal();
+
+    if ((sb == null) || !sb.startsWith(":")) {
+      return typeAttendee;
+    }
+
+    return typeVoter;
   }
 
   /** Set the cn
@@ -308,7 +350,22 @@ public class BwAttendee extends BwDbentity<BwAttendee>
    *  @param  val   String sentBy
    */
   public void setSentBy(final String val) {
-    sentBy = val;
+    final String sb = getSentByVal();
+
+    if ((sb == null) || !sb.startsWith(":")) {
+      setSentByVal(val);
+      return;
+    }
+
+    final String sbpart;
+
+    if (val == null) {
+      sbpart = "";
+    } else{
+      sbpart = val;
+    }
+
+    setSentByVal(sb.substring(0, sb.indexOf(":", 2) + 1) + sbpart);
   }
 
   /** Get the sentBy
@@ -316,6 +373,34 @@ public class BwAttendee extends BwDbentity<BwAttendee>
    *  @return String     sentBy
    */
   public String getSentBy() {
+    final String sb = getSentByVal();
+
+    if ((sb == null) || !sb.startsWith(":")) {
+      return sb;
+    }
+
+    final String sbpart = sb.substring(sb.indexOf(":", 2) + 1);
+
+    if (sbpart.length() == 0) {
+      return null;
+    }
+
+    return sbpart;
+  }
+
+  /** Set the sentBy
+   *
+   *  @param  val   String sentBy
+   */
+  public void setSentByVal(final String val) {
+    sentBy = val;
+  }
+
+  /** Get the sentBy
+   *
+   *  @return String     sentBy
+   */
+  public String getSentByVal() {
     return sentBy;
   }
 
@@ -352,7 +437,7 @@ public class BwAttendee extends BwDbentity<BwAttendee>
   }
 
   /**
-   * @param val
+   * @param val the dtstamp
    */
   public void setDtstamp(final String val) {
     dtstamp = val;
@@ -399,26 +484,57 @@ public class BwAttendee extends BwDbentity<BwAttendee>
 
   /** Set the response - voter only
    *
-   *  @param  val
+   *  @param  val response for voter
    */
   public void setResponse(final int val) {
-    response = val;
+    final String sb = getSentByVal();
+
+    if (sb == null) {
+      setSentByVal(":F" + val + ":");
+      return;
+    }
+
+    final String sbpart = sb.substring(sb.indexOf(":", 2) + 1);
+    final String sipart = sb.substring(1, 2);
+
+    setSentByVal(":" + sipart + val + ":" + sbpart);
   }
 
-  /** Get the type
+  /** Get the response
    *
    *  @return int
    */
   public int getResponse() {
-    return response;
+    final String sb = getSentByVal();
+
+    if ((sb == null) || !sb.startsWith(":")) {
+      return 0;
+    }
+
+    return Integer.valueOf(sb.substring(2,
+                                        sb.indexOf(":", 2)));
   }
 
   /**
    *
-   *  @param  val
+   *  @param  val true/false for stay-informed
    */
   public void setStayInformed(final boolean val) {
-    stayInformed = val;
+    final String sb = getSentByVal();
+    final String sival;
+
+    if (val) {
+      sival = "T";
+    } else {
+      sival = "F";
+    }
+
+    if (sb == null) {
+      setSentByVal(":" + sival + "0:");
+      return;
+    }
+
+    setSentByVal(":" + sival + sb.substring(2));
   }
 
   /**
@@ -426,15 +542,20 @@ public class BwAttendee extends BwDbentity<BwAttendee>
    *  @return boolean
    */
   public boolean getStayInformed() {
-    return stayInformed;
+    final String sb = getSentByVal();
+
+    if ((sb == null) || !sb.startsWith(":")) {
+      return false;
+    }
+
+    return sb.charAt(1) == 'T';
   }
 
   /** Copy this objects values into the parameter
-   *
+1   *
    * @param val to copy
    */
   public void copyTo(final BwAttendee val) {
-    val.setType(getType());
     val.setCn(getCn());
     val.setCuType(getCuType());
     val.setDelegatedFrom(getDelegatedFrom());
@@ -445,15 +566,12 @@ public class BwAttendee extends BwDbentity<BwAttendee>
     val.setRsvp(getRsvp());
     val.setRole(getRole());
     val.setPartstat(getPartstat());
-    val.setSentBy(getSentBy());
+    val.setSentByVal(getSentByVal());
     val.setAttendeeUri(getAttendeeUri());
     val.setSequence(getSequence());
     val.setScheduleAgent(getScheduleAgent());
     val.setScheduleStatus(getScheduleStatus());
     val.setDtstamp(getDtstamp());
-
-    val.setResponse(getResponse());
-    val.setStayInformed(getStayInformed());
   }
 
   /** Only true if something changes the status of, or information about, the
@@ -474,29 +592,18 @@ public class BwAttendee extends BwDbentity<BwAttendee>
    * @return true for significant change
    */
   public boolean changedBy(final BwAttendee val, final boolean checkPartStat) {
-    boolean changed =
-        (Util.compareStrings(val.getCn(), getCn()) != 0) ||
-        (Util.compareStrings(val.getCuType(), getCuType()) != 0) ||
-        (Util.compareStrings(val.getDelegatedFrom(), getDelegatedFrom()) != 0) ||
-        (Util.compareStrings(val.getDelegatedTo(), getDelegatedTo()) != 0) ||
-        (Util.compareStrings(val.getDir(), getDir()) != 0) ||
-        (Util.compareStrings(val.getLanguage(), getLanguage()) != 0) ||
-        (Util.compareStrings(val.getMember(), getMember()) != 0) ||
-        (Util.compareStrings(val.getRole(), getRole()) != 0) ||
-        (Util.compareStrings(val.getSentBy(), getSentBy()) != 0) ||
-        (Util.compareStrings(val.getAttendeeUri(), getAttendeeUri()) != 0);
-
-    if (changed) {
-      return true;
-    }
-
-    if (getType() == typeAttendee){
-      return checkPartStat &&
-             (Util.compareStrings(val.getPartstat(), getPartstat()) != 0);
-    }
-
-    return (Util.cmpIntval(val.getResponse(), getResponse()) != 0) ||
-        (Util.cmpBoolval(val.getStayInformed(), getStayInformed()) != 0);
+    return ((checkPartStat &&
+             (Util.compareStrings(val.getPartstat(), getPartstat()) != 0))) ||
+           (Util.compareStrings(val.getCn(), getCn()) != 0) ||
+           (Util.compareStrings(val.getCuType(), getCuType()) != 0) ||
+           (Util.compareStrings(val.getDelegatedFrom(), getDelegatedFrom()) != 0) ||
+           (Util.compareStrings(val.getDelegatedTo(), getDelegatedTo()) != 0) ||
+           (Util.compareStrings(val.getDir(), getDir()) != 0) ||
+           (Util.compareStrings(val.getLanguage(), getLanguage()) != 0) ||
+           (Util.compareStrings(val.getMember(), getMember()) != 0) ||
+           (Util.compareStrings(val.getRole(), getRole()) != 0) ||
+           (Util.compareStrings(val.getSentByVal(), getSentByVal()) != 0) ||
+           (Util.compareStrings(val.getAttendeeUri(), getAttendeeUri()) != 0);
   }
 
   /* ====================================================================
@@ -505,28 +612,19 @@ public class BwAttendee extends BwDbentity<BwAttendee>
 
   @Override
   public boolean differsFrom(final BwAttendee val) {
-    if ((Util.cmpIntval(val.getType(), getType()) != 0) ||
-        (Util.compareStrings(val.getCn(), getCn()) != 0) ||
-        (Util.compareStrings(val.getCuType(), getCuType()) != 0) ||
-        (Util.compareStrings(val.getDelegatedFrom(), getDelegatedFrom()) != 0) ||
-        (Util.compareStrings(val.getDelegatedTo(), getDelegatedTo()) != 0) ||
-        (Util.compareStrings(val.getDir(), getDir()) != 0) ||
-        (Util.compareStrings(val.getLanguage(), getLanguage()) != 0) ||
-        (Util.compareStrings(val.getMember(), getMember()) != 0) ||
-        (Util.cmpBoolval(val.getRsvp(), getRsvp()) != 0) ||
-        (Util.compareStrings(val.getRole(), getRole()) != 0) ||
-        (Util.compareStrings(val.getSentBy(), getSentBy()) != 0) ||
-        (Util.compareStrings(val.getAttendeeUri(), getAttendeeUri()) != 0) ||
-        (Util.cmpIntval(val.getScheduleAgent(), getScheduleAgent()) != 0)) {
-      return true;
-    }
-
-    if (val.getType() != typeVoter) {
-      return Util.compareStrings(val.getPartstat(), getPartstat()) != 0;
-    }
-
-    return (Util.cmpIntval(val.getResponse(), getResponse()) != 0) ||
-        (Util.cmpBoolval(val.getStayInformed(), getStayInformed()) != 0);
+    return (Util.compareStrings(val.getPartstat(), getPartstat()) != 0) ||
+           (Util.compareStrings(val.getCn(), getCn()) != 0) ||
+           (Util.compareStrings(val.getCuType(), getCuType()) != 0) ||
+           (Util.compareStrings(val.getDelegatedFrom(), getDelegatedFrom()) != 0) ||
+           (Util.compareStrings(val.getDelegatedTo(), getDelegatedTo()) != 0) ||
+           (Util.compareStrings(val.getDir(), getDir()) != 0) ||
+           (Util.compareStrings(val.getLanguage(), getLanguage()) != 0) ||
+           (Util.compareStrings(val.getMember(), getMember()) != 0) ||
+           (Util.cmpBoolval(val.getRsvp(), getRsvp()) != 0) ||
+           (Util.compareStrings(val.getRole(), getRole()) != 0) ||
+           (Util.compareStrings(val.getSentByVal(), getSentByVal()) != 0) ||
+           (Util.compareStrings(val.getAttendeeUri(), getAttendeeUri()) != 0) ||
+           (Util.cmpIntval(val.getScheduleAgent(), getScheduleAgent()) != 0);
   }
 
   /* ====================================================================

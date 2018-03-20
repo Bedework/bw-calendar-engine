@@ -24,6 +24,7 @@ import java.io.Serializable;
 
 import static org.bedework.calfacade.responses.Response.Status.failed;
 import static org.bedework.calfacade.responses.Response.Status.ok;
+import static org.bedework.calfacade.responses.Response.Status.validationError;
 
 /** Base for service responses
  *
@@ -35,14 +36,22 @@ public class Response implements Serializable {
     
     notFound,
 
-    /** Somethign is currently running */
+    validationError,
+
+    /** Something is currently running */
     processing,
+
+    /** Something exists that shouldn't */
+    exists,
 
     failed;
   }
   
   private Status status = ok;
   private String message;
+
+  /* Copied from the request */
+  private int id;
 
   /**
    *
@@ -78,6 +87,20 @@ public class Response implements Serializable {
     return status == ok;
   }
 
+  /**
+   * @param val an id to identify the request
+   */
+  public void setId(final int val) {
+    id = val;
+  }
+
+  /**
+   * @return an id to identify the request
+   */
+  public int getId() {
+    return id;
+  }
+
   public static Response ok() {
     return ok(new Response(), null);
   }
@@ -103,10 +126,21 @@ public class Response implements Serializable {
                                              final String msg) {
     return notOk(resp, failed, msg);
   }
-  
+
+  public static <T extends Response> T error(final T resp,
+                                             final Throwable t) {
+    return error(resp, t.getLocalizedMessage());
+  }
+
+  public static <T extends Response> T invalid(final T resp,
+                                               final String msg) {
+    return notOk(resp, validationError, msg);
+  }
+
   public void toStringSegment(final ToString ts) {
     ts.append("status", getStatus())
-      .append("message", getMessage());
+      .append("message", getMessage())
+      .append("id", getId());
   }
 
   @Override

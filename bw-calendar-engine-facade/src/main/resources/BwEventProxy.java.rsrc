@@ -24,7 +24,7 @@ import org.bedework.calfacade.base.OverrideSet;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 
-//import Util;
+//import org.bedework.util.misc.Util;
 
 import java.util.List;
 import java.util.Set;
@@ -321,6 +321,76 @@ public class BwEventProxy extends BwEvent implements ChangeFlag {
       ref.setNoStart(val);
       setChangeFlag(true);
     }
+  }
+
+  /* ====================================================================
+   *                      Temp methods until schema change
+   * ==================================================================== */
+
+  @Override
+  public void setOrganizerSchedulingObject(final Boolean val) {
+    final List<BwXproperty> props =
+            getXproperties(BwXproperty.bedeworkOrganizerSchedulingObject);
+    BwXproperty xp = null;
+    if ((props != null) && (props.size() > 0)) {
+      xp = props.get(0);
+    }
+
+    if (xp != null) {
+      if (val == null) {
+        // Delete property
+        removeXproperty(xp);
+      } else {
+        xp.setValue(String.valueOf(val));
+      }
+    } else if (val != null) {
+      addXproperty(new BwXproperty(BwXproperty.bedeworkOrganizerSchedulingObject,
+                                   null,
+                                   String.valueOf(val)));
+    }
+  }
+
+  @Override
+  public Boolean getOrganizerSchedulingObject() {
+    String val = ref.getXproperty(BwXproperty.bedeworkOrganizerSchedulingObject);
+    if (val != null) {
+      return Boolean.valueOf(val);
+    }
+
+    return getTarget().getOrganizerSchedulingObject();
+  }
+
+  @Override
+  public void setAttendeeSchedulingObject(final Boolean val) {
+    final List<BwXproperty> props =
+            getXproperties(BwXproperty.bedeworkAttendeeSchedulingObject);
+    BwXproperty xp = null;
+    if ((props != null) && (props.size() > 0)) {
+      xp = props.get(0);
+    }
+
+    if (xp != null) {
+      if (val == null) {
+        // Delete property
+        removeXproperty(xp);
+      } else {
+        xp.setValue(String.valueOf(val));
+      }
+    } else {
+      addXproperty(new BwXproperty(BwXproperty.bedeworkAttendeeSchedulingObject,
+                                   null,
+                                   String.valueOf(val)));
+    }
+  }
+
+  @Override
+  public Boolean getAttendeeSchedulingObject() {
+    String val = ref.getXproperty(BwXproperty.bedeworkAttendeeSchedulingObject);
+    if (val != null) {
+      return Boolean.valueOf(val);
+    }
+
+    return getTarget().getAttendeeSchedulingObject();
   }
 
   /* ====================================================================

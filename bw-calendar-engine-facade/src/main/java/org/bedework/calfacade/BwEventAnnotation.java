@@ -24,8 +24,6 @@ import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 
-import java.util.List;
-
 /** An Event Annotation in Bedework
  *
  *  @author Mike Douglass
@@ -64,59 +62,6 @@ public class BwEventAnnotation extends BwEvent {
    */
   public BwEventAnnotation() {
     super();
-  }
-
-  /* ====================================================================
-   *                      Temp overrides
-   * The following is here because we don't have these columns in the
-   * schema. We'll save them in the x-props but need to move them out at a
-   * later stage.
-   * ==================================================================== */
-
-  @Override
-  public void setOrganizerSchedulingObject(final Boolean val) {
-    final List<BwXproperty> props =
-            getXproperties(BwXproperty.bedeworkOrganizerSchedulingObject);
-    BwXproperty xp = null;
-    if ((props != null) && (props.size() > 0)) {
-      xp = props.get(0);
-    }
-
-    if (xp != null) {
-      xp.setValue(String.valueOf(val));
-    } else {
-      addXproperty(new BwXproperty(BwXproperty.bedeworkOrganizerSchedulingObject,
-                                   null,
-                                   String.valueOf(val)));
-    }
-  }
-
-  @Override
-  public Boolean getOrganizerSchedulingObject() {
-    return Boolean.valueOf(getXproperty(BwXproperty.bedeworkOrganizerSchedulingObject));
-  }
-
-  @Override
-  public void setAttendeeSchedulingObject(final Boolean val) {
-    final List<BwXproperty> props =
-            getXproperties(BwXproperty.bedeworkAttendeeSchedulingObject);
-    BwXproperty xp = null;
-    if ((props != null) && (props.size() > 0)) {
-      xp = props.get(0);
-    }
-
-    if (xp != null) {
-      xp.setValue(String.valueOf(val));
-    } else {
-      addXproperty(new BwXproperty(BwXproperty.bedeworkAttendeeSchedulingObject,
-                                   null,
-                                   String.valueOf(val)));
-    }
-  }
-
-  @Override
-  public Boolean getAttendeeSchedulingObject() {
-    return Boolean.valueOf(getXproperty(BwXproperty.bedeworkAttendeeSchedulingObject));
   }
 
   /* ====================================================================

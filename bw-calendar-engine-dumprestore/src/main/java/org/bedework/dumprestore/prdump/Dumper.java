@@ -23,6 +23,8 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.Response;
+import org.bedework.calfacade.responses.Response.Status;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.DumpIntf;
 import org.bedework.dumprestore.AliasInfo;
@@ -65,14 +67,14 @@ public class Dumper extends Logged {
 
   /**
    * @return true if ok
-   * @throws CalFacadeException on error
    */
-  boolean open() throws CalFacadeException {
+  boolean open() {
     pathStack.clear();
     pushPath(globals.getDirPath());
 
     if (globals.getDirPath() == null) {
-      throw new CalFacadeException("Null directory name");
+      addLn("Null directory name");
+      return false;
     }
 
     return true;
@@ -214,11 +216,12 @@ public class Dumper extends Logged {
   /** Add a directory using stack top as path and pushes the new path
    *
    * @param name dirname
-   * @return true if created
-   * @throws CalFacadeException on error
+   * @return Response with status ok if created
    */
-  protected boolean makeDir(final String name,
-                           final boolean pushDup) throws CalFacadeException {
+  protected Response makeDir(final String name,
+                             final boolean pushDup) {
+    final Response resp = new Response();
+
     try {
       final Path p =  FileSystems.getDefault().getPath(topPath(), name);
 
@@ -230,7 +233,8 @@ public class Dumper extends Logged {
         if (pushDup) {
           pushPath(p.toString());
         }
-        return false;
+        return Response.notOk(resp, Status.exists,
+                              "Path " + p + " already exists.");
       }
 
       if (!f.mkdirs()) {
@@ -238,11 +242,9 @@ public class Dumper extends Logged {
       }
 
       pushPath(p.toString());
-      return true;
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
+      return resp;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      return Response.error(resp, t);
     }
   }
 

@@ -128,14 +128,15 @@ public interface DumpIntf {
    */
   Iterator<BwEvent> getEvents() throws CalFacadeException;
 
-  /** Will return an Iterator returning EventInfo objects.
+  /** Will return an Iterable object returning EventInfo objects.
    * All relevent objects, categories, locations, sponsors, creators will
    * be attached.
    *
-   * @return Iterator - events may have overrides attached.
+   * @param colPath for events
+   * @return Iterable - events may have overrides attached.
    * @throws CalFacadeException on error
    */
-  Iterator<EventInfo> getEventInfos() throws CalFacadeException;
+  Iterable<EventInfo> getEventInfos(String colPath) throws CalFacadeException;
 
   /** Will return an Iterator over event hrefs.
    *

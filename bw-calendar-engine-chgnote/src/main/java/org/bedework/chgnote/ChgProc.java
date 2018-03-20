@@ -18,11 +18,9 @@
 */
 package org.bedework.chgnote;
 
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvc.MesssageHandler;
 import org.bedework.calsvc.MesssageHandler.ProcessMessageResult;
 import org.bedework.calsvci.CalSvcFactoryDefault;
-import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
 
@@ -38,42 +36,22 @@ import org.bedework.sysevents.listeners.JmsSysEventListener;
  * @author Mike Douglass
  */
 public class ChgProc extends JmsSysEventListener implements Runnable {
-  private MesssageCounts counts;
+  private final MesssageCounts counts;
 
   private int retryLimit = 10;
-
-  boolean debug;
 
   private MesssageHandler handler;
 
   /** Constructor to run
    *
-   * @param counts
-   * @param retryLimit
-   * @throws CalFacadeException
+   * @param counts for stats
+   * @param retryLimit how often we retry
    */
   ChgProc(final MesssageCounts counts,
-          final int retryLimit) throws CalFacadeException {
+          final int retryLimit) {
     this.retryLimit = retryLimit;
     this.counts = counts;
-
-    debug = getLogger().isDebugEnabled();
-  }
-
-  /** Set the number of times we retry a message when we get stale state
-   * exceptions.
-   *
-   * @param val
-   */
-  public void setRetryLimit(final int val) {
-    retryLimit = val;
-  }
-
-  /**
-   * @return current limit
-   */
-  public int getRetryLimit() {
-    return retryLimit;
+    enableAuditLogger();
   }
 
   /**
@@ -85,30 +63,31 @@ public class ChgProc extends JmsSysEventListener implements Runnable {
 
   @Override
   public void run() {
-    try {
-      open(changesQueueName, CalSvcFactoryDefault.getPr());
+    try (final JmsSysEventListener ignored =
+                 open(changesQueueName,
+                      CalSvcFactoryDefault.getPr())) {
       handler = new Notifier();
 
       process(false);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error("Notification processor terminating with exception:");
       error(t);
     }
   }
 
   @Override
-  public void action(final SysEvent ev) throws NotificationException {
+  public void action(final SysEvent ev) {
     if (ev == null) {
       return;
     }
 
     try {
       if (debug) {
-        trace("Received message with syscode " + ev.getSysCode());
+        debug("Received message with syscode " + ev.getSysCode());
       }
 
-      if (getLogger().isInfoEnabled()) {
-        info(ev.toString());
+      if (isAuditLoggerEnabled()) {
+        audit(ev.toString());
       }
 
       counts.total++;
@@ -118,7 +97,7 @@ public class ChgProc extends JmsSysEventListener implements Runnable {
           counts.maxRetries = ct - 1;
         }
 
-        ProcessMessageResult pmr = handler.processMessage(ev);
+        final ProcessMessageResult pmr = handler.processMessage(ev);
 
         if (pmr == ProcessMessageResult.PROCESSED) {
           counts.processed++;
@@ -161,7 +140,7 @@ public class ChgProc extends JmsSysEventListener implements Runnable {
         /* Failed after retries */
         counts.failedRetries++;
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error("Error processing message " + ev);
       error(t);
     }
