@@ -33,11 +33,11 @@ public class BwInoutSched extends ConfBase
   private static BwHosts isched;
 
   private class ProcessorThread extends Thread {
-    private InoutSched sched;
+    private final InoutSched sched;
 
     /**
      * @param name - for the thread
-     * @param sched
+     * @param sched - the scheduling object
      */
     public ProcessorThread(final String name, final InoutSched sched) {
       super(name);
@@ -62,7 +62,7 @@ public class BwInoutSched extends ConfBase
 
   private int outgoingRetryLimit = 10;
 
-  private Counts counts = new Counts();
+  private final Counts counts = new Counts();
 
   /**
    *
@@ -154,7 +154,7 @@ public class BwInoutSched extends ConfBase
                                          new InoutSched(counts.outCounts,
                                                         outgoingRetryLimit,
                                                         false));
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error("Error starting scheduler");
       error(t);
     }
@@ -212,8 +212,8 @@ public class BwInoutSched extends ConfBase
     p.interrupt();
     try {
       p.join();
-    } catch (InterruptedException ie) {
-    } catch (Throwable t) {
+    } catch (final InterruptedException ignored) {
+    } catch (final Throwable t) {
       error("Error waiting for processor termination");
       error(t);
     }

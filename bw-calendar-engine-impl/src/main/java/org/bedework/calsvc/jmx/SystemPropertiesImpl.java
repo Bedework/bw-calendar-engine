@@ -72,6 +72,8 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private String localeList;
 
+  private String socketToken;
+
   private String eventregAdminToken;
   private String eventregUrl;
 
@@ -259,6 +261,16 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
   @Override
   public String getLocaleList() {
     return localeList;
+  }
+
+  @Override
+  public void setSocketToken(final String val) {
+    socketToken = val;
+  }
+
+  @Override
+  public String getSocketToken() {
+    return socketToken;
   }
 
   @Override

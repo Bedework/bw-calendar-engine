@@ -358,9 +358,14 @@ public interface HibSession extends Serializable {
   public void lockUpdate(Object o) throws CalFacadeException;
 
   /**
-   * @throws CalFacadeException
+   * @throws CalFacadeException on hibernate error
    */
   public void flush() throws CalFacadeException;
+
+  /**
+   * @throws CalFacadeException on hibernate error
+   */
+  public void clear() throws CalFacadeException;
 
   /**
    * @throws CalFacadeException

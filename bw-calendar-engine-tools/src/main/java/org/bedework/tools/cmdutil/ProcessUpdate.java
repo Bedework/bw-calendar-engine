@@ -19,6 +19,7 @@
 package org.bedework.tools.cmdutil;
 
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwLocation;
 
 /**
  * @author douglm
@@ -42,12 +43,25 @@ public class ProcessUpdate extends CmdUtilHelper {
                       "   where <update> is one of\n" +
                       "     topicalArea=true|false\n"
       );
-      
+
+      addInfo("update loc <guid> <update>" +
+                      "   where <update> is one of\n" +
+                      "     addkey <name> <val>\n" +
+                      "     updkey <name> <val>\n" +
+                      "     delkey <name>\n" +
+                      "     setfld <name> (<val>|null\n\n" +
+                      "   <name> and <val> are quoted strings\n"
+      );
+
       return true;
     }
 
     if ("collection".equals(wd)) {
       return updateCollection();
+    }
+
+    if ("loc".equals(wd)) {
+      return updateLocation();
     }
 
     return false;
@@ -60,10 +74,10 @@ public class ProcessUpdate extends CmdUtilHelper {
 
   @Override
   String description() {
-    return "Update collection";
+    return "Update collection or location";
   }
 
-  private boolean updateCollection() throws Throwable {
+  private boolean updateCollection() {
     try {
       open();
 
@@ -84,7 +98,7 @@ public class ProcessUpdate extends CmdUtilHelper {
         
         switch (upname) {
           case "topicalArea": {
-            Boolean val = boolFor(upname);
+            final Boolean val = boolFor(upname);
             if (val == null) {
               return true;
             }
@@ -94,7 +108,7 @@ public class ProcessUpdate extends CmdUtilHelper {
           }
 
           case "summary": {
-            String val = qstringFor(upname);
+            final String val = qstringFor(upname);
             if (val == null) {
               return true;
             }
@@ -108,6 +122,62 @@ public class ProcessUpdate extends CmdUtilHelper {
       getSvci().getCalendarsHandler().update(col);
 
       return true;
+    } catch (final Throwable t) {
+      error(t);
+      return false;
+    } finally {
+      close();
+    }
+  }
+
+  private boolean updateLocation() {
+    try {
+      open();
+
+      final BwLocation loc = getPersistentLoc();
+
+      if (loc == null) {
+        return true;
+      }
+
+      while (true) {
+        final String upname = word();
+        if (upname == null) {
+          break;
+        }
+
+        switch (upname) {
+          case "addkey": {
+            final String name = qstringFor("key name");
+            final String val = qstringFor("key value");
+
+            loc.addKey(name, val);
+            break;
+          }
+
+          case "updkey": {
+            final String name = qstringFor("key name");
+            final String val = qstringFor("key value");
+
+            loc.updKey(name, val);
+            break;
+          }
+
+          case "delkey": {
+            final String name = qstringFor("key name");
+
+            loc.delKey(name);
+            break;
+          }
+        }
+      }
+
+      getSvci().getLocationsHandler().update(loc);
+
+      return true;
+    } catch (final Throwable t) {
+      error(t);
+      return false;
     } finally {
       close();
     }

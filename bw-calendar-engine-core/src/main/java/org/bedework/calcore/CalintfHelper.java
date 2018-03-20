@@ -430,7 +430,7 @@ public abstract class CalintfHelper
     }
 
     if (val instanceof CategorisedEntity) {
-      clearCollection(((CategorisedEntity)val).getCategoryUids());
+      clearCollection(((CategorisedEntity)val).getCategories());
     }
 
     if (val instanceof CommentedEntity) {
@@ -474,6 +474,18 @@ public abstract class CalintfHelper
     }
 
     val.clear();
+  }
+
+  protected String fixPath(final String path) {
+    if (path.length() <= 1) {
+      return path;
+    }
+
+    if (path.endsWith("/")) {
+      return path.substring(0, path.length() - 1);
+    }
+
+    return path;
   }
 
   /* Post processing of event. Return null or throw exception for no access

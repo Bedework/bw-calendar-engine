@@ -4,30 +4,39 @@
 	<parent>
 		<groupId>org.bedework.caleng</groupId>
 		<artifactId>bw-calendar-engine</artifactId>
-		<version>4.0.0-SNAPSHOT</version>
+		<version>3.12.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
   
-	<artifactId>bw-caleng-api</artifactId>
+	<artifactId>bw-calendar-engine-api</artifactId>
   
 	<dependencies>
 		<!-- Project Dependencies -->
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-caleng-facade</artifactId>
+			<artifactId>bw-calendar-engine-facade</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-    <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-calendar</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-indexing</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-misc</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util2-calendar</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-xml-synchws</artifactId>
+      <scope>provided</scope>
     </dependency>
 		<!-- Third Party Dependencies -->
 	</dependencies>

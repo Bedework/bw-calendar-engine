@@ -22,7 +22,6 @@ import org.bedework.access.AccessException;
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.PrivilegeSet;
-import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -67,7 +66,7 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
  */
 @SuppressWarnings("unchecked")
 public class DumpImpl extends CalSvcDb implements DumpIntf {
-  DumpPrincipalInfo pinfo;
+  //DumpPrincipalInfo pinfo;
 
   private BasicSystemProperties sysRoots;
 
@@ -211,6 +210,19 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     }
   }
 
+  class IterablImpl<T> implements Iterable<T> {
+    private final Iterator<T> it;
+
+    IterablImpl(final Iterator<T> it){
+      this.it = it;
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+      return it;
+    }
+  }
+
   @Override
   public Iterator<BwEvent> getEvents() throws CalFacadeException {
     return new EventIterator(
@@ -218,9 +230,10 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public Iterator<EventInfo> getEventInfos() throws CalFacadeException {
-    return new EventInfoIterator(
-            getCal().getObjectIterator(BwEventObj.class.getName()));
+  public Iterable<EventInfo> getEventInfos(final String colPath) throws CalFacadeException {
+    return new IterablImpl<>(new EventInfoIterator(
+            getCal().getObjectIterator(BwEventObj.class.getName(),
+                                       colPath)));
   }
 
   @Override
@@ -323,9 +336,9 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
 
     private static class StackedState {
       BwPrincipal principal;
-      boolean superUser;
-      String calendarHomePath;
-      PrivilegeSet maxAllowedPrivs;
+      //boolean superUser;
+      //String calendarHomePath;
+      //PrivilegeSet maxAllowedPrivs;
     }
 
     private final Deque<StackedState> stack = new ArrayDeque<>();
@@ -337,10 +350,6 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
       super(principal, authPrincipal, maxAllowedPrivs, false);
       this.dump = dump;
    }
-
-    void setSuperUser(final boolean val) {
-      superUser = val;
-    }
 
     @Override
     public AccessPrincipal getPrincipal(final String href) throws CalFacadeException {
@@ -359,7 +368,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     }
 
     @Override
-    public BasicSystemProperties getSyspars() throws CalFacadeException {
+    public BasicSystemProperties getSyspars() {
       //return svci.getSysparsHandler().get();
       return dump.getBasicSyspars();
     }
@@ -369,8 +378,9 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
       calendarHomePath = null;
     }
 
+    /*
     void pushPrincipal(final BwPrincipal principal) {
-      StackedState ss = new StackedState();
+      final StackedState ss = new StackedState();
       ss.principal = this.principal;
       ss.superUser = superUser;
       ss.calendarHomePath = calendarHomePath;
@@ -384,7 +394,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     }
 
     void popPrincipal() throws CalFacadeException {
-      StackedState ss = stack.pop();
+      final StackedState ss = stack.pop();
 
       if (ss == null) {
         throw new CalFacadeException("Nothing to pop");
@@ -394,7 +404,7 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
       calendarHomePath = ss.calendarHomePath;
       superUser = ss.superUser;
       maxAllowedPrivs = ss.maxAllowedPrivs;
-    }
+    }*/
 
     @Override
     public String makeHref(final String id,

@@ -68,7 +68,7 @@ final class SvciPrincipalInfo extends PrincipalInfo {
   }
 
   @Override
-  public BasicSystemProperties getSyspars() throws CalFacadeException {
+  public BasicSystemProperties getSyspars() {
     return svci.getBasicSystemProperties();
   }
 

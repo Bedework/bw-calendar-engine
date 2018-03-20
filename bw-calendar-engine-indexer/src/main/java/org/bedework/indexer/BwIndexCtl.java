@@ -26,7 +26,6 @@ import org.bedework.calfacade.indexing.IndexStatsResponse;
 import org.bedework.calfacade.indexing.ReindexResponse;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.util.jmx.ConfBase;
-import org.bedework.util.misc.AbstractProcessorThread;
 import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
@@ -46,48 +45,83 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   /* Name of the property holding the location of the config data */
   public static final String confuriPname = "org.bedework.bwengine.confuri";
 
-  private class ProcessorThread extends AbstractProcessorThread {
+  private class ProcessorThread extends Thread {
+    private boolean running;
+
+    long lastErrorTime = 0;
+    long errorResetTime = 1000 * 60 * 5;  // 5 minutes since last error
+    int errorCt = 0;
+    final int maxErrorCt = 5;
+
+    boolean showedTrace;
+
     /**
      * @param name - for the thread
      */
     public ProcessorThread(final String name) {
       super(name);
     }
-
     @Override
-    public void runInit() {
-      /* List the indexes in use - ensures we have an indexer early on */
+    public void run() {
+      final BwIndexApp app = getIndexApp();
+
+      info("************************************************************");
+      info(" * Starting indexer");
+
+    /* List the indexes in use - ensures we have an indexer early on */
 
       info(" * Current indexes: ");
       Set<IndexInfo> is = null;
 
       try {
-        is = getIndexApp().getIndexInfo();
-      } catch (Throwable t) {
+        is = app.getIndexInfo();
+      } catch (final Throwable t) {
         info(" * Exception getting index info:");
         info(" * " + t.getLocalizedMessage());
       }
 
       info(listIndexes(is));
+
+      info("************************************************************");
+
+      while (running) {
+        try {
+          app.listen();
+          running = false;
+        } catch (final Throwable t) {
+          if (!handleException(t)) {
+            if (System.currentTimeMillis() - lastErrorTime > errorResetTime) {
+              errorCt = 0;
+            }
+
+            if (errorCt > maxErrorCt) {
+              error("Too many errors: stopping");
+              running = false;
+              break;
+            }
+
+            lastErrorTime = System.currentTimeMillis();
+            errorCt++;
+
+            if (!showedTrace) {
+              error(t);
+              //            showedTrace = true;
+            } else {
+              error(t.getMessage());
+            }
+          }
+        } finally {
+          getIndexApp().close();
+        }
+      }
     }
 
-    @Override
-    public void runProcess() throws Throwable {
-      getIndexApp().listen();
-    }
-
-    @Override
-    public void close() {
-      getIndexApp().close();
-    }
-
-    @Override
-    public boolean handleException(final Throwable val) {
+    private boolean handleException(final Throwable val) {
       if (!(val instanceof NotificationException)) {
         return false;
       }
 
-      Throwable t = val.getCause();
+      final Throwable t = val.getCause();
       if (t instanceof NameNotFoundException) {
         // jmx shutting down?
         error("Looks like JMX shut down.");
@@ -116,7 +150,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       try {
         getIndexApp().crawl();
         setStatus(statusDone);
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         setStatus(statusFailed);
         if (!showedTrace) {
           error(t);
@@ -336,7 +370,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   public String listIndexes() {
     try {
       return listIndexes(getIndexApp().getIndexInfo());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       return t.getLocalizedMessage();
     }
   }
@@ -368,17 +402,17 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
 
   @Override
   public List<String> rebuildStatus() {
-    List<String> res = new ArrayList<>();
+    final List<String> res = new ArrayList<>();
 
     if (crawler == null) {
       outLine(res, "No rebuild appears to have taken place");
       return res;
     }
 
-    List<CrawlStatus> sts = getIndexApp().getStatus();
+    final List<CrawlStatus> sts = getIndexApp().getStatus();
 
     if (sts != null) {
-      for (CrawlStatus st: sts) {
+      for (final CrawlStatus st: sts) {
         outputStatus(st, res);
       }
     }
@@ -402,11 +436,6 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       return "Started";
     } catch (final Throwable t) {
       setStatus(statusFailed);
-      List<String> infoLines = new ArrayList<String>();
-
-      infoLines.add("***********************************\n");
-      infoLines.add("Error rebuilding indexes.\n");
-      infoLines.add("***********************************\n");
       error("Error rebuilding indexes.");
       error(t);
 
@@ -427,9 +456,9 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   public String reindex(final String indexName) {
     try {
       final ReindexResponse resp = getIndexApp().reindex(indexName);
-
+      
       info(resp.toString());
-
+      
       return "ok";
     } catch (final Throwable t) {
       return "Failed: " + t.getLocalizedMessage();
@@ -460,7 +489,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
 
       return resp;
     } catch (final Throwable t) {
-      IndexStatsResponse resp = new IndexStatsResponse("Failed");
+      final IndexStatsResponse resp = new IndexStatsResponse("Failed");
       resp.setStatus(failed);
       resp.setMessage(t.getLocalizedMessage());
       return resp;
@@ -483,7 +512,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     }
 
     processor = new ProcessorThread(getServiceName());
-    processor.setRunning(true);
+    processor.running = true;
     processor.start();
   }
 
@@ -497,9 +526,27 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       return;
     }
 
-    ProcessorThread.stopProcess(processor);
+    info("************************************************************");
+    info(" * Stopping indexer");
+    info("************************************************************");
+
+    processor.running = false;
+    //?? ProcessorThread.stopProcess(processor);
+
+    processor.interrupt();
+    try {
+      processor.join(20 * 1000);
+    } catch (final InterruptedException ignored) {
+    } catch (final Throwable t) {
+      error("Error waiting for processor termination");
+      error(t);
+    }
 
     processor = null;
+
+    info("************************************************************");
+    info(" * Indexer terminated");
+    info("************************************************************");
   }
 
   @Override
@@ -511,22 +558,22 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
    * Private methods
    * ======================================================================== */
 
-  private String listIndexes(Set<IndexInfo> is) {
+  private String listIndexes(final Set<IndexInfo> is) {
     if (Util.isEmpty(is)) {
       return "No indexes found";
     }
 
-    StringBuilder res = new StringBuilder("Indexes");
+    final StringBuilder res = new StringBuilder("Indexes");
 
     res.append("------------------------\n");
 
-    for (IndexInfo ii: is) {
+    for (final IndexInfo ii: is) {
       res.append(ii.getIndexName());
 
       if (!Util.isEmpty(ii.getAliases())) {
         String delim = "<----";
 
-        for (String a: ii.getAliases()) {
+        for (final String a: ii.getAliases()) {
           res.append(delim);
           res.append(a);
           delim = ", ";
@@ -577,7 +624,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     outLine(res, "totalFailed: " + status.getTotalFailed());
 
     final IndexStatistics is = status.getStats();
-
+    
     if (is != null) {
       for (final IndexedType type: IndexedType.values()) {
         outLine(res, type.toString() + ": " + is.getCount(type));

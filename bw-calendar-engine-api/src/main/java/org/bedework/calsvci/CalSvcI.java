@@ -335,6 +335,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    */
   public abstract IcalCallback getIcalCallback();
 
+  public abstract IcalCallback getIcalCallback(final Boolean timezonesByReference);
+
   /* ====================================================================
    *                   Factory methods
    * ==================================================================== */
@@ -390,9 +392,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Obtain an object which handles events
    *
    * @return EventsI   events handler
-   * @throws CalFacadeException
    */
-  public abstract EventsI getEventsHandler() throws CalFacadeException;
+  public abstract EventsI getEventsHandler();
 
   /** Obtain an object which handles filters
    *
@@ -417,26 +418,23 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /**
    * @param publick true for public index
    * @return the indexer
-   * @throws CalFacadeException
    */
-  public abstract BwIndexer getIndexer(final boolean publick) throws CalFacadeException;
+  public abstract BwIndexer getIndexer(final boolean publick);
 
   /**
    * @param principal - for given principal
    * @return the indexer
-   * @throws CalFacadeException
    */
-  public abstract BwIndexer getIndexer(String principal) throws CalFacadeException;
+  public abstract BwIndexer getIndexer(String principal);
 
   /** Method which allows us to specify the index root.
    *
    * @param principal
    * @param indexRoot
    * @return the indexer
-   * @throws CalFacadeException
    */
   public abstract BwIndexer getIndexer(String principal,
-                                       final String indexRoot) throws CalFacadeException;
+                                       final String indexRoot);
 
   /** Obtain an object which handles notifications
    *

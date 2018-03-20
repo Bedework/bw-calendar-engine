@@ -27,6 +27,8 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
+import org.bedework.calfacade.responses.GetEntityResponse;
+import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.io.Serializable;
@@ -166,7 +168,13 @@ public interface BwIndexer extends Serializable {
    * @return current statistics
    */
   IndexStatsResponse getIndexStats(String indexName);
-  
+
+  enum DeletedState {
+    onlyDeleted, // Only deleted entities in result
+    noDeleted,   // No deleted entities in result
+    includeDeleted // Deleted and non-deleted in result
+  }
+
   /** Called to find entries that match the search string. This string may
    * be a simple sequence of keywords or some sort of query the syntax of
    * which is determined by the underlying implementation.
@@ -199,6 +207,7 @@ public interface BwIndexer extends Serializable {
                       String start,
                       String end,
                       int pageSize,
+                      DeletedState deletedState,
                       RecurringRetrievalMode recurRetrieval) throws CalFacadeException;
 
   enum Position {
@@ -354,6 +363,14 @@ public interface BwIndexer extends Serializable {
    */
   int setAlias(String index, String alias) throws CalFacadeException;
 
+  /** Href of event with possible anchor tag for recurrence id.
+   *
+   * @param href of event
+   * @return entity is EventInfo with overrides if present
+   * @throws CalFacadeException on fatal error
+   */
+  GetEntityResponse<EventInfo> fetchEvent(String href) throws CalFacadeException;
+
   /** Find a category owned by the current user which has a named
    * field which matches the value.
    *
@@ -414,11 +431,21 @@ public interface BwIndexer extends Serializable {
    *
    * @param val - expected full value
    * @param index e.g. UID or CN, VALUE
-   * @return null or contact object
+   * @return null or location object
    * @throws CalFacadeException
    */
   BwLocation fetchLocation(String val,
                            PropertyInfoIndex... index) throws CalFacadeException;
+
+  /** Find a location owned by the current user which has a named
+   * key field which matches the value.
+   *
+   * @param name - of key field
+   * @param val - expected full value
+   * @return null or location object
+   */
+  GetEntityResponse<BwLocation> fetchLocationByKey(String name,
+                                                   String val);
 
   /** Fetch all for the current principal.
    *

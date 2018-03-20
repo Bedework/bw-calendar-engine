@@ -19,6 +19,7 @@
 package org.bedework.calsvci;
 
 import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.responses.GetEntityResponse;
 
 /** Interface which handles manipulation of location entities.
  *
@@ -36,5 +37,17 @@ public interface Locations extends EventProperties<BwLocation> {
    * @param adminCanEditAllPublic   True if administrators can edit all public entities
    */
   void init(boolean adminCanEditAllPublic);
+
+  /** Uses named keys to locate the location. These are used to map a
+   * String location value onto a location entity. This allows us to map
+   * locations in e.g. an OrgSync event onto better specified bedework
+   * entities.
+   *
+   * @param keyName name of key
+   * @param keyVal the value
+   * @return response with possible BwLocation object.
+   */
+  GetEntityResponse<BwLocation> fetchLocationByKey(String keyName,
+                                                   String keyVal);
 }
 

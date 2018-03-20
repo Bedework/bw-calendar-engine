@@ -34,6 +34,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.calfacade.svc.BwAdminGroup;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvc.AbstractScheduler;
 import org.bedework.sysevents.events.CollectionMovedEvent;
 import org.bedework.sysevents.events.EntityDeletedEvent;
@@ -410,7 +411,7 @@ public class Notifier extends AbstractScheduler {
   }
 
   private boolean processAliasInfo(final AliasesInfo ai,
-                                   final String ownerHref,
+                                   final String authHref,
                                    final ResourceChangeType rc) throws CalFacadeException {
     /* We have to notify the sharee of the change. We do not notify the
        * sharee that made the change.
@@ -418,9 +419,9 @@ public class Notifier extends AbstractScheduler {
 
     final String shareeHref = ai.getPrincipalHref();
 
-    if (shareeHref.equals(ownerHref) || !ai.getVisible()) {
+    if (shareeHref.equals(authHref) || !ai.getVisible()) {
       // This sharee made the change or the event is not visible to this alias. Do not notify, but process other aliases.
-      return checkAliases(ai, ownerHref, rc);
+      return checkAliases(ai, authHref, rc);
     }
 
     boolean processed = false;
@@ -437,6 +438,22 @@ public class Notifier extends AbstractScheduler {
         pushPrincipal(shareeHref);
       }
 
+      if (debug) {
+        trace("Change notification for principal " + shareeHref +
+                      " and href " + colHref);
+      }
+
+      final BwPreferences p = getSvc().getPrefsHandler().get();
+
+      if ((p != null) && (p.getNoNotifications())) {
+        if (debug) {
+          trace("Notification for principal " + shareeHref +
+                        " is suppressed");
+        }
+
+        return checkAliases(ai, authHref, rc);
+      }
+
       /* See if we have any notifications for this entity referenced
        * by the href for the current alias
        *
@@ -448,7 +465,7 @@ public class Notifier extends AbstractScheduler {
 
       for (final NotificationType n:
               getNotes().getMatching(AppleServerTags.resourceChange)) {
-        
+
         final BaseNotificationType bnt = n.getNotification();
         
         if (!(bnt instanceof ResourceChangeType)) {
@@ -462,6 +479,7 @@ public class Notifier extends AbstractScheduler {
           break;
         }
       }
+
 
       /* Add to collection or update or merge this one into a
              stored one.
@@ -570,7 +588,7 @@ public class Notifier extends AbstractScheduler {
       }
     }
 
-    if (checkAliases(ai, ownerHref, rc)) {
+    if (checkAliases(ai, authHref, rc)) {
       processed = true;
     }
 
@@ -578,12 +596,12 @@ public class Notifier extends AbstractScheduler {
   }
 
   private boolean checkAliases(final AliasesInfo ai,
-                               final String ownerHref,
+                               final String authHref,
                                final ResourceChangeType rc) throws CalFacadeException {
     boolean processed = false;
 
     for (final AliasesInfo aai: ai.getAliases()) {
-      if (processAliasInfo(aai, ownerHref, rc)) {
+      if (processAliasInfo(aai, authHref, rc)) {
         processed = true;
       }
     }

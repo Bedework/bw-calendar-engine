@@ -83,9 +83,8 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
 
   /**
    * @return the path for home for the current principal, e.g. /user
-   * @throws CalFacadeException
    */
-  public String getUserHomePath() throws CalFacadeException {
+  public String getUserHomePath() {
     if (userHomePath == null) {
       userHomePath = "/" + getSyspars().getUserCalendarRoot();
     }
@@ -95,9 +94,8 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
 
   /**
    * @return the path for calendar home for the current principal, e.g. /user/douglm
-   * @throws CalFacadeException
    */
-  public String getCalendarHomePath() throws CalFacadeException {
+  public String getCalendarHomePath() {
     if (calendarHomePath == null) {
       calendarHomePath = getCalendarHomePath(getPrincipal());
     }
@@ -108,9 +106,8 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
   /**
    * @param pr the principal
    * @return the path for calendar home for the given principal, e.g. /user/douglm
-   * @throws CalFacadeException
    */
-  public String getCalendarHomePath(final BwPrincipal pr) throws CalFacadeException {
+  public String getCalendarHomePath(final AccessPrincipal pr) {
     if (pr.getKind() == WhoDefs.whoTypeUser) {
       return Util.buildPath(BasicSystemProperties.colPathEndsWithSlash, 
                             getUserHomePath(), "/", pr.getAccount());
@@ -147,7 +144,6 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
 
   /**
    * @return system parameters
-   * @throws CalFacadeException
    */
-  public abstract BasicSystemProperties getSyspars() throws CalFacadeException;
+  public abstract BasicSystemProperties getSyspars();
 }

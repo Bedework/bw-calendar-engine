@@ -35,6 +35,7 @@ import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.icalendar.Icalendar.TimeZoneInfo;
@@ -43,6 +44,7 @@ import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
+import org.bedework.util.xml.tagdefs.XcalTags;
 
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
@@ -97,6 +99,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.xml.ws.Holder;
+
+import static org.bedework.calfacade.responses.Response.Status.ok;
 
 /** Class to provide utility methods for translating to BwEvent from ical4j classes
  *
@@ -1023,7 +1027,7 @@ public class BwEventUtil extends IcalUtil {
             }
 
             if (name.equalsIgnoreCase(BwXproperty.xBedeworkLocation)) {
-              if (checkLocation(cb, chg, ev, null, pval)) {
+              if (checkLocation(cb, chg, ev, prop)) {
                 break;
               }
             }
@@ -1191,22 +1195,36 @@ public class BwEventUtil extends IcalUtil {
   private static boolean checkLocation(final IcalCallback cb,
                                        final ChangeTable chg,
                                        final BwEvent ev,
-                                       final String lang,
-                                       final String val) throws CalFacadeException {
-    final BwString sval = new BwString(lang, val);
+                                       final Property prop) throws CalFacadeException {
+    final Parameter param =
+            prop.getParameter(XcalTags.xBedeworkLocationKey.getLocalPart());
+    final String val = prop.getValue();
     final BwLocation evloc = ev.getLocation();
+    final BwLocation loc;
 
-    final BwLocation loc = cb.getLocation(sval);
+    if (param == null) {
+      final BwString sval = new BwString(null, val);
 
-    if (loc == null) {
-      return false;
+      loc = cb.getLocation(sval);
+
+      if (loc == null) {
+        return false;
+      }
+    } else {
+      final GetEntityResponse<BwLocation> resp =
+              cb.fetchLocationByKey(param.getValue(), val);
+
+      if (resp.getStatus() != ok) {
+        return false;
+      }
+
+      loc = resp.getEntity();
     }
 
     ev.setLocation(loc);
 
     chg.changed(PropertyIndex.PropertyInfoIndex.LOCATION,
                 evloc, loc);
-
     return true;
   }
 

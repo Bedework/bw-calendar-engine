@@ -134,7 +134,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    *
    * <p>All event properties have string values which are used as the external
    * representation in icalendar files. The field should be unique
-   * fo rthe owner. The field value may change over time while the
+   * for the owner. The field value may change over time while the
    * uid does not.
    *
    * @param val          BwString value

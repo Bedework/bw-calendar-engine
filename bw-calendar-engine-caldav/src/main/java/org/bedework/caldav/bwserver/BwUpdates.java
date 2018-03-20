@@ -56,7 +56,6 @@ import ietf.params.xml.ns.icalendar_2.VtodoType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkWrapperPropType;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.Dur;
-import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
@@ -873,12 +872,7 @@ public class BwUpdates {
     private boolean change;
     private boolean remove;
 
-    private TzGetter tzs = new TzGetter() {
-      @Override
-      public TimeZone getTz(final String id) throws Throwable {
-        return Timezones.getTz(id);
-      }
-    };
+    private TzGetter tzs = id -> Timezones.getTz(id);
 
     private BasePropertyType prop;
 

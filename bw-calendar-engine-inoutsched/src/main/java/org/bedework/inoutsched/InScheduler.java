@@ -73,15 +73,11 @@ public class InScheduler extends AbstractScheduler {
   }
 
   private ProcessMessageResult processScheduleUpdateEvent(final ScheduleUpdateEvent msg) {
-    CalSvcI svci = null;
-
-    try {
+    try (final CalSvcI svci = getSvci(msg.getOwnerHref())) {
       if (debug) {
         trace("ScheduleUpdateEvent for principal " +
               msg.getOwnerHref());
       }
-
-      svci = getSvci(msg.getOwnerHref());
 
       final EventInfo ei =
               svci.getEventsHandler().get(getParentPath(msg.getHref()),
@@ -95,7 +91,7 @@ public class InScheduler extends AbstractScheduler {
         return ProcessMessageResult.NO_ACTION;
       }
 
-      BwEvent ev = ei.getEvent();
+      final BwEvent ev = ei.getEvent();
 
       SchedProcessor proc = null;
 
@@ -114,27 +110,23 @@ public class InScheduler extends AbstractScheduler {
         return ProcessMessageResult.PROCESSED;
       }
 
-      SchedProcResult pr = proc.process(ei);
+      final SchedProcResult pr = proc.process(ei);
 
       if (debug) {
         trace("InSchedule " + pr.sr);
       }
 
       return ProcessMessageResult.PROCESSED;
-    } catch (CalFacadeStaleStateException csse) {
+    } catch (final CalFacadeStaleStateException csse) {
       if (debug) {
         trace("Stale state exception");
       }
-      rollback(svci);
+      rollback(getSvc());
 
       return ProcessMessageResult.STALE_STATE;
-    } catch (Throwable t) {
-      rollback(svci);
+    } catch (final Throwable t) {
+      rollback(getSvc());
       error(t);
-    } finally {
-      try {
-        closeSvci(svci);
-      } catch (Throwable t) {}
     }
 
     return ProcessMessageResult.FAILED;
@@ -143,17 +135,16 @@ public class InScheduler extends AbstractScheduler {
   private ProcessMessageResult processEntityQueuedEvent(final EntityQueuedEvent msg) {
     /* These are events that are placed in the inbox.
      */
-    CalSvcI svci = null;
 
-    try {
+    EventInfo ei = null;
+
+    try (final CalSvcI svci = getSvci(msg.getOwnerHref())) {
       if (debug) {
         trace("InSchedule inbox entry for principal " +
               msg.getOwnerHref());
       }
 
-      svci = getSvci(msg.getOwnerHref());
-
-      EventInfo ei = getInboxEvent(svci, msg.getName());
+      ei = getInboxEvent(svci, msg.getName());
 
       if (ei == null) {
         // Event deleted from inbox.
@@ -164,8 +155,8 @@ public class InScheduler extends AbstractScheduler {
         return ProcessMessageResult.NO_ACTION;
       }
 
-      BwEvent ev = ei.getEvent();
-      int method = ev.getScheduleMethod();
+      final BwEvent ev = ei.getEvent();
+      final int method = ev.getScheduleMethod();
 
       if (debug) {
         trace("InSchedule event for " + msg.getOwnerHref() + " " +
@@ -174,7 +165,7 @@ public class InScheduler extends AbstractScheduler {
               ev);
 
         if (ev.getSuppressed()){
-          for (EventInfo oei: ei.getOverrides()) {
+          for (final EventInfo oei: ei.getOverrides()) {
             trace("Override: " + oei.getEvent());
           }
         }
@@ -206,7 +197,7 @@ public class InScheduler extends AbstractScheduler {
       }
 
       if (proc == null) {
-        getSvc().getEventsHandler().delete(ei, false);
+        deleteEvent(ei, false, false);
         return ProcessMessageResult.PROCESSED;
       }
 
@@ -222,28 +213,30 @@ public class InScheduler extends AbstractScheduler {
                             pr.removeInboxEntry);
       }
 
+      deleteEvent(ei, false, false);
       return ProcessMessageResult.PROCESSED;
-    } catch (CalFacadeForbidden cff) {
+    } catch (final CalFacadeForbidden cff) {
       if (debug) {
         trace("Forbidden exception" + cff);
       }
 
-      rollback(svci);
+      if (ei != null) {
+        try {
+          deleteEvent(ei, false, false);
+        } catch (final Throwable ignored) {
+        }
+      }
       return ProcessMessageResult.FAILED_NORETRIES;
-    } catch (CalFacadeStaleStateException csse) {
+    } catch (final CalFacadeStaleStateException csse) {
       if (debug) {
         trace("Stale state exception");
       }
 
-      rollback(svci);
+      rollback(getSvc());
       return ProcessMessageResult.STALE_STATE;
-    } catch (Throwable t) {
-      rollback(svci);
+    } catch (final Throwable t) {
+      rollback(getSvc());
       error(t);
-    } finally {
-      try {
-        closeSvci(svci);
-      } catch (Throwable t) {}
     }
 
     return ProcessMessageResult.FAILED;
@@ -251,14 +244,15 @@ public class InScheduler extends AbstractScheduler {
 
   private EventInfo getInboxEvent(final CalSvcI svci,
                                   final String eventName) throws CalFacadeException {
-    BwCalendar inbox = svci.getCalendarsHandler().
+    final BwCalendar inbox = svci.getCalendarsHandler().
             getSpecial(BwCalendar.calTypePendingInbox, false);
     if (inbox == null) {
       return null;
     }
 
-    EventInfo ei = svci.getEventsHandler().get(inbox.getPath(),
-                                               eventName);
+    final EventInfo ei = svci.getEventsHandler()
+                             .get(inbox.getPath(),
+                                  eventName);
     if (ei == null) {
       if (debug) {
         trace("autoSchedule: no event with name " + eventName);
@@ -267,7 +261,7 @@ public class InScheduler extends AbstractScheduler {
     }
 
     if (debug) {
-      boolean recur = ei.getEvent().getRecurring();
+      final boolean recur = ei.getEvent().getRecurring();
       int numOverrides = 0;
       if (recur && (ei.getOverrides() != null)) {
         numOverrides = ei.getOverrides().size();

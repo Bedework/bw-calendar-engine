@@ -158,7 +158,8 @@ public class ProcessState extends Logged {
                                              true,// adminCanEditAllPublicCategories
                                              true,// adminCanEditAllPublicLocations
                                              true,// adminCanEditAllPublicSponsors
-                                             false);    // sessionless
+                                             false, // sessionless
+                                             true); // system
     try {
       setSvci(new CalSvcFactoryDefault().getSvc(pars));
       return true;

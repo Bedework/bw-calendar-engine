@@ -248,7 +248,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       if (startCol != null) {
         // Found the start collection
         if (debug) {
-          trace("Start vpath collection:" + startCol.getPath());
+          debug("Start vpath collection:" + startCol.getPath());
         }
         break;
       }
@@ -266,7 +266,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       cols.add(curCol);
 
       if (debug) {
-        trace("      vpath collection:" + curCol.getPath());
+        debug("      vpath collection:" + curCol.getPath());
       }
 
       // Follow the chain of references for curCol until we reach a non-alias
@@ -376,6 +376,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
       path = path.substring(CalFacadeDefs.bwUriPrefix.length());
     }
 
+    if ((path.length() > 1) && path.endsWith("/")) {
+      path = path.substring(0, path.length() - 1);
+    }
+
     return getCal().getCalendar(path, PrivilegeDefs.privAny, false);
   }
 
@@ -388,6 +392,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
     if ((path.length() > 1) &&
             (path.startsWith(CalFacadeDefs.bwUriPrefix))) {
       path = path.substring(CalFacadeDefs.bwUriPrefix.length());
+    }
+
+    if ((path.length() > 1) && path.endsWith("/")) {
+      path = path.substring(0, path.length() - 1);
     }
 
     return getCal().getCollectionIdx(getIndexer(), path, 
@@ -482,11 +490,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
     updateOK(val);
 
     setupSharableEntity(val, getPrincipal().getPrincipalRef());
-    val.adjustCategories();
-
-    if (val.getExternalSub()) {
-      val.setRefreshRate(60 * 15);
-    }
 
     if (val.getPwNeedsEncrypt() || (val.getExternalSub() && val.getRemotePw() != null)) {
       encryptPw(val);
@@ -526,8 +529,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   @Override
   public void update(final BwCalendar val) throws CalFacadeException {
-    val.adjustCategories();
-
     /* Ensure it's not in admin prefs if it's a folder.
      * User may have switched from calendar to folder.
      */
@@ -586,13 +587,13 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                  getIndexer());
   }
 
-  /* The key will be the full href of the entity based on the 
+  /* The key will be the full href of the entity based on the
      real collection containing it.
    */
   private static final Map<String, AliasesInfo> aliasesInfoMap =
           new FlushMap<>(100, // size
-                         60 * 1000 * 3,
-                         500);
+                         60 * 1000 * 30,
+                         1000);
 
   @Override
   public AliasesInfo getAliasesInfo(final String collectionHref,
@@ -664,11 +665,14 @@ class Calendars extends CalSvcDb implements CalendarsI {
           throws CalFacadeException {
     /* The set of categories referenced by the alias and its parents */
 
-    Collection<BwCalendar> cols = null;
+    final Collection<BwCalendar> cols;
 
     cols = decomposeVirtualPath(href);
 
     if (Util.isEmpty(cols)) {
+      if (debug) {
+        debug("No collections for vpath " + href);
+      }
       return null;
     }
 
@@ -682,8 +686,14 @@ class Calendars extends CalSvcDb implements CalendarsI {
     final Set<BwCategory> cats = new TreeSet<>();
 
     for (final BwCalendar col : cols) {
-      if (!Util.isEmpty(col.getCategories())) {
-        cats.addAll(col.getCategories());
+      int numCats = 0;
+      final Set<BwCategory> colCats = col.getCategories();
+      if (!Util.isEmpty(colCats)) {
+        cats.addAll(colCats);
+        numCats = colCats.size();
+      }
+      if (debug) {
+        debug("For col " + col.getPath() + " found " + numCats);
       }
       if (col.getAlias()) {
         curCol = col;
@@ -707,6 +717,22 @@ class Calendars extends CalSvcDb implements CalendarsI {
     return cats;
   }
 
+  public BwCalendar getSpecial(final BwPrincipal owner,
+                               final int calType,
+                               final boolean create,
+                               final int access) throws CalFacadeException {
+    final Calintf.GetSpecialCalendarResult gscr =
+            getSvc().getCal().getSpecialCalendar(
+                    owner, calType, create,
+                    PrivilegeDefs.privAny);
+    if (gscr.noUserHome) {
+      getSvc().getUsersHandler().add(owner.getAccount());
+    }
+
+    return getSvc().getCal().getSpecialCalendar(owner, calType, create,
+                                                PrivilegeDefs.privAny).cal;
+  }
+
   /* ====================================================================
    *                   package private methods
    * ==================================================================== */
@@ -723,22 +749,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
   Set<BwCalendar> getSynchCols(final String path,
                                final String lastmod) throws CalFacadeException {
     return getCal().getSynchCols(path, lastmod);
-  }
-
-  BwCalendar getSpecial(final BwPrincipal owner,
-                        final int calType,
-                        final boolean create,
-                        final int access) throws CalFacadeException {
-    final Calintf.GetSpecialCalendarResult gscr =
-            getSvc().getCal().getSpecialCalendar(
-                                      owner, calType, create,
-                                                PrivilegeDefs.privAny);
-    if (gscr.noUserHome) {
-      getSvc().getUsersHandler().add(owner.getAccount());
-    }
-
-    return getSvc().getCal().getSpecialCalendar(owner, calType, create,
-                                         PrivilegeDefs.privAny).cal;
   }
 
   boolean delete(final BwCalendar val,
@@ -768,6 +778,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
     if (unsubscribe) {
       getSvc().getSharingHandler().unsubscribe(val);
     }
+
+    getSvc().getSynch().unsubscribe(val, true);
 
     /* Remove from preferences */
     ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true,
@@ -808,8 +820,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
         }
       }
     }
-
-    getSvc().getSynch().unsubscribe(val, true);
 
     val.getProperties().clear();
 

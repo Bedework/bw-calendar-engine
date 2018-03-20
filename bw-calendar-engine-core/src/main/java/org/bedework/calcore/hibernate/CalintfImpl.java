@@ -66,6 +66,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAdminGroupEntry;
 import org.bedework.calfacade.svc.BwAuthUser;
@@ -163,8 +164,6 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
   CalintfHelperCallback cb;
 
-  private boolean killed;
-  
   /** Prevent updates.
    */
   //sprivate boolean readOnly;
@@ -207,9 +206,10 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
                    final String url,
                    final boolean publicAdmin,
                    final boolean publicSubmission,
-                   final boolean sessionless) throws CalFacadeException {
+                   final boolean sessionless,
+                   final boolean dontKill) throws CalFacadeException {
     super.init(logId, configs, principalInfo, url,
-               publicAdmin, publicSubmission, sessionless);
+               publicAdmin, publicSubmission, sessionless, dontKill);
     
     events = new CoreEvents(sess, cb,
                             ac, currentMode, sessionless);
@@ -225,6 +225,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     
     ifInfo.setLogid(getLogId());
     ifInfo.setId(getTraceId());
+    ifInfo.setDontKill(getDontKill());
     ifInfo.setLastStateTime(getLastStateTime());
     ifInfo.setState(getState());
     ifInfo.setSeconds((now - getStartMillis()) / 1000);
@@ -322,7 +323,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     }
 
     @Override
-    public BwIndexer getIndexer(final BwOwnedDbentity entity) throws CalFacadeException {
+    public BwIndexer getIndexer(final BwOwnedDbentity entity) {
       if ((intf.currentMode == CalintfDefs.guestMode) ||
               (intf.currentMode == CalintfDefs.publicUserMode) ||
               (intf.currentMode == CalintfDefs.publicAdminMode)) {
@@ -626,23 +627,39 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   }
 
   @Override
-  public Collection<? extends Calintf> active() throws CalFacadeException {
+  public void clear() throws CalFacadeException {
+    if (killed) {
+      return;
+    }
+
+    if (debug) {
+      getLogger().debug("clear for " + getTraceId());
+    }
+    if (sess.isOpen()) {
+      sess.clear();
+    }
+  }
+
+  @Override
+  public Collection<? extends Calintf> active() {
     return openIfs.values();
   }
 
   @Override
-  public void kill() throws CalFacadeException {
+  public void kill() {
     try {
       rollbackTransaction();
-    } catch (final Throwable ignored) {
+    } catch (final Throwable t) {
+      warn("Exception on rollback for kill: " + t.getMessage());
     }
     
     try {
       close();
-    } catch (final Throwable ignored) {
+    } catch (final Throwable t) {
+      warn("Exception on close for kill: " + t.getMessage());
     }
-    
-    killed = true;
+
+    super.kill();
   }
 
   @Override
@@ -655,9 +672,6 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     return curTimestamp;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.Calintf#reAttach(org.bedework.calfacade.base.BwDbentity)
-   */
   @Override
   public void reAttach(BwDbentity val) throws CalFacadeException {
     if (val instanceof CalendarWrapper) {
@@ -1017,7 +1031,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
       for (final EventPeriod ep: eventPeriods) {
         if (debug) {
-          trace(ep.toString());
+          debug(ep.toString());
         }
 
         if (p == null) {
@@ -1071,10 +1085,12 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
                                              final FilterBase filter,
                                              final BwDateTime startDate, final BwDateTime endDate,
                                              final List<BwIcalPropertyInfoEntry> retrieveList,
+                                             final DeletedState delState,
                                              final RecurringRetrievalMode recurRetrieval,
                                              final boolean freeBusy) throws CalFacadeException {
     return events.getEvents(calendars, filter,
-                            startDate, endDate, retrieveList, recurRetrieval,
+                            startDate, endDate, retrieveList,
+                            delState, recurRetrieval,
                             freeBusy);
   }
 
@@ -1189,6 +1205,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   
   private class ObjectIterator implements Iterator {
     protected final String className;
+    protected final String colPath;
     protected List batch;
     protected int index;
     protected boolean done;
@@ -1196,12 +1213,19 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
     protected final int batchSize = 100;
 
     private ObjectIterator(final String className) {
-      this(className, 0);
+      this(className, null, 0);
     }
 
     private ObjectIterator(final String className,
+                           final String colPath) {
+      this(className, colPath, 0);
+    }
+
+    private ObjectIterator(final String className,
+                           final String colPath,
                            final int start) {
       this.className = className;
+      this.colPath = colPath;
       this.start = start;
     }
 
@@ -1239,7 +1263,12 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
 
     protected void nextBatch() {
       try {
-        sess.createQuery("from " + className);
+        if (colPath == null) {
+          sess.createQuery("from " + className);
+        } else {
+          sess.createQuery("from " + className + " where colPath=:colPath");
+          sess.setString("colPath", colPath);
+        }
 
         sess.setFirstResult(start);
         sess.setMaxResults(batchSize);
@@ -1260,7 +1289,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   
   private class EventHrefIterator extends ObjectIterator {
     private EventHrefIterator(final int start) {
-      super(BwEventObj.class.getName(), start);
+      super(BwEventObj.class.getName(), null, start);
     }
 
     @Override
@@ -1269,7 +1298,7 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
         return null;
       }
 
-      Object[] pathName = (Object[])batch.get(index);
+      final Object[] pathName = (Object[])batch.get(index);
       index++;
       
       if ((pathName.length != 2) || 
@@ -1307,6 +1336,12 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
   @Override
   public Iterator getObjectIterator(final String className) {
     return new ObjectIterator(className);
+  }
+
+  @Override
+  public Iterator getObjectIterator(final String className,
+                                    final String colPath) {
+    return new ObjectIterator(className, colPath);
   }
 
   @Override
@@ -1704,7 +1739,9 @@ public class CalintfImpl extends CalintfBase implements PrivilegeDefs {
                                                     filter, 
                                                     start, 
                                                     end,
-                                                    null, rrm, true);
+                                                    null,
+                                                    DeletedState.noDeleted,
+                                                    rrm, true);
 
     // Filter out transparent and cancelled events
 

@@ -19,6 +19,7 @@
 package org.bedework.calfacade.base;
 
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwUser;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -50,7 +51,7 @@ public interface UpdateFromTimeZonesInfo extends Serializable {
     /**
      * @param val the owner to set
      */
-    public void setOwner(final BwPrincipal val) {
+    public void setOwner(final BwUser val) {
       owner = val;
     }
 

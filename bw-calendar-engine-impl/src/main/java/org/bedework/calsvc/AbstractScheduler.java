@@ -79,7 +79,7 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
     CalSvcIPars runAsPars = CalSvcIPars.getServicePars("scheduler",
                                                        principalHref,//principal.getAccount(),
                                                        false,   // publicAdmin
-                                                       "/principals/users/root/".equals(principalHref));  // allow SuperUser
+                                                       "/principals/users/root".equals(principalHref));  // allow SuperUser
 
     svci = new CalSvcFactoryDefault().getSvc(runAsPars);
     setSvc(svci);
@@ -93,7 +93,7 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
   protected void rollback(final CalSvcI svci) {
     try {
       svci.rollbackTransaction();
-    } catch (Throwable t) {
+    } catch (final Throwable ignored) {
       // Pretty much screwed  now
     }
   }
@@ -108,7 +108,7 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
     try {
       try {
         svci.endTransaction();
-      } catch (CalFacadeException cfe) {
+      } catch (final CalFacadeException cfe) {
         rollback(svci);
         exc = cfe;
       }

@@ -103,9 +103,9 @@ public class BwIndexApp extends JmsSysEventListener {
 
   /**
    * @return info on indexes maintained by indexer.
-   * @throws Throwable
+   * @throws CalFacadeException on fatal error
    */
-  public Set<IndexInfo> getIndexInfo() throws Throwable {
+  public Set<IndexInfo> getIndexInfo() throws CalFacadeException {
     return getCrawler().getIndexInfo();
   }
 
@@ -188,11 +188,13 @@ public class BwIndexApp extends JmsSysEventListener {
   }
 
   void listen() throws Throwable {
-    open(crawlerQueueName, CalSvcFactoryDefault.getPr());
+    try (final JmsSysEventListener ignored =
+                 open(crawlerQueueName,
+                      CalSvcFactoryDefault.getPr())) {
+      msgProc = new MessageProcessor(props);
 
-    msgProc = new MessageProcessor(props);
-
-    process(false);
+      process(false);
+    }
   }
 
   @Override

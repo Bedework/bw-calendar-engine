@@ -404,5 +404,10 @@ public interface CalendarsI extends Serializable {
    */
   String getSyncToken(String path) throws CalFacadeException;
   
-  Set<BwCategory> getCategorySet(final String href) throws CalFacadeException;
+  Set<BwCategory> getCategorySet(String href) throws CalFacadeException;
+
+  BwCalendar getSpecial(BwPrincipal owner,
+                        int calType,
+                        boolean create,
+                        int access) throws CalFacadeException;
 }

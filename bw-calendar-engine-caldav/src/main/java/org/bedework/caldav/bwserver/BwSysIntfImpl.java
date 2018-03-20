@@ -21,6 +21,7 @@ package org.bedework.caldav.bwserver;
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.Acl;
 import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;
 import org.bedework.caldav.server.CalDAVCollection;
 import org.bedework.caldav.server.CalDAVEvent;
@@ -71,11 +72,13 @@ import org.bedework.calfacade.filter.SfpTokenizer;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ifs.Directories;
+import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
+import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.EventsI.CopyMoveStatus;
 import org.bedework.calsvci.SharingI.ReplyResult;
 import org.bedework.calsvci.SynchReport;
@@ -92,6 +95,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.IcalDefs.IcalComponentType;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.XcalUtil;
+import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.tagdefs.CaldavTags;
@@ -116,7 +120,6 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.component.VFreeBusy;
-import org.apache.log4j.Logger;
 import org.oasis_open.docs.ws_calendar.ns.soap.ComponentSelectionType;
 
 import java.io.Reader;
@@ -132,10 +135,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
@@ -143,14 +144,10 @@ import javax.xml.ws.Holder;
  *
  * @author Mike Douglass douglm at rpi.edu
  */
-public class BwSysIntfImpl implements SysIntf {
-  private boolean debug;
-
-  protected transient Logger log;
-
+public class BwSysIntfImpl extends Logged implements SysIntf {
   private boolean bedeworkExtensionsEnabled;
 
-  protected AccessPrincipal currentPrincipal;
+  protected BwPrincipal currentPrincipal;
 
   private CalPrincipalInfo principalInfo;
 
@@ -188,6 +185,78 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
+  private class HttpReqInfo {
+    private final HttpServletRequest req;
+
+    HttpReqInfo(final HttpServletRequest req) {
+      this.req = req;
+    }
+
+    String runAs() {
+      if (req == null) {
+        return null;
+      }
+
+      return CalDavHeaders.getRunAs(req);
+    }
+
+    String clientId() {
+      if (req == null) {
+        return null;
+      }
+
+      return CalDavHeaders.getClientId(req);
+    }
+
+    String principalToken() {
+      if (req == null) {
+        return null;
+      }
+
+      return req.getHeader("X-BEDEWORK-PT");
+    }
+
+    String notePr() {
+      if (req == null) {
+        return null;
+      }
+
+      return req.getHeader("X-BEDEWORK-NOTEPR");
+    }
+
+    String note() {
+      if (req == null) {
+        return null;
+      }
+
+      return req.getHeader("X-BEDEWORK-NOTE");
+    }
+
+    String socketToken() {
+      if (req == null) {
+        return null;
+      }
+
+      return req.getHeader("X-BEDEWORK-SOCKETTKN");
+    }
+
+    String socketPr() {
+      if (req == null) {
+        return null;
+      }
+
+      return req.getHeader("X-BEDEWORK-SOCKETPR");
+    }
+
+    String bedeworkExtensions() {
+      if (req == null) {
+        return null;
+      }
+
+      return req.getHeader("X-BEDEWORK-EXTENSIONS");
+    }
+  }
+
   @Override
   public String init(final HttpServletRequest req,
                      final String account,
@@ -195,18 +264,24 @@ public class BwSysIntfImpl implements SysIntf {
                      final boolean calWs,
                      final boolean synchWs,
                      final boolean notifyWs,
+                     final boolean socketWs,
                      final String opaqueData) throws WebdavException {
     try {
       this.calWs = calWs;
       this.synchWs = synchWs;
-      debug = getLogger().isDebugEnabled();
+
+      final HttpReqInfo reqi = new HttpReqInfo(req);
 
       principalInfo = null; // In case we reinit
 
-      urlHandler = new UrlHandler(req, !calWs);
+      if (req != null) {
+        urlHandler = new UrlHandler(req, !calWs);
+      } else {
+        urlHandler = new UrlHandler("", null, true);
+      }
 
-      final HttpSession session = req.getSession();
-      final ServletContext sc = session.getServletContext();
+      //final HttpSession session = req.getSession();
+      //final ServletContext sc = session.getServletContext();
 
       //final String appName = sc.getInitParameter("bwappname");
 
@@ -216,16 +291,24 @@ public class BwSysIntfImpl implements SysIntf {
 
       // Notification service calling?
       final String id;
-      final String notePr = req.getHeader("X-BEDEWORK-NOTEPR");
+      final String notePr = reqi.notePr();
 
       if (notifyWs) {
-        id = doNoteHeader(req.getHeader("X-BEDEWORK-NOTE"),
-                          notePr);
+        id = doNoteHeader(reqi.note(), notePr);
+      } else if (socketWs) {
+        final String tkn = reqi.socketToken();
+
+        if ((tkn == null) ||
+                !tkn.equals(getSystemProperties().getSocketToken())) {
+          throw new WebdavForbidden();
+        }
+
+        id = reqi.socketPr();
       } else {
         id = account;
       }
 
-      doBedeworkExtensions(req.getHeader("X-BEDEWORK-EXTENSIONS"));
+      doBedeworkExtensions(reqi.bedeworkExtensions());
 
       /* Find the mbean and get the config */
 
@@ -251,10 +334,10 @@ public class BwSysIntfImpl implements SysIntf {
       }
 
       getSvci(id,
-              CalDavHeaders.getRunAs(req),
+              reqi.runAs(),
               service,
               publicAdmin,
-              CalDavHeaders.getClientId(req),
+              reqi.clientId(),
               adminCreateEprops);
 
       authProperties = svci.getAuthProperties();
@@ -266,7 +349,7 @@ public class BwSysIntfImpl implements SysIntf {
       currentPrincipal = svci.getUsersHandler().getUser(id);
 
       if (notifyWs && (notePr != null)) {
-        final String principalToken = req.getHeader("X-BEDEWORK-PT");
+        final String principalToken = reqi.principalToken();
         if (principalToken == null) {
           throw new WebdavUnauthorized();
         }
@@ -298,20 +381,16 @@ public class BwSysIntfImpl implements SysIntf {
   }
 
   @Override
-  public AuthProperties getAuthProperties() throws WebdavException {
+  public AuthProperties getAuthProperties() {
     return authProperties;
   }
 
   @Override
-  public SystemProperties getSystemProperties() throws WebdavException {
-    try {
-      if (sysProperties == null) {
-        sysProperties = configs.getSystemProperties();
-      }
-      return sysProperties;
-    } catch (Throwable t) {
-      throw new WebdavException(t);
+  public SystemProperties getSystemProperties() {
+    if (sysProperties == null) {
+      sysProperties = configs.getSystemProperties();
     }
+    return sysProperties;
   }
 
   @Override
@@ -366,7 +445,7 @@ public class BwSysIntfImpl implements SysIntf {
   }
 
   @Override
-  public String getDefaultContentType() throws WebdavException {
+  public String getDefaultContentType() {
     if (calWs) {
       return XcalTags.mimetype;
     }
@@ -382,7 +461,7 @@ public class BwSysIntfImpl implements SysIntf {
   }
 
   @Override
-  public AccessPrincipal getPrincipal() throws WebdavException {
+  public AccessPrincipal getPrincipal() {
     return currentPrincipal;
   }
 
@@ -412,17 +491,11 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#getPropertyHandler(org.bedework.caldav.server.PropertyHandler.PropertyType)
-   */
   @Override
   public PropertyHandler getPropertyHandler(final PropertyType ptype) throws WebdavException {
     return new MyPropertyHandler();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#getUrlHandler()
-   */
   @Override
   public UrlHandler getUrlHandler() {
     return urlHandler;
@@ -597,12 +670,8 @@ public class BwSysIntfImpl implements SysIntf {
 
       // SCHEDULE - just get home path and get default cal from user prefs.
 
-      final BwCalendar cal = getSvci().getCalendarsHandler().getHome(p, true);
-      if (cal == null) {
-        return null;
-      }
-
-      final String userHomePath = Util.buildPath(true, cal.getPath());
+      final String userHomePath = Util.buildPath(true,
+                                                 getSvci().getPrincipalInfo().getCalendarHomePath(p));
 
       final String defaultCalendarPath =
               Util.buildPath(true, userHomePath +
@@ -752,7 +821,7 @@ public class BwSysIntfImpl implements SysIntf {
 
     for (final WebdavProperty prop: pps.props) {
       if (debug) {
-        debugMsg("Try to match " + prop);
+        debug("Try to match " + prop);
       }
 
       final String pval = prop.getPval();
@@ -1173,11 +1242,12 @@ public class BwSysIntfImpl implements SysIntf {
                                             pr.filter);
 
       final Collection<EventInfo> bwevs =
-             getSvci().getEventsHandler().getEvents(null,  // Collection
+             getSvci().getEventsHandler().getEvents(null,// Collection
                                                     f,
                                                     null,  // start
                                                     null,  // end
                                                     RetrieveList.getRetrieveList(retrieveList),
+                                                    DeletedState.noDeleted,
                                                     getRrm(recurRetrieval));
 
       if (bwevs == null) {
@@ -1657,31 +1727,71 @@ public class BwSysIntfImpl implements SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#getCollections(org.bedework.caldav.server.CalDAVCollection)
-   */
   @Override
   public Collection<CalDAVCollection> getCollections(final CalDAVCollection col) throws WebdavException {
     try {
-      Collection<BwCalendar> bwch = getSvci().getCalendarsHandler().getChildren(unwrap(col));
+      final BwCalendar bwCol = unwrap(col);
+      boolean isUserHome = false;
+      List<Integer> provisionedTypes = null;
 
-      Collection<CalDAVCollection> ch = new ArrayList<CalDAVCollection>();
+      /* Is this the calendar home? If so we have to ensure all
+         provisioned collections exist */
+      if (getPrincipal() != null) {
+        final String userHomePath =
+                Util.buildPath(true,
+                               getSvci().getPrincipalInfo()
+                                        .getCalendarHomePath(
+                                                getPrincipal()));
+
+        if (Util.buildPath(true, bwCol.getPath())
+                .equals(userHomePath)) {
+          isUserHome = true;
+          provisionedTypes = new ArrayList<>();
+
+          for (final BwCalendar.CollectionInfo ci:
+                  BwCalendar.getAllCollectionInfo()) {
+            if (ci.provision) {
+              provisionedTypes.add(ci.collectionType);
+            }
+          }
+        }
+      }
+
+      final CalendarsI ci = getSvci().getCalendarsHandler();
+      final Collection<BwCalendar> bwch = ci.getChildren(bwCol);
+
+      final Collection<CalDAVCollection> ch = new ArrayList<>();
 
       if (bwch == null) {
         return ch;
       }
 
-      for (BwCalendar c: bwch) {
-        getSvci().getCalendarsHandler().resolveAlias(c, true, false);
-        ch.add(new BwCalDAVCollection(this, c));
+      for (final BwCalendar c: bwch) {
+        if (bedeworkExtensionsEnabled() || !c.getName().startsWith(".")) {
+          ci.resolveAlias(c, true, false);
+          ch.add(new BwCalDAVCollection(this, c));
+        }
+
+        if (isUserHome && !c.getAlias()) {
+          provisionedTypes.remove(new Integer(c.getCalType()));
+        }
+      }
+
+      if (isUserHome && !provisionedTypes.isEmpty()) {
+        // Need to add some
+        for (final int colType: provisionedTypes) {
+          final BwCalendar pcol =
+                  ci.getSpecial(currentPrincipal, colType,
+                                true, PrivilegeDefs.privAny);
+
+          ch.add(new BwCalDAVCollection(this, pcol));
+        }
       }
 
       return ch;
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
@@ -1701,8 +1811,6 @@ public class BwSysIntfImpl implements SysIntf {
       return getSvci().getCalendarsHandler().resolveAlias(col, resolveSubAlias, false);
     } catch (CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
@@ -2136,7 +2244,7 @@ public class BwSysIntfImpl implements SysIntf {
             (!contentType.equals("text/calendar") &&
                      !contentType.equals("application/calendar+json"))) {
       if (debug) {
-        debugMsg("Bad content type: " + contentType);
+        debug("Bad content type: " + contentType);
       }
       throw new WebdavForbidden(CaldavTags.supportedCalendarData,
                                 "Bad content type: " + contentType);
@@ -2280,7 +2388,7 @@ public class BwSysIntfImpl implements SysIntf {
           (ic.size() != 0) || // No components other than timezones
           (ic.getTimeZones().size() != 1)) {
         if (debug) {
-          debugMsg("Not single timezone");
+          debug("Not single timezone");
         }
         throw new WebdavForbidden(CaldavTags.calendarTimezone, "Not single timezone");
       }
@@ -2329,7 +2437,7 @@ public class BwSysIntfImpl implements SysIntf {
       if ((ic == null) ||
           (ic.getEventInfo() == null)) {
         if (debug) {
-          debugMsg("Not single event");
+          debug("Not single event");
         }
 
         return false;
@@ -2532,8 +2640,9 @@ public class BwSysIntfImpl implements SysIntf {
        * user, if non-null, is the user calendar we want to access.
        */
 
-      boolean possibleSuperUser = "root".equals(account) || // allow SuperUser
-                                  "admin".equals(account);
+      final boolean possibleSuperUser =
+              "root".equals(account) || // allow SuperUser
+                      "admin".equals(account);
       String runAsUser = null;
       String clientIdent = null;
 
@@ -2542,13 +2651,14 @@ public class BwSysIntfImpl implements SysIntf {
         clientIdent = clientId;
       }
 
-      CalSvcIPars pars = CalSvcIPars.getCaldavPars("bwcaldav",
-                                                   account,
-                                                   runAsUser,
-                                                   clientIdent,
-                                                   possibleSuperUser,   // allow SuperUser
-                                                   service,publicAdmin,
-                                                   allowCreateEprops);
+      final CalSvcIPars pars =
+              CalSvcIPars.getCaldavPars("bwcaldav",
+                                        account,
+                                        runAsUser,
+                                        clientIdent,
+                                        possibleSuperUser,   // allow SuperUser
+                                        service,publicAdmin,
+                                        allowCreateEprops);
       svci = new CalSvcFactoryDefault().getSvc(pars);
 
       svci.open();
@@ -2824,37 +2934,5 @@ public class BwSysIntfImpl implements SysIntf {
     }
 
     return prefs;
-  }
-
-  /* ====================================================================
-   *                        Protected methods
-   * ==================================================================== */
-
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void trace(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void debugMsg(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void warn(final String msg) {
-    getLogger().warn(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(this, t);
-  }
-
-  protected void logIt(final String msg) {
-    getLogger().info(msg);
   }
 }

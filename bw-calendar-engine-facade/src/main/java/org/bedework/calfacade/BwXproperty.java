@@ -181,6 +181,12 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   /** */
   public final static String bedeworkEventRegWaitListLimit = "X-BEDEWORK-WAIT-LIST-LIMIT";
 
+  /** */
+  public final static String bedeworkEventRegInternal = "X-BEDEWORK-REGISTRATION-INTERNAL";
+
+  /** */
+  public final static String bedeworkEventRegExternal = "X-BEDEWORK-REGISTRATION-EXTERNAL";
+
   /* ====================================================================
    *                        Sharing/publishing properties
    * ==================================================================== */
@@ -211,6 +217,20 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
   public final static String pollItemId = "X-BW-POLL-ITEMID";
 
+  public final static String pollWinner = "X-BW-POLL-WINNER";
+
+  public final static String pollAccceptResponse = "X-BW-POLL-ACCEPT_RESPONSE";
+
+  public final static String pollMode = "X-BW-POLL-MODE";
+
+  public final static String pollProperties = "X-BW-POLL-PROPERTIES";
+
+  public final static String pollItem = "X-BW-POLL-ITEM";
+
+  public final static String pollVoter = "X-BW-POLL-VOTER";
+
+  public final static String pollCandidate = "X-BW-POLL-CANDIDATE";
+
   /* ====================================================================
    *                        Synch properties
    * ==================================================================== */
@@ -218,6 +238,9 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   public final static String xBedeworkCategories = "X-BEDEWORK-CATEGORIES";
 
   public final static String xBedeworkLocation = "X-BEDEWORK-LOCATION";
+
+  // Param for above
+  public final static String xBedeworkLocationKeyName = "x-bedework-loc-key";
 
   public final static String xBedeworkContact = "X-BEDEWORK-CONTACT";
 
@@ -313,6 +336,20 @@ public class BwXproperty extends BwDbentity<BwXproperty>
     xskipJsp.add(bedeworkDavProp);
 
     xskipJsp.add(pollItemId);
+
+    xskipJsp.add(pollAccceptResponse);
+
+    xskipJsp.add(pollMode);
+
+    xskipJsp.add(pollWinner);
+
+    xskipJsp.add(pollProperties);
+
+    xskipJsp.add(pollItem);
+
+    xskipJsp.add(pollVoter);
+
+    xskipJsp.add(pollCandidate);
 
     xskipJsp.add(peruserPropTransp);
 
@@ -472,7 +509,7 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
     private String value;
 
-    Xpar(final String name, final String value) {
+    public Xpar(final String name, final String value) {
       this.name = name;
       this.value = value;
     }

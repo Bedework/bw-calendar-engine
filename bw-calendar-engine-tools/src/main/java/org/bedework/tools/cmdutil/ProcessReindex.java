@@ -30,12 +30,12 @@ import java.util.Collection;
  *
  */
 public class ProcessReindex extends CmdUtilHelper {
-  ProcessReindex(ProcessState pstate) {
+  ProcessReindex(final ProcessState pstate) {
     super(pstate);
   }
 
   boolean process() throws Throwable {
-    String wd = word();
+    final String wd = word();
 
     if (wd == null) {
       return false;
@@ -158,7 +158,7 @@ public class ProcessReindex extends CmdUtilHelper {
    * @param path to parent
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   protected Refs getChildCollections(final String path,
                                      final Refs refs) throws CalFacadeException {

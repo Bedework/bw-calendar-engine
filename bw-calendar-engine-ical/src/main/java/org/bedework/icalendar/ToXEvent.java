@@ -310,6 +310,10 @@ public class ToXEvent extends Xutil {
         BwStringBase bwstr = val.findDescription(null);
         if (bwstr != null) {
           DescriptionPropType desc = new DescriptionPropType();
+
+          if (bwstr.getValue().contains("Â")) {
+            warn("Odd character Â in description: " + bwstr.getValue());
+          }
           desc.setText(bwstr.getValue());
           pl.add(of.createDescription((DescriptionPropType)langProp(desc, bwstr)));
         }

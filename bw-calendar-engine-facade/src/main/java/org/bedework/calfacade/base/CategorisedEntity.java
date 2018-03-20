@@ -86,9 +86,4 @@ public interface CategorisedEntity {
    * @return Set of BwCategory
    */
   Set<BwCategory> cloneCategories();
-
-  /** Call before saving to ensure that all references to categories are up to
-   * date.
-   */
-  void adjustCategories();
 }

@@ -9,16 +9,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-calendar:4.0.14-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-ws-icalendar:4.0.4" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-misc:4.0.14-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: log4j:log4j:1.2.15" level="project" />
-    <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />
-    <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-xml:4.0.14-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-ws-tzsvr:4.0.4" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-ws-calws-soap:4.0.4" level="project" />
-    <orderEntry type="library" name="Maven: jtidy:jtidy:4aug2000r7-dev" level="project" />
+    <orderEntry type="module" module-name="bw-util2-calendar" />
+    <orderEntry type="module" module-name="bw-xml-calws-soap" />
+    <orderEntry type="module" module-name="bw-xml-icalendar" />
+    <orderEntry type="module" module-name="bw-util-xml" />
     <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:2.0.3" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.10" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-collections4:4.0" level="project" />
@@ -30,5 +24,6 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.3.1" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.3.1" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.3.1" level="project" />
+    <orderEntry type="module" module-name="bw-util-misc" />
   </component>
 </module>

@@ -42,6 +42,7 @@ import org.bedework.calfacade.filter.BwViewFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.elasticsearch.ESQueryFilterBase;
 
@@ -68,6 +69,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.*;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
 import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 /** Build filters for ES searching
@@ -156,15 +160,76 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
    * @param doctype  type of document we want
    * @param val the value to match
    * @param index list of terms for dot reference
-   * @return
-   * @throws CalFacadeException
+   * @return a filter builder
    */
   public FilterBuilder singleEntityFilter(final String doctype,
                                           final String val,
-                                          final PropertyInfoIndex... index) throws CalFacadeException {
+                                          final PropertyInfoIndex... index) {
     return and(addTerm("_type", doctype),
                addTerm(makePropertyRef(index), val),
                null);
+  }
+
+  /** Build a filter for a single event identified by the href
+   * and recurrenceid. If recurrenceId is null we target a master only
+   * otherwise we target an instance only.
+   *
+   * @param href  of event
+   * @param recurrenceId of instance
+   * @return a filter builder
+   */
+  public FilterBuilder singleEventFilter(final String href,
+                                          final String recurrenceId) {
+    FilterBuilder anded = and(addTerm("_type", docTypeEvent),
+                              addTerm(makePropertyRef(PropertyInfoIndex.HREF), href),
+                              null);
+
+    if (recurrenceId == null) {
+      anded = and(anded, addTerm(PropertyInfoIndex.MASTER, "true"), null);
+    } else {
+      anded = and(anded, addTerm(PropertyInfoIndex.INSTANCE, "true"),
+                  null);
+      anded = and(anded, addTerm(PropertyInfoIndex.RECURRENCE_ID,
+                                 recurrenceId),
+                  null);
+    }
+
+    return anded;
+  }
+
+  /** Build a filter for a single location identified by the key with
+   * the given name and value.
+   *
+   * @param name - of key field
+   * @param val - expected full value
+   * @return a filter builder
+   */
+  public FilterBuilder locationKeyFilter(final String name,
+                                         final String val) throws CalFacadeException {
+    final ObjectFilter<String> kf =
+            new ObjectFilter<>(null,
+                               PropertyInfoIndex.LOC_KEYS_FLD,
+                               null,
+                               name);
+    kf.setEntity(val);
+    kf.setExact(true);
+    kf.setCaseless(false);
+
+    final ObjectFilter<String> ef =
+            new ObjectFilter<>(null,
+                               PropertyInfoIndex.ENTITY_TYPE,
+                               null,
+                               null);
+    ef.setEntity(docTypeLocation);
+    ef.setExact(true);
+    ef.setCaseless(false);
+
+    final AndFilter and = new AndFilter();
+
+    and.addChild(ef);
+    and.addChild(kf);
+
+    return buildFilter(and);
   }
 
   public FilterBuilder buildFilter(final FilterBase f) throws CalFacadeException {
@@ -300,7 +365,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
 
     if (rmode.mode == Rmode.entityOnly) {
       FilterBuilder limit = not(addTerm("_type",
-                                        BwIndexer.docTypeEvent));
+                                        docTypeEvent));
 
       limit = or(limit,
                  addTerm(PropertyInfoIndex.MASTER, "true"));
@@ -344,7 +409,8 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
    * @throws CalFacadeException on error
    */
   public FilterBuilder addLimits(final FilterBuilder f,
-                                 final FilterBase defaultFilterContext) throws CalFacadeException {
+                                 final FilterBase defaultFilterContext,
+                                 final DeletedState delState) throws CalFacadeException {
     if (f instanceof MatchNone) {
       return f;
     }
@@ -384,32 +450,40 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
     }
     
     FilterBuilder recurFb = recurTerms();
-    
-    if (nfbs.size() == 1) {
-      final FilterBuilder fb = nfbs.get(0).fb;
 
+    FilterBuilder fb;
+
+    if (nfbs.size() == 1) {
+      fb = nfbs.get(0).fb;
+
+      if (recurFb != null) {
+        fb = and(fb, recurFb, null);
+      }
+    } else {
+      fb = null;
       if (recurFb == null) {
-        return fb;
+        recurFb = new MatchAllFilterBuilder();
       }
 
-      return and(fb, recurFb, null);
+      for (final NamedFilterBuilder nfb : nfbs) {
+        fb = or(fb, and(nfb.fb, recurFb, nfb.name));
+      }
     }
 
-    FilterBuilder fb = null;
-    if (recurFb == null) {
-      recurFb = new MatchAllFilterBuilder();
+    if (delState == includeDeleted) {
+      return fb;
     }
-    
-    for (final NamedFilterBuilder nfb: nfbs) {
-      fb = or(fb, and(nfb.fb, recurFb, nfb.name));
-    }
-    
-    return fb;
+
+    return and(fb,
+               addTerm(PropertyInfoIndex.DELETED,
+                       String.valueOf(delState == onlyDeleted)),
+               null);
+
   }
   
   final FilterBuilder overridesOnly(final String uid) {
     FilterBuilder flt = new TermFilterBuilder("_type",
-                                              BwIndexer.docTypeEvent);
+                                              docTypeEvent);
     
     flt = and(flt, addTerm(PropertyInfoIndex.UID, uid), null);
     return and(flt, addTerm(PropertyInfoIndex.OVERRIDE, "true"), null);
@@ -431,7 +505,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
     if (recurRetrieval.mode == Rmode.expanded) {
       // Limit events to instances only //
       FilterBuilder limit = not(addTerm("_type",
-                                        BwIndexer.docTypeEvent));
+                                        docTypeEvent));
 
       limit = or(limit, addTerm(PropertyInfoIndex.INSTANCE, "true"));
       limit = or(limit, addTerm(PropertyInfoIndex.OVERRIDE, "true"));
@@ -446,7 +520,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
 
     if (recurRetrieval.mode == Rmode.entityOnly) {
       FilterBuilder limit = not(addTerm("_type",
-                                        BwIndexer.docTypeEvent));
+                                        docTypeEvent));
 
       limit = or(limit,
                  addTerm(PropertyInfoIndex.MASTER, "true"));
@@ -463,7 +537,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
     }
 
     FilterBuilder limit = not(addTerm("_type",
-                                      BwIndexer.docTypeEvent));
+                                      docTypeEvent));
 
     limit = or(limit, addTerm(PropertyInfoIndex.MASTER, "true"));
 
@@ -486,11 +560,11 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
       f = or(f, addTerm("_type",
                         BwIndexer.docTypeLocation));
       f = or(f, addTerm("_type",
-                        BwIndexer.docTypeEvent));
+                        docTypeEvent));
       limit = not(f);
 
       f = addTerm("_type",
-                  BwIndexer.docTypeEvent);
+                  docTypeEvent);
       f = and(f, addTerm(PropertyInfoIndex.MASTER, "true"), null);
       limit = or(limit, f);
     }
@@ -500,7 +574,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
 
   public QueryBuilder getAllForReindexStats() {
     FilterBuilder limit = not(addTerm("_type",
-                                      BwIndexer.docTypeEvent));
+                                      docTypeEvent));
 
     limit = or(limit, addTerm(PropertyInfoIndex.MASTER, "true"));
 
@@ -729,12 +803,12 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
    * @param pis list of indexes
    * @return dot delimited property reference
    */
-  public static String makePropertyRef(PropertyInfoIndex... pis) {
+  public static String makePropertyRef(final PropertyInfoIndex... pis) {
     String delim = "";
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
-    for (PropertyInfoIndex pi: pis) {
+    for (final PropertyInfoIndex pi: pis) {
       sb.append(delim);
       sb.append(getJname(pi));
       delim = ".";

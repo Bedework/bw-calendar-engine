@@ -38,9 +38,8 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.Util;
-
-import org.apache.log4j.Logger;
 
 import java.util.Collection;
 import java.util.TreeSet;
@@ -59,16 +58,12 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
  *
  * @author Mike Douglass
  */
-public class AccessUtil implements AccessUtilI {
-  private boolean debug;
-
+public class AccessUtil extends Logged implements AccessUtilI {
   /** For evaluating access control
    */
   private Access access;
 
   private PrincipalInfo cb;
-
-  private transient Logger log;
 
   /**
    */
@@ -91,7 +86,6 @@ public class AccessUtil implements AccessUtilI {
   @Override
   public void init(final PrincipalInfo cb) throws CalFacadeException {
     this.cb = cb;
-    debug = getLog().isDebugEnabled();
     try {
       access = new Access();
     } catch (Throwable t) {
@@ -254,10 +248,10 @@ public class AccessUtil implements AccessUtilI {
       } else {
         ident = String.valueOf(ent.getId());
       }
-      getLog().debug("Check access for object " +
-                     cname.substring(cname.lastIndexOf(".") + 1) +
-                     " ident=" + ident +
-                     " desiredAccess = " + desiredAccess);
+      debug("Check access for object " +
+                    cname.substring(cname.lastIndexOf(".") + 1) +
+                    " ident=" + ident +
+                    " desiredAccess = " + desiredAccess);
     }
 
     try {
@@ -266,13 +260,18 @@ public class AccessUtil implements AccessUtilI {
 
       final AccessPrincipal owner = cb.getPrincipal(ent.getOwnerHref());
       if (debug) {
-        getLog().debug("After getPrincipal: " + (System.currentTimeMillis() - startTime));
+        debug("After getPrincipal - took: " + (System.currentTimeMillis() - startTime));
       }
       
       if (owner == null) {
-        throw new CalFacadeException("Principal " + ent.getOwnerHref() +
-                                             " does not exist");
+        error("Principal(owner) " + ent.getOwnerHref() +
+                      " does not exist");
+        if (!alwaysReturnResult) {
+          throw new CalFacadeAccessException();
+        }
+        return new CurrentAccess(false);
       }
+
       PrivilegeSet maxPrivs = null;
 
       char[] aclChars = null;
@@ -336,8 +335,16 @@ public class AccessUtil implements AccessUtilI {
          */
         aclChars = getAclChars(ent);
 
+        if (aclChars == null) {
+          error("Unable to fetch aclchars for " + ent);
+          if (!alwaysReturnResult) {
+            throw new CalFacadeAccessException();
+          }
+          return new CurrentAccess(false);
+        }
+
         if (debug) {
-          getLog().debug("aclChars = " + new String(aclChars));
+          debug("aclChars = " + new String(aclChars));
         }
 
         if (desiredAccess == privAny) {
@@ -359,15 +366,19 @@ public class AccessUtil implements AccessUtilI {
          * up expects a valid filled in object.
          */
         if (debug && !ca.getAccessAllowed()) {
-          getLog().debug("Override for superuser");
+          debug("Override for superuser");
         }
         ca = Acl.forceAccessAllowed(ca);
       }
 
       if (ent instanceof CalendarWrapper) {
-        CalendarWrapper col = (CalendarWrapper)ent;
+        final CalendarWrapper col = (CalendarWrapper)ent;
 
         col.setCurrentAccess(ca, desiredAccess);
+      }
+
+      if (debug) {
+        debug("access allowed: " + ca.getAccessAllowed());
       }
 
       if (!ca.getAccessAllowed() && !alwaysReturnResult) {
@@ -375,9 +386,9 @@ public class AccessUtil implements AccessUtilI {
       }
 
       return ca;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -405,7 +416,11 @@ public class AccessUtil implements AccessUtilI {
         container = getParent((BwShareableContainedDbentity<?>)ent);
       }
 
-      String path = container.getPath();
+      if (container == null) {
+        return null;
+      }
+
+      final String path = container.getPath();
 
       CalendarWrapper wcol = (CalendarWrapper)container;
 
@@ -420,7 +435,7 @@ public class AccessUtil implements AccessUtilI {
                                    parent.getPath(),
                                    wcol.getAccess()));
       } else if (wcol.getAccess() != null) {
-        aclStr = new String(wcol.getAccess());
+        aclStr = wcol.getAccess();
       } else {
         // At root
         throw new CalFacadeException("Collections must have default access set at root");
@@ -586,14 +601,6 @@ public class AccessUtil implements AccessUtilI {
     }
   }
    */
-
-  private Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(getClass());
-    }
-
-    return log;
-  }
 
 //  private void warn(String msg) {
 //    getLog().warn(msg);

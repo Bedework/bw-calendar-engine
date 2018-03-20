@@ -42,19 +42,12 @@ public class DumpSystem extends DumpPrincipal {
     super(globals);
   }
 
-  /**
-   * @return true if ok
-   * @throws CalFacadeException on error
-   */
-  public boolean open() throws CalFacadeException {
-    super.open("system");
-    
-    return true;
+  @Override
+  public boolean open() {
+    return super.open("system");
   }
 
-  /**
-   * @throws CalFacadeException on error
-   */
+  @Override
   public void close() throws CalFacadeException {
   }
 

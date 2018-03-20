@@ -80,7 +80,8 @@ public interface Calintf
    * @param publicAdmin boolean true if this is a public events admin app
    * @param publicSubmission true for the submit app
    * @param sessionless true if this is a sessionless client
-   * @throws CalFacadeException
+   * @param dontKill true if this is a system process
+   * @throws CalFacadeException on fatal error
    */
   void init(String logId,
             Configurations configs,
@@ -88,7 +89,8 @@ public interface Calintf
             String url,
             boolean publicAdmin,
             boolean publicSubmission,
-            boolean sessionless) throws CalFacadeException;
+            boolean sessionless,
+            boolean dontKill) throws CalFacadeException;
 
   /**
    * 
@@ -107,6 +109,12 @@ public interface Calintf
    * @return a label
    */
   String getLogId();
+
+  /**
+   *
+   * @return dontKill flag
+   */
+  boolean getDontKill();
 
   /**
    *
@@ -228,18 +236,28 @@ public interface Calintf
    */
   void flush() throws CalFacadeException;
 
+  /** Clear session - probably need to flush first.
+   *
+   * @throws CalFacadeException on hibernate error
+   */
+  void clear() throws CalFacadeException;
+
+  /** Replace session with a clean one - probably need to flush first.
+   *
+   * @throws CalFacadeException on hibernate error
+   * /
+  void replaceSession() throws CalFacadeException;
+
   /**
    * Get the set of active transactions
    * @return set
-   * @throws CalFacadeException
    */
-  Collection<? extends Calintf> active() throws CalFacadeException;
+  Collection<? extends Calintf> active();
 
   /** Kill an errant interface.
    *
-   * @throws CalFacadeException on error
    */
-  void kill() throws CalFacadeException;
+  void kill();
 
   /**
    *
@@ -263,33 +281,29 @@ public interface Calintf
   /** Get the current system pars
    *
    * @return SystemProperties object
-   * @throws CalFacadeException if not admin
    */
-  BasicSystemProperties getSyspars() throws CalFacadeException;
+  BasicSystemProperties getSyspars();
 
   /**
    * @return the indexer
-   * @throws CalFacadeException
    */
-  BwIndexer getPublicIndexer() throws CalFacadeException;
+  BwIndexer getPublicIndexer();
 
   /** Get a non-public indexer for a principal
    *
    * @param principal
    * @return the indexer
-   * @throws CalFacadeException
    */
-  BwIndexer getIndexer(BwPrincipal principal) throws CalFacadeException;
+  BwIndexer getIndexer(BwPrincipal principal);
 
   /** Method which allows us to specify the index root.
    *
    * @param principal
    * @param indexRoot
    * @return the indexer
-   * @throws CalFacadeException
    */
   BwIndexer getIndexer(BwPrincipal principal,
-                       final String indexRoot) throws CalFacadeException;
+                       final String indexRoot);
 
   /* ====================================================================
    *                   Notifications
@@ -463,9 +477,18 @@ public interface Calintf
   /**
    *
    * @param className of objects
-   * @return iterator over the objects
+   * @return iterator over all the objects
    */
   Iterator getObjectIterator(String className);
+
+  /**
+   *
+   * @param className of objects
+   * @param colPath for objects
+   * @return iterator over all the objects with the given col path
+   */
+  Iterator getObjectIterator(String className,
+                             String colPath);
 
   /** Return an iterator over hrefs for events.
    *

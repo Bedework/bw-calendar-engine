@@ -161,20 +161,52 @@ class Synch extends CalSvcDb implements SynchI {
 
     /* =============== End B - file ======================= */
     final ConnectorInfoType ciB = new ConnectorInfoType();
+    String aliasUri = val.getAliasUri();
 
-    ciB.setConnectorId("read-only-file");
+    String subType = null;
+
+    // We'll allow specification of known type by prefixing the url
+    final int pos = aliasUri.indexOf("+http");
+    if (pos > 0) {
+      subType = aliasUri.substring(0, pos);
+      aliasUri = aliasUri.substring(pos + 1);
+    }
+
+    if (subType == null) {
+      subType = val.getSubscriptionTargetType();
+    }
+
+    //warn("############################################ Subtype = " + subType);
+    if ((subType == null) || (subType.equals("file"))) {
+      ciB.setConnectorId("read-only-file");
+    } else {
+      // Assume it's the correct id
+      ciB.setConnectorId(subType);
+    }
 
     final ArrayOfSynchProperties aosB = new ArrayOfSynchProperties();
 
     ciB.setProperties(aosB);
 
-    aosB.getProperty().add(makeSynchProperty("uri", val.getAliasUri()));
+    aosB.getProperty().add(makeSynchProperty("uri", aliasUri));
 
     if (val.getRemoteId() != null) {
       aosB.getProperty().add(makeSynchProperty("principal",
                                                val.getRemoteId()));
+    }
+    if (val.getRemotePw() != null) {
+      // May have pw without id
       aosB.getProperty().add(makeSynchProperty("password",
                                                val.getRemotePw()));
+    }
+
+    aosB.getProperty()
+        .add(makeSynchProperty("orgsync-publicOnly",
+                               String.valueOf(val.getOrgSyncPublicOnly())));
+    if (val.getLocationKey() != null) {
+      aosB.getProperty()
+          .add(makeSynchProperty("locKey",
+                                 val.getLocationKey()));
     }
 
     int refreshRate = val.getRefreshRate(); // seconds
@@ -342,7 +374,7 @@ class Synch extends CalSvcDb implements SynchI {
 
     final SynchConnection sc = sconn.sc;
 
-    GetInfoResponseType girt = null;
+    final GetInfoResponseType girt;
     
     try {
       girt = getPort(synchConf.getManagerUri()).getInfo(

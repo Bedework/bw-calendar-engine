@@ -692,7 +692,7 @@ public class RestoreGlobals extends Counters {
     }
 
     @Override
-    public BasicSystemProperties getSyspars() throws CalFacadeException {
+    public BasicSystemProperties getSyspars() {
       return getBasicSyspars();
     }
 

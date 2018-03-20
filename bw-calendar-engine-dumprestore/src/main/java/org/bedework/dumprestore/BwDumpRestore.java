@@ -21,10 +21,14 @@ package org.bedework.dumprestore;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.caldav.util.sharing.AccessType;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.configs.DumpRestoreProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
@@ -46,8 +50,11 @@ import org.w3c.dom.Element;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author douglm
@@ -70,6 +77,10 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
   private boolean lowercaseAccounts;
 
+  private boolean newRestoreFormat;
+  
+  private boolean newDumpFormat;
+
   private String curSvciOwner;
 
   private CalSvcI svci;
@@ -91,7 +102,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         return;
       }
 
-      try (final Restore restorer = new Restore()) {
+      try (final Restore restorer = new Restore(newRestoreFormat)) {
         if (!disableIndexer()) {
           infoLines.add("***********************************\n");
           infoLines.add("********* Unable to disable indexer\n");
@@ -167,7 +178,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
       try {
         final long startTime = System.currentTimeMillis();
 
-        final Dump d = new Dump(infoLines);
+        final Dump d = new Dump(infoLines, newDumpFormat);
 
         try {
           d.getConfigProperties();
@@ -175,8 +186,14 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
           if (dumpAll) {
             infoLines.addLn("Started dump of data");
 
-            d.setDirPath(makeDirname());
-            d.setLowercaseAccounts(lowercaseAccounts);
+            if (newDumpFormat) {
+              d.setDirPath(makeDirname());
+              d.setLowercaseAccounts(lowercaseAccounts);
+            } else {
+              d.setFilename(makeFilename(getDataOutPrefix()));
+              d.setAliasesFilename(
+                      makeFilename("aliases-" + getDataOutPrefix()));
+            }
 
             d.open(false);
 
@@ -196,13 +213,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
           d.stats(infoLines);
 
-          final long millis = System.currentTimeMillis() - startTime;
-          final long seconds = millis / 1000;
-          final long minutes = seconds / 60;
-
-          infoLines.addLn("Elapsed time: " + minutes + ":" +
-                                  Restore.twoDigits(
-                                          seconds - (minutes * 60)));
+          infoLines.addLn("Elapsed time: " + elapsed(startTime));
 
           infoLines.addLn("Complete");
         }
@@ -211,6 +222,16 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         infoLines.exceptionMsg(t);
       }
     }
+  }
+  
+  private String elapsed(final long startTime) {
+    final long millis = System.currentTimeMillis() - startTime;
+    final long seconds = millis / 1000;
+    final long minutes = seconds / 60;
+
+    return String.valueOf(minutes) + ":" +
+            Restore.twoDigits(
+                    seconds - (minutes * 60));
   }
 
   private DumpThread dump;
@@ -548,6 +569,282 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
   private AliasesThread aliases;
 
+  private class FixDataThread extends Thread {
+    private final int hrefBatchSize = 1000;
+    private int hrefBatchPos;
+    
+    final InfoLines infoLines = new InfoLines();
+    
+    boolean fixing;
+    
+    /* Number for which no action was required */
+    int okCt = 0;
+
+    /* Number changed */
+    int changedCt = 0;
+
+    /* Number already processed */
+    int alreadyDoneCt = 0;
+
+    /* Number without yale loc */
+    int noLocCt = 0;
+
+    /* Number where yale loc doesn't match */
+    int missingLocCt = 0;
+
+    /* Number of failures */
+    int failedCt = 0;
+
+    int ct = 0;
+    int accessErrorCt = 0;
+    int errorCt = 0;
+    
+    long startTime;
+
+    final Map<String, BwLocation> locs = new HashMap<>();
+    
+    final Set<String> missingLocations = new TreeSet<>();
+
+    FixDataThread(final int start) {
+      super("FixData");
+
+      hrefBatchPos = start;
+    }
+
+    @Override
+    public void run() {
+      CalSvcI svci = null;
+
+      try {
+        startTime = System.currentTimeMillis();
+        
+        fixing = true;
+        
+        okCt = 0;
+        changedCt = 0;
+        alreadyDoneCt = 0;
+        noLocCt = 0;
+        missingLocCt = 0;
+        failedCt = 0;
+        ct = 0;
+        accessErrorCt = 0;
+        errorCt = 0;
+        locs.clear();
+        
+        final boolean debug = getLogger().isDebugEnabled();
+
+        if (debug) {
+          debug("About to get locations");
+        }
+
+        try {
+          svci = getSvci("public-user", true);
+
+          final Iterator<BwLocation> loci = svci.getDumpHandler()
+                                                .getLocations();
+
+          while (loci.hasNext()) {
+            final BwLocation loc = loci.next();
+            final String ids = loc.getSubField1();
+            if (ids == null) {
+              warn("No loc id for " + loc);
+              continue;
+            }
+            
+            /* The id may be a ; separated string of ids
+             */
+
+            String[] idsplit = {ids};
+            
+            if (ids.contains(";")) {
+              idsplit = ids.split(";");
+            }
+            
+            for (final String nxtId: idsplit) {
+              if (nxtId == null) {
+                continue;
+              }
+              
+              final String id = nxtId.trim();
+              if (id.length() == 0) {
+                continue;
+              }
+              
+              if (locs.get(id) != null) {
+                warn("Duplicate id " + id +
+                             "for " + loc);
+                continue;
+              }
+              locs.put(id, loc);
+            }
+          }
+
+          infoLines.addLn("Found " + locs.size() + " locations");
+        } finally {
+          closeSvci();
+        }
+        
+        doFix: while (true) {
+          final List<String> hrefs = hrefBatch();
+
+          if (Util.isEmpty(hrefs)) {
+            break doFix;
+          }
+          
+          for (final String href: hrefs) {
+            try {
+              svci = getSvci("public-user", true);
+
+              final int nmpos = href.lastIndexOf('/');
+              if (nmpos < 0) {
+                warn("Invalid href " + href);
+                continue; 
+              }
+              final EventInfo ei = 
+                      svci.getEventsHandler().get(href.substring(0, nmpos), 
+                                                  href.substring(nmpos + 1));
+              if (ei == null) {
+                warn("No event with href " + href);
+                continue;
+              }
+              
+              ct++;
+
+              if (updateEvent(ei)) {
+                changedCt++;
+                
+                try {
+                  EventInfo.UpdateResult ur =
+                          svci.getEventsHandler().update(ei, true);
+                } catch (final Throwable t) {
+                  errorCt++;
+                  warn("Error updating event " + href + 
+                               " " + t.getLocalizedMessage());
+                }
+              }
+            } finally {
+              closeSvci();
+            }
+          }
+          
+          if ((ct % 100) == 0) {
+            info("Processed " + ct + " at " + hrefBatchPos);
+          }
+        }
+        info("Processed " + ct + " at " + hrefBatchPos);
+      } catch (final Throwable t) {
+        error(t);
+        infoLines.exceptionMsg(t);
+      } finally {
+        infoLines.addAll(fixDataStatus());
+        fixing = false;
+        locs.clear();
+        
+        if (svci != null) {
+          try {
+            closeSvci();
+          } catch (final Throwable t) {
+            error(t);
+          }
+        }
+      }
+    }
+    
+    private List<String> hrefBatch() {
+      List<String> hrefs = new ArrayList<>(hrefBatchSize);
+      
+      try {
+        svci = getSvci("public-user", true);
+        
+        Iterator<String> hrefi = svci.getDumpHandler().getEventHrefs(hrefBatchPos);
+        
+        for (int i = 0; i < hrefBatchSize; i++) {
+          hrefBatchPos++;
+          if (!hrefi.hasNext()) {
+            break;
+          }
+          
+          hrefs.add(hrefi.next());
+        }
+
+        return hrefs;
+      } catch (final Throwable t) {
+        error(t);
+        infoLines.exceptionMsg(t);
+        return null;
+      } finally {
+        if (svci != null) {
+          try {
+            closeSvci();
+          } catch (final Throwable t) {
+            error(t);
+          }
+        }
+      }
+    }
+    
+    private boolean updateEvent(final EventInfo ei) {
+      final BwEvent ev = ei.getEvent();
+      boolean changed = false;
+          
+      updateEv: {
+        /* Yale events are referenced by an X-prop - X-YALE-LOCATION
+           */
+
+        final BwXproperty yaleLoc = ev.findXproperty("X-YALE-LOCATION");
+
+        if (yaleLoc == null) {
+          noLocCt++;
+          break updateEv;
+        }
+
+        String yaleLocId = yaleLoc.getValue();
+
+        if (yaleLocId == null) {
+          noLocCt++;
+          break updateEv;
+        }
+
+        if (yaleLocId.startsWith("DONE-")) {
+          alreadyDoneCt++;
+          break updateEv;
+        }
+
+        final BwLocation loc = locs.get(yaleLocId);
+
+        if (loc == null) {
+          missingLocCt++;
+          missingLocations.add(yaleLocId);
+          break updateEv;
+        }
+
+        if (loc.equals(ev.getLocation())) {
+          break updateEv;
+        }
+        
+        ev.setLocation(loc);
+        yaleLoc.setValue("DONE-" + yaleLocId);
+        
+        changed = true;
+      } // updateEv
+      
+      if (!Util.isEmpty(ei.getOverrides())) {
+        for (final EventInfo ovei: ei.getOverrides()) {
+          if (updateEvent(ovei)) {
+            changed = true;
+          }
+        }
+      }
+      
+      // Force update
+      ei.clearChangeset();
+      
+      return changed;
+    }
+  }
+  
+  private FixDataThread fixer;
+
   private final static String nm = "dumprestore";
 
   /**
@@ -654,6 +951,26 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   }
 
   @Override
+  public void setNewRestoreFormat(final boolean val) {
+    newRestoreFormat = val;
+  }
+
+  @Override
+  public boolean getNewRestoreFormat() {
+    return newRestoreFormat;
+  }
+
+  @Override
+  public void setNewDumpFormat(final boolean val) {
+    newDumpFormat = val;
+  }
+
+  @Override
+  public boolean getNewDumpFormat() {
+    return newDumpFormat;
+  }
+
+  @Override
   public synchronized String restoreData() {
     try {
       setStatus(statusStopped);
@@ -671,7 +988,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   }
 
   @Override
-  public synchronized List<String> restoreStatus() {
+  public List<String> restoreStatus() {
     if (restore == null) {
       final InfoLines infoLines = new InfoLines();
 
@@ -681,6 +998,57 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     }
 
     return restore.infoLines;
+  }
+
+  @Override
+  public String fixData(final int start) {
+    try {
+      setStatus(statusStopped);
+      fixer = new FixDataThread(start);
+
+      fixer.start();
+
+      return "OK";
+    } catch (final Throwable t) {
+      setStatus(statusFailed);
+      error(t);
+
+      return "Exception: " + t.getLocalizedMessage();
+    }
+  }
+
+  public List<String> fixDataStatus() {
+    if (fixer == null) {
+      final InfoLines infoLines = new InfoLines();
+
+      infoLines.addLn("Fix data has not been started");
+
+      return infoLines;
+    }
+
+    if (!fixer.fixing) {
+      return fixer.infoLines;
+    }
+
+    final InfoLines infoLines = new InfoLines();
+
+    infoLines.addLn("      Checked: " + fixer.ct + " events");
+    infoLines.addLn("       errors: " + fixer.errorCt);
+    infoLines.addLn("access errors: " + fixer.accessErrorCt);
+    infoLines.addLn("           ok: " + fixer.okCt);
+    infoLines.addLn(" already done: " + fixer.alreadyDoneCt);
+    infoLines.addLn(" missing locs: " + fixer.missingLocCt);
+    infoLines.addLn("       no loc: " + fixer.noLocCt);
+    infoLines.addLn("      changed: " + fixer.changedCt);
+    infoLines.addLn("       failed: " + fixer.failedCt);
+    infoLines.addLn("Elapsed time: " + elapsed(fixer.startTime));
+
+    infoLines.addLn("Missing locations: ");
+    for (final String ml: fixer.missingLocations) {
+      infoLines.addLn("    " + ml);
+    }
+
+    return infoLines;
   }
 
   @Override
@@ -886,8 +1254,8 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
                             final boolean merge,
                             final boolean dryRun) {
     final InfoLines infoLines = new InfoLines();
-
-    try (final Restore restorer = new Restore()) {
+    
+    try (final Restore restorer = new Restore(newRestoreFormat)) {
       restorer.getConfigProperties();
       restorer.setFilename(getDataIn());
 
@@ -914,7 +1282,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
                               final boolean dryRun) {
     final InfoLines infoLines = new InfoLines();
 
-    try (final Restore restorer = new Restore()) {
+    try (final Restore restorer = new Restore(newRestoreFormat)) {
       restorer.getConfigProperties();
       restorer.setFilename(getDataIn());
 

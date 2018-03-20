@@ -70,9 +70,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
     }
 
     final String account = Util.buildPath(false,
-                                          href.substring(
-                                                  dirInfo.getBwadmingroupPrincipalRoot()
-                                                          .length()));
+                                          href.substring(dirInfo.getBwadmingroupPrincipalRoot().length()));
 
     return findGroup(account);
   }

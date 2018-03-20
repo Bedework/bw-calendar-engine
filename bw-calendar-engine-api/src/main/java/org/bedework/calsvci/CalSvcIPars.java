@@ -79,6 +79,10 @@ public class CalSvcIPars implements Serializable {
    */
   private final boolean sessionless;
 
+  /** True if this is a system process, e.g. restore
+   */
+  private final boolean dontKill;
+
   private boolean forRestore;
 
   private boolean indexRebuild;
@@ -100,6 +104,7 @@ public class CalSvcIPars implements Serializable {
    * @param adminCanEditAllPublicLocations true/false
    * @param adminCanEditAllPublicContacts true/false
    * @param sessionless true if this is a sessionless client
+   * @param dontKill true if this is a system process
    */
   public CalSvcIPars(final String logId,
                      final String authUser,
@@ -115,7 +120,8 @@ public class CalSvcIPars implements Serializable {
                      final boolean adminCanEditAllPublicLocations,
                      final boolean adminCanEditAllPublicContacts,
 
-                     final boolean sessionless) {
+                     final boolean sessionless,
+                     final boolean dontKill) {
     this.logId = logId;
     this.authUser = authUser;
     this.calSuite = calSuite;
@@ -126,6 +132,7 @@ public class CalSvcIPars implements Serializable {
     this.adminCanEditAllPublicLocations = adminCanEditAllPublicLocations;
     this.adminCanEditAllPublicContacts = adminCanEditAllPublicContacts;
     this.sessionless = sessionless;
+    this.dontKill = dontKill;
     this.user = user;
     this.publicSubmission = publicSubmission;
   }
@@ -153,7 +160,8 @@ public class CalSvcIPars implements Serializable {
                            false,  // adminCanEditAllPublicCategories
                            false,  // adminCanEditAllPublicLocations
                            false,  // adminCanEditAllPublicSponsors
-                           false); // sessionless
+                           false, // sessionless
+                           true); // system
   }
 
   /** Return new pars for an index rebuild
@@ -175,7 +183,8 @@ public class CalSvcIPars implements Serializable {
                                              false,  // adminCanEditAllPublicCategories
                                              false,  // adminCanEditAllPublicLocations
                                              false,  // adminCanEditAllPublicSponsors
-                                             false); // sessionless
+                                             false, // sessionless
+                                             true); // system
 
     pars.indexRebuild = true;
 
@@ -200,7 +209,8 @@ public class CalSvcIPars implements Serializable {
                                           true,   // adminCanEditAllPublicCategories
                                           true,   // adminCanEditAllPublicLocations
                                           true,   // adminCanEditAllPublicSponsors
-                                          false); // sessionless
+                                          false, // sessionless
+                                          true); // system
 
     p.indexRebuild = true;
     p.forRestore = true;
@@ -240,7 +250,8 @@ public class CalSvcIPars implements Serializable {
                                              allowCreateEprops,  // adminCanEditAllPublicCategories
                                              allowCreateEprops,  // adminCanEditAllPublicLocations
                                              allowCreateEprops,  // adminCanEditAllPublicSponsors
-                                             true);  // sessionless
+                                             true, // sessionless
+                                             false); // system
 
     pars.setClientId(clientId);
 
@@ -364,6 +375,13 @@ public class CalSvcIPars implements Serializable {
   }
 
   /**
+   * @return boolean true if this is a system process.
+   */
+  public boolean getDontKill() {
+    return dontKill;
+  }
+
+  /**
    * @return boolean true if this is a web client..
    */
   public boolean getWebMode() {
@@ -410,6 +428,7 @@ public class CalSvcIPars implements Serializable {
     return ts.toString();
   }
 
+  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     final CalSvcIPars pars = new CalSvcIPars(getLogId(),
@@ -423,7 +442,8 @@ public class CalSvcIPars implements Serializable {
                                              getAdminCanEditAllPublicCategories(),
                                              getAdminCanEditAllPublicLocations(),
                                              getAdminCanEditAllPublicContacts(),
-                                             getSessionsless());
+                                             getSessionsless(),
+                                             getDontKill());
 
     pars.setClientId(getClientId());
     pars.forRestore = getForRestore();

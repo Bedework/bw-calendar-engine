@@ -18,6 +18,7 @@
 */
 package org.bedework.calcore.hibernate;
 
+import org.bedework.calcore.CalintfHelper.Callback;
 import org.bedework.calcorei.HibSession;
 import org.bedework.caldav.util.TimeRange;
 import org.bedework.caldav.util.filter.AndFilter;
@@ -143,6 +144,8 @@ public class Filters implements Serializable {
    */
   private HibSession sess;
 
+  private Callback cb;
+
   /** Name of the master event we are testing. e.g. for a recurrence it might be
    * ev.master
    */
@@ -164,10 +167,14 @@ public class Filters implements Serializable {
 
   /** Constructor
    *
+   * @param cb - needed until we change the schema - we need to get the
+   *             persistent copy of the category for searches.
    * @param filter
    * @throws CalFacadeException
    */
-  public Filters(final FilterBase filter) throws CalFacadeException {
+  public Filters(final Callback cb,
+                 final FilterBase filter) throws CalFacadeException {
+    this.cb = cb;
     /* Reconstruct the filter and create a date only filter for overrides. */
 
     fullFilter = reconstruct(filter, false);
@@ -873,6 +880,12 @@ public class Filters implements Serializable {
 
           doTimeRange((TimeRangeFilter)pf, false, fld, subfld);
         } else if (pf instanceof BwCategoryFilter) {
+          BwCategory cat = ((BwCategoryFilter)pf).getEntity();
+          if (cat.unsaved()) {
+            ((BwCategoryFilter)pf).setEntity(cb.getCategory(
+                    cat.getUid()));
+          }
+
           qseg.append("(:");
           parTerm();
           if (f.getNot()) {
@@ -1218,7 +1231,11 @@ public class Filters implements Serializable {
       BwCategoryFilter cf = (BwCategoryFilter)f;
 
       BwCategory cat = cf.getEntity();
+      /* XXX - this is what we want to be able to do
       sess.setString(parPrefix + qi, cat.getUid());
+      */
+      sess.setEntity(parPrefix + qi, cat);
+
       qi++;
 
       return;

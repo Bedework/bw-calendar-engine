@@ -4,22 +4,25 @@
 	<parent>
 		<groupId>org.bedework.caleng</groupId>
 		<artifactId>bw-calendar-engine</artifactId>
-		<version>4.0.0-SNAPSHOT</version>
+		<version>3.12.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<artifactId>bw-caleng-chgnote</artifactId>
+
+	<artifactId>bw-calendar-engine-chgnote</artifactId>
+
 	<dependencies>
 		<!-- Project Dependencies -->
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-caleng-facade</artifactId>
+			<artifactId>bw-calendar-engine-facade</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-caleng-impl</artifactId>
+			<artifactId>bw-calendar-engine-impl</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
 			<artifactId>bwsysev-common</artifactId>
@@ -38,6 +41,7 @@
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-caching</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-misc</artifactId>

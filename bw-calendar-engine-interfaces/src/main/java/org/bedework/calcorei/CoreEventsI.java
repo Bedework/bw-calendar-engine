@@ -28,6 +28,7 @@ import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.svc.EventInfo;
 
 import java.io.Serializable;
@@ -98,6 +99,7 @@ public interface CoreEventsI extends Serializable {
                                              FilterBase filter,
                                              BwDateTime startDate, BwDateTime endDate,
                                              List<BwIcalPropertyInfoEntry> retrieveList,
+                                             DeletedState delState,
                                              RecurringRetrievalMode recurRetrieval,
                                              boolean freeBusy) throws CalFacadeException;
 

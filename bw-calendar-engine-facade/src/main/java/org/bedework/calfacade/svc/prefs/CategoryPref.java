@@ -18,13 +18,14 @@
 */
 package org.bedework.calfacade.svc.prefs;
 
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.annotations.Dump;
 
-/** Represent user category preferences - a list of category uids
+/** Represent user category preferences
  *
  *  @author Mike Douglass douglm - bedework.edu
  *  @version 1.0
  */
 @Dump(elementName="category-pref")
-public class CategoryPref extends CollectionPref<String> {
+public class CategoryPref extends CollectionPref<BwCategory> {
 }

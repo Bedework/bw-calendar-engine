@@ -41,9 +41,17 @@ import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.InfoLines;
 import org.bedework.dumprestore.nrestore.RestorePrincipal;
 import org.bedework.dumprestore.nrestore.RestorePublic;
+import org.bedework.dumprestore.restore.rules.RestoreRuleSet;
 import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.Util;
 
+import org.apache.commons.digester.Digester;
+import org.apache.commons.digester.RegexMatcher;
+import org.apache.commons.digester.RegexRules;
+import org.apache.commons.digester.SimpleRegexMatcher;
+
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -63,6 +71,8 @@ public class Restore extends Logged implements Defs, AutoCloseable {
   private final RestoreGlobals globals;
 
   private final String adminUserAccount = "admin";
+  
+  private final boolean newRestoreFormat;
 
   /* True if we are creating a clean system */
   private boolean newSystem;
@@ -76,9 +86,10 @@ public class Restore extends Logged implements Defs, AutoCloseable {
   /**
    * @throws Throwable on fatal error
    */
-  public Restore() throws Throwable {
+  public Restore(final boolean newRestoreFormat) throws Throwable {
     globals = new RestoreGlobals();
     globals.svci = getSvci();
+    this.newRestoreFormat = newRestoreFormat;
   }
 
   /* ===================================================================
@@ -86,7 +97,7 @@ public class Restore extends Logged implements Defs, AutoCloseable {
    *  =================================================================== */
 
   /**
-   * @param val - directory to restore from
+   * @param val - filename to restore from or directory for new restore
    */
   public void setFilename(final String val) {
     filename = val;
@@ -118,7 +129,7 @@ public class Restore extends Logged implements Defs, AutoCloseable {
     }
   }
 
-  /** Restore a single user - which must not exist - from a dump.
+  /** Restore a single user from a new style dump.
    * 
    * @param account of user
    * @param merge don't replace entities - add new ones.
@@ -188,6 +199,21 @@ public class Restore extends Logged implements Defs, AutoCloseable {
     }
 
     globals.info = info;
+    
+    if (newRestoreFormat) {
+      // Do something
+      return;
+    }
+    
+    // Old style single file.
+    globals.digester = new Digester();
+
+    final RegexMatcher m = new SimpleRegexMatcher();
+    globals.digester.setRules(new RegexRules(m));
+
+    globals.digester.addRuleSet(new RestoreRuleSet(globals));
+    globals.digester.parse(new InputStreamReader(new FileInputStream(filename),
+                                         "UTF-8"));
   }
 
   /**

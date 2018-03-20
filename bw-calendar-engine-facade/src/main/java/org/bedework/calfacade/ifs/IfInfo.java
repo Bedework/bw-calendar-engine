@@ -31,12 +31,13 @@ import java.util.TreeSet;
 public class IfInfo implements Serializable {
   private String logid;
   private String id;
+  private boolean dontKill;
   private String lastStateTime;
   private String state;
   private long seconds;
   private boolean attemptedTermination;
   private Throwable terminationException;
-  private Set<String> entityKeys = new TreeSet<>();
+  private final Set<String> entityKeys = new TreeSet<>();
   
   /**
    *
@@ -60,6 +61,18 @@ public class IfInfo implements Serializable {
 
   public void setId(final String val) {
     id = val;
+  }
+
+  /**
+   *
+   * @return true if this is a system process.
+   */
+  public boolean getDontKill() {
+    return dontKill;
+  }
+
+  public void setDontKill(final boolean val) {
+    dontKill = val;
   }
 
   /** Updated every time state is changed. Not necessarily an

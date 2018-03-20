@@ -35,6 +35,7 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
+import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwOrganizer;
@@ -54,13 +55,16 @@ import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.ifs.Directories;
+import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
+import org.bedework.calfacade.requests.GetInstancesRequest;
+import org.bedework.calfacade.responses.InstancesResponse;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
-import org.bedework.calsvci.Categories;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.calsvci.EventProperties.EnsureEntityExistsResult;
 import org.bedework.calsvci.EventsI;
@@ -68,6 +72,7 @@ import org.bedework.icalendar.IcalTranslator;
 import org.bedework.icalendar.IcalUtil;
 import org.bedework.icalendar.Icalendar;
 import org.bedework.icalendar.RecurUtil;
+import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.icalendar.RecurUtil.Recurrence;
 import org.bedework.sysevents.events.EntityFetchEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
@@ -101,6 +106,7 @@ import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
 import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
+import static org.bedework.calfacade.responses.Response.Status.ok;
 import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 
 /** This acts as an interface to the database for subscriptions.
@@ -338,9 +344,9 @@ class Events extends CalSvcDb implements EventsI {
     }
 
 
-    if (col.getAlias()) {
+    if (col.getInternalAlias()) {
       final String expr = 
-              "(colPath='" + 
+              "(vpath='" +
                       SfpTokenizer.escapeQuotes(col.getPath()) + 
                       "') and (name='" +
                       SfpTokenizer.escapeQuotes(name) + 
@@ -359,6 +365,7 @@ class Events extends CalSvcDb implements EventsI {
                         null,  // start
                         null,  // end
                         RetrieveList.getRetrieveList(retrieveList),
+                        DeletedState.noDeleted,
                         RecurringRetrievalMode.overrides);
       if (evs.size() == 0) {
         return null;
@@ -401,6 +408,7 @@ class Events extends CalSvcDb implements EventsI {
   public Collection<EventInfo> getEvents(final BwCalendar cal, final FilterBase filter,
                                          final BwDateTime startDate, final BwDateTime endDate,
                                          final List<BwIcalPropertyInfoEntry> retrieveList,
+                                         final DeletedState delState,
                                          final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
     Collection<BwCalendar> cals = null;
@@ -412,6 +420,7 @@ class Events extends CalSvcDb implements EventsI {
 
     Collection<EventInfo> res =  getMatching(cals, filter, startDate, endDate,
                                              retrieveList,
+                                             delState,
                                              recurRetrieval, false);
 
     int num = 0;
@@ -457,6 +466,13 @@ class Events extends CalSvcDb implements EventsI {
         for (final BwCategory cat: cats) {
           event.addCategory(cat);
         }
+      }
+
+      final RealiasResult raResp = reAlias(event);
+      if (raResp.getStatus() != ok) {
+        throw new CalFacadeException(CalFacadeException.badRequest,
+                                     "Status: " + raResp.getStatus() +
+                                             " message: " + raResp.getMessage());
       }
 
       assignGuid(event); // Or just validate?
@@ -641,22 +657,26 @@ class Events extends CalSvcDb implements EventsI {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.EventsI#update(org.bedework.calfacade.svc.EventInfo, boolean)
-   */
   @Override
   public UpdateResult update(final EventInfo ei,
                              final boolean noInvites) throws CalFacadeException {
-    return update(ei, noInvites, null);
+    return update(ei, noInvites, null, false);
   }
 
   @Override
   public UpdateResult update(final EventInfo ei,
                              final boolean noInvites,
                              final String fromAttUri) throws CalFacadeException {
+    return update(ei, noInvites, fromAttUri, false);
+  }
+
+  @Override
+  public UpdateResult update(final EventInfo ei,
+                             final boolean noInvites,
+                             final String fromAttUri,
+                             final boolean alwaysWrite) throws CalFacadeException {
     try {
       final BwEvent event = ei.getEvent();
-      event.setDtstamps(getCurrentTimestamp());
 
       final UpdateResult updResult = ei.getUpdResult();
 
@@ -664,6 +684,13 @@ class Events extends CalSvcDb implements EventsI {
 
       final BwCalendar cal = validate(event, false, false, false);
       adjustEntities(ei);
+
+      final RealiasResult raResp = reAlias(event);
+      if (raResp.getStatus() != ok) {
+        throw new CalFacadeException(CalFacadeException.badRequest,
+                                     "Status: " + raResp.getStatus() +
+                                             " message: " + raResp.getMessage());
+      }
 
       boolean organizerSchedulingObject = false;
       boolean attendeeSchedulingObject = false;
@@ -680,10 +707,11 @@ class Events extends CalSvcDb implements EventsI {
         event.updateStag(getCurrentTimestamp());
       }
 
-      boolean changed = checkChanges(ei,
-                                     organizerSchedulingObject,
-                                     attendeeSchedulingObject) ||
-                        ei.getOverridesChanged();
+      boolean changed = alwaysWrite ||
+              checkChanges(ei,
+                           organizerSchedulingObject,
+                           attendeeSchedulingObject) ||
+              ei.getOverridesChanged();
       boolean sequenceChange = ei.getUpdResult().sequenceChange;
 
       /* TODO - this is wrong.
@@ -729,6 +757,7 @@ class Events extends CalSvcDb implements EventsI {
         return ei.getUpdResult();
       }
 
+      event.setDtstamps(getCurrentTimestamp());
       /* TODO - fix this */
 //      if (doReschedule) {
   //      getSvc().getScheduler().setupReschedule(ei);
@@ -1095,37 +1124,102 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   @Override
-  public Set<BwCategory> reAlias(final BwEvent ev) throws CalFacadeException {
+  public RealiasResult reAlias(final BwEvent ev) {
     /* The set of categories referenced by the aliases and their parents */
-    final ChangeTable changes = ev.getChangeset(getPrincipalHref());
+    final RealiasResult resp = new RealiasResult(new TreeSet<>());
 
     final Collection<BwXproperty> aliases = ev.getXproperties(BwXproperty.bedeworkAlias);
 
-    if (Util.isEmpty(aliases)) {
-      return null;
+    if (!Util.isEmpty(aliases)) {
+      for (final BwXproperty alias : aliases) {
+        doCats(resp, alias.getValue(), ev);
+      }
     }
 
-    final ChangeTableEntry cte = changes.getEntry(PropertyInfoIndex.CATEGORIES);
+    doCats(resp, ev.getColPath(), ev);
 
-    final Set<BwCategory> allcats = new TreeSet<>();
-    
-    for (final BwXproperty alias: aliases) {
-      final Set<BwCategory> cats = getCols().getCategorySet(alias.getValue());
+    return resp;
+  }
 
-      if (Util.isEmpty(cats)) {
-        continue;
+  @Override
+  public InstancesResponse getInstances(final GetInstancesRequest req) {
+    final InstancesResponse resp = new InstancesResponse();
+
+    resp.setId(req.getId());
+
+    if (!req.validate(resp)) {
+      return resp;
+    }
+
+    // Use a BwEvent to build the instance set
+
+    final BwEvent ev = new BwEventObj();
+
+    try {
+      final BwDateTime st = req.getStartDt();
+      ev.setDtstart(st);
+      ev.setDtend(req.getEndDt());
+      ev.addRrule(req.getRrule());
+
+      if (!Util.isEmpty(req.getExdates())) {
+        for (final String dt: req.getExdates()) {
+          ev.addExdate(BwDateTime.makeBwDateTime(st.getDateType(),
+                                                 dt,
+                                                 st.getTzid()));
+        }
       }
 
-      allcats.addAll(cats);
-      
-      for (final BwCategory cat: cats) {
+      if (!Util.isEmpty(req.getRdates())) {
+        for (final String dt: req.getRdates()) {
+          ev.addRdate(BwDateTime.makeBwDateTime(st.getDateType(),
+                                                 dt,
+                                                 st.getTzid()));
+        }
+      }
+
+      final RecurPeriods rp =
+              RecurUtil.getPeriods(ev,
+                                   getAuthpars().getMaxYears(),
+                                   getAuthpars().getMaxInstances(),
+                                   req.getBegin(),
+                                   req.getEnd());
+
+      resp.setInstances(rp.instances);
+
+      return resp;
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
+  }
+
+  private void doCats(final RealiasResult resp,
+                      final String colHref,
+                      final BwEvent ev) {
+    try {
+      final Set<BwCategory> cats = getCols()
+              .getCategorySet(colHref);
+
+      if (Util.isEmpty(cats)) {
+        return;
+      }
+
+      resp.getCats().addAll(cats);
+
+      for (final BwCategory cat : cats) {
         if (ev.addCategory(cat)) {
+          final ChangeTable changes = ev.getChangeset(getPrincipalHref());
+
+          final ChangeTableEntry cte = changes
+                  .getEntry(PropertyInfoIndex.CATEGORIES);
+
+
           cte.addAddedValue(cat);
         }
       }
+    } catch (final Throwable t) {
+      Response.error(new RealiasResult(null),
+                     t.getMessage());
     }
-    
-    return allcats;
   }
 
   @Override
@@ -1268,8 +1362,35 @@ class Events extends CalSvcDb implements EventsI {
 
   void updateEntities(final UpdateResult updResult,
                       final BwEvent event) throws CalFacadeException {
+    final EventProperties<BwCategory> cathdlr = getSvc().getCategoriesHandler();
 
-    BwContact ct = event.getContact();
+    final Set<BwCategory> cats = event.getCategories();
+    final Set<BwCategory> removeCats = new TreeSet<>();
+    final Set<BwCategory> addCats = new TreeSet<>();
+
+    if (cats != null) {
+      for (final BwCategory cat : cats) {
+        if (cat.unsaved()) {
+          final EnsureEntityExistsResult<BwCategory> eeer =
+                  cathdlr.ensureExists(cat, event.getOwnerHref());
+
+          removeCats.add(cat);
+          if (eeer.entity != null) {
+            addCats.add(eeer.entity);
+          }
+        }
+      }
+
+      for (final BwCategory cat : removeCats) {
+        event.removeCategory(cat);
+      }
+
+      for (final BwCategory cat : addCats) {
+        event.addCategory(cat);
+      }
+    }
+
+    final BwContact ct = event.getContact();
 
     if (ct != null) {
       final EnsureEntityExistsResult<BwContact> eeers =
@@ -1316,6 +1437,7 @@ class Events extends CalSvcDb implements EventsI {
                                     final FilterBase filter,
                                     final BwDateTime startDate, final BwDateTime endDate,
                                     final List<BwIcalPropertyInfoEntry> retrieveList,
+                                    final DeletedState delState,
                                     final RecurringRetrievalMode recurRetrieval,
                                     final boolean freeBusy) throws CalFacadeException {
     TreeSet<EventInfo> ts = new TreeSet<EventInfo>();
@@ -1339,6 +1461,7 @@ class Events extends CalSvcDb implements EventsI {
     ts.addAll(postProcess(getCal().getEvents(calSet, filter,
                           startDate, endDate,
                           retrieveList,
+                          delState,
                           recurRetrieval, freeBusy)));
 
     return ts;
@@ -1445,87 +1568,16 @@ class Events extends CalSvcDb implements EventsI {
     return true;
   }
 
-  @Override
-  public void implantEntities(final Collection<EventInfo> events) throws CalFacadeException {
-    if (Util.isEmpty(events)) {
-      return;
-    }
-
-    Categories cats = getSvc().getCategoriesHandler();
-    EventProperties<BwLocation> locs = getSvc().getLocationsHandler();
-
-    for (EventInfo ei: events) {
-      BwEvent ev = ei.getEvent();
-
-      Set<String> catUids = ev.getCategoryUids();
-
-      if (catUids != null) {
-        for (String uid: catUids) {
-          BwCategory cat = cats.get(uid);
-
-          if (cat != null) {
-            ev.addCategory(cat);
-          }
-        }
-      }
-
-      if (ev.getLocationUid() != null) {
-        ev.setLocation(locs.get(ev.getLocationUid()));
-      }
-    }
-  }
-
   /* ====================================================================
    *                   private methods
    * ==================================================================== */
 
-  /** Ensure that all references to entities are up to date, for example, ensure
-   * that the list of category uids matches the actual list of categories.
+  /** Ensure that all referenced are the persistent versions.
    *
    * @param event
    * @throws CalFacadeException
    */
   private void adjustEntities(final EventInfo event) throws CalFacadeException {
-    if (event == null) {
-      return;
-    }
-
-    BwEvent ev = event.getEvent();
-
-    ev.adjustCategories();
-
-    if (ev.getLocation() != null) {
-      ev.setLocationUid(ev.getLocation().getUid());
-    } else {
-      ev.setLocationUid(null);
-    }
-  }
-
-  private void implantEntities(final EventInfo event) throws CalFacadeException {
-    if (event == null) {
-      return;
-    }
-
-    Categories cats = getSvc().getCategoriesHandler();
-    EventProperties<BwLocation> locs = getSvc().getLocationsHandler();
-
-    BwEvent ev = event.getEvent();
-
-    Set<String> catUids = ev.getCategoryUids();
-
-    if (catUids != null) {
-      for (String uid: catUids) {
-        BwCategory cat = cats.get(uid);
-
-        if (cat != null) {
-          ev.addCategory(cat);
-        }
-      }
-    }
-
-    if (ev.getLocationUid() != null) {
-      ev.setLocation(locs.get(ev.getLocationUid()));
-    }
   }
 
   private void buildCalendarSet(final Collection<BwCalendar> cals,
@@ -1928,8 +1980,6 @@ class Events extends CalSvcDb implements EventsI {
 
     ei.setCurrentAccess(cei.getCurrentAccess());
 
-    implantEntities(ei);
-
     return ei;
   }
 
@@ -1940,8 +1990,6 @@ class Events extends CalSvcDb implements EventsI {
     for (CoreEventInfo cei: ceis) {
       eis.add(postProcess(cei));
     }
-
-    implantEntities(eis);
 
     return eis;
   }

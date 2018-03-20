@@ -43,12 +43,9 @@ public class DumpPublic extends DumpPrincipal {
 
   /**
    * @return true if ok
-   * @throws CalFacadeException on error
    */
-  public boolean open() throws CalFacadeException {
-    super.open("public");
-    
-    return true;
+  public boolean open() {
+    return super.open("public");
   }
 
   /**

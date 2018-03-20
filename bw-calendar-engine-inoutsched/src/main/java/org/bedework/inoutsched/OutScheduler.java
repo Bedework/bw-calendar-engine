@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.AbstractScheduler;
 import org.bedework.calsvci.CalSvcI;
@@ -263,6 +264,7 @@ public class OutScheduler extends AbstractScheduler {
             getEvents(outbox, null,
                       null, null,
                       null, // retrieveList
+                      BwIndexer.DeletedState.noDeleted,
                       RecurringRetrievalMode.overrides);
     if (Util.isEmpty(eis)) {
       if (debug) {

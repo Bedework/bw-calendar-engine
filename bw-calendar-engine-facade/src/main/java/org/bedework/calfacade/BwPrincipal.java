@@ -84,7 +84,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
   private final static HashMap<String, Integer> toWho = new HashMap<>();
   private final static HashMap<Integer, String> fromWho = new HashMap<>();
-
+  
   static {
     initWhoMaps(userPrincipalRoot, WhoDefs.whoTypeUser);
     initWhoMaps(groupPrincipalRoot, WhoDefs.whoTypeGroup);
@@ -95,7 +95,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
     initWhoMaps(bwadmingroupPrincipalRoot, WhoDefs.whoTypeGroup);
   }
-
+  
   /* The name by which this principal is identified, unique within
    * its kind
    */
@@ -512,6 +512,25 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   /* ====================================================================
    *                   Non-db methods
    * ==================================================================== */
+
+  /**
+   * @return  String account name without any leading "/"
+   */
+  @NoDump
+  @JsonIgnore
+  public String getAccountNoSlash() {
+    String res = getAccount();
+
+    if (res.startsWith("/")) {
+      res = res.substring(1);
+    }
+
+    if (res.endsWith("/")) {
+      res = res.substring(0, res.length() - 1);
+    }
+
+    return res;
+  }
 
   /**
    * @return  String[] account name split on "/"

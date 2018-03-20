@@ -21,6 +21,10 @@ package org.bedework.tools.cmdutil;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
+import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.util.misc.Util;
+
+import java.util.List;
 
 /**
  * @author douglm
@@ -41,7 +45,11 @@ public class ProcessCalsuite extends ProcessUser {
 
     if ("help".equals(wd)) {
       pstate.addInfo("calsuite <name>\n" +
-                             "   switch to event owner for calsuite");
+                             "   switch to event owner for calsuite\n" +
+                             "calsuite <name> addapprover <account>\n" +
+                             "   add an approver\n" +
+                             "calsuite <name> remapprover <account>\n" +
+                             "   remove an approver");
 
       return true;
     }
@@ -51,19 +59,19 @@ public class ProcessCalsuite extends ProcessUser {
     try {
       open();
       final BwCalSuite cs = getSvci().getCalSuitesHandler().get(wd);
-      
+
       if (cs == null) {
         error("No calsuite with name " + wd);
         return true;
       }
-      
+
       final BwAdminGroup adminGrp = cs.getGroup();
 
       if (adminGrp == null) {
         error("No admin group for calsuite " + wd);
         return true;
       }
-      
+
       final String ownerHref = adminGrp.getOwnerHref();
 
       if (ownerHref == null) {
@@ -72,7 +80,7 @@ public class ProcessCalsuite extends ProcessUser {
         return true;
       }
 
-      BwPrincipal ownerPr = getSvci().getPrincipal(ownerHref);
+      final BwPrincipal ownerPr = getSvci().getPrincipal(ownerHref);
 
       if (ownerPr == null) {
         error("No user with owner href " + ownerHref +
@@ -80,10 +88,49 @@ public class ProcessCalsuite extends ProcessUser {
                       " for calsuite " + wd);
         return true;
       }
-      
-      pstate.setCalsuite(cs);
-      
+
+      final String action = word();
+
       account = ownerPr.getAccount();
+      if (action == null) {
+        pstate.setCalsuite(cs);
+
+        return true;
+      }
+
+      final boolean addAppprover = "addapprover".equals(action);
+      if (!addAppprover && !"remapprover".equals(action)) {
+        error("Expected addapprover or remapprover");
+        return false;
+      }
+
+      final String appAccount = word();
+      if (appAccount == null) {
+        error("Expected an account");
+      }
+
+      final BwPreferences prefs = getSvci().getPrefsHandler()
+                                           .get(ownerPr);
+
+      final List<String> approvers = prefs.getCalsuiteApproversList();
+
+      if (Util.isEmpty(approvers)) {
+        if (addAppprover) {
+          prefs.setCalsuiteApprovers(appAccount);
+        }
+      } else {
+        if (addAppprover) {
+          if (!approvers.contains(appAccount)) {
+            approvers.add(appAccount);
+          }
+        } else {
+          approvers.remove(appAccount);
+        }
+
+        prefs.setCalsuiteApprovers(String.join(",", approvers));
+      }
+
+      getSvci().getPrefsHandler().update(prefs);
     } finally {
       close();
     }
