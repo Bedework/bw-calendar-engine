@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+                         Hostnames
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.ifs.HostInfo"
+         table="bw_hostinfo">
+    <id name="id" type="integer" column="bwid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="hostname" column="bwhostname" type="string" not-null="true"
+              length="255" unique="true" />
+
+    <property name="port" column="bwport" type="integer" />
+
+    <property name="secure" column="bwsecure" type="true_false"
+              not-null="true" />
+
+    <property name="supportedServices" column="bwsvcs" type="string"
+              not-null="true" length="255" />
+
+    <property name="caldavUrl" column="bwcaldav_url" type="string"
+              length="255" />
+
+    <property name="caldavPrincipal" column="bwcaldav_principal" type="string"
+              length="255" />
+
+    <property name="caldavCredentials" column="bwcaldav_cred" type="string"
+              length="255" />
+
+    <property name="IScheduleUrl" column="bwrt_url" type="string"
+              length="255" />
+
+    <property name="ISchedulePrincipal" column="bwrt_principal" type="string"
+              length="255" />
+
+    <property name="IScheduleCredentials" column="bwrt_cred" type="string"
+              length="255" />
+
+    <property name="fbUrl" column="bwfb_url" type="string"
+              length="255" />
+  </class>
+
+  <!-- =================================================================
+                  Hostinfo queries
+       ================================================================= -->
+</hibernate-mapping>

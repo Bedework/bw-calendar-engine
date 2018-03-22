@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     SynchData
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.syncml.BwSynchData"
+         table="bw_synchdata">
+    <composite-id>
+      <key-property name="userid" type="integer" />
+      <key-property name="eventId" column="eventid" type="integer" />
+    </composite-id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="user" column="bw_owner" type="string"
+              index="bwidx_synchd_owner" />
+
+    <property name="eventData" column="eventData" type="text"/>
+  </class>
+
+  <!-- =================================================================
+       SynchData queries
+       ================================================================= -->
+
+  <query name="getSynchData"><![CDATA[
+    from org.bedework.calfacade.syncml.BwSynchData as sd
+      where sd.user=:user and sd.eventId =:eventid
+  ]]></query>
+</hibernate-mapping>
+

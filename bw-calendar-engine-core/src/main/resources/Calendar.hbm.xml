@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     A calendar definition in Bedework.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwCalendar"
+         table="bw_calendars" lazy="false">
+    <cache usage="read-write"/>
+    <id name="id" type="integer" column="id" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="creatorHref" column="bw_creator" type="string"
+              index="bwidx_cal_creator" />
+
+    <property name="ownerHref" column="bw_owner" type="string"
+              index="bwidx_cal_owner" />
+
+    <property name="access" column="bwaccess" type="string"
+              length="3900" />
+
+    <property name="publick" type="true_false" >
+      <column name="publick" not-null="true" />
+    </property>
+
+    <!-- This should be considered an internal, probably immutable name and
+         we use the display name in the ui.
+         Caldav may present the displayname -->
+    <property name="name" column="calname" type="string"
+              length="100" not-null="true" />
+                 <!-- unique-key="cal-sibling-names" -->
+
+    <!-- I wanted to specify unique="true" on this but mysql complains.
+         This is also probably too short.
+
+         For uniqueness maybe limit the length of the name and create a
+         unique key on the parent + name
+      -->
+    <property name="path" column="bwpath" type="string" length="3000"
+              not-null="true"
+              index="bwidx_calpath" />
+
+    <property name="colPath" column="bw_col_path" type="string" length="3000"
+              index="bwidx_cal_colpath" />
+
+    <!-- These need changing. Perhaps recast summary as displayNames
+         Both need to be multi-language.
+         For the moment limit the lengtgh for Oracle -->
+    <property name="summary" column="summary" type="string" length="500" />
+    <property name="description" column="description" type="string" length="1000" />
+
+    <property name="mailListId" column="mail_list_id" type="string"
+              length="200" />
+
+    <property name="calType" column="caltype" type="integer" not-null="true"/>
+
+    <one-to-one name="lastmod"
+                class="org.bedework.calfacade.BwCollectionLastmod"
+                cascade="all"/>
+
+    <property name="created" type="string">
+      <column name="bw_created" length="16" not-null="true" />
+    </property>
+
+    <property name="filterExpr" column="bw_filterexpr" type="text" />
+
+    <property name="aliasUri" column="bw_alias_uri" type="string"
+              length="500" />
+
+    <property name="display" type="true_false"
+              column="display" not-null="true" />
+
+    <property name="affectsFreeBusy" type="true_false"
+              column="affects_free_busy" not-null="true" />
+
+    <property name="ignoreTransparency" type="true_false"
+              column="ignore_transparency" not-null="true" />
+
+    <property name="unremoveable" type="true_false"
+              column="unremoveable" not-null="true" />
+
+    <!--  Properties associated with remote subscriptions -->
+    <property name="refreshRate" column="bwrefreshseconds" type="integer" />
+    <property name="lastRefresh" column="bwlastrefresh" type="string"
+              length="16" />
+    <property name="lastEtag" column="bwlastetag" type="string"
+              length="256" />
+    <property name="remoteId" column="bwrid" type="string"
+              length="256" />
+    <property name="remotePw" column="bwrpw" type="string"
+              length="500" />
+
+    <set name="categories" table="bw_calendar_categories"
+         lazy="false">
+      <cache usage="read-write"/>
+      <key column="calendarid" foreign-key="bw_calcat_cid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwCategory"
+                    column="categoryid"
+                    foreign-key="bw_cal_cat_fk" />
+    </set>
+
+    <set name="properties" table="bw_calendar_properties"
+         cascade="all,delete-orphan"
+         lazy="false">
+      <key column="bwid" foreign-key="bw_calprp_pid_fk" />
+      <composite-element class="org.bedework.calfacade.BwProperty">
+        <property name="name" type="string" length="200"
+                  column="bw_name"  />
+
+        <property name="value" column="bw_value" type="text"/>
+      </composite-element>
+    </set>
+  </class>
+
+  <!-- =================================================================
+       Collection last mod
+       ================================================================= -->
+
+  <class name="org.bedework.calfacade.BwCollectionLastmod"
+         table="bw_collection_lastmods" >
+    <cache usage="read-write"/>
+
+    <id name="id" column="bw_id">
+      <generator class="foreign">
+        <param name="property">dbEntity</param>
+      </generator>
+    </id>
+
+    <one-to-one name="dbEntity"
+                class="org.bedework.calfacade.BwCalendar"
+                constrained="true"/>
+
+    <property name="path" column="bwpath" type="string" length="3000"
+              not-null="true"
+              index="bwidx_collm_path" />
+
+    <property name="timestamp" type="string" >
+      <column name="bw_timestamp" length="16" not-null="true" />
+    </property>
+
+    <property name="sequence"  column="bw_sequence" type="integer" />
+  </class>
+</hibernate-mapping>

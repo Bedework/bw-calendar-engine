@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--==============================================
+     Attachments
+     ============================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwAttachment"
+         table="bw_attachments">
+    <id name="id" type="integer" column="bwid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <property name="fmtType"
+                    column="bw_fmttype" type="string" length="20"/>
+    <property name="valueType"
+                    column="bw_valuetype" type="string" length="20"/>
+
+    <property name="encoding" column="bw_encoding" type="string"
+              length="2000"/>
+    <property name="uri" column="bw_uri" type="string"
+              length="2000"/>
+
+    <property name="value" column="bw_value" type="text"/>
+  </class>
+</hibernate-mapping>
+

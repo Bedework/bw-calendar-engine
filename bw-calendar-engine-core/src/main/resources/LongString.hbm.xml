@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     A long string in Bedework. There are restrictions on the use of such
+     String values with hibernate and some db systems, e.g. Oracle.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwLongString"
+         table="bw_longstrings">
+    <cache usage="read-write"/>
+
+    <id name="id" type="integer" column="bw_id" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="lang" type="string" length="100"
+              column="bw_lang"  />
+
+    <property name="value" column="bw_value" type="text"/>
+  </class>
+
+  <!-- =================================================================
+       String queries
+       ================================================================= -->
+</hibernate-mapping>
+

@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- =================================================================
+     object to represent an authorised calendar user - that is a user
+     with some special privilege. This could also be represented by users
+     with roles in a directory.
+
+     NOTE: I believe the constraint on the id requires we create the user
+     first and have an embedded user entry - or at least have an
+     embedded entry which hibernate will create.
+     ================================================================= -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.svc.BwAuthUser"
+         table="bw_auth">
+    <id name="id" type="integer" column="userid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="userHref" column="bw_user" type="string"
+              index="bwidx_au_user" not-null="true" />
+
+    <component name="prefs"
+               class="org.bedework.calfacade.svc.prefs.BwAuthUserPrefs">
+      <component name="categoryPrefs"
+                 class="org.bedework.calfacade.svc.prefs.CategoryPref" >
+        <property name="autoAdd" type="true_false" >
+          <column name="autoaddCategories" not-null="true" />
+        </property>
+
+        <set name="preferred" table="bw_authprefCategories" >
+          <key foreign-key="bw_apcat_ap_fk1">
+            <column name="userid" not-null="true" />
+          </key>
+          <many-to-many class="org.bedework.calfacade.BwCategory"
+                        column="categoryid"
+                        foreign-key="bw_apcat_cat_fk1"/>
+        </set>
+      </component>
+
+      <component name="locationPrefs"
+                 class="org.bedework.calfacade.svc.prefs.LocationPref" >
+        <property name="autoAdd" type="true_false" >
+          <column name="autoaddLocations" not-null="true" />
+        </property>
+
+        <set name="preferred" table="bw_authprefLocations" >
+          <key foreign-key="bw_aploc_ap_fk1">
+            <column name="userid" not-null="true" />
+          </key>
+          <many-to-many class="org.bedework.calfacade.BwLocation"
+                        column="locationid"
+                        foreign-key="bw_aploc_loc_fk1" />
+        </set>
+      </component>
+
+      <component name="contactPrefs"
+                 class="org.bedework.calfacade.svc.prefs.ContactPref" >
+        <property name="autoAdd" type="true_false" >
+          <column name="autoaddContacts" not-null="true" />
+        </property>
+
+        <set name="preferred" table="bw_authprefContacts" >
+          <key foreign-key="bw_apcon_ap_fk1">
+            <column name="userid" not-null="true" />
+          </key>
+          <many-to-many class="org.bedework.calfacade.BwContact"
+                        column="contactid"
+                        foreign-key="bw_apcon_con_fk1"
+                        lazy="false"/>
+        </set>
+      </component>
+
+      <component name="calendarPrefs"
+                 class="org.bedework.calfacade.svc.prefs.CalendarPref" >
+        <property name="autoAdd" type="true_false" >
+          <column name="autoaddCalendars" not-null="true" />
+        </property>
+
+        <set name="preferred" table="bw_authprefCalendars" >
+          <key foreign-key="bw_apcal_ap_fk1">
+            <column name="userid" not-null="true" />
+          </key>
+          <many-to-many class="org.bedework.calfacade.BwCalendar"
+                        column="calendarid"
+                        foreign-key="bw_apcal_cal_fk1"/>
+        </set>
+      </component>
+    </component>
+
+    <property name="usertype" column="usertype" type="integer"/>
+  </class>
+
+  <!-- This is a cheat to get around some problems. I cannot delete all
+       references to a given contact, location etc in one update.
+       SQL allows it - delete from authprefContacts where contactid=?
+
+       I was unable to execute that query. Hibernate 3.1 may allow it.
+       Rather than build the table names into the java and use direct jdbc
+       I added a bogus class and mapped it here.
+    -->
+
+  <class name="org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCategory"
+         table="bw_authprefCategories">
+    <id name="id" column="userid" unsaved-value="-1"/>
+    <property name="categoryid" column="categoryid" type="integer" not-null="true"/>
+  </class>
+
+  <class name="org.bedework.calfacade.svc.prefs.BwAuthUserPrefsLocation"
+         table="bw_authprefLocations">
+    <id name="id" column="userid" unsaved-value="-1"/>
+    <property name="locationid" column="locationid" type="integer" not-null="true"/>
+  </class>
+
+  <class name="org.bedework.calfacade.svc.prefs.BwAuthUserPrefsContact"
+         table="bw_authprefContacts">
+    <id name="id" column="userid" unsaved-value="-1"/>
+    <property name="contactid" column="contactid" type="integer" not-null="true"/>
+  </class>
+
+  <class name="org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar"
+         table="bw_authprefCalendars">
+    <id name="id" column="userid" unsaved-value="-1"/>
+    <property name="calendarid" column="calendarid" type="integer" not-null="true"/>
+  </class>
+</hibernate-mapping>
+

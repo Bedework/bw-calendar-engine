@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     SynchInfo
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.syncml.BwSynchInfo"
+         table="bw_synchinfo">
+    <composite-id>
+      <key-property name="userid" type="integer" />
+      <key-property name="deviceId"
+                column="deviceid" type="string" length="255" />
+    </composite-id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <many-to-one name="user" insert="false" update="false"
+                 class="org.bedework.calfacade.BwUser"
+                 foreign-key="bw_syi_user_fk" >
+      <column name="userid"/>
+    </many-to-one>
+
+    <property name="calendarId" column="calendarid" type="integer"/>
+    <property name="lastsynch" type="string" >
+      <column name="lastsynch" />
+    </property>
+  </class>
+
+  <!-- =================================================================
+       SynchInfo queries
+       ================================================================= -->
+
+  <query name="getSynchInfo"><![CDATA[
+    from org.bedework.calfacade.syncml.BwSynchInfo as si
+      where si.user=:user and si.deviceId =:deviceId
+  ]]></query>
+</hibernate-mapping>
+

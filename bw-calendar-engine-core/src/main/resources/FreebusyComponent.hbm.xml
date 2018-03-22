@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     A freebusy component in Bedework.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwFreeBusyComponent"
+         table="bw_fbcomp">
+    <id name="id" type="integer" column="bwid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="type" column="bwtype" type="integer" />
+    <property name="value" column="bwvalue" type="string"
+              length="3900" />
+  </class>
+</hibernate-mapping>
+

@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- =================================================================
+     object to represent information about a user. This could be
+     save in the local db or retrieved from a directory.
+
+     NOTE: I believe the constraint on the id requires we create the user
+     first and have an embedded user entry - or at least have an
+     embedded entry which hibernate will create.
+     ================================================================= -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwUserInfo"
+         table="bw_userinfo">
+    <id name="id" column="userid" unsaved-value="-1">
+        <generator class="foreign">
+            <param name="property">user</param>
+        </generator>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="userHref" column="bw_user" type="string"
+              index="bwidx_ui_owner" not-null="true" />
+
+    <property name="lastname" column="lastname" type="string"/>
+    <property name="firstname" column="firstname" type="string"/>
+    <property name="phone" column="phone" type="string"/>
+    <property name="email" column="email" type="string"/>
+    <property name="dept" column="department" type="string"/>
+
+    <set name="properties"
+         table="bw_userinfo_properties" order-by="name asc">
+      <key column="user_info" foreign-key="bw_ui_pid_fk" />
+      <composite-element class="org.bedework.calfacade.BwUserInfo$UserProperty">
+        <property name="name" column="propname" not-null="true"/>
+        <property name="val" column="val" />
+      </composite-element>
+    </set>
+  </class>
+
+  <!-- =================================================================
+       UserInfo queries
+       ================================================================= -->
+
+  <query name="getUserInfo"><![CDATA[
+    from org.bedework.calfacade.BwUserInfo ui
+          where ui.userHref=:userHref
+  ]]></query>
+</hibernate-mapping>
+

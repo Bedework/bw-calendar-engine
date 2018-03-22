@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     A scheduling message definition in Bedework.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.svc.ScheduleMessage"
+         table="bw_sched_msg" >
+    <id name="id" type="integer" column="id" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="timestamp" type="string"
+              column="bw_timestamp" length="16" not-null="true"
+              index="bwidx_smsg_timestamp" />
+
+    <property name="sequence"  column="bw_sequence" type="integer" />
+
+    <property name="lastProcessed" type="string" >
+      <column name="bw_lastproc" length="16" not-null="true" />
+    </property>
+
+    <property name="inBox" type="true_false"
+              column="bw_inbox" not-null="true" />
+
+    <property name="principalHref" column="bw_principal_href" type="string"
+              index="bwidx_smsg_principal" />
+
+    <property name="eventName" column="bw_eventname" type="string" length="500"
+              index="bwidx_smsg_eventname" />
+
+    <property name="rid" column="bw_recurrence_id" type="string"
+               length="16" />
+  </class>
+</hibernate-mapping>

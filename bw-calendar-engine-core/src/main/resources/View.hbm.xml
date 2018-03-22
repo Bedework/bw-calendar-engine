@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Views
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.svc.BwView"
+         table="bw_views">
+    <cache usage="read-write"/>
+
+    <id name="id" type="integer" column="viewid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="name" column="viewname" type="string"
+              length="100" not-null="true"/>
+
+    <list name="collectionPaths"
+          table="bw_view_collections"
+          cascade="all, delete-orphan"
+          lazy="false" >
+      <key column="viewid" foreign-key="bw_cal_vid_fk" />
+      <list-index column="bw_path_positon"/>
+      <element type="string" column="bw_calpath" not-null="true"/>
+    </list>
+  </class>
+
+  <!-- =================================================================
+       View queries
+       ================================================================= -->
+</hibernate-mapping>

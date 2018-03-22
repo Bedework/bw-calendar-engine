@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Object to represent calendar user preferences.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.svc.BwPreferences"
+         table="bw_preferences" >
+    <cache usage="read-write"/>
+    <id name="id" type="integer" column="prefid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="ownerHref" column="bw_owner" type="string"
+              unique="true"
+              index="bwidx_prefs_owner" not-null="true" />
+
+    <set name="views" table="bw_user_views" lazy="false"
+         cascade="all-delete-orphan"
+         sort="natural" >
+      <cache usage="read-write"/>
+      <key column="prefid" foreign-key="bw_prview_pid_fk" />
+      <many-to-many class="org.bedework.calfacade.svc.BwView"
+                    foreign-key="bw_pr_view_fk" />
+    </set>
+
+    <property name="email" column="email" type="string" />
+
+    <property name="defaultCalendarPath" column="bw_default_calendar" type="string"
+              length="3900" />
+
+    <property name="skinName" column="skin_name" type="string" />
+    <property name="skinStyle" column="skin_style" type="string" />
+    <property name="preferredView" column="preferred_view" type="string" />
+    <property name="preferredViewPeriod" column="preferred_view_period"
+              type="string" />
+    <property name="pageSize" column="bw_page_size" type="integer" />
+    <property name="workDays" column="workdays" type="string" />
+    <property name="workdayStart" column="workday_start" type="integer" />
+    <property name="workdayEnd" column="workday_end" type="integer" />
+    <property name="preferredEndType" column="preferred_endtype" type="string" />
+
+    <property name="userMode" column="bwuser_mode" type="integer" />
+
+    <property name="hour24" column="bw_hour24" type="true_false"
+              not-null="true" />
+
+    <property name="scheduleAutoRespond" column="bw_sched_autoresp" type="true_false"
+              not-null="true" />
+
+    <property name="scheduleAutoCancelAction" column="bw_sched_autocancelaction"
+              type="integer" />
+
+    <property name="scheduleDoubleBook" column="bw_sched_double_book" type="true_false"
+              not-null="true" />
+
+    <property name="scheduleAutoProcessResponses" column="bw_sched_autoproc_resp"
+              type="integer" />
+
+    <set name="properties" table="bw_user_properties"
+         lazy="true">
+      <key column="bwid" foreign-key="bw_prprp_pid_fk" />
+      <composite-element class="org.bedework.calfacade.BwProperty">
+        <property name="name" type="string" length="200"
+                  column="bw_name"  />
+
+        <property name="value" column="bw_value" type="text"/>
+      </composite-element>
+    </set>
+  </class>
+
+  <!-- =================================================================
+       Preferences queries
+       ================================================================= -->
+
+  <query name="getAllPreferences"><![CDATA[
+    from org.bedework.calfacade.svc.BwPreferences p
+      order by p.ownerHref
+  ]]></query>
+</hibernate-mapping>
+

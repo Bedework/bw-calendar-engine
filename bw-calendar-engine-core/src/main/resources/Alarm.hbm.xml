@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     An alarm in Bedework.
+
+     An alarm may be associated with an event or task.
+
+     Alarms may be of different types as defined by the RFC.
+       0 -> AUDIO
+       1 -> DISPLAY
+       2 -> EMAIL
+       3 -> PROCEDURE
+
+     If sites want to implement non-standard alarm types use values 1000 and
+     greater to define the type. 4-999 are reserved for expansions to the standard
+
+     The following describes the use of each field and when or how required based
+     on the trigger type
+
+     Field         Description                                Required Optional
+     trigger       This specifies the time for the alarm
+                   in rfc format                              ADEP
+     trigger_start T if we trigger off the start, 'F' for end          ADEP
+     duration      External form of duration                           ADEP
+     repeat        number of repitions                                 ADEP
+     attach        audio file or attachment or exec              P      A E
+     description                                               DE          P
+     summary                                                    E
+     attendees     Set of attendees                             E
+
+     internal use
+     trigger_time  This specifies the time for the next alarm
+                   converted to internal format
+     previous_trigger  Used to determine if we missed an alarm
+     repeat_count  Number of repeats we've done
+     expired       Set to 'T' when we're done - default 'F'
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwAlarm"
+         table="bw_alarms"
+         discriminator-value="O">
+    <id name="id" type="integer" column="alarmid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="alarmType" column="alarm_type" type="integer" />
+
+    <property name="ownerHref" column="bw_owner" type="string"
+              index="bwidx_alarm_owner" not-null="true" />
+
+    <property name="publick" type="true_false" >
+      <column name="publick" not-null="true" />
+    </property>
+
+    <property name="trigger" column="trigger_rfctime" type="string"
+              length="16" />
+
+    <property name="triggerStart" type="true_false">
+      <column name="trigger_start" not-null="true" />
+    </property>
+
+    <property name="duration" column="duration" type="string"
+              length="100" />
+    <property name="repeat" column="repetitions" type="integer" />
+
+    <!-- This is inadequate and/or wrong
+         It needs to be multiple valued and allow for longer values.
+         Also, if a real attachment, it probably ought to be saved as a file and
+         this would be a url
+         -->
+    <property name="attach" column="attach" type="string"
+              length="2000"/>
+
+    <set name="summaries" table="bw_alarmsummaries"
+         cascade="all-delete-orphan" >
+      <cache usage="read-write"/>
+      <key column="bw_alarmid" foreign-key="bw_as_alarm_fk" />
+      <many-to-many class="org.bedework.calfacade.BwString"
+                    unique="true"
+                    column="bw_strid"
+                    foreign-key="bw_as_str_fk" />
+    </set>
+
+    <set name="descriptions" table="bw_alarmdescriptions"
+         cascade="all-delete-orphan" >
+      <cache usage="read-write"/>
+      <key column="bw_alarmid" foreign-key="bw_ad_alarm_fk" />
+      <many-to-many class="org.bedework.calfacade.BwString"
+                    unique="true"
+                    column="bw_strid"
+                    foreign-key="bw_ad_str_fk" />
+    </set>
+
+    <set name="attendees" table="bw_alarm_attendees"
+         cascade="all-delete-orphan" >
+      <key column="alarmid" foreign-key="bw_aa_alarm_fk" />
+      <many-to-many class="org.bedework.calfacade.BwAttendee"
+                    column="attendeeid"
+                    foreign-key="bw_aa_att_fk"/>
+    </set>
+
+    <property name="expired" type="true_false">
+      <column name="expired" not-null="true" />
+    </property>
+
+    <list name="xproperties" table="bw_alarm_xprops"
+         cascade="all-delete-orphan" >
+      <!-- <cache usage="read-write"/> -->
+      <key column="alarmid" foreign-key="bw_alarmxp_aid_fk" />
+      <list-index column="bwxp_position"/>
+      <composite-element class="org.bedework.calfacade.BwXproperty">
+        <property name="name" type="string" length="100"
+                  column="bw_name"  />
+
+        <property name="pars" type="string" length="4000"
+                  column="bw_pars"  />
+
+        <property name="value" column="bw_value" type="text"/>
+      </composite-element>
+    </list>
+  </class>
+</hibernate-mapping>
+

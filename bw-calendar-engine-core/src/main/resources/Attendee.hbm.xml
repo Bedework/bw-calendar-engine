@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Attendees
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwAttendee"
+         table="bw_attendees">
+    <id name="id" type="integer" column="attendeeid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <property name="cn" type="string" length="2000" />
+    <property name="cuType" column="cutype" type="string" length="2000"/>
+    <property name="delegatedFrom" column="delegated_from" type="string"
+              length="2000"/>
+    <property name="delegatedTo" column="delegated_to" type="string"
+              length="2000"/>
+    <property name="dir" type="string" length="2000"/>
+    <property name="language" column="lang" type="string" length="100"/>
+    <property name="member" type="string" length="2000"/>
+    <property name="rsvp" type="true_false"/>
+    <property name="role" type="string" length="200"/>
+    <property name="partstat" type="string" length="100"/>
+    <property name="sentByVal" column="sent_by" type="string" length="2000"/>
+    <property name="attendeeUri" column="attendee_uri" type="string"
+              length="2000"/>
+
+    <property name="sequence" column="rfcsequence" type="integer" />
+
+    <property name="scheduleAgent" column="bw_sched_agent" type="integer" />
+    <property name="scheduleStatus" column="bw_sched_status" type="string"
+              length="100"/>
+
+    <property name="dtstamp" column="dtstamp" type="string" length="16" />
+  </class>
+</hibernate-mapping>
+

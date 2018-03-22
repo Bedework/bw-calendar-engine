@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     SynchState
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.syncml.BwSynchState"
+         table="bw_synchstate">
+    <composite-id>
+      <key-property name="userid" type="integer" />
+      <key-property name="deviceId"
+                    column="deviceid" type="string" length="255" />
+      <key-property name="eventId" column="eventid" type="integer" />
+    </composite-id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <many-to-one name="user" insert="false" update="false"
+                 class="org.bedework.calfacade.BwUser"
+                 foreign-key="bw_sys_user_fk" >
+      <column name="userid"/>
+    </many-to-one>
+
+    <many-to-one name="event" insert="false" update="false"
+                 class="org.bedework.calfacade.BwEventObj"
+                 column="eventid"
+                 foreign-key="bw_sys_event_fk" />
+
+    <property name="guid"
+              column="guid" type="string" length="255" />
+    <property name="synchState" column="state" type="integer"/>
+  </class>
+
+  <!-- =================================================================
+       SynchState queries
+       ================================================================= -->
+
+  <query name="getSynchState"><![CDATA[
+    from org.bedework.calfacade.syncml.BwSynchState as ss
+      where ss.event=:event and ss.user=:user and ss.deviceId=:deviceId
+  ]]></query>
+
+  <query name="getDeletedSynchStates"><![CDATA[
+    from org.bedework.calfacade.syncml.BwSynchState as ss
+      where ss.user=:user and ss.deviceId=:deviceId and ss.synchState=:synchState
+  ]]></query>
+
+  <query name="setSynchState">
+    <![CDATA[
+     update org.bedework.calfacade.syncml.BwSynchState
+       set state=:state where eventid=:eventid
+    ]]>
+  </query>
+
+  <query name="setSynchStateUser"><![CDATA[
+     update org.bedework.calfacade.syncml.BwSynchState
+      set state=:state where userid=:userid and eventid=:eventid
+    ]]>
+  </query>
+
+  <query name="updateSynchStates1"><![CDATA[
+     update org.bedework.calfacade.syncml.BwSynchState
+        set state=:newstate
+        where userid=:userid and deviceid=:deviceid
+          and state<=:state
+    ]]>
+  </query>
+
+  <query name="updateSynchStates2"><![CDATA[
+     update org.bedework.calfacade.syncml.BwSynchState
+        set state=:newstate
+        where userid=:userid and deviceid=:deviceid
+            and state=:state
+    ]]>
+  </query>
+</hibernate-mapping>
+

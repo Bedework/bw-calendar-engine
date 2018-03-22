@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Object to represent a calendar user. These are also the owners of
+     events in the database.
+
+     It would probably be a good thing to define this class with
+     lazy="true". However this adds extra complication to the interface
+     requiring explicit initializations at various places.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwUser"
+         table="bw_users" lazy="false" >
+    <cache usage="read-write"/>
+    <id name="id" type="integer" column="userid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="account"
+              column="bw_account" type="string" length="200" not-null="true"
+              unique-key="user-key" />
+
+    <property name="principalRef" column="bw_principal_ref" type="string"
+              index="bwidx_user_href" not-null="true" />
+
+    <property name="instanceOwner" type="true_false" >
+      <column name="instance_owner" index="bwidx_user_instance_owner" not-null="true" />
+    </property>
+
+    <property name="created" column="bw_created"
+              type="timestamp"/>
+    <property name="logon" column="bw_last_logon"
+              type="timestamp"/>
+    <property name="lastAccess"
+              column="bw_last_access" type="timestamp"/>
+    <property name="lastModify"
+              column="bw_last_modify" type="timestamp"/>
+    <property name="categoryAccess"
+              column="bw_category_access" type="string" length="3900" />
+    <property name="contactAccess"
+              column="bw_contact_access" type="string" length="3900" />
+    <property name="locationAccess"
+              column="bw_location_access" type="string" length="3900" />
+
+    <property name="quota" column="bw_quota" type="long"/>
+  </class>
+</hibernate-mapping>
+

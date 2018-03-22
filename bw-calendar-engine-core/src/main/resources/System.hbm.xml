@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Object representing the system parameters
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwSystem"
+         table="bw_settings">
+    <cache usage="read-write"/>
+    <id name="id" type="integer" column="id" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="name" column="bwname" type="string"
+              length="200" />
+
+    <set name="properties" table="bw_system_properties"
+         cascade="all,delete-orphan"
+         lazy="false">
+      <key column="bwid" foreign-key="bw_sysprp_pid_fk" />
+      <composite-element class="org.bedework.calfacade.BwProperty">
+        <property name="name" type="string" length="200"
+                  column="bw_name"  />
+
+        <property name="value" column="bw_value" type="text"/>
+      </composite-element>
+    </set>
+  </class>
+</hibernate-mapping>

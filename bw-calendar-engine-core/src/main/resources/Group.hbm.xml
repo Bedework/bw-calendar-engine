@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     Groups stored in the db - most sites will probably use an external
+     directory but this is useful for debugging
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwGroup"
+         table="bw_groups">
+    <id name="id" type="integer" column="bw_group_id" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="account"
+              column="bw_account" type="string" length="200" not-null="true"
+              unique-key="group-key" />
+
+    <property name="principalRef" column="bw_principal_ref" type="string"
+              index="bwidx_grp_href" not-null="true" />
+
+    <!--
+    <set name="groupMembers" table="bw_Group_Members"
+         lazy="true" >
+      <key>
+        <column name="groupname" not-null="true" />
+      </key>
+      <many-to-many class="org.bedework.calfacade.BwUser"
+                    column="userid" />
+    </set>
+    -->
+  </class>
+
+  <!-- This is a cheat to get around some problems.
+
+       I was unable to execute that query. Hibernate 3.1 may allow it.
+       Rather than build the table names into the java and use direct jdbc
+       I added a bogus class and mapped it here.
+    -->
+
+  <class name="org.bedework.calfacade.BwGroupEntry"
+         table="bw_group_Members">
+    <composite-id>
+      <key-many-to-one name="grp" column="groupid"
+                       class="org.bedework.calfacade.BwGroup"
+                       foreign-key="bw_grp_grp_fk" />
+      <key-property name="memberId" column="memberid"
+                    type="integer"/>
+      <key-property name="memberIsGroup" column="member_is_group"
+                    type="true_false" />
+    </composite-id>
+
+    <property name="groupId" column="groupid"
+              type="integer" insert="false" update="false"/>
+
+    <!--
+    <id name="groupId" column="groupid" unsaved-value="-1">
+      <generator class="foreign">
+        <param name="property">grp</param>
+      </generator>
+    </id>
+
+    <many-to-one name="grp" column="groupid"
+                 class="org.bedework.calfacade.BwGroup"
+                 not-null="true"
+                 insert="false" update="false" />
+
+    <property name="memberId" column="memberid" type="integer"
+              unique-key="agmembers_key" />
+
+    <property name="memberIsGroup" type="true_false"
+              unique-key="agmembers_key"  >
+      <column name="member_is_group" not-null="true" />
+    </property>
+    -->
+  </class>
+</hibernate-mapping>
+

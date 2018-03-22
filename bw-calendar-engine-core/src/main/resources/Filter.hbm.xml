@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     A filter definition is an xml string with an associated internal name,
+     a set of display names and descriptions
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwFilterDef"
+         table="bw_filters">
+    <id name="id" type="integer" column="filterid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="ownerHref" column="bw_owner" type="string"
+              index="bwidx_flt_owner" />
+
+    <property name="publick" type="true_false" >
+      <column name="publick" not-null="true" />
+    </property>
+
+    <property name="name" type="string" >
+      <column name="filtername" length="200" />
+    </property>
+
+    <set name="displayNames" table="bw_filter_display_names"
+         cascade="all-delete-orphan"
+         fetch="subselect" >
+      <cache usage="read-write"/>
+      <key column="bw_eventid" foreign-key="bw_fltrdname_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwString"
+                    unique="true"
+                    column="bw_strid"
+                    foreign-key="bw_fltrdname_fk" />
+    </set>
+
+    <set name="descriptions" table="bw_filter_descriptions"
+         cascade="all-delete-orphan"
+         fetch="subselect" >
+      <cache usage="read-write"/>
+      <key column="bw_eventid" foreign-key="bw_fltrdesc_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwLongString"
+                    unique="true"
+                    column="bw_strid"
+                    foreign-key="bw_fktr_desc_fk" />
+    </set>
+
+    <property name="definition" column="bwdefinition" type="text" />
+  </class>
+</hibernate-mapping>
+

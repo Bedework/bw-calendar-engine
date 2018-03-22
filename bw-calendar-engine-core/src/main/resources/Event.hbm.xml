@@ -1,0 +1,412 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     An Event in Bedework.
+     =================================================================== -->
+
+<hibernate-mapping default-lazy="false">
+  <class name="org.bedework.calfacade.BwEventObj"
+         table="bw_events">
+    <cache usage="read-write"/>
+
+    <id name="id" type="integer" column="eventid" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="entityType" column="bw_entity_type" type="integer" />
+
+    <property name="colPath" column="bw_col_path" type="string" length="3000"
+              not-null="true"
+              index="bwidx_ev_colpath" />
+
+    <!-- (ownerid +) calendarid + uid + recurrence-id is usually a unique key. -->
+    <property name="uid" column="bw_uid" type="string" length="1000"
+              index="bwidx_event_cal_name_uid" />
+
+    <property name="name" column="eventname" type="string" length="500"
+              index="bwidx_event_cal_name_uid" />
+
+    <property name="creatorHref" column="bw_creator" type="string"
+              index="bwidx_event_creator" />
+
+    <property name="ownerHref" column="bw_owner" type="string"
+              index="bwidx_event_owner" />
+
+    <property name="access" column="bwaccess" type="string"
+              length="3900" />
+
+    <property name="publick" type="true_false" >
+      <column name="publick" not-null="true" />
+    </property>
+
+    <component name="dtstart"
+               class="org.bedework.calfacade.BwDateTime" >
+      <property name="dateType" column="start_date_type" type="true_false" />
+      <property name="tzid" column="start_tzid" type="string" />
+      <property name="dtval" column="start_dtval" type="string" length="16" />
+      <property name="date" column="start_date" type="string" length="16"
+                index="bwidx_event_start" />
+      <property name="floatFlag" column="bw_start_floating" type="true_false"
+                index="bwidx_event_start_floating" />
+    </component>
+
+    <!-- All day events and events which end when they start have no
+         end date/time -->
+    <component name="dtend"
+               class="org.bedework.calfacade.BwDateTime" >
+      <property name="dateType" column="end_date_type" type="true_false" />
+      <property name="tzid" column="end_tzid" type="string" />
+      <property name="dtval" column="end_dtval" type="string" length="16" />
+      <property name="date" column="end_date" type="string" length="16"
+                index="bwidx_event_end" />
+      <property name="floatFlag" column="bw_end_floating" type="true_false"
+                index="bwidx_event_end_floating" />
+    </component>
+
+    <property name="duration" column="duration" type="string" />
+
+    <property name="endType" column="end_type" type="char"
+              not-null="true" />
+
+    <property name="noStart" type="true_false"
+              column="bw_nostart" not-null="true" />
+
+    <property name="deleted" type="true_false">
+      <column name="bw_deleted" not-null="true"
+              index="bwidx_event_deleted" />
+    </property>
+
+    <property name="tombstoned" type="true_false">
+      <column name="bwtombstoned" not-null="true"
+              index="bwidx_event_tombstoned" />
+    </property>
+
+    <set name="summaries" table="bw_event_summaries"
+         cascade="all-delete-orphan"
+         lazy="false"
+         fetch="subselect" >
+      <!-- <cache usage="read-write"/> -->
+      <key column="bw_eventid" foreign-key="bw_eventsum_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwString"
+                    unique="true"
+                    column="bw_strid"
+                    foreign-key="bw_event_sum_fk" />
+    </set>
+
+    <set name="descriptions" table="bw_event_descriptions"
+         cascade="all-delete-orphan"
+         lazy="false"
+         fetch="subselect" >
+      <!-- <cache usage="read-write"/> -->
+      <key column="bw_eventid" foreign-key="bw_eventdesc_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwLongString"
+                    unique="true"
+                    column="bw_strid"
+                    foreign-key="bw_event_desc_fk" />
+    </set>
+
+    <property name="classification" column="bw_class"
+              type="string" length="250" />
+
+    <set name="comments" table="bw_event_comments"
+         cascade="all-delete-orphan"
+         lazy="false"
+         fetch="subselect" >
+      <!-- <cache usage="read-write"/> -->
+      <key column="bw_eventid" foreign-key="bw_eventcom_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwString"
+                    unique="true"
+                    column="bw_strid"
+                    foreign-key="bw_event_com_fk" />
+    </set>
+
+    <set name="contacts" table="bw_event_contacts"
+         sort="natural"
+         fetch="subselect" >
+      <!-- <cache usage="read-write"/> -->
+      <key column="eventid" foreign-key="bw_eventcon_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwContact"
+                    column="contactid"
+                    foreign-key="bw_event_con_fk"/>
+    </set>
+
+    <set name="resources" table="bw_event_resources"
+         lazy="false"
+         cascade="all-delete-orphan" >
+      <!-- <cache usage="read-write"/> -->
+      <key column="bw_eventid" foreign-key="bw_eventres_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwString"
+                    unique="true"
+                    column="bw_strid"
+                    foreign-key="bw_event_res_fk" />
+    </set>
+
+    <property name="link" column="bw_link" type="string" length="500" />
+
+    <component name="geo"
+               class="org.bedework.calfacade.BwGeo" >
+      <property name="latitude" column="bw_geolatitude" type="big_decimal" />
+      <property name="longitude" column="bw_geolongitude" type="big_decimal" />
+    </component>
+
+    <property name="status" type="string" />
+
+    <property name="cost" column="cost" type="string"/>
+
+    <property name="dtstamp" column="bw_dtstamp" type="string" length="16" />
+
+    <property name="lastmod" type="string" >
+      <column name="bw_lastmod" length="16" not-null="true" />
+    </property>
+
+    <property name="created" type="string">
+      <column name="bw_created" length="16" not-null="true" />
+    </property>
+
+    <property name="stag" type="string" >
+      <column name="bw_stag" length="21" />
+    </property>
+
+    <property name="priority" type="integer" >
+      <column name="priority" />
+    </property>
+
+    <many-to-one name="location"
+                 class="org.bedework.calfacade.BwLocation"
+                 foreign-key="bw_event_loc_fk" >
+      <column name="locationid" index="bwidx_event_location" />
+    </many-to-one>
+
+    <property name="sequence"  column="rfcsequence" type="integer" />
+
+    <property name="transparency" column="transparency"
+             type="string" length="100" />
+
+    <!-- task only -->
+    <property name="percentComplete" column="percent_complete" type="integer" />
+    <property name="completed" column="completed"
+              type="string" length="16" />
+
+    <set name="categories" table="bw_event_categories"
+         sort="natural"
+         lazy="false"
+         cascade="lock" >
+      <!-- <cache usage="read-write"/> -->
+      <key column="eventid" foreign-key="bw_eventcat_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwCategory"
+                    column="categoryid"
+                    foreign-key="bw_event_cat_fk" />
+    </set>
+
+    <set name="alarms" table="bw_entity_alarms"
+         lazy="false"
+         cascade="all-delete-orphan" >
+      <key column="eventid" foreign-key="bw_eventalm_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwAlarm"
+                    column="alarmid" foreign-key="bw_event_alarm_fk" />
+    </set>
+
+    <set name="attachments" table="bw_entity_attachments"
+         lazy="true"
+         cascade="all-delete-orphan" >
+      <key column="eventid" foreign-key="bw_eventattach_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwAttachment"
+                    column="attachid" foreign-key="bw_event_attach_fk" />
+    </set>
+
+    <property name="recurring" type="true_false" column="recurring" not-null="true"
+              index="bwidx_event_recurring" />
+
+    <property name="recurrenceId" column="recurrence_id" type="string"
+               length="16" />
+
+    <set name="rrules"
+         lazy="false"
+         table="bw_event_rrules"
+         cascade="all-delete-orphan">
+      <key column="eventid" foreign-key="bw_event_rrule_fk" />
+      <element type="string" column="rrule" not-null="true"/>
+    </set>
+
+    <set name="rdates"
+         lazy="false"
+         table="bw_event_rdates"
+         cascade="all-delete-orphan">
+      <key column="eventid" foreign-key="bw_event_rdate_fk" />
+      <composite-element
+                 class="org.bedework.calfacade.BwDateTime" >
+        <property name="dateType" column="r_date_type" type="true_false"
+                  not-null="true" />
+        <property name="tzid" column="r_tzid" type="string" />
+        <property name="dtval" column="r_dtval" type="string" length="16"
+                  not-null="true" />
+        <property name="date" column="r_date" type="string" length="16"
+                  not-null="true"
+                  index="bwidx_event_rdate" />
+      </composite-element>
+    </set>
+
+    <set name="exrules"
+         lazy="false"
+         table="bw_event_exrules"
+         cascade="all-delete-orphan">
+      <key column="eventid" foreign-key="bw_event_erule_fk" />
+      <element type="string" column="exrule" not-null="true"/>
+    </set>
+
+    <set name="exdates"
+         table="bw_event_exdates"
+         lazy="false"
+         cascade="all-delete-orphan">
+      <key column="eventid" foreign-key="bw_event_edate_fk" />
+      <composite-element
+                 class="org.bedework.calfacade.BwDateTime" >
+        <property name="dateType" column="ex_date_type" type="true_false"
+                  not-null="true" />
+        <property name="tzid" column="ex_tzid" type="string" />
+        <property name="dtval" column="ex_dtval" type="string" length="16"
+                  not-null="true" />
+        <property name="date" column="ex_date" type="string" length="16"
+                  not-null="true"
+                  index="bwidx_event_exdate" />
+      </composite-element>
+    </set>
+
+    <property name="ctoken" column="latest_date" type="string"
+              index="bwidx_event_latest_date" />
+
+    <property name="scheduleMethod"  column="schedule_method" type="integer" />
+
+    <property name="originator" column="originator" type="string" />
+
+    <set name="recipients"
+         table="bw_event_recipients"
+         fetch="subselect"
+         lazy="false"
+         cascade="all-delete-orphan">
+      <key column="eventid" foreign-key="bw_event_recip_fk" />
+      <element type="string" column="recipient" not-null="true"/>
+    </set>
+
+    <component name="organizer"
+               class="org.bedework.calfacade.BwOrganizer">
+      <property name="cn" type="string"
+                column="bw_org_cn" length="500" />
+      <property name="dir" type="string"
+                column="bw_org_dir" length="500" />
+      <property name="language" type="string"
+                column="bw_org_lang" length="100" />
+      <property name="sentBy" type="string"
+                column="bw_org_sentby" length="500" />
+      <property name="organizerUri" type="string"
+                column="bw_org_uri" length="500" />
+      <property name="scheduleStatus" column="bw_org_sched_status" type="string"
+                length="100"/>
+
+      <property name="dtstamp" type="string"
+                column="bw_org_dtstamp" length="16" />
+    </component>
+
+    <set name="attendees" table="bw_event_attendees"
+         cascade="all-delete-orphan"
+         lazy="false"
+         fetch="subselect" >
+      <key column="eventid" foreign-key="bw_eventatt_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwAttendee"
+                    column="attendeeid"
+                    foreign-key="bw_event_att_fk" />
+    </set>
+
+    <set name="requestStatuses" table="bw_rstatus"
+         cascade="all-delete-orphan"
+         lazy="false">
+      <key column="eventid" foreign-key="bw_eventrst_eid_fk" />
+      <composite-element
+                 class="org.bedework.calfacade.BwRequestStatus" >
+        <property name="code" column="bw_rscode" type="string" length="100" />
+        <many-to-one name="description"
+                     class="org.bedework.calfacade.BwString"
+                     column="bw_rsdescid"
+                     unique="true"
+                     not-null="false"
+                     cascade="all"
+                     foreign-key="bw_event_rst_fk"/>
+        <property name="data" column="bw_rsdata" type="string" length="250" />
+      </composite-element>
+    </set>
+
+    <component name="relatedTo"
+               class="org.bedework.calfacade.BwRelatedTo" >
+      <property name="relType" column="bw_reltype" type="string" length="100" />
+      <property name="value" column="bw_reltoval" type="string" length="500" />
+    </component>
+
+    <property name="scheduleState"
+              column="schedule_state"
+              type="integer" />
+
+    <property name="organizerSchedulingObject"
+              column="bw_org_scheduleobj"
+              type="boolean" not-null="true"
+              index="bw_idx_orgsobj" />
+
+    <property name="attendeeSchedulingObject"
+              column="bw_att_scheduleobj"
+              type="boolean" not-null="true"
+              index="bw_idx_attsobj" />
+
+    <list name="xproperties" table="bw_event_xprops"
+         cascade="all-delete-orphan"
+          lazy="false" >
+      <!-- <cache usage="read-write"/> -->
+      <key column="bw_eventid" foreign-key="bw_eventxp_eid_fk" />
+      <list-index column="bwxp_position"/>
+      <composite-element class="org.bedework.calfacade.BwXproperty">
+        <property name="name" type="string" length="100"
+                  column="bw_name"  />
+
+        <property name="pars" type="string" length="4000"
+                  column="bw_pars"  />
+
+        <property name="value" column="bw_value" type="text"/>
+      </composite-element>
+    </list>
+
+    <!-- =============== Freebusy =============== -->
+
+    <list name="freeBusyPeriods" lazy="true"
+          cascade="all-delete-orphan">
+      <key column="eventid" foreign-key="bw_eventfbc_eid_fk" />
+      <list-index column="fbcomp_position"/>
+      <one-to-many class="org.bedework.calfacade.BwFreeBusyComponent" />
+    </list>
+
+    <!-- =============== Vavailability =============== -->
+
+    <property name="busyType"  column="busy_type" type="integer" />
+
+    <set name="availableUids" lazy="true" table="bw_event_availuids">
+      <key column="eventid" foreign-key="bw_event_avluid_fk" />
+      <element type="string" column="avluid" not-null="true"/>
+    </set>
+  </class>
+
+  <!--
+  <database-object>
+    <create>
+        CREATE INDEX BW_EVENT_CAL_NAME ON BW_EVENTS(
+    </create>
+    <drop>
+        [DROP statement]
+    </drop>
+    <dialect-scope name="org.hibernate.dialect.Oracle9Dialect"/>
+    <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
+  </database-object>
+  -->
+</hibernate-mapping>
+

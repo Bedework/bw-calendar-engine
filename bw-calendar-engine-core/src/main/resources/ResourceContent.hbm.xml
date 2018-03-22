@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- ===================================================================
+     A resource content definition in Bedework.
+     =================================================================== -->
+
+<hibernate-mapping>
+  <class name="org.bedework.calfacade.BwResourceContent"
+         table="bw_resource_contents">
+    <id name="id" type="integer" column="id" unsaved-value="-1">
+      <generator class="native"/>
+    </id>
+
+    <version name="seq" column="bwseq" type="integer" />
+
+    <property name="colPath" column="bw_col_path" type="string" length="3000"
+              index="bwidx_rsrc_content_colpath" />
+
+    <property name="name" column="bwname" type="string"
+              length="100" not-null="true" />
+
+    <property name="value" column="bw_value" type="blob"/>
+  </class>
+
+  <!-- =================================================================
+        queries
+       ================================================================= -->
+</hibernate-mapping>
