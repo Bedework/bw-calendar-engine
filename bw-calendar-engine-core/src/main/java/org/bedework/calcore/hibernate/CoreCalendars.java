@@ -260,7 +260,6 @@ class CoreCalendars extends CalintfHelper
     BwCalendar col = colCache.get(path);
 
     if (col != null) {
-      debugCol("From cache", col);
       return col;
     }
 
@@ -268,36 +267,9 @@ class CoreCalendars extends CalintfHelper
                            PropertyIndex.PropertyInfoIndex.HREF);
     if (col != null) {
       restoreCategories(col);
-      debugCol("After fetchCol", col);
     }
     
     return col;
-  }
-
-  private void debugCol(final String label,
-                        final BwCalendar col) {
-    if (!debug) {
-      return;
-    }
-
-    if (!"/public/Aliases/Event Category/Arts and Humanities".equals(col.getPath())) {
-      return;
-    }
-
-    String msg;
-    if (Util.isEmpty(col.getCategoryUids())) {
-      msg = "No uids";
-    } else {
-      msg = "Uids: " + col.getCategoryUids().size();
-    }
-
-    if (Util.isEmpty(col.getCategories())) {
-      msg += ": No cats";
-    } else {
-      msg += ": Cats: " + col.getCategories().size();
-    }
-
-    debugMsg(label + ": " + col.getPath() + ": " + msg);
   }
 
   @Override
@@ -837,7 +809,6 @@ class CoreCalendars extends CalintfHelper
     final BwCalendar c = val.getAliasTarget();
     if (c != null) {
       if (!resolveSubAlias) {
-        debugCol("Resolved already", c);
         return c;
       }
 
@@ -873,10 +844,8 @@ class CoreCalendars extends CalintfHelper
 
     try {
       if (indexer != null) {
-        //debugMsg("Resolve from idx");
         col = getCollectionIdx(indexer, path, desiredAccess, false);
       } else {
-        //debugMsg("Resolve from db");
         col = getCalendar(path, desiredAccess, false);
       }
     } catch (final CalFacadeAccessException cfae) {
@@ -894,7 +863,6 @@ class CoreCalendars extends CalintfHelper
       return null;
     }
 
-    debugCol("Resolved", col);
     val.setAliasTarget(col);
 
     if (!resolveSubAlias) {

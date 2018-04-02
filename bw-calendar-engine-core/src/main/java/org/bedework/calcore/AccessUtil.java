@@ -232,6 +232,13 @@ public class AccessUtil extends Logged implements AccessUtilI {
       if (ca != null) {
         // Checked already
 
+        if (debug) {
+          debug("Access " + desiredAccess +
+                        " already checked for " +
+                        cb.getPrincipal().getPrincipalRef() +
+                        " and allowed=" + ca.getAccessAllowed());
+        }
+
         if (!ca.getAccessAllowed() && !alwaysReturnResult) {
           throw new CalFacadeAccessException();
         }
@@ -248,7 +255,9 @@ public class AccessUtil extends Logged implements AccessUtilI {
       } else {
         ident = String.valueOf(ent.getId());
       }
-      debug("Check access for object " +
+      debug("Check access by " +
+                    cb.getPrincipal().getPrincipalRef() +
+                    " for object " +
                     cname.substring(cname.lastIndexOf(".") + 1) +
                     " ident=" + ident +
                     " desiredAccess = " + desiredAccess);
