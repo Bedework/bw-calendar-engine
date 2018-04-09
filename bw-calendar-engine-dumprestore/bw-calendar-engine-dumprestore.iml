@@ -70,7 +70,7 @@
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
     <orderEntry type="module" module-name="bw-calendar-engine-core" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-common" />
-    <orderEntry type="library" name="Maven: javax.jms:jms:1.1" level="project" />
+    <orderEntry type="library" name="Maven: javax.jms:jms-api:1.1-rev-1" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-elasticsearch:4.0.18" level="project" />
     <orderEntry type="library" name="Maven: org.elasticsearch:elasticsearch:1.5.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-core:4.10.4" level="project" />

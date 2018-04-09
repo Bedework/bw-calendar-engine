@@ -82,7 +82,7 @@
     <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-common" />
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
-    <orderEntry type="library" name="Maven: javax.jms:jms:1.1" level="project" />
+    <orderEntry type="library" name="Maven: javax.jms:jms-api:1.1-rev-1" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-ical" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.5" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.5" level="project" />
