@@ -1192,6 +1192,25 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
             BedeworkServerTags.synchXcategories.getLocalPart()));
   }
 
+  /** Set the deletions suppressed flag for synch
+   *
+   * @param val true if we suppress deletions during synch
+   */
+  public void setSynchDeleteSuppressed(final boolean val) {
+    setProperty(BedeworkServerTags.synchDeleteSuppressed.getLocalPart(),
+                String.valueOf(val));
+  }
+
+  /** Get the deletions suppressed flag for synch
+   *
+   * @return boolean on/off
+   */
+  @NoDump
+  public boolean getSynchDeleteSuppressed() {
+    return Boolean.valueOf(getProperty(
+            BedeworkServerTags.synchDeleteSuppressed.getLocalPart()));
+  }
+
   /** Set the calendar timezone property
    *
    * @param val

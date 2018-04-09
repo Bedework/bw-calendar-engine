@@ -6,6 +6,8 @@
 	<version>3.12.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>bw-calendar-engine</name>
+  <description>Main calendar engine code for bedework</description>
+  <url>https://github.com/Bedework/bw-calendar-engine</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,12 +17,12 @@
 
 		<!-- Bedework Versions -->
 
-		<bw-xml.version>4.0.5-SNAPSHOT</bw-xml.version>
-		<bw-util.version>4.0.17-SNAPSHOT</bw-util.version>
-    <bw-util2.version>4.0.0-SNAPSHOT</bw-util2.version>
-		<bw-access.version>4.0.2-SNAPSHOT</bw-access.version>
-		<bw-webdav.version>4.0.2-SNAPSHOT</bw-webdav.version>
-		<bw-caldav.version>4.0.3-SNAPSHOT</bw-caldav.version>
+		<bw-xml.version>4.0.5</bw-xml.version>
+		<bw-util.version>4.0.18</bw-util.version>
+    <bw-util2.version>4.0.0</bw-util2.version>
+		<bw-access.version>4.0.2</bw-access.version>
+		<bw-webdav.version>4.0.2</bw-webdav.version>
+		<bw-caldav.version>4.0.3</bw-caldav.version>
 
     <commons.csv.version>1.2</commons.csv.version>
     <commons.io.version>2.0.1</commons.io.version>
@@ -96,6 +98,23 @@
     <module>bw-calendar-engine-userws</module>
     <module>bw-calendar-engine-mail</module>
   </modules>
+
+  <developers>
+    <developer>
+      <name>Mike Douglass</name>
+      <organization>
+        Spherical Cow Group
+      </organization>
+      <organizationUrl>http://sphericalcowgroup.com/</organizationUrl>
+    </developer>
+    <developer>
+      <name>Arlen Johnson</name>
+      <organization>
+        Spherical Cow Group
+      </organization>
+      <organizationUrl>http://sphericalcowgroup.com/</organizationUrl>
+    </developer>
+  </developers>
 
   <distributionManagement>
     <snapshotRepository>
