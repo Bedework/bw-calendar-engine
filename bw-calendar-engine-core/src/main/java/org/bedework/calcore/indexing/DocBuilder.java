@@ -79,6 +79,8 @@ public class DocBuilder extends DocBuilderBase {
   static Map<String, String> interestingXprops = new HashMap<>();
 
   static {
+    interestingXprops.put(BwXproperty.bedeworkTag,
+                          getJname(PropertyInfoIndex.TAG));
     interestingXprops.put(BwXproperty.bedeworkImage,
                           getJname(PropertyInfoIndex.IMAGE));
     interestingXprops.put(BwXproperty.bedeworkThumbImage,
@@ -602,6 +604,30 @@ public class DocBuilder extends DocBuilderBase {
               continue;
             }
             value(val.substring(0, pos));
+            continue;
+          }
+
+          if (xp.getName().equals(BwXproperty.bedeworkTag)) {
+            final String val = xp.getValue();
+
+            if (val == null) {
+              // Bad value
+              continue;
+            }
+
+            for (final String sval: val.split(",")) {
+              if (sval == null) {
+                continue;
+              }
+
+              final String svalTrim = sval.trim();
+              if (svalTrim.length() == 0) {
+                continue;
+              }
+
+              value(svalTrim);
+            }
+
             continue;
           }
 

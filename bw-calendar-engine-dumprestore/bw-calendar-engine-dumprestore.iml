@@ -17,7 +17,7 @@
     <orderEntry type="module" module-name="bw-calendar-engine-annotations" />
     <orderEntry type="library" name="Maven: org.bedework:bw-access:4.0.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.8.2" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-vcard:4.0.0" level="project" />
+    <orderEntry type="module" module-name="bw-util2-vcard" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.3.1" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-http:4.0.18" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-config:4.0.18" level="project" />
@@ -103,7 +103,7 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-util-caching:4.0.18" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.3.1" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.3.1" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-calendar:4.0.0" level="project" />
+    <orderEntry type="module" module-name="bw-util2-calendar" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-calws-soap:4.0.5" level="project" />
     <orderEntry type="library" name="Maven: commons-digester:commons-digester:1.8" level="project" />
     <orderEntry type="library" name="Maven: commons-beanutils:commons-beanutils:1.7.0" level="project" />

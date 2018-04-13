@@ -265,6 +265,9 @@ public class BwXproperty extends BwDbentity<BwXproperty>
    * ==================================================================== */
 
   /** */
+  public final static String bedeworkTag = "X-BEDEWORK-TAG";
+
+  /** */
   public final static String bedeworkCalsuite = "X-BEDEWORK-CALSUITE";
 
   /** */
