@@ -47,7 +47,6 @@ public class LogListener extends JmsSysEventListener {
   void listen() throws NotificationException {
     try (final JmsSysEventListener ignored =
                  open(syseventsLogQueueName)) {
-      open(syseventsLogQueueName);
 
       process(false);
     }
