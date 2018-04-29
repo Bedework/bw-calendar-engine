@@ -211,7 +211,7 @@ class Synch extends CalSvcDb implements SynchI {
 
     int refreshRate = val.getRefreshRate(); // seconds
     if (refreshRate == 0) {
-      refreshRate = 60;
+      refreshRate = 60 * 60;  // 1 hour default
     }
 
     aosB.getProperty().add(makeSynchProperty("refreshDelay",
