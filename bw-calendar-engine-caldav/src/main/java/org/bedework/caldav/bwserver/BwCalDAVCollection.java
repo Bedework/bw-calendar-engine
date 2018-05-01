@@ -90,6 +90,16 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
+  public void setRefreshRate(final int val) throws WebdavException {
+    getCol().setRefreshRate(Math.max(BwCalendar.minRefreshRateSeconds, val));
+  }
+
+  @Override
+  public int getRefreshRate() throws WebdavException {
+    return 0;
+  }
+
+  @Override
   public BwCalDAVCollection resolveAlias(final boolean resolveSubAlias) throws WebdavException {
     if (!col.getInternalAlias()) {
       return this;

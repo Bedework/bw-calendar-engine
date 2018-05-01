@@ -22,9 +22,9 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-webdav:4.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.0.18" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-xml:4.0.18" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-util:4.0.3" level="project" />
+    <orderEntry type="module" module-name="bw-caldav-util" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.5" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-server:4.0.3" level="project" />
+    <orderEntry type="module" module-name="bw-caldav-server" />
     <orderEntry type="library" name="Maven: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
     <orderEntry type="library" name="Maven: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
     <orderEntry type="library" name="Maven: org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final" level="project" />
