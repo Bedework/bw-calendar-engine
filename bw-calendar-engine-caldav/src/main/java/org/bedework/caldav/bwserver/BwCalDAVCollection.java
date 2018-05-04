@@ -260,6 +260,17 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
     return getCol().getRemotePw();
   }
 
+  @Override
+  public void setSynchDeleteSuppressed(final boolean val)
+          throws WebdavException {
+    getCol().setSynchDeleteSuppressed(val);
+  }
+
+  @Override
+  public boolean getSynchDeleteSuppressed() throws WebdavException {
+    return getCol().getSynchDeleteSuppressed();
+  }
+
   /* ====================================================================
    *                      Overrides
    * ==================================================================== */
