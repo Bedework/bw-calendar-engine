@@ -181,6 +181,9 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   /** default suite resources directory */
   public static final String propertySuiteResourcesDirectory = "userpref:suite-resources-directory";
 
+  /** admin clear form on submit */
+  public static final String propertyAdminClearFormsOnSubmit= "userpref:admin-clear-form-on-submit";
+
   /** preferred group - admin suggest event - this may occur multiple times */
   public static final String propertyPreferredGroup = "userpref:preferrred-group";
 
@@ -712,6 +715,21 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   @NoDump
   public String getSuiteResourcesDirectory() {
     return getProp(propertySuiteResourcesDirectory);
+  }
+
+  /**
+   * @param val  String clear form pref - null for default.
+   */
+  public void setClearFormsOnSubmit(final String val) {
+    setProp(propertyAdminClearFormsOnSubmit, val);
+  }
+
+  /**
+   * @return String clear form pref.
+   */
+  @NoDump
+  public String getClearFormsOnSubmit() {
+    return getProp(propertyAdminClearFormsOnSubmit);
   }
 
   /**
