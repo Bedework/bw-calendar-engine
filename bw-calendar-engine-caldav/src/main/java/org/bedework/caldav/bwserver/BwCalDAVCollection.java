@@ -70,7 +70,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
-  public void setAliasUri(String val) throws WebdavException {
+  public void setAliasUri(final String val) throws WebdavException {
     getCol().setAliasUri(val);
   }
 
@@ -80,13 +80,24 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
       return null;
     }
 
-    String s = getCol().getInternalAliasPath();
+    final String s = getCol().getInternalAliasPath();
 
     if (s != null) {
       return intf.getUrlHandler().prefix(Util.buildPath(true, s));
     }
 
     return getCol().getAliasUri();
+  }
+
+  @Override
+  public void setSynchDeleteSuppressed(final boolean val)
+          throws WebdavException {
+    getCol().setSynchDeleteSuppressed(val);
+  }
+
+  @Override
+  public boolean getSynchDeleteSuppressed() throws WebdavException {
+    return getCol().getSynchDeleteSuppressed();
   }
 
   @Override
@@ -231,7 +242,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
-  public void setRemoteId(String val) throws WebdavException {
+  public void setRemoteId(final String val) throws WebdavException {
     getCol().setRemoteId(val);
   }
 
@@ -241,7 +252,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
-  public void setRemotePw(String val) throws WebdavException {
+  public void setRemotePw(final String val) throws WebdavException {
     getCol().setRemotePw(val);
   }
 
