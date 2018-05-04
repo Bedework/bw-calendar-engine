@@ -70,9 +70,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
   /** Constructor
    *
    * @param svci interface
-   * @throws CalFacadeException
    */
-  Calendars(final CalSvc svci) throws CalFacadeException {
+  Calendars(final CalSvc svci) {
     super(svci);
 
     publicCalendarRootPath = Util.buildPath(colPathEndsWithSlash, "/",
@@ -502,9 +501,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                                                null,
                                                                null);
 
-    final SynchI synch = getSvc().getSynch();
-
     if (val.getExternalSub()) {
+      final SynchI synch = getSvc().getSynch();
+
       if (!synch.subscribe(val)) {
         throw new CalFacadeException(
                 CalFacadeException.subscriptionFailed);

@@ -41,7 +41,7 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-webdav:4.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.0.18" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-xml:4.0.18" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-util:4.0.3" level="project" />
+    <orderEntry type="module" module-name="bw-caldav-util" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.5" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.5" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:apache-jdkim-library:0.4" level="project" />
@@ -52,7 +52,7 @@
     <orderEntry type="library" name="Maven: org.apache.james:apache-mime4j-core:0.7" level="project" />
     <orderEntry type="library" name="Maven: org.apache.james:apache-mime4j-dom:0.7" level="project" />
     <orderEntry type="library" name="Maven: dnsjava:dnsjava:2.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-server:4.0.3" level="project" />
+    <orderEntry type="module" module-name="bw-caldav-server" />
     <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:2.0.3" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.10" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-collections4:4.0" level="project" />

@@ -104,6 +104,9 @@ import javax.xml.namespace.QName;
                        "tombstoned"})
 public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
         implements CollatableEntity, CategorisedEntity, PropertiesEntity {
+  // TODO - make configurable
+  public static final int minRefreshRateSeconds = 15 * 60;
+
   /** The internal name of the calendar
    */
   private String name;
