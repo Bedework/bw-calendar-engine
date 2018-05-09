@@ -96,7 +96,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
 
   @Override
   public int getRefreshRate() throws WebdavException {
-    return 0;
+    return getCol().getRefreshRate();
   }
 
   @Override

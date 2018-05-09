@@ -1031,6 +1031,10 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
 
   @Override
   public InviteType getInviteStatus(final CalDAVCollection col) throws WebdavException {
+    if (col == null) {
+      return null;
+    }
+
     try {
       InviteType inv = svci.getSharingHandler().getInviteStatus(unwrap(col));
 
@@ -1062,7 +1066,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
   public Collection<String> getFreebusySet() throws WebdavException {
     try {
       Collection<BwCalendar> cals = svci.getScheduler().getFreebusySet();
-      Collection<String> hrefs = new ArrayList<String>();
+      Collection<String> hrefs = new ArrayList<>();
 
       if (cals == null) {
         return hrefs;
@@ -1134,7 +1138,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
         return null;
       }
 
-      final Collection<CalDAVEvent> evs = new ArrayList<CalDAVEvent>();
+      final Collection<CalDAVEvent> evs = new ArrayList<>();
 
       for (final BwEvent bwev: bwevs) {
         evs.add(new BwCalDAVEvent(this, new EventInfo(bwev)));
@@ -2580,8 +2584,12 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
   }
 
   private BwCalendar unwrap(final CalDAVCollection col) throws WebdavException {
+    if (col == null) {
+      return null;
+    }
+
     if (!(col instanceof BwCalDAVCollection)) {
-      throw new WebdavBadRequest("Unknown implemenation of BwCalDAVCollection" +
+      throw new RuntimeException("Unknown implementation of BwCalDAVCollection" +
                                  col.getClass());
     }
 
