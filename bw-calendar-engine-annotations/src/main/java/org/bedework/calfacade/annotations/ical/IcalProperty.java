@@ -54,8 +54,11 @@ public @interface IcalProperty {
   /** Property name for key */
   PropertyInfoIndex keyindex() default PropertyInfoIndex.UNKNOWN_PROPERTY;
 
-  /** Required for a valid event   */
+  /** Allow matches   */
   boolean analyzed() default false;
+
+  /** field we test for a complete term match when doing queries */
+  String termsField() default "";
 
   /** field we test for presence */
   String presenceField() default "";

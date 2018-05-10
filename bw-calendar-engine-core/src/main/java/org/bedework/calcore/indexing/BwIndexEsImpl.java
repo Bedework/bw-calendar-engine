@@ -46,6 +46,7 @@ import org.bedework.calfacade.indexing.IndexStatsResponse;
 import org.bedework.calfacade.indexing.ReindexResponse;
 import org.bedework.calfacade.indexing.SearchResult;
 import org.bedework.calfacade.indexing.SearchResultEntry;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
@@ -965,7 +966,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         }
 
         srb.addSort(new FieldSortBuilder(
-                ESQueryFilter.makePropertyRef(st.getProperties()))
+                ESQueryFilter.makePropertyRef(st.getProperties(), null))
                             .order(so));
       }
     }
@@ -1071,7 +1072,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         }
 
         srb.addSort(new FieldSortBuilder(
-                ESQueryFilter.makePropertyRef(st.getProperties()))
+                ESQueryFilter.makePropertyRef(st.getProperties(), null))
                             .order(so));
       }
     }
@@ -2213,6 +2214,268 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                                 return eb.makeLocation();
                               }
                             });
+  }
+
+  @Override
+  public GetEntitiesResponse<BwContact> findContacts(final FilterBase filter,
+                                                     final int from,
+                                                     final int size) {
+    final GetEntitiesResponse<BwContact> resp = new GetEntitiesResponse<>();
+
+    try {
+      final ESQueryFilter ef = getFilters(null);
+
+      QueryBuilder qb = ef.buildQuery(filter);
+
+      FilterBuilder curFilter = ef.buildFilter(ef.addTypeFilter(null,
+                                                                docTypeContact));
+
+      if (!(curFilter instanceof MatchNone)) {
+        curFilter = ef.addLimits(curFilter,
+                                 null, DeletedState.noDeleted);
+      }
+
+      if (curFilter instanceof MatchNone) {
+        resp.setStatus(notFound);
+        return resp;
+      }
+
+      final SearchRequestBuilder srb = getClient()
+              .prepareSearch(searchIndexes);
+
+      srb.setSearchType(SearchType.QUERY_AND_FETCH)
+         .setQuery(qb)
+         .setPostFilter(curFilter)
+         .setFrom(from)
+         .setSize(size);
+
+      /*
+      if (!Util.isEmpty(res.curSort)) {
+        SortOrder so;
+
+        for (final SortTerm st : res.curSort) {
+          if (st.isAscending()) {
+            so = SortOrder.ASC;
+          } else {
+            so = SortOrder.DESC;
+          }
+
+          srb.addSort(new FieldSortBuilder(
+                  ESQueryFilter.makePropertyRef(st.getProperties()))
+                              .order(so));
+        }
+      }
+
+*/
+
+      final SearchResponse sresp = srb.execute().actionGet();
+
+//    if (resp.status() != RestStatus.OK) {
+      //TODO
+//    }
+
+      if (debug) {
+        debug("Search: returned status " + sresp.status() +
+                      " found: " + sresp.getHits().getTotalHits());
+      }
+
+      for (final SearchHit hit : sresp.getHits().getHits()) {
+        final Object entity = makeEntity(resp, hit, null);
+        if (!resp.isOk()) {
+          return resp;
+        }
+
+        if (!(entity instanceof BwContact)) {
+          continue;
+        }
+
+        final BwEventProperty evp = (BwEventProperty)entity;
+
+        evp.setScore(hit.score());
+
+        resp.addEntity((BwContact)entity);
+      }
+
+      return resp;
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
+  }
+
+  @Override
+  public GetEntitiesResponse<BwLocation> findLocations(final FilterBase filter,
+                                                       final int from,
+                                                       final int size) {
+    final GetEntitiesResponse<BwLocation> resp = new GetEntitiesResponse<>();
+
+    try {
+      final ESQueryFilter ef = getFilters(null);
+
+      QueryBuilder qb = ef.buildQuery(filter);
+
+      FilterBuilder curFilter = ef.buildFilter(ef.addTypeFilter(null,
+                                                                docTypeLocation));
+
+      if (!(curFilter instanceof MatchNone)) {
+        curFilter = ef.addLimits(curFilter,
+                                 null, DeletedState.noDeleted);
+      }
+
+      if (curFilter instanceof MatchNone) {
+        resp.setStatus(notFound);
+        return resp;
+      }
+
+      final SearchRequestBuilder srb = getClient()
+              .prepareSearch(searchIndexes);
+
+      srb.setSearchType(SearchType.QUERY_AND_FETCH)
+         .setQuery(qb)
+         .setPostFilter(curFilter)
+         .setFrom(from)
+         .setSize(size);
+
+      /*
+      if (!Util.isEmpty(res.curSort)) {
+        SortOrder so;
+
+        for (final SortTerm st : res.curSort) {
+          if (st.isAscending()) {
+            so = SortOrder.ASC;
+          } else {
+            so = SortOrder.DESC;
+          }
+
+          srb.addSort(new FieldSortBuilder(
+                  ESQueryFilter.makePropertyRef(st.getProperties()))
+                              .order(so));
+        }
+      }
+
+*/
+
+      if (debug) {
+        debug("Search: targetIndex=" + targetIndex +
+                      "; srb=" + srb);
+      }
+
+      final SearchResponse sresp = srb.execute().actionGet();
+
+//    if (resp.status() != RestStatus.OK) {
+      //TODO
+//    }
+
+      if (debug) {
+        debug("Search: returned status " + sresp.status() +
+                      " found: " + sresp.getHits().getTotalHits());
+      }
+
+      for (final SearchHit hit : sresp.getHits().getHits()) {
+        final Object entity = makeEntity(resp, hit, null);
+        if (!resp.isOk()) {
+          return resp;
+        }
+
+        if (!(entity instanceof BwLocation)) {
+          continue;
+        }
+
+        final BwEventProperty evp = (BwEventProperty)entity;
+
+        evp.setScore(hit.score());
+        resp.addEntity((BwLocation)entity);
+      }
+
+      return resp;
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
+  }
+
+  @Override
+  public GetEntitiesResponse<BwCategory> findCategories(final FilterBase filter,
+                                                        final int from,
+                                                        final int size) {
+    final GetEntitiesResponse<BwCategory> resp = new GetEntitiesResponse<>();
+
+    try {
+      final ESQueryFilter ef = getFilters(null);
+
+      QueryBuilder qb = ef.buildQuery(filter);
+
+      FilterBuilder curFilter = ef.buildFilter(ef.addTypeFilter(null,
+                                                                docTypeCategory));
+
+      if (!(curFilter instanceof MatchNone)) {
+        curFilter = ef.addLimits(curFilter,
+                                 null, DeletedState.noDeleted);
+      }
+
+      if (curFilter instanceof MatchNone) {
+        resp.setStatus(notFound);
+        return resp;
+      }
+
+      final SearchRequestBuilder srb = getClient()
+              .prepareSearch(searchIndexes);
+
+      srb.setSearchType(SearchType.QUERY_AND_FETCH)
+         .setQuery(qb)
+         .setPostFilter(curFilter)
+         .setFrom(from)
+         .setSize(size);
+
+      /*
+      if (!Util.isEmpty(res.curSort)) {
+        SortOrder so;
+
+        for (final SortTerm st : res.curSort) {
+          if (st.isAscending()) {
+            so = SortOrder.ASC;
+          } else {
+            so = SortOrder.DESC;
+          }
+
+          srb.addSort(new FieldSortBuilder(
+                  ESQueryFilter.makePropertyRef(st.getProperties()))
+                              .order(so));
+        }
+      }
+
+*/
+
+      final SearchResponse sresp = srb.execute().actionGet();
+
+//    if (resp.status() != RestStatus.OK) {
+      //TODO
+//    }
+
+      if (debug) {
+        debug("Search: returned status " + sresp.status() +
+                      " found: " + sresp.getHits().getTotalHits());
+      }
+
+      for (final SearchHit hit : sresp.getHits().getHits()) {
+        final Object entity = makeEntity(resp, hit, null);
+        if (!resp.isOk()) {
+          return resp;
+        }
+
+        if (!(entity instanceof BwCategory)) {
+          continue;
+        }
+
+        final BwEventProperty evp = (BwEventProperty)entity;
+
+        evp.setScore(hit.score());
+
+        resp.addEntity((BwCategory)entity);
+      }
+
+      return resp;
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
   }
 
   /* ========================================================================

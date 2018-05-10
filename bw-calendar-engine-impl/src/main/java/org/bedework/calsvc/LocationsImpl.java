@@ -21,7 +21,10 @@ package org.bedework.calsvc;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.GetEntityResponse;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calsvci.Locations;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
@@ -84,6 +87,21 @@ public class LocationsImpl
     return getIndexer().fetchLocation(val.getValue(),
                                       PropertyInfoIndex.ADDRESS,
                                       PropertyInfoIndex.VALUE);
+  }
+
+  @Override
+  public GetEntitiesResponse<BwLocation> find(final String fexpr,
+                                              final int from,
+                                              final int size) {
+    final ParseResult pr = getSvc().getFilterParser().parse(fexpr,
+                                                            false,
+                                                            null);
+
+    if (!pr.ok) {
+      return Response.error(new GetEntitiesResponse<>(), pr.message);
+    }
+
+    return getIndexer().findLocations(pr.filter, from, size);
   }
 }
 

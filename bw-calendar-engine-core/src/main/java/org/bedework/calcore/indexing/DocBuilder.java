@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwGeo;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwOrganizer;
@@ -238,6 +239,8 @@ public class DocBuilder extends DocBuilderBase {
       makeField(PropertyInfoIndex.GEOURI_FLD, ent.getGeouri());
 
       makeField(PropertyInfoIndex.STATUS, ent.getStatus());
+      makeField(PropertyInfoIndex.DELETED,
+                BwEventProperty.statusDeleted.equals(ent.getStatus()));
 
       // These fields are part of the subaddress field
       makeField(PropertyInfoIndex.STREET_FLD, ent.getStreet());

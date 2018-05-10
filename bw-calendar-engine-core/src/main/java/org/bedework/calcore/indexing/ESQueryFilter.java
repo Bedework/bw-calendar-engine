@@ -48,6 +48,7 @@ import org.bedework.util.elasticsearch.ESQueryFilterBase;
 
 import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.BoolFilterBuilder;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.FilteredQueryBuilder;
@@ -58,18 +59,22 @@ import org.elasticsearch.index.query.NestedFilterBuilder;
 import org.elasticsearch.index.query.NotFilterBuilder;
 import org.elasticsearch.index.query.OrFilterBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryFilterBuilder;
 import org.elasticsearch.index.query.RangeFilterBuilder;
 import org.elasticsearch.index.query.TermFilterBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.query.TermsFilterBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.*;
+import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.includeDeleted;
+import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.onlyDeleted;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
 import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -215,21 +220,29 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
     kf.setExact(true);
     kf.setCaseless(false);
 
+    return and(addTerm("_type",
+                       docTypeLocation),
+               buildFilter(kf),
+               "and");
+  }
+
+  public FilterBase addTypeFilter(final FilterBase f,
+                                  final String docType) {
     final ObjectFilter<String> ef =
             new ObjectFilter<>(null,
-                               PropertyInfoIndex.ENTITY_TYPE,
+                               PropertyInfoIndex.DOCTYPE,
                                null,
                                null);
-    ef.setEntity(docTypeLocation);
+    ef.setEntity(docType);
     ef.setExact(true);
     ef.setCaseless(false);
 
     final AndFilter and = new AndFilter();
 
     and.addChild(ef);
-    and.addChild(kf);
+    and.addChild(f);
 
-    return buildFilter(and);
+    return and;
   }
 
   public FilterBuilder buildFilter(final FilterBase f) throws CalFacadeException {
@@ -240,6 +253,16 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
     }
 
     return fb;
+  }
+
+  public QueryBuilder buildQuery(final FilterBase f) throws CalFacadeException {
+    QueryBuilder qb = makeQuery(f);
+
+    if (qb instanceof TermOrTermsQuery) {
+      qb = ((TermOrTermsQuery)qb).makeQb();
+    }
+
+    return qb;
   }
 
   /* TODO we need to provide a chain of filters when we have deep paths,
@@ -280,9 +303,17 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
       
       final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pii);
 
+      final String fullTermPath;
+      if (bwPie.getTermsField() == null) {
+        fullTermPath = null;
+      } else {
+        fullTermPath = makePropertyRef(pis, plistIndex,
+                                       bwPie.getTermsField());
+      }
+
       if (isNested) {
         final FilterBuilder nested;
-        String path = makePropertyRef(pis, plistIndex);
+        String path = makePropertyRef(pis, plistIndex, null);
 
         if (nfb != null) {
           if (plistIndex == 0) {
@@ -292,7 +323,8 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
           nested = new NestedFilterBuilder(path, nfb);
         } else {
           fb = makeFilter(leafPii,
-                         makePropertyRef(pis),
+                         makePropertyRef(pis, null),
+                         fullTermPath,
                          val, opType);
 
           /* Is the parent indexed? */
@@ -317,7 +349,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
             final List<PropertyInfoIndex> indexPis = new ArrayList<>();
             indexPis.add(pis.get(plistIndex - 1));
             indexPis.add(parentPie.getKeyindex());
-            final String indexPath = makePropertyRef(indexPis);
+            final String indexPath = makePropertyRef(indexPis, null);
 
             if (intKey != null) {
               bfb.must(new TermFilterBuilder(indexPath, 
@@ -339,7 +371,8 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
         nfb = nested;
       } else if (plistIndex == 0) {
         // No nested types found
-        fb = makeFilter(leafPii, makePropertyRef(pis),
+        fb = makeFilter(leafPii, makePropertyRef(pis, null),
+                        fullTermPath,
                         val, opType);
       }
     }
@@ -411,7 +444,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
   public FilterBuilder addLimits(final FilterBuilder f,
                                  final FilterBase defaultFilterContext,
                                  final DeletedState delState) throws CalFacadeException {
-    if (f instanceof MatchNone) {
+    if ((f != null) && (f instanceof MatchNone)) {
       return f;
     }
     
@@ -443,8 +476,14 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
       }
 
       if (!queryLimited) {
-        nfbs.add(new NamedFilterBuilder(null, principalFilter(f)));
+        if (f == null) {
+          nfbs.add(new NamedFilterBuilder(null, new MatchAllFilterBuilder()));
+        } else {
+          nfbs.add(new NamedFilterBuilder(null, principalFilter(f)));
+        }
       }
+    } else if (f == null) {
+      nfbs.add(new NamedFilterBuilder(null, new MatchAllFilterBuilder()));
     } else {
       nfbs.add(new NamedFilterBuilder(null, f));
     }
@@ -773,8 +812,9 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
    * @param pis the refs
    * @return dot delimited property reference
    */
-  public static String makePropertyRef(final List<PropertyInfoIndex> pis) {
-    return makePropertyRef(pis, pis.size() - 1);
+  public static String makePropertyRef(final List<PropertyInfoIndex> pis,
+                                       final String lastElJname) {
+    return makePropertyRef(pis, pis.size() - 1, lastElJname);
   }
 
   /**
@@ -783,16 +823,23 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
    * @return dot delimited property reference
    */
   public static String makePropertyRef(final List<PropertyInfoIndex> pis,
-                                       final int numElements) {
+                                       final int numElements,
+                                       final String lastElJname) {
     String delim = "";
+    final int last = numElements - 1;
 
     StringBuilder sb = new StringBuilder();
 
     for (int i = 0; i <= numElements; i++) {
-      final PropertyInfoIndex pi = pis.get(i);
       sb.append(delim);
-      sb.append(getJname(pi));
       delim = ".";
+
+      if ((i < last) || (lastElJname == null)) {
+        final PropertyInfoIndex pi = pis.get(i);
+        sb.append(getJname(pi));
+      } else {
+        sb.append(lastElJname);
+      }
     }
 
     return sb.toString();
@@ -819,6 +866,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
 
   private QueryBuilder makeQuery(final PropertyInfoIndex pii,
                                  final String path,
+                                 final String fullTermPath,
                                  final Object val,
                                  final OperationType opType,
                                  final float boost) throws CalFacadeException {
@@ -827,11 +875,43 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
     switch (opType) {
       case compare:
         if (bwPie.getAnalyzed()) {
-          final MatchQueryBuilder mqb = new MatchQueryBuilder(path, val);
-          if (boost != 1) {
-            mqb.boost(boost);
+          if (bwPie.getTermsField() == null) {
+            return new MatchQueryBuilder(path, val).operator(
+                    MatchQueryBuilder.Operator.AND);
           }
-          return mqb;
+
+          /* Build something like this
+              "query" : {
+                "function_score" : {
+                  "query" : {
+                    "match" : {
+                      "loc_all" : {
+                        "query" : "hill",
+                        "operator" : "AND"
+                      }
+                    }
+                  },
+                  "functions" : [{
+                    "weight": 10,
+                    "filter": {
+                      "term" : {
+                        "loc_all_terms" : "hill"
+                      }
+                    }
+                  }]
+                }
+              },...
+           */
+          QueryBuilder qb = new MatchQueryBuilder(path, val).operator(
+                  MatchQueryBuilder.Operator.AND);
+          final FunctionScoreQueryBuilder fsqb =
+                  new FunctionScoreQueryBuilder(qb);
+
+          final FilterBuilder fb = new TermFilterBuilder(fullTermPath,
+                                                         val);
+          fsqb.add(fb, ScoreFunctionBuilders.weightFactorFunction(10));
+
+          return fsqb;
         }
 
         final TermQueryBuilder tqb = new TermQueryBuilder(path, val);
@@ -853,6 +933,7 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
 
   private FilterBuilder makeFilter(final PropertyInfoIndex pii,
                                    final String path,
+                                   final String fullTermPath,
                                    final Object val,
                                    final OperationType opType) throws CalFacadeException {
     final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pii);
@@ -874,7 +955,51 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
                     new MultiMatchQueryBuilder(path, vals);
             return new QueryFilterBuilder(mmqb);
           }
-          return new QueryFilterBuilder(new MatchQueryBuilder(path, val));
+
+          if (bwPie.getTermsField() == null) {
+            return new QueryFilterBuilder(
+                    new MatchQueryBuilder(path, val).operator(
+                            MatchQueryBuilder.Operator.AND));
+          }
+
+          /* Build something like this
+              "query": {
+                "bool": {
+                  "must": [
+                    {
+                      "match": {
+                        "loc_all": {
+                          "value":...,
+                          "operator": "AND"
+                        }
+                      }
+                    }
+                  ],
+                  "should": [
+                    {
+                      "term": {
+                        "top_users": {
+                          "value": "1",
+                          "boost": 2
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+           */
+          QueryBuilder qb = new MatchQueryBuilder(path, val).operator(
+                  MatchQueryBuilder.Operator.AND);
+          final BoolQueryBuilder bqb = new BoolQueryBuilder();
+
+          bqb.must(qb);
+
+          qb = new TermQueryBuilder(fullTermPath, val).boost(
+                  (float)2.0);
+
+          bqb.should(qb);
+
+          return new QueryFilterBuilder(bqb);
         }
 
         if (val instanceof Collection) {
@@ -1327,6 +1452,174 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
       addThisJoin(pi);
       return;
     }*/
+  }
+
+  private QueryBuilder makeQuery(final FilterBase f) throws CalFacadeException {
+    if (f == null) {
+      return null;
+    }
+
+    if (f instanceof AndFilter) {
+      final List<QueryBuilder> qbs = makeQueries(f.getChildren(), true);
+
+      if (qbs.size() == 1) {
+        return qbs.get(0);
+      }
+
+      final BoolQueryBuilder bqb = new BoolQueryBuilder();
+
+      for (final QueryBuilder qb: qbs) {
+        if (qb instanceof TermOrTermsQuery) {
+          bqb.must(((TermOrTermsQuery)qb).makeQb());
+        } else {
+          bqb.must(qb);
+        }
+      }
+
+      return bqb;
+    }
+
+    if (f instanceof OrFilter) {
+      final List<QueryBuilder> qbs = makeQueries(f.getChildren(), false);
+
+      if (qbs.size() == 1) {
+        return qbs.get(0);
+      }
+
+      final BoolQueryBuilder bqb = new BoolQueryBuilder().minimumShouldMatch("1");
+
+      for (final QueryBuilder qb: qbs) {
+        if (qb instanceof TermOrTermsQuery) {
+          bqb.should(((TermOrTermsQuery)qb).makeQb());
+        } else {
+          bqb.should(qb);
+        }
+      }
+
+      return bqb;
+    }
+
+    if (f instanceof BwHrefFilter) {
+      queryLimited = true;
+
+      return QueryBuilders.termQuery(hrefJname,
+                                     ((BwHrefFilter)f).getHref());
+    }
+
+    if (!(f instanceof PropertyFilter)) {
+      return null;
+    }
+
+    final PropertyFilter pf = (PropertyFilter)f;
+
+    if (pf instanceof EntityTypeFilter) {
+      final EntityTypeFilter etf = (EntityTypeFilter)pf;
+
+      return new TermOrTermsQuery("_type",
+                                  etf.getEntity(),
+                                  pf.getNot());
+    }
+
+    if (f instanceof PresenceFilter) {
+      final PresenceFilter prf = (PresenceFilter)f;
+
+      if (prf.getTestPresent()) {
+        return makeQuery(pf.getPropertyIndex(),
+                         makePropertyRef(pf.getPropertyIndexes(), null),
+                         null,
+                         null, OperationType.presence, 1);
+      }
+
+      return makeQuery(pf.getPropertyIndex(),
+                       makePropertyRef(pf.getPropertyIndexes(), null),
+                       null,
+                       null, OperationType.absence, 1);
+    }
+
+    if (pf instanceof TimeRangeFilter) {
+      return makeQuery(pf.getPropertyIndex(),
+                       makePropertyRef(pf.getPropertyIndexes(), null),
+                       null,
+                       ((TimeRangeFilter)pf).getEntity(),
+                       OperationType.timeRange,
+                       1);
+    }
+
+    if (pf instanceof ObjectFilter) {
+      final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
+
+      final String fullTermsPath;
+      if (bwPie.getTermsField() == null) {
+        fullTermsPath = null;
+      } else {
+        fullTermsPath = makePropertyRef(pf.getPropertyIndexes(),
+                                        bwPie.getTermsField());
+      }
+      return makeQuery(pf.getPropertyIndex(),
+                       makePropertyRef(pf.getPropertyIndexes(), null),
+                       fullTermsPath,
+                       getValue((ObjectFilter)pf),
+                       OperationType.compare,
+                       1);
+    }
+
+    return null;
+  }
+
+  private List<QueryBuilder> makeQueries(final List<FilterBase> fs,
+                                         final boolean anding) throws CalFacadeException {
+    final List<QueryBuilder> qbs = new ArrayList<>();
+
+        /* We'll try to compact the queries - if we have a whole bunch of
+          "term" {"category_uid": "abcd"} for example we can turn it into
+          "terms" {"category_uid": ["abcd", "pqrs"]}
+        */
+    TermOrTermsQuery lastQb = null;
+
+    for (final FilterBase f: fs) {
+      final QueryBuilder qb = makeQuery(f);
+
+      if (qb == null) {
+        continue;
+      }
+
+      if (lastQb == null) {
+        if (!(qb instanceof TermOrTermsQuery)) {
+          qbs.add(qb);
+          continue;
+        }
+
+        lastQb = (TermOrTermsQuery) qb;
+      } else if (!(qb instanceof TermOrTermsQuery)) {
+        qbs.add(qb);
+      } else {
+                /* Can we combine them? */
+        final TermOrTermsQuery thisQb = (TermOrTermsQuery)qb;
+
+        if (thisQb.dontMerge ||
+                !lastQb.fldName.equals(thisQb.fldName) ||
+                (lastQb.not != thisQb.not)) {
+          qbs.add(lastQb);
+          lastQb = thisQb;
+        } else {
+          lastQb = lastQb.anding(anding);
+
+          if (thisQb.isTerms) {
+            for (final Object o: (Collection)thisQb.value) {
+              lastQb.addValue(o);
+            }
+          } else {
+            lastQb.addValue(thisQb.value);
+          }
+        }
+      }
+    }
+
+    if (lastQb != null) {
+      qbs.add(lastQb);
+    }
+
+    return qbs;
   }
 
   private FilterBuilder doView(final BwViewFilter vf) throws CalFacadeException {

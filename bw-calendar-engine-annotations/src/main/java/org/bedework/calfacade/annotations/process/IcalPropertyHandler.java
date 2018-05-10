@@ -75,6 +75,8 @@ public class IcalPropertyHandler {
 
     boolean analyzed;
 
+    String termsField;
+
     boolean isCollectionType;
 
     boolean param;
@@ -129,6 +131,7 @@ public class IcalPropertyHandler {
       nested = p.nested();
       keyindex = p.keyindex();
       analyzed = p.analyzed();
+      termsField = p.termsField();
       required = p.required();
       annotationRequired = p.annotationRequired();
 
@@ -489,6 +492,7 @@ public class IcalPropertyHandler {
           new PinfoField("boolean", "nested", "True for nested types"),
           new PinfoField("PropertyInfoIndex", "keyindex", "!= UNKNOWN_PROPERTY for indexed values"),
           new PinfoField("boolean", "analyzed", "True for analyzed types"),
+          new PinfoField("String", "termsField", "field we test for full term match"),
           new PinfoField("String", "presenceField", "field we test for presence"),
           new PinfoField("boolean", "param", "It's a parameter"),
           new PinfoField("boolean", "required", "Required for a valid event"),
@@ -532,6 +536,8 @@ public class IcalPropertyHandler {
     makePar(parIndent, "PropertyInfoIndex." + ip.keyindex.name(), "keyindex");
 
     makePar(parIndent, ip.analyzed, "analyzed");
+
+    makePar(parIndent, quote(ip.termsField), "termsField");
 
     makePar(parIndent, quote(ip.presenceField), "presenceField");
 

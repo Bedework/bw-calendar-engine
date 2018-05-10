@@ -19,6 +19,7 @@
 package org.bedework.calfacade;
 
 import org.bedework.access.Ace;
+import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.FixNamesEntity;
@@ -42,6 +43,10 @@ import org.bedework.util.misc.Util;
 public abstract class BwEventProperty<T> extends
         BwShareableContainedDbentity<T> implements FixNamesEntity {
   private String uid;
+
+  /* Non-db fields */
+
+  private float score;
 
   /** Constructor
    *
@@ -96,6 +101,18 @@ public abstract class BwEventProperty<T> extends
     setUid(Uid.getUid());
 
     return this;
+  }
+
+  public void setScore(final float val) {
+    score = val;
+  }
+
+  /**
+   * @return score from search
+   */
+  @NoDump
+  public float getScore() {
+    return score;
   }
 
   /* ====================================================================

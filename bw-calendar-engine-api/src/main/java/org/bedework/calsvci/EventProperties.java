@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -142,6 +143,16 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * @throws CalFacadeException
    */
   T find(final BwString val) throws CalFacadeException;
+
+  /** Return all entities matching the given filter expression to which the
+   * user has access.
+   *
+   * @param fexpr          filter expression - will be restriced to type
+   * @return matching BwEventProperty objects and status
+   */
+  GetEntitiesResponse<T> find(String fexpr,
+                              int from,
+                              int size);
 
   /** Add an entity to the database. The id will be set in the parameter
    * object.

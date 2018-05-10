@@ -27,6 +27,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -426,6 +427,17 @@ public interface BwIndexer extends Serializable {
    */
   List<BwContact> fetchAllContacts() throws CalFacadeException;
 
+  /**
+   *
+   * @param filter expression
+   * @param from start for result
+   * @param size max number
+   * @return status and locations
+   */
+  GetEntitiesResponse<BwContact> findContacts(FilterBase filter,
+                                              int from,
+                                              int size);
+
   /** Find a location owned by the current user which has a named
    * field which matches the value.
    *
@@ -447,10 +459,32 @@ public interface BwIndexer extends Serializable {
   GetEntityResponse<BwLocation> fetchLocationByKey(String name,
                                                    String val);
 
+  /**
+   *
+   * @param filter expression
+   * @param from start for result
+   * @param size max number
+   * @return status and locations
+   */
+  GetEntitiesResponse<BwLocation> findLocations(FilterBase filter,
+                                                int from,
+                                                int size);
+
   /** Fetch all for the current principal.
    *
    * @return possibly empty list
    * @throws CalFacadeException
    */
   List<BwLocation> fetchAllLocations() throws CalFacadeException;
+
+  /**
+   *
+   * @param filter expression
+   * @param from start for result
+   * @param size max number
+   * @return status and categories
+   */
+  GetEntitiesResponse<BwCategory> findCategories(FilterBase filter,
+                                                 int from,
+                                                 int size);
 }

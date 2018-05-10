@@ -20,6 +20,7 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
+import org.bedework.calfacade.annotations.ical.IcalProperties;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.CollatableEntity;
 import org.bedework.calfacade.base.SizedEntity;
@@ -107,7 +108,13 @@ public class BwLocation extends BwEventProperty<BwLocation>
    *
    * @return the main address of the location
    */
-  @IcalProperty(pindex = PropertyInfoIndex.ADDRESS)
+  @IcalProperties({
+          @IcalProperty(pindex = PropertyInfoIndex.ADDRESS),
+          @IcalProperty(pindex = PropertyInfoIndex.LOC_ALL,
+                  jname = "loc_all",
+                  termsField = "loc_all_terms",
+                  analyzed = true)
+  })
   @JsonIgnore
   public BwString getAddress() {
     return address;
