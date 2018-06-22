@@ -18,37 +18,35 @@
 */
 package org.bedework.calfacade.responses;
 
-import org.bedework.calfacade.BwLocation;
 import org.bedework.util.misc.ToString;
 
-import java.util.Collection;
+import java.util.List;
 
-/** Container for fetching locations.
+/** Container for fetching event properties.
  *
- * @author Mike Douglass douglm - rpi.edu
+ * @author Mike Douglass douglm
  */
-public class LocationsResponse extends EventPropertiesResponse {
-  private Collection<BwLocation> locations;
+public class EventPropertiesResponse extends Response {
+  private List<String> preferred;
 
   /**
-   *
-   * @param val collection of locations
+   * @param val list of hrefs
    */
-  public void setLocations(final Collection<BwLocation> val) {
-    locations = val;
+  public void setPreferred(final List<String> val) {
+    preferred = val;
   }
 
   /**
-   * @return collection of locations
+   * @return list of hrefs
    */
-  public Collection<BwLocation> getLocations() {
-    return locations;
+  public List<String> getPreferred() {
+    return preferred;
   }
 
   @Override
   public void toStringSegment(final ToString ts) {
     super.toStringSegment(ts);
 
-    ts.append("locations", getLocations());
+    ts.append("preferred", getPreferred());
   }
 }

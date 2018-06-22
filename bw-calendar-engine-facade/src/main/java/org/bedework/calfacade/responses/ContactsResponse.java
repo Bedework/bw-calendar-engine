@@ -18,37 +18,37 @@
 */
 package org.bedework.calfacade.responses;
 
-import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.BwContact;
 import org.bedework.util.misc.ToString;
 
 import java.util.Collection;
 
-/** Container for fetching locations.
+/** Container for fetching contacts.
  *
- * @author Mike Douglass douglm - rpi.edu
+ * @author Mike Douglass douglm
  */
-public class LocationsResponse extends EventPropertiesResponse {
-  private Collection<BwLocation> locations;
+public class ContactsResponse extends EventPropertiesResponse {
+  private Collection<BwContact> contacts;
 
   /**
    *
-   * @param val collection of locations
+   * @param val collection of contacts
    */
-  public void setLocations(final Collection<BwLocation> val) {
-    locations = val;
+  public void setContacts(final Collection<BwContact> val) {
+    contacts = val;
   }
 
   /**
-   * @return collection of locations
+   * @return collection of contacts
    */
-  public Collection<BwLocation> getLocations() {
-    return locations;
+  public Collection<BwContact> getContacts() {
+    return contacts;
   }
 
   @Override
   public void toStringSegment(final ToString ts) {
     super.toStringSegment(ts);
 
-    ts.append("locations", getLocations());
+    ts.append("contacts", getContacts());
   }
 }
