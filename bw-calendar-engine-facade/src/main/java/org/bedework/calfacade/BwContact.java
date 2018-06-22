@@ -20,6 +20,7 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
+import org.bedework.calfacade.annotations.ical.IcalProperties;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.CollatableEntity;
 import org.bedework.calfacade.base.SizedEntity;
@@ -64,8 +65,14 @@ public class BwContact extends BwEventProperty<BwContact>
    *
    * @param val    BwString name
    */
-  @IcalProperty(pindex = PropertyInfoIndex.CN,                 
-                analyzed = true)
+  @IcalProperties({
+          @IcalProperty(pindex = PropertyInfoIndex.CN,
+                  analyzed = true),
+          @IcalProperty(pindex = PropertyInfoIndex.CONTACT_ALL,
+                  jname = "contact_all",
+                  termsField = "contact_all_terms",
+                  analyzed = true)
+  })
   public void setCn(final BwString val) {
     cn = val;
   }
