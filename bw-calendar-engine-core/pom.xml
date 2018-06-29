@@ -13,9 +13,14 @@
 		<!-- Project Dependencies -->
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-calendar-engine-facade</artifactId>
+			<artifactId>bw-calendar-engine-core-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+    <dependency>
+      <groupId>org.bedework.caleng</groupId>
+      <artifactId>bw-calendar-engine-facade</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
 			<artifactId>bw-calendar-engine-interfaces</artifactId>
@@ -42,11 +47,6 @@
 
     <dependency>
       <groupId>org.bedework</groupId>
-      <artifactId>bw-util-elasticsearch</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.bedework</groupId>
       <artifactId>bw-util-hibernate</artifactId>
     </dependency>
 
@@ -58,11 +58,6 @@
     <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-util2-calendar</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.elasticsearch</groupId>
-      <artifactId>elasticsearch</artifactId>
     </dependency>
 	</dependencies>
 </project>

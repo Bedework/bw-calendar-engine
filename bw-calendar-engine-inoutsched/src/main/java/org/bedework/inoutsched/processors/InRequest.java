@@ -1247,7 +1247,7 @@ public class InRequest extends InProcessor {
         case INSTANCE:
         case LAST_REFRESH:
         case LAST_REFRESH_STATUS:
-        case LOCATION_UID:
+        case LOCATION_HREF:
         case LOCATION_STR:
           break;
         

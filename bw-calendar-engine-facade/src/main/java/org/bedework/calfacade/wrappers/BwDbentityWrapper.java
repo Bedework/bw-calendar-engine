@@ -27,7 +27,8 @@ import org.bedework.calfacade.base.BwDbentity;
  *
  * @param <T>
  */
-public class BwDbentityWrapper<T extends BwDbentity> extends BwDbentity
+public abstract class BwDbentityWrapper<T extends BwDbentity>
+        extends BwDbentity
         implements EntityWrapper<T> {
   protected T entity;
 
@@ -41,16 +42,12 @@ public class BwDbentityWrapper<T extends BwDbentity> extends BwDbentity
     putEntity(entity);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.wrappers.EntityWrapper#putEntity(org.bedework.calfacade.base.BwDbentity)
-   */
+  @Override
   public void putEntity(T val) {
     entity = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.wrappers.EntityWrapper#fetchEntity()
-   */
+  @Override
   public T fetchEntity() {
     return entity;
   }
@@ -59,9 +56,7 @@ public class BwDbentityWrapper<T extends BwDbentity> extends BwDbentity
    *                   Overridden methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.BwDbentity#getSeq()
-   */
+  @Override
   public int getSeq() {
     throw new RuntimeException("org.bedework.noaccess");
   }

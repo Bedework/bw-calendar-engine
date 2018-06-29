@@ -19,6 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -168,7 +169,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
       indexer.indexEntity(col);
 //      close();
 
-      final BwCalendar.CollectionInfo ci = col.getCollectionInfo();
+      final CollectionInfo ci = col.getCollectionInfo();
       if (!ci.childrenAllowed) {
         return;
       }

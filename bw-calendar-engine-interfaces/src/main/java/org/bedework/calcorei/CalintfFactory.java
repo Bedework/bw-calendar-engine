@@ -53,11 +53,15 @@ import org.bedework.calfacade.exc.CalFacadeException;
  */
 public class CalintfFactory {
   public final static Class hibernateClass;
+  public final static Class indexerOnlyClass;
   static {
     try {
-      /** CalIntf implemented in hibernate */
+      /* CalIntf implemented in hibernate */
       hibernateClass =
             Class.forName("org.bedework.calcore.hibernate.CalintfImpl");
+
+      indexerOnlyClass =
+              Class.forName("org.bedework.calcore.common.CalintfROImpl");
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -69,9 +73,9 @@ public class CalintfFactory {
 
   /** Obtain a calintf object.
    *
-   * @param cl
+   * @param cl the class
    * @return Calintf
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   public static Calintf getIntf(final Class cl) throws CalFacadeException {
     try {

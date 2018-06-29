@@ -55,7 +55,7 @@ public class EventInfo
     /** False if the update method(s) could find no changes */
     public boolean hasChanged;
 
-    /** False if the suence doesn't need updating */
+    /** False if the sequence doesn't need updating */
     public boolean sequenceChange;
 
     /** true if we need to reschedule after add/update

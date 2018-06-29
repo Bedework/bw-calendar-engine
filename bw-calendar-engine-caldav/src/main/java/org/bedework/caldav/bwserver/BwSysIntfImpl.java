@@ -53,6 +53,7 @@ import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.ScheduleResult;
@@ -1717,7 +1718,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
           isUserHome = true;
           provisionedTypes = new ArrayList<>();
 
-          for (final BwCalendar.CollectionInfo ci:
+          for (final CollectionInfo ci:
                   BwCalendar.getAllCollectionInfo()) {
             if (ci.provision) {
               provisionedTypes.add(ci.collectionType);
@@ -2258,7 +2259,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
     try {
       BwCalendar bwcol = null;
       if (col != null) {
-        bwcol = unwrap(col.resolveAlias(true));
+        bwcol = unwrap((CalDAVCollection)col.resolveAlias(true));
       }
 
       Icalendar ic = trans.fromIcal(bwcol,

@@ -69,9 +69,6 @@ public class BwSystem extends BwDbentity<BwSystem>
    *                   Property methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#setProperties(java.util.Set)
-   */
   @Override
   public void setProperties(final Set<BwProperty> val) {
     properties = val;
@@ -122,9 +119,6 @@ public class BwSystem extends BwDbentity<BwSystem>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#getNumProperties()
-   */
   @Override
   @NoDump
   public int getNumProperties() {
@@ -136,9 +130,6 @@ public class BwSystem extends BwDbentity<BwSystem>
     return c.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#findProperty(java.lang.String)
-   */
   @Override
   public BwProperty findProperty(final String name) {
     Collection<BwProperty> props = getProperties();
@@ -326,6 +317,21 @@ public class BwSystem extends BwDbentity<BwSystem>
    */
   public String getQproperty(final QName name) {
     return getProperty(NamespaceAbbrevs.prefixed(name));
+  }
+
+  /* ====================================================================
+   *                   db entity methods
+   * ==================================================================== */
+
+  /** Set the href
+   *
+   * @param val    String href
+   */
+  public void setHref(final String val) {
+  }
+
+  public String getHref() {
+    return null;
   }
 
   /* ====================================================================

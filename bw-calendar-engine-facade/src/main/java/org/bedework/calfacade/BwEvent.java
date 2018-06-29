@@ -710,9 +710,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   private Set<String> categoryUids;
 
-  private Set<String> contactUids;
+  private Set<String> contactHrefs;
 
-  private String locationUid;
+  private String locationHref;
 
   private ChangeTable changeSet;
 
@@ -4341,7 +4341,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoWrap
   @NoDump
   @Override
-  public void setCategoryUids(final Set<String> val) {
+  public void setCategoryHrefs(final Set<String> val) {
     categoryUids = val;
   }
 
@@ -4353,20 +4353,20 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoWrap
   @NoDump
   @Override
-  public Set<String> getCategoryUids() {
+  public Set<String> getCategoryHrefs() {
     return categoryUids;
   }
 
   /** Set list of referenced contacts
    *
-   * @param val list of contact uids
+   * @param val list of contact hrefs
    */
   @NoProxy
   @NoWrap
   @NoDump
   @Override
-  public void setContactUids(final Set<String> val) {
-    contactUids = val;
+  public void setContactHrefs(final Set<String> val) {
+    contactHrefs = val;
   }
 
   /**
@@ -4377,36 +4377,36 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoWrap
   @NoDump
   @Override
-  public Set<String> getContactUids() {
-    return contactUids;
+  public Set<String> getContactHrefs() {
+    return contactHrefs;
   }
 
-  /** Set uid of referenced location
+  /** Set href of referenced location
    *
-   * @param val location uid or null
+   * @param val location href or null
    */
   @NoProxy
   @NoWrap
   @NoDump
-  @IcalProperty(pindex = PropertyInfoIndex.LOCATION_UID,
-                jname = "locationUid",
+  @IcalProperty(pindex = PropertyInfoIndex.LOCATION_HREF,
+                jname = "locationHref",
                 required = true,
                 eventProperty = true,
                 todoProperty = true,
                 journalProperty = true)
-  public void setLocationUid(final String val) {
-    locationUid = val;
+  public void setLocationHref(final String val) {
+    locationHref = val;
   }
 
   /**
    *
-   * @return location uids
+   * @return location href
    */
   @NoProxy
   @NoWrap
   @NoDump
-  public String getLocationUid() {
-    return locationUid;
+  public String getLocationHref() {
+    return locationHref;
   }
 
   /** Get change set for the event. The absence of a changes does not

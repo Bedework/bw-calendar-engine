@@ -64,19 +64,15 @@ public interface CoreEventsI extends Serializable {
                                             String guid)
           throws CalFacadeException;
 
-  /** Get an event given the calendar and String name. Return null for not
+  /** Get an event given href. Return null for not
    * found. For non-recurring there should be only one event. For recurring
    * events, overrides and possibly instances will be returned.
    *
-   * @param colPath    String collection path or null.
-   * @param val        String possible name
-   * @param recurRetrieval How recurring event is returned.
+   * @param href   String path
    * @return CoreEventInfo or null
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
-  public CoreEventInfo getEvent(String colPath,
-                                String val,
-                                RecurringRetrievalMode recurRetrieval)
+  public CoreEventInfo getEvent(String href)
           throws CalFacadeException;
 
   /** Return the events for the current user within the given date/time

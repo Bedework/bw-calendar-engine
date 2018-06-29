@@ -65,6 +65,11 @@ public class ContactsImpl
   }
 
   @Override
+  BwContact fetchIndexed(final String href) throws CalFacadeException {
+    return getIndexer().fetchContact(href, PropertyInfoIndex.HREF);
+  }
+
+  @Override
   BwContact findPersistent(final BwContact val,
                            final String ownerHref) throws CalFacadeException {
     return findPersistent(val.getFinderKeyValue(), ownerHref);

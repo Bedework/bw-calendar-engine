@@ -21,11 +21,14 @@ package org.bedework.calfacade;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
-import org.bedework.calfacade.base.BwOwnedDbentity;
+import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.DescriptionEntity;
 import org.bedework.calfacade.base.DisplayNameEntity;
+import org.bedework.calfacade.base.FixNamesEntity;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -51,9 +54,9 @@ import java.util.TreeSet;
  * @version 1.1
  */
 @Dump(elementName="filter", keyFields={"owner", "name"})
-public class BwFilterDef extends BwOwnedDbentity<BwFilterDef>
+public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
         implements DescriptionEntity<BwLongString>,
-        DisplayNameEntity, Comparator<BwFilterDef> {
+        DisplayNameEntity, FixNamesEntity, Comparator<BwFilterDef> {
   /** The internal name of the filter
    */
   private String name;
@@ -339,17 +342,11 @@ public class BwFilterDef extends BwOwnedDbentity<BwFilterDef>
     return BwLongString.findLang(lang, getDescriptions());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#setDescription(java.lang.String)
-   */
   @Override
   public void setDescription(final String val) {
     updateDescriptions(null, val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#getDescription()
-   */
   @Override
   @NoDump
   public String getDescription() {
@@ -358,6 +355,31 @@ public class BwFilterDef extends BwOwnedDbentity<BwFilterDef>
       return null;
     }
     return s.getValue();
+  }
+
+  /* ====================================================================
+   *                   FixNamesEntity methods
+   * ==================================================================== */
+
+  @Override
+  public void fixNames(final BasicSystemProperties props,
+                       final BwPrincipal principal) {
+    if (getHref() != null) {
+      return;
+    }
+
+    setColPath(props, principal, "filters", null);
+
+    setHref(Util.buildPath(false, getColPath(), getName()));
+  }
+
+  protected void setColPath(final BasicSystemProperties props,
+                            final BwPrincipal principal,
+                            final String dir,
+                            final String namePart) {
+    setColPath(principal, props.getUserCalendarRoot(),
+               props.getBedeworkResourceDirectory(),
+               dir, namePart);
   }
 
   /** Add our stuff to the StringBuilder
@@ -372,9 +394,9 @@ public class BwFilterDef extends BwOwnedDbentity<BwFilterDef>
     ts.append("description", getDescription());
   }
 
-   /* ====================================================================
-    *                   Object methods
-    * ==================================================================== */
+  /* ====================================================================
+   *                   Object methods
+   * ==================================================================== */
 
   @Override
   public int compare(final BwFilterDef f1, final BwFilterDef f2) {

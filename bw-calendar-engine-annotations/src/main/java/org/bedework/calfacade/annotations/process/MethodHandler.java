@@ -22,7 +22,6 @@ import org.bedework.calfacade.annotations.CloneForOverride;
 import org.bedework.calfacade.annotations.ical.Immutable;
 import org.bedework.util.misc.ToString;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -46,6 +45,8 @@ import javax.lang.model.type.TypeMirror;
  * @param <T>
  */
 public abstract class MethodHandler<T> implements Comparable<MethodHandler> {
+  protected String forClass;
+
   protected AnnUtil annUtil;
 
   protected String ucFieldName; // no lower cased first char.
@@ -87,10 +88,12 @@ public abstract class MethodHandler<T> implements Comparable<MethodHandler> {
    */
   public MethodHandler(final ProcessingEnvironment env,
                        final AnnUtil annUtil,
-                       final ExecutableElement d) {
+                       final ExecutableElement d,
+                       final ProcessState pstate) {
     this.env = env;
     this.annUtil = annUtil;
     msg = env.getMessager();
+    forClass = pstate.currentClassName;
 
     staticMethod = d.getModifiers().contains(Modifier.STATIC);
     methName = d.getSimpleName().toString();
@@ -214,11 +217,18 @@ public abstract class MethodHandler<T> implements Comparable<MethodHandler> {
    * @param ts to string object
    */
   public void toStringSegment(final ToString ts) {
+    ts.append("forClass", forClass);
     ts.append("fieldName", fieldName);
     ts.append("fieldType", fieldType);
     ts.append("method", methName);
+    ts.append("getter", getter);
+    ts.append("setter", setter);
     ts.append("staticMethod", staticMethod);
     ts.append("basicType", basicType);
+    ts.append("pars.size()", pars.size());
+    for (VariableElement pd: pars) {
+      ts.append("par", pd);
+    }
   }
 
   @Override
@@ -248,13 +258,14 @@ public abstract class MethodHandler<T> implements Comparable<MethodHandler> {
       return 1;
     }
 
-    Iterator<VariableElement> it = that.pars.iterator();
-    for (VariableElement pd: pars) {
-      VariableElement thatPd = it.next();
-
-      if (!pd.equals(thatPd)) {
-        return 1;
+    if (fieldType == null) {
+      if (that.fieldType == null) {
+        return 0;
       }
+
+      return -1;
+    } if (!fieldType.equals(that.fieldType))  {
+      return 1;
     }
 
     return 0;

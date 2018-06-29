@@ -30,7 +30,7 @@ import org.bedework.util.misc.ToString;
  *
  * @param <T>
  */
-public class BwOwnedDbentity<T> extends BwDbentity<T> {
+public abstract class BwOwnedDbentity<T> extends BwDbentity<T> {
   private String ownerHref;
 
   private Boolean publick;

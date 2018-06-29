@@ -88,8 +88,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
 
   private String link;
 
-  private String href;
-
   /** Constructor
    *
    */
@@ -606,16 +604,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
     setColPath(props, principal, "locations", null);
 
     setHref(Util.buildPath(false, getColPath(), getUid()));
-  }
-
-  @Override
-  public void setHref(final String val) {
-    href = val;
-  }
-
-  @Override
-  public String getHref(){
-    return href;
   }
 
   /* ====================================================================

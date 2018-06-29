@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.indexing;
+package org.bedework.calcore.common.indexing;
 
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.Configurations;

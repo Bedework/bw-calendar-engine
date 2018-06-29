@@ -53,7 +53,7 @@
     <orderEntry type="library" name="Maven: org.apache.james:apache-mime4j-dom:0.7" level="project" />
     <orderEntry type="library" name="Maven: dnsjava:dnsjava:2.1.1" level="project" />
     <orderEntry type="module" module-name="bw-caldav-server" />
-    <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:2.0.3" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:2.0.9" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.10" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-collections4:4.0" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.groovy:groovy-all:2.3.2" level="project" />

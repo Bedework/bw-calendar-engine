@@ -55,5 +55,16 @@ public interface AccessChecker extends Serializable {
   CalendarWrapper checkAccess(final BwCalendar val)
           throws CalFacadeException;
 
+  /**
+   *
+   * @param val to be checked
+   * @param desiredAccess access we want
+   * @return null if no access
+   * @throws CalFacadeException
+   */
+  CalendarWrapper checkAccess(final BwCalendar val,
+                              int desiredAccess)
+          throws CalFacadeException;
+
     AccessUtilI getAccessUtil();
 }

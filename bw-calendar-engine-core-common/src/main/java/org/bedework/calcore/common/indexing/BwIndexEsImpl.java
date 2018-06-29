@@ -16,10 +16,10 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.indexing;
+package org.bedework.calcore.common.indexing;
 
 import org.bedework.access.Acl;
-import org.bedework.calcore.indexing.DocBuilder.ItemKind;
+import org.bedework.calcore.common.indexing.DocBuilder.ItemKind;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -30,11 +30,18 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwEventProxy;
+import org.bedework.calfacade.BwFilterDef;
+import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.BwResourceContent;
+import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwShareableDbentity;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
+import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
@@ -49,6 +56,9 @@ import org.bedework.calfacade.indexing.SearchResultEntry;
 import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.responses.Response;
+import org.bedework.calfacade.svc.BwAdminGroup;
+import org.bedework.calfacade.svc.BwCalSuitePrincipal;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.icalendar.RecurUtil;
@@ -130,10 +140,6 @@ import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -146,7 +152,7 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import static org.bedework.access.PrivilegeDefs.privRead;
-import static org.bedework.calcore.indexing.DocBuilder.ItemKind.entity;
+import static org.bedework.calcore.common.indexing.DocBuilder.ItemKind.entity;
 import static org.bedework.calfacade.indexing.BwIndexer.IndexedType.unreachableEntities;
 import static org.bedework.calfacade.responses.Response.Status.failed;
 import static org.bedework.calfacade.responses.Response.Status.notFound;
@@ -211,6 +217,12 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   private final String[] searchIndexes;
   private final int currentMode;
 
+  private String lastChangeToken;
+  private long lastChangeTokenCheck;
+  private final int lastChangeTokenCheckPeriod = 2000;
+
+  final static EntityCaches caches = new EntityCaches();
+
   private final AuthProperties authpars;
   private final AuthProperties unauthpars;
   private final IndexProperties idxpars;
@@ -240,15 +252,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       docToType.put(it.getDocType(), it);
     }
   }
-
-  final static EventPropertiesCache<BwCategory> categories =
-          new EventPropertiesCache<>();
-
-  final static EventPropertiesCache<BwLocation> locations =
-          new EventPropertiesCache<>();
-
-  final static EventPropertiesCache<BwContact> contacts =
-          new EventPropertiesCache<>();
 
   /**
    * Constructor
@@ -529,106 +532,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     return resp;
   }
 
-  /* This is code to fix an issue that arose with reindexing data.
-     It reinstates location uids if a file of the format
-     event-uid,location-uid
-     exists, e.g. many lines like
-     CAL-2c9cb3cc-22ebebec-0123-04daafe6-000035a0bedework@yale.edu,00f1fcdb-0f068baf-010f-068baf7c-00000002
-
-      This code can be removed or disabled.
-   */
-
-  private final static String uidsMapFilename = "/data/bedework/files/locids.txt";
-
-  private final static String uidsOverrideMapFilename = "/data/bedework/files/locids-recur.txt";
-
-  private Map<String,String> uidsMap;
-
-  private Map<String,String> uidsOverideMap;
-
-  private long uidsSet;
-  private long uidOverridesSet;
-
-  private void checkUidsMap() {
-    //noinspection ConstantConditions
-    if (uidsMapFilename == null) {
-      return;
-    }
-
-    // Reset just in case
-    uidsSet = 0;
-    uidOverridesSet = 0;
-    uidsOverideMap = null;
-
-    final File uidsMapFile = new File(uidsMapFilename);
-
-    try {
-      uidsMap = new HashMap<>();
-
-      LineNumberReader lnr =
-              new LineNumberReader(new FileReader(uidsMapFile));
-
-      int errors = 0;
-      while (true) {
-        final String ln = lnr.readLine();
-
-        if (ln == null) {
-          break;
-        }
-
-        final String[] uids = ln.split(",");
-
-        if ((uids.length != 2) | (uids[0] == null) | (uids[1] == null)) {
-          warn("Bad input line " + ln);
-          errors++;
-          if (errors > 100) {
-            break;
-          }
-        }
-
-        uidsMap.put(uids[0], uids[1]);
-      }
-
-      //noinspection ConstantConditions
-      if (uidsOverrideMapFilename == null) {
-        return;
-      }
-
-      uidsOverideMap = new HashMap<>();
-
-      lnr = new LineNumberReader(new FileReader(uidsOverrideMapFilename));
-
-
-      errors = 0;
-      while (true) {
-        final String ln = lnr.readLine();
-
-        if (ln == null) {
-          break;
-        }
-
-        final String[] uids = ln.split(",");
-
-        if ((uids.length != 3) ||
-                (uids[0] == null) ||
-                (uids[1] == null) ||
-                (uids[2] == null)) {
-          warn("Bad input line " + ln);
-          errors++;
-          if (errors > 100) {
-            break;
-          }
-        }
-
-        uidsOverideMap.put(uids[0] + "|" + uids[1], uids[2]);
-      }
-    } catch (final FileNotFoundException fnfe) {
-      warn("Unable to open " + uidsMapFilename);
-    } catch (IOException e) {
-      warn("Error reading " + uidsMapFilename);
-    }
-  }
-
   private void reindex(final ReindexResponse resp,
                        final String indexName,
                        final String docType) {
@@ -645,8 +548,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     if (cl == null) {
       return;
     }
-
-    checkUidsMap();
 
     // Start with default index as source
     targetIndex = Util.buildPath(false, idxpars.getUserIndexName());
@@ -750,9 +651,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
           bulkProcessor.add(request);
 
           if (entity instanceof BwEventProperty) {
-            if (!cacheEvprop(hitResp, (BwEventProperty)entity)) {
-              resp.addFailure(hitResp);
-            }
+            caches.put((BwEventProperty)entity);
           }
         }
       }
@@ -773,14 +672,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                   "Final bulk close was interrupted. Records may be missing",
                   failed);
     }
-
-    if (uidsSet > 0) {
-      info("Uids set: " + uidsSet);
-      info("uidOverridesSet: " + uidOverridesSet);
-    }
-
-    uidsMap = null;
-    uidsOverideMap = null;
   }
 
   @Override
@@ -1147,7 +1038,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       Object entity = null;
       switch (dtype) {
         case docTypeCollection:
-          entity = eb.makeCollection();
+          entity = makeCollection(eb);
           break;
         case docTypeCategory:
           entity = eb.makeCat();
@@ -1160,15 +1051,15 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
           break;
         case docTypeEvent:
         case docTypePoll:
-          entity = eb.makeEvent(kval,
-                                res.recurRetrieval.mode == Rmode.expanded);
+          final Response evrestResp = new Response();
+          entity = makeEvent(eb, evrestResp, kval,
+                             res.recurRetrieval.mode == Rmode.expanded);
           final EventInfo ei = (EventInfo)entity;
           final BwEvent ev = ei.getEvent();
-          final Response evrestResp = new Response();
 
-          restoreEvProps(evrestResp, ei);
           if (evrestResp.getStatus() != ok) {
-            warn("Failed restore of ev props: " + evrestResp);
+            warn("Failed restore of event " + ev.getUid() +
+                         ": " + evrestResp);
           }
 
           final Acl.CurrentAccess ca =
@@ -1370,32 +1261,9 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
           switch (dtype) {
             case docTypeEvent:
             case docTypePoll:
-              entity = eb.makeEvent(kval, false);
+              entity = makeEvent(eb, resp, kval, false);
               final EventInfo oei = (EventInfo)entity;
               final BwEvent oev = oei.getEvent();
-
-              if ((uidsMap != null) && (oev.getLocationUid() == null)) {
-                String locuid = null;
-
-                if (uidsOverideMap != null) {
-                  locuid = uidsOverideMap.get(oev.getUid() + "|" +
-                                                      oev.getRecurrenceId());
-                }
-
-                if (locuid == null) {
-                  locuid = uidsMap.get(oev.getUid());
-                }
-                if (locuid != null) {
-                  uidOverridesSet++;
-                  oev.setLocationUid(locuid);
-                }
-
-                oev.setLocationUid(locuid);
-              }
-
-              if (!restoreEvProps(resp, oei)) {
-                return false;
-              }
 
               if (oev instanceof BwEventAnnotation) {
                 final BwEventAnnotation ann = (BwEventAnnotation)oev;
@@ -1437,18 +1305,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       /* If it's not recurring or a stand-alone instance index it */
 
       final BwEvent ev = ei.getEvent();
-
-      if ((uidsMap != null) && (ev.getLocationUid() == null)) {
-        final String locuid = uidsMap.get(ev.getUid());
-        if (locuid != null) {
-          uidsSet++;
-          ev.setLocationUid(locuid);
-        }
-      }
-
-      if (!restoreEvProps(resp, ei)) {
-        return false;
-      }
 
       if (!ev.testRecurring() && (ev.getRecurrenceId() == null)) {
         final EsDocInfo doc = makeDoc(resp,
@@ -1645,71 +1501,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
   }
 
-  private boolean restoreEvProps(final Response resp,
-                                 final EventInfo ei) {
-    final BwEvent ev = ei.getEvent();
-
-    try {
-      final Set<String> catUids = ev.getCategoryUids();
-      if (!Util.isEmpty(catUids)) {
-        for (final String uid : catUids) {
-          BwCategory evprop = categories.get(uid);
-          if (evprop == null) {
-            evprop = fetchCat(uid, PropertyInfoIndex.UID);
-            if (evprop == null) {
-              warn("Unable to fetch category " + uid +
-                           " for event " + ev.getHref());
-              errorReturn(resp, "Unable to fetch category " + uid);
-              continue;
-            }
-          }
-
-          ev.addCategory(evprop);
-        }
-      }
-
-      final Set<String> contactUids = ev.getContactUids();
-      if (!Util.isEmpty(contactUids)) {
-        for (final String uid : contactUids) {
-          BwContact evprop = contacts.get(uid);
-          if (evprop == null) {
-            evprop = fetchContact(uid, PropertyInfoIndex.UID);
-            if (evprop == null) {
-              warn("Unable to fetch contact " + uid +
-                           " for event " + ev.getHref());
-              errorReturn(resp, "Unable to fetch contact " + uid);
-              continue;
-            }
-          }
-
-          ev.addContact(evprop);
-        }
-      }
-
-      final String uid = ev.getLocationUid();
-      if (uid != null) {
-        BwLocation evprop = locations.get(uid);
-        if (evprop == null) {
-          evprop = fetchLocation(uid, PropertyInfoIndex.UID);
-          if (evprop == null) {
-            warn("Unable to fetch location " + uid +
-                         " for event " + ev.getHref());
-            errorReturn(resp, "Unable to fetch location " + uid);
-          }
-        }
-
-        if (evprop != null) {
-          ev.setLocation(evprop);
-        }
-      }
-
-      return resp.getStatus() == ok;
-    } catch (final Throwable t) {
-      errorReturn(resp, t);
-      return false;
-    }
-  }
-
   private EsDocInfo makeDoc(final Response resp,
                             final EventInfo ei,
                             final ItemKind kind,
@@ -1751,17 +1542,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       throw new CalFacadeException("Unable to set updateInfo");
     }
 
-    if ((docType == null) || docType.equals(docTypeUnknown)) {
-      categories.clear();
-      contacts.clear();
-      locations.clear();
-    } else if (docType.equals(docTypeCategory)) {
-      categories.clear();
-    } else if (docType.equals(docTypeContact)) {
-      contacts.clear();
-    } else if (docType.equals(docTypeLocation)) {
-      locations.clear();
-    }
+    caches.clear();
 
     ui.setUpdate(true);
   }
@@ -1979,6 +1760,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
   }
 
+  private BwSystem cachedBwSystem;
+
   @Override
   public GetEntityResponse<EventInfo> fetchEvent(final String href)
           throws CalFacadeException {
@@ -2014,7 +1797,52 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
     final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
 
-    final EventInfo ei = eb.makeEvent(hit.getId(), false);
+    final EventInfo ei = makeEvent(eb, resp, hit.getId(), false);
+    if (ei == null) {
+      return notFound(resp);
+    }
+
+    final BwEvent ev = ei.getEvent();
+
+    final Acl.CurrentAccess ca =
+            accessCheck.checkAccess(ev, privRead, true);
+
+    if ((ca == null) || !ca.getAccessAllowed()) {
+      return notFound(resp);
+    }
+
+    ei.setCurrentAccess(ca);
+
+    if (ev.getRecurrenceId() != null) {
+      // Single instance
+      resp.setEntity(ei);
+      return resp;
+    }
+
+    addOverrides(resp, idxpars.getUserIndexName(), ei);
+
+    return resp;
+  }
+
+  @Override
+  public GetEntityResponse<EventInfo> fetchEvent(String colPath,
+                                                 String guid)
+          throws CalFacadeException {
+    final GetEntityResponse<EventInfo> resp = new GetEntityResponse<>();
+
+
+    final FilterBuilder fltr =
+            getFilters(null).singleEventFilterGuid(colPath, guid);
+
+    final SearchHit hit = fetchEntity(docTypeEvent, fltr);
+
+    if (hit == null) {
+      return notFound(resp);
+    }
+
+    final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
+
+    final EventInfo ei = makeEvent(eb, resp, hit.getId(), false);
     if (ei == null) {
       return notFound(resp);
     }
@@ -2045,23 +1873,35 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   public BwCategory fetchCat(final String val,
                              final PropertyInfoIndex... index)
           throws CalFacadeException {
+    BwCategory entity;
+
+    if ((index.length == 1) &&
+            (index[0] == PropertyInfoIndex.HREF)) {
+      checkCache();
+      entity = getCached(val, BwCategory.class);
+      if (entity != null) {
+        return entity;
+      }
+    }
+
     final EntityBuilder eb = fetchEntity(docTypeCategory, val, index);
 
     if (eb == null) {
       return null;
     }
 
-    final BwCategory entity = eb.makeCat();
+    entity = eb.makeCat();
     if (entity == null) {
       return null;
     }
 
-    categories.put(entity);
+    caches.put(entity);
     return entity;
   }
 
   @Override
   public BwCalendar fetchCol(final String val,
+                             final int desiredAccess,
                              final PropertyInfoIndex... index)
           throws CalFacadeException {
     final EntityBuilder eb = fetchEntity(docTypeCollection, val,
@@ -2071,9 +1911,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       return null;
     }
 
-    final BwCalendar col = eb.makeCollection();
-
-    return accessCheck.checkAccess(col);
+    return accessCheck.checkAccess(makeCollection(eb),
+                                   desiredAccess);
   }
 
   @Override
@@ -2084,19 +1923,20 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
 
     final List<BwCalendar> cols =
-            fetchAllEntities(docTypeCollection,
+            fetchEntities(docTypeCollection,
                              new BuildEntity<BwCalendar>() {
                                @Override
                                BwCalendar make(final EntityBuilder eb)
                                        throws CalFacadeException {
                                  return accessCheck.checkAccess(
-                                         eb.makeCollection());
+                                         makeCollection(eb));
                                }
                              },
                              new TermFilterBuilder(
                                      EntityBuilder.getJname(
                                              PropertyInfoIndex.COLPATH),
-                                     href));
+                                     href),
+                          -1);
 
     if (Util.isEmpty(cols)) {
       return cols;
@@ -2106,21 +1946,266 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   }
 
   @Override
+  public Collection<BwCalendar> fetchChildrenDeep(final String href)
+          throws CalFacadeException {
+    if (debug) {
+      debug("fetchChildrenDeep for " + href);
+    }
+
+    Collection<BwCalendar> cols = fetchChildren(href);
+
+    if (Util.isEmpty(cols)) {
+      return cols;
+    }
+
+    Collection<BwCalendar> res = new ArrayList<>(cols);
+
+    for (final BwCalendar col: cols) {
+      Collection<BwCalendar> subcols = fetchChildren(col.getHref());
+
+      if (Util.isEmpty(subcols)) {
+        return cols;
+      }
+
+      res.addAll(subcols);
+    }
+
+    return new TreeSet<>(cols); // Sort the result
+  }
+
+  @Override
+  public BwPrincipal fetchPrincipal(final String val)
+          throws CalFacadeException {
+    checkCache();
+    BwPrincipal entity = getCached(val, BwPrincipal.class);
+
+    if (entity != null) {
+      return entity;
+    }
+
+    final EntityBuilder eb = fetchEntity(docTypePrincipal, val,
+                                         PropertyInfoIndex.HREF);
+
+    if (eb == null) {
+      return null;
+    }
+
+    entity = eb.makePrincipal();
+    if (entity == null) {
+      return null;
+    }
+
+    caches.put(entity);
+
+    if (entity instanceof BwCalSuitePrincipal) {
+      final BwCalSuitePrincipal cs = (BwCalSuitePrincipal)entity;
+
+      if (cs.getGroupHref() != null) {
+        cs.setGroup((BwAdminGroup)fetchPrincipal(cs.getGroupHref()));
+      }
+      return entity;
+    }
+
+    if (!(entity instanceof BwGroup)) {
+      return entity;
+    }
+
+    final BwGroup grp = (BwGroup)entity;
+
+    // Get all member entities
+    if (Util.isEmpty(grp.getMemberHrefs())) {
+      return entity;
+    }
+
+    for (final String href: grp.getMemberHrefs()) {
+      final BwPrincipal mbr = fetchPrincipal(href);
+      if (mbr == null) {
+        warn("Missing member in index: " + href);
+        continue;
+      }
+
+      grp.addGroupMember(mbr);
+    }
+
+    return entity;
+  }
+
+  @Override
+  public BwPreferences fetchPreferences(String href)
+          throws CalFacadeException {
+    if (href == null) {
+      return null;
+    }
+
+    checkCache();
+    BwPreferences entity = getCached(href, BwPreferences.class);
+    if (entity != null) {
+      return entity;
+    }
+
+    final EntityBuilder eb = fetchEntity(docTypePreferences, href,
+                                         PropertyInfoIndex.HREF);
+
+    if (eb == null) {
+      return null;
+    }
+
+    entity = eb.makePreferences();
+    if (entity == null) {
+      return null;
+    }
+
+    caches.put(entity);
+    return entity;
+  }
+
+  @Override
+  public BwFilterDef fetchFilter(String href)
+          throws CalFacadeException {
+    checkCache();
+    BwFilterDef entity = getCached(href, BwFilterDef.class);
+
+    if (entity != null) {
+      return entity;
+    }
+
+    final EntityBuilder eb = fetchEntity(docTypeFilter, href,
+                                         PropertyInfoIndex.HREF);
+
+    if (eb == null) {
+      return null;
+    }
+
+    entity = eb.makefilter();
+    if (entity == null) {
+      return null;
+    }
+
+    caches.put(entity);
+    return entity;
+  }
+
+  @Override
+  public List<BwFilterDef> fetchFilters(final FilterBase fb,
+                                        final int count)
+          throws CalFacadeException {
+    final FilterBuilder f;
+
+    if (fb == null) {
+      f = getFilters(null).principalFilter(null);
+    } else {
+      f = getFilters(null).buildFilter(fb);
+    }
+
+    return fetchEntities(docTypeFilter,
+                         new BuildEntity<BwFilterDef>() {
+                           @Override
+                           BwFilterDef make(final EntityBuilder eb)
+                                   throws CalFacadeException {
+                             return eb.makefilter();
+                           }
+                         },
+                         f,
+                         count);
+  }
+
+  @Override
+  public BwResource fetchResource(String href)
+          throws CalFacadeException {
+    checkCache();
+    BwResource entity = getCached(href, BwResource.class);
+
+    if (entity != null) {
+      return entity;
+    }
+
+    final EntityBuilder eb = fetchEntity(docTypeResource, href,
+                                         PropertyInfoIndex.HREF);
+
+    if (eb == null) {
+      return null;
+    }
+
+    entity = eb.makeResource();
+    if (entity == null) {
+      return null;
+    }
+
+    caches.put(entity);
+    return entity;
+  }
+
+  @Override
+  public List<BwResource> fetchResources(final FilterBase fb,
+                                         final int count)
+          throws CalFacadeException {
+    final FilterBuilder f;
+
+    if (fb == null) {
+      f = getFilters(null).principalFilter(null);
+    } else {
+      f = getFilters(null).buildFilter(fb);
+    }
+
+    return fetchEntities(docTypeResource,
+                         new BuildEntity<BwResource>() {
+                           @Override
+                           BwResource make(final EntityBuilder eb)
+                                   throws CalFacadeException {
+                             return eb.makeResource();
+                           }
+                         },
+                         f,
+                         count);
+  }
+
+  @Override
+  public BwResourceContent fetchResourceContent(final String href)
+          throws CalFacadeException {
+    /* Note - we do not cache these - they are potentially very large */
+
+    final EntityBuilder eb = fetchEntity(docTypeResourceContent, href,
+                                         PropertyInfoIndex.HREF);
+
+    if (eb == null) {
+      return null;
+    }
+
+    final BwResourceContent entity = eb.makeResourceContent();
+    if (entity == null) {
+      return null;
+    }
+
+    return entity;
+  }
+
+  @Override
   public BwContact fetchContact(final String val,
                                 final PropertyInfoIndex... index)
           throws CalFacadeException {
+    BwContact entity;
+
+    if ((index.length == 1) &&
+            (index[0] == PropertyInfoIndex.HREF)) {
+      checkCache();
+      entity = getCached(val, BwContact.class);
+      if (entity != null) {
+        return entity;
+      }
+    }
+
     final EntityBuilder eb = fetchEntity(docTypeContact, val, index);
 
     if (eb == null) {
       return null;
     }
 
-    final BwContact entity = eb.makeContact();
+    entity = eb.makeContact();
     if (entity == null) {
       return null;
     }
 
-    contacts.put(entity);
+    caches.put(entity);
     return entity;
   }
 
@@ -2128,18 +2213,29 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   public BwLocation fetchLocation(final String val,
                                   final PropertyInfoIndex... index)
           throws CalFacadeException {
+    BwLocation entity;
+
+    if ((index.length == 1) &&
+            (index[0] == PropertyInfoIndex.HREF)) {
+      checkCache();
+      entity = getCached(val, BwLocation.class);
+      if (entity != null) {
+        return entity;
+      }
+    }
+
     final EntityBuilder eb = fetchEntity(docTypeLocation, val, index);
 
     if (eb == null) {
       return null;
     }
 
-    final BwLocation entity = eb.makeLocation();
+    entity = eb.makeLocation();
     if (entity == null) {
       return null;
     }
 
-    locations.put(entity);
+    caches.put(entity);
     return entity;
   }
 
@@ -2180,40 +2276,42 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
   @Override
   public List<BwCategory> fetchAllCats() throws CalFacadeException {
-    return fetchAllEntities(docTypeCategory,
-                            new BuildEntity<BwCategory>() {
-                              @Override
-                              BwCategory make(final EntityBuilder eb)
-                                      throws CalFacadeException {
-                                return eb.makeCat();
-                              }
-                            });
+    return fetchEntities(docTypeCategory,
+                         new BuildEntity<BwCategory>() {
+                           @Override
+                           BwCategory make(final EntityBuilder eb)
+                                   throws CalFacadeException {
+                             return eb.makeCat();
+                           }
+                         },
+                         -1);
   }
 
   @Override
   public List<BwContact> fetchAllContacts()
           throws CalFacadeException {
-    return fetchAllEntities(docTypeContact,
-                            new BuildEntity<BwContact>() {
-                              @Override
-                              BwContact make(final EntityBuilder eb)
-                                      throws CalFacadeException {
-                                return eb.makeContact();
-                              }
-                            });
+    return fetchEntities(docTypeContact,
+                         new BuildEntity<BwContact>() {
+                           @Override
+                           BwContact make(final EntityBuilder eb)
+                                   throws CalFacadeException {
+                             return eb.makeContact();
+                           }
+                         },
+                         -1);
   }
 
   @Override
   public List<BwLocation> fetchAllLocations()
           throws CalFacadeException {
-    return fetchAllEntities(docTypeLocation,
-                            new BuildEntity<BwLocation>() {
-                              @Override
-                              BwLocation make(final EntityBuilder eb)
-                                      throws CalFacadeException {
-                                return eb.makeLocation();
-                              }
-                            });
+    return fetchEntities(docTypeLocation,
+                         new BuildEntity<BwLocation>() {
+                           @Override
+                           BwLocation make(final EntityBuilder eb)
+                                   throws CalFacadeException {
+                             return eb.makeLocation();
+                           }
+                         }, -1);
   }
 
   @Override
@@ -2267,6 +2365,11 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       }
 
 */
+
+      if (debug) {
+        debug("Search: targetIndex=" + targetIndex +
+                      "; srb=" + srb);
+      }
 
       final SearchResponse sresp = srb.execute().actionGet();
 
@@ -2482,6 +2585,37 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
    *                   private methods
    * ======================================================================== */
 
+  private boolean checkCache() throws CalFacadeException {
+    final long now = System.currentTimeMillis();
+
+    if ((now - lastChangeTokenCheck) <= lastChangeTokenCheckPeriod) {
+      return true;
+    }
+
+    lastChangeTokenCheck = now;
+    final String changeToken = currentChangeToken();
+
+    if ((changeToken == null) ||
+            changeToken.equals(lastChangeToken)) {
+      return true;
+    }
+
+    lastChangeToken = changeToken;
+    caches.clear();
+
+    return false;
+  }
+
+  synchronized <T extends BwUnversionedDbentity> T getCached(final String href,
+                                                             final Class<T> resultType)
+          throws CalFacadeException {
+    if (!checkCache()) {
+      return null;
+    }
+
+    return caches.get(href, resultType);
+  }
+
   private SearchHits multiColFetch(final List<String> hrefs)
           throws CalFacadeException {
     final int batchSize = hrefs.size();
@@ -2629,16 +2763,19 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     abstract T make(EntityBuilder eb) throws CalFacadeException;
   }
 
-  private <T> List<T> fetchAllEntities(final String docType,
-                                       final BuildEntity<T> be)
+  private <T> List<T> fetchEntities(final String docType,
+                                    final BuildEntity<T> be,
+                                    final int count)
           throws CalFacadeException {
-    return fetchAllEntities(docType, be,
-                            getFilters(null).principalFilter(null));
+    return fetchEntities(docType, be,
+                         getFilters(null).principalFilter(null),
+                         count);
   }
 
-  private <T> List<T> fetchAllEntities(final String docType,
-                                       final BuildEntity<T> be,
-                                       final FilterBuilder filter)
+  private <T> List<T> fetchEntities(final String docType,
+                                    final BuildEntity<T> be,
+                                    final FilterBuilder filter,
+                                    final int count)
           throws CalFacadeException {
     final SearchRequestBuilder srb = getClient()
             .prepareSearch(targetIndex);
@@ -2650,8 +2787,13 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
 
     int tries = 0;
-    //int ourPos = 0;
-    final int ourCount = maxFetchCount;
+    final int ourCount;
+
+    if (count < 0) {
+      ourCount = maxFetchCount;
+    } else {
+      ourCount = Math.min(maxFetchCount, count);
+    }
 
     final List<T> res = new ArrayList<>();
 
@@ -2842,6 +2984,14 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         di = db.makeDoc((BwLocation)rec);
       }
 
+      if (rec instanceof BwPrincipal) {
+        di = db.makeDoc((BwPrincipal)rec);
+      }
+
+      if (rec instanceof BwPreferences) {
+        di = db.makeDoc((BwPreferences)rec);
+      }
+
       if (di != null) {
         return indexDoc(di);
       }
@@ -2901,27 +3051,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
 
     return null;
-  }
-
-  private boolean cacheEvprop(final Response resp,
-                              final BwEventProperty rec) {
-    if (rec instanceof BwCategory) {
-      categories.put((BwCategory)rec);
-      return true;
-    }
-
-    if (rec instanceof BwContact) {
-      contacts.put((BwContact)rec);
-      return true;
-    }
-
-    if (rec instanceof BwLocation) {
-      locations.put((BwLocation)rec);
-      return true;
-    }
-
-    errorReturn(resp, "Unknown record type: " + rec.getClass().getName());
-    return false;
   }
 
   private IndexResponse indexEvent(final EventInfo ei) throws CalFacadeException {
@@ -3366,7 +3495,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       Object entity = null;
       switch (dtype) {
         case docTypeCollection:
-          entity = eb.makeCollection();
+          entity = makeCollection(eb);
           break;
         case docTypeCategory:
           entity = eb.makeCat();
@@ -3378,8 +3507,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
           entity = eb.makeLocation();
           break;
         case docTypeEvent: case docTypePoll:
-          entity = eb.makeEvent(kval,
-                                (rrm != null) && (rrm.mode == Rmode.expanded));
+          entity = makeEvent(eb, resp, kval,
+                             (rrm != null) && (rrm.mode == Rmode.expanded));
           break;
       }
       
@@ -3387,6 +3516,116 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     } catch (final CalFacadeException cfe) {
       errorReturn(resp, cfe);
       return null;
+    }
+  }
+
+  private BwCalendar makeCollection(final EntityBuilder eb) throws CalFacadeException {
+    final BwCalendar entity = eb.makeCollection();
+
+    if (entity != null) {
+      restoreCategories(entity);
+    }
+
+    return entity;
+  }
+
+  private EventInfo makeEvent(final EntityBuilder eb,
+                              final Response resp,
+                              final String kval,
+                              final boolean expanded) throws CalFacadeException {
+    final EventInfo entity = eb.makeEvent(kval, expanded);
+
+    if (entity == null) {
+      return null;
+    }
+
+    restoreEvent(resp, entity);
+
+    return entity;
+  }
+
+  private void restoreEvent(final Response resp,
+                            final Collection<EventInfo> eis) throws CalFacadeException {
+    if (Util.isEmpty(eis)) {
+      return;
+    }
+
+    for (final EventInfo ei: eis) {
+      restoreEvent(resp, ei);
+    }
+  }
+
+  private void restoreEvent(final Response resp,
+                            final EventInfo ei) throws CalFacadeException {
+    if (ei == null) {
+      return;
+    }
+
+    final BwEvent ev = ei.getEvent();
+
+    restoreCategories(ev);
+    restoreEvent(resp, ei.getContainedItems());
+    restoreEvent(resp, ei.getOverrides());
+
+    try {
+      final Set<String> contactHrefs = ev.getContactHrefs();
+      if (!Util.isEmpty(contactHrefs)) {
+        for (final String href : contactHrefs) {
+          BwContact evprop = fetchContact(href, PropertyInfoIndex.HREF);
+          if (evprop == null) {
+            warn("Unable to fetch contact " + href +
+                         " for event " + ev.getHref());
+            errorReturn(resp, "Unable to fetch contact " + href);
+            continue;
+          }
+
+          ev.addContact(evprop);
+        }
+      }
+
+      final String href = ev.getLocationHref();
+      if (href != null) {
+        BwLocation evprop = fetchLocation(href, PropertyInfoIndex.HREF);
+        if (evprop == null) {
+          warn("Unable to fetch location " + href +
+                       " for event " + ev.getHref());
+          errorReturn(resp, "Unable to fetch location " + href);
+        } else {
+          ev.setLocation(evprop);
+        }
+      }
+    } catch (final Throwable t) {
+      error(t);
+      errorReturn(resp, t);
+    }
+  }
+
+  private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
+    if (ce == null) {
+      return;
+    }
+
+    final Set<String> hrefs = ce.getCategoryHrefs();
+    if (Util.isEmpty(hrefs)) {
+      return;
+    }
+
+    // Check we didn't do this
+    final Set<BwCategory> cats = ce.getCategories();
+    if (!Util.isEmpty(cats) && (cats.size() == hrefs.size())) {
+      return;
+    }
+
+    for (final String href: hrefs) {
+      final BwCategory cat = fetchCat(href, PropertyInfoIndex.HREF);
+
+      if (cat == null) {
+        error("Attempting to store null for cat "
+                      + href);
+        continue;
+      }
+
+      ce.addCategory(cat);
     }
   }
 
@@ -3437,6 +3676,10 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
   private <T extends Response> T errorReturn(final T resp,
                                              final String msg) {
+    if (resp == null) {
+      return resp;
+    }
+
     if (resp.getMessage() != null) {
       resp.setMessage(resp.getMessage() + "\n" + msg);
     } else {

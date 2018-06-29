@@ -65,6 +65,11 @@ public class CategoriesImpl
   }
 
   @Override
+  BwCategory fetchIndexed(final String href) throws CalFacadeException {
+    return getIndexer().fetchCat(href, PropertyInfoIndex.HREF);
+  }
+
+  @Override
   BwCategory findPersistent(final BwCategory val,
                             final String ownerHref) throws CalFacadeException {
     return findPersistent(val.getWord(), ownerHref);

@@ -399,7 +399,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     return getCal().getCollectionIdx(getIndexer(), path, 
                                      PrivilegeDefs.privAny, 
-                                     false);
+                                     true);
   }
 
   @Override
@@ -421,17 +421,14 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     final Calintf.GetSpecialCalendarResult gscr =
-            getSvc().getCal().getSpecialCalendar(
-                    pr, calType, create,
-                    PrivilegeDefs.privAny);
+            getSpecialCalendar(pr, calType, create);
     if (!gscr.noUserHome) {
       return gscr.cal;
     }
 
     getSvc().getUsersHandler().add(getPrincipal().getAccount());
 
-    return getCal().getSpecialCalendar(pr, calType, create,
-                                       PrivilegeDefs.privAny).cal;
+    return getSpecialCalendar(pr, calType, create).cal;
   }
 
   @Override
@@ -468,10 +465,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     final GetSpecialCalendarResult gscr =
-            getCal().getSpecialCalendar(getPrincipal(),
-                                        calType,
-                                        true,
-                                        PrivilegeDefs.privAny);
+            getSpecialCalendar(getPrincipal(), calType, true);
 
     return gscr.cal.getPath();
   }
@@ -688,7 +682,20 @@ class Calendars extends CalSvcDb implements CalendarsI {
       int numCats = 0;
       final Set<BwCategory> colCats = col.getCategories();
       if (!Util.isEmpty(colCats)) {
-        cats.addAll(colCats);
+        for (final BwCategory colCat: colCats) {
+          if (!colCat.unsaved()) {
+            cats.add(colCat);
+            continue;
+          }
+
+          final BwCategory theCat =
+                  getSvc().getCategoriesHandler()
+                          .getPersistent(colCat.getUid());
+
+          if (theCat != null) {
+            cats.add(theCat);
+          }
+        }
         numCats = colCats.size();
       }
       if (debug) {
@@ -721,20 +728,23 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                final boolean create,
                                final int access) throws CalFacadeException {
     final Calintf.GetSpecialCalendarResult gscr =
-            getSvc().getCal().getSpecialCalendar(
-                    owner, calType, create,
-                    PrivilegeDefs.privAny);
+            getSpecialCalendar(owner, calType, create);
     if (gscr.noUserHome) {
       getSvc().getUsersHandler().add(owner.getAccount());
     }
 
-    return getSvc().getCal().getSpecialCalendar(owner, calType, create,
-                                                PrivilegeDefs.privAny).cal;
+    return getSpecialCalendar(owner, calType, create).cal;
   }
 
   /* ====================================================================
    *                   package private methods
    * ==================================================================== */
+  GetSpecialCalendarResult getSpecialCalendar(BwPrincipal owner,
+                                              int calType,
+                                              boolean create) throws CalFacadeException {
+    return getCal().getSpecialCalendar(null, owner, calType, create,
+                                       PrivilegeDefs.privAny);
+  }
 
   /**
    * @param val an href
@@ -747,7 +757,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   Set<BwCalendar> getSynchCols(final String path,
                                final String lastmod) throws CalFacadeException {
-    return getCal().getSynchCols(path, lastmod);
+    return getCal().getSynchCols(path, lastmod, null);
   }
 
   boolean delete(final BwCalendar val,

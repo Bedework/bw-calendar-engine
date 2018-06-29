@@ -41,8 +41,9 @@ public class ProxyMethod extends MethodHandler<ProxyMethod> {
    */
   public ProxyMethod(final ProcessingEnvironment env,
                      final AnnUtil annUtil,
-                     final ExecutableElement d) {
-    super(env, annUtil, d);
+                     final ExecutableElement d,
+                     final ProcessState pstate) {
+    super(env, annUtil, d, pstate);
   }
 
   /**

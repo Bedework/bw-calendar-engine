@@ -27,17 +27,17 @@ import java.util.Set;
  * @author douglm
  */
 public interface ContactedEntity {
-  /** Set the contacts uids Set
+  /** Set the contacts hrefs Set
    *
-   * @param val    Set of contact uids
+   * @param val    Set of contact hrefs
    */
-  void setContactUids(Set<String> val);
+  void setContactHrefs(Set<String> val);
 
-  /** Get the contact uids
+  /** Get the contact hrefs
    *
-   *  @return Set of contact uids
+   *  @return Set of contact hrefs
    */
-  Set<String> getContactUids();
+  Set<String> getContactHrefs();
 
   /** Set the contacts Set
    *

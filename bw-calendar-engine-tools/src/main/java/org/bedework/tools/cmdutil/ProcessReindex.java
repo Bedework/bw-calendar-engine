@@ -19,6 +19,7 @@
 package org.bedework.tools.cmdutil;
 
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -114,7 +115,7 @@ public class ProcessReindex extends CmdUtilHelper {
 
       reindexed++;
       
-      final BwCalendar.CollectionInfo ci = col.getCollectionInfo();
+      final CollectionInfo ci = col.getCollectionInfo();
       if (!ci.childrenAllowed) {
         return reindexed;
       }

@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.indexing;
+package org.bedework.calcore.common.indexing;
 
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
@@ -28,13 +28,18 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
+import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwGeo;
+import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwLongString;
 import org.bedework.calfacade.BwOrganizer;
+import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.BwRelatedTo;
 import org.bedework.calfacade.BwRequestStatus;
+import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
@@ -43,6 +48,10 @@ import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.svc.BwAdminGroup;
+import org.bedework.calfacade.svc.BwCalSuitePrincipal;
+import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
@@ -53,8 +62,10 @@ import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.property.RequestStatus;
+import org.apache.commons.codec.binary.Base64;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -98,6 +109,120 @@ public class EntityBuilder extends EntityBuilderBase {
                                      getLong("count"));
   }
 
+  BwPrincipal makePrincipal() throws CalFacadeException {
+    final String href = getString(PropertyInfoIndex.HREF);
+
+    final BwPrincipal pr = BwPrincipal.makePrincipal(href);
+
+    if (pr == null) {
+      return null;
+    }
+
+    pr.setCreated(getTimestamp(getJname(PropertyInfoIndex.CREATED)));
+    pr.setLastAccess(getTimestamp("lastAccess"));
+    pr.setDescription(getString(PropertyInfoIndex.DESCRIPTION));
+    pr.setQuota(getLongVal("quota"));
+    pr.setCategoryAccess(getString("categoryAccess"));
+    pr.setContactAccess(getString("contactAccess"));
+    pr.setLocationAccess(getString("locationAccess"));
+
+    if (pr instanceof BwGroup) {
+      final BwGroup grp = (BwGroup)pr;
+
+      grp.setMemberHrefs(getStringSet("memberHref"));
+    }
+
+    if (pr instanceof BwAdminGroup) {
+      final BwAdminGroup grp = (BwAdminGroup)pr;
+
+      grp.setGroupOwnerHref(getString("groupOwnerHref"));
+      grp.setOwnerHref(getString("ownerHref"));
+    }
+
+    if (pr instanceof BwCalSuitePrincipal) {
+      final BwCalSuitePrincipal cs = (BwCalSuitePrincipal)pr;
+
+      cs.setRootCollectionPath(getString("rootCollectionPath"));
+      cs.setSubmissionsRootPath(getString("submissionsRootPath"));
+      cs.setGroupHref(getString("groupHref"));
+    }
+
+    return pr;
+  }
+
+  BwPreferences makePreferences() throws CalFacadeException {
+    final BwPreferences ent = new BwPreferences();
+
+    ent.setOwnerHref(getString(PropertyInfoIndex.OWNER));
+
+    ent.setViews(restoreViews());
+
+    ent.setEmail(getString("email"));
+    ent.setDefaultCalendarPath(getString("defaultCalendarPath"));
+    ent.setSkinName(getString("skinName"));
+    ent.setSkinStyle(getString("skinStyle"));
+    ent.setPreferredView(getString("preferredView"));
+    ent.setPreferredViewPeriod(getString("preferredViewPeriod"));
+    ent.setPageSize(getInt("pageSize"));
+    ent.setWorkDays(getString("workDays"));
+    ent.setWorkdayStart(getInt("workDayStart"));
+    ent.setWorkdayEnd(getInt("workDayEnd"));
+    ent.setPreferredEndType(getString("preferredEndType"));
+    ent.setUserMode(getInt("userMode"));
+    ent.setHour24(getBool("hour24"));
+    ent.setScheduleAutoRespond(getBool("scheduleAutoRespond"));
+    ent.setScheduleAutoCancelAction(getInt("scheduleAutoCancelAction"));
+    ent.setScheduleDoubleBook(getBool("scheduleDoubleBook"));
+    ent.setScheduleAutoProcessResponses(getInt("scheduleAutoProcessResponses"));
+
+    ent.setProperties(restoreProperties("userProperties"));
+
+    return ent;
+  }
+
+  BwFilterDef makefilter() throws CalFacadeException {
+    final BwFilterDef ent = new BwFilterDef();
+
+    restoreSharedEntity(ent);
+
+    ent.setName(getString(PropertyInfoIndex.NAME));
+
+    ent.setDisplayNames(restoreBwStringSet(
+            "displayName", BwString.class));
+    ent.setDefinition(getString(PropertyInfoIndex.FILTER_EXPR));
+    ent.setDescriptions(restoreBwStringSet(
+            PropertyInfoIndex.DESCRIPTION, BwLongString.class));
+
+    return ent;
+  }
+
+  BwResource makeResource() throws CalFacadeException {
+    final BwResource ent = new BwResource();
+
+    restoreSharedEntity(ent);
+
+    ent.setName(getString(PropertyInfoIndex.NAME));
+
+    ent.setSequence(getInt(PropertyInfoIndex.SEQUENCE));
+    ent.setContentType(getString("contentType"));
+    ent.setEncoding(getString("encoding"));
+    ent.setContentLength(getLongVal("contentlength"));
+
+    return ent;
+  }
+
+  /* Return the docinfo for the indexer */
+  BwResourceContent makeResourceContent() throws CalFacadeException {
+    final BwResourceContent ent = new BwResourceContent();
+
+    ent.setName(getString(PropertyInfoIndex.NAME));
+    ent.setColPath(getString(PropertyInfoIndex.COLLECTION));
+
+    ent.setByteValue(new Base64().decode(getString("content")));
+
+    return ent;
+  }
+
   BwCategory makeCat() throws CalFacadeException {
     final BwCategory cat = new BwCategory();
 
@@ -106,10 +231,10 @@ public class EntityBuilder extends EntityBuilderBase {
     cat.setName(getString(PropertyInfoIndex.NAME));
     cat.setUid(getString(PropertyInfoIndex.UID));
 
-    cat.setWord(
-            (BwString)restoreBwString(PropertyInfoIndex.CATEGORIES, false));
-    cat.setDescription(
-            (BwString)restoreBwString(PropertyInfoIndex.DESCRIPTION, false));
+    cat.setWord(restoreBwString(PropertyInfoIndex.CATEGORIES,
+                                BwString.class));
+    cat.setDescription(restoreBwString(PropertyInfoIndex.DESCRIPTION,
+                                       BwString.class));
 
     return cat;
   }
@@ -121,8 +246,8 @@ public class EntityBuilder extends EntityBuilderBase {
 
     ent.setUid(getString(PropertyInfoIndex.UID));
 
-    ent.setCn((BwString)restoreBwString(PropertyInfoIndex.CN,
-                                        false));
+    ent.setCn(restoreBwStringValue(PropertyInfoIndex.CN,
+                              BwString.class));
     ent.setPhone(getString(PropertyInfoIndex.PHONE));
     ent.setEmail(getString(PropertyInfoIndex.EMAIL));
     ent.setLink(getString(PropertyInfoIndex.URL));
@@ -137,10 +262,10 @@ public class EntityBuilder extends EntityBuilderBase {
 
     ent.setUid(getString(PropertyInfoIndex.UID));
 
-    ent.setAddress((BwString)restoreBwString(
-            PropertyInfoIndex.ADDRESS, false));
-    ent.setSubaddress((BwString)restoreBwString(
-            PropertyInfoIndex.SUBADDRESS, false));
+    ent.setAddress(restoreBwString(
+            PropertyInfoIndex.ADDRESS, BwString.class));
+    ent.setSubaddress(restoreBwString(
+            PropertyInfoIndex.SUBADDRESS, BwString.class));
     ent.setLink(getString(PropertyInfoIndex.URL));
 
     return ent;
@@ -173,7 +298,7 @@ public class EntityBuilder extends EntityBuilderBase {
     col.setRemotePw(getString(PropertyInfoIndex.REMOTE_PW));
     col.setUnremoveable(getBool(PropertyInfoIndex.UNREMOVEABLE));
 
-    restoreProperties(col);
+    col.setProperties(restoreProperties(getJname(PropertyInfoIndex.COL_PROPERTIES)));
     restoreCategories(col);
     
     return col;
@@ -322,10 +447,10 @@ public class EntityBuilder extends EntityBuilderBase {
 
     restoreCategories(ev);
 
-    ev.setSummaries((Set<BwString>)restoreBwStringSet(
-            PropertyInfoIndex.SUMMARY, false));
-    ev.setDescriptions((Set<BwLongString>)restoreBwStringSet(
-            PropertyInfoIndex.DESCRIPTION, true));
+    ev.setSummaries(restoreBwStringSet(PropertyInfoIndex.SUMMARY,
+                                       BwString.class));
+    ev.setDescriptions(restoreBwStringSet(PropertyInfoIndex.DESCRIPTION,
+                                          BwLongString.class));
 
     ev.setEntityType(makeEntityType(getString(PropertyInfoIndex.ENTITY_TYPE)));
 
@@ -347,7 +472,7 @@ public class EntityBuilder extends EntityBuilderBase {
 
     ev.setSequence(getInt(PropertyInfoIndex.SEQUENCE));
 
-    ev.setLocationUid(getString(PropertyInfoIndex.LOCATION_UID));
+    ev.setLocationHref(getString(PropertyInfoIndex.LOCATION_HREF));
 
     ev.setUid(getString(PropertyInfoIndex.UID));
     ev.setTransparency(getString(PropertyInfoIndex.TRANSP));
@@ -391,11 +516,11 @@ public class EntityBuilder extends EntityBuilderBase {
 
     ev.setAttendees(restoreAttendees(vpoll));
     ev.setRecipients(getStringSet(PropertyInfoIndex.RECIPIENT));
-    ev.setComments((Set<BwString>)restoreBwStringSet(
-            PropertyInfoIndex.COMMENT, false));
+    ev.setComments(restoreBwStringSet(PropertyInfoIndex.COMMENT,
+                                      BwString.class));
     restoreContacts(ev);
-    ev.setResources((Set<BwString>)restoreBwStringSet(
-            PropertyInfoIndex.RESOURCES, false));
+    ev.setResources(restoreBwStringSet(PropertyInfoIndex.RESOURCES,
+                                       BwString.class));
 
     if (vpoll) {
       final Set<String> pollItems = getStringSet(PropertyInfoIndex.POLL_ITEM);
@@ -624,36 +749,62 @@ public class EntityBuilder extends EntityBuilderBase {
     }
   }
 
-  private BwStringBase restoreBwString(final PropertyInfoIndex pi,
-                                       final boolean longString) throws CalFacadeException {
+  private <T extends BwStringBase> T restoreBwStringValue(final PropertyInfoIndex pi,
+                                                     final Class<T> resultType) throws CalFacadeException {
+    final String val = getString(pi);
+    if (val == null) {
+      return null;
+    }
+    final T sb;
+    try {
+      sb = resultType.newInstance();
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+
+    sb.setLang(null);
+    sb.setValue(val);
+
+    return sb;
+  }
+
+  private <T extends BwStringBase> T restoreBwString(final PropertyInfoIndex pi,
+                                       final Class<T> resultType) throws CalFacadeException {
     if (!pushFields(pi)) {
       return null;
     }
 
     try {
-      return restoreBwString(longString);
+      return restoreBwString(resultType);
     } finally {
       popFields();
     }
   }
 
-  private Set<? extends BwStringBase> restoreBwStringSet(
+  private <T extends BwStringBase> Set<T> restoreBwStringSet(
           final PropertyInfoIndex pi,
-          final boolean longStrings)
+          final Class<T> resultType)
           throws CalFacadeException {
-    final List<Object> vals = getFieldValues(pi);
+    return restoreBwStringSet(getJname(pi), resultType);
+  }
+
+  private <T extends BwStringBase> Set<T> restoreBwStringSet(
+          final String name,
+          final Class<T> resultType)
+          throws CalFacadeException {
+    final List<Object> vals = getFieldValues(name);
 
     if (Util.isEmpty(vals)) {
       return null;
     }
 
-    final Set<BwStringBase> ss = new TreeSet<>();
+    final Set<T> ss = new TreeSet<>();
 
     for (final Object o: vals) {
       try {
         pushFields(o);
 
-        ss.add(restoreBwString(longStrings));
+        ss.add(restoreBwString(resultType));
       } catch (final IndexException ie) {
         throw new CalFacadeException(ie);
       } finally {
@@ -664,14 +815,13 @@ public class EntityBuilder extends EntityBuilderBase {
     return ss;
   }
 
-  private BwStringBase restoreBwString(final boolean longString)
+  private <T extends BwStringBase> T restoreBwString(final Class<T> resultType)
           throws CalFacadeException {
-    final BwStringBase sb;
-
-    if (longString) {
-      sb = new BwLongString();
-    } else {
-      sb = new BwString();
+    final T sb;
+    try {
+      sb = resultType.newInstance();
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
     }
 
     sb.setLang(getString(PropertyInfoIndex.LANG));
@@ -833,10 +983,38 @@ public class EntityBuilder extends EntityBuilderBase {
     ent.setPublick(getBooleanNotNull(PropertyInfoIndex.PUBLIC));
   }
 
-  private void restoreProperties(final BwCalendar col) throws CalFacadeException {
-    final Collection<Object> vals = getFieldValues(PropertyInfoIndex.COL_PROPERTIES);
+  private Set<BwView> restoreViews() throws CalFacadeException {
+    final Collection<Object> vals = getFieldValues("views");
     if (Util.isEmpty(vals)) {
-      return;
+      return null;
+    }
+
+    final Set<BwView> views = new TreeSet<>();
+
+    for (final Object o: vals) {
+      try {
+        pushFields(o);
+
+        final BwView view = new BwView();
+
+        view.setName(getString(PropertyInfoIndex.NAME));
+        view.setCollectionPaths(new ArrayList<>(getStringSet(PropertyInfoIndex.HREF)));
+
+        views.add(view);
+      } catch (final IndexException ie) {
+        throw new CalFacadeException(ie);
+      } finally {
+        popFields();
+      }
+    }
+
+    return views;
+  }
+
+  private Set<BwProperty> restoreProperties(final String name) throws CalFacadeException {
+    final Collection<Object> vals = getFieldValues(name);
+    if (Util.isEmpty(vals)) {
+      return null;
     }
 
     final Set<BwProperty> props = new TreeSet<>();
@@ -844,9 +1022,9 @@ public class EntityBuilder extends EntityBuilderBase {
     for (final Object o: vals) {
       try {
         pushFields(o);
-        final String name = getString(PropertyInfoIndex.NAME);
+        final String pname = getString(PropertyInfoIndex.NAME);
         final String val = getString(PropertyInfoIndex.VALUE);
-        props.add(new BwProperty(name, val));
+        props.add(new BwProperty(pname, val));
       } catch (final IndexException ie) {
         throw new CalFacadeException(ie);
       } finally {
@@ -854,29 +1032,29 @@ public class EntityBuilder extends EntityBuilderBase {
       }
     }
 
-    col.setProperties(props);
+    return props;
   }
 
   private void restoreContacts(final BwEvent ev) throws CalFacadeException {
-    ev.setContactUids(getUids(getFieldValues(PropertyInfoIndex.CONTACT)));
+    ev.setContactHrefs(getHrefs(getFieldValues(PropertyInfoIndex.CONTACT)));
   }
 
   private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
-    ce.setCategoryUids(getUids(getFieldValues(PropertyInfoIndex.CATEGORIES)));
+    ce.setCategoryHrefs(getHrefs(getFieldValues(PropertyInfoIndex.CATEGORIES)));
   }
 
-  private Set<String> getUids(final List<Object> vals) throws CalFacadeException {
+  private Set<String> getHrefs(final List<Object> vals) throws CalFacadeException {
     if (Util.isEmpty(vals)) {
       return null;
     }
 
-    final Set<String> uids = new TreeSet<>();
+    final Set<String> hrefs = new TreeSet<>();
 
     for (final Object o: vals) {
       try {
         pushFields(o);
-        final String uid = getString(PropertyInfoIndex.UID);
-        uids.add(uid);
+        final String uid = getString(PropertyInfoIndex.HREF);
+        hrefs.add(uid);
       } catch (final IndexException ie) {
         throw new CalFacadeException(ie);
       } finally {
@@ -884,7 +1062,7 @@ public class EntityBuilder extends EntityBuilderBase {
       }
     }
 
-    return uids;
+    return hrefs;
   }
 
   @SuppressWarnings("unchecked")
@@ -959,6 +1137,24 @@ public class EntityBuilder extends EntityBuilderBase {
     }
 
     return Boolean.valueOf(s);
+  }
+
+  protected Timestamp getTimestamp(final String name) {
+    final String s = (String)getFirstValue(name);
+    if ((s == null) || (s.length() != 16)) {
+      return null;
+    }
+
+    // in: 20140305T093551Z
+    //     0   4 6 89 1 3 5
+    //                1 1 1
+
+    return  Timestamp.valueOf(
+            String.format("%s-%s-%s %s:%s:%s.0",
+                          s.substring(0, 4),
+                          s.substring(4, 6), s.substring(6, 8),
+                          s.substring(9, 11), s.substring(11, 13),
+                          s.substring(13, 15)));
   }
 
   private boolean getBool(final ParameterInfoIndex id) {

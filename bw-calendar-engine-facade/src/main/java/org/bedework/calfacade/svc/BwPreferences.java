@@ -908,6 +908,22 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   }
 
   /* ====================================================================
+   *                   db entity methods
+   * ==================================================================== */
+
+  /** Set the href - ignored
+   *
+   * @param val    String href
+   */
+  public void setHref(final String val) {
+    setOwnerHref(val);
+  }
+
+  public String getHref() {
+    return getOwnerHref();
+  }
+
+  /* ====================================================================
    *                   Convenience methods
    * ==================================================================== */
 

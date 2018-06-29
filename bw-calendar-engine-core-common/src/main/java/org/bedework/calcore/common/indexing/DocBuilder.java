@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.indexing;
+package org.bedework.calcore.common.indexing;
 
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
@@ -26,16 +26,23 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventProperty;
+import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwGeo;
+import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.BwRelatedTo;
 import org.bedework.calfacade.BwRequestStatus;
+import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
+import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwStringBase;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.FixNamesEntity;
 import org.bedework.calfacade.base.XpropsEntity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
@@ -44,6 +51,10 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.IndexKeys;
+import org.bedework.calfacade.svc.BwAdminGroup;
+import org.bedework.calfacade.svc.BwCalSuitePrincipal;
+import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
@@ -56,6 +67,7 @@ import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.parameter.Related;
 
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -121,23 +133,160 @@ public class DocBuilder extends DocBuilderBase {
    *                   package private methods
    * =================================================================== */
 
-  String getHref(final BwShareableContainedDbentity val) throws CalFacadeException {
-    if (val instanceof BwEvent) {
-      return ((BwEvent)val).getHref();
+  /* Return the docinfo for the indexer */
+  EsDocInfo makeDoc(final BwPrincipal ent) throws CalFacadeException {
+    try {
+      startObject();
+      makeHref(ent);
+
+      makeField("account", ent.getAccount());
+      makeTimestampField(getJname(PropertyInfoIndex.CREATED),
+                         ent.getCreated());
+      makeTimestampField("lastAccess", ent.getLastAccess());
+      makeField(PropertyInfoIndex.DESCRIPTION, ent.getDescription());
+      makeField("quota", ent.getQuota());
+      makeField("categoryAccess", ent.getCategoryAccess());
+      makeField("contactAccess", ent.getContactAccess());
+      makeField("locationAccess", ent.getLocationAccess());
+
+      if (ent instanceof BwGroup) {
+        final BwGroup grp = (BwGroup)ent;
+
+        if (!Util.isEmpty(grp.getGroupMembers())) {
+          startArray("memberHref");
+
+          for (final BwPrincipal mbr: grp.getGroupMembers()) {
+            value(mbr.getPrincipalRef());
+          }
+          endArray();
+        }
+      }
+
+      if (ent instanceof BwAdminGroup) {
+        final BwAdminGroup grp = (BwAdminGroup)ent;
+
+        makeField("groupOwnerHref", grp.getGroupOwnerHref());
+        makeField("ownerHref", grp.getOwnerHref());
+      }
+
+      if (ent instanceof BwCalSuitePrincipal) {
+        final BwCalSuitePrincipal cs = (BwCalSuitePrincipal)ent;
+
+        makeField("rootCollectionPath", cs.getRootCollectionPath());
+        makeField("submissionsRootPath", cs.getSubmissionsRootPath());
+        makeField("groupHref", cs.getGroup().getHref());
+      }
+
+      endObject();
+
+      return makeDocInfo(BwIndexer.docTypePrincipal, 0,
+                         getHref(ent));
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  private void makeTimestampField(
+          @SuppressWarnings("SameParameterValue") final String name,
+          final Timestamp val) throws IndexException {
+    if (val == null) {
+      return;
     }
 
-    if (val instanceof BwCalendar) {
-      return ((BwCalendar)val).getPath();
+    final String dt = val.toString();
+
+    // in: 2014-03-05 09:35:51.0
+    //     0    5  8  1  4  7
+    //                1  1  1
+    makeField(name,
+              String.format("%s%s%sT%s%s%sZ", dt.substring(0, 4),
+                            dt.substring(5, 7), dt.substring(8, 10),
+                            dt.substring(11, 13), dt.substring(14, 16),
+                            dt.substring(17, 19)));
+  }
+
+  /* Return the docinfo for the indexer */
+  EsDocInfo makeDoc(final BwPreferences ent) throws CalFacadeException {
+    try {
+      startObject();
+      makeHref(ent);
+
+      indexViews(ent.getViews());
+
+      makeField("email", ent.getEmail());
+      makeField("defaultCalendarPath", ent.getDefaultCalendarPath());
+      makeField("skinName", ent.getSkinName());
+      makeField("skinStyle", ent.getSkinStyle());
+      makeField("preferredView", ent.getPreferredView());
+      makeField("preferredViewPeriod", ent.getPreferredViewPeriod());
+      makeField("pageSize", ent.getPageSize());
+      makeField("workDays", ent.getWorkDays());
+      makeField("workDayStart", ent.getWorkdayStart());
+      makeField("workDayEnd", ent.getWorkdayEnd());
+      makeField("preferredEndType", ent.getPreferredEndType());
+      makeField("userMode", ent.getUserMode());
+      makeField("hour24", ent.getHour24());
+      makeField("scheduleAutoRespond", ent.getScheduleAutoRespond());
+      makeField("scheduleAutoCancelAction", ent.getScheduleAutoCancelAction());
+      makeField("scheduleDoubleBook", ent.getScheduleDoubleBook());
+      makeField("scheduleAutoProcessResponses", ent.getScheduleAutoProcessResponses());
+
+      indexProperties("userProperties",
+                      ent.getProperties());
+
+      endObject();
+
+      return makeDocInfo(BwIndexer.docTypePreferences, 0, ent.getHref());
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
     }
+  }
 
-    if (val instanceof FixNamesEntity) {
-      final FixNamesEntity ent = (FixNamesEntity)val;
+  /* Return the docinfo for the indexer */
+  EsDocInfo makeDoc(final BwResource ent) throws CalFacadeException {
+    try {
+      startObject();
 
-      ent.fixNames(basicSysprops, principal);
-      return ent.getHref();
+      makeShareableContained(ent);
+
+      makeField(PropertyInfoIndex.NAME, ent.getName());
+
+      makeField(PropertyInfoIndex.SEQUENCE, ent.getSequence());
+      makeField("contentType", ent.getContentType());
+      makeField("encoding", ent.getEncoding());
+      makeField("contentlength", ent.getContentLength());
+
+      endObject();
+
+      return makeDocInfo(BwIndexer.docTypeResource, 0, ent.getHref());
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
     }
+  }
 
-    throw new CalFacadeException("Unhandled class " + val);
+  /* Return the docinfo for the indexer */
+  EsDocInfo makeDoc(final BwResourceContent ent) throws CalFacadeException {
+    try {
+      startObject();
+      makeHref(ent);
+
+      makeField(PropertyInfoIndex.NAME, ent.getName());
+      makeField(PropertyInfoIndex.COLLECTION, ent.getColPath());
+
+      makeField("content", ent.getEncodedContent());
+
+      return makeDocInfo(BwIndexer.docTypeResourceContent, 0, ent.getHref());
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
   }
 
   /* Return the docinfo for the indexer */
@@ -156,8 +305,6 @@ public class DocBuilder extends DocBuilderBase {
 
       makeField(PropertyInfoIndex.NAME, ent.getName());
       makeField(PropertyInfoIndex.UID, ent.getUid());
-
-      makeField(PropertyInfoIndex.HREF, ent.getHref());
 
       makeField(PropertyInfoIndex.CATEGORIES, ent.getWord());
       makeField(PropertyInfoIndex.DESCRIPTION, ent.getDescription());
@@ -190,9 +337,9 @@ public class DocBuilder extends DocBuilderBase {
       makeField(PropertyInfoIndex.NAME, ent.getUid());
       makeField(PropertyInfoIndex.UID, ent.getUid());
 
-      makeField(PropertyInfoIndex.HREF, ent.getHref());
-
-      makeField(PropertyInfoIndex.CN, ent.getCn());
+      if (ent.getCn() != null) {
+        makeField(PropertyInfoIndex.CN, ent.getCn().getValue());
+      }
       makeField(PropertyInfoIndex.PHONE, ent.getPhone());
       makeField(PropertyInfoIndex.EMAIL, ent.getEmail());
       makeField(PropertyInfoIndex.URL, ent.getLink());
@@ -223,8 +370,6 @@ public class DocBuilder extends DocBuilderBase {
 
       makeField(PropertyInfoIndex.NAME, ent.getAddressField());
       makeField(PropertyInfoIndex.UID, ent.getUid());
-
-      makeField(PropertyInfoIndex.HREF, ent.getHref());
 
       // These 2 fields are composite fields
       makeField(PropertyInfoIndex.ADDRESS, ent.getAddress());
@@ -264,6 +409,35 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   /* Return the docinfo for the indexer */
+  EsDocInfo makeDoc(final BwFilterDef ent) throws CalFacadeException {
+    try {
+      /* We don't have real collections. It's been the practice to
+         create "/" delimited names to emulate a hierarchy. Look out
+         for these and try to create a real path based on them.
+       */
+
+      ent.fixNames(basicSysprops, principal);
+
+      startObject();
+
+      makeShareableContained(ent);
+
+      makeField(PropertyInfoIndex.NAME, ent.getName());
+      indexBwStrings("displayName", ent.getDisplayNames());
+      makeField(PropertyInfoIndex.FILTER_EXPR, ent.getDefinition());
+      indexBwStrings(PropertyInfoIndex.DESCRIPTION, ent.getDescriptions());
+
+      endObject();
+
+      return makeDocInfo(BwIndexer.docTypeFilter, 0, ent.getHref());
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  /* Return the docinfo for the indexer */
   EsDocInfo makeDoc(final BwCalendar col) throws CalFacadeException {
     try {
       final long version = col.getMicrosecsVersion();
@@ -279,7 +453,6 @@ public class DocBuilder extends DocBuilderBase {
       //makeField(PropertyInfoIndex.VERSION, version);
 
       makeField(PropertyInfoIndex.NAME, col.getName());
-      makeField(PropertyInfoIndex.HREF, col.getPath());
 
       makeField(PropertyInfoIndex.SUMMARY, col.getSummary());
       makeField(PropertyInfoIndex.DESCRIPTION,
@@ -312,13 +485,14 @@ public class DocBuilder extends DocBuilderBase {
                 
       // mailListId
 
-      indexProperties(col.getProperties());
+      indexProperties(getJname(PropertyInfoIndex.COL_PROPERTIES),
+                      col.getProperties());
       indexCategories(col.getCategories());
       
       endObject();
 
       return makeDocInfo(BwIndexer.docTypeCollection,
-                         version, col.getPath());
+                         version, col.getHref());
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
@@ -420,7 +594,7 @@ public class DocBuilder extends DocBuilderBase {
       if (loc != null) {
         loc.fixNames(basicSysprops, principal);
 
-        makeField(PropertyInfoIndex.LOCATION_UID, loc.getUid());
+        makeField(PropertyInfoIndex.LOCATION_HREF, loc.getHref());
 
         String s = null;
 
@@ -440,10 +614,10 @@ public class DocBuilder extends DocBuilderBase {
           makeField(PropertyInfoIndex.LOCATION_STR, s);
         }
       } else {
-        // Try the uid
-        final String locuid = ev.getLocationUid();
-        if (locuid != null) {
-          makeField(PropertyInfoIndex.LOCATION_UID, locuid);
+        // Try the href
+        final String locHref = ev.getLocationHref();
+        if (locHref != null) {
+          makeField(PropertyInfoIndex.LOCATION_HREF, locHref);
         }
       }
 
@@ -564,18 +738,48 @@ public class DocBuilder extends DocBuilderBase {
    *                   private methods
    * ======================================================================== */
 
+  String getHref(final BwUnversionedDbentity val) {
+    if (val instanceof FixNamesEntity) {
+      final FixNamesEntity ent = (FixNamesEntity)val;
+
+      ent.fixNames(basicSysprops, principal);
+    }
+
+    if (val.getHref() == null) {
+      warn("No href for " + val);
+    }
+
+    return val.getHref();
+  }
+
+  void makeHref(final BwUnversionedDbentity val) throws CalFacadeException {
+    makeField(PropertyInfoIndex.HREF, getHref(val));
+  }
+
+  private void makeOwned(final BwOwnedDbentity ent)
+          throws Throwable {
+    makeHref(ent);
+    makeField(PropertyInfoIndex.OWNER, ent.getOwnerHref());
+    makeField(PropertyInfoIndex.PUBLIC, ent.getPublick());
+  }
+
+  private void makeShareable(final BwShareableDbentity ent)
+          throws Throwable {
+    makeOwned(ent);
+    makeField(PropertyInfoIndex.CREATOR, ent.getCreatorHref());
+    makeField(PropertyInfoIndex.ACL, ent.getAccess());
+  }
+
   private void makeShareableContained(final BwShareableContainedDbentity ent)
           throws Throwable {
-    makeField(PropertyInfoIndex.CREATOR, ent.getCreatorHref());
-    makeField(PropertyInfoIndex.OWNER, ent.getOwnerHref());
+    makeShareable(ent);
+
     String colPath = ent.getColPath();
     if (colPath == null) {
       colPath = "";
     }
 
     makeField(PropertyInfoIndex.COLLECTION, colPath);
-    makeField(PropertyInfoIndex.ACL, ent.getAccess());
-    makeField(PropertyInfoIndex.PUBLIC, ent.getPublick());
   }
 
   private void indexXprops(final XpropsEntity ent) throws CalFacadeException {
@@ -675,13 +879,38 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
-  private void indexProperties(final Set<BwProperty> props) throws CalFacadeException {
+  private void indexViews(final Collection<BwView> views) throws CalFacadeException {
+    if (Util.isEmpty(views)) {
+      return;
+    }
+
+    try {
+      startArray("views");
+
+      for (final BwView view: views) {
+        startObject();
+        makeField(PropertyInfoIndex.NAME, view.getName());
+
+        indexStrings(getJname(PropertyInfoIndex.HREF),
+                     view.getCollectionPaths());
+
+        endObject();
+      }
+
+      endArray();
+    } catch (final IndexException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
+  private void indexProperties(final String name,
+                               final Set<BwProperty> props) throws CalFacadeException {
     if (props == null) {
       return;
     }
 
     try {
-      startArray(getJname(PropertyInfoIndex.COL_PROPERTIES));
+      startArray(name);
       
       for (final BwProperty prop: props) {
         startObject();
@@ -1027,13 +1256,18 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void indexBwStrings(final PropertyInfoIndex pi,
-                              final Set<? extends BwStringBase> val) throws CalFacadeException {
+                              final Collection<? extends BwStringBase> val) throws CalFacadeException {
+    indexBwStrings(getJname(pi), val);
+  }
+
+  private void indexBwStrings(String name,
+                              final Collection<? extends BwStringBase> val) throws CalFacadeException {
     try {
       if (Util.isEmpty(val)) {
         return;
       }
 
-      startArray(getJname(pi));
+      startArray(name);
 
       for (final BwStringBase s: val) {
         makeField((PropertyInfoIndex)null, s);

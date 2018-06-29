@@ -24,6 +24,7 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
 
 import org.apache.commons.codec.binary.Base64OutputStream;
 
@@ -46,6 +47,8 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
   private String name;
 
   private Blob value;
+
+  private byte[] byteValue;
 
   /** Constructor
    *
@@ -107,8 +110,40 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
   }
 
   /* ====================================================================
+   *                   db entity methods
+   * ==================================================================== */
+
+  /** Set the href - ignored
+   *
+   * @param val    String href
+   */
+  public void setHref(final String val) { }
+
+  public String getHref() {
+    return Util.buildPath(false, getColPath(),
+                          "/",
+                          getName());
+  }
+
+  /* ====================================================================
    *                   non-db methods
    * ==================================================================== */
+
+  /** Set the byte array value
+   *
+   * @param val    byte array value
+   */
+  public void setByteValue(final byte[] val) {
+    byteValue = val;
+  }
+
+  /** Get the byte array value
+   *
+   * @return byte array or null
+   */
+  public byte[] getByteValue() {
+    return byteValue;
+  }
 
   /**
    * @return base64 encoded value

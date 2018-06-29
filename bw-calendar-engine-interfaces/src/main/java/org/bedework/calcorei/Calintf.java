@@ -20,9 +20,11 @@ package org.bedework.calcorei;
 
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
+import org.bedework.access.Acl;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventProperty;
@@ -33,11 +35,13 @@ import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.base.BwDbentity;
+import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwAdminGroup;
@@ -71,26 +75,16 @@ import java.util.List;
  */
 public interface Calintf
         extends CoreCalendarsI, CoreEventsI, CoreFilterDefsI, CoreUserAuthI {
-  /** Must be called to initialize the new object.
+  interface FilterParserFetcher {
+    SimpleFilterParser getFilterParser();
+  }
+
+  /** Must be called once we know the principal.
    *
-   * @param logId for tracing
-   * @param configs  so we can get at configurations
    * @param principalInfo    Required for access evaluation.
-   * @param url         String url to which we are connecting
-   * @param publicAdmin boolean true if this is a public events admin app
-   * @param publicSubmission true for the submit app
-   * @param sessionless true if this is a sessionless client
-   * @param dontKill true if this is a system process
    * @throws CalFacadeException on fatal error
    */
-  void init(String logId,
-            Configurations configs,
-            PrincipalInfo principalInfo,
-            String url,
-            boolean publicAdmin,
-            boolean publicSubmission,
-            boolean sessionless,
-            boolean dontKill) throws CalFacadeException;
+  void initPinfo(PrincipalInfo principalInfo) throws CalFacadeException;
 
   /**
    * 
@@ -141,6 +135,16 @@ public interface Calintf
    */
   String getState();
 
+  /**
+   * @return PrincipalInfo
+   */
+  PrincipalInfo getPrincipalInfo();
+
+  /**
+   * @return true if restoring
+   */
+  boolean getForRestore();
+
   /** Get the current system (not db) stats
    *
    * @return BwStats object
@@ -178,7 +182,7 @@ public interface Calintf
   /** Get information about this interface
    *
    * @return CalintfInfo
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   CalintfInfo getInfo() throws CalFacadeException;
 
@@ -186,18 +190,35 @@ public interface Calintf
    * in that there may be 0 to many transactions started and ended within an
    * open/close call and many open/close calls within a transaction.
    *
+   * <p>During the initial opening of a new object we may not be fully
+   * initialised.
+   *
+   * @param filterParserFetcher for the parsing of filters
+   * @param logId for tracing
+   * @param configs for configuration info
    * @param webMode  true for long-running multi request conversations.
    * @param forRestore true if this is for a system restore
    * @param indexRebuild  true if we are rebuilding the index.
-   * @throws CalFacadeException
+   * @param publicAdmin boolean true if this is a public events admin app
+   * @param publicSubmission true for the submit app
+   * @param sessionless true if this is a sessionless client
+   * @param dontKill true if this is a system process
+   * @throws CalFacadeException on error
    */
-  void open(boolean webMode,
+  void open(FilterParserFetcher filterParserFetcher,
+            String logId,
+            Configurations configs,
+            boolean webMode,
             boolean forRestore,
-            boolean indexRebuild) throws CalFacadeException;
+            boolean indexRebuild,
+            boolean publicAdmin,
+            boolean publicSubmission,
+            boolean sessionless,
+            boolean dontKill) throws CalFacadeException;
 
   /** Call on the way out after handling a request..
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   void close() throws CalFacadeException;
 
@@ -206,7 +227,7 @@ public interface Calintf
    * check version numbers to detect concurrent updates and fail with an
    * exception.
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   void beginTransaction() throws CalFacadeException;
 
@@ -214,7 +235,7 @@ public interface Calintf
    * this should in some way check version numbers to detect concurrent updates
    * and fail with an exception.
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   void endTransaction() throws CalFacadeException;
 
@@ -284,10 +305,35 @@ public interface Calintf
    */
   BasicSystemProperties getSyspars();
 
+  String getCalendarNameFromType(int calType) throws CalFacadeException;
+
+  /**
+   * @return the appropriate indexer
+   */
+  BwIndexer getIndexer();
+
+  /**
+   * @param entity may influence choice of indexer
+   * @return BwIndexer
+   */
+  BwIndexer getIndexer(BwOwnedDbentity entity);
+
+  /** Return a public indexer if we're in public mode or one for the given href
+   *
+   * @param principalHref if we're not public
+   * @return BwIndexer
+   */
+  BwIndexer getIndexer(final String principalHref);
+
   /**
    * @return the indexer
    */
   BwIndexer getPublicIndexer();
+
+  /**
+   * @return the [public] indexer
+   */
+  BwIndexer getIndexer(boolean publick);
 
   /** Get a non-public indexer for a principal
    *
@@ -379,8 +425,10 @@ public interface Calintf
    * @return CurrentAccess
    * @throws CalFacadeException if returnResult false and no access
    */
-  CurrentAccess checkAccess(BwShareableDbentity ent, int desiredAccess,
-                            boolean returnResult) throws CalFacadeException;
+  CurrentAccess checkAccess(BwShareableDbentity ent,
+                            int desiredAccess,
+                            boolean returnResult)
+          throws CalFacadeException;
 
   /* ====================================================================
    *                   Alarms
@@ -411,6 +459,18 @@ public interface Calintf
           throws CalFacadeException;
 
   /* ====================================================================
+   *                   Some general helpers
+   * ==================================================================== */
+
+  /** Used to fetch a category from the cache - assumes any access
+   *
+   * @param uid
+   * @return BwCategory
+   * @throws CalFacadeException on error
+   */
+  BwCategory getCategory(String uid) throws CalFacadeException;
+
+  /* ====================================================================
    *                   Free busy
    * ==================================================================== */
 
@@ -431,6 +491,29 @@ public interface Calintf
                       boolean returnAll,
                       boolean ignoreTransparency)
           throws CalFacadeException;
+
+  /* ====================================================================
+   *                   Events
+   * ==================================================================== */
+
+  Collection<CoreEventInfo> postGetEvents(final Collection evs,
+                                          final int desiredAccess,
+                                          final boolean nullForNoAccess,
+                                          final FiltersCommonI f)
+          throws CalFacadeException;
+
+  /* Post processing of event access has been checked
+   */
+  CoreEventInfo postGetEvent(BwEvent ev,
+                             FiltersCommonI f,
+                             Acl.CurrentAccess ca) throws CalFacadeException;
+
+  /* Post processing of event. Return null or throw exception for no access
+   */
+  CoreEventInfo postGetEvent(BwEvent ev,
+                             int desiredAccess,
+                             boolean nullForNoAccess,
+                             FiltersCommonI f) throws CalFacadeException;
 
   /* ====================================================================
    *                       General db methods
@@ -683,47 +766,35 @@ public interface Calintf
 
   /** Fetch a resource object.
    *
-   * @param name
-   * @param coll
-   * @param desiredAccess
+   * @param href of resource
+   * @param desiredAccess we need
    * @return BwResource object or null
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
-  BwResource getResource(final String name,
-                         final BwCalendar coll,
+  BwResource getResource(final String href,
                          final int desiredAccess) throws CalFacadeException;
 
   /** Get resource content given the resource. It will be set in the resource
    * object
    *
    * @param  val BwResource
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   void getResourceContent(BwResource val) throws CalFacadeException;
 
   /** Get resources to which this user has access - content is not fetched.
    *
    * @param  path           String path to containing collection
-   * @param forSynch
-   * @param token
-   * @return List     of BwResource
-   * @throws CalFacadeException
+   * @param forSynch true if a synch report
+   * @param token synch token or null
+   * @param count   return this many < 0 for all
+   * @return List     of BwResource or null/empty if done
+   * @throws CalFacadeException on fatal error
    */
-  List<BwResource> getAllResources(String path,
-                                   final boolean forSynch,
-                                   final String token) throws CalFacadeException;
-
-  /** Get resources to which this user has access - content is not fetched.
-   *
-   * @param  path           String path to containing collection
-   * @param start   start here    
-   * @param count   return this many
-   * @return List     of BwResource
-   * @throws CalFacadeException
-   */
-  List<BwResource> getNResources(String path,
-                                 final int start,
-                                 final int count) throws CalFacadeException;
+  List<BwResource> getResources(String path,
+                                final boolean forSynch,
+                                final String token,
+                                final int count) throws CalFacadeException;
 
    /* ====================================================================
     *                       system parameters
@@ -736,6 +807,7 @@ public interface Calintf
    * @return BwSystem object
    * @throws CalFacadeException if not admin
    */
+  @Deprecated
   BwSystem getSyspars(String name) throws CalFacadeException;
 }
 

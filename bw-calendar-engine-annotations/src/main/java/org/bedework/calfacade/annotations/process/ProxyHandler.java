@@ -81,10 +81,11 @@ public class ProxyHandler {
    * @return boolean true for ok
    */
   public boolean proxyMethod(final ProcessingEnvironment env,
-                             final ExecutableElement d) {
+                             final ExecutableElement d,
+                             final ProcessState pstate) {
     Messager msg = env.getMessager();
     try {
-      ProxyMethod pm = new ProxyMethod(env, annUtil, d);
+      ProxyMethod pm = new ProxyMethod(env, annUtil, d, pstate);
 
       if (pstate.debug) {
         annUtil.note("          " + pm);

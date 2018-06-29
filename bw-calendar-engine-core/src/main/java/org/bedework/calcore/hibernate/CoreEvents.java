@@ -19,7 +19,7 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.access.Acl.CurrentAccess;
-import org.bedework.calcore.CalintfHelper;
+import org.bedework.calcore.common.CalintfHelper;
 import org.bedework.calcore.hibernate.EventQueryBuilder.EventsQueryResult;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI;
@@ -27,24 +27,20 @@ import org.bedework.calcorei.HibSession;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwCalendar.CollectionInfo;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwRecurrenceInstance;
+import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeDupNameException;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.filter.BwCollectionFilter;
-import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
-import org.bedework.calfacade.indexing.SearchResult;
-import org.bedework.calfacade.indexing.SearchResultEntry;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.ChangeTable;
@@ -203,21 +199,21 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   /** Constructor
    *
    * @param sess persistance session
-   * @param cb callback
+   * @param intf interface
    * @param ac access checker
    * @param currentMode of access
    * @param sessionless if true
    * @throws CalFacadeException on fatal error
    */
   public CoreEvents(final HibSession sess,
-                    final Callback cb,
+                    final CalintfImpl intf,
                     final AccessChecker ac,
                     final int currentMode,
                     final boolean sessionless)
           throws CalFacadeException {
     dao = new CoreEventsDAO(sess);
-    cb.registerDao(dao);
-    super.init(cb, ac, currentMode, sessionless);
+    intf.registerDao(dao);
+    super.init(intf, ac, currentMode, sessionless);
   }
 
   @Override
@@ -289,9 +285,9 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     }
 
     final Collection<CoreEventInfo> ceis =
-            postGetEvents(evs, desiredAccess,
-                          returnResultAlways,
-                          null);
+            intf.postGetEvents(evs, desiredAccess,
+                               returnResultAlways,
+                               null);
 
     if (ceis.isEmpty()) {
       return ceis;
@@ -302,7 +298,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
      */
 
     final EventsQueryResult eqr = new EventsQueryResult();
-    eqr.flt = new Filters(cb, null);
+    eqr.flt = new Filters(intf, null);
     eqr.addColPath(colPath);
 
     for (final CoreEventInfo cei: ceis) {
@@ -332,11 +328,10 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
   @Override
   @SuppressWarnings("unchecked")
-  public CoreEventInfo getEvent(final String colPath,
-                                final String name,
-                                final RecurringRetrievalMode recurRetrieval)
+  public CoreEventInfo getEvent(final String href)
           throws CalFacadeException {
-    final List<BwEvent> evs = dao.getEventsByName(colPath, name);
+    final PathAndName pn = new PathAndName(href);
+    final List<BwEvent> evs = dao.getEventsByName(pn.colPath, pn.name);
 
     /* If this is availability we should have one vavailability and a number of
      * available. Otherwise just a single event.
@@ -374,14 +369,17 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     if (ev == null) {
       // Try annotation
 
-      ev = dao.getEventsAnnotationName(colPath, name);
+      ev = dao.getEventsAnnotationName(pn.colPath, pn.name);
     }
 
     if (ev == null) {
       return null;
     }
 
-    final CoreEventInfo cei = postGetEvent(ev, privRead, returnResultAlways, null);
+    final CoreEventInfo cei = intf.postGetEvent(ev,
+                                                privRead,
+                                                returnResultAlways,
+                                                null);
 
     if (cei != null)  {
       // Access was not denied
@@ -389,15 +387,15 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       if (avails != null) {
         for (final BwEvent aev: avails) {
           final CoreEventInfo acei = 
-                  postGetEvent(aev,
-                               privRead,
-                               returnResultAlways, null);
+                  intf.postGetEvent(aev,
+                                    privRead,
+                                    returnResultAlways, null);
           if (acei == null) {
             continue;
           }
 
           if (aev.testRecurring()) {
-            doRecurrence(acei, recurRetrieval);
+            doRecurrence(acei, RecurringRetrievalMode.overrides);
           }
 
           cei.addContainedItem(acei);
@@ -405,7 +403,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       } else {
         ev = cei.getEvent();
         if (ev.testRecurring()) {
-          doRecurrence(cei, recurRetrieval);
+          doRecurrence(cei, RecurringRetrievalMode.overrides);
         }
       }
     }
@@ -422,87 +420,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                                              final DeletedState delState,
                                              RecurringRetrievalMode recurRetrieval,
                                              final boolean freeBusy) throws CalFacadeException {
-    /* Ensure dates are limited explicitly or implicitly */
-    recurRetrieval = defaultRecurringRetrieval(recurRetrieval,
-                                               startDate, endDate);
-
-    if (debug) {
-      trace("getEvents for start=" + startDate + " end=" + endDate);
-    }
-
-    FilterBase fltr = filter;
-
-    if (!Util.isEmpty(calendars)) {
-      FilterBase colfltr = null;
-      for (final BwCalendar c: calendars) {
-        colfltr = FilterBase.addOrChild(colfltr,
-                                        new BwCollectionFilter(null, c));
-      }
-      fltr = FilterBase.addAndChild(fltr, colfltr);
-    }
-
-    int desiredAccess = privRead;
-    if (freeBusy) {
-      // DORECUR - freebusy events must have enough info for expansion
-      desiredAccess = privReadFreeBusy;
-    }
-
-    final List<PropertyInfoIndex> properties = new ArrayList<>(2);
-
-    properties.add(PropertyInfoIndex.DTSTART);
-    properties.add(PropertyInfoIndex.UTC);
-
-    final List<SortTerm> sort = new ArrayList<>(1);
-    sort.add(new SortTerm(properties, true));
-
-    String start = null;
-    String end = null;
-
-    if (startDate != null) {
-      start = startDate.getDate();
-    }
-
-    if (endDate != null) {
-      end = endDate.getDate();
-    }
-
-    final SearchResult sr =
-            getIndexer(null).search(null,   // query
-                                    false,
-                                    fltr,
-                                    sort,
-                                    null,  // defaultFilterContext
-                                    start,
-                                    end,
-                                    -1,
-                                    delState,
-                                    recurRetrieval);
-
-    final List<SearchResultEntry> sres =
-            sr.getIndexer().getSearchResult(sr, 0, -1, desiredAccess);
-    final TreeSet<CoreEventInfo> ceis = new TreeSet<>();
-
-    for (final SearchResultEntry sre: sres) {
-      final Object o = sre.getEntity();
-
-      if (!(o instanceof EventInfo)) {
-        continue;
-      }
-
-      final EventInfo ei = (EventInfo)o;
-      final BwEvent ev = ei.getEvent();
-      restoreCategories(ev);
-
-      final CoreEventInfo cei = postGetEvent(ev, null, ei.getCurrentAccess());
-
-      if (cei == null) {
-        continue;
-      }
-
-      ceis.add(cei);
-    }
-
-    return buildVavail(ceis);
+    throw new CalFacadeException("Implemented in the interface class");
   }
 
   @Override
@@ -675,7 +593,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       } else if (firstRecurrenceId.equals(ri.getRecurrenceId())) {
         // Skip it
         if (debug) {
-          debugMsg("Skipping duplicate recurid " + firstRecurrenceId);
+          debug("Skipping duplicate recurid " + firstRecurrenceId);
         }
 
         continue;
@@ -688,7 +606,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
         if (ov != null) {
           if (debug) {
-            debugMsg("Add override with recurid " + rid);
+            debug("Add override with recurid " + rid);
           }
 
           setupDependentEntities(ov);
@@ -734,7 +652,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     final BwEvent val = ei.getEvent();
     final Collection<BwEventProxy> overrides = ei.getOverrideProxies();
     final Collection<BwEventProxy> deletedOverrides =
-            ei.getDeletedOverrideProxies(cb.getPrincipalInfo().getPrincipal().getPrincipalRef());
+            ei.getDeletedOverrideProxies(intf.getPrincipalInfo().getPrincipal().getPrincipalRef());
     final UpdateEventResult ue = new UpdateEventResult();
 
     if (!ac.checkAccess(val, privWrite, true).getAccessAllowed()) {
@@ -962,9 +880,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
             (ev instanceof BwEventProxy);
 
     if (!isInstance && ev.unsaved()) {
-      final CoreEventInfo cei = getEvent(ev.getColPath(),
-                                         ev.getName(),
-                                         RecurringRetrievalMode.overrides);
+      final CoreEventInfo cei = getEvent(ev.getHref());
 
       if (cei == null) {
         return der;
@@ -1037,9 +953,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       BwEvent master = ann.getMaster();
 
       if (master.unsaved()) {
-        final CoreEventInfo cei = getEvent(master.getColPath(),
-                                           master.getName(),
-                                           RecurringRetrievalMode.overrides);
+        final CoreEventInfo cei = getEvent(master.getHref());
 
         if (cei == null) {
           return der;
@@ -1200,7 +1114,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     final List<BwEvent> evs = dao.getSynchEventObjects(fpath, token);
 
     if (debug) {
-      trace(" ----------- number evs = " + evs.size());
+      debug(" ----------- number evs = " + evs.size());
     }
 
     final Set<CoreEventInfo> res = new TreeSet<>();
@@ -1268,7 +1182,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
      */
     final BwEventAnnotation override = proxy.getRef();
     if (debug) {
-      debugMsg("Update override event " + override);
+      debug("Update override event " + override);
     }
 
     BwEvent mstr = override.getTarget();
@@ -1295,7 +1209,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                               override.getRecurrenceId());
       if (inst == null) {
         if (debug) {
-          debugMsg("Cannot locate instance for " +
+          debug("Cannot locate instance for " +
                    mstr + "with recurrence id " + override.getRecurrenceId());
         }
         throwException(CalFacadeException.cannotLocateInstance,
@@ -1427,44 +1341,13 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       final CoreEventInfo instcei = makeInstanceProxy(inst, ca);
       if (instcei != null) {
         //if (debug) {
-        //  debugMsg("Ev: " + proxy);
+        //  debug("Ev: " + proxy);
         //}
         ceis.add(instcei);
       }
     }
 
     cei.setInstances(ceis);
-  }
-
-  /* Get an object which will limit retrieved enties either to the explicitly
-   * given date limits or to th edates (if any) given in the call.
-   */
-  private RecurringRetrievalMode defaultRecurringRetrieval(
-        final RecurringRetrievalMode val,
-        final BwDateTime start, final BwDateTime end) {
-    if ((start == null) && (end == null)) {
-      // No change to make
-      return val;
-    }
-
-    if ((val.start != null) && (val.end != null)) {
-      // Fully specified
-      return val;
-    }
-
-    final RecurringRetrievalMode newval = 
-            new RecurringRetrievalMode(val.mode,
-                                       val.start,
-                                       val.end);
-    if (newval.start == null) {
-      newval.start = start;
-    }
-
-    if (newval.end == null) {
-      newval.end = end;
-    }
-
-    return newval;
   }
 
   /* XXX This needs more work, OK until we allow modification of annotations - which
@@ -1936,29 +1819,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     return new CoreEventInfo(proxy, ca);
   }
 
-  private Collection<CoreEventInfo> postGetEvents(final Collection evs,
-                                                  final int desiredAccess,
-                                                  final boolean nullForNoAccess,
-                                                  final Filters f)
-          throws CalFacadeException {
-    final TreeSet<CoreEventInfo> outevs = new TreeSet<>();
-
-    for (final Object ev1 : evs) {
-      final BwEvent ev = (BwEvent)ev1;
-
-      final CoreEventInfo cei = postGetEvent(ev, desiredAccess,
-                                             nullForNoAccess, f);
-
-      if (cei == null) {
-        continue;
-      }
-
-      outevs.add(cei);
-    }
-
-    return outevs;
-  }
-
   private boolean calendarNameExists(final BwEvent val,
                                      final boolean annotation,
                                      final boolean adding) throws CalFacadeException {
@@ -1981,64 +1841,12 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     }
   }
 
-  private Collection<CoreEventInfo> buildVavail(final Collection<CoreEventInfo> ceis)
-          throws CalFacadeException {
-    final TreeSet<CoreEventInfo> outevs = new TreeSet<>();
-
-    final Map<String, CoreEventInfo> vavails = new HashMap<>();
-
-    final List<CoreEventInfo> unclaimed = new ArrayList<>();
-
-    for (final CoreEventInfo cei: ceis) {
-      final BwEvent ev = cei.getEvent();
-
-      if (ev.getEntityType() == IcalDefs.entityTypeAvailable) {
-        final CoreEventInfo vavail = vavails.get(ev.getUid());
-
-        if (vavail != null) {
-          vavail.addContainedItem(cei);
-        } else {
-          unclaimed.add(cei);
-        }
-
-        continue;
-      }
-
-      if (ev.getEntityType() == IcalDefs.entityTypeVavailability) {
-        // Keys are the list of AVAILABLE uids
-        for (final String auid: ev.getAvailableUids()) {
-          vavails.put(auid, cei);
-        }
-      }
-
-      outevs.add(cei);
-    }
-
-    for (final CoreEventInfo cei: unclaimed) {
-      final CoreEventInfo vavail = vavails.get(cei.getEvent().getUid());
-
-      if (vavail != null) {
-        vavail.addContainedItem(cei);
-        continue;
-      }
-
-      /*
-         This is an orphaned available object. We should probably retrieve the
-         vavailability.
-         I guess this could happen if we have a date range query that excludes
-         the vavailability?
-       */
-    }
-
-    return outevs;
-  }
-
   private class RecuridTable extends HashMap<String, BwEventProxy> {
     RecuridTable(final Collection<BwEventProxy> events) {
       for (final BwEventProxy ev: events) {
         final String rid = ev.getRecurrenceId();
         if (debug) {
-          debugMsg("Add override to table with recurid " + rid);
+          debug("Add override to table with recurid " + rid);
         }
 
         put(rid, ev);

@@ -102,6 +102,10 @@ public class CalSvcDb extends Logged implements Serializable {
    *                   Protected methods.
    * ==================================================================== */
 
+  void touchCalendar(final String href) throws CalFacadeException {
+    getSvc().touchCalendar(href);
+  }
+
   void touchCalendar(final BwCalendar col) throws CalFacadeException {
     getSvc().touchCalendar(col);
   }
@@ -519,7 +523,7 @@ public class CalSvcDb extends Logged implements Serializable {
    * @return BwPrincipal
    */
   protected BwPrincipal getEntityOwner(final BwPrincipal owner) {
-    if (isPublicAdmin()) {
+    if (isPublicAdmin() || isGuest()) {
       return getPublicUser();
     }
 

@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serializable;
 
 /** Base type for a database entity. We require an id and the subclasses must
- * implement hashcode and compareTo.
+ * implement get/setHref, hashcode and compareTo.
  *
  * @author Mike Douglass
  * @version 1.0
@@ -37,6 +37,8 @@ import java.io.Serializable;
 public class BwUnversionedDbentity<T> extends DumpEntity<T>
         implements Comparable<T>, Serializable {
   private int id = CalFacadeDefs.unsavedItemKey;
+
+  private String href;
 
   /**
    * @param val
@@ -68,6 +70,26 @@ public class BwUnversionedDbentity<T> extends DumpEntity<T>
   }
 
   /* ====================================================================
+   *                   Abstract methods
+   * ==================================================================== */
+
+  /**
+   *
+   * @param val the href - may be ignored
+   */
+  public void setHref(final String val) {
+    href = val;
+  }
+
+  /**
+   *
+   * @return non null unique href for the entity
+   */
+  public String getHref() {
+    return href;
+  }
+
+  /* ====================================================================
    *                   Convenience methods
    * ==================================================================== */
 
@@ -93,9 +115,6 @@ public class BwUnversionedDbentity<T> extends DumpEntity<T>
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Comparable#compareTo(java.lang.Object)
-   */
   @Override
   @NoWrap
   public int compareTo(final T o) {

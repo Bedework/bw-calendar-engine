@@ -19,6 +19,7 @@
 package org.bedework.calfacade.annotations.process;
 
 import org.bedework.calfacade.annotations.NoQuota;
+import org.bedework.util.misc.ToString;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
@@ -60,7 +61,7 @@ public class WrapperMethod extends MethodHandler<WrapperMethod> {
                        final ProcessState pstate,
                        final ExecutableElement d,
                        final boolean fromSuper) {
-    super(env, annUtil, d);
+    super(env, annUtil, d, pstate);
     this.pstate = pstate;
     this.fromSuper = fromSuper;
 
@@ -147,5 +148,15 @@ public class WrapperMethod extends MethodHandler<WrapperMethod> {
     }
     annUtil.prntlns("  }",
                     "");
+  }
+
+  /**
+   * @param ts to string object
+   */
+  public void toStringSegment(final ToString ts) {
+    super.toStringSegment(ts);
+
+    ts.append("fromSuper", fromSuper);
+    ts.append("unquotad", unquotad);
   }
 }

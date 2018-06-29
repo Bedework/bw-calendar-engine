@@ -28,7 +28,6 @@ import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwCalendar.EventListEntry;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
@@ -42,6 +41,7 @@ import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.CalFacadeDefs;
+import org.bedework.calfacade.EventListEntry;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.CategorisedEntity;
@@ -311,9 +311,9 @@ class Events extends CalSvcDb implements EventsI {
                        final String recurrenceId)
           throws CalFacadeException {
     final EventInfo res =
-            postProcess(getCal().getEvent(colPath,
-                                          name,
-                                          RecurringRetrievalMode.overrides));
+            postProcess(getCal().getEvent(Util.buildPath(false,
+                                                         colPath, "/",
+                                          name)));
 
     int num = 0;
 
@@ -386,7 +386,7 @@ class Events extends CalSvcDb implements EventsI {
 
     if (col.getCalType() == BwCalendar.calTypeEventList) {
         /* Find the event in the list using the name */
-      final SortedSet<EventListEntry> eles = 
+      final SortedSet<EventListEntry> eles =
               col.getEventList();
 
       findHref: {
@@ -461,7 +461,7 @@ class Events extends CalSvcDb implements EventsI {
       final BwPreferences prefs = getSvc().getPrefsHandler().get();
       if (prefs != null) {
         final Collection<BwCategory> cats = getSvc().getCategoriesHandler().
-                get(prefs.getDefaultCategoryUids());
+                getByUids(prefs.getDefaultCategoryUids());
 
         for (final BwCategory cat: cats) {
           event.addCategory(cat);
@@ -996,7 +996,7 @@ class Events extends CalSvcDb implements EventsI {
 
     // Where does the ref go? Not in the same calendar - we have no access
 
-    BwCalendar cal = getCal().getSpecialCalendar(getPrincipal(),
+    BwCalendar cal = getCal().getSpecialCalendar(null, getPrincipal(),
                                      BwCalendar.calTypeDeleted,
                                      true, PrivilegeDefs.privRead).cal;
     proxy.setOwnerHref(getPrincipal().getPrincipalRef());
@@ -1704,7 +1704,7 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       final GetSpecialCalendarResult gscr =
-              getCal().getSpecialCalendar(getPrincipal(), calType,
+              getCal().getSpecialCalendar(null, getPrincipal(), calType,
                                           true,
                                           PrivilegeDefs.privAny);
 
@@ -1958,7 +1958,7 @@ class Events extends CalSvcDb implements EventsI {
       ev = new BwEventProxy((BwEventAnnotation)ev);
     }
 
-    final Set<EventInfo> overrides = new TreeSet<EventInfo>();
+    final Set<EventInfo> overrides = new TreeSet<>();
     if (cei.getOverrides() != null) {
       for (final CoreEventInfo ocei: cei.getOverrides()) {
         final BwEventProxy op = (BwEventProxy)ocei.getEvent();
@@ -1985,7 +1985,7 @@ class Events extends CalSvcDb implements EventsI {
 
   private Set<EventInfo> postProcess(final Collection<CoreEventInfo> ceis)
           throws CalFacadeException {
-    TreeSet<EventInfo> eis = new TreeSet<EventInfo>();
+    TreeSet<EventInfo> eis = new TreeSet<>();
 
     for (CoreEventInfo cei: ceis) {
       eis.add(postProcess(cei));

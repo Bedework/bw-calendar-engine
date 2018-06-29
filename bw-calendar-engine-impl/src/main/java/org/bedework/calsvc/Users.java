@@ -24,6 +24,7 @@ import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -38,7 +39,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.bedework.calfacade.BwCalendar.*;
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 
 /** This acts as an interface to the database for user objects.
@@ -229,7 +229,7 @@ class Users extends CalSvcDb implements UsersI {
         continue;
       }
 
-      getCal().getSpecialCalendar(user, ci.collectionType,
+      getCal().getSpecialCalendar(null, user, ci.collectionType,
                                   true, PrivilegeDefs.privAny);
     }
 

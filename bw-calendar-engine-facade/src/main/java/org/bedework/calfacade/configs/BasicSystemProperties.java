@@ -37,6 +37,8 @@ public interface BasicSystemProperties extends Serializable {
    */
   boolean colPathEndsWithSlash = false;
 
+  // TODO - make all these static strings
+
   /** Set the public Calendar Root
    *
    * @param val    String

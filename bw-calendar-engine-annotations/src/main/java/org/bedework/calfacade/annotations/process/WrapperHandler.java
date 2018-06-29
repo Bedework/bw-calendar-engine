@@ -120,7 +120,8 @@ public class WrapperHandler {
     }
 
     try {
-      WrapperMethod wm = new WrapperMethod(env, annUtil, pstate, d, fromSuper);
+      WrapperMethod wm = new WrapperMethod(env, annUtil, pstate, d,
+                                           fromSuper);
 
       if (pstate.debug) {
         annUtil.note("          " + wm);

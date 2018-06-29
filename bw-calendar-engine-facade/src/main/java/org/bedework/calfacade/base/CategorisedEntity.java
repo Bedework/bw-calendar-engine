@@ -31,13 +31,13 @@ public interface CategorisedEntity {
    *
    * @param val    Set of category uids
    */
-  void setCategoryUids(Set<String> val);
+  void setCategoryHrefs(Set<String> val);
 
   /** Get the categories
    *
    *  @return Set of category uids
    */
-  Set<String> getCategoryUids();
+  Set<String> getCategoryHrefs();
 
   /** Set the categories Set
    *

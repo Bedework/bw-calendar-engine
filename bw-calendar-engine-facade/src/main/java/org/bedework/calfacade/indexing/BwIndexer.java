@@ -23,12 +23,17 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
+import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.GetEntityResponse;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
@@ -46,14 +51,20 @@ public interface BwIndexer extends Serializable {
   // Types of entity we index
   String docTypeUnknown = "unknown";
   String docTypePrincipal = "principal";
+  String docTypePreferences = "preferences";
+  String docTypeAuthUser = "auth";
   String docTypeCollection = "collection";
   String docTypeCategory = "category";
   String docTypeLocation = "location";
   String docTypeContact = "contact";
+  String docTypeFilter = "filter";
   String docTypeEvent = "event";
   //        IcalDefs.entityTypeNames[IcalDefs.entityTypeEvent];
   String docTypePoll = "vpoll";
   //        IcalDefs.entityTypeNames[IcalDefs.entityTypeVpoll];
+  String docTypeResource = "resource";
+  String docTypeResourceContent = "resourceContent";
+  String docTypeSyspars = "syspars";
 
   /** */
   public enum IndexedType {
@@ -77,6 +88,9 @@ public interface BwIndexer extends Serializable {
 
     /** */
     locations(docTypeLocation),
+
+    /** */
+    preferences(docTypePreferences),
 
     /** */
     unreachableEntities(docTypeUnknown);
@@ -372,6 +386,16 @@ public interface BwIndexer extends Serializable {
    */
   GetEntityResponse<EventInfo> fetchEvent(String href) throws CalFacadeException;
 
+  /** Colpath and guid supplied.
+   *
+   * @param colPath to event
+   * @param guid of event
+   * @return entity is EventInfo with overrides if present
+   * @throws CalFacadeException on fatal error
+   */
+  GetEntityResponse<EventInfo> fetchEvent(String colPath,
+                                          String guid) throws CalFacadeException;
+
   /** Find a category owned by the current user which has a named
    * field which matches the value.
    *
@@ -399,15 +423,87 @@ public interface BwIndexer extends Serializable {
    * @throws CalFacadeException
    */
   BwCalendar fetchCol(String val,
+                      final int desiredAccess,
                       PropertyInfoIndex... index) throws CalFacadeException;
 
   /** Fetch children of the collection with the given href.
    *
    * @param href of parent
    * @return possibly empty list of children
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   Collection<BwCalendar> fetchChildren(String href) throws CalFacadeException;
+
+  /** Fetch children at any depth of the collection with the given href.
+   *
+   * @param href of parent
+   * @return possibly empty list of children
+   * @throws CalFacadeException on error
+   */
+  Collection<BwCalendar> fetchChildrenDeep(String href) throws CalFacadeException;
+
+  /** Find a principal which has a named
+   * field which matches the value.
+   *
+   * @param href - of principal
+   * @return null or BwPrincipal object
+   * @throws CalFacadeException on error
+   */
+  BwPrincipal fetchPrincipal(String href) throws CalFacadeException;
+
+  /** Find a preference owned by the given href.
+   *
+   * @param href - of owner principal
+   * @return null or contact object
+   * @throws CalFacadeException on error
+   */
+  BwPreferences fetchPreferences(String href) throws CalFacadeException;
+
+  /** Find a filter with the given href.
+   *
+   * @param href - of filter
+   * @return null or filter object
+   * @throws CalFacadeException on error
+   */
+  BwFilterDef fetchFilter(String href) throws CalFacadeException;
+
+  /** Return all or first count filters
+   *
+   * @param fb - possibly null filter
+   * @param count - <0 for all
+   * @return filter for owner
+   * @throws CalFacadeException on error
+   */
+  List<BwFilterDef> fetchFilters(final FilterBase fb,
+                                 final int count)
+          throws CalFacadeException;
+
+  /** Find a resource with the given href.
+   *
+   * @param href - of resource
+   * @return null or resource object
+   * @throws CalFacadeException on error
+   */
+  BwResource fetchResource(String href) throws CalFacadeException;
+
+  /** Return all or first count resources
+   *
+   * @param fb - possibly null filter
+   * @param count - <0 for all
+   * @return resources for owner
+   * @throws CalFacadeException on error
+   */
+  List<BwResource> fetchResources(final FilterBase fb,
+                                  final int count)
+          throws CalFacadeException;
+
+  /** Find a resource content with the given href.
+   *
+   * @param href - of resource content
+   * @return null or resource object
+   * @throws CalFacadeException on error
+   */
+  BwResourceContent fetchResourceContent(String href) throws CalFacadeException;
 
   /** Find a contact owned by the current user which has a named
    * field which matches the value.
@@ -415,7 +511,7 @@ public interface BwIndexer extends Serializable {
    * @param val - expected full value
    * @param index e.g. UID or CN, VALUE
    * @return null or contact object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   BwContact fetchContact(String val,
                          PropertyInfoIndex... index) throws CalFacadeException;
@@ -423,7 +519,7 @@ public interface BwIndexer extends Serializable {
   /** Fetch all for the current principal.
    *
    * @return possibly empty list
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   List<BwContact> fetchAllContacts() throws CalFacadeException;
 

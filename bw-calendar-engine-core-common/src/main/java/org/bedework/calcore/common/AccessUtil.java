@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore;
+package org.bedework.calcore.common;
 
 import org.bedework.access.Access;
 import org.bedework.access.AccessPrincipal;
@@ -24,6 +24,7 @@ import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.Acl;
 import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.PrivilegeSet;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -33,6 +34,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
@@ -43,8 +45,6 @@ import org.bedework.util.misc.Util;
 
 import java.util.Collection;
 import java.util.TreeSet;
-
-import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 
 /** An access helper class. This class makes some assumptions about the
  * classes it deals with but there are no explicit hibernate, or other
@@ -155,7 +155,7 @@ public class AccessUtil extends Logged implements AccessUtilI {
                            final Collection<Ace> aces,
                            final boolean replaceAll) throws CalFacadeException {
     try {
-      Acl acl = checkAccess(ent, privWriteAcl, false).getAcl();
+      Acl acl = checkAccess(ent, PrivilegeDefs.privWriteAcl, false).getAcl();
 
       Collection<Ace> allAces;
       if (replaceAll) {
@@ -180,7 +180,7 @@ public class AccessUtil extends Logged implements AccessUtilI {
   public void defaultAccess(final BwShareableDbentity<?> ent,
                             final AceWho who) throws CalFacadeException {
     try {
-      Acl acl = checkAccess(ent, privWriteAcl, false).getAcl();
+      Acl acl = checkAccess(ent, PrivilegeDefs.privWriteAcl, false).getAcl();
 
       /* Now remove any access */
 
@@ -320,9 +320,10 @@ public class AccessUtil extends Logged implements AccessUtilI {
             ca = new CurrentAccess();
 
             ca = Acl.defaultNonOwnerAccess;
-          } else if (path.equals(Util.buildPath(colPathEndsWithSlash, cb.getUserHomePath(),
-                                                "/",
-                                                owner.getAccount()))) {
+          } else if (path.equals(Util.buildPath(
+                  BasicSystemProperties.colPathEndsWithSlash, cb.getUserHomePath(),
+                  "/",
+                  owner.getAccount()))) {
             // Accessing user home directory
             // Set the maximumn access
 
@@ -356,11 +357,11 @@ public class AccessUtil extends Logged implements AccessUtilI {
           debug("aclChars = " + new String(aclChars));
         }
 
-        if (desiredAccess == privAny) {
+        if (desiredAccess == PrivilegeDefs.privAny) {
           ca = access.checkAny(cb, cb.getPrincipal(), owner, aclChars, maxPrivs);
-        } else if (desiredAccess == privRead) {
+        } else if (desiredAccess == PrivilegeDefs.privRead) {
           ca = access.checkRead(cb, cb.getPrincipal(), owner, aclChars, maxPrivs);
-        } else if (desiredAccess == privWrite) {
+        } else if (desiredAccess == PrivilegeDefs.privWrite) {
           ca = access.checkReadWrite(cb, cb.getPrincipal(), owner, aclChars, maxPrivs);
         } else {
           ca = access.evaluateAccess(cb, cb.getPrincipal(), owner, desiredAccess, aclChars,

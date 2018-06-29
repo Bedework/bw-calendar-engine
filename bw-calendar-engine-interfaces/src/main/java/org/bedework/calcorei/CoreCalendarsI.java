@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.wrappers.CalendarWrapper;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -121,6 +122,21 @@ public interface CoreCalendarsI extends Serializable {
    * calendar, for example the deleted calendar, it may not exist if it has
    * not been used.
    *
+   * @param  path          String path of calendar
+   * @param  desiredAccess int access we need
+   * @param  alwaysReturnResult  false to raise access exceptions
+   *                             true to return only those we have access to
+   * @return BwCalendar null for unknown calendar
+   * @throws CalFacadeException on error
+   */
+  BwCalendar getCollection(String path,
+                           int desiredAccess,
+                           boolean alwaysReturnResult) throws CalFacadeException;
+
+  /** Get a calendar given the path. If the path is that of a 'special'
+   * calendar, for example the deleted calendar, it may not exist if it has
+   * not been used.
+   *
    * @param  indexer       Used to retrieve the object
    * @param  path          String path of calendar
    * @param  desiredAccess int access we need
@@ -152,6 +168,7 @@ public interface CoreCalendarsI extends Serializable {
   /** Get a special calendar (e.g. Trash) for the given user. If it does not
    * exist and is supported by the target system it will be created.
    *
+   * @param  indexer       Used to retrieve the object
    * @param  owner     of the entity
    * @param  calType   int special calendar type.
    * @param  create    true if we should create it if non-existant.
@@ -159,7 +176,8 @@ public interface CoreCalendarsI extends Serializable {
    * @return GetSpecialCalendarResult null for unknown calendar
    * @throws CalFacadeException on error
    */
-  GetSpecialCalendarResult getSpecialCalendar(BwPrincipal owner,
+  GetSpecialCalendarResult getSpecialCalendar(BwIndexer indexer,
+                                              BwPrincipal owner,
                                               int calType,
                                               boolean create,
                                               int access) throws CalFacadeException;
@@ -285,11 +303,13 @@ public interface CoreCalendarsI extends Serializable {
    *
    * @param path - must be non-null
    * @param lastmod - limit search, may be null
+   * @param indexer - if non-null use this
    * @return list of collection paths.
    * @throws CalFacadeException on error
    */
   Set<BwCalendar> getSynchCols(String path,
-                               String lastmod) throws CalFacadeException;
+                               String lastmod,
+                               BwIndexer indexer) throws CalFacadeException;
 
   /** Return true if the collection has changed as defined by the sync token.
    *
@@ -327,4 +347,9 @@ public interface CoreCalendarsI extends Serializable {
   Collection<String> getChildCollections(String parentPath,
                                          int start,
                                          int count) throws CalFacadeException;
+
+  BwCalendar checkAccess(final CalendarWrapper col,
+                         final int desiredAccess,
+                         final boolean alwaysReturnResult)
+          throws CalFacadeException;
 }

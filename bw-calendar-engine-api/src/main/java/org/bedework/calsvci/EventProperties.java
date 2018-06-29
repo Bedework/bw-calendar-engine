@@ -81,7 +81,19 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    *                     null if it doesn't exist.
    * @throws CalFacadeException
    */
-  T get(String uid) throws CalFacadeException;
+  T getByUid(String uid) throws CalFacadeException;
+
+  /** Return a non-persistent version of the entity given the uid - if the user has access
+   *
+   * <p>This entity will not be a live version - it is a detached copy which may
+   * be out of date. The cache entries will be refreshed fairly frequently.
+   *
+   * @param href       String href
+   * @return BwEventProperty object representing the entity in question
+   *                     null if it doesn't exist.
+   * @throws CalFacadeException
+   */
+  T get(String href) throws CalFacadeException;
 
   /** Return all current user entities.
    *
@@ -114,7 +126,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    *                     never null.
    * @throws CalFacadeException
    */
-  Collection<T> get(Collection<String> uids) throws CalFacadeException;
+  Collection<T> getByUids(Collection<String> uids) throws CalFacadeException;
 
   /** Return one or more entities matching the given BwString and
    * owned by the current principal.

@@ -72,6 +72,11 @@ public class LocationsImpl
   }
 
   @Override
+  BwLocation fetchIndexed(final String href) throws CalFacadeException {
+    return getIndexer().fetchLocation(href, PropertyInfoIndex.HREF);
+  }
+
+  @Override
   BwLocation findPersistent(final BwLocation val,
                             final String ownerHref) throws CalFacadeException {
     return findPersistent(val.getAddress(), ownerHref);

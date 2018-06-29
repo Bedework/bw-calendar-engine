@@ -19,7 +19,7 @@
 
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calcore.CalintfHelper;
+import org.bedework.calcore.common.CalintfHelper;
 import org.bedework.calcorei.CoreEventPropertiesI;
 import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwEventProperty;
@@ -44,22 +44,22 @@ public class CoreEventProperties <T extends BwEventProperty>
   /** Constructor
    *
    * @param sess persistance session
-   * @param cb callback
+   * @param intf interface
    * @param ac access checker
    * @param currentMode of access
    * @param sessionless if true
    * @throws CalFacadeException on fatal error
    */
   public CoreEventProperties(final HibSession sess,
-                             final Callback cb,
+                             final CalintfImpl intf,
                              final AccessChecker ac,
                              final int currentMode,
                              final boolean sessionless,
                              final String className)
           throws CalFacadeException {
     dao = new CoreEventPropertiesDAO(sess, className);
-    cb.registerDao(dao);
-    super.init(cb, ac, currentMode, sessionless);
+    intf.registerDao(dao);
+    super.init(intf, ac, currentMode, sessionless);
   }
 
   @Override
@@ -77,7 +77,7 @@ public class CoreEventProperties <T extends BwEventProperty>
     final Collection c = ac.getAccessUtil().checkAccess(eps, privRead, true);
 
     if (debug) {
-      debugMsg("getAll: found: " + eps.size() + " returning: " + c.size());
+      debug("getAll: found: " + eps.size() + " returning: " + c.size());
     }
 
     return c;

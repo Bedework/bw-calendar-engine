@@ -24,8 +24,10 @@ import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwDbentity;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
+import org.bedework.calfacade.svc.BwCalSuitePrincipal;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
@@ -81,6 +83,13 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
           "/principals/groups/bwadmin/";
 
   public final static String publicUser = "public-user";
+  public final static String publicUserHref = Util.buildPath(
+          BasicSystemProperties.colPathEndsWithSlash,
+          userPrincipalRoot,
+          publicUser);
+
+  // Note these aren't principals - yet
+  public final static String calsuitePrincipalRoot = "/principals/calsuites/";
 
   private final static HashMap<String, Integer> toWho = new HashMap<>();
   private final static HashMap<Integer, String> fromWho = new HashMap<>();
@@ -257,6 +266,10 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   }
   public static BwPrincipal makePrincipal(final String href) throws CalFacadeException {
     try {
+      if (href.startsWith(calsuitePrincipalRoot)) {
+        return new BwCalSuitePrincipal();
+      }
+
       final String uri =
               URLDecoder.decode(new URI(
                       URLEncoder.encode(href, "UTF-8")
@@ -298,10 +311,10 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
         final BwPrincipal p;
 
         if ((whoType == WhoDefs.whoTypeGroup) &&
-                prefix.equals(bwadmingroupPrincipalRoot)) {
+                uri.startsWith(bwadmingroupPrincipalRoot)) {
           p = new BwAdminGroup();
         } else {
-          p = BwPrincipal.makePrincipal(whoType);
+          p = makePrincipal(whoType);
         }
 
         if (p != null) {
@@ -586,6 +599,22 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
   @JsonIgnore
   public BwPrincipalInfo getPrincipalInfo() {
     return principalInfo;
+  }
+
+  /* ====================================================================
+   *                   db entity methods
+   * ==================================================================== */
+
+  /** Set the href
+   *
+   * @param val    String href
+   */
+  public void setHref(final String val) {
+    setPrincipalRef(val);
+  }
+
+  public String getHref() {
+    return getPrincipalRef();
   }
 
   /* ====================================================================

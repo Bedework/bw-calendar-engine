@@ -40,15 +40,4 @@ public interface FixNamesEntity {
    */
   void fixNames(BasicSystemProperties props,
                 BwPrincipal principal);
-
-  /**
-   *
-   * @param val
-   */
-  void setHref(String val);
-  /**
-   *
-   * @return href for this object
-   */
-  String getHref();
 }

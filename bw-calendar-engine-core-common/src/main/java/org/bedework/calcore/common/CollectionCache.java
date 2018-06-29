@@ -16,9 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.hibernate;
+package org.bedework.calcore.common;
 
-import org.bedework.calfacade.BwStats;
+import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calfacade.BwStats.CacheStats;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -35,7 +35,7 @@ import java.util.TreeSet;
  * @author douglm
  *
  */
-class CollectionCache implements Serializable {
+public class CollectionCache implements Serializable {
   private static class CacheInfo {
     CalendarWrapper col;
     String token;
@@ -54,19 +54,18 @@ class CollectionCache implements Serializable {
 
   private Map<String, CacheInfo> cache = new HashMap<>();
 
-  private CoreCalendars cols;
+  private CoreCalendarsI cols;
 
-  //BwStats stats;
   CacheStats cs;
 
-  CollectionCache(final CoreCalendars cols,
-                  final BwStats stats) {
+  public CollectionCache(final CoreCalendarsI cols,
+                  final CacheStats cs) {
     //this.stats = stats;
     this.cols = cols;
-    cs = stats.getCollectionCacheStats();
+    this.cs = cs;
   }
 
-  void put(final CalendarWrapper col) {
+  public void put(final CalendarWrapper col) {
     CacheInfo ci = cache.get(col.getPath());
 
     if (ci != null) {
@@ -82,11 +81,11 @@ class CollectionCache implements Serializable {
     }
   }
 
-  void remove(final String path) {
+  public void remove(final String path) {
     cache.remove(path);
   }
 
-  CalendarWrapper get(final String path) throws CalFacadeException {
+  public CalendarWrapper get(final String path) throws CalFacadeException {
     CacheInfo ci = cache.get(path);
 
     if (ci == null) {
@@ -117,7 +116,7 @@ class CollectionCache implements Serializable {
     return null;  // force refetch
   }
 
-  CalendarWrapper get(final String path, final String token) throws CalFacadeException {
+  public CalendarWrapper get(final String path, final String token) throws CalFacadeException {
     CacheInfo ci = cache.get(path);
 
     if (ci == null) {
@@ -133,7 +132,7 @@ class CollectionCache implements Serializable {
     return ci.col;
   }
 
-  void flushAccess(final CoreCalendars cc) throws CalFacadeException {
+  public void flushAccess(final CoreCalendarsI cc) throws CalFacadeException {
     for (CacheInfo ci: cache.values()) {
 
       Set<Integer> accesses = ci.col.evaluatedAccesses();
@@ -152,7 +151,7 @@ class CollectionCache implements Serializable {
 //      cs.incAccessFlushes();
   }
 
-  void flush() {
+  public void flush() {
     for (CacheInfo ci: cache.values()) {
       ci.checked = false;
     }
@@ -160,7 +159,7 @@ class CollectionCache implements Serializable {
     cs.incFlushes();
   }
 
-  void clear() {
+  public void clear() {
     cache.clear();
 
     cs.incFlushes();

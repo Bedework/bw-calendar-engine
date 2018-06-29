@@ -23,13 +23,13 @@ import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
-import org.bedework.calcore.AccessUtil;
-import org.bedework.calcore.CalintfHelper;
 import org.bedework.calcore.Transactions;
+import org.bedework.calcore.common.AccessUtil;
+import org.bedework.calcore.common.CalintfHelper;
+import org.bedework.calcore.common.CollectionCache;
 import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.CollectionSynchInfo;
@@ -41,7 +41,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.events.SysEvent;
-import org.bedework.util.calendar.PropertyIndex;
+import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
@@ -60,30 +60,30 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
 class CoreCalendars extends CalintfHelper
          implements AccessUtil.CollectionGetter, Transactions,
         CoreCalendarsI {
+  private final CalintfImpl intf;
   private final CoreCalendarsDAO dao;
   private final String userCalendarRootPath;
   //private String groupCalendarRootPath;
-  
-  private final CollectionCache colCache;
 
   /** Constructor
    *
    * @param sess persistance session
-   * @param cb callback
+   * @param intf interface
    * @param ac access checker
    * @param currentMode of access
    * @param sessionless if true
    * @throws CalFacadeException on fatal error
    */
   CoreCalendars(final HibSession sess, 
-                final Callback cb,
+                final CalintfImpl intf,
                 final AccessChecker ac,
                 final int currentMode,
                 final boolean sessionless)
           throws CalFacadeException {
     dao = new CoreCalendarsDAO(sess);
-    cb.registerDao(dao);
-    super.init(cb, ac, currentMode, sessionless);
+    this.intf = intf;
+    intf.registerDao(dao);
+    super.init(intf, ac, currentMode, sessionless);
 
     userCalendarRootPath = 
             Util.buildPath(colPathEndsWithSlash, 
@@ -91,17 +91,19 @@ class CoreCalendars extends CalintfHelper
                                    .getUserCalendarRoot());
     //groupCalendarRootPath = userCalendarRootPath + "/" + "groups";
 
-    colCache = new CollectionCache(this, cb.getStats());
+    intf.colCache =
+            new CollectionCache(this,
+                                intf.getStats().getCollectionCacheStats());
   }
 
   @Override
   public void startTransaction() throws CalFacadeException {
-    colCache.flush();  // Just in case
+    intf.colCache.flush();  // Just in case
   }
 
   @Override
   public void endTransaction() throws CalFacadeException {
-    colCache.flush();
+    intf.colCache.flush();
   }
 
   @Override
@@ -122,7 +124,7 @@ class CoreCalendars extends CalintfHelper
       return null;
     }
 
-    BwCalendar col = colCache.get(path);
+    BwCalendar col = intf.colCache.get(path);
 
     if (col != null) {
       return col;
@@ -162,9 +164,9 @@ class CoreCalendars extends CalintfHelper
       }
     }
 
-    final CalendarWrapper wcol = wrap(col);
+    final CalendarWrapper wcol = intf.wrap(col);
     if (wcol != null) {
-      colCache.put(wcol);
+      intf.colCache.put(wcol);
     }
 
     return wcol;
@@ -176,7 +178,7 @@ class CoreCalendars extends CalintfHelper
 
   @Override
   public void principalChanged() throws CalFacadeException {
-    colCache.clear();
+    intf.colCache.clear();
   }
 
   @Override
@@ -226,7 +228,7 @@ class CoreCalendars extends CalintfHelper
     }
 
     for (final BwCalendar alias: aliases) {
-      waliases.add(wrap(alias));
+      waliases.add(intf.wrap(alias));
     }
 
     return waliases;
@@ -257,27 +259,24 @@ class CoreCalendars extends CalintfHelper
                                      final String path,
                                      final int desiredAccess,
                                      final boolean alwaysReturnResult) throws CalFacadeException {
-    BwCalendar col = colCache.get(path);
+    BwCalendar col = intf.colCache.get(path);
 
     if (col != null) {
       return col;
     }
 
-    col = indexer.fetchCol(path,
-                           PropertyIndex.PropertyInfoIndex.HREF);
-    if (col != null) {
-      restoreCategories(col);
-    }
-    
-    return col;
+    return indexer.fetchCol(path, desiredAccess,
+                           PropertyInfoIndex.HREF);
   }
 
   @Override
-  public GetSpecialCalendarResult getSpecialCalendar(final BwPrincipal owner,
+  public GetSpecialCalendarResult getSpecialCalendar(final BwIndexer indexer,
+                                                     final BwPrincipal owner,
                                                      final int calType,
                                                      final boolean create,
                                                      final int access) throws CalFacadeException {
-    return getSpecialCalendar(owner, calType, create, true, access);
+    return getSpecialCalendar(owner, calType, create, true, access,
+                              indexer);
   }
 
   @Override
@@ -289,7 +288,7 @@ class CoreCalendars extends CalintfHelper
   @Override
   public void renameCalendar(BwCalendar val,
                              final String newName) throws CalFacadeException {
-    colCache.flush();
+    intf.colCache.flush();
 
     /* update will check access
      */
@@ -314,13 +313,13 @@ class CoreCalendars extends CalintfHelper
     dao.removeTombstonedVersion(val);
 
     // Flush it again
-    colCache.flush();
+    intf.colCache.flush();
   }
 
   @Override
   public void moveCalendar(BwCalendar val,
                            final BwCalendar newParent) throws CalFacadeException {
-    colCache.flush();
+    intf.colCache.flush();
 
     /* check access - privbind on new parent privunbind on val?
      */
@@ -351,7 +350,7 @@ class CoreCalendars extends CalintfHelper
     dao.removeTombstonedVersion(val);
 
     // Flush it again
-    colCache.flush();
+    intf.colCache.flush();
   }
 
   @Override
@@ -378,7 +377,7 @@ class CoreCalendars extends CalintfHelper
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
 
-    colCache.put((CalendarWrapper)val);
+    intf.colCache.put((CalendarWrapper)val);
   }
 
   @Override
@@ -388,12 +387,12 @@ class CoreCalendars extends CalintfHelper
     ac.getAccessUtil().changeAccess(col, aces, replaceAll);
 
     // Clear the cache - inheritance makes it difficult to be sure of the effects.
-    colCache.clear();
+    intf.colCache.clear();
 
     dao.saveOrUpdateCollection(unwrap(col));
 
     ((CalendarWrapper)col).clearCurrentAccess(); // force recheck
-    colCache.put((CalendarWrapper)col);
+    intf.colCache.put((CalendarWrapper)col);
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, col);
   }
@@ -404,7 +403,7 @@ class CoreCalendars extends CalintfHelper
     ac.getAccessUtil().defaultAccess(cal, who);
     dao.saveOrUpdateCollection(unwrap(cal));
 
-    colCache.flush();
+    intf.colCache.flush();
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, cal);
   }
@@ -412,7 +411,7 @@ class CoreCalendars extends CalintfHelper
   @Override
   public boolean deleteCalendar(BwCalendar val,
                                 final boolean reallyDelete) throws CalFacadeException {
-    colCache.flush();
+    intf.colCache.flush();
 
     ac.checkAccess(val, privUnbind, false);
 
@@ -464,7 +463,7 @@ class CoreCalendars extends CalintfHelper
       touchCalendar(unwrapped);
     }
 
-    colCache.remove(path);
+    intf.colCache.remove(path);
     touchCalendar(parent);
 
     notify(SysEvent.SysCode.COLLECTION_DELETED, val);
@@ -565,15 +564,45 @@ class CoreCalendars extends CalintfHelper
 
   @Override
   public Set<BwCalendar> getSynchCols(final String path,
-                                      final String token) throws CalFacadeException {
-    @SuppressWarnings("unchecked")
-    final List<BwCalendar> cols = dao.getSynchCollections(fixPath(path), 
-                                                          token);
+                                      final String token,
+                                      final BwIndexer indexer) throws CalFacadeException {
+    final Collection<BwCalendar> cols;
+
+    if (indexer == null) {
+      //noinspection unchecked
+      cols = dao.getSynchCollections(fixPath(path),
+                                     token);
+    } else {
+      final Collection<BwCalendar> icols = indexer.fetchChildren(path);
+      cols = new ArrayList<>();
+
+      for (final BwCalendar col: icols) {
+        if (token != null) {
+          final String lastmod = token.substring(0, 16);
+          final Integer seq = Integer.parseInt(token.substring(17), 16);
+
+          if (col.getLastmod().getTimestamp().compareTo(lastmod) < 0) {
+            continue;
+          }
+
+          if ((col.getLastmod().getTimestamp().compareTo(lastmod) == 0) &&
+                  (col.getLastmod().getSequence() <= seq)) {
+            continue;
+          }
+        }
+
+        if ((col.getCalType() != 7) && (col.getCalType() != 8)) {
+          continue;
+        }
+
+        cols.add(col);
+      }
+    }
 
     final Set<BwCalendar> res = new TreeSet<>();
 
     for (final BwCalendar col: cols) {
-      final BwCalendar wcol = wrap(col);
+      final BwCalendar wcol = intf.wrap(col);
       final CurrentAccess ca = ac.checkAccess(wcol, privAny, true);
       if (!ca.getAccessAllowed()) {
         continue;
@@ -589,24 +618,7 @@ class CoreCalendars extends CalintfHelper
   public boolean testSynchCol(final BwCalendar col,
                               final String token)
           throws CalFacadeException {
-    if (token == null) {
-      return true;
-    }
-
-    final String lastmod = token.substring(0, 16);
-    final int seq = Integer.parseInt(token.substring(17), 16);
-
-    final BwCollectionLastmod cl = col.getLastmod();
-    final int cmp = cl.getTimestamp().compareTo(lastmod);
-    if (cmp > 0) {
-      return true;
-    }
-    
-    if (cmp < 0) {
-      return false;
-    }
-    
-    return cl.getSequence() > seq;
+    throw new CalFacadeException("Should not get here - handled by interface");
   }
 
   @Override
@@ -640,7 +652,7 @@ class CoreCalendars extends CalintfHelper
         continue;
       }
       
-      final BwCalendar wcol = wrap(col);
+      final BwCalendar wcol = intf.wrap(col);
       final CurrentAccess ca = ac.checkAccess(wcol, privAny, true);
       if (!ca.getAccessAllowed()) {
         continue;
@@ -670,44 +682,50 @@ class CoreCalendars extends CalintfHelper
 
   private GetSpecialCalendarResult getIfSpecial(final BwPrincipal owner,
                                                 final String path) throws CalFacadeException {
-    final String pathTo = cb.getPrincipalInfo().getCalendarHomePath(owner);
+    final String pathTo = intf.getPrincipalInfo().getCalendarHomePath(owner);
 
     final BasicSystemProperties sys = getSyspars();
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
                        sys.getUserInbox()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeInbox,
-                                true, false, PrivilegeDefs.privAny);
+                                true, false, PrivilegeDefs.privAny,
+                                null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
                        ".pendingInbox").equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypePendingInbox,
-                                true, false, PrivilegeDefs.privAny);
+                                true, false, PrivilegeDefs.privAny,
+                                null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
                        sys.getUserOutbox()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeOutbox,
-                                true, false, PrivilegeDefs.privAny);
+                                true, false, PrivilegeDefs.privAny,
+                                null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
                        sys.getDefaultNotificationsName()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeNotifications,
-                                true, false, PrivilegeDefs.privAny);
+                                true, false, PrivilegeDefs.privAny,
+                                null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
                        sys.getDefaultReferencesName()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeEventList,
-                                true, false, PrivilegeDefs.privAny);
+                                true, false, PrivilegeDefs.privAny,
+                                null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
                        sys.getUserDefaultPollsCalendar()).equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypePoll,
-                                true, false, PrivilegeDefs.privAny);
+                                true, false, PrivilegeDefs.privAny,
+                                null);
     }
 
     return null;
@@ -717,38 +735,17 @@ class CoreCalendars extends CalintfHelper
                                                       final int calType,
                                                       final boolean create,
                                                       final boolean tryFetch,
-                                                      final int access) throws CalFacadeException {
-    final String name;
-    final BasicSystemProperties sys = getSyspars();
-    int ctype = calType;
-
-    if (calType == BwCalendar.calTypeInbox) {
-      name = sys.getUserInbox();
-    } else if (calType == BwCalendar.calTypePendingInbox) {
-      name = ".pendingInbox";// sys.getUserInbox();
-    } else if (calType == BwCalendar.calTypeOutbox) {
-      name = sys.getUserOutbox();
-    } else if (calType == BwCalendar.calTypeNotifications) {
-      name = sys.getDefaultNotificationsName();
-    } else if (calType == BwCalendar.calTypeEventList) {
-      name = sys.getDefaultReferencesName();
-    } else if (calType == BwCalendar.calTypePoll) {
-      name = sys.getUserDefaultPollsCalendar();
-    } else if (calType == BwCalendar.calTypeAttachments) {
-      name = sys.getDefaultAttachmentsName();
-    } else if (calType == BwCalendar.calTypeCalendarCollection) {
-      name = sys.getUserDefaultCalendar();
-    } else if (calType == BwCalendar.calTypeTasks) {
-      name = sys.getUserDefaultTasksCalendar();
-      ctype = BwCalendar.calTypeTasks;
-    } else {
+                                                      final int access,
+                                                      final BwIndexer indexer) throws CalFacadeException {
+    final String name = intf.getCalendarNameFromType(calType);
+    if (name == null) {
       // Not supported
       return null;
     }
 
     final List<String> entityTypes = BwCalendar.entityTypes.get(calType);
 
-    final String pathTo = cb.getPrincipalInfo().getCalendarHomePath(owner);
+    final String pathTo = intf.getPrincipalInfo().getCalendarHomePath(owner);
 
     final GetSpecialCalendarResult gscr = new GetSpecialCalendarResult();
 
@@ -758,9 +755,16 @@ class CoreCalendars extends CalintfHelper
     }
 
     if (tryFetch){
-      gscr.cal = getCalendar(Util.buildPath(colPathEndsWithSlash,
-                                            pathTo, "/", name),
-                             access, false);
+      if (indexer != null) {
+        gscr.cal = getCollectionIdx(indexer,
+                                    Util.buildPath(colPathEndsWithSlash,
+                                                   pathTo, "/", name),
+                                    access, false);
+      } else {
+        gscr.cal = getCalendar(Util.buildPath(colPathEndsWithSlash,
+                                              pathTo, "/", name),
+                               access, false);
+      }
 
       if ((gscr.cal != null) || !create) {
         return gscr;
@@ -779,7 +783,7 @@ class CoreCalendars extends CalintfHelper
     gscr.cal.setName(name);
     gscr.cal.setCreatorHref(owner.getPrincipalRef());
     gscr.cal.setOwnerHref(owner.getPrincipalRef());
-    gscr.cal.setCalType(ctype);
+    gscr.cal.setCalType(calType);
 
     if (entityTypes != null) {
       gscr.cal.setSupportedComponents(entityTypes);
@@ -886,7 +890,7 @@ class CoreCalendars extends CalintfHelper
 
       notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
 
-      colCache.put((CalendarWrapper)val);
+      intf.colCache.put((CalendarWrapper)val);
     }
   }
 
@@ -1004,9 +1008,9 @@ class CoreCalendars extends CalintfHelper
 
     notify(SysEvent.SysCode.COLLECTION_ADDED, val);
 
-    final CalendarWrapper wcol = wrap(val);
+    final CalendarWrapper wcol = intf.wrap(val);
 
-    colCache.put(wcol);
+    intf.colCache.put(wcol);
 
     return checkAccess(wcol, privAny, true);
   }
@@ -1064,9 +1068,9 @@ class CoreCalendars extends CalintfHelper
     return out;
   }
 
-  BwCalendar checkAccess(final CalendarWrapper col,
-                         final int desiredAccess,
-                         final boolean alwaysReturnResult)
+  public BwCalendar checkAccess(final CalendarWrapper col,
+                                final int desiredAccess,
+                                final boolean alwaysReturnResult)
           throws CalFacadeException {
     if (col == null) {
       return null;
@@ -1162,7 +1166,7 @@ class CoreCalendars extends CalintfHelper
         final String token = BwLastMod.getTagValue(lmp.timestamp, 
                                                    lmp.sequence);
 
-        final BwCalendar c = colCache.get(lmp.path, token);
+        final BwCalendar c = intf.colCache.get(lmp.path, token);
 
         if ((c != null) && !c.getTombstoned()) {
           wch.add(c);
@@ -1188,9 +1192,9 @@ class CoreCalendars extends CalintfHelper
     }
 
     for (final BwCalendar c: ch) {
-      final CalendarWrapper wc = wrap(c);
+      final CalendarWrapper wc = intf.wrap(c);
 
-      colCache.put(wc);
+      intf.colCache.put(wc);
       wch.add(wc);
     }
 

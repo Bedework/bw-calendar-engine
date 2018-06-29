@@ -272,7 +272,7 @@ public abstract class SimpleFilterParser extends Logged {
    * @return category entity or null.
    * @throws CalFacadeException on error
    */
-  public abstract BwCategory getCategory(String uid) throws CalFacadeException;
+  public abstract BwCategory getCategoryByUid(String uid) throws CalFacadeException;
 
   /** Get the view given the path.
    *
@@ -902,7 +902,7 @@ public abstract class SimpleFilterParser extends Logged {
         final ArrayList<String> paths = doWordList();
 
         for (final String path: paths) {
-          final ObjectFilter<String> f = new ObjectFilter<String>(null, 
+          final ObjectFilter<String> f = new ObjectFilter<String>(null,
                                                                   pixs);
           f.setEntity(path);
 
@@ -1551,7 +1551,7 @@ public abstract class SimpleFilterParser extends Logged {
 
   private BwCategory callGetCategory(final String uid) throws ParseFailed {
     try {
-      return getCategory(uid);
+      return getCategoryByUid(uid);
     } catch (final CalFacadeException cfe) {
       throw parseResult.setCfe(cfe);
     }

@@ -872,12 +872,10 @@ public class VEventUtil extends IcalUtil {
         dlp = new RDate(dl);
       }
 
-      if (tz != null) {
-        dlp.setTimeZone(tz);
-      }
-
       if (dateType) {
         dlp.getParameters().add(Value.DATE);
+      } else if (tz != null) {
+        dlp.setTimeZone(tz);
       }
 
       pl.add(dlp);

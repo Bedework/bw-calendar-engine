@@ -83,6 +83,8 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
   abstract T fetchIndexedByUid(String uid) throws CalFacadeException;
 
+  abstract T fetchIndexed(String href) throws CalFacadeException;
+
   /** Find a persistent entry like the one given or return null.
    *
    * @param val the non-persistent form
@@ -160,7 +162,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
   @SuppressWarnings("unchecked")
   @Override
-  public T get(final String uid) throws CalFacadeException {
+  public T getByUid(final String uid) throws CalFacadeException {
     T ent = getCachedByUid(uid);
 
     if (ent != null) {
@@ -178,8 +180,14 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     return ent;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public Collection<T> get(final Collection<String> uids) throws CalFacadeException {
+  public T get(final String href) throws CalFacadeException {
+    return fetchIndexed(href);
+  }
+
+  @Override
+  public Collection<T> getByUids(final Collection<String> uids) throws CalFacadeException {
     final Collection<T> ents = new ArrayList<>();
 
     if (Util.isEmpty(uids)) {
@@ -187,9 +195,9 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     }
 
     for (final String uid: uids) {
-      final T ent = get(uid);
+      final T ent = getByUid(uid);
       if (ent != null) {
-        ents.add(get(uid));
+        ents.add(ent);
       }
     }
 
@@ -548,20 +556,14 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
       return;
     }
 
-    if (!(o instanceof BwShareableDbentity)) {
-      throw new CalFacadeAccessException();
-    }
-
     if (!isPublicAdmin()) {
       // Normal access checks apply
       getSvc().checkAccess(o, privUnbind, false);
       return;
     }
 
-    final BwShareableDbentity ent = o;
-
     if (adminCanEditAllPublic ||
-            ent.getCreatorHref().equals(getPrincipal().getPrincipalRef())) {
+            o.getCreatorHref().equals(getPrincipal().getPrincipalRef())) {
       return;
     }
 

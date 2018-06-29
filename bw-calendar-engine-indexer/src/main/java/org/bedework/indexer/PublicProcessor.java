@@ -18,12 +18,17 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
+import org.bedework.calfacade.svc.BwAdminGroup;
+import org.bedework.calfacade.svc.BwCalSuite;
+import org.bedework.calfacade.svc.BwCalSuitePrincipal;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.util.misc.Util;
 
+import java.util.Iterator;
 import java.util.List;
 
 /** This implementation crawls the public subtree indexing entries. This is harder
@@ -76,6 +81,24 @@ public class PublicProcessor extends Crawler {
       final BwIndexer indexer = svc.getIndexer(principal,
                                                indexRootPath);
 
+      final BwPrincipal pr = svc.getUsersHandler().getPublicUser();
+      indexer.indexEntity(pr);
+      status.stats.inc(IndexedType.principals, 1);
+      indexer.indexEntity(svc.getPreferences(pr.getPrincipalRef()));
+      status.stats.inc(IndexedType.preferences, 1);
+
+      final Iterator<BwAdminGroup> it = getAdminGroups(svc);
+      while (it.hasNext()) {
+        indexer.indexEntity(it.next());
+        status.stats.inc(IndexedType.principals, 1);
+      }
+
+      final Iterator<BwCalSuite> csit = svc.getDumpHandler().getCalSuites();
+      while (csit.hasNext()) {
+        indexer.indexEntity(BwCalSuitePrincipal.from(csit.next()));
+        status.stats.inc(IndexedType.principals, 1);
+      }
+
       status.stats.inc(IndexedType.categories,
                        svc.getCategoriesHandler().reindex(indexer));
 
@@ -85,5 +108,9 @@ public class PublicProcessor extends Crawler {
       status.stats.inc(IndexedType.locations,
                        svc.getLocationsHandler().reindex(indexer));
     }
+  }
+
+  public Iterator<BwAdminGroup> getAdminGroups(final CalSvcI svc) throws CalFacadeException {
+    return svc.getDumpHandler().getAdminGroups();
   }
 }

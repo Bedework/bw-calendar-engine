@@ -187,89 +187,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   /** <em>Tasks</em>  */
   public final static int calTypeTasks = 15;
 
-  /** There are limitations on what may be placed in each type of collection,
-   *  e.g folders cannot hold entities, guids must be unique in calendars etc.
-   *
-   *  <p>This class allows us to create a list of characteristics for each
-   *  calendar type.
-   */
-  public static class CollectionInfo {
-    /** Allows us to use this as a parameter */
-    public int collectionType;
-
-    /** Is this 'special', e.g. Trash */
-    public boolean special;
-
-    /** Children allowed in this collection */
-    public boolean childrenAllowed;
-
-    /** Objects in here can be indexed */
-    public boolean indexable;
-
-    /** Guid + recurrence must be unique */
-    public boolean uniqueKey;
-
-    /** Allow annotations */
-    public boolean allowAnnotations;
-
-    /** Freebusy allowed */
-    public boolean allowFreeBusy;
-
-    /** Can be the target of an alias */
-    public boolean canAlias;
-
-    /** Only calendar entities here */
-    public boolean onlyCalEntities;
-
-    /** Scheduling allowed here */
-    public boolean scheduling;
-
-    /** Shareable/publishable */
-    public boolean shareable;
-
-    /** Provision at creation and cehck for them */
-    public boolean provision;
-
-    /**
-     * @param collectionType the type
-     * @param special true for special
-     * @param childrenAllowed true/false
-     * @param indexable true/false
-     * @param uniqueKey e.g. false for inbox
-     * @param allowAnnotations can we annotate the entities
-     * @param allowFreeBusy on this collection?
-     * @param canAlias can we symlink it
-     * @param onlyCalEntities one entities in this
-     * @param scheduling a scheduling collection?
-     * @param shareable is it shareable?
-     * @param provision do we provision?
-     */
-    public CollectionInfo(final int collectionType,
-                          final boolean special,
-                          final boolean childrenAllowed,
-                          final boolean indexable,
-                          final boolean uniqueKey,
-                          final boolean allowAnnotations,
-                          final boolean allowFreeBusy,
-                          final boolean canAlias,
-                          final boolean onlyCalEntities,
-                          final boolean scheduling,
-                          final boolean shareable,
-                          final boolean provision) {
-      this.collectionType = collectionType;
-      this.special = special;
-      this.childrenAllowed = childrenAllowed;
-      this.indexable = indexable;
-      this.uniqueKey = uniqueKey;
-      this.allowAnnotations = allowAnnotations;
-      this.allowFreeBusy = allowFreeBusy;
-      this.canAlias = canAlias;
-      this.onlyCalEntities = onlyCalEntities;
-      this.scheduling = scheduling;
-      this.shareable = shareable;
-      this.provision = provision;
-    }
-  }
 
   private static final boolean f = false;
   private static final boolean o = false; // flag obsolete entries
@@ -397,7 +314,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   private List<String> vpollSupportedComponents;
 
-  private Set<String> categoryUids;
+  private Set<String> categoryHrefs;
 
   /** Constructor
    */
@@ -1372,82 +1289,13 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   static final String eventListProperty = "org.bedework.eventlist";
   static final int maxEventListSize = 2500;
 
-  /**
-   */
-  public static class EventListEntry implements Comparable<EventListEntry> {
-    private String href;
-
-    private String path;
-    private String name;
-
-    /**
-     * @param href
-     */
-    public EventListEntry(final String href) {
-      this.href = href;
-    }
-
-    /**
-     * @param path
-     * @param name
-     */
-    public EventListEntry(final String path,
-                          final String name) {
-      this.path = path;
-      this.name = name;
-
-      href = path + "/" + name;
-    }
-
-    /**
-     * @return href
-     */
-    public String getHref() {
-      return href;
-    }
-
-    /**
-     * @return path part
-     */
-    public String getPath() {
-      if (path == null) {
-        split();
-      }
-
-      return path;
-    }
-
-    /**
-     * @return name part
-     */
-    public String getName() {
-      if (name == null) {
-        split();
-      }
-
-      return name;
-    }
-
-    private void split() {
-      int pos = href.lastIndexOf("/");
-
-      path = href.substring(0, pos );
-      name = href.substring(pos + 1); // Skip the "/"
-    }
-
-    @Override
-    public int compareTo(final EventListEntry that) {
-      return href.compareTo(that.href);
-    }
-  }
-
   /** Set the event list property
    *
    * @param val
    */
   public void setEventList(final SortedSet<EventListEntry> val) {
     String currentPath = null;
-    List<String> vals = new ArrayList<String>();
+    List<String> vals = new ArrayList<>();
     StringBuilder cur = new StringBuilder();
 
     for (EventListEntry ele: val) {
@@ -1537,6 +1385,26 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     }
 
     return res;
+  }
+
+  /* ====================================================================
+   *                   db entity methods
+   * ==================================================================== */
+
+  @IcalProperty(pindex = PropertyInfoIndex.HREF,
+          jname = "href",
+          required = true,
+          eventProperty = true,
+          todoProperty = true,
+          journalProperty = true)
+  @Override
+  public void setHref(final String val) {
+    setPath(val);
+  }
+
+  @Override
+  public String getHref() {
+    return getPath();
   }
 
   /* ====================================================================
@@ -1761,26 +1629,26 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /** Set list of referenced categories
    *
-   * @param val list of category uids
+   * @param val list of category hrefs
    */
   @NoProxy
   @NoWrap
   @NoDump
   @Override
-  public void setCategoryUids(final Set<String> val) {
-    categoryUids = val;
+  public void setCategoryHrefs(final Set<String> val) {
+    categoryHrefs = val;
   }
 
   /**
    *
-   * @return list of category uids.
+   * @return list of category hrefs.
    */
   @NoProxy
   @NoWrap
   @NoDump
   @Override
-  public Set<String> getCategoryUids() {
-    return categoryUids;
+  public Set<String> getCategoryHrefs() {
+    return categoryHrefs;
   }
 
   /**
@@ -2215,9 +2083,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     cal.setLastEtag(getLastEtag());
     cal.setFilterExpr(getFilterExpr());
     
-    if (!Util.isEmpty(getCategoryUids())) {
-      final Set<String> uids = new TreeSet<>(getCategoryUids());
-      cal.setCategoryUids(uids);
+    if (!Util.isEmpty(getCategoryHrefs())) {
+      final Set<String> uids = new TreeSet<>(getCategoryHrefs());
+      cal.setCategoryHrefs(uids);
     }
 
     return cal;

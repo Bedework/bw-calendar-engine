@@ -5,7 +5,6 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwAlarm;
-import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwResource;
@@ -144,14 +143,14 @@ public class EntityDAO extends DAOBase {
                   " and (encoding is null or encoding <> :tsenc)";
 
   public BwResource getResource(final String name,
-                                final BwCalendar coll,
+                                final String colPath,
                                 final int desiredAccess) throws CalFacadeException {
     final HibSession sess = getSess();
 
     sess.createQuery(getResourceQuery);
 
     sess.setString("name", name);
-    sess.setString("path", coll.getPath());
+    sess.setString("path", colPath);
     sess.setString("tsenc", BwResource.tombstoned);
     sess.cacheableQuery();
 
@@ -189,12 +188,14 @@ public class EntityDAO extends DAOBase {
                   " as r where r.colPath=:path" +
                   // Include deleted resources after the token.
                   " and (r.lastmod>:lastmod" +
-                  " or (r.lastmod=:lastmod and r.sequence>:seq))";
+                  " or (r.lastmod=:lastmod and r.sequence>:seq))"+
+                  " order by r.created desc";
 
   @SuppressWarnings("unchecked")
   public List<BwResource> getAllResources(final String path,
                                           final boolean forSynch,
-                                          final String token) throws CalFacadeException {
+                                          final String token,
+                                          final int count) throws CalFacadeException {
     final HibSession sess = getSess();
 
     if (forSynch && (token != null)) {
@@ -212,32 +213,10 @@ public class EntityDAO extends DAOBase {
       sess.setString("tsenc", BwResource.tombstoned);
     }
 
-    sess.cacheableQuery();
-
-    return sess.getList();
-  }
-
-  private static final String getNResourcesQuery =
-          "from " + BwResource.class.getName() +
-                  " as r where r.colPath=:path" +
-                  // No deleted collections for null sync-token or not sync
-                  " and (r.encoding is null or r.encoding <> :tsenc)" +
-                  " order by r.created desc";
-
-  @SuppressWarnings("unchecked")
-  public List<BwResource> getNResources(final String path,
-                                        final int start,
-                                        final int count) throws CalFacadeException {
-    final HibSession sess = getSess();
-
-    sess.createQuery(getNResourcesQuery);
-
-    sess.setString("path", path);
-
-    sess.setString("tsenc", BwResource.tombstoned);
-
-    sess.setFirstResult(start);
+    sess.setFirstResult(0);
     sess.setMaxResults(count);
+
+    sess.cacheableQuery();
 
     return sess.getList();
   }

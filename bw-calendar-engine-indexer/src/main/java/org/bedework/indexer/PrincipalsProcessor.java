@@ -37,11 +37,11 @@ public class PrincipalsProcessor extends Crawler {
    *
    * When we've finished the entire tree we stop.
    *
-   * @param status
-   * @param name
-   * @param adminAccount
-   * @param batchDelay
-   * @param entityDelay
+   * @param status of the process
+   * @param name for the thread
+   * @param adminAccount to use
+   * @param batchDelay between batches
+   * @param entityDelay betwen entities
    * @param skipPaths - paths to skip
    * @param indexRootPath - where we build the index
    */
@@ -57,9 +57,6 @@ public class PrincipalsProcessor extends Crawler {
           skipPaths, indexRootPath);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.crawler.Processor#process(java.lang.String)
-   */
   @Override
   public void process() throws CalFacadeException {
     /* We get batched lists of user principals and then start up indexer threads

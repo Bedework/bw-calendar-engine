@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calcore.indexing;
+package org.bedework.calcore.common.indexing;
 
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.caldav.util.TimeRange;
@@ -198,6 +198,26 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
                                  recurrenceId),
                   null);
     }
+
+    return anded;
+  }
+
+  /** Build a filter for a single event identified by the colPath
+   * and uid.
+   *
+   * @param colPath to event
+   * @param guid of event
+   * @return a filter builder
+   */
+  public FilterBuilder singleEventFilterGuid(final String colPath,
+                                             final String guid) {
+    FilterBuilder anded = and(addTerm("_type", docTypeEvent),
+                              addTerm(makePropertyRef(PropertyInfoIndex.COLPATH), colPath),
+                              null);
+
+    anded = and(anded, addTerm(makePropertyRef(PropertyInfoIndex.UID), guid),
+                null);
+    anded = and(anded, addTerm(PropertyInfoIndex.MASTER, "true"), null);
 
     return anded;
   }

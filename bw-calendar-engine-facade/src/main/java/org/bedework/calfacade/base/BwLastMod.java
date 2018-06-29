@@ -61,15 +61,15 @@ public class BwLastMod<T extends BwDbentity, T1>
 
   /** No date constructor
    *
-   * @param dbEntity
+   * @param dbEntity related db entity
    */
   public BwLastMod(final T dbEntity) {
     this.dbEntity = dbEntity;
   }
 
   /** Constructor to set last mod
-   * @param dbEntity
-   * @param dt
+   * @param dbEntity related db entity
+   * @param dt datetime
    */
   public BwLastMod(final T dbEntity, final Date dt) {
     this(dbEntity);
@@ -77,7 +77,7 @@ public class BwLastMod<T extends BwDbentity, T1>
   }
 
   /**
-   * @param val
+   * @param val the id
    */
   @Override
   public void setId(final int val) {
@@ -94,7 +94,7 @@ public class BwLastMod<T extends BwDbentity, T1>
   }
 
   /**
-   * @param val
+   * @param val related db entity
    */
   public void setDbEntity(final T val) {
     dbEntity = val;
@@ -109,7 +109,7 @@ public class BwLastMod<T extends BwDbentity, T1>
   }
 
   /**
-   * @param val
+   * @param val timestamp of change
    */
   public void setTimestamp(final String val) {
     timestamp = val;
@@ -147,11 +147,25 @@ public class BwLastMod<T extends BwDbentity, T1>
   }
 
   /* ====================================================================
+   *                   Abstract methods
+   * ==================================================================== */
+
+  /** Set the href - ignored
+   *
+   * @param val    String href
+   */
+  public void setHref(final String val) { }
+
+  public String getHref() {
+    return dbEntity.getHref();
+  }
+
+  /* ====================================================================
    *                   Convenience methods
    * ==================================================================== */
 
   /** Update last mod fields
-   * @param val
+   * @param val timestamp of change
    */
   public void updateLastmod(final Timestamp val) {
     DateTime dt = new DateTime(val);
@@ -170,8 +184,8 @@ public class BwLastMod<T extends BwDbentity, T1>
 
   /** Return a value that can be used for etag and ctag support
    *
-   * @param timestamp
-   * @param sequence
+   * @param timestamp of change
+   * @param sequence to allow sub microsec precision
    * @return String tag value
    */
   @NoDump
@@ -181,7 +195,7 @@ public class BwLastMod<T extends BwDbentity, T1>
 
   /** Add our stuff to the StringBuilder
    *
-   * @param sb    StringBuilder for result
+   * @param ts    for result
    */
   @Override
   protected void toStringSegment(final ToString ts) {

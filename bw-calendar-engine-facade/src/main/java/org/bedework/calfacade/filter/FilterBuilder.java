@@ -24,7 +24,7 @@ import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.caldav.util.filter.ObjectFilter;
 import org.bedework.caldav.util.filter.OrFilter;
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwCalendar.EventListEntry;
+import org.bedework.calfacade.EventListEntry;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeSubscriptionLoopException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;

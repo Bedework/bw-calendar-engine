@@ -59,6 +59,9 @@ public class ProcessDelete extends CmdUtilHelper {
       addInfo("delete view \"<name>\" \n" +
                       "   delete given view");
 
+      addInfo("delete vmbr \"<name>\" \"<path>\" \n" +
+                      "   delete entry from given view");
+
       addInfo("delete all views\n" +
                       "   delete all views for current user");
 
@@ -79,6 +82,10 @@ public class ProcessDelete extends CmdUtilHelper {
 
     if ("view".equals(wd)) {
       return deleteView(quotedVal());
+    }
+
+    if ("vmbr".equals(wd)) {
+      return deleteViewMember(quotedVal());
     }
 
     if ("all".equals(wd)) {
@@ -215,7 +222,35 @@ public class ProcessDelete extends CmdUtilHelper {
       close();
     }
   }
-  
+
+  private boolean deleteViewMember(final String name) throws Throwable {
+    if (name == null) {
+      addError("Must supply name");
+      return false;
+    }
+
+    if (debug) {
+      debug("About to delete view member" + name);
+    }
+
+    final String path = quotedVal();
+
+    if (path == null) {
+      addError("Must supply path");
+      return false;
+    }
+
+    try {
+      open();
+
+      getSvci().getViewsHandler().removeCollection(name, path);
+
+      return true;
+    } finally {
+      close();
+    }
+  }
+
   private boolean deleteAll(final String type) throws Throwable {
     if (!"views".equals(type)) {
       error("Only allow views for delete all");

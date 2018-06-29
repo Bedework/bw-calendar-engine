@@ -674,6 +674,11 @@ public class BwEventUtil extends IcalUtil {
 
             break;
 
+          case DUE:
+            /* -------------------- Due ------------------------ */
+
+            break;
+
           case DURATION:
             /* ------------------- Duration -------------------- */
 

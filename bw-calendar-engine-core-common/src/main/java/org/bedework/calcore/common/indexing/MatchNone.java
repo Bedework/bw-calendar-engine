@@ -1,7 +1,7 @@
 /* ********************************************************************
     Appropriate copyright notice
 */
-package org.bedework.calcore.indexing;
+package org.bedework.calcore.common.indexing;
 
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.BaseFilterBuilder;

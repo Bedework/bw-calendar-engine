@@ -177,7 +177,8 @@ public class BedeworkAp extends AbstractProcessor {
           final Collection<Modifier> mods = e.getModifiers();
 
           if (mods.contains(Modifier.PUBLIC)) {
-            pstate.getProxyHandler().proxyMethod(pstate.getEnv(), e);
+            pstate.getProxyHandler().proxyMethod(pstate.getEnv(), e,
+                                                 pstate);
           }
         }
       }

@@ -124,7 +124,7 @@ import java.util.TreeSet;
  *
  * @author Mike Douglass       douglm rpi.edu
  */
-public class CalSvc extends CalSvcI {
+public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
   //private String systemName;
 
   private CalSvcIPars pars;
@@ -542,9 +542,16 @@ public class CalSvc extends CalSvcI {
     }
 
     open = true;
-    getCal().open(pars.getWebMode(),
+    getCal().open(this,
+                  pars.getLogId(),
+                  configs,
+                  pars.getWebMode(),
                   pars.getForRestore(),
-                  pars.getIndexRebuild());
+                  pars.getIndexRebuild(),
+                  pars.getPublicAdmin(),
+                  pars.getPublicSubmission(),
+                  pars.getSessionsless(),
+                  pars.getDontKill());
 
     for (final CalSvcDb handler: handlers) {
       handler.open();
@@ -670,8 +677,8 @@ public class CalSvc extends CalSvcI {
     }
 
     @Override
-    public BwCategory getCategory(final String uid) throws CalFacadeException {
-      return getCategoriesHandler().get(uid);
+    public BwCategory getCategoryByUid(final String uid) throws CalFacadeException {
+      return getCategoriesHandler().getByUid(uid);
     }
 
     @Override
@@ -803,18 +810,17 @@ public class CalSvc extends CalSvcI {
   }
 
   public BwIndexer getIndexer() {
-    return getIndexer(getPars().getPublicAdmin() ||
-                              getPars().isGuest());
+    try {
+      return getCal().getIndexer();
+    } catch (final CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
+    }
   }
 
   @Override
   public BwIndexer getIndexer(final boolean publick) {
     try {
-      if (publick) {
-        return getCal().getPublicIndexer();
-      }
-
-      return getCal().getIndexer(getPrincipal());
+      return getCal().getIndexer(publick);
     } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }
@@ -1249,13 +1255,32 @@ public class CalSvc extends CalSvcI {
     try {
       final long beforeGetIntf = System.currentTimeMillis() - start;
 
-      cali = CalintfFactory.getIntf(CalintfFactory.hibernateClass);
+      String authenticatedUser = pars.getAuthUser();
+
+      if (pars.getForRestore()) {
+        authenticated = true;
+      } else {
+        authenticated = authenticatedUser != null;
+      }
+
+      if (authenticated) {
+        cali = CalintfFactory.getIntf(CalintfFactory.hibernateClass);
+      } else {
+        cali = CalintfFactory.getIntf(CalintfFactory.indexerOnlyClass);
+      }
 
       final long afterGetIntf = System.currentTimeMillis() - start;
 
-      cali.open(pars.getWebMode(),
+      cali.open(this,
+                pars.getLogId(),
+                configs,
+                pars.getWebMode(),
                 pars.getForRestore(),
-                pars.getIndexRebuild()); // Just for the user interactions
+                pars.getIndexRebuild(),
+                pars.getPublicAdmin(),
+                pars.getPublicSubmission(),
+                pars.getSessionsless(),
+                pars.getDontKill()); // Just for the user interactions
 
       postNotification(SysEvent.makeTimedEvent("Login: about to obtain calintf",
                                                beforeGetIntf));
@@ -1302,8 +1327,6 @@ public class CalSvc extends CalSvcI {
       final Directories dir = getDirectories();
 
       /* Get ourselves a user object */
-      String authenticatedUser = pars.getAuthUser();
-
       if (authenticatedUser != null) {
         final String sv = authenticatedUser;
 
@@ -1341,12 +1364,10 @@ public class CalSvc extends CalSvcI {
       boolean addingRunAsUser = false;
 
       if (pars.getForRestore()) {
-        authenticated = true;
         currentPrincipal = dir.caladdrToPrincipal(pars.getAuthUser());
         authPrincipal = currentPrincipal;
         subscriptionsOnly = false;
       } else if (authenticatedUser == null) {
-        authenticated = false;
         // Unauthenticated use
 
         currentPrincipal = unauthUsers.get(runAsUser);
@@ -1369,7 +1390,6 @@ public class CalSvc extends CalSvcI {
         authPrincipal = currentPrincipal;
         maxAllowedPrivs = PrivilegeSet.readOnlyPrivileges;
       } else {
-        authenticated = true;
         currentPrincipal = unauthUsers.get(authenticatedUser);
 
         if (currentPrincipal == null) {
@@ -1452,14 +1472,7 @@ public class CalSvc extends CalSvcI {
                                             maxAllowedPrivs,
                                             subscriptionsOnly);
 
-      cali.init(pars.getLogId(),
-                configs,
-                principalInfo,
-                null,
-                pars.getPublicAdmin(),
-                pars.getPublicSubmission(),
-                pars.getSessionsless(),
-                pars.getDontKill());
+      cali.initPinfo(principalInfo);
 
       if (addingUser) {
         // Do the real work of setting up user
@@ -1709,7 +1722,7 @@ public class CalSvc extends CalSvcI {
 
     @Override
     public BwContact getContact(final String uid) throws CalFacadeException {
-      return getContactsHandler().get(uid);
+      return getContactsHandler().getByUid(uid);
     }
 
     @Override
@@ -1724,7 +1737,7 @@ public class CalSvc extends CalSvcI {
 
     @Override
     public BwLocation getLocation(final String uid) throws CalFacadeException {
-      return getLocationsHandler().get(uid);
+      return getLocationsHandler().getByUid(uid);
     }
 
     @Override
@@ -1945,6 +1958,10 @@ public class CalSvc extends CalSvcI {
   /* ====================================================================
    *                   Package private methods
    * ==================================================================== */
+
+  void touchCalendar(final String href) throws CalFacadeException {
+    getCal().touchCalendar(href);
+  }
 
   void touchCalendar(final BwCalendar col) throws CalFacadeException {
     getCal().touchCalendar(col);

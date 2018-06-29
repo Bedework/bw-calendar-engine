@@ -18,6 +18,7 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
@@ -31,18 +32,20 @@ import java.util.List;
  *
  */
 public class PrincipalProcessor extends Crawler {
+  BwPrincipal publicUser = null;
+
   /** Constructor for an entity thread processor. These handle the entities
    * found within a collection.
    *
-   * @param status
-   * @param name
-   * @param adminAccount
+   * @param status of the process
+   * @param name for the thread
+   * @param adminAccount to use
    * @param principal - the principal we are processing or null.
-   * @param batchDelay
-   * @param entityDelay
+   * @param batchDelay between batches
+   * @param entityDelay betwen entities
    * @param skipPaths - paths to skip
    * @param indexRootPath - where we build the index
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public PrincipalProcessor(final CrawlStatus status,
                             final String name,
@@ -56,9 +59,6 @@ public class PrincipalProcessor extends Crawler {
           principal, batchDelay, entityDelay, skipPaths, indexRootPath);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.crawler.Processor#process(java.lang.String)
-   */
   @Override
   public void process() throws CalFacadeException {
     /* Index the current principal
@@ -67,18 +67,30 @@ public class PrincipalProcessor extends Crawler {
     try (BwSvc bw = getBw()) {
       final CalSvcI svc = bw.getSvci();
 
+      if (publicUser == null) {
+        publicUser = svc.getUsersHandler().getPublicUser();
+      }
+
       indexCollection(svc, svc.getCalendarsHandler().getHomePath());
+
 
       /* Skip the public owner here as public entities are already
        * indexed by the public processor
        */
 
-      if (principal.equals(svc.getUsersHandler().getPublicUser().getPrincipalRef())) {
+      if (principal.equals(publicUser.getPrincipalRef())) {
         return;
       }
 
       final BwIndexer indexer = svc.getIndexer(principal,
                                                indexRootPath);
+
+      final BwPrincipal pr =
+              svc.getUsersHandler().getPrincipal(principal);
+      indexer.indexEntity(pr);
+      status.stats.inc(IndexedType.principals, 1);
+      indexer.indexEntity(svc.getPreferences(pr.getPrincipalRef()));
+      status.stats.inc(IndexedType.preferences, 1);
 
       status.stats.inc(IndexedType.categories,
                        svc.getCategoriesHandler().reindex(indexer));

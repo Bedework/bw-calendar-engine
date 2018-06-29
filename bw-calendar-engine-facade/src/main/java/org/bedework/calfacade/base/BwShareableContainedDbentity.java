@@ -18,9 +18,12 @@
 */
 package org.bedework.calfacade.base;
 
+import org.bedework.access.Ace;
+import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
 
 /** Base class for shareable database entities that live within a container,
  * i.e. a calendar
@@ -30,7 +33,7 @@ import org.bedework.util.misc.ToString;
  *
  * @param <T>
  */
-public class BwShareableContainedDbentity<T> extends BwShareableDbentity<T> {
+public abstract class BwShareableContainedDbentity<T> extends BwShareableDbentity<T> {
   /* Path to the parent collection */
   private String colPath;
 
@@ -67,6 +70,44 @@ public class BwShareableContainedDbentity<T> extends BwShareableDbentity<T> {
   /* ====================================================================
    *                   Convenience methods
    * ==================================================================== */
+
+  protected void setColPath(final BwPrincipal principal,
+                            final String userRoot,
+                            final String colPathElement,
+                            final String dir,
+                            final String namePart) {
+    if (getPublick()) {
+      setColPath(Util.buildPath(true,
+                                "/public",
+                                "/",
+                                colPathElement,
+                                "/",
+                                dir,
+                                "/",
+                                namePart));
+      return;
+    }
+
+    final String homeDir;
+
+    if (principal.getKind() == Ace.whoTypeUser) {
+      homeDir = userRoot;
+    } else {
+      homeDir = Util.pathElement(1, principal.getPrincipalRef());
+    }
+
+    setColPath(Util.buildPath(true,
+                              "/",
+                              homeDir,
+                              "/",
+                              principal.getAccount(),
+                              "/",
+                              colPathElement,
+                              "/",
+                              dir,
+                              "/",
+                              namePart));
+  }
 
   /** Add our stuff to the ToString object
    *

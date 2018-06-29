@@ -71,6 +71,18 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
    *                  Non-db fields - should be in a wrapper
    * ==================================================================== */
 
+  /** Set the href - ignored
+   *
+   * @param val    String href
+   */
+  public void setHref(final String val) { }
+
+  public String getHref() {
+    return Util.buildPath(true, getColPath(),
+                          "/",
+                          getName());
+  }
+
   private String prevLastmod;
 
   private int prevSeq;

@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.CalFacadeDefs;
+import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.AccessUtilI;
@@ -468,13 +469,13 @@ public class CalendarWrapper extends BwCalendar
   }
 
   @Override
-  public void setCategoryUids(final Set<String> val) {
-    entity.setCategoryUids(val);
+  public void setCategoryHrefs(final Set<String> val) {
+    entity.setCategoryHrefs(val);
   }
 
   @Override
-  public Set<String> getCategoryUids() {
-    return entity.getCategoryUids();
+  public Set<String> getCategoryHrefs() {
+    return entity.getCategoryHrefs();
   }
 
   /* ====================================================================
@@ -665,6 +666,24 @@ public class CalendarWrapper extends BwCalendar
   @Override
   public void updateLastmod(final Timestamp val) {
     entity.updateLastmod(val);
+  }
+
+  /* ====================================================================
+   *                   db entity methods
+   * ==================================================================== */
+
+  /** Set the href
+   *
+   * @param val    String href
+   */
+  @Override
+  public void setHref(final String val) {
+    entity.setHref(val);
+  }
+
+  @Override
+  public String getHref() {
+    return entity.getHref();
   }
 
   /* ====================================================================

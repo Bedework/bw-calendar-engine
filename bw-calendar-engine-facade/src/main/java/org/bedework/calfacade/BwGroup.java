@@ -28,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
 import java.util.TreeSet;
 
 /** Value object to represent a calendar group.
@@ -43,6 +44,10 @@ public class BwGroup extends BwPrincipal {
    */
   private Collection<BwPrincipal> groupMembers;
 
+  /* Non-db */
+
+  private Set<String> memberHrefs;
+
   /* ====================================================================
    *                   Constructors
    * ==================================================================== */
@@ -53,9 +58,6 @@ public class BwGroup extends BwPrincipal {
     super();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwPrincipal#getKind()
-   */
   @Override
   @NoDump
   public int getKind() {
@@ -82,6 +84,15 @@ public class BwGroup extends BwPrincipal {
   /* ====================================================================
    *                   Convenience methods
    * ==================================================================== */
+
+  public void setMemberHrefs(final Set<String> val) {
+    memberHrefs = val;
+  }
+
+  @NoDump
+  public Set<String> getMemberHrefs() {
+    return memberHrefs;
+  }
 
   /** Return true if the account name is in the group members.
    *

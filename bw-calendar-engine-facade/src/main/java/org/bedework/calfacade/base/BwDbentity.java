@@ -33,7 +33,7 @@ import java.util.Collection;
  *
  * @param <T>
  */
-public class BwDbentity<T> extends BwUnversionedDbentity<T> {
+public abstract class BwDbentity<T> extends BwUnversionedDbentity<T> {
   /* Hibernate does not implicitly delete db entities during update or
    * save, except for those referenced as part of a Collection.
    *

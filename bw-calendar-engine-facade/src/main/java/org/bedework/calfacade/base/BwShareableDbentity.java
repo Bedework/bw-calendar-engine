@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  *
  * @param <T>
  */
-public class BwShareableDbentity<T> extends BwOwnedDbentity<T> {
+public abstract class BwShareableDbentity<T> extends BwOwnedDbentity<T> {
   private String creatorHref;
 
   /** Encoded access rights
