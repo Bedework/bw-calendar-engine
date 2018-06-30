@@ -574,6 +574,13 @@ public interface Calintf
   /**
    *
    * @param className of objects
+   * @return iterator over all the public objects
+   */
+  Iterator getPublicObjectIterator(String className);
+
+  /**
+   *
+   * @param className of objects
    * @param colPath for objects
    * @return iterator over all the objects with the given col path
    */

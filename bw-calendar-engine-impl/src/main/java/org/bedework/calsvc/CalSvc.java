@@ -1031,6 +1031,15 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     }
   }
 
+  @Override
+  public Iterator getPublicObjectIterator(String className) {
+    try {
+      return getCal().getPublicObjectIterator(className);
+    } catch (final CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
+    }
+  }
+
   /* ====================================================================
    *                   Users and accounts
    * ==================================================================== */

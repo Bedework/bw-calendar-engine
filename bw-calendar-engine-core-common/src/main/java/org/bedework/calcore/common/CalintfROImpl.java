@@ -238,15 +238,7 @@ public class CalintfROImpl extends CalintfBase
 
     ac = new CIAccessChecker();
 
-    if (!authenticated) {
-      currentMode = CalintfDefs.guestMode;
-    } else if (publicAdmin) {
-      currentMode = CalintfDefs.publicAdminMode;
-    } else if (publicSubmission) {
-      currentMode = CalintfDefs.publicUserMode;
-    } else {
-      currentMode = CalintfDefs.userMode;
-    }
+    currentMode = CalintfDefs.guestMode;
   }
 
   @Override
@@ -1174,6 +1166,11 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Iterator getPrincipalObjectIterator(final String className) {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public Iterator getPublicObjectIterator(final String className) {
     throw new RuntimeException("Read only version");
   }
 

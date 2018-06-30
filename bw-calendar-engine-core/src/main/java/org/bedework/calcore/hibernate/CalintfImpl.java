@@ -23,6 +23,7 @@ import org.bedework.access.AceWho;
 import org.bedework.access.Acl.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.common.CalintfROImpl;
+import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CalintfInfo;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventPropertiesI;
@@ -264,6 +265,14 @@ public class CalintfImpl extends CalintfROImpl {
                forRestore, indexRebuild,
                publicAdmin, publicSubmission, sessionless, dontKill);
     authenticated = true;
+
+    if (publicAdmin) {
+      currentMode = CalintfDefs.publicAdminMode;
+    } else if (publicSubmission) {
+      currentMode = CalintfDefs.publicUserMode;
+    } else {
+      currentMode = CalintfDefs.userMode;
+    }
 
     if ((sess != null) && !webMode) {
       warn("Session is not null. Will close");
@@ -812,6 +821,7 @@ public class CalintfImpl extends CalintfROImpl {
     protected final String className;
     protected final String colPath;
     protected final String ownerHref;
+    protected final boolean publicAdmin;
     protected List batch;
     protected int index;
     protected boolean done;
@@ -819,21 +829,23 @@ public class CalintfImpl extends CalintfROImpl {
     protected final int batchSize = 100;
 
     private ObjectIterator(final String className) {
-      this(className, null, null, 0);
+      this(className, null, null, false, 0);
     }
 
     private ObjectIterator(final String className,
                            final String colPath) {
-      this(className, colPath, null, 0);
+      this(className, colPath, null, false, 0);
     }
 
     private ObjectIterator(final String className,
                            final String colPath,
                            final String ownerHref,
+                           final boolean publicAdmin,
                            final int start) {
       this.className = className;
       this.colPath = colPath;
       this.ownerHref = ownerHref;
+      this.publicAdmin = publicAdmin;
       this.start = start;
     }
 
@@ -873,16 +885,21 @@ public class CalintfImpl extends CalintfROImpl {
       try {
         String query = "from " + className;
 
+        boolean doneWhere = false;
+
         if (colPath != null) {
           query += " where colPath=:colPath";
+          doneWhere = true;
         }
 
-        if (ownerHref != null) {
-          if (colPath != null) {
-            query += " and ownerHref=:ownerHref";
+        if ((ownerHref != null) | publicAdmin) {
+          if (!doneWhere) {
+            query += " where";
+            doneWhere = true;
           } else {
-            query += " where ownerHref=:ownerHref";
+            query += " and";
           }
+          query += " ownerHref=:ownerHref";
         }
 
         sess.createQuery(query);
@@ -891,7 +908,9 @@ public class CalintfImpl extends CalintfROImpl {
           sess.setString("colPath", colPath);
         }
 
-        if (ownerHref != null) {
+        if (publicAdmin) {
+          sess.setString("ownerHref", BwPrincipal.publicUserHref);
+        } else if (ownerHref != null) {
           sess.setString("ownerHref", ownerHref);
         }
 
@@ -914,7 +933,7 @@ public class CalintfImpl extends CalintfROImpl {
   
   private class EventHrefIterator extends ObjectIterator {
     private EventHrefIterator(final int start) {
-      super(BwEventObj.class.getName(), null, null, start);
+      super(BwEventObj.class.getName(), null, null, false, start);
     }
 
     @Override
@@ -965,7 +984,12 @@ public class CalintfImpl extends CalintfROImpl {
 
   @Override
   public Iterator getPrincipalObjectIterator(final String className) {
-    return new ObjectIterator(className, null, getPrincipalRef(), 0);
+    return new ObjectIterator(className, null, getPrincipalRef(), false, 0);
+  }
+
+  @Override
+  public Iterator getPublicObjectIterator(final String className) {
+    return new ObjectIterator(className, null, null, true, 0);
   }
 
   @Override

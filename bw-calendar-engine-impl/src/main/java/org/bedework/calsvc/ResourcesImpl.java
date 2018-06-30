@@ -279,11 +279,15 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       owner = getPublicUser();
     }
 
-    Iterator<BwResource> ents = getSvc().getPrincipalObjectIterator(BwResource.class.getName());
+    Iterator<BwResource> ents = getSvc().getPublicObjectIterator(BwResource.class.getName());
     int ct = 0;
 
     while (ents.hasNext()) {
-      indexer.indexEntity(ents.next());
+      BwResource ent = ents.next();
+      if (ent.getTombstoned()) {
+        continue;
+      }
+      indexer.indexEntity(ent);
       ct++;
     }
 

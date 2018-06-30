@@ -551,6 +551,13 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    */
   public abstract Iterator getPrincipalObjectIterator(String className);
 
+  /**
+   *
+   * @param className of objects
+   * @return iterator over all the public objects
+   */
+  public abstract Iterator getPublicObjectIterator(String className);
+
   /* ====================================================================
    *                   Users and accounts
    * ==================================================================== */
