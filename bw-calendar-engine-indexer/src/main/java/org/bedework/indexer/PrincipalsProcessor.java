@@ -29,6 +29,8 @@ import java.util.List;
  *
  */
 public class PrincipalsProcessor extends Crawler {
+  private final Class entityClass;
+
   /** This is the constructor for handling the non-public principal indexing.
    *
    * Run a thread which reads the children of the root directory. Each child
@@ -51,10 +53,13 @@ public class PrincipalsProcessor extends Crawler {
                              final long batchDelay,
                              final long entityDelay,
                              final List<String> skipPaths,
-                             final String indexRootPath) {
+                             final String indexRootPath,
+                             final Class entityClass) {
     super(status,
           name, adminAccount, null, batchDelay, entityDelay,
           skipPaths, indexRootPath);
+
+    this.entityClass = entityClass;
   }
 
   @Override
@@ -105,7 +110,9 @@ public class PrincipalsProcessor extends Crawler {
                                                        href,
                                                        batchDelay,
                                                        entityDelay,
-                                                       getSkipPaths(), indexRootPath);
+                                                       getSkipPaths(),
+                                                       indexRootPath,
+                                                       entityClass);
 
         /* This call should hang waiting for an available process */
         final IndexerThread it = getPrincipalThread(p);

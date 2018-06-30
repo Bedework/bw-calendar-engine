@@ -21,6 +21,7 @@ package org.bedework.calsvci;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.responses.GetFilterDefResponse;
 
 import java.io.Serializable;
@@ -96,4 +97,12 @@ public interface FiltersI extends Serializable {
    * @return result - check the status
    */
   ParseResult parseSort(String val);
+
+  /** Reindex current users entities
+   *
+   * @param indexer to use for this operation
+   * @return number of entities reindexed
+   * @throws CalFacadeException on fatal error
+   */
+  int reindex(BwIndexer indexer) throws CalFacadeException;
 }

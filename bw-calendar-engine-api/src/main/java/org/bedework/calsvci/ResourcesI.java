@@ -20,6 +20,7 @@ package org.bedework.calsvci;
 
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.indexing.BwIndexer;
 
 import java.io.Serializable;
 import java.util.List;
@@ -127,4 +128,12 @@ public interface ResourcesI extends Serializable {
                    String name,
                    boolean copy,
                    boolean overwrite) throws CalFacadeException;
+
+  /** Reindex current users entities
+   *
+   * @param indexer to use for this operation
+   * @return number of entities reindexed
+   * @throws CalFacadeException on fatal error
+   */
+  int reindex(BwIndexer indexer) throws CalFacadeException;
 }

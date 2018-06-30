@@ -811,6 +811,7 @@ public class CalintfImpl extends CalintfROImpl {
   private class ObjectIterator implements Iterator {
     protected final String className;
     protected final String colPath;
+    protected final String ownerHref;
     protected List batch;
     protected int index;
     protected boolean done;
@@ -818,19 +819,21 @@ public class CalintfImpl extends CalintfROImpl {
     protected final int batchSize = 100;
 
     private ObjectIterator(final String className) {
-      this(className, null, 0);
+      this(className, null, null, 0);
     }
 
     private ObjectIterator(final String className,
                            final String colPath) {
-      this(className, colPath, 0);
+      this(className, colPath, null, 0);
     }
 
     private ObjectIterator(final String className,
                            final String colPath,
+                           final String ownerHref,
                            final int start) {
       this.className = className;
       this.colPath = colPath;
+      this.ownerHref = ownerHref;
       this.start = start;
     }
 
@@ -868,11 +871,28 @@ public class CalintfImpl extends CalintfROImpl {
 
     protected void nextBatch() {
       try {
-        if (colPath == null) {
-          sess.createQuery("from " + className);
-        } else {
-          sess.createQuery("from " + className + " where colPath=:colPath");
+        String query = "from " + className;
+
+        if (colPath != null) {
+          query += " where colPath=:colPath";
+        }
+
+        if (ownerHref != null) {
+          if (colPath != null) {
+            query += " and ownerHref=:ownerHref";
+          } else {
+            query += " where ownerHref=:ownerHref";
+          }
+        }
+
+        sess.createQuery(query);
+
+        if (colPath != null) {
           sess.setString("colPath", colPath);
+        }
+
+        if (ownerHref != null) {
+          sess.setString("ownerHref", ownerHref);
         }
 
         sess.setFirstResult(start);
@@ -894,7 +914,7 @@ public class CalintfImpl extends CalintfROImpl {
   
   private class EventHrefIterator extends ObjectIterator {
     private EventHrefIterator(final int start) {
-      super(BwEventObj.class.getName(), null, start);
+      super(BwEventObj.class.getName(), null, null, start);
     }
 
     @Override
@@ -941,6 +961,11 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public Iterator getObjectIterator(final String className) {
     return new ObjectIterator(className);
+  }
+
+  @Override
+  public Iterator getPrincipalObjectIterator(final String className) {
+    return new ObjectIterator(className, null, getPrincipalRef(), 0);
   }
 
   @Override

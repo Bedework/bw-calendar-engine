@@ -1173,6 +1173,11 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
+  public Iterator getPrincipalObjectIterator(final String className) {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
   public Iterator getObjectIterator(final String className,
                                     final String colPath) {
     throw new RuntimeException("Read only version");

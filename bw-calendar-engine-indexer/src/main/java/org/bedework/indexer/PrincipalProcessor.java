@@ -18,10 +18,16 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwContact;
+import org.bedework.calfacade.BwFilterDef;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvci.CalSvcI;
 
 import java.util.List;
@@ -34,6 +40,8 @@ import java.util.List;
 public class PrincipalProcessor extends Crawler {
   BwPrincipal publicUser = null;
 
+  private final Class entityClass;
+
   /** Constructor for an entity thread processor. These handle the entities
    * found within a collection.
    *
@@ -45,6 +53,8 @@ public class PrincipalProcessor extends Crawler {
    * @param entityDelay betwen entities
    * @param skipPaths - paths to skip
    * @param indexRootPath - where we build the index
+   * @param entityClass - if non-null only index this class. Cannot
+   *                    be collection or events classes
    * @throws CalFacadeException on fatal error
    */
   public PrincipalProcessor(final CrawlStatus status,
@@ -54,9 +64,12 @@ public class PrincipalProcessor extends Crawler {
                             final long batchDelay,
                             final long entityDelay,
                             final List<String> skipPaths,
-                            final String indexRootPath) throws CalFacadeException {
+                            final String indexRootPath,
+                            final Class entityClass) throws CalFacadeException {
     super(status, name, adminAccount,
           principal, batchDelay, entityDelay, skipPaths, indexRootPath);
+
+    this.entityClass = entityClass;
   }
 
   @Override
@@ -71,8 +84,9 @@ public class PrincipalProcessor extends Crawler {
         publicUser = svc.getUsersHandler().getPublicUser();
       }
 
-      indexCollection(svc, svc.getCalendarsHandler().getHomePath());
-
+      if (entityClass == null) {
+        indexCollection(svc, svc.getCalendarsHandler().getHomePath());
+      }
 
       /* Skip the public owner here as public entities are already
        * indexed by the public processor
@@ -87,19 +101,45 @@ public class PrincipalProcessor extends Crawler {
 
       final BwPrincipal pr =
               svc.getUsersHandler().getPrincipal(principal);
-      indexer.indexEntity(pr);
-      status.stats.inc(IndexedType.principals, 1);
-      indexer.indexEntity(svc.getPreferences(pr.getPrincipalRef()));
-      status.stats.inc(IndexedType.preferences, 1);
 
-      status.stats.inc(IndexedType.categories,
-                       svc.getCategoriesHandler().reindex(indexer));
+      if (testClass(BwPrincipal.class)) {
+        indexer.indexEntity(pr);
+        status.stats.inc(IndexedType.principals, 1);
+      }
 
-      status.stats.inc(IndexedType.contacts,
-                       svc.getContactsHandler().reindex(indexer));
+      if (testClass(BwPreferences.class)) {
+        indexer.indexEntity(svc.getPreferences(pr.getPrincipalRef()));
+        status.stats.inc(IndexedType.preferences, 1);
+      }
 
-      status.stats.inc(IndexedType.locations,
-                       svc.getLocationsHandler().reindex(indexer));
+      if (testClass(BwCategory.class)) {
+        status.stats.inc(IndexedType.categories,
+                         svc.getCategoriesHandler().reindex(indexer));
+      }
+
+      if (testClass(BwContact.class)) {
+        status.stats.inc(IndexedType.contacts,
+                         svc.getContactsHandler().reindex(indexer));
+      }
+
+      if (testClass(BwLocation.class)) {
+        status.stats.inc(IndexedType.locations,
+                         svc.getLocationsHandler().reindex(indexer));
+      }
+
+      if (testClass(BwResource.class)) {
+        status.stats.inc(IndexedType.resources,
+                         svc.getResourcesHandler().reindex(indexer));
+      }
+
+      if (testClass(BwFilterDef.class)) {
+        status.stats.inc(IndexedType.filters,
+                         svc.getFiltersHandler().reindex(indexer));
+      }
     }
+  }
+
+  private boolean testClass(final Class cl) {
+    return entityClass == null || (entityClass.equals(cl));
   }
 }

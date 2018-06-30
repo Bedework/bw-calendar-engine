@@ -93,6 +93,12 @@ public interface BwIndexer extends Serializable {
     preferences(docTypePreferences),
 
     /** */
+    resources(docTypeResource),
+
+    /** */
+    filters(docTypeFilter),
+
+    /** */
     unreachableEntities(docTypeUnknown);
     
     private final String docType;

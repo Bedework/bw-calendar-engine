@@ -167,6 +167,17 @@ public class BwIndexApp extends JmsSysEventListener {
     c.checkThreads();
   }
 
+  void indexEntity(final Class entityClass) throws CalFacadeException {
+    final Crawl c = getCrawler();
+
+    c.setEntityClass(entityClass);
+    c.sameIndex();
+
+    c.crawl();
+
+    c.checkThreads();
+  }
+
   private Crawl getCrawler() {
     if (crawler != null) {
       return crawler;

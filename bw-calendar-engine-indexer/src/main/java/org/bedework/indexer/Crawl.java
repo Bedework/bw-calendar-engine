@@ -57,6 +57,10 @@ public class Crawl extends CalSys {
 
   private final List<CrawlStatus> statuses = new ArrayList<>();
 
+  private Class entityClass;
+
+  private boolean sameIndex;
+
   //protected long batchDelay;
   //protected long entityDelay;
 
@@ -88,6 +92,14 @@ public class Crawl extends CalSys {
     */
   }
 
+  public void setEntityClass(final Class entityClass) {
+    this.entityClass = entityClass;
+  }
+
+  public void sameIndex() {
+    this.sameIndex = true;
+  }
+
   /**
    * @throws CalFacadeException
    */
@@ -103,7 +115,13 @@ public class Crawl extends CalSys {
 
     final CrawlStatus status = new CrawlStatus("Overall status");
     statuses.add(status);
-    final String indexName = newIndexes(status);
+    final String indexName;
+
+    if (sameIndex) {
+      indexName = null;
+    } else {
+      indexName = newIndexes(status);
+    }
 
     /* Now we can reindex into the new directory */
 
@@ -117,7 +135,8 @@ public class Crawl extends CalSys {
                                        2000,   // batchDelay,
                                        100,    // entityDelay,
                                        props.getSkipPathsList(),
-                                       indexName);
+                                       indexName,
+                                       entityClass);
       prProc.start();
     }
 
@@ -128,7 +147,8 @@ public class Crawl extends CalSys {
                                     2000,   // batchDelay,
                                     100,    // entityDelay,
                                     props.getSkipPathsList(),
-                                    indexName);
+                                    indexName,
+                                    entityClass);
       pubProc.start();
     }
 

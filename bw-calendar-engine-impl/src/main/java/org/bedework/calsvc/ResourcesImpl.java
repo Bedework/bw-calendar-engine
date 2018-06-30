@@ -20,13 +20,16 @@ package org.bedework.calsvc;
 
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calsvci.ResourcesI;
 import org.bedework.util.misc.Util;
 
+import java.util.Iterator;
 import java.util.List;
 
 /** This acts as an interface to the database for resources.
@@ -265,6 +268,26 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       getSvc().rollbackTransaction();
       throw new CalFacadeException(t);
     }
+  }
+
+  @Override
+  public int reindex(BwIndexer indexer) throws CalFacadeException {
+    BwPrincipal owner;
+    if (!isPublicAdmin()) {
+      owner = getPrincipal();
+    } else {
+      owner = getPublicUser();
+    }
+
+    Iterator<BwResource> ents = getSvc().getPrincipalObjectIterator(BwResource.class.getName());
+    int ct = 0;
+
+    while (ents.hasNext()) {
+      indexer.indexEntity(ents.next());
+      ct++;
+    }
+
+    return ct;
   }
 
   List<BwResource> getSynchResources(final String path,

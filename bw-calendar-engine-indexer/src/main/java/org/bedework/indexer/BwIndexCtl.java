@@ -18,6 +18,7 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
@@ -61,6 +62,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     public ProcessorThread(final String name) {
       super(name);
     }
+
     @Override
     public void run() {
       final BwIndexApp app = getIndexApp();
@@ -134,8 +136,6 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     }
   }
 
-  private ProcessorThread processor;
-
   private class CrawlThread extends Thread {
     boolean showedTrace;
 
@@ -162,7 +162,43 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     }
   }
 
+  // The one we want to index
+  private Class entityClass;
+
+  /* Thread to index a particular entity type
+   */
+  private class EntityIndexThread extends Thread {
+    boolean showedTrace;
+
+    /**
+     * @param name - for the thread
+     */
+    public EntityIndexThread(final String name) {
+      super(name);
+    }
+
+    @Override
+    public void run() {
+      try {
+        getIndexApp().indexEntity(entityClass);
+        setStatus(statusDone);
+      } catch (final Throwable t) {
+        setStatus(statusFailed);
+        if (!showedTrace) {
+          error(t);
+          //            showedTrace = true;
+        } else {
+          error(t.getMessage());
+        }
+      }
+    }
+  }
+
+  private ProcessorThread processor;
+
   private CrawlThread crawler;
+
+  private EntityIndexThread entityProcessor;
 
   private final static String nm = "indexing";
 
@@ -437,6 +473,30 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     } catch (final Throwable t) {
       setStatus(statusFailed);
       error("Error rebuilding indexes.");
+      error(t);
+
+      return t.getLocalizedMessage();
+    }
+  }
+
+  @Override
+  public String rebuildResourceIndex() {
+    try {
+      setStatus(statusStopped);
+
+      if ((entityProcessor != null) && entityProcessor.isAlive()) {
+        error("Reindexer already started");
+        return "Reindexer already started";
+      }
+
+      entityClass = BwResource.class;
+      entityProcessor = new EntityIndexThread(getServiceName());
+      entityProcessor.start();
+
+      return "Started";
+    } catch (final Throwable t) {
+      setStatus(statusFailed);
+      error("Error rebuilding entity index.");
       error(t);
 
       return t.getLocalizedMessage();

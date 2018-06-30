@@ -67,6 +67,12 @@ public interface BwIndexCtlMBean extends ConfBaseMBean, IndexProperties {
    */
   String rebuildIndex();
 
+  /** Crawl the db data and reindex the resources - this is done in place.
+   *
+   * @return message
+   */
+  String rebuildResourceIndex();
+
   /** Creates a new index for use by reindex
    * 
    * @return index name.

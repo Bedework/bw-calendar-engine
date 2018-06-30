@@ -50,6 +50,7 @@ import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /** This is the service interface to the calendar suite. This will be
@@ -528,6 +529,27 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * @return Contacts
    */
   public abstract Contacts getContactsHandler();
+
+  /* ====================================================================
+   *                       dump/restore methods
+   *
+   * These are used to handle the needs of dump/restore. Perhaps we
+   * can eliminate the need at some point...
+   * ==================================================================== */
+
+  /**
+   *
+   * @param className of objects
+   * @return iterator over all the objects
+   */
+  public abstract Iterator getObjectIterator(String className);
+
+  /**
+   *
+   * @param className of objects
+   * @return iterator over all the objects for current principal
+   */
+  public abstract Iterator getPrincipalObjectIterator(String className);
 
   /* ====================================================================
    *                   Users and accounts

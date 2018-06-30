@@ -114,6 +114,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -565,11 +566,8 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
 
   @Override
   public boolean isRolledback() throws CalFacadeException {
-    if (!open) {
-      return false;
-    }
+    return open && getCal().isRolledback();
 
-    return getCal().isRolledback();
   }
 
   @Override
@@ -796,9 +794,6 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     return calendarsHandler;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getCalSuitesHandler()
-   */
   @Override
   public CalSuitesI getCalSuitesHandler() throws CalFacadeException {
     if (calSuitesHandler == null) {
@@ -881,9 +876,6 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     return resourcesHandler;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getScheduler()
-   */
   @Override
   public SchedulingI getScheduler() throws CalFacadeException {
     if (sched == null) {
@@ -928,9 +920,6 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     return usersHandler;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getViewsHandler()
-   */
   @Override
   public ViewsI getViewsHandler() throws CalFacadeException {
     if (viewsHandler == null) {
@@ -941,9 +930,6 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     return viewsHandler;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getDirectories()
-   */
   @Override
   public Directories getDirectories() throws CalFacadeException {
     if (isPublicAdmin()) {
@@ -953,9 +939,6 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     return getUserDirectories();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getUserDirectories()
-   */
   @Override
   public Directories getUserDirectories() throws CalFacadeException {
     if (userGroups != null) {
@@ -973,9 +956,6 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     return userGroups;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getAdminDirectories()
-   */
   @Override
   public Directories getAdminDirectories() throws CalFacadeException {
     if (adminGroups != null) {
@@ -993,9 +973,6 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     return adminGroups;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getCategoriesHandler()
-   */
   @Override
   public Categories getCategoriesHandler() {
     if (categoriesHandler == null) {
@@ -1027,6 +1004,31 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     }
 
     return contactsHandler;
+  }
+
+  /* ====================================================================
+   *                       dump/restore methods
+   *
+   * These are used to handle the needs of dump/restore. Perhaps we
+   * can eliminate the need at some point...
+   * ==================================================================== */
+
+  @Override
+  public Iterator getObjectIterator(String className) {
+    try {
+      return getCal().getObjectIterator(className);
+    } catch (final CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
+    }
+  }
+
+  @Override
+  public Iterator getPrincipalObjectIterator(String className) {
+    try {
+      return getCal().getPrincipalObjectIterator(className);
+    } catch (final CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
+    }
   }
 
   /* ====================================================================
@@ -1165,7 +1167,7 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
       return null;
     }
 
-    Set<SynchReportItem> items = new TreeSet<SynchReportItem>();
+    Set<SynchReportItem> items = new TreeSet<>();
     String resToken = getSynchItems(col, path, token, items, recurse);
     final SynchReport res = new SynchReport(items, resToken);
 
@@ -1202,11 +1204,7 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     //  return false;
     //}
 
-    if (col.getCalType() == BwCalendar.calTypeExtSub) {
-      return false;
-    }
-
-    return true;
+    return col.getCalType() != BwCalendar.calTypeExtSub;
   }
 
   /* ====================================================================
@@ -1257,16 +1255,14 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
 
       String authenticatedUser = pars.getAuthUser();
 
-      if (pars.getForRestore()) {
-        authenticated = true;
-      } else {
-        authenticated = authenticatedUser != null;
-      }
+      authenticated = pars.getForRestore()
+              || authenticatedUser != null;
 
       if (authenticated) {
         cali = CalintfFactory.getIntf(CalintfFactory.hibernateClass);
       } else {
-        cali = CalintfFactory.getIntf(CalintfFactory.indexerOnlyClass);
+        cali = CalintfFactory
+                .getIntf(CalintfFactory.indexerOnlyClass);
       }
 
       final long afterGetIntf = System.currentTimeMillis() - start;
@@ -1282,10 +1278,12 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
                 pars.getSessionsless(),
                 pars.getDontKill()); // Just for the user interactions
 
-      postNotification(SysEvent.makeTimedEvent("Login: about to obtain calintf",
-                                               beforeGetIntf));
-      postNotification(SysEvent.makeTimedEvent("Login: calintf obtained",
-                                               afterGetIntf));
+      postNotification(SysEvent.makeTimedEvent(
+              "Login: about to obtain calintf",
+              beforeGetIntf));
+      postNotification(
+              SysEvent.makeTimedEvent("Login: calintf obtained",
+                                      afterGetIntf));
       postNotification(
               SysEvent.makeTimedEvent("Login: intf opened",
                                       System.currentTimeMillis() - start));
@@ -1303,11 +1301,13 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
 
         if (cs == null) {
           error("******************************************************");
-          error("Unable to fetch calendar suite " + pars.getCalSuite());
+          error("Unable to fetch calendar suite " + pars
+                  .getCalSuite());
           error("Is the database correctly initialised?");
           error("******************************************************");
-          throw new CalFacadeException(CalFacadeException.unknownCalsuite,
-                                       pars.getCalSuite());
+          throw new CalFacadeException(
+                  CalFacadeException.unknownCalsuite,
+                  pars.getCalSuite());
         }
 
         getCalSuitesHandler().set(new BwCalSuiteWrapper(cs));
@@ -1321,8 +1321,9 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
         }
       }
 
-      postNotification(SysEvent.makeTimedEvent("Login: before get dirs",
-                                               System.currentTimeMillis() - start));
+      postNotification(
+              SysEvent.makeTimedEvent("Login: before get dirs",
+                                      System.currentTimeMillis() - start));
 
       final Directories dir = getDirectories();
 
@@ -1331,7 +1332,8 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
         final String sv = authenticatedUser;
 
         if (dir.isPrincipal(authenticatedUser)) {
-          authenticatedUser = dir.accountFromPrincipal(authenticatedUser);
+          authenticatedUser = dir
+                  .accountFromPrincipal(authenticatedUser);
         }
 
         if (authenticatedUser == null) {
@@ -1341,12 +1343,13 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
 
         if (authenticatedUser.endsWith("/")) {
           getLogger().warn("Authenticated user " + authenticatedUser +
-              " ends with \"/\"");
+                                   " ends with \"/\"");
         }
       }
 
-      postNotification(SysEvent.makeTimedEvent("Login: before user fetch",
-                                               System.currentTimeMillis() - start));
+      postNotification(
+              SysEvent.makeTimedEvent("Login: before user fetch",
+                                      System.currentTimeMillis() - start));
 
       //synchronized (synchlock) {
       final Users users = (Users)getUsersHandler();
@@ -1358,7 +1361,8 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
       BwPrincipal currentPrincipal;
       final BwPrincipal authPrincipal;
       PrivilegeSet maxAllowedPrivs = null;
-      boolean subscriptionsOnly = getSystemProperties().getUserSubscriptionsOnly();
+      boolean subscriptionsOnly = getSystemProperties()
+              .getUserSubscriptionsOnly();
       boolean userMapHit = false;
       boolean addingUser = false;
       boolean addingRunAsUser = false;
@@ -1416,8 +1420,9 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
         authPrincipal = currentPrincipal;
 
         if (authenticatedUser.equals(runAsUser)) {
-          getLogger().debug("Authenticated user " + authenticatedUser +
-                                    " logged on");
+          getLogger()
+                  .debug("Authenticated user " + authenticatedUser +
+                                 " logged on");
         } else {
           currentPrincipal = unauthUsers.get(runAsUser);
 
@@ -1438,34 +1443,40 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
             addingRunAsUser = true;
           }
 
-          getLogger().debug("Authenticated user " + authenticatedUser +
-                                    " logged on - running as " + runAsUser);
+          getLogger()
+                  .debug("Authenticated user " + authenticatedUser +
+                                 " logged on - running as " + runAsUser);
         }
 
         if (!userMapHit && (currentPrincipal != null)) {
           currentPrincipal
                   .setGroups(dir.getAllGroups(currentPrincipal));
-          authUsers.put(currentPrincipal.getAccount(), currentPrincipal);
+          authUsers.put(currentPrincipal.getAccount(),
+                        currentPrincipal);
         }
 
-        postNotification(SysEvent.makeTimedEvent("Login: after get Groups",
-                                                 System.currentTimeMillis() - start));
+        postNotification(
+                SysEvent.makeTimedEvent("Login: after get Groups",
+                                        System.currentTimeMillis() - start));
 
         if (pars.getService()) {
           subscriptionsOnly = false;
         } else {
-          final BwPrincipalInfo bwpi = dir.getDirInfo(currentPrincipal);
+          final BwPrincipalInfo bwpi = dir
+                  .getDirInfo(currentPrincipal);
           currentPrincipal.setPrincipalInfo(bwpi);
 
-          if (pars.getPublicAdmin() || (bwpi != null && bwpi.getHasFullAccess())) {
+          if (pars.getPublicAdmin() || (bwpi != null && bwpi
+                  .getHasFullAccess())) {
             subscriptionsOnly = false;
           }
 
-          postNotification(SysEvent.makeTimedEvent("Login: got Dirinfo",
-                                                   System.currentTimeMillis() - start));
+          postNotification(
+                  SysEvent.makeTimedEvent("Login: got Dirinfo",
+                                          System.currentTimeMillis() - start));
         }
       }
-        
+
       principalInfo = new SvciPrincipalInfo(this,
                                             currentPrincipal,
                                             authPrincipal,
@@ -1487,16 +1498,18 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
       if (!currentPrincipal.getUnauthenticated()) {
         if (pars.getService()) {
           postNotification(
-                  SysEvent.makePrincipalEvent(SysEvent.SysCode.SERVICE_USER_LOGIN,
-                                              currentPrincipal,
-                                              System.currentTimeMillis() - start));
+                  SysEvent.makePrincipalEvent(
+                          SysEvent.SysCode.SERVICE_USER_LOGIN,
+                          currentPrincipal,
+                          System.currentTimeMillis() - start));
         } else if (!creating) {
           users.logon(currentPrincipal);
 
           postNotification(
-                  SysEvent.makePrincipalEvent(SysEvent.SysCode.USER_LOGIN,
-                                              currentPrincipal,
-                                              System.currentTimeMillis() - start));
+                  SysEvent.makePrincipalEvent(
+                          SysEvent.SysCode.USER_LOGIN,
+                          currentPrincipal,
+                          System.currentTimeMillis() - start));
         }
       } else {
         // If we have a runAsUser it's a public client. Pretend we authenticated
@@ -1582,7 +1595,7 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
 
   /** Switch back to the previous principal.
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   void popPrincipal() throws CalFacadeException {
     ((SvciPrincipalInfo)principalInfo).popPrincipal();

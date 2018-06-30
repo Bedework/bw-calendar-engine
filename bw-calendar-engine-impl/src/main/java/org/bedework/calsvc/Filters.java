@@ -24,9 +24,11 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.responses.GetFilterDefResponse;
 import org.bedework.calfacade.responses.Response;
 import org.bedework.calsvci.FiltersI;
+import org.bedework.util.misc.Util;
 
 import ietf.params.xml.ns.caldav.FilterType;
 
@@ -154,5 +156,26 @@ class Filters extends CalSvcDb implements FiltersI {
   @Override
   public ParseResult parseSort(final String val) {
     return getSvc().getFilterParser().parseSort(val);
+  }
+
+  @Override
+  public int reindex(BwIndexer indexer) throws CalFacadeException {
+    BwPrincipal owner;
+    if (!isPublicAdmin()) {
+      owner = getPrincipal();
+    } else {
+      owner = getPublicUser();
+    }
+
+    final Collection<BwFilterDef> filters = getAll();
+    if (Util.isEmpty(filters)) {
+      return 0;
+    }
+
+    for (final BwFilterDef f: filters) {
+      indexer.indexEntity(f);
+    }
+
+    return filters.size();
   }
 }

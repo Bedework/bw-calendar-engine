@@ -18,13 +18,20 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwContact;
+import org.bedework.calfacade.BwFilterDef;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwCalSuitePrincipal;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.util.misc.Util;
 
@@ -41,6 +48,8 @@ import java.util.List;
  *
  */
 public class PublicProcessor extends Crawler {
+  private final Class entityClass;
+
   /** Run a thread which reads the children of the root directory. Each child
    * is a home directory. We read a batch of these at a time and then start
    * up maxThreads processes to handle the user data.
@@ -57,6 +66,8 @@ public class PublicProcessor extends Crawler {
    * @param entityDelay millis
    * @param skipPaths - paths to skip
    * @param indexRootPath - where we build the index
+   * @param entityClass - if non-null only index this class. Cannot
+   *                    be collection or events classes
    */
   public PublicProcessor(final CrawlStatus status,
                          final String name,
@@ -64,10 +75,13 @@ public class PublicProcessor extends Crawler {
                          final long batchDelay,
                          final long entityDelay,
                          final List<String> skipPaths,
-                         final String indexRootPath) {
+                         final String indexRootPath,
+                         final Class entityClass) {
     super(status, name, adminAccount, null, batchDelay, entityDelay,
           skipPaths,
           indexRootPath);
+
+    this.entityClass = entityClass;
   }
 
   @Override
@@ -76,41 +90,77 @@ public class PublicProcessor extends Crawler {
       final CalSvcI svc = bw.getSvci();
 
       /* First index the public collection(s) */
-      indexCollection(svc, Util.buildPath(false, "/", getPublicCalendarRoot()));
+      if (entityClass == null) {
+        indexCollection(svc, Util.buildPath(
+                BasicSystemProperties.colPathEndsWithSlash,
+                "/",
+                getPublicCalendarRoot()));
+      }
 
       final BwIndexer indexer = svc.getIndexer(principal,
                                                indexRootPath);
 
       final BwPrincipal pr = svc.getUsersHandler().getPublicUser();
-      indexer.indexEntity(pr);
-      status.stats.inc(IndexedType.principals, 1);
-      indexer.indexEntity(svc.getPreferences(pr.getPrincipalRef()));
-      status.stats.inc(IndexedType.preferences, 1);
 
-      final Iterator<BwAdminGroup> it = getAdminGroups(svc);
-      while (it.hasNext()) {
-        indexer.indexEntity(it.next());
+      if (testClass(BwPrincipal.class)) {
+        indexer.indexEntity(pr);
         status.stats.inc(IndexedType.principals, 1);
       }
 
-      final Iterator<BwCalSuite> csit = svc.getDumpHandler().getCalSuites();
-      while (csit.hasNext()) {
-        indexer.indexEntity(BwCalSuitePrincipal.from(csit.next()));
-        status.stats.inc(IndexedType.principals, 1);
+      if (testClass(BwPreferences.class)) {
+        indexer.indexEntity(svc.getPreferences(pr.getPrincipalRef()));
+        status.stats.inc(IndexedType.preferences, 1);
       }
 
-      status.stats.inc(IndexedType.categories,
-                       svc.getCategoriesHandler().reindex(indexer));
+      if (testClass(BwAdminGroup.class)) {
+        final Iterator<BwAdminGroup> it = getAdminGroups(svc);
+        while (it.hasNext()) {
+          indexer.indexEntity(it.next());
+          status.stats.inc(IndexedType.principals, 1);
+        }
+      }
 
-      status.stats.inc(IndexedType.contacts,
-                       svc.getContactsHandler().reindex(indexer));
+      if (testClass(BwCalSuite.class)) {
+        final Iterator<BwCalSuite> csit = svc.getDumpHandler()
+                                             .getCalSuites();
+        while (csit.hasNext()) {
+          indexer.indexEntity(BwCalSuitePrincipal.from(csit.next()));
+          status.stats.inc(IndexedType.principals, 1);
+        }
+      }
 
-      status.stats.inc(IndexedType.locations,
-                       svc.getLocationsHandler().reindex(indexer));
+      if (testClass(BwCategory.class)) {
+        status.stats.inc(IndexedType.categories,
+                         svc.getCategoriesHandler().reindex(indexer));
+      }
+
+      if (testClass(BwContact.class)) {
+        status.stats.inc(IndexedType.contacts,
+                         svc.getContactsHandler().reindex(indexer));
+      }
+
+      if (testClass(BwLocation.class)) {
+        status.stats.inc(IndexedType.locations,
+                         svc.getLocationsHandler().reindex(indexer));
+      }
+
+      if (testClass(BwResource.class)) {
+        status.stats.inc(IndexedType.resources,
+                         svc.getResourcesHandler().reindex(indexer));
+      }
+
+      if (testClass(BwFilterDef.class)) {
+        status.stats.inc(IndexedType.filters,
+                         svc.getFiltersHandler().reindex(indexer));
+      }
     }
   }
 
   public Iterator<BwAdminGroup> getAdminGroups(final CalSvcI svc) throws CalFacadeException {
     return svc.getDumpHandler().getAdminGroups();
+  }
+
+  private boolean testClass(final Class cl) {
+    return entityClass == null || (entityClass.equals(cl));
   }
 }

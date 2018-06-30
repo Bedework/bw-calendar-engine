@@ -2992,6 +2992,14 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         di = db.makeDoc((BwPreferences)rec);
       }
 
+      if (rec instanceof BwResource) {
+        di = db.makeDoc((BwResource)rec);
+      }
+
+      if (rec instanceof BwFilterDef) {
+        di = db.makeDoc((BwFilterDef)rec);
+      }
+
       if (di != null) {
         return indexDoc(di);
       }

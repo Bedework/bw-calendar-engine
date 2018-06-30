@@ -54,7 +54,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * <p>The returned objects will not be persistent objects.
    *
    * @return Collection     of objects
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   Collection<T> getPublic() throws CalFacadeException;
 
@@ -67,7 +67,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * report query.
    *
    * @return Collection     of objects
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   Collection<T> getEditable() throws CalFacadeException;
 
@@ -79,7 +79,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * @param uid       String uid
    * @return BwEventProperty object representing the entity in question
    *                     null if it doesn't exist.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   T getByUid(String uid) throws CalFacadeException;
 
@@ -91,7 +91,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * @param href       String href
    * @return BwEventProperty object representing the entity in question
    *                     null if it doesn't exist.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   T get(String href) throws CalFacadeException;
 
@@ -103,7 +103,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * report query.
    *
    * @return Collection     of objects
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   Collection<T> get() throws CalFacadeException;
 
@@ -112,7 +112,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * @param uid       String uid
    * @return BwEventProperty object representing the entity in question
    *                     null if it doesn't exist.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   T getPersistent(String uid) throws CalFacadeException;
 
@@ -124,7 +124,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * @param uids       Collection of String uids
    * @return BwEventProperty objects representing the entities in question
    *                     never null.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   Collection<T> getByUids(Collection<String> uids) throws CalFacadeException;
 
@@ -138,7 +138,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    *
    * @param val          BwString value
    * @return matching BwEventProperty object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   T findPersistent(final BwString val) throws CalFacadeException;
 
@@ -152,7 +152,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    *
    * @param val          BwString value
    * @return matching BwEventProperty object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   T find(final BwString val) throws CalFacadeException;
 
@@ -171,14 +171,14 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    *
    * @param val   BwEventProperty object to be added
    * @return boolean true for added, false for already exists
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   boolean add(T val) throws CalFacadeException;
 
   /** Update an entity in the database.
    *
    * @param val   BwEventProperty object to be updated
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   void update(T val) throws CalFacadeException;
 
@@ -188,15 +188,15 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * @return int     0 if it was deleted.
    *                 1 if it didn't exist
    *                 2 if in use
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   int delete(T val) throws CalFacadeException;
 
   /** Return references to the entity
    *
-   * @param val
+   * @param val an entity
    * @return a collection of references.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on faltal error
    */
   Collection<EventPropertiesReference> getRefs(T val) throws CalFacadeException;
 
@@ -204,7 +204,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    *
    * @param <T>
    */
-  static class EnsureEntityExistsResult<T> {
+  class EnsureEntityExistsResult<T> {
     /** Was added */
     public boolean added;
     /** */
@@ -218,17 +218,17 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    *                we assume the check was made previously.
    * @param ownerHref   String principal href, null for current user
    * @return EnsureEntityExistsResult  with entity set to actual object.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   EnsureEntityExistsResult<T> ensureExists(final T val,
                                            final String ownerHref)
           throws CalFacadeException;
 
-  /** Reindex current users categories
+  /** Reindex current users entities
    *
    * @param indexer to use for this operation
    * @return number of entities reindexed
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   int reindex(BwIndexer indexer) throws CalFacadeException;
 }
