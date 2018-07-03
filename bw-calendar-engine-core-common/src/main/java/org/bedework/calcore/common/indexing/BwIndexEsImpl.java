@@ -61,6 +61,8 @@ import org.bedework.calfacade.svc.BwCalSuitePrincipal;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.AccessChecker;
+import org.bedework.calfacade.util.AccessUtilI;
+import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.icalendar.RecurUtil;
 import org.bedework.icalendar.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.IcalDefs;
@@ -238,6 +240,120 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
   private final static long indexerDelay = 1100;
 
+  // Total
+  private static long fetchTime;
+  private long fetchStart;
+  private int fetchDepth;
+
+  private static long fetchAccessTime;
+  private long fetchAccessStart;
+  private int fetchAccessDepth;
+
+  private static long fetches;
+  private static long nestedFetches;
+  private static long nestedAccessFetches;
+
+  private void fetchStart() {
+    if (fetchStart != 0) {
+      fetchDepth++;
+      nestedFetches++;
+      return;
+    }
+
+    fetches++;
+    fetchStart = System.currentTimeMillis();
+  }
+
+  private void fetchAccessStart() {
+    if (fetchAccessStart != 0) {
+      fetchAccessDepth++;
+      nestedAccessFetches++;
+      return;
+    }
+
+    nestedFetches++;
+    fetchAccessStart = System.currentTimeMillis();
+  }
+
+  private void fetchEnd() {
+    fetchEnd(false);
+  }
+
+  private void fetchEnd(final boolean closing) {
+    if ((closing || (fetchDepth <= 0))
+            && (fetchStart != 0)) {
+      fetchTime += (System.currentTimeMillis() - fetchStart);
+      fetchStart = 0;
+
+      if (debug) {
+        debug("fetches: " + fetches +
+                      ", fetchTime: " + fetchTime +
+                      ", fetcAccessTime: " + fetchAccessTime);
+      }
+    } else if (fetchDepth > 0){
+      fetchDepth--;
+    }
+  }
+
+  private void fetchAccessEnd() {
+    if ((fetchAccessDepth <= 0) && (fetchAccessStart != 0)){
+      fetchAccessTime += (System.currentTimeMillis() - fetchAccessStart);
+      fetchAccessStart = 0;
+    } else if (fetchAccessDepth > 0){
+      fetchAccessDepth--;
+    }
+  }
+
+  private class TimedAccessChecker implements AccessChecker {
+    private AccessChecker accessCheck;
+
+    TimedAccessChecker(final AccessChecker accessCheck) {
+      this.accessCheck = accessCheck;
+    }
+
+    public Acl.CurrentAccess checkAccess(BwShareableDbentity ent,
+                                         int desiredAccess,
+                                         boolean returnResult)
+            throws CalFacadeException {
+      try {
+        fetchAccessStart();
+
+        return accessCheck
+                .checkAccess(ent, desiredAccess, returnResult);
+      } finally {
+        fetchAccessEnd();
+      }
+    }
+
+    public CalendarWrapper checkAccess(final BwCalendar val)
+            throws CalFacadeException {
+      try {
+        fetchAccessStart();
+
+        return accessCheck.checkAccess(val);
+      } finally {
+        fetchAccessEnd();
+      }
+    }
+
+    public CalendarWrapper checkAccess(final BwCalendar val,
+                                       int desiredAccess)
+            throws CalFacadeException {
+      try {
+        fetchAccessStart();
+
+        return accessCheck.checkAccess(val, desiredAccess);
+      } finally {
+        fetchAccessEnd();
+      }
+    }
+
+    @Override
+    public AccessUtilI getAccessUtil() {
+      return accessCheck.getAccessUtil();
+    }
+  }
+
   /**
    * String is name of index
    */
@@ -277,7 +393,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     this.principal = principal;
     this.superUser = superUser;
     this.currentMode = currentMode;
-    this.accessCheck = accessCheck;
+    this.accessCheck = new TimedAccessChecker(accessCheck);
 
     idxpars = configs.getIndexProperties();
     authpars = configs.getAuthProperties(true);
@@ -311,6 +427,11 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     //if (updateInfo.get(targetIndex) == null) {
     // Need to get the info from the index
     //}
+  }
+
+  @Override
+  public void close() {
+    fetchEnd(true);
   }
 
   @Override
@@ -921,218 +1042,226 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
           final int num,
           final int desiredAccess)
           throws CalFacadeException {
-    if (debug) {
-      debug("offset: " + offset + ", num: " + num);
-    }
-
-    final EsSearchResult res = (EsSearchResult)sres;
-
-    res.pageStart = offset;
-
-    final SearchRequestBuilder srb = getClient()
-            .prepareSearch(searchIndexes);
-    if (res.curQuery != null) {
-      srb.setQuery(res.curQuery);
-    }
-
-    srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-       .setPostFilter(res.curFilter)
-       .setFrom(res.pageStart);
-
-    final int size;
-
-    if (num < 0) {
-      size = (int)sres.getFound();
-    } else {
-      size = num;
-    }
-
-    // TODO - need a configurable absolute max size for fetches
-
-    srb.setSize(size);
-    final List<SearchResultEntry> entities = new ArrayList<>(size);
-
-    if (!Util.isEmpty(res.curSort)) {
-      SortOrder so;
-
-      for (final SortTerm st : res.curSort) {
-        if (st.isAscending()) {
-          so = SortOrder.ASC;
-        } else {
-          so = SortOrder.DESC;
-        }
-
-        srb.addSort(new FieldSortBuilder(
-                ESQueryFilter.makePropertyRef(st.getProperties(), null))
-                            .order(so));
-      }
-    }
-
-    if (res.requiresSecondaryFetch) {
-      // Limit to href then fetch those
-      srb.addField(ESQueryFilter.hrefJname);
-    }
-
-    final SearchResponse resp = srb.execute().actionGet();
-
-    if (resp.status() != RestStatus.OK) {
+    try {
+      fetchStart();
       if (debug) {
-        debug("Search returned status " + resp.status());
+        debug("offset: " + offset + ", num: " + num);
       }
-    }
 
-    final SearchHits hitsResp = resp.getHits();
+      final EsSearchResult res = (EsSearchResult)sres;
 
-    if ((hitsResp.getHits() == null) ||
-            (hitsResp.getHits().length == 0)) {
-      return entities;
-    }
+      res.pageStart = offset;
 
-    //Break condition: No hits are returned
-    if (hitsResp.hits().length == 0) {
-      return entities;
-    }
+      final SearchRequestBuilder srb = getClient()
+              .prepareSearch(searchIndexes);
+      if (res.curQuery != null) {
+        srb.setQuery(res.curQuery);
+      }
 
-    final List<SearchHit> hits;
-    if (res.requiresSecondaryFetch) {
-      hits = multiFetch(hitsResp, res.recurRetrieval);
+      srb.setSearchType(SearchType.QUERY_THEN_FETCH)
+         .setPostFilter(res.curFilter)
+         .setFrom(res.pageStart);
 
-      if (hits == null) {
+      final int size;
+
+      if (num < 0) {
+        size = (int)sres.getFound();
+      } else {
+        size = num;
+      }
+
+      // TODO - need a configurable absolute max size for fetches
+
+      srb.setSize(size);
+      final List<SearchResultEntry> entities = new ArrayList<>(size);
+
+      if (!Util.isEmpty(res.curSort)) {
+        SortOrder so;
+
+        for (final SortTerm st : res.curSort) {
+          if (st.isAscending()) {
+            so = SortOrder.ASC;
+          } else {
+            so = SortOrder.DESC;
+          }
+
+          srb.addSort(new FieldSortBuilder(
+                  ESQueryFilter
+                          .makePropertyRef(st.getProperties(), null))
+                              .order(so));
+        }
+      }
+
+      if (res.requiresSecondaryFetch) {
+        // Limit to href then fetch those
+        srb.addField(ESQueryFilter.hrefJname);
+      }
+
+      final SearchResponse resp = srb.execute().actionGet();
+
+      if (resp.status() != RestStatus.OK) {
+        if (debug) {
+          debug("Search returned status " + resp.status());
+        }
+      }
+
+      final SearchHits hitsResp = resp.getHits();
+
+      if ((hitsResp.getHits() == null) ||
+              (hitsResp.getHits().length == 0)) {
         return entities;
       }
-    } else {
-      hits = Arrays.asList(hitsResp.getHits());
-    }
 
-    final Map<String, Collection<BwEventAnnotation>> overrides = new HashMap<>();
-    final Collection<EventInfo> masters = new TreeSet<>();
+      //Break condition: No hits are returned
+      if (hitsResp.hits().length == 0) {
+        return entities;
+      }
 
-    EntityBuilder.checkFlushCache(currentChangeToken());
+      final List<SearchHit> hits;
+      if (res.requiresSecondaryFetch) {
+        hits = multiFetch(hitsResp, res.recurRetrieval);
+
+        if (hits == null) {
+          return entities;
+        }
+      } else {
+        hits = Arrays.asList(hitsResp.getHits());
+      }
+
+      final Map<String, Collection<BwEventAnnotation>> overrides = new HashMap<>();
+      final Collection<EventInfo> masters = new TreeSet<>();
+
+      EntityBuilder.checkFlushCache(currentChangeToken());
       
     /* If we are retrieving events with a time range query and we are asking for the 
      * master + overrides then we need to check that the master really has an 
      * instance in the given time range */
-    final boolean checkTimeRange =
-            (res.recurRetrieval.mode == Rmode.overrides) &&
-                    ((res.latestStart != null) ||
-                             (res.earliestEnd != null));
+      final boolean checkTimeRange =
+              (res.recurRetrieval.mode == Rmode.overrides) &&
+                      ((res.latestStart != null) ||
+                               (res.earliestEnd != null));
 
-    final Set<String> excluded = new TreeSet<>();
+      final Set<String> excluded = new TreeSet<>();
 
-    for (final SearchHit hit : hits) {
-      res.pageStart++;
-      final String dtype = hit.getType();
+      for (final SearchHit hit : hits) {
+        res.pageStart++;
+        final String dtype = hit.getType();
 
-      if (dtype == null) {
-        throw new CalFacadeException("org.bedework.index.noitemtype");
-      }
+        if (dtype == null) {
+          throw new CalFacadeException(
+                  "org.bedework.index.noitemtype");
+        }
 
-      final String kval = hit.getId();
+        final String kval = hit.getId();
 
-      if (kval == null) {
-        throw new CalFacadeException("org.bedework.index.noitemkey");
-      }
+        if (kval == null) {
+          throw new CalFacadeException(
+                  "org.bedework.index.noitemkey");
+        }
 
-      final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
+        final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
 
-      Object entity = null;
-      switch (dtype) {
-        case docTypeCollection:
-          entity = makeCollection(eb);
-          break;
-        case docTypeCategory:
-          entity = eb.makeCat();
-          break;
-        case docTypeContact:
-          entity = eb.makeContact();
-          break;
-        case docTypeLocation:
-          entity = eb.makeLocation();
-          break;
-        case docTypeEvent:
-        case docTypePoll:
-          final Response evrestResp = new Response();
-          entity = makeEvent(eb, evrestResp, kval,
-                             res.recurRetrieval.mode == Rmode.expanded);
-          final EventInfo ei = (EventInfo)entity;
-          final BwEvent ev = ei.getEvent();
+        Object entity = null;
+        switch (dtype) {
+          case docTypeCollection:
+            entity = makeCollection(eb);
+            break;
+          case docTypeCategory:
+            entity = eb.makeCat();
+            break;
+          case docTypeContact:
+            entity = eb.makeContact();
+            break;
+          case docTypeLocation:
+            entity = eb.makeLocation();
+            break;
+          case docTypeEvent:
+          case docTypePoll:
+            final Response evrestResp = new Response();
+            entity = makeEvent(eb, evrestResp, kval,
+                               res.recurRetrieval.mode == Rmode.expanded);
+            final EventInfo ei = (EventInfo)entity;
+            final BwEvent ev = ei.getEvent();
 
-          if (evrestResp.getStatus() != ok) {
-            warn("Failed restore of event " + ev.getUid() +
-                         ": " + evrestResp);
-          }
+            if (evrestResp.getStatus() != ok) {
+              warn("Failed restore of event " + ev.getUid() +
+                           ": " + evrestResp);
+            }
 
-          final Acl.CurrentAccess ca =
-                  res.accessCheck.checkAccess(ev,
-                                              desiredAccess,
-                                              true);
+            final Acl.CurrentAccess ca =
+                    res.accessCheck.checkAccess(ev,
+                                                desiredAccess,
+                                                true);
 
-          if ((ca == null) || !ca.getAccessAllowed()) {
-            continue;
-          }
-
-          ei.setCurrentAccess(ca);
-
-          if (ev instanceof BwEventAnnotation) {
-            if (excluded.contains(ev.getUid())) {
+            if ((ca == null) || !ca.getAccessAllowed()) {
               continue;
             }
 
-            // Treat as override
-            final Collection<BwEventAnnotation> ov = overrides
-                    .computeIfAbsent(
-                            ev.getHref(), k -> new TreeSet<>());
+            ei.setCurrentAccess(ca);
 
-            ov.add((BwEventAnnotation)ev);
-            continue;
-          }
+            if (ev instanceof BwEventAnnotation) {
+              if (excluded.contains(ev.getUid())) {
+                continue;
+              }
 
-          if (checkTimeRange && dtype.equals(docTypeEvent) && ev
-                  .getRecurring()) {
-            if (Util.isEmpty(RecurUtil.getPeriods(ev,
-                                                  99,
-                                                  1,
-                                                  res.latestStart,
-                                                  res.earliestEnd).instances)) {
-              excluded.add(ev.getUid());
+              // Treat as override
+              final Collection<BwEventAnnotation> ov = overrides
+                      .computeIfAbsent(
+                              ev.getHref(), k -> new TreeSet<>());
+
+              ov.add((BwEventAnnotation)ev);
               continue;
             }
-          }
 
-          masters.add(ei);
-          break;
+            if (checkTimeRange && dtype.equals(docTypeEvent) && ev
+                    .getRecurring()) {
+              if (Util.isEmpty(RecurUtil.getPeriods(ev,
+                                                    99,
+                                                    1,
+                                                    res.latestStart,
+                                                    res.earliestEnd).instances)) {
+                excluded.add(ev.getUid());
+                continue;
+              }
+            }
+
+            masters.add(ei);
+            break;
+        }
+
+        entities.add(new SearchResultEntry(entity,
+                                           dtype,
+                                           hit.getScore()));
       }
 
-      entities.add(new SearchResultEntry(entity,
-                                         dtype,
-                                         hit.getScore()));
-    }
+      //<editor-fold desc="Finish off events by setting master, target and overrides">
 
-    //<editor-fold desc="Finish off events by setting master, target and overrides">
+      for (final EventInfo ei : masters) {
+        final BwEvent ev = ei.getEvent();
 
-    for (final EventInfo ei : masters) {
-      final BwEvent ev = ei.getEvent();
+        if (ev.getRecurring()) {
+          final Collection<BwEventAnnotation> ov = overrides
+                  .get(ev.getHref());
 
-      if (ev.getRecurring()) {
-        final Collection<BwEventAnnotation> ov = overrides
-                .get(ev.getHref());
+          if (ov != null) {
+            for (final BwEventAnnotation ann : ov) {
+              final BwEvent proxy = new BwEventProxy(ann);
+              ann.setTarget(ev);
+              ann.setMaster(ev);
 
-        if (ov != null) {
-          for (final BwEventAnnotation ann : ov) {
-            final BwEvent proxy = new BwEventProxy(ann);
-            ann.setTarget(ev);
-            ann.setMaster(ev);
+              final EventInfo oei = new EventInfo(proxy);
 
-            final EventInfo oei = new EventInfo(proxy);
-
-            ei.addOverride(oei);
+              ei.addOverride(oei);
+            }
           }
         }
       }
-    }
-    //</editor-fold>
+      //</editor-fold>
 
-    return entities;
+      return entities;
+    } finally {
+      fetchEnd();
+    }
   }
 
   @Override
@@ -1765,108 +1894,119 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   @Override
   public GetEntityResponse<EventInfo> fetchEvent(final String href)
           throws CalFacadeException {
-    final GetEntityResponse<EventInfo> resp = new GetEntityResponse<>();
-    final String recurrenceId;
-    final String hrefNorid;
+    try {
+      fetchStart();
 
-    // Check validity
-    final int pos = href.lastIndexOf("/");
-    if (pos < 0) {
-      throw new RuntimeException("Bad href: " + href);
-    }
+      final GetEntityResponse<EventInfo> resp = new GetEntityResponse<>();
+      final String recurrenceId;
+      final String hrefNorid;
 
-    final int fragPos = href.lastIndexOf("#");
+      // Check validity
+      final int pos = href.lastIndexOf("/");
+      if (pos < 0) {
+        throw new RuntimeException("Bad href: " + href);
+      }
 
-    if (fragPos < pos) {
-      hrefNorid = href;
-      recurrenceId = null;
-    } else {
-      hrefNorid = href.substring(0, fragPos);
-      recurrenceId = href.substring(fragPos + 1);
-    }
+      final int fragPos = href.lastIndexOf("#");
 
-    final FilterBuilder fltr =
-            getFilters(null).singleEventFilter(href,
-                                               recurrenceId);
+      if (fragPos < pos) {
+        hrefNorid = href;
+        recurrenceId = null;
+      } else {
+        hrefNorid = href.substring(0, fragPos);
+        recurrenceId = href.substring(fragPos + 1);
+      }
 
-    final SearchHit hit = fetchEntity(docTypeEvent, fltr);
+      final FilterBuilder fltr =
+              getFilters(null).singleEventFilter(href,
+                                                 recurrenceId);
 
-    if (hit == null) {
-      return notFound(resp);
-    }
+      final SearchHit hit = fetchEntity(docTypeEvent, fltr);
 
-    final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
+      if (hit == null) {
+        return notFound(resp);
+      }
 
-    final EventInfo ei = makeEvent(eb, resp, hit.getId(), false);
-    if (ei == null) {
-      return notFound(resp);
-    }
+      final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
 
-    final BwEvent ev = ei.getEvent();
+      final EventInfo ei = makeEvent(eb, resp, hit.getId(), false);
+      if (ei == null) {
+        return notFound(resp);
+      }
 
-    final Acl.CurrentAccess ca =
-            accessCheck.checkAccess(ev, privRead, true);
+      final BwEvent ev = ei.getEvent();
 
-    if ((ca == null) || !ca.getAccessAllowed()) {
-      return notFound(resp);
-    }
+      final Acl.CurrentAccess ca =
+              accessCheck.checkAccess(ev, privRead, true);
 
-    ei.setCurrentAccess(ca);
+      if ((ca == null) || !ca.getAccessAllowed()) {
+        return notFound(resp);
+      }
 
-    if (ev.getRecurrenceId() != null) {
-      // Single instance
-      resp.setEntity(ei);
+      ei.setCurrentAccess(ca);
+
+      if (ev.getRecurrenceId() != null) {
+        // Single instance
+        resp.setEntity(ei);
+        return resp;
+      }
+
+      addOverrides(resp, idxpars.getUserIndexName(), ei);
+
       return resp;
+    } finally {
+      fetchEnd();
     }
-
-    addOverrides(resp, idxpars.getUserIndexName(), ei);
-
-    return resp;
   }
 
   @Override
   public GetEntityResponse<EventInfo> fetchEvent(String colPath,
                                                  String guid)
           throws CalFacadeException {
-    final GetEntityResponse<EventInfo> resp = new GetEntityResponse<>();
+    try {
+      fetchStart();
 
+      final GetEntityResponse<EventInfo> resp = new GetEntityResponse<>();
 
-    final FilterBuilder fltr =
-            getFilters(null).singleEventFilterGuid(colPath, guid);
+      final FilterBuilder fltr =
+              getFilters(null).singleEventFilterGuid(colPath, guid);
 
-    final SearchHit hit = fetchEntity(docTypeEvent, fltr);
+      final SearchHit hit = fetchEntity(docTypeEvent, fltr);
 
-    if (hit == null) {
-      return notFound(resp);
-    }
+      if (hit == null) {
+        return notFound(resp);
+      }
 
-    final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
+      final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
 
-    final EventInfo ei = makeEvent(eb, resp, hit.getId(), false);
-    if (ei == null) {
-      return notFound(resp);
-    }
+      final EventInfo ei = makeEvent(eb, resp, hit.getId(), false);
+      if (ei == null) {
+        return notFound(resp);
+      }
 
-    final BwEvent ev = ei.getEvent();
+      final BwEvent ev = ei.getEvent();
 
-    final Acl.CurrentAccess ca =
-            accessCheck.checkAccess(ev, privRead, true);
+      final Acl.CurrentAccess ca =
+              accessCheck.checkAccess(ev, privRead, true);
 
-    if ((ca == null) || !ca.getAccessAllowed()) {
-      return notFound(resp);
-    }
+      if ((ca == null) || !ca.getAccessAllowed()) {
+        return notFound(resp);
+      }
 
-    ei.setCurrentAccess(ca);
+      ei.setCurrentAccess(ca);
 
-    if (ev.getRecurrenceId() != null) {
-      // Single instance
-      resp.setEntity(ei);
+      if (ev.getRecurrenceId() != null) {
+        // Single instance
+        resp.setEntity(ei);
+        return resp;
+      }
+
+      addOverrides(resp, idxpars.getUserIndexName(), ei);
+
       return resp;
+    } finally {
+      fetchEnd();
     }
-
-    addOverrides(resp, idxpars.getUserIndexName(), ei);
-
-    return resp;
   }
 
   @Override
@@ -1904,6 +2044,18 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                              final int desiredAccess,
                              final PropertyInfoIndex... index)
           throws CalFacadeException {
+    BwCalendar entity;
+
+    if ((index.length == 1) &&
+            (index[0] == PropertyInfoIndex.HREF)) {
+      checkCache();
+      entity = getCached(val, desiredAccess, CalendarWrapper.class);
+
+      if (entity != null) {
+        return entity;
+      }
+    }
+
     final EntityBuilder eb = fetchEntity(docTypeCollection, val,
                                          index);
 
@@ -1911,8 +2063,19 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       return null;
     }
 
-    return accessCheck.checkAccess(makeCollection(eb),
-                                   desiredAccess);
+    entity = makeCollection(eb);
+
+    if (desiredAccess < 0) {
+      entity = new CalendarWrapper(entity,
+                                   accessCheck.getAccessUtil());
+      caches.put(entity, desiredAccess);
+      return entity;
+    }
+
+    entity = accessCheck.checkAccess(entity,
+                                     desiredAccess);
+    caches.put(entity, desiredAccess);
+    return entity;
   }
 
   @Override
@@ -2616,6 +2779,17 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     return caches.get(href, resultType);
   }
 
+  synchronized <T extends BwUnversionedDbentity> T getCached(final String href,
+                                                             final int desiredAccess,
+                                                             final Class<T> resultType)
+          throws CalFacadeException {
+    if (!checkCache()) {
+      return null;
+    }
+
+    return caches.get(href, desiredAccess, resultType);
+  }
+
   private SearchHits multiColFetch(final List<String> hrefs)
           throws CalFacadeException {
     final int batchSize = hrefs.size();
@@ -2853,32 +3027,39 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                                     final String val,
                                     final PropertyInfoIndex... index)
           throws CalFacadeException {
-    if ((index.length == 1) &&
-            (index[0] == PropertyInfoIndex.HREF)) {
-      final GetRequestBuilder grb = getClient()
-              .prepareGet(targetIndex,
-                          docType,
-                          val);
+    try {
+      fetchStart();
 
-      final GetResponse gr = grb.execute().actionGet();
+      if ((index.length == 1) &&
+              (index[0] == PropertyInfoIndex.HREF)) {
+        final GetRequestBuilder grb = getClient()
+                .prepareGet(targetIndex,
+                            docType,
+                            val);
 
-      if (!gr.isExists()) {
+        final GetResponse gr = grb.execute().actionGet();
+
+        if (!gr.isExists()) {
+          return null;
+        }
+
+        return getEntityBuilder(gr.getSourceAsMap());
+      }
+
+      final SearchHit hit = fetchEntity(docType,
+                                        getFilters(null)
+                                                .singleEntityFilter(
+                                                        docType, val,
+                                                        index));
+
+      if (hit == null) {
         return null;
       }
 
-      return getEntityBuilder(gr.getSourceAsMap());
+      return getEntityBuilder(hit.sourceAsMap());
+    } finally {
+      fetchEnd();
     }
-
-    final SearchHit hit = fetchEntity(docType,
-                                      getFilters(null)
-                                              .singleEntityFilter(docType, val,
-                                                                  index));
-
-    if (hit == null) {
-      return null;
-    }
-
-    return getEntityBuilder(hit.sourceAsMap());
   }
 
   private SearchHit fetchEntity(final String docType,

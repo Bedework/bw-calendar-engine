@@ -119,6 +119,11 @@ class CoreCalendars extends CalintfHelper
   }
 
   @Override
+  public BwCalendar getCollectionNoCheck(final String path) throws CalFacadeException {
+    return getCollection(path);
+  }
+
+  @Override
   public BwCalendar getCollection(final String path) throws CalFacadeException {
     if (path == null) {
       return null;

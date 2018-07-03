@@ -150,6 +150,11 @@ public interface BwIndexer extends Serializable {
   /* Other types are those defined in IcalDefs.entityTypeNames */
 
   /**
+   * Release any rsources etc.
+   */
+  void close();
+
+  /**
    * @return true if this is a public indexer
    */
   boolean getPublic();

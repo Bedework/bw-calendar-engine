@@ -48,6 +48,8 @@ import org.bedework.util.misc.Util;
 
 import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.LinkedTransferQueue;
 
@@ -172,6 +174,19 @@ public abstract class CalintfBase extends Logged implements Calintf {
     }
   }
 
+  public void closeIndexers() {
+    if (publicIndexer != null) {
+      publicIndexer.close();
+      publicIndexer = null;
+    }
+
+    for (final BwIndexer idx: principalIndexers.values()) {
+      idx.close();
+    }
+
+    principalIndexers.clear();
+  }
+
   @Override
   public void initPinfo(final PrincipalInfo principalInfo) throws CalFacadeException {
     this.principalInfo = principalInfo;
@@ -285,6 +300,10 @@ public abstract class CalintfBase extends Logged implements Calintf {
     return principalInfo.getSuperUser();
   }
 
+  private BwIndexer publicIndexer;
+  private Map<String, BwIndexer> principalIndexers =
+          new HashMap<>();
+
   public BwIndexer getIndexer() {
     if (currentMode == CalintfDefs.publicAdminMode ||
                               !authenticated) {
@@ -339,9 +358,13 @@ public abstract class CalintfBase extends Logged implements Calintf {
 
   @Override
   public BwIndexer getPublicIndexer() {
-    return BwIndexerFactory.getPublicIndexer(configs,
-                                             currentMode,
-                                             ac);
+    if (publicIndexer != null) {
+      return publicIndexer;
+    }
+    publicIndexer = BwIndexerFactory.getPublicIndexer(configs,
+                                                      currentMode,
+                                                      ac);
+    return publicIndexer;
   }
 
   @Override
@@ -359,10 +382,16 @@ public abstract class CalintfBase extends Logged implements Calintf {
       return getPublicIndexer();
     }
 
-    return BwIndexerFactory.getIndexer(configs, principal,
-                                       getSuperUser(),
-                                       currentMode,
-                                       ac);
+    BwIndexer idx = principalIndexers.get(principal.getPrincipalRef());
+    if (idx != null) {
+      return idx;
+    }
+    idx = BwIndexerFactory.getIndexer(configs, principal,
+                                      getSuperUser(),
+                                      currentMode,
+                                      ac);
+    principalIndexers.put(principal.getPrincipalRef(), idx);
+    return idx;
   }
 
   @Override

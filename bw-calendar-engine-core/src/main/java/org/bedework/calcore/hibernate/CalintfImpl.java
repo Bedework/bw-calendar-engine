@@ -321,6 +321,8 @@ public class CalintfImpl extends CalintfROImpl {
 
   @Override
   public synchronized void close() throws CalFacadeException {
+    closeIndexers();
+
     if (killed) {
       return;
     }
@@ -396,6 +398,10 @@ public class CalintfImpl extends CalintfROImpl {
 
       if (!sess.rolledback()) {
         sess.commit();
+      }
+
+      if (!indexRebuild) {
+        getIndexer().markTransaction();
       }
     } catch (final CalFacadeException cfe) {
       if (sess != null) {

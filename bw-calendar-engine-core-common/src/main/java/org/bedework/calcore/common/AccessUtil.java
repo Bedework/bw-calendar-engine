@@ -74,7 +74,7 @@ public class AccessUtil extends Logged implements AccessUtilI {
      * @return BwCalendar null for unknown calendar
      * @throws CalFacadeException on error
      */
-    BwCalendar getCollection(String path) throws CalFacadeException;
+    BwCalendar getCollectionNoCheck(String path) throws CalFacadeException;
   }
 
   private CollectionGetter cg;
@@ -124,7 +124,7 @@ public class AccessUtil extends Logged implements AccessUtilI {
   @Override
   public BwCalendar getParent(final BwShareableContainedDbentity<?> val)
           throws CalFacadeException {
-    return cg.getCollection(val.getColPath());
+    return cg.getCollectionNoCheck(val.getColPath());
   }
 
   /* ====================================================================

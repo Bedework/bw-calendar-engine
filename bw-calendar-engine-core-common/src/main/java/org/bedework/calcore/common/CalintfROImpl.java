@@ -243,6 +243,8 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public synchronized void close() throws CalFacadeException {
+    closeIndexers();
+
     if (killed) {
       return;
     }
@@ -300,10 +302,6 @@ public class CalintfROImpl extends CalintfBase
 
       if (debug) {
         debug("End transaction for " + getTraceId());
-      }
-
-      if (!indexRebuild) {
-        getIndexer().markTransaction();
       }
     } catch (final CalFacadeException cfe) {
       throw cfe;
@@ -507,6 +505,13 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
+  public BwCalendar getCollectionNoCheck(final String path) throws CalFacadeException {
+    checkOpen();
+
+    return getCollectionIdx(getIndexer(),
+                            path, -1, true);
+  }
+
   public BwCalendar getCollection(final String path) throws CalFacadeException {
     checkOpen();
 

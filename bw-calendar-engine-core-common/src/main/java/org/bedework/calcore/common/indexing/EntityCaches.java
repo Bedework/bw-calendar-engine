@@ -3,6 +3,7 @@
 */
 package org.bedework.calcore.common.indexing;
 
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwFilterDef;
@@ -11,6 +12,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.calfacade.wrappers.CalendarWrapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +26,10 @@ public class EntityCaches {
           new HashMap<>();
 
   static {
+    register(BwCalendar.class, new EntityCache<>());
+
+    register(CalendarWrapper.class, new EntityCache<>());
+
     register(BwCategory.class, new EntityCache<>());
 
     register(BwLocation.class, new EntityCache<>());
@@ -53,11 +59,34 @@ public class EntityCaches {
     cache.put(val);
   }
 
+  synchronized <T extends BwUnversionedDbentity> void put(final T val,
+                                                          final int desiredAccess) {
+    final Class cl;
+
+    if (val instanceof BwPrincipal) {
+      cl = BwPrincipal.class;
+    } else {
+      cl = val.getClass();
+    }
+
+    EntityCache cache = getCache(cl);
+
+    cache.put(val, desiredAccess);
+  }
+
   synchronized <T extends BwUnversionedDbentity> T get(final String href,
                                                        final Class<T> resultType) {
     EntityCache cache = getCache(resultType);
 
     return (T)cache.get(href);
+  }
+
+  synchronized <T extends BwUnversionedDbentity> T get(final String href,
+                                                       final int desiredAccess,
+                                                       final Class<T> resultType) {
+    EntityCache cache = getCache(resultType);
+
+    return (T)cache.get(href, desiredAccess);
   }
 
   synchronized void clear() {
