@@ -1953,10 +1953,10 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       }
 
       ei.setCurrentAccess(ca);
+      resp.setEntity(ei);
 
       if (ev.getRecurrenceId() != null) {
         // Single instance
-        resp.setEntity(ei);
         return resp;
       }
 
