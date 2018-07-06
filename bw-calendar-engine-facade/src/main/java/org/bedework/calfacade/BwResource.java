@@ -78,7 +78,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
   public void setHref(final String val) { }
 
   public String getHref() {
-    return Util.buildPath(true, getColPath(),
+    return Util.buildPath(false, getColPath(),
                           "/",
                           getName());
   }
