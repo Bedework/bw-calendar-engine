@@ -38,6 +38,7 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.events.SysEvent;
@@ -52,6 +53,9 @@ import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeCollection;
+import static org.bedework.calfacade.responses.Response.Status.noAccess;
+import static org.bedework.calfacade.responses.Response.Status.notFound;
+import static org.bedework.calfacade.responses.Response.Status.ok;
 
 /** Class to encapsulate most of what we do with collections
  *
@@ -271,8 +275,27 @@ class CoreCalendars extends CalintfHelper
       return col;
     }
 
-    return indexer.fetchCol(path, desiredAccess,
-                           PropertyInfoIndex.HREF);
+    final GetEntityResponse<BwCalendar> ger =
+            indexer.fetchCol(path, desiredAccess,
+                             PropertyInfoIndex.HREF);
+
+    if (ger.getStatus() == ok) {
+      return ger.getEntity();
+    }
+
+    if (ger.getStatus() == notFound) {
+      return null;
+    }
+
+    if (ger.getStatus() == noAccess) {
+      if (alwaysReturnResult) {
+        return null;
+      }
+
+      throw new CalFacadeAccessException();
+    }
+
+    throw new CalFacadeException(ger.getMessage());
   }
 
   @Override

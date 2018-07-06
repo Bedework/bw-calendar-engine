@@ -100,6 +100,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+import static org.bedework.calfacade.responses.Response.Status.noAccess;
+import static org.bedework.calfacade.responses.Response.Status.notFound;
+import static org.bedework.calfacade.responses.Response.Status.ok;
 
 /** Implementation of CalIntf for read-only clients which only interacts with
  * the search engine.
@@ -548,15 +551,27 @@ public class CalintfROImpl extends CalintfBase
       return rootCol;
     }
 
-    final BwCalendar col =
+    final GetEntityResponse<BwCalendar> ger =
             getIndexer(indexer).fetchCol(path, desiredAccess,
                                          PropertyInfoIndex.HREF);
 
-    if (!alwaysReturnResult && (col == null)) {
-      throw new CalFacadeException(CalFacadeException.collectionNotFound);
+    if (ger.getStatus() == ok) {
+      return ger.getEntity();
     }
 
-    return col;
+    if (ger.getStatus() == notFound) {
+      return null;
+    }
+
+    if (ger.getStatus() == noAccess) {
+      if (alwaysReturnResult) {
+        return null;
+      }
+
+      throw new CalFacadeAccessException();
+    }
+
+    throw new CalFacadeException(ger.getMessage());
   }
   
   @Override

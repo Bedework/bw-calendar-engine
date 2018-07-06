@@ -432,12 +432,12 @@ public interface BwIndexer extends Serializable {
    *
    * @param val - expected full value
    * @param index e.g. HREF, UID or CN, VALUE
-   * @return null or collection object
+   * @return response with status and possible collection object
    * @throws CalFacadeException on error
    */
-  BwCalendar fetchCol(String val,
-                      final int desiredAccess,
-                      PropertyInfoIndex... index) throws CalFacadeException;
+  GetEntityResponse<BwCalendar> fetchCol(String val,
+                                         final int desiredAccess,
+                                         PropertyInfoIndex... index) throws CalFacadeException;
 
   /** Fetch children of the collection with the given href.
    *

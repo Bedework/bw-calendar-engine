@@ -287,10 +287,17 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
     while (ents.hasNext()) {
       BwResource ent = ents.next();
-      if (ent.getTombstoned()) {
-        continue;
+      if (!ent.getTombstoned()) {
+        try {
+          getContent(ent);
+        } catch (final Throwable t) {
+          error(t);
+        }
       }
+
       indexer.indexEntity(ent);
+      indexer.indexEntity(ent.getContent());
+
       ct++;
     }
 

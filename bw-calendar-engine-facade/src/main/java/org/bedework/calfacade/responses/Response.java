@@ -44,6 +44,8 @@ public class Response implements Serializable {
     /** Something exists that shouldn't */
     exists,
 
+    noAccess,
+
     failed;
   }
   

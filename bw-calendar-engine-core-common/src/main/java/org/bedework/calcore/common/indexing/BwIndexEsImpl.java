@@ -157,6 +157,7 @@ import static org.bedework.access.PrivilegeDefs.privRead;
 import static org.bedework.calcore.common.indexing.DocBuilder.ItemKind.entity;
 import static org.bedework.calfacade.indexing.BwIndexer.IndexedType.unreachableEntities;
 import static org.bedework.calfacade.responses.Response.Status.failed;
+import static org.bedework.calfacade.responses.Response.Status.noAccess;
 import static org.bedework.calfacade.responses.Response.Status.notFound;
 import static org.bedework.calfacade.responses.Response.Status.ok;
 import static org.bedework.calfacade.responses.Response.Status.processing;
@@ -2044,10 +2045,11 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   }
 
   @Override
-  public BwCalendar fetchCol(final String val,
-                             final int desiredAccess,
-                             final PropertyInfoIndex... index)
+  public GetEntityResponse<BwCalendar> fetchCol(final String val,
+                                                final int desiredAccess,
+                                                final PropertyInfoIndex... index)
           throws CalFacadeException {
+    final GetEntityResponse<BwCalendar> resp = new GetEntityResponse<>();
     BwCalendar entity;
 
     if ((index.length == 1) &&
@@ -2056,7 +2058,9 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       entity = getCached(val, desiredAccess, CalendarWrapper.class);
 
       if (entity != null) {
-        return entity;
+        resp.setEntity(entity);
+
+        return Response.ok(resp, null);
       }
     }
 
@@ -2064,7 +2068,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                                          index);
 
     if (eb == null) {
-      return null;
+      resp.setStatus(notFound);
+      return resp;
     }
 
     entity = makeCollection(eb);
@@ -2073,13 +2078,21 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       entity = new CalendarWrapper(entity,
                                    accessCheck.getAccessUtil());
       caches.put(entity, desiredAccess);
-      return entity;
+      resp.setEntity(entity);
+
+      return Response.ok(resp, null);
     }
 
     entity = accessCheck.checkAccess(entity,
                                      desiredAccess);
+
+    if (entity == null) {
+      return Response.notOk(resp, noAccess, null);
+    }
     caches.put(entity, desiredAccess);
-    return entity;
+    resp.setEntity(entity);
+
+    return Response.ok(resp, null);
   }
 
   @Override
