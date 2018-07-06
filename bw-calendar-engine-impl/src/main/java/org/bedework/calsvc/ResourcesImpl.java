@@ -20,7 +20,6 @@ package org.bedework.calsvc;
 
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.configs.BasicSystemProperties;
@@ -275,14 +274,14 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
   @Override
   public int reindex(BwIndexer indexer) throws CalFacadeException {
-    BwPrincipal owner;
-    if (!isPublicAdmin()) {
-      owner = getPrincipal();
+    Iterator<BwResource> ents;
+
+    if (isPublicAdmin()) {
+      ents = getSvc().getPublicObjectIterator(BwResource.class.getName());
     } else {
-      owner = getPublicUser();
+      ents = getSvc().getPrincipalObjectIterator(BwResource.class.getName());
     }
 
-    Iterator<BwResource> ents = getSvc().getPublicObjectIterator(BwResource.class.getName());
     int ct = 0;
 
     while (ents.hasNext()) {
