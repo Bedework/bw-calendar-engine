@@ -1298,6 +1298,10 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       // Unbatched
 
+      if (rec == null) {
+        return;
+      }
+
       markUpdated(docTypeFromClass(rec.getClass()));
 
       final IndexResponse resp = index(rec);

@@ -295,7 +295,9 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       }
 
       indexer.indexEntity(ent);
-      indexer.indexEntity(ent.getContent());
+      if (ent.getContent() != null) {
+        indexer.indexEntity(ent.getContent());
+      }
 
       ct++;
     }
