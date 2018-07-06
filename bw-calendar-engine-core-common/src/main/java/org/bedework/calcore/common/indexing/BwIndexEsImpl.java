@@ -285,7 +285,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       fetchTime += (System.currentTimeMillis() - fetchStart);
       fetchStart = 0;
 
-      if (debug) {
+      if ((debug) && ((fetches % 100) == 0)) {
         debug("fetches: " + fetches +
                       ", fetchTime: " + fetchTime +
                       ", fetcAccessTime: " + fetchAccessTime);
@@ -2303,16 +2303,13 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   }
 
   @Override
-  public List<BwResource> fetchResources(final FilterBase fb,
+  public List<BwResource> fetchResources(final String path,
+                                         final String lastmod,
+                                         final int lastmodSeq,
                                          final int count)
           throws CalFacadeException {
-    final FilterBuilder f;
-
-    if (fb == null) {
-      f = getFilters(null).principalFilter(null);
-    } else {
-      f = getFilters(null).buildFilter(fb);
-    }
+    final FilterBuilder f =
+            getFilters(null).resourcesFilter(path, lastmod, lastmodSeq);
 
     return fetchEntities(docTypeResource,
                          new BuildEntity<BwResource>() {

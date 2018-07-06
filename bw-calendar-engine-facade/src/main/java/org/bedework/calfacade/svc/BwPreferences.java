@@ -23,7 +23,6 @@ import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.PropertiesEntity;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
@@ -919,8 +918,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   public void setHref(final String val) { }
 
   public String getHref() {
-    return Util.buildPath(BasicSystemProperties.colPathEndsWithSlash,
-                          getOwnerHref(), "/", "preferences");
+    return getOwnerHref();
   }
 
   /* ====================================================================

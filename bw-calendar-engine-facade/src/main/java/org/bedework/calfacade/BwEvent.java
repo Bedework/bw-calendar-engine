@@ -1961,6 +1961,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                   todoProperty = true,
                   journalProperty = true,
                   freeBusyProperty = true
+    ),
+    @IcalProperty(pindex = PropertyInfoIndex.LASTMODSEQ,
+            jname = "lastModifiedSeq",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true
     )}
   )
   public void setCtoken(final String val) {

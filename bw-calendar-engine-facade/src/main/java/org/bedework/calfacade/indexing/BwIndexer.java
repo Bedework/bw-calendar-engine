@@ -501,12 +501,16 @@ public interface BwIndexer extends Serializable {
 
   /** Return all or first count resources
    *
-   * @param fb - possibly null filter
+   * @param path - to resources
+   * @param lastmod - if non-null use for sync check
+   * @param lastmodSeq - if lastmod non-null use for sync check
    * @param count - <0 for all
    * @return resources for owner
    * @throws CalFacadeException on error
    */
-  List<BwResource> fetchResources(final FilterBase fb,
+  List<BwResource> fetchResources(final String path,
+                                  final String lastmod,
+                                  final int lastmodSeq,
                                   final int count)
           throws CalFacadeException;
 

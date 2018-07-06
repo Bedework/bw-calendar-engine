@@ -841,9 +841,9 @@ public interface Calintf
    * @throws CalFacadeException on fatal error
    */
   List<BwResource> getResources(String path,
-                                final boolean forSynch,
-                                final String token,
-                                final int count) throws CalFacadeException;
+                                boolean forSynch,
+                                String token,
+                                int count) throws CalFacadeException;
 
   /**
    * @param val resource to add

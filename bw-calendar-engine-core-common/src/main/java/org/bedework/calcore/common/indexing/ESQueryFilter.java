@@ -77,6 +77,7 @@ import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.includeDele
 import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.onlyDeleted;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeResource;
 import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 /** Build filters for ES searching
@@ -244,6 +245,46 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
                        docTypeLocation),
                buildFilter(kf),
                "and");
+  }
+
+  /** Build a filter for resources in a collection possibly limited by
+   * lastmod + seq
+   *
+   * @param path - to resources
+   * @param lastmod - if non-null use for sync check
+   * @param lastmodSeq - if lastmod non-null use for sync check
+   * @return a filter builder
+   */
+  public FilterBuilder resourcesFilter(final String path,
+                                       final String lastmod,
+                                       final int lastmodSeq) throws CalFacadeException {
+    final BwCollectionFilter cf =
+            new BwCollectionFilter(null, path);
+
+    FilterBuilder fb = and(addTerm("_type",
+                                   docTypeResource),
+                           buildFilter(cf),
+                           "and");
+
+    if (lastmod == null) {
+      return fb;
+    }
+
+    /* filter is
+       fb AND (lastmod>"lastmod" or
+                (lastmod="lastmod" and sequence>seq))
+
+     */
+
+    FilterBuilder lmeq = and(addTerm(getJname(PropertyInfoIndex.LAST_MODIFIED),
+                                     lastmod),
+                             new RangeFilterBuilder(getJname(PropertyInfoIndex.LASTMODSEQ)).gt(lastmodSeq),
+                             null);
+
+    FilterBuilder lmor = or(new RangeFilterBuilder(getJname(PropertyInfoIndex.LAST_MODIFIED)).gt(lastmod),
+                            lmeq);
+
+    return principalFilter(and(fb, lmor, "lmor"));
   }
 
   public FilterBase addTypeFilter(final FilterBase f,
@@ -1403,10 +1444,10 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
         queryLimited = true;
       }
 
-      final BwCalendar col = ((BwCollectionFilter)pf).getEntity();
+      final String path = ((BwCollectionFilter)pf).getPath();
 
       return new TermOrTerms(colpathJname,
-                             col.getPath(),
+                             path,
                              pf.getNot(),
                              f.getName());
     }

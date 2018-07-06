@@ -58,12 +58,10 @@ import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCollectionFilter;
-import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.ifs.IfInfo;
@@ -532,6 +530,7 @@ public class CalintfROImpl extends CalintfBase
   static {
     rootCol = new BwCalendar();
     rootCol.setPath("/");
+    rootCol.setPublick(false);
 
     rootCol.setOwnerHref(BwPrincipal.publicUserHref);
     rootCol.setCreatorHref(BwPrincipal.publicUserHref);
@@ -1287,9 +1286,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public BwPreferences getPreferences(final String principalHref) throws CalFacadeException {
-    return getIndexer().fetchPreferences(Util.buildPath(
-            BasicSystemProperties.colPathEndsWithSlash,
-            principalHref, "/", "preferences"));
+    return getIndexer().fetchPreferences(principalHref);
   }
 
   @Override
@@ -1477,38 +1474,16 @@ public class CalintfROImpl extends CalintfBase
                                        final boolean forSynch,
                                        final String token,
                                        final int count) throws CalFacadeException {
-    final FilterBase fb;
+    String lastmod = null;
+    int seq = 0;
 
-    if ((path == null) && !forSynch) {
-      fb = null;
-    } else {
-      String s = "";
+    if (forSynch && (token != null)) {
+      lastmod = token.substring(0, 16);
+      seq = Integer.parseInt(token.substring(17), 16);
 
-      if (path != null) {
-        s = "colPath = \"" + path + "\"";
-      }
-
-      if (forSynch && (token != null)) {
-        final String lastmod = token.substring(0, 16);
-        final int seq = Integer.parseInt(token.substring(17), 16);
-        if (!s.isEmpty()) {
-          s += " and ";
-        }
-
-        s += "(lastmod>\"" + lastmod +
-                "\" or (lastmod=" + lastmod + " and sequence>" + seq + "))";
-      }
-      SimpleFilterParser.ParseResult pr
-              = filterParserFetcher.getFilterParser().parse(s,
-                                                            false,
-                                                            null);
-      if (!pr.ok) {
-        throw pr.cfe;
-      }
-      fb = pr.filter;
     }
 
-    return getIndexer().fetchResources(fb, count);
+    return getIndexer().fetchResources(path, lastmod, seq, count);
   }
 
   @Override
