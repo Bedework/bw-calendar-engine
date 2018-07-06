@@ -255,6 +255,7 @@ public class DocBuilder extends DocBuilderBase {
 
       makeField(PropertyInfoIndex.NAME, ent.getName());
 
+      makeField("tombstoned", ent.getTombstoned());
       makeField(PropertyInfoIndex.SEQUENCE, ent.getSequence());
       makeField("contentType", ent.getContentType());
       makeField("encoding", ent.getEncoding());
@@ -446,6 +447,7 @@ public class DocBuilder extends DocBuilderBase {
 
       makeShareableContained(col);
 
+      makeField("tombstoned", col.getTombstoned());
       makeField(PropertyInfoIndex.LAST_MODIFIED,
                 col.getLastmod().getTimestamp());
       makeField(PropertyInfoIndex.CREATED,
@@ -558,6 +560,7 @@ public class DocBuilder extends DocBuilderBase {
 
       makeShareableContained(ev);
 
+      makeField("tombstoned", ev.getTombstoned());
       makeField(PropertyInfoIndex.DELETED, ev.getDeleted());
       makeField(PropertyInfoIndex.NAME, ev.getName());
       makeField(PropertyInfoIndex.HREF, ev.getHref());

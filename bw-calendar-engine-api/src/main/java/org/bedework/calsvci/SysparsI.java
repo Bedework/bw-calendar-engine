@@ -47,13 +47,6 @@ public interface SysparsI extends Serializable {
    */
   BwSystem get(String name) throws CalFacadeException;
 
-  /** Update the system pars
-   *
-   * @param val BwSystem object
-   * @throws CalFacadeException if not admin
-   */
-  void update(BwSystem val) throws CalFacadeException;
-
   /** Get the list of root accounts.
    *
    * @return Collection of String

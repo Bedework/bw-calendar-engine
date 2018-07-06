@@ -9,7 +9,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
@@ -219,23 +218,5 @@ public class EntityDAO extends DAOBase {
     sess.cacheableQuery();
 
     return sess.getList();
-  }
-
-  /* ====================================================================
-   *                       system parameters
-   * ==================================================================== */
-
-  private static final String getSystemParsQuery =
-          "from " + BwSystem.class.getName() + " as sys " +
-                  "where sys.name = :name";
-
-  public BwSystem getSyspars(final String name) throws CalFacadeException {
-    final HibSession sess = getSess();
-
-    sess.createQuery(getSystemParsQuery);
-
-    sess.setString("name", name);
-
-    return (BwSystem)sess.getUnique();
   }
 }

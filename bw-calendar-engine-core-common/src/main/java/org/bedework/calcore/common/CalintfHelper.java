@@ -262,26 +262,10 @@ public abstract class CalintfHelper extends Logged
     }
   }
 
-  protected void unindexEntity(final EventInfo ei) throws CalFacadeException {
-    final BwEvent ev = ei.getEvent();
-
-    if (ev.getRecurrenceId() != null) {
-      // Cannot index single instance
-      warn("Tried to unindex a recurrence instance");
-      return;
-    }
-
-    getIndexer(ev).unindexEntity(ev.getHref());
-  }
-
   protected void indexEntity(final BwCalendar col) throws CalFacadeException {
     if (!getForRestore()) {
       getIndexer(col).indexEntity(col);
     }
-  }
-
-  protected void unindexEntity(final BwCalendar col) throws CalFacadeException {
-    getIndexer(col).unindexEntity(col.getPath());
   }
 
   /** Called to notify container that an event occurred. This method should
@@ -289,7 +273,7 @@ public abstract class CalintfHelper extends Logged
    * should only receive notifications when the actual data has been written.
    *
    * @param ev
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void postNotification(final SysEvent ev) throws CalFacadeException {
     intf.postNotification(ev);

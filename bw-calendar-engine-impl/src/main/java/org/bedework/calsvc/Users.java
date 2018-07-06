@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
 
 /** This acts as an interface to the database for user objects.
  *
@@ -272,7 +273,7 @@ class Users extends CalSvcDb implements UsersI {
     /* Remove preferences */
     getSvc().getPrefsHandler().delete(prefs);
 
-    getCal().delete(pr);
+    getCal().getIndexer().unindexEntity(docTypePrincipal, pr.getHref());
   }
 
   @Override

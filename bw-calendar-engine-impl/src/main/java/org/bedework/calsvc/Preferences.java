@@ -40,6 +40,8 @@ import org.bedework.util.misc.Util;
 import java.util.Collection;
 import java.util.Collections;
 
+import static org.bedework.calfacade.indexing.BwIndexer.docTypePreferences;
+
 /** This acts as an interface to the database for user preferences.
  *
  * @author Mike Douglass       douglm - bedework.edu
@@ -117,29 +119,18 @@ class Preferences extends CalSvcDb implements PreferencesI {
     return fetch(principal);
   }
 
-  /** Update a preferences object
-   *
-   * @param val
-   * @throws CalFacadeException
-   */
   @Override
   public void update(final BwPreferences val) throws CalFacadeException {
     getCal().saveOrUpdate(val);
   }
 
-  /** delete a preferences object
-   *
-   * @param val
-   * @throws CalFacadeException
-   */
   @Override
   public void delete(final BwPreferences val) throws CalFacadeException {
     getCal().delete(val);
+    getCal().getIndexer().unindexEntity(docTypePreferences,
+                                        val.getHref());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.PreferencesI#updateAdminPrefs(boolean, org.bedework.calfacade.BwEventProperty)
-   */
   public void updateAdminPrefs(final boolean remove,
                                final BwEventProperty ent) throws CalFacadeException {
     if (ent instanceof BwCategory) {
@@ -153,9 +144,6 @@ class Preferences extends CalSvcDb implements PreferencesI {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.PreferencesI#updateAdminPrefs(boolean, org.bedework.calfacade.BwCalendar, org.bedework.calfacade.BwCategory, org.bedework.calfacade.BwLocation, org.bedework.calfacade.BwContact)
-   */
   public void updateAdminPrefs(final boolean remove,
                                final BwCalendar cal,
                                final Collection<BwCategory> cats,
@@ -272,7 +260,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
   /** Fetch the preferences for the current user from the db
    *
    * @return the preferences for the current user
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   private BwPreferences fetch() throws CalFacadeException {
     return fetch(getPrincipal());
@@ -280,9 +268,9 @@ class Preferences extends CalSvcDb implements PreferencesI {
 
   /** Fetch the preferences for the given principal from the db
    *
-   * @param principal
+   * @param principal owning the prefs
    * @return the preferences for the current user
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   private BwPreferences fetch(final BwPrincipal principal) throws CalFacadeException {
     BwPreferences prefs = getSvc().getPreferences(principal.getPrincipalRef());

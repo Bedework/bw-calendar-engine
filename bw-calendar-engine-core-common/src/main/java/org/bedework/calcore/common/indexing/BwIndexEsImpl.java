@@ -1679,26 +1679,30 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   @Override
   public void unindexEntity(final BwEventProperty val)
           throws CalFacadeException {
-    unindexEntity(getDocBuilder().getHref(val));
-
-    markUpdated(docTypeFromClass(val.getClass()));
+    unindexEntity(docTypeFromClass(val.getClass()),
+                  getDocBuilder().getHref(val));
   }
 
   @Override
-  public void unindexEntity(final String href)
+  public void unindexEntity(final String docType,
+                            final String href)
           throws CalFacadeException {
     try {
       final DeleteByQueryRequestBuilder dqrb = getClient()
               .prepareDeleteByQuery(
                       targetIndex);
 
-      dqrb.setQuery(
-              QueryBuilders.termQuery(ESQueryFilter.hrefJname, href));
+      FilterBuilder fb = getFilters(null)
+              .singleEntityFilter(docType,
+                                  href,
+                                  PropertyInfoIndex.HREF);
+
+      dqrb.setQuery(new FilteredQueryBuilder(null, fb));
 
       /*final DeleteByQueryResponse resp = */
       dqrb.execute().actionGet();
 
-      markUpdated(null);
+      markUpdated(docType);
 
       // TODO check response?
     } catch (final ElasticsearchException ese) {

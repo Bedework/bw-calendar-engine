@@ -51,12 +51,6 @@ import static org.bedework.calfacade.BwEventProperty.statusDeleted;
  */
 public abstract class EventPropertiesImpl<T extends BwEventProperty>
         extends CalSvcDb implements EventProperties<T>, PrivilegeDefs {
-  /* We'll cache the indexers we use. Use a map for non-public
-   */
-  private final static FlushMap<String, BwIndexer> userIndexers =
-          new FlushMap<>(60 * 1000 * 5, // 5 mins
-                         200);  // max size
-
   /* We'll cache lists of entities by principal href - flushing them
     every so often.
    */
@@ -67,8 +61,6 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   private final FlushMap<String, T> cachedByUid =
           new FlushMap<>(60 * 1000 * 5, // 5 mins
                          2000);  // max size
-
-  private static BwIndexer publicIndexer;
 
   private Class<T> ourClass;
   private CoreEventPropertiesI<T> coreHdlr;
@@ -245,7 +237,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
 
-    getIndexer(val.getPublick(), val.getOwnerHref()).indexEntity(val);
+    getSvc().getIndexer(val).indexEntity(val);
 
     // Update cached
     final Collection<T> ents = get();
@@ -273,8 +265,6 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false, val);
 
     coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
-
-    getIndexer(val.getPublick(), val.getOwnerHref()).indexEntity(val);
 
     // Update cached
     final Collection<T> ents = get();
@@ -309,7 +299,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     coreHdlr.deleteProp(ent);
 
-    getIndexer(ent.getPublick(), ent.getOwnerHref()).unindexEntity(ent);
+    getSvc().getIndexer(ent).unindexEntity(ent);
 
     // Update cached
     final Collection<T> ents = get();
@@ -398,24 +388,10 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     final boolean publick = getPublic || isGuest() || isPublicAdmin();
 
     if (publick) {
-      if (publicIndexer == null) {
-        publicIndexer = getSvc().getIndexer(true);
-      }
-
-      return publicIndexer;
+      return getSvc().getIndexer(true);
     }
 
-    BwIndexer idx = userIndexers.get(href);
-
-    if (idx != null) {
-      return idx;
-    }
-
-    idx = getSvc().getIndexer(href);
-
-    userIndexers.put(href, idx);
-
-    return idx;
+    return getSvc().getIndexer(href);
   }
 
   /**
@@ -525,7 +501,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     }
 
     // Assume public
-    return getSvc().getUsersHandler().getPublicUser().getPrincipalRef();
+    return BwPrincipal.publicUserHref;
   }
 
   private T check(final T ent) throws CalFacadeException {

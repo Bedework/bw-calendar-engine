@@ -43,6 +43,7 @@ import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwDbentity;
+import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
@@ -816,6 +817,15 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
   public BwIndexer getIndexer(final boolean publick) {
     try {
       return getCal().getIndexer(publick);
+    } catch (final CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
+    }
+  }
+
+  @Override
+  public BwIndexer getIndexer(final BwOwnedDbentity entity) {
+    try {
+      return getCal().getIndexer(entity);
     } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }

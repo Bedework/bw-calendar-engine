@@ -31,9 +31,9 @@ import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
@@ -45,6 +45,7 @@ import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwAdminGroup;
+import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.PrincipalInfo;
@@ -516,31 +517,65 @@ public interface Calintf
                              FiltersCommonI f) throws CalFacadeException;
 
   /* ====================================================================
+   *                       Restore methods
+   * ==================================================================== */
+
+  /**
+   * @param val an entity to restore
+   * @throws CalFacadeException on fatal error
+   */
+  void saveOrUpdate(final BwUnversionedDbentity val) throws CalFacadeException;
+
+  /* ====================================================================
    *                       General db methods
    * ==================================================================== */
 
   /**
-   * @param val to add
-   * @throws CalFacadeException on error
+   * @param val principal
+   * @throws CalFacadeException on fatal error
    */
-  void add(final BwUnversionedDbentity val) throws CalFacadeException;
+  void saveOrUpdate(final BwPrincipal val) throws CalFacadeException;
 
   /**
-   * @param val
-   * @throws CalFacadeException
+   * @param val the event property
+   * @throws CalFacadeException on fatal error
    */
-  void saveOrUpdate(final BwUnversionedDbentity val) throws CalFacadeException;
+  void saveOrUpdate(final BwEventProperty val) throws CalFacadeException;
 
   /**
-   * @param val
-   * @throws CalFacadeException
+   * @param val the preferences
+   * @throws CalFacadeException on fatal error
    */
-  void delete(final BwUnversionedDbentity val) throws CalFacadeException;
+  void saveOrUpdate(final BwPreferences val) throws CalFacadeException;
+
+  /**
+   * @param val to save/update/index
+   * @throws CalFacadeException on fatal error
+   */
+  void saveOrUpdate(BwCalSuite val) throws CalFacadeException;
+
+  /**
+   * @param val auth user entry to delete
+   * @throws CalFacadeException on fatal error
+   */
+  void delete(final BwAuthUser val) throws CalFacadeException;
+
+  /**
+   * @param val the preferences
+   * @throws CalFacadeException on fatal error
+   */
+  void delete(final BwPreferences val) throws CalFacadeException;
+
+  /**
+   * @param val calsuite to delete and unindex
+   * @throws CalFacadeException on fatal error
+   */
+  void delete(final BwCalSuite val) throws CalFacadeException;
 
   /**
    * @param val
    * @return - merged entity
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   BwUnversionedDbentity merge(final BwUnversionedDbentity val) throws CalFacadeException;
 
@@ -810,18 +845,46 @@ public interface Calintf
                                 final String token,
                                 final int count) throws CalFacadeException;
 
-   /* ====================================================================
-    *                       system parameters
-    * ==================================================================== */
-
-  /** Get the system pars given name - will update cache object if the name is
-   * the current system name.
-   *
-   * @param name
-   * @return BwSystem object
-   * @throws CalFacadeException if not admin
+  /**
+   * @param val resource to add
+   * @throws CalFacadeException on error
    */
-  @Deprecated
-  BwSystem getSyspars(String name) throws CalFacadeException;
+  void add(final BwResource val) throws CalFacadeException;
+
+  /**
+   * @param r resource owning content
+   * @param rc content to add
+   * @throws CalFacadeException on error
+   */
+  void addContent(final BwResource r,
+                  final BwResourceContent rc) throws CalFacadeException;
+
+  /**
+   * @param val resource
+   * @throws CalFacadeException on fatal error
+   */
+  void saveOrUpdate(BwResource val) throws CalFacadeException;
+
+  /**
+   * @param r resource owning content
+   * @param val resource content
+   * @throws CalFacadeException on fatal error
+   */
+  void saveOrUpdateContent(BwResource r,
+                           BwResourceContent val) throws CalFacadeException;
+
+  /**
+   * @param val resource to delete
+   * @throws CalFacadeException on fatal error
+   */
+  void delete(final BwResource val) throws CalFacadeException;
+
+  /**
+   * @param r resource owning content
+   * @param val resource content to delete
+   * @throws CalFacadeException on fatal error
+   */
+  void deleteContent(BwResource r,
+                     BwResourceContent val) throws CalFacadeException;
 }
 

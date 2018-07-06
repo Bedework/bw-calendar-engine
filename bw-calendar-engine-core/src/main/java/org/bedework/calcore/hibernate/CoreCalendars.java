@@ -51,6 +51,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeCollection;
 
 /** Class to encapsulate most of what we do with collections
  *
@@ -461,18 +462,19 @@ class CoreCalendars extends CalintfHelper
 
     if (reallyDelete) {
       dao.deleteCalendar(unwrapped);
+      getIndexer(val).unindexEntity(docTypeCollection, path);
     } else {
       tombstoneEntity(unwrapped);
       unwrapped.tombstone();
       dao.updateCollection(unwrapped);
       touchCalendar(unwrapped);
+      getIndexer(val).indexEntity(val);
     }
 
     intf.colCache.remove(path);
     touchCalendar(parent);
 
     notify(SysEvent.SysCode.COLLECTION_DELETED, val);
-    getIndexer(val).unindexEntity(path);
 
     return true;
   }
@@ -1036,6 +1038,8 @@ class CoreCalendars extends CalintfHelper
     val.getLastmod().setPath(val.getPath());
     val.updateLastmod(getCurrentTimestamp());
 
+    indexEntity(val);
+
     notifyMove(SysEvent.SysCode.COLLECTION_MOVED,
                oldHref, val);
 
@@ -1056,7 +1060,7 @@ class CoreCalendars extends CalintfHelper
    */
   private Collection<BwCalendar> checkAccess(final Collection<BwCalendar> ents,
                                              final int desiredAccess,
-                                             final boolean nullForNoAccess)
+                                             @SuppressWarnings("SameParameterValue") final boolean nullForNoAccess)
           throws CalFacadeException {
     final TreeSet<BwCalendar> out = new TreeSet<>();
     if (ents == null) {
@@ -1122,8 +1126,6 @@ class CoreCalendars extends CalintfHelper
                           final String oldHref,
                           final BwCalendar val) throws CalFacadeException {
     final boolean indexed = true;
-    getIndexer(val).unindexEntity(oldHref);
-    indexEntity(val);
 
     postNotification(
             SysEvent.makeCollectionMovedEvent(code,

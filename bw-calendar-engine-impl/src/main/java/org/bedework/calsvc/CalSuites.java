@@ -54,7 +54,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
   /** Constructor
    *
-   * @param svci
+   * @param svci for interactions with api
    */
   CalSuites(final CalSvc svci) {
     super(svci);
@@ -113,9 +113,6 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSuitesI#get(java.lang.String)
-   */
   @Override
   public BwCalSuiteWrapper get(final String name) throws CalFacadeException {
     BwCalSuite cs = getCal().getCalSuite(name);
@@ -129,9 +126,6 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     return wrap(cs, false);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSuitesI#get(org.bedework.calfacade.svc.BwAdminGroup)
-   */
   @Override
   public BwCalSuiteWrapper get(final BwAdminGroup group)
         throws CalFacadeException {
@@ -146,14 +140,11 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     return wrap(cs, false);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSuitesI#getAll()
-   */
   @Override
   public Collection<BwCalSuite> getAll() throws CalFacadeException {
     Collection<BwCalSuite> css = getCal().getAllCalSuites();
 
-    TreeSet<BwCalSuite> retCss = new TreeSet<BwCalSuite>();
+    TreeSet<BwCalSuite> retCss = new TreeSet<>();
 
     for (BwCalSuite cs: css) {
       checkCollections(cs);
@@ -185,9 +176,6 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     getCal().saveOrUpdate(cs);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSuitesI#delete(org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper)
-   */
   @Override
   public void delete(final BwCalSuiteWrapper val) throws CalFacadeException {
     getCal().delete(val.fetchEntity());
@@ -322,10 +310,10 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
      */
 
     try {
-      Collection<Privilege> readPrivs = new ArrayList<Privilege>();
+      Collection<Privilege> readPrivs = new ArrayList<>();
       readPrivs.add(Access.read);
 
-      Collection<Ace> aces = new ArrayList<Ace>();
+      Collection<Ace> aces = new ArrayList<>();
       aces.add(Ace.makeAce(AceWho.all, readPrivs, null));
 
       getSvc().changeAccess(resCol, aces, true);
@@ -338,9 +326,8 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
   /** Set root collection if supplied
    *
-   * @param cs
-   * @param rootCollectionPath
-   * @throws CalFacadeException
+   * @param rootCollectionPath root collection path
+   * @throws CalFacadeException on fatal error
    */
   private void setRootCol(final BwCalSuite cs,
                           final String rootCollectionPath) throws CalFacadeException {
@@ -359,16 +346,13 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     cs.setRootCollectionPath(rootCol.getPath());
   }
 
-  /** Set submissions collection if supplied
+  /* Set submissions collection if supplied
    *
-   * @param cs
-   * @param submissionsPath path
-   * @throws CalFacadeException
    */
   private void setSubmissionsCol(final BwCalSuite cs,
                                  final String submissionsPath) throws CalFacadeException {
     if ((submissionsPath == null) ||
-        submissionsPath.equals(cs.getSubmissionsRoot())) {
+        submissionsPath.equals(cs.getSubmissionsRoot().getPath())) {
       return;
     }
 
@@ -382,12 +366,8 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     cs.setSubmissionsRootPath(submissionsCol.getPath());
   }
 
-  /** Ensure the given group is valid for the given calendar suite
+  /* Ensure the given group is valid for the given calendar suite
    *
-   * @param cs
-   * @param groupName
-   * @return home for the group
-   * @throws CalFacadeException
    */
   private BwCalendar validateGroup(final BwCalSuite cs,
                                    final String groupName) throws CalFacadeException {

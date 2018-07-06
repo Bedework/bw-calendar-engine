@@ -67,7 +67,7 @@ public interface BwIndexer extends Serializable {
   String docTypeSyspars = "syspars";
 
   /** */
-  public enum IndexedType {
+  enum IndexedType {
     /** */
     principals(docTypePrincipal),
 
@@ -103,7 +103,7 @@ public interface BwIndexer extends Serializable {
     
     private final String docType;
 
-    private IndexedType(final String docType) {
+    IndexedType(final String docType) {
       this.docType = docType;
     }
 
@@ -162,13 +162,13 @@ public interface BwIndexer extends Serializable {
   /** Flag the end of a transaction - updates the updateTracker if any
    * changes were made to the index.
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   void markTransaction() throws CalFacadeException;
 
   /**
    * @return a token based on the update tracker value.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   String currentChangeToken() throws CalFacadeException;
 
@@ -223,7 +223,7 @@ public interface BwIndexer extends Serializable {
    * @param pageSize - stored in the search result for future calls.
    * @param recurRetrieval How recurring event is returned.
    * @return  SearchResult - never null
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   SearchResult search(String query,
                       boolean relevance,
@@ -248,7 +248,7 @@ public interface BwIndexer extends Serializable {
    * @param  sres     result of previous search
    * @param pos - specify movement in result set
    * @param desiredAccess  to the entities
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   List<SearchResultEntry> getSearchResult(SearchResult sres,
                                           Position pos,
@@ -262,7 +262,7 @@ public interface BwIndexer extends Serializable {
    * @param num number of entries
    * @param desiredAccess  to the entities
    * @return list of results - possibly empty - never null.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   List<SearchResultEntry> getSearchResult(SearchResult sres,
                                           int offset,
@@ -271,21 +271,23 @@ public interface BwIndexer extends Serializable {
   /** Called to unindex an entity
    *
    * @param   val     an event property
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   void unindexEntity(BwEventProperty val) throws CalFacadeException;
 
   /** Called to unindex an entity
    *
-   * @param   href     the entities href
-   * @throws CalFacadeException
+   * @param docType type of document
+   * @param href     the entities href
+   * @throws CalFacadeException on error
    */
-  void unindexEntity(String href) throws CalFacadeException;
+  void unindexEntity(String docType,
+                     String href) throws CalFacadeException;
 
   /** Called to index a record
    *
    * @param rec an indexable object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   void indexEntity(Object rec) throws CalFacadeException;
 
@@ -297,12 +299,12 @@ public interface BwIndexer extends Serializable {
 
   /** Called at the end of a batch of updates.
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   void endBwBatch() throws CalFacadeException;
 
   /** Flush any batched entities.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   void flush() throws CalFacadeException;
 
@@ -310,7 +312,7 @@ public interface BwIndexer extends Serializable {
    *
    * @param name basis for new name - in solr the core
    * @return name of created index.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   String newIndex(String name) throws CalFacadeException;
 
@@ -369,14 +371,14 @@ public interface BwIndexer extends Serializable {
   /** Get info on indexes maintained by server
    *
    * @return list of index info.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   Set<IndexInfo> getIndexInfo() throws CalFacadeException;
 
   /** Purge non-current indexes maintained by server.
    *
    * @return names of indexes removed.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   List<String> purgeIndexes() throws CalFacadeException;
 
@@ -385,7 +387,7 @@ public interface BwIndexer extends Serializable {
    * @param index   name of index to be aliased
    * @param alias   to point at index
    * @return 0 for OK or HTTP status from indexer
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   int setAlias(String index, String alias) throws CalFacadeException;
 
@@ -413,7 +415,7 @@ public interface BwIndexer extends Serializable {
    * @param val - expected full value
    * @param index e.g. UID or CN, VALUE
    * @return null or category object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   BwCategory fetchCat(String val,
                       PropertyInfoIndex... index) throws CalFacadeException;
@@ -421,7 +423,7 @@ public interface BwIndexer extends Serializable {
   /** Fetch all for the current principal.
    *
    * @return possibly empty list
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error on error
    */
   List<BwCategory> fetchAllCats() throws CalFacadeException;
 
@@ -431,7 +433,7 @@ public interface BwIndexer extends Serializable {
    * @param val - expected full value
    * @param index e.g. HREF, UID or CN, VALUE
    * @return null or collection object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   BwCalendar fetchCol(String val,
                       final int desiredAccess,
@@ -551,7 +553,7 @@ public interface BwIndexer extends Serializable {
    * @param val - expected full value
    * @param index e.g. UID or CN, VALUE
    * @return null or location object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   BwLocation fetchLocation(String val,
                            PropertyInfoIndex... index) throws CalFacadeException;
@@ -580,7 +582,7 @@ public interface BwIndexer extends Serializable {
   /** Fetch all for the current principal.
    *
    * @return possibly empty list
-   * @throws CalFacadeException
+   * @throws CalFacadeException on error
    */
   List<BwLocation> fetchAllLocations() throws CalFacadeException;
 

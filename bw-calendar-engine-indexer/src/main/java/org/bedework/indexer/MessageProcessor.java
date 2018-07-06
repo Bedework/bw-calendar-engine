@@ -18,14 +18,7 @@
  */
 package org.bedework.indexer;
 
-import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.configs.IndexProperties;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
-import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.indexing.BwIndexer;
-import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calsvci.CalSvcI;
 import org.bedework.sysevents.events.CollectionDeletedEvent;
 import org.bedework.sysevents.events.CollectionUpdateEvent;
 import org.bedework.sysevents.events.EntityDeletedEvent;
@@ -46,19 +39,11 @@ import org.bedework.sysevents.events.SysEvent;
  * @author douglm
  */
 public class MessageProcessor extends CalSys {
-  transient private BwIndexer publicIndexer;
-
-  transient private BwIndexer userIndexer;
-
-  transient private String userIndexerPrincipal;
-
   protected long collectionsUpdated;
   protected long collectionsDeleted;
 
   protected long entitiesUpdated;
   protected long entitiesDeleted;
-
-  private static final int maxRetryCt = 10;
 
   /**
    * @param props index properties
@@ -71,52 +56,28 @@ public class MessageProcessor extends CalSys {
    * @param msg the incoming message
    */
   public void processMessage(final SysEvent msg) {
-    for (int ct = 0; ct < maxRetryCt; ct++) {
-      try {
-        if (debug) {
-          debug("Event " + msg.getSysCode());
-        }
-
-        if (msg instanceof CollectionUpdateEvent) {
-          collectionsUpdated++;
-          doCollectionChange((CollectionUpdateEvent)msg);
-          return;
-        }
-
-        if (msg instanceof EntityUpdateEvent) {
-          entitiesUpdated++;
-          doEntityChange((EntityUpdateEvent)msg);
-          return;
-        }
-
-        if (msg instanceof EntityDeletedEvent) {
-          entitiesDeleted++;
-          doEntityDelete((EntityDeletedEvent)msg);
-          return;
-        }
-
-        if (msg instanceof CollectionDeletedEvent) {
-          collectionsDeleted++;
-          doCollectionDelete((CollectionDeletedEvent)msg);
-          return;
-        }
-
-        return;
-      } catch (final CalFacadeAccessException cfae) {
-        // No point in retrying this
-        warn("No access (or deleted)");
-        break;
-      } catch (final Throwable t) {
-        warn("Error indexing msg");
-        if (ct == 0) {
-          warn("Will retry " + maxRetryCt + " times");
-        }
-
-        error(t);
-      }
+    if (debug) {
+      debug("Event " + msg.getSysCode());
     }
 
-    warn("Failed after " + maxRetryCt + " retries");
+    if (msg instanceof CollectionUpdateEvent) {
+      collectionsUpdated++;
+      return;
+    }
+
+    if (msg instanceof EntityUpdateEvent) {
+      entitiesUpdated++;
+      return;
+    }
+
+    if (msg instanceof EntityDeletedEvent) {
+      entitiesDeleted++;
+      return;
+    }
+
+    if (msg instanceof CollectionDeletedEvent) {
+      collectionsDeleted++;
+    }
   }
 
   /**
@@ -148,165 +109,9 @@ public class MessageProcessor extends CalSys {
     return entitiesDeleted;
   }
 
-  private void doCollectionDelete(final CollectionDeletedEvent cde)
-          throws CalFacadeException {
-    try (BwSvc bw = getBw()) {
-      getIndexer(bw.getSvci(),
-                 cde.getPublick(), cde.getOwnerHref()).
-              unindexEntity(cde.getHref());
-    }
-  }
-
-  private void doCollectionChange(final CollectionUpdateEvent cce)
-                                                   throws CalFacadeException {
-    setCurrentPrincipal(null);
-
-    try (BwSvc bw = getBw()) {
-      final BwCalendar col = getCollection(bw.getSvci(), cce.getHref());
-
-      if (col != null) {
-        // Null if no access or removed.
-        add(bw.getSvci(), col);
-      }
-    }
-  }
-
-  private void doEntityDelete(final EntityDeletedEvent ede)
-       throws CalFacadeException {
-    /* Treat the delete of a recurrence instance as an update */
-
-    if (ede.getRecurrenceId() != null) {
-      setCurrentPrincipal(ede.getOwnerHref());
-      try (BwSvc bw = getBw()) {
-        final EventInfo val = getEvent(bw.getSvci(),
-                                       getParentPath(ede.getHref()),
-                                       getName(ede.getHref()));
-        if (val == null) {
-          if (debug) {
-            debug("Missing event: " + ede.getHref());
-          }
-        } else {
-          add(val);
-        }
-      }
-    } else {
-      try (BwSvc bw = getBw()) {
-        getIndexer(bw.getSvci(), ede.getPublick(),
-                   ede.getOwnerHref()).unindexEntity(ede.getHref());
-      }
-    }
-  }
-
-  private void doEntityChange(final EntityUpdateEvent ece)
-       throws CalFacadeException {
-    setCurrentPrincipal(ece.getOwnerHref());
-
-    try (BwSvc bw = getBw()) {
-      final EventInfo val = getEvent(bw.getSvci(),
-                                     getParentPath(ece.getHref()),
-                                     getName(ece.getHref()));
-      if (val == null) {
-        if (debug) {
-          debug("Missing event: " + ece.getHref());
-        }
-      } else {
-        add(val);
-      }
-    }
-  }
-
   /*
    * ====================================================================
    * Private methods
    * ====================================================================
    */
-
-  private void add(final CalSvcI svci,
-                   final BwCalendar val) throws CalFacadeException {
-    getIndexer(svci, val).indexEntity(val);
-  }
-
-  /*
-  private void add(final EventInfo val,
-                   final boolean firstRecurrence) throws CalFacadeException {
-    boolean first = true;
-    if (!Util.isEmpty(val.getOverrides())) {
-      for (EventInfo ei : val.getOverrides()) {
-        add(ei, first);
-        first = false;
-      }
-    }
-
-    if (firstRecurrence && (val.getEvent().getRecurrenceId() != null)) {
-      // Indexing an override. Reindex the master event
-      BwEventProxy proxy = (BwEventProxy)val.getEvent();
-
-      EventInfo ei = new EventInfo(proxy.getTarget());
-
-      getIndexer(val).indexEntity(ei);
-    }
-
-    getIndexer(val).indexEntity(val);
-  }
-  */
-  private void add(final EventInfo val) throws CalFacadeException {
-    try (BwSvc bw = getBw()) {
-      getIndexer(bw.getSvci(), val).indexEntity(val);
-    }
-  }
-
-  @SuppressWarnings("rawtypes")
-  private BwIndexer getIndexer(final CalSvcI svci,
-                               final Object val) throws CalFacadeException {
-    boolean publick = false;
-
-    String principal = null;
-
-    final BwOwnedDbentity ent;
-
-    if (val instanceof BwOwnedDbentity) {
-      ent = (BwOwnedDbentity)val;
-    } else if (val instanceof EventInfo) {
-      ent = ((EventInfo)val).getEvent();
-    } else {
-      error("Cannot index class: " + val.getClass());
-      throw new CalFacadeException("org.bedework.index.unexpected.class");
-    }
-
-    if (ent != null) {
-      if (ent.getPublick() == null) {
-        debug("This is wrong");
-      }
-      publick = ent.getPublick();
-      principal = ent.getOwnerHref();
-    }
-
-    return getIndexer(svci, publick, principal);
-  }
-
-  private BwIndexer getIndexer(final CalSvcI svci,
-                               final boolean publick,
-                               final String principal) throws CalFacadeException {
-    try {
-      if (publick) {
-        if (publicIndexer == null) {
-          publicIndexer = svci.getIndexer(true);
-        }
-        return publicIndexer;
-      }
-
-      if ((userIndexerPrincipal != null) &&
-              (!userIndexerPrincipal.equals(principal))) {
-        userIndexer = null;
-      }
-
-      if (userIndexer == null) {
-        userIndexer = svci.getIndexer(principal);
-      }
-
-      return userIndexer;
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
 }

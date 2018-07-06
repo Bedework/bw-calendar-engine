@@ -70,6 +70,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.indexing.BwIndexer.DeletedState;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
 
 /** Class to encapsulate most of what we do with events.
  *
@@ -1036,6 +1037,18 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     unindexEntity(ei);
 
     return der;
+  }
+
+  private void unindexEntity(final EventInfo ei) throws CalFacadeException {
+    final BwEvent ev = ei.getEvent();
+
+    if (ev.getRecurrenceId() != null) {
+      // Cannot index single instance
+      warn("Tried to unindex a recurrence instance");
+      return;
+    }
+
+    getIndexer(ev).unindexEntity(docTypeEvent, ev.getHref());
   }
 
   @Override

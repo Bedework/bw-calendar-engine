@@ -26,6 +26,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.base.BwDbentity;
+import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
@@ -427,6 +428,12 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * @return the indexer
    */
   public abstract BwIndexer getIndexer(String principal);
+
+  /**
+   * @param entity may influence choice of indexer
+   * @return BwIndexer
+   */
+  public abstract BwIndexer getIndexer(BwOwnedDbentity entity);
 
   /** Method which allows us to specify the index root.
    *

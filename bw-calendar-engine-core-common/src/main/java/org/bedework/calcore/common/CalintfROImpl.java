@@ -48,9 +48,9 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
-import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
@@ -58,6 +58,7 @@ import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -1137,21 +1138,20 @@ public class CalintfROImpl extends CalintfBase
   }
 
   /* ====================================================================
-   *                       General db methods
+   *                       Restore methods
    * ==================================================================== */
-
-  @Override
-  public void add(final BwUnversionedDbentity val) throws CalFacadeException {
-    throw new RuntimeException("Read only version");
-  }
 
   @Override
   public void saveOrUpdate(final BwUnversionedDbentity val) throws CalFacadeException {
     throw new RuntimeException("Read only version");
   }
 
+  /* ====================================================================
+   *                       General db methods
+   * ==================================================================== */
+
   @Override
-  public void delete(final BwUnversionedDbentity val) throws CalFacadeException {
+  public void saveOrUpdate(final BwEventProperty val) throws CalFacadeException {
     throw new RuntimeException("Read only version");
   }
 
@@ -1260,6 +1260,11 @@ public class CalintfROImpl extends CalintfBase
     throw new RuntimeException("Read only version");
   }
 
+  @Override
+  public void delete(final BwAuthUser val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
+  }
+
   /* ====================================================================
    *                       principals + prefs
    * ==================================================================== */
@@ -1270,6 +1275,11 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
+  public void saveOrUpdate(final BwPrincipal val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
   public List<String> getPrincipalHrefs(final int start,
                                         final int count) throws CalFacadeException {
     throw new RuntimeException("Read only version");
@@ -1277,7 +1287,19 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public BwPreferences getPreferences(final String principalHref) throws CalFacadeException {
-    return getIndexer().fetchPreferences(principalHref);
+    return getIndexer().fetchPreferences(Util.buildPath(
+            BasicSystemProperties.colPathEndsWithSlash,
+            principalHref, "/", "preferences"));
+  }
+
+  @Override
+  public void saveOrUpdate(final BwPreferences val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void delete(final BwPreferences val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
   }
 
   /* ====================================================================
@@ -1390,6 +1412,20 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
+  public void saveOrUpdate(final BwCalSuite val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void delete(final BwCalSuite val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
+  }
+
+  /* ====================================================================
+   *                       Event properties
+   * ==================================================================== */
+
+  @Override
   public BwCategory getCategory(final String uid) throws CalFacadeException {
     try {
       return getIndexer()
@@ -1476,8 +1512,36 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public BwSystem getSyspars(final String name) throws CalFacadeException {
-    return new BwSystem();
+  public void add(final BwResource val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void addContent(final BwResource r,
+                         final BwResourceContent rc) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void saveOrUpdate(final BwResource val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void saveOrUpdateContent(final BwResource r,
+                                  final BwResourceContent val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void delete(final BwResource val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void deleteContent(final BwResource r,
+                            final BwResourceContent val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
   }
 
   /* ====================================================================

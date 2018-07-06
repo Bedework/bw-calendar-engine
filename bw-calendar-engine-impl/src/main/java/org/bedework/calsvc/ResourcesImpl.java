@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -95,7 +96,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         rc.setColPath(val.getColPath());
         rc.setName(val.getName());
 
-        getCal().saveOrUpdate(rc);
+        getCal().saveOrUpdateContent(val, rc);
       }
 
       touchCalendar(getCols().get(val.getColPath()));
@@ -130,6 +131,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
                                                PrivilegeDefs.privUnbind);
 
     if (tr != null) {
+      // Just deleet resource - content was deleted when tombstoned
       getCal().delete(tr);
     }
 
@@ -142,7 +144,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     getCal().saveOrUpdate(r);
 
     if (rc != null) {
-      getCal().delete(rc);
+      getCal().deleteContent(r, rc);
     }
 
     touchCalendar(r.getColPath());
@@ -176,8 +178,9 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       }
       checkAccess(collTo, access, false);
 
-      BwResource r = getCal().getResource(Util.buildPath(false, to, "/",
-                                                         val.getName()),
+      BwResource r = getCal().getResource(Util.buildPath(
+              BasicSystemProperties.colPathEndsWithSlash, to, "/",
+              val.getName()),
                                           access);
       boolean createdNew = false;
 
@@ -202,7 +205,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         rc.setValue(val.getContent().getValue());
 
         getCal().saveOrUpdate(r);
-        getCal().saveOrUpdate(rc);
+        getCal().saveOrUpdateContent(r, rc);
       } else {
         /* Create a new resource */
 
@@ -225,7 +228,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         rc.setName(val.getName());
         rc.setValue(fromRc.getValue());
 
-        getCal().saveOrUpdate(rc);
+        getCal().saveOrUpdateContent(val, rc);
 
         createdNew = true;
       }
@@ -238,7 +241,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
         final BwResourceContent rc = val.getContent();
 
-        getCal().delete(rc);
+        getCal().deleteContent(val, rc);
 
         /* Remove any previous tombstoned version */
         final BwResource tr =
@@ -354,7 +357,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       rc.setColPath(val.getColPath());
       rc.setName(val.getName());
 
-      getCal().add(rc);
+      getCal().addContent(val, rc);
 
       touchCalendar(coll);
 
