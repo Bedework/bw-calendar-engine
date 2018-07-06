@@ -341,6 +341,8 @@ class CoreCalendars extends CalintfHelper
     /* Remove any tombstoned collection with the same name */
     dao.removeTombstonedVersion(val);
 
+    error("Unimplemented - remove tombstoned from index");
+
     // Flush it again
     intf.colCache.flush();
   }
@@ -369,6 +371,8 @@ class CoreCalendars extends CalintfHelper
     tombstoned.tombstone();
     dao.save(tombstoned);
 
+    indexEntity(tombstoned);
+
     /* This triggers off a cascade of updates down the tree as we are storing the
      * path in the calendar objects. This may be preferable to calculating the
      * path at every access
@@ -377,6 +381,8 @@ class CoreCalendars extends CalintfHelper
 
     /* Remove any tombstoned collection with the same name */
     dao.removeTombstonedVersion(val);
+
+    error("Unimplemented - remove tombstoned from index");
 
     // Flush it again
     intf.colCache.flush();
@@ -395,6 +401,8 @@ class CoreCalendars extends CalintfHelper
   @Override
   public void touchCalendar(final BwCalendar col) throws CalFacadeException {
     dao.touchCollection(col, getCurrentTimestamp());
+
+    indexEntity(col);
   }
 
   @Override
@@ -403,6 +411,8 @@ class CoreCalendars extends CalintfHelper
 
     dao.updateCollection(unwrap(val));
     touchCalendar(val.getPath());
+
+    indexEntity(val);
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
 
@@ -420,6 +430,8 @@ class CoreCalendars extends CalintfHelper
 
     dao.saveOrUpdateCollection(unwrap(col));
 
+    indexEntity(col);
+
     ((CalendarWrapper)col).clearCurrentAccess(); // force recheck
     intf.colCache.put((CalendarWrapper)col);
 
@@ -431,6 +443,8 @@ class CoreCalendars extends CalintfHelper
                             final AceWho who) throws CalFacadeException {
     ac.getAccessUtil().defaultAccess(cal, who);
     dao.saveOrUpdateCollection(unwrap(cal));
+
+    getIndexer(cal).indexEntity(cal);
 
     intf.colCache.flush();
 
@@ -483,6 +497,8 @@ class CoreCalendars extends CalintfHelper
     /* Ensure no tombstoned events or childen */
     dao.removeTombstoned(fixPath(path));
 
+    error("Not implemented - remove tombstoned children from index");
+
     if (reallyDelete) {
       dao.deleteCalendar(unwrapped);
       getIndexer(val).unindexEntity(docTypeCollection, path);
@@ -491,7 +507,7 @@ class CoreCalendars extends CalintfHelper
       unwrapped.tombstone();
       dao.updateCollection(unwrapped);
       touchCalendar(unwrapped);
-      getIndexer(val).indexEntity(val);
+      indexEntity(val);
     }
 
     intf.colCache.remove(path);
@@ -553,6 +569,9 @@ class CoreCalendars extends CalintfHelper
         usercal.setColPath(parentCal.getPath());
 
         dao.saveCollection(usercal);
+
+        getIndexer(usercal).indexEntity(usercal);
+
         notify(SysEvent.SysCode.COLLECTION_ADDED, usercal);
       } else if (usercal == null) {
         /* Create a new system owned folder for part of the principal
@@ -567,6 +586,9 @@ class CoreCalendars extends CalintfHelper
         usercal.setColPath(parentCal.getPath());
 
         dao.saveCollection(usercal);
+
+        getIndexer(usercal).indexEntity(usercal);
+
         notify(SysEvent.SysCode.COLLECTION_ADDED, usercal);
       }
 
@@ -589,6 +611,8 @@ class CoreCalendars extends CalintfHelper
     cal.setAffectsFreeBusy(true);
 
     dao.saveCollection(cal);
+
+    getIndexer(cal).indexEntity(cal);
     notify(SysEvent.SysCode.COLLECTION_ADDED, cal);
   }
 
@@ -916,6 +940,8 @@ class CoreCalendars extends CalintfHelper
       // Save the state
       val.updateLastmod(getCurrentTimestamp());
       dao.updateCollection(unwrap(val));
+
+      getIndexer(val).indexEntity(val);
       //touchCalendar(val.getPath());
 
       notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
@@ -1035,6 +1061,8 @@ class CoreCalendars extends CalintfHelper
     if (parent != null) {
       touchCalendar(parent);
     }
+
+    indexEntity(val);
 
     notify(SysEvent.SysCode.COLLECTION_ADDED, val);
 

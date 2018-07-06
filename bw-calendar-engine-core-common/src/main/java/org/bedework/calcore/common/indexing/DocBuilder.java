@@ -254,6 +254,10 @@ public class DocBuilder extends DocBuilderBase {
       makeShareableContained(ent);
 
       makeField(PropertyInfoIndex.NAME, ent.getName());
+      makeField(PropertyInfoIndex.LAST_MODIFIED,
+                ent.getLastmod());
+      makeField(PropertyInfoIndex.CREATED,
+                ent.getCreated());
 
       makeField("tombstoned", ent.getTombstoned());
       makeField(PropertyInfoIndex.SEQUENCE, ent.getSequence());

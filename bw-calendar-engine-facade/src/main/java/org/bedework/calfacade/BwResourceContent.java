@@ -28,6 +28,7 @@ import org.bedework.util.misc.Util;
 
 import org.apache.commons.codec.binary.Base64OutputStream;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.sql.Blob;
@@ -128,6 +129,22 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
   /* ====================================================================
    *                   non-db methods
    * ==================================================================== */
+
+  public InputStream getBinaryStream() throws CalFacadeException {
+    if (getValue() != null) {
+      try {
+        return getValue().getBinaryStream();
+      } catch (final Throwable t) {
+        throw new CalFacadeException(t);
+      }
+    }
+
+    if (byteValue != null) {
+      return new ByteArrayInputStream(byteValue);
+    }
+
+    return null;
+  }
 
   /** Set the byte array value
    *

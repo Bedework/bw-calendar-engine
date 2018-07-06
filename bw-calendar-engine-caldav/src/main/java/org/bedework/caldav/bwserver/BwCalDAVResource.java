@@ -34,7 +34,6 @@ import org.bedework.webdav.servlet.shared.WebdavForbidden;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.sql.Blob;
 
 import javax.xml.namespace.QName;
 
@@ -220,14 +219,8 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
       return null;
     }
 
-    Blob b = bwrc.getValue();
-
-    if (b == null) {
-      return null;
-    }
-
     try {
-      return b.getBinaryStream();
+      return bwrc.getBinaryStream();
     } catch (final Throwable t) {
       throw new WebdavException(t);
     }

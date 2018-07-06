@@ -202,6 +202,8 @@ public class EntityBuilder extends EntityBuilderBase {
     restoreSharedEntity(ent);
 
     ent.setName(getString(PropertyInfoIndex.NAME));
+    ent.setCreated(getString(PropertyInfoIndex.CREATED));
+    ent.setLastmod(getString(PropertyInfoIndex.LAST_MODIFIED));
 
     ent.setSequence(getInt(PropertyInfoIndex.SEQUENCE));
     ent.setContentType(getString("contentType"));

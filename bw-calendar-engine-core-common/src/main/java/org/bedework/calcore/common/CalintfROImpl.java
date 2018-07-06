@@ -1481,7 +1481,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public void getResourceContent(final BwResource val) throws CalFacadeException {
-    getIndexer().fetchResourceContent(val.getHref());
+    val.setContent(getIndexer().fetchResourceContent(val.getHref()));
   }
 
   @Override

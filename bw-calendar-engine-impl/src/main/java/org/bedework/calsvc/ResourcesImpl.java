@@ -31,6 +31,8 @@ import org.bedework.util.misc.Util;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /** This acts as an interface to the database for resources.
  *
@@ -283,6 +285,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     }
 
     int ct = 0;
+    final Set<String> checkedCollections = new TreeSet<>();
 
     while (ents.hasNext()) {
       BwResource ent = ents.next();
@@ -294,6 +297,48 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         }
       }
 
+      // We might have to manufacture a collection
+      final String parentPath = ent.getColPath();
+      boolean create = true;
+
+      if (!checkedCollections.contains(parentPath)) {
+        try {
+          final BwCalendar col = getSvc().getCalendarsHandler().get(parentPath);
+          if (col != null) {
+            create = false;
+
+            // Ensure it's indexed
+            getSvc().getIndexer(col).indexEntity(col);
+          }
+        } catch (final Throwable t) {
+          if (debug) {
+            error(t);
+          }
+        }
+
+        if (create) {
+          final SplitResult sr = splitUri(parentPath);
+          final BwCalendar parent = new BwCalendar();
+
+          parent.setCalType(BwCalendar.calTypeFolder);
+          parent.setColPath(sr.path);
+          parent.setPath(parentPath);
+          parent.setName(sr.name);
+          parent.setPublick(ent.getPublick());
+          parent.setOwnerHref(ent.getOwnerHref());
+          parent.setCreatorHref(ent.getCreatorHref());
+
+          try {
+            getSvc().getCalendarsHandler().add(parent, sr.path);
+          } catch (final Throwable t) {
+            if (debug) {
+              error(t);
+            }
+          }
+        }
+
+        checkedCollections.add(parentPath);
+      }
       indexer.indexEntity(ent);
       if (ent.getContent() != null) {
         indexer.indexEntity(ent.getContent());
