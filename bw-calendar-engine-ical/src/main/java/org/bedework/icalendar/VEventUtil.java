@@ -516,7 +516,7 @@ public class VEventUtil extends IcalUtil {
           String relval = info[i + 2];
 
           ParameterList rtpl = null;
-          if (reltype.length() > 0) {
+          if ((reltype != null) && (reltype.length() > 0)) {
             rtpl = new ParameterList();
             rtpl.add(new RelType(reltype));
           }
