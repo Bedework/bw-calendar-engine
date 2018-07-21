@@ -315,6 +315,7 @@ class Users extends CalSvcDb implements UsersI {
     final BwPreferences prefs = new BwPreferences();
 
     prefs.setOwnerHref(principal.getPrincipalRef());
+    prefs.setPublick(false);
 
     prefs.setDefaultCalendarPath(
       Util.buildPath(colPathEndsWithSlash, 
