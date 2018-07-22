@@ -223,7 +223,7 @@ public class InScheduler extends AbstractScheduler {
                             pr.removeInboxEntry);
       }
 
-      deleteEvent(ei, false, false);
+      //deleteEvent(ei, false, false);
       return ProcessMessageResult.PROCESSED;
     } catch (final CalFacadeForbidden cff) {
       if (debug) {
