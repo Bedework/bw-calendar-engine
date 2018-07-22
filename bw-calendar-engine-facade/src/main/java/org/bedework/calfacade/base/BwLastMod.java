@@ -168,9 +168,9 @@ public class BwLastMod<T extends BwDbentity, T1>
    * @param val timestamp of change
    */
   public void updateLastmod(final Timestamp val) {
-    DateTime dt = new DateTime(val);
+    final DateTime dt = new DateTime(val);
     setTimestamp(new LastModified(dt).getValue());
-    setSequence(val.getNanos() / 100000);
+    setSequence(val.getNanos());
   }
 
   /** Return a value that can be used for etag and ctag support

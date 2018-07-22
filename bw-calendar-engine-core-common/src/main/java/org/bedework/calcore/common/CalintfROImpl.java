@@ -350,6 +350,14 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Timestamp getCurrentTimestamp() {
+    // Inc nanos to guarantee different
+    int nanos = curTimestamp.getNanos() + 1;
+    if (nanos > 999999999) {
+      nanos = 0;
+    }
+
+    curTimestamp.setNanos(nanos);
+
     return curTimestamp;
   }
 

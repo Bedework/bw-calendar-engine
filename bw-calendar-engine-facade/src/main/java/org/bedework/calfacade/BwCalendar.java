@@ -1430,7 +1430,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   public long getMicrosecsVersion() throws CalFacadeException {
     try {
       return new LastModified(getLastmod().getTimestamp()).getDate().getTime() * 1000000 +
-              getLastmod().getSequence() * 100;
+              getLastmod().getSequence();
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
