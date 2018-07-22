@@ -3294,7 +3294,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.RESOURCES,
-                adderName = "resource",
+                adderName = "resources",
                 analyzed = true,
                 eventProperty = true,
                 todoProperty = true)
