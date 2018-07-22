@@ -73,11 +73,15 @@ public class InScheduler extends AbstractScheduler {
   }
 
   private ProcessMessageResult processScheduleUpdateEvent(final ScheduleUpdateEvent msg) {
-    try (final CalSvcI svci = getSvci(msg.getOwnerHref())) {
+    CalSvcI svci = null;
+
+    try {
       if (debug) {
         trace("ScheduleUpdateEvent for principal " +
               msg.getOwnerHref());
       }
+
+      svci = getSvci(msg.getOwnerHref());
 
       final EventInfo ei =
               svci.getEventsHandler().get(getParentPath(msg.getHref()),
@@ -127,6 +131,10 @@ public class InScheduler extends AbstractScheduler {
     } catch (final Throwable t) {
       rollback(getSvc());
       error(t);
+    } finally {
+      try {
+        closeSvci(svci);
+      } catch (final Throwable ignored) {}
     }
 
     return ProcessMessageResult.FAILED;
@@ -137,12 +145,14 @@ public class InScheduler extends AbstractScheduler {
      */
 
     EventInfo ei = null;
+    CalSvcI svci = null;
 
-    try (final CalSvcI svci = getSvci(msg.getOwnerHref())) {
+    try {
       if (debug) {
         trace("InSchedule inbox entry for principal " +
               msg.getOwnerHref());
       }
+      svci = getSvci(msg.getOwnerHref());
 
       ei = getInboxEvent(svci, msg.getName());
 
@@ -237,6 +247,10 @@ public class InScheduler extends AbstractScheduler {
     } catch (final Throwable t) {
       rollback(getSvc());
       error(t);
+    } finally {
+      try {
+        closeSvci(svci);
+      } catch (final Throwable ignored) {}
     }
 
     return ProcessMessageResult.FAILED;

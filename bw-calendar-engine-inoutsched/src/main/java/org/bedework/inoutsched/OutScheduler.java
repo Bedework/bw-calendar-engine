@@ -96,7 +96,7 @@ public class OutScheduler extends AbstractScheduler {
     } finally {
       try {
         closeSvci(svci);
-      } catch (Throwable t) {}
+      } catch (final Throwable ignored) {}
     }
 
     return ProcessMessageResult.FAILED;
