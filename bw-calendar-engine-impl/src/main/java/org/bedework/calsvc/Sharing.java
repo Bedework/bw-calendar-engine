@@ -39,6 +39,7 @@ import org.bedework.caldav.util.sharing.UserType;
 import org.bedework.caldav.util.sharing.parse.Parser;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
@@ -124,12 +125,16 @@ public class Sharing extends CalSvcDb implements SharingI {
     final List<AddPrincipal> addPrincipals = new ArrayList<>();
 
     final String calAddr = principalToCaladdr(getPrincipal());
+    final BwPrincipalInfo pi = getBwPrincipalInfo();
 
     final InviteType invite = getInviteStatus(col);
 
     if (invite.getOrganizer() == null) {
       final OrganizerType org = new OrganizerType();
       org.setHref(calAddr);
+      if (pi != null) {
+        org.setCommonName(pi.getFirstname() + " " + pi.getLastname());
+      }
       invite.setOrganizer(org);
     }
 
@@ -851,8 +856,13 @@ public class Sharing extends CalSvcDb implements SharingI {
     in.setAccess(access);
     in.setHostUrl(colPath);
 
+    final BwPrincipalInfo pi = getBwPrincipalInfo();
+
     final OrganizerType org = new OrganizerType();
     org.setHref(sharerHref);
+    if (pi != null) {
+      org.setCommonName(pi.getFirstname() + " " + pi.getLastname());
+    }
 
     in.setOrganizer(org);
     in.setSummary(summary);
@@ -955,7 +965,12 @@ public class Sharing extends CalSvcDb implements SharingI {
     in.setSummary(s.getSummary());
 
     final OrganizerType org = new OrganizerType();
+    final BwPrincipalInfo pi = getBwPrincipalInfo();
+
     org.setHref(calAddr);
+    if (pi != null) {
+      org.setCommonName(pi.getFirstname() + " " + pi.getLastname());
+    }
 
     in.setOrganizer(org);
 

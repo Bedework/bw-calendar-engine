@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
@@ -351,6 +352,10 @@ public class CalSvcDb extends Logged implements Serializable {
 
   protected PrincipalInfo getPrincipalInfo() throws CalFacadeException {
     return svci.getPrincipalInfo();
+  }
+
+  protected BwPrincipalInfo getBwPrincipalInfo() throws CalFacadeException {
+    return svci.getDirectories().getDirInfo(getPrincipal());
   }
 
   /**

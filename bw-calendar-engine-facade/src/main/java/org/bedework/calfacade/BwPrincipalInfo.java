@@ -152,8 +152,8 @@ public class BwPrincipalInfo extends Logged
    */
   public static class IntPrincipalProperty extends PrincipalProperty<Integer> {
     /**
-     * @param name
-     * @param val
+     * @param name of property
+     * @param val of property
      */
     public IntPrincipalProperty(final String name,
                                 final Integer val) {
@@ -167,8 +167,8 @@ public class BwPrincipalInfo extends Logged
    */
   public static class BooleanPrincipalProperty extends PrincipalProperty<Boolean> {
     /**
-     * @param name
-     * @param val
+     * @param name of property
+     * @param val of property
      */
     public BooleanPrincipalProperty(final String name,
                                     final Boolean val) {
@@ -205,8 +205,8 @@ public class BwPrincipalInfo extends Logged
    */
   public static class ImagePrincipalProperty extends PrincipalProperty<ImagePropertyVal> {
     /**
-     * @param name
-     * @param val
+     * @param name of property
+     * @param val of property
      */
     public ImagePrincipalProperty(final String name,
                                   final ImagePropertyVal val) {
@@ -231,7 +231,7 @@ public class BwPrincipalInfo extends Logged
 
   /** Info about properties */
   public static class PrincipalPropertyInfo {
-    private Property.Id vcardPname;
+    private final Property.Id vcardPname;
 
     /** Name of property */
     public String name;
@@ -339,7 +339,7 @@ public class BwPrincipalInfo extends Logged
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val href
    */
   public void setPrincipalHref(final String val) {
     principalHref = val;
@@ -367,7 +367,7 @@ public class BwPrincipalInfo extends Logged
   }
 
   /**
-   * @param val
+   * @param val last name
    */
   public void setLastname(final String val) {
     lastname = val;
@@ -381,7 +381,7 @@ public class BwPrincipalInfo extends Logged
   }
 
   /**
-   * @param val
+   * @param val first name
    */
   public void setFirstname(final String val) {
     firstname = val;
@@ -505,7 +505,7 @@ public class BwPrincipalInfo extends Logged
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val the property
    */
   public void addProperty(final PrincipalProperty val) {
     List<PrincipalProperty> c = getProperties();
