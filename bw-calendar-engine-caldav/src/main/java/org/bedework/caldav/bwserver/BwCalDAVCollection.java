@@ -176,6 +176,10 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
       return CalDAVCollection.calTypeCalendarCollection;
     }
 
+    if (calType == BwCalendar.calTypeTasks) {
+      return CalDAVCollection.calTypeCalendarCollection;
+    }
+
     return CalDAVCollection.calTypeUnknown;
   }
 
