@@ -254,9 +254,8 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
   public void addResource(final BwCalSuite suite,
                           final BwResource res,
                           final ResourceClass cl) throws CalFacadeException {
-    final BwCalendar resCol = getResourcesDir(suite, cl);
-
-    getRess().save(resCol.getPath(), res, false);
+    res.setColPath(getResourcesPath(suite, cl));
+    getRess().save(res, false);
   }
 
   @Override

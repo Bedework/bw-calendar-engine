@@ -61,7 +61,8 @@ public abstract class DAOBase extends Logged {
     getSess().saveOrUpdate(val);
   }
 
-  protected void save(final BwUnversionedDbentity val) throws CalFacadeException {
+  protected void save(final BwUnversionedDbentity val)
+          throws CalFacadeException {
     getSess().save(val);
   }
 

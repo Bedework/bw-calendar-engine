@@ -97,6 +97,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
     final BwResource noteRsrc = new BwResource();
     noteRsrc.setName(val.getName());
+    noteRsrc.setColPath(ncol.getPath());
     noteRsrc.setEncoding(val.getNotification().getEncoding());
 
     final BwResourceContent rc = new BwResourceContent();
@@ -120,8 +121,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
     }
 
     for (int i = 0; i <= 100; i++) {
-      if (getRess().saveNotification(ncol.getPath(),
-                                     noteRsrc)) {
+      if (getRess().saveNotification(noteRsrc)) {
         getNoteClient().informNotifier(getPrincipalHref(), 
                                        noteRsrc.getName());
 

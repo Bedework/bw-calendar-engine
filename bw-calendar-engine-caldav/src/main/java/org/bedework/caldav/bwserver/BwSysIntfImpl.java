@@ -1536,20 +1536,17 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#makeCollection(org.bedework.caldav.server.CalDAVCollection)
-   */
   @Override
   public int makeCollection(final CalDAVCollection col) throws WebdavException {
-    BwCalendar bwCol = unwrap(col);
+    final BwCalendar bwCol = unwrap(col);
 
     try {
       getSvci().getCalendarsHandler().add(bwCol, bwCol.getColPath());
       return HttpServletResponse.SC_CREATED;
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
-    } catch (CalFacadeException cfe) {
-      String msg = cfe.getMessage();
+    } catch (final CalFacadeException cfe) {
+      final String msg = cfe.getMessage();
       if (CalFacadeException.duplicateCalendar.equals(msg)) {
         throw new WebdavForbidden(WebdavTags.resourceMustBeNull);
       }
@@ -1557,7 +1554,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
         throw new WebdavForbidden();
       }
       throw new WebdavException(cfe);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
@@ -1677,14 +1674,15 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
 
   @Override
   public void deleteCollection(final CalDAVCollection col,
-                               final boolean sendSchedulingMessage) throws WebdavException {
+                               final boolean sendSchedulingMessage)
+          throws WebdavException {
     try {
       getSvci().getCalendarsHandler().delete(unwrap(col), true,
                                              sendSchedulingMessage);
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
-    } catch (CalFacadeException ce) {
-      String msg = ce.getMessage();
+    } catch (final CalFacadeException ce) {
+      final String msg = ce.getMessage();
 
       if (CalFacadeException.cannotDeleteDefaultCalendar.equals(msg) ||
           CalFacadeException.cannotDeleteCalendarRoot.equals(msg)) {
@@ -1692,7 +1690,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
       } else {
         throw new WebdavException(ce);
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }
@@ -1790,13 +1788,10 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
    *                   Files
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#newResourceObject(java.lang.String)
-   */
   @Override
   public CalDAVResource newResourceObject(final String parentPath) throws WebdavException {
-    CalDAVResource r = new BwCalDAVResource(this,
-                                            null);
+    final CalDAVResource r = new BwCalDAVResource(this,
+                                                  null);
 
     r.setParentPath(parentPath);
     r.setOwner(currentPrincipal);
@@ -1804,19 +1799,18 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
     return r;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#putFile(org.bedework.caldav.server.CalDAVCollection, org.bedework.caldav.server.CalDAVResource)
-   */
   @Override
   public void putFile(final CalDAVCollection coll,
                       final CalDAVResource val) throws WebdavException {
     try {
-      getSvci().getResourcesHandler().save(coll.getPath(),
-                                           getRsrc(val),
+      final BwResource rsrc = getRsrc(val);
+      rsrc.setColPath(coll.getPath());
+
+      getSvci().getResourcesHandler().save(rsrc,
                                            false);
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }

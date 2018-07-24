@@ -67,17 +67,19 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
   /** Get an svci object as a different user.
    *
    * @param principalHref of user
+   * @param logId for log messages
    * @return CalSvcI
    * @throws CalFacadeException on fatal error
    */
-  protected CalSvcI getSvci(final String principalHref) throws CalFacadeException {
-    CalSvcI svci;
+  protected CalSvcI getSvci(final String principalHref,
+                            final String logId) throws CalFacadeException {
+    final CalSvcI svci;
 
     /* account is what we authenticated with.
      * user, if non-null, is the user calendar we want to access.
      */
     final CalSvcIPars runAsPars =
-            CalSvcIPars.getServicePars("scheduler",
+            CalSvcIPars.getServicePars(logId,
                                        principalHref,//principal.getAccount(),
                                        false,   // publicAdmin
                                        "/principals/users/root".equals(principalHref));  // allow SuperUser

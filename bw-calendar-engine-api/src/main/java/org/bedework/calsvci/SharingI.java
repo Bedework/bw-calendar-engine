@@ -39,7 +39,7 @@ public interface SharingI extends Serializable {
    * @param col MUST be a sharable collection
    * @param share the request
    * @return list of ok and !ok sharees
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   ShareResultType share(final String principalHref,
                         final BwCalendar col,
@@ -49,14 +49,14 @@ public interface SharingI extends Serializable {
    * @param col MUST be a sharable collection
    * @param share the request
    * @return list of ok and !ok sharees
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   ShareResultType share(final BwCalendar col,
                         final ShareType share) throws CalFacadeException;
 
   /**
    */
-  public static class ReplyResult {
+  class ReplyResult {
     /** true for fine */
     private boolean ok;
 
@@ -117,37 +117,37 @@ public interface SharingI extends Serializable {
    * @param col MUST be current sharees home
    * @param reply the request
    * @return a ReplyResult object.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   ReplyResult reply(final BwCalendar col,
                     final InviteReplyType reply) throws CalFacadeException;
 
   /**
-   * @param col
+   * @param col to check
    * @return current invitations
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   InviteType getInviteStatus(final BwCalendar col) throws CalFacadeException;
 
   /** Do any cleanup necessary for a collection delete.
    *
-   * @param col
-   * @throws CalFacadeException
+   * @param col to delete
+   * @throws CalFacadeException on fatal error
    */
   void delete(final BwCalendar col) throws CalFacadeException;
 
   /** Publish the collection - that is make it available for subscriptions.
    *
-   * @param col
-   * @throws CalFacadeException
+   * @param col to publish
+   * @throws CalFacadeException on fatal error
    */
   void publish(BwCalendar col) throws CalFacadeException;
 
   /** Unpublish the collection - that is make it unavailable for subscriptions
    * and remove any existing subscriptions.
    *
-   * @param col
-   * @throws CalFacadeException
+   * @param col to unpublish
+   * @throws CalFacadeException on fatal error
    */
   void unpublish(BwCalendar col) throws CalFacadeException;
 
@@ -163,23 +163,23 @@ public interface SharingI extends Serializable {
 
   /** Subscribe to the collection - must be a published collection.
    *
-   * @param colPath
+   * @param colPath of collection
    * @param subscribedName name for new alias
    * @return path of new alias and flag
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   SubscribeResult subscribe(String colPath,
                             String subscribedName) throws CalFacadeException;
 
   /** Subscribe to an external url.
    *
-   * @param extUrl
+   * @param extUrl external url
    * @param subscribedName name for new alias
    * @param refresh - refresh rate in minutes <= 0 for default
    * @param remoteId - may be null
    * @param remotePw  - may be null
    * @return path of new alias and flag
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   SubscribeResult subscribeExternal(String extUrl,
                                     String subscribedName,
@@ -192,7 +192,7 @@ public interface SharingI extends Serializable {
    * current principal.
    *
    * @param col alias to unsubscribe
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   void unsubscribe(BwCalendar col) throws CalFacadeException;
 }

@@ -135,7 +135,7 @@ public class Notifier extends AbstractScheduler {
       }
 
       try {
-        getSvci(targetPrincipal);
+        getSvci(targetPrincipal, "notifier-appr");
 
         /* See if we have any notifications for this entity
            *
@@ -232,7 +232,7 @@ public class Notifier extends AbstractScheduler {
       }
 
       try {
-        getSvci(targetPrincipal);
+        getSvci(targetPrincipal, "notifier-sug");
 
           /* See if we have any notifications for this entity
            *
@@ -362,7 +362,7 @@ public class Notifier extends AbstractScheduler {
   private ProcessMessageResult doChangeNotification(final OwnedHrefEvent msg,
                                                     final NotificationType note) throws CalFacadeException {
     try {
-      getSvci(msg.getOwnerHref());
+      getSvci(msg.getOwnerHref(), "notifier-chg");
 
       // Normalized
       final String ownerHref = getPrincipalHref();

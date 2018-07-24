@@ -797,7 +797,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                                                null,
                                                                null);
 
-    /* If it' an alias we just delete it - otherwise we might need to empty it.
+    /* If it's an alias we just delete it - otherwise we might need to empty it.
      */
     if (!val.getInternalAlias() && emptyIt) {
       if (val.getCalendarCollection()) {

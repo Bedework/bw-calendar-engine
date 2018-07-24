@@ -678,10 +678,18 @@ public class CalintfImpl extends CalintfROImpl {
 
   @Override
   public boolean deleteCalendar(final BwCalendar val,
-                                final boolean reallyDelete) throws CalFacadeException {
+                                final boolean reallyDelete)
+          throws CalFacadeException {
     checkOpen();
 
     return calendars.deleteCalendar(val, reallyDelete);
+  }
+
+  @Override
+  public boolean isEmpty(final BwCalendar val) throws CalFacadeException {
+    checkOpen();
+
+    return calendars.isEmpty(val);
   }
 
   @Override
@@ -1326,15 +1334,20 @@ public class CalintfImpl extends CalintfROImpl {
 
   @Override
   public BwResource getResource(final String href,
-                                final int desiredAccess) throws CalFacadeException {
+                                final int desiredAccess)
+          throws CalFacadeException {
     final int pos = href.lastIndexOf("/");
-    if (pos < 0) {
+    if (pos <= 0) {
       throw new RuntimeException("Bad href: " + href);
     }
 
     final String name = href.substring(pos + 1);
 
     final String colPath = href.substring(0, pos);
+
+    if (debug) {
+      debug("Get resource " + colPath + " -> " + name);
+    }
     final BwResource res = entityDao.getResource(name, colPath,
                                                  desiredAccess);
     if (res == null) {
@@ -1369,6 +1382,7 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public void add(final BwResource val) throws CalFacadeException {
     entityDao.save(val);
+
     getIndexer(val).indexEntity(val);
   }
 

@@ -81,7 +81,7 @@ public class InScheduler extends AbstractScheduler {
               msg.getOwnerHref());
       }
 
-      svci = getSvci(msg.getOwnerHref());
+      svci = getSvci(msg.getOwnerHref(), "in-scheduler-upd");
 
       final EventInfo ei =
               svci.getEventsHandler().get(getParentPath(msg.getHref()),
@@ -152,7 +152,7 @@ public class InScheduler extends AbstractScheduler {
         trace("InSchedule inbox entry for principal " +
               msg.getOwnerHref());
       }
-      svci = getSvci(msg.getOwnerHref());
+      svci = getSvci(msg.getOwnerHref(), "in-scheduler-qev");
 
       ei = getInboxEvent(svci, msg.getName());
 

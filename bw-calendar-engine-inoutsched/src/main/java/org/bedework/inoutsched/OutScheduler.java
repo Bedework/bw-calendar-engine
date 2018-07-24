@@ -81,7 +81,7 @@ public class OutScheduler extends AbstractScheduler {
               msg.getOwnerHref());
       }
 
-      svci = getSvci(msg.getOwnerHref());
+      svci = getSvci(msg.getOwnerHref(), "out-scheduler");
 
       return processOutBox();
     } catch (CalFacadeStaleStateException csse) {

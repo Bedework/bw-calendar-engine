@@ -49,16 +49,15 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     super(svci);
   }
 
-  public boolean saveNotification(final String path,
-                           final BwResource val) throws CalFacadeException {
-    return save(path, val, true, true);
+  public boolean saveNotification(final BwResource val)
+          throws CalFacadeException {
+    return save(val, true, true);
   }
 
   @Override
-  public boolean save(final String path,
-                      final BwResource val,
+  public boolean save(final BwResource val,
                       final boolean returnIfExists) throws CalFacadeException {
-    return save(path, val, false, returnIfExists);
+    return save(val, false, returnIfExists);
   }
 
   @Override
@@ -275,8 +274,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
   }
 
   @Override
-  public int reindex(BwIndexer indexer) throws CalFacadeException {
-    Iterator<BwResource> ents;
+  public int reindex(final BwIndexer indexer) throws CalFacadeException {
+    final Iterator<BwResource> ents;
 
     if (isPublicAdmin()) {
       ents = getSvc().getPublicObjectIterator(BwResource.class.getName());
@@ -288,7 +287,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     final Set<String> checkedCollections = new TreeSet<>();
 
     while (ents.hasNext()) {
-      BwResource ent = ents.next();
+      final BwResource ent = ents.next();
       if (!ent.getTombstoned()) {
         try {
           getContent(ent);
@@ -355,11 +354,16 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     return getCal().getResources(path, true, lastmod, -1);
   }
 
-  private boolean save(final String path,
-                       final BwResource val,
+  private boolean save(final BwResource val,
                        final boolean forNotification,
                        final boolean returnIfExists) throws CalFacadeException {
     try {
+      final String path = val.getColPath();
+      if (path == null) {
+        throw new CalFacadeException("No col path for " + val.getName());
+      }
+
+
       final BwCalendar coll = getCols().get(path);
 
       if (coll == null) {
