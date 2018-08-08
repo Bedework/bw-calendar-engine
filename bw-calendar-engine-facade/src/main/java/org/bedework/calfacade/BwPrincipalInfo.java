@@ -579,7 +579,7 @@ public class BwPrincipalInfo extends Logged
         break;
       }
 
-      final String[] split = p.getValue().split(",");
+      final String[] split = p.getValue().split(";");
       if (split.length > 0) {
         setLastname(split[0]);
       }
