@@ -626,6 +626,11 @@ public class Sharing extends CalSvcDb implements SharingI {
       reply.setInReplyTo(col.getName());
       reply.setSummary(col.getSummary());
 
+      final BwPrincipalInfo pi = getBwPrincipalInfo();
+      if (pi != null) {
+        reply.setCommonName(pi.getFirstname() + " " + pi.getLastname());
+      }
+
       note.setNotification(reply);
 
       getSvc().getNotificationsHandler().add(note);
