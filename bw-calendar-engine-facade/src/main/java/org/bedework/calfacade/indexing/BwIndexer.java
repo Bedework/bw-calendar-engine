@@ -268,6 +268,24 @@ public interface BwIndexer extends Serializable {
                                           int offset,
                                           int num,
                                           int desiredAccess) throws CalFacadeException;
+
+  /** Called to unindex a tombstoned entity.
+   *
+   * @param docType type of document
+   * @param   href     of entity to delete
+   * @throws CalFacadeException on error
+   */
+  void unindexTombstoned(String docType,
+                         String href) throws CalFacadeException;
+
+  /** Called to unindex entities in a collection. This is used when
+   * deleting a collection. All entities should be tombstoned
+   *
+   * @param   colPath     of entities to delete
+   * @throws CalFacadeException on error
+   */
+  void unindexContained(String colPath) throws CalFacadeException;
+
   /** Called to unindex an entity
    *
    * @param   val     an event property
@@ -439,13 +457,24 @@ public interface BwIndexer extends Serializable {
                                          final int desiredAccess,
                                          PropertyInfoIndex... index) throws CalFacadeException;
 
-  /** Fetch children of the collection with the given href.
+  /** Fetch children of the collection with the given href. Tombstoned
+   * collections are excluded
    *
    * @param href of parent
    * @return possibly empty list of children
    * @throws CalFacadeException on error
    */
   Collection<BwCalendar> fetchChildren(String href) throws CalFacadeException;
+
+  /** Fetch children of the collection with the given href.
+   *
+   * @param href of parent
+   *
+   * @return possibly empty list of children
+   * @throws CalFacadeException on error
+   */
+  Collection<BwCalendar> fetchChildren(String href,
+                                       boolean excludeTombstoned) throws CalFacadeException;
 
   /** Fetch children at any depth of the collection with the given href.
    *

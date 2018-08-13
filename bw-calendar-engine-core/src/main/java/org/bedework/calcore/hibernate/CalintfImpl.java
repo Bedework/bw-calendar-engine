@@ -711,9 +711,8 @@ public class CalintfImpl extends CalintfROImpl {
 
   @Override
   public Set<BwCalendar> getSynchCols(final String path,
-                                      final String lastmod,
-                                      final BwIndexer indexer) throws CalFacadeException {
-    return calendars.getSynchCols(path, lastmod, indexer);
+                                      final String lastmod) throws CalFacadeException {
+    return calendars.getSynchCols(path, lastmod);
   }
 
   @Override

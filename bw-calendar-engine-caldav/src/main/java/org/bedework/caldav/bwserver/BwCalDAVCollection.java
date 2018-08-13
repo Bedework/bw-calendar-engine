@@ -40,12 +40,11 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   private BwCalendar col;
 
   /**
-   * @param intf
-   * @param col
-   * @throws WebdavException
+   * @param intf the system interface
+   * @param col the collection
    */
   BwCalDAVCollection(final BwSysIntfImpl intf,
-                     final BwCalendar col) throws WebdavException {
+                     final BwCalendar col) {
     this.intf = intf;
     this.col = col;
   }

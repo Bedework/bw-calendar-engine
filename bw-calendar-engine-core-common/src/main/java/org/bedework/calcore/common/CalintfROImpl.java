@@ -687,12 +687,11 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Set<BwCalendar> getSynchCols(final String path,
-                                      final String token,
-                                      final BwIndexer indexer) throws CalFacadeException {
+                                      final String token) throws CalFacadeException {
     final Collection<BwCalendar> cols;
 
     final Collection<BwCalendar> icols =
-            getIndexer(indexer).fetchChildren(path);
+            getIndexer().fetchChildren(path, false);
     cols = new ArrayList<>();
 
     for (final BwCalendar col: icols) {

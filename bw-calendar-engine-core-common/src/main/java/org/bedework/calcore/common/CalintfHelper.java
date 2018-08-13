@@ -53,12 +53,15 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.misc.Logged;
+import org.bedework.util.misc.Util;
 
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Collection;
+
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 
 /** Class used as basis for a number of helper classes.
  *
@@ -268,6 +271,10 @@ public abstract class CalintfHelper extends Logged
     }
   }
 
+  protected void unindex(final BwCalendar col) throws CalFacadeException {
+    getIndexer(col).unindexEntity(BwIndexer.docTypeCollection, col.getHref());
+  }
+
   /** Called to notify container that an event occurred. This method should
    * queue up notifications until after transaction commit as consumers
    * should only receive notifications when the actual data has been written.
@@ -407,15 +414,7 @@ public abstract class CalintfHelper extends Logged
   }
 
   protected String fixPath(final String path) {
-    if (path.length() <= 1) {
-      return path;
-    }
-
-    if (path.endsWith("/")) {
-      return path.substring(0, path.length() - 1);
-    }
-
-    return path;
+    return Util.buildPath(colPathEndsWithSlash, path);
   }
 
   protected AuthProperties getAuthprops() throws CalFacadeException {

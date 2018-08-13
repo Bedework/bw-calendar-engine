@@ -303,13 +303,11 @@ public interface CoreCalendarsI extends Serializable {
    *
    * @param path - must be non-null
    * @param lastmod - limit search, may be null
-   * @param indexer - if non-null use this
    * @return list of collection paths.
    * @throws CalFacadeException on error
    */
   Set<BwCalendar> getSynchCols(String path,
-                               String lastmod,
-                               BwIndexer indexer) throws CalFacadeException;
+                               String lastmod) throws CalFacadeException;
 
   /** Return true if the collection has changed as defined by the sync token.
    *

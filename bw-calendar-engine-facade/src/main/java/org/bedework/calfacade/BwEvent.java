@@ -890,6 +890,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    *  @param val    boolean true if the event is tombstoned
    */
+  @IcalProperty(pindex = PropertyInfoIndex.TOMBSTONED,
+          eventProperty = true,
+          todoProperty = true,
+          journalProperty = true
+  )
   public void setTombstoned(final Boolean val) {
     tombstoned = val;
   }

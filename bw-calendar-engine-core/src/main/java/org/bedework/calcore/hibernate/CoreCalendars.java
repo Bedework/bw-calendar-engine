@@ -319,10 +319,10 @@ class CoreCalendars extends CalintfHelper
                              final String newName) throws CalFacadeException {
     intf.colCache.flush();
 
-    /* update will check access
-     */
+    ac.checkAccess(val, privWriteProperties, false);
 
-    final BwCalendar parent = dao.getCollection(val.getColPath());
+    final String parentPath = val.getColPath();
+    final BwCalendar parent = dao.getCollection(parentPath);
 
     /* Ensure the name isn't reserved and the path is unique */
     checkNewCalendarName(newName, false, parent);
@@ -332,16 +332,19 @@ class CoreCalendars extends CalintfHelper
     val.setName(newName);
     val.updateLastmod(getCurrentTimestamp());
 
+    /* Remove any tombstoned collection with the same name */
+    dao.removeTombstonedVersion(val);
+    getIndexer(val).unindexEntity(docTypeCollection,
+                                  Util.buildPath(colPathEndsWithSlash,
+                                                 parentPath,
+                                                 "/",
+                                                 val.getName()));
+
     /* This triggers off a cascade of updates down the tree as we are storing the
      * path in the calendar objects. This may be preferable to calculating the
      * path at every access
      */
     updatePaths(val, parent);
-
-    /* Remove any tombstoned collection with the same name */
-    dao.removeTombstonedVersion(val);
-
-    error("Unimplemented - remove tombstoned from index");
 
     // Flush it again
     intf.colCache.flush();
@@ -379,11 +382,12 @@ class CoreCalendars extends CalintfHelper
      */
     updatePaths(val, newParent);
 
-    /* Remove any tombstoned collection with the same name */
+    /* Remove any tombstoned collection with the same name
+      probably not needed
     dao.removeTombstonedVersion(val);
 
     error("Unimplemented - remove tombstoned from index");
-
+    */
     // Flush it again
     intf.colCache.flush();
   }
@@ -496,8 +500,7 @@ class CoreCalendars extends CalintfHelper
 
     /* Ensure no tombstoned events or childen */
     dao.removeTombstoned(fixPath(path));
-
-    error("Not implemented - remove tombstoned children from index");
+    getIndexer(val).unindexContained(fixPath(path));
 
     if (reallyDelete) {
       dao.deleteCalendar(unwrapped);
@@ -618,40 +621,10 @@ class CoreCalendars extends CalintfHelper
 
   @Override
   public Set<BwCalendar> getSynchCols(final String path,
-                                      final String token,
-                                      final BwIndexer indexer) throws CalFacadeException {
-    final Collection<BwCalendar> cols;
-
-    if (indexer == null) {
-      //noinspection unchecked
-      cols = dao.getSynchCollections(fixPath(path),
-                                     token);
-    } else {
-      final Collection<BwCalendar> icols = indexer.fetchChildren(path);
-      cols = new ArrayList<>();
-
-      for (final BwCalendar col: icols) {
-        if (token != null) {
-          final String lastmod = token.substring(0, 16);
-          final Integer seq = Integer.parseInt(token.substring(17), 16);
-
-          if (col.getLastmod().getTimestamp().compareTo(lastmod) < 0) {
-            continue;
-          }
-
-          if ((col.getLastmod().getTimestamp().compareTo(lastmod) == 0) &&
-                  (col.getLastmod().getSequence() <= seq)) {
-            continue;
-          }
-        }
-
-        if ((col.getCalType() != 7) && (col.getCalType() != 8)) {
-          continue;
-        }
-
-        cols.add(col);
-      }
-    }
+                                      final String token) throws CalFacadeException {
+    final Collection<BwCalendar> cols =
+            dao.getSynchCollections(fixPath(path),
+                                    token);
 
     final Set<BwCalendar> res = new TreeSet<>();
 
@@ -1053,7 +1026,8 @@ class CoreCalendars extends CalintfHelper
     }
 
     /* Remove any tombstoned collection with the same name */
-    dao.removeTombstonedVersion(val);
+    // Not necessary? We just overwrite
+    //dao.removeTombstonedVersion(val);
 
     // No cascades - explicitly save child
     dao.saveCollection(unwrap(val));
@@ -1078,6 +1052,8 @@ class CoreCalendars extends CalintfHelper
     final Collection<BwCalendar> children = getChildren(val);
 
     final String oldHref = val.getPath();
+
+    unindex(val);
 
     val = unwrap(val);
 

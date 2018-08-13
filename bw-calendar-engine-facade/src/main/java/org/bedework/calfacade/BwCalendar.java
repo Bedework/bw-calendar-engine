@@ -1692,9 +1692,12 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
      * currently the lastmod is linked via the path - better linked by id
      */
 
+    /* I don't think this is true - the tombstoned version replaces the
+       original - leave these alone
     setName(getName() + tombstonedSuffix);
     setPath(getPath() + tombstonedSuffix);
     getLastmod().setPath(getPath());
+     */
   }
 
   /** Is this collection shared?

@@ -484,10 +484,29 @@ class CoreCalendarsDAO extends DAOBase {
   }
 
   protected void removeTombstonedVersion(final BwCalendar val) throws CalFacadeException {
-    final BwCalendar col = getCollection(val.getPath() + BwCalendar.tombstonedSuffix);
+    final BwCalendar col =
+            getTombstonedCollection(val.getPath());
 
     if (col != null) {
       deleteCalendar(col);
     }
+  }
+
+  private static final String getTombstonedCollectionByPathQuery =
+          "from " + BwCalendar.class.getName() + " as cal " +
+                  "where cal.path=:path and " +
+
+          // XXX tombstone-schema
+          "col.filterExpr = :tsfilter";
+
+
+  public BwCalendar getTombstonedCollection(final String path) throws CalFacadeException {
+    final HibSession sess = getSess();
+
+    sess.createQuery(getTombstonedCollectionByPathQuery);
+    sess.setString("path", path);
+    sess.setString("tsfilter", BwCalendar.tombstonedFilter);
+
+    return (BwCalendar)sess.getUnique();
   }
 }

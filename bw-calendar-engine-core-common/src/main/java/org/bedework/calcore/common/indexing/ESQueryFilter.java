@@ -570,6 +570,11 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
       }
     }
 
+    // Always exclude tombstoned here
+
+    fb = termFilter(fb, PropertyInfoIndex.TOMBSTONED,
+                    "false");
+
     if (delState == includeDeleted) {
       return fb;
     }
@@ -808,6 +813,37 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
                                   final String href) throws CalFacadeException {
     return and(filter,
                FilterBuilders.termFilter(hrefJname, href),
+               null);
+  }
+
+  /** Add a filter for the collection path.
+   *
+   * @param filter - or null
+   * @param colPath to match
+   * @return a filter
+   * @throws CalFacadeException on error
+   */
+  public FilterBuilder colPathFilter(final FilterBuilder filter,
+                                     final String colPath) throws CalFacadeException {
+    return and(filter,
+               FilterBuilders.termFilter(colpathJname, colPath),
+               null);
+  }
+
+  /** Add a filter for the term.
+   *
+   * @param filter - or null
+   * @param pi of field
+   * @param val to match
+   * @return a filter
+   * @throws CalFacadeException on error
+   */
+  public FilterBuilder termFilter(final FilterBuilder filter,
+                                  final PropertyInfoIndex pi,
+                                  final String val)
+          throws CalFacadeException {
+    return and(filter,
+               FilterBuilders.termFilter(getJname(pi), val),
                null);
   }
 

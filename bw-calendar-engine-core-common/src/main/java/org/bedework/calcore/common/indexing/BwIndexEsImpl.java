@@ -129,7 +129,6 @@ import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermFilterBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
@@ -1682,6 +1681,72 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   }
 
   @Override
+  public void unindexContained(final String colPath)
+          throws CalFacadeException {
+    try {
+      final DeleteByQueryRequestBuilder dqrb = getClient()
+              .prepareDeleteByQuery(
+                      targetIndex);
+
+      FilterBuilder fb = getFilters(null).colPathFilter(null, colPath);
+
+      dqrb.setQuery(new FilteredQueryBuilder(null, fb));
+
+      /*final DeleteByQueryResponse resp = */
+      dqrb.execute().actionGet();
+
+      markUpdated(null);
+
+      // TODO check response?
+    } catch (final ElasticsearchException ese) {
+      // Failed somehow
+      error(ese);
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      error(t);
+      throw new CalFacadeException(t);
+    } finally {
+      lastIndexTime = System.currentTimeMillis();
+    }
+  }
+
+  @Override
+  public void unindexTombstoned(final String docType,
+                                final String href)
+          throws CalFacadeException {
+    try {
+      final DeleteByQueryRequestBuilder dqrb = getClient()
+              .prepareDeleteByQuery(
+                      targetIndex);
+
+      FilterBuilder fb = getFilters(null)
+              .singleEntityFilter(docType,
+                                  href,
+                                  PropertyInfoIndex.HREF);
+
+      dqrb.setQuery(new FilteredQueryBuilder(null, fb));
+
+      /*final DeleteByQueryResponse resp = */
+      dqrb.execute().actionGet();
+
+      markUpdated(docType);
+
+      // TODO check response?
+    } catch (final ElasticsearchException ese) {
+      // Failed somehow
+      error(ese);
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      error(t);
+      throw new CalFacadeException(t);
+    } finally {
+      lastIndexTime = System.currentTimeMillis();
+    }
+  }
+
+  @Override
   public void unindexEntity(final BwEventProperty val)
           throws CalFacadeException {
     unindexEntity(docTypeFromClass(val.getClass()),
@@ -1753,10 +1818,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       info("Index created: change token set to " + currentChangeToken());
 
       return newName;
-    } catch (final ElasticsearchException ese) {
-      // Failed somehow
-      error(ese);
-      return null;
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
@@ -2102,8 +2163,23 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   @Override
   public Collection<BwCalendar> fetchChildren(final String href)
           throws CalFacadeException {
+    return fetchChildren(href, true);
+  }
+
+  @Override
+  public Collection<BwCalendar> fetchChildren(final String href,
+                                              final boolean excludeTombstoned)
+          throws CalFacadeException {
     if (debug) {
       debug("fetchChildren for " + href);
+    }
+
+    final ESQueryFilter filters = getFilters(null);
+    FilterBuilder fb = filters.colPathFilter(null, href);
+
+    if (excludeTombstoned) {
+      fb = filters.termFilter(fb, PropertyInfoIndex.TOMBSTONED,
+                              "false");
     }
 
     final List<BwCalendar> cols =
@@ -2116,10 +2192,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                                          makeCollection(eb));
                                }
                              },
-                             new TermFilterBuilder(
-                                     EntityBuilder.getJname(
-                                             PropertyInfoIndex.COLPATH),
-                                     href),
+                             fb,
                           -1);
 
     if (Util.isEmpty(cols)) {

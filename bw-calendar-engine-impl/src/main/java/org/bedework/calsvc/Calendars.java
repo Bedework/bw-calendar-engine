@@ -757,7 +757,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   Set<BwCalendar> getSynchCols(final String path,
                                final String lastmod) throws CalFacadeException {
-    return getCal().getSynchCols(path, lastmod, null);
+    return getCal().getSynchCols(path, lastmod);
   }
 
   boolean delete(final BwCalendar val,
