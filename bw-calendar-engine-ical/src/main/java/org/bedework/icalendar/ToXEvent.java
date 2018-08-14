@@ -118,12 +118,12 @@ public class ToXEvent extends Xutil {
   /** Make a BaseComponentType component from a BwEvent object. This may produce a
    * VEvent, VTodo or VJournal.
    *
-   * @param val
+   * @param val the event
    * @param isOverride - true if event object is an override
    * @param pattern - if non-null limit returned components and values to those
    *                  supplied in the pattern.
-   * @return JAXBElement<? extends BaseComponentType>
-   * @throws CalFacadeException
+   * @return converted to a JAXBElement
+   * @throws CalFacadeException on fatal error
    */
   public static JAXBElement<? extends BaseComponentType>
                     toComponent(final BwEvent val,

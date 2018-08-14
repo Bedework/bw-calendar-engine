@@ -449,6 +449,12 @@ public class Xutil {
       aop.getBaseParameter().add(of.createTzid(tz));
       return;
     }
+
+    if (xp.getName().equalsIgnoreCase("altrep")) {
+      altrepProp(prop, xp.getValue());
+
+      return;
+    }
   }
 
   protected static boolean emit(final BaseComponentType pattern,
