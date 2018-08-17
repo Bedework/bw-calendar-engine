@@ -68,6 +68,7 @@
     <orderEntry type="library" name="Maven: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
     <orderEntry type="library" name="Maven: javax.annotation:jsr250-api:1.0" level="project" />
     <orderEntry type="library" name="Maven: javax.inject:javax.inject:1" level="project" />
+    <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="module" module-name="bw-util-indexing" />
     <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="module" module-name="bw-util2-calendar" />

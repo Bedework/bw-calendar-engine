@@ -217,9 +217,10 @@ public class BwIndexApp extends JmsSysEventListener {
     try {
       messageCount++;
 
+      /*
       if (props.getDiscardMessages()) {
         return;
-      }
+      }*/
 
       msgProc.processMessage(ev);
     } catch (final Throwable t) {

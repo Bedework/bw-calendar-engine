@@ -200,7 +200,12 @@ public interface SysEventBase extends Serializable {
     SUGGESTED(info, priv, notIndexable, isNotifiableEvent, false),
 
     /** Response from suggestion to another group */
-    SUGGESTED_RESPONSE(info, priv, notIndexable, isNotifiableEvent, false);
+    SUGGESTED_RESPONSE(info, priv, notIndexable, isNotifiableEvent, false),
+
+    /* ========= Reindexing =========== */
+
+    /** Rindex event */
+    REINDEX_EVENT(info, priv);
 
     private final int severity;
 

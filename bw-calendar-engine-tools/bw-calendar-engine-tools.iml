@@ -76,6 +76,7 @@
     <orderEntry type="library" name="Maven: javax.annotation:jsr250-api:1.0" level="project" />
     <orderEntry type="library" name="Maven: javax.inject:javax.inject:1" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
+    <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="module" module-name="bw-util-args" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-bwlicense:4.0.5" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-csv:1.2" level="project" />

@@ -658,6 +658,15 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   @Override
+  public void reindex(final EventInfo ei) {
+    try {
+      getCal().reindex(ei);
+    } catch(final Throwable t) {
+      error(t);
+    }
+  }
+
+  @Override
   public UpdateResult update(final EventInfo ei,
                              final boolean noInvites) throws CalFacadeException {
     return update(ei, noInvites, null, false);

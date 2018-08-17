@@ -18,6 +18,12 @@
 		</dependency>
 
     <dependency>
+      <groupId>org.bedework.caleng</groupId>
+      <artifactId>bw-calendar-engine-sysevents-msgs</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-indexing</artifactId>
     </dependency>
@@ -37,6 +43,7 @@
       <artifactId>bw-xml-synchws</artifactId>
       <scope>provided</scope>
     </dependency>
+
 		<!-- Third Party Dependencies -->
 	</dependencies>
 </project>

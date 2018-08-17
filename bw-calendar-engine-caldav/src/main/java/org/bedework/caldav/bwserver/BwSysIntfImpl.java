@@ -1107,9 +1107,6 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
    *                   Events
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#addEvent(org.bedework.caldav.server.CalDAVEvent, boolean, boolean)
-   */
   @Override
   public Collection<CalDAVEvent> addEvent(final CalDAVEvent ev,
                                           final boolean noInvites,
@@ -1157,6 +1154,17 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
       throw new WebdavException(cfe);
     } catch (Throwable t) {
       throw new WebdavException(t);
+    }
+  }
+
+  @Override
+  public void reindexEvent(final CalDAVEvent event) {
+    try {
+      EventInfo ei = getEvinfo(event);
+
+      getSvci().getEventsHandler().reindex(ei);
+    } catch (Throwable t) {
+      error(t);
     }
   }
 

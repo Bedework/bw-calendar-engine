@@ -649,6 +649,11 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   @Override
+  public void reindex(final EventInfo ei) {
+    throw new RuntimeException("Should be handled by interface");
+  }
+
+  @Override
   public UpdateEventResult updateEvent(final EventInfo ei) throws CalFacadeException {
     final BwEvent val = ei.getEvent();
     final Collection<BwEventProxy> overrides = ei.getOverrideProxies();

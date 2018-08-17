@@ -173,6 +173,12 @@ public interface CoreEventsI extends Serializable {
                                     boolean scheduling,
                                     boolean rollbackOnError) throws CalFacadeException;
 
+  /** Reindex an event by sending an async notification.
+   *
+   * @param ei           EventInfo object to be reindexed
+   */
+  public void reindex(EventInfo ei);
+
   /** Update an event in the database.
    *
    * <p>This method will set any synchronization state entries to modified

@@ -80,6 +80,8 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.Granulator.EventPeriod;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.sysevents.events.EntityEvent;
+import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
@@ -1104,6 +1106,22 @@ public class CalintfROImpl extends CalintfBase
                                     final boolean scheduling,
                                     final boolean rollbackOnError) throws CalFacadeException {
     throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void reindex(EventInfo ei) {
+    try {
+      final BwEvent ev = ei.getEvent();
+
+      postNotification(
+              new EntityEvent(SysEventBase.SysCode.REINDEX_EVENT,
+                              ev.getOwnerHref(),
+                              ev.getOwnerHref(),
+                              ev.getHref(),
+                              null));
+    } catch (final Throwable t) {
+      error(t);
+    }
   }
 
   @Override

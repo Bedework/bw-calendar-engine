@@ -18,12 +18,19 @@
  */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.configs.IndexProperties;
+import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calsvci.CalSvcI;
 import org.bedework.sysevents.events.CollectionDeletedEvent;
 import org.bedework.sysevents.events.CollectionUpdateEvent;
 import org.bedework.sysevents.events.EntityDeletedEvent;
+import org.bedework.sysevents.events.EntityEvent;
 import org.bedework.sysevents.events.EntityUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.sysevents.events.SysEventBase;
 
 /**
  * Class to handle incoming system event messages and fire off index processes
@@ -39,6 +46,12 @@ import org.bedework.sysevents.events.SysEvent;
  * @author douglm
  */
 public class MessageProcessor extends CalSys {
+  transient private BwIndexer publicIndexer;
+
+  transient private BwIndexer userIndexer;
+
+  transient private String userIndexerPrincipal;
+
   protected long collectionsUpdated;
   protected long collectionsDeleted;
 
@@ -58,6 +71,12 @@ public class MessageProcessor extends CalSys {
   public void processMessage(final SysEvent msg) {
     if (debug) {
       debug("Event " + msg.getSysCode());
+    }
+
+    if ((msg instanceof EntityEvent) &&
+            (msg.getSysCode() == SysEventBase.SysCode.REINDEX_EVENT)) {
+      doEntityReindex((EntityEvent)msg);
+      return;
     }
 
     if (msg instanceof CollectionUpdateEvent) {
@@ -114,4 +133,80 @@ public class MessageProcessor extends CalSys {
    * Private methods
    * ====================================================================
    */
+
+  private void doEntityReindex(final EntityEvent ece) {
+    setCurrentPrincipal(ece.getOwnerHref());
+
+    try (BwSvc bw = getBw()) {
+      final EventInfo val = getEvent(bw.getSvci(),
+                                     getParentPath(ece.getHref()),
+                                     getName(ece.getHref()));
+      if (val == null) {
+        // Unindex it
+        if (debug) {
+          debug("Missing event: " + ece.getHref());
+        }
+      } else {
+        getIndexer(bw.getSvci(), val).indexEntity(val);
+      }
+    } catch (final Throwable t) {
+      error(t);
+    }
+  }
+
+  @SuppressWarnings("rawtypes")
+  private BwIndexer getIndexer(final CalSvcI svci,
+                               final Object val) throws CalFacadeException {
+    boolean publick = false;
+
+    String principal = null;
+
+    final BwOwnedDbentity ent;
+
+    if (val instanceof BwOwnedDbentity) {
+      ent = (BwOwnedDbentity)val;
+    } else if (val instanceof EventInfo) {
+      ent = ((EventInfo)val).getEvent();
+    } else {
+      error("Cannot index class: " + val.getClass());
+      throw new CalFacadeException("org.bedework.index.unexpected.class");
+    }
+
+    if (ent != null) {
+      if (ent.getPublick() == null) {
+        debug("This is wrong");
+      }
+      publick = ent.getPublick();
+      principal = ent.getOwnerHref();
+    }
+
+    return getIndexer(svci, publick, principal);
+  }
+
+  private BwIndexer getIndexer(final CalSvcI svci,
+                               final boolean publick,
+                               final String principal) throws CalFacadeException {
+    try {
+      if (publick) {
+        if (publicIndexer == null) {
+          publicIndexer = svci.getIndexer(true);
+        }
+        return publicIndexer;
+      }
+
+      if ((userIndexerPrincipal != null) &&
+              (!userIndexerPrincipal.equals(principal))) {
+        userIndexer = null;
+      }
+
+      if (userIndexer == null) {
+        userIndexer = svci.getIndexer(principal);
+        userIndexerPrincipal = principal;
+      }
+
+      return userIndexer;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
 }

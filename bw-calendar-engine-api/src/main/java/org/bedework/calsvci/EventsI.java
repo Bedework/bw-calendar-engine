@@ -194,6 +194,12 @@ public interface EventsI extends Serializable {
                           boolean autoCreateCollection,
                           boolean rollbackOnError) throws CalFacadeException;
 
+  /** Reindex an event.
+   *
+   * @param ei           EventInfo object to be reindexed
+   */
+  void reindex(EventInfo ei);
+
   /** Update an event. Any changeset should be embedded in the event info object.
    *
    * @param ei           EventInfo object to be added
@@ -201,8 +207,8 @@ public interface EventsI extends Serializable {
    * @return UpdateResult Counts of changes.
    * @throws CalFacadeException on error
    */
-  UpdateResult update(final EventInfo ei,
-                             final boolean noInvites) throws CalFacadeException;
+  UpdateResult update(EventInfo ei,
+                      boolean noInvites) throws CalFacadeException;
 
   /** Update an event in response to an attendee. Exactly as normal update if
    * fromAtt is null. Otherwise no status update is sent to the given attendee

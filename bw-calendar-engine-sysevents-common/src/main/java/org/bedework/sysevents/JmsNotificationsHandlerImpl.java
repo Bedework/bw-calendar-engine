@@ -143,7 +143,11 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
       if (changeEvent) {
         changes.post(ev); 
       }
-      // indexer - not needed?
+
+      // indexer - reindexing events
+      if (ev.getSysCode() == SysEventBase.SysCode.REINDEX_EVENT) {
+        indexer.post(ev);
+      }
       
       if (ev instanceof EntityQueuedEvent) {
         final EntityQueuedEvent eqe = (EntityQueuedEvent)ev;
