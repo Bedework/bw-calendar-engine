@@ -21,13 +21,9 @@ package org.bedework.caldav.bwserver.stdupdaters;
 
 import org.bedework.caldav.bwserver.PropertyUpdater;
 import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
-import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.ChangeTableEntry;
-import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.BasePropertyType;
@@ -35,7 +31,6 @@ import ietf.params.xml.ns.icalendar_2.TextListPropertyType;
 import ietf.params.xml.ns.icalendar_2.XBedeworkWrapperPropType;
 
 import java.util.List;
-import java.util.Set;
 
 /** Updates the x-property wrapped by this property.
  *
@@ -49,13 +44,12 @@ public class XbwWrapperPropUpdater implements PropertyUpdater {
 
     /* Create an x-property from the selector */
 
-    // TODO - do parameters properly
     final XBedeworkWrapperPropType wrapper =
             (XBedeworkWrapperPropType)ui.getProp();
 
     final BwXproperty theProp = new BwXproperty(
             UpdaterUtil.getWrapperName(wrapper),
-            null,
+            UpdaterUtil.getParams(wrapper),
             wrapper.getText());
 
     if (ui.isRemove()) {
@@ -78,7 +72,7 @@ public class XbwWrapperPropUpdater implements PropertyUpdater {
 
       final BwXproperty newProp = new BwXproperty(
               UpdaterUtil.getWrapperName(wrapper),
-              null,
+              UpdaterUtil.getParams(ui.getUpdprop()),
               ((XBedeworkWrapperPropType)ui.getUpdprop()).getText());
       ev.addXproperty(newProp);
       cte.addValue(newProp);
@@ -111,35 +105,5 @@ public class XbwWrapperPropUpdater implements PropertyUpdater {
 
     return new BwXproperty(BwXproperty.xBedeworkCategories,
                            pars, val);
-  }
-
-  /* Return true if value matches a category - which may be added as
-   * a result
-   */
-  private boolean checkCategory(final UpdateInfo ui,
-                                final BwEvent ev,
-                                final Set<BwCategory> cats,
-                                final String lang,
-                                final String val) throws CalFacadeException {
-    final BwString sval = new BwString(lang, val);
-
-    final BwCategory cat = ui.getIcalCallback().findCategory(sval);
-
-    if (cat == null) {
-      return false;
-    }
-
-    for (final BwCategory c: cats) {
-      if (c.getWord().equals(sval)) {
-        // Already present
-        return true;
-      }
-    }
-
-    ev.addCategory(cat);
-
-    ui.getCte(PropertyIndex.PropertyInfoIndex.CATEGORIES).addValue(cat);
-
-    return true;
   }
 }

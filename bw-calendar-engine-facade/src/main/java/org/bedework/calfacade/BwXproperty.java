@@ -26,6 +26,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
 import java.io.StreamTokenizer;
@@ -507,7 +508,7 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
   /**
    */
-  public static class Xpar implements Serializable {
+  public static class Xpar implements Comparable<Xpar>, Serializable {
     private String name;
 
     private String value;
@@ -531,6 +532,21 @@ public class BwXproperty extends BwDbentity<BwXproperty>
      */
     public String getValue() {
       return value;
+    }
+
+    @Override
+    public int compareTo(final Xpar o) {
+      if (o == null) {
+        return 1;
+      }
+
+      final int cmp = Util.cmpObjval(getName(), o.getName());
+
+      if (cmp != 0) {
+        return cmp;
+      }
+
+      return Util.cmpObjval(getValue(), o.getValue());
     }
   }
 

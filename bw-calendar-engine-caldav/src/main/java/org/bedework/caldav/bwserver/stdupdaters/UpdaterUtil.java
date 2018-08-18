@@ -20,13 +20,22 @@
 package org.bedework.caldav.bwserver.stdupdaters;
 
 import org.bedework.caldav.bwserver.ParameterUpdater;
+import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.XcalTags;
 
 import ietf.params.xml.ns.icalendar_2.ArrayOfParameters;
 import ietf.params.xml.ns.icalendar_2.BaseParameterType;
 import ietf.params.xml.ns.icalendar_2.BasePropertyType;
+import ietf.params.xml.ns.icalendar_2.BooleanParameterType;
+import ietf.params.xml.ns.icalendar_2.CalAddressListParamType;
+import ietf.params.xml.ns.icalendar_2.CalAddressParamType;
+import ietf.params.xml.ns.icalendar_2.DurationParameterType;
+import ietf.params.xml.ns.icalendar_2.IntegerParameterType;
+import ietf.params.xml.ns.icalendar_2.RangeParamType;
 import ietf.params.xml.ns.icalendar_2.TextParameterType;
 import ietf.params.xml.ns.icalendar_2.UriParameterType;
+import net.fortuna.ical4j.model.ParameterFactoryImpl;
+import net.fortuna.ical4j.model.ParameterList;
 
 import java.util.List;
 
@@ -38,7 +47,8 @@ import javax.xml.namespace.QName;
  *
  */
 public class UpdaterUtil {
-  /** See if there is a language parameter attached to the property
+  /**
+   * See if there is a language parameter attached to the property
    *
    * @param p
    * @return String
@@ -49,7 +59,8 @@ public class UpdaterUtil {
       return null;
     }
 
-    for (JAXBElement<? extends BaseParameterType> parEl: pars.getBaseParameter()) {
+    for (JAXBElement<? extends BaseParameterType> parEl : pars
+            .getBaseParameter()) {
       if (parEl.getName().equals(XcalTags.language)) {
         return ((TextParameterType)parEl.getValue()).getText();
       }
@@ -64,9 +75,10 @@ public class UpdaterUtil {
       return null;
     }
 
-    for (final JAXBElement<? extends BaseParameterType> parEl:
+    for (final JAXBElement<? extends BaseParameterType> parEl :
             pars.getBaseParameter()) {
-      if (parEl.getName().getLocalPart().equalsIgnoreCase("x-bedework-wrapped-name")) {
+      if (parEl.getName().getLocalPart()
+               .equalsIgnoreCase("x-bedework-wrapped-name")) {
         return ((TextParameterType)parEl.getValue()).getText();
       }
     }
@@ -74,7 +86,8 @@ public class UpdaterUtil {
     return null;
   }
 
-  /** See if there is an altrep parameter attached to the property
+  /**
+   * See if there is an altrep parameter attached to the property
    *
    * @param p
    * @return String
@@ -85,7 +98,8 @@ public class UpdaterUtil {
       return null;
     }
 
-    for (JAXBElement<? extends BaseParameterType> parEl: pars.getBaseParameter()) {
+    for (JAXBElement<? extends BaseParameterType> parEl : pars
+            .getBaseParameter()) {
       if (parEl.getName().equals(XcalTags.altrep)) {
         return ((UriParameterType)parEl.getValue()).getUri();
       }
@@ -94,13 +108,15 @@ public class UpdaterUtil {
     return null;
   }
 
-  /** See if there is a language parameter update
+  /**
+   * See if there is a language parameter update
    *
    * @param updates
    * @return ParameterUpdater.UpdateInfo or null
    */
-  static ParameterUpdater.UpdateInfo findLangUpdate(final List<ParameterUpdater.UpdateInfo> updates) {
-    for (ParameterUpdater.UpdateInfo parUpd: updates) {
+  static ParameterUpdater.UpdateInfo findLangUpdate(
+          final List<ParameterUpdater.UpdateInfo> updates) {
+    for (ParameterUpdater.UpdateInfo parUpd : updates) {
       if (parUpd.getParamName().equals(XcalTags.language)) {
         return parUpd;
       }
@@ -109,7 +125,8 @@ public class UpdaterUtil {
     return null;
   }
 
-  /** Return named parameter attached to the property
+  /**
+   * Return named parameter attached to the property
    *
    * @param p
    * @param name
@@ -122,7 +139,8 @@ public class UpdaterUtil {
       return null;
     }
 
-    for (JAXBElement<? extends BaseParameterType> parEl: pars.getBaseParameter()) {
+    for (JAXBElement<? extends BaseParameterType> parEl : pars
+            .getBaseParameter()) {
       if (parEl.getName().equals(name)) {
         return parEl.getValue();
       }
@@ -131,4 +149,88 @@ public class UpdaterUtil {
     return null;
   }
 
+  public static String getParams(final BasePropertyType p) {
+    ArrayOfParameters pars = p.getParameters();
+    if ((pars == null) || Util.isEmpty(pars.getBaseParameter())) {
+      return null;
+    }
+
+    final ParameterList plist = new ParameterList(false);
+
+    for (JAXBElement<? extends BaseParameterType> parEl : pars
+            .getBaseParameter()) {
+      final String name = parEl.getName().getLocalPart()
+                               .toUpperCase();
+
+      if (name.equals("X-BEDEWORK-WRAPPED-NAME")) {
+        continue;
+      }
+
+      final String val = getValue(parEl.getValue());
+
+      if (val == null) {
+        continue;
+      }
+
+      try {
+        plist.add(
+                ParameterFactoryImpl.getInstance().createParameter(
+                        parEl.getName().getLocalPart().toUpperCase(),
+                        val));
+      } catch (Throwable t) {
+      }
+    }
+
+    return plist.toString();
+  }
+
+  public static String getValue(final BaseParameterType par) {
+    if (par instanceof RangeParamType) {
+      final RangeParamType par1 = (RangeParamType)par;
+      return par1.getText().value();
+    }
+
+    if (par instanceof DurationParameterType) {
+      final DurationParameterType par1 = (DurationParameterType)par;
+      return par1.getDuration().toString();
+    }
+
+    if (par instanceof TextParameterType) {
+      final TextParameterType par1 = (TextParameterType)par;
+      return par1.getText();
+    }
+
+    if (par instanceof CalAddressListParamType) {
+      final CalAddressListParamType par1 = (CalAddressListParamType)par;
+      if (Util.isEmpty(par1.getCalAddress())) {
+        return null;
+      }
+      return String.join(",", par1.getCalAddress());
+    }
+
+    if (par instanceof CalAddressParamType) {
+      final CalAddressParamType par1 = (CalAddressParamType)par;
+      return par1.getCalAddress();
+    }
+
+    if (par instanceof IntegerParameterType) {
+      final IntegerParameterType par1 = (IntegerParameterType)par;
+      if (par1.getInteger() == null) {
+        return null;
+      }
+      return par1.getInteger().toString();
+    }
+
+    if (par instanceof UriParameterType) {
+      final UriParameterType par1 = (UriParameterType)par;
+      return par1.getUri();
+    }
+
+    if (par instanceof BooleanParameterType) {
+      final BooleanParameterType par1 = (BooleanParameterType)par;
+      return String.valueOf(par1.isBoolean());
+    }
+
+    return null;
+  }
 }
