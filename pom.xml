@@ -27,6 +27,7 @@
     <commons.io.version>2.0.1</commons.io.version>
 
     <digester-version>1.8</digester-version>
+    <dom4j-version>1.6.1</dom4j-version>
 
     <ical4j.groupId>org.bedework.ical4j</ical4j.groupId>
     <ical4j.artifactId>ical4j</ical4j.artifactId>
@@ -296,8 +297,14 @@
 				<artifactId>hibernate-validator</artifactId>
 				<version>${hibernate-validator.version}</version>
 			</dependency>
-      
-			<dependency>
+
+      <dependency>
+        <groupId>dom4j</groupId>
+        <artifactId>dom4j</artifactId>
+        <version>${dom4j-version}</version>
+      </dependency>
+
+      <dependency>
 				<groupId>javax.servlet</groupId>
 				<artifactId>servlet-api</artifactId>
 				<version>${servlet-api.version}</version>
