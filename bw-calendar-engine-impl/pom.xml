@@ -80,15 +80,23 @@
       <artifactId>bw-util2-calendar</artifactId>
     </dependency>
 
-		<!-- Third Party Dependencies -->
+
+    <!-- Third Party Libraries -->
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>${ical4j.groupId}</groupId>
       <artifactId>${ical4j.artifactId}</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-ical4j-vcard</artifactId>
     </dependency>
+
 		<dependency>
 			<groupId>org.bedework</groupId>
 			<artifactId>apache-jdkim-library</artifactId>

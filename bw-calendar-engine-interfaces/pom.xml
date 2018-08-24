@@ -27,11 +27,5 @@
       <groupId>org.bedework</groupId>
       <artifactId>bw-caldav-util</artifactId>
     </dependency>
-
-		<!-- Third Party -->
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-		</dependency>
 	</dependencies>
 </project>

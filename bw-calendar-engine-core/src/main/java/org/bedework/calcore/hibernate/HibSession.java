@@ -17,7 +17,7 @@
     under the License.
 */
 
-package org.bedework.calcorei;
+package org.bedework.calcore.hibernate;
 
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;

@@ -59,5 +59,11 @@
       <groupId>org.bedework</groupId>
       <artifactId>bw-util2-calendar</artifactId>
     </dependency>
+
+    <!-- Third Party Libraries -->
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+    </dependency>
 	</dependencies>
 </project>

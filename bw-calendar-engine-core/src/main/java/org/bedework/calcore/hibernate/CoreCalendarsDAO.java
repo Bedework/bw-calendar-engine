@@ -18,7 +18,6 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwEventObj;

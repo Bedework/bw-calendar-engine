@@ -18,7 +18,6 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.misc.Logged;

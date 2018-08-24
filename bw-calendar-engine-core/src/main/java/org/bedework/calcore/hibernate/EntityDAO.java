@@ -3,7 +3,6 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;

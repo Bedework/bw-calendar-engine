@@ -18,7 +18,6 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;

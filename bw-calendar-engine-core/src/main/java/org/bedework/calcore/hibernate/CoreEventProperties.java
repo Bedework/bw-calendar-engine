@@ -21,7 +21,6 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calcore.common.CalintfHelper;
 import org.bedework.calcorei.CoreEventPropertiesI;
-import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.EventPropertiesReference;

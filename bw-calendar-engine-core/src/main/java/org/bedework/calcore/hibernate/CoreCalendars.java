@@ -28,7 +28,6 @@ import org.bedework.calcore.common.AccessUtil;
 import org.bedework.calcore.common.CalintfHelper;
 import org.bedework.calcore.common.CollectionCache;
 import org.bedework.calcorei.CoreCalendarsI;
-import org.bedework.calcorei.HibSession;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CalFacadeDefs;

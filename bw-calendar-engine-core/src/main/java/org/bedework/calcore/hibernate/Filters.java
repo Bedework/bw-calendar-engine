@@ -20,7 +20,6 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calcore.common.FiltersCommon;
 import org.bedework.calcorei.Calintf;
-import org.bedework.calcorei.HibSession;
 import org.bedework.caldav.util.TimeRange;
 import org.bedework.caldav.util.filter.AndFilter;
 import org.bedework.caldav.util.filter.EntityTimeRangeFilter;
