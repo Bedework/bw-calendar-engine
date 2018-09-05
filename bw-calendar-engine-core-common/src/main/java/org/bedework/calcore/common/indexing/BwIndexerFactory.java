@@ -20,6 +20,7 @@ package org.bedework.calcore.common.indexing;
 
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.Configurations;
+import org.bedework.calfacade.indexing.BwIndexFetcher;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.util.AccessChecker;
 
@@ -36,25 +37,32 @@ public class BwIndexerFactory {
 
   /** Factory method to get indexer
    *
-   * @param configs
+   * @param configs to configure indexer
+   * @param docType type of entity
    * @param currentMode - guest, user,publicAdmin
    * @param accessCheck  - required - lets us check access
    * @return indexer
    */
   public static BwIndexer getPublicIndexer(final Configurations configs,
+                                           final String docType,
                                            final int currentMode,
-                                           final AccessChecker accessCheck) {
-    return new BwIndexEsImpl(configs, true,
+                                           final AccessChecker accessCheck,
+                                           final BwIndexFetcher indexFetcher) {
+    return new BwIndexEsImpl(configs,
+                             docType,
+                             true,
                              null,    // principal
                              false,   // super user
                              currentMode,
                              accessCheck,
-                             null); // No explicit name
+                             indexFetcher,
+                             null); // Not reindexing
   }
 
   /** Factory method to get current indexer
    *
-   * @param configs
+   * @param configs to configure indexer
+   * @param docType type of entity
    * @param principal - who we are searching for
    * @param superUser - true if the principal is a superuser.
    * @param currentMode - guest, user,publicAdmin
@@ -62,39 +70,50 @@ public class BwIndexerFactory {
    * @return indexer
    */
   public static BwIndexer getIndexer(final Configurations configs,
+                                     final String docType,
                                      final BwPrincipal principal,
                                      final boolean superUser,
                                      final int currentMode,
-                                     final AccessChecker accessCheck) {
-    return new BwIndexEsImpl(configs, false,
+                                     final AccessChecker accessCheck,
+                                     final BwIndexFetcher indexFetcher) {
+    return new BwIndexEsImpl(configs,
+                             docType,
+                             false,
                              principal,
                              superUser,
                              currentMode,
                              accessCheck,
-                             null); // No explicit name
+                             indexFetcher,
+                             null); // Not reindexing
   }
 
   /** Factory method allowing us to specify the system root. This should only
    * be called from the crawler which will be indexing into an alternative
    * index.
    *
-   * @param configs
+   * @param configs to configure indexer
+   * @param docType type of entity
    * @param principal - who we are searching for
    * @param currentMode - guest, user,publicAdmin
    * @param accessCheck  - required - lets us check access
    * @param indexRoot
    * @return indexer
    */
-  public static BwIndexer getIndexer(final Configurations configs,
-                                     final BwPrincipal principal,
-                                     final int currentMode,
-                                     final AccessChecker accessCheck,
-                                     final String indexRoot) {
-    return new BwIndexEsImpl(configs, true,
+  public static BwIndexer getIndexerForReindex(final Configurations configs,
+                                               final String docType,
+                                               final BwPrincipal principal,
+                                               final int currentMode,
+                                               final AccessChecker accessCheck,
+                                               final BwIndexFetcher indexFetcher,
+                                               final String indexRoot) {
+    return new BwIndexEsImpl(configs,
+                             docType,
+                             true,
                              principal,
                              false,
                              currentMode,
                              accessCheck,
+                             indexFetcher,
                              indexRoot); // Explicit name
   }
 }

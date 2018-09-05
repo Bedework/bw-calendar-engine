@@ -334,16 +334,13 @@ public class CalSvcDb extends Logged implements Serializable {
     return getPrincipal().getPrincipalRef();
   }
 
-  public BwIndexer getIndexer() {
-    return svci.getIndexer();
+  public BwIndexer getIndexer(final String docType) {
+    return svci.getIndexer(docType);
   }
 
-  public BwIndexer getIndexer(final boolean publick) {
-    return svci.getIndexer(publick);
-  }
-
-  public BwIndexer getPublicIndexer() {
-    return svci.getIndexer(true);
+  public BwIndexer getIndexer(final boolean publick,
+                              final String docType) {
+    return svci.getIndexer(publick, docType);
   }
 
   protected BwPrincipal getPrincipal(final String href) throws CalFacadeException {

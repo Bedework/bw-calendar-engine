@@ -79,12 +79,12 @@ public interface BwIndexCtlMBean extends ConfBaseMBean, IndexProperties {
    */
   String newIndexes();
 
-  /** Reindex the current index into the given index. Used for schema 
+  /** Reindex the current docType index into a new index. Used for schema
    * changes etc.
    *
    * @return result.
    */
-  String reindex(String indexName);
+  String reindex(String docType);
 
   /** Move the production index alias to the given index
    *
@@ -92,6 +92,12 @@ public interface BwIndexCtlMBean extends ConfBaseMBean, IndexProperties {
    * @return result.
    */
   String setProdAlias(final String indexName);
+
+  /** Move the production index aliases to the latest index
+   *
+   * @return result.
+   */
+  String makeAllProd();
 
   IndexStatsResponse indexStats(String indexName);
 

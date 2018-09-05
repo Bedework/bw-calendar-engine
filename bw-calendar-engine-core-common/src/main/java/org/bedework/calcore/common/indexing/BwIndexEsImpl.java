@@ -48,7 +48,9 @@ import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
+import org.bedework.calfacade.indexing.BwIndexFetcher;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexerParams;
 import org.bedework.calfacade.indexing.IndexStatsResponse;
 import org.bedework.calfacade.indexing.ReindexResponse;
 import org.bedework.calfacade.indexing.SearchResult;
@@ -160,7 +162,6 @@ import static org.bedework.calfacade.responses.Response.Status.noAccess;
 import static org.bedework.calfacade.responses.Response.Status.notFound;
 import static org.bedework.calfacade.responses.Response.Status.ok;
 import static org.bedework.calfacade.responses.Response.Status.processing;
-import static org.bedework.util.elasticsearch.DocBuilderBase.docTypeUpdateTracker;
 import static org.bedework.util.elasticsearch.DocBuilderBase.updateTrackerId;
 
 /** Implementation of indexer for ElasticSearch
@@ -215,6 +216,10 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   private static Client theClient;
   private static final Object clientSyncher = new Object();
 
+  private String docType;
+
+  private final String updateTrackerIndex = "bw" + docTypeUpdateTracker.toLowerCase();
+
   private String targetIndex;
   private final String[] searchIndexes;
   private final int currentMode;
@@ -233,7 +238,14 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   /* Indexed by index name */
   private final static Map<String, UpdateInfo> updateInfo = new HashMap<>();
 
-  /* This is used for testng - we delay searches to give the indexer
+  private final static Set<String> knownTypes =
+          new TreeSet<>(Arrays.asList(allDocTypes));
+
+  private final BwIndexerParams params;
+
+  private final BwIndexFetcher indexFetcher;
+
+  /* This is used for testing - we delay searches to give the indexer
    * time to catch up
    */
   private static long lastIndexTime;
@@ -357,8 +369,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   /**
    * String is name of index
    */
-  private Map<String, ReindexResponse> currentReindexing =
-          new HashMap<>();
+  private ReindexResponse currentReindexing;
 
   private final static Map<String, IndexedType> docToType =
           new HashMap<>();
@@ -373,6 +384,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
    * Constructor
    *
    * @param configs     - the configurations object
+   * @param docType type of entity
    * @param publick     - if false we add an owner term to the
    *                    searches
    * @param principal   - who is doing the searching - only for
@@ -383,17 +395,28 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
    * @param indexName   - explicitly specified
    */
   public BwIndexEsImpl(final Configurations configs,
+                       final String docType,
                        final boolean publick,
                        final BwPrincipal principal,
                        final boolean superUser,
                        final int currentMode,
                        final AccessChecker accessCheck,
+                       final BwIndexFetcher indexFetcher,
                        final String indexName) {
     this.publick = publick;
     this.principal = principal;
     this.superUser = superUser;
     this.currentMode = currentMode;
     this.accessCheck = new TimedAccessChecker(accessCheck);
+    this.docType = docType;
+    this.indexFetcher = indexFetcher;
+
+    params = new BwIndexerParams(configs,
+                                 publick,
+                                 principal,
+                                 superUser,
+                                 currentMode,
+                                 accessCheck);
 
     idxpars = configs.getIndexProperties();
     authpars = configs.getAuthProperties(true);
@@ -418,9 +441,9 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
 
     if (indexName == null) {
-      targetIndex = Util.buildPath(false, idxpars.getUserIndexName());
+      targetIndex = "bw" + docType.toLowerCase();
     } else {
-      targetIndex = Util.buildPath(false, indexName);
+      targetIndex = Util.buildPath(false, indexName.toLowerCase());
     }
     searchIndexes = new String[]{targetIndex};
 
@@ -539,14 +562,14 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
   @Override
   public void markTransaction() throws CalFacadeException {
-    final UpdateInfo ui = updateInfo.get(targetIndex);
+    final UpdateInfo ui = updateInfo.get(updateTrackerIndex);
     if ((ui != null) && !ui.isUpdate()) {
       return;
     }
 
     try {
       final UpdateRequestBuilder urb =
-              getClient().prepareUpdate(targetIndex,
+              getClient().prepareUpdate(updateTrackerIndex,
                                         docTypeUpdateTracker,
                                         updateTrackerId).
                                  setRetryOnConflict(20).
@@ -567,7 +590,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     UpdateInfo ui;
     try {
       final GetRequestBuilder grb = getClient()
-              .prepareGet(targetIndex,
+              .prepareGet(updateTrackerIndex,
                           docTypeUpdateTracker,
                           updateTrackerId).
                       setFields("count", "_timestamp");
@@ -626,36 +649,27 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   }
 
   @Override
-  public ReindexResponse reindex(final String indexName) {
-    final ReindexResponse resp =
-            currentReindexing.getOrDefault(indexName,
-                                           new ReindexResponse(
-                                                   indexName));
+  public ReindexResponse reindex() {
+    if (currentReindexing == null) {
+      currentReindexing = new ReindexResponse(docType);
+    }
+
+    final ReindexResponse resp = currentReindexing;
 
     if (resp.getStatus() == processing) {
       return resp;
     }
 
-    reindex(resp, indexName, docTypeCategory);
-    if (resp.getStatus() != ok) {
-      return resp;
-    }
-    reindex(resp, indexName, docTypeContact);
-    if (resp.getStatus() != ok) {
-      return resp;
-    }
-    reindex(resp, indexName, docTypeLocation);
-    if (resp.getStatus() != ok) {
-      return resp;
-    }
-    reindex(resp, indexName, null);
+    // Create a new index.
 
-    return resp;
-  }
+    final String indexName;
 
-  private void reindex(final ReindexResponse resp,
-                       final String indexName,
-                       final String docType) {
+    try {
+      indexName = newIndex();
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
+
     // Only retrieve masters - we'll query for the overrides
     final QueryBuilder qb =
             getFilters(RecurringRetrievalMode.entityOnly)
@@ -667,7 +681,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     final Client cl = getClient(resp);
 
     if (cl == null) {
-      return;
+      return resp;
     }
 
     // Start with default index as source
@@ -728,8 +742,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
           try {
             principal = BwPrincipal.makePrincipal(ent.getOwnerHref());
           } catch (final CalFacadeException cfe) {
-            errorReturn(resp, cfe);
-            return;
+            return errorReturn(resp, cfe);
           }
         }
 
@@ -793,11 +806,13 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                   "Final bulk close was interrupted. Records may be missing",
                   failed);
     }
+
+    return resp;
   }
 
   @Override
   public ReindexResponse getReindexStatus(final String indexName) {
-    return currentReindexing.get(indexName);
+    return currentReindexing;
   }
 
   @Override
@@ -1176,7 +1191,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
             entity = eb.makeLocation();
             break;
           case docTypeEvent:
-          case docTypePoll:
             final Response evrestResp = new Response();
             entity = makeEvent(eb, evrestResp, kval,
                                res.recurRetrieval.mode == Rmode.expanded);
@@ -1393,7 +1407,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
           final Object entity;
           switch (dtype) {
             case docTypeEvent:
-            case docTypePoll:
               entity = makeEvent(eb, resp, kval, false);
               final EventInfo oei = (EventInfo)entity;
               final BwEvent oev = oei.getEvent();
@@ -1789,10 +1802,9 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   }
 
   @Override
-  public String newIndex(final String name)
-          throws CalFacadeException {
+  public String newIndex() throws CalFacadeException {
     try {
-      final String newName = name + newIndexSuffix();
+      final String newName = "bw" + docType.toLowerCase() + newIndexSuffix();
       targetIndex = newName;
 
       final IndicesAdminClient idx = getAdminIdx();
@@ -1800,7 +1812,11 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       final CreateIndexRequestBuilder cirb = idx
               .prepareCreate(newName);
 
-      final File f = new File(idxpars.getIndexerConfig());
+      final File f = new File(Util.buildPath(false,
+                                             idxpars.getIndexerConfig(),
+                                             "/",
+                                             docType.toLowerCase(),
+                                             "/mappings.json"));
 
       final byte[] sbBytes = Streams.copyToByteArray(f);
 
@@ -1813,9 +1829,14 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       /*resp = */
       af.actionGet();
 
-      index(new UpdateInfo());
+      info("Index " + newName +
+                   " created: change token set to " + currentChangeToken());
 
-      info("Index created: change token set to " + currentChangeToken());
+      if (docType.equals(docTypeUpdateTracker)) {
+        index(new UpdateInfo());
+
+        info("Change token set to " + currentChangeToken());
+      }
 
       return newName;
     } catch (final CalFacadeException cfe) {
@@ -1878,8 +1899,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     for (final IndexInfo ii : indexes) {
       final String idx = ii.getIndexName();
 
-      if (!idx.startsWith(idxpars.getPublicIndexName()) &&
-              !idx.startsWith(idxpars.getUserIndexName())) {
+      if (!idx.startsWith("bw")) {
         continue purge;
       }
 
@@ -1887,11 +1907,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       if (!Util.isEmpty(ii.getAliases())) {
         for (final String alias : ii.getAliases()) {
-          if (alias.equals(idxpars.getPublicIndexName())) {
-            continue purge;
-          }
-
-          if (alias.equals(idxpars.getUserIndexName())) {
+          if (alias.startsWith("bw") && knownTypes.contains(alias.substring(2))) {
             continue purge;
           }
         }
@@ -1906,8 +1922,23 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   }
 
   @Override
-  public int setAlias(final String index,
-                      final String alias) throws CalFacadeException {
+  public int setAlias(final String index) throws CalFacadeException {
+    // Make the alias
+    String alias = null;
+
+    for (final String type: knownTypes) {
+      final String lctype = type.toLowerCase();
+
+      if (index.startsWith("bw" + lctype + "2")) {
+        alias = "bw" + lctype;
+        break;
+      }
+    }
+
+    if (alias == null) {
+      throw new CalFacadeException("Bad name " + index);
+    }
+
     //IndicesAliasesResponse resp = null;
     try {
       /* Other is the alias name - index is the index we were just indexing into
@@ -3225,54 +3256,72 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
   }
 
+  private void mustBe(final String reqDocType) throws CalFacadeException {
+    if (!docType.equals(reqDocType)) {
+      throw new CalFacadeException("Wrong index type " + docType +
+                                           " for expected " + reqDocType);
+    }
+  }
+
   /* Return the response after indexing */
   private IndexResponse index(final Object rec) throws CalFacadeException {
     EsDocInfo di = null;
 
     try {
       if (rec instanceof EventInfo) {
+        mustBe(docTypeEvent);
         return indexEvent((EventInfo)rec);
       }
 
       final DocBuilder db = getDocBuilder();
 
       if (rec instanceof UpdateInfo) {
+        mustBe(docTypeUpdateTracker);
         di = db.makeDoc((UpdateInfo)rec);
       }
 
       if (rec instanceof BwCalendar) {
+        mustBe(docTypeCollection);
         di = db.makeDoc((BwCalendar)rec);
       }
 
       if (rec instanceof BwCategory) {
+        mustBe(docTypeCategory);
         di = db.makeDoc((BwCategory)rec);
       }
 
       if (rec instanceof BwContact) {
+        mustBe(docTypeContact);
         di = db.makeDoc((BwContact)rec);
       }
 
       if (rec instanceof BwLocation) {
+        mustBe(docTypeLocation);
         di = db.makeDoc((BwLocation)rec);
       }
 
       if (rec instanceof BwPrincipal) {
+        mustBe(docTypePrincipal);
         di = db.makeDoc((BwPrincipal)rec);
       }
 
       if (rec instanceof BwPreferences) {
+        mustBe(docTypePreferences);
         di = db.makeDoc((BwPreferences)rec);
       }
 
       if (rec instanceof BwResource) {
+        mustBe(docTypeResource);
         di = db.makeDoc((BwResource)rec);
       }
 
       if (rec instanceof BwResourceContent) {
+        mustBe(docTypeResourceContent);
         di = db.makeDoc((BwResourceContent)rec);
       }
 
       if (rec instanceof BwFilterDef) {
+        mustBe(docTypeFilter);
         di = db.makeDoc((BwFilterDef)rec);
       }
 
@@ -3509,7 +3558,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   private boolean deleteEvent(final String href) throws CalFacadeException {
     final DeleteByQueryRequestBuilder delQreq =
             getClient().prepareDeleteByQuery(targetIndex).
-                    setTypes(docTypeEvent,docTypePoll);
+                    setTypes(docTypeEvent);
 
     final ESQueryFilter esq= getFilters(null);
 
@@ -3718,7 +3767,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
   private String newIndexSuffix() {
     // ES only allows lower case letters in names (and digits)
-    final StringBuilder suffix = new StringBuilder("p");
+    final StringBuilder suffix = new StringBuilder();
 
     final char[] ch = DateTimeUtil.isoDateTime().toCharArray();
 
@@ -3790,7 +3839,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         case docTypeLocation:
           entity = eb.makeLocation();
           break;
-        case docTypeEvent: case docTypePoll:
+        case docTypeEvent:
           entity = makeEvent(eb, resp, kval,
                              (rrm != null) && (rrm.mode == Rmode.expanded));
           break;
@@ -3855,27 +3904,31 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       final Set<String> contactHrefs = ev.getContactHrefs();
       if (!Util.isEmpty(contactHrefs)) {
         for (final String href : contactHrefs) {
-          BwContact evprop = fetchContact(href, PropertyInfoIndex.HREF);
-          if (evprop == null) {
-            warn("Unable to fetch contact " + href +
-                         " for event " + ev.getHref());
+          final GetEntityResponse<BwContact> geresp =
+                  indexFetcher.fetchContact(params, href);
+
+          if (!resp.isOk()) {
+            error("Unable to fetch contact " + href +
+                          " for event " + ev.getHref());
             errorReturn(resp, "Unable to fetch contact " + href);
             continue;
           }
 
-          ev.addContact(evprop);
+          ev.addContact(geresp.getEntity());
         }
       }
 
       final String href = ev.getLocationHref();
       if (href != null) {
-        BwLocation evprop = fetchLocation(href, PropertyInfoIndex.HREF);
-        if (evprop == null) {
-          warn("Unable to fetch location " + href +
-                       " for event " + ev.getHref());
+        final GetEntityResponse<BwLocation> geresp =
+                indexFetcher.fetchLocation(params, href);
+
+        if (!resp.isOk()) {
+          error("Unable to fetch location " + href +
+                        " for event " + ev.getHref());
           errorReturn(resp, "Unable to fetch location " + href);
         } else {
-          ev.setLocation(evprop);
+          ev.setLocation(geresp.getEntity());
         }
       }
     } catch (final Throwable t) {
@@ -3885,7 +3938,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   }
 
   private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
-    if (ce == null) {
+    if ((ce == null) || (indexFetcher == null)) {
       return;
     }
 
@@ -3901,15 +3954,14 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
 
     for (final String href: hrefs) {
-      final BwCategory cat = fetchCat(href, PropertyInfoIndex.HREF);
+      final GetEntityResponse<BwCategory> resp = indexFetcher.fetchCategory(params, href);
 
-      if (cat == null) {
-        error("Attempting to store null for cat "
-                      + href);
+      if (!resp.isOk()) {
+        error("Unable to fetch cat " + href);
         continue;
       }
 
-      ce.addCategory(cat);
+      ce.addCategory(resp.getEntity());
     }
   }
 

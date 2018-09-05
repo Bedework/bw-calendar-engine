@@ -26,7 +26,9 @@ import org.bedework.calfacade.indexing.IndexStatsResponse;
 import org.bedework.calfacade.indexing.ReindexResponse;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -115,12 +117,14 @@ public class Crawl extends CalSys {
 
     final CrawlStatus status = new CrawlStatus("Overall status");
     statuses.add(status);
-    final String indexName;
+
+    // Key is docType
+    final Map<String, String> indexNames;
 
     if (sameIndex) {
-      indexName = null;
+      indexNames = null;
     } else {
-      indexName = newIndexes(status);
+      indexNames = newIndexes(status);
     }
 
     /* Now we can reindex into the new directory */
@@ -135,7 +139,7 @@ public class Crawl extends CalSys {
                                        2000,   // batchDelay,
                                        100,    // entityDelay,
                                        props.getSkipPathsList(),
-                                       indexName,
+                                       indexNames,
                                        entityClass);
       prProc.start();
     }
@@ -147,7 +151,7 @@ public class Crawl extends CalSys {
                                     2000,   // batchDelay,
                                     100,    // entityDelay,
                                     props.getSkipPathsList(),
-                                    indexName,
+                                    indexNames,
                                     entityClass);
       pubProc.start();
     }
@@ -186,7 +190,8 @@ public class Crawl extends CalSys {
    */
   public Set<IndexInfo> getIndexInfo() throws CalFacadeException {
     try (BwSvc bw = getAdminBw()) {
-      final BwIndexer idx = bw.getSvci().getIndexer(adminAccount, null);
+      final BwIndexer idx = bw.getSvci().getIndexer(adminPrincipal,
+                                                    BwIndexer.docTypeEvent);
 
       return idx.getIndexInfo();
     }
@@ -199,49 +204,49 @@ public class Crawl extends CalSys {
    */
   public List<String> purgeIndexes() throws CalFacadeException {
     try (BwSvc bw = getAdminBw()) {
-      final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
-                                                    null);
+      final BwIndexer idx = bw.getSvci().getIndexer(adminPrincipal,
+                                                    BwIndexer.docTypeEvent);
 
       return idx.purgeIndexes();
     }
   }
 
-  public String newIndexes() throws CalFacadeException {
+  public Map<String, String> newIndexes() throws CalFacadeException {
+    final Map<String, String> names = new HashMap<>();
+
     try (BwSvc bw = getAdminBw()) {
       // Switch indexes.
 
-      if (props.getUserIndexName() == null) {
-        throw new CalFacadeException(
-                "No index name defined in system properties");
+      for (final String docType: BwIndexer.allDocTypes) {
+        if (docType.equals(BwIndexer.docTypeUnknown)) {
+          continue;
+        }
+
+        final BwIndexer idx = bw.getSvci().getIndexer(adminPrincipal,
+                                                      docType);
+
+        names.put(docType, idx.newIndex());
       }
-
-      final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
-                                                    null);
-
-      return idx.newIndex(props.getUserIndexName());
     }
+
+    return names;
   }
 
-  public ReindexResponse reindex(final String indexName) throws CalFacadeException {
+  public ReindexResponse reindex(final String docType) throws CalFacadeException {
     try (BwSvc bw = getAdminBw()) {
       // Switch indexes.
 
-      if (props.getUserIndexName() == null) {
-        throw new CalFacadeException(
-                "No index name defined in system properties");
-      }
+      final BwIndexer idx = bw.getSvci().getIndexer(adminPrincipal,
+                                                    docType);
 
-      final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
-                                                    null);
-
-      return idx.reindex(indexName);
+      return idx.reindex();
     }
   }
 
   public IndexStatsResponse getIndexStats(final String indexName) throws CalFacadeException {
     try (BwSvc bw = getAdminBw()) {
-      return bw.getSvci().getIndexer(adminAccount,
-                                     null).getIndexStats(indexName);
+      return bw.getSvci().getIndexer(adminPrincipal,
+                                     BwIndexer.docTypeEvent).getIndexStats(indexName);
     }
   }
 
@@ -253,20 +258,23 @@ public class Crawl extends CalSys {
    */
   public int setProdAlias(final String indexName) throws CalFacadeException {
     try (BwSvc bw = getAdminBw()) {
-      final BwIndexer idx = bw.getSvci().getIndexer(adminAccount,
-                                                    indexName);
+      final BwIndexer idx = bw.getSvci().getIndexer(adminPrincipal,
+                                                    BwIndexer.docTypeEvent);
 
-      return idx.setAlias(indexName, props.getUserIndexName());
+      return idx.setAlias(indexName);
     }
   }
 
-  private String newIndexes(final CrawlStatus cr) throws CalFacadeException {
+  private Map<String, String> newIndexes(final CrawlStatus cr) throws CalFacadeException {
     try {
-      final String indexName = newIndexes();
+      final Map<String, String> indexNames = newIndexes();
 
-      setStatus(cr, "Switched index to " + indexName);
+      for (final String type: indexNames.keySet()) {
+        final String indexName = indexNames.get(type);
+        setStatus(cr, "Created index " + indexName + " for " + type);
+      }
 
-      return indexName;
+      return indexNames;
     } catch (final Throwable t) {
       outErr(cr, t.getLocalizedMessage());
       throw t;

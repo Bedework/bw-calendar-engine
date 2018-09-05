@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.bedework.calfacade.BwEventProperty.statusDeleted;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeUpdateTracker;
 
 /** Class which handles manipulation of BwEventProperty subclasses which are
  * treated in the same manner, these being Category, Location and contact.
@@ -382,13 +383,14 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
    * ==================================================================== */
 
   protected BwIndexer getIndexer(final boolean getPublic,
-                                 final String ownerHref) throws CalFacadeException {
+                                 final String ownerHref,
+                                 final String docType) throws CalFacadeException {
     String href = checkHref(ownerHref);
 
     final boolean publick = getPublic || isGuest() || isPublicAdmin();
 
     if (publick) {
-      return getSvc().getIndexer(true);
+      return getSvc().getIndexer(true, docType);
     }
 
     return getSvc().getIndexer(href);
@@ -399,7 +401,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
    * @throws CalFacadeException
    */
   protected boolean indexChanged() throws CalFacadeException {
-    final String token = getIndexer().currentChangeToken();
+    final String token = getIndexer(docTypeUpdateTracker).currentChangeToken();
 
     final boolean changed = lastChangeToken == null ||
         !lastChangeToken.equals(token);

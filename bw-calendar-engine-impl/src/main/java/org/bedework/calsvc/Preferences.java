@@ -127,7 +127,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
   @Override
   public void delete(final BwPreferences val) throws CalFacadeException {
     getCal().delete(val);
-    getCal().getIndexer().unindexEntity(docTypePreferences,
+    getCal().getIndexer(docTypePreferences).unindexEntity(docTypePreferences,
                                         val.getHref());
   }
 

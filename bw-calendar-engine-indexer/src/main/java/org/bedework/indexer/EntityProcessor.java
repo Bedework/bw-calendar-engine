@@ -27,6 +27,7 @@ import org.bedework.calsvci.CalSvcI;
 import org.apache.log4j.Logger;
 
 import java.util.Collection;
+import java.util.Map;
 
 /** Run to index entities.
  *
@@ -49,7 +50,7 @@ public class EntityProcessor extends Crawler {
    * @param entityDelay delay in millisecs between entities (unused)
    * @param path for collection
    * @param entityNames paths to index
-   * @param indexRootPath - where we build the index
+   * @param indexNames - where we build the index
    * @throws CalFacadeException
    */
   public EntityProcessor(final CrawlStatus status,
@@ -59,9 +60,9 @@ public class EntityProcessor extends Crawler {
                          final long entityDelay,
                          final String path,
                          final Collection<String> entityNames,
-                         final String indexRootPath) throws CalFacadeException {
+                         final Map<String, String> indexNames) throws CalFacadeException {
     super(status, name, adminAccount,
-          principal, 0, entityDelay, null, indexRootPath);
+          principal, 0, entityDelay, null, indexNames);
     this.path = path;
     this.entityNames = entityNames;
   }
@@ -75,8 +76,9 @@ public class EntityProcessor extends Crawler {
       try (BwSvc bw = getBw()) {
         final CalSvcI svci = bw.getSvci();
 
-        final BwIndexer indexer = svci.getIndexer(principal,
-                                                  indexRootPath);
+        final BwIndexer entIndexer = getIndexer(svci,
+                                                principal,
+                                                BwIndexer.docTypeEvent);
 
         for (final String name: entityNames) {
           try {
@@ -93,7 +95,7 @@ public class EntityProcessor extends Crawler {
               status.stats.inc(IndexedType.unreachableEntities);
               continue;
             }
-            indexer.indexEntity(ent);
+            entIndexer.indexEntity(ent);
           } catch (final Throwable t) {
             Logger.getLogger(this.getClass()).error(this, t);
 

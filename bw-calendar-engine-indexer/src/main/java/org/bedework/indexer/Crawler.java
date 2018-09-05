@@ -21,6 +21,7 @@ package org.bedework.indexer;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.util.List;
+import java.util.Map;
 
 /** This class provides common crawler methods.
  *
@@ -48,7 +49,7 @@ public abstract class Crawler extends ProcessorBase {
    * @param batchDelay
    * @param entityDelay
    * @param skipPaths - paths to skip
-   * @param indexRootPath - where we build the index
+   * @param indexNames - where we build the index
    */
   public Crawler(final CrawlStatus status,
                  final String name,
@@ -57,9 +58,9 @@ public abstract class Crawler extends ProcessorBase {
                  final long batchDelay,
                  final long entityDelay,
                  final List<String> skipPaths,
-                 final String indexRootPath) {
+                 final Map<String, String> indexNames) {
     super(name, adminAccount, principal, batchDelay, entityDelay,
-          skipPaths, indexRootPath);
+          skipPaths, indexNames);
 
     setStatus(status);
   }

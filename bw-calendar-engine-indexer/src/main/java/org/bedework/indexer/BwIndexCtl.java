@@ -31,6 +31,7 @@ import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.naming.NameNotFoundException;
@@ -506,16 +507,26 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   @Override
   public String newIndexes() {
     try {
-      return getIndexApp().newIndexes();
+      Map<String, String> indexNames = getIndexApp().newIndexes();
+      StringBuilder sb = new StringBuilder();
+
+      for (final String type: indexNames.keySet()) {
+        sb.append(type);
+        sb.append(": ");
+        sb.append(indexNames.get(type));
+        sb.append("\n");
+      }
+
+      return sb.toString();
     } catch (final Throwable t) {
       return "Failed: " + t.getLocalizedMessage();
     }
   }
 
   @Override
-  public String reindex(final String indexName) {
+  public String reindex(final String docType) {
     try {
-      final ReindexResponse resp = getIndexApp().reindex(indexName);
+      final ReindexResponse resp = getIndexApp().reindex(docType);
       
       info(resp.toString());
       
@@ -529,6 +540,21 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   public String setProdAlias(final String indexName) {
     try {
       final int status = getIndexApp().setProdAlias(indexName);
+
+      if (status == 0) {
+        return "ok";
+      }
+
+      return "Failed with status " + status;
+    } catch (final Throwable t) {
+      return "Failed: " + t.getLocalizedMessage();
+    }
+  }
+
+  @Override
+  public String makeAllProd() {
+    try {
+      final int status = getIndexApp().makeAllProd();
 
       if (status == 0) {
         return "ok";
@@ -669,8 +695,9 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
                             final List<String> res) {
     outLine(res, "--------------------------------------");
 
-    outLine(res, status.getName());
+    outLine(res, status.getIndexName());
 
+    outLine(res, "    docType: " + status.getDocType());
     outLine(res, "     status: " + status.getStatus());
 
     if (status.getMessage() != null) {

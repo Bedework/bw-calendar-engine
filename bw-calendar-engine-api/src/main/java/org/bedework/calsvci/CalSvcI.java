@@ -421,13 +421,15 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * @param publick true for public index
    * @return the indexer
    */
-  public abstract BwIndexer getIndexer(final boolean publick);
+  public abstract BwIndexer getIndexer(final boolean publick,
+                                       final String docType);
 
   /**
    * @param principal - for given principal
    * @return the indexer
    */
-  public abstract BwIndexer getIndexer(String principal);
+  public abstract BwIndexer getIndexer(String principal,
+                                       String docType);
 
   /**
    * @param entity may influence choice of indexer
@@ -435,14 +437,15 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    */
   public abstract BwIndexer getIndexer(BwOwnedDbentity entity);
 
-  /** Method which allows us to specify the index root.
+  /** .
    *
    * @param principal
-   * @param indexRoot
+   * @param docType
    * @return the indexer
    */
-  public abstract BwIndexer getIndexer(String principal,
-                                       final String indexRoot);
+  public abstract BwIndexer getIndexerForReindex(String principal,
+                                                 final String docType,
+                                                 final String name);
 
   /** Obtain an object which handles notifications
    *

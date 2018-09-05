@@ -58,6 +58,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeCollection;
 
 /** This acts as an interface to the database for calendars.
  *
@@ -87,7 +88,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   @Override
   public BwCalendar getPublicCalendars() throws CalFacadeException {
-    return getCal().getCollectionIdx(getIndexer(true),
+    return getCal().getCollectionIdx(getIndexer(true, docTypeCollection),
                                      publicCalendarRootPath,
                                      PrivilegeDefs.privRead, true);
   }
@@ -133,7 +134,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     } else {
       priv = PrivilegeDefs.privRead;
     }
-    return getCal().getCollectionIdx(getIndexer(false),
+    return getCal().getCollectionIdx(getIndexer(false, docTypeCollection),
                                      getSvc().getPrincipalInfo().getCalendarHomePath(principal),
                                      priv, true);
   }
@@ -346,7 +347,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
     if (col.getCalType() == BwCalendar.calTypeAlias) {
       resolveAliasIdx(col, true, false);
     }
-    return getCal().getCalendars(col.getAliasedEntity(), getIndexer());
+    return getCal().getCalendars(col.getAliasedEntity(),
+                                 getIndexer(docTypeCollection));
   }
 
   @Override
@@ -397,7 +399,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       path = path.substring(0, path.length() - 1);
     }
 
-    return getCal().getCollectionIdx(getIndexer(), path, 
+    return getCal().getCollectionIdx(getIndexer(docTypeCollection), path,
                                      PrivilegeDefs.privAny, 
                                      true);
   }
@@ -577,7 +579,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                     final boolean freeBusy)
           throws CalFacadeException {
     return getCal().resolveAlias(val, resolveSubAlias, freeBusy,
-                                 getIndexer());
+                                 getIndexer(docTypeCollection));
   }
 
   /* The key will be the full href of the entity based on the

@@ -31,6 +31,7 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvci.CalSvcI;
 
 import java.util.List;
+import java.util.Map;
 
 /** This implementation crawls the user subtree indexing user entries.
  *
@@ -52,7 +53,7 @@ public class PrincipalProcessor extends Crawler {
    * @param batchDelay between batches
    * @param entityDelay betwen entities
    * @param skipPaths - paths to skip
-   * @param indexRootPath - where we build the index
+   * @param indexNames - where we build the index
    * @param entityClass - if non-null only index this class. Cannot
    *                    be collection or events classes
    * @throws CalFacadeException on fatal error
@@ -64,10 +65,10 @@ public class PrincipalProcessor extends Crawler {
                             final long batchDelay,
                             final long entityDelay,
                             final List<String> skipPaths,
-                            final String indexRootPath,
+                            final Map<String, String> indexNames,
                             final Class entityClass) throws CalFacadeException {
     super(status, name, adminAccount,
-          principal, batchDelay, entityDelay, skipPaths, indexRootPath);
+          principal, batchDelay, entityDelay, skipPaths, indexNames);
 
     this.entityClass = entityClass;
   }
@@ -96,45 +97,49 @@ public class PrincipalProcessor extends Crawler {
         return;
       }
 
-      final BwIndexer indexer = svc.getIndexer(principal,
-                                               indexRootPath);
-
       final BwPrincipal pr =
               svc.getUsersHandler().getPrincipal(principal);
 
       if (testClass(BwPrincipal.class)) {
-        indexer.indexEntity(pr);
+        getIndexer(svc, principal,
+                   BwIndexer.docTypePrincipal).indexEntity(pr);
         status.stats.inc(IndexedType.principals, 1);
       }
 
       if (testClass(BwPreferences.class)) {
-        indexer.indexEntity(svc.getPreferences(pr.getPrincipalRef()));
+        getIndexer(svc, principal,
+                   BwIndexer.docTypePreferences).indexEntity(svc.getPreferences(pr.getPrincipalRef()));
         status.stats.inc(IndexedType.preferences, 1);
       }
 
       if (testClass(BwCategory.class)) {
         status.stats.inc(IndexedType.categories,
-                         svc.getCategoriesHandler().reindex(indexer));
+                         svc.getCategoriesHandler().reindex(getIndexer(svc, principal,
+                                                                       BwIndexer.docTypeCategory)));
       }
 
       if (testClass(BwContact.class)) {
         status.stats.inc(IndexedType.contacts,
-                         svc.getContactsHandler().reindex(indexer));
+                         svc.getContactsHandler().reindex(getIndexer(svc, principal,
+                                                                     BwIndexer.docTypeContact)));
       }
 
       if (testClass(BwLocation.class)) {
         status.stats.inc(IndexedType.locations,
-                         svc.getLocationsHandler().reindex(indexer));
+                         svc.getLocationsHandler().reindex(getIndexer(svc, principal,
+                                                                      BwIndexer.docTypeLocation)));
       }
 
       if (testClass(BwResource.class)) {
         status.stats.inc(IndexedType.resources,
-                         svc.getResourcesHandler().reindex(indexer));
+                         svc.getResourcesHandler().reindex(getIndexer(svc, principal,
+                                                                      BwIndexer.docTypeResource)));
       }
 
       if (testClass(BwFilterDef.class)) {
         status.stats.inc(IndexedType.filters,
-                         svc.getFiltersHandler().reindex(indexer));
+                         svc.getFiltersHandler().reindex(getIndexer(svc, principal,
+                                                                    BwIndexer.docTypeResourceContent)));
       }
     }
   }

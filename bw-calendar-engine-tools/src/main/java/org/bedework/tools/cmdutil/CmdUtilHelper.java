@@ -109,8 +109,8 @@ public abstract class CmdUtilHelper extends Logged {
     }
   }
   
-  public BwIndexer getIndexer() throws CalFacadeException {
-    return getSvci().getIndexer(true);
+  public BwIndexer getIndexer(final String docType) throws CalFacadeException {
+    return getSvci().getIndexer(true, docType);
   }
 
   public FilterBase parseQuery(final String query) throws CalFacadeException {

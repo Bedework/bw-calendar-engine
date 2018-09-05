@@ -29,8 +29,12 @@ import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
 import org.bedework.util.misc.Util;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import static org.bedework.calfacade.indexing.BwIndexer.allDocTypes;
 
 /** The crawler program for the bedework calendar system.
  *
@@ -137,12 +141,12 @@ public class BwIndexApp extends JmsSysEventListener {
     }
   }
 
-  public String newIndexes() throws CalFacadeException {
+  public Map<String, String> newIndexes() throws CalFacadeException {
     return getCrawler().newIndexes();
   }
 
-  public ReindexResponse reindex(final String indexName) throws CalFacadeException {
-    return getCrawler().reindex(indexName);
+  public ReindexResponse reindex(final String docType) throws CalFacadeException {
+    return getCrawler().reindex(docType);
   }
 
   public IndexStatsResponse getIndexStats(final String indexName) throws CalFacadeException {
@@ -157,6 +161,42 @@ public class BwIndexApp extends JmsSysEventListener {
    */
   public int setProdAlias(final String indexName) throws CalFacadeException {
     return getCrawler().setProdAlias(indexName);
+  }
+
+  /** Move the production index aliases to the latest indexes
+   *
+   * @return status code- 0 for OK
+   * @throws CalFacadeException on error
+   */
+  public int makeAllProd() throws CalFacadeException {
+    final Set<IndexInfo> is = getIndexInfo();
+    final Map<String, String> names = new HashMap<>();
+
+    for (final IndexInfo ii: is) {
+      final String indexName = ii.getIndexName();
+
+      for (final String type: allDocTypes) {
+        final String lctype = type.toLowerCase();
+
+        if (indexName.startsWith("bw" + lctype + "2")) {
+          final String tname = names.get(type);
+
+          if ((tname == null) || (tname.compareTo(indexName) < 0)) {
+            names.put(type, indexName);
+          }
+          break;
+        }
+      }
+    }
+
+    for (final String iname: names.values()) {
+      final int res = getCrawler().setProdAlias(iname);
+      if (res != 0) {
+        return res;
+      }
+    }
+
+    return 0;
   }
 
   void crawl() throws CalFacadeException {

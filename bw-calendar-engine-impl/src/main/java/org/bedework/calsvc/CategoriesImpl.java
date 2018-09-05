@@ -29,6 +29,8 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
 
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeCategory;
+
 /** Class which handles manipulation of Categories.
  *
  * @author Mike Douglass   douglm - rpi.edu
@@ -55,18 +57,19 @@ public class CategoriesImpl
   Collection<BwCategory> fetchAllIndexed(final boolean publick,
                                          final String ownerHref)
           throws CalFacadeException {
-    return filterDeleted(getIndexer(publick, 
-                                    ownerHref).fetchAllCats());
+    return filterDeleted(getIndexer(publick,
+                                    ownerHref,
+                                    docTypeCategory).fetchAllCats());
   }
 
   @Override
   BwCategory fetchIndexedByUid(final String uid) throws CalFacadeException {
-    return getIndexer().fetchCat(uid, PropertyInfoIndex.UID);
+    return getIndexer(docTypeCategory).fetchCat(uid, PropertyInfoIndex.UID);
   }
 
   @Override
   BwCategory fetchIndexed(final String href) throws CalFacadeException {
-    return getIndexer().fetchCat(href, PropertyInfoIndex.HREF);
+    return getIndexer(docTypeCategory).fetchCat(href, PropertyInfoIndex.HREF);
   }
 
   @Override
@@ -82,9 +85,10 @@ public class CategoriesImpl
 
   @Override
   public BwCategory find(final BwString val) throws CalFacadeException {
-    return getIndexer().fetchCat(val.getValue(),
-                                 PropertyInfoIndex.CATEGORIES,
-                                 PropertyInfoIndex.VALUE);
+    return getIndexer(docTypeCategory)
+            .fetchCat(val.getValue(),
+                      PropertyInfoIndex.CATEGORIES,
+                      PropertyInfoIndex.VALUE);
   }
 
   @Override
@@ -99,7 +103,8 @@ public class CategoriesImpl
       return Response.error(new GetEntitiesResponse<>(), pr.message);
     }
 
-    return getIndexer().findCategories(pr.filter, from, size);
+    return getIndexer(docTypeCategory)
+            .findCategories(pr.filter, from, size);
   }
 }
 

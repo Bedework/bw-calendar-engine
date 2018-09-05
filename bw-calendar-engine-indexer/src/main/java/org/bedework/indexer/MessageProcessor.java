@@ -32,6 +32,8 @@ import org.bedework.sysevents.events.EntityUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase;
 
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
+
 /**
  * Class to handle incoming system event messages and fire off index processes
  * <p>
@@ -147,7 +149,8 @@ public class MessageProcessor extends CalSys {
           debug("Missing event: " + ece.getHref());
         }
       } else {
-        getIndexer(bw.getSvci(), val).indexEntity(val);
+        getIndexer(bw.getSvci(), val,
+                   docTypeEvent).indexEntity(val);
       }
     } catch (final Throwable t) {
       error(t);
@@ -156,7 +159,8 @@ public class MessageProcessor extends CalSys {
 
   @SuppressWarnings("rawtypes")
   private BwIndexer getIndexer(final CalSvcI svci,
-                               final Object val) throws CalFacadeException {
+                               final Object val,
+                               final String docType) throws CalFacadeException {
     boolean publick = false;
 
     String principal = null;
@@ -180,16 +184,17 @@ public class MessageProcessor extends CalSys {
       principal = ent.getOwnerHref();
     }
 
-    return getIndexer(svci, publick, principal);
+    return getIndexer(svci, publick, principal, docType);
   }
 
   private BwIndexer getIndexer(final CalSvcI svci,
                                final boolean publick,
-                               final String principal) throws CalFacadeException {
+                               final String principal,
+                               final String docType) throws CalFacadeException {
     try {
       if (publick) {
         if (publicIndexer == null) {
-          publicIndexer = svci.getIndexer(true);
+          publicIndexer = svci.getIndexer(true, docType);
         }
         return publicIndexer;
       }
@@ -200,7 +205,7 @@ public class MessageProcessor extends CalSys {
       }
 
       if (userIndexer == null) {
-        userIndexer = svci.getIndexer(principal);
+        userIndexer = svci.getIndexer(principal, docType);
         userIndexerPrincipal = principal;
       }
 

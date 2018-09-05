@@ -27,22 +27,35 @@ import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.FiltersCommonI;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
+import org.bedework.calfacade.BwFilterDef;
+import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.indexing.BwIndexFetcher;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.indexing.BwIndexerParams;
+import org.bedework.calfacade.responses.GetEntityResponse;
+import org.bedework.calfacade.responses.Response;
+import org.bedework.calfacade.svc.BwAuthUser;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.NotificationsHandlerFactory;
 import org.bedework.sysevents.events.SysEventBase;
+import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.misc.Logged;
 import org.bedework.util.misc.Util;
 
@@ -52,6 +65,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.LinkedTransferQueue;
+
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeCategory;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeContact;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
 
 /** Base Implementation of CalIntf which throws exceptions for most methods.
 *
@@ -104,6 +121,8 @@ public abstract class CalintfBase extends Logged implements Calintf {
   protected AccessUtil access;
 
   public CollectionCache colCache;
+
+  private BwIndexFetcher indexFetcher = new BwIndexFetcherImpl();
 
   public class CIAccessChecker implements AccessChecker {
     @Override
@@ -175,10 +194,11 @@ public abstract class CalintfBase extends Logged implements Calintf {
   }
 
   public void closeIndexers() {
-    if (publicIndexer != null) {
-      publicIndexer.close();
-      publicIndexer = null;
+    for (final BwIndexer idx: publicIndexers.values()) {
+      idx.close();
     }
+
+    publicIndexers.clear();
 
     for (final BwIndexer idx: principalIndexers.values()) {
       idx.close();
@@ -300,107 +320,244 @@ public abstract class CalintfBase extends Logged implements Calintf {
     return principalInfo.getSuperUser();
   }
 
-  private BwIndexer publicIndexer;
+  private Map<String, BwIndexer> publicIndexers = new HashMap<>();
   private Map<String, BwIndexer> principalIndexers =
           new HashMap<>();
 
-  public BwIndexer getIndexer() {
+  public BwIndexer getIndexer(final String docType) {
     if (currentMode == CalintfDefs.publicAdminMode ||
                               !authenticated) {
-      return getPublicIndexer();
+      return getPublicIndexer(docType);
     }
 
-    return getIndexer(getPrincipal());
+    return getIndexer(getPrincipal(), docType);
   }
 
   @Override
   public BwIndexer getIndexer(final BwOwnedDbentity entity) {
+    final String docType = docTypeFromClass(entity);
+
     if ((currentMode == CalintfDefs.guestMode) ||
             (currentMode == CalintfDefs.publicUserMode) ||
             (currentMode == CalintfDefs.publicAdminMode)) {
-      return getPublicIndexer();
+      return getPublicIndexer(docType);
     }
 
     if ((entity != null) && entity.getPublick()) {
-      return getPublicIndexer();
+      return getPublicIndexer(docType);
     }
 
-    return getIndexer(getPrincipal());
+    return getIndexer(getPrincipal(), docType);
   }
 
-  public BwIndexer getIndexer(final BwIndexer indexer) {
+  private static Map<Class, String> toDocType = new HashMap<>();
+
+  static {
+    toDocType.put(BwCalendar.class, BwIndexer.docTypeCollection);
+    toDocType.put(BwCategory.class, docTypeCategory);
+    toDocType.put(BwPrincipal.class, BwIndexer.docTypePrincipal);
+    toDocType.put(BwPreferences.class, BwIndexer.docTypePreferences);
+    toDocType.put(BwAuthUser.class, BwIndexer.docTypePrincipal);
+    toDocType.put(BwLocation.class, BwIndexer.docTypeLocation);
+    toDocType.put(BwContact.class, BwIndexer.docTypeContact);
+    toDocType.put(BwFilterDef.class, BwIndexer.docTypeFilter);
+    toDocType.put(BwEvent.class, BwIndexer.docTypeEvent);
+    toDocType.put(BwResource.class, BwIndexer.docTypeResource);
+    toDocType.put(BwResourceContent.class, BwIndexer.docTypeResourceContent);
+  }
+
+  public String docTypeFromClass(final Object entity) {
+    final String docType = toDocType.get(entity.getClass());
+
+    if (docType == null) {
+      throw new RuntimeException("Unable to get docType for class " +
+                                         entity.getClass());
+    }
+
+    return docType;
+  }
+
+  public BwIndexer getIndexer(final BwIndexer indexer,
+                              final String docType) {
     if (indexer != null) {
       return indexer;
     }
     if ((currentMode == CalintfDefs.publicAdminMode) ||
             (currentMode == CalintfDefs.publicUserMode) ||
             !authenticated) {
-      return getPublicIndexer();
+      return getPublicIndexer(docType);
     }
 
-    return getIndexer(getPrincipal());
+    return getIndexer(getPrincipal(), docType);
   }
 
-  public BwIndexer getIndexer(final String principalHref) {
+  public BwIndexer getIndexer(final String principalHref,
+                              final String docType) {
     if ((currentMode == CalintfDefs.publicAdminMode) ||
             (currentMode == CalintfDefs.publicUserMode) ||
             !authenticated) {
-      return getPublicIndexer();
+      return getPublicIndexer(docType);
     }
 
     try {
-      return getIndexer(getPrincipal(principalHref));
+      return getIndexer(getPrincipal(principalHref),
+                        docType);
     } catch (final CalFacadeException cfe) {
       error(cfe);
       throw new RuntimeException(cfe);
     }
   }
 
-  @Override
-  public BwIndexer getPublicIndexer() {
-    if (publicIndexer != null) {
-      return publicIndexer;
+  private class BwIndexFetcherImpl implements BwIndexFetcher {
+    @Override
+    public GetEntityResponse<BwCategory> fetchCategory(
+            final BwIndexerParams params, final String href) {
+      final GetEntityResponse<BwCategory> resp = new GetEntityResponse<>();
+
+      try {
+        final BwCategory ent = getIndexer(params,
+                                          docTypeCategory)
+                .fetchCat(href, PropertyIndex.PropertyInfoIndex.HREF);
+
+        if (ent == null) {
+          return Response.notOk(resp, Response.Status.notFound, null);
+        }
+
+        resp.setEntity(ent);
+
+        return Response.ok(resp, null);
+      } catch (final Throwable t) {
+        return Response.error(resp, t);
+      }
     }
-    publicIndexer = BwIndexerFactory.getPublicIndexer(configs,
-                                                      currentMode,
-                                                      ac);
-    return publicIndexer;
+
+    @Override
+    public GetEntityResponse<BwContact> fetchContact(
+            final BwIndexerParams params, final String href) {
+      final GetEntityResponse<BwContact> resp = new GetEntityResponse<>();
+
+      try {
+        final BwContact ent = getIndexer(params,
+                                          docTypeContact)
+                .fetchContact(href, PropertyIndex.PropertyInfoIndex.HREF);
+
+        if (ent == null) {
+          return Response.notOk(resp, Response.Status.notFound, null);
+        }
+
+        resp.setEntity(ent);
+
+        return Response.ok(resp, null);
+      } catch (final Throwable t) {
+        return Response.error(resp, t);
+      }
+    }
+
+    @Override
+    public GetEntityResponse<BwLocation> fetchLocation(
+            final BwIndexerParams params, final String href) {
+      final GetEntityResponse<BwLocation> resp = new GetEntityResponse<>();
+
+      try {
+        final BwLocation ent = getIndexer(params,
+                                          docTypeLocation)
+                .fetchLocation(href, PropertyIndex.PropertyInfoIndex.HREF);
+
+        if (ent == null) {
+          return Response.notOk(resp, Response.Status.notFound, null);
+        }
+
+        resp.setEntity(ent);
+
+        return Response.ok(resp, null);
+      } catch (final Throwable t) {
+        return Response.error(resp, t);
+      }
+    }
+  }
+
+  public BwIndexer getIndexer(final BwIndexerParams params,
+                              final String docType) {
+    if (params.publick) {
+      return getPublicIndexer(docType);
+    }
+
+    return getIndexer(params.principal, docType);
   }
 
   @Override
-  public BwIndexer getIndexer(final boolean publick) {
-    if (publick) {
-      return getPublicIndexer();
+  public BwIndexer getPublicIndexer(final String docType) {
+    BwIndexer idx = publicIndexers.get(docType);
+    if (idx == null) {
+      idx = BwIndexerFactory.getPublicIndexer(configs,
+                                              docType,
+                                              currentMode,
+                                              ac,
+                                              indexFetcher);
+      publicIndexers.put(docType, idx);
     }
 
-    return getIndexer(getPrincipal());
-  }
-
-  @Override
-  public BwIndexer getIndexer(final BwPrincipal principal) {
-    if (BwPrincipal.publicUserHref.equals(principal.getPrincipalRef())) {
-      return getPublicIndexer();
-    }
-
-    BwIndexer idx = principalIndexers.get(principal.getPrincipalRef());
-    if (idx != null) {
-      return idx;
-    }
-    idx = BwIndexerFactory.getIndexer(configs, principal,
-                                      getSuperUser(),
-                                      currentMode,
-                                      ac);
-    principalIndexers.put(principal.getPrincipalRef(), idx);
     return idx;
   }
 
   @Override
+  public BwIndexer getIndexer(final boolean publick,
+                              final String docType) {
+    if (publick) {
+      return getPublicIndexer(docType);
+    }
+
+    return getIndexer(getPrincipal(), docType);
+  }
+
+  @Override
   public BwIndexer getIndexer(final BwPrincipal principal,
-                              final String indexRoot) {
-    return BwIndexerFactory.getIndexer(configs, principal,
-                                       currentMode,
-                                       ac,
-                                       indexRoot);
+                              final String docType) {
+    if (BwPrincipal.publicUserHref.equals(principal.getPrincipalRef())) {
+      return getPublicIndexer(docType);
+    }
+
+    BwIndexer idx = principalIndexers.get(docType + "\t" +
+                                                  principal.getPrincipalRef());
+    if (idx != null) {
+      return idx;
+    }
+
+    idx = BwIndexerFactory.getIndexer(configs,
+                                      docType,
+                                      principal,
+                                      getSuperUser(),
+                                      currentMode,
+                                      ac,
+                                      indexFetcher);
+    principalIndexers.put(docType + "\t" +
+                                  principal.getPrincipalRef(), idx);
+    return idx;
+  }
+
+  @Override
+  public BwIndexer getIndexerForReindex(final BwPrincipal principal,
+                                        final String docType,
+                                        final String indexName) {
+    return BwIndexerFactory.getIndexerForReindex(configs,
+                                                 docType,
+                                                 principal,
+                                                 currentMode,
+                                                 ac,
+                                                 indexFetcher,
+                                                 indexName);
+  }
+
+  protected BwIndexer getEvIndexer() {
+    return getIndexer(BwIndexer.docTypeEvent);
+  }
+
+  protected BwIndexer getColIndexer() {
+    return getIndexer(BwIndexer.docTypeCollection);
+  }
+
+  protected BwIndexer getColIndexer(final BwIndexer indexer) {
+    return getIndexer(indexer, BwIndexer.docTypeCollection);
   }
 
   protected String makeHref(final BwPrincipal principal,

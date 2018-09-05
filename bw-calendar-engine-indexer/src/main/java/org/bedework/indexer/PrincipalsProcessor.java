@@ -22,6 +22,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 
 import java.util.List;
+import java.util.Map;
 
 /** This implementation crawls the user subtree indexing user entries.
  *
@@ -45,7 +46,7 @@ public class PrincipalsProcessor extends Crawler {
    * @param batchDelay between batches
    * @param entityDelay betwen entities
    * @param skipPaths - paths to skip
-   * @param indexRootPath - where we build the index
+   * @param indexNames - where we build the index
    */
   public PrincipalsProcessor(final CrawlStatus status,
                              final String name,
@@ -53,11 +54,11 @@ public class PrincipalsProcessor extends Crawler {
                              final long batchDelay,
                              final long entityDelay,
                              final List<String> skipPaths,
-                             final String indexRootPath,
+                             final Map<String, String> indexNames,
                              final Class entityClass) {
     super(status,
           name, adminAccount, null, batchDelay, entityDelay,
-          skipPaths, indexRootPath);
+          skipPaths, indexNames);
 
     this.entityClass = entityClass;
   }
@@ -111,7 +112,7 @@ public class PrincipalsProcessor extends Crawler {
                                                        batchDelay,
                                                        entityDelay,
                                                        getSkipPaths(),
-                                                       indexRootPath,
+                                                       indexNames,
                                                        entityClass);
 
         /* This call should hang waiting for an available process */

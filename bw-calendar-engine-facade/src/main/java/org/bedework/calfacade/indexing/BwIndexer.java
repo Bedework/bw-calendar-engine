@@ -50,57 +50,71 @@ import java.util.TreeSet;
 public interface BwIndexer extends Serializable {
   // Types of entity we index
   String docTypeUnknown = "unknown";
+  String docTypeUpdateTracker = "updateTracker";
   String docTypePrincipal = "principal";
   String docTypePreferences = "preferences";
-  String docTypeAuthUser = "auth";
   String docTypeCollection = "collection";
   String docTypeCategory = "category";
   String docTypeLocation = "location";
   String docTypeContact = "contact";
   String docTypeFilter = "filter";
   String docTypeEvent = "event";
-  //        IcalDefs.entityTypeNames[IcalDefs.entityTypeEvent];
-  String docTypePoll = "vpoll";
-  //        IcalDefs.entityTypeNames[IcalDefs.entityTypeVpoll];
   String docTypeResource = "resource";
   String docTypeResourceContent = "resourceContent";
-  String docTypeSyspars = "syspars";
+
+  String[] allDocTypes = {
+          docTypeUnknown,
+          docTypeUpdateTracker,
+          docTypePrincipal,
+          docTypePreferences,
+          docTypeCollection,
+          docTypeCategory,
+          docTypeLocation,
+          docTypeContact,
+          docTypeFilter,
+          docTypeEvent,
+          docTypeResource,
+          docTypeResourceContent
+  };
 
   /** */
   enum IndexedType {
     /** */
+    unreachableEntities(docTypeUnknown),
+
+    /** */
+    updateTracker(docTypeUpdateTracker),
+
+    /** */
     principals(docTypePrincipal),
-
-    /** */
-    collections(docTypeCollection),
-
-    /** */
-    events(docTypeEvent),
-
-    /** */
-    vpoll(docTypePoll),
-
-    /** */
-    categories(docTypeCategory),
-
-    /** */
-    contacts(docTypeContact),
-
-    /** */
-    locations(docTypeLocation),
 
     /** */
     preferences(docTypePreferences),
 
     /** */
-    resources(docTypeResource),
+    collections(docTypeCollection),
+
+    /** */
+    categories(docTypeCategory),
+
+    /** */
+    locations(docTypeLocation),
+
+    /** */
+    contacts(docTypeContact),
 
     /** */
     filters(docTypeFilter),
 
     /** */
-    unreachableEntities(docTypeUnknown);
-    
+    events(docTypeEvent),
+
+    /** */
+    resources(docTypeResource),
+
+    /** */
+    resourceContents(docTypeResourceContent);
+
     private final String docType;
 
     IndexedType(final String docType) {
@@ -172,14 +186,14 @@ public interface BwIndexer extends Serializable {
    */
   String currentChangeToken() throws CalFacadeException;
 
-  /** Will return a response indicating what happened. An immediate 
+  /** Indexes the current datafor the current docType into a new index.
+   * Will return a response indicating what happened. An immediate
    * response with status processing indicates a process is already 
    * running.
    * 
-   * @param name of index
    * @return final statistics
    */
-  ReindexResponse reindex(String name);
+  ReindexResponse reindex();
 
   /**
    *
@@ -326,13 +340,12 @@ public interface BwIndexer extends Serializable {
    */
   void flush() throws CalFacadeException;
 
-  /** create a new index and start using it.
+  /** create a new index for current doctype and start using it.
    *
-   * @param name basis for new name - in solr the core
    * @return name of created index.
    * @throws CalFacadeException on error
    */
-  String newIndex(String name) throws CalFacadeException;
+  String newIndex() throws CalFacadeException;
 
   class IndexInfo implements Comparable<IndexInfo>, Serializable {
     private final String indexName;
@@ -400,14 +413,13 @@ public interface BwIndexer extends Serializable {
    */
   List<String> purgeIndexes() throws CalFacadeException;
 
-  /** Set alias on the given index - usually to make it the production index.
+  /** Set alias on the given index - to make it the production index.
    *
    * @param index   name of index to be aliased
-   * @param alias   to point at index
    * @return 0 for OK or HTTP status from indexer
    * @throws CalFacadeException on error
    */
-  int setAlias(String index, String alias) throws CalFacadeException;
+  int setAlias(String index) throws CalFacadeException;
 
   /** Href of event with possible anchor tag for recurrence id.
    *

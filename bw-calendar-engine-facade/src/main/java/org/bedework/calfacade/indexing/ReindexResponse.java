@@ -33,8 +33,10 @@ public class ReindexResponse extends Response {
       source = val;
     }
   }
-  
-  private final String name;
+
+  private final String docType;
+
+  private String indexName;
 
   private long processed;
 
@@ -47,13 +49,21 @@ public class ReindexResponse extends Response {
 
   private List<Failure> failures;
 
-  public ReindexResponse(final String name) {
-    this.name = name;
-    stats = new IndexStatistics(name);
+  public ReindexResponse(final String docType) {
+    this.docType = docType;
+    stats = new IndexStatistics(docType);
   }
 
-  public String getName() {
-    return name;
+  public String getDocType() {
+    return docType;
+  }
+
+  public String getIndexName() {
+    return indexName;
+  }
+
+  public void setIndexName(final String val) {
+    indexName = val;
   }
 
   /**
@@ -108,7 +118,8 @@ public class ReindexResponse extends Response {
   public void toStringSegment(final ToString ts) {
     super.toStringSegment(ts);
 
-    ts.append("name", getName());
+    ts.append("docType", getDocType());
+    ts.append("indexName", getIndexName());
     ts.append("processed", getProcessed());
     ts.append("recurring", getRecurring());
     ts.append("totalFailed", getTotalFailed());

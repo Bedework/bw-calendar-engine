@@ -85,6 +85,7 @@ import static org.bedework.calfacade.indexing.BwIndexer.docTypePreferences;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeResource;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeResourceContent;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeUpdateTracker;
 
 /** Implementation of CalIntf which uses hibernate as its persistance engine.
  *
@@ -406,7 +407,7 @@ public class CalintfImpl extends CalintfROImpl {
       }
 
       if (!indexRebuild) {
-        getIndexer().markTransaction();
+        getIndexer(docTypeUpdateTracker).markTransaction();
       }
     } catch (final CalFacadeException cfe) {
       if (sess != null) {
@@ -1131,7 +1132,7 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public void saveOrUpdate(final BwPrincipal val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
-    getIndexer(val).indexEntity(val);
+    getIndexer(val, docTypePrincipal).indexEntity(val);
   }
 
   @Override
@@ -1154,7 +1155,7 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public void delete(final BwPreferences val) throws CalFacadeException {
     entityDao.delete(val);
-    getIndexer().unindexEntity(docTypePreferences, val.getHref());
+    getIndexer(docTypePreferences).unindexEntity(docTypePreferences, val.getHref());
   }
 
   /* ====================================================================
@@ -1186,14 +1187,14 @@ public class CalintfImpl extends CalintfROImpl {
   public void updateGroup(final BwGroup group,
                           final boolean admin) throws CalFacadeException {
     principalsAndPrefs.saveOrUpdate(group);
-    getIndexer().indexEntity(group);
+    getIndexer(docTypePrincipal).indexEntity(group);
   }
 
   @Override
   public void removeGroup(final BwGroup group,
                           final boolean admin) throws CalFacadeException {
     principalsAndPrefs.removeGroup(group, admin);
-    getIndexer().unindexEntity(docTypePrincipal, group.getHref());
+    getIndexer(docTypePrincipal).unindexEntity(docTypePrincipal, group.getHref());
   }
 
   @Override
@@ -1212,7 +1213,7 @@ public class CalintfImpl extends CalintfROImpl {
     ent.setMember(val);
 
     principalsAndPrefs.saveOrUpdate(ent);
-    getIndexer().indexEntity(group);
+    getIndexer(docTypePrincipal).indexEntity(group);
   }
 
   @Override
@@ -1220,7 +1221,7 @@ public class CalintfImpl extends CalintfROImpl {
                            final BwPrincipal val,
                            final boolean admin) throws CalFacadeException {
     principalsAndPrefs.removeMember(group, val, admin);
-    getIndexer().indexEntity(group);
+    getIndexer(docTypePrincipal).indexEntity(group);
   }
 
   @Override
@@ -1269,7 +1270,7 @@ public class CalintfImpl extends CalintfROImpl {
   public void delete(final BwCalSuite val) throws CalFacadeException {
     entityDao.delete(val);
     BwCalSuitePrincipal csp = BwCalSuitePrincipal.from(val);
-    getIndexer().unindexEntity(docTypePrincipal, csp.getHref());
+    getIndexer(docTypePrincipal).unindexEntity(docTypePrincipal, csp.getHref());
   }
 
   /* ====================================================================

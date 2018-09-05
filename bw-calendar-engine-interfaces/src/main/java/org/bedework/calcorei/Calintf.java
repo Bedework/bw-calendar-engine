@@ -309,9 +309,10 @@ public interface Calintf
   String getCalendarNameFromType(int calType) throws CalFacadeException;
 
   /**
+   * @param docType type of entity
    * @return the appropriate indexer
    */
-  BwIndexer getIndexer();
+  BwIndexer getIndexer(String docType);
 
   /**
    * @param entity may influence choice of indexer
@@ -322,35 +323,40 @@ public interface Calintf
   /** Return a public indexer if we're in public mode or one for the given href
    *
    * @param principalHref if we're not public
+   * @param docType type of entity
    * @return BwIndexer
    */
-  BwIndexer getIndexer(final String principalHref);
+  BwIndexer getIndexer(final String principalHref, String docType);
 
   /**
+   * @param docType type of entity
    * @return the indexer
    */
-  BwIndexer getPublicIndexer();
+  BwIndexer getPublicIndexer(String docType);
 
   /**
+   * @param docType type of entity
    * @return the [public] indexer
    */
-  BwIndexer getIndexer(boolean publick);
+  BwIndexer getIndexer(boolean publick, String docType);
 
   /** Get a non-public indexer for a principal
    *
    * @param principal
+   * @param docType type of entity
    * @return the indexer
    */
-  BwIndexer getIndexer(BwPrincipal principal);
+  BwIndexer getIndexer(BwPrincipal principal, String docType);
 
-  /** Method which allows us to specify the index root.
+  /** Method for reindexing.
    *
    * @param principal
-   * @param indexRoot
+   * @param docType type of entity
    * @return the indexer
    */
-  BwIndexer getIndexer(BwPrincipal principal,
-                       final String indexRoot);
+  BwIndexer getIndexerForReindex(BwPrincipal principal,
+                                 String docType,
+                                 String indexName);
 
   /* ====================================================================
    *                   Notifications

@@ -805,18 +805,19 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     return calSuitesHandler;
   }
 
-  public BwIndexer getIndexer() {
+  public BwIndexer getIndexer(final String docType) {
     try {
-      return getCal().getIndexer();
+      return getCal().getIndexer(docType);
     } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }
   }
 
   @Override
-  public BwIndexer getIndexer(final boolean publick) {
+  public BwIndexer getIndexer(final boolean publick,
+                              final String docType) {
     try {
-      return getCal().getIndexer(publick);
+      return getCal().getIndexer(publick, docType);
     } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }
@@ -832,7 +833,8 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
   }
 
   @Override
-  public BwIndexer getIndexer(final String principal) {
+  public BwIndexer getIndexer(final String principal,
+                              final String docType) {
     try {
       final BwPrincipal pr;
 
@@ -842,15 +844,16 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
         pr = getPrincipal(principal);
       }
 
-      return getCal().getIndexer(pr);
+      return getCal().getIndexer(pr, docType);
     } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }
   }
 
   @Override
-  public BwIndexer getIndexer(final String principal,
-                              final String indexRoot) {
+  public BwIndexer getIndexerForReindex(final String principal,
+                                        final String docType,
+                                        final String indexName) {
     try {
       final BwPrincipal pr;
 
@@ -860,7 +863,7 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
         pr = getPrincipal(principal);
       }
 
-      return getCal().getIndexer(pr, indexRoot);
+      return getCal().getIndexerForReindex(pr, docType, indexName);
     } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }

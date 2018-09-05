@@ -42,6 +42,7 @@ public abstract class CalSys extends Logged {
   protected String name;
 
   protected String adminAccount;
+  protected String adminPrincipal;
 
   protected String principal;
 
@@ -72,6 +73,8 @@ public abstract class CalSys extends Logged {
     this.name = name;
     this.adminAccount = adminAccount;
     this.principal = principal;
+
+    adminPrincipal = "/principals/users/" + adminAccount;
   }
 
   protected void setThreadPools(final int maxEntityThreads,

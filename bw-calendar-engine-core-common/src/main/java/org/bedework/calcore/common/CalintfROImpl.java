@@ -479,7 +479,7 @@ public class CalintfROImpl extends CalintfBase
                                              final BwIndexer indexer) throws CalFacadeException {
     checkOpen();
 
-    return getIndexer(indexer).fetchChildren(cal.getHref());
+    return getColIndexer(indexer).fetchChildren(cal.getHref());
   }
 
   @Override
@@ -498,7 +498,7 @@ public class CalintfROImpl extends CalintfBase
     pathElements.add(val.getPath());
 
     return resolveAlias(val, resolveSubAlias, freeBusy,
-                        pathElements, getIndexer(indexer));
+                        pathElements, getColIndexer(indexer));
   }
 
   @Override
@@ -512,7 +512,7 @@ public class CalintfROImpl extends CalintfBase
                                 final boolean alwaysReturnResult) throws CalFacadeException{
     checkOpen();
 
-    return getCollectionIdx(getIndexer(),
+    return getCollectionIdx(getColIndexer(),
                             path, desiredAccess, alwaysReturnResult);
   }
 
@@ -520,14 +520,14 @@ public class CalintfROImpl extends CalintfBase
   public BwCalendar getCollectionNoCheck(final String path) throws CalFacadeException {
     checkOpen();
 
-    return getCollectionIdx(getIndexer(),
+    return getCollectionIdx(getColIndexer(),
                             path, -1, true);
   }
 
   public BwCalendar getCollection(final String path) throws CalFacadeException {
     checkOpen();
 
-    return getCollectionIdx(getIndexer(),
+    return getCollectionIdx(getColIndexer(),
                             path, privAny, true);
   }
 
@@ -535,7 +535,7 @@ public class CalintfROImpl extends CalintfBase
   public BwCalendar getCollection(final String path,
                                   final int desiredAccess,
                                   final boolean alwaysReturnResult) throws CalFacadeException {
-    return getCollectionIdx(getIndexer(), path, desiredAccess, alwaysReturnResult);
+    return getCollectionIdx(getColIndexer(), path, desiredAccess, alwaysReturnResult);
   }
 
   private final static BwCalendar rootCol;
@@ -562,7 +562,7 @@ public class CalintfROImpl extends CalintfBase
     }
 
     final GetEntityResponse<BwCalendar> ger =
-            getIndexer(indexer).fetchCol(path, desiredAccess,
+            getColIndexer(indexer).fetchCol(path, desiredAccess,
                                          PropertyInfoIndex.HREF);
 
     if (ger.getStatus() == ok) {
@@ -693,7 +693,7 @@ public class CalintfROImpl extends CalintfBase
     final Collection<BwCalendar> cols;
 
     final Collection<BwCalendar> icols =
-            getIndexer().fetchChildren(path, false);
+            getColIndexer().fetchChildren(path, false);
     cols = new ArrayList<>();
 
     for (final BwCalendar col: icols) {
@@ -777,7 +777,7 @@ public class CalintfROImpl extends CalintfBase
     final String fpathSlash = fpath + "/";
 
     @SuppressWarnings("unchecked")
-    final Collection<BwCalendar> cols = getIndexer().fetchChildrenDeep(fpath);
+    final Collection<BwCalendar> cols = getColIndexer().fetchChildrenDeep(fpath);
 
     String token = thisCol.getLastmod().getTagValue();
 
@@ -1008,7 +1008,7 @@ public class CalintfROImpl extends CalintfBase
     }
 
     final SearchResult sr =
-            getIndexer().search(null,   // query
+            getEvIndexer().search(null,   // query
                                     false,
                                     fltr,
                                     sort,
@@ -1051,7 +1051,7 @@ public class CalintfROImpl extends CalintfBase
            throws CalFacadeException {
     checkOpen();
     final GetEntityResponse<EventInfo> ger =
-            getIndexer().fetchEvent(colPath, guid);
+            getEvIndexer().fetchEvent(colPath, guid);
 
     if (ger.getStatus() == Response.Status.notFound) {
       return null;
@@ -1157,7 +1157,7 @@ public class CalintfROImpl extends CalintfBase
     checkOpen();
     checkOpen();
     final GetEntityResponse<EventInfo> ger =
-            getIndexer().fetchEvent(href);
+            getEvIndexer().fetchEvent(href);
 
     if (ger.getStatus() == Response.Status.notFound) {
       return null;
@@ -1252,7 +1252,7 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public BwFilterDef getFilterDef(final String name,
                                   final BwPrincipal owner) throws CalFacadeException {
-    return getIndexer(owner).fetchFilter(
+    return getIndexer(owner, BwIndexer.docTypeFilter).fetchFilter(
             makeHref(owner,
                      getSyspars().getUserCalendarRoot(),
                      getSyspars().getBedeworkResourceDirectory(),
@@ -1261,7 +1261,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Collection<BwFilterDef> getAllFilterDefs(final BwPrincipal owner) throws CalFacadeException {
-    return getIndexer(owner).fetchFilters(null, -1);
+    return getIndexer(owner, BwIndexer.docTypeFilter).fetchFilters(null, -1);
   }
 
   @Override
@@ -1310,7 +1310,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
-    return getIndexer().fetchPrincipal(href);
+    return getIndexer(BwIndexer.docTypePrincipal).fetchPrincipal(href);
   }
 
   @Override
@@ -1326,7 +1326,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public BwPreferences getPreferences(final String principalHref) throws CalFacadeException {
-    return getIndexer().fetchPreferences(principalHref);
+    return getIndexer(BwIndexer.docTypePreferences).fetchPreferences(principalHref);
   }
 
   @Override
@@ -1367,7 +1367,7 @@ public class CalintfROImpl extends CalintfBase
                             account);
     }
 
-    return (BwGroup)getIndexer().fetchPrincipal(href);
+    return (BwGroup)getIndexer(BwIndexer.docTypePrincipal).fetchPrincipal(href);
   }
 
   @Override
@@ -1435,7 +1435,7 @@ public class CalintfROImpl extends CalintfBase
                                        "/", name);
 
     final BwCalSuitePrincipal cspr =
-            (BwCalSuitePrincipal)getIndexer().fetchPrincipal(href);
+            (BwCalSuitePrincipal)getIndexer(BwIndexer.docTypePrincipal).fetchPrincipal(href);
     if (cspr == null) {
       return null;
     }
@@ -1465,7 +1465,7 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public BwCategory getCategory(final String uid) throws CalFacadeException {
     try {
-      return getIndexer()
+      return getIndexer(BwIndexer.docTypeCategory)
               .fetchCat(uid, PropertyInfoIndex.UID);
     } catch (final Throwable t) {
       if (t instanceof CalFacadeException) {
@@ -1490,7 +1490,7 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public BwResource getResource(final String href,
                                 final int desiredAccess) throws CalFacadeException {
-    final BwResource res = getIndexer().fetchResource(href);
+    final BwResource res = getIndexer(BwIndexer.docTypeResource).fetchResource(href);
     if (res == null) {
       return null;
     }
@@ -1506,7 +1506,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public void getResourceContent(final BwResource val) throws CalFacadeException {
-    val.setContent(getIndexer().fetchResourceContent(val.getHref()));
+    val.setContent(getIndexer(BwIndexer.docTypeResourceContent).fetchResourceContent(val.getHref()));
   }
 
   @Override
@@ -1523,7 +1523,7 @@ public class CalintfROImpl extends CalintfBase
 
     }
 
-    return getIndexer().fetchResources(path, lastmod, seq, count);
+    return getIndexer(BwIndexer.docTypeResource).fetchResources(path, lastmod, seq, count);
   }
 
   @Override

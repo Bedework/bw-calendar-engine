@@ -29,6 +29,7 @@ import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** Provide a number of useful common methods for processors.
  *
@@ -47,7 +48,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
 
   protected CrawlStatus status;
 
-  protected String indexRootPath;
+  protected Map<String, String> indexNames;
 
   /**
    * @param name to identify
@@ -56,7 +57,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
    * @param batchDelay - delay between batches - milliseconds
    * @param entityDelay - delay between entities - milliseconds
    * @param skipPaths - paths to skip
-   * @param indexRootPath - where we build the index
+   * @param indexNames - where we build the index
    */
   public ProcessorBase(final String name,
                        final String adminAccount,
@@ -64,12 +65,12 @@ public abstract class ProcessorBase extends CalSys implements Processor {
                        final long batchDelay,
                        final long entityDelay,
                        final List<String> skipPaths,
-                       final String indexRootPath) {
+                       final Map<String, String> indexNames) {
     super(name, adminAccount, principal);
 
     this.batchDelay = batchDelay;
     this.entityDelay = entityDelay;
-    this.indexRootPath = indexRootPath;
+    this.indexNames = indexNames;
     this.skipPaths = skipPaths;
 
     if (skipPaths != null) {
@@ -102,6 +103,13 @@ public abstract class ProcessorBase extends CalSys implements Processor {
     status = val;
   }
 
+  public BwIndexer getIndexer(final CalSvcI svci,
+                              final String principal,
+                              final String docType) {
+    return svci.getIndexerForReindex(principal,
+                                     docType,
+                                     indexNames.get(docType));
+  }
   /**
    * @return CrawlStatus
    */
@@ -163,10 +171,11 @@ public abstract class ProcessorBase extends CalSys implements Processor {
         return;
       }
 
-      final BwIndexer indexer = svci.getIndexer(principal,
-                                                indexRootPath);
+      final BwIndexer colIndexer = getIndexer(svci,
+                                              principal,
+                                              BwIndexer.docTypeCollection);
 
-      indexer.indexEntity(col);
+      colIndexer.indexEntity(col);
 //      close();
 
       final CollectionInfo ci = col.getCollectionInfo();
@@ -209,7 +218,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
                                                        entityDelay,
                                                        path,
                                                        refs.refs,
-                                                       indexRootPath);
+                                                       indexNames);
 
         final IndexerThread eit = getEntityThread(ep);
 

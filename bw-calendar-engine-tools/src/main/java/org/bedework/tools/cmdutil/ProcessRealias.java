@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.includeDeleted;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
 import static org.bedework.calfacade.responses.Response.Status.ok;
 
 /** Reakias events
@@ -173,7 +174,7 @@ public class ProcessRealias extends CmdUtilHelper {
       
       open();
 
-      final BwIndexer idx = getIndexer();
+      final BwIndexer idx = getIndexer(docTypeEvent);
       final SearchResult sr = idx.search(null,
                                          false,
                                          fltr,

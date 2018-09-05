@@ -713,9 +713,9 @@ public class DocBuilder extends DocBuilderBase {
 
       final String docType;
 
-      if (vpoll) {
-        docType = BwIndexer.docTypePoll;
+      docType = BwIndexer.docTypeEvent;
 
+      if (vpoll) {
         if (!Util.isEmpty(ev.getPollItems())) {
           makeField(PropertyInfoIndex.POLL_ITEM, ev.getPollItems());
         }
@@ -723,8 +723,6 @@ public class DocBuilder extends DocBuilderBase {
         makeField(PropertyInfoIndex.POLL_MODE, ev.getPollMode());
         makeField(PropertyInfoIndex.POLL_WINNER, ev.getPollWinner());
         makeField(PropertyInfoIndex.POLL_PROPERTIES, ev.getPollProperties());
-      } else {
-        docType = BwIndexer.docTypeEvent;
       }
 
       endObject();

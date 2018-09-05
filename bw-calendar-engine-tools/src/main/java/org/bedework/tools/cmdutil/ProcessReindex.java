@@ -26,6 +26,11 @@ import org.bedework.calfacade.indexing.BwIndexer;
 
 import java.util.Collection;
 
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeCategory;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeCollection;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeContact;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
+
 /**
  * @author douglm
  *
@@ -81,7 +86,7 @@ public class ProcessReindex extends CmdUtilHelper {
       
       open();
       info("Number reindexed: " + 
-                   indexCollection(path, getIndexer()));
+                   indexCollection(path, getIndexer(docTypeCollection)));
 
       return true;
     } finally {
@@ -192,7 +197,7 @@ public class ProcessReindex extends CmdUtilHelper {
     try {
       open();
       info("Number reindexed: " +
-                   getSvci().getCategoriesHandler().reindex(getIndexer()));
+                   getSvci().getCategoriesHandler().reindex(getIndexer(docTypeCategory)));
 
       return true;
     } finally {
@@ -204,7 +209,7 @@ public class ProcessReindex extends CmdUtilHelper {
     try {
       open();
       info("Number reindexed: " +
-                   getSvci().getContactsHandler().reindex(getIndexer()));
+                   getSvci().getContactsHandler().reindex(getIndexer(docTypeContact)));
 
       return true;
     } finally {
@@ -216,7 +221,7 @@ public class ProcessReindex extends CmdUtilHelper {
     try {
       open();
       info("Number reindexed: " +
-                   getSvci().getLocationsHandler().reindex(getIndexer()));
+                   getSvci().getLocationsHandler().reindex(getIndexer(docTypeLocation)));
 
       return true;
     } finally {

@@ -29,6 +29,8 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
 
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeContact;
+
 /** Class which handles manipulation of Contacts.
  *
  * @author Mike Douglass   douglm - rpi.edu
@@ -56,17 +58,18 @@ public class ContactsImpl
                                         final String ownerHref)
           throws CalFacadeException {
     return filterDeleted(getIndexer(publick, 
-                                    ownerHref).fetchAllContacts());
+                                    ownerHref,
+                                    docTypeContact).fetchAllContacts());
   }
 
   @Override
   BwContact fetchIndexedByUid(final String uid) throws CalFacadeException {
-    return getIndexer().fetchContact(uid, PropertyInfoIndex.UID);
+    return getIndexer(docTypeContact).fetchContact(uid, PropertyInfoIndex.UID);
   }
 
   @Override
   BwContact fetchIndexed(final String href) throws CalFacadeException {
-    return getIndexer().fetchContact(href, PropertyInfoIndex.HREF);
+    return getIndexer(docTypeContact).fetchContact(href, PropertyInfoIndex.HREF);
   }
 
   @Override
@@ -82,7 +85,7 @@ public class ContactsImpl
 
   @Override
   public BwContact find(final BwString val) throws CalFacadeException {
-    return getIndexer().fetchContact(val.getValue(),
+    return getIndexer(docTypeContact).fetchContact(val.getValue(),
                                      PropertyInfoIndex.CN,
                                      PropertyInfoIndex.VALUE);
   }
@@ -99,7 +102,7 @@ public class ContactsImpl
       return Response.error(new GetEntitiesResponse<>(), pr.message);
     }
 
-    return getIndexer().findContacts(pr.filter, from, size);
+    return getIndexer(docTypeContact).findContacts(pr.filter, from, size);
   }
 }
 

@@ -30,6 +30,8 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
 
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
+
 /** Class which handles manipulation of Locations.
  *
  * @author Mike Douglass   douglm - rpi.edu
@@ -55,7 +57,7 @@ public class LocationsImpl
   @Override
   public GetEntityResponse<BwLocation> fetchLocationByKey(final String keyName,
                                        final String keyVal) {
-    return getIndexer().fetchLocationByKey(keyName, keyVal);
+    return getIndexer(docTypeLocation).fetchLocationByKey(keyName, keyVal);
   }
 
   @Override
@@ -63,17 +65,18 @@ public class LocationsImpl
                                          final String ownerHref)
           throws CalFacadeException {
     return filterDeleted(getIndexer(publick, 
-                                    ownerHref).fetchAllLocations());
+                                    ownerHref,
+                                    docTypeLocation).fetchAllLocations());
   }
 
   @Override
   BwLocation fetchIndexedByUid(final String uid) throws CalFacadeException {
-    return getIndexer().fetchLocation(uid, PropertyInfoIndex.UID);
+    return getIndexer(docTypeLocation).fetchLocation(uid, PropertyInfoIndex.UID);
   }
 
   @Override
   BwLocation fetchIndexed(final String href) throws CalFacadeException {
-    return getIndexer().fetchLocation(href, PropertyInfoIndex.HREF);
+    return getIndexer(docTypeLocation).fetchLocation(href, PropertyInfoIndex.HREF);
   }
 
   @Override
@@ -89,7 +92,7 @@ public class LocationsImpl
 
   @Override
   public BwLocation find(final BwString val) throws CalFacadeException {
-    return getIndexer().fetchLocation(val.getValue(),
+    return getIndexer(docTypeLocation).fetchLocation(val.getValue(),
                                       PropertyInfoIndex.ADDRESS,
                                       PropertyInfoIndex.VALUE);
   }
@@ -106,7 +109,7 @@ public class LocationsImpl
       return Response.error(new GetEntitiesResponse<>(), pr.message);
     }
 
-    return getIndexer().findLocations(pr.filter, from, size);
+    return getIndexer(docTypeLocation).findLocations(pr.filter, from, size);
   }
 }
 
