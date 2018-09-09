@@ -29,7 +29,7 @@ import java.util.Map;
  *
  */
 public class PrincipalsProcessor extends Crawler {
-  private final Class entityClass;
+  private final String docType;
 
   /** This is the constructor for handling the non-public principal indexing.
    *
@@ -46,6 +46,8 @@ public class PrincipalsProcessor extends Crawler {
    * @param entityDelay betwen entities
    * @param skipPaths - paths to skip
    * @param indexNames - where we build the index
+   * @param docType - if non-null only index this type. Cannot
+   *                    be collection or events types
    */
   public PrincipalsProcessor(final CrawlStatus status,
                              final String name,
@@ -54,12 +56,12 @@ public class PrincipalsProcessor extends Crawler {
                              final long entityDelay,
                              final List<String> skipPaths,
                              final Map<String, String> indexNames,
-                             final Class entityClass) {
+                             final String docType) {
     super(status,
           name, adminAccount, null, batchDelay, entityDelay,
           skipPaths, indexNames);
 
-    this.entityClass = entityClass;
+    this.docType = docType;
   }
 
   @Override
@@ -112,7 +114,7 @@ public class PrincipalsProcessor extends Crawler {
                                                        entityDelay,
                                                        getSkipPaths(),
                                                        indexNames,
-                                                       entityClass);
+                                                       docType);
 
         /* This call should hang waiting for an available process */
         final IndexerThread it = getPrincipalThread(p);

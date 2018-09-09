@@ -238,8 +238,14 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   /* Indexed by index name */
   private final static Map<String, UpdateInfo> updateInfo = new HashMap<>();
 
-  private final static Set<String> knownTypes =
-          new TreeSet<>(Arrays.asList(allDocTypes));
+  private final static Set<String> knownTypesLowered =
+          new TreeSet<>();
+
+  static {
+    for (final String type: allDocTypes) {
+      knownTypesLowered.add(type.toLowerCase());
+    }
+  }
 
   private final BwIndexerParams params;
 
@@ -960,7 +966,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
     res.curFilter = ef.addLimits(res.curFilter,
                                  defaultFilterContext,
-                                 res.delState);
+                                 res.delState,
+                                 docType == docTypeEvent);
     if (res.curFilter instanceof MatchNone) {
       res.setFound(0);
       return res;
@@ -1907,7 +1914,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       if (!Util.isEmpty(ii.getAliases())) {
         for (final String alias : ii.getAliases()) {
-          if (alias.startsWith("bw") && knownTypes.contains(alias.substring(2))) {
+          if (alias.startsWith("bw") && knownTypesLowered
+                  .contains(alias.substring(2))) {
             continue purge;
           }
         }
@@ -1926,11 +1934,9 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     // Make the alias
     String alias = null;
 
-    for (final String type: knownTypes) {
-      final String lctype = type.toLowerCase();
-
-      if (index.startsWith("bw" + lctype + "2")) {
-        alias = "bw" + lctype;
+    for (final String type: knownTypesLowered) {
+      if (index.startsWith("bw" + type + "2")) {
+        alias = "bw" + type;
         break;
       }
     }
@@ -2615,7 +2621,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       if (!(curFilter instanceof MatchNone)) {
         curFilter = ef.addLimits(curFilter,
-                                 null, DeletedState.noDeleted);
+                                 null, DeletedState.noDeleted,
+                                 false);
       }
 
       if (curFilter instanceof MatchNone) {
@@ -2706,7 +2713,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       if (!(curFilter instanceof MatchNone)) {
         curFilter = ef.addLimits(curFilter,
-                                 null, DeletedState.noDeleted);
+                                 null, DeletedState.noDeleted,
+                                 false);
       }
 
       if (curFilter instanceof MatchNone) {
@@ -2796,7 +2804,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       if (!(curFilter instanceof MatchNone)) {
         curFilter = ef.addLimits(curFilter,
-                                 null, DeletedState.noDeleted);
+                                 null, DeletedState.noDeleted,
+                                 false);
       }
 
       if (curFilter instanceof MatchNone) {

@@ -313,6 +313,9 @@ public class DocBuilder extends DocBuilderBase {
 
       makeField(PropertyInfoIndex.CATEGORIES, ent.getWord());
       makeField(PropertyInfoIndex.DESCRIPTION, ent.getDescription());
+      makeField(PropertyInfoIndex.DELETED,
+                BwEventProperty.statusDeleted.equals(ent.getStatus()));
+      makeField("tombstoned", false); // TODO ent.getTombstoned());
 
       endObject();
 
@@ -350,6 +353,7 @@ public class DocBuilder extends DocBuilderBase {
       makeField(PropertyInfoIndex.URL, ent.getLink());
       makeField(PropertyInfoIndex.DELETED,
                 BwEventProperty.statusDeleted.equals(ent.getStatus()));
+      makeField("tombstoned", false); // TODO ent.getTombstoned());
 
       endObject();
 
@@ -393,6 +397,7 @@ public class DocBuilder extends DocBuilderBase {
       makeField(PropertyInfoIndex.STATUS, ent.getStatus());
       makeField(PropertyInfoIndex.DELETED,
                 BwEventProperty.statusDeleted.equals(ent.getStatus()));
+      makeField("tombstoned", false); // TODO ent.getTombstoned());
 
       // These fields are part of the subaddress field
       makeField(PropertyInfoIndex.STREET_FLD, ent.getStreet());

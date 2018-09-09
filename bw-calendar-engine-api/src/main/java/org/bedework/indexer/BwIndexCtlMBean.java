@@ -71,7 +71,7 @@ public interface BwIndexCtlMBean extends ConfBaseMBean, IndexProperties {
    *
    * @return message
    */
-  String rebuildResourceIndex();
+  String rebuildEntityIndex(String docType);
 
   /** Creates a new index for use by reindex
    * 

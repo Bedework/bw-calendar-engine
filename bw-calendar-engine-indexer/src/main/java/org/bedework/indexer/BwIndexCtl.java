@@ -18,7 +18,6 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.indexing.BwIndexer.IndexInfo;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
@@ -42,6 +41,7 @@ import static org.bedework.calfacade.responses.Response.Status.failed;
  * @author douglm
  *
  */
+@SuppressWarnings("unused")
 public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
         implements BwIndexCtlMBean {
   /* Name of the property holding the location of the config data */
@@ -164,7 +164,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   }
 
   // The one we want to index
-  private Class entityClass;
+  private String entityDocType;
 
   /* Thread to index a particular entity type
    */
@@ -181,7 +181,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     @Override
     public void run() {
       try {
-        getIndexApp().indexEntity(entityClass);
+        getIndexApp().indexEntity(entityDocType);
         setStatus(statusDone);
       } catch (final Throwable t) {
         setStatus(statusFailed);
@@ -481,7 +481,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   }
 
   @Override
-  public String rebuildResourceIndex() {
+  public String rebuildEntityIndex(final String docType) {
     try {
       setStatus(statusStopped);
 
@@ -490,7 +490,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
         return "Reindexer already started";
       }
 
-      entityClass = BwResource.class;
+      entityDocType = docType;
       entityProcessor = new EntityIndexThread(getServiceName());
       entityProcessor.start();
 

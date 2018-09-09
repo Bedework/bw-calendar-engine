@@ -59,7 +59,7 @@ public class Crawl extends CalSys {
 
   private final List<CrawlStatus> statuses = new ArrayList<>();
 
-  private Class entityClass;
+  private String docType;
 
   private boolean sameIndex;
 
@@ -94,8 +94,8 @@ public class Crawl extends CalSys {
     */
   }
 
-  public void setEntityClass(final Class entityClass) {
-    this.entityClass = entityClass;
+  public void setDocType(final String docType) {
+    this.docType = docType;
   }
 
   public void sameIndex() {
@@ -140,7 +140,7 @@ public class Crawl extends CalSys {
                                        100,    // entityDelay,
                                        props.getSkipPathsList(),
                                        indexNames,
-                                       entityClass);
+                                       docType);
       prProc.start();
     }
 
@@ -152,7 +152,7 @@ public class Crawl extends CalSys {
                                     100,    // entityDelay,
                                     props.getSkipPathsList(),
                                     indexNames,
-                                    entityClass);
+                                    docType);
       pubProc.start();
     }
 
@@ -216,6 +216,14 @@ public class Crawl extends CalSys {
 
     try (BwSvc bw = getAdminBw()) {
       // Switch indexes.
+
+      if (docType != null) {
+        final BwIndexer idx = bw.getSvci().getIndexer(adminPrincipal,
+                                                      docType);
+
+        names.put(docType, idx.newIndex());
+        return names;
+      }
 
       for (final String docType: BwIndexer.allDocTypes) {
         if (docType.equals(BwIndexer.docTypeUnknown)) {

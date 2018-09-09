@@ -499,12 +499,14 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
    * 
    * @param f current filter
    * @param defaultFilterContext set if we have one
+   * @param forEvents true if this is an events index we are searching
    * @return augmented filter
    * @throws CalFacadeException on error
    */
   public FilterBuilder addLimits(final FilterBuilder f,
                                  final FilterBase defaultFilterContext,
-                                 final DeletedState delState) throws CalFacadeException {
+                                 final DeletedState delState,
+                                 final boolean forEvents) throws CalFacadeException {
     if ((f != null) && (f instanceof MatchNone)) {
       return f;
     }
@@ -549,7 +551,13 @@ public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
       nfbs.add(new NamedFilterBuilder(null, f));
     }
     
-    FilterBuilder recurFb = recurTerms();
+    FilterBuilder recurFb;
+
+    if (forEvents) {
+      recurFb = recurTerms();
+    } else {
+      recurFb = null;
+    }
 
     FilterBuilder fb;
 

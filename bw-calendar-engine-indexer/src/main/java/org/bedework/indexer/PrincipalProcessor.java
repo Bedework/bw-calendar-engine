@@ -18,20 +18,22 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.calfacade.BwCategory;
-import org.bedework.calfacade.BwContact;
-import org.bedework.calfacade.BwFilterDef;
-import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
-import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calsvci.CalSvcI;
 
 import java.util.List;
 import java.util.Map;
+
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeCategory;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeContact;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeFilter;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypePreferences;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeResource;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeResourceContent;
 
 /** This implementation crawls the user subtree indexing user entries.
  *
@@ -41,7 +43,7 @@ import java.util.Map;
 public class PrincipalProcessor extends Crawler {
   BwPrincipal publicUser = null;
 
-  private final Class entityClass;
+  private final String docType;
 
   /** Constructor for an entity thread processor. These handle the entities
    * found within a collection.
@@ -54,8 +56,8 @@ public class PrincipalProcessor extends Crawler {
    * @param entityDelay betwen entities
    * @param skipPaths - paths to skip
    * @param indexNames - where we build the index
-   * @param entityClass - if non-null only index this class. Cannot
-   *                    be collection or events classes
+   * @param docType - if non-null only index this type. Cannot
+   *                    be collection or events types
    * @throws CalFacadeException on fatal error
    */
   public PrincipalProcessor(final CrawlStatus status,
@@ -66,11 +68,11 @@ public class PrincipalProcessor extends Crawler {
                             final long entityDelay,
                             final List<String> skipPaths,
                             final Map<String, String> indexNames,
-                            final Class entityClass) throws CalFacadeException {
+                            final String docType) throws CalFacadeException {
     super(status, name, adminAccount,
           principal, batchDelay, entityDelay, skipPaths, indexNames);
 
-    this.entityClass = entityClass;
+    this.docType = docType;
   }
 
   @Override
@@ -85,7 +87,7 @@ public class PrincipalProcessor extends Crawler {
         publicUser = svc.getUsersHandler().getPublicUser();
       }
 
-      if (entityClass == null) {
+      if (docType == null) {
         indexCollection(svc, svc.getCalendarsHandler().getHomePath());
       }
 
@@ -100,51 +102,57 @@ public class PrincipalProcessor extends Crawler {
       final BwPrincipal pr =
               svc.getUsersHandler().getPrincipal(principal);
 
-      if (testClass(BwPrincipal.class)) {
+      if (testType(docTypePrincipal)) {
         getIndexer(svc, principal,
-                   BwIndexer.docTypePrincipal).indexEntity(pr);
+                   docTypePrincipal).indexEntity(pr);
         status.stats.inc(IndexedType.principals, 1);
       }
 
-      if (testClass(BwPreferences.class)) {
+      if (testType(docTypePreferences)) {
         getIndexer(svc, principal,
-                   BwIndexer.docTypePreferences).indexEntity(svc.getPreferences(pr.getPrincipalRef()));
+                   docTypePreferences).indexEntity(svc.getPreferences(pr.getPrincipalRef()));
         status.stats.inc(IndexedType.preferences, 1);
       }
 
-      if (testClass(BwCategory.class)) {
+      if (testType(docTypeCategory)) {
         status.stats.inc(IndexedType.categories,
                          svc.getCategoriesHandler().reindex(getIndexer(svc, principal,
-                                                                       BwIndexer.docTypeCategory)));
+                                                                       docTypeCategory)));
       }
 
-      if (testClass(BwContact.class)) {
+      if (testType(docTypeContact)) {
         status.stats.inc(IndexedType.contacts,
                          svc.getContactsHandler().reindex(getIndexer(svc, principal,
-                                                                     BwIndexer.docTypeContact)));
+                                                                     docTypeContact)));
       }
 
-      if (testClass(BwLocation.class)) {
+      if (testType(docTypeLocation)) {
         status.stats.inc(IndexedType.locations,
                          svc.getLocationsHandler().reindex(getIndexer(svc, principal,
-                                                                      BwIndexer.docTypeLocation)));
+                                                                      docTypeLocation)));
       }
 
-      if (testClass(BwResource.class)) {
+      if (testType(docTypeResource)) {
         status.stats.inc(IndexedType.resources,
                          svc.getResourcesHandler().reindex(getIndexer(svc, principal,
-                                                                      BwIndexer.docTypeResource)));
+                                                                      docTypeResource)));
       }
 
-      if (testClass(BwFilterDef.class)) {
+      if (testType(docTypeResourceContent)) {
+        status.stats.inc(IndexedType.resourceContents,
+                         svc.getResourcesHandler().reindex(getIndexer(svc, principal,
+                                                                      docTypeResourceContent)));
+      }
+
+      if (testType(docTypeFilter)) {
         status.stats.inc(IndexedType.filters,
                          svc.getFiltersHandler().reindex(getIndexer(svc, principal,
-                                                                    BwIndexer.docTypeResourceContent)));
+                                                                    docTypeFilter)));
       }
     }
   }
 
-  private boolean testClass(final Class cl) {
-    return entityClass == null || (entityClass.equals(cl));
+  private boolean testType(final String type) {
+    return docType == null || (docType.equals(type));
   }
 }
