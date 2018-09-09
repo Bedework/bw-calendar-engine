@@ -19,7 +19,6 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 
 import java.util.List;
 import java.util.Map;
@@ -121,8 +120,6 @@ public class PrincipalsProcessor extends Crawler {
         if (debug) {
           debug("Principals: Got thread for " + href);
         }
-
-        getStatus().stats.inc(IndexedType.principals);
 
         it.start();
       }
