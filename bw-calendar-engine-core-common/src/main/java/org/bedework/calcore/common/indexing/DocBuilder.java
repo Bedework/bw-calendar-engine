@@ -348,6 +348,8 @@ public class DocBuilder extends DocBuilderBase {
       makeField(PropertyInfoIndex.PHONE, ent.getPhone());
       makeField(PropertyInfoIndex.EMAIL, ent.getEmail());
       makeField(PropertyInfoIndex.URL, ent.getLink());
+      makeField(PropertyInfoIndex.DELETED,
+                BwEventProperty.statusDeleted.equals(ent.getStatus()));
 
       endObject();
 
