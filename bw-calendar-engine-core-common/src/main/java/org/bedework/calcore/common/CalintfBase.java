@@ -31,6 +31,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
+import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwLocation;
@@ -354,6 +355,7 @@ public abstract class CalintfBase extends Logged implements Calintf {
 
   static {
     toDocType.put(BwCalendar.class, BwIndexer.docTypeCollection);
+    toDocType.put(CalendarWrapper.class, BwIndexer.docTypeCollection);
     toDocType.put(BwCategory.class, docTypeCategory);
     toDocType.put(BwPrincipal.class, BwIndexer.docTypePrincipal);
     toDocType.put(BwPreferences.class, BwIndexer.docTypePreferences);
@@ -362,6 +364,7 @@ public abstract class CalintfBase extends Logged implements Calintf {
     toDocType.put(BwContact.class, BwIndexer.docTypeContact);
     toDocType.put(BwFilterDef.class, BwIndexer.docTypeFilter);
     toDocType.put(BwEvent.class, BwIndexer.docTypeEvent);
+    toDocType.put(BwEventObj.class, BwIndexer.docTypeEvent);
     toDocType.put(BwResource.class, BwIndexer.docTypeResource);
     toDocType.put(BwResourceContent.class, BwIndexer.docTypeResourceContent);
   }

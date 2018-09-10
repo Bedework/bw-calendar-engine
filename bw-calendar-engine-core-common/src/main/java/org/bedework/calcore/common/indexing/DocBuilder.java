@@ -574,7 +574,6 @@ public class DocBuilder extends DocBuilderBase {
       makeField("tombstoned", ev.getTombstoned());
       makeField(PropertyInfoIndex.DELETED, ev.getDeleted());
       makeField(PropertyInfoIndex.NAME, ev.getName());
-      makeField(PropertyInfoIndex.HREF, ev.getHref());
       makeField(PropertyInfoIndex.CALSUITE, ev.getCalSuite());
 
       indexCategories(ev.getCategories());
