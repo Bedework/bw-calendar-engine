@@ -63,7 +63,7 @@ public interface ResourcesI extends Serializable {
    *
    * @param  path     String path to resource
    * @return BwResource null for unknown resource
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   BwResource get(String path) throws CalFacadeException;
 
@@ -71,7 +71,7 @@ public interface ResourcesI extends Serializable {
    * object
    *
    * @param  val BwResource
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   void getContent(BwResource val) throws CalFacadeException;
 
@@ -79,7 +79,7 @@ public interface ResourcesI extends Serializable {
    *
    * @param  path           String path to containing collection
    * @return List     of BwResource
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   List<BwResource> getAll(String path) throws CalFacadeException;
 
@@ -88,7 +88,7 @@ public interface ResourcesI extends Serializable {
    * @param  path           String path to containing collection
    * @param count this many
    * @return List     of BwResource
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   List<BwResource> get(String path,
                        int count) throws CalFacadeException;
@@ -105,7 +105,7 @@ public interface ResourcesI extends Serializable {
   /** Delete a resource and content given the path
    *
    * @param  path     String path to resource
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   void delete(String path) throws CalFacadeException;
 
@@ -117,7 +117,7 @@ public interface ResourcesI extends Serializable {
    * @param copy      true for copying
    * @param overwrite destination exists
    * @return true if destination created (i.e. not updated)
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   boolean copyMove(BwResource val,
                    String to,
@@ -128,8 +128,10 @@ public interface ResourcesI extends Serializable {
   /** Reindex current users entities
    *
    * @param indexer to use for this operation
+   * @param contentIndexer to use for this operation
    * @return number of entities reindexed
    * @throws CalFacadeException on fatal error
    */
-  int reindex(BwIndexer indexer) throws CalFacadeException;
+  int reindex(BwIndexer indexer,
+              BwIndexer contentIndexer) throws CalFacadeException;
 }

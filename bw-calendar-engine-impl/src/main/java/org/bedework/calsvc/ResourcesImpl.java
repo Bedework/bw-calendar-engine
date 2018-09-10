@@ -274,7 +274,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
   }
 
   @Override
-  public int reindex(final BwIndexer indexer) throws CalFacadeException {
+  public int reindex(final BwIndexer indexer,
+                     final BwIndexer contentIndexer) throws CalFacadeException {
     final Iterator<BwResource> ents;
 
     if (isPublicAdmin()) {
@@ -340,7 +341,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       }
       indexer.indexEntity(ent);
       if (ent.getContent() != null) {
-        indexer.indexEntity(ent.getContent());
+        contentIndexer.indexEntity(ent.getContent());
       }
 
       ct++;

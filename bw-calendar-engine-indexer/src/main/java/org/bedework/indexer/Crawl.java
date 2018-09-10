@@ -32,6 +32,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeResource;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeResourceContent;
+
 /** A class to crawl the entire data structure reindexing as it proceeds.
  *
  * <p>The reindexing process creates an index directory under the index root
@@ -222,6 +225,14 @@ public class Crawl extends CalSys {
                                                       docType);
 
         names.put(docType, idx.newIndex());
+
+        if (docTypeResource.equals(docType)) {
+          final BwIndexer cidx = bw.getSvci().getIndexer(adminPrincipal,
+                                                        docTypeResourceContent);
+
+          names.put(docType, cidx.newIndex());
+
+        }
         return names;
       }
 
