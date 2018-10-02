@@ -1061,13 +1061,18 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                         final BwCalendar to) throws CalFacadeException {
     deleteTombstoned(to.getPath(), val.getUid());
 
-    val.setColPath(to.getPath());
-
     final BwEvent tombstone = val.cloneTombstone();
+    tombstone.setDtstamps(getCurrentTimestamp());
 
     //tombstoneEvent(tombstone);
 
     dao.save(tombstone);
+    final EventInfo old = new EventInfo(tombstone);
+    indexEntity(old);
+
+    val.setColPath(to.getPath());
+    // Don't save just yet - updates get triggered
+    // TODO - this is asking for trouble if it fails
 
     notifyMove(SysEvent.SysCode.ENTITY_MOVED,
                tombstone.getHref(),
