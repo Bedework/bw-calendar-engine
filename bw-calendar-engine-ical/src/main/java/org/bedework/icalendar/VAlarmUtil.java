@@ -327,7 +327,7 @@ public class VAlarmUtil extends IcalUtil {
         } else {
           // Not required - it's the default - but we fail some Cyrus tests otherwise
           // Apparently Cyrus now handles the default state correctly
-          //addParameter(tr, Related.START);
+          addParameter(tr, Related.START);
         }
         addProperty(alarm, tr);
       }
