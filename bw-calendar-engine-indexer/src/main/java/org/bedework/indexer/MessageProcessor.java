@@ -18,6 +18,7 @@
  */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -148,6 +149,9 @@ public class MessageProcessor extends CalSys {
         if (debug) {
           debug("Missing event: " + ece.getHref());
         }
+        getIndexer(bw.getSvci(), null,
+                   docTypeEvent).unindexEntity(docTypeEvent,
+                                               ece.getHref());
       } else {
         getIndexer(bw.getSvci(), val,
                    docTypeEvent).indexEntity(val);
@@ -165,9 +169,12 @@ public class MessageProcessor extends CalSys {
 
     String principal = null;
 
-    final BwOwnedDbentity ent;
+    BwOwnedDbentity ent = null;
 
-    if (val instanceof BwOwnedDbentity) {
+    if (val == null) {
+      principal = this.principal;
+      publick = principal.equals(BwPrincipal.publicUserHref);
+    } else if (val instanceof BwOwnedDbentity) {
       ent = (BwOwnedDbentity)val;
     } else if (val instanceof EventInfo) {
       ent = ((EventInfo)val).getEvent();
