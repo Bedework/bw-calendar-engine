@@ -649,6 +649,7 @@ class Events extends CalSvcDb implements EventsI {
         error(t);
       }
       getSvc().rollbackTransaction();
+      reindex(ei);
       if (t instanceof CalFacadeException) {
         throw (CalFacadeException)t;
       }
@@ -1066,7 +1067,7 @@ class Events extends CalSvcDb implements EventsI {
           add(to, newEi, true);
           */
 
-          BwCalendar from = getCols().get(fromPath);
+          final BwCalendar from = getCols().get(fromPath);
 
           getCal().moveEvent(ev, from, to);
 
@@ -1081,13 +1082,13 @@ class Events extends CalSvcDb implements EventsI {
       } else {
         // Copying the event.
 
-        BwEvent newEvent = (BwEvent)ev.clone();
+        final BwEvent newEvent = (BwEvent)ev.clone();
         newEvent.setName(name);
 
         // WebDAV ACL say's new event must not carry over access
         newEvent.setAccess(null);
 
-        EventInfo newEi = new EventInfo(newEvent);
+        final EventInfo newEi = new EventInfo(newEvent);
 
         if (fromEi.getOverrideProxies() != null) {
           for (BwEventProxy proxy: fromEi.getOverrideProxies()) {
