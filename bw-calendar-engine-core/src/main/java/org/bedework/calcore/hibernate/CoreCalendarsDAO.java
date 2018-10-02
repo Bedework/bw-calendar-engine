@@ -492,11 +492,11 @@ class CoreCalendarsDAO extends DAOBase {
   }
 
   private static final String getTombstonedCollectionByPathQuery =
-          "from " + BwCalendar.class.getName() + " as cal " +
-                  "where cal.path=:path and " +
+          "from " + BwCalendar.class.getName() + " as col " +
+                  "where col.path=:path and " +
 
-          // XXX tombstone-schema
-          "col.filterExpr = :tsfilter";
+                  // XXX tombstone-schema
+                  "col.filterExpr = :tsfilter";
 
 
   public BwCalendar getTombstonedCollection(final String path) throws CalFacadeException {
