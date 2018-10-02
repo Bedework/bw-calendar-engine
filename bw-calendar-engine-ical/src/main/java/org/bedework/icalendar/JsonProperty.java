@@ -118,6 +118,24 @@ public class JsonProperty implements Serializable {
       return dtype;
     }
 
+    if ("attach".equals(nm)) {
+      final Attach att = (Attach)prop;
+      if (att.getUri() !=null) {
+        return DataType.URI;
+      }
+
+      return DataType.BINARY;
+    }
+
+    if ("trigger".equals(nm)) {
+      final Trigger tr = (Trigger)prop;
+      if (tr.getDuration() !=null) {
+        return DataType.DURATION;
+      }
+
+      return DataType.DATE_TIME;
+    }
+
     if (prop instanceof DateProperty) {
       // dtend, dtstart, due
 
@@ -137,24 +155,6 @@ public class JsonProperty implements Serializable {
 
       if (Value.DATE.equals(dlp.getDates().getType())) {
         return DataType.DATE;
-      }
-
-      return DataType.DATE_TIME;
-    }
-
-    if ("attach".equals(nm)) {
-      final Attach att = (Attach)prop;
-      if (att.getUri() !=null) {
-        return DataType.URI;
-      }
-
-      return DataType.BINARY;
-    }
-
-    if ("trigger".equals(nm)) {
-      final Trigger tr = (Trigger)prop;
-      if (tr.getDuration() !=null) {
-        return DataType.DURATION;
       }
 
       return DataType.DATE_TIME;
