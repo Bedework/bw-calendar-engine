@@ -121,6 +121,10 @@ class Preferences extends CalSvcDb implements PreferencesI {
 
   @Override
   public void update(final BwPreferences val) throws CalFacadeException {
+    if (val.getPublick() == null) {
+      // Fix the data
+      val.setPublick(val.getOwnerHref().equals(BwPrincipal.publicUserHref));
+    }
     getCal().saveOrUpdate(val);
   }
 

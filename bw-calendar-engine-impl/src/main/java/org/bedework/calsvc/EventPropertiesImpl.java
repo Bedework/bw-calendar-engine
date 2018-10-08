@@ -393,7 +393,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
       return getSvc().getIndexer(true, docType);
     }
 
-    return getSvc().getIndexer(href);
+    return getSvc().getIndexer(href, docType);
   }
 
   /**
