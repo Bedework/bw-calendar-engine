@@ -230,9 +230,9 @@ public class Crawl extends CalSys {
           final BwIndexer cidx = bw.getSvci().getIndexer(adminPrincipal,
                                                         docTypeResourceContent);
 
-          names.put(docType, cidx.newIndex());
-
+          names.put(docTypeResourceContent, cidx.newIndex());
         }
+
         return names;
       }
 
