@@ -1109,7 +1109,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void reindex(EventInfo ei) {
+  public void reindex(final EventInfo ei) {
     try {
       final BwEvent ev = ei.getEvent();
 

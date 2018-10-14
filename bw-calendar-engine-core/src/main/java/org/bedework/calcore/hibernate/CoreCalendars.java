@@ -365,21 +365,19 @@ class CoreCalendars extends CalintfHelper
 
     val = unwrap(val);
 
-    val.setColPath(newParent.getPath());
     val.updateLastmod(getCurrentTimestamp());
 
     final BwCalendar tombstoned = val.makeTombstoneCopy();
-
     tombstoned.tombstone();
-    dao.save(tombstoned);
-
-    indexEntity(tombstoned);
 
     /* This triggers off a cascade of updates down the tree as we are storing the
      * path in the calendar objects. This may be preferable to calculating the
      * path at every access
      */
     updatePaths(val, newParent);
+
+    dao.save(tombstoned);
+    indexEntity(tombstoned);
 
     /* Remove any tombstoned collection with the same name
       probably not needed

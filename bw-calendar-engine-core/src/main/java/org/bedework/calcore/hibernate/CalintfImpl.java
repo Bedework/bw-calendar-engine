@@ -763,6 +763,7 @@ public class CalintfImpl extends CalintfROImpl {
       ue = events.updateEvent(ei);
     } catch (final CalFacadeException cfe) {
       rollbackTransaction();
+      reindex(ei);
       throw cfe;
     }
 
@@ -780,6 +781,7 @@ public class CalintfImpl extends CalintfROImpl {
         return events.deleteEvent(ei, scheduling, reallyDelete);
       } catch (final CalFacadeException cfe) {
         rollbackTransaction();
+        reindex(ei);
         throw cfe;
       }
     } finally {
