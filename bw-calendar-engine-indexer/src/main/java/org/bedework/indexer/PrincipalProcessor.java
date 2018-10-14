@@ -133,13 +133,13 @@ public class PrincipalProcessor extends Crawler {
       }
 
       if (testType(docTypeResource)) {
-        status.stats.inc(
-                IndexedType.resourceContents,
-                svc.getResourcesHandler().reindex(
-                        getIndexer(svc, principal,
-                                   docTypeResourceContent),
-                        getIndexer(svc, principal,
-                                   docTypeResourceContent)));
+        int[] res = svc.getResourcesHandler().reindex(
+                getIndexer(svc, principal,
+                           docTypeResource),
+                getIndexer(svc, principal,
+                           docTypeResourceContent));
+        status.stats.inc(IndexedType.resources, res[0]);
+        status.stats.inc(IndexedType.resourceContents, res[1]);
       }
 
       if (testType(docTypeFilter)) {

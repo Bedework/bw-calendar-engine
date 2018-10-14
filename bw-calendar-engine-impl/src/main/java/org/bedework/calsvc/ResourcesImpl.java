@@ -274,8 +274,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
   }
 
   @Override
-  public int reindex(final BwIndexer indexer,
-                     final BwIndexer contentIndexer) throws CalFacadeException {
+  public int[] reindex(final BwIndexer indexer,
+                       final BwIndexer contentIndexer) throws CalFacadeException {
     final Iterator<BwResource> ents;
 
     if (isPublicAdmin()) {
@@ -284,7 +284,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       ents = getSvc().getPrincipalObjectIterator(BwResource.class.getName());
     }
 
-    int ct = 0;
+    int resCt = 0;
+    int resContentCt = 0;
     final Set<String> checkedCollections = new TreeSet<>();
 
     while (ents.hasNext()) {
@@ -340,14 +341,14 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         checkedCollections.add(parentPath);
       }
       indexer.indexEntity(ent);
+      resCt++;
       if (ent.getContent() != null) {
         contentIndexer.indexEntity(ent.getContent());
+        resContentCt++;
       }
-
-      ct++;
     }
 
-    return ct;
+    return new int[]{resCt, resContentCt};
   }
 
   List<BwResource> getSynchResources(final String path,
