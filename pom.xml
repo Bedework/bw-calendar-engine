@@ -18,6 +18,7 @@
 
 		<bw-xml.version>4.0.5</bw-xml.version>
 		<bw-util.version>4.0.19-SNAPSHOT</bw-util.version>
+    <bw-util-hibernate.version>4.0.19-SNAPSHOT</bw-util-hibernate.version>
     <bw-util2.version>4.0.1-SNAPSHOT</bw-util2.version>
 		<bw-access.version>4.0.2</bw-access.version>
 		<bw-webdav.version>4.0.2</bw-webdav.version>
@@ -165,7 +166,7 @@
       <dependency>
         <groupId>org.bedework</groupId>
         <artifactId>bw-util-hibernate</artifactId>
-        <version>${bw-util.version}</version>
+        <version>${bw-util-hibernate.version}</version>
       </dependency>
       <dependency>
         <groupId>org.bedework</groupId>
