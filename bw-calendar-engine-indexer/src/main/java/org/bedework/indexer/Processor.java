@@ -38,13 +38,13 @@ import org.bedework.calfacade.exc.CalFacadeException;
 public interface Processor {
   /** Start crawling
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void start() throws CalFacadeException;
 
   /** Wait for any processes to stop.
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void join() throws CalFacadeException;
 
@@ -52,25 +52,25 @@ public interface Processor {
    * call to restart will restart with the last entry being processed. A call to
    * restartNext will drop the last entry and restart.
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void stop() throws CalFacadeException;
 
   /** Start from where we left off
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void restart() throws CalFacadeException;
 
   /** Start with the next entry on the list
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void restartNext() throws CalFacadeException;
 
   /** Do whatever this processor is supposed to do. usually called from a
    * Thread object.
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void process() throws CalFacadeException;
 }

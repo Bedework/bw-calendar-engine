@@ -600,33 +600,33 @@ public interface Calintf
 
   /**
    *
-   * @param className of objects
+   * @param cl Class of objects
    * @return iterator over all the objects
    */
-  Iterator getObjectIterator(String className);
+  <T> Iterator<T> getObjectIterator(Class<T> cl);
 
   /**
    *
-   * @param className of objects
+   * @param cl Class of objects
    * @return iterator over all the objects for current principal
    */
-  Iterator getPrincipalObjectIterator(String className);
+  <T> Iterator<T> getPrincipalObjectIterator(Class<T> cl);
 
   /**
    *
-   * @param className of objects
+   * @param cl Class of objects
    * @return iterator over all the public objects
    */
-  Iterator getPublicObjectIterator(String className);
+  <T> Iterator<T> getPublicObjectIterator(Class<T> cl);
 
   /**
    *
-   * @param className of objects
+   * @param cl Class of objects
    * @param colPath for objects
    * @return iterator over all the objects with the given col path
    */
-  Iterator getObjectIterator(String className,
-                             String colPath);
+  <T> Iterator<T> getObjectIterator(Class<T> cl,
+                                    String colPath);
 
   /** Return an iterator over hrefs for events.
    *

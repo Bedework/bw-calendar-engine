@@ -279,9 +279,9 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
     final Iterator<BwResource> ents;
 
     if (isPublicAdmin()) {
-      ents = getSvc().getPublicObjectIterator(BwResource.class.getName());
+      ents = getSvc().getPublicObjectIterator(BwResource.class);
     } else {
-      ents = getSvc().getPrincipalObjectIterator(BwResource.class.getName());
+      ents = getSvc().getPrincipalObjectIterator(BwResource.class);
     }
 
     int resCt = 0;

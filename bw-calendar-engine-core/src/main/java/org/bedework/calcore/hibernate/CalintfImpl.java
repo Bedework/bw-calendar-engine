@@ -832,8 +832,9 @@ public class CalintfImpl extends CalintfROImpl {
     return entityDao.getBlob(val);
   }
   
-  private class ObjectIterator implements Iterator {
+  private class ObjectIterator<T> implements Iterator {
     protected final String className;
+    protected final Class<T> cl;
     protected final String colPath;
     protected final String ownerHref;
     protected final boolean publicAdmin;
@@ -843,21 +844,22 @@ public class CalintfImpl extends CalintfROImpl {
     protected int start;
     protected final int batchSize = 100;
 
-    private ObjectIterator(final String className) {
-      this(className, null, null, false, 0);
+    private ObjectIterator(final Class<T> cl) {
+      this(cl, null, null, false, 0);
     }
 
-    private ObjectIterator(final String className,
+    private ObjectIterator(final Class<T> cl,
                            final String colPath) {
-      this(className, colPath, null, false, 0);
+      this(cl, colPath, null, false, 0);
     }
 
-    private ObjectIterator(final String className,
+    private ObjectIterator(final Class<T> cl,
                            final String colPath,
                            final String ownerHref,
                            final boolean publicAdmin,
                            final int start) {
-      this.className = className;
+      this.className = cl.getName();
+      this.cl = cl;
       this.colPath = colPath;
       this.ownerHref = ownerHref;
       this.publicAdmin = publicAdmin;
@@ -870,7 +872,7 @@ public class CalintfImpl extends CalintfROImpl {
     }
 
     @Override
-    public Object next() {
+    public synchronized Object next() {
       if (!more()) {
         return null;
       }
@@ -884,7 +886,7 @@ public class CalintfImpl extends CalintfROImpl {
       throw new RuntimeException("Forbidden");
     }
 
-    protected boolean more() {
+    protected synchronized boolean more() {
       if (done) {
         return false;
       }
@@ -948,11 +950,11 @@ public class CalintfImpl extends CalintfROImpl {
   
   private class EventHrefIterator extends ObjectIterator {
     private EventHrefIterator(final int start) {
-      super(BwEventObj.class.getName(), null, null, false, start);
+      super(BwEventObj.class, null, null, false, start);
     }
 
     @Override
-    public Object next() {
+    public synchronized Object next() {
       if (!more()) {
         return null;
       }
@@ -993,24 +995,24 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public Iterator getObjectIterator(final String className) {
-    return new ObjectIterator(className);
+  public <T> Iterator<T> getObjectIterator(final Class<T> cl) {
+    return new ObjectIterator(cl);
   }
 
   @Override
-  public Iterator getPrincipalObjectIterator(final String className) {
-    return new ObjectIterator(className, null, getPrincipalRef(), false, 0);
+  public <T> Iterator<T> getPrincipalObjectIterator(final Class<T> cl) {
+    return new ObjectIterator(cl, null, getPrincipalRef(), false, 0);
   }
 
   @Override
-  public Iterator getPublicObjectIterator(final String className) {
-    return new ObjectIterator(className, null, null, true, 0);
+  public <T> Iterator<T> getPublicObjectIterator(final Class<T> cl) {
+    return new ObjectIterator(cl, null, null, true, 0);
   }
 
   @Override
-  public Iterator getObjectIterator(final String className,
-                                    final String colPath) {
-    return new ObjectIterator(className, colPath);
+  public <T> Iterator<T> getObjectIterator(final Class<T> cl,
+                                           final String colPath) {
+    return new ObjectIterator(cl, colPath);
   }
 
   @Override

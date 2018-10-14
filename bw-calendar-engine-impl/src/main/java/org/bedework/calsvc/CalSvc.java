@@ -1027,27 +1027,27 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
    * ==================================================================== */
 
   @Override
-  public Iterator getObjectIterator(String className) {
+  public <T>  Iterator<T> getObjectIterator(Class<T> cl) {
     try {
-      return getCal().getObjectIterator(className);
+      return getCal().getObjectIterator(cl);
     } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }
   }
 
   @Override
-  public Iterator getPrincipalObjectIterator(String className) {
+  public <T> Iterator<T> getPrincipalObjectIterator(final Class<T> cl) {
     try {
-      return getCal().getPrincipalObjectIterator(className);
+      return getCal().getPrincipalObjectIterator(cl);
     } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }
   }
 
   @Override
-  public Iterator getPublicObjectIterator(String className) {
+  public <T> Iterator<T> getPublicObjectIterator(Class<T> cl) {
     try {
-      return getCal().getPublicObjectIterator(className);
+      return getCal().getPublicObjectIterator(cl);
     } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }

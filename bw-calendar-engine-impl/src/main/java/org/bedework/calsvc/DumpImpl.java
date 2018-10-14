@@ -95,8 +95,8 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public Iterator getAuthUsers() throws CalFacadeException {
-    return getObjects(BwAuthUser.class.getName());
+  public Iterator<BwAuthUser> getAuthUsers() throws CalFacadeException {
+    return getObjects(BwAuthUser.class);
   }
 
   @Override
@@ -121,13 +121,13 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public Iterator getCalSuites() throws CalFacadeException {
-    return getObjects(BwCalSuite.class.getName());
+  public Iterator<BwCalSuite> getCalSuites() throws CalFacadeException {
+    return getObjects(BwCalSuite.class);
   }
 
   @Override
-  public Iterator getCategories() throws CalFacadeException {
-    return getObjects(BwCategory.class.getName());
+  public Iterator<BwCategory> getCategories() throws CalFacadeException {
+    return getObjects(BwCategory.class);
   }
 
   private class EventIterator implements Iterator<BwEvent> {
@@ -226,13 +226,13 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   @Override
   public Iterator<BwEvent> getEvents() throws CalFacadeException {
     return new EventIterator(
-            getCal().getObjectIterator(BwEventObj.class.getName()));
+            getCal().getObjectIterator(BwEventObj.class));
   }
 
   @Override
   public Iterable<EventInfo> getEventInfos(final String colPath) throws CalFacadeException {
     return new IterablImpl<>(new EventInfoIterator(
-            getCal().getObjectIterator(BwEventObj.class.getName(),
+            getCal().getObjectIterator(BwEventObj.class,
                                        colPath)));
   }
 
@@ -248,33 +248,33 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public Iterator getFilters() throws CalFacadeException {
-    return getObjects(BwFilterDef.class.getName());
+  public Iterator<BwFilterDef> getFilters() throws CalFacadeException {
+    return getObjects(BwFilterDef.class);
   }
 
   @Override
-  public Iterator getLocations() throws CalFacadeException {
-    return getObjects(BwLocation.class.getName());
+  public Iterator<BwLocation> getLocations() throws CalFacadeException {
+    return getObjects(BwLocation.class);
   }
 
   @Override
-  public Iterator getPreferences() throws CalFacadeException {
-    return getObjects(BwPreferences.class.getName());
+  public Iterator<BwPreferences> getPreferences() throws CalFacadeException {
+    return getObjects(BwPreferences.class);
   }
 
   @Override
-  public Iterator getContacts() throws CalFacadeException {
-    return getObjects(BwContact.class.getName());
+  public Iterator<BwContact> getContacts() throws CalFacadeException {
+    return getObjects(BwContact.class);
   }
 
   @Override
-  public Iterator getAllPrincipals() throws CalFacadeException {
-    return getObjects(BwUser.class.getName());
+  public Iterator<BwPrincipal> getAllPrincipals() throws CalFacadeException {
+    return getObjects(BwUser.class);
   }
 
   @Override
   public Iterator<BwResource> getResources() throws CalFacadeException {
-    return getObjects(BwResource.class.getName());
+    return getObjects(BwResource.class);
   }
 
   @Override
@@ -292,8 +292,8 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   }
 
   @Override
-  public Iterator getViews() throws CalFacadeException {
-    return getObjects(BwView.class.getName());
+  public Iterator<BwView> getViews() throws CalFacadeException {
+    return getObjects(BwView.class);
   }
 
   @Override
@@ -308,8 +308,8 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     popPrincipal();
   }
 
-  private Iterator getObjects(final String className) throws CalFacadeException {
-    return getCal().getObjectIterator(className);
+  private <T> Iterator<T> getObjects(final Class cl) throws CalFacadeException {
+    return getCal().getObjectIterator(cl);
   }
 
   private void getAdminMembers(final BwGroup group) throws CalFacadeException {
