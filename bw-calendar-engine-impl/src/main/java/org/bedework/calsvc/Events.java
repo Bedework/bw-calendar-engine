@@ -1754,6 +1754,10 @@ class Events extends CalSvcDb implements EventsI {
   /* Check for bad characters - not complete
    */
   private String checkString(final String val) {
+    if (val == null) {
+      return null;
+    }
+
     boolean hasBadChar = false;
 
     final char[] badChars = {'\u0013', '\u001F'};
