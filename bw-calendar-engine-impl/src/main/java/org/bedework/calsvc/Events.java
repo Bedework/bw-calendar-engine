@@ -1681,6 +1681,21 @@ class Events extends CalSvcDb implements EventsI {
                                    "recurring");
     }
 
+    if (ev.getSummary() == null) {
+      throw new CalFacadeException(CalFacadeException.missingEventProperty,
+                                   "summary");
+    }
+
+    String checkedString = checkString(ev.getSummary());
+    if (checkedString != null) {
+      ev.setSummary(checkedString);
+    }
+
+    checkedString = checkString(ev.getDescription());
+    if (checkedString != null) {
+      ev.setDescription(checkedString);
+    }
+
     setScheduleState(ev, adding, schedulingInbox);
 
     BwCalendar col = getCols().get(ev.getColPath());
@@ -1734,6 +1749,29 @@ class Events extends CalSvcDb implements EventsI {
     }
     
     return col;
+  }
+
+  /* Check for bad characters - not complete
+   */
+  private String checkString(final String val) {
+    boolean hasBadChar = false;
+
+    final char[] badChars = {'\u0013', '\u001F'};
+
+    for (final char c: badChars) {
+      if (val.indexOf(c) >= 0) {
+        hasBadChar = true;
+        break;
+      }
+    }
+
+    if (!hasBadChar) {
+      return null;
+    }
+
+    warn("String " + val + " contains a bad character");
+
+    return val.replaceAll(new String(badChars), val);
   }
 
   /* Flag this as an attendee scheduling object or an organizer scheduling object
