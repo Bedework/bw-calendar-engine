@@ -21,6 +21,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="bw-util-hibernate" />
+    <orderEntry type="library" name="Maven: org.apache.derby:derbynet:10.8.2.2" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.derby:derby:10.8.2.2" level="project" />
+    <orderEntry type="library" name="Maven: com.h2database:h2:1.4.190" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-core-common" />
     <orderEntry type="module" module-name="bw-util-elasticsearch" />
     <orderEntry type="library" name="Maven: org.elasticsearch:elasticsearch:1.5.2" level="project" />
@@ -88,7 +92,7 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.5" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.5" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
-    <orderEntry type="module" module-name="bw-util-hibernate" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util-hibernate:4.0.19-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-util-config" />
     <orderEntry type="module" module-name="bw-util-jmx" />
     <orderEntry type="library" name="Maven: org.apache.derby:derbynet:10.8.2.2" level="project" />
