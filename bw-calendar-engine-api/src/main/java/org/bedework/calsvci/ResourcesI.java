@@ -129,9 +129,11 @@ public interface ResourcesI extends Serializable {
    *
    * @param indexer to use for this operation
    * @param contentIndexer to use for this operation
+   * @param collectionIndexer to use for this operation
    * @return number of resources and resourcecontents reindexed
    * @throws CalFacadeException on fatal error
    */
   int[] reindex(BwIndexer indexer,
-                BwIndexer contentIndexer) throws CalFacadeException;
+                BwIndexer contentIndexer,
+                BwIndexer collectionIndexer) throws CalFacadeException;
 }

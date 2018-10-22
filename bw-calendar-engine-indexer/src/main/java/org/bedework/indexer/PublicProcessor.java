@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeCategory;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeCollection;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeContact;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeFilter;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
@@ -156,7 +157,9 @@ public class PublicProcessor extends Crawler {
                 getIndexer(svc, principal,
                            docTypeResource),
                 getIndexer(svc, principal,
-                           docTypeResourceContent));
+                           docTypeResourceContent),
+                getIndexer(svc, principal,
+                           docTypeCollection));
         status.stats.inc(IndexedType.resources, res[0]);
         status.stats.inc(IndexedType.resourceContents, res[1]);
       }

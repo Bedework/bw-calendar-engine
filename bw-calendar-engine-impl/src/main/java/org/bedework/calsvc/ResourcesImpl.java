@@ -275,7 +275,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
   @Override
   public int[] reindex(final BwIndexer indexer,
-                       final BwIndexer contentIndexer) throws CalFacadeException {
+                       final BwIndexer contentIndexer,
+                       final BwIndexer collectionIndexer) throws CalFacadeException {
     final Iterator<BwResource> ents;
 
     if (isPublicAdmin()) {
@@ -309,7 +310,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
             create = false;
 
             // Ensure it's indexed
-            getSvc().getIndexer(col).indexEntity(col);
+            collectionIndexer.indexEntity(col);
           }
         } catch (final Throwable t) {
           if (debug) {
@@ -330,7 +331,11 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
           parent.setCreatorHref(ent.getCreatorHref());
 
           try {
-            getSvc().getCalendarsHandler().add(parent, sr.path);
+            // This will get indexed in the wrong place
+            final BwCalendar newCol =
+                    getSvc().getCalendarsHandler().add(parent, sr.path);
+
+            collectionIndexer.indexEntity(newCol);
           } catch (final Throwable t) {
             if (debug) {
               error(t);
