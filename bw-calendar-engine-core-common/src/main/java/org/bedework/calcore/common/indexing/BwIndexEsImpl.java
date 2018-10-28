@@ -2166,10 +2166,22 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       }
     }
 
+    if (debug) {
+      final String ival;
+      if (index.length == 1) {
+        ival = index[0].name();
+      } else {
+        ival = "multi-ref";
+      }
+      debug("Fetch collection with " + ival + " = " + val);
+    }
     final EntityBuilder eb = fetchEntity(docTypeCollection, val,
                                          index);
 
     if (eb == null) {
+      if (debug) {
+        debug("Not found");
+      }
       resp.setStatus(notFound);
       return resp;
     }
@@ -2181,6 +2193,9 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                                    accessCheck.getAccessUtil());
       caches.put(entity, desiredAccess);
       resp.setEntity(entity);
+      if (debug) {
+        debug("Return ok - any access");
+      }
 
       return Response.ok(resp, null);
     }
@@ -2189,11 +2204,17 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                                      desiredAccess);
 
     if (entity == null) {
+      if (debug) {
+        debug("No access");
+      }
       return Response.notOk(resp, noAccess, null);
     }
     caches.put(entity, desiredAccess);
     resp.setEntity(entity);
 
+    if (debug) {
+      debug("Return ok - access ok");
+    }
     return Response.ok(resp, null);
   }
 
