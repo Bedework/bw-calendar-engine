@@ -87,6 +87,8 @@ public class CalSvcIPars implements Serializable {
 
   private boolean indexRebuild;
 
+  private boolean readonly;
+
   /** True if this is a web application
    */
   private boolean webMode;
@@ -238,7 +240,8 @@ public class CalSvcIPars implements Serializable {
                                           final boolean allowSuperUser,
                                           final boolean service,
                                           final boolean publicAdmin,
-                                          final boolean allowCreateEprops) {
+                                          final boolean allowCreateEprops,
+                                          final boolean readonly) {
     final CalSvcIPars pars = new CalSvcIPars(logId,
                                              authUser,
                                              runAsUser,
@@ -254,6 +257,7 @@ public class CalSvcIPars implements Serializable {
                                              false); // system
 
     pars.setClientId(clientId);
+    pars.readonly = readonly;
 
     return pars;
   }
@@ -386,6 +390,13 @@ public class CalSvcIPars implements Serializable {
    */
   public boolean getWebMode() {
     return webMode;
+  }
+
+  /**
+   * @return boolean true if this is a read-only request.
+   */
+  public boolean getReadonly() {
+    return readonly;
   }
 
   /**

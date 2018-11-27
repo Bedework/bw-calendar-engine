@@ -936,14 +936,15 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
       if (reallyDelete) {
         dao.delete(ev);
+        unindexEntity(ei);
       } else {
         tombstoneEvent(ev);
+        indexEntity(ei);
       }
 
       der.eventDeleted = true;
 
       stat(StatsEvent.deleteTime, startTime);
-      unindexEntity(ei);
 
       return der;
     }
@@ -1031,14 +1032,15 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       clearCollection(ev.getAttendees());
 
       dao.delete(deletee);
+      unindexEntity(ei);
     } else {
       tombstoneEvent(deletee);
+      indexEntity(ei);
     }
 
     der.eventDeleted = true;
 
     stat(StatsEvent.deleteTime, startTime);
-    unindexEntity(ei);
 
     return der;
   }

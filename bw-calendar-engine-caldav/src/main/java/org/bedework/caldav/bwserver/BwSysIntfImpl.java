@@ -129,12 +129,14 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.sql.Blob;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -186,6 +188,10 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
     }
   }
 
+  final static List<String> roMethods = Arrays.asList("GET", "REPORT", "PROPFIND");
+  private final static Set<String> readOnlyMethods =
+          new TreeSet<>(roMethods);
+
   private class HttpReqInfo {
     private final HttpServletRequest req;
 
@@ -199,6 +205,10 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
       }
 
       return CalDavHeaders.getRunAs(req);
+    }
+
+    boolean readOnly() {
+      return readOnlyMethods.contains(req.getMethod());
     }
 
     String clientId() {
@@ -339,7 +349,8 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
               service,
               publicAdmin,
               reqi.clientId(),
-              adminCreateEprops);
+              adminCreateEprops,
+              reqi.readOnly());
 
       authProperties = svci.getAuthProperties();
       sysProperties = configs.getSystemProperties();
@@ -1518,7 +1529,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
   @Override
   public CalDAVCollection newCollectionObject(final boolean isCalendarCollection,
                                               final String parentPath) throws WebdavException {
-    BwCalendar col = new BwCalendar();
+    final BwCalendar col = new BwCalendar();
 
     if (isCalendarCollection) {
       col.setCalType(BwCalendar.calTypeCalendarCollection);
@@ -1537,7 +1548,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
                            final Acl acl) throws WebdavException {
     try {
       getSvci().changeAccess(unwrap(col), acl.getAces(), true);
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
     } catch (Throwable t) {
       throw new WebdavException(t);
@@ -2575,7 +2586,8 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
                           final boolean service,
                           final boolean publicAdmin,
                           final String clientId,
-                          final boolean allowCreateEprops) throws WebdavException {
+                          final boolean allowCreateEprops,
+                          final boolean readonly) throws WebdavException {
     try {
       /* account is what we authenticated with.
        * user, if non-null, is the user calendar we want to access.
@@ -2599,7 +2611,8 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
                                         clientIdent,
                                         possibleSuperUser,   // allow SuperUser
                                         service,publicAdmin,
-                                        allowCreateEprops);
+                                        allowCreateEprops,
+                                        readonly);
       svci = new CalSvcFactoryDefault().getSvc(pars);
 
       svci.open();

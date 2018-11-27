@@ -23,7 +23,6 @@ import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.misc.Util;
 
-import java.io.InputStream;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Properties;
@@ -84,8 +83,6 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
   }
 
   public static Properties getPr() throws CalFacadeException {
-    final InputStream is = null;
-
     try {
       final SystemProperties sysProps = 
               CalSvcFactoryDefault.getSystemProperties();
@@ -116,26 +113,20 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
     } catch (final Throwable t) {
       //Logger.getLogger(CalSvcFactoryDefault.class.getName()).throwing(CalSvcFactory.class, t);
       throw new CalFacadeException(t.getMessage());
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch (final Throwable ignored) {}
-      }
     }
   }
 
   private static Object loadInstance(final String cname,
                                      final Class interfaceClass) {
     try {
-      ClassLoader loader = Thread.currentThread().getContextClassLoader();
-      Class cl = loader.loadClass(cname);
+      final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      final Class cl = loader.loadClass(cname);
 
       if (cl == null) {
         throw new CalFacadeException("Class " + cname + " not found");
       }
 
-      Object o = cl.newInstance();
+      final Object o = cl.newInstance();
 
       if (o == null) {
         throw new CalFacadeException("Unable to instantiate class " + cname);
@@ -148,7 +139,7 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
       }
 
       return o;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       t.printStackTrace();
       throw new RuntimeException(t);
     }

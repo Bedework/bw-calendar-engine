@@ -207,10 +207,10 @@ class CoreCalendarsDAO extends DAOBase {
     sess.executeUpdate();
   }
 
-  protected void deleteCalendar(final BwCalendar val) throws CalFacadeException {
+  protected void deleteCalendar(final BwCalendar col) throws CalFacadeException {
     final HibSession sess = getSess();
 
-    sess.delete(val);
+    sess.delete(col);
   }
 
   private static final String countCalendarEventRefsQuery =

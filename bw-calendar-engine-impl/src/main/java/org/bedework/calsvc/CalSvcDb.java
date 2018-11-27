@@ -407,22 +407,6 @@ public class CalSvcDb extends Logged implements Serializable {
     getLogger().debug("trace: " + msg);
   }
 
-  protected void info(final String msg) {
-    getLogger().info(msg);
-  }
-
-  protected void warn(final String msg) {
-    getLogger().warn(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(this, t);
-  }
-
-  protected void error(final String msg) {
-    getLogger().error(msg);
-  }
-
   /** Assign a guid to an event. A noop if this event already has a guid.
    *
    * @param val      BwEvent object

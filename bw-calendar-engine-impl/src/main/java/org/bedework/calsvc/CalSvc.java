@@ -1280,11 +1280,11 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
       authenticated = pars.getForRestore()
               || authenticatedUser != null;
 
-      if (authenticated) {
-        cali = CalintfFactory.getIntf(CalintfFactory.hibernateClass);
-      } else {
+      if (!authenticated || pars.getReadonly()) {
         cali = CalintfFactory
                 .getIntf(CalintfFactory.indexerOnlyClass);
+      } else {
+        cali = CalintfFactory.getIntf(CalintfFactory.hibernateClass);
       }
 
       final long afterGetIntf = System.currentTimeMillis() - start;

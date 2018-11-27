@@ -245,7 +245,7 @@ public interface CalendarsI extends Serializable {
    * @param  val     BwCalendar new object
    * @param  parentPath  String path to parent.
    * @return BwCalendar object as added. Parameter val MUST be discarded
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   BwCalendar add(BwCalendar val,
                  String parentPath) throws CalFacadeException;
@@ -254,7 +254,7 @@ public interface CalendarsI extends Serializable {
    *
    * @param  val         BwCalendar object
    * @param  newName     String name
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   void rename(BwCalendar val,
               String newName) throws CalFacadeException;
@@ -263,7 +263,7 @@ public interface CalendarsI extends Serializable {
    *
    * @param  val         BwCalendar object
    * @param  newParent   BwCalendar potential parent
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   void move(BwCalendar val,
             BwCalendar newParent) throws CalFacadeException;
@@ -271,7 +271,7 @@ public interface CalendarsI extends Serializable {
   /** Update a calendar object
    *
    * @param  val     BwCalendar object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   void update(BwCalendar val) throws CalFacadeException;
 

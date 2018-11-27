@@ -1024,7 +1024,7 @@ class CoreCalendars extends CalintfHelper
 
     /* Remove any tombstoned collection with the same name */
     // Not necessary? We just overwrite
-    //dao.removeTombstonedVersion(val);
+    dao.removeTombstonedVersion(val);
 
     // No cascades - explicitly save child
     dao.saveCollection(unwrap(val));
