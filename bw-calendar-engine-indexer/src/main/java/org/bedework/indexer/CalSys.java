@@ -47,6 +47,7 @@ public abstract class CalSys extends Logged {
   protected String principal;
 
   private String publicCalendarRoot;
+  private String userCalendarRoot;
 
   //private AuthProperties authpars;
   //private AuthProperties unauthpars;
@@ -260,6 +261,14 @@ public abstract class CalSys extends Logged {
     }
 
     return publicCalendarRoot;
+  }
+
+  protected String getUserCalendarRoot() throws CalFacadeException {
+    if (userCalendarRoot == null) {
+      userCalendarRoot = getBasicSyspars().getUserCalendarRoot();
+    }
+
+    return userCalendarRoot;
   }
 
   protected BasicSystemProperties getBasicSyspars() throws CalFacadeException {

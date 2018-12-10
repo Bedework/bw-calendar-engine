@@ -18,7 +18,10 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calsvci.CalSvcI;
+import org.bedework.util.misc.Util;
 
 import java.util.List;
 import java.util.Map;
@@ -71,6 +74,18 @@ public class PrincipalsProcessor extends Crawler {
      */
 
     Refs refs = null;
+
+      /* First index the user collection root */
+    try (BwSvc bw = getBw()) {
+      final CalSvcI svc = bw.getSvci();
+
+      if (docType == null) {
+        indexCollection(svc, Util.buildPath(
+                BasicSystemProperties.colPathEndsWithSlash,
+                "/",
+                getUserCalendarRoot()));
+      }
+    }
 
     for (;;) {
       refs = getPrincipalHrefs(refs);

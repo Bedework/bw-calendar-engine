@@ -11,10 +11,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-misc:4.0.19" level="project" />
+    <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="library" name="Maven: org.bedework:bw-access:4.0.3" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-caching:4.0.19" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-xml:4.0.19" level="project" />
+    <orderEntry type="module" module-name="bw-util-caching" />
+    <orderEntry type="module" module-name="bw-util-xml" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.8.2" level="project" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.15" level="project" />
     <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />

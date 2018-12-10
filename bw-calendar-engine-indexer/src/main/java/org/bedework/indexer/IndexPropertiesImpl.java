@@ -52,10 +52,6 @@ public class IndexPropertiesImpl
 
   private String indexerConfig;
 
-  private String publicIndexName;
-
-  private String userIndexName;
-
   private String account;
 
   private boolean discardMessages;
@@ -138,26 +134,6 @@ public class IndexPropertiesImpl
   @Override
   public String getIndexerConfig() {
     return indexerConfig;
-  }
-
-  @Override
-  public void setPublicIndexName(final String val) {
-    publicIndexName = val;
-  }
-
-  @Override
-  public String getPublicIndexName() {
-    return publicIndexName;
-  }
-
-  @Override
-  public void setUserIndexName(final String val) {
-    userIndexName = val;
-  }
-
-  @Override
-  public String getUserIndexName() {
-    return userIndexName;
   }
 
   @Override
@@ -264,8 +240,6 @@ public class IndexPropertiesImpl
     ts.append("indexerURL", getIndexerURL());
     ts.append("embeddedIndexer", getEmbeddedIndexer());
     ts.append("indexerConfig", getIndexerConfig());
-    ts.append("publicIndexName", getPublicIndexName());
-    ts.append("userIndexName", getUserIndexName());
 
     ts.newLine();
     ts.append("account", getAccount());
@@ -289,8 +263,6 @@ public class IndexPropertiesImpl
     clone.setIndexerURL(getIndexerURL());
     clone.setEmbeddedIndexer(getEmbeddedIndexer());
     clone.setIndexerConfig(getIndexerConfig());
-    clone.setPublicIndexName(getPublicIndexName());
-    clone.setUserIndexName(getUserIndexName());
 
     clone.setAccount(getAccount());
     clone.setMaxEntityThreads(getMaxEntityThreads());

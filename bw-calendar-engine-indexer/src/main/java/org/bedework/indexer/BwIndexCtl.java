@@ -294,26 +294,6 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   }
 
   @Override
-  public void setPublicIndexName(final String val) {
-    getConfig().setPublicIndexName(val);
-  }
-
-  @Override
-  public String getPublicIndexName() {
-    return getConfig().getPublicIndexName();
-  }
-
-  @Override
-  public void setUserIndexName(final String val) {
-    getConfig().setUserIndexName(val);
-  }
-
-  @Override
-  public String getUserIndexName() {
-    return getConfig().getUserIndexName();
-  }
-
-  @Override
   public void setAccount(final String val) {
     getConfig().setAccount(val);
   }

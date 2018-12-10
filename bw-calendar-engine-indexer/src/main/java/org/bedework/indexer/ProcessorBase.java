@@ -139,6 +139,12 @@ public abstract class ProcessorBase extends CalSys implements Processor {
 
   protected void indexCollection(final CalSvcI svci,
                                  final String path) throws CalFacadeException {
+    indexCollection(svci, path, true);
+  }
+
+  protected void indexCollection(final CalSvcI svci,
+                                 final String path,
+                                 final boolean doChildren) throws CalFacadeException {
     if (skipThis(path)) {
       if (debug) {
         debug("Skipping " + path);
@@ -177,6 +183,10 @@ public abstract class ProcessorBase extends CalSys implements Processor {
 
       colIndexer.indexEntity(col);
 //      close();
+
+      if (!doChildren) {
+        return;
+      }
 
       final CollectionInfo ci = col.getCollectionInfo();
       if (!ci.childrenAllowed) {
