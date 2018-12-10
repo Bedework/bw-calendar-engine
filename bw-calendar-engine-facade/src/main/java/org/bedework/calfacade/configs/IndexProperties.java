@@ -123,32 +123,6 @@ public interface IndexProperties {
   @MBeanInfo("indexer config location")
   String getIndexerConfig();
 
-  /** Set the public index name
-   *
-   * @param val
-   */
-  void setPublicIndexName(String val);
-
-  /** Get the public index name
-   *
-   * @return public core
-   */
-  @MBeanInfo("public index name")
-  String getPublicIndexName();
-
-  /** Set the user index name
-   *
-   * @param val
-   */
-  void setUserIndexName(String val);
-
-  /** Get the user index name
-   *
-   * @return user core
-   */
-  @MBeanInfo("user index name")
-  String getUserIndexName();
-
   /** Account we run under
    *
    * @param val
