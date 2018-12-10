@@ -224,8 +224,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   private final String[] searchIndexes;
   private final int currentMode;
 
-  private String lastChangeToken;
-  private long lastChangeTokenCheck;
+  private static String lastChangeToken;
+  private static long lastChangeTokenCheck;
   private final int lastChangeTokenCheckPeriod = 2000;
 
   final static EntityCaches caches = new EntityCaches();
@@ -235,8 +235,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   private final IndexProperties idxpars;
   private final BasicSystemProperties basicSysprops;
 
-  /* Indexed by index name */
-  private final static Map<String, UpdateInfo> updateInfo = new HashMap<>();
+  private static UpdateInfo updateInfo = null;
+  private final static Object updateInfoLock = new Object();
 
   private final static Set<String> knownTypesLowered =
           new TreeSet<>();
@@ -568,32 +568,39 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
   @Override
   public void markTransaction() throws CalFacadeException {
-    final UpdateInfo ui = updateInfo.get(updateTrackerIndex);
-    if ((ui != null) && !ui.isUpdate()) {
-      return;
-    }
+    synchronized (updateInfoLock) {
+      final boolean wasUpdate = caches.testResetUpdate();
 
-    try {
-      final UpdateRequestBuilder urb =
-              getClient().prepareUpdate(updateTrackerIndex,
-                                        docTypeUpdateTracker,
-                                        updateTrackerId).
-                                 setRetryOnConflict(20).
-                                 setRefresh(true);
+      if (!wasUpdate) {
+        return;
+      }
 
-      urb.setScript("ctx._source.count += 1",
-                    ScriptService.ScriptType.INLINE);
-      final UpdateResponse ur = urb.execute().actionGet();
-    } catch (final ElasticsearchException ese) {
-      warn("Exception updating UpdateInfo: " + ese
-              .getLocalizedMessage());
-      index(new UpdateInfo());
+      try {
+        if ((updateInfo != null) && (updateInfo.getCount() >= (0111111111 - 1000))) {
+          index(new UpdateInfo());
+          return;
+        }
+
+        final UpdateRequestBuilder urb =
+                getClient().prepareUpdate(updateTrackerIndex,
+                                          docTypeUpdateTracker,
+                                          updateTrackerId).
+                                   setRetryOnConflict(20).
+                                   setRefresh(true);
+
+        urb.setScript("ctx._source.count += 1",
+                      ScriptService.ScriptType.INLINE);
+        final UpdateResponse ur = urb.execute().actionGet();
+      } catch (final ElasticsearchException ese) {
+        warn("Exception updating UpdateInfo: " + ese
+                .getLocalizedMessage());
+        index(new UpdateInfo());
+      }
     }
   }
 
   @Override
   public String currentChangeToken() throws CalFacadeException {
-    UpdateInfo ui;
     try {
       final GetRequestBuilder grb = getClient()
               .prepareGet(updateTrackerIndex,
@@ -608,29 +615,14 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       }
 
       final EntityBuilder er = getEntityBuilder(gr.getFields());
-      ui = er.makeUpdateInfo();
+      updateInfo = er.makeUpdateInfo();
     } catch (final ElasticsearchException ese) {
       warn("Exception getting UpdateInfo: " + ese
               .getLocalizedMessage());
-      ui = new UpdateInfo();
+      updateInfo = new UpdateInfo();
     }
 
-    synchronized (updateInfo) {
-      UpdateInfo tui = updateInfo.get(targetIndex);
-
-      if ((tui != null) && (tui.getCount() >= (0111111111 - 1000))) {
-        // Reset before we overflow
-        tui = null;
-      }
-
-      if ((tui == null) || (!tui.getCount().equals(ui.getCount()))) {
-        updateInfo.put(targetIndex, ui);
-      } else {
-        ui = tui;
-      }
-    }
-
-    return ui.getChangeToken();
+    return updateInfo.getChangeToken();
   }
 
   private class BulkListener implements BulkProcessor.Listener {
@@ -689,9 +681,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     if (cl == null) {
       return resp;
     }
-
-    // Start with default index as source
-    targetIndex = Util.buildPath(false, idxpars.getUserIndexName());
 
     final BulkProcessor bulkProcessor =
             BulkProcessor.builder(cl,
@@ -1322,7 +1311,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         return;
       }
 
-      markUpdated(docTypeFromClass(rec.getClass()));
+      markUpdated();
 
       final IndexResponse resp = index(rec);
 
@@ -1347,7 +1336,6 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   }
 
   private boolean addOverrides(final Response resp,
-                               final String indexName,
                                final EventInfo ei) {
     try {
       final BwEvent ev = ei.getEvent();
@@ -1364,7 +1352,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       while (true) {
         // Search original for overrides
         final SearchRequestBuilder srb = getClient()
-                .prepareSearch(Util.buildPath(false, indexName));
+                .prepareSearch(searchIndexes);
 
         srb.setSearchType(SearchType.QUERY_THEN_FETCH)
            .setPostFilter(flts.overridesOnly(ev.getUid()));
@@ -1485,7 +1473,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         return false;
       }
 
-      if (!addOverrides(resp, idxpars.getUserIndexName(), ei)) {
+      if (!addOverrides(resp, ei)) {
         return false;
       }
 
@@ -1681,23 +1669,16 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
   }
 
-  private void markUpdated(final String docType)
-          throws CalFacadeException {
-    UpdateInfo ui = updateInfo.get(targetIndex);
-
-    if (ui == null) {
+  private void markUpdated() throws CalFacadeException {
+    if (updateInfo == null) {
       currentChangeToken();
     }
 
-    ui = updateInfo.get(targetIndex);
-
-    if (ui == null) {
+    if (updateInfo == null) {
       throw new CalFacadeException("Unable to set updateInfo");
     }
 
-    caches.clear();
-
-    ui.setUpdate(true);
+    caches.markUpdate(docType);
   }
 
   @Override
@@ -1715,7 +1696,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       /*final DeleteByQueryResponse resp = */
       dqrb.execute().actionGet();
 
-      markUpdated(null);
+      markUpdated();
 
       // TODO check response?
     } catch (final ElasticsearchException ese) {
@@ -1750,7 +1731,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       /*final DeleteByQueryResponse resp = */
       dqrb.execute().actionGet();
 
-      markUpdated(docType);
+      markUpdated();
 
       // TODO check response?
     } catch (final ElasticsearchException ese) {
@@ -1792,7 +1773,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       /*final DeleteByQueryResponse resp = */
       dqrb.execute().actionGet();
 
-      markUpdated(docType);
+      markUpdated();
 
       // TODO check response?
     } catch (final ElasticsearchException ese) {
@@ -2058,7 +2039,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         return resp;
       }
 
-      addOverrides(resp, idxpars.getUserIndexName(), ei);
+      addOverrides(resp, ei);
 
       return resp;
     } finally {
@@ -2108,7 +2089,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         return resp;
       }
 
-      addOverrides(resp, idxpars.getUserIndexName(), ei);
+      addOverrides(resp, ei);
 
       return resp;
     } finally {
@@ -2153,6 +2134,10 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
           throws CalFacadeException {
     final GetEntityResponse<BwCalendar> resp = new GetEntityResponse<>();
     BwCalendar entity;
+
+    if ((val == null) || (val.length() == 0)) {
+      return Response.notOk(resp, notFound, null);
+    }
 
     if ((index.length == 1) &&
             (index[0] == PropertyInfoIndex.HREF)) {
@@ -2901,6 +2886,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
    * ======================================================================== */
 
   private boolean checkCache() throws CalFacadeException {
+    // 1. Have we only just checked? If so then ok
     final long now = System.currentTimeMillis();
 
     if ((now - lastChangeTokenCheck) <= lastChangeTokenCheckPeriod) {
@@ -2908,6 +2894,8 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
 
     lastChangeTokenCheck = now;
+
+    // 2. Has there been a change since we last checked? If not then ok
     final String changeToken = currentChangeToken();
 
     if ((changeToken == null) ||
@@ -2915,6 +2903,10 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       return true;
     }
 
+    // 3. There's been a change - flush and return false.
+    if (debug) {
+      debug("Change - flush cache");
+    }
     lastChangeToken = changeToken;
     caches.clear();
 

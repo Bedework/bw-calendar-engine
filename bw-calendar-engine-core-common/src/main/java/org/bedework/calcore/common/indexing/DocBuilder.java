@@ -786,11 +786,9 @@ public class DocBuilder extends DocBuilderBase {
     makeShareable(ent);
 
     String colPath = ent.getColPath();
-    if (colPath == null) {
-      colPath = "";
+    if (colPath != null) {
+      makeField(PropertyInfoIndex.COLLECTION, colPath);
     }
-
-    makeField(PropertyInfoIndex.COLLECTION, colPath);
   }
 
   private void indexXprops(final XpropsEntity ent) throws CalFacadeException {
