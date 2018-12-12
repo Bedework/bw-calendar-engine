@@ -207,7 +207,7 @@ public class RestoreGlobals extends Counters {
 
   /** So we can output messages on the jmx console */
   public static class RestoreMessage {
-    /** log4j level */
+    /** log level */
     public String level;
 
     /** The message */

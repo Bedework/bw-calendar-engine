@@ -26,7 +26,7 @@
     <orderEntry type="module" module-name="bw-util-servlet" />
     <orderEntry type="module" module-name="bw-util-xml" />
     <orderEntry type="module" module-name="bw-caldav-util" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.6" level="project" />
+    <orderEntry type="module" module-name="bw-xml-caldav" />
     <orderEntry type="library" name="Maven: org.bedework:apache-jdkim-library:0.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.specs:geronimo-activation_1.1_spec:1.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.javamail:geronimo-javamail_1.4_mail:1.6" level="project" />
@@ -50,9 +50,9 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.6" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.6" level="project" />
     <orderEntry type="module" module-name="bw-util2-calendar" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-calws-soap:4.0.6" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.6" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.6" level="project" />
+    <orderEntry type="module" module-name="bw-xml-calws-soap" />
+    <orderEntry type="module" module-name="bw-xml-icalendar" />
+    <orderEntry type="module" module-name="bw-xml-synchws" />
     <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:2.0.9" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.10" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-collections4:4.0" level="project" />

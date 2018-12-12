@@ -60,7 +60,7 @@
     <orderEntry type="module" module-name="bw-util-servlet" />
     <orderEntry type="module" module-name="bw-util-xml" />
     <orderEntry type="module" module-name="bw-caldav-util" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.6" level="project" />
+    <orderEntry type="module" module-name="bw-xml-caldav" />
     <orderEntry type="library" name="Maven: org.bedework:apache-jdkim-library:0.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.specs:geronimo-activation_1.1_spec:1.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.javamail:geronimo-javamail_1.4_mail:1.6" level="project" />
@@ -86,8 +86,8 @@
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
     <orderEntry type="library" name="Maven: javax.jms:jms-api:1.1-rev-1" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-ical" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.6" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.6" level="project" />
+    <orderEntry type="module" module-name="bw-xml-icalendar" />
+    <orderEntry type="module" module-name="bw-xml-synchws" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="module" module-name="bw-util-hibernate" />
     <orderEntry type="module" module-name="bw-util-config" />
@@ -101,7 +101,7 @@
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
     <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="module" module-name="bw-util2-calendar" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-calws-soap:4.0.6" level="project" />
+    <orderEntry type="module" module-name="bw-xml-calws-soap" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.6" level="project" />
     <orderEntry type="library" name="Maven: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
     <orderEntry type="library" name="Maven: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />

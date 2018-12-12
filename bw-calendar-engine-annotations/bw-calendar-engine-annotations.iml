@@ -10,8 +10,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="bw-util2-calendar" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-calws-soap:4.0.6" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.6" level="project" />
+    <orderEntry type="module" module-name="bw-xml-calws-soap" />
+    <orderEntry type="module" module-name="bw-xml-icalendar" />
     <orderEntry type="module" module-name="bw-util-xml" />
     <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:2.0.9" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.10" level="project" />

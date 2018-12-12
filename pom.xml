@@ -23,7 +23,7 @@
     <bw-util-logging.version>4.0.0-SNAPSHOT</bw-util-logging.version>
     <bw-util2.version>4.0.2-SNAPSHOT</bw-util2.version>
 		<bw-webdav.version>4.0.5-SNAPSHOT</bw-webdav.version>
-    <bw-xml.version>4.0.6</bw-xml.version>
+    <bw-xml.version>4.0.7-SNAPSHOT</bw-xml.version>
 
     <commons.csv.version>1.2</commons.csv.version>
     <commons.io.version>2.0.1</commons.io.version>
