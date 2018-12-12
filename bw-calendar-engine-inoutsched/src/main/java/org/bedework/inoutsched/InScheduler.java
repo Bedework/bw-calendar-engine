@@ -76,8 +76,8 @@ public class InScheduler extends AbstractScheduler {
     CalSvcI svci = null;
 
     try {
-      if (debug) {
-        trace("ScheduleUpdateEvent for principal " +
+      if (debug()) {
+        debug("ScheduleUpdateEvent for principal " +
               msg.getOwnerHref());
       }
 
@@ -88,8 +88,8 @@ public class InScheduler extends AbstractScheduler {
                                           getName(msg.getHref()));
       if (ei == null) {
         // Event deleted?.
-        if (debug) {
-          trace("InSchedule event deleted?");
+        if (debug()) {
+          debug("InSchedule event deleted?");
         }
 
         return ProcessMessageResult.NO_ACTION;
@@ -116,14 +116,14 @@ public class InScheduler extends AbstractScheduler {
 
       final SchedProcResult pr = proc.process(ei);
 
-      if (debug) {
-        trace("InSchedule " + pr.sr);
+      if (debug()) {
+        debug("InSchedule " + pr.sr);
       }
 
       return ProcessMessageResult.PROCESSED;
     } catch (final CalFacadeStaleStateException csse) {
-      if (debug) {
-        trace("Stale state exception");
+      if (debug()) {
+        debug("Stale state exception");
       }
       rollback(getSvc());
 
@@ -148,8 +148,8 @@ public class InScheduler extends AbstractScheduler {
     CalSvcI svci = null;
 
     try {
-      if (debug) {
-        trace("InSchedule inbox entry for principal " +
+      if (debug()) {
+        debug("InSchedule inbox entry for principal " +
               msg.getOwnerHref());
       }
       svci = getSvci(msg.getOwnerHref(), "in-scheduler-qev");
@@ -158,8 +158,8 @@ public class InScheduler extends AbstractScheduler {
 
       if (ei == null) {
         // Event deleted from inbox.
-        if (debug) {
-          trace("InSchedule event deleted from inbox");
+        if (debug()) {
+          debug("InSchedule event deleted from inbox");
         }
 
         return ProcessMessageResult.NO_ACTION;
@@ -168,15 +168,15 @@ public class InScheduler extends AbstractScheduler {
       final BwEvent ev = ei.getEvent();
       final int method = ev.getScheduleMethod();
 
-      if (debug) {
-        trace("InSchedule event for " + msg.getOwnerHref() + " " +
+      if (debug()) {
+        debug("InSchedule event for " + msg.getOwnerHref() + " " +
               msg.getName() +
               " with method " + ScheduleMethods.methods[method] + "\n" +
               ev);
 
         if (ev.getSuppressed()){
           for (final EventInfo oei: ei.getOverrides()) {
-            trace("Override: " + oei.getEvent());
+            debug("Override: " + oei.getEvent());
           }
         }
       }
@@ -213,8 +213,8 @@ public class InScheduler extends AbstractScheduler {
 
       final ProcessResult pr = proc.process(ei);
 
-      if (debug) {
-        trace("InSchedule " + pr.sr);
+      if (debug()) {
+        debug("InSchedule " + pr.sr);
       }
 
       if (!pr.noInboxChange) {
@@ -226,8 +226,8 @@ public class InScheduler extends AbstractScheduler {
       //deleteEvent(ei, false, false);
       return ProcessMessageResult.PROCESSED;
     } catch (final CalFacadeForbidden cff) {
-      if (debug) {
-        trace("Forbidden exception" + cff);
+      if (debug()) {
+        debug("Forbidden exception" + cff);
       }
 
       if (ei != null) {
@@ -238,8 +238,8 @@ public class InScheduler extends AbstractScheduler {
       }
       return ProcessMessageResult.FAILED_NORETRIES;
     } catch (final CalFacadeStaleStateException csse) {
-      if (debug) {
-        trace("Stale state exception");
+      if (debug()) {
+        debug("Stale state exception");
       }
 
       rollback(getSvc());
@@ -268,13 +268,13 @@ public class InScheduler extends AbstractScheduler {
                              .get(inbox.getPath(),
                                   eventName);
     if (ei == null) {
-      if (debug) {
-        trace("autoSchedule: no event with name " + eventName);
+      if (debug()) {
+        debug("autoSchedule: no event with name " + eventName);
       }
       return null;
     }
 
-    if (debug) {
+    if (debug()) {
       final boolean recur = ei.getEvent().getRecurring();
       int numOverrides = 0;
       if (recur && (ei.getOverrides() != null)) {
@@ -282,10 +282,10 @@ public class InScheduler extends AbstractScheduler {
       }
 
       if (recur) {
-        trace("autoSchedule: retrieved recurring event with name " + eventName +
+        debug("autoSchedule: retrieved recurring event with name " + eventName +
               " and " + numOverrides + " overrides");
       } else {
-        trace("autoSchedule: retrieved non-recurring event with name " + eventName);
+        debug("autoSchedule: retrieved non-recurring event with name " + eventName);
       }
     }
 

@@ -36,7 +36,8 @@ import java.util.Map;
  * @author douglm
  *
  */
-public abstract class ProcessorBase extends CalSys implements Processor {
+public abstract class ProcessorBase extends CalSys
+        implements Processor {
   protected long batchDelay;
   protected long entityDelay;
 
@@ -146,13 +147,13 @@ public abstract class ProcessorBase extends CalSys implements Processor {
                                  final String path,
                                  final boolean doChildren) throws CalFacadeException {
     if (skipThis(path)) {
-      if (debug) {
+      if (debug()) {
         debug("Skipping " + path);
       }
       return;
     }
 
-    if (debug) {
+    if (debug()) {
       debug("indexCollection(" + path + ")");
     }
 
@@ -170,7 +171,7 @@ public abstract class ProcessorBase extends CalSys implements Processor {
       }
 
       if ((col == null) || !hasAccess(col)) {
-        if (debug) {
+        if (debug()) {
           debug("path " + path + " not found");
         }
 

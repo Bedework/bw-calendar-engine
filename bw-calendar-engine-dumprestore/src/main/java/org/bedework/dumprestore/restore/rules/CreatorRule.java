@@ -103,7 +103,7 @@ public class CreatorRule extends RestoreRule {
       throws Exception {
     /*
     if (globals.debug) {
-      trace("Save field " + name);
+      debug("Save field " + name);
     }
     */
 

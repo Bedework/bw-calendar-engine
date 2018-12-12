@@ -20,7 +20,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.common.CalintfROImpl;
 import org.bedework.calcorei.CalintfDefs;
@@ -285,7 +285,7 @@ public class CalintfImpl extends CalintfROImpl {
       try {
         close();
       } catch (final Throwable t) {
-        if (debug) {
+        if (debug()) {
           warn("Ignoring the following error");
           error(t);
         }
@@ -293,14 +293,14 @@ public class CalintfImpl extends CalintfROImpl {
     }
 
     if (sess == null) {
-      if (debug) {
+      if (debug()) {
         debug("New hibernate session for " + getTraceId());
       }
       sess = new HibSessionImpl();
-      sess.init(getSessionFactory(), getLogger());
+      sess.init(getSessionFactory());
       if (webMode) {
         sess.setFlushMode(FlushMode.MANUAL);
-      } else if (debug) {
+      } else if (debug()) {
         debug("Open session for " + getTraceId());
       }
     }
@@ -334,13 +334,13 @@ public class CalintfImpl extends CalintfROImpl {
     }
 
     if (!isOpen) {
-      if (debug) {
+      if (debug()) {
         debug("Close for " + getTraceId() + " closed session");
       }
       return;
     }
 
-    if (debug) {
+    if (debug()) {
       debug("Close for " + getTraceId());
     }
 
@@ -461,7 +461,7 @@ public class CalintfImpl extends CalintfROImpl {
       return;
     }
 
-    if (debug) {
+    if (debug()) {
       getLogger().debug("flush for " + getTraceId());
     }
     if (sess.isOpen()) {
@@ -475,7 +475,7 @@ public class CalintfImpl extends CalintfROImpl {
       return;
     }
 
-    if (debug) {
+    if (debug()) {
       getLogger().debug("clear for " + getTraceId());
     }
     if (sess.isOpen()) {
@@ -1348,7 +1348,7 @@ public class CalintfImpl extends CalintfROImpl {
 
     final String colPath = href.substring(0, pos);
 
-    if (debug) {
+    if (debug()) {
       debug("Get resource " + colPath + " -> " + name);
     }
     final BwResource res = entityDao.getResource(name, colPath,

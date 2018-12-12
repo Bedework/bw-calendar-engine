@@ -45,6 +45,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.elasticsearch.ESQueryFilterBase;
+import org.bedework.util.logging.Logged;
 
 import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.BoolFilterBuilder;
@@ -85,7 +86,8 @@ import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
  * @author Mike Douglass douglm @ rpi.edu
  *
  */
-public class ESQueryFilter extends ESQueryFilterBase implements CalintfDefs {
+public class ESQueryFilter extends ESQueryFilterBase
+        implements CalintfDefs, Logged {
   private final boolean publick;
   private final int currentMode;
   private final BwPrincipal principal;

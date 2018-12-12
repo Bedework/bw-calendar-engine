@@ -22,7 +22,7 @@ import org.bedework.sysevents.JmsConnectionHandler;
 import org.bedework.sysevents.JmsDefs;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 
 import java.io.InvalidClassException;
 import java.util.Properties;
@@ -38,8 +38,8 @@ import javax.jms.ObjectMessage;
  *
  * @author Mike Douglass
  */
-public abstract class JmsSysEventListener extends Logged
-    implements AutoCloseable, MessageListener, ExceptionListener, JmsDefs {
+public abstract class JmsSysEventListener
+    implements Logged, AutoCloseable, MessageListener, ExceptionListener, JmsDefs {
   private JmsConnectionHandler conn;
 
   private MessageConsumer consumer;

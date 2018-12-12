@@ -45,6 +45,7 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.RestoreIntf;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.xml.tagdefs.AppleServerTags;
 
 import java.util.Collection;
@@ -57,9 +58,7 @@ import java.util.TreeSet;
  * @version 1.0
  */
 class RestoreImpl extends CalSvcDb implements RestoreIntf {
-  private RestoreLogger log;
-
-  private boolean debug;
+  private Logged log;
 
   protected int currentMode = CalintfDefs.userMode;
 
@@ -73,9 +72,8 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  public void setLogger(final RestoreLogger val) {
+  public void setLogger(final Logged val) {
     log = val;
-    debug = log.isDebugEnabled();
   }
 
   @Override
@@ -152,7 +150,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       o.markUnsaved();
       getCal().saveOrUpdate(o);
 
-      if (debug) {
+      if (debug()) {
         log.debug("Saved admin group " + o);
       }
     } finally {
@@ -519,7 +517,8 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
     log.error(msg, t);
   }
 
-  protected void info(final String msg) {
+  @Override
+  public void info(final String msg) {
     if (log == null) {
       return;
     }
@@ -527,7 +526,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  protected void warn(final String msg) {
+  public void warn(final String msg) {
     if (log == null) {
       return;
     }
@@ -535,7 +534,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
   }
 
   @Override
-  protected void error(final String msg) {
+  public void error(final String msg) {
     if (log == null) {
       return;
     }

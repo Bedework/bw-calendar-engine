@@ -51,7 +51,7 @@ public class UserRule extends EntityRule {
 
       entity.setId(CalFacadeDefs.unsavedItemKey);
 
-      //trace("Restore user " + entity);
+      //debug("Restore user " + entity);
       if (globals.rintf != null) {
         globals.rintf.restorePrincipal(entity);
       }

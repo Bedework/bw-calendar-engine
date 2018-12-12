@@ -23,10 +23,10 @@ import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.util.logging.SLogged;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
-import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ import java.util.Iterator;
  *
  * @author Mike Douglass douglm at bedework.edu
  */
-public class Granulator {
+public class Granulator implements SLogged {
   private Granulator() {}
 
   /** This class defines the entities which occupy time and the period of
@@ -95,7 +95,8 @@ public class Granulator {
     String end = pars.endDt.getDate();
 
     if (pars.debug) {
-      debugMsg("Did UTC stuff in " + (System.currentTimeMillis() - millis));
+      SLogged.debug("Did UTC stuff in " +
+                            (System.currentTimeMillis() - millis));
     }
 
     EntityRange er = new EntityRange();
@@ -110,7 +111,7 @@ public class Granulator {
 
       int evstSt = er.start.compareTo(end);
 
-      //debugMsg("                   event " + evStart + " to " + evEnd);
+      //debug("                   event " + evStart + " to " + evEnd);
 
       if (evstSt < 0) {
         int evendSt = er.end.compareTo(start);
@@ -118,8 +119,8 @@ public class Granulator {
         if ((evendSt > 0) ||
             (er.start.equals(er.end) && (evendSt >= 0))) {
           // Passed the tests.
-          //if (debug) {
-          //  debugMsg("Event passed range " + start + "-" + end +
+          //if (debug()) {
+          //  debug("Event passed range " + start + "-" + end +
           //           " with dates " + evStart + "-" + evEnd +
           //           ": " + ev.getSummary());
           //}
@@ -294,9 +295,5 @@ public class Granulator {
 
       return sb.toString();
     }
-  }
-
-  private static void debugMsg(String msg) {
-    Logger.getLogger(Granulator.class).debug(msg);
   }
 }

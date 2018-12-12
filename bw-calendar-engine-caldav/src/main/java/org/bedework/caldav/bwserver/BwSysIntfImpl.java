@@ -20,7 +20,7 @@ package org.bedework.caldav.bwserver;
 
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.Acl;
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;
 import org.bedework.caldav.server.CalDAVCollection;
@@ -96,7 +96,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.IcalDefs.IcalComponentType;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.XcalUtil;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.tagdefs.CaldavTags;
@@ -147,7 +147,7 @@ import javax.xml.ws.Holder;
  *
  * @author Mike Douglass douglm at rpi.edu
  */
-public class BwSysIntfImpl extends Logged implements SysIntf {
+public class BwSysIntfImpl implements Logged, SysIntf {
   private boolean bedeworkExtensionsEnabled;
 
   protected BwPrincipal currentPrincipal;
@@ -821,7 +821,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
     String cutype = null;
 
     for (final WebdavProperty prop: pps.props) {
-      if (debug) {
+      if (debug()) {
         debug("Try to match " + prop);
       }
 
@@ -1348,7 +1348,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
 
       return checkStatus(sr);
     } catch (CalFacadeAccessException cfae) {
-      if (debug) {
+      if (debug()) {
         error(cfae);
       }
       throw new WebdavForbidden();
@@ -1403,7 +1403,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
           ical.getComponents().add(vfreeBusy);
           IcalTranslator.writeCalendar(ical, wtr);
         } catch (Throwable t) {
-          if (debug) {
+          if (debug()) {
             error(t);
           }
           throw new WebdavException(t);
@@ -2196,7 +2196,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
     if ((contentType == null) ||
             (!contentType.equals("text/calendar") &&
                      !contentType.equals("application/calendar+json"))) {
-      if (debug) {
+      if (debug()) {
         debug("Bad content type: " + contentType);
       }
       throw new WebdavForbidden(CaldavTags.supportedCalendarData,
@@ -2246,7 +2246,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
     } catch (final WebdavException wde) {
       throw wde;
     } catch (final Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       // Assume bad data in some way
@@ -2302,7 +2302,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
       throw new WebdavForbidden(CaldavTags.validCalendarData,
                                 ime.getMessage());
     } catch (Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       // Assume bad data in some way
@@ -2338,7 +2338,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
       if ((ic == null) ||
           (ic.size() != 0) || // No components other than timezones
           (ic.getTimeZones().size() != 1)) {
-        if (debug) {
+        if (debug()) {
           debug("Not single timezone");
         }
         throw new WebdavForbidden(CaldavTags.calendarTimezone, "Not single timezone");
@@ -2387,7 +2387,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
 
       if ((ic == null) ||
           (ic.getEventInfo() == null)) {
-        if (debug) {
+        if (debug()) {
           debug("Not single event");
         }
 
@@ -2402,7 +2402,7 @@ public class BwSysIntfImpl extends Logged implements SysIntf {
       return ((ev.getAlarms() != null) &&
           !ev.getAlarms().isEmpty());
     } catch (CalFacadeException cfe) {
-      if (debug) {
+      if (debug()) {
         error(cfe);
       }
 

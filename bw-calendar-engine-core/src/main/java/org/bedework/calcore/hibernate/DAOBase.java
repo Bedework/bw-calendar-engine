@@ -20,7 +20,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 
 import java.sql.Blob;
 
@@ -28,7 +28,7 @@ import java.sql.Blob;
  *
  * @author Mike Douglass   douglm  bedework.org
  */
-public abstract class DAOBase extends Logged {
+public abstract class DAOBase implements Logged {
   private HibSession sess;
 
   /**

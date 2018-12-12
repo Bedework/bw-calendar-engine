@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.util.logging.SLogged;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.Date;
@@ -43,7 +44,6 @@ import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,7 +57,11 @@ import java.util.TreeSet;
  * @author Mike Douglass     douglm - rpi.edu
  *  @version 1.0
  */
-public class RecurUtil {
+public class RecurUtil implements SLogged {
+  static {
+    SLogged.setLoggerClass(RecurUtil.class);
+  }
+
   /**
    */
   public static class RecurRange {
@@ -684,7 +688,6 @@ public class RecurUtil {
                                               final DtEnd enddt,
                                               final Duration d,
                                               final Date maxRangeEnd) throws CalFacadeException {
-    boolean debug = getLog().isDebugEnabled();
     try {
       Date start = vstart.getDate();
       Date until = null;
@@ -736,8 +739,8 @@ public class RecurUtil {
             return null;
           }
 
-          if (debug) {
-            debugMsg("Last date for recur=" + nextUntil);
+          if (SLogged.debug()) {
+            SLogged.debug("Last date for recur=" + nextUntil);
           }
 
           if ((until == null) || (nextUntil.after(until))) {
@@ -794,8 +797,8 @@ public class RecurUtil {
         }
       }
 
-      if (debug) {
-        debugMsg("Last date before fix=" + until);
+      if (SLogged.debug()) {
+        SLogged.debug("Last date before fix=" + until);
       }
 
       /* Now add the duration of the event to get us past the end
@@ -807,8 +810,8 @@ public class RecurUtil {
         until = new Date(dur.getTime(until));
       }
 
-      if (debug) {
-        debugMsg("Last date after fix=" + until);
+      if (SLogged.debug()) {
+        SLogged.debug("Last date after fix=" + until);
       }
 
       return until;
@@ -850,40 +853,5 @@ public class RecurUtil {
     }
 
     return until;
-  }
-
-  /**
-   * @return Logger
-   */
-  public static Logger getLog() {
-    return Logger.getLogger(RecurUtil.class);
-  }
-
-  /**
-   * @return true for debugging on
-   */
-  public static boolean debugEnabled() {
-    return getLog().isDebugEnabled();
-  }
-
-  /**
-   * @param t
-   */
-  public static void error(final Throwable t) {
-    getLog().error(RecurUtil.class, t);
-  }
-
-  /**
-   * @param msg
-   */
-  public static void warn(final String msg) {
-    getLog().warn(msg);
-  }
-
-  /**
-   * @param msg
-   */
-  public static void debugMsg(final String msg) {
-    getLog().debug(msg);
   }
 }

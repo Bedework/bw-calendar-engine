@@ -114,7 +114,7 @@ public class InoutSched extends JmsSysEventListener implements Runnable {
     }
 
     try {
-      if (debug) {
+      if (debug()) {
         debug("Received message" + ev);
       }
       if (ev instanceof EntityQueuedEvent) {

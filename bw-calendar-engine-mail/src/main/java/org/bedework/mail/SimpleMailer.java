@@ -25,7 +25,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.mail.Message;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Calendar;
@@ -52,7 +52,7 @@ import javax.mail.internet.MimeMessage;
  *
  * @author  Mike Douglass douglm@rpi.edu
  */
-public class SimpleMailer extends Logged implements MailerIntf {
+public class SimpleMailer implements Logged, MailerIntf {
   private boolean debug;
 
   private MailConfigProperties config;
@@ -110,7 +110,7 @@ public class SimpleMailer extends Logged implements MailerIntf {
                             String originator,
                             final Collection<String>recipients,
                             String subject) throws CalFacadeException {
-    if (debug) {
+    if (debug()) {
       debug("mailEntity called with " + cal);
     }
 
@@ -160,7 +160,7 @@ public class SimpleMailer extends Logged implements MailerIntf {
 
       return true;
     } catch (Throwable t) {
-      if (debug) {
+      if (debug()) {
         t.printStackTrace();
       }
 
@@ -264,7 +264,7 @@ public class SimpleMailer extends Logged implements MailerIntf {
       tr.connect();
       tr.sendMessage(msg, tos);
     } catch (Throwable t) {
-      if (debug) {
+      if (debug()) {
         t.printStackTrace();
       }
 

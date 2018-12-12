@@ -595,8 +595,8 @@ public class Sharing extends CalSvcDb implements SharingI {
       }
 
       if (uentry == null) {
-        if (debug) {
-          trace("Cannot find invitee: " + invitee);
+        if (debug()) {
+          debug("Cannot find invitee: " + invitee);
         }
 
         return;
@@ -702,8 +702,8 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       if (xmlInvite == null) {
         // No invite
-        if (debug) {
-          trace("No invite notification on collection with name: " + pname);
+        if (debug()) {
+          debug("No invite notification on collection with name: " + pname);
         }
         throw new CalFacadeForbidden(CalFacadeException.noInvite);
       }
@@ -722,8 +722,8 @@ public class Sharing extends CalSvcDb implements SharingI {
       }
 
       if (uentry == null) {
-        if (debug) {
-          trace("Cannot find invitee: " + invitee);
+        if (debug()) {
+          debug("Cannot find invitee: " + invitee);
         }
         throw new CalFacadeForbidden(CalFacadeException.noInviteeInUsers);
       }

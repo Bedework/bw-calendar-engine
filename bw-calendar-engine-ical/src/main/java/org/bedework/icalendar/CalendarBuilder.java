@@ -49,6 +49,8 @@
  */
 package org.bedework.icalendar;
 
+import org.bedework.util.logging.Logged;
+
 import net.fortuna.ical4j.data.CalendarParser;
 import net.fortuna.ical4j.data.CalendarParserFactory;
 import net.fortuna.ical4j.data.ContentHandler;
@@ -86,7 +88,6 @@ import net.fortuna.ical4j.model.property.XProperty;
 import net.fortuna.ical4j.util.CompatibilityHints;
 import net.fortuna.ical4j.util.Constants;
 import net.fortuna.ical4j.util.Strings;
-import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -114,11 +115,9 @@ import java.util.List;
  * </pre>
  *
  */
-public class CalendarBuilder {
+public class CalendarBuilder implements Logged {
 
     private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
-
-    private final Logger log = Logger.getLogger(CalendarBuilder.class);
 
     private final CalendarParser parser;
 
@@ -438,7 +437,7 @@ public class CalendarBuilder {
             }
             catch (ClassCastException e2) {
                 if (CompatibilityHints.isHintEnabled(CompatibilityHints.KEY_RELAXED_PARSING)) {
-                    log.warn("Error setting timezone [" + timezone.getID()
+                    error("Error setting timezone [" + timezone.getID()
                             + "] on property [" + property.getName()
                             + "]", e);
                 }

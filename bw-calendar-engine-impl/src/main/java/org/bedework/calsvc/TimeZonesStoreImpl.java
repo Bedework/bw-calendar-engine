@@ -26,11 +26,11 @@ import org.bedework.calfacade.base.UpdateFromTimeZonesInfo.UnknownTimezoneInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.BwDateTimeUtil;
 import org.bedework.calsvci.TimeZonesStoreI;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.ToString;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.LastModified;
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,18 +41,13 @@ import java.util.TreeSet;
  * @author douglm
  *
  */
-public class TimeZonesStoreImpl implements TimeZonesStoreI {
-  protected boolean debug;
-
+public class TimeZonesStoreImpl implements Logged, TimeZonesStoreI {
   private final CalSvc svci;
-
-  private transient Logger log;
 
   /*
    */
   TimeZonesStoreImpl(final CalSvc svci) {
     this.svci = svci;
-    debug = getLogger().isDebugEnabled();
   }
 
   /** Extended info class which has internal state information.
@@ -194,8 +189,8 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
           if (!checkOnly) {
             if (start != null) {
               BwDateTime evstart = ev.getDtstart();
-              if (debug) {
-                trace("Updated start: ev.tzid=" + evstart.getTzid() +
+              if (debug()) {
+                debug("Updated start: ev.tzid=" + evstart.getTzid() +
                       " ev.dtval=" + evstart.getDtval() +
                       " ev.date=" + evstart.getDate() +
                       " newdate=" + start.getDate());
@@ -209,8 +204,8 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
             }
             if (end != null) {
               BwDateTime evend = ev.getDtend();
-              if (debug) {
-                trace("Updated end: ev.tzid=" + evend.getTzid() +
+              if (debug()) {
+                debug("Updated end: ev.tzid=" + evend.getTzid() +
                       " ev.dtval=" + evend.getDtval() +
                       " ev.date=" + evend.getDate() +
                       " newdate=" + end.getDate());
@@ -243,7 +238,7 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
       iinfo.totalEventsChecked++;
     }
 
-    if (debug) {
+    if (debug()) {
       trace(iinfo.toString());
     }
 
@@ -286,19 +281,5 @@ public class TimeZonesStoreImpl implements TimeZonesStoreI {
       }
       throw cfe;
     }
-  }
-
-  /* Get a logger for messages
-   */
-  private Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  private void trace(final String msg) {
-    getLogger().debug("trace: " + msg);
   }
 }

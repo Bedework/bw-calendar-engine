@@ -110,7 +110,7 @@ public class ProcessMove extends CmdUtilHelper {
       final BwCalendar from = getCal();
 
       if (from == null) {
-        if (debug) {
+        if (debug()) {
           debug("No from cal");
         }
         return false;
@@ -121,7 +121,7 @@ public class ProcessMove extends CmdUtilHelper {
       final BwCalendar to = getCal();
 
       if (to == null) {
-        if (debug) {
+        if (debug()) {
           debug("No to cal");
         }
         return false;
@@ -207,7 +207,7 @@ public class ProcessMove extends CmdUtilHelper {
 
     final BwEvent ev = ei.getEvent();
 
-    if (debug) {
+    if (debug()) {
       final StringBuilder sb = new StringBuilder("Moving event ");
       sb.append(ev.getUid());
       if (ev.getRecurring()) {
@@ -271,7 +271,7 @@ public class ProcessMove extends CmdUtilHelper {
       final BwCategory cat = getCat(toOwner, catVal);
 
       if (cat == null) {
-        if (debug) {
+        if (debug()) {
           debug("No cat ");
         }
         return null;

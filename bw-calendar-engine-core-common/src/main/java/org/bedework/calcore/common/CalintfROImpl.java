@@ -21,7 +21,7 @@ package org.bedework.calcore.common;
 import org.bedework.access.Access;
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;
 import org.bedework.calcorei.Calintf;
@@ -254,13 +254,13 @@ public class CalintfROImpl extends CalintfBase
     }
 
     if (!isOpen) {
-      if (debug) {
+      if (debug()) {
         debug("Close for " + getTraceId() + " closed session");
       }
       return;
     }
 
-    if (debug) {
+    if (debug()) {
       debug("Close for " + getTraceId());
     }
     isOpen = false;
@@ -270,7 +270,7 @@ public class CalintfROImpl extends CalintfBase
   public void beginTransaction() throws CalFacadeException {
     checkOpen();
 
-    if (debug) {
+    if (debug()) {
       debug("Begin transaction for " + getTraceId());
     }
 
@@ -304,7 +304,7 @@ public class CalintfROImpl extends CalintfBase
       
       checkOpen();
 
-      if (debug) {
+      if (debug()) {
         debug("End transaction for " + getTraceId());
       }
     } catch (final CalFacadeException cfe) {
@@ -902,7 +902,7 @@ public class CalintfROImpl extends CalintfBase
       int lastType = 0;
 
       for (final EventPeriod ep: eventPeriods) {
-        if (debug) {
+        if (debug()) {
           debug(ep.toString());
         }
 
@@ -939,7 +939,7 @@ public class CalintfROImpl extends CalintfBase
         fbc.addPeriod(p.getStart(), p.getEnd());
       }
     } catch (final Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -967,7 +967,7 @@ public class CalintfROImpl extends CalintfBase
             defaultRecurringRetrieval(rrm,
                                       startDate, endDate);
 
-    if (debug) {
+    if (debug()) {
       debug("getEvents for start=" + startDate + " end=" + endDate);
     }
 
@@ -1685,8 +1685,8 @@ public class CalintfROImpl extends CalintfBase
 
     pathElements.add(path);
 
-    //if (debug) {
-    //  trace("Search for calendar \"" + path + "\"");
+    //if (debug()) {
+    //  debug("Search for calendar \"" + path + "\"");
     //}
 
     BwCalendar col;

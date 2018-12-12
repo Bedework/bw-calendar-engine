@@ -24,8 +24,7 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.dump.DumpGlobals;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.logging.Logged;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -36,10 +35,8 @@ import java.util.Iterator;
  * @version 1.0
  *
  */
-public class ExtSubs implements Defs {
+public class ExtSubs implements Defs, Logged {
   protected DumpGlobals globals;
-
-  private transient Logger log;
 
   /**
    * @param globals
@@ -100,32 +97,6 @@ public class ExtSubs implements Defs {
     }
 
     return ((CalendarWrapper)val).fetchEntity();
-  }
-
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void info(final String msg) {
-    getLog().info(msg);
-    if (globals.info != null) {
-      globals.info.addLn(msg);
-    }
-  }
-
-  protected void error(final String msg) {
-    getLog().error(msg);
-    if (globals.info != null) {
-      globals.info.addLn("ERROR:" + msg);
-    }
-  }
-
-  protected void trace(final String msg) {
-    getLog().debug(msg);
   }
 }
 

@@ -24,8 +24,6 @@ import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
 
-import org.apache.log4j.Logger;
-
 import java.util.Collection;
 import java.util.Map;
 
@@ -82,7 +80,7 @@ public class EntityProcessor extends Crawler {
 
         for (final String name: entityNames) {
           try {
-            if (debug) {
+            if (debug()) {
               debug("Indexing collection " + path +
                        " entity " + name);
             }
@@ -97,7 +95,7 @@ public class EntityProcessor extends Crawler {
             }
             entIndexer.indexEntity(ent);
           } catch (final Throwable t) {
-            Logger.getLogger(this.getClass()).error(this, t);
+            error(t);
 
             errors++;
 
@@ -109,7 +107,7 @@ public class EntityProcessor extends Crawler {
         }
       }
     } catch (final Throwable t) {
-      Logger.getLogger(this.getClass()).error(t);
+      error(t);
     }
   }
 }

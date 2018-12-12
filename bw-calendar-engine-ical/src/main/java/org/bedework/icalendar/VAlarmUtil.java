@@ -26,6 +26,7 @@ import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.logging.SLogged;
 
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
@@ -59,6 +60,9 @@ import java.util.List;
  * @author Mike Douglass   douglm rpi.edu
  */
 public class VAlarmUtil extends IcalUtil {
+  static {
+    SLogged.setLoggerClass(VAlarmUtil.class);
+  }
 
   /** If there are any alarms for this component add them to the events alarm
    * collection

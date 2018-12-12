@@ -76,8 +76,8 @@ public class OutScheduler extends AbstractScheduler {
     CalSvcI svci = null;
 
     try {
-      if (debug) {
-        trace("autoSchedule outbox entry for for principal " +
+      if (debug()) {
+        debug("autoSchedule outbox entry for for principal " +
               msg.getOwnerHref());
       }
 
@@ -85,8 +85,8 @@ public class OutScheduler extends AbstractScheduler {
 
       return processOutBox();
     } catch (CalFacadeStaleStateException csse) {
-      if (debug) {
-        trace("Stale state exception");
+      if (debug()) {
+        debug("Stale state exception");
       }
 
       return ProcessMessageResult.STALE_STATE;
@@ -206,8 +206,8 @@ public class OutScheduler extends AbstractScheduler {
       deduped.put(evKey, ei);
     }
 
-    if (debug) {
-      trace("Outbox process discarded " + discarded);
+    if (debug()) {
+      debug("Outbox process discarded " + discarded);
     }
 
     boolean allOk = true;
@@ -267,8 +267,8 @@ public class OutScheduler extends AbstractScheduler {
                       BwIndexer.DeletedState.noDeleted,
                       RecurringRetrievalMode.overrides);
     if (Util.isEmpty(eis)) {
-      if (debug) {
-        trace("autoSchedule: no outbox events for " +
+      if (debug()) {
+        debug("autoSchedule: no outbox events for " +
               getSvc().getPrincipal().getPrincipalRef());
       }
       return null;

@@ -41,7 +41,7 @@ import org.bedework.util.dav.DavUtil.MultiStatusResponse;
 import org.bedework.util.dav.DavUtil.MultiStatusResponseElement;
 import org.bedework.util.dav.DavUtil.PropstatElement;
 import org.bedework.util.http.BasicHttpClient;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.XmlEmit.NameSpace;
@@ -93,7 +93,7 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
  * @author Mike Douglass douglm  rpi.edu
  * @version 1.0
  */
-public abstract class AbstractDirImpl extends Logged implements Directories {
+public abstract class AbstractDirImpl implements Logged, Directories {
   private static BasicSystemProperties sysRoots;
   private CalAddrPrefixes caPrefixes;
   private CardDavInfo authCdinfo;
@@ -208,8 +208,6 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
     this.authCdinfo = configs.getCardDavInfo(true);
     this.unauthCdinfo = configs.getCardDavInfo(false);
     this.dirProps = configs.getDirConfig(getConfigName());
-
-    debug = getLogger().isDebugEnabled();
 
     setDomains();
 
@@ -1241,7 +1239,7 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
 
       final int SC_MULTI_STATUS = 207; // not defined for some reason
       if (res != SC_MULTI_STATUS) {
-        if (debug) {
+        if (debug()) {
           debug("Got response " + res + " for path " + url);
         }
 
@@ -1351,7 +1349,7 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
      /* We want one propstat element with successful status */
 
      if (msre.propstats.size() != 1) {
-       if (debug) {
+       if (debug()) {
          debug("Found " + msre.propstats.size() + " propstat elements");
        }
 
@@ -1360,7 +1358,7 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
 
      PropstatElement pse = msre.propstats.get(0);
      if (pse.status != HttpServletResponse.SC_OK) {
-       if (debug) {
+       if (debug()) {
          debug("propstat status was " + pse.status);
        }
 
@@ -1369,7 +1367,7 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
 
      // We expect one principal-address property
      if (pse.props.size() != 1) {
-       if (debug) {
+       if (debug()) {
          debug("Found " + pse.props.size() + " prop elements");
        }
 
@@ -1379,7 +1377,7 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
      final Element pr = pse.props.iterator().next();
 
      if (!XmlUtil.nodeMatches(pr, CarddavTags.principalAddress)) {
-       if (debug) {
+       if (debug()) {
          debug("Expected principal-address - found " + pr);
        }
 
@@ -1389,7 +1387,7 @@ public abstract class AbstractDirImpl extends Logged implements Directories {
      /* Expect a single href element */
      final Element hrefEl = DavUtil.getOnlyChild(pr);
      if (!XmlUtil.nodeMatches(hrefEl, WebdavTags.href)) {
-       if (debug) {
+       if (debug()) {
          debug("Expected href element for principal-address - found " +
                        hrefEl);
        }

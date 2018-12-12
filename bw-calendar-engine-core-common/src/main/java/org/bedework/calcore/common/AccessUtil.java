@@ -23,7 +23,7 @@ import org.bedework.access.AccessPrincipal;
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.Acl;
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.PrivilegeSet;
 import org.bedework.calfacade.BwCalendar;
@@ -40,7 +40,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
 import java.util.Collection;
@@ -58,7 +58,7 @@ import java.util.TreeSet;
  *
  * @author Mike Douglass
  */
-public class AccessUtil extends Logged implements AccessUtilI {
+public class AccessUtil implements Logged, AccessUtilI {
   /** For evaluating access control
    */
   private Access access;
@@ -232,7 +232,7 @@ public class AccessUtil extends Logged implements AccessUtilI {
       if (ca != null) {
         // Checked already
 
-        if (debug) {
+        if (debug()) {
           debug("Access " + desiredAccess +
                         " already checked for " +
                         cb.getPrincipal().getPrincipalRef() +
@@ -247,7 +247,7 @@ public class AccessUtil extends Logged implements AccessUtilI {
       }
     }
 
-    if (debug) {
+    if (debug()) {
       final String cname = ent.getClass().getName();
       final String ident;
       if (ent instanceof BwCalendar) {
@@ -268,7 +268,7 @@ public class AccessUtil extends Logged implements AccessUtilI {
       CurrentAccess ca = null;
 
       final AccessPrincipal owner = cb.getPrincipal(ent.getOwnerHref());
-      if (debug) {
+      if (debug()) {
         debug("After getPrincipal - took: " + (System.currentTimeMillis() - startTime));
       }
       
@@ -353,7 +353,7 @@ public class AccessUtil extends Logged implements AccessUtilI {
           return new CurrentAccess(false);
         }
 
-        if (debug) {
+        if (debug()) {
           debug("aclChars = " + new String(aclChars));
         }
 
@@ -375,7 +375,7 @@ public class AccessUtil extends Logged implements AccessUtilI {
         /* Override rather than just create a readable access as code further
          * up expects a valid filled in object.
          */
-        if (debug && !ca.getAccessAllowed()) {
+        if (debug() && !ca.getAccessAllowed()) {
           debug("Override for superuser");
         }
         ca = Acl.forceAccessAllowed(ca);
@@ -387,7 +387,7 @@ public class AccessUtil extends Logged implements AccessUtilI {
         col.setCurrentAccess(ca, desiredAccess);
       }
 
-      if (debug) {
+      if (debug()) {
         debug("access allowed: " + ca.getAccessAllowed());
       }
 

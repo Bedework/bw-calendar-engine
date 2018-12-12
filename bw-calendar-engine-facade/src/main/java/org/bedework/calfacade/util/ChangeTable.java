@@ -23,7 +23,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 
@@ -44,7 +44,7 @@ import java.util.Set;
  *
  * @author Mike Douglass
  */
-public class ChangeTable extends Logged implements Serializable {
+public class ChangeTable implements Logged, Serializable {
   private final HashMap<PropertyInfoIndex, ChangeTableEntry> map = 
           new HashMap<>();
 

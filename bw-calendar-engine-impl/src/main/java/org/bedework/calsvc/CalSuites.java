@@ -23,7 +23,7 @@ import org.bedework.access.AccessException;
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.Acl;
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.access.Privilege;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.access.WhoDefs;

@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.BwXproperty.Xpar;
 import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.util.calendar.XcalUtil;
+import org.bedework.util.logging.SLogged;
 
 import ietf.params.xml.ns.icalendar_2.AltrepParamType;
 import ietf.params.xml.ns.icalendar_2.ArrayOfParameters;
@@ -47,7 +48,6 @@ import ietf.params.xml.ns.icalendar_2.XBwCategoriesPropType;
 import ietf.params.xml.ns.icalendar_2.XBwContactPropType;
 import ietf.params.xml.ns.icalendar_2.XBwLocationPropType;
 import net.fortuna.ical4j.model.NumberList;
-import org.apache.log4j.Logger;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -60,7 +60,7 @@ import javax.xml.bind.JAXBElement;
  *
  * @author Mike Douglass   douglm  rpi.edu
  */
-public class Xutil {
+public class Xutil implements SLogged {
   protected static ObjectFactory of = new ObjectFactory();
 
   protected static void listFromNumberList(final List<String> l,
@@ -399,8 +399,8 @@ public class Xutil {
       }
 
       if (!wrapXprops) {
-        if (getLog().isDebugEnabled()) {
-          warn("Not handing x-property " + xname);
+        if (SLogged.debug()) {
+          SLogged.warn("Not handing x-property " + xname);
         }
         continue;
       }
@@ -508,26 +508,5 @@ public class Xutil {
     }
 
     return false;
-  }
-
-  /**
-   * @return Logger
-   */
-  public static Logger getLog() {
-    return Logger.getLogger(Xutil.class);
-  }
-
-  /**
-   * @param t
-   */
-  public static void error(final Throwable t) {
-    getLog().error(Xutil.class, t);
-  }
-
-  /**
-   * @param msg
-   */
-  public static void warn(final String msg) {
-    getLog().warn(msg);
   }
 }

@@ -40,7 +40,7 @@ public class FilterRule extends EntityRule {
 
     try {
       if (globals.rintf != null) {
-        trace("About to restore filter " + entity);
+        debug("About to restore filter " + entity);
         globals.rintf.restoreFilter(entity);
       }
     } catch (Throwable t) {

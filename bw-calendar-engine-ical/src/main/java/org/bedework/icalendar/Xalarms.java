@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.XcalUtil;
+import org.bedework.util.logging.SLogged;
 import org.bedework.util.xml.tagdefs.XcalTags;
 
 import ietf.params.xml.ns.icalendar_2.ActionPropType;
@@ -52,6 +53,10 @@ import javax.xml.bind.JAXBElement;
  * @author Mike Douglass   douglm  rpi.edu
  */
 public class Xalarms extends Xutil {
+  static {
+    SLogged.setLoggerClass(Xalarms.class);
+  }
+
   /**
    * @param ev
    * @param val

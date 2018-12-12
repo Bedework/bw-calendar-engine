@@ -28,6 +28,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.logging.SLogged;
 
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Period;
@@ -50,6 +51,10 @@ import java.util.Iterator;
  * @author Mike Douglass   douglm  rpi.edu
  */
 public class BwFreeBusyUtil extends IcalUtil {
+  static {
+    SLogged.setLoggerClass(BwFreeBusyUtil.class);
+  }
+
   /**
    * @param cb
    * @param val
@@ -61,8 +66,6 @@ public class BwFreeBusyUtil extends IcalUtil {
     if (val == null) {
       return null;
     }
-
-    boolean debug = getLog().isDebugEnabled();
 
     try {
       PropertyList pl = val.getProperties();
@@ -97,9 +100,9 @@ public class BwFreeBusyUtil extends IcalUtil {
 
         PropertyInfoIndex pi = PropertyInfoIndex.fromName(prop.getName());
         if (pi == null) {
-          debugMsg("Unknown property with name " + prop.getName() +
-                           " class " + prop.getClass() +
-                           " and value " + pval);
+          SLogged.debug("Unknown property with name " + prop.getName() +
+                                " class " + prop.getClass() +
+                                " and value " + pval);
           continue;
         }
 
@@ -155,8 +158,8 @@ public class BwFreeBusyUtil extends IcalUtil {
             } else if (par.equals(FbType.FREE)) {
               fbtype = BwFreeBusyComponent.typeFree;
             } else {
-              if (debug) {
-                debugMsg("Unsupported parameter " + par.getName());
+              if (SLogged.debug()) {
+                SLogged.debug("Unsupported parameter " + par.getName());
               }
 
               throw new IcalMalformedException("parameter " + par.getName());
@@ -196,9 +199,10 @@ public class BwFreeBusyUtil extends IcalUtil {
             break;
 
           default:
-            if (debug) {
-              debugMsg("Unsupported property with class " + prop.getClass() +
-                               " and value " + pval);
+            if (SLogged.debug()) {
+              SLogged.debug("Unsupported property with class " +
+                                    prop.getClass() +
+                                    " and value " + pval);
             }
         }
       }

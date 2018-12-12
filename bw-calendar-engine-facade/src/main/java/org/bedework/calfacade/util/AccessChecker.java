@@ -18,7 +18,7 @@
 */
 package org.bedework.calfacade.util;
 
-import org.bedework.access.Acl;
+import org.bedework.access.CurrentAccess;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -41,9 +41,9 @@ public interface AccessChecker extends Serializable {
    * @return CurrentAccess
    * @throws CalFacadeException if returnResult false and no access
    */
-  Acl.CurrentAccess checkAccess(BwShareableDbentity ent,
-                                int desiredAccess,
-                                boolean returnResult)
+  CurrentAccess checkAccess(BwShareableDbentity ent,
+                            int desiredAccess,
+                            boolean returnResult)
           throws CalFacadeException;
 
   /**

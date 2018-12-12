@@ -313,7 +313,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
             collectionIndexer.indexEntity(col);
           }
         } catch (final Throwable t) {
-          if (debug) {
+          if (debug()) {
             error(t);
           }
         }
@@ -337,7 +337,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
             collectionIndexer.indexEntity(newCol);
           } catch (final Throwable t) {
-            if (debug) {
+            if (debug()) {
               error(t);
             }
           }

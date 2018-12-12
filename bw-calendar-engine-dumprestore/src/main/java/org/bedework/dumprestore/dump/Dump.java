@@ -33,7 +33,7 @@ import org.bedework.dumprestore.dump.dumpling.ExtSubs;
 import org.bedework.dumprestore.prdump.DumpPrincipal;
 import org.bedework.dumprestore.prdump.DumpPublic;
 import org.bedework.dumprestore.prdump.DumpSystem;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
@@ -46,7 +46,7 @@ import java.util.Map;
  * @author Mike Douglass   douglm rpi.edu
  * @version 3.1
  */
-public class Dump extends Logged implements Defs {
+public class Dump implements Logged, Defs {
   /* Where we dump to.
    */
   private String fileName;

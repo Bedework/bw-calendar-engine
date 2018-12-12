@@ -304,7 +304,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
         fb.addFreeBusyPeriod(fbc);
       }
     } catch (Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -547,8 +547,8 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
      * segment.
      */
     while ((gpp.endDt == null) || (gpp.endDt.before(bwend))) {
-      //if (debug) {
-      //  trace("gpp.startDt=" + gpp.startDt + " end=" + end);
+      //if (debug()) {
+      //  debug("gpp.startDt=" + gpp.startDt + " end=" + end);
       //}
       if (limit < 0) {
         throw new CalFacadeException("org.bedework.svci.limit.exceeded");

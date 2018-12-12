@@ -148,8 +148,8 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
 
       if (recipients == null) {
         // request per recipient - only freebusy
-        if (debug) {
-          trace("freebusy request to " + hi.getFbUrl() + " for " + ui.recipient);
+        if (debug()) {
+          debug("freebusy request to " + hi.getFbUrl() + " for " + ui.recipient);
         }
       } else {
         recipients.add(ui.recipient);
@@ -162,7 +162,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
       return;
     }
 
-    if (debug) {
+    if (debug()) {
       final String meth;
       if (freeBusyRequest) {
         meth = "freebusy";

@@ -42,7 +42,7 @@ import org.bedework.dumprestore.InfoLines;
 import org.bedework.dumprestore.nrestore.RestorePrincipal;
 import org.bedework.dumprestore.nrestore.RestorePublic;
 import org.bedework.dumprestore.restore.rules.RestoreRuleSet;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
 import org.apache.commons.digester.Digester;
@@ -64,7 +64,7 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
  * @author Mike Douglass   douglm rpi.edu
  * @version 3.1
  */
-public class Restore extends Logged implements Defs, AutoCloseable {
+public class Restore implements Logged, Defs, AutoCloseable {
   /* File we restore from */
   private String filename;
 

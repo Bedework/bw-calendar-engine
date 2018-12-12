@@ -22,7 +22,6 @@ package org.bedework.calcore.hibernate;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 
-import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -42,11 +41,9 @@ public interface HibSession extends Serializable {
   /** Set up for a hibernate interaction. Throw the object away on exception.
    *
    * @param sessFactory
-   * @param log
    * @throws CalFacadeException
    */
-  public void init(SessionFactory sessFactory,
-                   Logger log) throws CalFacadeException;
+  public void init(SessionFactory sessFactory) throws CalFacadeException;
 
   /**
    * @return Session

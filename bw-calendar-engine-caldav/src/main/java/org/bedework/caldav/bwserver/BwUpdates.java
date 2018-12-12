@@ -38,6 +38,7 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.calendar.XcalUtil.TzGetter;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.timezones.Timezones;
 import org.bedework.util.xml.tagdefs.XcalTags;
 import org.bedework.webdav.servlet.shared.WebdavException;
@@ -59,7 +60,6 @@ import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
-import org.apache.log4j.Logger;
 import org.oasis_open.docs.ws_calendar.ns.soap.ComponentReferenceType;
 import org.oasis_open.docs.ws_calendar.ns.soap.ComponentSelectionType;
 import org.oasis_open.docs.ws_calendar.ns.soap.ComponentsSelectionType;
@@ -83,11 +83,7 @@ import javax.xml.namespace.QName;
  *
  * @author Mike Douglass douglm at rpi.edu
  */
-public class BwUpdates {
-  private boolean debug;
-
-  protected transient Logger log;
-
+public class BwUpdates implements Logged {
   protected IcalCallback cb;
 
   protected String userHref;
@@ -98,8 +94,6 @@ public class BwUpdates {
    * @param userHref
    */
   public BwUpdates(final String userHref) {
-    debug = getLogger().isDebugEnabled();
-
     this.userHref = userHref;
   }
 
@@ -164,12 +158,12 @@ public class BwUpdates {
 
       return UpdateResult.getOkResult();
     } catch (WebdavException we) {
-      if (debug) {
+      if (debug()) {
         error(we);
       }
       throw we;
     } catch (Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new WebdavException(t);
@@ -624,7 +618,7 @@ public class BwUpdates {
       return ur;
     }
 
-    if (debug) {
+    if (debug()) {
       ei.getChangeset(userHref).dumpEntries();
     }
 
@@ -1212,37 +1206,5 @@ public class BwUpdates {
     public QName getParamName() {
       return paramName;
     }
-  }
-
-  /* ====================================================================
-   *                        Protected methods
-   * ==================================================================== */
-
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void trace(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void debugMsg(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void warn(final String msg) {
-    getLogger().warn(msg);
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(this, t);
-  }
-
-  protected void logIt(final String msg) {
-    getLogger().info(msg);
   }
 }

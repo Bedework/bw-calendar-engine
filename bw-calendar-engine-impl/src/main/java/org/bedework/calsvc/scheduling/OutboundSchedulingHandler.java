@@ -157,8 +157,8 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
         }
       }
 
-      if (debug) {
-        trace("added recipient " + ui.recipient + " status = " + ui.getStatus());
+      if (debug()) {
+        debug("added recipient " + ui.recipient + " status = " + ui.getStatus());
       }
     }
 
@@ -276,8 +276,8 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
       return ecode;
     }
 
-    if (debug) {
-      trace("Add event with name " + ev.getName() +
+    if (debug()) {
+      debug("Add event with name " + ev.getName() +
             " and summary " + ev.getSummary() +
             " to " + ev.getColPath());
     }

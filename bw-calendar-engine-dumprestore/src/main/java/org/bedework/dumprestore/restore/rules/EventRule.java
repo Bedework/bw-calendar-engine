@@ -165,8 +165,8 @@ public class EventRule extends EntityRule {
           return;
         }
 
-        if (debug) {
-          trace("Add override to event ");
+        if (debug()) {
+          debug("Add override to event ");
         }
         EventInfo masterei = (EventInfo)top();
         masterei.addOverride(ei);

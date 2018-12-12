@@ -21,15 +21,15 @@ package org.bedework.dumprestore.restore.rules;
 
 import org.bedework.calfacade.BwVersion;
 import org.bedework.dumprestore.restore.RestoreGlobals;
+import org.bedework.util.logging.Logged;
 
 import org.apache.commons.digester.Rule;
-import org.apache.log4j.Logger;
 
 /**
  * @author Mike Douglass   douglm@rpi.edu
  * @version 1.0
  */
-public class RestoreRule extends Rule {
+public class RestoreRule extends Rule implements Logged {
   /** On stack when restoring date-time
    */
   public static class DateTimeValues {
@@ -48,13 +48,8 @@ public class RestoreRule extends Rule {
 
   protected RestoreGlobals globals;
 
-  private transient Logger log;
-
-  protected boolean debug;
-
   RestoreRule(final RestoreGlobals globals) {
     this.globals = globals;
-    debug = getLog().isDebugEnabled();
   }
 
   protected void push(final Object o) {
@@ -160,48 +155,36 @@ public class RestoreRule extends Rule {
     throw (Exception)t;
   }
 
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void info(final String msg) {
-    getLog().info(msg);
+  public void info(final String msg) {
+    Logged.super.info(msg);
 
     if (globals.info != null) {
       globals.info.addLn(msg);
     }
   }
 
-  protected void error(final String msg) {
+  public void error(final String msg) {
     globals.errors++;
     String ln = atLine();
 
     globals.messages.errorMessage(ln + ": " + msg);
-    getLog().error(ln + ": " + msg);
+    Logged.super.error(ln + ": " + msg);
   }
 
-  protected void error(final String msg, final Throwable t) {
+  public void error(final String msg, final Throwable t) {
     globals.errors++;
     String ln = atLine();
 
     globals.messages.errorMessage(ln+ ": " + msg + ": " + t.getMessage());
-    getLog().error(ln+ ": " + msg, t);
+    Logged.super.error(ln+ ": " + msg, t);
   }
 
-  protected void warn(final String msg) {
+  public void warn(final String msg) {
     globals.warnings++;
     String ln = atLine();
 
     globals.messages.warningMessage(ln+ ": " + msg);
-    getLog().warn(ln+ ": " + msg);
-  }
-
-  protected void trace(final String msg) {
-    getLog().debug(msg);
+    Logged.super.warn(ln+ ": " + msg);
   }
 }
 

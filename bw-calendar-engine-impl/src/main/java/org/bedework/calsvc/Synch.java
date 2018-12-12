@@ -114,7 +114,7 @@ class Synch extends CalSvcDb implements SynchI {
     } catch (final Throwable t) {
       warn("Exception getting synch connection: " +
                    "is the synch engine installed and running?");
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       return null;

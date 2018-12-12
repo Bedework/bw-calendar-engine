@@ -23,8 +23,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.UserAuth;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.logging.Logged;
 
 import java.util.Collection;
 
@@ -33,14 +32,7 @@ import java.util.Collection;
  * @author Mike Douglass    douglm@rpi.edu
  * @version 1.0
  */
-public class UserAuthUWDbImpl implements UserAuth {
-  /** Ideally this would trigger the debugging log in the underlying jdbc
-   * implementation.
-   */
-  private boolean debug;
-
-  private transient Logger log;
-
+public class UserAuthUWDbImpl implements Logged, UserAuth {
   protected CallBack cb;
 
   /** Constructor
@@ -55,8 +47,6 @@ public class UserAuthUWDbImpl implements UserAuth {
   @Override
   public void initialise(final CallBack cb) throws CalFacadeException {
     this.cb = cb;
-
-    debug = getLogger().isDebugEnabled();
   }
 
   /** ===================================================================
@@ -93,8 +83,8 @@ public class UserAuthUWDbImpl implements UserAuth {
 
   @Override
   public BwAuthUser getUser(final String account) throws CalFacadeException {
-    if (debug) {
-      trace("getUserEntry for " + account);
+    if (debug()) {
+      debug("getUserEntry for " + account);
     }
 
     final BwPrincipal p = cb.getPrincipal(account);
@@ -109,21 +99,5 @@ public class UserAuthUWDbImpl implements UserAuth {
   @Override
   public Collection<BwAuthUser> getAll() throws CalFacadeException {
     return cb.getAll();
-  }
-
-  /*  ===================================================================
-   *                   Private methods
-   *  =================================================================== */
-
-  private Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  private void trace(final String msg) {
-    getLogger().debug("trace: " + msg);
   }
 }

@@ -30,7 +30,7 @@ import org.bedework.calsvci.DumpIntf;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.dump.DumpGlobals;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 
 import java.io.File;
 import java.nio.file.FileSystems;
@@ -45,7 +45,7 @@ import java.util.List;
  * @author Mike Douglass   douglm @ bedework.edu
  * @version 4.0
  */
-public class Dumper extends Logged {
+public class Dumper implements Logged {
   private final Deque<String> pathStack = new ArrayDeque<>();
 
   private final DumpGlobals globals;

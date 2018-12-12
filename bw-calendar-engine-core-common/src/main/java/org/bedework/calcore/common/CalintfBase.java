@@ -19,7 +19,7 @@
 package org.bedework.calcore.common;
 
 import org.bedework.access.Ace;
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.common.indexing.BwIndexerFactory;
 import org.bedework.calcorei.Calintf;
@@ -57,7 +57,7 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.NotificationsHandlerFactory;
 import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.calendar.PropertyIndex;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
 import java.sql.Timestamp;
@@ -75,7 +75,7 @@ import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
 *
 * @author Mike Douglass   douglm   rpi.edu
 */
-public abstract class CalintfBase extends Logged implements Calintf {
+public abstract class CalintfBase implements Logged, Calintf {
   protected Configurations configs;
 
   protected PrincipalInfo principalInfo;

@@ -583,7 +583,7 @@ public class RestoreGlobals extends Counters {
           digester.getDocumentLocator().getLineNumber();
 
       messages.errorMessage(ln + ": bad user");
-      getLog().error(ln + ": bad user");
+      error(ln + ": bad user");
     }
 
     if (account.startsWith("/")) {

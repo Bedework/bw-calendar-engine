@@ -34,6 +34,7 @@ import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.util.logging.Logged;
 
 /** Interface which defines the database functions needed to restore the
  * calendar database. The methods need to be called in the order defined
@@ -43,45 +44,10 @@ import org.bedework.calfacade.svc.EventInfo;
  * @version 1.0
  */
 public interface RestoreIntf {
-  /** Caller needs to see the messages.
-   */
-  public interface RestoreLogger {
-    /**
-     * @param msg
-     */
-    void info(String msg);
-
-    /**
-     * @param msg
-     */
-    void warn(String msg);
-
-    /**
-     * @param msg
-     */
-    void error(String msg);
-
-    /**
-     * @param msg
-     * @param t
-     */
-    void error(final String msg, final Throwable t);
-
-    /**
-     * @param msg
-     */
-    void debug(String msg);
-
-    /**
-     * @return true for debug on
-     */
-    boolean isDebugEnabled();
-  }
-
   /**
    * @param val
    */
-  void setLogger(RestoreLogger val);
+  void setLogger(Logged val);
 
   /** Allow transactions to span many updates. May not work well.
    *

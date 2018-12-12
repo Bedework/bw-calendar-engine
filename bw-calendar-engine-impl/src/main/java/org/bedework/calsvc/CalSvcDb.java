@@ -18,7 +18,7 @@
 */
 package org.bedework.calsvc;
 
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.calcorei.Calintf;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
@@ -47,7 +47,7 @@ import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.UsersI;
 import org.bedework.sysevents.events.SysEvent;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.security.PwEncryptionIntf;
 
@@ -67,7 +67,7 @@ import static org.bedework.calfacade.responses.Response.Status.failed;
  *
  * @author Mike Douglass       douglm - rpi.edu
  */
-public class CalSvcDb extends Logged implements Serializable {
+public class CalSvcDb implements Logged, Serializable {
   private CalSvc svci;
 
   private CalSvcIPars pars;
@@ -403,10 +403,6 @@ public class CalSvcDb extends Logged implements Serializable {
     return svci.checkAccess(ent, desiredAccess, returnResult);
   }
 
-  protected void trace(final String msg) {
-    getLogger().debug("trace: " + msg);
-  }
-
   /** Assign a guid to an event. A noop if this event already has a guid.
    *
    * @param val      BwEvent object
@@ -624,7 +620,7 @@ public class CalSvcDb extends Logged implements Serializable {
   private <T extends Response> T errorReturn(final T resp,
                                              final Throwable t,
                                              final Response.Status st) {
-    if (debug) {
+    if (debug()) {
       error(t);
     }
     return errorReturn(resp, t.getLocalizedMessage(), st);

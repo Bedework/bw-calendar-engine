@@ -432,7 +432,7 @@ public class CoreEventsDAO extends DAOBase {
 
     final Collection anns = sess.getList();
 
-    if (debug) {
+    if (debug()) {
       debug("getAnnotations for event " + val.getId() +
                " overrides=" + overrides +
                " returns " + anns.size());
@@ -513,7 +513,7 @@ public class CoreEventsDAO extends DAOBase {
       sess.setString("rid", rid);
     }
 
-    //debugMsg("Try query " + sb.toString());
+    //debug("Try query " + sb.toString());
     return sess.getList();
   }
 }

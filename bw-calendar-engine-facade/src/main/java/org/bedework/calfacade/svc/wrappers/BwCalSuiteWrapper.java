@@ -18,7 +18,7 @@
 */
 package org.bedework.calfacade.svc.wrappers;
 
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;

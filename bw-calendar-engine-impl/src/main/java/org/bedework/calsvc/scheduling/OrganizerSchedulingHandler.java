@@ -285,8 +285,8 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
      * /
     boolean changed = false;
 
-    if (debug) {
-      trace("Update for attendee " + attUri);
+    if (debug()) {
+      debug("Update for attendee " + attUri);
     }
 
     if (inBoxEv.getScheduleMethod() != Icalendar.methodTypeReply) {
@@ -304,8 +304,8 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
     if (!inBoxEv.getSuppressed()) {
       calAtt = calEv.findAttendee(attUri);
       if (calAtt == null) {
-        if (debug) {
-          trace("Not an attendee of " + calEv);
+        if (debug()) {
+          debug("Not an attendee of " + calEv);
         }
         sr.errorCode = CalFacadeException.schedulingUnknownAttendee;
         sr.extraInfo = attUri;
@@ -353,8 +353,8 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
         /*
         if (cei == null) {
           // Organizer must have deleted the override.
-          if (debug) {
-            trace("Skipping missing override " + oev.getRecurrenceId());
+          if (debug()) {
+            debug("Skipping missing override " + oev.getRecurrenceId());
           }
           continue;
         }* /
@@ -397,8 +397,8 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
 
         if (calAtt == null) {
           // Organizer must have removed the attendee.
-          if (debug) {
-            trace("Skipping override " + attUri +
+          if (debug()) {
+            debug("Skipping override " + attUri +
                   " is not attending");
           }
           continue;

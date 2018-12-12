@@ -34,7 +34,7 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.WsXMLTranslator;
 import org.bedework.util.calendar.XmlCalendarBuilder;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.timezones.Timezones;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.XmlEmit.NameSpace;
@@ -99,7 +99,7 @@ import javax.xml.namespace.QName;
  *
  * @author Mike Douglass   douglm rpi.edu
  */
-public class IcalTranslator extends Logged implements Serializable {
+public class IcalTranslator implements Logged, Serializable {
   /** A class we use to indicate we are skipping stuff. Pushed on to teh stack.
    *
    */
@@ -665,7 +665,7 @@ public class IcalTranslator extends Logged implements Serializable {
     if ((ic == null) ||
         (ic.size() != 0) || // No components other than timezones
         (ic.getTimeZones().size() != 1)) {
-      if (debug) {
+      if (debug()) {
         debug("Not icalendar");
       }
       throw new CalFacadeException("Not icalendar");
@@ -792,7 +792,7 @@ public class IcalTranslator extends Logged implements Serializable {
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (ParserException pe) {
-      if (debug) {
+      if (debug()) {
         error(pe);
       }
       throw new IcalMalformedException(pe.getMessage());
@@ -1282,7 +1282,7 @@ public class IcalTranslator extends Logged implements Serializable {
 
     String id = tzid.getValue();
 
-    //if (debug) {
+    //if (debug()) {
     //  debug("Got timezone: \n" + vtz.toString() + " with id " + id);
     //}
 
@@ -1366,7 +1366,7 @@ public class IcalTranslator extends Logged implements Serializable {
       return;
     }
 
-    //if (debug) {
+    //if (debug()) {
     //  debug("Look for timezone with id " + tzid);
     //}
 
@@ -1377,11 +1377,11 @@ public class IcalTranslator extends Logged implements Serializable {
     }
 
     if (vtz != null) {
-      //if (debug) {
+      //if (debug()) {
       //  debug("found timezone with id " + tzid);
       //}
       cal.getComponents().add(vtz);
-    } else if (debug) {
+    } else if (debug()) {
       debug("Didn't find timezone with id " + tzid);
     }
 

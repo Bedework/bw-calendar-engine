@@ -108,7 +108,7 @@ public abstract class InProcessor extends CalSvcDb {
             IcalDefs.entityTypeVpoll;
 
     if (delete) {
-      if (debug) {
+      if (debug()) {
         debug("Delete event - don't move to inbox");
       }
       getSvc().getEventsHandler().delete(ei, false);
@@ -139,7 +139,7 @@ public abstract class InProcessor extends CalSvcDb {
 
           /* Discard the earlier message */
 
-      if (debug) {
+      if (debug()) {
         debug("delete earlier? event from inbox: " + inev
                 .getName());
       }
@@ -147,7 +147,7 @@ public abstract class InProcessor extends CalSvcDb {
     }
 //      }
 
-    if (debug) {
+    if (debug()) {
       debug("set event to scheduleStateProcessed: " + ev.getName());
     }
 

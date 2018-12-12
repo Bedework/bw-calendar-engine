@@ -197,7 +197,7 @@ public class ProcessDelete extends CmdUtilHelper {
   }
 
   private boolean deleteView(final String name) throws Throwable {
-    if (debug) {
+    if (debug()) {
       debug("About to delete view " + name);
     }
 
@@ -229,7 +229,7 @@ public class ProcessDelete extends CmdUtilHelper {
       return false;
     }
 
-    if (debug) {
+    if (debug()) {
       debug("About to delete view member" + name);
     }
 

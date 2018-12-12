@@ -319,7 +319,7 @@ public abstract class CalSys implements Logged {
     final BwCalendar col = svci.getCalendarsHandler().get(path);
 
     if ((col == null) || !hasAccess(col)) {
-      if (debug) {
+      if (debug()) {
         if (col == null) {
           debug("No collection");
         } else {
@@ -371,7 +371,7 @@ public abstract class CalSys implements Logged {
     try (BwSvc bw = getAdminBw()) {
       r.refs = bw.getSvci().getUsersHandler().getPrincipalHrefs(r.index, r.batchSize);
 
-      if (debug) {
+      if (debug()) {
         if (r.refs == null) {
           debug("getPrincipalHrefs(" + r.index + ") found none");
         } else {
@@ -399,7 +399,7 @@ public abstract class CalSys implements Logged {
    */
   protected Refs getChildCollections(final String path,
                                      final Refs refs) throws CalFacadeException {
-    if (debug) {
+    if (debug()) {
       debug("getChildCollections(" + path + ")");
     }
 
@@ -414,7 +414,7 @@ public abstract class CalSys implements Logged {
       final BwCalendar col = bw.getSvci().getCalendarsHandler().get(path);
 
       if ((col == null) || !hasAccess(col)) {
-        if (debug) {
+        if (debug()) {
           if (col == null) {
             debug("No collection");
           } else {
@@ -426,7 +426,7 @@ public abstract class CalSys implements Logged {
 
       r.refs = bw.getSvci().getAdminHandler().getChildCollections(path, r.index, r.batchSize);
 
-      if (debug) {
+      if (debug()) {
         if (r.refs == null) {
           debug("getChildCollections(" + path + ") found none");
         } else {
@@ -453,7 +453,7 @@ public abstract class CalSys implements Logged {
    */
   protected Refs getChildEntities(final String path,
                                   final Refs refs) throws CalFacadeException {
-    if (debug) {
+    if (debug()) {
       debug("getChildEntities(" + path + ")");
     }
 
@@ -473,7 +473,7 @@ public abstract class CalSys implements Logged {
 
       r.refs = bw.getSvci().getAdminHandler().getChildEntities(path, r.index, r.batchSize);
 
-      if (debug) {
+      if (debug()) {
         if (r.refs == null) {
           debug("getChildEntities(" + path + ") found none");
         } else {

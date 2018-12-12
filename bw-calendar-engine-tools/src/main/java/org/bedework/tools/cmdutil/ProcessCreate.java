@@ -147,7 +147,7 @@ public class ProcessCreate extends CmdUtilHelper {
   }
 
   private boolean createAdminGroup(final String account) throws Throwable {
-    if (debug) {
+    if (debug()) {
       debug("About to create admin group " + account);
     }
     
@@ -213,7 +213,7 @@ public class ProcessCreate extends CmdUtilHelper {
   }
 
   private BwCalSuiteWrapper createCalsuite(final String name) throws Throwable {
-    if (debug) {
+    if (debug()) {
       debug("About to create cal suite " + name);
     }
 
@@ -245,7 +245,7 @@ public class ProcessCreate extends CmdUtilHelper {
   }
 
   private boolean createView(final String name) throws Throwable {
-    if (debug) {
+    if (debug()) {
       debug("About to create view " + name);
     }
 
@@ -272,7 +272,7 @@ public class ProcessCreate extends CmdUtilHelper {
 
   private BwCategory createCategory(final String catVal,
                                     final String catDesc) throws Throwable {
-    if (debug) {
+    if (debug()) {
       debug("About to create category " + catVal);
     }
 
@@ -317,7 +317,7 @@ public class ProcessCreate extends CmdUtilHelper {
       final String parentPath = wordOrQuotedVal();
 
       if (parentPath == null) {
-        if (debug) {
+        if (debug()) {
           debug("No parent path");
         }
         return false;

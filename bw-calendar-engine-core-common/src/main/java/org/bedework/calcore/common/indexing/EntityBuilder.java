@@ -408,7 +408,7 @@ public class EntityBuilder extends EntityBuilderBase {
         hits++;
         ece.update();
         
-        if (debug && ((retrievals % 500) == 0)) {
+        if (debug() && ((retrievals % 500) == 0)) {
           debug("Retrievals: " + retrievals + 
                         " hits: " + hits +
                         " purges: " + purges +

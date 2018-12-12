@@ -30,7 +30,7 @@ import org.bedework.calfacade.exc.CalFacadeSubscriptionLoopException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -75,7 +75,7 @@ import java.util.Iterator;
  * @author Mike Douglass
  *
  */
-public class FilterBuilder extends Logged {
+public class FilterBuilder implements Logged {
   private HashMap<String, BwCalendar> colCache = new HashMap<>();
 
   //private HashMap<String, CalFilter> filterCache = new HashMap<String, CalFilter>();
@@ -166,7 +166,7 @@ public class FilterBuilder extends Logged {
 
     final FilterBase f = makeBwFilter(calFilter);
 
-    if (debug) {
+    if (debug()) {
       debug(" ---------  FilterBuilder result ---------------");
       dump(f, "");
 

@@ -29,11 +29,10 @@ import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.dump.DumpGlobals;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.xml.XmlEmit;
-
-import org.apache.log4j.Logger;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -47,14 +46,13 @@ import javax.xml.namespace.QName;
  *
  * @param <T> class we are dumping
  */
-public class Dumpling<T extends DumpEntity> implements Defs {
+public class Dumpling<T extends DumpEntity>
+        implements Defs, Logged {
   protected DumpGlobals globals;
 
   protected QName sectionTag;
 
   protected int countIndex;
-
-  private transient Logger log;
 
   protected XmlEmit xml;
 
@@ -223,37 +221,25 @@ public class Dumpling<T extends DumpEntity> implements Defs {
     xml.closeTag(tag);
   }
 
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void info(final String msg) {
-    getLog().info(msg);
+  public void info(final String msg) {
+    Logged.super.info(msg);
     if (globals.info != null) {
       globals.info.addLn(msg);
     }
   }
 
-  protected void warn(final String msg) {
-    getLog().warn(msg);
+  public void warn(final String msg) {
+    Logged.super.warn(msg);
     if (globals.info != null) {
       globals.info.addLn("WARN:" + msg);
     }
   }
 
-  protected void error(final String msg) {
-    getLog().error(msg);
+  public void error(final String msg) {
+    Logged.super.error(msg);
     if (globals.info != null) {
       globals.info.addLn("ERROR:" + msg);
     }
-  }
-
-  protected void trace(final String msg) {
-    getLog().debug(msg);
   }
 }
 

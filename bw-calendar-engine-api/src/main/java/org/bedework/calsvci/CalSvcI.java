@@ -20,7 +20,7 @@ package org.bedework.calsvci;
 
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwStats;

@@ -224,8 +224,8 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
       return false;
     }
 
-    if (debug) {
-      trace("Add " + val);
+    if (debug()) {
+      debug("Add " + val);
     }
 
     if ((val.getCreatorHref() == null) ||

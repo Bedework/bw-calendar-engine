@@ -84,7 +84,7 @@ public class CoreEventPropertiesRO<T extends BwEventProperty>
 
     final Collection c = ac.getAccessUtil().checkAccess(eps, privRead, true);
 
-    if (debug) {
+    if (debug()) {
       debug("getAll: found: " + eps.size() + " returning: " + c.size());
     }
 

@@ -61,7 +61,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
                                final boolean noInvites) throws CalFacadeException {
     UpdateResult uer = ei.getUpdResult();
 
-    if (debug) {
+    if (debug()) {
       dump(uer);
     }
 
@@ -74,7 +74,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
       if (!Util.isEmpty(ei.getOverrides())) {
         for (EventInfo oei: ei.getOverrides()) {
           uer = oei.getUpdResult();
-          if (debug) {
+          if (debug()) {
             dump(uer);
           }
           BwEvent oev = oei.getEvent();
@@ -93,8 +93,8 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
     if (!organizerSchedulingObject &&
         !attendeeSchedulingObject) {
       // Not a scheduling event
-      if (debug) {
-        trace("No a scheduling object: just return");
+      if (debug()) {
+        debug("No a scheduling object: just return");
       }
       return;
     }
@@ -173,7 +173,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
         ScheduleResult cnclr = schedule(cei,
                                         null, null, false);
-        if (debug) {
+        if (debug()) {
           trace(cnclr.toString());
         }
       }
@@ -282,7 +282,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
     }
 
     for (BwRecurrenceInstance ri: val) {
-      trace("  " + ri.getRecurrenceId());
+      debug("  " + ri.getRecurrenceId());
     }
   }
 
@@ -293,7 +293,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
     }
 
     for (BwAttendee att: val) {
-      trace("  " + att.getAttendeeUri());
+      debug("  " + att.getAttendeeUri());
     }
   }
 }

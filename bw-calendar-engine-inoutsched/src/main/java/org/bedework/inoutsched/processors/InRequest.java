@@ -90,8 +90,8 @@ public class InRequest extends InProcessor {
 
     boolean schedAssistant = ev.isSchedulingAssistant();
 
-    if (debug) {
-      trace("InSchedule schedAssistant = " + schedAssistant);
+    if (debug()) {
+      debug("InSchedule schedAssistant = " + schedAssistant);
     }
 
     /* First we save or update the event in the users default scheduling calendar
@@ -113,8 +113,8 @@ public class InRequest extends InProcessor {
       if (ourCopy != null) {
         /* Update */
 
-        if (debug) {
-          trace("InSchedule update for " + owner);
+        if (debug()) {
+          debug("InSchedule update for " + owner);
         }
 
         colPath = ourCopy.getEvent().getColPath();
@@ -135,16 +135,16 @@ public class InRequest extends InProcessor {
 
         adding = true;
 
-        if (debug) {
-          trace("InSchedule add for " + owner);
+        if (debug()) {
+          debug("InSchedule add for " + owner);
         }
 
         String prefSched = getSvc().getCalendarsHandler().
                 getPreferred(IcalDefs.entityTypeIcalNames[ev.getEntityType()]);
         if (prefSched == null) {
           // SCHED - status = no default collection
-          if (debug) {
-            trace("InSchedule - no default collection for " + owner);
+          if (debug()) {
+            debug("InSchedule - no default collection for " + owner);
           }
 
           // XXX set error code in request status
@@ -155,8 +155,8 @@ public class InRequest extends InProcessor {
 
         ourCopy = newAttendeeCopy(getSvc(), prefSched, ei, uri);
         if (ourCopy == null) {
-          if (debug) {
-            trace("InSchedule - unable to add to calendar for " + owner);
+          if (debug()) {
+            debug("InSchedule - unable to add to calendar for " + owner);
           }
 
           // XXX set error code in request status
@@ -192,8 +192,8 @@ public class InRequest extends InProcessor {
                             prefs.getScheduleAutoRespond();
 
     if (doAutoRespond) {
-      if (debug) {
-        trace("InSchedule - auto responding for " + owner);
+      if (debug()) {
+        debug("InSchedule - auto responding for " + owner);
       }
 
       noInvites = !autoRespond(getSvc(), ourCopy, ei,
@@ -207,8 +207,8 @@ public class InRequest extends InProcessor {
                                        BwCalendar.calTypeCalendarCollection,
                                        noInvites);
       if (pr.sr.errorCode != null) {
-        if (debug) {
-          trace("Schedule - error " + pr.sr.errorCode +
+        if (debug()) {
+          debug("Schedule - error " + pr.sr.errorCode +
                 " adding event for " + owner);
         }
 
@@ -220,8 +220,8 @@ public class InRequest extends InProcessor {
                                                  noInvites,
                                                  null);
 
-      if (debug) {
-        trace("Schedule - update result " + pr.sr +
+      if (debug()) {
+        debug("Schedule - update result " + pr.sr +
                       " for event" + ourCopy.getEvent());
       }
 
@@ -251,8 +251,8 @@ public class InRequest extends InProcessor {
 
     if (ourCopy == null) {
       // Error - deleted while we did this?
-      if (debug) {
-        trace("InSchedule - no event for auto respond for " + owner);
+      if (debug()) {
+        debug("InSchedule - no event for auto respond for " + owner);
       }
 
       return false;
@@ -278,16 +278,16 @@ public class InRequest extends InProcessor {
 
       if (att == null) {
         // Error?
-        if (debug) {
-          trace("InSchedule - no attendee on our copy for auto respond for " +
+        if (debug()) {
+          debug("InSchedule - no attendee on our copy for auto respond for " +
                 owner);
         }
 
         return false;
       }
 
-      if (debug) {
-        trace("send response event for " + owner + " " + inboxEv.getName());
+      if (debug()) {
+        debug("send response event for " + owner + " " + inboxEv.getName());
       }
 
       att.setRsvp(false); // We're about to reply.
@@ -334,8 +334,8 @@ public class InRequest extends InProcessor {
       return false;
     }
 
-    if (debug) {
-      trace("autoRespond: " + recurrences.size() + " instances");
+    if (debug()) {
+      debug("autoRespond: " + recurrences.size() + " instances");
     }
 
     /* Assume accept and then override with declines - assuming we're in the
@@ -524,8 +524,8 @@ public class InRequest extends InProcessor {
         busy = checkBusy(svci,
                          excludeUid,
                          r.start, r.end, org, uid);
-        if (debug) {
-          trace("busy=" + busy + " for " + r.start + " to " + r.end);
+        if (debug()) {
+          debug("busy=" + busy + " for " + r.start + " to " + r.end);
         }
       }
 
@@ -617,8 +617,8 @@ public class InRequest extends InProcessor {
 
     if (att == null) {
       // Error?
-      if (debug) {
-        trace("Schedule - no attendee with uri " + uri +
+      if (debug()) {
+        debug("Schedule - no attendee with uri " + uri +
               " for " + svci.getPrincipal().getPrincipalRef());
       }
 
@@ -659,8 +659,8 @@ public class InRequest extends InProcessor {
 
       if (inEv.getScheduleMethod() ==
               ScheduleMethods.methodTypeRequest) {
-        if (debug) {
-          trace("Update the poll common fields");
+        if (debug()) {
+          debug("Update the poll common fields");
         }
         if (!updateAttendeeFields(ourCopy, inCopy, attUri)) {
           return false;
@@ -668,7 +668,7 @@ public class InRequest extends InProcessor {
         statusUpdate = false;
       } else if (inEv.getScheduleMethod() !=
               ScheduleMethods.methodTypePollStatus) {
-        if (debug) {
+        if (debug()) {
           debug("Bad method " + inEv.getScheduleMethod());
         }
         return false;
@@ -758,8 +758,8 @@ public class InRequest extends InProcessor {
     if (!inMaster || !inEv.getSuppressed()) {
       // Not a suppressed master event
 
-      if (debug) {
-        trace("Update the master event or single recurrence");
+      if (debug()) {
+        debug("Update the master event or single recurrence");
       }
       if (!updateAttendeeFields(ourCopy, inCopy, attUri)) {
         return false;
@@ -1092,8 +1092,8 @@ public class InRequest extends InProcessor {
 
           if (ourAtt == null) {
             // Error?
-            if (debug) {
-              trace("InSchedule - no attendee for " + ourEv.getOwnerHref());
+            if (debug()) {
+              debug("InSchedule - no attendee for " + ourEv.getOwnerHref());
             }
 
             return false;
@@ -1285,8 +1285,8 @@ public class InRequest extends InProcessor {
       ourEv.setSignificantChange(true);
     }
 
-    if (debug) {
-      trace("After change check getSignificantChange=" +
+    if (debug()) {
+      debug("After change check getSignificantChange=" +
             ourEv.getSignificantChange());
     }
 
@@ -1299,7 +1299,7 @@ public class InRequest extends InProcessor {
 
     chg.processChanges(ourEv, true);
 
-    if (debug) {
+    if (debug()) {
       trace(chg.toString());
     }
 
@@ -1318,8 +1318,8 @@ public class InRequest extends InProcessor {
       }
     }
 
-    if (debug) {
-      trace("After attendee change check getSignificantChange=" +
+    if (debug()) {
+      debug("After attendee change check getSignificantChange=" +
             ourEv.getSignificantChange());
     }
 

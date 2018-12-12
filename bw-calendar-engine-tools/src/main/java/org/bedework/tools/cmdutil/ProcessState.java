@@ -8,7 +8,7 @@ import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ import java.util.Collection;
  * Date: 3/7/17
  * Time: 11:10
  */
-public class ProcessState extends Logged {
+public class ProcessState implements Logged {
   private String account;
 
   private boolean superUser;

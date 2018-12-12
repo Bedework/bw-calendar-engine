@@ -16,12 +16,13 @@
 
 		<!-- Bedework Versions -->
 
-    <bw-access.version>4.0.3</bw-access.version>
-    <bw-caldav.version>4.0.4</bw-caldav.version>
+    <bw-access.version>4.0.4-SNAPSHOT</bw-access.version>
+    <bw-caldav.version>4.0.5-SNAPSHOT</bw-caldav.version>
 		<bw-util.version>4.0.20-SNAPSHOT</bw-util.version>
     <bw-util-hibernate.version>4.0.20-SNAPSHOT</bw-util-hibernate.version>
-    <bw-util2.version>4.0.1</bw-util2.version>
-		<bw-webdav.version>4.0.4</bw-webdav.version>
+    <bw-util-logging.version>4.0.0-SNAPSHOT</bw-util-logging.version>
+    <bw-util2.version>4.0.2-SNAPSHOT</bw-util2.version>
+		<bw-webdav.version>4.0.5-SNAPSHOT</bw-webdav.version>
     <bw-xml.version>4.0.6</bw-xml.version>
 
     <commons.csv.version>1.2</commons.csv.version>
@@ -47,7 +48,6 @@
     <jackson.version>2.9.6</jackson.version>
     <javax.mail.version>1.5.4</javax.mail.version>
 		<junit.version>4.8.2</junit.version>
-		<log4j.version>1.2.15</log4j.version>
 		<servlet-api.version>2.4</servlet-api.version>
 		<apache-jdkim-library.version>0.4</apache-jdkim-library.version>
 	</properties>
@@ -168,26 +168,37 @@
         <artifactId>bw-util-hibernate</artifactId>
         <version>${bw-util-hibernate.version}</version>
       </dependency>
+
       <dependency>
         <groupId>org.bedework</groupId>
         <artifactId>bw-util-http</artifactId>
         <version>${bw-util.version}</version>
       </dependency>
+
       <dependency>
         <groupId>org.bedework</groupId>
         <artifactId>bw-util-indexing</artifactId>
         <version>${bw-util.version}</version>
       </dependency>
+
       <dependency>
         <groupId>org.bedework</groupId>
         <artifactId>bw-util-jmx</artifactId>
         <version>${bw-util.version}</version>
       </dependency>
+
       <dependency>
         <groupId>org.bedework</groupId>
         <artifactId>bw-util-jolokia</artifactId>
         <version>${bw-util.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-util-logging</artifactId>
+        <version>${bw-util-logging.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.bedework</groupId>
         <artifactId>bw-util-misc</artifactId>
@@ -377,25 +388,6 @@
         <version>${jackson.version}</version>
       </dependency>
 
-			<dependency>
-				<groupId>log4j</groupId>
-				<artifactId>log4j</artifactId>
-				<version>${log4j.version}</version>
-				<exclusions>
-					<exclusion>
-						<artifactId>jmxtools</artifactId>
-						<groupId>com.sun.jdmk</groupId>
-					</exclusion>
-					<exclusion>
-						<artifactId>jmxri</artifactId>
-						<groupId>com.sun.jmx</groupId>
-					</exclusion>
-					<exclusion>
-						<artifactId>jms</artifactId>
-						<groupId>javax.jms</groupId>
-					</exclusion>
-				</exclusions>
-			</dependency>
 			<!-- Test Dependencies -->
 			<dependency>
 				<groupId>junit</groupId>

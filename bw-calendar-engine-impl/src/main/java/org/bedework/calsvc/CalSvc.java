@@ -21,7 +21,7 @@ package org.bedework.calsvc;
 import org.bedework.access.Access;
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeSet;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfFactory;
@@ -101,12 +101,12 @@ import org.bedework.icalendar.IcalCallback;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.jmx.MBeanUtil;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.security.PwEncryptionIntf;
 import org.bedework.util.security.keys.GenKeysMBean;
 import org.bedework.util.timezones.Timezones;
 
-import org.apache.log4j.Logger;
 import org.hibernate.exception.ConstraintViolationException;
 
 import java.sql.Blob;
@@ -126,12 +126,10 @@ import java.util.TreeSet;
  *
  * @author Mike Douglass       douglm rpi.edu
  */
-public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
+public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetcher {
   //private String systemName;
 
   private CalSvcIPars pars;
-
-  private boolean debug;
 
   private static Configurations configs;
 
@@ -246,8 +244,6 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
 
   private IcalCallback icalcb;
 
-  private transient Logger log;
-
   @Override
   public void init(final CalSvcIPars parsParam) throws CalFacadeException {
     init(parsParam, false);
@@ -259,7 +255,6 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
 
     this.creating = creating;
 
-    debug = getLogger().isDebugEnabled();
     final long start = System.currentTimeMillis();
 
     fixUsers();
@@ -481,7 +476,7 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
 
   @Override
   public void logStats() throws CalFacadeException {
-    logIt(getStats().toString());
+    info(getStats().toString());
   }
 
   @Override
@@ -1539,8 +1534,8 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
       }
 
       if (pars.getPublicAdmin() || pars.isGuest()) {
-        if (debug) {
-          trace("PublicAdmin: " + pars.getPublicAdmin() + " user: "
+        if (debug()) {
+          debug("PublicAdmin: " + pars.getPublicAdmin() + " user: "
                         + runAsUser);
         }
 
@@ -1662,14 +1657,14 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
         // Does this session still work?
       } else {
         rollbackTransaction();
-        if (debug) {
+        if (debug()) {
           cfe.printStackTrace();
         }
         throw cfe;
       }
     } catch (final Throwable t) {
       rollbackTransaction();
-      if (debug) {
+      if (debug()) {
         t.printStackTrace();
       }
       throw new CalFacadeException(t);
@@ -1842,8 +1837,8 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
     String newToken = "";
     BwCalendar resolvedCol = col;
 
-    if (debug) {
-      trace("sync token: " + token + " col: " + resolvedCol.getPath());
+    if (debug()) {
+      debug("sync token: " + token + " col: " + resolvedCol.getPath());
     }
 
     if (col.getTombstoned()) {
@@ -1928,8 +1923,8 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
         newToken = sri.getToken();
       }
 
-      if (debug) {
-        trace("     token=" + sri.getToken() + " for " + c.getPath());
+      if (debug()) {
+        debug("     token=" + sri.getToken() + " for " + c.getPath());
       }
     }
     
@@ -2050,35 +2045,5 @@ public class CalSvc extends CalSvcI implements Calintf.FilterParserFetcher {
    */
   private boolean isPublicAdmin() throws CalFacadeException {
     return pars.getPublicAdmin();
-  }
-
-  /* Get a logger for messages
-   */
-  private Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  private void logIt(final String msg) {
-    getLogger().info(msg);
-  }
-
-  private void trace(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  private void warn(final String msg) {
-    getLogger().warn(msg);
-  }
-
-  private void error(final String msg) {
-    getLogger().error(msg);
-  }
-
-  private void error(final Throwable t) {
-    getLogger().error(this, t);
   }
 }

@@ -72,7 +72,7 @@ public class MessageProcessor extends CalSys {
    * @param msg the incoming message
    */
   public void processMessage(final SysEvent msg) {
-    if (debug) {
+    if (debug()) {
       debug("Event " + msg.getSysCode());
     }
 
@@ -146,7 +146,7 @@ public class MessageProcessor extends CalSys {
                                      getName(ece.getHref()));
       if (val == null) {
         // Unindex it
-        if (debug) {
+        if (debug()) {
           debug("Missing event: " + ece.getHref());
         }
         getIndexer(bw.getSvci(), null,

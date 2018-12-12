@@ -19,9 +19,8 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.ToString;
-
-import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,13 +30,10 @@ import java.util.Collection;
  * @author douglm
  *
  */
-public class ThreadPool {
-  protected boolean debug;
+public class ThreadPool implements Logged {
   private String name;
 
   private int maxThreads;
-
-  private Logger log;
 
   private ThreadGroup tgroup;
 
@@ -52,7 +48,6 @@ public class ThreadPool {
    */
   public ThreadPool(final String name,
                     final int maxThreads) {
-    debug = getLogger().isDebugEnabled();
     tgroup = new ThreadGroup(name);
 
     this.name = name;
@@ -89,8 +84,8 @@ public class ThreadPool {
     try {
       synchronized (running) {
         while (numWaiting > 0) {
-          if (debug) {
-            debugMsg("Number waiting is " + numWaiting + ". Waiting till zero");
+          if (debug()) {
+            debug("Number waiting is " + numWaiting + ". Waiting till zero");
           }
 
           running.wait();
@@ -99,20 +94,20 @@ public class ThreadPool {
 
       synchronized (running) {
         while (running.size() > 0) {
-          if (debug) {
-            debugMsg("Number running is " + running.size() + ". Waiting till zero");
+          if (debug()) {
+            debug("Number running is " + running.size() + ". Waiting till zero");
           }
 
           running.wait();
         }
       }
 
-      if (debug) {
-        debugMsg("All threads terminated");
+      if (debug()) {
+        debug("All threads terminated");
       }
     } catch (Throwable t) {
-      if (debug) {
-        debugMsg("Exception waiting for processor: " + t);
+      if (debug()) {
+        debug("Exception waiting for processor: " + t);
       }
       throw new CalFacadeException(t);
     }
@@ -128,8 +123,8 @@ public class ThreadPool {
       synchronized (running) {
         while (running.size() >= maxThreads) {
           numWaiting++;
-          if (debug) {
-            debugMsg("Waiting for thread. Queue length: " + numWaiting);
+          if (debug()) {
+            debug("Waiting for thread. Queue length: " + numWaiting);
           }
 
           running.wait();
@@ -143,8 +138,8 @@ public class ThreadPool {
         return it;
       }
     } catch (Throwable t) {
-      if (debug) {
-        debugMsg("Exception waiting for processor: " + t);
+      if (debug()) {
+        debug("Exception waiting for processor: " + t);
       }
       throw new CalFacadeException(t);
     }
@@ -182,24 +177,5 @@ public class ThreadPool {
     ts.append("total", totalThreads);
 
     return ts.toString();
-  }
-
-  /**
-   * @return Logger
-   */
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void debugMsg(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void error(final String msg) {
-    getLogger().error(msg);
   }
 }

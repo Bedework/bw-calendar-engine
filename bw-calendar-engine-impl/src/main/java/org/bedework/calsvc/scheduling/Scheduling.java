@@ -61,7 +61,7 @@ public class Scheduling extends ImplicitSchedulingHandler {
       throw new CalFacadeException(CalFacadeException.schedulingNoCalendar);
     }
 
-    if (debug) {
+    if (debug()) {
       debug("Look for event " + ev.getUid() +
                     " in " + preferred);
     }

@@ -269,7 +269,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         /* Number of failures */
         int failedCt = 0;
 
-        if (debug) {
+        if (debug()) {
           debug("About to process " + externalSubs
                   .size() + " external subs");
         }
@@ -392,7 +392,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         /* Number of failures */
         int failedCt = 0;
 
-        if (debug) {
+        if (debug()) {
           debug("About to process " + aliasInfo.size() +
                         " aliases");
         }
@@ -633,7 +633,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         
         final boolean debug = getLogger().isDebugEnabled();
 
-        if (debug) {
+        if (debug()) {
           debug("About to get locations");
         }
 

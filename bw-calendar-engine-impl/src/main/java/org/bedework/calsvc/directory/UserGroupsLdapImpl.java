@@ -355,13 +355,13 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
     try {
       ctx = new InitialLdapContext(env, null);
-      if (debug) {
+      if (debug()) {
         debug("Logged into LDAP server, " + ctx);
       }
 
       return ctx;
     } catch(Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -403,7 +403,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
       return group;
     } catch(Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -480,7 +480,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
 
       return groups;
     } catch(final Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -596,7 +596,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
         }
       }
     } catch(Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);

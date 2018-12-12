@@ -33,7 +33,7 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.ToString;
 
 import ietf.params.xml.ns.caldav.TextMatchType;
@@ -66,7 +66,7 @@ import java.util.Stack;
  * @author Mike Douglass
  *
  */
-public abstract class SimpleFilterParser extends Logged {
+public abstract class SimpleFilterParser implements Logged {
   private SfpTokenizer tokenizer;
   private String currentExpr;
   private String source;
@@ -326,7 +326,7 @@ public abstract class SimpleFilterParser extends Logged {
     parseResult.ok = true;
 
     try {
-      if (debug) {
+      if (debug()) {
         debug("About to parse filter expression: " + expr +
                       " from " + source);
       }
@@ -358,7 +358,7 @@ public abstract class SimpleFilterParser extends Logged {
 
       final FilterBase f = popFilters();
 
-      if (debug) {
+      if (debug()) {
         debug(f.toString());
       }
 
@@ -442,7 +442,7 @@ public abstract class SimpleFilterParser extends Logged {
   }
 
   private boolean doFactor() throws ParseFailed {
-    if (debug) {
+    if (debug()) {
       debug("doFactor: " + tokenizer.toString());
     }
 
@@ -489,7 +489,7 @@ public abstract class SimpleFilterParser extends Logged {
 
   private boolean doExpr() throws ParseFailed {
     // Don't seem quite right
-    if (debug) {
+    if (debug()) {
       debug("doExpr: " + tokenizer.toString());
     }
     return doTerm();
@@ -500,7 +500,7 @@ public abstract class SimpleFilterParser extends Logged {
       return false;
     }
 
-    if (debug) {
+    if (debug()) {
       debug("doTerm: " + tokenizer.toString());
     }
 
@@ -1234,7 +1234,7 @@ public abstract class SimpleFilterParser extends Logged {
     BwCalendar vpathTarget = null;
 
     for (final BwCalendar col: cols) {
-      if (debug) {
+      if (debug()) {
         debug("      vpath collection:" + col.getPath());
       }
 
@@ -1474,7 +1474,7 @@ public abstract class SimpleFilterParser extends Logged {
     try {
       final int tkn = tokenizer.next();
 
-      if (!debug) {
+      if (!debug()) {
         return tkn;
       }
 

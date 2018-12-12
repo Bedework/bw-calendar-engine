@@ -18,7 +18,7 @@
 */
 package org.bedework.calcore.common;
 
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
@@ -52,10 +52,8 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
-
-import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -67,8 +65,8 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
  *
  * @author Mike Douglass   douglm  rpi.edu
  */
-public abstract class CalintfHelper extends Logged
-        implements CalintfDefs, PrivilegeDefs, Serializable {
+public abstract class CalintfHelper
+        implements Logged, CalintfDefs, PrivilegeDefs, Serializable {
   protected AccessChecker ac;
 
   protected boolean collectTimeStats;
@@ -98,7 +96,7 @@ public abstract class CalintfHelper extends Logged
     this.ac = ac;
     this.currentMode = currentMode;
     this.sessionless = sessionless;
-    collectTimeStats = Logger.getLogger("org.bedework.collectTimeStats").isDebugEnabled();
+    collectTimeStats = isMetricsDebugEnabled();
   }
 
   public abstract void throwException(final CalFacadeException cfe)

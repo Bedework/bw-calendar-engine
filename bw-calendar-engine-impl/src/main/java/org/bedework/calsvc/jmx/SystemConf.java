@@ -79,7 +79,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
               ctr = 0;
             }
           } else {
-            if (debug) {
+            if (debug()) {
               debug("About to check interfaces");
             }
 
@@ -133,7 +133,7 @@ public class SystemConf extends ConfBase<SystemPropertiesImpl>
               }
 
               try {
-                if (debug) {
+                if (debug()) {
                   debug("About to shut down interface " +
                                 ifInfo.getId());
                 }

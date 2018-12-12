@@ -18,7 +18,7 @@
 */
 package org.bedework.calsvc;
 
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
@@ -167,10 +167,10 @@ class Calendars extends CalSvcDb implements CalendarsI {
   @Override
   public Collection<BwCalendar> decomposeVirtualPath(final String vpath) throws CalFacadeException {
     vpathCalls++;
-    if (debug && ((vpathCalls % 250) == 0)) {
-      trace("Vpath calls: " + vpathCalls);
-      trace(" Vpath hits: " + vpathHits);
-      trace(" Vpath size: " + vpathCache.size());
+    if (debug() && ((vpathCalls % 250) == 0)) {
+      debug("Vpath calls: " + vpathCalls);
+      debug(" Vpath hits: " + vpathHits);
+      debug(" Vpath size: " + vpathCache.size());
     }
     
     // In the cache?
@@ -247,7 +247,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
       if (startCol != null) {
         // Found the start collection
-        if (debug) {
+        if (debug()) {
           debug("Start vpath collection:" + startCol.getPath());
         }
         break;
@@ -265,7 +265,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     for (;;) {
       cols.add(curCol);
 
-      if (debug) {
+      if (debug()) {
         debug("      vpath collection:" + curCol.getPath());
       }
 
@@ -665,7 +665,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     cols = decomposeVirtualPath(href);
 
     if (Util.isEmpty(cols)) {
-      if (debug) {
+      if (debug()) {
         debug("No collections for vpath " + href);
       }
       return null;
@@ -700,7 +700,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
         }
         numCats = colCats.size();
       }
-      if (debug) {
+      if (debug()) {
         debug("For col " + col.getPath() + " found " + numCats);
       }
       if (col.getAlias()) {
@@ -1094,13 +1094,13 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
       uri = Util.buildPath(colPathEndsWithSlash, URLDecoder.decode(uri, "UTF-8"));
 
-      if (debug) {
-        trace("Normalized uri=" + uri);
+      if (debug()) {
+        debug("Normalized uri=" + uri);
       }
 
       return uri;
     } catch (final Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException("Bad uri: " + uri);

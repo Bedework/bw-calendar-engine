@@ -168,7 +168,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
     sess.createQuery(getAllQuery);
 
-    if (debug) {
+    if (debug()) {
       debug("getAll: q=" + getAllQuery + " owner=" + ownerHref);
     }
 
@@ -312,7 +312,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
     /* May get multiple counts back for events and annotations. */
     final List<EventPropertiesReference> refs = sess.getList();
 
-    if (debug) {
+    if (debug()) {
       debug(" ----------- count = " + refs.size());
     }
 
@@ -332,7 +332,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
     long total = 0;
 
-    if (debug) {
+    if (debug()) {
       debug(" ----------- count = " + counts.size());
       if (counts.size() > 0) {
         debug(" ---------- first el class is " + counts.iterator().next().getClass().getName());

@@ -1410,7 +1410,7 @@ public class DocBuilder extends DocBuilderBase {
     try {
       XContentBuilder builder = XContentFactory.jsonBuilder();
 
-      if (debug) {
+      if (debug()) {
         builder = builder.prettyPrint();
       }
 

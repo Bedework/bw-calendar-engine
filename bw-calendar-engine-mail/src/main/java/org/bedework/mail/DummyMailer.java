@@ -25,7 +25,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.mail.Message;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 
 import net.fortuna.ical4j.model.Calendar;
 
@@ -37,7 +37,7 @@ import java.util.Collection;
  *
  * @author  Mike Douglass douglm@rpi.edu
  */
-public class DummyMailer extends Logged implements MailerIntf {
+public class DummyMailer implements Logged, MailerIntf {
   //private boolean debug;
 
   private MailConfigProperties config;

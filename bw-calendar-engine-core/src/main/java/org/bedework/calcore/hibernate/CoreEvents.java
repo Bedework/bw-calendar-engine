@@ -18,7 +18,7 @@
 */
 package org.bedework.calcore.hibernate;
 
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.calcore.common.CalintfHelper;
 import org.bedework.calcore.hibernate.EventQueryBuilder.EventsQueryResult;
 import org.bedework.calcorei.CoreEventInfo;
@@ -592,7 +592,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         firstRecurrenceId = ri.getRecurrenceId();
       } else if (firstRecurrenceId.equals(ri.getRecurrenceId())) {
         // Skip it
-        if (debug) {
+        if (debug()) {
           debug("Skipping duplicate recurid " + firstRecurrenceId);
         }
 
@@ -605,7 +605,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         final BwEventProxy ov = recurids.get(rid);
 
         if (ov != null) {
-          if (debug) {
+          if (debug()) {
             debug("Add override with recurid " + rid);
           }
 
@@ -1137,7 +1137,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     @SuppressWarnings("unchecked")
     final List<BwEvent> evs = dao.getSynchEventObjects(fpath, token);
 
-    if (debug) {
+    if (debug()) {
       debug(" ----------- number evs = " + evs.size());
     }
 
@@ -1205,7 +1205,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
        Otherwise we just update the event annotation.
      */
     final BwEventAnnotation override = proxy.getRef();
-    if (debug) {
+    if (debug()) {
       debug("Update override event " + override);
     }
 
@@ -1232,7 +1232,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
               dao.getInstance(mstr, 
                               override.getRecurrenceId());
       if (inst == null) {
-        if (debug) {
+        if (debug()) {
           debug("Cannot locate instance for " +
                    mstr + "with recurrence id " + override.getRecurrenceId());
         }
@@ -1364,7 +1364,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
       final CoreEventInfo instcei = makeInstanceProxy(inst, ca);
       if (instcei != null) {
-        //if (debug) {
+        //if (debug()) {
         //  debug("Ev: " + proxy);
         //}
         ceis.add(instcei);
@@ -1869,7 +1869,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     RecuridTable(final Collection<BwEventProxy> events) {
       for (final BwEventProxy ev: events) {
         final String rid = ev.getRecurrenceId();
-        if (debug) {
+        if (debug()) {
           debug("Add override to table with recurid " + rid);
         }
 

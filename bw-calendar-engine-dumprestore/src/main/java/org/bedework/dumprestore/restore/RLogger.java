@@ -18,29 +18,18 @@
 */
 package org.bedework.dumprestore.restore;
 
-import org.bedework.calsvci.RestoreIntf.RestoreLogger;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.logging.Logged;
 
 /** Logger for restore class.
  *
  * @author Mike Douglass   douglm@rpi.edu
  * @version 3.1
  */
-public class RLogger implements RestoreLogger {
-  private transient Logger log;
-
+public class RLogger implements Logged {
   private RestoreGlobals globals;
 
   RLogger(final RestoreGlobals globals) {
-    log = Logger.getLogger(this.getClass());
-
     this.globals = globals;
-  }
-
-  @Override
-  public void info(final String msg) {
-    log.info(msg);
   }
 
   @Override
@@ -49,7 +38,7 @@ public class RLogger implements RestoreLogger {
     String ln = atLine();
 
     globals.messages.warningMessage(ln+ ": " + msg);
-    log.warn(ln+ ": " + msg);
+    Logged.super.warn(ln+ ": " + msg);
   }
 
   @Override
@@ -58,7 +47,7 @@ public class RLogger implements RestoreLogger {
     String ln = atLine();
 
     globals.messages.errorMessage(ln + ": " + msg);
-    log.error(ln + ": " + msg);
+    Logged.super.error(ln + ": " + msg);
   }
 
   @Override
@@ -67,17 +56,7 @@ public class RLogger implements RestoreLogger {
     String ln = atLine();
 
     globals.messages.errorMessage(ln+ ": " + msg + ": " + t.getMessage());
-    log.error(ln+ ": " + msg, t);
-  }
-
-  @Override
-  public void debug(final String msg) {
-    log.debug(msg);
-  }
-
-  @Override
-  public boolean isDebugEnabled() {
-    return log.isDebugEnabled();
+    Logged.super.error(ln+ ": " + msg, t);
   }
 
   protected String atLine() {

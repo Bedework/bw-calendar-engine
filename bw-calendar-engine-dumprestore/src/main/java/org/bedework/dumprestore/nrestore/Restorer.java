@@ -31,7 +31,7 @@ import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 import org.bedework.dumprestore.restore.XmlFile;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.xml.FromXml;
 
 import java.io.Closeable;
@@ -59,7 +59,7 @@ import static java.nio.file.FileVisitResult.CONTINUE;
  * @author Mike Douglass   douglm @ bedework.edu
  * @version 4.0
  */
-public class Restorer extends Logged implements Closeable {
+public class Restorer implements Logged, Closeable {
   private final Deque<String> pathStack = new ArrayDeque<>();
 
   protected final RestoreGlobals globals;

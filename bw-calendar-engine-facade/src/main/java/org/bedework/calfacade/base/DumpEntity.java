@@ -23,10 +23,10 @@ import org.bedework.calfacade.annotations.Dump.DumpFormat;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.annotations.NoWrap;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.xml.XmlEmit;
 
 import net.fortuna.ical4j.vcard.VCard;
-import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -45,9 +45,7 @@ import javax.xml.namespace.QName;
  *
  * @param <T>
  */
-public class DumpEntity<T> {
-  private transient Logger log;
-
+public class DumpEntity<T> implements Logged {
   /** We're dumping the entire object */
   public enum DumpType {
     /** We're dumping the entire object */
@@ -616,17 +614,5 @@ public class DumpEntity<T> {
     }
 
     return val.substring(3, 4).toLowerCase() + val.substring(4);
-  }
-
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void error(final String msg) {
-    getLog().error(msg);
   }
 }

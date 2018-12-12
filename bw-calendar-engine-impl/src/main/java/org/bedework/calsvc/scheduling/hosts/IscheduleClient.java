@@ -24,7 +24,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.scheduling.hosts.Response.ResponseElement;
 import org.bedework.icalendar.IcalTranslator;
 import org.bedework.icalendar.Icalendar;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlUtil;
 import org.bedework.util.xml.tagdefs.CaldavTags;
@@ -71,7 +71,7 @@ import static org.bedework.util.http.HttpUtil.setContent;
  *
  * @author Mike Douglass
  */
-public class IscheduleClient extends Logged {
+public class IscheduleClient implements Logged {
   private transient IcalTranslator trans;
 
   /* There is one entry per host + port. Because we are likely to make a number
@@ -314,7 +314,7 @@ public class IscheduleClient extends Logged {
                     getFirstHeaderValue(resp,
                                         "location");
             if (location != null) {
-              if (debug) {
+              if (debug()) {
                 debug("Got redirected to " + location +
                               " from " + uri);
               }
@@ -341,7 +341,7 @@ public class IscheduleClient extends Logged {
             // The response is invalid and did not provide the new location for
             // the resource.  Report an error or possibly handle the response
             // like a 404 Not Found error.
-          if (debug) {
+          if (debug()) {
             error("Got response " + rcode +
                   ", host " + hi.getHostname() +
                   " and url " + uri);
@@ -377,7 +377,7 @@ public class IscheduleClient extends Logged {
         return;
       }
 
-      if (debug) {
+      if (debug()) {
         error("Too many redirects: Got response " + rcode +
               ", host " + hi.getHostname() +
               " and url " + uri);
@@ -387,7 +387,7 @@ public class IscheduleClient extends Logged {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
 
@@ -532,7 +532,7 @@ public class IscheduleClient extends Logged {
         resp.addResponse(fbel);
       }
     } catch (final Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
 
@@ -688,8 +688,8 @@ public class IscheduleClient extends Logged {
     try {
       return XmlUtil.getElements(nd);
     } catch (final Throwable t) {
-      if (debug) {
-        getLogger().error(this, t);
+      if (debug()) {
+        error(t);
       }
 
       throw new CalFacadeException(CalFacadeException.badResponse);
@@ -700,8 +700,8 @@ public class IscheduleClient extends Logged {
     try {
       return XmlUtil.getElementContent(el);
     } catch (final Throwable t) {
-      if (debug) {
-        getLogger().error(this, t);
+      if (debug()) {
+        error(t);
       }
 
       throw new CalFacadeException(CalFacadeException.badResponse);

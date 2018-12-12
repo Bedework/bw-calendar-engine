@@ -20,8 +20,7 @@ package org.bedework.calfacade.filter;
 
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeException;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.logging.Logged;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -32,11 +31,7 @@ import java.util.regex.Pattern;
  * @author douglm
  *
  */
-public class SfpTokenizer extends StreamTokenizer {
-  private transient Logger log;
-
-  private boolean debug;
-
+public class SfpTokenizer extends StreamTokenizer implements Logged {
   private static final int WORD_CHAR_START = 32;
 
   private static final int WORD_CHAR_END = 255;
@@ -52,8 +47,6 @@ public class SfpTokenizer extends StreamTokenizer {
    */
   public SfpTokenizer(final Reader rdr) {
     super(rdr);
-
-    debug = getLogger().isDebugEnabled();
 
     lowerCaseMode(false);
     wordChars(WORD_CHAR_START, WORD_CHAR_END);
@@ -107,11 +100,11 @@ public class SfpTokenizer extends StreamTokenizer {
                                   ttype + "] at " + lineno());
       }
 
-      if (debug) {
+      if (debug()) {
         if (token > 0) {
-          debugMsg("[" + (char)token + "]");
+          debug("[" + (char)token + "]");
         } else {
-          debugMsg("[" + token + "]");
+          debug("[" + token + "]");
         }
       }
     } catch (IOException e) {
@@ -178,8 +171,8 @@ public class SfpTokenizer extends StreamTokenizer {
                                 sval + "] at " + lineno());
     }
 
-    if (debug) {
-      debugMsg("[" + token + "]");
+    if (debug()) {
+      debug("[" + token + "]");
     }
   }
 
@@ -264,29 +257,4 @@ public class SfpTokenizer extends StreamTokenizer {
   public static String escapeQuotes(String s) {
          return quotePattern.matcher(s).replaceFirst("\\\\$1");
   }
-
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void error(final Throwable t) {
-    getLogger().error(this, t);
-  }
-
-  protected void warn(final String msg) {
-    getLogger().warn(msg);
-  }
-
-  protected void debugMsg(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  protected void logIt(final String msg) {
-    getLogger().info(msg);
-  }
-
 }

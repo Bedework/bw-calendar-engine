@@ -20,8 +20,7 @@ package org.bedework.sysevents.listeners;
 
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.logging.Logged;
 
 import java.io.Serializable;
 
@@ -29,31 +28,11 @@ import java.io.Serializable;
 *
 * @author Mike Douglass
 */
-public abstract class SysEventActionClass implements Serializable {
-  private transient Logger log;
-
+public abstract class SysEventActionClass implements Logged, Serializable {
   /** Called whenever a matching event occurs.
    *
    * @param ev
    * @throws NotificationException
    */
   public abstract void action(SysEvent ev) throws NotificationException;
-
-  /* ====================================================================
-   *                   Protected methods
-   * ==================================================================== */
-
-  protected void trace(String msg) {
-    getLogger().debug(msg);
-  }
-
-  /* Get a logger for messages
-   */
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
 }

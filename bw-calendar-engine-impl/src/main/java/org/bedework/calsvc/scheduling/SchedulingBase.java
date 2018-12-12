@@ -60,7 +60,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author douglm
  *
  */
-public abstract class SchedulingBase extends CalSvcDb implements SchedulingIntf {
+public abstract class SchedulingBase extends CalSvcDb
+        implements SchedulingIntf {
   SchedulingBase(final CalSvc svci) {
     super(svci);
   }

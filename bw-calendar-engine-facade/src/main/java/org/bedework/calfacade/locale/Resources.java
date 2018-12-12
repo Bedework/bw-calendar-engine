@@ -18,7 +18,7 @@
 */
 package org.bedework.calfacade.locale;
 
-import org.apache.log4j.Logger;
+import org.bedework.util.logging.Logged;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -29,7 +29,7 @@ import java.util.ResourceBundle;
  *
  * @author Mike Douglass   douglm bedework.edu
  */
-public class Resources implements Serializable {
+public class Resources implements Logged, Serializable {
   /** */
   public static final String DESCRIPTION = "description";
 
@@ -96,21 +96,7 @@ public class Resources implements Serializable {
     try {
       return bundle.getString(key);
     } catch (Throwable t) {
-      Logger.getLogger(Resources.class).warn("Exception getting resource " + key, t);
-      return null;
-    }
-  }
-
-  /**
-   * @param key
-   * @param loc
-   * @return value for key and locale
-   */
-  public static String getString(String key, Locale loc) {
-    try {
-      return ResourceBundle.getBundle(bundleBase, loc).getString(key);
-    } catch (Throwable t) {
-      Logger.getLogger(Resources.class).warn("Exception getting resource " + key, t);
+      error("Exception getting resource " + key, t);
       return null;
     }
   }

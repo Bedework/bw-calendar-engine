@@ -21,9 +21,8 @@ package org.bedework.tools.xmlutil;
 import org.bedework.schemas.licenses.JarLicenseType;
 import org.bedework.schemas.licenses.JarLicensesType;
 import org.bedework.util.args.Args;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
-
-import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,11 +42,11 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamSource;
 
-/** Common code for timezones.
+/** Print out licence info.
  *
  *   @author Mike Douglass
  */
-public class LicensesUtil {
+public class LicensesUtil implements Logged {
   private String infileName;
 
   private String outfileName;
@@ -285,40 +284,5 @@ public class LicensesUtil {
     System.out.println("       -o <filename>");
     System.out.println("            specify file for processed output");
     System.out.println("");
-  }
-
-  /**
-   * @return Logger
-   */
-  static Logger getLogger() {
-    return Logger.getLogger(LicensesUtil.class);
-  }
-
-  /** Debug
-   *
-   * @param msg
-   */
-  static void debugMsg(final String msg) {
-    getLogger().debug(msg);
-  }
-
-  /** Info messages
-   *
-   * @param msg
-   */
-  static void logIt(final String msg) {
-    getLogger().info(msg);
-  }
-
-  static void error(final String msg) {
-    getLogger().error(msg);
-  }
-
-  static void info(final String msg) {
-    getLogger().info(msg);
-  }
-
-  static void error(final Throwable t) {
-    getLogger().error(LicensesUtil.class, t);
   }
 }

@@ -82,7 +82,7 @@ public class ChgProc extends JmsSysEventListener implements Runnable {
     }
 
     try {
-      if (debug) {
+      if (debug()) {
         debug("Received message with syscode " + ev.getSysCode());
       }
 

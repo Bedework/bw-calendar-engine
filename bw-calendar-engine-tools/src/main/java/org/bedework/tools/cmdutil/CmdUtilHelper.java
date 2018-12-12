@@ -35,7 +35,7 @@ import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.EventsI;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 
 import java.io.StreamTokenizer;
 
@@ -44,7 +44,7 @@ import java.io.StreamTokenizer;
  * @author douglm
  *
  */
-public abstract class CmdUtilHelper extends Logged {
+public abstract class CmdUtilHelper implements Logged {
   protected ProcessState pstate;
 
   CmdUtilHelper(final ProcessState pstate) {
@@ -336,7 +336,7 @@ public abstract class CmdUtilHelper extends Logged {
   protected int nextToken() throws CalFacadeException {
     final int tkn = pstate.getTokenizer().next();
 
-    if (!debug) {
+    if (!debug()) {
       return tkn;
     }
 
@@ -417,19 +417,22 @@ public abstract class CmdUtilHelper extends Logged {
 
     return pstate.getTokenizer().sval;
   }
-  
+
+  @Override
   public void error(final String msg) {
     pstate.addError(msg);
-    super.error(msg);
+    Logged.super.error(msg);
   }
 
+  @Override
   public void warn(final String msg) {
     pstate.addInfo(msg);
-    super.warn(msg);
+    Logged.super.warn(msg);
   }
 
+  @Override
   public void info(final String msg) {
     pstate.addInfo(msg);
-    super.info(msg);
+    Logged.super.info(msg);
   }
 }

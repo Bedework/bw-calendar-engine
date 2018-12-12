@@ -21,7 +21,7 @@ package org.bedework.calsvc.notifications;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.http.BasicHttpClient;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -35,7 +35,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author Mike Douglass       douglm - rpi.edu
  */
-public class NotificationClient extends Logged {
+public class NotificationClient implements Logged {
   final NotificationProperties np;
 
   private static final ObjectMapper om = new ObjectMapper();
@@ -131,7 +131,7 @@ public class NotificationClient extends Logged {
           warn("Unable to post notification");
         }
       } catch (final Throwable t) {
-        if (debug) {
+        if (debug()) {
           error(t);
         }
         error("Unable to contact notification engine " +
@@ -158,7 +158,7 @@ public class NotificationClient extends Logged {
 
       return cl;
     } catch (final Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);

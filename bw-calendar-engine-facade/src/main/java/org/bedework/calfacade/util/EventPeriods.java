@@ -21,11 +21,11 @@ package org.bedework.calfacade.util;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwFreeBusyComponent;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.timezones.Timezones;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
-import org.apache.log4j.Logger;
 
 import java.util.TreeSet;
 
@@ -33,9 +33,7 @@ import java.util.TreeSet;
  * @author douglm
  *
  */
-public class EventPeriods {
-  private boolean debug;
-
+public class EventPeriods implements Logged {
   private BwDateTime start;
   private String startTzid;
   private DateTime dtstart;
@@ -53,8 +51,6 @@ public class EventPeriods {
    */
   public EventPeriods(final BwDateTime start,
                       final BwDateTime end) throws CalFacadeException {
-    debug = Logger.getLogger(Granulator.class).isDebugEnabled();
-
     this.start = start;
     this.end = end;
 
@@ -164,7 +160,7 @@ public class EventPeriods {
     Period p = null;
 
     for (EventPeriod ep: eventPeriods) {
-      if (debug) {
+      if (debug()) {
         trace(ep.toString());
       }
 
@@ -196,9 +192,5 @@ public class EventPeriods {
       periods[p.type] = eps;
     }
     eps.add(p);
-  }
-
-  private static void trace(final String msg) {
-    Logger.getLogger(Granulator.class).debug(msg);
   }
 }

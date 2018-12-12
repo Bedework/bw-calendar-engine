@@ -21,7 +21,7 @@ package org.bedework.calcorei;
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.Acl;
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -513,7 +513,7 @@ public interface Calintf
    */
   CoreEventInfo postGetEvent(BwEvent ev,
                              FiltersCommonI f,
-                             Acl.CurrentAccess ca) throws CalFacadeException;
+                             CurrentAccess ca) throws CalFacadeException;
 
   /* Post processing of event. Return null or throw exception for no access
    */

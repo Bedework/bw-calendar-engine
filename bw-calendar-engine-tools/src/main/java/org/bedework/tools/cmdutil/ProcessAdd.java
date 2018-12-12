@@ -72,7 +72,7 @@ public class ProcessAdd extends CmdUtilHelper {
   }
 
   private boolean addToAdminGroup(final String account) throws Throwable {
-    if (debug) {
+    if (debug()) {
       debug("About to add member " + account + " to a group");
     }
     
@@ -130,7 +130,7 @@ public class ProcessAdd extends CmdUtilHelper {
   }
 
   private boolean addToView(final String name) throws Throwable {
-    if (debug) {
+    if (debug()) {
       debug("About to add to view " + name);
     }
 

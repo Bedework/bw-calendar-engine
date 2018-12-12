@@ -20,8 +20,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.jmx.ConfBase;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.logging.BwLogger;
 
 import javax.management.ObjectName;
 
@@ -56,7 +55,8 @@ public final class CoreConfigurations extends ConfBase {
       try {
         configs = new CoreConfigurations();
       } catch (Throwable t) {
-        Logger.getLogger(CoreConfigurations.class).error("Failed to configure", t);
+        new BwLogger().setLoggedClass(CoreConfigurations.class)
+                      .error("Failed to configure", t);
       }
       return configs;
     }

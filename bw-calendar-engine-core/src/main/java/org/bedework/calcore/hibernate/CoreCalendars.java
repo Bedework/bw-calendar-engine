@@ -21,7 +21,7 @@ package org.bedework.calcore.hibernate;
 import org.bedework.access.Access;
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.Transactions;
 import org.bedework.calcore.common.AccessUtil;
@@ -864,8 +864,8 @@ class CoreCalendars extends CalintfHelper
 
     pathElements.add(path);
 
-    //if (debug) {
-    //  trace("Search for calendar \"" + path + "\"");
+    //if (debug()) {
+    //  debug("Search for calendar \"" + path + "\"");
     //}
 
     BwCalendar col;

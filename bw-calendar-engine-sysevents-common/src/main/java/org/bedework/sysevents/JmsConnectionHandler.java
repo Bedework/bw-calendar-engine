@@ -20,10 +20,8 @@ package org.bedework.sysevents;
 
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calsvci.CalSvcFactoryDefault;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
-
-import org.apache.log4j.Logger;
 
 import java.io.InputStream;
 import java.io.StringReader;
@@ -46,7 +44,7 @@ import javax.naming.NamingException;
  *
  * @author Mike Douglass       douglm - rpi.edu
  */
-public class JmsConnectionHandler extends Logged implements JmsDefs {
+public class JmsConnectionHandler implements Logged, JmsDefs {
   /** Location of the properties file */
   private static final String propertiesFile =
       "/sysevents.properties";
@@ -115,7 +113,7 @@ public class JmsConnectionHandler extends Logged implements JmsDefs {
         connection = connFactory.createConnection();
 
       } catch (final Throwable t) {
-        if (debug) {
+        if (debug()) {
           error(t);
         }
         throw new NotificationException(t);
@@ -137,7 +135,7 @@ public class JmsConnectionHandler extends Logged implements JmsDefs {
           ourQueue =  (Queue)ctx.lookup(qn);
         }
       } catch (final Throwable t) {
-        if (debug) {
+        if (debug()) {
           error(t);
         }
         throw new NotificationException(t);
@@ -145,7 +143,7 @@ public class JmsConnectionHandler extends Logged implements JmsDefs {
     } catch (final NotificationException ne) {
       throw ne;
     } catch (final Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new NotificationException(t);
@@ -220,7 +218,7 @@ public class JmsConnectionHandler extends Logged implements JmsDefs {
    *                   Protected methods
    * ==================================================================== */
 
-  private static Properties getPr() throws NotificationException {
+  private Properties getPr() throws NotificationException {
     synchronized (lockit) {
       if (pr != null) {
         return pr;
@@ -275,7 +273,7 @@ public class JmsConnectionHandler extends Logged implements JmsDefs {
       } catch (final NotificationException cee) {
         throw cee;
       } catch (final Throwable t) {
-        Logger.getLogger(JmsConnectionHandler.class).error("getEnv error", t);
+        error("getEnv error", t);
         throw new NotificationException(t.getMessage());
       } finally {
         if (is != null) {

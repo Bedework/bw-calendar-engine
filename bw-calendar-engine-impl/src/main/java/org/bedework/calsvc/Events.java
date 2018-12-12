@@ -19,7 +19,7 @@
 package org.bedework.calsvc;
 
 import org.bedework.access.AccessPrincipal;
-import org.bedework.access.Acl.CurrentAccess;
+import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
@@ -645,7 +645,7 @@ class Events extends CalSvcDb implements EventsI {
 
       return updResult;
     } catch (final Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       getSvc().rollbackTransaction();
@@ -761,8 +761,8 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       if (!changed) {
-        if (debug) {
-          trace("No changes to event: returning");
+        if (debug()) {
+          debug("No changes to event: returning");
         }
         return ei.getUpdResult();
       }
@@ -876,7 +876,7 @@ class Events extends CalSvcDb implements EventsI {
       return true;
     }
 
-    if (debug) {
+    if (debug()) {
       ei.getChangeset(getPrincipalHref()).dumpEntries();
     }
 
@@ -1548,7 +1548,7 @@ class Events extends CalSvcDb implements EventsI {
             sched.implicitSchedule(ei, false);
           }
         } catch (CalFacadeException cfe) {
-          if (debug) {
+          if (debug()) {
             error(cfe);
           }
         }
@@ -1911,7 +1911,7 @@ class Events extends CalSvcDb implements EventsI {
             groupVvoter = voters.get(att.getAttendeeUri());
 
             if (groupVvoter == null) {
-              if (debug) {
+              if (debug()) {
                 warn("No vvoter found for " + att.getAttendeeUri());
               }
               continue;
@@ -1999,7 +1999,7 @@ class Events extends CalSvcDb implements EventsI {
       return null;
     }
 
-    //trace("ev: " + ev);
+    //debug("ev: " + ev);
 
     /* If the event is an event reference (an alias) implant it in an event
      * proxy and return that object.
@@ -2154,8 +2154,8 @@ class Events extends CalSvcDb implements EventsI {
 
       if ((ic == null) ||
           (ic.getEventInfo() == null)) {
-        if (debug) {
-          trace("Not single event");
+        if (debug()) {
+          debug("Not single event");
         }
 
         return null;
@@ -2174,7 +2174,7 @@ class Events extends CalSvcDb implements EventsI {
 
       return alarms;
     } catch (CalFacadeException cfe) {
-      if (debug) {
+      if (debug()) {
         error(cfe);
       }
 

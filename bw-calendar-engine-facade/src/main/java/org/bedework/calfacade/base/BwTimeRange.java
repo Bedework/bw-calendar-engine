@@ -19,17 +19,17 @@
 package org.bedework.calfacade.base;
 
 import org.bedework.calfacade.BwDateTime;
+import org.bedework.util.logging.Logged;
 
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.property.DateProperty;
-import org.apache.log4j.Logger;
 
 /** Timerange element for filters. Either start or end may be absent but
  * not both.
  *
  *   @author Mike Douglass   douglm  bedework.edu
  */
-public class BwTimeRange {
+public class BwTimeRange implements Logged {
   private BwDateTime start;
   private BwDateTime end;
 
@@ -106,11 +106,10 @@ public class BwTimeRange {
 
   /** Debug
    *
-   * @param log
    * @param indent
    */
-  public void dump(Logger log, String indent) {
-    log.debug(indent + toString());
+  public void dump(String indent) {
+    debug(indent + toString());
   }
 
   protected void toStringSegment(StringBuffer sb) {

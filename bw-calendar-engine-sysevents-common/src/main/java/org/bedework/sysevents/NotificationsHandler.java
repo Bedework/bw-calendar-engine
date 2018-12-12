@@ -20,7 +20,7 @@ package org.bedework.sysevents;
 
 import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.sysevents.listeners.SysEventListener;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 
 /**
  * Handler which may be called to notify the system that something changed.
@@ -32,7 +32,7 @@ import org.bedework.util.misc.Logged;
  * 
  * @author Mike Douglass
  */
-public abstract class NotificationsHandler extends Logged {
+public abstract class NotificationsHandler implements Logged {
   /**
    * Called to notify container that an event occurred.
    * 

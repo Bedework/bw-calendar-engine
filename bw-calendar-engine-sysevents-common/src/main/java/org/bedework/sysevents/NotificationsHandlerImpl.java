@@ -32,7 +32,7 @@ class NotificationsHandlerImpl extends NotificationsHandler {
 
   @Override
   public void post(final SysEventBase ev) throws NotificationException {
-    if (debug) {
+    if (debug()) {
       debug(ev.toString());
     }
   }

@@ -489,7 +489,7 @@ class Notifications extends CalSvcDb implements NotificationsI {
 
       return note;
     } catch (final Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       error("Unable to parse notification " + rsrc.getColPath() +

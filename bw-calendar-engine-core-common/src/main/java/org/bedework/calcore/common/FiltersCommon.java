@@ -24,7 +24,7 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * User: mike Date: 6/18/18 Time: 23:57
  */
-public class FiltersCommon extends Logged implements FiltersCommonI {
+public class FiltersCommon implements Logged, FiltersCommonI {
   /* The complete filter with some filter elements replaced by bedework specific
    * classes
    */
@@ -216,7 +216,7 @@ public class FiltersCommon extends Logged implements FiltersCommonI {
       return true;
     }
 
-    if (debug) {
+    if (debug()) {
       debug("match " + f);
     }
 
@@ -227,7 +227,7 @@ public class FiltersCommon extends Logged implements FiltersCommonI {
         if (match(flt, ev, userHref)) {
           if (!itsAnd) {
             // Success for OR
-            if (debug) {
+            if (debug()) {
               debug("match true");
             }
 
@@ -298,7 +298,7 @@ public class FiltersCommon extends Logged implements FiltersCommonI {
   }
 
   private boolean traceMatch(final boolean val) {
-    if (debug) {
+    if (debug()) {
       debug("match " + val);
     }
 

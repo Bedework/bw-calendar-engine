@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwFreeBusyComponent;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.logging.SLogged;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
@@ -44,6 +45,9 @@ import java.util.Collection;
  *   @author Mike Douglass   douglm   rpi.edu
  */
 public class VFreeUtil extends IcalUtil {
+  static {
+    SLogged.setLoggerClass(VFreeUtil.class);
+  }
 
   /** Make a VFreeBusy object from a BwFreeBusy.
    */

@@ -277,8 +277,8 @@ public class Notifier extends AbstractScheduler {
         closeSvci(getSvc());
       }
     } catch (final CalFacadeStaleStateException csse) {
-      if (debug) {
-        trace("Stale state exception");
+      if (debug()) {
+        debug("Stale state exception");
       }
 
       return ProcessMessageResult.STALE_STATE;
@@ -311,8 +311,8 @@ public class Notifier extends AbstractScheduler {
         return processEntity(oheMsg);
       }
     } catch (final CalFacadeStaleStateException csse) {
-      if (debug) {
-        trace("Stale state exception");
+      if (debug()) {
+        debug("Stale state exception");
       }
 
       return ProcessMessageResult.STALE_STATE;
@@ -368,9 +368,9 @@ public class Notifier extends AbstractScheduler {
       final String ownerHref = getPrincipalHref();
       final String href = msg.getHref();
 
-      if (debug) {
+      if (debug()) {
         trace(msg.toString());
-        trace("Notification for entity " + href +
+        debug("Notification for entity " + href +
               " owner principal " + ownerHref);
       }
 
@@ -438,16 +438,16 @@ public class Notifier extends AbstractScheduler {
         pushPrincipal(shareeHref);
       }
 
-      if (debug) {
-        trace("Change notification for principal " + shareeHref +
+      if (debug()) {
+        debug("Change notification for principal " + shareeHref +
                       " and href " + colHref);
       }
 
       final BwPreferences p = getSvc().getPrefsHandler().get();
 
       if ((p != null) && (p.getNoNotifications())) {
-        if (debug) {
-          trace("Notification for principal " + shareeHref +
+        if (debug()) {
+          debug("Notification for principal " + shareeHref +
                         " is suppressed");
         }
 

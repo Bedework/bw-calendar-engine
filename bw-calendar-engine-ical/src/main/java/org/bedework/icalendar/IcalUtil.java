@@ -36,6 +36,7 @@ import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.logging.SLogged;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.data.CalendarParserImpl;
@@ -85,7 +86,6 @@ import net.fortuna.ical4j.model.property.Trigger;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Voter;
 import net.fortuna.ical4j.model.property.XProperty;
-import org.apache.log4j.Logger;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -100,7 +100,7 @@ import java.util.TreeSet;
  *
  * @author Mike Douglass   douglm    rpi.edu
  */
-public class IcalUtil {
+public class IcalUtil implements SLogged {
   /**
    * @param p
    * @return AbbreviatedValue
@@ -1094,41 +1094,6 @@ public class IcalUtil {
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
-  }
-
-  /**
-   * @return Logger
-   */
-  public static Logger getLog() {
-    return Logger.getLogger(IcalUtil.class);
-  }
-
-  /**
-   * @param t
-   */
-  public static void error(final Throwable t) {
-    getLog().error(IcalUtil.class, t);
-  }
-
-  /**
-   * @param msg
-   */
-  public static void error(final String msg) {
-    getLog().error(msg);
-  }
-
-  /**
-   * @param msg
-   */
-  public static void warn(final String msg) {
-    getLog().warn(msg);
-  }
-
-  /**
-   * @param msg
-   */
-  public static void debugMsg(final String msg) {
-    getLog().debug(msg);
   }
 }
 

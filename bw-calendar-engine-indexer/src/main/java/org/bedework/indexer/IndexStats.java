@@ -20,8 +20,7 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calfacade.indexing.IndexStatistics;
-
-import org.apache.log4j.Logger;
+import org.bedework.util.logging.Logged;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,9 +30,7 @@ import java.util.List;
  * @author douglm
  *
  */
-public class IndexStats extends IndexStatistics {
-  private transient Logger log;
-
+public class IndexStats extends IndexStatistics implements Logged {
   /**
    * @param name - name of the statistics
    */
@@ -81,17 +78,5 @@ public class IndexStats extends IndexStatistics {
     sb.append(getCount(st));
 
     return sb.toString();
-  }
-
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void info(final String msg) {
-    getLog().info(msg);
   }
 }

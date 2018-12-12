@@ -18,7 +18,7 @@ package org.bedework.dumprestore;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
 import org.w3c.dom.Document;
@@ -51,7 +51,7 @@ import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @SuppressWarnings("WeakerAccess")
-public class Utils extends Logged {
+public class Utils implements Logged {
   public Utils() {
   }
 

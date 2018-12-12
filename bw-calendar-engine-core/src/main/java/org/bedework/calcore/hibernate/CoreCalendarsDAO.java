@@ -230,7 +230,7 @@ class CoreCalendarsDAO extends DAOBase {
 
     Long res = (Long)sess.getUnique();
 
-    if (debug) {
+    if (debug()) {
       debug(" ----------- count = " + res);
     }
 
@@ -243,7 +243,7 @@ class CoreCalendarsDAO extends DAOBase {
 
     res = (Long)sess.getUnique();
 
-    if (debug) {
+    if (debug()) {
       debug(" ----------- count children = " + res);
     }
 

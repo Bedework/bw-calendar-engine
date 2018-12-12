@@ -18,7 +18,7 @@
 */
 package org.bedework.dumprestore;
 
-import org.apache.log4j.Logger;
+import org.bedework.util.logging.Logged;
 
 import java.util.List;
 
@@ -27,9 +27,7 @@ import java.util.List;
  * @author Mike Douglass
  * @version 1.0
  */
-public class Counters {
-  private transient Logger log;
-
+public class Counters implements Logged {
   /** */
   public final static int syspars = 0;
 
@@ -151,23 +149,11 @@ public class Counters {
     info(infoLines, sb.toString());
   }
 
-  protected Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
   protected void info(final List<String> infoLines, final String msg) {
     if (infoLines != null) {
       infoLines.add(msg + "\n");
     }
 
     info(msg);
-  }
-
-  protected void info(final String msg) {
-    getLog().info(msg);
   }
 }

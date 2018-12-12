@@ -23,6 +23,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.logging.SLogged;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -40,7 +41,6 @@ import net.fortuna.ical4j.model.component.VVoter;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Version;
-import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -52,7 +52,7 @@ import java.util.Collection;
  * @author Mike Douglass douglm rpi.edu
  * @version 1.0
  */
-public class JcalHandler implements Serializable {
+public class JcalHandler implements SLogged, Serializable {
   private final static JsonFactory jsonFactory;
 
   static {
@@ -91,7 +91,7 @@ public class JcalHandler implements Serializable {
     try {
       final JsonGenerator jgen = jsonFactory.createGenerator(wtr);
 
-      if (Logger.getLogger(JcalHandler.class).isDebugEnabled()) {
+      if (SLogged.debug()) {
         jgen.useDefaultPrettyPrinter();
       }
 
@@ -137,7 +137,7 @@ public class JcalHandler implements Serializable {
     try {
       final JsonGenerator jgen = jsonFactory.createJsonGenerator(wtr);
 
-      if (Logger.getLogger(JcalHandler.class).isDebugEnabled()) {
+      if (SLogged.debug()) {
         jgen.useDefaultPrettyPrinter();
       }
 

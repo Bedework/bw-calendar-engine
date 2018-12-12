@@ -18,7 +18,7 @@
 */
 package org.bedework.calcore.common.indexing;
 
-import org.bedework.access.Acl;
+import org.bedework.access.CurrentAccess;
 import org.bedework.calcore.common.indexing.DocBuilder.ItemKind;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
@@ -72,7 +72,7 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.elasticsearch.DocBuilderBase.UpdateInfo;
 import org.bedework.util.elasticsearch.EsDocInfo;
 import org.bedework.util.indexing.IndexException;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 
@@ -198,7 +198,7 @@ import static org.bedework.util.elasticsearch.DocBuilderBase.updateTrackerId;
  * @author Mike Douglass douglm - rpi.edu
  *
  */
-public class BwIndexEsImpl extends Logged implements BwIndexer {
+public class BwIndexEsImpl implements Logged, BwIndexer {
   //private int batchMaxSize = 0;
   //private int batchCurSize = 0;
 
@@ -303,7 +303,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       fetchTime += (System.currentTimeMillis() - fetchStart);
       fetchStart = 0;
 
-      if ((debug) && ((fetches % 100) == 0)) {
+      if ((debug()) && ((fetches % 100) == 0)) {
         debug("fetches: " + fetches +
                       ", fetchTime: " + fetchTime +
                       ", fetcAccessTime: " + fetchAccessTime);
@@ -329,9 +329,9 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       this.accessCheck = accessCheck;
     }
 
-    public Acl.CurrentAccess checkAccess(BwShareableDbentity ent,
-                                         int desiredAccess,
-                                         boolean returnResult)
+    public CurrentAccess checkAccess(BwShareableDbentity ent,
+                                     int desiredAccess,
+                                     boolean returnResult)
             throws CalFacadeException {
       try {
         fetchAccessStart();
@@ -997,7 +997,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     res.latestStart = ef.getLatestStart();
     res.earliestEnd = ef.getEarliestEnd();
 
-    if (debug) {
+    if (debug()) {
       debug("Search: latestStart=" + res.latestStart +
                     " earliestEnd=" + res.earliestEnd +
                     " targetIndex=" + targetIndex +
@@ -1010,7 +1010,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     //TODO
 //    }
 
-    if (debug) {
+    if (debug()) {
       debug("Search: returned status " + resp.status() +
                     " found: " + resp.getHits().getTotalHits());
     }
@@ -1055,7 +1055,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
           throws CalFacadeException {
     try {
       fetchStart();
-      if (debug) {
+      if (debug()) {
         debug("offset: " + offset + ", num: " + num);
       }
 
@@ -1111,7 +1111,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       final SearchResponse resp = srb.execute().actionGet();
 
       if (resp.status() != RestStatus.OK) {
-        if (debug) {
+        if (debug()) {
           debug("Search returned status " + resp.status());
         }
       }
@@ -1198,7 +1198,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                            ": " + evrestResp);
             }
 
-            final Acl.CurrentAccess ca =
+            final CurrentAccess ca =
                     res.accessCheck.checkAccess(ev,
                                                 desiredAccess,
                                                 true);
@@ -1315,7 +1315,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       final IndexResponse resp = index(rec);
 
-      if (debug) {
+      if (debug()) {
         if (resp == null) {
           debug("IndexResponse: resp=null");
         } else {
@@ -1326,7 +1326,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         }
       }
     } catch (final Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -1359,7 +1359,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
         srb.setFrom(start);
         srb.setSize(batchSize);
 
-        //if (debug) {
+        //if (debug()) {
         //  debug("Overrides: targetIndex=" + indexName +
         //                "; srb=" + srb);
         //}
@@ -2024,7 +2024,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       final BwEvent ev = ei.getEvent();
 
-      final Acl.CurrentAccess ca =
+      final CurrentAccess ca =
               accessCheck.checkAccess(ev, privRead, true);
 
       if ((ca == null) || !ca.getAccessAllowed()) {
@@ -2074,7 +2074,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
       final BwEvent ev = ei.getEvent();
 
-      final Acl.CurrentAccess ca =
+      final CurrentAccess ca =
               accessCheck.checkAccess(ev, privRead, true);
 
       if ((ca == null) || !ca.getAccessAllowed()) {
@@ -2151,7 +2151,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       }
     }
 
-    if (debug) {
+    if (debug()) {
       final String ival;
       if (index.length == 1) {
         ival = index[0].name();
@@ -2164,7 +2164,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                                          index);
 
     if (eb == null) {
-      if (debug) {
+      if (debug()) {
         debug("Not found");
       }
       resp.setStatus(notFound);
@@ -2178,7 +2178,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                                    accessCheck.getAccessUtil());
       caches.put(entity, desiredAccess);
       resp.setEntity(entity);
-      if (debug) {
+      if (debug()) {
         debug("Return ok - any access");
       }
 
@@ -2189,7 +2189,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                                      desiredAccess);
 
     if (entity == null) {
-      if (debug) {
+      if (debug()) {
         debug("No access");
       }
       return Response.notOk(resp, noAccess, null);
@@ -2197,7 +2197,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     caches.put(entity, desiredAccess);
     resp.setEntity(entity);
 
-    if (debug) {
+    if (debug()) {
       debug("Return ok - access ok");
     }
     return Response.ok(resp, null);
@@ -2213,7 +2213,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   public Collection<BwCalendar> fetchChildren(final String href,
                                               final boolean excludeTombstoned)
           throws CalFacadeException {
-    if (debug) {
+    if (debug()) {
       debug("fetchChildren for " + href);
     }
 
@@ -2248,7 +2248,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   @Override
   public Collection<BwCalendar> fetchChildrenDeep(final String href)
           throws CalFacadeException {
-    if (debug) {
+    if (debug()) {
       debug("fetchChildrenDeep for " + href);
     }
 
@@ -2664,7 +2664,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
 */
 
-      if (debug) {
+      if (debug()) {
         debug("Search: targetIndex=" + targetIndex +
                       "; srb=" + srb);
       }
@@ -2675,7 +2675,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       //TODO
 //    }
 
-      if (debug) {
+      if (debug()) {
         debug("Search: returned status " + sresp.status() +
                       " found: " + sresp.getHits().getTotalHits());
       }
@@ -2756,7 +2756,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
 */
 
-      if (debug) {
+      if (debug()) {
         debug("Search: targetIndex=" + targetIndex +
                       "; srb=" + srb);
       }
@@ -2767,7 +2767,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       //TODO
 //    }
 
-      if (debug) {
+      if (debug()) {
         debug("Search: returned status " + sresp.status() +
                       " found: " + sresp.getHits().getTotalHits());
       }
@@ -2853,7 +2853,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       //TODO
 //    }
 
-      if (debug) {
+      if (debug()) {
         debug("Search: returned status " + sresp.status() +
                       " found: " + sresp.getHits().getTotalHits());
       }
@@ -2904,7 +2904,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     }
 
     // 3. There's been a change - flush and return false.
-    if (debug) {
+    if (debug()) {
       debug("Change - flush cache");
     }
     lastChangeToken = changeToken;
@@ -2951,7 +2951,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     srb.setFrom(0);
     srb.setSize(batchSize);
 
-    if (debug) {
+    if (debug()) {
       debug("MultiColFetch: targetIndex=" + targetIndex +
                     "; srb=" + srb);
     }
@@ -2959,7 +2959,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
     final SearchResponse resp = srb.execute().actionGet();
 
     if (resp.status() != RestStatus.OK) {
-      if (debug) {
+      if (debug()) {
         debug("Search returned status " + resp.status());
       }
 
@@ -3026,7 +3026,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       srb.setFrom(start);
       srb.setSize(batchSize);
 
-      if (debug) {
+      if (debug()) {
         debug("MultiFetch: targetIndex=" + targetIndex +
                       "; srb=" + srb);
       }
@@ -3034,7 +3034,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       final SearchResponse resp = srb.execute().actionGet();
 
       if (resp.status() != RestStatus.OK) {
-        if (debug) {
+        if (debug()) {
           debug("Search returned status " + resp.status());
         }
 
@@ -3100,7 +3100,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
 
     srb.setTypes(docType);
 
-    if (debug) {
+    if (debug()) {
       debug("fetchAllEntities: srb=" + srb);
     }
 
@@ -3122,7 +3122,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
                                    .actionGet(); //ourCount hits per shard will be returned for each scroll
 
     if (scrollResp.status() != RestStatus.OK) {
-      if (debug) {
+      if (debug()) {
         debug("Search returned status " + scrollResp.status());
       }
     }
@@ -3138,7 +3138,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
               .prepareSearchScroll(scrollResp.getScrollId())
               .setScroll(new TimeValue(600000)).execute().actionGet();
       if (scrollResp.status() != RestStatus.OK) {
-        if (debug) {
+        if (debug()) {
           debug("Search returned status " + scrollResp.status());
         }
       }
@@ -3653,7 +3653,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
       req.setVersion(di.getVersion()).setVersionType(VersionType.EXTERNAL);
     }
 
-    if (debug) {
+    if (debug()) {
       debug("Indexing to index " + targetIndex +
                     " with DocInfo " + di);
     }
@@ -4011,7 +4011,7 @@ public class BwIndexEsImpl extends Logged implements BwIndexer {
   private <T extends Response> T errorReturn(final T resp,
                                              final Throwable t,
                                              final Response.Status st) {
-    if (debug) {
+    if (debug()) {
       error(t);
     }
     return errorReturn(resp, t.getMessage(), st);

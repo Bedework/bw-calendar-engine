@@ -368,13 +368,13 @@ public class CardDAVDirImpl extends AbstractDirImpl {
 
     try {
       ctx = new InitialLdapContext(env, null);
-      if (debug) {
+      if (debug()) {
         debug("Logged into LDAP server, " + ctx);
       }
 
       return ctx;
     } catch(Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -416,7 +416,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
 
       return group;
     } catch(Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -480,7 +480,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
 
       return groups;
     } catch(Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);
@@ -596,7 +596,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
         }
       }
     } catch(Throwable t) {
-      if (debug) {
+      if (debug()) {
         error(t);
       }
       throw new CalFacadeException(t);

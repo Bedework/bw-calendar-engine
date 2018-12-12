@@ -18,14 +18,14 @@
 */
 package org.bedework.indexer;
 
-import org.apache.log4j.Logger;
+import org.bedework.util.logging.Logged;
 
 /** Runnable thread process.
  *
  * @author douglm
  *
  */
-public class CrawlThread extends Thread {
+public class CrawlThread extends Thread implements Logged {
   private Processor proc;
 
   CrawlThread(final String name,
@@ -39,7 +39,7 @@ public class CrawlThread extends Thread {
     try {
       proc.process();
     } catch (Throwable t) {
-      Logger.getLogger(this.getClass()).error(this, t);
+      error(t);
     } finally {
     }
   }

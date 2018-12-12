@@ -24,9 +24,9 @@ import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
-import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
@@ -52,9 +52,7 @@ import java.util.List;
  *
  * @author Mike Douglass douglm@rpi.edu
  */
-public class HibSessionImpl implements HibSession {
-  transient Logger log;
-
+public class HibSessionImpl implements Logged, HibSession {
   Session sess;
   transient Transaction tx;
   boolean rolledBack;
@@ -69,14 +67,11 @@ public class HibSessionImpl implements HibSession {
   /** Set up for a hibernate interaction. Throw the object away on exception.
    *
    * @param sessFactory
-   * @param log
    * @throws CalFacadeException
    */
   @Override
-  public void init(final SessionFactory sessFactory,
-                   final Logger log) throws CalFacadeException {
+  public void init(final SessionFactory sessFactory) throws CalFacadeException {
     try {
-      this.log = log;
       sess = sessFactory.openSession();
       rolledBack = false;
       //sess.setFlushMode(FlushMode.COMMIT);
@@ -1012,12 +1007,12 @@ public class HibSessionImpl implements HibSession {
   private void handleException(final Throwable t,
                                final Object o) throws CalFacadeException {
     try {
-      if (getLogger().isDebugEnabled()) {
-        getLogger().debug("handleException called");
+      if (debug()) {
+        debug("handleException called");
         if (o != null) {
-          getLogger().debug(o.toString());
+          debug(o.toString());
         }
-        getLogger().error(this, t);
+        error(t);
       }
     } catch (Throwable dummy) {}
 
@@ -1090,17 +1085,6 @@ public class HibSessionImpl implements HibSession {
    * @param t   Throwable from the rollback
    */
   private void rollbackException(final Throwable t) {
-    if (getLogger().isDebugEnabled()) {
-      getLogger().debug("HibSession: ", t);
-    }
-    getLogger().error(this, t);
-  }
-
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
+    error(t);
   }
 }

@@ -35,6 +35,7 @@ import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.XcalUtil;
+import org.bedework.util.logging.SLogged;
 
 import ietf.params.xml.ns.icalendar_2.ArrayOfComponents;
 import ietf.params.xml.ns.icalendar_2.ArrayOfParameters;
@@ -115,6 +116,10 @@ import javax.xml.bind.JAXBElement;
  * @author Mike Douglass   douglm    rpi.edu
  */
 public class ToXEvent extends Xutil {
+  static {
+    SLogged.setLoggerClass(ToXEvent.class);
+  }
+
   /** Make a BaseComponentType component from a BwEvent object. This may produce a
    * VEvent, VTodo or VJournal.
    *
@@ -312,7 +317,8 @@ public class ToXEvent extends Xutil {
           DescriptionPropType desc = new DescriptionPropType();
 
           if (bwstr.getValue().contains("Â")) {
-            warn("Odd character Â in description: " + bwstr.getValue());
+            SLogged.warn("Odd character Â in description: " +
+                                 bwstr.getValue());
           }
           desc.setText(bwstr.getValue());
           pl.add(of.createDescription((DescriptionPropType)langProp(desc, bwstr)));
@@ -630,7 +636,7 @@ public class ToXEvent extends Xutil {
                             wrapXprops);
         } catch (Throwable t) {
           // XXX For the moment swallow these.
-          error(t);
+          SLogged.error(t);
         }
       }
 
@@ -980,9 +986,9 @@ public class ToXEvent extends Xutil {
     }
 
     if (!(comp instanceof VeventType) && !(comp instanceof VtodoType)) {
-      warn("Entity of class " + ev.getClass() +
-           " has alarms but not allowed by entity of type " +
-           comp.getClass());
+      SLogged.warn("Entity of class " + ev.getClass() +
+                           " has alarms but not allowed by entity of type " +
+                           comp.getClass());
     }
 
     ArrayOfComponents aoc = comp.getComponents();

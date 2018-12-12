@@ -108,7 +108,7 @@ public class ProcessReindex extends CmdUtilHelper {
       }
 
       if (col == null) {
-        if (debug) {
+        if (debug()) {
           debug("path " + path + " not found");
         }
 
