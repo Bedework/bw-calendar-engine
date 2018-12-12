@@ -38,6 +38,11 @@
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-misc</artifactId>
     </dependency>
-		<!-- Third Party Dependencies -->
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-logging</artifactId>
+      <version>4.0.0-SNAPSHOT</version>
+    </dependency>
+    <!-- Third Party Dependencies -->
 	</dependencies>
 </project>

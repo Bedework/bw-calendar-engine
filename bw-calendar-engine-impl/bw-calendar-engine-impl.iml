@@ -30,8 +30,7 @@
     <orderEntry type="library" name="Maven: javax.jms:jms-api:1.1-rev-1" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="module" module-name="bw-util-caching" />
-    <orderEntry type="library" name="Maven: log4j:log4j:1.2.15" level="project" />
-    <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />
+    <orderEntry type="module" module-name="bw-util-logging" />
     <orderEntry type="module" module-name="bw-util-dav" />
     <orderEntry type="module" module-name="bw-util-http" />
     <orderEntry type="module" module-name="bw-util-config" />
@@ -78,6 +77,8 @@
     <orderEntry type="library" name="Maven: org.apache.james:apache-mailet:2.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.james:apache-mime4j-core:0.7" level="project" />
     <orderEntry type="library" name="Maven: org.apache.james:apache-mime4j-dom:0.7" level="project" />
+    <orderEntry type="library" name="Maven: log4j:log4j:1.2.15" level="project" />
+    <orderEntry type="library" name="Maven: javax.mail:mail:1.4" level="project" />
     <orderEntry type="library" name="Maven: dnsjava:dnsjava:2.1.1" level="project" />
     <orderEntry type="library" name="Maven: com.sun.mail:javax.mail:1.5.4" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />

@@ -29,7 +29,7 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.calsvci.EventsI;
-import org.bedework.util.misc.Logged;
+import org.bedework.util.logging.Logged;
 
 import java.util.Collection;
 
@@ -38,7 +38,7 @@ import java.util.Collection;
  * @author Mike Douglass
  *
  */
-public abstract class CalSys extends Logged {
+public abstract class CalSys implements Logged {
   protected String name;
 
   protected String adminAccount;

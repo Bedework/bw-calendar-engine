@@ -68,6 +68,7 @@
     <orderEntry type="module" module-name="bw-util-elasticsearch" />
     <orderEntry type="module" module-name="bw-util-config" />
     <orderEntry type="module" module-name="bw-util-jmx" />
+    <orderEntry type="module" module-name="bw-util-logging" />
     <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="library" name="Maven: org.elasticsearch:elasticsearch:1.5.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.lucene:lucene-core:4.10.4" level="project" />
