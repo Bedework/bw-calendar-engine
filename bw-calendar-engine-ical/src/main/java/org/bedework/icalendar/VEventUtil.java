@@ -36,7 +36,7 @@ import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
-import org.bedework.util.logging.SLogged;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.data.CalendarParserImpl;
@@ -121,9 +121,8 @@ import java.util.Map;
  * @author Mike Douglass   douglm  rpi.edu
  */
 public class VEventUtil extends IcalUtil {
-  static {
-    SLogged.setLoggerClass(VEventUtil.class);
-  }
+  private static BwLogger logger =
+          new BwLogger().setLoggedClass(VEventUtil.class);
 
   /** Make an Icalendar component from a BwEvent object. This may produce a
    * VEvent, VTodo, VJournal or VPoll.
@@ -177,8 +176,8 @@ public class VEventUtil extends IcalUtil {
 
             cal = bldr.build(ufrdr);
           } catch (Throwable t) {
-            SLogged.error(t);
-            SLogged.error("Trying to parse:\n" + xcompPropVal);
+            logger.error(t);
+            logger.error("Trying to parse:\n" + xcompPropVal);
           }
         }
       }
@@ -620,7 +619,7 @@ public class VEventUtil extends IcalUtil {
           IcalUtil.xpropertiesToIcal(pl, val.getXproperties());
         } catch (Throwable t) {
           // XXX For the moment swallow these.
-          SLogged.error(t);
+          logger.error(t);
         }
       }
 

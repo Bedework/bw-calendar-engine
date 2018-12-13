@@ -23,7 +23,6 @@ import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.util.logging.SLogged;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
@@ -50,7 +49,7 @@ import java.util.Iterator;
  *
  * @author Mike Douglass douglm at bedework.edu
  */
-public class Granulator implements SLogged {
+public class Granulator {
   private Granulator() {}
 
   /** This class defines the entities which occupy time and the period of
@@ -93,11 +92,6 @@ public class Granulator implements SLogged {
     pars.endDt = pars.startDt.addDuration(pars.dur);
     String start = pars.startDt.getDate();
     String end = pars.endDt.getDate();
-
-    if (pars.debug) {
-      SLogged.debug("Did UTC stuff in " +
-                            (System.currentTimeMillis() - millis));
-    }
 
     EntityRange er = new EntityRange();
     Iterator<?> it = pars.periods.iterator();

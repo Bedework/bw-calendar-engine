@@ -24,7 +24,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.util.logging.SLogged;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.Date;
@@ -57,10 +57,9 @@ import java.util.TreeSet;
  * @author Mike Douglass     douglm - rpi.edu
  *  @version 1.0
  */
-public class RecurUtil implements SLogged {
-  static {
-    SLogged.setLoggerClass(RecurUtil.class);
-  }
+public class RecurUtil {
+  private static BwLogger logger =
+          new BwLogger().setLoggedClass(RecurUtil.class);
 
   /**
    */
@@ -739,8 +738,8 @@ public class RecurUtil implements SLogged {
             return null;
           }
 
-          if (SLogged.debug()) {
-            SLogged.debug("Last date for recur=" + nextUntil);
+          if (logger.debug()) {
+            logger.debug("Last date for recur=" + nextUntil);
           }
 
           if ((until == null) || (nextUntil.after(until))) {
@@ -797,8 +796,8 @@ public class RecurUtil implements SLogged {
         }
       }
 
-      if (SLogged.debug()) {
-        SLogged.debug("Last date before fix=" + until);
+      if (logger.debug()) {
+        logger.debug("Last date before fix=" + until);
       }
 
       /* Now add the duration of the event to get us past the end
@@ -810,8 +809,8 @@ public class RecurUtil implements SLogged {
         until = new Date(dur.getTime(until));
       }
 
-      if (SLogged.debug()) {
-        SLogged.debug("Last date after fix=" + until);
+      if (logger.debug()) {
+        logger.debug("Last date after fix=" + until);
       }
 
       return until;

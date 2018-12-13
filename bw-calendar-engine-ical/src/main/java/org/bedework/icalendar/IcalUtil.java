@@ -36,7 +36,6 @@ import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
-import org.bedework.util.logging.SLogged;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.data.CalendarParserImpl;
@@ -100,7 +99,7 @@ import java.util.TreeSet;
  *
  * @author Mike Douglass   douglm    rpi.edu
  */
-public class IcalUtil implements SLogged {
+public class IcalUtil {
   /**
    * @param p
    * @return AbbreviatedValue

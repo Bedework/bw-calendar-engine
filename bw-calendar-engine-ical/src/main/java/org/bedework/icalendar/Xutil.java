@@ -23,7 +23,7 @@ import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.BwXproperty.Xpar;
 import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.util.calendar.XcalUtil;
-import org.bedework.util.logging.SLogged;
+import org.bedework.util.logging.BwLogger;
 
 import ietf.params.xml.ns.icalendar_2.AltrepParamType;
 import ietf.params.xml.ns.icalendar_2.ArrayOfParameters;
@@ -60,7 +60,10 @@ import javax.xml.bind.JAXBElement;
  *
  * @author Mike Douglass   douglm  rpi.edu
  */
-public class Xutil implements SLogged {
+public class Xutil {
+  private static BwLogger logger =
+          new BwLogger().setLoggedClass(Xutil.class);
+
   protected static ObjectFactory of = new ObjectFactory();
 
   protected static void listFromNumberList(final List<String> l,
@@ -399,8 +402,8 @@ public class Xutil implements SLogged {
       }
 
       if (!wrapXprops) {
-        if (SLogged.debug()) {
-          SLogged.warn("Not handing x-property " + xname);
+        if (logger.debug()) {
+          logger.warn("Not handing x-property " + xname);
         }
         continue;
       }

@@ -27,7 +27,7 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.BwUser;
-import org.bedework.util.logging.SLogged;
+import org.bedework.util.logging.BwLogger;
 
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.stat.EntityStatistics;
@@ -42,7 +42,7 @@ import java.util.Collection;
  *
  * @author Mike Douglass
  */
-public class DbStatistics implements SLogged {
+public class DbStatistics {
   /** Dump the statistics to the log
    *
    * @param dbStats
@@ -52,7 +52,8 @@ public class DbStatistics implements SLogged {
       return;
     }
 
-    SLogged.debug(BwStats.toString(getStats(dbStats)));
+    new BwLogger().setLoggedClass(DbStatistics.class)
+                  .debug(BwStats.toString(getStats(dbStats)));
   }
 
   /** Get the current statistics

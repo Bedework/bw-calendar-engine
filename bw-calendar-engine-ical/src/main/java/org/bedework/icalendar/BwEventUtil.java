@@ -43,7 +43,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
-import org.bedework.util.logging.SLogged;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.XcalTags;
 
@@ -108,9 +108,8 @@ import static org.bedework.calfacade.responses.Response.Status.ok;
  * @author Mike Douglass   douglm  rpi.edu
  */
 public class BwEventUtil extends IcalUtil {
-  static {
-    SLogged.setLoggerClass(BwEventUtil.class);
-  }
+  private static BwLogger logger =
+          new BwLogger().setLoggedClass(BwEventUtil.class);
 
   /** We are going to try to construct a BwEvent object from a VEvent. This
    * may represent a new event or an update to a pre-existing event. In any
@@ -248,7 +247,7 @@ public class BwEventUtil extends IcalUtil {
 
         if (ridObj.getRange() != null) {
           /* XXX What do I do with it? */
-          SLogged.warn("TRANS-TO_EVENT: Got a recurrence id range");
+          logger.warn("TRANS-TO_EVENT: Got a recurrence id range");
         }
 
         rid = ridObj.getDate();
@@ -331,8 +330,8 @@ public class BwEventUtil extends IcalUtil {
           (cal.getCalType() != BwCalendar.calTypeInbox) &&
           (cal.getCalType() != BwCalendar.calTypePendingInbox) &&
           (cal.getCalType() != BwCalendar.calTypeOutbox)) {
-        if (SLogged.debug()) {
-          SLogged.debug("TRANS-TO_EVENT: try to fetch event with guid=" + guid);
+        if (logger.debug()) {
+          logger.debug("TRANS-TO_EVENT: try to fetch event with guid=" + guid);
         }
 
         final Collection<EventInfo> eis = cb.getEvent(colPath, guid);
@@ -345,11 +344,11 @@ public class BwEventUtil extends IcalUtil {
           evinfo = eis.iterator().next();
         }
 
-        if (SLogged.debug()) {
+        if (logger.debug()) {
           if (evinfo != null) {
-            SLogged.debug("TRANS-TO_EVENT: fetched event with guid");
+            logger.debug("TRANS-TO_EVENT: fetched event with guid");
           } else {
-            SLogged.debug("TRANS-TO_EVENT: did not find event with guid");
+            logger.debug("TRANS-TO_EVENT: did not find event with guid");
           }
         }
 
@@ -418,7 +417,7 @@ public class BwEventUtil extends IcalUtil {
         final String evrid = evinfo.getEvent().getRecurrenceId();
 
         if ((evrid == null) || (!evrid.equals(rid))) {
-          SLogged. warn("Mismatched rid ev=" + evrid + " expected " + rid);
+          logger. warn("Mismatched rid ev=" + evrid + " expected " + rid);
           chg.changed(PropertyInfoIndex.RECURRENCE_ID, evrid, rid); // XXX spurious???
         }
 
@@ -465,7 +464,7 @@ public class BwEventUtil extends IcalUtil {
         }
 
         if (pi == null) {
-          SLogged.debug("Unknown property with name " + prop.getName() +
+          logger.debug("Unknown property with name " + prop.getName() +
                                 " class " + prop.getClass() +
                                 " and value " + pval);
           continue;
@@ -722,8 +721,8 @@ public class BwEventUtil extends IcalUtil {
             } else if (par.equals(FbType.FREE)) {
               fbtype = BwFreeBusyComponent.typeFree;
             } else {
-              if (SLogged.debug()) {
-                SLogged.debug("Unsupported parameter " + par.getName());
+              if (logger.debug()) {
+                logger.debug("Unsupported parameter " + par.getName());
               }
 
               throw new IcalMalformedException(
@@ -1061,8 +1060,8 @@ public class BwEventUtil extends IcalUtil {
             break;
 
           default:
-            if (SLogged.debug()) {
-              SLogged.debug("Unsupported property with index " + pi +
+            if (logger.debug()) {
+              logger.debug("Unsupported property with index " + pi +
                                     "; class " + prop.getClass() +
                                     " and value " + pval);
             }
@@ -1139,9 +1138,9 @@ public class BwEventUtil extends IcalUtil {
 
       ev.setRecurring(new Boolean(ev.isRecurringEntity()));
 
-      if (SLogged.debug()) {
-        SLogged.debug(chg.toString());
-        SLogged.debug(ev.toString());
+      if (logger.debug()) {
+        logger.debug(chg.toString());
+        logger.debug(ev.toString());
       }
 
       if (masterEI != null) {
@@ -1151,13 +1150,13 @@ public class BwEventUtil extends IcalUtil {
 
       return evinfo;
     } catch (CalFacadeException cfe) {
-      if (SLogged.debug()) {
-        SLogged.error(cfe);
+      if (logger.debug()) {
+        logger.error(cfe);
       }
       throw cfe;
     } catch (Throwable t) {
-      if (SLogged.debug()) {
-        SLogged.error(t);
+      if (logger.debug()) {
+        logger.error(t);
       }
       throw new CalFacadeException(t);
     }

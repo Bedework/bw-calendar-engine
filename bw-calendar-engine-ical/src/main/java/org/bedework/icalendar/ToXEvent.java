@@ -18,6 +18,7 @@
 */
 package org.bedework.icalendar;
 
+import org.bedework.access.EvaluatedAccessCache;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwAttendee;
@@ -35,7 +36,7 @@ import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.XcalUtil;
-import org.bedework.util.logging.SLogged;
+import org.bedework.util.logging.BwLogger;
 
 import ietf.params.xml.ns.icalendar_2.ArrayOfComponents;
 import ietf.params.xml.ns.icalendar_2.ArrayOfParameters;
@@ -116,9 +117,8 @@ import javax.xml.bind.JAXBElement;
  * @author Mike Douglass   douglm    rpi.edu
  */
 public class ToXEvent extends Xutil {
-  static {
-    SLogged.setLoggerClass(ToXEvent.class);
-  }
+  private static BwLogger logger =
+          new BwLogger().setLoggedClass(EvaluatedAccessCache.class);
 
   /** Make a BaseComponentType component from a BwEvent object. This may produce a
    * VEvent, VTodo or VJournal.
@@ -317,7 +317,7 @@ public class ToXEvent extends Xutil {
           DescriptionPropType desc = new DescriptionPropType();
 
           if (bwstr.getValue().contains("Â")) {
-            SLogged.warn("Odd character Â in description: " +
+            logger.warn("Odd character Â in description: " +
                                  bwstr.getValue());
           }
           desc.setText(bwstr.getValue());
@@ -636,7 +636,7 @@ public class ToXEvent extends Xutil {
                             wrapXprops);
         } catch (Throwable t) {
           // XXX For the moment swallow these.
-          SLogged.error(t);
+          logger.error(t);
         }
       }
 
@@ -986,7 +986,7 @@ public class ToXEvent extends Xutil {
     }
 
     if (!(comp instanceof VeventType) && !(comp instanceof VtodoType)) {
-      SLogged.warn("Entity of class " + ev.getClass() +
+      logger.warn("Entity of class " + ev.getClass() +
                            " has alarms but not allowed by entity of type " +
                            comp.getClass());
     }

@@ -23,7 +23,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
-import org.bedework.util.logging.SLogged;
+import org.bedework.util.logging.BwLogger;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -52,7 +52,10 @@ import java.util.Collection;
  * @author Mike Douglass douglm rpi.edu
  * @version 1.0
  */
-public class JcalHandler implements SLogged, Serializable {
+public class JcalHandler implements Serializable {
+  private static BwLogger logger =
+          new BwLogger().setLoggedClass(JcalHandler.class);
+
   private final static JsonFactory jsonFactory;
 
   static {
@@ -91,7 +94,7 @@ public class JcalHandler implements SLogged, Serializable {
     try {
       final JsonGenerator jgen = jsonFactory.createGenerator(wtr);
 
-      if (SLogged.debug()) {
+      if (logger.debug()) {
         jgen.useDefaultPrettyPrinter();
       }
 
@@ -137,7 +140,7 @@ public class JcalHandler implements SLogged, Serializable {
     try {
       final JsonGenerator jgen = jsonFactory.createJsonGenerator(wtr);
 
-      if (SLogged.debug()) {
+      if (logger.debug()) {
         jgen.useDefaultPrettyPrinter();
       }
 
