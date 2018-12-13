@@ -20,6 +20,7 @@ package org.bedework.sysevents;
 
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calsvci.CalSvcFactoryDefault;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
@@ -283,5 +284,20 @@ public class JmsConnectionHandler implements Logged, JmsDefs {
         }
       }
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

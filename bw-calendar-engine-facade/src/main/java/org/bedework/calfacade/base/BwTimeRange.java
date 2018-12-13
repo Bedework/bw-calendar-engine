@@ -19,6 +19,7 @@
 package org.bedework.calfacade.base;
 
 import org.bedework.calfacade.BwDateTime;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import net.fortuna.ical4j.model.Property;
@@ -135,6 +136,21 @@ public class BwTimeRange implements Logged {
     sb.append("/>");
 
     return sb.toString();
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }
 

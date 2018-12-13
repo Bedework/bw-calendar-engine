@@ -33,6 +33,7 @@ import org.bedework.dumprestore.dump.dumpling.ExtSubs;
 import org.bedework.dumprestore.prdump.DumpPrincipal;
 import org.bedework.dumprestore.prdump.DumpPublic;
 import org.bedework.dumprestore.prdump.DumpSystem;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import java.io.FileOutputStream;
@@ -262,5 +263,20 @@ public class Dump implements Logged, Defs {
                             false, // sessionless
                             true); // system
     return new CalSvcFactoryDefault().getSvc(pars);
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

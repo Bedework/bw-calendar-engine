@@ -18,6 +18,7 @@ package org.bedework.dumprestore;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
@@ -417,6 +418,21 @@ public class Utils implements Logged {
     } catch (final Throwable ignored) {
       throw new RuntimeException("Failed to parse as Integer " + val);
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }
 

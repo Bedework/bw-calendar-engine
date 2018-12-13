@@ -18,6 +18,7 @@
 */
 package org.bedework.dumprestore.restore;
 
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 /** Logger for restore class.
@@ -62,5 +63,20 @@ public class RLogger implements Logged {
   protected String atLine() {
     return "Approximately at line number " +
         globals.digester.getDocumentLocator().getLineNumber();
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

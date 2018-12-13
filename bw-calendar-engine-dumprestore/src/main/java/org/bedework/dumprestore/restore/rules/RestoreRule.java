@@ -21,6 +21,7 @@ package org.bedework.dumprestore.restore.rules;
 
 import org.bedework.calfacade.BwVersion;
 import org.bedework.dumprestore.restore.RestoreGlobals;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import org.apache.commons.digester.Rule;
@@ -185,6 +186,21 @@ public class RestoreRule extends Rule implements Logged {
 
     globals.messages.warningMessage(ln+ ": " + msg);
     Logged.super.warn(ln+ ": " + msg);
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }
 

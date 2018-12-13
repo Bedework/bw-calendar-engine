@@ -16,6 +16,5 @@
     <orderEntry type="module" module-name="bw-access" />
     <orderEntry type="module" module-name="bw-util-caching" />
     <orderEntry type="module" module-name="bw-util-xml" />
-    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.8.2" level="project" />
   </component>
 </module>

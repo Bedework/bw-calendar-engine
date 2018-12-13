@@ -33,6 +33,7 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.ToString;
 
@@ -1580,5 +1581,20 @@ public abstract class SimpleFilterParser implements Logged {
     } catch (final CalFacadeException cfe) {
       throw parseResult.setCfe(cfe);
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

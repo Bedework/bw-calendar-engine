@@ -21,6 +21,7 @@ package org.bedework.tools.xmlutil;
 import org.bedework.schemas.licenses.JarLicenseType;
 import org.bedework.schemas.licenses.JarLicensesType;
 import org.bedework.util.args.Args;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
@@ -284,5 +285,20 @@ public class LicensesUtil implements Logged {
     System.out.println("       -o <filename>");
     System.out.println("            specify file for processed output");
     System.out.println("");
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

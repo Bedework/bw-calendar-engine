@@ -22,6 +22,7 @@ import org.bedework.sysevents.JmsConnectionHandler;
 import org.bedework.sysevents.JmsDefs;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import java.io.InvalidClassException;
@@ -158,4 +159,19 @@ public abstract class JmsSysEventListener
    * @throws NotificationException on fatal error
    */
   public abstract void action(SysEvent ev) throws NotificationException;
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
+  }
 }

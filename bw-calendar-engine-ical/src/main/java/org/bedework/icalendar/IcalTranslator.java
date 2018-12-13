@@ -34,6 +34,7 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.WsXMLTranslator;
 import org.bedework.util.calendar.XmlCalendarBuilder;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.timezones.Timezones;
 import org.bedework.util.xml.XmlEmit;
@@ -1398,6 +1399,21 @@ public class IcalTranslator implements Logged, Serializable {
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }
 

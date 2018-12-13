@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.UserAuth;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import java.util.Collection;
@@ -99,5 +100,20 @@ public class UserAuthUWDbImpl implements Logged, UserAuth {
   @Override
   public Collection<BwAuthUser> getAll() throws CalFacadeException {
     return cb.getAll();
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

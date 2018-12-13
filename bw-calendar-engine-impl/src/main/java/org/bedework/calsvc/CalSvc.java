@@ -101,6 +101,7 @@ import org.bedework.icalendar.IcalCallback;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.jmx.MBeanUtil;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.security.PwEncryptionIntf;
@@ -2045,5 +2046,20 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
    */
   private boolean isPublicAdmin() throws CalFacadeException {
     return pars.getPublicAdmin();
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

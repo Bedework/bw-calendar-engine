@@ -24,6 +24,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.scheduling.hosts.Response.ResponseElement;
 import org.bedework.icalendar.IcalTranslator;
 import org.bedework.icalendar.Icalendar;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlUtil;
@@ -706,5 +707,20 @@ public class IscheduleClient implements Logged {
 
       throw new CalFacadeException(CalFacadeException.badResponse);
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

@@ -20,6 +20,7 @@ package org.bedework.sysevents.listeners;
 
 import org.bedework.sysevents.NotificationException;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.util.logging.BwLogger;
 
 /** This is the implementation of a notifications action class which logs
  * system events.
@@ -37,5 +38,20 @@ public class SysEventLoggerAction extends SysEventActionClass {
    */
   public void action(SysEvent ev) throws NotificationException {
     trace(ev.toString());
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

@@ -21,6 +21,7 @@ package org.bedework.calfacade.util;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwFreeBusyComponent;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.timezones.Timezones;
 
@@ -192,5 +193,20 @@ public class EventPeriods implements Logged {
       periods[p.type] = eps;
     }
     eps.add(p);
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

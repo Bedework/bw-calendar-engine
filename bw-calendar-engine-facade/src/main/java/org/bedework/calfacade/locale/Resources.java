@@ -18,6 +18,7 @@
 */
 package org.bedework.calfacade.locale;
 
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import java.io.Serializable;
@@ -99,5 +100,20 @@ public class Resources implements Logged, Serializable {
       error("Exception getting resource " + key, t);
       return null;
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

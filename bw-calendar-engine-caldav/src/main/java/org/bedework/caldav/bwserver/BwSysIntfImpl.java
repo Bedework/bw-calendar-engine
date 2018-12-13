@@ -96,6 +96,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.IcalDefs.IcalComponentType;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.XcalUtil;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlEmit;
@@ -2887,5 +2888,20 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     return prefs;
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

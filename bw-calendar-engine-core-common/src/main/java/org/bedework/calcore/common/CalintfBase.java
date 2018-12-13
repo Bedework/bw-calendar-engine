@@ -57,6 +57,7 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.NotificationsHandlerFactory;
 import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.calendar.PropertyIndex;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
@@ -760,4 +761,19 @@ public abstract class CalintfBase implements Logged, Calintf {
     personalModified.add(user);
   }*/
 
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
+  }
 }

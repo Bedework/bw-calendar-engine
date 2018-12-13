@@ -20,6 +20,7 @@ package org.bedework.calfacade;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
@@ -834,5 +835,20 @@ public class BwPrincipalInfo
                                                    lcname,
                                                    ptype,
                                                    multi));
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

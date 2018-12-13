@@ -29,6 +29,7 @@ import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.dump.DumpGlobals;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
@@ -240,6 +241,21 @@ public class Dumpling<T extends DumpEntity>
     if (globals.info != null) {
       globals.info.addLn("ERROR:" + msg);
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }
 

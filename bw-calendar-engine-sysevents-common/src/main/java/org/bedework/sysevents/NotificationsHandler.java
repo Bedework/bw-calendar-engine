@@ -20,6 +20,7 @@ package org.bedework.sysevents;
 
 import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.sysevents.listeners.SysEventListener;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 /**
@@ -66,4 +67,19 @@ public abstract class NotificationsHandler implements Logged {
    *
    */
   public abstract void close();
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
+  }
 }

@@ -25,6 +25,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.mail.Message;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import net.fortuna.ical4j.data.CalendarOutputter;
@@ -292,5 +293,20 @@ public class SimpleMailer implements Logged, MailerIntf {
     }
 
     props.setProperty(name, val);
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

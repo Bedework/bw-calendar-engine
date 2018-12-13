@@ -47,6 +47,7 @@ import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.UsersI;
 import org.bedework.sysevents.events.SysEvent;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.security.PwEncryptionIntf;
@@ -633,6 +634,21 @@ public class CalSvcDb implements Logged, Serializable {
     resp.setStatus(st);
 
     return resp;
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }
 

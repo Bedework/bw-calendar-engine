@@ -25,6 +25,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.mail.Message;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import net.fortuna.ical4j.model.Calendar;
@@ -126,5 +127,20 @@ public class DummyMailer implements Logged, MailerIntf {
   public void post(final Message val) throws CalFacadeException {
     debug("Mailer called with:");
     debug(val.toString());
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

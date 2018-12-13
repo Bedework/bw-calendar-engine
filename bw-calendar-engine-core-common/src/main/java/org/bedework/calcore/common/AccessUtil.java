@@ -40,6 +40,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
@@ -612,8 +613,19 @@ public class AccessUtil implements Logged, AccessUtilI {
   }
    */
 
-//  private void warn(String msg) {
-//    getLog().warn(msg);
-//  }
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
+  }
 }
 

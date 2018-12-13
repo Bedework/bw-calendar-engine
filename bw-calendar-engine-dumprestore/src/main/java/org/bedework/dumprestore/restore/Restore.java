@@ -42,6 +42,7 @@ import org.bedework.dumprestore.InfoLines;
 import org.bedework.dumprestore.nrestore.RestorePrincipal;
 import org.bedework.dumprestore.nrestore.RestorePublic;
 import org.bedework.dumprestore.restore.rules.RestoreRuleSet;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
@@ -388,5 +389,20 @@ public class Restore implements Logged, Defs, AutoCloseable {
     }
 
     return String.valueOf(val);
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

@@ -19,6 +19,7 @@
 package org.bedework.indexer;
 
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 /** Run to index entities.
@@ -53,5 +54,20 @@ public class IndexerThread extends Thread implements Logged {
     } finally {
       tpool.completed(this);
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

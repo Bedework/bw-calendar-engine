@@ -49,6 +49,7 @@
  */
 package org.bedework.icalendar;
 
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import net.fortuna.ical4j.data.CalendarParser;
@@ -491,4 +492,19 @@ public class CalendarBuilder implements Logged {
             }
         }
     }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
+  }
 }

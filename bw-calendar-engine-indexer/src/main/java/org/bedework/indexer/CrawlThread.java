@@ -18,6 +18,7 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 /** Runnable thread process.
@@ -42,5 +43,20 @@ public class CrawlThread extends Thread implements Logged {
       error(t);
     } finally {
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

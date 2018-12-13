@@ -30,6 +30,7 @@ import org.bedework.calsvci.DumpIntf;
 import org.bedework.dumprestore.AliasInfo;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.dump.DumpGlobals;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import java.io.File;
@@ -258,5 +259,20 @@ public class Dumper implements Logged {
 
   protected CalSvcI getSvc() {
     return globals.svci;
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

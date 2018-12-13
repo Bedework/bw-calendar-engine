@@ -31,6 +31,7 @@ import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 import org.bedework.dumprestore.restore.XmlFile;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.xml.FromXml;
 
@@ -538,5 +539,20 @@ public class Restorer implements Logged, Closeable {
 
   protected CalSvcI getSvc() {
     return globals.svci;
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

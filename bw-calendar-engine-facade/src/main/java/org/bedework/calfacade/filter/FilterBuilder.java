@@ -30,6 +30,7 @@ import org.bedework.calfacade.exc.CalFacadeSubscriptionLoopException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import java.util.ArrayList;
@@ -555,5 +556,20 @@ public class FilterBuilder implements Logged {
     }
 
     dump(f, curLine);
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

@@ -26,6 +26,7 @@ import org.bedework.calfacade.base.UpdateFromTimeZonesInfo.UnknownTimezoneInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.BwDateTimeUtil;
 import org.bedework.calsvci.TimeZonesStoreI;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.ToString;
 
@@ -281,5 +282,20 @@ public class TimeZonesStoreImpl implements Logged, TimeZonesStoreI {
       }
       throw cfe;
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

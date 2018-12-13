@@ -20,6 +20,7 @@ package org.bedework.calfacade.filter;
 
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import java.io.IOException;
@@ -256,5 +257,20 @@ public class SfpTokenizer extends StreamTokenizer implements Logged {
 
   public static String escapeQuotes(String s) {
          return quotePattern.matcher(s).replaceFirst("\\\\$1");
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

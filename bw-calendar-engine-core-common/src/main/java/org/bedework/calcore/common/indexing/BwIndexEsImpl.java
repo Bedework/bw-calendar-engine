@@ -72,6 +72,7 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.elasticsearch.DocBuilderBase.UpdateInfo;
 import org.bedework.util.elasticsearch.EsDocInfo;
 import org.bedework.util.indexing.IndexException;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
@@ -4046,5 +4047,20 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     resp.setStatus(failed);
 
     return resp;
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

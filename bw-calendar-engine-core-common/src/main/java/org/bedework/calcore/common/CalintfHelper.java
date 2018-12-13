@@ -52,6 +52,7 @@ import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 
@@ -573,5 +574,20 @@ public abstract class CalintfHelper
       error(t);
       return null;
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

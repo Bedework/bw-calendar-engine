@@ -41,6 +41,7 @@ import org.bedework.util.dav.DavUtil.MultiStatusResponse;
 import org.bedework.util.dav.DavUtil.MultiStatusResponseElement;
 import org.bedework.util.dav.DavUtil.PropstatElement;
 import org.bedework.util.http.BasicHttpClient;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlEmit;
@@ -1452,6 +1453,21 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   private void initWhoMaps(final String prefix, final int whoType) {
     toWho.put(prefix, whoType);
     fromWho.put(whoType, prefix);
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }
 

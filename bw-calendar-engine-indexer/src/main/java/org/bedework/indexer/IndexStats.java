@@ -20,6 +20,7 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calfacade.indexing.IndexStatistics;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import java.util.ArrayList;
@@ -78,5 +79,20 @@ public class IndexStats extends IndexStatistics implements Logged {
     sb.append(getCount(st));
 
     return sb.toString();
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

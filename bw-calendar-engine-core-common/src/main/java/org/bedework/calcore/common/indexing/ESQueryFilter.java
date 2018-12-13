@@ -45,6 +45,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.elasticsearch.ESQueryFilterBase;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import org.elasticsearch.index.query.AndFilterBuilder;
@@ -1807,5 +1808,20 @@ public class ESQueryFilter extends ESQueryFilterBase
 
     warn("Fuzzy search for " + of);
     return "";
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

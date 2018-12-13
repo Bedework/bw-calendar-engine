@@ -35,6 +35,7 @@ import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.EventsI;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import java.io.StreamTokenizer;
@@ -434,5 +435,20 @@ public abstract class CmdUtilHelper implements Logged {
   public void info(final String msg) {
     pstate.addInfo(msg);
     Logged.super.info(msg);
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

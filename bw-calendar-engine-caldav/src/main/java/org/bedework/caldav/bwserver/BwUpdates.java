@@ -38,6 +38,7 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.calendar.XcalUtil.TzGetter;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.timezones.Timezones;
 import org.bedework.util.xml.tagdefs.XcalTags;
@@ -1206,5 +1207,20 @@ public class BwUpdates implements Logged {
     public QName getParamName() {
       return paramName;
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

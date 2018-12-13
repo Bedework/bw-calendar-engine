@@ -21,6 +21,7 @@ package org.bedework.calsvc.notifications;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.http.BasicHttpClient;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -163,5 +164,20 @@ public class NotificationClient implements Logged {
       }
       throw new CalFacadeException(t);
     }
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }
