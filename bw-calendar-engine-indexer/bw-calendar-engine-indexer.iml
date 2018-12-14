@@ -83,6 +83,6 @@
     <orderEntry type="library" name="Maven: javax.servlet:servlet-api:2.4" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-misc:4.0.20" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.0" level="project" />
   </component>
 </module>
