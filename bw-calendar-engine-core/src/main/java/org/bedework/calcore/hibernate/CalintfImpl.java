@@ -1393,7 +1393,8 @@ public class CalintfImpl extends CalintfROImpl {
   public void addContent(final BwResource r,
                          final BwResourceContent rc) throws CalFacadeException {
     entityDao.save(rc);
-    getIndexer(r).indexEntity(rc);
+
+    getIndexer(BwIndexer.docTypeResourceContent).indexEntity(rc);
   }
 
   @Override
