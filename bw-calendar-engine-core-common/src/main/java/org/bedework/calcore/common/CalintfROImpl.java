@@ -1049,12 +1049,14 @@ public class CalintfROImpl extends CalintfBase
   public Collection<CoreEventInfo> getEvent(final String colPath,
                                             final String guid)
            throws CalFacadeException {
+    final List<CoreEventInfo> res = new ArrayList<>(1);
+
     checkOpen();
     final GetEntityResponse<EventInfo> ger =
             getEvIndexer().fetchEvent(colPath, guid);
 
     if (ger.getStatus() == Response.Status.notFound) {
-      return null;
+      return res;
     }
 
     if (ger.getStatus() != Response.Status.ok) {
@@ -1064,10 +1066,8 @@ public class CalintfROImpl extends CalintfBase
     final EventInfo ei = ger.getEntity();
 
     if (ei == null) {
-      return null;
+      return res;
     }
-
-    final List<CoreEventInfo> res = new ArrayList<>(1);
 
     res.add(postGetEvent(ei));
 
