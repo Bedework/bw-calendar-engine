@@ -100,6 +100,7 @@ import org.bedework.calsvci.ViewsI;
 import org.bedework.icalendar.IcalCallback;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase;
+import org.bedework.util.caching.FlushMap;
 import org.bedework.util.jmx.MBeanUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
@@ -647,10 +648,21 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   class SvcSimpleFilterParser extends SimpleFilterParser {
+    final FlushMap<String, BwCalendar> cols = new FlushMap<>(20, 60 * 1000,
+                                                             100);
+
     @Override
     public BwCalendar getCollection(final String path)
             throws CalFacadeException {
-      return getCalendarsHandler().get(path);
+      BwCalendar col = cols.get(path);
+      if (col != null) {
+        return col;
+      }
+
+      col = getCalendarsHandler().get(path);
+      cols.put(path, col);
+
+      return col;
     }
 
     @Override
@@ -663,7 +675,24 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     @Override
     public Collection<BwCalendar> getChildren(final BwCalendar col)
             throws CalFacadeException {
-      return getCalendarsHandler().getChildren(col);
+      final String path = col.getPath();
+      BwCalendar cachedCol = cols.get(path);
+
+      if ((cachedCol != null) && (cachedCol.getChildren() != null)) {
+        return col.getChildren();
+      }
+
+      Collection<BwCalendar> children = getCalendarsHandler().getChildren(col);
+
+      if (cachedCol == null) {
+        cachedCol = col;
+      }
+
+      cachedCol.setChildren(children);
+
+      cols.put(path, cachedCol);
+
+      return children;
     }
 
     @Override
@@ -699,9 +728,6 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     return new SvcSimpleFilterParser();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getSysparsHandler()
-   */
   @Override
   public SysparsI getSysparsHandler() throws CalFacadeException {
     if (sysparsHandler == null) {
@@ -712,9 +738,6 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     return sysparsHandler;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getMailer()
-   */
   @Override
   public MailerIntf getMailer() throws CalFacadeException {
     /*
