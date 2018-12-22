@@ -2083,10 +2083,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
 
       ei.setCurrentAccess(ca);
+      resp.setEntity(ei);
 
       if (ev.getRecurrenceId() != null) {
         // Single instance
-        resp.setEntity(ei);
         return resp;
       }
 
