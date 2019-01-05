@@ -19,7 +19,7 @@
 package org.bedework.calfacade.svc;
 
 import org.bedework.calfacade.MonitorStat;
-import org.bedework.util.jmx.BaseMBean;
+import org.bedework.util.jmx.ConfBaseMBean;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ import java.util.List;
  * @author douglm
  *
  */
-public interface BwSysMonitorMBean extends BaseMBean {
+public interface BwSysMonitorMBean extends ConfBaseMBean {
   static final String serviceName = "org.bedework.bwengine:service=BwSysMonitor";
 
   /** Display the current counts and values
