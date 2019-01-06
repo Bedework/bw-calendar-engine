@@ -22,6 +22,7 @@ import org.bedework.calfacade.BwSystem;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
+import org.bedework.calfacade.exc.CalFacadeConstraintViolationException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.util.logging.BwLogger;
@@ -38,6 +39,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
+import org.hibernate.exception.ConstraintViolationException;
 
 import java.io.Serializable;
 import java.sql.Blob;
@@ -1015,7 +1017,7 @@ public class HibSessionImpl implements Logged, HibSession {
         }
         error(t);
       }
-    } catch (Throwable dummy) {}
+    } catch (final Throwable ignored) {}
 
     try {
       if (tx != null) {
@@ -1029,7 +1031,7 @@ public class HibSessionImpl implements Logged, HibSession {
     } finally {
       try {
         sess.close();
-      } catch (Throwable t2) {}
+      } catch (final Throwable ignored) {}
       sess = null;
     }
 
@@ -1037,6 +1039,10 @@ public class HibSessionImpl implements Logged, HibSession {
 
     if (t instanceof StaleStateException) {
       throw new CalFacadeStaleStateException(t);
+    }
+
+    if (t instanceof ConstraintViolationException) {
+      throw new CalFacadeConstraintViolationException(t);
     }
 
     throw new CalFacadeException(t);

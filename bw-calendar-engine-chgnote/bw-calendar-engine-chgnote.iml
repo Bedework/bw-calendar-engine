@@ -51,21 +51,6 @@
     <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
     <orderEntry type="module" module-name="bw-calendar-engine-ical" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-dav:4.0.20" level="project" />
-    <orderEntry type="library" name="Maven: org.hibernate:hibernate-core:5.2.5.Final" level="project" />
-    <orderEntry type="library" name="Maven: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
-    <orderEntry type="library" name="Maven: org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final" level="project" />
-    <orderEntry type="library" name="Maven: org.javassist:javassist:3.20.0-GA" level="project" />
-    <orderEntry type="library" name="Maven: antlr:antlr:2.7.7" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.jboss:jandex:2.0.3.Final" level="project" />
-    <orderEntry type="library" name="Maven: com.fasterxml:classmate:1.3.0" level="project" />
-    <orderEntry type="library" name="Maven: dom4j:dom4j:1.6.1" level="project" />
-    <orderEntry type="library" name="Maven: org.hibernate.common:hibernate-commons-annotations:5.0.1.Final" level="project" />
-    <orderEntry type="library" name="Maven: javax.enterprise:cdi-api:1.1" level="project" />
-    <orderEntry type="library" name="Maven: javax.el:el-api:2.2" level="project" />
-    <orderEntry type="library" name="Maven: org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:1.0.0.Beta1" level="project" />
-    <orderEntry type="library" name="Maven: javax.annotation:jsr250-api:1.0" level="project" />
-    <orderEntry type="library" name="Maven: javax.inject:javax.inject:1" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:apache-jdkim-library:0.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.james:apache-mailet-base:1.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.james:apache-mailet:2.4" level="project" />

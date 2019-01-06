@@ -54,6 +54,7 @@ import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
+import org.bedework.calfacade.exc.CalFacadeConstraintViolationException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
@@ -108,8 +109,6 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.security.PwEncryptionIntf;
 import org.bedework.util.security.keys.GenKeysMBean;
 import org.bedework.util.timezones.Timezones;
-
-import org.hibernate.exception.ConstraintViolationException;
 
 import java.sql.Blob;
 import java.sql.Timestamp;
@@ -1674,7 +1673,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     try {
       users.createUser(val);
     } catch (final CalFacadeException cfe) {
-      if (cfe.getCause() instanceof ConstraintViolationException) {
+      if (cfe instanceof CalFacadeConstraintViolationException) {
         // We'll assume it was created by another process.
         warn("ConstraintViolationException trying to create " + val);
 
