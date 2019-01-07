@@ -16,13 +16,13 @@
 
 		<!-- Bedework Versions -->
 
-    <bw-access.version>4.0.5-SNAPSHOT</bw-access.version>
-    <bw-caldav.version>4.0.6-SNAPSHOT</bw-caldav.version>
-		<bw-util.version>4.0.21-SNAPSHOT</bw-util.version>
+    <bw-access.version>4.0.5</bw-access.version>
+    <bw-caldav.version>4.0.6</bw-caldav.version>
+		<bw-util.version>4.0.21</bw-util.version>
     <bw-util-hibernate.version>4.0.20</bw-util-hibernate.version>
     <bw-util-logging.version>4.0.0</bw-util-logging.version>
-    <bw-util2.version>4.0.3-SNAPSHOT</bw-util2.version>
-		<bw-webdav.version>4.0.6-SNAPSHOT</bw-webdav.version>
+    <bw-util2.version>4.0.3</bw-util2.version>
+		<bw-webdav.version>4.0.6</bw-webdav.version>
     <bw-xml.version>4.0.7</bw-xml.version>
 
     <commons.csv.version>1.2</commons.csv.version>
