@@ -431,7 +431,7 @@ class CoreCalendars extends CalintfHelper
 
     dao.saveOrUpdateCollection(unwrap(col));
 
-    indexEntity(col);
+    touchCalendar(col); // indexes as well
 
     ((CalendarWrapper)col).clearCurrentAccess(); // force recheck
     intf.colCache.put((CalendarWrapper)col);
@@ -506,8 +506,7 @@ class CoreCalendars extends CalintfHelper
       tombstoneEntity(unwrapped);
       unwrapped.tombstone();
       dao.updateCollection(unwrapped);
-      touchCalendar(unwrapped);
-      indexEntity(val);
+      touchCalendar(unwrapped); // Indexes as well
     }
 
     intf.colCache.remove(path);
