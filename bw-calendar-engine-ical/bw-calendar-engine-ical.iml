@@ -12,7 +12,7 @@
     <orderEntry type="module" module-name="bw-calendar-engine-facade" />
     <orderEntry type="module" module-name="bw-calendar-engine-annotations" />
     <orderEntry type="module" module-name="bw-access" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-vcard:4.0.2" level="project" />
+    <orderEntry type="module" module-name="bw-util2-vcard" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.6" level="project" />
     <orderEntry type="module" module-name="bw-util-http" />
     <orderEntry type="module" module-name="bw-util-config" />
@@ -49,7 +49,7 @@
     <orderEntry type="module" module-name="bw-util-caching" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.6" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.6" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-calendar:4.0.2" level="project" />
+    <orderEntry type="module" module-name="bw-util2-calendar" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-calws-soap:4.0.7" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.7" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.7" level="project" />
