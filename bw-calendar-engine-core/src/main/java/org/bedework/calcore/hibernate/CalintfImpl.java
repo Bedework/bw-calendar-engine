@@ -1394,7 +1394,7 @@ public class CalintfImpl extends CalintfROImpl {
                          final BwResourceContent rc) throws CalFacadeException {
     entityDao.save(rc);
 
-    getIndexer(BwIndexer.docTypeResourceContent).indexEntity(rc);
+    getIndexer(docTypeResourceContent).indexEntity(rc);
   }
 
   @Override
@@ -1407,7 +1407,7 @@ public class CalintfImpl extends CalintfROImpl {
   public void saveOrUpdateContent(final BwResource r,
                                   final BwResourceContent val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
-    getIndexer(r).indexEntity(val);
+    getIndexer(docTypeResourceContent).indexEntity(val);
   }
 
   @Override
@@ -1420,7 +1420,7 @@ public class CalintfImpl extends CalintfROImpl {
   public void deleteContent(final BwResource r,
                             final BwResourceContent val) throws CalFacadeException {
     entityDao.delete(val);
-    getIndexer(r).unindexEntity(docTypeResourceContent, val.getHref());
+    getIndexer(docTypeResourceContent).unindexEntity(docTypeResourceContent, val.getHref());
   }
 
   /* ====================================================================
