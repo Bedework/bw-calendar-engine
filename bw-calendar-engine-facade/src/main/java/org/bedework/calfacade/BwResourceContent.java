@@ -187,14 +187,11 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
       while((len = str.read(buffer)) != -1) {
         b64out.write(buffer, 0, len);
       }
+      b64out.close();
 
       return new String(baos.toByteArray());
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
-    } finally {
-      try {
-        b64out.close();
-      } catch (Throwable t) {}
     }
   }
 
