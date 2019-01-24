@@ -25,6 +25,7 @@ import org.bedework.calfacade.annotations.NoWrap;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.timezones.DateTimeUtil;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.LastModified;
 
@@ -104,6 +105,7 @@ public class BwLastMod<T extends BwDbentity, T1>
    * @return T
    */
   @NoDump
+  @JsonIgnore
   public T getDbEntity() {
     return dbEntity;
   }
@@ -178,6 +180,7 @@ public class BwLastMod<T extends BwDbentity, T1>
    * @return String tag value
    */
   @NoDump
+  @JsonIgnore
   public String getTagValue() {
     return getTagValue(getTimestamp(), getSequence());
   }

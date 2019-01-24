@@ -2075,7 +2075,11 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     cal.setMailListId(getMailListId());
     cal.setCalType(getCalType());
     cal.setCreated(getCreated());
-    cal.setLastmod((BwCollectionLastmod)getLastmod().clone());
+
+    final BwCollectionLastmod lm = (BwCollectionLastmod)getLastmod().clone();
+    lm.setDbEntity(cal);
+    cal.setLastmod(lm);
+
     cal.setAliasUri(getAliasUri());
     cal.setDisplay(getDisplay());
     cal.setAffectsFreeBusy(getAffectsFreeBusy());
