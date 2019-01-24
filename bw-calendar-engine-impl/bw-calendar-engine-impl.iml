@@ -29,7 +29,7 @@
     <orderEntry type="library" name="Maven: javax.jms:jms-api:1.1-rev-1" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-caching:4.0.22" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.0" level="project" />
+    <orderEntry type="module" module-name="bw-util-logging" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-dav:4.0.22" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-http:4.0.22" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-config:4.0.22" level="project" />

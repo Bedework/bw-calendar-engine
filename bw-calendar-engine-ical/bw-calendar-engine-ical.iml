@@ -44,7 +44,7 @@
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-misc:4.0.22" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.0" level="project" />
+    <orderEntry type="module" module-name="bw-util-logging" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-timezones:4.0.22" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-caching:4.0.22" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.6" level="project" />

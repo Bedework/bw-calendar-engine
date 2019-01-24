@@ -48,7 +48,7 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.7" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.7" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-calws-soap:4.0.7" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.0" level="project" />
+    <orderEntry type="module" module-name="bw-util-logging" />
     <orderEntry type="library" name="Maven: org.bedework:apache-jdkim-library:0.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.specs:geronimo-activation_1.1_spec:1.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.javamail:geronimo-javamail_1.4_mail:1.6" level="project" />

@@ -18,7 +18,6 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.6" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util2-vcard:4.0.3" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.6" level="project" />
-    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.6" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-http:4.0.22" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-config:4.0.22" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-jmx:4.0.22" level="project" />
@@ -68,6 +67,7 @@
     <orderEntry type="library" name="Maven: javax.servlet:servlet-api:2.4" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-misc:4.0.22" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.0" level="project" />
+    <orderEntry type="module" module-name="bw-util-logging" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.6" level="project" />
   </component>
 </module>
