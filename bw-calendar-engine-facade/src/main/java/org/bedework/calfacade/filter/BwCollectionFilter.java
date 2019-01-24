@@ -27,9 +27,7 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
  * @author Mike Douglass
  * @version 1.0
  */
-public class BwCollectionFilter extends ObjectFilter<BwCalendar> {
-  private String path;
-
+public class BwCollectionFilter extends ObjectFilter<String> {
   /** Match on a collection.
    *
    * @param name - null one will be created
@@ -46,8 +44,7 @@ public class BwCollectionFilter extends ObjectFilter<BwCalendar> {
   public BwCollectionFilter(String name,
                             BwCalendar col) {
     super(name, PropertyInfoIndex.COLLECTION);
-    setEntity(col);
-    path = col.getPath();
+    setEntity(col.getPath());
   }
 
   /** Match on a path.
@@ -58,10 +55,10 @@ public class BwCollectionFilter extends ObjectFilter<BwCalendar> {
   public BwCollectionFilter(final String name,
                             final String path) {
     super(name, PropertyInfoIndex.COLLECTION);
-    this.path = path;
+    setEntity(path);
   }
 
   public String getPath() {
-    return path;
+    return getEntity();
   }
 }
