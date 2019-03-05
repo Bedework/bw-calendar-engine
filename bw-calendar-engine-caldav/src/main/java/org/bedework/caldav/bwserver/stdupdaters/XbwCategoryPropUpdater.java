@@ -73,6 +73,19 @@ public class XbwCategoryPropUpdater implements PropertyUpdater {
         }
 
         for (final BwXproperty xp: xcats) {
+          // Watch for null values
+          if (xp.getValue() == null) {
+            ev.removeXproperty(xp);
+            cte.addRemovedValue(xp);
+
+            if (xval != null) {
+              continue;
+            }
+
+            // We're done
+            return UpdateResult.getOkResult();
+          }
+
           if (!xp.getValue().equals(xval)) {
             continue;
           }
@@ -96,8 +109,18 @@ public class XbwCategoryPropUpdater implements PropertyUpdater {
         return UpdateResult.getOkResult();
       }
 
+      if (xval == null) {
+        // Ignore
+        return UpdateResult.getOkResult();
+      }
+
       if (ui.isAdd()) {
         for (final BwXproperty xp: xcats) {
+          if (xp.getValue() == null) {
+            // Should strip it
+            continue;
+          }
+
           if (xp.getValue().equals(xval)) {
             return new UpdateResult(
                     "Entity already has " + ui.getPropName() +
@@ -117,6 +140,11 @@ public class XbwCategoryPropUpdater implements PropertyUpdater {
 
       if (ui.isChange()) {
         for (final BwXproperty xp : xcats) {
+          if (xp.getValue() == null) {
+            // Should strip it
+            continue;
+          }
+
           if (xp.getValue().equals(xval)) {
             // Found
 
