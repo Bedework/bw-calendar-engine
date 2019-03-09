@@ -781,16 +781,13 @@ public class BwLocation extends BwEventProperty<BwLocation>
 
     sb.append(getAddressField());
     addCombined(sb, getRoomField());
-    addCombined(sb, getSubField1());
-    addCombined(sb, getSubField2());
-    addCombined(sb, getStreet());
     addCombined(sb, getCity());
     addCombined(sb, getState());
     addCombined(sb, getZip());
     
-    if (getAccessible()) {
-      sb.append(" (accessible)");
-    }
+    //if (getAccessible()) {
+    //  sb.append(" (accessible)");
+    //}
     
     return sb.toString();
   }
@@ -801,7 +798,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
       return;
     }
 
-    sb.append(" ");
+    sb.append(", ");
     sb.append(field);
   }
   

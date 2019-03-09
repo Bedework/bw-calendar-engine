@@ -31,7 +31,7 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-util-security:4.0.23" level="project" />
     <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.5" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-timezones:4.0.23" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-webdav:4.0.6" level="project" />
+    <orderEntry type="module" module-name="bw-webdav" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.0.21" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-xml:4.0.23" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-caldav-util:4.0.6" level="project" />
