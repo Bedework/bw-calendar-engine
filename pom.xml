@@ -22,7 +22,7 @@
     <bw-util-hibernate.version>4.0.20</bw-util-hibernate.version>
     <bw-util-logging.version>4.0.1</bw-util-logging.version>
     <bw-util2.version>4.0.3</bw-util2.version>
-		<bw-webdav.version>4.0.6</bw-webdav.version>
+		<bw-webdav.version>4.0.7-SNAPSHOT</bw-webdav.version>
     <bw-xml.version>4.0.7</bw-xml.version>
 
     <commons.csv.version>1.2</commons.csv.version>
