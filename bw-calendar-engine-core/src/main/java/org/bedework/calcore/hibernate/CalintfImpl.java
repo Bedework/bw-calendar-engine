@@ -193,7 +193,7 @@ public class CalintfImpl extends CalintfROImpl {
     calendars = new CoreCalendars(sess, this,
                                   ac, currentMode, sessionless);
 
-    access.setCollectionGetter(calendars);
+    access.setCollectionGetter(this);
   }
 
   public IfInfo getIfInfo() {
