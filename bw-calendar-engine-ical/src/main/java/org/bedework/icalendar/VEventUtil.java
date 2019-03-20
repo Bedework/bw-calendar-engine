@@ -132,7 +132,7 @@ public class VEventUtil extends IcalUtil {
    * @param tzreg - timezone registry
    * @param currentPrincipal - href for current authenticated user
    * @return Component
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public static Component toIcalComponent(final EventInfo ei,
                                           final boolean isOverride,
@@ -187,11 +187,13 @@ public class VEventUtil extends IcalUtil {
       boolean freeBusy = false;
       boolean vavail = false;
       boolean todo = false;
+      boolean event = false;
       boolean vpoll = false;
 
       int entityType = val.getEntityType();
       if (entityType == IcalDefs.entityTypeEvent) {
         comp = new VEvent(pl);
+        event = true;
       } else if (entityType == IcalDefs.entityTypeTodo) {
         comp = new VToDo(pl);
         todo = true;
@@ -474,7 +476,7 @@ public class VEventUtil extends IcalUtil {
       if (todo) {
         Integer pc = val.getPercentComplete();
         if (pc != null) {
-          pl.add(new PercentComplete(pc.intValue()));
+          pl.add(new PercentComplete(pc));
         }
       }
 
@@ -482,7 +484,7 @@ public class VEventUtil extends IcalUtil {
 
       Integer prio = val.getPriority();
       if (prio != null) {
-        pl.add(new Priority(prio.intValue()));
+        pl.add(new Priority(prio));
       }
 
       /* ------------------- RDate -below------------------- */
@@ -654,6 +656,19 @@ public class VEventUtil extends IcalUtil {
       //  pl.add(new PollItemId(val.getPollItemId()));
      // }
 
+      final List<BwXproperty> xlocs =
+              val.getXproperties(BwXproperty.xBedeworkLocation);
+
+      if (!Util.isEmpty(xlocs) &&
+              (comp.getProperty(Property.LOCATION) == null)) {
+        // Create a location from the x-property
+        final BwXproperty xloc = xlocs.get(0);
+
+        final Location loc = new Location(xloc.getValue());
+
+        comp.getProperties().add(loc);
+      }
+
       if (vpoll) {
         final Integer ival = val.getPollWinner();
 
@@ -702,9 +717,9 @@ public class VEventUtil extends IcalUtil {
 
   /** Build recurring properties from event.
    *
-   * @param val
-   * @param pl
-   * @throws CalFacadeException
+   * @param val event
+   * @param pl properties
+   * @throws CalFacadeException on fatal error
    */
   public static void doRecurring(final BwEvent val,
                                  final PropertyList pl) throws CalFacadeException {
@@ -766,12 +781,11 @@ public class VEventUtil extends IcalUtil {
     Property from = null;
 
     if (pl.size() == 1) {
-      from = (Property)pl.get(0);
+      from = pl.get(0);
     } else {
       // Look for value?
-      Iterator pit = pl.iterator();
-      while (pit.hasNext()) {
-        from = (Property)pit.next();
+      for (final Object aPl : pl) {
+        from = (Property)aPl;
         if (from.getValue().equals(pval)) {
           break;
         }
@@ -841,7 +855,7 @@ public class VEventUtil extends IcalUtil {
 
     /* Generate as one date per property - matches up to other vendors better */
     for (BwDateTime dt: dts) {
-      DateList dl = null;
+      DateList dl;
 
       /* Always use the UTC values */
       boolean dateType = false;
