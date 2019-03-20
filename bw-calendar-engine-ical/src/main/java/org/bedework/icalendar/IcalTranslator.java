@@ -145,9 +145,9 @@ public class IcalTranslator implements Logged, Serializable {
 
   /** Make a new Calendar with default properties
    *
-   * @param methodType
+   * @param methodType - ical method
    * @return Calendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public static Calendar newIcal(final int methodType) throws CalFacadeException {
     Calendar cal = new Calendar();
@@ -167,10 +167,10 @@ public class IcalTranslator implements Logged, Serializable {
 
   /** Make a new Calendar with the freebusy object
    *
-   * @param methodType
-   * @param ent
+   * @param methodType scheduling method
+   * @param ent freebusy object
    * @return String representation
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public static String toIcalString(final int methodType,
                                     final BwEvent ent) throws CalFacadeException {
@@ -210,7 +210,7 @@ public class IcalTranslator implements Logged, Serializable {
    *
    * @param cal Calendar to convert
    * @return String representation
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public static String toIcalString(final Calendar cal) throws CalFacadeException {
     Writer wtr =  new StringWriter();
@@ -223,7 +223,7 @@ public class IcalTranslator implements Logged, Serializable {
    *
    * @param cal Calendar to convert
    * @param wtr Writer for output
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public static void writeCalendar(final Calendar cal,
                                    final Writer wtr) throws CalFacadeException {
@@ -238,10 +238,10 @@ public class IcalTranslator implements Logged, Serializable {
 
   /** turn a single event with possible overrides into a calendar
    *
-   * @param val
+   * @param val event
    * @param methodType    int value fromIcalendar
    * @return Calendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public Calendar toIcal(final EventInfo val,
                          final int methodType) throws CalFacadeException {
@@ -252,7 +252,7 @@ public class IcalTranslator implements Logged, Serializable {
     try {
       Calendar cal = newIcal(methodType);
 
-      addToCalendar(cal, val, new TreeSet<String>());
+      addToCalendar(cal, val, new TreeSet<>());
 
       return cal;
     } catch (CalFacadeException cfe) {
@@ -264,10 +264,10 @@ public class IcalTranslator implements Logged, Serializable {
 
   /** Write a collection of calendar data as json
    *
-   * @param vals
+   * @param vals collection of calendar data
    * @param methodType    int value fromIcalendar
    * @param wtr for output
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void writeJcal(final Collection<EventInfo> vals,
                         final int methodType,
@@ -288,10 +288,10 @@ public class IcalTranslator implements Logged, Serializable {
 
   /** Write a collection of calendar data as xml
    *
-   * @param vals
+   * @param vals collection of calendar data
    * @param methodType    int value fromIcalendar
    * @param xml for output
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void writeXmlCalendar(final Collection vals,
                                final int methodType,
@@ -595,10 +595,10 @@ public class IcalTranslator implements Logged, Serializable {
 
   /** Write a collection of calendar data as iCalendar
    *
-   * @param vals
+   * @param vals collection of calendar data
    * @param methodType    int value fromIcalendar
    * @param wtr Writer for output
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void writeCalendar(final Collection vals,
                             final int methodType,
@@ -615,10 +615,10 @@ public class IcalTranslator implements Logged, Serializable {
 
   /** Turn a collection of events into a calendar
    *
-   * @param vals
+   * @param vals          collection of events
    * @param methodType    int value fromIcalendar
    * @return Calendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public Calendar toIcal(final Collection vals,
                          final int methodType) throws CalFacadeException {
@@ -628,19 +628,16 @@ public class IcalTranslator implements Logged, Serializable {
       return cal;
     }
 
-    TreeSet<String> added = new TreeSet<String>();
+    TreeSet<String> added = new TreeSet<>();
 
     try {
-      Iterator it = vals.iterator();
-      while (it.hasNext()) {
-        Object o = it.next();
-
+      for (final Object o : vals) {
         if (o instanceof EventInfo) {
           addToCalendar(cal, (EventInfo)o, added);
         } else {
           // XXX implement
           warn("Unimplemented toIcal for " + o.getClass().getName());
-          continue;
+          //continue;
         }
       }
 
@@ -654,9 +651,9 @@ public class IcalTranslator implements Logged, Serializable {
 
   /** Get a TimeZone object from a VCALENDAR string definition
    *
-   * @param val
+   * @param val VCALENDAR string definition
    * @return TimeZone
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public TimeZone tzFromTzdef(final String val) throws CalFacadeException {
     StringReader sr = new StringReader(val);
@@ -680,9 +677,9 @@ public class IcalTranslator implements Logged, Serializable {
   /** Convert the Icalendar reader to a Collection of Calendar objects
    *
    * @param col      collection the entities will live in - possibly null
-   * @param rdr
+   * @param rdr      Icalendar reader
    * @return Icalendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public Icalendar fromIcal(final BwCalendar col,
                             final Reader rdr) throws CalFacadeException {
@@ -694,10 +691,10 @@ public class IcalTranslator implements Logged, Serializable {
   /** Convert the Icalendar object to a Collection of Calendar objects
    *
    * @param col      collection the entities will live in - possibly null
-   * @param ical
+   * @param ical     xCal icalendar object
    * @param diff     True if we should assume we are updating existing events.
    * @return Icalendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public Icalendar fromIcal(final BwCalendar col,
                             final IcalendarType ical,
@@ -726,7 +723,7 @@ public class IcalTranslator implements Logged, Serializable {
    * @param comp - the component
    * @param diff     True if we should assume we are updating existing events.
    * @return Icalendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public Icalendar fromComp(final BwCalendar col,
                             final Component comp,
@@ -749,15 +746,16 @@ public class IcalTranslator implements Logged, Serializable {
     }
   }
 
-  /** Convert the Icalendar reader to a Collection of Calendar objects
+  /** Convert the Icalendar reader to a Collection of Calendar objects.
+   * Handles xCal, jCal and ics
    *
    * @param col      collection the entities will live in - possibly null
-   * @param rdr
-   * @param contentType
+   * @param rdr Icalendar reader
+   * @param contentType "application/calendar+xml" etc
    * @param diff     True if we should assume we are updating existing events.
    * @param mergeAttendees True if we should only update our own attendee.
    * @return Icalendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public Icalendar fromIcal(final BwCalendar col,
                             final Reader rdr,
@@ -803,9 +801,9 @@ public class IcalTranslator implements Logged, Serializable {
   }
 
   /** Add an override as part of an update
-   * @param ei
-   * @param comp
-   * @throws CalFacadeException
+   * @param ei event
+   * @param comp XML representation of override
+   * @throws CalFacadeException on fatal error
    */
   public void addOverride(final EventInfo ei,
                           final JAXBElement<? extends BaseComponentType> comp) throws CalFacadeException {
@@ -889,7 +887,7 @@ public class IcalTranslator implements Logged, Serializable {
 
   /** Get the method for the calendar
    *
-   * @param val
+   * @param val Calendar object
    * @return String method
    */
   public static String getMethod(final Calendar val) {
@@ -901,7 +899,7 @@ public class IcalTranslator implements Logged, Serializable {
     return prop.getValue();
   }
 
-  /** Temp - update ical4j * /
+  /* Temp - update ical4j * /
   private static class CalBuilder extends CalendarBuilder {
     public CalBuilder(final CalendarParser parser,
                       final TimeZoneRegistry registry) {
@@ -965,7 +963,7 @@ public class IcalTranslator implements Logged, Serializable {
    *
    * @param tzid       String timezone id
    * @return Calendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public Calendar getTzCalendar(final String tzid) throws CalFacadeException {
     try {
@@ -986,7 +984,7 @@ public class IcalTranslator implements Logged, Serializable {
    *
    * @param tzid       String timezone id
    * @return String
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public String toStringTzCalendar(final String tzid) throws CalFacadeException {
     Calendar ical = getTzCalendar(tzid);
@@ -1005,11 +1003,11 @@ public class IcalTranslator implements Logged, Serializable {
   }
 
   /**
-   * @param val
-   * @param methodType
-   * @param pattern
+   * @param val event
+   * @param methodType icalendar method
+   * @param pattern to control output
    * @return XML IcalendarType
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public IcalendarType toXMLIcalendar(final EventInfo val,
                                       final int methodType,
@@ -1047,7 +1045,7 @@ public class IcalTranslator implements Logged, Serializable {
     }
 
     BwEvent ev = val.getEvent();
-    JAXBElement<? extends BaseComponentType> el = null;
+    JAXBElement<? extends BaseComponentType> el;
 
     VcalendarType vc = null;
 
@@ -1134,11 +1132,11 @@ public class IcalTranslator implements Logged, Serializable {
   }
 
   /**
-   * @param val
-   * @param methodType
-   * @param pattern
+   * @param val event
+   * @param methodType icalendar method
+   * @param pattern to control output
    * @return JSON jcal
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public String toJcal(final EventInfo val,
                        final int methodType,
@@ -1159,10 +1157,10 @@ public class IcalTranslator implements Logged, Serializable {
   }
 
   /**
-   * @param val
-   * @param pattern
+   * @param val calendar object
+   * @param pattern to limit result
    * @return JSON jcal
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public static String toJcal(final Calendar val,
                               final IcalendarType pattern) throws CalFacadeException {
@@ -1226,28 +1224,27 @@ public class IcalTranslator implements Logged, Serializable {
    * 4. Anything else
    */
   private static Collection<CalendarComponent> orderedComponents(final ComponentList clist) {
-    SubList<CalendarComponent> tzs = new SubList<CalendarComponent>();
-    SubList<CalendarComponent> fbs = new SubList<CalendarComponent>();
-    SubList<CalendarComponent> instances = new SubList<CalendarComponent>();
-    SubList<CalendarComponent> masters = new SubList<CalendarComponent>();
+    SubList<CalendarComponent> tzs = new SubList<>();
+    SubList<CalendarComponent> fbs = new SubList<>();
+    SubList<CalendarComponent> instances = new SubList<>();
+    SubList<CalendarComponent> masters = new SubList<>();
 
-    Iterator it = clist.iterator();
-
-    while (it.hasNext()) {
-      CalendarComponent c = (CalendarComponent)it.next();
+    for (final Object aClist : clist) {
+      CalendarComponent c = (CalendarComponent)aClist;
 
       if (c instanceof VFreeBusy) {
         fbs.add(c);
       } else if (c instanceof VTimeZone) {
         tzs.add(c);
-      } else if (IcalUtil.getProperty(c, Property.RECURRENCE_ID) != null) {
+      } else if (IcalUtil
+              .getProperty(c, Property.RECURRENCE_ID) != null) {
         instances.add(c);
       } else {
         masters.add(c);
       }
     }
 
-    ArrayList<CalendarComponent> all = new ArrayList<CalendarComponent>();
+    ArrayList<CalendarComponent> all = new ArrayList<>();
 
     tzs.appendTo(all);
     masters.appendTo(all);
@@ -1262,7 +1259,7 @@ public class IcalTranslator implements Logged, Serializable {
 
     void add(final T o) {
       if (list == null) {
-        list = new ArrayList<T>();
+        list = new ArrayList<>();
       }
       list.add(o);
     }
@@ -1307,12 +1304,9 @@ public class IcalTranslator implements Logged, Serializable {
    */
   private void addIcalTimezones(final Calendar cal,
                                 final Collection vals) throws CalFacadeException {
-    TreeSet<String> added = new TreeSet<String>();
+    TreeSet<String> added = new TreeSet<>();
 
-    Iterator it = vals.iterator();
-    while (it.hasNext()) {
-      Object o = it.next();
-
+    for (final Object o : vals) {
       if (o instanceof EventInfo) {
         EventInfo ei = (EventInfo)o;
         BwEvent ev = ei.getEvent();
@@ -1324,7 +1318,7 @@ public class IcalTranslator implements Logged, Serializable {
         }
 
         if (ei.getNumOverrides() > 0) {
-          for (EventInfo oei: ei.getOverrides()) {
+          for (EventInfo oei : ei.getOverrides()) {
             ev = oei.getEvent();
             addIcalTimezones(cal, ev, added,
                              new EventTimeZonesRegistry(this, ev));
