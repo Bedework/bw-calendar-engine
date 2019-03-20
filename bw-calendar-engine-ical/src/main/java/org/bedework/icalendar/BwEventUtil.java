@@ -1198,30 +1198,25 @@ public class BwEventUtil extends IcalUtil {
                                        final ChangeTable chg,
                                        final BwEvent ev,
                                        final Property prop) throws CalFacadeException {
-    final Parameter param =
+    final Parameter keyName =
             prop.getParameter(XcalTags.xBedeworkLocationKey.getLocalPart());
     final String val = prop.getValue();
     final BwLocation evloc = ev.getLocation();
     final BwLocation loc;
 
-    if (param == null) {
-      final BwString sval = new BwString(null, val);
+    final GetEntityResponse<BwLocation> resp;
 
-      loc = cb.getLocation(sval);
-
-      if (loc == null) {
-        return false;
-      }
+    if (keyName == null) {
+      resp = cb.fetchLocationByCombined(val, true);
     } else {
-      final GetEntityResponse<BwLocation> resp =
-              cb.fetchLocationByKey(param.getValue(), val);
-
-      if (resp.getStatus() != ok) {
-        return false;
-      }
-
-      loc = resp.getEntity();
+      resp = cb.fetchLocationByKey(keyName.getValue(), val);
     }
+
+    if (resp.getStatus() != ok) {
+      return false;
+    }
+
+    loc = resp.getEntity();
 
     ev.setLocation(loc);
 

@@ -61,6 +61,34 @@ public class LocationsImpl
   }
 
   @Override
+  public GetEntityResponse<BwLocation> fetchLocationByCombined(
+          final String val,
+          final boolean persisted) {
+    final GetEntityResponse<BwLocation> resp = new GetEntityResponse<>();
+
+    try {
+      final BwLocation loc =
+              getIndexer(docTypeLocation)
+                      .fetchLocation(val,
+                                     PropertyInfoIndex.LOC_COMBINED_VALUES);
+
+      if (loc == null) {
+        return Response.notOk(resp, Response.Status.notFound, null);
+      }
+
+      if (!persisted) {
+        resp.setEntity(loc);
+      } else {
+        resp.setEntity(getPersistent(loc.getUid()));
+      }
+
+      return Response.ok(resp, null);
+    } catch (CalFacadeException cfe) {
+      return Response.error(resp, cfe);
+    }
+  }
+
+  @Override
   Collection<BwLocation> fetchAllIndexed(final boolean publick,
                                          final String ownerHref)
           throws CalFacadeException {

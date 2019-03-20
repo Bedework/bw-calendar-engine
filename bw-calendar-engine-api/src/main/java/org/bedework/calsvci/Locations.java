@@ -49,5 +49,14 @@ public interface Locations extends EventProperties<BwLocation> {
    */
   GetEntityResponse<BwLocation> fetchLocationByKey(String keyName,
                                                    String keyVal);
+
+  /** Find the location given the combined address values.
+   *
+   * @param val - address, room, city, state, zip
+   * @param persisted - true if we want the db copy
+   * @return Location object
+   */
+  GetEntityResponse<BwLocation> fetchLocationByCombined(String val,
+                                                        boolean persisted);
 }
 

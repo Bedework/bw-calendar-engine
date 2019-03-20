@@ -465,12 +465,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
       return w;
     }
 
-    final BwCalendar home = getCols().getHome(eventsOwner, false);
-    if (home == null) {
-      return w;
-    }
-
-    w.setResourcesHome(home.getPath());
+    w.setResourcesHome(getSvc().getPrincipalInfo().getCalendarHomePath(eventsOwner));
 
     return w;
   }

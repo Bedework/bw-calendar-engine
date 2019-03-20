@@ -332,7 +332,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
 
     return vals.stream()
                .map(stringToKeyFld)
-               .collect(Collectors.<KeyFld> toList());
+               .collect(Collectors.toList());
   }
 
   /**
@@ -772,6 +772,7 @@ public class BwLocation extends BwEventProperty<BwLocation>
    */
   @NoDump
   @JsonIgnore
+  @IcalProperty(pindex = PropertyInfoIndex.LOC_COMBINED_VALUES)
   public String getCombinedValues() {
     if ((value(getAddress()) == null) && (value(getSubaddress()) == null)) {
       return null;

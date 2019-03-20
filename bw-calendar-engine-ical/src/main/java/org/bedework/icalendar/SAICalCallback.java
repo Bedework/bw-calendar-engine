@@ -120,6 +120,12 @@ public class SAICalCallback implements IcalCallback {
   }
 
   @Override
+  public GetEntityResponse<BwLocation> fetchLocationByCombined(
+          final String val, final boolean persisted) {
+    return null;
+  }
+
+  @Override
   public void addLocation(final BwLocation val) throws CalFacadeException {
   }
 

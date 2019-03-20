@@ -447,9 +447,13 @@ public class AccessUtil implements Logged, AccessUtilI {
                                    wcol.getAccess()));
       } else if (wcol.getAccess() != null) {
         aclStr = wcol.getAccess();
-      } else {
+      } else if ("/public".equals(wcol.getPath())) {
         // At root
-        throw new CalFacadeException("Collections must have default access set at root");
+        throw new CalFacadeException("Collections must have default access set at root: " + wcol.getPath());
+      } else {
+        // Missing collection in hierarchy
+        throw new CalFacadeException("Missing collection in hierarchy for " +
+                                             wcol.getPath());
       }
 
       if (aclStr != null) {

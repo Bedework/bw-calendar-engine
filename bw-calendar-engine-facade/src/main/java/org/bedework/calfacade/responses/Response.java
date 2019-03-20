@@ -52,6 +52,9 @@ public class Response implements Serializable {
   private Status status = ok;
   private String message;
 
+  // For internal use to pass exception up.
+  private Throwable exception;
+
   /* Copied from the request */
   private int id;
 
@@ -88,6 +91,22 @@ public class Response implements Serializable {
   public boolean isOk() {
     return status == ok;
   }
+
+  /**
+   *
+   * @param val an exception
+   */
+  public void setException(final Throwable val) {
+    exception = val;
+  }
+
+  /**
+   * @return an exception or null
+   */
+  public Throwable getException() {
+    return exception;
+  }
+
 
   /**
    * @param val an id to identify the request
@@ -131,6 +150,7 @@ public class Response implements Serializable {
 
   public static <T extends Response> T error(final T resp,
                                              final Throwable t) {
+    resp.setException(t);
     return error(resp, t.getLocalizedMessage());
   }
 

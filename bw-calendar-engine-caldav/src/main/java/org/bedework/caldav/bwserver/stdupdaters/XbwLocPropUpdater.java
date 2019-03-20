@@ -23,7 +23,6 @@ import org.bedework.caldav.bwserver.PropertyUpdater;
 import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.BwXproperty.Xpar;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -32,6 +31,8 @@ import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.XcalUtil;
+import org.bedework.util.logging.BwLogger;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.XcalTags;
 import org.bedework.webdav.servlet.shared.WebdavException;
@@ -54,7 +55,7 @@ import static org.bedework.calfacade.responses.Response.Status.ok;
  * @author douglm
  */
 @SuppressWarnings("UnusedDeclaration")
-public class XbwLocPropUpdater implements PropertyUpdater {
+public class XbwLocPropUpdater implements Logged, PropertyUpdater {
   public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
     try {
       final ChangeTableEntry cte = ui.getCte();
@@ -71,7 +72,6 @@ public class XbwLocPropUpdater implements PropertyUpdater {
         xloc = xlocs.get(0);
       }
 
-      final String lang = UpdaterUtil.getLang(ui.getProp());
       final String xval = ((TextPropertyType)ui.getProp()).getText();
       final BaseParameterType keyParam = XcalUtil.findParam(ui.getProp(),
                                                             XcalTags.xBedeworkLocationKey);
@@ -112,8 +112,8 @@ public class XbwLocPropUpdater implements PropertyUpdater {
             replacing one if it exists
           */
 
-        if (!checkLocation(ui, ev, lang, xval, null)) {
-          final BwXproperty xp = makeXprop(lang, xval);
+        if (!checkLocation(ui, ev, xval, keyName)) {
+          final BwXproperty xp = makeXprop(xval);
           ev.addXproperty(xp);
           cte.addAddedValue(xp);
         }
@@ -135,11 +135,10 @@ public class XbwLocPropUpdater implements PropertyUpdater {
         ev.removeXproperty(xloc);
         cte.addRemovedValue(xloc);
 
-        final String nlang = UpdaterUtil.getLang(ui.getUpdprop());
         final String nxval = ((TextPropertyType)ui.getUpdprop()).getText();
 
-        if (!checkLocation(ui, ev, nlang, nxval, keyName)) {
-          final BwXproperty nxp = makeXprop(nlang, nxval);
+        if (!checkLocation(ui, ev, nxval, keyName)) {
+          final BwXproperty nxp = makeXprop(nxval);
           if (keyName != null) {
             nxp.getParameters()
                .add(new Xpar(XcalTags.xBedeworkLocationKey.getLocalPart(),
@@ -157,46 +156,35 @@ public class XbwLocPropUpdater implements PropertyUpdater {
     }
   }
 
-  private BwXproperty makeXprop(final String lang,
-                                final String val) {
-    final String pars;
-    if (lang == null) {
-      pars = null;
-    } else {
-      pars = "lang=" + lang;
-    }
-
+  private BwXproperty makeXprop(final String val) {
     return new BwXproperty(xBedeworkLocation,
-                           pars, val);
+                           null, val);
   }
 
   private boolean checkLocation(final UpdateInfo ui,
                                 final BwEvent ev,
-                                final String lang,
                                 final String val,
                                 final String keyName) throws CalFacadeException {
     final boolean locPresent = ev.getLocation() != null;
 
-    final BwLocation loc;
+    final GetEntityResponse<BwLocation> resp;
 
     if (keyName == null) {
-      final BwString sval = new BwString(lang, val);
-      loc = ui.getIcalCallback().getLocation(sval);
-
-      if (loc == null) {
-        return false;
+      resp = ui.getIcalCallback().fetchLocationByCombined(val, true);
+      if (logger.debug()) {
+        debug("Attempt to fetch location with val \"" + val + "\"");
+        debug("Response was " + resp.getStatus());
       }
     } else {
-      final GetEntityResponse<BwLocation> resp =
-              ui.getIcalCallback().fetchLocationByKey(keyName,
-                                                      val);
-
-      if (resp.getStatus() != ok) {
-        return false;
-      }
-
-      loc = resp.getEntity();
+      resp = ui.getIcalCallback().fetchLocationByKey(keyName,
+                                                     val);
     }
+
+    if (resp.getStatus() != ok) {
+      return false;
+    }
+
+    final BwLocation loc = resp.getEntity();
 
     ev.setLocation(loc);
 
@@ -207,5 +195,20 @@ public class XbwLocPropUpdater implements PropertyUpdater {
     }
 
     return true;
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

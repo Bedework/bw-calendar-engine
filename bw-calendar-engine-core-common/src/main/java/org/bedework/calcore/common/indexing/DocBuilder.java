@@ -242,6 +242,7 @@ public class DocBuilder extends DocBuilderBase {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
+      error("Exception building doc for " + ent);
       throw new CalFacadeException(t);
     }
   }
@@ -271,6 +272,7 @@ public class DocBuilder extends DocBuilderBase {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
+      error("Exception building doc for " + ent);
       throw new CalFacadeException(t);
     }
   }
@@ -290,6 +292,8 @@ public class DocBuilder extends DocBuilderBase {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
+      error("Exception building doc for resource content " +
+                    ent.getHref());
       throw new CalFacadeException(t);
     }
   }
@@ -323,6 +327,7 @@ public class DocBuilder extends DocBuilderBase {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
+      error("Exception building doc for " + ent);
       throw new CalFacadeException(t);
     }
   }
@@ -361,6 +366,7 @@ public class DocBuilder extends DocBuilderBase {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
+      error("Exception building doc for " + ent);
       throw new CalFacadeException(t);
     }
   }
@@ -406,7 +412,8 @@ public class DocBuilder extends DocBuilderBase {
       makeField(PropertyInfoIndex.ZIP_FLD, ent.getZip());
       makeField(PropertyInfoIndex.ALTADDRESS_FLD, ent.getAlternateAddress());
       makeField(PropertyInfoIndex.CODEIDX_FLD, ent.getCode());
-      makeField(PropertyInfoIndex.LOC_KEYS_FLD, ent.getKeys());
+      makeLocKeys(ent.getKeys());
+      makeField(PropertyInfoIndex.LOC_COMBINED_VALUES, ent.getCombinedValues());
 
       makeField(PropertyInfoIndex.URL, ent.getLink());
 
@@ -416,6 +423,7 @@ public class DocBuilder extends DocBuilderBase {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
+      error("Exception building doc for " + ent);
       throw new CalFacadeException(t);
     }
   }
@@ -445,6 +453,7 @@ public class DocBuilder extends DocBuilderBase {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
+      error("Exception building doc for " + ent);
       throw new CalFacadeException(t);
     }
   }
@@ -509,6 +518,7 @@ public class DocBuilder extends DocBuilderBase {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
+      error("Exception building doc for " + col);
       throw new CalFacadeException(t);
     }
   }

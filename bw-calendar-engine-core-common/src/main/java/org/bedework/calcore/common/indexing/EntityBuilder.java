@@ -263,12 +263,13 @@ public class EntityBuilder extends EntityBuilderBase {
     restoreSharedEntity(ent);
 
     ent.setUid(getString(PropertyInfoIndex.UID));
+    ent.setLink(getString(PropertyInfoIndex.URL));
 
+    // All the field values are stored within these 2 fields 
     ent.setAddress(restoreBwString(
             PropertyInfoIndex.ADDRESS, BwString.class));
     ent.setSubaddress(restoreBwString(
             PropertyInfoIndex.SUBADDRESS, BwString.class));
-    ent.setLink(getString(PropertyInfoIndex.URL));
 
     return ent;
   }

@@ -141,7 +141,7 @@ public interface IcalCallback extends Serializable {
    *
    * @param address to find
    * @return Location object or null if not found
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   BwLocation getLocation(BwString address) throws CalFacadeException;
 
@@ -157,11 +157,28 @@ public interface IcalCallback extends Serializable {
 
   /** Find the location given the address.
    *
+   * <p>NOTE: the addition of multi-valued fields to the location object
+   * has led to some possible issues. Setting and accessing the address
+   * field should continue to work for personal clients that treat it as
+   * a single value.
+   *
+   * <p>Public events will not be able to match on the address field.
+   * Use the combined value as a key and use the findLocationByCombined
+   *
    * @param address
    * @return Location object
    * @throws CalFacadeException
    */
   BwLocation findLocation(BwString address) throws CalFacadeException;
+
+  /** Find the location given the combined address values.
+   *
+   * @param val - address, room, city, state, zip
+   * @param persisted - true if we want the db copy
+   * @return Location object
+   */
+  GetEntityResponse<BwLocation> fetchLocationByCombined(String val,
+                                                        boolean persisted);
 
   /** Add the location
    * @param val

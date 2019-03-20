@@ -1815,6 +1815,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     @Override
+    public GetEntityResponse<BwLocation> fetchLocationByCombined(
+            final String val, final boolean persisted) {
+      return getLocationsHandler().fetchLocationByCombined(val, persisted);
+    }
+
+    @Override
     public void addLocation(final BwLocation val) throws CalFacadeException {
       getLocationsHandler().add(val);
     }
