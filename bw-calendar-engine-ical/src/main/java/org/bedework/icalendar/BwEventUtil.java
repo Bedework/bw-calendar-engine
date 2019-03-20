@@ -68,7 +68,6 @@ import net.fortuna.ical4j.model.parameter.AltRep;
 import net.fortuna.ical4j.model.parameter.FbType;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.parameter.XParameter;
-import net.fortuna.ical4j.model.property.AcceptResponse;
 import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.Categories;
@@ -83,8 +82,6 @@ import net.fortuna.ical4j.model.property.Geo;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.PercentComplete;
 import net.fortuna.ical4j.model.property.PollItemId;
-import net.fortuna.ical4j.model.property.PollMode;
-import net.fortuna.ical4j.model.property.PollProperties;
 import net.fortuna.ical4j.model.property.PollWinner;
 import net.fortuna.ical4j.model.property.Priority;
 import net.fortuna.ical4j.model.property.RelatedTo;
@@ -147,7 +144,7 @@ public class BwEventUtil extends IcalUtil {
    * @param diff        True if we should assume we are updating existing events.
    * @param mergeAttendees True if we should only update our own attendee.
    * @return EventInfo  object representing new entry or updated entry
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public static EventInfo toEvent(final IcalCallback cb,
                                   final BwCalendar cal,
@@ -167,7 +164,7 @@ public class BwEventUtil extends IcalUtil {
     }
 
     @SuppressWarnings("unchecked")
-    final Holder<Boolean> hasXparams = new Holder<Boolean>(Boolean.FALSE);
+    final Holder<Boolean> hasXparams = new Holder<>(Boolean.FALSE);
 
     final int methodType = ical.getMethodType();
 
@@ -255,7 +252,7 @@ public class BwEventUtil extends IcalUtil {
 
       EventInfo masterEI = null;
       EventInfo evinfo = null;
-      BwEvent ev = null;
+      BwEvent ev;
 
       /* If we have a recurrence id see if we already have the master (we should
        * get a master + all its overrides).
@@ -476,7 +473,7 @@ public class BwEventUtil extends IcalUtil {
           case ACCEPT_RESPONSE:
             /* ------------------- Accept Response -------------------- */
 
-            String sval = ((AcceptResponse)prop).getValue();
+            String sval = prop.getValue();
             if (chg.changed(pi, ev.getPollAcceptResponse(), sval)) {
               ev.setPollAcceptResponse(sval);
             }
@@ -733,11 +730,8 @@ public class BwEventUtil extends IcalUtil {
 
             fbc.setType(fbtype);
 
-            Iterator perit = perpl.iterator();
-            while (perit.hasNext()) {
-              Period per = (Period)perit.next();
-
-              fbc.addPeriod(per);
+            for (final Object per : perpl) {
+              fbc.addPeriod((Period)per);
             }
 
             ev.addFreeBusyPeriod(fbc);
@@ -845,7 +839,7 @@ public class BwEventUtil extends IcalUtil {
           case POLL_MODE:
             /* ------------------- Poll mode -------------------- */
 
-            sval = ((PollMode)prop).getValue();
+            sval = prop.getValue();
             if (chg.changed(pi, ev.getPollMode(), sval)) {
               ev.setPollMode(sval);
             }
@@ -855,7 +849,7 @@ public class BwEventUtil extends IcalUtil {
           case POLL_PROPERTIES:
             /* ------------------- Poll properties ---------------- */
 
-            sval = ((PollProperties)prop).getValue();
+            sval = prop.getValue();
             if (chg.changed(pi, ev.getPollProperties(), sval)) {
               ev.setPollProperties(sval);
             }
@@ -1136,7 +1130,7 @@ public class BwEventUtil extends IcalUtil {
 
       chg.processChanges(ev, true);
 
-      ev.setRecurring(new Boolean(ev.isRecurringEntity()));
+      ev.setRecurring(ev.isRecurringEntity());
 
       if (logger.debug()) {
         logger.debug(chg.toString());
@@ -1536,14 +1530,13 @@ public class BwEventUtil extends IcalUtil {
     if (evs == null) {
       return null;
     }
-    Iterator it = evs.iterator();
 
-    while (it.hasNext()) {
-      EventInfo ei = (EventInfo)it.next();
+    for (final Object ev1 : evs) {
+      EventInfo ei = (EventInfo)ev1;
       BwEvent ev = ei.getEvent();
 
       if ((ev.getRecurrenceId() == null) &&
-          guid.equals(ev.getUid()) /* &&
+              guid.equals(ev.getUid()) /* &&
           ei.getNewEvent()  */) {
         return ei;
       }
