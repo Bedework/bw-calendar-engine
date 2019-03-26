@@ -151,13 +151,12 @@ public class BwContact extends BwEventProperty<BwContact>
    * ==================================================================== */
 
   @Override
-  public void fixNames(final BasicSystemProperties props,
-                       final BwPrincipal principal) {
+  public void fixNames(final BasicSystemProperties props) {
     if (getHref() != null) {
       return;
     }
 
-    setColPath(props, principal, "contacts", null);
+    setColPath(props, "contacts", null);
 
     setHref(Util.buildPath(false, getColPath(), getUid()));
   }

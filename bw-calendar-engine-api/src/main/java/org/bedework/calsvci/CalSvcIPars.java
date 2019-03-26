@@ -459,6 +459,7 @@ public class CalSvcIPars implements Serializable {
     pars.setClientId(getClientId());
     pars.forRestore = getForRestore();
     pars.indexRebuild = getIndexRebuild();
+    pars.readonly = getReadonly();
 
     return pars;
   }

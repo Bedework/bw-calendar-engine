@@ -18,16 +18,13 @@
 */
 package org.bedework.calfacade;
 
-import org.bedework.access.Ace;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.FixNamesEntity;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Uid;
-import org.bedework.util.misc.Util;
 
 /** Base for those classes that can be a property of an event and are all
  * treated in the same manner, being Category, Location and Sponsor.
@@ -125,43 +122,6 @@ public abstract class BwEventProperty<T> extends
    */
   public void copyTo(final BwEventProperty<?> val) {
     val.setUid(getUid());
-  }
-
-  protected void setColPath(final BasicSystemProperties props,
-                            final BwPrincipal principal,
-                            final String dir,
-                            final String namePart) {
-    if (getPublick()) {
-      setColPath(Util.buildPath(true,
-                            "/public",
-                            "/",
-                            props.getBedeworkResourceDirectory(),
-                            "/",
-                            dir,
-                            "/",
-                            namePart));
-      return;
-    }
-
-    final String homeDir;
-
-    if (principal.getKind() == Ace.whoTypeUser) {
-      homeDir = props.getUserCalendarRoot();
-    } else {
-      homeDir = Util.pathElement(1, principal.getPrincipalRef());
-    }
-
-    setColPath(Util.buildPath(true,
-                              "/",
-                              homeDir,
-                              "/",
-                              principal.getAccount(),
-                              "/",
-                              props.getBedeworkResourceDirectory(),
-                              "/",
-                              dir,
-                              "/",
-                              namePart));
   }
 
   @Override

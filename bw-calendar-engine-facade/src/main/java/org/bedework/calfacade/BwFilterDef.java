@@ -362,24 +362,14 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
    * ==================================================================== */
 
   @Override
-  public void fixNames(final BasicSystemProperties props,
-                       final BwPrincipal principal) {
+  public void fixNames(final BasicSystemProperties props) {
     if (getHref() != null) {
       return;
     }
 
-    setColPath(props, principal, "filters", null);
+    setColPath(props, "filters", null);
 
     setHref(Util.buildPath(false, getColPath(), getName()));
-  }
-
-  protected void setColPath(final BasicSystemProperties props,
-                            final BwPrincipal principal,
-                            final String dir,
-                            final String namePart) {
-    setColPath(principal, props.getUserCalendarRoot(),
-               props.getBedeworkResourceDirectory(),
-               dir, namePart);
   }
 
   /** Add our stuff to the StringBuilder

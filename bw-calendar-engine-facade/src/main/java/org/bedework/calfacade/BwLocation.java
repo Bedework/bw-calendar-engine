@@ -595,13 +595,12 @@ public class BwLocation extends BwEventProperty<BwLocation>
    * ==================================================================== */
 
   @Override
-  public void fixNames(final BasicSystemProperties props,
-                       final BwPrincipal principal) {
+  public void fixNames(final BasicSystemProperties props) {
     if (getHref() != null) {
       return;
     }
 
-    setColPath(props, principal, "locations", null);
+    setColPath(props, "locations", null);
 
     setHref(Util.buildPath(false, getColPath(), getUid()));
   }

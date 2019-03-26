@@ -91,7 +91,7 @@ public class ESQueryFilter extends ESQueryFilterBase
         implements CalintfDefs, Logged {
   private final boolean publick;
   private final int currentMode;
-  private final BwPrincipal principal;
+  private final String ownerHref;
   private final boolean superUser;
 
   private RecurringRetrievalMode recurRetrieval;
@@ -143,18 +143,18 @@ public class ESQueryFilter extends ESQueryFilterBase
    *
    * @param publick true for a public indexer
    * @param currentMode - guest, user,publicAdmin
-   * @param principal - only used to add a filter for non-public
+   * @param ownerHref - only used to add a filter for non-public
    * @param superUser - true if the principal is a superuser.
    * @param recurRetrieval  - value modifies search
    */
   public ESQueryFilter(final boolean publick,
                        final int currentMode,
-                       final BwPrincipal principal,
+                       final String ownerHref,
                        final boolean superUser,
                        final RecurringRetrievalMode recurRetrieval) {
     this.publick = publick;
     this.currentMode = currentMode;
-    this.principal = principal;
+    this.ownerHref = ownerHref;
     this.superUser = superUser;
     this.recurRetrieval = recurRetrieval;
     if (recurRetrieval == null) {
@@ -885,7 +885,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     }
 
     return and(filter, FilterBuilders.termFilter(ownerJname,
-                                                 principal.getPrincipalRef()),
+                                                 ownerHref),
                null);
   }
 

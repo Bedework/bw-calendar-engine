@@ -21,6 +21,7 @@ package org.bedework.calfacade.base;
 import org.bedework.access.Ace;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
@@ -71,16 +72,14 @@ public abstract class BwShareableContainedDbentity<T> extends BwShareableDbentit
    *                   Convenience methods
    * ==================================================================== */
 
-  protected void setColPath(final BwPrincipal principal,
-                            final String userRoot,
-                            final String colPathElement,
+  protected void setColPath(final BasicSystemProperties props,
                             final String dir,
                             final String namePart) {
     if (getPublick()) {
       setColPath(Util.buildPath(true,
                                 "/public",
                                 "/",
-                                colPathElement,
+                                props.getBedeworkResourceDirectory(),
                                 "/",
                                 dir,
                                 "/",
@@ -89,9 +88,21 @@ public abstract class BwShareableContainedDbentity<T> extends BwShareableDbentit
     }
 
     final String homeDir;
+    final BwPrincipal principal;
+
+    try {
+      principal = BwPrincipal.makePrincipal(getOwnerHref());
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+
+    if (principal == null) {
+      throw new RuntimeException("Cannot make principalfrom " +
+                                         getOwnerHref());
+    }
 
     if (principal.getKind() == Ace.whoTypeUser) {
-      homeDir = userRoot;
+      homeDir = props.getUserCalendarRoot();
     } else {
       homeDir = Util.pathElement(1, principal.getPrincipalRef());
     }
@@ -102,7 +113,7 @@ public abstract class BwShareableContainedDbentity<T> extends BwShareableDbentit
                               "/",
                               principal.getAccount(),
                               "/",
-                              colPathElement,
+                              props.getBedeworkResourceDirectory(),
                               "/",
                               dir,
                               "/",

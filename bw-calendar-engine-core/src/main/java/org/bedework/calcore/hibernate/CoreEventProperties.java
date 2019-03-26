@@ -128,7 +128,7 @@ public class CoreEventProperties <T extends BwEventProperty>
       return null;
     }
 
-    ent.fixNames(getSyspars(), getPrincipal());
+    ent.fixNames(getSyspars());
 
     /*  XXX This is wrong but it's always been like this.
         For scheduling we end up with other users categories embedded

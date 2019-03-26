@@ -1252,7 +1252,8 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public BwFilterDef getFilterDef(final String name,
                                   final BwPrincipal owner) throws CalFacadeException {
-    return getIndexer(owner, BwIndexer.docTypeFilter).fetchFilter(
+    return getIndexer(owner.getPrincipalRef(),
+                      BwIndexer.docTypeFilter).fetchFilter(
             makeHref(owner,
                      getSyspars().getUserCalendarRoot(),
                      getSyspars().getBedeworkResourceDirectory(),
@@ -1261,7 +1262,8 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Collection<BwFilterDef> getAllFilterDefs(final BwPrincipal owner) throws CalFacadeException {
-    return getIndexer(owner, BwIndexer.docTypeFilter).fetchFilters(null, -1);
+    return getIndexer(owner.getPrincipalRef(),
+                      BwIndexer.docTypeFilter).fetchFilters(null, -1);
   }
 
   @Override

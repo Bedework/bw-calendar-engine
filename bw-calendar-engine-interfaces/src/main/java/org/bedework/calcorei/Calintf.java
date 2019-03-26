@@ -20,7 +20,6 @@ package org.bedework.calcorei;
 
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
-import org.bedework.access.Acl;
 import org.bedework.access.CurrentAccess;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
@@ -340,21 +339,13 @@ public interface Calintf
    */
   BwIndexer getIndexer(boolean publick, String docType);
 
-  /** Get a non-public indexer for a principal
-   *
-   * @param principal
-   * @param docType type of entity
-   * @return the indexer
-   */
-  BwIndexer getIndexer(BwPrincipal principal, String docType);
-
   /** Method for reindexing.
    *
-   * @param principal
+   * @param principalHref if we're not public
    * @param docType type of entity
    * @return the indexer
    */
-  BwIndexer getIndexerForReindex(BwPrincipal principal,
+  BwIndexer getIndexerForReindex(String principalHref,
                                  String docType,
                                  String indexName);
 

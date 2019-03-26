@@ -206,7 +206,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   // private Object batchLock = new Object();
 
   private final boolean publick;
-  private BwPrincipal principal;
+  private String principalHref;
   private final boolean superUser;
 
   private final AccessChecker accessCheck;
@@ -394,7 +394,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
    * @param docType type of entity
    * @param publick     - if false we add an owner term to the
    *                    searches
-   * @param principal   - who is doing the searching - only for
+   * @param principalHref   - who is doing the searching - only for
    *                    non-public
    * @param superUser   - true if the principal is a superuser.
    * @param currentMode - guest, user,publicAdmin
@@ -404,14 +404,14 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   public BwIndexEsImpl(final Configurations configs,
                        final String docType,
                        final boolean publick,
-                       final BwPrincipal principal,
+                       final String principalHref,
                        final boolean superUser,
                        final int currentMode,
                        final AccessChecker accessCheck,
                        final BwIndexFetcher indexFetcher,
                        final String indexName) {
     this.publick = publick;
-    this.principal = principal;
+    this.principalHref = principalHref;
     this.superUser = superUser;
     this.currentMode = currentMode;
     this.accessCheck = new TimedAccessChecker(accessCheck);
@@ -420,7 +420,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     params = new BwIndexerParams(configs,
                                  publick,
-                                 principal,
+                                 principalHref,
                                  superUser,
                                  currentMode,
                                  accessCheck);
@@ -735,11 +735,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         if (entity instanceof BwShareableDbentity) {
           final BwShareableDbentity ent = (BwShareableDbentity)entity;
 
-          try {
-            principal = BwPrincipal.makePrincipal(ent.getOwnerHref());
-          } catch (final CalFacadeException cfe) {
-            return errorReturn(resp, cfe);
-          }
+          principalHref = ent.getOwnerHref();
         }
 
         if (entity instanceof EventInfo) {
@@ -3784,7 +3780,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
    */
   public ESQueryFilter getFilters(final RecurringRetrievalMode recurRetrieval) {
     return new ESQueryFilter(publick,
-                             currentMode, principal, superUser,
+                             currentMode,
+                             principalHref,
+                             superUser,
                              recurRetrieval);
   }
 
@@ -3998,7 +3996,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
   private DocBuilder getDocBuilder() throws CalFacadeException {
     try {
-      return new DocBuilder(principal, basicSysprops);
+      return new DocBuilder(basicSysprops);
     } catch (final IndexException ie) {
       throw new CalFacadeException(ie);
     }

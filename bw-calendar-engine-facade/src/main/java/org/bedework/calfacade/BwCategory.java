@@ -145,8 +145,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
    * ==================================================================== */
 
   @Override
-  public void fixNames(final BasicSystemProperties props,
-                       final BwPrincipal principal) {
+  public void fixNames(final BasicSystemProperties props) {
     if (getHref() != null) {
       return;
     }
@@ -165,7 +164,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
     }
 
     setName(name);
-    setColPath(props, principal, "categories", extra);
+    setColPath(props, "categories", extra);
 
     setHref(Util.buildPath(false, getColPath(), getName()));
   }

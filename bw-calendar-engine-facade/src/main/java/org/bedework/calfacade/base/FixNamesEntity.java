@@ -18,7 +18,6 @@
 */
 package org.bedework.calfacade.base;
 
-import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 
 /** Interface which defines an implementing class as needing names fixed..
@@ -36,8 +35,6 @@ public interface FixNamesEntity {
   /**
    *
    * @param props - needed for path names
-   * @param principal  - needed to locate home
    */
-  void fixNames(BasicSystemProperties props,
-                BwPrincipal principal);
+  void fixNames(BasicSystemProperties props);
 }

@@ -3,7 +3,6 @@
 */
 package org.bedework.calfacade.indexing;
 
-import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.util.AccessChecker;
 
@@ -14,20 +13,20 @@ import org.bedework.calfacade.util.AccessChecker;
 public class BwIndexerParams {
   public final Configurations configs;
   public final boolean publick;
-  public final BwPrincipal principal;
+  public final String principalHref;
   public final boolean superUser;
   public final int currentMode;
   public final AccessChecker accessCheck;
 
   public BwIndexerParams(final Configurations configs,
                          final boolean publick,
-                         final BwPrincipal principal,
+                         final String principalHref,
                          final boolean superUser,
                          final int currentMode,
                          final AccessChecker accessCheck) {
     this.configs = configs;
     this.publick = publick;
-    this.principal = principal;
+    this.principalHref = principalHref;
     this.superUser = superUser;
     this.currentMode = currentMode;
     this.accessCheck = accessCheck;

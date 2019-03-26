@@ -82,8 +82,6 @@ import java.util.TreeSet;
  *
  */
 public class DocBuilder extends DocBuilderBase {
-  private final BwPrincipal principal;
-
   // Only used for fixNames calls
   private final BasicSystemProperties basicSysprops;
 
@@ -118,14 +116,11 @@ public class DocBuilder extends DocBuilderBase {
 
   /**
    *
-   * @param principal - only used for building fake non-public entity paths
    * @param basicSysprops -  Only used for fixNames calls
    */
-  DocBuilder(final BwPrincipal principal,
-             final BasicSystemProperties basicSysprops)
+  DocBuilder(final BasicSystemProperties basicSysprops)
           throws CalFacadeException, IndexException {
     super();
-    this.principal = principal;
     this.basicSysprops = basicSysprops;
   }
 
@@ -306,7 +301,7 @@ public class DocBuilder extends DocBuilderBase {
          for these and try to create a real path based on them.
        */
 
-      ent.fixNames(basicSysprops, principal);
+      ent.fixNames(basicSysprops);
 
       startObject();
 
@@ -340,7 +335,7 @@ public class DocBuilder extends DocBuilderBase {
          for these and try to create a real path based on them.
        */
 
-      ent.fixNames(basicSysprops, principal);
+      ent.fixNames(basicSysprops);
 
       startObject();
 
@@ -379,7 +374,7 @@ public class DocBuilder extends DocBuilderBase {
          for these and try to create a real path based on them.
        */
 
-      ent.fixNames(basicSysprops, principal);
+      ent.fixNames(basicSysprops);
 
       startObject();
 
@@ -436,7 +431,7 @@ public class DocBuilder extends DocBuilderBase {
          for these and try to create a real path based on them.
        */
 
-      ent.fixNames(basicSysprops, principal);
+      ent.fixNames(basicSysprops);
 
       startObject();
 
@@ -615,7 +610,7 @@ public class DocBuilder extends DocBuilderBase {
 
       final BwLocation loc = ev.getLocation();
       if (loc != null) {
-        loc.fixNames(basicSysprops, principal);
+        loc.fixNames(basicSysprops);
 
         makeField(PropertyInfoIndex.LOCATION_HREF, loc.getHref());
 
@@ -763,7 +758,7 @@ public class DocBuilder extends DocBuilderBase {
     if (val instanceof FixNamesEntity) {
       final FixNamesEntity ent = (FixNamesEntity)val;
 
-      ent.fixNames(basicSysprops, principal);
+      ent.fixNames(basicSysprops);
     }
 
     if (val.getHref() == null) {
@@ -955,7 +950,7 @@ public class DocBuilder extends DocBuilderBase {
       for (final BwCategory cat: cats) {
         startObject();
 
-        cat.fixNames(basicSysprops, principal);
+        cat.fixNames(basicSysprops);
 
         makeField(PropertyInfoIndex.UID, cat.getUid());
         makeField(PropertyInfoIndex.HREF, cat.getHref());
@@ -983,7 +978,7 @@ public class DocBuilder extends DocBuilderBase {
       startArray(getJname(PropertyInfoIndex.CONTACT));
 
       for (final BwContact c: val) {
-        c.fixNames(basicSysprops, principal);
+        c.fixNames(basicSysprops);
 
         startObject();
         makeField(PropertyInfoIndex.HREF, c.getHref());

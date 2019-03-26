@@ -1136,7 +1136,8 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public void saveOrUpdate(final BwPrincipal val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
-    getIndexer(val, docTypePrincipal).indexEntity(val);
+    getIndexer(val.getPrincipalRef(),
+               docTypePrincipal).indexEntity(val);
   }
 
   @Override

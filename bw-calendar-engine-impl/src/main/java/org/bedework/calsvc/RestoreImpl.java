@@ -324,6 +324,7 @@ class RestoreImpl extends CalSvcDb implements RestoreIntf {
       final BwResourceContent rc = o.getContent();
 
       rc.markUnsaved();
+      rc.setValue(getSvc().getBlob(rc.getByteValue()));
       getCal().saveOrUpdate(rc);
     } finally {
       endTransaction();

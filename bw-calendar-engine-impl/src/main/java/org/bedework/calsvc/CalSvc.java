@@ -854,15 +854,15 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   public BwIndexer getIndexer(final String principal,
                               final String docType) {
     try {
-      final BwPrincipal pr;
+      final String prHref;
 
       if (principal == null) {
-        pr = getPrincipal();
+        prHref = getPrincipal().getPrincipalRef();
       } else {
-        pr = getPrincipal(principal);
+        prHref = principal;
       }
 
-      return getCal().getIndexer(pr, docType);
+      return getCal().getIndexer(prHref, docType);
     } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }
@@ -873,15 +873,15 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                                         final String docType,
                                         final String indexName) {
     try {
-      final BwPrincipal pr;
+      final String prHref;
 
       if (principal == null) {
-        pr = getPrincipal();
+        prHref = getPrincipal().getPrincipalRef();
       } else {
-        pr = getPrincipal(principal);
+        prHref = principal;
       }
 
-      return getCal().getIndexerForReindex(pr, docType, indexName);
+      return getCal().getIndexerForReindex(prHref, docType, indexName);
     } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }

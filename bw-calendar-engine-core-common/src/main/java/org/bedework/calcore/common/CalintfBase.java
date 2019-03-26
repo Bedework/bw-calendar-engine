@@ -332,7 +332,7 @@ public abstract class CalintfBase implements Logged, Calintf {
       return getPublicIndexer(docType);
     }
 
-    return getIndexer(getPrincipal(), docType);
+    return getIndexer(getPrincipalRef(), docType);
   }
 
   @Override
@@ -349,7 +349,7 @@ public abstract class CalintfBase implements Logged, Calintf {
       return getPublicIndexer(docType);
     }
 
-    return getIndexer(getPrincipal(), docType);
+    return getIndexer(getPrincipalRef(), docType);
   }
 
   private static Map<Class, String> toDocType = new HashMap<>();
@@ -392,24 +392,34 @@ public abstract class CalintfBase implements Logged, Calintf {
       return getPublicIndexer(docType);
     }
 
-    return getIndexer(getPrincipal(), docType);
+    return getIndexer(getPrincipalRef(), docType);
   }
 
   public BwIndexer getIndexer(final String principalHref,
                               final String docType) {
     if ((currentMode == CalintfDefs.publicAdminMode) ||
             (currentMode == CalintfDefs.publicUserMode) ||
-            !authenticated) {
+            !authenticated ||
+            BwPrincipal.publicUserHref.equals(principalHref)) {
       return getPublicIndexer(docType);
     }
 
-    try {
-      return getIndexer(getPrincipal(principalHref),
-                        docType);
-    } catch (final CalFacadeException cfe) {
-      error(cfe);
-      throw new RuntimeException(cfe);
+    BwIndexer idx = principalIndexers.get(docType + "\t" +
+                                                  principalHref);
+    if (idx != null) {
+      return idx;
     }
+
+    idx = BwIndexerFactory.getIndexer(configs,
+                                      docType,
+                                      principalHref,
+                                      getSuperUser(),
+                                      currentMode,
+                                      ac,
+                                      indexFetcher);
+    principalIndexers.put(docType + "\t" +
+                                  principalHref, idx);
+    return idx;
   }
 
   private class BwIndexFetcherImpl implements BwIndexFetcher {
@@ -486,7 +496,7 @@ public abstract class CalintfBase implements Logged, Calintf {
       return getPublicIndexer(docType);
     }
 
-    return getIndexer(params.principal, docType);
+    return getIndexer(params.principalHref, docType);
   }
 
   @Override
@@ -511,41 +521,16 @@ public abstract class CalintfBase implements Logged, Calintf {
       return getPublicIndexer(docType);
     }
 
-    return getIndexer(getPrincipal(), docType);
+    return getIndexer(getPrincipal().getPrincipalRef(), docType);
   }
 
   @Override
-  public BwIndexer getIndexer(final BwPrincipal principal,
-                              final String docType) {
-    if (BwPrincipal.publicUserHref.equals(principal.getPrincipalRef())) {
-      return getPublicIndexer(docType);
-    }
-
-    BwIndexer idx = principalIndexers.get(docType + "\t" +
-                                                  principal.getPrincipalRef());
-    if (idx != null) {
-      return idx;
-    }
-
-    idx = BwIndexerFactory.getIndexer(configs,
-                                      docType,
-                                      principal,
-                                      getSuperUser(),
-                                      currentMode,
-                                      ac,
-                                      indexFetcher);
-    principalIndexers.put(docType + "\t" +
-                                  principal.getPrincipalRef(), idx);
-    return idx;
-  }
-
-  @Override
-  public BwIndexer getIndexerForReindex(final BwPrincipal principal,
+  public BwIndexer getIndexerForReindex(final String principalHref,
                                         final String docType,
                                         final String indexName) {
     return BwIndexerFactory.getIndexerForReindex(configs,
                                                  docType,
-                                                 principal,
+                                                 principalHref,
                                                  currentMode,
                                                  ac,
                                                  indexFetcher,

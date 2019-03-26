@@ -18,7 +18,6 @@
 */
 package org.bedework.calcore.common.indexing;
 
-import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.indexing.BwIndexFetcher;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -63,7 +62,7 @@ public class BwIndexerFactory {
    *
    * @param configs to configure indexer
    * @param docType type of entity
-   * @param principal - who we are searching for
+   * @param principalHref - of current user
    * @param superUser - true if the principal is a superuser.
    * @param currentMode - guest, user,publicAdmin
    * @param accessCheck  - required - lets us check access
@@ -71,7 +70,7 @@ public class BwIndexerFactory {
    */
   public static BwIndexer getIndexer(final Configurations configs,
                                      final String docType,
-                                     final BwPrincipal principal,
+                                     final String principalHref,
                                      final boolean superUser,
                                      final int currentMode,
                                      final AccessChecker accessCheck,
@@ -79,7 +78,7 @@ public class BwIndexerFactory {
     return new BwIndexEsImpl(configs,
                              docType,
                              false,
-                             principal,
+                             principalHref,
                              superUser,
                              currentMode,
                              accessCheck,
@@ -93,7 +92,7 @@ public class BwIndexerFactory {
    *
    * @param configs to configure indexer
    * @param docType type of entity
-   * @param principal - who we are searching for
+   * @param principalHref - of current user
    * @param currentMode - guest, user,publicAdmin
    * @param accessCheck  - required - lets us check access
    * @param indexRoot
@@ -101,7 +100,7 @@ public class BwIndexerFactory {
    */
   public static BwIndexer getIndexerForReindex(final Configurations configs,
                                                final String docType,
-                                               final BwPrincipal principal,
+                                               final String principalHref,
                                                final int currentMode,
                                                final AccessChecker accessCheck,
                                                final BwIndexFetcher indexFetcher,
@@ -109,7 +108,7 @@ public class BwIndexerFactory {
     return new BwIndexEsImpl(configs,
                              docType,
                              true,
-                             principal,
+                             principalHref,
                              false,
                              currentMode,
                              accessCheck,
