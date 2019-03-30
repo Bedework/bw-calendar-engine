@@ -196,9 +196,6 @@ public class BwContact extends BwEventProperty<BwContact>
    *                   EventProperty methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwEventProperty#getFinderKeyValue()
-   */
   @Override
   @NoDump
   public BwString getFinderKeyValue() {
