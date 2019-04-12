@@ -46,7 +46,7 @@ public class Response implements Serializable {
 
     noAccess,
 
-    failed;
+    failed
   }
   
   private Status status = ok;
