@@ -143,6 +143,14 @@ public class Response implements Serializable {
     return resp;
   }
 
+  public static <T extends Response> T fromResponse(final T resp,
+                                                    final Response from) {
+    resp.setStatus(from.getStatus());
+    resp.setMessage(from.getMessage());
+
+    return resp;
+  }
+
   public static <T extends Response> T error(final T resp, 
                                              final String msg) {
     return notOk(resp, failed, msg);
