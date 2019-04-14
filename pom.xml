@@ -48,7 +48,7 @@
     <jackson.version>2.9.6</jackson.version>
     <javax.mail.version>1.5.4</javax.mail.version>
 		<junit.version>4.8.2</junit.version>
-		<servlet-api.version>2.4</servlet-api.version>
+		<servlet-api.version>4.0.0</servlet-api.version>
 		<apache-jdkim-library.version>0.4</apache-jdkim-library.version>
 	</properties>
 
@@ -318,7 +318,7 @@
 
       <dependency>
 				<groupId>javax.servlet</groupId>
-				<artifactId>servlet-api</artifactId>
+				<artifactId>javax.servlet-api</artifactId>
 				<version>${servlet-api.version}</version>
 			</dependency>
       

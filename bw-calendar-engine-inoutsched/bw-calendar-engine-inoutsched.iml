@@ -59,7 +59,7 @@
     <orderEntry type="library" name="Maven: com.sun.mail:javax.mail:1.5.4" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
     <orderEntry type="library" name="Maven: javax.mail:javax.mail-api:1.5.4" level="project" />
-    <orderEntry type="library" name="Maven: javax.servlet:servlet-api:2.4" level="project" />
+    <orderEntry type="library" name="Maven: javax.servlet:javax.servlet-api:4.0.0" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-misc:4.0.23" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.1" level="project" />
