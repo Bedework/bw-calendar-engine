@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.bedework.caleng</groupId>
 	<artifactId>bw-calendar-engine</artifactId>
-	<version>3.12.6-SNAPSHOT</version>
+	<version>3.12.6</version>
 	<packaging>pom</packaging>
 	<name>bw-calendar-engine</name>
   <description>Main calendar engine code for bedework</description>
@@ -68,7 +68,7 @@
 		<connection>scm:git:git@github.com:Bedework/bw-calendar-engine.git</connection>
 		<developerConnection>scm:git:git@github.com:Bedework/bw-calendar-engine.git</developerConnection>
 		<url>https://github.com/Bedework/bw-calendar-engine</url>
-	  <tag>HEAD</tag>
+	  <tag>bw-calendar-engine-3.12.6</tag>
   </scm>
 
 	<issueManagement>
