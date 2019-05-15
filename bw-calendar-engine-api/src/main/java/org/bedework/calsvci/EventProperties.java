@@ -83,7 +83,7 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    */
   T getByUid(String uid) throws CalFacadeException;
 
-  /** Return a non-persistent version of the entity given the uid - if the user has access
+  /** Return a non-persistent version of the entity given the href - if the user has access
    *
    * <p>This entity will not be a live version - it is a detached copy which may
    * be out of date. The cache entries will be refreshed fairly frequently.
