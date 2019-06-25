@@ -123,7 +123,11 @@ public class ProcessDelete extends CmdUtilHelper {
 
       return true;
     } catch (final CalFacadeAccessException cae) {
-      pstate.addError("No access to collection " + cal.getPath());
+      if (cal != null) {
+        pstate.addError("No access to collection " + cal.getPath());
+      } else {
+        pstate.addError("No access to collection");
+      }
       return false;
     } finally {
       close();
