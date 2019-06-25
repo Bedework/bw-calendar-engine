@@ -1810,6 +1810,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
 
     for (BwXproperty prop: props) {
+      if (prop == null) {
+        continue;
+      }
+
       if (name.equals(prop.getName())) {
         return prop;
       }
@@ -4062,14 +4066,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
 
     public String toString() {
-      final StringBuilder sb = new StringBuilder(getGroupHref().length() + 2);
-
-      return sb.append(getStatus()).
-              append(':').
-                       append(getGroupHref()).
-                       append(':').
-                       append(getSuggestedByHref()).
-              toString();
+      return String.valueOf(getStatus()) +
+              ':' +
+              getGroupHref() +
+              ':' +
+              getSuggestedByHref();
     }
   }
 
