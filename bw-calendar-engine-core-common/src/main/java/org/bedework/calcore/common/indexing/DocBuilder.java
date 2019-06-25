@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwEvent.SuggestedTo;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwGeo;
@@ -110,8 +111,18 @@ public class DocBuilder extends DocBuilderBase {
     interestingXprops.put(BwXproperty.bedeworkEventRegWaitListLimit,
                           getJname(PropertyInfoIndex.EVENTREG_WAIT_LIST_LIMIT));
 
-    interestingXprops.put(BwXproperty.bedeworkSuggestedTo,
-                          getJname(PropertyInfoIndex.SUGGESTED_TO));
+    /* The suggestedTo field that gets built is losing the suggested by
+       value. It's not clear that the suggested to value is used but we really
+       need to build a structure that accurately reflects this property.
+
+       Take it out of here and build the (broken) suggestedTo but also
+       output the x-prop to preserve it.
+
+       This has been going on for some time and may have left us with some
+       issues - e.g. events not shoing up in the suggested queue.
+     */
+    //interestingXprops.put(BwXproperty.bedeworkSuggestedTo,
+    //                      getJname(PropertyInfoIndex.SUGGESTED_TO));
   }
 
   /**
@@ -813,21 +824,6 @@ public class DocBuilder extends DocBuilderBase {
         startArray(interestingXprops.get(nm));
 
         for (final BwXproperty xp: props) {
-          if (xp.getName().equals(BwXproperty.bedeworkSuggestedTo)) {
-            final String val = xp.getValue();
-
-            // Find the second ":" delimiter
-
-            final int pos = val.indexOf(":", 2);
-
-            if (pos < 0) {
-              // Bad value
-              continue;
-            }
-            value(val.substring(0, pos));
-            continue;
-          }
-
           if (xp.getName().equals(BwXproperty.bedeworkTag)) {
             final String val = xp.getValue();
 
@@ -863,11 +859,36 @@ public class DocBuilder extends DocBuilderBase {
         endArray();
       }
 
+      if (ent instanceof BwEvent) {
+        final List<SuggestedTo> suggs = ((BwEvent)ent).getSuggested();
+
+        if (!Util.isEmpty(suggs)) {
+          startArray(interestingXprops.get(getJname(
+                  PropertyInfoIndex.SUGGESTED_TO)));
+
+          for (final SuggestedTo sugg: suggs) {
+            value(String.valueOf(sugg.getStatus()) +
+                          ':' +
+                          sugg.getGroupHref());
+          }
+
+          endArray();
+        }
+      }
+
       /* Now ones we don't know or care about */
+
+      if (Util.isEmpty(ent.getXproperties())) {
+        return;
+      }
 
       startArray(getJname(PropertyInfoIndex.XPROP));
 
       for (final BwXproperty xp: ent.getXproperties()) {
+        if (xp == null) {
+          continue;
+        }
+
         final String nm = interestingXprops.get(xp.getName());
 
         if (nm != null) {

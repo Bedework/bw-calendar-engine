@@ -1001,7 +1001,11 @@ public class EntityBuilder extends EntityBuilderBase {
         final BwView view = new BwView();
 
         view.setName(getString(PropertyInfoIndex.NAME));
-        view.setCollectionPaths(new ArrayList<>(getStringSet(PropertyInfoIndex.HREF)));
+        final Set<String> hrefs = getStringSet(PropertyInfoIndex.HREF);
+
+        if (!Util.isEmpty(hrefs)) {
+          view.setCollectionPaths(new ArrayList<>(hrefs));
+        }
 
         views.add(view);
       } catch (final IndexException ie) {
