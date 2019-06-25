@@ -1675,6 +1675,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
 
     for (final BwXproperty x: xs) {
+      if (x == null) {
+        continue;
+      }
+
       if (x.getName().equals(val)) {
         res.add(x);
       }
@@ -1699,6 +1703,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
 
     for (BwXproperty x: xs) {
+      if (x == null) {
+        continue;
+      }
+
       if (x.getName().equals(BwXproperty.bedeworkIcalProp)) {
         List<Xpar> xpars = x.getParameters();
 
@@ -1771,6 +1779,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     ArrayList<BwXproperty> xs = new ArrayList<BwXproperty>();
 
     for (BwXproperty x: getXproperties()) {
+      if (x == null) {
+        continue;
+      }
+
       xs.add((BwXproperty)x.clone());
     }
 
