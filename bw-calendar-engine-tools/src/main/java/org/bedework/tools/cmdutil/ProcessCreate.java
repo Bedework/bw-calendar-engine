@@ -404,6 +404,7 @@ public class ProcessCreate extends CmdUtilHelper {
           if (cat == null) {
             cat = BwCategory.makeCategory();
 
+            cat.setPublick(true);
             cat.setWordVal(catWd(catStr));
             //cat.setOwner(svci.getUser());
 
