@@ -18,6 +18,7 @@
 */
 package org.bedework.tools.cmdutil;
 
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 
 import java.util.ArrayList;
@@ -44,6 +45,10 @@ public class ProcessList extends CmdUtilHelper {
       return listCategories();
     }
 
+    if ("collections".equals(wd)) {
+      return listCollections();
+    }
+
     return false;
   }
 
@@ -54,14 +59,14 @@ public class ProcessList extends CmdUtilHelper {
 
   @Override
   String description() {
-    return "list categories";
+    return "list categories | collections";
   }
 
   private boolean listCategories() throws Throwable {
     try {
       info("Categories:");
 
-      Collection<String> vals = new ArrayList<String>();
+      Collection<String> vals = new ArrayList<>();
 
       while (!cmdEnd()) {
         String catVal = wordOrQuotedVal();
@@ -107,5 +112,57 @@ public class ProcessList extends CmdUtilHelper {
                cat.getOwnerHref());
 
     info(sb.toString());
+  }
+
+  private boolean listCollections() throws Throwable {
+    try {
+      info("Collections:");
+
+      open();
+
+      final BwCalendar home =
+              getSvci().getCalendarsHandler().getHome();
+
+      if (home == null) {
+        error("No home");
+        return false;
+      }
+
+      listCollections(home, 0);
+    } finally {
+      close();
+    }
+
+    return true;
+  }
+
+  private void listCollections(final BwCalendar col,
+                                  final int depth) throws Throwable {
+      listCol(col, depth);
+
+      if (col.getCalType() == BwCalendar.calTypeAlias) {
+        return;
+      }
+
+      if (!col.getCollectionInfo().childrenAllowed) {
+        return;
+      }
+
+      final Collection<BwCalendar> children =
+              getSvci().getCalendarsHandler().getChildren(col);
+      for (BwCalendar ch: children) {
+        listCollections(ch, depth + 1);
+      }
+  }
+
+  private void listCol(final BwCalendar col,
+                       final int depth) throws Throwable {
+    final String s = col.toString();
+
+    for (final String spl: s.split("\n")) {
+      info(new String(new char[depth * 3]).replace("\0", " ") +
+                   spl);
+    }
+
   }
 }
