@@ -297,9 +297,13 @@ public abstract class CmdUtilHelper implements Logged {
   }
   
   protected String catWd(final String val) {
+    if (val.startsWith("/public/.bedework/categories/")) {
+      return val.substring("/public/.bedework/categories/".length());
+    }
+
     if (val.startsWith("/")) {
-      final int pos = val.lastIndexOf("/");
-      return val.substring(pos + 1);
+      final int pos = val.lastIndexOf("categories/");
+      return val.substring(pos + "categories/".length());
     }
 
     return val;
