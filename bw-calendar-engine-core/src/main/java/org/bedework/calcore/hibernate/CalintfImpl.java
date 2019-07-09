@@ -81,11 +81,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePreferences;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeResource;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeResourceContent;
-import static org.bedework.calfacade.indexing.BwIndexer.docTypeUpdateTracker;
 
 /** Implementation of CalIntf which uses hibernate as its persistance engine.
  *
@@ -407,7 +407,7 @@ public class CalintfImpl extends CalintfROImpl {
       }
 
       if (!indexRebuild) {
-        getIndexer(docTypeUpdateTracker).markTransaction();
+        getIndexer(docTypeEvent).markTransaction();
       }
     } catch (final CalFacadeException cfe) {
       if (sess != null) {

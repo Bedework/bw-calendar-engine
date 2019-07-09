@@ -18,6 +18,9 @@
 */
 package org.bedework.calcore.common.indexing;
 
+import org.bedework.calcore.common.indexing.TermOrTermsQuery.AndQB;
+import org.bedework.calcore.common.indexing.TermOrTermsQuery.NotQB;
+import org.bedework.calcore.common.indexing.TermOrTermsQuery.OrQB;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.caldav.util.TimeRange;
 import org.bedework.caldav.util.filter.AndFilter;
@@ -41,34 +44,24 @@ import org.bedework.calfacade.filter.BwHrefFilter;
 import org.bedework.calfacade.filter.BwViewFilter;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
-import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.elasticsearch.ESQueryFilterBase;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
-import org.elasticsearch.index.query.AndFilterBuilder;
-import org.elasticsearch.index.query.BoolFilterBuilder;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.FilteredQueryBuilder;
-import org.elasticsearch.index.query.MatchAllFilterBuilder;
+import org.elasticsearch.index.query.MatchAllQueryBuilder;
+import org.elasticsearch.index.query.MatchNoneQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
-import org.elasticsearch.index.query.NestedFilterBuilder;
-import org.elasticsearch.index.query.NotFilterBuilder;
-import org.elasticsearch.index.query.OrFilterBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryFilterBuilder;
-import org.elasticsearch.index.query.RangeFilterBuilder;
-import org.elasticsearch.index.query.TermFilterBuilder;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
-import org.elasticsearch.index.query.TermsFilterBuilder;
-import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
-import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -78,9 +71,10 @@ import java.util.Set;
 import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.includeDeleted;
 import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.onlyDeleted;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
-import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
-import static org.bedework.calfacade.indexing.BwIndexer.docTypeResource;
 import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 /** Build filters for ES searching
  *
@@ -93,6 +87,7 @@ public class ESQueryFilter extends ESQueryFilterBase
   private final int currentMode;
   private final String ownerHref;
   private final boolean superUser;
+  private final String docType;
 
   private RecurringRetrievalMode recurRetrieval;
 
@@ -108,29 +103,58 @@ public class ESQueryFilter extends ESQueryFilterBase
   private String latestStart;
   private String earliestEnd;
 
-  private static final String entityTypeJname = getJname(PropertyInfoIndex.ENTITY_TYPE);
-  public static final String colpathJname = getJname(PropertyInfoIndex.COLLECTION);
+  private static final String entityTypeJname =
+          getJname(PropertyInfoIndex.ENTITY_TYPE);
+
+  public static final String colpathJname =
+          getJname(PropertyInfoIndex.COLLECTION);
+
+  private final static String lastModJname =
+          getJname(PropertyInfoIndex.LAST_MODIFIED);
+
+  private final static String lastModSeqJname =
+          getJname(PropertyInfoIndex.LASTMODSEQ);
+
   //private static final String dtendJname = getJname(PropertyInfoIndex.DTEND);
   //private static final String dtstartJname = getJname(PropertyInfoIndex.DTSTART);
 
   /** */
-  public static final String hrefJname = getJname(PropertyInfoIndex.HREF);
-  private static final String ownerJname = getJname(PropertyInfoIndex.OWNER);
-  private static final String publicJname = getJname(PropertyInfoIndex.PUBLIC);
+  public static final String hrefJname =
+          getJname(PropertyInfoIndex.HREF);
+
+  private static final String ownerJname =
+          getJname(PropertyInfoIndex.OWNER);
+
+  private static final String publicJname =
+          getJname(PropertyInfoIndex.PUBLIC);
+
   //public static final String recurrenceidJname =
   //        getJname(PropertyInfoIndex.RECURRENCE_ID);
 
   //private static String indexEndJname = getJname(PropertyInfoIndex.INDEX_END);
   //private static String indexStartJname = getJname(PropertyInfoIndex.INDEX_START);
 
-  private final static String dtEndUTCRef = makePropertyRef(PropertyInfoIndex.DTEND,
-                                                            PropertyInfoIndex.UTC);
+  private final static String hrefRef =
+          makePropertyRef(PropertyInfoIndex.HREF);
+
+  private final static String colPathRef =
+          makePropertyRef(PropertyInfoIndex.COLPATH);
+
+  private final static String uidRef =
+          makePropertyRef(PropertyInfoIndex.UID);
+
+  private final static String dtEndUTCRef =
+          makePropertyRef(PropertyInfoIndex.DTEND,
+                          PropertyInfoIndex.UTC);
+
   private final static String dtStartUTCRef = makePropertyRef(
           PropertyInfoIndex.DTSTART,
           PropertyInfoIndex.UTC);
 
-  private final static String indexEndUTCRef = makePropertyRef(PropertyInfoIndex.INDEX_END,
-                                                               PropertyInfoIndex.UTC);
+  private final static String indexEndUTCRef =
+          makePropertyRef(PropertyInfoIndex.INDEX_END,
+                          PropertyInfoIndex.UTC);
+
   private final static String indexStartUTCRef = makePropertyRef(
           PropertyInfoIndex.INDEX_START,
           PropertyInfoIndex.UTC);
@@ -151,7 +175,8 @@ public class ESQueryFilter extends ESQueryFilterBase
                        final int currentMode,
                        final String ownerHref,
                        final boolean superUser,
-                       final RecurringRetrievalMode recurRetrieval) {
+                       final RecurringRetrievalMode recurRetrieval,
+                       final String docType) {
     this.publick = publick;
     this.currentMode = currentMode;
     this.ownerHref = ownerHref;
@@ -160,22 +185,35 @@ public class ESQueryFilter extends ESQueryFilterBase
     if (recurRetrieval == null) {
       this.recurRetrieval = RecurringRetrievalMode.expanded;
     }
+    this.docType = docType;
   }
 
-  /** Build a filter for a single entity identified by the property
+  /** Build a query for a single entity identified by the property
    * reference and value. The search will be limited by the current
    * mode.
    *
-   * @param doctype  type of document we want
    * @param val the value to match
    * @param index list of terms for dot reference
-   * @return a filter builder
+   * @return a query builder
    */
-  public FilterBuilder singleEntityFilter(final String doctype,
-                                          final String val,
-                                          final PropertyInfoIndex... index) {
-    return and(addTerm("_type", doctype),
-               addTerm(makePropertyRef(index), val),
+  public QueryBuilder singleEntityQuery(final String val,
+                                        final PropertyInfoIndex... index) {
+    return termQuery(makePropertyRef(index), val);
+  }
+
+  /** Build a query for a single tombstoned entity identified by the property
+   * reference and value. The search will be limited by the current
+   * mode.
+   *
+   * @param val the value to match
+   * @param index list of terms for dot reference
+   * @return a query builder
+   */
+  public QueryBuilder singleTombstonedEntityQuery(final String val,
+                                        final PropertyInfoIndex... index) {
+    return and(termQuery(makePropertyRef(index), val),
+               termQuery(makePropertyRef(PropertyInfoIndex.TOMBSTONED),
+                         true),
                null);
   }
 
@@ -187,11 +225,9 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @param recurrenceId of instance
    * @return a filter builder
    */
-  public FilterBuilder singleEventFilter(final String href,
+  public QueryBuilder singleEventFilter(final String href,
                                           final String recurrenceId) {
-    FilterBuilder anded = and(addTerm("_type", docTypeEvent),
-                              addTerm(makePropertyRef(PropertyInfoIndex.HREF), href),
-                              null);
+    QueryBuilder anded = termQuery(hrefRef, href);
 
     if (recurrenceId == null) {
       anded = and(anded, addTerm(PropertyInfoIndex.MASTER, "true"), null);
@@ -213,13 +249,11 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @param guid of event
    * @return a filter builder
    */
-  public FilterBuilder singleEventFilterGuid(final String colPath,
+  public QueryBuilder singleEventFilterGuid(final String colPath,
                                              final String guid) {
-    FilterBuilder anded = and(addTerm("_type", docTypeEvent),
-                              addTerm(makePropertyRef(PropertyInfoIndex.COLPATH), colPath),
-                              null);
+    QueryBuilder anded = termQuery(colPathRef, colPath);
 
-    anded = and(anded, addTerm(makePropertyRef(PropertyInfoIndex.UID), guid),
+    anded = and(anded, termQuery(uidRef, guid),
                 null);
     anded = and(anded, addTerm(PropertyInfoIndex.MASTER, "true"), null);
 
@@ -233,7 +267,7 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @param val - expected full value
    * @return a filter builder
    */
-  public FilterBuilder locationKeyFilter(final String name,
+  public QueryBuilder locationKeyFilter(final String name,
                                          final String val) throws CalFacadeException {
     final ObjectFilter<String> kf =
             new ObjectFilter<>(null,
@@ -244,10 +278,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     kf.setExact(true);
     kf.setCaseless(false);
 
-    return and(addTerm("_type",
-                       docTypeLocation),
-               buildFilter(kf),
-               "and");
+    return buildQuery(kf);
   }
 
   /** Build a filter for resources in a collection possibly limited by
@@ -258,16 +289,13 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @param lastmodSeq - if lastmod non-null use for sync check
    * @return a filter builder
    */
-  public FilterBuilder resourcesFilter(final String path,
-                                       final String lastmod,
-                                       final int lastmodSeq) throws CalFacadeException {
+  public QueryBuilder resources(final String path,
+                                final String lastmod,
+                                final int lastmodSeq) throws CalFacadeException {
     final BwCollectionFilter cf =
             new BwCollectionFilter(null, path);
 
-    FilterBuilder fb = and(addTerm("_type",
-                                   docTypeResource),
-                           buildFilter(cf),
-                           "and");
+    QueryBuilder fb = buildQuery(cf);
 
     if (lastmod == null) {
       return fb;
@@ -279,15 +307,16 @@ public class ESQueryFilter extends ESQueryFilterBase
 
      */
 
-    FilterBuilder lmeq = and(addTerm(getJname(PropertyInfoIndex.LAST_MODIFIED),
-                                     lastmod),
-                             new RangeFilterBuilder(getJname(PropertyInfoIndex.LASTMODSEQ)).gt(lastmodSeq),
-                             null);
+    QueryBuilder lmeq =
+            and(termQuery(lastModJname, lastmod),
+                new RangeQueryBuilder(lastModSeqJname).gt(lastmodSeq),
+                null);
 
-    FilterBuilder lmor = or(new RangeFilterBuilder(getJname(PropertyInfoIndex.LAST_MODIFIED)).gt(lastmod),
-                            lmeq);
+    QueryBuilder lmor =
+            or(new RangeQueryBuilder(lastModJname).gt(lastmod),
+               lmeq);
 
-    return principalFilter(and(fb, lmor, "lmor"));
+    return principalQuery(and(fb, lmor, "lmor"));
   }
 
   public FilterBase addTypeFilter(final FilterBase f,
@@ -309,16 +338,6 @@ public class ESQueryFilter extends ESQueryFilterBase
     return and;
   }
 
-  public FilterBuilder buildFilter(final FilterBase f) throws CalFacadeException {
-    FilterBuilder fb = makeFilter(f);
-
-    if (fb instanceof TermOrTerms) {
-      fb = makeFilter((TermOrTerms)fb);
-    }
-
-    return fb;
-  }
-
   public QueryBuilder buildQuery(final FilterBase f) throws CalFacadeException {
     QueryBuilder qb = makeQuery(f);
 
@@ -332,12 +351,12 @@ public class ESQueryFilter extends ESQueryFilterBase
   /* TODO we need to provide a chain of filters when we have deep paths,
        e.g. entity[key1].entity[key2].value = "something"
    */
-  public FilterBuilder makeFilter(final List<PropertyInfoIndex> pis,
-                                  final Object val,
-                                  final Integer intKey,
-                                  final String strKey,
-                                  final OperationType opType,
-                                  final boolean negate) throws CalFacadeException {
+  public QueryBuilder makeQuery(final List<PropertyInfoIndex> pis,
+                                final Object val,
+                                final Integer intKey,
+                                final String strKey,
+                                final OperationType opType,
+                                final boolean negate) throws CalFacadeException {
     /* Work backwards through the property list building a path.
        When the head of the path is a nested type:
          If it's the first we found:
@@ -349,8 +368,8 @@ public class ESQueryFilter extends ESQueryFilterBase
        key value we generate a bool query with 2 must match terms.
      */
 
-    FilterBuilder fb = null;
-    FilterBuilder nfb = null; // current nested level
+    QueryBuilder qb = null;
+    QueryBuilder nqb = null; // current nested level
     PropertyInfoIndex leafPii = null;
 
     /* See if we need to build a nested query */
@@ -376,20 +395,22 @@ public class ESQueryFilter extends ESQueryFilterBase
       }
 
       if (isNested) {
-        final FilterBuilder nested;
+        final QueryBuilder nested;
         String path = makePropertyRef(pis, plistIndex, null);
 
-        if (nfb != null) {
+        if (nqb != null) {
           if (plistIndex == 0) {
             // TODO Temp fix this
             path = "event." + path;
           }
-          nested = new NestedFilterBuilder(path, nfb);
+          nested = new NestedQueryBuilder(path, nqb,
+                                          ScoreMode.Avg);
         } else {
-          fb = makeFilter(leafPii,
+          qb = makeQuery(leafPii,
                          makePropertyRef(pis, null),
                          fullTermPath,
-                         val, opType);
+                         val, opType,
+                         1, false);
 
           /* Is the parent indexed? */
           final BwIcalPropertyInfoEntry parentPie;
@@ -402,13 +423,13 @@ public class ESQueryFilter extends ESQueryFilterBase
           
           if ((parentPie != null) && 
                   (parentPie.getKeyindex() != PropertyInfoIndex.UNKNOWN_PROPERTY)) {
-            final BoolFilterBuilder bfb = new BoolFilterBuilder();
+            final BoolQueryBuilder bqb = new BoolQueryBuilder();
 
-            if (fb == null) {
+            if (qb == null) {
               error("No nested query for " + pii);
               return null;
             }
-            bfb.must(fb);
+            bqb.must(qb);
             
             final List<PropertyInfoIndex> indexPis = new ArrayList<>();
             indexPis.add(pis.get(plistIndex - 1));
@@ -416,79 +437,76 @@ public class ESQueryFilter extends ESQueryFilterBase
             final String indexPath = makePropertyRef(indexPis, null);
 
             if (intKey != null) {
-              bfb.must(new TermFilterBuilder(indexPath, 
+              bqb.must(new TermQueryBuilder(indexPath,
                                             intKey));
             } else if (strKey != null) {
-              bfb.must(new TermFilterBuilder(indexPath, 
+              bqb.must(new TermQueryBuilder(indexPath,
                                             strKey));
             } else {
               error("Missing key for index for " + pii);
               return null;
             }
             
-            fb = bfb;
+            qb = bqb;
           }
            
-          nested = fb;
+          nested = qb;
         }
 
-        nfb = nested;
+        nqb = nested;
       } else if (plistIndex == 0) {
         // No nested types found
-        fb = makeFilter(leafPii, makePropertyRef(pis, null),
-                        fullTermPath,
-                        val, opType);
+        qb = makeQuery(leafPii, makePropertyRef(pis, null),
+                       fullTermPath,
+                       val, opType,
+                       1,
+                       false);
       }
     }
 
-    if (nfb != null) {
-      fb = nfb;
+    if (nqb != null) {
+      qb = nqb;
     }
 
     if (negate) {
-      return FilterBuilders.notFilter(fb);
+      return not(qb);
     }
 
-    return fb;
+    return qb;
   }
 
-  public FilterBuilder multiHrefFilter(final Set<String> hrefs,
-                                       final RecurringRetrievalMode rmode) throws CalFacadeException {
-    FilterBuilder fb = null;
+  public QueryBuilder multiHref(final Set<String> hrefs,
+                                final RecurringRetrievalMode rmode) throws CalFacadeException {
+    QueryBuilder qb = null;
 
     for (final String href: hrefs) {
-      fb = or(fb, addTerm(hrefJname, href));
+      qb = or(qb, termQuery(hrefJname, href));
     }
 
-    if (rmode.mode == Rmode.entityOnly) {
-      FilterBuilder limit = not(addTerm("_type",
-                                        docTypeEvent));
-
-      limit = or(limit,
-                 addTerm(PropertyInfoIndex.MASTER, "true"));
-
-      return and(fb, limit, null);
+    if ((rmode.mode == Rmode.entityOnly) && docType.equals(docTypeEvent)) {
+      return and(qb,
+                 addTerm(PropertyInfoIndex.MASTER, "true"), null);
     }
 
     if (rmode.mode == Rmode.overrides) {
-      final FilterBuilder limit =
+      final QueryBuilder limit =
               or(addTerm(PropertyInfoIndex.MASTER, "true"),
                  addTerm(PropertyInfoIndex.OVERRIDE, "true"));
 
-      return and(fb, limit, null);
+      return and(qb, limit, null);
     }
 
-    return fb;
+    return qb;
   }
 
-  private static class NamedFilterBuilder {
+  private static class NamedQueryBuilder {
     final String name;
-    final FilterBuilder fb;
+    final QueryBuilder qb;
 
-    public NamedFilterBuilder(final String name,
-                              final FilterBuilder fb) {
+    public NamedQueryBuilder(final String name,
+                             final QueryBuilder qb) {
       this.name = name;
-      this.fb = fb;
+      this.qb = qb;
     }
   } 
   
@@ -500,21 +518,21 @@ public class ESQueryFilter extends ESQueryFilterBase
    * result is still not limited we limit to entities owned by the 
    * current principal</p>
    * 
-   * @param f current filter
+   * @param q current query
    * @param defaultFilterContext set if we have one
    * @param forEvents true if this is an events index we are searching
    * @return augmented filter
    * @throws CalFacadeException on error
    */
-  public FilterBuilder addLimits(final FilterBuilder f,
+  public QueryBuilder addLimits(final QueryBuilder q,
                                  final FilterBase defaultFilterContext,
                                  final DeletedState delState,
                                  final boolean forEvents) throws CalFacadeException {
-    if ((f != null) && (f instanceof MatchNone)) {
-      return f;
+    if ((q != null) && (q instanceof MatchNoneQueryBuilder)) {
+      return q;
     }
     
-    final List<NamedFilterBuilder> nfbs = new ArrayList<>();
+    final List<NamedQueryBuilder> nfbs = new ArrayList<>();
 
     if (!queryLimited) {
       if (defaultFilterContext != null) {
@@ -529,83 +547,79 @@ public class ESQueryFilter extends ESQueryFilterBase
           
           if ((fb != null) && (fb.getChildren() != null)) {
             for (final FilterBase vfb : fb.getChildren()) {
-              nfbs.add(new NamedFilterBuilder(vfb.getName(),
-                                              and(buildFilter(vfb), f,
+              nfbs.add(new NamedQueryBuilder(vfb.getName(),
+                                              and(buildQuery(vfb), q,
                                                   vfb.getName())));
             }
           }
         } else {
-          final FilterBuilder limFb = buildFilter(
-                  defaultFilterContext);
-          nfbs.add(new NamedFilterBuilder(null, and(f, limFb, null)));
+          final QueryBuilder limQb = buildQuery(defaultFilterContext);
+          nfbs.add(new NamedQueryBuilder(null, and(q, limQb, null)));
         }
       }
 
       if (!queryLimited) {
-        if (f == null) {
-          nfbs.add(new NamedFilterBuilder(null, new MatchAllFilterBuilder()));
+        if (q == null) {
+          nfbs.add(new NamedQueryBuilder(null, new MatchAllQueryBuilder()));
         } else {
-          nfbs.add(new NamedFilterBuilder(null, principalFilter(f)));
+          nfbs.add(new NamedQueryBuilder(null, principalQuery(q)));
         }
       }
-    } else if (f == null) {
-      nfbs.add(new NamedFilterBuilder(null, new MatchAllFilterBuilder()));
+    } else if (q == null) {
+      nfbs.add(new NamedQueryBuilder(null, new MatchAllQueryBuilder()));
     } else {
-      nfbs.add(new NamedFilterBuilder(null, f));
+      nfbs.add(new NamedQueryBuilder(null, q));
     }
-    
-    FilterBuilder recurFb;
+
+    QueryBuilder recurQb;
 
     if (forEvents) {
-      recurFb = recurTerms();
+      recurQb = recurTerms();
     } else {
-      recurFb = null;
+      recurQb = null;
     }
 
-    FilterBuilder fb;
+    QueryBuilder qb;
 
     if (nfbs.size() == 1) {
-      fb = nfbs.get(0).fb;
+      qb = nfbs.get(0).qb;
 
-      if (recurFb != null) {
-        fb = and(fb, recurFb, null);
+      if (recurQb != null) {
+        qb = and(qb, recurQb, null);
       }
     } else {
-      fb = null;
-      if (recurFb == null) {
-        recurFb = new MatchAllFilterBuilder();
+      qb = null;
+      if (recurQb == null) {
+        recurQb = new MatchAllQueryBuilder();
       }
 
-      for (final NamedFilterBuilder nfb : nfbs) {
-        fb = or(fb, and(nfb.fb, recurFb, nfb.name));
+      for (final NamedQueryBuilder nfb : nfbs) {
+        qb = or(qb, and(nfb.qb, recurQb, nfb.name));
       }
     }
 
     // Always exclude tombstoned here
 
-    fb = termFilter(fb, PropertyInfoIndex.TOMBSTONED,
+    qb = termFilter(qb, PropertyInfoIndex.TOMBSTONED,
                     "false");
 
     if (delState == includeDeleted) {
-      return fb;
+      return qb;
     }
 
-    return and(fb,
+    return and(qb,
                addTerm(PropertyInfoIndex.DELETED,
                        String.valueOf(delState == onlyDeleted)),
                null);
 
   }
   
-  final FilterBuilder overridesOnly(final String uid) {
-    FilterBuilder flt = new TermFilterBuilder("_type",
-                                              docTypeEvent);
-    
-    flt = and(flt, addTerm(PropertyInfoIndex.UID, uid), null);
-    return and(flt, addTerm(PropertyInfoIndex.OVERRIDE, "true"), null);
+  final QueryBuilder overridesOnly(final String uid) {
+    QueryBuilder qb = addTerm(PropertyInfoIndex.UID, uid);
+    return and(qb, addTerm(PropertyInfoIndex.OVERRIDE, "true"), null);
   }
   
-  final FilterBuilder recurTerms() throws CalFacadeException {
+  final QueryBuilder recurTerms() throws CalFacadeException {
     /* If the search is for expanded events we want instances or
        overrides or non-recurring masters only.
 
@@ -620,10 +634,8 @@ public class ESQueryFilter extends ESQueryFilterBase
 
     if (recurRetrieval.mode == Rmode.expanded) {
       // Limit events to instances only //
-      FilterBuilder limit = not(addTerm("_type",
-                                        docTypeEvent));
-
-      limit = or(limit, addTerm(PropertyInfoIndex.INSTANCE, "true"));
+      QueryBuilder limit =
+              addTerm(PropertyInfoIndex.INSTANCE, "true");
       limit = or(limit, addTerm(PropertyInfoIndex.OVERRIDE, "true"));
 
       limit = or(limit,
@@ -634,14 +646,9 @@ public class ESQueryFilter extends ESQueryFilterBase
       return limit;
     }
 
-    if (recurRetrieval.mode == Rmode.entityOnly) {
-      FilterBuilder limit = not(addTerm("_type",
-                                        docTypeEvent));
-
-      limit = or(limit,
-                 addTerm(PropertyInfoIndex.MASTER, "true"));
-
-      return limit;
+    if ((recurRetrieval.mode == Rmode.entityOnly) &&
+            docType.equals(docTypeEvent)) {
+      return addTerm(PropertyInfoIndex.MASTER, "true");
     }
 
     /* if the query is not filtered we can limit to the master and
@@ -652,10 +659,7 @@ public class ESQueryFilter extends ESQueryFilterBase
       return null;
     }
 
-    FilterBuilder limit = not(addTerm("_type",
-                                      docTypeEvent));
-
-    limit = or(limit, addTerm(PropertyInfoIndex.MASTER, "true"));
+    QueryBuilder limit = addTerm(PropertyInfoIndex.MASTER, "true");
 
     limit = or(limit, addTerm(PropertyInfoIndex.OVERRIDE, "true"));
 
@@ -665,38 +669,21 @@ public class ESQueryFilter extends ESQueryFilterBase
   }
   
   public QueryBuilder getAllForReindex(final String docType) {
-    FilterBuilder limit;
-    if (docType != null) {
-      limit = addTerm("_type", docType);
-    } else {
-      FilterBuilder f = addTerm("_type",
-                                      BwIndexer.docTypeCategory);
-      f = or(f, addTerm("_type",
-                        BwIndexer.docTypeContact));
-      f = or(f, addTerm("_type",
-                        BwIndexer.docTypeLocation));
-      f = or(f, addTerm("_type",
-                        docTypeEvent));
-      limit = not(f);
-
-      f = addTerm("_type",
-                  docTypeEvent);
-      f = and(f, addTerm(PropertyInfoIndex.MASTER, "true"), null);
-      limit = or(limit, f);
+    QueryBuilder limit;
+    if (docType.equals(docTypeEvent)) {
+      return addTerm(PropertyInfoIndex.MASTER, "true");
     }
 
-    return new FilteredQueryBuilder(null, limit);
+    return matchAllQuery();
   }
 
   public QueryBuilder getAllForReindexStats() {
-    FilterBuilder limit = not(addTerm("_type",
-                                      docTypeEvent));
+    if (docType.equals(docTypeEvent)) {
+      return or(addTerm(PropertyInfoIndex.MASTER, "true"),
+                addTerm(PropertyInfoIndex.OVERRIDE, "true"));
+    }
 
-    limit = or(limit, addTerm(PropertyInfoIndex.MASTER, "true"));
-
-    limit = or(limit, addTerm(PropertyInfoIndex.OVERRIDE, "true"));
-
-    return new FilteredQueryBuilder(null, limit);
+    return matchAllQuery();
   }
 
   /**
@@ -743,7 +730,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     return recurRetrieval.mode == Rmode.expanded;
   }
 
-  /** Add date range terms to filter. The actual terms depend on
+  /** Add date range terms to query. The actual terms depend on
    * how we want recurring events returned - expanded or as master
    * and overrides.
    *
@@ -755,19 +742,19 @@ public class ESQueryFilter extends ESQueryFilterBase
    * overrides an instance in the range but itself is outside the
    * range. For these we search on the index start/end</p>
    *
-   * @param filter
-   * @param entityType
-   * @param start
-   * @param end
-   * @return the filter or a filter with anded date range
+   * @param query to add to
+   * @param entityType to limit
+   * @param start of range
+   * @param end of range
+   * @return the query or a query with anded date range
    * @throws CalFacadeException on error
    */
-  public FilterBuilder addDateRangeFilter(final FilterBuilder filter,
+  public QueryBuilder addDateRangeQuery(final QueryBuilder query,
                                           final int entityType,
                                           final String start,
                                           final String end) throws CalFacadeException {
     if ((start == null) && (end == null)) {
-      return filter;
+      return query;
     }
 
     queryFiltered = true;
@@ -776,7 +763,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     final String endRef;
 
     if (entityType == IcalDefs.entityTypeAlarm) {
-      return and(filter, range(nextTriggerRef, start, end), null);
+      return and(query, range(nextTriggerRef, start, end), null);
     }      
      
     if (recurRetrieval.mode == Rmode.expanded) {
@@ -787,85 +774,85 @@ public class ESQueryFilter extends ESQueryFilterBase
       endRef = indexEndUTCRef;
     }
 
-    FilterBuilder fb = filter;
+    QueryBuilder qb = query;
 
     if (end != null) {
       // Start of events must be before the end of the range
-      final RangeFilterBuilder rfb = new RangeFilterBuilder(startRef);
+      final RangeQueryBuilder rqb = new RangeQueryBuilder(startRef);
 
-      rfb.lt(dateTimeUTC(end));
+      rqb.lt(dateTimeUTC(end));
 
-      fb = and(fb, rfb, null);
+      qb = and(qb, rqb, null);
     }
 
     if (start != null) {
       // End of events must be before the end of the range
-      final RangeFilterBuilder rfb = new RangeFilterBuilder(endRef);
+      final RangeQueryBuilder rqb = new RangeQueryBuilder(endRef);
 
-      rfb.gte(dateTimeUTC(start));
-      rfb.includeLower(false);
+      rqb.gte(dateTimeUTC(start));
+      rqb.includeLower(false);
 
-      fb = and(fb, rfb, null);
+      qb = and(qb, rqb, null);
     }
     
     adjustTimeLimits(start, end);
 
-    return fb;
+    return qb;
   }
 
   /** Add a filter for the given href.
    *
-   * @param filter - or null
+   * @param q - or null
    * @param href to match
    * @return a filter
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
-  public FilterBuilder hrefFilter(final FilterBuilder filter,
+  public QueryBuilder hrefFilter(final QueryBuilder q,
                                   final String href) throws CalFacadeException {
-    return and(filter,
-               FilterBuilders.termFilter(hrefJname, href),
+    return and(q,
+               termQuery(hrefJname, href),
                null);
   }
 
-  /** Add a filter for the collection path.
+  /** Add a query for the collection path.
    *
-   * @param filter - or null
+   * @param q - or null
    * @param colPath to match
    * @return a filter
    * @throws CalFacadeException on error
    */
-  public FilterBuilder colPathFilter(final FilterBuilder filter,
+  public QueryBuilder colPathFilter(final QueryBuilder q,
                                      final String colPath) throws CalFacadeException {
-    return and(filter,
-               FilterBuilders.termFilter(colpathJname, colPath),
+    return and(q,
+               termQuery(colpathJname, colPath),
                null);
   }
 
-  /** Add a filter for the term.
+  /** Add a query for the term.
    *
-   * @param filter - or null
+   * @param q - or null
    * @param pi of field
    * @param val to match
    * @return a filter
    * @throws CalFacadeException on error
    */
-  public FilterBuilder termFilter(final FilterBuilder filter,
+  public QueryBuilder termFilter(final QueryBuilder q,
                                   final PropertyInfoIndex pi,
                                   final String val)
           throws CalFacadeException {
-    return and(filter,
-               FilterBuilders.termFilter(getJname(pi), val),
+    return and(q,
+               termQuery(getJname(pi), val),
                null);
   }
 
-  /** Add filter for the current principal - or public - to limit search
+  /** Add query for the current principal - or public - to limit search
    * to entities owned by the current principal.
    *
-   * @param filter - or null
+   * @param q - or null
    * @return a filter
    * @throws CalFacadeException on error
    */
-  public FilterBuilder principalFilter(final FilterBuilder filter) throws CalFacadeException {
+  public QueryBuilder principalQuery(final QueryBuilder q) throws CalFacadeException {
     final boolean publicEvents = publick ||
             (currentMode == guestMode) ||
             (currentMode == publicAdminMode);
@@ -873,19 +860,16 @@ public class ESQueryFilter extends ESQueryFilterBase
     //boolean all = (currentMode == guestMode) || ignoreCreator;
 
     if (publicEvents) {
-      return and(filter,
-               FilterBuilders.termFilter(
-                       publicJname,
-                       String.valueOf(true)),
+      return and(q,
+                 termQuery(publicJname, String.valueOf(true)),
                  null);
     }
 
     if (superUser) {
-      return filter;
+      return q;
     }
 
-    return and(filter, FilterBuilders.termFilter(ownerJname,
-                                                 ownerHref),
+    return and(q, termQuery(ownerJname, ownerHref),
                null);
   }
 
@@ -893,26 +877,15 @@ public class ESQueryFilter extends ESQueryFilterBase
    *
    * @param pi property info index
    * @param val value
-   * @return TermFilterBuilder or AndFilterBuilder
+   * @return TermQuery
    */
-  public FilterBuilder addTerm(final PropertyInfoIndex pi,
+  public QueryBuilder addTerm(final PropertyInfoIndex pi,
                                final String val) {
     if ((pi != PropertyInfoIndex.HREF) &&
             (pi != PropertyInfoIndex.COLLECTION)) {
       queryFiltered = true;
     }
-    return addTerm(getJname(pi), val);
-  }
-
-  /**
-   *
-   * @param name
-   * @param val
-   * @return TermFilterBuilder or AndFilterBuilder
-   */
-  public FilterBuilder addTerm(final String name,
-                               final String val) {
-    return FilterBuilders.termFilter(name, val);
+    return termQuery(getJname(pi), val);
   }
 
   /**
@@ -977,15 +950,32 @@ public class ESQueryFilter extends ESQueryFilterBase
                                  final String fullTermPath,
                                  final Object val,
                                  final OperationType opType,
-                                 final float boost) throws CalFacadeException {
+                                 final float boost,
+                                 final boolean negate) throws CalFacadeException {
     final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pii);
+    QueryBuilder qb;
 
     switch (opType) {
       case compare:
         if (bwPie.getAnalyzed()) {
+          if (val instanceof Collection) {
+            final String[] vals;
+
+            try {
+              final Collection valsC = (Collection)val;
+              vals = (String[]) (valsC).toArray(new String[valsC.size()]);
+            } catch (final Throwable t) {
+              throw new CalFacadeException(CalFacadeException.filterBadOperator,
+                                           "Invalid query. Multi match only allowed on strings");
+            }
+            qb = new MultiMatchQueryBuilder(path, vals);
+            break;
+          }
+
           if (bwPie.getTermsField() == null) {
-            return new MatchQueryBuilder(path, val).operator(
-                    MatchQueryBuilder.Operator.AND);
+            qb = new MatchQueryBuilder(path, val).operator(
+                    Operator.AND);
+            break;
           }
 
           /* Build something like this
@@ -1010,197 +1000,111 @@ public class ESQueryFilter extends ESQueryFilterBase
                 }
               },...
            */
-          QueryBuilder qb = new MatchQueryBuilder(path, val).operator(
-                  MatchQueryBuilder.Operator.AND);
-          final FunctionScoreQueryBuilder fsqb =
-                  new FunctionScoreQueryBuilder(qb);
-
-          final FilterBuilder fb = new TermFilterBuilder(fullTermPath,
-                                                         val);
-          fsqb.add(fb, ScoreFunctionBuilders.weightFactorFunction(10));
-
-          return fsqb;
+          qb = new MatchQueryBuilder(path, val).operator(
+                  Operator.AND);
+          if (boost != 1) {
+            qb.boost(boost);
+          }
+          break;
         }
 
-        final TermQueryBuilder tqb = new TermQueryBuilder(path, val);
+        qb = new TermQueryBuilder(path, val);
         if (boost != 1) {
-          tqb.boost(boost);
+          qb.boost(boost);
         }
-        return tqb;
+        break;
+
       case prefix:
-      case timeRange:
-      case absence:
-      case presence:
-        throw new CalFacadeException(CalFacadeException.filterBadOperator,
-                                     opType.toString());
-      default:
-        throw new CalFacadeException(CalFacadeException.filterBadOperator,
-                                     opType.toString());
-    }
-  }
-
-  private FilterBuilder makeFilter(final PropertyInfoIndex pii,
-                                   final String path,
-                                   final String fullTermPath,
-                                   final Object val,
-                                   final OperationType opType) throws CalFacadeException {
-    final BwIcalPropertyInfoEntry bwPie = BwIcalPropertyInfo.getPinfo(pii);
-
-    switch (opType) {
-      case compare:
-        if (bwPie.getAnalyzed()) {
-          if (val instanceof Collection) {
-            final String[] vals;
-
-            try {
-              final Collection valsC = (Collection)val;
-              vals = (String[]) (valsC).toArray(new String[valsC.size()]);
-            } catch (final Throwable t) {
-              throw new CalFacadeException(CalFacadeException.filterBadOperator,
-                                           "Invalid query. Multi match only allowed on strings");
-            }
-            final MultiMatchQueryBuilder mmqb =
-                    new MultiMatchQueryBuilder(path, vals);
-            return new QueryFilterBuilder(mmqb);
-          }
-
-          if (bwPie.getTermsField() == null) {
-            return new QueryFilterBuilder(
-                    new MatchQueryBuilder(path, val).operator(
-                            MatchQueryBuilder.Operator.AND));
-          }
-
-          /* Build something like this
-              "query": {
-                "bool": {
-                  "must": [
-                    {
-                      "match": {
-                        "loc_all": {
-                          "value":...,
-                          "operator": "AND"
-                        }
-                      }
-                    }
-                  ],
-                  "should": [
-                    {
-                      "term": {
-                        "top_users": {
-                          "value": "1",
-                          "boost": 2
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-           */
-          QueryBuilder qb = new MatchQueryBuilder(path, val).operator(
-                  MatchQueryBuilder.Operator.AND);
-          final BoolQueryBuilder bqb = new BoolQueryBuilder();
-
-          bqb.must(qb);
-
-          qb = new TermQueryBuilder(fullTermPath, val).boost(
-                  (float)2.0);
-
-          bqb.should(qb);
-
-          return new QueryFilterBuilder(bqb);
-        }
-
-        if (val instanceof Collection) {
-          final TermsFilterBuilder tfb =
-                  FilterBuilders.termsFilter(path, (Collection) val);
-          tfb.execution("or");
-
-          return tfb;
-        }
-
-        return new TermFilterBuilder(path, val);
+        qb = QueryBuilders.prefixQuery(path, (String)val);
+        break;
 
       case timeRange:
-        final RangeFilterBuilder rfb = FilterBuilders.rangeFilter(path);
+        final RangeQueryBuilder rqb = QueryBuilders.rangeQuery(path);
+        qb = rqb;
 
         final TimeRange tr = (TimeRange)val;
         if (tr.getEnd() == null) {
-          rfb.gte(tr.getStart().toString());
+          rqb.gte(tr.getStart().toString());
 
-          return rfb;
+          break;
         }
 
         if (tr.getStart() == null) {
-          rfb.lt(tr.getEnd().toString());
+          rqb.lt(tr.getEnd().toString());
 
-          return rfb;
+          break;
         }
 
-        rfb.from(tr.getStart().toString());
-        rfb.to(tr.getEnd().toString());
-        rfb.includeLower(true);
-        rfb.includeUpper(false);
+        rqb.from(tr.getStart().toString());
+        rqb.to(tr.getEnd().toString());
+        rqb.includeLower(true);
+        rqb.includeUpper(false);
 
-        return rfb;
+        break;
 
       case absence:
-        return FilterBuilders.missingFilter(path);
+        qb = not(QueryBuilders.existsQuery(path));
+        break;
 
       case presence:
-        return FilterBuilders.existsFilter(path);
-
-      case prefix:
-        return FilterBuilders.prefixFilter(path, (String)val);
+        qb = QueryBuilders.existsQuery(path);
+        break;
 
       default:
         throw new CalFacadeException(CalFacadeException.filterBadOperator,
                                      opType.toString());
     }
+
+    if (negate) {
+      qb = not(qb);
+    }
+
+    return qb;
   }
 
-  private FilterBuilder not(final FilterBuilder filter) {
-    return new NotFilterBuilder(filter);
+  private QueryBuilder not(final QueryBuilder q) {
+    return new NotQB(q);
   }
 
-  private FilterBuilder and(final FilterBuilder filter,
-                            final FilterBuilder newFilter,
+  private QueryBuilder and(final QueryBuilder q,
+                            final QueryBuilder newQ,
                             final String name) {
-    if (filter == null) {
-      return newFilter;
+    if (q == null) {
+      return newQ;
     }
 
-    if (filter instanceof AndFilterBuilder) {
-      ((AndFilterBuilder)filter).add(newFilter);
+    if (q instanceof AndQB) {
+      ((AndQB)q).add(newQ);
 
-      return filter;
+      return q;
     }
 
-    final AndFilterBuilder afb = new AndFilterBuilder(filter);
+    final AndQB afb = new AndQB(q);
 
-    afb.add(newFilter);
+    afb.add(newQ);
     
     if (name != null) {
-      afb.filterName(name);
+      afb.queryName(name);
     }
 
     return afb;
   }
 
-  private FilterBuilder or(final FilterBuilder filter,
-                           final FilterBuilder newFilter) {
-    if (filter == null) {
-      return newFilter;
+  private QueryBuilder or(final QueryBuilder q,
+                           final QueryBuilder newQ) {
+    if (q == null) {
+      return newQ;
     }
 
-    if (filter instanceof OrFilterBuilder) {
-      ((OrFilterBuilder)filter).add(newFilter);
+    if (q instanceof OrQB) {
+      ((OrQB)q).add(newQ);
 
-      return filter;
+      return q;
     }
 
-    OrFilterBuilder ofb = new OrFilterBuilder(filter);
+    OrQB ofb = new OrQB(q);
 
-    ofb.add(newFilter);
+    ofb.add(newQ);
 
     return ofb;
   }
@@ -1235,14 +1139,14 @@ public class ESQueryFilter extends ESQueryFilterBase
     return dt; // It's probably a bad date
   }
   
-  private RangeFilterBuilder range(final String fld, 
-                                   final String start, 
-                                   final String end) {
+  private QueryBuilder range(final String fld,
+                             final String start,
+                             final String end) {
     if ((start == null) && (end == null)) {
       return null;
     }
     
-    final RangeFilterBuilder rfb = FilterBuilders.rangeFilter(fld);
+    final RangeQueryBuilder rfb = rangeQuery(fld);
     
     if (end == null) {
       rfb.gte(start);
@@ -1252,6 +1156,7 @@ public class ESQueryFilter extends ESQueryFilterBase
       rfb.from(start);
       rfb.to(end);
     }
+
     rfb.includeLower(true);
     rfb.includeUpper(false);
 
@@ -1279,63 +1184,8 @@ public class ESQueryFilter extends ESQueryFilterBase
     }
   }
 
-  private List<FilterBuilder> makeFilters(final List<FilterBase> fs,
-                                          final boolean anding) throws CalFacadeException {
-    List<FilterBuilder> fbs = new ArrayList<>();
-
-    /* We'll try to compact the filters - if we have a whole bunch of
-          "term" {"category_uid": "abcd"} for example we can turn it into
-          "terms" {"category_uid": ["abcd", "pqrs"]}
-     */
-    TermOrTerms lastFb = null;
-
-    for (FilterBase f: fs) {
-      FilterBuilder fb = makeFilter(f);
-
-      if (fb == null) {
-        continue;
-      }
-
-      if (lastFb == null) {
-        if (!(fb instanceof TermOrTerms)) {
-          fbs.add(fb);
-          continue;
-        }
-
-        lastFb = (TermOrTerms)fb;
-      } else if (!(fb instanceof TermOrTerms)) {
-        fbs.add(fb);
-      } else {
-        /* Can we combine them? */
-        TermOrTerms thisFb = (TermOrTerms)fb;
-
-        if (thisFb.dontMerge ||
-                !lastFb.fldName.equals(thisFb.fldName) ||
-                (lastFb.not != thisFb.not)) {
-          fbs.add(lastFb);
-          lastFb = thisFb;
-        } else {
-          lastFb = lastFb.anding(anding);
-
-          if (thisFb.isTerms) {
-            for (Object o: (Collection)thisFb.value) {
-              lastFb.addValue(o);
-            }
-          } else {
-            lastFb.addValue(thisFb.value);
-          }
-        }
-      }
-    }
-
-    if (lastFb != null) {
-      fbs.add(lastFb);
-    }
-
-    return fbs;
-  }
-
-  private FilterBuilder makeFilter(final TermOrTerms tort) throws CalFacadeException {
+  /*
+  private FilterBuilder makeFilter(final TermOrTermsQuery tort) throws CalFacadeException {
     final boolean hrefOrPath = tort.fldName.equals(hrefJname) ||
             tort.fldName.equals(colpathJname);
     
@@ -1347,8 +1197,9 @@ public class ESQueryFilter extends ESQueryFilterBase
     
     return tort.makeFb();
   }
+  */
 
-  private FilterBuilder makeFilter(final FilterBase f) throws CalFacadeException {
+  private QueryBuilder makeQuery(final FilterBase f) throws CalFacadeException {
     if (f == null) {
       return null;
     }
@@ -1356,215 +1207,10 @@ public class ESQueryFilter extends ESQueryFilterBase
     if (f instanceof BooleanFilter) {
       final BooleanFilter bf = (BooleanFilter)f;
       if (!bf.getValue()) {
-        return new MatchNone();
+        return new MatchNoneQueryBuilder();
       } else {
-        return new MatchAllFilterBuilder();
+        return new MatchAllQueryBuilder();
       }
-    }
-    
-    if (f instanceof AndFilter) {
-      final List<FilterBuilder> fbs = makeFilters(f.getChildren(), true);
-
-      if (fbs.size() == 1) {
-        return fbs.get(0);
-      }
-
-      final AndFilterBuilder afb = new AndFilterBuilder();
-      afb.filterName(f.getName());
-
-      for (final FilterBuilder fb: fbs) {
-        if (fb instanceof TermOrTerms) {
-          afb.add(makeFilter((TermOrTerms)fb));
-        } else {
-          afb.add(fb);
-        }
-      }
-
-      return afb;
-    }
-
-    if (f instanceof OrFilter) {
-      final List<FilterBuilder> fbs = makeFilters(f.getChildren(), false);
-
-      if (fbs.size() == 1) {
-        return fbs.get(0);
-      }
-
-      final OrFilterBuilder ofb = new OrFilterBuilder();
-      ofb.filterName(f.getName());
-
-      for (final FilterBuilder fb: fbs) {
-        if (fb instanceof TermOrTerms) {
-          ofb.add(((TermOrTerms)fb).makeFb());
-        } else {
-          ofb.add(fb);
-        }
-      }
-
-      return ofb;
-    }
-
-    if (f instanceof BwViewFilter) {
-      return doView((BwViewFilter)f);
-    }
-
-    if (f instanceof BwHrefFilter) {
-      queryLimited = true;
-
-      final TermFilterBuilder tfb = 
-              FilterBuilders.termFilter(hrefJname,
-                                        ((BwHrefFilter)f).getHref());
-      tfb.filterName(f.getName());
-      return tfb;
-    }
-
-    if (!(f instanceof PropertyFilter)) {
-      return null;
-    }
-
-    final PropertyFilter pf = (PropertyFilter)f;
-/*
-    if (pf.getPropertyIndex() == PropertyInfoIndex.CATEGORY_PATH) {
-      // Special case this one.
-      return new TermOrTerms(PropertyInfoIndex.CATEGORY_PATH.getJname(),
-                             ((ObjectFilter)pf).getEntity());
-    }*/
-
-    final BwIcalPropertyInfo.BwIcalPropertyInfoEntry pi =
-            BwIcalPropertyInfo.getPinfo(pf.getPropertyIndex());
-
-    if (pi == null) {
-      throw new CalFacadeException("org.bedework.filters.unknownproperty",
-                                   String.valueOf(pf.getPropertyIndex()));
-    }
-
-    final String fieldName;
-
-    final PropertyInfoIndex pii = pf.getPropertyIndex();
-
-    if (pf.getParentPropertyIndex() != null) {
-      fieldName = makePropertyRef(pf.getParentPropertyIndex(), pii);
-    } else {
-      fieldName = getJname(pii);
-    }
-
-    if (f instanceof PresenceFilter) {
-      final PresenceFilter prf = (PresenceFilter)f;
-
-      if (prf.getTestPresent()) {
-        return makeFilter(pf.getPropertyIndexes(), null,
-                          pf.getIntKey(), pf.getStrKey(),
-                          OperationType.presence,
-                          pf.getNot());
-      }
-
-      return makeFilter(pf.getPropertyIndexes(), null,
-                        pf.getIntKey(), pf.getStrKey(),
-                        OperationType.absence,
-                        pf.getNot());
-    }
-
-    if (pf instanceof TimeRangeFilter) {
-      return makeFilter(pf.getPropertyIndexes(),
-                        ((TimeRangeFilter)pf).getEntity(),
-                        pf.getIntKey(), pf.getStrKey(),
-                        OperationType.timeRange,
-                        pf.getNot());
-    }
-
-    /*
-    if (pf instanceof BwCreatorFilter) {
-      return new TermOrTerms("creator",
-                             ((BwCreatorFilter)pf).getEntity(),
-                             pf.getNot());
-    }
-
-    if (pf instanceof BwCategoryFilter) {
-      BwCategory cat = ((BwCategoryFilter)pf).getEntity();
-      return new TermOrTerms(PropertyInfoIndex.CATEGORIES.getJname() +
-              "." + PropertyInfoIndex.UID.getJname(),
-                             cat.getUid());
-    }*/
-
-    if (pf instanceof BwCollectionFilter) {
-      if (!pf.getNot()) {
-        queryLimited = true;
-      }
-
-      final String path = ((BwCollectionFilter)pf).getPath();
-
-      return new TermOrTerms(colpathJname,
-                             path,
-                             pf.getNot(),
-                             f.getName());
-    }
-
-    if (pf instanceof EntityTypeFilter) {
-      final EntityTypeFilter etf = (EntityTypeFilter)pf;
-
-      return new TermOrTerms(entityTypeJname,
-                             IcalDefs.entityTypeNames[etf.getEntity()],
-                             pf.getNot(),
-                             f.getName());
-    }
-
-    if (pf instanceof EntityTimeRangeFilter) {
-      final EntityTimeRangeFilter etrf = (EntityTimeRangeFilter)pf;
-
-      final TimeRange tr = etrf.getEntity();
-      String start = null;
-      String end = null;
-
-      if (tr.getStart() != null) {
-        start = tr.getStart().toString();
-      }
-
-      if (tr.getEnd() != null) {
-        end = tr.getEnd().toString();
-      }
-
-      return addDateRangeFilter(null, etrf.getEntityType(),
-                                start, end);
-    }
-
-    if (pii == PropertyInfoIndex.COLLECTION) {
-      if (!pf.getNot()) {
-        queryLimited = true;
-      }
-    }
-
-    if (pf instanceof ObjectFilter) {
-      final OperationType op;
-      if (((ObjectFilter) pf).getPrefixMatch()) {
-        op = OperationType.prefix;
-      } else {
-        op = OperationType.compare;
-      }
-
-      return makeFilter(pf.getPropertyIndexes(),
-                        getValue((ObjectFilter)pf),
-                        pf.getIntKey(), pf.getStrKey(),
-                        op,
-                        pf.getNot());
-    }
-
-    return null;
-
-    /*
-    if (f instanceof TimeRangeFilter) {
-      addThisJoin(pi);
-      return;
-    }
-
-    if (f instanceof BwObjectFilter) {
-      addThisJoin(pi);
-      return;
-    }*/
-  }
-
-  private QueryBuilder makeQuery(final FilterBase f) throws CalFacadeException {
-    if (f == null) {
-      return null;
     }
 
     if (f instanceof AndFilter) {
@@ -1607,10 +1253,14 @@ public class ESQueryFilter extends ESQueryFilterBase
       return bqb;
     }
 
+    if (f instanceof BwViewFilter) {
+      return makeQuery(((BwViewFilter)f).getFilter());
+    }
+
     if (f instanceof BwHrefFilter) {
       queryLimited = true;
 
-      return QueryBuilders.termQuery(hrefJname,
+      return termQuery(hrefJname,
                                      ((BwHrefFilter)f).getHref());
     }
 
@@ -1623,9 +1273,10 @@ public class ESQueryFilter extends ESQueryFilterBase
     if (pf instanceof EntityTypeFilter) {
       final EntityTypeFilter etf = (EntityTypeFilter)pf;
 
-      return new TermOrTermsQuery("_type",
-                                  etf.getEntity(),
-                                  pf.getNot());
+      return new MatchAllQueryBuilder();
+      //return new TermOrTermsQuery("_type",
+      //                            etf.getEntity(),
+      //                            pf.getNot());
     }
 
     if (f instanceof PresenceFilter) {
@@ -1635,13 +1286,13 @@ public class ESQueryFilter extends ESQueryFilterBase
         return makeQuery(pf.getPropertyIndex(),
                          makePropertyRef(pf.getPropertyIndexes(), null),
                          null,
-                         null, OperationType.presence, 1);
+                         null, OperationType.presence, 1, false);
       }
 
       return makeQuery(pf.getPropertyIndex(),
                        makePropertyRef(pf.getPropertyIndexes(), null),
                        null,
-                       null, OperationType.absence, 1);
+                       null, OperationType.absence, 1, false);
     }
 
     if (pf instanceof TimeRangeFilter) {
@@ -1650,7 +1301,45 @@ public class ESQueryFilter extends ESQueryFilterBase
                        null,
                        ((TimeRangeFilter)pf).getEntity(),
                        OperationType.timeRange,
-                       1);
+                       1, pf.getNot());
+    }
+
+    if (pf instanceof BwCollectionFilter) {
+      if (!pf.getNot()) {
+        queryLimited = true;
+      }
+
+      final String path = ((BwCollectionFilter)pf).getPath();
+
+      return new TermOrTermsQuery(colpathJname,
+                             path,
+                             pf.getNot(),
+                             f.getName());
+    }
+
+    if (pf instanceof EntityTimeRangeFilter) {
+      final EntityTimeRangeFilter etrf = (EntityTimeRangeFilter)pf;
+
+      final TimeRange tr = etrf.getEntity();
+      String start = null;
+      String end = null;
+
+      if (tr.getStart() != null) {
+        start = tr.getStart().toString();
+      }
+
+      if (tr.getEnd() != null) {
+        end = tr.getEnd().toString();
+      }
+
+      return addDateRangeQuery(null, etrf.getEntityType(),
+                               start, end);
+    }
+
+    if (pf.getPropertyIndex() == PropertyInfoIndex.COLLECTION) {
+      if (!pf.getNot()) {
+        queryLimited = true;
+      }
     }
 
     if (pf instanceof ObjectFilter) {
@@ -1668,7 +1357,7 @@ public class ESQueryFilter extends ESQueryFilterBase
                        fullTermsPath,
                        getValue((ObjectFilter)pf),
                        OperationType.compare,
-                       1);
+                       1, pf.getNot());
     }
 
     return null;
@@ -1728,12 +1417,6 @@ public class ESQueryFilter extends ESQueryFilterBase
     }
 
     return qbs;
-  }
-
-  private FilterBuilder doView(final BwViewFilter vf) throws CalFacadeException {
-    final FilterBuilder fb = makeFilter(vf.getFilter());
-
-    return fb;
   }
 
   private Object getValue(final ObjectFilter of) throws CalFacadeException {

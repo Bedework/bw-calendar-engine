@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.bedework.calfacade.BwEventProperty.statusDeleted;
-import static org.bedework.calfacade.indexing.BwIndexer.docTypeUpdateTracker;
 
 /** Class which handles manipulation of BwEventProperty subclasses which are
  * treated in the same manner, these being Category, Location and contact.
@@ -69,6 +68,8 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   private boolean adminCanEditAllPublic;
 
   private String lastChangeToken;
+
+  abstract String getDocType();
 
   /* fetch from indexer */
   abstract Collection<T> fetchAllIndexed(boolean publick,
@@ -382,18 +383,26 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
    *                   Protected methods
    * ==================================================================== */
 
-  protected BwIndexer getIndexer(final boolean getPublic,
-                                 final String ownerHref,
-                                 final String docType) throws CalFacadeException {
-    String href = checkHref(ownerHref);
+  public BwIndexer getIndexer() {
+    return getIndexer(getDocType());
+  }
+
+  public BwIndexer getIndexer(final boolean getPublic,
+                                 final String ownerHref) {
+    String href;
+    try {
+      href = checkHref(ownerHref);
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
 
     final boolean publick = getPublic || isGuest() || isPublicAdmin();
 
     if (publick) {
-      return getSvc().getIndexer(true, docType);
+      return getSvc().getIndexer(true, getDocType());
     }
 
-    return getSvc().getIndexer(href, docType);
+    return getSvc().getIndexer(href, getDocType());
   }
 
   /**
@@ -401,7 +410,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
    * @throws CalFacadeException
    */
   protected boolean indexChanged() throws CalFacadeException {
-    final String token = getIndexer(docTypeUpdateTracker).currentChangeToken();
+    final String token = getIndexer().currentChangeToken();
 
     final boolean changed = lastChangeToken == null ||
         !lastChangeToken.equals(token);

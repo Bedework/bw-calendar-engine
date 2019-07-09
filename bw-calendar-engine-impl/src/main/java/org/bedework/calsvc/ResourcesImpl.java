@@ -309,8 +309,10 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
           if (col != null) {
             create = false;
 
-            // Ensure it's indexed
-            collectionIndexer.indexEntity(col);
+            if (getSvc().getCalendarsHandler().getIdx(parentPath) == null) {
+              // Ensure it's indexed
+              collectionIndexer.indexEntity(col);
+            }
           }
         } catch (final Throwable t) {
           if (debug()) {

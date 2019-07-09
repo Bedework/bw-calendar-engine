@@ -45,32 +45,6 @@ public interface IndexProperties {
   @MBeanInfo("Non-embedded indexer url")
   String getIndexerURL();
 
-  /** Do we run an embedded indexer?
-   *
-   * @param val
-   */
-  void setEmbeddedIndexer(boolean val);
-
-  /** Do we run an embedded indexer?
-   *
-   * @return flag
-   */
-  @MBeanInfo("Do we run an embedded indexer?")
-  boolean getEmbeddedIndexer();
-
-  /** Do we run indexer with http enabled?
-   *
-   * @param val
-   */
-  void setHttpEnabled(boolean val);
-
-  /** Do we run indexer with http enabled?
-   *
-   * @return flag
-   */
-  @MBeanInfo("Do we run indexer with http enabled?")
-  boolean getHttpEnabled();
-
   /** Set the cluster name
    *
    * @param val

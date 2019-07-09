@@ -54,22 +54,26 @@ public class ContactsImpl
   }
 
   @Override
+  String getDocType() {
+    return docTypeContact;
+  }
+
+  @Override
   Collection<BwContact> fetchAllIndexed(final boolean publick,
                                         final String ownerHref)
           throws CalFacadeException {
     return filterDeleted(getIndexer(publick, 
-                                    ownerHref,
-                                    docTypeContact).fetchAllContacts());
+                                    ownerHref).fetchAllContacts());
   }
 
   @Override
   BwContact fetchIndexedByUid(final String uid) throws CalFacadeException {
-    return getIndexer(docTypeContact).fetchContact(uid, PropertyInfoIndex.UID);
+    return getIndexer().fetchContact(uid, PropertyInfoIndex.UID);
   }
 
   @Override
   BwContact fetchIndexed(final String href) throws CalFacadeException {
-    return getIndexer(docTypeContact).fetchContact(href, PropertyInfoIndex.HREF);
+    return getIndexer().fetchContact(href, PropertyInfoIndex.HREF);
   }
 
   @Override
@@ -85,7 +89,7 @@ public class ContactsImpl
 
   @Override
   public BwContact find(final BwString val) throws CalFacadeException {
-    return getIndexer(docTypeContact).fetchContact(val.getValue(),
+    return getIndexer().fetchContact(val.getValue(),
                                      PropertyInfoIndex.CN,
                                      PropertyInfoIndex.VALUE);
   }
@@ -102,7 +106,7 @@ public class ContactsImpl
       return Response.error(new GetEntitiesResponse<>(), pr.message);
     }
 
-    return getIndexer(docTypeContact).findContacts(pr.filter, from, size);
+    return getIndexer().findContacts(pr.filter, from, size);
   }
 }
 

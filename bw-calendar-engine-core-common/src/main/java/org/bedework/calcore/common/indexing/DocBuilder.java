@@ -270,7 +270,7 @@ public class DocBuilder extends DocBuilderBase {
       makeField(PropertyInfoIndex.SEQUENCE, ent.getSequence());
       makeField("contentType", ent.getContentType());
       makeField("encoding", ent.getEncoding());
-      makeField("contentlength", ent.getContentLength());
+      makeField("contentLength", ent.getContentLength());
 
       endObject();
 
@@ -293,6 +293,8 @@ public class DocBuilder extends DocBuilderBase {
       makeField(PropertyInfoIndex.COLLECTION, ent.getColPath());
 
       makeField("content", ent.getEncodedContent());
+
+      endObject();
 
       return makeDocInfo(BwIndexer.docTypeResourceContent, 0, ent.getHref());
     } catch (final CalFacadeException cfe) {
@@ -625,23 +627,8 @@ public class DocBuilder extends DocBuilderBase {
 
         makeField(PropertyInfoIndex.LOCATION_HREF, loc.getHref());
 
-        String s = null;
-
-        if (loc.getAddress() != null) {
-          s = loc.getAddress().getValue();
-        }
-
-        if (loc.getSubaddress() != null) {
-          if (s == null) {
-            s = loc.getSubaddress().getValue();
-          } else {
-            s = s + " " + loc.getSubaddress().getValue();
-          }
-        }
-
-        if (s != null) {
-          makeField(PropertyInfoIndex.LOCATION_STR, s);
-        }
+        makeField(PropertyInfoIndex.LOCATION_STR,
+                  loc.getCombinedValues());
       } else {
         // Try the href
         final String locHref = ev.getLocationHref();
@@ -926,7 +913,7 @@ public class DocBuilder extends DocBuilderBase {
         startObject();
         makeField(PropertyInfoIndex.NAME, view.getName());
 
-        indexStrings(getJname(PropertyInfoIndex.HREF),
+        indexStrings(getJname(PropertyInfoIndex.COLLECTION),
                      view.getCollectionPaths());
 
         endObject();

@@ -30,6 +30,7 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
 
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeCategory;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
 
 /** Class which handles manipulation of Locations.
@@ -55,9 +56,14 @@ public class LocationsImpl
   }
 
   @Override
+  String getDocType() {
+    return docTypeLocation;
+  }
+
+  @Override
   public GetEntityResponse<BwLocation> fetchLocationByKey(final String keyName,
                                        final String keyVal) {
-    return getIndexer(docTypeLocation).fetchLocationByKey(keyName, keyVal);
+    return getIndexer().fetchLocationByKey(keyName, keyVal);
   }
 
   @Override
@@ -68,7 +74,7 @@ public class LocationsImpl
 
     try {
       final BwLocation loc =
-              getIndexer(docTypeLocation)
+              getIndexer()
                       .fetchLocation(val,
                                      PropertyInfoIndex.LOC_COMBINED_VALUES);
 
@@ -93,18 +99,17 @@ public class LocationsImpl
                                          final String ownerHref)
           throws CalFacadeException {
     return filterDeleted(getIndexer(publick, 
-                                    ownerHref,
-                                    docTypeLocation).fetchAllLocations());
+                                    ownerHref).fetchAllLocations());
   }
 
   @Override
   BwLocation fetchIndexedByUid(final String uid) throws CalFacadeException {
-    return getIndexer(docTypeLocation).fetchLocation(uid, PropertyInfoIndex.UID);
+    return getIndexer().fetchLocation(uid, PropertyInfoIndex.UID);
   }
 
   @Override
   BwLocation fetchIndexed(final String href) throws CalFacadeException {
-    return getIndexer(docTypeLocation).fetchLocation(href, PropertyInfoIndex.HREF);
+    return getIndexer().fetchLocation(href, PropertyInfoIndex.HREF);
   }
 
   @Override
@@ -137,7 +142,7 @@ public class LocationsImpl
       return Response.error(new GetEntitiesResponse<>(), pr.message);
     }
 
-    return getIndexer(docTypeLocation).findLocations(pr.filter, from, size);
+    return getIndexer().findLocations(pr.filter, from, size);
   }
 }
 

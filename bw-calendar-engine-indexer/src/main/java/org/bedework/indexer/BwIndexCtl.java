@@ -234,26 +234,6 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   }
 
   @Override
-  public void setEmbeddedIndexer(final boolean val) {
-    getConfig().setEmbeddedIndexer(val);
-  }
-
-  @Override
-  public boolean getEmbeddedIndexer() {
-    return getConfig().getEmbeddedIndexer();
-  }
-
-  @Override
-  public void setHttpEnabled(final boolean val) {
-    getConfig().setHttpEnabled(val);
-  }
-
-  @Override
-  public boolean getHttpEnabled() {
-    return getConfig().getHttpEnabled();
-  }
-
-  @Override
   public void setClusterName(final String val) {
     getConfig().setClusterName(val);
   }

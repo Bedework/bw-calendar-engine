@@ -18,8 +18,10 @@
 */
 package org.bedework.calfacade.filter;
 
+import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.Util;
 
 import java.util.List;
 
@@ -50,6 +52,31 @@ public class SortTerm {
    */
   public List<PropertyInfoIndex> getProperties() {
     return properties;
+  }
+
+  public String getPropertyRef() {
+    if (Util.isEmpty(properties)) {
+      return null;
+    }
+
+    String delim = "";
+
+    final StringBuilder sb = new StringBuilder();
+
+    for (final PropertyInfoIndex pii : properties) {
+      final BwIcalPropertyInfo.BwIcalPropertyInfoEntry ipie =
+              BwIcalPropertyInfo.getPinfo(pii);
+
+      if (ipie == null) {
+        return null;
+      }
+
+      sb.append(delim);
+      sb.append(ipie.getJname());
+      delim = ".";
+    }
+
+    return sb.toString();
   }
 
   /**

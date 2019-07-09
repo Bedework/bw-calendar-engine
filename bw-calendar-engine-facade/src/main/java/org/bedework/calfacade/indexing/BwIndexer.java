@@ -50,7 +50,6 @@ import java.util.TreeSet;
 public interface BwIndexer extends Serializable {
   // Types of entity we index
   String docTypeUnknown = "unknown";
-  String docTypeUpdateTracker = "updateTracker";
   String docTypePrincipal = "principal";
   String docTypePreferences = "preferences";
   String docTypeCollection = "collection";
@@ -64,7 +63,6 @@ public interface BwIndexer extends Serializable {
 
   String[] allDocTypes = {
           docTypeUnknown,
-          docTypeUpdateTracker,
           docTypePrincipal,
           docTypePreferences,
           docTypeCollection,
@@ -81,9 +79,6 @@ public interface BwIndexer extends Serializable {
   enum IndexedType {
     /** */
     unreachableEntities(docTypeUnknown),
-
-    /** */
-    updateTracker(docTypeUpdateTracker),
 
     /** */
     principals(docTypePrincipal),

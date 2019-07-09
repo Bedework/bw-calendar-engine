@@ -18,7 +18,7 @@
 
     <bw-access.version>4.0.6</bw-access.version>
     <bw-caldav.version>4.0.7</bw-caldav.version>
-		<bw-util.version>4.0.24</bw-util.version>
+		<bw-util.version>4.0.25-SNAPSHOT</bw-util.version>
     <bw-util-hibernate.version>4.0.21</bw-util-hibernate.version>
     <bw-util-logging.version>4.0.2</bw-util-logging.version>
     <bw-util2.version>4.0.4</bw-util2.version>
@@ -41,7 +41,7 @@
     -->
 
 		<!-- Third Party Library Versions -->
-    <elasticsearch.version>1.5.2</elasticsearch.version>
+    <elasticsearch.version>7.2.0</elasticsearch.version>
     <hibernate.version>5.2.5.Final</hibernate.version>
     <hibernate-validator.version>5.3.4.Final</hibernate-validator.version>
 		<ical4j-vcard.version>1.0.4</ical4j-vcard.version>
@@ -367,6 +367,12 @@
       <dependency>
         <groupId>org.elasticsearch</groupId>
         <artifactId>elasticsearch</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-high-level-client</artifactId>
         <version>${elasticsearch.version}</version>
       </dependency>
 

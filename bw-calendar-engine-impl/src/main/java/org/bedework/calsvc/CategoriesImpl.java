@@ -54,22 +54,26 @@ public class CategoriesImpl
   }
 
   @Override
+  String getDocType() {
+    return docTypeCategory;
+  }
+
+  @Override
   Collection<BwCategory> fetchAllIndexed(final boolean publick,
                                          final String ownerHref)
           throws CalFacadeException {
     return filterDeleted(getIndexer(publick,
-                                    ownerHref,
-                                    docTypeCategory).fetchAllCats());
+                                    ownerHref).fetchAllCats());
   }
 
   @Override
   BwCategory fetchIndexedByUid(final String uid) throws CalFacadeException {
-    return getIndexer(docTypeCategory).fetchCat(uid, PropertyInfoIndex.UID);
+    return getIndexer().fetchCat(uid, PropertyInfoIndex.UID);
   }
 
   @Override
   BwCategory fetchIndexed(final String href) throws CalFacadeException {
-    return getIndexer(docTypeCategory).fetchCat(href, PropertyInfoIndex.HREF);
+    return getIndexer().fetchCat(href, PropertyInfoIndex.HREF);
   }
 
   @Override
@@ -85,7 +89,7 @@ public class CategoriesImpl
 
   @Override
   public BwCategory find(final BwString val) throws CalFacadeException {
-    return getIndexer(docTypeCategory)
+    return getIndexer()
             .fetchCat(val.getValue(),
                       PropertyInfoIndex.CATEGORIES,
                       PropertyInfoIndex.VALUE);
@@ -103,7 +107,7 @@ public class CategoriesImpl
       return Response.error(new GetEntitiesResponse<>(), pr.message);
     }
 
-    return getIndexer(docTypeCategory)
+    return getIndexer()
             .findCategories(pr.filter, from, size);
   }
 }

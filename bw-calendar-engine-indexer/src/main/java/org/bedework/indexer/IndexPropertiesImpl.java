@@ -40,10 +40,6 @@ public class IndexPropertiesImpl
         implements IndexProperties {
   private String indexerURL;
 
-  private boolean embeddedIndexer;
-
-  private boolean httpEnabled;
-
   private String clusterName;
 
   private String nodeName;
@@ -74,26 +70,6 @@ public class IndexPropertiesImpl
   @Override
   public String getIndexerURL() {
     return indexerURL;
-  }
-
-  @Override
-  public void setEmbeddedIndexer(final boolean val) {
-    embeddedIndexer = val;
-  }
-
-  @Override
-  public boolean getEmbeddedIndexer() {
-    return embeddedIndexer;
-  }
-
-  @Override
-  public void setHttpEnabled(final boolean val) {
-    httpEnabled = val;
-  }
-
-  @Override
-  public boolean getHttpEnabled() {
-    return httpEnabled;
   }
 
   @Override
@@ -238,7 +214,6 @@ public class IndexPropertiesImpl
     final ToString ts = new ToString(this);
 
     ts.append("indexerURL", getIndexerURL());
-    ts.append("embeddedIndexer", getEmbeddedIndexer());
     ts.append("indexerConfig", getIndexerConfig());
 
     ts.newLine();
@@ -261,7 +236,6 @@ public class IndexPropertiesImpl
     clone.setName(getName());
 
     clone.setIndexerURL(getIndexerURL());
-    clone.setEmbeddedIndexer(getEmbeddedIndexer());
     clone.setIndexerConfig(getIndexerConfig());
 
     clone.setAccount(getAccount());

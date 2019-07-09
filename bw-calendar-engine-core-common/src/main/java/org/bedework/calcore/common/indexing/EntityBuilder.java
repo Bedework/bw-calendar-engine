@@ -105,8 +105,12 @@ public class EntityBuilder extends EntityBuilderBase {
    * ======================================================================== */
 
   DocBuilderBase.UpdateInfo makeUpdateInfo() {
-    return DocBuilder.makeUpdateInfo(String.valueOf(getFirstValue("_timestamp")),
-                                     getLong("count"));
+    Long l = getLong("esUpdateCount");
+    if (l == null) {
+      l = 0l;
+    }
+
+    return new DocBuilderBase.UpdateInfo(l);
   }
 
   BwPrincipal makePrincipal() throws CalFacadeException {
@@ -208,7 +212,7 @@ public class EntityBuilder extends EntityBuilderBase {
     ent.setSequence(getInt(PropertyInfoIndex.SEQUENCE));
     ent.setContentType(getString("contentType"));
     ent.setEncoding(getString("encoding"));
-    ent.setContentLength(getLongVal("contentlength"));
+    ent.setContentLength(getLongVal("contentLength"));
 
     return ent;
   }
@@ -1001,7 +1005,7 @@ public class EntityBuilder extends EntityBuilderBase {
         final BwView view = new BwView();
 
         view.setName(getString(PropertyInfoIndex.NAME));
-        final Set<String> hrefs = getStringSet(PropertyInfoIndex.HREF);
+        final Set<String> hrefs = getStringSet(PropertyInfoIndex.COLLECTION);
 
         if (!Util.isEmpty(hrefs)) {
           view.setCollectionPaths(new ArrayList<>(hrefs));

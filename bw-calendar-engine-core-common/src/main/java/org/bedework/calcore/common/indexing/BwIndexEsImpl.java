@@ -78,82 +78,72 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Period;
+import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.ActionFuture;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequestBuilder;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequestBuilder;
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesResponse;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
-import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
-import org.elasticsearch.action.admin.indices.status.IndicesStatusRequestBuilder;
-import org.elasticsearch.action.admin.indices.status.IndicesStatusResponse;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
-import org.elasticsearch.action.deletebyquery.IndexDeleteByQueryResponse;
-import org.elasticsearch.action.get.GetRequestBuilder;
+import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
+import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.ClusterAdminClient;
-import org.elasticsearch.client.IndicesAdminClient;
-import org.elasticsearch.client.Requests;
-import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.client.GetAliasesResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.CreateIndexResponse;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
-import org.elasticsearch.common.io.Streams;
-import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.FilteredQueryBuilder;
+import org.elasticsearch.index.query.MatchNoneQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder.Operator;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermsQueryBuilder;
-import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
-import org.elasticsearch.script.ScriptService;
+import org.elasticsearch.script.Script;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static org.bedework.access.PrivilegeDefs.privRead;
 import static org.bedework.calcore.common.indexing.DocBuilder.ItemKind.entity;
@@ -211,15 +201,37 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
   private final AccessChecker accessCheck;
 
-  private final String host;
-  private int port = 9300;
+  private static class HostPort {
+    private final String host;
+    private int port = 9300;
 
-  private static Client theClient;
+    HostPort(final String url) {
+      final int pos = url.indexOf(":");
+
+      if (pos < 0) {
+        host = url;
+      } else {
+        host = url.substring(0, pos);
+        if (pos < url.length()) {
+          port = Integer.valueOf(url.substring(pos + 1));
+        }
+      }
+    }
+
+    String getHost() {
+      return host;
+    }
+
+    int getPort() {
+      return port;
+    }
+  }
+
+  private final List<HostPort> esHosts = new ArrayList<>();
+  private static RestHighLevelClient theClient;
   private static final Object clientSyncher = new Object();
 
   private String docType;
-
-  private final String updateTrackerIndex = "bw" + docTypeUpdateTracker.toLowerCase();
 
   private String targetIndex;
   private final String[] searchIndexes;
@@ -236,8 +248,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   private final IndexProperties idxpars;
   private final BasicSystemProperties basicSysprops;
 
-  private static UpdateInfo updateInfo = null;
-  private final static Object updateInfoLock = new Object();
+  /* Indexed by index name */
+  private final static Map<String, UpdateInfo> updateInfo = new HashMap<>();
 
   private final static Set<String> knownTypesLowered =
           new TreeSet<>();
@@ -430,19 +442,16 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     unauthpars = configs.getAuthProperties(false);
     basicSysprops = configs.getBasicSystemProperties();
 
-    final String url = idxpars.getIndexerURL();
+    final String urls = idxpars.getIndexerURL();
 
-    if (url == null) {
-      host = "localhost";
+    if (urls == null) {
+      esHosts.add(new HostPort("localhost"));
     } else {
-      final int pos = url.indexOf(":");
+      final String[] urlsSplit = urls.split(",");
 
-      if (pos < 0) {
-        host = url;
-      } else {
-        host = url.substring(0, pos);
-        if (pos < url.length()) {
-          port = Integer.valueOf(url.substring(pos + 1));
+      for (final String url : urlsSplit) {
+        if ((url != null) && (url.length() > 0)) {
+          esHosts.add(new HostPort(url));
         }
       }
     }
@@ -500,7 +509,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     private String start;
     private String end;
     private QueryBuilder curQuery;
-    private FilterBuilder curFilter;
+    private QueryBuilder curFilter;
     private List<SortTerm> curSort;
     private DeletedState delState;
     private RecurringRetrievalMode recurRetrieval;
@@ -569,61 +578,59 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
   @Override
   public void markTransaction() throws CalFacadeException {
-    synchronized (updateInfoLock) {
-      final boolean wasUpdate = caches.testResetUpdate();
+    final UpdateInfo ui = updateInfo.get(targetIndex);
+    if ((ui != null) && !ui.getUpdated()) {
+      return;
+    }
 
-      if (!wasUpdate) {
-        return;
-      }
+    final UpdateRequest req = new UpdateRequest(targetIndex,
+                                                updateTrackerId);
+    req.retryOnConflict(20)
+       .setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL)
+       .script(new Script("ctx._source.esUpdateCount += 1"));
 
-      try {
-        if ((updateInfo != null) && (updateInfo.getCount() >= (0111111111 - 1000))) {
-          index(new UpdateInfo());
-          return;
-        }
-
-        final UpdateRequestBuilder urb =
-                getClient().prepareUpdate(updateTrackerIndex,
-                                          docTypeUpdateTracker,
-                                          updateTrackerId).
-                                   setRetryOnConflict(20).
-                                   setRefresh(true);
-
-        urb.setScript("ctx._source.count += 1",
-                      ScriptService.ScriptType.INLINE);
-        final UpdateResponse ur = urb.execute().actionGet();
-      } catch (final ElasticsearchException ese) {
-        warn("Exception updating UpdateInfo: " + ese
-                .getLocalizedMessage());
-        index(new UpdateInfo());
-      }
+    try {
+      final UpdateResponse ur = getClient().update(req, RequestOptions.DEFAULT);
+    } catch (final IOException ie) {
+      throw new CalFacadeException(ie);
     }
   }
 
   @Override
   public String currentChangeToken() throws CalFacadeException {
+    UpdateInfo ui;
     try {
-      final GetRequestBuilder grb = getClient()
-              .prepareGet(updateTrackerIndex,
-                          docTypeUpdateTracker,
-                          updateTrackerId).
-                      setFields("count", "_timestamp");
+      final GetRequest req = new GetRequest(targetIndex,
+                                           updateTrackerId).
+                      storedFields("esUpdateCount");
 
-      final GetResponse gr = grb.execute().actionGet();
+      final GetResponse resp = getClient().get(req, RequestOptions.DEFAULT);
 
-      if (!gr.isExists()) {
+      if (!resp.isExists()) {
         return null;
       }
 
-      final EntityBuilder er = getEntityBuilder(gr.getFields());
-      updateInfo = er.makeUpdateInfo();
-    } catch (final ElasticsearchException ese) {
-      warn("Exception getting UpdateInfo: " + ese
-              .getLocalizedMessage());
-      updateInfo = new UpdateInfo();
+      final EntityBuilder er = getEntityBuilder(resp.getFields());
+      ui = er.makeUpdateInfo();
+
+      synchronized (updateInfo) {
+        final UpdateInfo fromTbl = updateInfo.get(targetIndex);
+
+        if ((fromTbl == null) || (fromTbl.getCount() < ui.getCount())) {
+          updateInfo.put(targetIndex, ui);
+        } else {
+          ui = fromTbl;
+        }
+      }
+
+      return ui.getChangeToken();
+    } catch (final IOException ie) {
+      warn("Exception getting UpdateInfo: " +
+                   ie.getLocalizedMessage());
+      ui = new UpdateInfo();
     }
 
-    return updateInfo.getChangeToken();
+    return ui.getChangeToken();
   }
 
   private class BulkListener implements BulkProcessor.Listener {
@@ -673,24 +680,31 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final QueryBuilder qb =
             getFilters(RecurringRetrievalMode.entityOnly)
                     .getAllForReindex(docType);
+
     final int timeoutMillis = 60000;  // 1 minute
     final TimeValue tv = new TimeValue(timeoutMillis);
     final int batchSize = 100;
 
-    final Client cl = getClient(resp);
+    final RestHighLevelClient cl = getClient(resp);
 
     if (cl == null) {
       return resp;
     }
 
-    final BulkProcessor bulkProcessor =
-            BulkProcessor.builder(cl,
-                                  new BulkListener())
-                         .setBulkActions(batchSize)
-                         .setConcurrentRequests(3)
-                         .setFlushInterval(tv)
-                         .build();
+    final BulkListener listener = new BulkListener();
 
+    BulkProcessor.Builder builder = BulkProcessor.builder(
+            (request, bulkListener) ->
+                    cl.bulkAsync(request, RequestOptions.DEFAULT, bulkListener),
+            listener);
+
+    final BulkProcessor bulkProcessor =
+            builder.setBulkActions(batchSize)
+                   .setConcurrentRequests(3)
+                   .setFlushInterval(tv)
+                   .build();
+
+    /*
     SearchResponse scrollResp = cl.prepareSearch(targetIndex)
                                   .setSearchType(SearchType.SCAN)
                                   .setScroll(tv)
@@ -698,105 +712,126 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                   .setSize(batchSize)
                                   .execute()
                                   .actionGet(); //100 hits per shard will be returned for each scroll
+*/
+
+    final SearchSourceBuilder ssb =
+            new SearchSourceBuilder()
+                    .size(batchSize)
+                    .query(qb);
+
+    final SearchRequest sr = new SearchRequest(targetIndex)
+            .source(ssb)
+            .scroll(tv);
 
     // Switch to new index
     targetIndex = indexName;
 
-    //Scroll until no hits are returned
-    while (true) {
-      for (final SearchHit hit : scrollResp.getHits().getHits()) {
-        final String dtype = hit.getType();
+    try {
+      SearchResponse scrollResp = cl.search(sr, RequestOptions.DEFAULT);
 
-        resp.incProcessed();
-
-        if ((resp.getProcessed() % 250) == 0) {
-          info("processed " + docType + ": " + resp.getProcessed());
+      if (scrollResp.status() != RestStatus.OK) {
+        if (debug()) {
+          debug("Search returned status " + scrollResp.status());
         }
+      }
 
-        if (dtype.equals(docTypeUpdateTracker)) {
-          continue;
-        }
+      //Scroll until no hits are returned
+      while (true) {
+        for (final SearchHit hit : scrollResp.getHits().getHits()) {
 
-        resp.getStats().inc(docToType.getOrDefault(dtype,
-                                                   unreachableEntities));
+          resp.incProcessed();
 
-        final ReindexResponse.Failure hitResp = new ReindexResponse.Failure();
-        final Object entity = makeEntity(hitResp, hit, null);
-
-        if (entity == null) {
-          warn("Unable to build entity " + hit.sourceAsString());
-          resp.incTotalFailed();
-          if (resp.getTotalFailed() < 50) {
-            resp.addFailure(hitResp);
-          }
-          continue;
-        }
-
-        if (entity instanceof BwShareableDbentity) {
-          final BwShareableDbentity ent = (BwShareableDbentity)entity;
-
-          principalHref = ent.getOwnerHref();
-        }
-
-        if (entity instanceof EventInfo) {
-          // This might be a single event or a recurring event.
-
-          final EventInfo ei = (EventInfo)entity;
-          final BwEvent ev = ei.getEvent();
-          if (ev.getRecurring()) {
-            resp.incRecurring();
+          if ((resp.getProcessed() % 250) == 0) {
+            info("processed " + docType + ": " + resp.getProcessed());
           }
 
-          if (!reindexEvent(hitResp,
-                            indexName,
-                            hit,
-                            ei,
-                            bulkProcessor)) {
-            warn("Unable to iondex event " + hit.sourceAsString());
+          resp.getStats().inc(docToType.getOrDefault(docType,
+                                                     unreachableEntities));
+
+          final ReindexResponse.Failure hitResp = new ReindexResponse.Failure();
+          final Object entity = makeEntity(hitResp, hit, null);
+
+          if (entity == null) {
+            warn("Unable to build entity " + hit.getSourceAsString());
             resp.incTotalFailed();
             if (resp.getTotalFailed() < 50) {
               resp.addFailure(hitResp);
             }
-          }
-        } else {
-          final EsDocInfo doc = makeDoc(resp, entity);
-
-          if (doc == null) {
-            if (resp.getStatus() != ok) {
-              resp.addFailure(hitResp);
-            }
-
             continue;
           }
 
-          final IndexRequest request =
-                  new IndexRequest(indexName, hit.type(),
-                                   doc.getId());
+          if (entity instanceof BwShareableDbentity) {
+            final BwShareableDbentity ent = (BwShareableDbentity)entity;
 
-          request.source(doc.getSource());
-          bulkProcessor.add(request);
+            principalHref = ent.getOwnerHref();
+          }
 
-          if (entity instanceof BwEventProperty) {
-            caches.put((BwEventProperty)entity);
+          if (entity instanceof EventInfo) {
+            // This might be a single event or a recurring event.
+
+            final EventInfo ei = (EventInfo)entity;
+            final BwEvent ev = ei.getEvent();
+            if (ev.getRecurring()) {
+              resp.incRecurring();
+            }
+
+            if (!reindexEvent(hitResp,
+                              indexName,
+                              hit,
+                              ei,
+                              bulkProcessor)) {
+              warn("Unable to iondex event " + hit.getSourceAsString());
+              resp.incTotalFailed();
+              if (resp.getTotalFailed() < 50) {
+                resp.addFailure(hitResp);
+              }
+            }
+          } else {
+            final EsDocInfo doc = makeDoc(resp, entity);
+
+            if (doc == null) {
+              if (resp.getStatus() != ok) {
+                resp.addFailure(hitResp);
+              }
+
+              continue;
+            }
+
+            final IndexRequest request =
+                    new IndexRequest(indexName);
+
+            request.id(doc.getId());
+
+            request.source(doc.getSource());
+            bulkProcessor.add(request);
+
+            if (entity instanceof BwEventProperty) {
+              caches.put((BwEventProperty)entity);
+            }
           }
         }
-      }
-      scrollResp = cl.prepareSearchScroll(scrollResp.getScrollId()).
-              setScroll(tv).
-                             execute().
-                             actionGet();
-      //Break condition: No hits are returned
-      if (scrollResp.getHits().getHits().length == 0) {
-        break;
-      }
-    }
 
-    try {
-      bulkProcessor.awaitClose(10, TimeUnit.MINUTES);
-    } catch (final InterruptedException e) {
-      errorReturn(resp,
-                  "Final bulk close was interrupted. Records may be missing",
-                  failed);
+        SearchScrollRequest scrollRequest =
+                new SearchScrollRequest(scrollResp.getScrollId());
+        scrollRequest.scroll(tv);
+        scrollResp = getClient().scroll(scrollRequest,
+                                        RequestOptions.DEFAULT);
+
+        //Break condition: No hits are returned
+        if (scrollResp.getHits().getHits().length == 0) {
+          break;
+        }
+      }
+
+      try {
+        bulkProcessor.awaitClose(10, TimeUnit.MINUTES);
+      } catch (final InterruptedException e) {
+        errorReturn(resp,
+                    "Final bulk close was interrupted. Records may be missing",
+                    failed);
+      }
+    } catch (final Throwable t) {
+      errorReturn(resp, t);
     }
 
     return resp;
@@ -815,75 +850,88 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       return errorReturn(resp, "indexName must be provided");
     }
 
-    final QueryBuilder qb = new FilteredQueryBuilder(null,
-                                                     FilterBuilders
-                                                             .matchAllFilter());
+    final QueryBuilder qb = QueryBuilders.matchAllQuery();
     final int timeoutMillis = 60000;  // 1 minute
     final TimeValue tv = new TimeValue(timeoutMillis);
     final int batchSize = 100;
 
-    final Client cl = getClient(resp);
+    final RestHighLevelClient cl = getClient(resp);
 
     if (cl == null) {
       return resp;
     }
 
-    SearchResponse scrollResp = cl.prepareSearch(indexName)
-                                  .setSearchType(SearchType.SCAN)
-                                  .setScroll(tv)
-                                  .setQuery(qb)
-                                  .setSize(batchSize)
-                                  .execute()
-                                  .actionGet(); //100 hits per shard will be returned for each scroll
+    final SearchSourceBuilder ssb =
+            new SearchSourceBuilder()
+                    .size(batchSize)
+                    .query(qb);
 
-    //Scroll until no hits are returned
-    while (true) {
-      for (final SearchHit hit : scrollResp.getHits().getHits()) {
-        resp.incProcessed();
-        final String dtype = hit.getType();
+    final SearchRequest sr = new SearchRequest(targetIndex)
+            .source(ssb)
+            .scroll(tv);
 
-        if (dtype.equals(docTypeEvent)) {
-          final EventInfo entity = (EventInfo)makeEntity(resp, hit,
-                                                         null);
-          if (entity == null) {
-            errorReturn(resp, "Unable to make doc for " + hit
-                    .sourceAsString());
-            continue;
-          }
+    try {
+      SearchResponse scrollResp = getClient()
+              .search(sr, RequestOptions.DEFAULT);
 
-          final BwEvent ev = entity.getEvent();
-
-          if (ev instanceof BwEventAnnotation) {
-            final BwEventAnnotation ann = (BwEventAnnotation)ev;
-
-            if (ann.testOverride()) {
-              resp.incOverrides();
-            }
-          }
-
-          if (ev.getRecurring()) {
-            resp.incRecurring();
-          }
-
-          if (ev.getRecurrenceId() == null) {
-            resp.incMasters();
-          } else {
-            resp.incInstances();
-          }
-        } else {
-          resp.getStats().inc(docToType.getOrDefault(dtype,
-                                                     unreachableEntities));
+      if (scrollResp.status() != RestStatus.OK) {
+        if (debug()) {
+          debug("Search returned status " + scrollResp.status());
         }
       }
 
-      scrollResp = cl.prepareSearchScroll(scrollResp.getScrollId()).
-              setScroll(tv)
-                     .execute()
-                     .actionGet();
-      //Break condition: No hits are returned
-      if (scrollResp.getHits().getHits().length == 0) {
-        break;
+      //Scroll until no hits are returned
+      while (true) {
+        for (final SearchHit hit : scrollResp.getHits().getHits()) {
+          resp.incProcessed();
+
+          if (docType.equals(docTypeEvent)) {
+            final EventInfo entity = (EventInfo)makeEntity(resp, hit,
+                                                           null);
+            if (entity == null) {
+              errorReturn(resp, "Unable to make doc for " + hit
+                      .getSourceAsString());
+              continue;
+            }
+
+            final BwEvent ev = entity.getEvent();
+
+            if (ev instanceof BwEventAnnotation) {
+              final BwEventAnnotation ann = (BwEventAnnotation)ev;
+
+              if (ann.testOverride()) {
+                resp.incOverrides();
+              }
+            }
+
+            if (ev.getRecurring()) {
+              resp.incRecurring();
+            }
+
+            if (ev.getRecurrenceId() == null) {
+              resp.incMasters();
+            } else {
+              resp.incInstances();
+            }
+          } else {
+            resp.getStats().inc(docToType.getOrDefault(docType,
+                                                       unreachableEntities));
+          }
+        }
+
+        SearchScrollRequest scrollRequest =
+                new SearchScrollRequest(scrollResp.getScrollId());
+        scrollRequest.scroll(tv);
+        scrollResp = getClient().scroll(scrollRequest,
+                                        RequestOptions.DEFAULT);
+
+        //Break condition: No hits are returned
+        if (scrollResp.getHits().getHits().length == 0) {
+          break;
+        }
       }
+    } catch (final Throwable t) {
+      errorReturn(resp, t);
     }
 
     return resp;
@@ -939,22 +987,22 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     final ESQueryFilter ef = getFilters(recurRetrieval);
 
-    res.curFilter = ef.buildFilter(filter);
-    if (res.curFilter instanceof MatchNone) {
+    res.curFilter = ef.buildQuery(filter);
+    if (res.curFilter instanceof MatchNoneQueryBuilder) {
       res.setFound(0);
       return res;
     }
 
-    res.curFilter = ef.addDateRangeFilter(res.curFilter,
-                                          IcalDefs.entityTypeEvent,
-                                          start,
-                                          end);
+    res.curFilter = ef.addDateRangeQuery(res.curFilter,
+                                         IcalDefs.entityTypeEvent,
+                                         start,
+                                         end);
 
     res.curFilter = ef.addLimits(res.curFilter,
                                  defaultFilterContext,
                                  res.delState,
-                                 docType == docTypeEvent);
-    if (res.curFilter instanceof MatchNone) {
+                                 docType.equals(docTypeEvent));
+    if (res.curFilter instanceof MatchNoneQueryBuilder) {
       res.setFound(0);
       return res;
     }
@@ -964,55 +1012,24 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     res.curSort = sort;
 
-    final SearchRequestBuilder srb = getClient()
-            .prepareSearch(searchIndexes);
-    if (res.curQuery != null) {
-      srb.setQuery(res.curQuery);
-    }
-
-    srb.setSearchType(SearchType.COUNT)
-       .setPostFilter(res.curFilter)
-       .setFrom(0)
-       .setSize(0);
-
-    if (!Util.isEmpty(res.curSort)) {
-      SortOrder so;
-
-      for (final SortTerm st : res.curSort) {
-        if (st.isAscending()) {
-          so = SortOrder.ASC;
-        } else {
-          so = SortOrder.DESC;
-        }
-
-        srb.addSort(new FieldSortBuilder(
-                ESQueryFilter.makePropertyRef(st.getProperties(), null))
-                            .order(so));
-      }
-    }
-
+    res.pageStart = 0;
     res.latestStart = ef.getLatestStart();
     res.earliestEnd = ef.getEarliestEnd();
 
-    if (debug()) {
-      debug("Search: latestStart=" + res.latestStart +
-                    " earliestEnd=" + res.earliestEnd +
-                    " targetIndex=" + targetIndex +
-                    "; srb=" + srb);
+    final SearchResponse resp = executeSearch(res,
+                                              0,
+                                              0,
+                                              false);
+    if (resp == null) {
+      return res;
     }
-
-    final SearchResponse resp = srb.execute().actionGet();
-
-//    if (resp.status() != RestStatus.OK) {
-    //TODO
-//    }
 
     if (debug()) {
       debug("Search: returned status " + resp.status() +
                     " found: " + resp.getHits().getTotalHits());
     }
 
-    res.setFound(resp.getHits().getTotalHits());
+    res.setFound(resp.getHits().getTotalHits().value);
 
     return res;
   }
@@ -1060,16 +1077,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       res.pageStart = offset;
 
-      final SearchRequestBuilder srb = getClient()
-              .prepareSearch(searchIndexes);
-      if (res.curQuery != null) {
-        srb.setQuery(res.curQuery);
-      }
-
-      srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-         .setPostFilter(res.curFilter)
-         .setFrom(res.pageStart);
-
       final int size;
 
       if (num < 0) {
@@ -1080,32 +1087,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       // TODO - need a configurable absolute max size for fetches
 
-      srb.setSize(size);
       final List<SearchResultEntry> entities = new ArrayList<>(size);
 
-      if (!Util.isEmpty(res.curSort)) {
-        SortOrder so;
-
-        for (final SortTerm st : res.curSort) {
-          if (st.isAscending()) {
-            so = SortOrder.ASC;
-          } else {
-            so = SortOrder.DESC;
-          }
-
-          srb.addSort(new FieldSortBuilder(
-                  ESQueryFilter
-                          .makePropertyRef(st.getProperties(), null))
-                              .order(so));
-        }
-      }
-
-      if (res.requiresSecondaryFetch) {
-        // Limit to href then fetch those
-        srb.addField(ESQueryFilter.hrefJname);
-      }
-
-      final SearchResponse resp = srb.execute().actionGet();
+      final SearchResponse resp = executeSearch(res,
+                                                res.pageStart,
+                                                size,
+                                                false);
 
       if (resp.status() != RestStatus.OK) {
         if (debug()) {
@@ -1117,11 +1104,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       if ((hitsResp.getHits() == null) ||
               (hitsResp.getHits().length == 0)) {
-        return entities;
-      }
-
-      //Break condition: No hits are returned
-      if (hitsResp.hits().length == 0) {
         return entities;
       }
 
@@ -1153,12 +1135,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       for (final SearchHit hit : hits) {
         res.pageStart++;
-        final String dtype = hit.getType();
-
-        if (dtype == null) {
-          throw new CalFacadeException(
-                  "org.bedework.index.noitemtype");
-        }
 
         final String kval = hit.getId();
 
@@ -1167,10 +1143,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                   "org.bedework.index.noitemkey");
         }
 
-        final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
+        final EntityBuilder eb = getEntityBuilder(hit.getSourceAsMap());
 
         Object entity = null;
-        switch (dtype) {
+        switch (docType) {
           case docTypeCollection:
             entity = makeCollection(eb);
             break;
@@ -1220,8 +1196,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
               continue;
             }
 
-            if (checkTimeRange && dtype.equals(docTypeEvent) && ev
-                    .getRecurring()) {
+            if (checkTimeRange && ev.getRecurring()) {
               if (Util.isEmpty(RecurUtil.getPeriods(ev,
                                                     99,
                                                     1,
@@ -1237,7 +1212,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         }
 
         entities.add(new SearchResultEntry(entity,
-                                           dtype,
+                                           docType,
                                            hit.getScore()));
       }
 
@@ -1318,7 +1293,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         } else {
           debug("IndexResponse: index=" + resp.getIndex() +
                         " id=" + resp.getId() +
-                        " type=" + resp.getType() +
+                        " type=" + docType +
                         " version=" + resp.getVersion());
         }
       }
@@ -1348,29 +1323,39 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       while (true) {
         // Search original for overrides
-        final SearchRequestBuilder srb = getClient()
-                .prepareSearch(searchIndexes);
 
-        srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-           .setPostFilter(flts.overridesOnly(ev.getUid()));
-        srb.setFrom(start);
-        srb.setSize(batchSize);
+        final SearchSourceBuilder ssb =
+                new SearchSourceBuilder()
+                        .from(start)
+                        .size(batchSize)
+                        .postFilter(flts.overridesOnly(ev.getUid()));
 
-        //if (debug()) {
-        //  debug("Overrides: targetIndex=" + indexName +
-        //                "; srb=" + srb);
-        //}
+        final RestHighLevelClient cl = getClient(resp);
 
-        final SearchResponse sresp = srb.execute().actionGet();
+        if (cl == null) {
+          return false;
+        }
 
-        if (sresp.status() != RestStatus.OK) {
+        final SearchRequest req = new SearchRequest(searchIndexes)
+                .searchType(SearchType.QUERY_THEN_FETCH)
+                .source(ssb);
+
+        final SearchResponse sres;
+        try {
+          sres = getClient().search(req, RequestOptions.DEFAULT);
+        } catch (final Throwable t) {
+          errorReturn(resp, t);
+          return false;
+        }
+
+        if (sres.status() != RestStatus.OK) {
           errorReturn(resp,
-                      "Search returned status " + sresp.status());
+                      "Search returned status " + sres.status());
 
           return false;
         }
 
-        final SearchHit[] hits = sresp.getHits().getHits();
+        final SearchHit[] hits = sres.getHits().getHits();
 
         if ((hits == null) ||
                 (hits.length == 0)) {
@@ -1379,13 +1364,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         }
 
         for (final SearchHit hit : hits) {
-          final String dtype = hit.getType();
-
-          if (dtype == null) {
-            errorReturn(resp, "org.bedework.index.noitemtype");
-            return false;
-          }
-
           final String kval = hit.getId();
 
           if (kval == null) {
@@ -1394,10 +1372,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           }
 
           final EntityBuilder eb = getEntityBuilder(
-                  hit.sourceAsMap());
+                  hit.getSourceAsMap());
 
           final Object entity;
-          switch (dtype) {
+          switch (docType) {
             case docTypeEvent:
               entity = makeEvent(eb, resp, kval, false);
               final EventInfo oei = (EventInfo)entity;
@@ -1415,7 +1393,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           }
 
           // Unexpected type
-          errorReturn(resp, "Expected override only: " + dtype);
+          errorReturn(resp, "Expected override only: " + docType);
           return false;
         }
 
@@ -1457,8 +1435,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         }
 
         final IndexRequest request =
-                new IndexRequest(indexName, sh.type(), doc.getId());
+                new IndexRequest(indexName);
 
+        request.id(doc.getId());
         request.source(doc.getSource());
         bulkProcessor.add(request);
         return true;
@@ -1546,8 +1525,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           }
 
           final IndexRequest request =
-                  new IndexRequest(indexName, sh.type(), doc.getId());
+                  new IndexRequest(indexName);
 
+          request.id(doc.getId());
           request.source(doc.getSource());
           bulkProcessor.add(request);
 
@@ -1594,8 +1574,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         }
 
         final IndexRequest request =
-                new IndexRequest(indexName, sh.type(), doc.getId());
+                new IndexRequest(indexName);
 
+        request.id(doc.getId());
         request.source(doc.getSource());
         bulkProcessor.add(request);
 
@@ -1627,8 +1608,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
 
       final IndexRequest request =
-              new IndexRequest(indexName, sh.type(), doc.getId());
+              new IndexRequest(indexName);
 
+      request.id(doc.getId());
       request.source(doc.getSource());
       bulkProcessor.add(request);
       //</editor-fold>
@@ -1667,31 +1649,33 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   private void markUpdated() throws CalFacadeException {
-    if (updateInfo == null) {
+    UpdateInfo ui = updateInfo.get(targetIndex);
+
+    if (ui == null) {
       currentChangeToken();
     }
 
-    if (updateInfo == null) {
-      throw new CalFacadeException("Unable to set updateInfo");
+    ui = updateInfo.get(targetIndex);
+
+    if (ui == null) {
+      throw new CalFacadeException("Unable to mark update");
     }
 
-    caches.markUpdate(docType);
+    ui.setUpdated(true);
   }
 
   @Override
   public void unindexContained(final String colPath)
           throws CalFacadeException {
     try {
-      final DeleteByQueryRequestBuilder dqrb = getClient()
-              .prepareDeleteByQuery(
-                      targetIndex);
+      final DeleteByQueryRequest dqr =
+              new DeleteByQueryRequest(targetIndex);
 
-      FilterBuilder fb = getFilters(null).colPathFilter(null, colPath);
+      dqr.setConflicts("proceed");
+      dqr.setQuery(getFilters(null).colPathFilter(null, colPath));
 
-      dqrb.setQuery(new FilteredQueryBuilder(null, fb));
-
-      /*final DeleteByQueryResponse resp = */
-      dqrb.execute().actionGet();
+      BulkByScrollResponse bulkResponse =
+              getClient().deleteByQuery(dqr, RequestOptions.DEFAULT);
 
       markUpdated();
 
@@ -1714,19 +1698,18 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                 final String href)
           throws CalFacadeException {
     try {
-      final DeleteByQueryRequestBuilder dqrb = getClient()
-              .prepareDeleteByQuery(
-                      targetIndex);
+      final DeleteByQueryRequest dqr =
+              new DeleteByQueryRequest(targetIndex);
 
-      FilterBuilder fb = getFilters(null)
-              .singleEntityFilter(docType,
-                                  href,
-                                  PropertyInfoIndex.HREF);
+      dqr.setConflicts("proceed");
+      QueryBuilder fb = getFilters(null)
+              .singleTombstonedEntityQuery(href,
+                                 PropertyInfoIndex.HREF);
 
-      dqrb.setQuery(new FilteredQueryBuilder(null, fb));
+      dqr.setQuery(fb);
 
-      /*final DeleteByQueryResponse resp = */
-      dqrb.execute().actionGet();
+      BulkByScrollResponse bulkResponse =
+              getClient().deleteByQuery(dqr, RequestOptions.DEFAULT);
 
       markUpdated();
 
@@ -1756,19 +1739,18 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                             final String href)
           throws CalFacadeException {
     try {
-      final DeleteByQueryRequestBuilder dqrb = getClient()
-              .prepareDeleteByQuery(
-                      targetIndex);
+      final DeleteByQueryRequest dqr =
+              new DeleteByQueryRequest(targetIndex);
 
-      FilterBuilder fb = getFilters(null)
-              .singleEntityFilter(docType,
-                                  href,
-                                  PropertyInfoIndex.HREF);
+      dqr.setConflicts("proceed");
+      QueryBuilder fb = getFilters(null)
+              .singleEntityQuery(href,
+                                 PropertyInfoIndex.HREF);
 
-      dqrb.setQuery(new FilteredQueryBuilder(null, fb));
+      dqr.setQuery(fb);
 
-      /*final DeleteByQueryResponse resp = */
-      dqrb.execute().actionGet();
+      BulkByScrollResponse bulkResponse =
+              getClient().deleteByQuery(dqr, RequestOptions.DEFAULT);
 
       markUpdated();
 
@@ -1792,36 +1774,27 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       final String newName = "bw" + docType.toLowerCase() + newIndexSuffix();
       targetIndex = newName;
 
-      final IndicesAdminClient idx = getAdminIdx();
+      final CreateIndexRequest req = new CreateIndexRequest(newName);
 
-      final CreateIndexRequestBuilder cirb = idx
-              .prepareCreate(newName);
+      final String mappingStr =
+              fileToString(Util.buildPath(false,
+                                          idxpars.getIndexerConfig(),
+                                          "/",
+                                          docType.toLowerCase(),
+                                          "/mappings.json"));
 
-      final File f = new File(Util.buildPath(false,
-                                             idxpars.getIndexerConfig(),
-                                             "/",
-                                             docType.toLowerCase(),
-                                             "/mappings.json"));
+      req.source(mappingStr, XContentType.JSON);
 
-      final byte[] sbBytes = Streams.copyToByteArray(f);
+      info("Attempt to create index " + newName);
 
-      cirb.setSource(sbBytes);
+      final CreateIndexResponse resp =
+              getClient().indices().create(req, RequestOptions.DEFAULT);
 
-      final CreateIndexRequest cir = cirb.request();
+      info("Index " + newName + " created");
 
-      final ActionFuture<CreateIndexResponse> af = idx.create(cir);
+      final DocBuilder db = getDocBuilder();
 
-      /*resp = */
-      af.actionGet();
-
-      info("Index " + newName +
-                   " created: change token set to " + currentChangeToken());
-
-      if (docType.equals(docTypeUpdateTracker)) {
-        index(new UpdateInfo());
-
-        info("Change token set to " + currentChangeToken());
-      }
+      indexDoc(db.makeUpdateInfoDoc(docType));
 
       return newName;
     } catch (final CalFacadeException cfe) {
@@ -1837,31 +1810,25 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final Set<IndexInfo> res = new TreeSet<>();
 
     try {
-      final IndicesAdminClient idx = getAdminIdx();
+      GetAliasesRequest req = new GetAliasesRequest();
 
-      final IndicesStatusRequestBuilder isrb =
-              idx.prepareStatus(Strings.EMPTY_ARRAY);
+      final GetAliasesResponse resp =
+              getClient().indices().getAlias(req, RequestOptions.DEFAULT);
 
-      final ActionFuture<IndicesStatusResponse> sr = idx.status(
-              isrb.request());
-      final IndicesStatusResponse sresp = sr.actionGet();
+      Map<String, Set<AliasMetaData>> aliases = resp.getAliases();
 
-      for (final String inm : sresp.getIndices().keySet()) {
+      for (final String inm: aliases.keySet()) {
         final IndexInfo ii = new IndexInfo(inm);
         res.add(ii);
 
-        final ClusterStateRequest clusterStateRequest = Requests
-                .clusterStateRequest()
-                .routingTable(true)
-                .nodes(true)
-                .indices(inm);
+        final Set<AliasMetaData> amds = aliases.get(inm);
 
-        final Iterator<String> it =
-                getAdminCluster().state(clusterStateRequest).
-                        actionGet().getState().getMetaData().aliases()
-                                 .keysIt();
-        while (it.hasNext()) {
-          ii.addAlias(it.next());
+        if (amds == null) {
+          continue;
+        }
+
+        for (final AliasMetaData amd: amds) {
+          ii.addAlias(amd.alias());
         }
       }
 
@@ -1928,39 +1895,46 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       /* Other is the alias name - index is the index we were just indexing into
        */
 
-      final IndicesAdminClient idx = getAdminIdx();
+      GetAliasesRequest req = new GetAliasesRequest(alias);
 
-      final GetAliasesRequestBuilder igarb = idx.prepareGetAliases(
-              alias);
+      final GetAliasesResponse resp =
+              getClient().indices().getAlias(req, RequestOptions.DEFAULT);
 
-      final ActionFuture<GetAliasesResponse> getAliasesAf =
-              idx.getAliases(igarb.request());
-      final GetAliasesResponse garesp = getAliasesAf.actionGet();
+      if (resp.status() == RestStatus.OK) {
+        final Map<String, Set<AliasMetaData>> aliases =
+                resp.getAliases();
+        for (final String inm : aliases.keySet()) {
+          final Set<AliasMetaData> amds = aliases.get(inm);
 
-      final ImmutableOpenMap<String, List<AliasMetaData>> aliasesmeta =
-              garesp.getAliases();
+          if (amds == null) {
+            continue;
+          }
 
-      final IndicesAliasesRequestBuilder iarb = idx.prepareAliases();
-
-      final Iterator<String> it = aliasesmeta.keysIt();
-
-      while (it.hasNext()) {
-        final String indexName = it.next();
-
-        for (final AliasMetaData amd : aliasesmeta.get(indexName)) {
-          if (amd.getAlias().equals(alias)) {
-            iarb.removeAlias(indexName, alias);
+          for (final AliasMetaData amd : amds) {
+            final IndicesAliasesRequest ireq = new IndicesAliasesRequest();
+            final AliasActions removeAction =
+                    new AliasActions(
+                            AliasActions.Type.REMOVE)
+                            .index(inm)
+                            .alias(amd.alias());
+            ireq.addAliasAction(removeAction);
+            AcknowledgedResponse ack =
+                    getClient().indices().updateAliases(ireq,
+                                                        RequestOptions.DEFAULT);
           }
         }
       }
 
-      iarb.addAlias(index, alias);
+      /* Now add alias */
 
-      final ActionFuture<IndicesAliasesResponse> af =
-              idx.aliases(iarb.request());
-
-      /*resp = */
-      af.actionGet();
+      final IndicesAliasesRequest ireq = new IndicesAliasesRequest();
+      final AliasActions addAction =
+              new AliasActions(AliasActions.Type.ADD)
+                      .index(index)
+                      .alias(alias);
+      ireq.addAliasAction(addAction);
+      AcknowledgedResponse ack =
+              getClient().indices().updateAliases(ireq, RequestOptions.DEFAULT);
 
       return 0;
     } catch (final ElasticsearchException ese) {
@@ -2002,17 +1976,17 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         recurrenceId = href.substring(fragPos + 1);
       }
 
-      final FilterBuilder fltr =
+      final QueryBuilder qb =
               getFilters(null).singleEventFilter(href,
                                                  recurrenceId);
 
-      final SearchHit hit = fetchEntity(docTypeEvent, fltr);
+      final SearchHit hit = fetchEntity(docTypeEvent, qb);
 
       if (hit == null) {
         return notFound(resp);
       }
 
-      final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
+      final EntityBuilder eb = getEntityBuilder(hit.getSourceAsMap());
 
       final EventInfo ei = makeEvent(eb, resp, hit.getId(), false);
       if (ei == null) {
@@ -2053,16 +2027,16 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       final GetEntityResponse<EventInfo> resp = new GetEntityResponse<>();
 
-      final FilterBuilder fltr =
+      final QueryBuilder qb =
               getFilters(null).singleEventFilterGuid(colPath, guid);
 
-      final SearchHit hit = fetchEntity(docTypeEvent, fltr);
+      final SearchHit hit = fetchEntity(docTypeEvent, qb);
 
       if (hit == null) {
         return notFound(resp);
       }
 
-      final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
+      final EntityBuilder eb = getEntityBuilder(hit.getSourceAsMap());
 
       final EventInfo ei = makeEvent(eb, resp, hit.getId(), false);
       if (ei == null) {
@@ -2215,10 +2189,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     final ESQueryFilter filters = getFilters(null);
-    FilterBuilder fb = filters.colPathFilter(null, href);
+    QueryBuilder qb = filters.colPathFilter(null, href);
 
     if (excludeTombstoned) {
-      fb = filters.termFilter(fb, PropertyInfoIndex.TOMBSTONED,
+      qb = filters.termFilter(qb, PropertyInfoIndex.TOMBSTONED,
                               "false");
     }
 
@@ -2232,7 +2206,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                          makeCollection(eb));
                                }
                              },
-                             fb,
+                             qb,
                           -1);
 
     if (Util.isEmpty(cols)) {
@@ -2386,12 +2360,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   public List<BwFilterDef> fetchFilters(final FilterBase fb,
                                         final int count)
           throws CalFacadeException {
-    final FilterBuilder f;
+    final QueryBuilder q;
 
     if (fb == null) {
-      f = getFilters(null).principalFilter(null);
+      q = getFilters(null).principalQuery(null);
     } else {
-      f = getFilters(null).buildFilter(fb);
+      q = getFilters(null).buildQuery(fb);
     }
 
     return fetchEntities(docTypeFilter,
@@ -2402,7 +2376,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                              return eb.makefilter();
                            }
                          },
-                         f,
+                         q,
                          count);
   }
 
@@ -2438,8 +2412,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                          final int lastmodSeq,
                                          final int count)
           throws CalFacadeException {
-    final FilterBuilder f =
-            getFilters(null).resourcesFilter(path, lastmod, lastmodSeq);
+    final QueryBuilder qb =
+            getFilters(null).resources(path, lastmod, lastmodSeq);
 
     return fetchEntities(docTypeResource,
                          new BuildEntity<BwResource>() {
@@ -2449,7 +2423,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                              return eb.makeResource();
                            }
                          },
-                         f,
+                         qb,
                          count);
   }
 
@@ -2550,7 +2524,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         return notFound(resp);
       }
 
-      final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
+      final EntityBuilder eb = getEntityBuilder(hit.getSourceAsMap());
 
       final BwLocation loc = eb.makeLocation();
 
@@ -2612,243 +2586,53 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   public GetEntitiesResponse<BwContact> findContacts(final FilterBase filter,
                                                      final int from,
                                                      final int size) {
-    final GetEntitiesResponse<BwContact> resp = new GetEntitiesResponse<>();
-
-    try {
-      final ESQueryFilter ef = getFilters(null);
-
-      QueryBuilder qb = ef.buildQuery(filter);
-
-      FilterBuilder curFilter = ef.buildFilter(ef.addTypeFilter(null,
-                                                                docTypeContact));
-
-      if (!(curFilter instanceof MatchNone)) {
-        curFilter = ef.addLimits(curFilter,
-                                 null, DeletedState.noDeleted,
-                                 false);
-      }
-
-      if (curFilter instanceof MatchNone) {
-        resp.setStatus(notFound);
-        return resp;
-      }
-
-      final SearchRequestBuilder srb = getClient()
-              .prepareSearch(searchIndexes);
-
-      srb.setSearchType(SearchType.QUERY_AND_FETCH)
-         .setQuery(qb)
-         .setPostFilter(curFilter)
-         .setFrom(from)
-         .setSize(size);
-
-      /*
-      if (!Util.isEmpty(res.curSort)) {
-        SortOrder so;
-
-        for (final SortTerm st : res.curSort) {
-          if (st.isAscending()) {
-            so = SortOrder.ASC;
-          } else {
-            so = SortOrder.DESC;
-          }
-
-          srb.addSort(new FieldSortBuilder(
-                  ESQueryFilter.makePropertyRef(st.getProperties()))
-                              .order(so));
-        }
-      }
-
-*/
-
-      if (debug()) {
-        debug("Search: targetIndex=" + targetIndex +
-                      "; srb=" + srb);
-      }
-
-      final SearchResponse sresp = srb.execute().actionGet();
-
-//    if (resp.status() != RestStatus.OK) {
-      //TODO
-//    }
-
-      if (debug()) {
-        debug("Search: returned status " + sresp.status() +
-                      " found: " + sresp.getHits().getTotalHits());
-      }
-
-      for (final SearchHit hit : sresp.getHits().getHits()) {
-        final Object entity = makeEntity(resp, hit, null);
-        if (!resp.isOk()) {
-          return resp;
-        }
-
-        if (!(entity instanceof BwContact)) {
-          continue;
-        }
-
-        final BwEventProperty evp = (BwEventProperty)entity;
-
-        evp.setScore(hit.score());
-
-        resp.addEntity((BwContact)entity);
-      }
-
-      return resp;
-    } catch (final Throwable t) {
-      return Response.error(resp, t);
-    }
+    return findEvProperty(filter, from, size, BwContact.class);
   }
 
   @Override
   public GetEntitiesResponse<BwLocation> findLocations(final FilterBase filter,
                                                        final int from,
                                                        final int size) {
-    final GetEntitiesResponse<BwLocation> resp = new GetEntitiesResponse<>();
-
-    try {
-      final ESQueryFilter ef = getFilters(null);
-
-      QueryBuilder qb = ef.buildQuery(filter);
-
-      FilterBuilder curFilter = ef.buildFilter(ef.addTypeFilter(null,
-                                                                docTypeLocation));
-
-      if (!(curFilter instanceof MatchNone)) {
-        curFilter = ef.addLimits(curFilter,
-                                 null, DeletedState.noDeleted,
-                                 false);
-      }
-
-      if (curFilter instanceof MatchNone) {
-        resp.setStatus(notFound);
-        return resp;
-      }
-
-      final SearchRequestBuilder srb = getClient()
-              .prepareSearch(searchIndexes);
-
-      srb.setSearchType(SearchType.QUERY_AND_FETCH)
-         .setQuery(qb)
-         .setPostFilter(curFilter)
-         .setFrom(from)
-         .setSize(size);
-
-      /*
-      if (!Util.isEmpty(res.curSort)) {
-        SortOrder so;
-
-        for (final SortTerm st : res.curSort) {
-          if (st.isAscending()) {
-            so = SortOrder.ASC;
-          } else {
-            so = SortOrder.DESC;
-          }
-
-          srb.addSort(new FieldSortBuilder(
-                  ESQueryFilter.makePropertyRef(st.getProperties()))
-                              .order(so));
-        }
-      }
-
-*/
-
-      if (debug()) {
-        debug("Search: targetIndex=" + targetIndex +
-                      "; srb=" + srb);
-      }
-
-      final SearchResponse sresp = srb.execute().actionGet();
-
-//    if (resp.status() != RestStatus.OK) {
-      //TODO
-//    }
-
-      if (debug()) {
-        debug("Search: returned status " + sresp.status() +
-                      " found: " + sresp.getHits().getTotalHits());
-      }
-
-      for (final SearchHit hit : sresp.getHits().getHits()) {
-        final Object entity = makeEntity(resp, hit, null);
-        if (!resp.isOk()) {
-          return resp;
-        }
-
-        if (!(entity instanceof BwLocation)) {
-          continue;
-        }
-
-        final BwEventProperty evp = (BwEventProperty)entity;
-
-        evp.setScore(hit.score());
-        resp.addEntity((BwLocation)entity);
-      }
-
-      return resp;
-    } catch (final Throwable t) {
-      return Response.error(resp, t);
-    }
+    return findEvProperty(filter, from, size, BwLocation.class);
   }
 
   @Override
   public GetEntitiesResponse<BwCategory> findCategories(final FilterBase filter,
                                                         final int from,
                                                         final int size) {
-    final GetEntitiesResponse<BwCategory> resp = new GetEntitiesResponse<>();
+    return findEvProperty(filter, from, size, BwCategory.class);
+  }
+
+  private <T extends BwEventProperty>
+  GetEntitiesResponse<T> findEvProperty(final FilterBase filter,
+                                        final int from,
+                                        final int size,
+                                        final Class<T> cl) {
+    final GetEntitiesResponse<T> resp = new GetEntitiesResponse<>();
 
     try {
       final ESQueryFilter ef = getFilters(null);
 
       QueryBuilder qb = ef.buildQuery(filter);
 
-      FilterBuilder curFilter = ef.buildFilter(ef.addTypeFilter(null,
-                                                                docTypeCategory));
-
-      if (!(curFilter instanceof MatchNone)) {
-        curFilter = ef.addLimits(curFilter,
-                                 null, DeletedState.noDeleted,
-                                 false);
+      if (!(qb instanceof MatchNoneQueryBuilder)) {
+        qb = ef.addLimits(qb,
+                          null, DeletedState.noDeleted,
+                          false);
       }
 
-      if (curFilter instanceof MatchNone) {
+      if (qb instanceof MatchNoneQueryBuilder) {
         resp.setStatus(notFound);
         return resp;
       }
 
-      final SearchRequestBuilder srb = getClient()
-              .prepareSearch(searchIndexes);
+      final EsSearchResult esr = new EsSearchResult(this);
 
-      srb.setSearchType(SearchType.QUERY_AND_FETCH)
-         .setQuery(qb)
-         .setPostFilter(curFilter)
-         .setFrom(from)
-         .setSize(size);
+      esr.curQuery = qb;
+      esr.pageStart = from;
+      esr.pageSize = size;
 
-      /*
-      if (!Util.isEmpty(res.curSort)) {
-        SortOrder so;
-
-        for (final SortTerm st : res.curSort) {
-          if (st.isAscending()) {
-            so = SortOrder.ASC;
-          } else {
-            so = SortOrder.DESC;
-          }
-
-          srb.addSort(new FieldSortBuilder(
-                  ESQueryFilter.makePropertyRef(st.getProperties()))
-                              .order(so));
-        }
-      }
-
-*/
-
-      final SearchResponse sresp = srb.execute().actionGet();
-
-//    if (resp.status() != RestStatus.OK) {
-      //TODO
-//    }
+      final SearchResponse sresp = executeSearch(esr, from, size, false);
 
       if (debug()) {
         debug("Search: returned status " + sresp.status() +
@@ -2861,15 +2645,14 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           return resp;
         }
 
-        if (!(entity instanceof BwCategory)) {
-          continue;
+        final BwEventProperty evp = (BwEventProperty)entity;
+        if (evp == null) {
+          return resp;
         }
 
-        final BwEventProperty evp = (BwEventProperty)entity;
+        evp.setScore(hit.getScore());
 
-        evp.setScore(hit.score());
-
-        resp.addEntity((BwCategory)entity);
+        resp.addEntity((T)entity);
       }
 
       return resp;
@@ -2931,6 +2714,87 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return caches.get(href, desiredAccess, resultType);
   }
 
+  private SearchResponse executeSearch(final EsSearchResult sresp,
+                                       final int pos,
+                                       final int pageSize,
+                                       final boolean forSecondarySearch) throws CalFacadeException {
+    if (basicSysprops.getTestMode()) {
+      final long timeSinceIndex = System.currentTimeMillis() - lastIndexTime;
+      final long waitTime = indexerDelay - timeSinceIndex;
+
+      if (waitTime > 0) {
+        try {
+          Thread.sleep(waitTime);
+        } catch (final InterruptedException ignored) {
+        }
+      }
+    }
+
+    final SearchSourceBuilder ssb =
+            new SearchSourceBuilder()
+                    .from(pos)
+                    .size(pageSize)
+                    .postFilter(sresp.curFilter);
+
+    if (sresp.curQuery != null) {
+      ssb.query(sresp.curQuery);
+    } else {
+      ssb.query(QueryBuilders.matchAllQuery());
+    }
+
+    if (forSecondarySearch) {
+      // Limit to href then fetch those
+      ssb.docValueField(ESQueryFilter.hrefJname);
+    }
+
+    final RestHighLevelClient cl = getClient();
+
+    final SearchRequest req = new SearchRequest(searchIndexes)
+            .searchType(SearchType.QUERY_THEN_FETCH)
+            .source(ssb);
+
+    if (!Util.isEmpty(sresp.curSort)) {
+      SortOrder so;
+
+      for (final SortTerm st : sresp.curSort) {
+        if (st.isAscending()) {
+          so = SortOrder.ASC;
+        } else {
+          so = SortOrder.DESC;
+        }
+
+        ssb.sort(new FieldSortBuilder(st.getPropertyRef())
+                         .order(so));
+      }
+    }
+
+    if (debug()) {
+      debug("Search: latestStart=" + sresp.latestStart +
+                    " earliestEnd=" + sresp.earliestEnd +
+                    " targetIndex=" + targetIndex +
+                    "; req=" + req);
+    }
+
+    final SearchResponse resp;
+    try {
+      resp = getClient().search(req, RequestOptions.DEFAULT);
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+
+//    if (resp.status() != RestStatus.OK) {
+    //TODO
+//    }
+
+    if (debug()) {
+      debug("Search: returned status " + resp.status() +
+                    " found: " + resp.getHits().getTotalHits());
+    }
+
+    return resp;
+  }
+
+  /*
   private SearchHits multiColFetch(final List<String> hrefs)
           throws CalFacadeException {
     final int batchSize = hrefs.size();
@@ -2971,12 +2835,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     //Break condition: No hits are returned
-    if (hits.hits().length == 0) {
+    if (hits.getHits().length == 0) {
       return null;
     }
 
     return hits;
   }
+  */
 
   private List<SearchHit> multiFetch(final SearchHits hits,
                                      final RecurringRetrievalMode rmode)
@@ -2991,44 +2856,44 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
      */
 
     for (final SearchHit hit : hits) {
-      final String dtype = hit.getType();
-
-      if (dtype == null) {
-        throw new CalFacadeException("org.bedework.index.noitemtype");
-      }
-
       final String kval = hit.getId();
 
       if (kval == null) {
         throw new CalFacadeException("org.bedework.index.noitemkey");
       }
 
-      final SearchHitField hrefField = hit
+      final DocumentField hrefField = hit
               .field(ESQueryFilter.hrefJname);
 
-      hrefs.add((String)hrefField.getValue());
+      hrefs.add(hrefField.getValue());
     }
 
-    final int batchSize = (int)hits.getTotalHits() * 100;
+    final int batchSize = (int)hits.getTotalHits().value * 100;
     int start = 0;
     final List<SearchHit> res = new ArrayList<>();
 
     while (true) {
-      final SearchRequestBuilder srb = getClient()
-              .prepareSearch(searchIndexes);
+      final SearchSourceBuilder ssb =
+              new SearchSourceBuilder()
+                      .from(start)
+                      .size(batchSize)
+                      .query(getFilters(null).multiHref(hrefs, rmode));
 
-      srb.setSearchType(SearchType.QUERY_THEN_FETCH)
-         .setPostFilter(getFilters(null).multiHrefFilter(hrefs,
-                                                         rmode));
-      srb.setFrom(start);
-      srb.setSize(batchSize);
+      final SearchRequest req = new SearchRequest(searchIndexes)
+              .searchType(SearchType.QUERY_THEN_FETCH)
+              .source(ssb);
 
       if (debug()) {
         debug("MultiFetch: targetIndex=" + targetIndex +
-                      "; srb=" + srb);
+                      "; ssb=" + ssb);
       }
 
-      final SearchResponse resp = srb.execute().actionGet();
+      final SearchResponse resp;
+      try {
+        resp = getClient().search(req, RequestOptions.DEFAULT);
+      } catch (final Throwable t) {
+        throw new CalFacadeException(t);
+      }
 
       if (resp.status() != RestStatus.OK) {
         if (debug()) {
@@ -3041,7 +2906,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       final SearchHit[] hits2 = resp.getHits().getHits();
 
       if ((hits2 == null) ||
-              (hits2.length < 0)) {
+              (hits2.length == 0)) {
         // No more data - we're done
         return res;
       }
@@ -3060,15 +2925,11 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   private void deleteIndexes(final List<String> names)
           throws CalFacadeException {
     try {
-      final IndicesAdminClient idx = getAdminIdx();
-      final DeleteIndexRequestBuilder dirb = getAdminIdx()
-              .prepareDelete(
-                      names.toArray(new String[names.size()]));
+      final DeleteIndexRequest request =
+              new DeleteIndexRequest(names.toArray(new String[names.size()]));
 
-      final ActionFuture<DeleteIndexResponse> dr = idx.delete(
-              dirb.request());
-      /*DeleteIndexResponse dir = */
-      dr.actionGet();
+      final AcknowledgedResponse deleteIndexResponse =
+              getClient().indices().delete(request, RequestOptions.DEFAULT);
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -3083,22 +2944,19 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                     final int count)
           throws CalFacadeException {
     return fetchEntities(docType, be,
-                         getFilters(null).principalFilter(null),
+                         getFilters(null).principalQuery(null),
                          count);
   }
 
   private <T> List<T> fetchEntities(final String docType,
                                     final BuildEntity<T> be,
-                                    final FilterBuilder filter,
+                                    final QueryBuilder filter,
                                     final int count)
           throws CalFacadeException {
-    final SearchRequestBuilder srb = getClient()
-            .prepareSearch(targetIndex);
-
-    srb.setTypes(docType);
+    requireDocType(docType);
 
     if (debug()) {
-      debug("fetchAllEntities: srb=" + srb);
+      debug("fetchAllEntities");
     }
 
     int tries = 0;
@@ -3110,55 +2968,69 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       ourCount = Math.min(maxFetchCount, count);
     }
 
+    final SearchSourceBuilder ssb =
+            new SearchSourceBuilder()
+                    .size(ourCount)
+                    .query(filter);
+
+    final SearchRequest sr = new SearchRequest(targetIndex)
+            .source(ssb)
+            .scroll(new TimeValue(60000));
+
     final List<T> res = new ArrayList<>();
 
-    SearchResponse scrollResp = srb.setSearchType(SearchType.SCAN)
-                                   .setScroll(new TimeValue(60000))
-                                   .setPostFilter(filter)
-                                   .setSize(ourCount).execute()
-                                   .actionGet(); //ourCount hits per shard will be returned for each scroll
+    try {
+      SearchResponse scrollResp = getClient()
+              .search(sr, RequestOptions.DEFAULT);
 
-    if (scrollResp.status() != RestStatus.OK) {
-      if (debug()) {
-        debug("Search returned status " + scrollResp.status());
-      }
-    }
-
-    for (; ; ) {
-      if (tries > absoluteMaxTries) {
-        // huge count or we screwed up
-        warn("Indexer: too many tries");
-        break;
-      }
-
-      scrollResp = getClient()
-              .prepareSearchScroll(scrollResp.getScrollId())
-              .setScroll(new TimeValue(600000)).execute().actionGet();
       if (scrollResp.status() != RestStatus.OK) {
         if (debug()) {
           debug("Search returned status " + scrollResp.status());
         }
       }
 
-      final SearchHits hits = scrollResp.getHits();
-
-      //Break condition: No hits are returned
-      if (hits.hits().length == 0) {
-        break;
-      }
-
-      for (final SearchHit hit : hits) {
-        //Handle the hit...
-        final T ent = be.make(getEntityBuilder(hit.sourceAsMap()));
-        if (ent == null) {
-          // No access
-          continue;
+      for (; ; ) {
+        if (tries > absoluteMaxTries) {
+          // huge count or we screwed up
+          warn("Indexer: too many tries");
+          break;
         }
-        res.add(ent);
-        //ourPos++;
-      }
 
-      tries++;
+        if (scrollResp.status() != RestStatus.OK) {
+          if (debug()) {
+            debug("Search returned status " + scrollResp.status());
+          }
+        }
+
+        final SearchHits hits = scrollResp.getHits();
+
+        //Break condition: No hits are returned
+        if (hits.getHits().length == 0) {
+          break;
+        }
+
+        for (final SearchHit hit : hits) {
+          //Handle the hit...
+          final T ent = be
+                  .make(getEntityBuilder(hit.getSourceAsMap()));
+          if (ent == null) {
+            // No access
+            continue;
+          }
+          res.add(ent);
+          //ourPos++;
+        }
+
+        tries++;
+
+        SearchScrollRequest scrollRequest =
+                new SearchScrollRequest(scrollResp.getScrollId());
+        scrollRequest.scroll(new TimeValue(60000));
+        scrollResp = getClient().scroll(scrollRequest,
+                                        RequestOptions.DEFAULT);
+      }
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
     }
 
     return res;
@@ -3168,17 +3040,17 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                     final String val,
                                     final PropertyInfoIndex... index)
           throws CalFacadeException {
+    requireDocType(docType);
+
     try {
       fetchStart();
 
       if ((index.length == 1) &&
               (index[0] == PropertyInfoIndex.HREF)) {
-        final GetRequestBuilder grb = getClient()
-                .prepareGet(targetIndex,
-                            docType,
-                            val);
+        final GetRequest req = new GetRequest(targetIndex,
+                                             val);
 
-        final GetResponse gr = grb.execute().actionGet();
+        final GetResponse gr = getClient().get(req, RequestOptions.DEFAULT);
 
         if (!gr.isExists()) {
           return null;
@@ -3187,51 +3059,61 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         return getEntityBuilder(gr.getSourceAsMap());
       }
 
-      final SearchHit hit = fetchEntity(docType,
-                                        getFilters(null)
-                                                .singleEntityFilter(
-                                                        docType, val,
-                                                        index));
+      final SearchHit hit =
+              fetchEntity(docType,
+                          getFilters(null)
+                                  .singleEntityQuery(
+                                          val,
+                                          index));
 
       if (hit == null) {
         return null;
       }
 
-      return getEntityBuilder(hit.sourceAsMap());
+      return getEntityBuilder(hit.getSourceAsMap());
+    } catch (final IOException ie) {
+      throw new CalFacadeException(ie);
     } finally {
       fetchEnd();
     }
   }
 
   private SearchHit fetchEntity(final String docType,
-                                final FilterBuilder fltr)
+                                final QueryBuilder qb)
           throws CalFacadeException {
-    final SearchRequestBuilder srb = getClient()
-            .prepareSearch(searchIndexes);
+    requireDocType(docType);
 
-    srb.setTypes(docType);
+    final SearchSourceBuilder ssb =
+            new SearchSourceBuilder()
+                    .from(0)
+                    .size(60)
+                    .query(qb);
 
-    final SearchResponse response = srb
-            .setSearchType(SearchType.QUERY_THEN_FETCH)
-            .setPostFilter(fltr)
-            .setFrom(0).setSize(60).setExplain(true)
-            .execute()
-            .actionGet();
+    final SearchRequest req = new SearchRequest(searchIndexes)
+            .searchType(SearchType.QUERY_THEN_FETCH)
+            .source(ssb);
 
-    final SearchHits hits = response.getHits();
+    final SearchResponse resp;
+    try {
+      resp = getClient().search(req, RequestOptions.DEFAULT);
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
 
-    if (hits.hits().length == 0) {
+    final SearchHits hits = resp.getHits();
+
+    if (hits.getHits().length == 0) {
       // No match
       return null;
     }
 
-    if (hits.getTotalHits() != 1) {
+    if (hits.getTotalHits().value != 1) {
       error("Multiple entities of type " + docType +
-                    " with filter " + fltr);
+                    " with filter " + qb);
       return null;
     }
 
-    return hits.hits()[0];
+    return hits.getHits()[0];
   }
 
   private static class DateLimits {
@@ -3294,11 +3176,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       final DocBuilder db = getDocBuilder();
 
-      if (rec instanceof UpdateInfo) {
-        mustBe(docTypeUpdateTracker);
-        di = db.makeDoc((UpdateInfo)rec);
-      }
-
       if (rec instanceof BwCalendar) {
         mustBe(docTypeCollection);
         di = db.makeDoc((BwCalendar)rec);
@@ -3354,13 +3231,17 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final VersionConflictEngineException vcee) {
-      if (vcee.getCurrentVersion() == vcee.getProvidedVersion()) {
+      error(vcee);
+      throw new CalFacadeException(vcee);
+      /* Can't do this any more
+      if (vcee.currentVersion() == vcee.getProvidedVersion()) {
         warn("Failed index with equal version for type " + 
                      di.getType() +
                      " and id " + di.getId());
       }
 
       return null;
+      */
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -3575,29 +3456,31 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   private boolean deleteEvent(final String href) throws CalFacadeException {
-    final DeleteByQueryRequestBuilder delQreq =
-            getClient().prepareDeleteByQuery(targetIndex).
-                    setTypes(docTypeEvent);
+    final DeleteByQueryRequest delQreq =
+            new DeleteByQueryRequest(targetIndex);
 
-    final ESQueryFilter esq= getFilters(null);
+    final ESQueryFilter esq = getFilters(null);
 
-    final FilterBuilder fb = esq.addTerm(PropertyInfoIndex.HREF,
+    final QueryBuilder qb = esq.addTerm(PropertyInfoIndex.HREF,
                                          href);
 
-    delQreq.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(),
-                                                 fb));
-    final DeleteByQueryResponse delResp = delQreq.execute()
-            .actionGet();
+    delQreq.setConflicts("proceed");
 
+    delQreq.setQuery(qb);
     boolean ok = true;
 
-    for (final IndexDeleteByQueryResponse idqr: delResp.getIndices().values()) {
-      if (idqr.getFailedShards() > 0) {
+    try {
+      BulkByScrollResponse bulkResponse =
+              getClient().deleteByQuery(delQreq, RequestOptions.DEFAULT);
+
+      for (final BulkItemResponse.Failure f: bulkResponse.getBulkFailures()) {
         warn("Failing shards for delete href: " + href +
-                     " index: " + idqr.getIndex());
+                     " index: " + f.getIndex());
 
         ok = false;
       }
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
     }
 
     return ok;
@@ -3609,8 +3492,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                    final BwDateTime end,
                                    final String recurid,
                                    final DateLimits dl) throws CalFacadeException {
-    final BwEvent ev = ei.getEvent();
-
     try {
       final DocBuilder db = getDocBuilder();
       final EsDocInfo di = db.makeDoc(ei,
@@ -3628,26 +3509,33 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final VersionConflictEngineException vcee) {
-      if (vcee.getCurrentVersion() == vcee.getProvidedVersion()) {
-        warn("Failed index with equal version for kind " + kind +
-                     " and href " + ev.getHref());
+      error(vcee);
+      throw new CalFacadeException(vcee);
+      /* Can't do this any more
+      if (vcee.currentVersion() == vcee.getProvidedVersion()) {
+        warn("Failed index with equal version for type " +
+                     di.getType() +
+                     " and id " + di.getId());
       }
 
       return null;
+      */
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   private IndexResponse indexDoc(final EsDocInfo di) throws Throwable {
-    //batchCurSize++;
-    final IndexRequestBuilder req = getClient().
-            prepareIndex(targetIndex, di.getType(), di.getId());
+    requireDocType(di.getType());
 
-    req.setSource(di.getSource());
+    //batchCurSize++;
+    final IndexRequest req = new IndexRequest(targetIndex);
+
+    req.id(di.getId());
+    req.source(di.getSource());
 
     if (di.getVersion() != 0) {
-      req.setVersion(di.getVersion()).setVersionType(VersionType.EXTERNAL);
+      req.version(di.getVersion()).versionType(VersionType.EXTERNAL);
     }
 
     if (debug()) {
@@ -3655,10 +3543,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                     " with DocInfo " + di);
     }
 
-    return req.execute().actionGet();
+    return getClient().index(req, RequestOptions.DEFAULT);
   }
 
-  private Client getClient(final Response resp) {
+  private RestHighLevelClient getClient(final Response resp) {
     try {
       return getClient();
     } catch (final CalFacadeException cfe) {
@@ -3668,7 +3556,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private Client getClient() throws CalFacadeException {
+  public RestHighLevelClient getClient() throws CalFacadeException {
     if (theClient != null) {
       return theClient;
     }
@@ -3678,48 +3566,14 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         return theClient;
       }
 
-      if (idxpars.getEmbeddedIndexer()) {
-        /* Start up a node and get a client from it.
-         */
-        final ImmutableSettings.Builder settings =
-                ImmutableSettings.settingsBuilder();
+      final HttpHost[] hosts = new HttpHost[esHosts.size()];
 
-        if (idxpars.getNodeName() != null) {
-          settings.put("node.name", idxpars.getNodeName());
-        }
-
-        settings.put("path.data", idxpars.getDataDir());
-
-        if (idxpars.getHttpEnabled()) {
-          warn("*************************************************************");
-          warn("*************************************************************");
-          warn("*************************************************************");
-          warn("http is enabled for the indexer. This is a security risk.    ");
-          warn("Turn it off in the indexer configuration.                    ");
-          warn("*************************************************************");
-          warn("*************************************************************");
-          warn("*************************************************************");
-        }
-        settings.put("http.enabled", idxpars.getHttpEnabled());
-        final NodeBuilder nbld = NodeBuilder.nodeBuilder()
-                .settings(settings);
-
-        if (idxpars.getClusterName() != null) {
-          nbld.clusterName(idxpars.getClusterName());
-        }
-
-        final Node theNode = nbld.data(true).local(true).node();
-
-        theClient = theNode.client();
-      } else {
-        /* Not embedded - use the URL */
-        TransportClient tClient = new TransportClient();
-
-        tClient = tClient.addTransportAddress(
-                new InetSocketTransportAddress(host, port));
-
-        theClient = tClient;
+      for (int i = 0; i < esHosts.size(); i++) {
+        final HostPort hp = esHosts.get(i);
+        hosts[i] = new HttpHost(hp.getHost(), hp.getPort());
       }
+
+      theClient = new RestHighLevelClient(RestClient.builder(hosts));
 
       /* Ensure status is at least yellow */
 
@@ -3727,50 +3581,43 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       int yellowTries = 0;
 
       for (;;) {
-        final ClusterHealthRequestBuilder chrb =
-                theClient.admin().cluster().prepareHealth();
+        try {
+          ClusterHealthRequest request = new ClusterHealthRequest();
+          final ClusterHealthResponse chr =
+                  theClient.cluster().health(request, RequestOptions.DEFAULT);
 
-        final ClusterHealthResponse chr = chrb.execute().actionGet();
-
-        if (chr.getStatus() == ClusterHealthStatus.GREEN) {
-          break;
-        }
-
-        if (chr.getStatus() == ClusterHealthStatus.YELLOW) {
-          yellowTries++;
-
-          if (yellowTries > 60) {
-            warn("Going ahead anyway on YELLOW status");
+          if (chr.getStatus() == ClusterHealthStatus.GREEN) {
+            break;
           }
 
-          break;
-        }
+          if (chr.getStatus() == ClusterHealthStatus.YELLOW) {
+            yellowTries++;
 
-        tries++;
+            if (yellowTries > 60) {
+              warn("Going ahead anyway on YELLOW status");
+            }
 
-        if (tries % 5 == 0) {
-          warn("Cluster status for " + chr.getClusterName() +
-                       " is still " + chr.getStatus() +
-                       " after " + tries + " tries");
-        }
+            break;
+          }
 
-        try {
+          tries++;
+
+          if (tries % 5 == 0) {
+            warn("Cluster status for " + chr.getClusterName() +
+                         " is still " + chr.getStatus() +
+                         " after " + tries + " tries");
+          }
+
           Thread.sleep(1000);
         } catch(final InterruptedException ex) {
           throw new CalFacadeException("Interrupted out of getClient");
+        } catch (final Throwable t) {
+          throw new CalFacadeException(t);
         }
       }
 
       return theClient;
     }
-  }
-
-  private IndicesAdminClient getAdminIdx() throws CalFacadeException {
-    return getClient().admin().indices();
-  }
-
-  private ClusterAdminClient getAdminCluster() throws CalFacadeException {
-    return getClient().admin().cluster();
   }
 
   /** Return a new filter builder
@@ -3783,7 +3630,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                              currentMode,
                              principalHref,
                              superUser,
-                             recurRetrieval);
+                             recurRetrieval,
+                             docType);
   }
 
   private String newIndexSuffix() {
@@ -3830,13 +3678,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   private Object makeEntity(final Response resp,
                             final SearchHit hit,
                             final RecurringRetrievalMode rrm) {
-    final String dtype = hit.getType();
-
-    if (dtype == null) {
-      errorReturn(resp, "org.bedework.index.noitemtype");
-      return null;
-    }
-
     final String kval = hit.getId();
 
     if (kval == null) {
@@ -3844,10 +3685,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     try {
-      final EntityBuilder eb = getEntityBuilder(hit.sourceAsMap());
+      final EntityBuilder eb = getEntityBuilder(hit.getSourceAsMap());
 
       Object entity = null;
-      switch (dtype) {
+      switch (docType) {
         case docTypeCollection:
           entity = makeCollection(eb);
           break;
@@ -4034,7 +3875,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   private <T extends Response> T errorReturn(final T resp,
                                              final String msg) {
     if (resp == null) {
-      return resp;
+      return null;
     }
 
     if (resp.getMessage() != null) {
@@ -4045,6 +3886,24 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     resp.setStatus(failed);
 
     return resp;
+  }
+
+  private String fileToString(final String path) throws IndexException {
+    final StringBuilder content = new StringBuilder();
+    try (Stream<String> stream = Files.lines(Paths.get(path),
+                                             StandardCharsets.UTF_8)) {
+      stream.forEach(s -> content.append(s).append("\n"));
+    } catch (final Throwable t) {
+      throw new IndexException(t);
+    }
+
+    return content.toString();
+  }
+
+  private void requireDocType(final String docType) throws CalFacadeException {
+    if (!this.docType.equals(docType)) {
+      throw new CalFacadeException("Require doctype: " + docType);
+    }
   }
 
   /* ====================================================================
