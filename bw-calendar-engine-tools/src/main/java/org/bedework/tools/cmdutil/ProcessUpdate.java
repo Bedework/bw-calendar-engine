@@ -20,6 +20,8 @@ package org.bedework.tools.cmdutil;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwLocation;
+import org.bedework.calfacade.svc.BwAuthUser;
+import org.bedework.calfacade.svc.UserAuth;
 
 /**
  * @author douglm
@@ -53,6 +55,12 @@ public class ProcessUpdate extends CmdUtilHelper {
                       "   <name> and <val> are quoted strings\n"
       );
 
+      addInfo("update auth <userid> <update>" +
+                      "   where <update> is one of\n" +
+                      "     approver true|false\n" +
+                      "     content true|false\n"
+      );
+
       return true;
     }
 
@@ -62,6 +70,10 @@ public class ProcessUpdate extends CmdUtilHelper {
 
     if ("loc".equals(wd)) {
       return updateLocation();
+    }
+
+    if ("auth".equals(wd)) {
+      return updateAuthUser();
     }
 
     return false;
@@ -181,5 +193,76 @@ public class ProcessUpdate extends CmdUtilHelper {
     } finally {
       close();
     }
+  }
+
+  private boolean updateAuthUser() {
+    try {
+      open();
+
+      final String userid = word();
+
+      if (userid == null) {
+        error("Expected a userid");
+        return false;
+      }
+
+      BwAuthUser au = getAuthUser(userid);
+
+
+      while (true) {
+        final String upname = word();
+        if (upname == null) {
+          break;
+        }
+
+        switch (upname) {
+          case "approver": {
+            if (!setFlag(au, word(), UserAuth.approverUser)) {
+              return false;
+            }
+
+            break;
+          }
+
+          case "content": {
+            if (!setFlag(au, word(), UserAuth.contentAdminUser)) {
+              return false;
+            }
+
+            break;
+          }
+
+          default: {
+            info("Bad flag name: " + upname);
+            return false;
+          }
+        }
+      }
+
+      getSvci().getUserAuth().updateUser(au);
+
+      return true;
+    } catch (final Throwable t) {
+      error(t);
+      return false;
+    } finally {
+      close();
+    }
+  }
+
+  private boolean setFlag(final BwAuthUser au, final String sw, final int flag) {
+    int usertype = au.getUsertype();
+    if (sw.equals("false")) {
+      au.setUsertype(au.getUsertype() & ~flag);
+      return true;
+    }
+
+    if (sw.equals("true")) {
+      au.setUsertype(au.getUsertype() | flag);
+      return true;
+    }
+
+    info("Bad value for flag: " + sw);
+    return false;
   }
 }

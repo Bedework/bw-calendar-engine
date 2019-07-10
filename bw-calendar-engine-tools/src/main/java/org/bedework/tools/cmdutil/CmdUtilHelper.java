@@ -205,6 +205,10 @@ public abstract class CmdUtilHelper implements Logged {
     return getSvci().getPrefsHandler().get();
   }
 
+  public BwAuthUser getAuthUser(final String val) throws Throwable {
+    return getSvci().getUserAuth().getUser(val);
+  }
+
   public BwPrincipal findGroup(final String val) throws Throwable {
     return getSvci().getDirectories().findGroup(val);
   }
