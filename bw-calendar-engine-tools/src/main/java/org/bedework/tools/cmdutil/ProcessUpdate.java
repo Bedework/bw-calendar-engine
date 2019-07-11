@@ -199,7 +199,7 @@ public class ProcessUpdate extends CmdUtilHelper {
     try {
       open();
 
-      final String userid = word();
+      final String userid = quotedVal();
 
       if (userid == null) {
         error("Expected a userid");
