@@ -123,6 +123,7 @@
     <orderEntry type="module" module-name="bw-calendar-engine-ical" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.8" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.8" level="project" />
+    <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.3.0" level="project" />
     <orderEntry type="module" module-name="bw-util-args" />
     <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.2" level="project" />
