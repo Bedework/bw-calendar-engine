@@ -1758,24 +1758,26 @@ class Events extends CalSvcDb implements EventsI {
       return null;
     }
 
-    boolean hasBadChar = false;
+    // Normalize the line endings
+    final String s1 = val.replaceAll("(\\r|\\n|\\r\\n)+", "\\\\n");
 
-    final char[] badChars = {'\u0013', '\u001F'};
+    boolean changed = !s1.equals(val);
 
-    for (final char c: badChars) {
-      if (val.indexOf(c) >= 0) {
-        hasBadChar = true;
-        break;
-      }
+    // Get rid of all controls except cr and LF
+    final String s2 =
+            s1.replaceAll("[\u0000-\u0009\u000B-\u000C\u000E-\u0019\u007F]+",
+                          "");
+
+    if (!s2.equals(s1)) {
+      changed = true;
     }
 
-    if (!hasBadChar) {
+    if (!changed) {
       return null;
     }
 
-    warn("String " + val + " contains a bad character");
-
-    return val.replaceAll(new String(badChars), val);
+    // Put the escaped form back again
+    return s2.replaceAll("(\\r|\\n|\\r\\n)+", "\\\\n");
   }
 
   /* Flag this as an attendee scheduling object or an organizer scheduling object

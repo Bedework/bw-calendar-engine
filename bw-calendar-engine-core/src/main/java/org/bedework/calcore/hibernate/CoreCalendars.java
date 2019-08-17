@@ -411,9 +411,7 @@ class CoreCalendars extends CalintfHelper
     ac.checkAccess(val, privWriteProperties, false);
 
     dao.updateCollection(unwrap(val));
-    touchCalendar(val.getPath());
-
-    indexEntity(val);
+    touchCalendar(val.getPath()); // Also indexes
 
     notify(SysEvent.SysCode.COLLECTION_UPDATED, val);
 
@@ -1134,7 +1132,6 @@ class CoreCalendars extends CalintfHelper
                                                   val.getPublick(),
                                                   indexed));
     } else {
-      indexEntity(val);
       postNotification(
               SysEvent.makeCollectionUpdateEvent(code,
                                                  authenticatedPrincipal(),
