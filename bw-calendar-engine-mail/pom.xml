@@ -3,7 +3,7 @@
   <parent>
     <artifactId>bw-calendar-engine</artifactId>
     <groupId>org.bedework.caleng</groupId>
-    <version>3.12.8-SNAPSHOT</version>
+    <version>3.13.0-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
