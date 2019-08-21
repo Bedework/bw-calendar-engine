@@ -28,6 +28,7 @@ import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
@@ -39,6 +40,7 @@ import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import java.io.StreamTokenizer;
+import java.util.List;
 
 /** Handle processing for CmdUtil
  *
@@ -55,7 +57,7 @@ public abstract class CmdUtilHelper implements Logged {
   abstract boolean process() throws Throwable;
 
   /**
-   * 
+   *
    * @return command e.g. "add"
    */
   abstract String command();
@@ -69,7 +71,7 @@ public abstract class CmdUtilHelper implements Logged {
   protected void addError(final String val) {
     pstate.addError(val);
   }
-  
+
   protected CalSvcI getSvci() {
     return pstate.getSvci();
   }
@@ -85,10 +87,10 @@ public abstract class CmdUtilHelper implements Logged {
   public DirectoryInfo getDirectoryInfo() throws CalFacadeException {
     return getSvci().getDirectories().getDirectoryInfo();
   }
-  
+
   protected void open() throws Throwable {
     final CalSvcI svci = getSvci();
-    
+
     if (svci == null) {
       return;
     }
@@ -109,28 +111,30 @@ public abstract class CmdUtilHelper implements Logged {
       error(t);
     }
   }
-  
+
   public BwIndexer getIndexer(final String docType) throws CalFacadeException {
     return getSvci().getIndexer(true, docType);
   }
 
   public FilterBase parseQuery(final String query) throws CalFacadeException {
     final SimpleFilterParser.ParseResult pr = getSvci().getFilterParser().parse(query, false, null);
-    
+
     if (pr.ok) {
       return pr.filter;
     }
-    
-    error("Expression " + query + 
+
+    error("Expression " + query +
                   " failed to parse: " + pr.message);
     return null;
   }
-  
+
   /* expect a possibly quoted path next
    */
   protected BwCalendar getCal() throws Throwable {
-    final String path = wordOrQuotedVal();
+    return getCal(wordOrQuotedVal());
+  }
 
+  protected BwCalendar getCal(final String path) throws Throwable {
     if (path == null) {
       error("Expected a path");
       return null;
@@ -140,6 +144,271 @@ public abstract class CmdUtilHelper implements Logged {
 
     if (cal == null) {
       error("Unable to access calendar " + path);
+    }
+
+    return cal;
+  }
+
+  protected void setUser(final String account,
+                         final boolean superUser) throws Throwable {
+    if (account.equals(pstate.getAccount())) {
+      info("Account is already " + account);
+      return; // No change
+    }
+
+    info("Setting account to " + account);
+
+    pstate.closeSvci();
+
+    pstate.setAccount(account);
+    pstate.setSuperUser(superUser);
+
+    // Open to force creation of account
+    try {
+      open();
+    } finally {
+      close();
+    }
+  }
+
+  protected BwAdminGroup makeAdminGroup(final String account,
+                                        final String description,
+                                        final String owner,
+                                        final String eventOwner) throws Throwable {
+    if (description == null) {
+      addError("Must supply admin group description");
+      return null;
+    }
+
+    if (owner == null) {
+      addError("Must supply admin group owner");
+      return null;
+    }
+
+    final BwAdminGroup grp = new BwAdminGroup();
+
+    grp.setAccount(account);
+
+    final DirectoryInfo di = getDirectoryInfo();
+    String href = di.getBwadmingroupPrincipalRoot();
+    if (!href.endsWith("/")) {
+      href += "/";
+    }
+
+    grp.setPrincipalRef(href + account);
+
+    grp.setDescription(description);
+
+    final BwPrincipal adgPr = getUserAlways(owner);
+    if (adgPr == null) {
+      return null;
+    }
+
+    grp.setGroupOwnerHref(adgPr.getPrincipalRef());
+
+    final BwPrincipal adePr;
+    if (eventOwner == null) {
+      adePr = getUserAlways("agrp_" + account);
+    } else {
+      adePr = getUserAlways(eventOwner);
+    }
+
+    if (adePr == null) {
+      return null;
+    }
+
+    grp.setOwnerHref(adePr.getPrincipalRef());
+
+    getSvci().getAdminDirectories().addGroup(grp);
+
+    return grp;
+  }
+
+  protected boolean addToAdminGroup(final String accountToAdd,
+                                    final String kind,
+                                    final String groupName) throws Throwable {
+    if (accountToAdd == null) {
+      pstate.addError("Must supply account");
+      return false;
+    }
+
+    final boolean group;
+
+    if ("group".equals(kind)) {
+      group = true;
+    } else if ("user".equals(kind)) {
+      group = false;
+    } else {
+      pstate.addError("Invalid kind: " + kind);
+      return false;
+    }
+
+    final BwAdminGroup grp =
+            (BwAdminGroup)getSvci().getAdminDirectories()
+                                   .findGroup(groupName);
+
+    if (grp == null) {
+      pstate.addError("Unknown group " + groupName);
+      return false;
+    }
+
+    if (grp.isMember(accountToAdd, group)) {
+      pstate.addError("Already a member: " + accountToAdd);
+      return false;
+    }
+
+    final BwPrincipal nmbr = newMember(accountToAdd, !group);
+
+    getSvci().getAdminDirectories().addMember(grp, nmbr);
+    getSvci().getAdminDirectories().updateGroup(grp);
+
+    return true;
+  }
+
+  protected BwCalendar makeCollection(final String type,
+                                      final String parentPath,
+                                      final String calName,
+                                      final String calSummary,
+                                      final String aliasTarget,
+                                      final String ownerHref,
+                                      final String creatorHref,
+                                      final String description,
+                                      final String filter,
+                                      final List<String> catuids) throws Throwable {
+    final int calType;
+    boolean topicalArea  = false;
+
+    if (type == null) {
+      error("Expected a collection type");
+      return null;
+    }
+
+    if ("folder".equals(type)) {
+      calType = BwCalendar.calTypeFolder;
+    } else if ("calendar".equals(type)) {
+      calType = BwCalendar.calTypeCalendarCollection;
+    } else if ("alias".equals(type)) {
+      calType = BwCalendar.calTypeAlias;
+    } else if ("topic".equals(type)) {
+      calType = BwCalendar.calTypeAlias;
+      topicalArea  = true;
+    } else {
+      error("Expected a collection type 'folder', 'calendar', 'alias' or 'topic'");
+      return null;
+    }
+
+    if (parentPath == null) {
+      error("No parent path");
+      return null;
+    }
+
+    if (calName == null) {
+      error("Expected a collection name");
+      return null;
+    }
+
+    if (calSummary == null) {
+      error("Expected a collection display-name");
+      return null;
+    }
+
+    if (ownerHref == null) {
+      error("Expected an owner href");
+      return null;
+    }
+
+    if (creatorHref == null) {
+      error("Expected a creator href");
+      return null;
+    }
+
+    final BwCalendar cal = new BwCalendar();
+
+    cal.setName(calName);
+    cal.setSummary(calSummary);
+    cal.setCalType(calType);
+    cal.setPath(parentPath + "/" + calName);
+
+    if (calType == BwCalendar.calTypeAlias) {
+      final BwCalendar target = getCal(aliasTarget);
+
+      if (target == null) {
+        error("Require a target for alias");
+        return null;
+      }
+
+      cal.setAliasUri(BwCalendar.internalAliasUriPrefix +
+                              target.getPath());
+
+      if (topicalArea) {
+        cal.setIsTopicalArea(true);
+      }
+    }
+
+    /* Owner and creator href */
+    cal.setOwnerHref(ownerHref);
+    cal.setCreatorHref(creatorHref);
+    cal.setDescription(description);
+
+    /* filter */
+
+    boolean filterSupplied = false;
+
+    if (filter != null) {
+      cal.setFilterExpr(filter);
+      filterSupplied = true;
+    }
+
+    if (catuids.size() > 0) {
+      final StringBuilder filterExpr = new StringBuilder(
+              "catuid=(");
+      String delim = "";
+
+      /* Now we have the owner find or add the categories */
+
+      for (final String catStr : catuids) {
+        BwCategory cat = getCatPersistent(ownerHref, catStr);
+
+        if (cat == null) {
+          cat = BwCategory.makeCategory();
+
+          cat.setPublick(true);
+          cat.setWordVal(catWd(catStr));
+          //cat.setOwner(svci.getUser());
+
+          getSvci().getCategoriesHandler().add(cat);
+        }
+
+        cal.addCategory(cat);
+
+        filterExpr.append("\"");
+        filterExpr.append(cat.getUid());
+        filterExpr.append("\"");
+        filterExpr.append(delim);
+        delim = ",";
+      }
+
+      filterExpr.append(")");
+
+      if (!filterSupplied) {
+        cal.setFilterExpr(filterExpr.toString());
+      }
+    }
+
+    try {
+      getSvci().getCalendarsHandler().add(cal, parentPath);
+    } catch (final CalFacadeException cfe) {
+      if (CalFacadeException.duplicateCalendar.equals(cfe.getMessage())) {
+        error("Collection " + calName + " already exists on path " + parentPath);
+        return null;
+      }
+
+      if (CalFacadeException.collectionNotFound.equals(cfe.getMessage())) {
+        error("Collection " + parentPath + " does not exist");
+        return null;
+      }
+
+      throw cfe;
     }
 
     return cal;
@@ -165,8 +434,8 @@ public abstract class CmdUtilHelper implements Logged {
   }
 
   protected BwCalendar getAliasTarget(final BwCalendar col) throws Throwable {
-    return getSvci().getCalendarsHandler().resolveAlias(col, 
-                                                        true, 
+    return getSvci().getCalendarsHandler().resolveAlias(col,
+                                                        true,
                                                         false);
   }
 
@@ -183,7 +452,7 @@ public abstract class CmdUtilHelper implements Logged {
       error(cal.getPath() + " is not an alias");
       return null;
     }
-    
+
     return cal.getPath();
   }
 
@@ -212,8 +481,8 @@ public abstract class CmdUtilHelper implements Logged {
   public BwPrincipal findGroup(final String val) throws Throwable {
     return getSvci().getDirectories().findGroup(val);
   }
-  
-  public BwPrincipal newMember(final String account, 
+
+  public BwPrincipal newMember(final String account,
                                final boolean user) throws Throwable {
 
     if (user) {
@@ -243,17 +512,17 @@ public abstract class CmdUtilHelper implements Logged {
 
       return p;
     }
-      
+
     // group
     final BwPrincipal p = findGroup(account);
 
     if (p == null) {
       pstate.addError("Unknown group " + account);
     }
-    
+
     return p;
   }
-  
+
   /* Get an event given path and name
    */
   protected EventInfo getEvent(final String path,
@@ -287,19 +556,19 @@ public abstract class CmdUtilHelper implements Logged {
   @SuppressWarnings("unused")
   protected boolean expect(final String val) throws Throwable {
     final String next = word();
-    
+
     if (!next.equals(val)) {
       error("Expected " + val + " got " + next);
       return false;
     }
-    
+
     return true;
   }
 
   protected boolean test(final String val) throws Throwable {
     return pstate.getTokenizer().testToken(val);
   }
-  
+
   protected String catWd(final String val) {
     if (val.startsWith("/public/.bedework/categories/")) {
       return val.substring("/public/.bedework/categories/".length());
@@ -312,15 +581,15 @@ public abstract class CmdUtilHelper implements Logged {
 
     return val;
   }
-  
+
   protected BwCategory getCat(final String ownerHref,
                               final String catVal) throws Throwable {
-    final BwCategory cat = 
-            getSvci().getCategoriesHandler().find(new BwString(null, 
+    final BwCategory cat =
+            getSvci().getCategoriesHandler().find(new BwString(null,
                                                                catWd(catVal)));
 
     if (cat == null) {
-      error("Unable to access category " + catVal + 
+      error("Unable to access category " + catVal +
                     " for owner " + ownerHref);
     }
 
@@ -328,10 +597,10 @@ public abstract class CmdUtilHelper implements Logged {
   }
 
   protected BwCategory getCatPersistent(final String ownerHref,
-                              final String catVal) throws Throwable {
+                                        final String catVal) throws Throwable {
     final BwCategory cat =
             getSvci().getCategoriesHandler().findPersistent(new BwString(null,
-                                                               catWd(catVal)));
+                                                                         catWd(catVal)));
 
     if (cat == null) {
       error("Unable to access category " + catVal +
@@ -374,7 +643,7 @@ public abstract class CmdUtilHelper implements Logged {
 
   protected boolean cmdEnd() throws Throwable {
     return testToken(StreamTokenizer.TT_EOL) ||
-           testToken(StreamTokenizer.TT_EOF);
+            testToken(StreamTokenizer.TT_EOF);
   }
 
   protected Boolean boolFor(final String wd) throws Throwable {

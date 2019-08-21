@@ -19,8 +19,6 @@
 package org.bedework.tools.cmdutil;
 
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwView;
 
 /**
@@ -76,24 +74,8 @@ public class ProcessAdd extends CmdUtilHelper {
       debug("About to add member " + account + " to a group");
     }
     
-    if (account == null) {
-      pstate.addError("Must supply account");
-      return false;
-    }
-    
     final String kind = word();
 
-    final boolean group;
-    
-    if ("group".equals(kind)) {
-      group = true;
-    } else if ("user".equals(kind)) {
-      group = false;
-    } else {
-      pstate.addError("Invalid kind: " + kind);
-      return false;
-    }
-    
     if (!"to".equals(word())) {
       pstate.addError("Invalid syntax - expected 'to'");
       return false;
@@ -104,26 +86,7 @@ public class ProcessAdd extends CmdUtilHelper {
     try {
       open();
 
-      final BwAdminGroup grp =
-              (BwAdminGroup)getSvci().getAdminDirectories()
-                                     .findGroup(toGrp);
-
-      if (grp == null) {
-        pstate.addError("Unknown group " + toGrp);
-        return false;
-      }
-
-      if (grp.isMember(account, "group".equals(kind))) {
-        pstate.addError("Already a member: " + account);
-        return false;
-      }
-
-      final BwPrincipal nmbr = newMember(account, !group);
-
-      getSvci().getAdminDirectories().addMember(grp, nmbr);
-      getSvci().getAdminDirectories().updateGroup(grp);
-
-      return true;
+      return addToAdminGroup(account, kind, toGrp);
     } finally {
       close();
     }

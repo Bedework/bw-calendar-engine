@@ -27,6 +27,7 @@
 
     <commons.csv.version>1.2</commons.csv.version>
     <commons.io.version>2.0.1</commons.io.version>
+    <commons.text.version>1.7</commons.text.version>
 
     <digester-version>1.8</digester-version>
     <dom4j-version>1.6.1</dom4j-version>
@@ -346,6 +347,12 @@
         <groupId>commons-digester</groupId>
         <artifactId>commons-digester</artifactId>
         <version>${digester-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>${commons.text.version}</version>
       </dependency>
 
       <dependency>

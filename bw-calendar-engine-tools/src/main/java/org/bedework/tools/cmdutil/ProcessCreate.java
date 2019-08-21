@@ -21,9 +21,6 @@ package org.bedework.tools.cmdutil;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.DirectoryInfo;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper;
@@ -126,7 +123,7 @@ public class ProcessCreate extends CmdUtilHelper {
 
   @Override
   String description() {
-    return "create admin group, category, collection or location";
+    return "create admin group, calendar suite, category, collection or location";
   }
 
   private boolean processCreateCategory(final String catVal) throws Throwable {
@@ -159,52 +156,14 @@ public class ProcessCreate extends CmdUtilHelper {
     try {
       open();
 
-      final BwAdminGroup grp = new BwAdminGroup();
+      final BwAdminGroup grp = makeAdminGroup(account,
+                                              quotedVal(), // description,
+                                              word(),      //owner,
+                                              word());     // eventOwner);
       
-      grp.setAccount(account);
-
-      final DirectoryInfo di = getDirectoryInfo();
-      String href = di.getBwadmingroupPrincipalRoot();
-      if (!href.endsWith("/")) {
-        href += "/";
-      }
-
-      grp.setPrincipalRef(href + account);
-    
-      grp.setDescription(quotedVal());
-      if (grp.getDescription() == null) {
-        addError("Must supply admin group description");
+      if (grp == null) {
         return false;
       }
-    
-      final String adgGroupOwner = word();
-    
-      if (adgGroupOwner == null) {
-        addError("Must supply admin group owner");
-        return false;
-      }
-
-      final BwPrincipal adgPr = getUserAlways(adgGroupOwner);
-      if (adgPr == null) {
-        return false;
-      }
-    
-      grp.setGroupOwnerHref(adgPr.getPrincipalRef());
-
-      String adgEventOwner = word();
-
-      if (adgEventOwner == null) {
-        adgEventOwner = "agrp_" + account;
-      }
-
-      final BwPrincipal adePr = getUserAlways(adgEventOwner);
-      if (adePr == null) {
-        return false;
-      }
-
-      grp.setOwnerHref(adePr.getPrincipalRef());
-    
-      getSvci().getAdminDirectories().addGroup(grp);
 
       return true;
     } finally {
@@ -261,7 +220,7 @@ public class ProcessCreate extends CmdUtilHelper {
       view.setName(name);
 
       if (!getSvci().getViewsHandler().add(view, false)) {
-        error("view " + name + "already exists.");
+        error("view \"" + name + "\" already exists.");
       }
       
       return true;
@@ -292,96 +251,33 @@ public class ProcessCreate extends CmdUtilHelper {
       open();
 
       final String type = word();
-      final int calType;
-      boolean topicalArea  = false;
-
-      if (type == null) {
-        error("Expected a collection type");
-        return false;
-      }
-
-      if ("folder".equals(type)) {
-        calType = BwCalendar.calTypeFolder;
-      } else if ("calendar".equals(type)) {
-        calType = BwCalendar.calTypeCalendarCollection;
-      } else if ("alias".equals(type)) {
-        calType = BwCalendar.calTypeAlias;
-      } else if ("topic".equals(type)) {
-        calType = BwCalendar.calTypeAlias;
-        topicalArea  = true;
-      } else {
-        error("Expected a collection type 'folder', 'calendar', 'alias' or 'topic'");
-        return false;
-      }
-
       final String parentPath = wordOrQuotedVal();
-
-      if (parentPath == null) {
-        if (debug()) {
-          debug("No parent path");
-        }
-        return false;
-      }
-
       final String calName = wordOrQuotedVal();
-
-      if (calName == null) {
-        error("Expected a collection name");
-        return false;
-      }
-
       final String calSummary = wordOrQuotedVal();
-
-      if (calSummary == null) {
-        error("Expected a collection display-name");
-        return false;
+      final String aliasTarget;
+      if ("topic".equals(type)) {
+        aliasTarget = wordOrQuotedVal();
+      } else {
+        aliasTarget = null;
       }
-
-      final BwCalendar cal = new BwCalendar();
-
-      cal.setName(calName);
-      cal.setSummary(calSummary);
-      cal.setCalType(calType);
-      cal.setPath(parentPath + "/" + calName);
-
-      if (calType == BwCalendar.calTypeAlias) {
-        final BwCalendar target = getCal();
-
-        if (target == null) {
-          error("Require a target for alias");
-          return false;
-        }
-
-        cal.setAliasUri(BwCalendar.internalAliasUriPrefix + 
-                                target.getPath());
-
-        if (topicalArea) {
-          cal.setIsTopicalArea(true);
-        }
-      }
-
-      /* Owner and creator href */
       final String ownerHref = quotedVal();
       final String creatorHref = quotedVal();
-
-      cal.setOwnerHref(ownerHref);
-      cal.setCreatorHref(creatorHref);
-
+      final String description;
       if (test("desc")) {
         assertToken('=');
 
-        cal.setDescription(quotedVal());
+        description = quotedVal();
+      } else {
+        description = null;
       }
-      
-      /* filter */
-      
-      boolean filterSupplied = false;
 
+      final String filter;
       if (test("filter")) {
         assertToken('=');
 
-        cal.setFilterExpr(quotedVal());
-        filterSupplied = true;
+        filter = quotedVal();
+      } else {
+        filter = null;
       }
 
       final List<String> cats = new ArrayList<>();
@@ -390,60 +286,19 @@ public class ProcessCreate extends CmdUtilHelper {
         assertToken('=');
         cats.add(quotedVal());
       }
-      
-      if (cats.size() > 0) {
-        final StringBuilder filterExpr = new StringBuilder(
-                "catuid=(");
-        String delim = "";
 
-        /* Now we have the owner find or add the categories */
+      final BwCalendar cal = makeCollection(type,
+                                            parentPath,
+                                            calName,
+                                            calSummary,
+                                            aliasTarget,
+                                            ownerHref,
+                                            creatorHref,
+                                            description,
+                                            filter,
+                                            cats);
 
-        for (final String catStr : cats) {
-          BwCategory cat = getCatPersistent(ownerHref, catStr);
-
-          if (cat == null) {
-            cat = BwCategory.makeCategory();
-
-            cat.setPublick(true);
-            cat.setWordVal(catWd(catStr));
-            //cat.setOwner(svci.getUser());
-
-            getSvci().getCategoriesHandler().add(cat);
-          }
-
-          cal.addCategory(cat);
-
-          filterExpr.append("\"");
-          filterExpr.append(cat.getUid());
-          filterExpr.append("\"");
-          filterExpr.append(delim);
-          delim = ",";
-        }
-
-        filterExpr.append(")");
-
-        if (!filterSupplied) {
-          cal.setFilterExpr(filterExpr.toString());
-        }
-      }
-      
-      try {
-        getSvci().getCalendarsHandler().add(cal, parentPath);
-      } catch (final CalFacadeException cfe) {
-        if (CalFacadeException.duplicateCalendar.equals(cfe.getMessage())) {
-          error("Collection " + calName + " already exists on path " + parentPath);
-          return false;
-        }
-
-        if (CalFacadeException.collectionNotFound.equals(cfe.getMessage())) {
-          error("Collection " + parentPath + " does not exist");
-          return false;
-        }
-
-        throw cfe;
-      }
-
-      return true;
+      return cal != null;
     } finally {
       close();
     }

@@ -59,28 +59,6 @@ public class ProcessUser extends CmdUtilHelper {
 
     return true;
   }
-  
-  protected void setUser(final String account, 
-                         final boolean superUser) throws Throwable {
-    if (account.equals(pstate.getAccount())) {
-      info("Account is already " + account);
-      return; // No change
-    }
-    
-    info("Setting account to " + account);
-
-    pstate.closeSvci();
-
-    pstate.setAccount(account);
-    pstate.setSuperUser(superUser);
-
-    // Open to force creation of account
-    try {
-      open();
-    } finally {
-      close();
-    }
-  }
 
   @Override
   String command() {
