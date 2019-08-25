@@ -973,7 +973,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     if (query != null) {
       final MatchQueryBuilder mqb = QueryBuilders
-              .matchQuery("_all", query);
+              .matchQuery("all_content", query);
 
       if (!relevance) {
         mqb.operator(Operator.AND);
