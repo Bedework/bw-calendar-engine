@@ -16,14 +16,14 @@
 
 		<!-- Bedework Versions -->
 
-    <bw-access.version>4.0.6</bw-access.version>
-    <bw-caldav.version>4.0.7</bw-caldav.version>
-		<bw-util.version>4.0.25-SNAPSHOT</bw-util.version>
-    <bw-util-hibernate.version>4.0.21</bw-util-hibernate.version>
-    <bw-util-logging.version>4.0.2</bw-util-logging.version>
-    <bw-util2.version>4.0.4</bw-util2.version>
-		<bw-webdav.version>4.0.7</bw-webdav.version>
-    <bw-xml.version>4.0.8</bw-xml.version>
+    <bw-access.version>4.0.7</bw-access.version>
+    <bw-caldav.version>4.0.8</bw-caldav.version>
+		<bw-util.version>4.0.25</bw-util.version>
+    <bw-util-hibernate.version>4.0.22</bw-util-hibernate.version>
+    <bw-util-logging.version>4.0.4</bw-util-logging.version>
+    <bw-util2.version>4.0.5</bw-util2.version>
+		<bw-webdav.version>4.0.8</bw-webdav.version>
+    <bw-xml.version>4.0.9</bw-xml.version>
 
     <commons.csv.version>1.2</commons.csv.version>
     <commons.io.version>2.0.1</commons.io.version>
@@ -483,9 +483,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.9.1</version>
+        <version>3.1.1</version>
         <configuration>
-          <additionalparam>-Xdoclint:none</additionalparam>
+          <additionalJOption>-Xdoclint:none</additionalJOption>
           <failOnError>false</failOnError>
         </configuration>
       </plugin>
@@ -538,7 +538,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.9.1</version>
+            <version>3.1.1</version>
             <executions>
               <execution>
                 <id>attach-javadocs</id>
@@ -548,7 +548,7 @@
               </execution>
             </executions>
             <configuration>
-              <additionalparam>-Xdoclint:none</additionalparam>
+              <additionalJOption>-Xdoclint:none</additionalJOption>
               <failOnError>false</failOnError>
             </configuration>
           </plugin>
