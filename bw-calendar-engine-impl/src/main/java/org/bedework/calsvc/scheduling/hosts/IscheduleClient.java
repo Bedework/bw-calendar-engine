@@ -75,13 +75,6 @@ import static org.bedework.util.http.HttpUtil.setContent;
 public class IscheduleClient implements Logged {
   private transient IcalTranslator trans;
 
-  /* There is one entry per host + port. Because we are likely to make a number
-   * of calls to the same host + port combination it makes sense to preserve
-   * the objects between calls.
-   *
-  private HashMap<String, BasicHttpClient> cioTable = new HashMap<>();
-  */
-
   private static CloseableHttpClient cio;
 
   private PrivateKeys pkeys;
