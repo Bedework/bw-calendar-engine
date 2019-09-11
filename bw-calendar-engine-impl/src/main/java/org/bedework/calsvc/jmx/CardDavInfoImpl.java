@@ -32,11 +32,7 @@ public class CardDavInfoImpl extends ConfigBase<CardDavInfoImpl>
         implements CardDavInfo {
   private boolean auth;
 
-  private String host;
-
-  private int port;
-
-  private String contextPath;
+  private String url;
 
   private String cutypeMapping;
 
@@ -51,33 +47,13 @@ public class CardDavInfoImpl extends ConfigBase<CardDavInfoImpl>
   }
 
   @Override
-  public void setHost(final String val) {
-    host = val;
+  public void setUrl(final String val) {
+    url = val;
   }
 
   @Override
-  public String getHost() {
-    return host;
-  }
-
-  @Override
-  public void setPort(final int val) {
-    port = val;
-  }
-
-  @Override
-  public int getPort() {
-    return port;
-  }
-
-  @Override
-  public void setContextPath(final String val) {
-    contextPath = val;
-  }
-
-  @Override
-  public String getContextPath() {
-    return contextPath;
+  public String getUrl() {
+    return url;
   }
 
   @Override

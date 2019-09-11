@@ -20,7 +20,7 @@ package org.bedework.calsvc.notifications;
 
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.util.http.BasicHttpClient;
+import org.bedework.util.http.PooledHttpClient;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
@@ -41,7 +41,7 @@ public class NotificationClient implements Logged {
 
   private static final ObjectMapper om = new ObjectMapper();
 
-  private BasicHttpClient cl;
+  private PooledHttpClient cl;
 
   /**
    * Constructor
@@ -54,9 +54,9 @@ public class NotificationClient implements Logged {
   /**
    *
    * @param principalHref owner of changed notifications
-   * @throws CalFacadeException
    */
-  public void informNotifier(final String principalHref, final String resourceName) throws CalFacadeException {
+  public void informNotifier(final String principalHref,
+                             final String resourceName) {
     final NotifyMessage nm = new NotifyMessage(np.getNotifierId(),
                                                np.getNotifierToken());
 
@@ -71,11 +71,10 @@ public class NotificationClient implements Logged {
    * @param principalHref identify who
    * @param emails non-empty list
    * @param userToken per-user token
-   * @throws CalFacadeException
    */
   public void subscribe(final String principalHref,
                         final List<String> emails,
-                        final String userToken) throws CalFacadeException {
+                        final String userToken) {
     final SubscribeMessage sm =
             new SubscribeMessage(np.getNotifierId(),
                                  np.getNotifierToken(),
@@ -90,10 +89,9 @@ public class NotificationClient implements Logged {
    *
    * @param principalHref identify who
    * @param emails null to remove entire subscription
-   * @throws CalFacadeException
    */
   public void unsubscribe(final String principalHref,
-                   final List<String> emails) throws CalFacadeException {
+                   final List<String> emails) {
     final SubscribeMessage sm = new SubscribeMessage(np.getNotifierId(),
                                                      np.getNotifierToken(),
                                                      null,
@@ -104,29 +102,19 @@ public class NotificationClient implements Logged {
   }
 
   private void sendRequest(final Object req,
-                           final String path) throws CalFacadeException {
+                           final String path) {
     if (np.getNotifierURI() == null) {
       return;  // Assume not enabled
     }
 
     synchronized (this) {
       try {
-        final BasicHttpClient cl = getClient();
-
-        cl.setBaseURI(new URI(np.getNotifierURI()));
-
         final StringWriter sw = new StringWriter();
 
         om.writeValue(sw, req);
 
-        final byte[] content = sw.toString().getBytes();
-
-        final int status = cl.sendRequest("POST",
-                                          path,
-                                          null, // hdrs
-                                          "application/json",
-                                          content.length,
-                                          content);
+        final int status = cl.postJson(path,
+                                       sw.toString());
 
         if (status != HttpServletResponse.SC_OK) {
           warn("Unable to post notification");
@@ -148,14 +136,13 @@ public class NotificationClient implements Logged {
     }
   }
 
-  private BasicHttpClient getClient() throws CalFacadeException {
+  private PooledHttpClient getClient() throws CalFacadeException {
     if (cl != null) {
       return cl;
     }
 
     try {
-      cl = new BasicHttpClient(30 * 1000,
-                               false);  // followRedirects
+      cl = new PooledHttpClient(new URI(np.getNotifierURI()));
 
       return cl;
     } catch (final Throwable t) {

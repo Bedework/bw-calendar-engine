@@ -40,7 +40,9 @@ import org.bedework.util.dav.DavUtil;
 import org.bedework.util.dav.DavUtil.MultiStatusResponse;
 import org.bedework.util.dav.DavUtil.MultiStatusResponseElement;
 import org.bedework.util.dav.DavUtil.PropstatElement;
-import org.bedework.util.http.BasicHttpClient;
+import org.bedework.util.http.HttpUtil;
+import org.bedework.util.http.PooledHttpClient;
+import org.bedework.util.http.PooledHttpClient.ResponseHolder;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
@@ -58,17 +60,16 @@ import net.fortuna.ical4j.vcard.Property;
 import net.fortuna.ical4j.vcard.Property.Id;
 import net.fortuna.ical4j.vcard.VCard;
 import net.fortuna.ical4j.vcard.property.Kind;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HTTP;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.w3c.dom.Element;
 
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -95,6 +96,8 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
  * @version 1.0
  */
 public abstract class AbstractDirImpl implements Logged, Directories {
+  public final static int SC_MULTI_STATUS = 207; // not defined for some reason
+
   private static BasicSystemProperties sysRoots;
   private CalAddrPrefixes caPrefixes;
   private CardDavInfo authCdinfo;
@@ -283,19 +286,18 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
     final CardDavInfo cdi = getCardDavInfo(false);
 
-    if ((cdi == null) || (cdi.getHost() == null)) {
+    if ((cdi == null) || (cdi.getUrl() == null)) {
       return null;
     }
 
-    BasicHttpClient cdc = null;
+    PooledHttpClient cdc = null;
 
     pi = new BwPrincipalInfo();
 
     try {
-      cdc = new BasicHttpClient(cdi.getHost(), cdi.getPort(), null,
-                              15 * 1000);
+      cdc = new PooledHttpClient(new URI(cdi.getUrl()));
 
-      pi.setPropertiesFromVCard(getCard(cdc, cdi.getContextPath(), p),
+      pi.setPropertiesFromVCard(getCard(cdc, p),
                                 "text/vcard");
     } catch (final Throwable t) {
       if (getLogger().isDebugEnabled()) {
@@ -303,7 +305,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       }
     } finally {
       if (cdc != null) {
-        cdc.close();
+        cdc.release();
       }
     }
 
@@ -320,11 +322,11 @@ public abstract class AbstractDirImpl implements Logged, Directories {
           throws CalFacadeException {
     final CardDavInfo cdi = getCardDavInfo(false);
 
-    if ((cdi == null) || (cdi.getHost() == null)) {
+    if ((cdi == null) || (cdi.getUrl() == null)) {
       return null;
     }
 
-    BasicHttpClient cdc = null;
+    PooledHttpClient cdc = null;
 
     final String path = getCutypePath(cutype, cdi);
 
@@ -341,10 +343,9 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     }
 
     try {
-      cdc = new BasicHttpClient(cdi.getHost(), cdi.getPort(), null,
-                                15 * 1000);
+      cdc = new PooledHttpClient(new URI(cdi.getUrl()));
       final List<MatchResult> mrs = matching(cdc,
-                                             cdi.getContextPath() + path,
+                                             path,
                                              addrCtype,
                                              props);
 
@@ -370,7 +371,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       throw new CalFacadeException(t);
     } finally {
       if (cdc != null) {
-        cdc.close();
+        cdc.release();
       }
     }
   }
@@ -382,15 +383,14 @@ public abstract class AbstractDirImpl implements Logged, Directories {
                                     final Holder<Boolean> truncated) throws CalFacadeException {
     final CardDavInfo cdi = getCardDavInfo(false);
 
-    if ((cdi == null) || (cdi.getHost() == null)) {
+    if ((cdi == null) || (cdi.getUrl() == null)) {
       return null;
     }
 
-    BasicHttpClient cdc = null;
+    PooledHttpClient cdc = null;
 
     try {
-      cdc = new BasicHttpClient(cdi.getHost(), cdi.getPort(), null,
-                                15 * 1000);
+      cdc = new PooledHttpClient(new URI(cdi.getUrl()));
 
       final List<BwPrincipalInfo> pis = find(cdc, cdi,
                                              cua, cutype);
@@ -438,14 +438,12 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       throw new CalFacadeException(t);
     } finally {
       if (cdc != null) {
-        try {
-          cdc.release();
-        } catch (final Throwable ignored) {}
+        cdc.release();
       }
     }
   }
 
-  private BwPrincipalInfo fetch(final BasicHttpClient cdc,
+  private BwPrincipalInfo fetch(final PooledHttpClient cdc,
                                 final CardDavInfo cdi,
                                 final String uri) throws CalFacadeException {
     final List<BwPrincipalInfo> pis = find(cdc, cdi, uri,
@@ -458,7 +456,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     return pis.get(0);
   }
 
-  private List<BwPrincipalInfo> find(final BasicHttpClient cdc,
+  private List<BwPrincipalInfo> find(final PooledHttpClient cdc,
                                      final CardDavInfo cdi,
                                      final String cua,
                                      final String cutype) throws CalFacadeException {
@@ -486,8 +484,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     final List<BwPrincipalInfo> pis = new ArrayList<>();
 
     final List<MatchResult> mrs = matching(cdc,
-                                           cdi.getContextPath() + getCutypePath(
-                                                   cutype, cdi),
+                                           getCutypePath(cutype, cdi),
                                            null,
                                            props);
 
@@ -1128,7 +1125,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     String card;
   }
 
-  private List<MatchResult> matching(final BasicHttpClient cl,
+  private List<MatchResult> matching(final PooledHttpClient cl,
                                      final String url,
                                      final String addrDataCtype,
                                      final List<WebdavProperty> props)
@@ -1228,28 +1225,51 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
       xml.closeTag(CarddavTags.addressbookQuery);
 
-      final DavUtil du = new DavUtil();
-
       final byte[] content = sw.toString().getBytes();
 
-      final int res = du.sendRequest(cl, "REPORT", url,
-                                     new BasicHeader("depth", "infinity"),
-                                     "text/xml", // contentType,
-                                     content.length, // contentLen,
-                                     content);
+      final ResponseHolder resp = cl.report(url, "infinity",
+                                            new String(content),
+                                            this::processMatchingResponse);
 
-      final int SC_MULTI_STATUS = 207; // not defined for some reason
-      if (res != SC_MULTI_STATUS) {
+      if (resp.failed) {
         if (debug()) {
-          debug("Got response " + res + " for path " + url);
+          debug("Got response " + resp.status + " for path " + url);
         }
 
         return null;
       }
 
-      final List<MatchResult> mrs = new ArrayList<>();
+      return (List<MatchResult>)resp.response;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    } finally {
+      try {
+        cl.release();
+      } catch (final Throwable ignored) {}
+    }
+  }
+
+  final ResponseHolder processMatchingResponse(final String path,
+                                               final CloseableHttpResponse resp) {
+    try {
+      final int status = HttpUtil.getStatus(resp);
+
+      if (status != SC_MULTI_STATUS) {
+        return new ResponseHolder(status,
+                                  "Failed response from server");
+      }
+
+      if (resp.getEntity() == null) {
+        return new ResponseHolder(status,
+                                  "No content in response from server");
+      }
+
+      final InputStream is = resp.getEntity().getContent();
+      final DavUtil du = new DavUtil();
+
       final MultiStatusResponse msr =
-              du.getMultiStatusResponse(cl.getResponseBodyAsStream());
+              du.getMultiStatusResponse(is);
+      final List<MatchResult> mrs = new ArrayList<>();
 
       for (final MultiStatusResponseElement msre: msr.responses) {
         MatchResult mr = new MatchResult();
@@ -1276,13 +1296,11 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
       }
 
-      return mrs;
+      final ResponseHolder<List<MatchResult>> response =
+              new ResponseHolder<>(mrs);
+      return response;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    } finally {
-      try {
-        cl.release();
-      } catch (final Throwable ignored) {}
+      return new ResponseHolder(t);
     }
   }
 
@@ -1292,163 +1310,156 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   * @return card or null
   * @throws CalFacadeException
   */
- private String getCard(final BasicHttpClient cl,
-                        final String context,
-                        final AccessPrincipal p) throws CalFacadeException {
-   /* Try a propfind on the principal */
+  private String getCard(final PooledHttpClient cl,
+                         final AccessPrincipal p) throws CalFacadeException {
+    /* Try a propfind on the principal */
 
-   try {
-     StringBuilder sb = new StringBuilder(
-         "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
-         "<D:propfind xmlns:D=\"DAV:\"\n" +
-         "            xmlns:C=\"urn:ietf:params:xml:ns:carddav\">\n" +
-         "  <D:prop>\n" +
-         "    <C:principal-address/>\n" +
-         "  </D:prop>\n" +
-         "</D:propfind>\n");
+    try {
+      final String content =
+              "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                      "<D:propfind xmlns:D=\"DAV:\"\n" +
+                      "            xmlns:C=\"urn:ietf:params:xml:ns:carddav\">\n" +
+                      "  <D:prop>\n" +
+                      "    <C:principal-address/>\n" +
+                      "  </D:prop>\n" +
+                      "</D:propfind>\n";
 
-     byte[] content = sb.toString().getBytes();
+      final ResponseHolder resp = cl.propfind(p.getPrincipalRef(),
+                                              "0",
+                                              content,
+                                              this::processGetCardHrefResponse);
 
-     int res = cl.sendRequest("PROPFIND", context + p.getPrincipalRef(),
-                              Collections.singletonList(DavUtil.depth0), // hdrs
-                              "text/xml",
-                              content.length, content);
+      if (resp.failed) {
+        if (debug()) {
+          debug("Got response " + resp.status + " for path " +
+                        p.getPrincipalRef());
+        }
 
-     int SC_MULTI_STATUS = 207; // not defined for some reason
-     if (res != SC_MULTI_STATUS) {
-       return null;
-     }
+        return null;
+      }
 
-     /* Extract the principal address from something like
-      * <?xml version="1.0" encoding="UTF-8" ?>
-      * <multistatus xmlns="DAV:" xmlns:ns1="urn:ietf:params:xml:ns:carddav">
-      *   <response>
-      *     <href>/ucarddav/principals/users/douglm/</href>
-      *     <propstat>
-      *       <prop>
-      *         <ns1:principal-address>
-      *           <href>/ucarddav/public/people/douglm.vcf/</href>
-      *         </ns1:principal-address>
-      *       </prop>
-      *       <status>HTTP/1.1 200 ok</status>
-      *     </propstat>
-      *   </response>
-      * </multistatus>
-      */
+      final String href = (String)resp.response;
 
-     DavUtil du = new DavUtil();
-     MultiStatusResponse msr = du.getMultiStatusResponse(cl.getResponseBodyAsStream());
+      /* New request for card */
+      return cl.getString(href, "text/vcard");
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    } finally {
+      try {
+        cl.release();
+      } catch (final Throwable ignored) {}
+    }
+  }
 
-     // Expect one response only - might have responseDescription
+  final ResponseHolder processGetCardHrefResponse(final String path,
+                                                  final CloseableHttpResponse resp) {
+    try {
+      /* Extract the principal address from something like
+       * <?xml version="1.0" encoding="UTF-8" ?>
+       * <multistatus xmlns="DAV:" xmlns:ns1="urn:ietf:params:xml:ns:carddav">
+       *   <response>
+       *     <href>/ucarddav/principals/users/douglm/</href>
+       *     <propstat>
+       *       <prop>
+       *         <ns1:principal-address>
+       *           <href>/ucarddav/public/people/douglm.vcf/</href>
+       *         </ns1:principal-address>
+       *       </prop>
+       *       <status>HTTP/1.1 200 ok</status>
+       *     </propstat>
+       *   </response>
+       * </multistatus>
+       */
+      final int status = HttpUtil.getStatus(resp);
 
-     if (msr.responses.size() != 1) {
-       throw new CalFacadeException("Bad response. Expected exactly 1 response element");
-     }
+      if (status != SC_MULTI_STATUS) {
+        return new ResponseHolder(status,
+                                  "Failed response from server");
+      }
 
-     MultiStatusResponseElement msre = msr.responses.get(0);
+      if (resp.getEntity() == null) {
+        return new ResponseHolder(status,
+                                  "No content in response from server");
+      }
 
-     /* We want one propstat element with successful status */
+      final InputStream is = resp.getEntity().getContent();
 
-     if (msre.propstats.size() != 1) {
-       if (debug()) {
-         debug("Found " + msre.propstats.size() + " propstat elements");
-       }
+      DavUtil du = new DavUtil();
+      MultiStatusResponse msr = du.getMultiStatusResponse(is);
 
-       return null;
-     }
+      // Expect one response only - might have responseDescription
 
-     PropstatElement pse = msre.propstats.get(0);
-     if (pse.status != HttpServletResponse.SC_OK) {
-       if (debug()) {
-         debug("propstat status was " + pse.status);
-       }
+      if (msr.responses.size() != 1) {
+        throw new CalFacadeException(
+                "Bad response. Expected exactly 1 response element");
+      }
 
-       return null;
-     }
+      MultiStatusResponseElement msre = msr.responses.get(0);
 
-     // We expect one principal-address property
-     if (pse.props.size() != 1) {
-       if (debug()) {
-         debug("Found " + pse.props.size() + " prop elements");
-       }
+      /* We want one propstat element with successful status */
 
-       return null;
-     }
+      if (msre.propstats.size() != 1) {
+        if (debug()) {
+          debug("Found " + msre.propstats
+                  .size() + " propstat elements");
+        }
 
-     final Element pr = pse.props.iterator().next();
+        return new ResponseHolder(HttpStatus.SC_NOT_ACCEPTABLE,
+                                  "Found " + msre.propstats
+                                          .size() + " propstat elements");
+      }
 
-     if (!XmlUtil.nodeMatches(pr, CarddavTags.principalAddress)) {
-       if (debug()) {
-         debug("Expected principal-address - found " + pr);
-       }
+      PropstatElement pse = msre.propstats.get(0);
+      if (pse.status != HttpServletResponse.SC_OK) {
+        if (debug()) {
+          debug("propstat status was " + pse.status);
+        }
 
-       return null;
-     }
+        return new ResponseHolder(HttpStatus.SC_NOT_ACCEPTABLE,
+                                  "propstat status was " + pse.status);
+      }
 
-     /* Expect a single href element */
-     final Element hrefEl = DavUtil.getOnlyChild(pr);
-     if (!XmlUtil.nodeMatches(hrefEl, WebdavTags.href)) {
-       if (debug()) {
-         debug("Expected href element for principal-address - found " +
-                       hrefEl);
-       }
+      // We expect one principal-address property
+      if (pse.props.size() != 1) {
+        if (debug()) {
+          debug("Found " + pse.props.size() + " prop elements");
+        }
 
-       return null;
-     }
+        return new ResponseHolder(HttpStatus.SC_NOT_ACCEPTABLE,
+                                  "Found " + pse.props.size() + " prop elements");
+      }
 
-     final String href =
-             URLDecoder.decode(XmlUtil.getElementContent((Element)hrefEl),
-                               HTTP.UTF_8); // href should be escaped
+      final Element pr = pse.props.iterator().next();
 
-     /*
-     final DavUtil du = new DavUtil();
-     Collection<QName> props = new ArrayList<>();
+      if (!XmlUtil.nodeMatches(pr, CarddavTags.principalAddress)) {
+        if (debug()) {
+          debug("Expected principal-address - found " + pr);
+        }
 
-     props.add(CarddavTags.principalAddress);
+        return new ResponseHolder(HttpStatus.SC_NOT_ACCEPTABLE,
+                                  "Expected principal-address - found " + pr);
+      }
 
-     final DavChild dc = du.getProps(cl, context + p.getPrincipalRef(), props);
+      /* Expect a single href element */
+      final Element hrefEl = DavUtil.getOnlyChild(pr);
+      if (!XmlUtil.nodeMatches(hrefEl, WebdavTags.href)) {
+        if (debug()) {
+          debug("Expected href element for principal-address - found " +
+                        hrefEl);
+        }
 
-     if ((dc == null) ||
-             (dc.status != HttpServletResponse.SC_OK)){
-       return null;
-     }
+        return new ResponseHolder(HttpStatus.SC_NOT_ACCEPTABLE,
+                                  "Expected href element for principal-address - found " +
+                                          hrefEl);
+      }
 
-     /* New request for card * /
-     final InputStream is = cl.get(dc.uri);
-     */
-
-     /* New request for card */
-     final InputStream is = cl.get(href);
-
-     if (is == null) {
-       return null;
-     }
-
-     final LineNumberReader lnr = new LineNumberReader(new InputStreamReader(is));
-     final StringBuilder card = new StringBuilder();
-
-     for (;;) {
-       final String ln = lnr.readLine();
-       if (ln == null) {
-         break;
-       }
-       card.append(ln);
-       card.append("\n");
-     }
-
-     if (card.length() == 0) {
-       return null;
-     }
-
-     return card.toString();
-   } catch (final Throwable t) {
-     throw new CalFacadeException(t);
-   } finally {
-     try {
-       cl.release();
-     } catch (final Throwable ignored) {}
-   }
- }
+      return new ResponseHolder(URLDecoder.decode(XmlUtil.getElementContent(
+                      (Element)hrefEl),
+                                StandardCharsets.UTF_8)); // href should be escaped
+    } catch (final Throwable t) {
+      return new ResponseHolder(t);
+    }
+  }
 
   private void initWhoMaps(final String prefix, final int whoType) {
     toWho.put(prefix, whoType);

@@ -40,41 +40,17 @@ public interface CardDavInfo extends Serializable {
    */
   public boolean getAuth();
 
-  /** Set the host
+  /** Set the url
    *
    * @param val    String
    */
-  public void setHost(final String val);
+  public void setUrl(final String val);
 
-  /** get the host
+  /** get the url
    *
    * @return String
    */
-  public String getHost();
-
-  /** Set the port
-   *
-   * @param val    int
-   */
-  public void setPort(final int val);
-
-  /** get the v
-   *
-   * @return int
-   */
-  public int getPort();
-
-  /** Set the contextPath
-   *
-   * @param val    String
-   */
-  public void setContextPath(final String val);
-
-  /** Get the contextPath
-   *
-   * @return String
-   */
-  public String getContextPath();
+  public String getUrl();
 
   /** Comma delimited set of cutype:path - maps cutype on to the given path.
    * cutype of * is the default.

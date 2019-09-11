@@ -65,33 +65,13 @@ public class CardDavInfoConf extends ConfBase<CardDavInfoImpl>
   }
 
   @Override
-  public void setHost(final String val) {
-    getConfig().setHost(val);
+  public void setUrl(final String val) {
+    getConfig().setUrl(val);
   }
 
   @Override
-  public String getHost() {
-    return getConfig().getHost();
-  }
-
-  @Override
-  public void setPort(final int val) {
-    getConfig().setPort(val);
-  }
-
-  @Override
-  public int getPort() {
-    return getConfig().getPort();
-  }
-
-  @Override
-  public void setContextPath(final String val) {
-    getConfig().setContextPath(val);
-  }
-
-  @Override
-  public String getContextPath() {
-    return getConfig().getContextPath();
+  public String getUrl() {
+    return getConfig().getUrl();
   }
 
   @Override
