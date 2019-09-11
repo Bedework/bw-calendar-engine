@@ -62,6 +62,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.TermsQueryBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1008,7 +1009,11 @@ public class ESQueryFilter extends ESQueryFilterBase
           break;
         }
 
-        qb = new TermQueryBuilder(path, val);
+        if(val instanceof Collection) {
+          qb = new TermsQueryBuilder(path, (Collection)val);
+        } else {
+          qb = new TermQueryBuilder(path, val);
+        }
         if (boost != 1) {
           qb.boost(boost);
         }
