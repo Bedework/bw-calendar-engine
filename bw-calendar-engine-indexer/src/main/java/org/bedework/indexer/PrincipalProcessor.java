@@ -18,14 +18,19 @@
 */
 package org.bedework.indexer;
 
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
+import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calsvci.CalSvcI;
+import org.bedework.util.calendar.PropertyIndex;
 
 import java.util.List;
 import java.util.Map;
 
+import static org.bedework.access.PrivilegeDefs.privAny;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeCategory;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeCollection;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeContact;
@@ -35,6 +40,7 @@ import static org.bedework.calfacade.indexing.BwIndexer.docTypePreferences;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeResource;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeResourceContent;
+import static org.bedework.calfacade.responses.Response.Status.ok;
 
 /** This implementation crawls the user subtree indexing user entries.
  *
@@ -89,7 +95,19 @@ public class PrincipalProcessor extends Crawler {
       }
 
       if (docType == null) {
-        indexCollection(svc, svc.getCalendarsHandler().getHomePath());
+        final String homePath = svc.getCalendarsHandler().getHomePath();
+        final GetEntityResponse<BwCalendar> ger =
+                getIndexer(svc,
+                           principal,
+                           BwIndexer.docTypeCollection)
+                        .fetchCol(homePath,
+                                  privAny,
+                                  PropertyIndex.PropertyInfoIndex.HREF);
+        if (ger.getStatus() == ok) {
+          return;
+        }
+
+        indexCollection(svc, homePath);
       }
 
       /* Skip the public owner here as public entities are already
