@@ -113,8 +113,8 @@ public class NotificationClient implements Logged {
 
         om.writeValue(sw, req);
 
-        final int status = cl.postJson(path,
-                                       sw.toString());
+        final int status = getClient().postJson(path,
+                                                sw.toString());
 
         if (status != HttpServletResponse.SC_OK) {
           warn("Unable to post notification");
