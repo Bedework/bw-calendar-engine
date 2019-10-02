@@ -402,6 +402,8 @@ class CoreCalendars extends CalintfHelper
   @Override
   public void touchCalendar(final BwCalendar col) throws CalFacadeException {
     dao.touchCollection(col, getCurrentTimestamp());
+    // Remove it
+    intf.colCache.remove(col.getPath());
 
     indexEntity(col);
   }
@@ -565,9 +567,12 @@ class CoreCalendars extends CalintfHelper
         usercal.setPath(path);
         usercal.setColPath(parentCal.getPath());
 
+        final BwLastMod lm = usercal.getLastmod();
+        lm.updateLastmod(getCurrentTimestamp());
+
         dao.saveCollection(usercal);
 
-        getIndexer(usercal).indexEntity(usercal);
+        getIndexer(usercal).indexEntity(usercal, true);
 
         notify(SysEvent.SysCode.COLLECTION_ADDED, usercal);
       } else if (usercal == null) {
@@ -582,9 +587,12 @@ class CoreCalendars extends CalintfHelper
         usercal.setPath(path);
         usercal.setColPath(parentCal.getPath());
 
+        final BwLastMod lm = usercal.getLastmod();
+        lm.updateLastmod(getCurrentTimestamp());
+
         dao.saveCollection(usercal);
 
-        getIndexer(usercal).indexEntity(usercal);
+        getIndexer(usercal).indexEntity(usercal, true);
 
         notify(SysEvent.SysCode.COLLECTION_ADDED, usercal);
       }
@@ -607,9 +615,12 @@ class CoreCalendars extends CalintfHelper
     cal.setCalType(BwCalendar.calTypeCalendarCollection);
     cal.setAffectsFreeBusy(true);
 
+    final BwLastMod lm = usercal.getLastmod();
+    lm.updateLastmod(getCurrentTimestamp());
+
     dao.saveCollection(cal);
 
-    getIndexer(cal).indexEntity(cal);
+    getIndexer(cal).indexEntity(cal, true);
     notify(SysEvent.SysCode.COLLECTION_ADDED, cal);
   }
 
