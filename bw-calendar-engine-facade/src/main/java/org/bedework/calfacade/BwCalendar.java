@@ -1429,8 +1429,14 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   @JsonIgnore
   public long getMicrosecsVersion() throws CalFacadeException {
     try {
-      return new LastModified(getLastmod().getTimestamp()).getDate().getTime() * 1000000 +
-              getLastmod().getSequence();
+      var lm = getLastmod();
+      var micros = new LastModified(lm.getTimestamp()).getDate().getTime();
+      var seq = lm.getSequence();
+      var res = micros * 1000000 + seq;
+
+      // debug("version: " + getPath() + " " + micros + " " + seq + " " + res);
+
+      return res;
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
