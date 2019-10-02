@@ -51,6 +51,10 @@ public class CalSvcIPars implements Serializable {
    */
   private final boolean publicAdmin;
 
+  /** True if this is for authenticated public client
+   */
+  private final boolean publicAuth;
+
   /** True if this is for public event submission
    */
   private final boolean publicSubmission;
@@ -99,6 +103,7 @@ public class CalSvcIPars implements Serializable {
    * @param user        String user to act as
    * @param calSuite    String calSuite name
    * @param publicAdmin true for admin
+   * @param publicAuth  true for authenticated public client
    * @param allowSuperUser  true to allow superuser mode in non-admin mode
    * @param service     true for a service
    * @param publicSubmission true for the submit app
@@ -114,6 +119,7 @@ public class CalSvcIPars implements Serializable {
                      final String calSuite,
 
                      final boolean publicAdmin,
+                     final boolean publicAuth,
                      final boolean allowSuperUser,
                      final boolean service,
                      final boolean publicSubmission,
@@ -128,6 +134,7 @@ public class CalSvcIPars implements Serializable {
     this.authUser = authUser;
     this.calSuite = calSuite;
     this.publicAdmin = publicAdmin;
+    this.publicAuth = publicAuth;
     this.allowSuperUser = allowSuperUser;
     this.service = service;
     this.adminCanEditAllPublicCategories = adminCanEditAllPublicCategories;
@@ -156,6 +163,7 @@ public class CalSvcIPars implements Serializable {
                            null,    // user
                            null,   // calsuite
                            publicAdmin,
+                           false, // public auth
                            allowSuperUser,
                            true,   // service
                            false,  // public submission
@@ -179,6 +187,7 @@ public class CalSvcIPars implements Serializable {
                                              null,    // user
                                              null,   // calsuite
                                              publicAdmin,
+                                             false, // public auth
                                              true,
                                              true,   // service
                                              false,  // public submission
@@ -205,6 +214,7 @@ public class CalSvcIPars implements Serializable {
                                           null,    // user
                                           null,   // calsuite
                                           true,   // publicAdmin,
+                                          false,  // public auth
                                           true,   // superUser,
                                           true,   // service
                                           false,  // public submission
@@ -247,6 +257,7 @@ public class CalSvcIPars implements Serializable {
                                              runAsUser,
                                              null,    // calsuite
                                              publicAdmin,
+                                             false, // public auth
                                              allowSuperUser,   // allow SuperUser
                                              service,
                                              false, // publicSubmission
@@ -330,6 +341,13 @@ public class CalSvcIPars implements Serializable {
    */
   public boolean getPublicAdmin() {
     return publicAdmin;
+  }
+
+  /**
+   * @return boolean true if this is a public authenticated client.
+   */
+  public boolean getPublicAuth() {
+    return publicAuth;
   }
 
   public boolean getPublicSubmission() {
@@ -428,6 +446,7 @@ public class CalSvcIPars implements Serializable {
     ts.append("user", getUser());
     ts.append("calSuite", getCalSuite());
     ts.append("publicAdmin", getPublicAdmin());
+    ts.append("publicAuth", getPublicAuth());
     ts.append("service", getService());
     ts.append("adminCanEditAllPublicCategories()", getAdminCanEditAllPublicCategories());
     ts.append("adminCanEditAllPublicLocations()", getAdminCanEditAllPublicLocations());
@@ -447,6 +466,7 @@ public class CalSvcIPars implements Serializable {
                                              getUser(),
                                              getCalSuite(),
                                              getPublicAdmin(),
+                                             getPublicAuth(),
                                              getAllowSuperUser(),
                                              getService(),
                                              getPublicSubmission(),

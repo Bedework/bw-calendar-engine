@@ -1138,9 +1138,6 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
    *                   Access
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#changeAccess(org.bedework.calfacade.base.BwShareableDbentity, java.util.Collection)
-   */
   @Override
   public void changeAccess(BwShareableDbentity ent,
                            final Collection<Ace> aces,
@@ -1550,6 +1547,16 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                           SysEvent.SysCode.USER_LOGIN,
                           currentPrincipal,
                           System.currentTimeMillis() - start));
+        }
+
+        if (debug()) {
+          final Collection<BwGroup> groups =
+                  currentPrincipal.getGroups();
+          if (!Util.isEmpty(groups)) {
+            for (final BwGroup group: groups) {
+              debug("Group: " + group.getAccount());
+            }
+          }
         }
       } else {
         // If we have a runAsUser it's a public client. Pretend we authenticated

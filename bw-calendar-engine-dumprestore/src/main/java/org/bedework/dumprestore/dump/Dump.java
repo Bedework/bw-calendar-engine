@@ -38,6 +38,7 @@ import org.bedework.util.logging.Logged;
 
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -71,10 +72,9 @@ public class Dump implements Logged, Defs {
 
   /**
    * @param info lines
-   * @throws Throwable on error
    */
   public Dump(final InfoLines info,
-              final boolean newDumpFormat) throws Throwable {
+              final boolean newDumpFormat) {
     this.newDumpFormat = newDumpFormat;
     globals.info = info;
   }
@@ -138,10 +138,10 @@ public class Dump implements Logged, Defs {
 
       globals.setOut(
               new OutputStreamWriter(new FileOutputStream(fileName),
-                                     "UTF-8"),
+                                     StandardCharsets.UTF_8),
               new OutputStreamWriter(
                       new FileOutputStream(aliasesFileName),
-                      "UTF-8"));
+                      StandardCharsets.UTF_8));
     }
   }
 
@@ -254,6 +254,7 @@ public class Dump implements Logged, Defs {
                             null,    // user
                             null,   // calsuite
                             !newDumpFormat,   // publicAdmin
+                            false,  // publicAuth
                             !newDumpFormat,   // superUser,
                             true,   // service
                             false,  // public submission

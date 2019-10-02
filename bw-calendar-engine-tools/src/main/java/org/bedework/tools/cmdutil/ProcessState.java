@@ -153,6 +153,7 @@ public class ProcessState implements Logged {
                                              getAccount(),
                                              null,   // calsuite
                                              true,   // publicAdmin
+                                             false,  // publicAuth
                                              getSuperUser(),   // superUser,
                                              true,   // service
                                              false,// publicSubmission

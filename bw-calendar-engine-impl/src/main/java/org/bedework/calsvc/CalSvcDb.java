@@ -318,6 +318,12 @@ public class CalSvcDb implements Logged, Serializable {
     return pars.getPublicAdmin();
   }
 
+  /* See if is public authenticated calendar
+   */
+  protected boolean isPublicAuth() {
+    return pars.getPublicAuth();
+  }
+
   protected BwPrincipal getPrincipal() {
     return svci.getPrincipal();
   }
