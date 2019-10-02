@@ -229,7 +229,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     final long seconds = millis / 1000;
     final long minutes = seconds / 60;
 
-    return String.valueOf(minutes) + ":" +
+    return minutes + ":" +
             Restore.twoDigits(
                     seconds - (minutes * 60));
   }
@@ -246,8 +246,6 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     @Override
     public void run() {
       try {
-        final boolean debug = getLogger().isDebugEnabled();
-
         if (externalSubs.isEmpty()) {
           infoLines.addLn("No external subscriptions");
 
@@ -366,8 +364,6 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     @Override
     public void run() {
       try {
-        final boolean debug = getLogger().isDebugEnabled();
-
         if (aliasInfo.isEmpty()) {
           infoLines.addLn("No aliases");
 
@@ -631,8 +627,6 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         errorCt = 0;
         locs.clear();
         
-        final boolean debug = getLogger().isDebugEnabled();
-
         if (debug()) {
           debug("About to get locations");
         }
@@ -1310,7 +1304,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
 
   private BwIndexCtlMBean indexer;
 
-  private boolean disableIndexer() throws CalFacadeException {
+  private boolean disableIndexer() {
     try {
       if (indexer == null) {
         indexer = (BwIndexCtlMBean)MBeanUtil.getMBean(BwIndexCtlMBean.class,
@@ -1325,7 +1319,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     }
   }
 
-  private boolean reindex() throws CalFacadeException {
+  private boolean reindex() {
     try {
       if (indexer == null) {
         return false;
@@ -1339,12 +1333,12 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     }
   }
 
-  private String makeDirname() throws Throwable {
+  private String makeDirname() {
     return Util.buildPath(true, getDataOut(), "/", 
                           DateTimeUtil.isoDateTime());
   }
 
-  private String makeFilename(final String val) throws Throwable {
+  private String makeFilename(final String val) {
     final StringBuilder fname = new StringBuilder(getDataOut());
     if (!getDataOut().endsWith("/")) {
       fname.append("/");
@@ -1393,10 +1387,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     return svci;
   }
 
-  /**
-   * @throws CalFacadeException on fatal error
-   */
-  private void closeSvci() throws CalFacadeException {
+  private void closeSvci() {
     if ((svci == null) || !svci.isOpen()) {
       return;
     }
