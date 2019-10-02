@@ -71,6 +71,7 @@ import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.calsvc.scheduling.Scheduling;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.AdminI;
@@ -611,6 +612,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
   @Override
   public BwUnversionedDbentity merge(final BwUnversionedDbentity val) throws CalFacadeException {
+    if (val instanceof CalendarWrapper) {
+      final CalendarWrapper w = (CalendarWrapper)val;
+      w.putEntity((BwCalendar)getCal().merge(w.fetchEntity()));
+      return w;
+    }
+
     return getCal().merge(val);
   }
 
