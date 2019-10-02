@@ -1247,8 +1247,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public void indexEntity(final Object rec)
-          throws CalFacadeException {
+  public void indexEntity(final Object rec) throws CalFacadeException {
+    indexEntity(rec, false);
+  }
+
+  @Override
+  public void indexEntity(final Object rec,
+                          final boolean waitForIt) throws CalFacadeException {
     try {
       /* XXX later with batch
       XmlEmit xml;
@@ -1285,7 +1290,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       markUpdated();
 
-      final IndexResponse resp = index(rec);
+      final IndexResponse resp = index(rec, waitForIt);
 
       if (debug()) {
         if (resp == null) {
@@ -1794,7 +1799,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       final DocBuilder db = getDocBuilder();
 
-      indexDoc(db.makeUpdateInfoDoc(docType));
+      indexDoc(db.makeUpdateInfoDoc(docType), true);
 
       return newName;
     } catch (final CalFacadeException cfe) {
@@ -3165,7 +3170,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   /* Return the response after indexing */
-  private IndexResponse index(final Object rec) throws CalFacadeException {
+  private IndexResponse index(final Object rec,
+                              final boolean waitForIt) throws CalFacadeException {
     EsDocInfo di = null;
 
     try {
@@ -3222,7 +3228,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
 
       if (di != null) {
-        return indexDoc(di);
+        return indexDoc(di, waitForIt);
       }
 
       throw new CalFacadeException(
@@ -3505,7 +3511,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         dl.checkMax(end);
       }
 
-      return indexDoc(di);
+      return indexDoc(di, false);
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final VersionConflictEngineException vcee) {
@@ -3525,7 +3531,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private IndexResponse indexDoc(final EsDocInfo di) throws Throwable {
+  private IndexResponse indexDoc(final EsDocInfo di,
+                                 final boolean waitForIt) throws Throwable {
     requireDocType(di.getType());
 
     //batchCurSize++;
@@ -3536,6 +3543,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     if (di.getVersion() != 0) {
       req.version(di.getVersion()).versionType(VersionType.EXTERNAL);
+    }
+
+    if (waitForIt) {
+      req.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
     }
 
     if (debug()) {

@@ -318,6 +318,15 @@ public interface BwIndexer extends Serializable {
    */
   void indexEntity(Object rec) throws CalFacadeException;
 
+  /** Called to index a record with optional wait
+   *
+   * @param rec an indexable object
+   * @param waitForIt true if we wait for it to appear in the index
+   * @throws CalFacadeException on error
+   */
+  void indexEntity(Object rec,
+                   final boolean waitForIt) throws CalFacadeException;
+
   /** Set to > 1 to enable batching
    *
    * @param val batch size
