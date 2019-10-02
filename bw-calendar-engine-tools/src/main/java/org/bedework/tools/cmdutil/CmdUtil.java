@@ -115,6 +115,7 @@ public class CmdUtil extends ConfBase<CmdUtilPropertiesImpl>
     addProcessor(new ProcessPrefs(pstate));
     addProcessor(new ProcessReindex(pstate));
     addProcessor(new ProcessSetstatus(pstate));
+    addProcessor(new ProcessSetup(pstate));
     addProcessor(new ProcessUpdate(pstate));
     addProcessor(new ProcessUser(pstate));
   }

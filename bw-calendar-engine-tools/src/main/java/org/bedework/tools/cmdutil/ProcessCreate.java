@@ -255,7 +255,7 @@ public class ProcessCreate extends CmdUtilHelper {
       final String calName = wordOrQuotedVal();
       final String calSummary = wordOrQuotedVal();
       final String aliasTarget;
-      if ("topic".equals(type)) {
+      if ("topic".equals(type) || "alias".equals(type)) {
         aliasTarget = wordOrQuotedVal();
       } else {
         aliasTarget = null;

@@ -30,7 +30,7 @@ import java.util.List;
  * @author douglm
  *
  */
-public class ProcessCalsuite extends ProcessUser {
+public class ProcessCalsuite extends CmdUtilHelper {
   ProcessCalsuite(final ProcessState pstate) {
     super(pstate);
   }
@@ -54,7 +54,7 @@ public class ProcessCalsuite extends ProcessUser {
       return true;
     }
     
-    final String account;
+    String account = null;
 
     try {
       open();
@@ -133,9 +133,11 @@ public class ProcessCalsuite extends ProcessUser {
       getSvci().getPrefsHandler().update(prefs);
     } finally {
       close();
+
+      if (account != null) {
+        setUser(account, false);
+      }
     }
-    
-    setUser(account, false);
 
     return true;
   }

@@ -37,6 +37,7 @@ public class ProcessSetup extends CmdUtilHelper {
       user will enter e.g. setup calsuite "Payroll"
       We camelcase the name and then do effectively the following:
 
+        0. setUser(agrp_payroll, false)  -- to create the events owner
         1. user admin super
             Need admin for the rest
         2. create admingroup payrollAdminGroup "Payroll" public-user agrp_payroll
@@ -145,10 +146,14 @@ public class ProcessSetup extends CmdUtilHelper {
       return null;
     }
 
+    // These open and close svci
+    setUser(eventOwnerAccount, false);
+    setUser("admin", true);
+
+    final BwCalSuiteWrapper cs;
+
     try {
       open();
-
-      setUser("admin", true);
 
       // 2. The admin group
 
@@ -181,19 +186,25 @@ public class ProcessSetup extends CmdUtilHelper {
 
       // 4. The calsuite
 
-      final BwCalSuiteWrapper cs =
-              getSvci().getCalSuitesHandler().add(name,
-                                                  adminGroupname,
-                                                  null,
-                                                  null);
+      cs = getSvci().getCalSuitesHandler().add(name,
+                                               adminGroupname,
+                                               null,
+                                               null);
 
       if (cs == null) {
         return null;
       }
+    } finally {
+      close();
+    }
 
+    try {
       // 5. switch to calsuite
 
       pstate.setCalsuite(cs);
+      setUser(eventOwnerAccount, false);
+
+      open();
 
       // 6. create default category
 

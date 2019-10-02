@@ -107,6 +107,7 @@ public abstract class CmdUtilHelper implements Logged {
       }
       svci.endTransaction();
       svci.close();
+      pstate.setSvci(null);
     } catch (final Throwable t) {
       error(t);
     }
@@ -283,18 +284,23 @@ public abstract class CmdUtilHelper implements Logged {
       return null;
     }
 
-    if ("folder".equals(type)) {
-      calType = BwCalendar.calTypeFolder;
-    } else if ("calendar".equals(type)) {
-      calType = BwCalendar.calTypeCalendarCollection;
-    } else if ("alias".equals(type)) {
-      calType = BwCalendar.calTypeAlias;
-    } else if ("topic".equals(type)) {
-      calType = BwCalendar.calTypeAlias;
-      topicalArea  = true;
-    } else {
-      error("Expected a collection type 'folder', 'calendar', 'alias' or 'topic'");
-      return null;
+    switch (type) {
+      case "folder":
+        calType = BwCalendar.calTypeFolder;
+        break;
+      case "calendar":
+        calType = BwCalendar.calTypeCalendarCollection;
+        break;
+      case "alias":
+        calType = BwCalendar.calTypeAlias;
+        break;
+      case "topic":
+        calType = BwCalendar.calTypeAlias;
+        topicalArea = true;
+        break;
+      default:
+        error("Expected a collection type 'folder', 'calendar', 'alias' or 'topic'");
+        return null;
     }
 
     if (parentPath == null) {
@@ -327,7 +333,7 @@ public abstract class CmdUtilHelper implements Logged {
     cal.setName(calName);
     cal.setSummary(calSummary);
     cal.setCalType(calType);
-    cal.setPath(parentPath + "/" + calName);
+    //cal.setPath(parentPath + "/" + calName);
 
     if (calType == BwCalendar.calTypeAlias) {
       final BwCalendar target = getCal(aliasTarget);
