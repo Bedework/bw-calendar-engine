@@ -47,10 +47,9 @@ import java.util.Collection;
 public interface AccessUtilI extends PrivilegeDefs, Serializable {
   /**
    *
-   * @param cb
-   * @throws CalFacadeException
+   * @param cb PrincipalInfo object
    */
-  void init(PrincipalInfo cb) throws CalFacadeException;
+  void init(PrincipalInfo cb);
 
   /** Called at request start
    *

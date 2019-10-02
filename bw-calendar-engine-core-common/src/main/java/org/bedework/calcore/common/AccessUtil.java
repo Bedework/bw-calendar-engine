@@ -80,22 +80,14 @@ public class AccessUtil implements Logged, AccessUtilI {
 
   private CollectionGetter cg;
 
-  /**
-   * @param cb
-   * @throws CalFacadeException
-   */
   @Override
-  public void init(final PrincipalInfo cb) throws CalFacadeException {
+  public void init(final PrincipalInfo cb) {
     this.cb = cb;
-    try {
-      access = new Access();
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    access = new Access();
   }
 
   /**
-   * @param cg
+   * @param cg a collection getter
    */
   public void setCollectionGetter(final CollectionGetter cg) {
     this.cg = cg;
@@ -119,7 +111,7 @@ public class AccessUtil implements Logged, AccessUtilI {
   /** Called to get the parent object for a shared entity. This method should be
    * overriden if explicit calls to the back end calendar are required.
    *
-   * @param val
+   * @param val the shareable entity
    * @return parent calendar or null.
    */
   @Override
@@ -206,7 +198,7 @@ public class AccessUtil implements Logged, AccessUtilI {
                                 final int desiredAccess,
                                 final boolean alwaysReturn)
           throws CalFacadeException {
-    TreeSet<BwShareableDbentity<?>> out = new TreeSet<BwShareableDbentity<?>>();
+    TreeSet<BwShareableDbentity<?>> out = new TreeSet<>();
 
     for (BwShareableDbentity<?> sdbe: ents) {
       if (checkAccess(sdbe, desiredAccess, alwaysReturn).getAccessAllowed()) {
@@ -284,7 +276,7 @@ public class AccessUtil implements Logged, AccessUtilI {
 
       PrivilegeSet maxPrivs = null;
 
-      char[] aclChars = null;
+      char[] aclChars;
 
       if (ent instanceof BwCalendar) {
         final BwCalendar cal = (BwCalendar)ent;
@@ -318,8 +310,6 @@ public class AccessUtil implements Logged, AccessUtilI {
          */
         if (!cb.getSuperUser()) {
           if (cb.getUserHomePath().equals(path)) {
-            ca = new CurrentAccess();
-
             ca = Acl.defaultNonOwnerAccess;
           } else if (path.equals(Util.buildPath(
                   BasicSystemProperties.colPathEndsWithSlash, cb.getUserHomePath(),
@@ -344,33 +334,44 @@ public class AccessUtil implements Logged, AccessUtilI {
         /* Not special. getAclChars provides merged access for the current
          * entity.
          */
-        aclChars = getAclChars(ent);
+        aclChars = getAclChars(ent, cb.getSuperUser());
 
         if (aclChars == null) {
-          error("Unable to fetch aclchars for " + ent);
-          if (!alwaysReturnResult) {
-            throw new CalFacadeAccessException();
+          if (cb.getSuperUser()) {
+            if (debug()) {
+              debug("Override no aclchars for superuser");
+            }
+            ca = Acl.forceAccessAllowed(Acl.defaultNonOwnerAccess);
+          } else {
+            error("Unable to fetch aclchars for " + ent);
+            if (!alwaysReturnResult) {
+              throw new CalFacadeAccessException();
+            }
+            return new CurrentAccess(false);
           }
-          return new CurrentAccess(false);
-        }
-
-        if (debug()) {
-          debug("aclChars = " + new String(aclChars));
-        }
-
-        if (desiredAccess == PrivilegeDefs.privAny) {
-          ca = access.checkAny(cb, cb.getPrincipal(), owner, aclChars, maxPrivs);
-        } else if (desiredAccess == PrivilegeDefs.privRead) {
-          ca = access.checkRead(cb, cb.getPrincipal(), owner, aclChars, maxPrivs);
-        } else if (desiredAccess == PrivilegeDefs.privWrite) {
-          ca = access.checkReadWrite(cb, cb.getPrincipal(), owner, aclChars, maxPrivs);
         } else {
-          ca = access.evaluateAccess(cb, cb.getPrincipal(), owner, desiredAccess, aclChars,
-                                     maxPrivs);
+          if (debug()) {
+            debug("aclChars = " + new String(aclChars));
+          }
+
+          if (desiredAccess == PrivilegeDefs.privAny) {
+            ca = access.checkAny(cb, cb.getPrincipal(), owner,
+                                 aclChars, maxPrivs);
+          } else if (desiredAccess == PrivilegeDefs.privRead) {
+            ca = access.checkRead(cb, cb.getPrincipal(), owner,
+                                  aclChars, maxPrivs);
+          } else if (desiredAccess == PrivilegeDefs.privWrite) {
+            ca = access.checkReadWrite(cb, cb.getPrincipal(), owner,
+                                       aclChars, maxPrivs);
+          } else {
+            ca = access.evaluateAccess(cb, cb.getPrincipal(), owner,
+                                       desiredAccess, aclChars,
+                                       maxPrivs);
+          }
         }
       }
 
-      if ((cb.getPrincipal() != null) && cb.getSuperUser()) {
+      if (cb.getSuperUser()) {
         // Nobody can stop us - BWAAA HAA HAA
 
         /* Override rather than just create a readable access as code further
@@ -416,7 +417,8 @@ public class AccessUtil implements Logged, AccessUtilI {
    *
    * The calendar/container access might be cached in the pathInfoTable.
    */
-  private char[] getAclChars(final BwShareableDbentity<?> ent) throws CalFacadeException {
+  private char[] getAclChars(final BwShareableDbentity<?> ent,
+                             final boolean isSuperUser) throws CalFacadeException {
     if ((!(ent instanceof BwEventProperty)) &&
         (ent instanceof BwShareableContainedDbentity)) {
       BwCalendar container;
@@ -442,14 +444,22 @@ public class AccessUtil implements Logged, AccessUtilI {
       BwCalendar parent = getParent(wcol);
 
       if (parent != null) {
-        aclStr = new String(merged(getAclChars(parent),
+        aclStr = new String(merged(getAclChars(parent, isSuperUser),
                                    parent.getPath(),
                                    wcol.getAccess()));
       } else if (wcol.getAccess() != null) {
         aclStr = wcol.getAccess();
-      } else if ("/public".equals(wcol.getPath())) {
+      } else if (wcol.getColPath() == null) {
         // At root
-        throw new CalFacadeException("Collections must have default access set at root: " + wcol.getPath());
+        if (!isSuperUser) {
+          throw new CalFacadeException(
+                  "Collections must have default access set at root: " +
+                          wcol.getPath());
+        }
+
+        warn("Collections must have default access set at root: " +
+                     wcol.getPath());
+        return null;
       } else {
         // Missing collection in hierarchy
         throw new CalFacadeException("Missing collection in hierarchy for " +
