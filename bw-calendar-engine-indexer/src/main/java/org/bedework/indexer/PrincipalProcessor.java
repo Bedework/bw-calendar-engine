@@ -103,11 +103,9 @@ public class PrincipalProcessor extends Crawler {
                         .fetchCol(homePath,
                                   privAny,
                                   PropertyIndex.PropertyInfoIndex.HREF);
-        if (ger.getStatus() == ok) {
-          return;
+        if (ger.getStatus() != ok) {
+          indexCollection(svc, homePath);
         }
-
-        indexCollection(svc, homePath);
       }
 
       /* Skip the public owner here as public entities are already
