@@ -365,7 +365,7 @@ public abstract class CmdUtilHelper implements Logged {
       filterSupplied = true;
     }
 
-    if (catuids.size() > 0) {
+    if ((catuids != null) && (catuids.size() > 0)) {
       final StringBuilder filterExpr = new StringBuilder(
               "catuid=(");
       String delim = "";
