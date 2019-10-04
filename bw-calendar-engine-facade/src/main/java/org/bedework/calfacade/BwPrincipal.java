@@ -40,6 +40,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Comparator;
@@ -272,8 +273,8 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
       final String uri =
               URLDecoder.decode(new URI(
-                      URLEncoder.encode(href, "UTF-8")
-              ).getPath(), "UTF-8");
+                      URLEncoder.encode(href, StandardCharsets.UTF_8)
+              ).getPath(), StandardCharsets.UTF_8);
 
       if (!isPrincipal(uri)) {
         return null;
