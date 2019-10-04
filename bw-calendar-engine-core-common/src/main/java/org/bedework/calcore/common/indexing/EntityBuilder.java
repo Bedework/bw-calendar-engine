@@ -88,12 +88,12 @@ public class EntityBuilder extends EntityBuilderBase {
   /** Constructor - 1 use per entity
    *
    * @param fields map of fields from index
-   * @throws CalFacadeException on fatal error
+   * @throws IndexException on fatal error
    */
   EntityBuilder(final boolean publick,
                 final int currentMode,
                 final Map<String, ?> fields)
-          throws CalFacadeException, IndexException {
+          throws IndexException {
     super(fields, 0);
     this.publick = publick;
     this.currentMode = currentMode;
@@ -107,7 +107,7 @@ public class EntityBuilder extends EntityBuilderBase {
   DocBuilderBase.UpdateInfo makeUpdateInfo() {
     Long l = getLong("esUpdateCount");
     if (l == null) {
-      l = 0l;
+      l = 0L;
     }
 
     return new DocBuilderBase.UpdateInfo(l);
@@ -146,6 +146,10 @@ public class EntityBuilder extends EntityBuilderBase {
     if (pr instanceof BwCalSuitePrincipal) {
       final BwCalSuitePrincipal cs = (BwCalSuitePrincipal)pr;
 
+      cs.setCreatorHref(getString(PropertyInfoIndex.CREATOR));
+      cs.setOwnerHref(getString(PropertyInfoIndex.OWNER));
+      cs.setPublick(getBooleanNotNull(PropertyInfoIndex.PUBLIC));
+      cs.setAccess(getString(PropertyInfoIndex.ACL));
       cs.setRootCollectionPath(getString("rootCollectionPath"));
       cs.setSubmissionsRootPath(getString("submissionsRootPath"));
       cs.setGroupHref(getString("groupHref"));
@@ -218,7 +222,7 @@ public class EntityBuilder extends EntityBuilderBase {
   }
 
   /* Return the docinfo for the indexer */
-  BwResourceContent makeResourceContent() throws CalFacadeException {
+  BwResourceContent makeResourceContent() {
     final BwResourceContent ent = new BwResourceContent();
 
     ent.setName(getString(PropertyInfoIndex.NAME));
@@ -395,7 +399,6 @@ public class EntityBuilder extends EntityBuilderBase {
    * @return an event object
    * @throws CalFacadeException on error
    */
-  @SuppressWarnings("unchecked")
   EventInfo makeEvent(final String id,
                       final boolean expanded) throws CalFacadeException {
     final boolean override = !expanded &&
@@ -826,7 +829,7 @@ public class EntityBuilder extends EntityBuilderBase {
           throws CalFacadeException {
     final T sb;
     try {
-      sb = resultType.newInstance();
+      sb = resultType.getDeclaredConstructor().newInstance();
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -982,7 +985,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return i;
   }
 
-  private void restoreSharedEntity(final BwShareableContainedDbentity ent) throws CalFacadeException {
+  private void restoreSharedEntity(final BwShareableContainedDbentity ent) {
     ent.setCreatorHref(getString(PropertyInfoIndex.CREATOR));
     ent.setOwnerHref(getString(PropertyInfoIndex.OWNER));
     ent.setColPath(getString(PropertyInfoIndex.COLLECTION));

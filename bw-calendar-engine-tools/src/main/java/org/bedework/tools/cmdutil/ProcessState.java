@@ -161,7 +161,8 @@ public class ProcessState implements Logged {
                                              true,// adminCanEditAllPublicLocations
                                              true,// adminCanEditAllPublicSponsors
                                              false, // sessionless
-                                             true); // system
+                                             true, // system
+                                             false); // readonly
     try {
       setSvci(new CalSvcFactoryDefault().getSvc(pars));
       return true;

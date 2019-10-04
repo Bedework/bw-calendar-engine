@@ -66,7 +66,7 @@ public abstract class BwOwnedDbentity<T> extends BwDbentity<T> {
   }
 
   /**
-   * @param val
+   * @param val public/not public
    */
   @IcalProperty(pindex = PropertyInfoIndex.PUBLIC,
                 required = true,
@@ -106,7 +106,7 @@ public abstract class BwOwnedDbentity<T> extends BwDbentity<T> {
   /** Copy this objects fields into the parameter. Don't clone many of the
    * referenced objects
    *
-   * @param val
+   * @param val to copy to
    */
   public void shallowCopyTo(final BwOwnedDbentity<?> val) {
     val.setOwnerHref(getOwnerHref());
@@ -118,7 +118,7 @@ public abstract class BwOwnedDbentity<T> extends BwDbentity<T> {
 
   /** Copy this objects fields into the parameter
    *
-   * @param val
+   * @param val to copy to
    */
   public void copyTo(final BwOwnedDbentity<?> val) {
     val.setOwnerHref(getOwnerHref());

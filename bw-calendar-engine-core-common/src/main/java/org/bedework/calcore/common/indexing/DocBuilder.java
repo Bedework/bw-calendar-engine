@@ -130,7 +130,7 @@ public class DocBuilder extends DocBuilderBase {
    * @param basicSysprops -  Only used for fixNames calls
    */
   DocBuilder(final BasicSystemProperties basicSysprops)
-          throws CalFacadeException, IndexException {
+          throws IndexException {
     super();
     this.basicSysprops = basicSysprops;
   }
@@ -178,6 +178,10 @@ public class DocBuilder extends DocBuilderBase {
       if (ent instanceof BwCalSuitePrincipal) {
         final BwCalSuitePrincipal cs = (BwCalSuitePrincipal)ent;
 
+        makeField(PropertyInfoIndex.OWNER, cs.getOwnerHref());
+        makeField(PropertyInfoIndex.PUBLIC, cs.getPublick());
+        makeField(PropertyInfoIndex.CREATOR, cs.getCreatorHref());
+        makeField(PropertyInfoIndex.ACL, cs.getAccess());
         makeField("rootCollectionPath", cs.getRootCollectionPath());
         makeField("submissionsRootPath", cs.getSubmissionsRootPath());
         makeField("groupHref", cs.getGroup().getHref());
@@ -538,7 +542,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   static String getItemType(final EventInfo ei,
-                            final ItemKind kind) throws CalFacadeException {
+                            final ItemKind kind) {
     final BwEvent ev = ei.getEvent();
 
     if (kind == ItemKind.entity) {

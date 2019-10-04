@@ -40,6 +40,16 @@ import org.bedework.util.misc.Util;
  */
 @Dump(elementName="cal-suite", keyFields={"name"})
 public class BwCalSuitePrincipal extends BwPrincipal {
+  private String ownerHref;
+
+  private String creatorHref;
+
+  private Boolean publick;
+
+  /** Encoded access rights
+   */
+  private String access;
+
   /** The admin group which 'owns' this calendar suite
    */
   private BwAdminGroup group;
@@ -69,6 +79,69 @@ public class BwCalSuitePrincipal extends BwPrincipal {
   /* ====================================================================
    *                   Bean methods
    * ==================================================================== */
+
+  /** Set the creator
+   *
+   * @param val     String creator of the entity
+   */
+  public void setCreatorHref(final String val) {
+    creatorHref = val;
+  }
+
+  /**
+   *
+   * @return BwUser    creator of the entity
+   */
+  public String getCreatorHref() {
+    return creatorHref;
+  }
+
+  /** Set the owner
+   *
+   * @param val     String owner path of the entity e.g. /principals/users/jim
+   */
+  public void setOwnerHref(final String val) {
+    ownerHref = val;
+  }
+
+  /**
+   *
+   * @return String    owner of the entity
+   */
+  public String getOwnerHref() {
+    return ownerHref;
+  }
+
+  /**
+   * @param val public/not public
+   */
+  public void setPublick(final Boolean val) {
+    publick = val;
+  }
+
+  /**
+   * @return Boolean true for public
+   */
+  @Dump(elementName="public")
+  public Boolean getPublick() {
+    return publick;
+  }
+
+  /** Set the access
+   *
+   * @param val    String access
+   */
+  public void setAccess(final String val) {
+    access = val;
+  }
+
+  /** Get the access
+   *
+   * @return String   access
+   */
+  public String getAccess() {
+    return access;
+  }
 
   /** Set the owning group
    *
@@ -149,6 +222,10 @@ public class BwCalSuitePrincipal extends BwPrincipal {
     csp.setPrincipalRef(Util.buildPath(true,
                                    BwPrincipal.calsuitePrincipalRoot,
                                    "/", val.getName()));
+    csp.setOwnerHref(val.getOwnerHref());
+    csp.setCreatorHref(val.getCreatorHref());
+    csp.setPublick(val.getPublick());
+    csp.setAccess(val.getAccess());
     csp.setAccount(val.getName());
     csp.setGroup(val.getGroup());
     csp.setRootCollectionPath(val.getRootCollectionPath());
@@ -165,6 +242,10 @@ public class BwCalSuitePrincipal extends BwPrincipal {
   public BwCalSuite getFrom() {
     final BwCalSuite cs = new BwCalSuite();
 
+    cs.setOwnerHref(getOwnerHref());
+    cs.setCreatorHref(getCreatorHref());
+    cs.setPublick(getPublick());
+    cs.setAccess(getAccess());
     cs.setName(getAccount());
     cs.setGroup(getGroup());
     cs.setRootCollectionPath(getRootCollectionPath());

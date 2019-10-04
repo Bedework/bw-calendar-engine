@@ -112,6 +112,7 @@ public class CalSvcIPars implements Serializable {
    * @param adminCanEditAllPublicContacts true/false
    * @param sessionless true if this is a sessionless client
    * @param dontKill true if this is a system process
+   * @param readonly true if this is a readonly process
    */
   public CalSvcIPars(final String logId,
                      final String authUser,
@@ -129,7 +130,8 @@ public class CalSvcIPars implements Serializable {
                      final boolean adminCanEditAllPublicContacts,
 
                      final boolean sessionless,
-                     final boolean dontKill) {
+                     final boolean dontKill,
+                     final boolean readonly) {
     this.logId = logId;
     this.authUser = authUser;
     this.calSuite = calSuite;
@@ -144,6 +146,7 @@ public class CalSvcIPars implements Serializable {
     this.dontKill = dontKill;
     this.user = user;
     this.publicSubmission = publicSubmission;
+    this.readonly = readonly;
   }
 
   /** Return new parameters for a service
@@ -171,7 +174,8 @@ public class CalSvcIPars implements Serializable {
                            false,  // adminCanEditAllPublicLocations
                            false,  // adminCanEditAllPublicSponsors
                            false, // sessionless
-                           true); // system
+                           true,
+                           false); // system
   }
 
   /** Return new pars for an index rebuild
@@ -195,7 +199,8 @@ public class CalSvcIPars implements Serializable {
                                              false,  // adminCanEditAllPublicLocations
                                              false,  // adminCanEditAllPublicSponsors
                                              false, // sessionless
-                                             true); // system
+                                             true,
+                                             false); // system
 
     pars.indexRebuild = true;
 
@@ -222,7 +227,8 @@ public class CalSvcIPars implements Serializable {
                                           true,   // adminCanEditAllPublicLocations
                                           true,   // adminCanEditAllPublicSponsors
                                           false, // sessionless
-                                          true); // system
+                                          true,
+                                          false); // system
 
     p.indexRebuild = true;
     p.forRestore = true;
@@ -265,10 +271,10 @@ public class CalSvcIPars implements Serializable {
                                              allowCreateEprops,  // adminCanEditAllPublicLocations
                                              allowCreateEprops,  // adminCanEditAllPublicSponsors
                                              true, // sessionless
-                                             false); // system
+                                             false, // system
+                                             readonly);
 
     pars.setClientId(clientId);
-    pars.readonly = readonly;
 
     return pars;
   }
@@ -474,12 +480,12 @@ public class CalSvcIPars implements Serializable {
                                              getAdminCanEditAllPublicLocations(),
                                              getAdminCanEditAllPublicContacts(),
                                              getSessionsless(),
-                                             getDontKill());
+                                             getDontKill(),
+                                             getReadonly());
 
     pars.setClientId(getClientId());
     pars.forRestore = getForRestore();
     pars.indexRebuild = getIndexRebuild();
-    pars.readonly = getReadonly();
 
     return pars;
   }

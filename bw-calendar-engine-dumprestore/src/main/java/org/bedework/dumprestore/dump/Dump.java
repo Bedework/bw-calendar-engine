@@ -262,7 +262,8 @@ public class Dump implements Logged, Defs {
                             true,  // adminCanEditAllPublicLocations
                             true,  // adminCanEditAllPublicSponsors
                             false, // sessionless
-                            true); // system
+                            true, // system
+                            false); // readonly
     return new CalSvcFactoryDefault().getSvc(pars);
   }
 

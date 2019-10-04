@@ -1360,7 +1360,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
          *
          * For public clients we use the calendar suite owning group.
          */
-        if (!pars.getPublicAdmin()) {
+        if (!pars.getPublicAdmin() && !pars.getPublicAuth()) {
           runAsUser = cs.getGroup().getOwnerHref();
         }
       }
