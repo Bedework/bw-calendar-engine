@@ -74,6 +74,7 @@ import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.onlyDeleted
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
 import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
@@ -85,7 +86,6 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 public class ESQueryFilter extends ESQueryFilterBase
         implements CalintfDefs, Logged {
   private final boolean publick;
-  private final int currentMode;
   private final String ownerHref;
   private final boolean superUser;
   private final String docType;
@@ -167,19 +167,16 @@ public class ESQueryFilter extends ESQueryFilterBase
   /**
    *
    * @param publick true for a public indexer
-   * @param currentMode - guest, user,publicAdmin
    * @param ownerHref - only used to add a filter for non-public
    * @param superUser - true if the principal is a superuser.
    * @param recurRetrieval  - value modifies search
    */
   public ESQueryFilter(final boolean publick,
-                       final int currentMode,
                        final String ownerHref,
                        final boolean superUser,
                        final RecurringRetrievalMode recurRetrieval,
                        final String docType) {
     this.publick = publick;
-    this.currentMode = currentMode;
     this.ownerHref = ownerHref;
     this.superUser = superUser;
     this.recurRetrieval = recurRetrieval;
@@ -318,6 +315,29 @@ public class ESQueryFilter extends ESQueryFilterBase
                lmeq);
 
     return principalQuery(and(fb, lmor, "lmor"));
+  }
+
+  public QueryBuilder allGroupsQuery(final boolean admin) {
+    if (admin) {
+      return prefixQuery(makePropertyRef(PropertyInfoIndex.HREF),
+                         BwPrincipal.bwadmingroupPrincipalRoot);
+    }
+
+    return and(prefixQuery(makePropertyRef(PropertyInfoIndex.HREF),
+                           BwPrincipal.groupPrincipalRoot),
+
+               not(prefixQuery(makePropertyRef(PropertyInfoIndex.HREF),
+                               BwPrincipal.bwadmingroupPrincipalRoot)),
+               "non-admin-groups");
+
+  }
+
+  public QueryBuilder allGroupsQuery(final boolean admin,
+                                     final String memberHref) {
+    return and(allGroupsQuery(admin),
+
+               termQuery("memberHref", memberHref),
+               "groups");
   }
 
   public FilterBase addTypeFilter(final FilterBase f,
@@ -854,13 +874,7 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @throws CalFacadeException on error
    */
   public QueryBuilder principalQuery(final QueryBuilder q) throws CalFacadeException {
-    final boolean publicEvents = publick ||
-            (currentMode == guestMode) ||
-            (currentMode == publicAdminMode);
-
-    //boolean all = (currentMode == guestMode) || ignoreCreator;
-
-    if (publicEvents) {
+    if (publick) {
       return and(q,
                  termQuery(publicJname, String.valueOf(true)),
                  null);
@@ -1020,7 +1034,7 @@ public class ESQueryFilter extends ESQueryFilterBase
         break;
 
       case prefix:
-        qb = QueryBuilders.prefixQuery(path, (String)val);
+        qb = prefixQuery(path, (String)val);
         break;
 
       case timeRange:

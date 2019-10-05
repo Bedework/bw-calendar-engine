@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEventProperty;
 import org.bedework.calfacade.BwFilterDef;
+import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
@@ -500,14 +501,29 @@ public interface BwIndexer extends Serializable {
    */
   Collection<BwCalendar> fetchChildrenDeep(String href) throws CalFacadeException;
 
-  /** Find a principal which has a named
-   * field which matches the value.
+  /** Find a principal by href.
    *
    * @param href - of principal
    * @return null or BwPrincipal object
    * @throws CalFacadeException on error
    */
   BwPrincipal fetchPrincipal(String href) throws CalFacadeException;
+
+  /** Fetch all groups.
+   *
+   * @param admin - true for admin groups
+   * @return status and List of groups
+   */
+  GetEntitiesResponse<BwGroup> fetchGroups(boolean admin);
+
+  /** Fetch all groups of which href is a member.
+   *
+   * @param admin - true for admin groups
+   * @param href - of member
+   * @return status and List of groups
+   */
+  GetEntitiesResponse<BwGroup> fetchGroups(boolean admin,
+                                           String memberHref);
 
   /** Find a preference owned by the given href.
    *

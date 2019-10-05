@@ -200,6 +200,7 @@ public interface Calintf
    * @param forRestore true if this is for a system restore
    * @param indexRebuild  true if we are rebuilding the index.
    * @param publicAdmin boolean true if this is a public events admin app
+   * @param publicAuth boolean true if this is authenticated public events app
    * @param publicSubmission true for the submit app
    * @param sessionless true if this is a sessionless client
    * @param dontKill true if this is a system process
@@ -212,6 +213,7 @@ public interface Calintf
             boolean forRestore,
             boolean indexRebuild,
             boolean publicAdmin,
+            boolean publicAuth,
             boolean publicSubmission,
             boolean sessionless,
             boolean dontKill) throws CalFacadeException;

@@ -188,10 +188,10 @@ public class CalintfImpl extends CalintfROImpl {
     super.initPinfo(principalInfo);
     
     events = new CoreEvents(sess, this,
-                            ac, currentMode, sessionless);
+                            ac, readOnlyMode, sessionless);
 
     calendars = new CoreCalendars(sess, this,
-                                  ac, currentMode, sessionless);
+                                  ac, readOnlyMode, sessionless);
 
     access.setCollectionGetter(calendars);
   }
@@ -264,16 +264,19 @@ public class CalintfImpl extends CalintfROImpl {
                                 final boolean forRestore,
                                 final boolean indexRebuild,
                                 final boolean publicAdmin,
+                                final boolean publicAuth,
                                 final boolean publicSubmission,
                                 final boolean sessionless,
                                 final boolean dontKill) throws CalFacadeException {
     super.open(filterParserFetcher, logId, configs, webMode,
                forRestore, indexRebuild,
-               publicAdmin, publicSubmission, sessionless, dontKill);
-    authenticated = true;
+               publicAdmin, publicAuth, publicSubmission, sessionless, dontKill);
+    readOnlyMode = false;
 
     if (publicAdmin) {
       currentMode = CalintfDefs.publicAdminMode;
+    } else if (publicAuth) {
+      currentMode = CalintfDefs.publicAuthMode;
     } else if (publicSubmission) {
       currentMode = CalintfDefs.publicUserMode;
     } else {
@@ -1301,7 +1304,7 @@ public class CalintfImpl extends CalintfROImpl {
       if (categoriesHandler == null) {
         categoriesHandler =
             new CoreEventProperties<>(sess, this,
-                                      ac, currentMode, sessionless,
+                                      ac, readOnlyMode, sessionless,
                                       BwCategory.class.getName());
       }
 
@@ -1312,7 +1315,7 @@ public class CalintfImpl extends CalintfROImpl {
       if (contactsHandler == null) {
         contactsHandler =
                 new CoreEventProperties<>(sess, this,
-                                          ac, currentMode, sessionless,
+                                          ac, readOnlyMode, sessionless,
                                           BwContact.class.getName());
       }
 
@@ -1323,7 +1326,7 @@ public class CalintfImpl extends CalintfROImpl {
       if (locationsHandler == null) {
         locationsHandler =
                 new CoreEventProperties<>(sess, this,
-                                          ac, currentMode, sessionless,
+                                          ac, readOnlyMode, sessionless,
                                           BwLocation.class.getName());
       }
 

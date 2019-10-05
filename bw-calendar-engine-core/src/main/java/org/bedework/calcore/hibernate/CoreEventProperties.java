@@ -45,20 +45,20 @@ public class CoreEventProperties <T extends BwEventProperty>
    * @param sess persistance session
    * @param intf interface
    * @param ac access checker
-   * @param currentMode of access
+   * @param guestMode true for a guest
    * @param sessionless if true
    * @throws CalFacadeException on fatal error
    */
   public CoreEventProperties(final HibSession sess,
                              final CalintfImpl intf,
                              final AccessChecker ac,
-                             final int currentMode,
+                             final boolean guestMode,
                              final boolean sessionless,
                              final String className)
           throws CalFacadeException {
     dao = new CoreEventPropertiesDAO(sess, className);
     intf.registerDao(dao);
-    super.init(intf, ac, currentMode, sessionless);
+    super.init(intf, ac, guestMode, sessionless);
   }
 
   @Override

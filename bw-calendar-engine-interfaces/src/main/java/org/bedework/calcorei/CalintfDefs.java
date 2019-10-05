@@ -44,6 +44,10 @@ public interface CalintfDefs {
    * publicAdminMode: public events owned by user
    */
   static final int publicAdminMode = 3;
+  /**
+   * publicAuthMode: public authenticatd readonly client
+   */
+  static final int publicAuthMode = 4;
 
   /** Sometimes we want a no access exception when we try to retrieve
       something, other times we wan an exception.

@@ -235,7 +235,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
   private String targetIndex;
   private final String[] searchIndexes;
-  private final int currentMode;
 
   private static String lastChangeToken;
   private static long lastChangeTokenCheck;
@@ -409,7 +408,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
    * @param principalHref   - who is doing the searching - only for
    *                    non-public
    * @param superUser   - true if the principal is a superuser.
-   * @param currentMode - guest, user,publicAdmin
    * @param accessCheck - required - lets us check access
    * @param indexName   - explicitly specified
    */
@@ -418,14 +416,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                        final boolean publick,
                        final String principalHref,
                        final boolean superUser,
-                       final int currentMode,
                        final AccessChecker accessCheck,
                        final BwIndexFetcher indexFetcher,
                        final String indexName) {
     this.publick = publick;
     this.principalHref = principalHref;
     this.superUser = superUser;
-    this.currentMode = currentMode;
     this.accessCheck = new TimedAccessChecker(accessCheck);
     this.docType = docType;
     this.indexFetcher = indexFetcher;
@@ -434,7 +430,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                  publick,
                                  principalHref,
                                  superUser,
-                                 currentMode,
                                  accessCheck);
 
     idxpars = configs.getIndexProperties();
@@ -2307,6 +2302,56 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
+  public GetEntitiesResponse<BwGroup> fetchGroups(final boolean admin) {
+    final QueryBuilder qb = getFilters(null).allGroupsQuery(admin);
+    final GetEntitiesResponse<BwGroup> resp = new GetEntitiesResponse<>();
+
+    try {
+
+      resp.setEntities(fetchEntities(docTypePrincipal,
+                                     new BuildEntity<BwGroup>() {
+                                       @Override
+                                       BwGroup make(final EntityBuilder eb)
+                                               throws CalFacadeException {
+                                         return (BwGroup)eb.makePrincipal();
+                                       }
+                                     },
+                                     qb,
+                                     -1));
+
+      return Response.ok(resp, null);
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
+  }
+
+  @Override
+  public GetEntitiesResponse<BwGroup> fetchGroups(final boolean admin,
+                                                  final String memberHref) {
+    final QueryBuilder qb = getFilters(null).allGroupsQuery(admin,
+                                                            memberHref);
+    final GetEntitiesResponse<BwGroup> resp = new GetEntitiesResponse<>();
+
+    try {
+
+      resp.setEntities(fetchEntities(docTypePrincipal,
+                                     new BuildEntity<BwGroup>() {
+                                       @Override
+                                       BwGroup make(final EntityBuilder eb)
+                                               throws CalFacadeException {
+                                         return (BwGroup)eb.makePrincipal();
+                                       }
+                                     },
+                                     qb,
+                                     -1));
+
+      return Response.ok(resp, null);
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
+  }
+
+  @Override
   public BwPreferences fetchPreferences(String href)
           throws CalFacadeException {
     if (href == null) {
@@ -2544,7 +2589,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private static final int maxFetchCount = 100;
+  private static final int maxFetchCount = 10000;
   private static final int absoluteMaxTries = 1000;
 
   @Override
@@ -3638,7 +3683,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
    */
   public ESQueryFilter getFilters(final RecurringRetrievalMode recurRetrieval) {
     return new ESQueryFilter(publick,
-                             currentMode,
                              principalHref,
                              superUser,
                              recurRetrieval,
@@ -3840,7 +3884,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
   private EntityBuilder getEntityBuilder(final Map<String, ?> fields) throws CalFacadeException {
     try {
-      return new EntityBuilder(publick, currentMode, fields);
+      return new EntityBuilder(publick, fields);
     } catch (final IndexException ie) {
       throw new CalFacadeException(ie);
     }

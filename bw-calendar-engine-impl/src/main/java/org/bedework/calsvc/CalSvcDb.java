@@ -545,44 +545,6 @@ public class CalSvcDb implements Logged, Serializable {
     return ((CalendarWrapper)val).fetchEntity();
   }
 
-  /** Generate a where clause term for a query which handles the
-   * public/not public and creator.
-   *
-   * @param sb        StringBuilder for result
-   * @param entName   String name of the entity whose values we are matching
-   * @param publicEvents
-   * @param ignoreCreator  true if we can ignore the creator (owner)
-   * @return boolean  true if we need to set the :user term
-   * @throws CalFacadeException
-   */
-  static boolean appendPublicOrOwnerTerm(final StringBuilder sb, final String entName,
-                                         final boolean publicEvents, final boolean ignoreCreator)
-            throws CalFacadeException {
-    //boolean all = (currentMode == guestMode) || ignoreCreator;
-    boolean all = publicEvents || ignoreCreator;
-    boolean setUser = false;
-
-    sb.append("(");
-    if (!all) {
-      sb.append("(");
-    }
-
-    sb.append(entName);
-    sb.append(".publick=");
-    sb.append(String.valueOf(publicEvents));
-
-    if (!all) {
-      sb.append(") and (");
-      sb.append(entName);
-      sb.append(".owner=:user");
-      sb.append(")");
-      setUser = true;
-    }
-    sb.append(")");
-
-    return setUser;
-  }
-
   public static class SplitResult {
     String path;
     String name;

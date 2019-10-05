@@ -201,19 +201,19 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
    * @param sess persistance session
    * @param intf interface
    * @param ac access checker
-   * @param currentMode of access
+   * @param guestMode true for a guest
    * @param sessionless if true
    * @throws CalFacadeException on fatal error
    */
   public CoreEvents(final HibSession sess,
                     final CalintfImpl intf,
                     final AccessChecker ac,
-                    final int currentMode,
+                    final boolean guestMode,
                     final boolean sessionless)
           throws CalFacadeException {
     dao = new CoreEventsDAO(sess);
     intf.registerDao(dao);
-    super.init(intf, ac, currentMode, sessionless);
+    super.init(intf, ac, guestMode, sessionless);
   }
 
   @Override

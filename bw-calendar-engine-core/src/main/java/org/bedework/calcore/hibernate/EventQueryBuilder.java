@@ -167,20 +167,16 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
    * public/not public and creator.
    *
    * @param entName   String name of the entity whose values we are matching
-   * @param currentMode    int mode as defined in CalintfDefs
+   * @param publick   true for public access
    * @param ignoreCreator  true if we can ignore the creator (owner)
    * @return boolean  true if we need to set the :user term
    * @throws CalFacadeException
    */
   public boolean appendPublicOrOwnerTerm(final String entName,
-                                         final int currentMode,
+                                         final boolean publick,
                                          final boolean ignoreCreator)
             throws CalFacadeException {
-    boolean publicEvents = (currentMode == guestMode) ||
-                           (currentMode == publicAdminMode);
-
-    //boolean all = (currentMode == guestMode) || ignoreCreator;
-    boolean all = publicEvents || ignoreCreator;
+    boolean all = publick || ignoreCreator;
     boolean setUser = false;
 
     and();
@@ -191,7 +187,7 @@ public class EventQueryBuilder implements Serializable, CalintfDefs {
 
     sb.append(entName);
     sb.append(".publick=");
-    sb.append(String.valueOf(publicEvents));
+    sb.append(String.valueOf(publick));
 
     if (!all) {
       sb.append(") and (");

@@ -69,6 +69,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.indexing.SearchResult;
 import org.bedework.calfacade.indexing.SearchResultEntry;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwAdminGroup;
@@ -93,6 +94,7 @@ import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -102,6 +104,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
 import static org.bedework.calfacade.responses.Response.Status.noAccess;
 import static org.bedework.calfacade.responses.Response.Status.notFound;
 import static org.bedework.calfacade.responses.Response.Status.ok;
@@ -219,6 +222,7 @@ public class CalintfROImpl extends CalintfBase
                                 final boolean forRestore,
                                 final boolean indexRebuild,
                                 final boolean publicAdmin,
+                                final boolean publicAuth,
                                 final boolean publicSubmission,
                                 final boolean sessionless,
                                 final boolean dontKill) throws CalFacadeException {
@@ -230,7 +234,6 @@ public class CalintfROImpl extends CalintfBase
     this.logId = logId;
     isOpen = true;
     this.configs = configs;
-    authenticated = false;
     this.forRestore = forRestore;
     this.indexRebuild = indexRebuild;
     this.sessionless = sessionless;
@@ -242,7 +245,12 @@ public class CalintfROImpl extends CalintfBase
 
     ac = new CIAccessChecker();
 
-    currentMode = CalintfDefs.guestMode;
+    if (publicAuth) {
+      currentMode = CalintfDefs.publicAuthMode;
+    } else {
+      currentMode = CalintfDefs.guestMode;
+      readOnlyMode = true;
+    }
   }
 
   @Override
@@ -1312,7 +1320,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
-    return getIndexer(BwIndexer.docTypePrincipal).fetchPrincipal(href);
+    return getIndexer(docTypePrincipal).fetchPrincipal(href);
   }
 
   @Override
@@ -1369,7 +1377,7 @@ public class CalintfROImpl extends CalintfBase
                             account);
     }
 
-    return (BwGroup)getIndexer(BwIndexer.docTypePrincipal).fetchPrincipal(href);
+    return (BwGroup)getIndexer(docTypePrincipal).fetchPrincipal(href);
   }
 
   @Override
@@ -1408,18 +1416,49 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public Collection<BwPrincipal> getMembers(final BwGroup group,
                                             final boolean admin) throws CalFacadeException {
-    return group.getGroupMembers();
+    final List<BwPrincipal> members = new ArrayList<>();
+    final BwIndexer idx = getIndexer(docTypePrincipal);
+
+    for (final String href: group.getMemberHrefs()) {
+      final BwPrincipal pr = idx.fetchPrincipal(href);
+
+      if (pr != null) {
+        members.add(pr);
+      }
+    }
+    return members;
   }
 
   @Override
   public Collection<BwGroup> getAllGroups(final boolean admin) throws CalFacadeException {
-    throw new RuntimeException("Read only version");
+    GetEntitiesResponse<BwGroup> resp =
+            getIndexer(docTypePrincipal).fetchGroups(admin);
+
+    if (!resp.isOk()) {
+      throw new CalFacadeException(resp.getException());
+    }
+
+    if (resp.getEntities() == null) {
+      return Collections.emptyList();
+    }
+    return resp.getEntities();
   }
 
   @Override
   public Collection<BwGroup> getGroups(final BwPrincipal val,
                                        final boolean admin) throws CalFacadeException {
-    throw new RuntimeException("Read only version");
+    GetEntitiesResponse<BwGroup> resp =
+            getIndexer(docTypePrincipal).fetchGroups(admin,
+                                                     val.getHref());
+
+    if (!resp.isOk()) {
+      throw new CalFacadeException(resp.getException());
+    }
+
+    if (resp.getEntities() == null) {
+      return Collections.emptyList();
+    }
+    return resp.getEntities();
   }
 
   /* ====================================================================
@@ -1437,7 +1476,8 @@ public class CalintfROImpl extends CalintfBase
                                        "/", name);
 
     final BwCalSuitePrincipal cspr =
-            (BwCalSuitePrincipal)getIndexer(BwIndexer.docTypePrincipal).fetchPrincipal(href);
+            (BwCalSuitePrincipal)getIndexer(
+                    docTypePrincipal).fetchPrincipal(href);
     if (cspr == null) {
       return null;
     }

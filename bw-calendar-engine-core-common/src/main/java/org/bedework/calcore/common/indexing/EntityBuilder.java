@@ -74,8 +74,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static org.bedework.calcorei.CalintfDefs.guestMode;
-
 /** Implementation of indexer for ElasticSearch
  *
  * @author Mike Douglass douglm - rpi.edu
@@ -83,7 +81,6 @@ import static org.bedework.calcorei.CalintfDefs.guestMode;
  */
 public class EntityBuilder extends EntityBuilderBase {
   private final boolean publick;
-  private final int currentMode;
 
   /** Constructor - 1 use per entity
    *
@@ -91,12 +88,10 @@ public class EntityBuilder extends EntityBuilderBase {
    * @throws IndexException on fatal error
    */
   EntityBuilder(final boolean publick,
-                final int currentMode,
                 final Map<String, ?> fields)
           throws IndexException {
     super(fields, 0);
     this.publick = publick;
-    this.currentMode = currentMode;
     pushFields(fields);
   }
 
@@ -404,12 +399,11 @@ public class EntityBuilder extends EntityBuilderBase {
     final boolean override = !expanded &&
             getBool(PropertyInfoIndex.OVERRIDE);
 
-    final boolean tryCache = (currentMode == guestMode) && publick;
     final String cacheKey = id + override;
 
     retrievals++;
     
-    if (tryCache) {
+    if (publick) {
       checkPurge();
       final EventCacheEntry ece = eventCache.get(cacheKey);
       if (ece != null) {
@@ -546,7 +540,7 @@ public class EntityBuilder extends EntityBuilderBase {
       ev.setPollProperties(getString(PropertyInfoIndex.POLL_PROPERTIES));
     }
     
-    if (tryCache) {
+    if (publick) {
       synchronized (eventCache) {
         eventCache.put(cacheKey, new EventCacheEntry(cacheKey, ei));
       }

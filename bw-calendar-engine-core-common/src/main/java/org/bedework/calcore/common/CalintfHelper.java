@@ -74,7 +74,7 @@ public abstract class CalintfHelper
 
   protected Calintf intf;
 
-  protected int currentMode = guestMode;
+  protected boolean guestMode;
 
   protected boolean sessionless;
 
@@ -86,16 +86,16 @@ public abstract class CalintfHelper
    *
    * @param intf - interface for calls
    * @param ac
-   * @param currentMode
+   * @param guestMode true for a guest
    * @param sessionless
    */
   public void init(final Calintf intf,
                    final AccessChecker ac,
-                   final int currentMode,
+                   final boolean guestMode,
                    final boolean sessionless) {
     this.intf = intf;
     this.ac = ac;
-    this.currentMode = currentMode;
+    this.guestMode = guestMode;
     this.sessionless = sessionless;
     collectTimeStats = isMetricsDebugEnabled();
   }
@@ -418,7 +418,7 @@ public abstract class CalintfHelper
 
   protected AuthProperties getAuthprops() throws CalFacadeException {
     if (authprops == null) {
-      authprops = new CalSvcFactoryDefault().getSystemConfig().getAuthProperties(currentMode == guestMode);
+      authprops = new CalSvcFactoryDefault().getSystemConfig().getAuthProperties(guestMode);
     }
 
     return authprops;

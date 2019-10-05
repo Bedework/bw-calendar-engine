@@ -548,6 +548,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                   pars.getForRestore(),
                   pars.getIndexRebuild(),
                   pars.getPublicAdmin(),
+                  pars.getPublicAuth(),
                   pars.getPublicSubmission(),
                   pars.getSessionsless(),
                   pars.getDontKill());
@@ -970,7 +971,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
   @Override
   public Directories getDirectories() throws CalFacadeException {
-    if (isPublicAdmin()) {
+    if (isPublicAdmin() || isPublicAuth()) {
       return getAdminDirectories();
     }
 
@@ -1318,6 +1319,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                 pars.getForRestore(),
                 pars.getIndexRebuild(),
                 pars.getPublicAdmin(),
+                pars.getPublicAuth(),
                 pars.getPublicSubmission(),
                 pars.getSessionsless(),
                 pars.getDontKill()); // Just for the user interactions
@@ -1754,7 +1756,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     @Override
-    public int getStrictness() throws CalFacadeException {
+    public int getStrictness() {
       return strictness;
     }
 
@@ -2086,8 +2088,14 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
   /* See if in public admin mode
    */
-  private boolean isPublicAdmin() throws CalFacadeException {
+  private boolean isPublicAdmin() {
     return pars.getPublicAdmin();
+  }
+
+  /* See if in public auth mode
+   */
+  private boolean isPublicAuth() {
+    return pars.getPublicAuth();
   }
 
   /* ====================================================================

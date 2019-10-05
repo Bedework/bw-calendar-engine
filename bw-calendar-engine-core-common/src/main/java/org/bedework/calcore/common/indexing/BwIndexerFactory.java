@@ -38,21 +38,18 @@ public class BwIndexerFactory {
    *
    * @param configs to configure indexer
    * @param docType type of entity
-   * @param currentMode - guest, user,publicAdmin
    * @param accessCheck  - required - lets us check access
    * @return indexer
    */
   public static BwIndexer getPublicIndexer(final Configurations configs,
                                            final String docType,
-                                           final int currentMode,
                                            final AccessChecker accessCheck,
                                            final BwIndexFetcher indexFetcher) {
     return new BwIndexEsImpl(configs,
                              docType,
-                             true,
+                             true,    // publick
                              null,    // principal
                              false,   // super user
-                             currentMode,
                              accessCheck,
                              indexFetcher,
                              null); // Not reindexing
@@ -64,7 +61,6 @@ public class BwIndexerFactory {
    * @param docType type of entity
    * @param principalHref - of current user
    * @param superUser - true if the principal is a superuser.
-   * @param currentMode - guest, user,publicAdmin
    * @param accessCheck  - required - lets us check access
    * @return indexer
    */
@@ -72,7 +68,6 @@ public class BwIndexerFactory {
                                      final String docType,
                                      final String principalHref,
                                      final boolean superUser,
-                                     final int currentMode,
                                      final AccessChecker accessCheck,
                                      final BwIndexFetcher indexFetcher) {
     return new BwIndexEsImpl(configs,
@@ -80,7 +75,6 @@ public class BwIndexerFactory {
                              false,
                              principalHref,
                              superUser,
-                             currentMode,
                              accessCheck,
                              indexFetcher,
                              null); // Not reindexing
@@ -93,7 +87,6 @@ public class BwIndexerFactory {
    * @param configs to configure indexer
    * @param docType type of entity
    * @param principalHref - of current user
-   * @param currentMode - guest, user,publicAdmin
    * @param accessCheck  - required - lets us check access
    * @param indexRoot
    * @return indexer
@@ -101,7 +94,6 @@ public class BwIndexerFactory {
   public static BwIndexer getIndexerForReindex(final Configurations configs,
                                                final String docType,
                                                final String principalHref,
-                                               final int currentMode,
                                                final AccessChecker accessCheck,
                                                final BwIndexFetcher indexFetcher,
                                                final String indexRoot) {
@@ -110,7 +102,6 @@ public class BwIndexerFactory {
                              true,
                              principalHref,
                              false,
-                             currentMode,
                              accessCheck,
                              indexFetcher,
                              indexRoot); // Explicit name

@@ -111,6 +111,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   //protected BwUser user;
 
   protected int currentMode = CalintfDefs.guestMode;
+  protected boolean readOnlyMode;
 
   /** Ensure we don't open while open
    */
@@ -328,7 +329,7 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   public BwIndexer getIndexer(final String docType) {
     if (currentMode == CalintfDefs.publicAdminMode ||
-                              !authenticated) {
+            readOnlyMode) {
       return getPublicIndexer(docType);
     }
 
@@ -339,7 +340,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   public BwIndexer getIndexer(final BwOwnedDbentity entity) {
     final String docType = docTypeFromClass(entity);
 
-    if ((currentMode == CalintfDefs.guestMode) ||
+    if (readOnlyMode ||
             (currentMode == CalintfDefs.publicUserMode) ||
             (currentMode == CalintfDefs.publicAdminMode)) {
       return getPublicIndexer(docType);
@@ -388,7 +389,7 @@ public abstract class CalintfBase implements Logged, Calintf {
     }
     if ((currentMode == CalintfDefs.publicAdminMode) ||
             (currentMode == CalintfDefs.publicUserMode) ||
-            !authenticated) {
+            readOnlyMode) {
       return getPublicIndexer(docType);
     }
 
@@ -399,7 +400,7 @@ public abstract class CalintfBase implements Logged, Calintf {
                               final String docType) {
     if ((currentMode == CalintfDefs.publicAdminMode) ||
             (currentMode == CalintfDefs.publicUserMode) ||
-            !authenticated ||
+            readOnlyMode ||
             BwPrincipal.publicUserHref.equals(principalHref)) {
       return getPublicIndexer(docType);
     }
@@ -414,7 +415,6 @@ public abstract class CalintfBase implements Logged, Calintf {
                                       docType,
                                       principalHref,
                                       getSuperUser(),
-                                      currentMode,
                                       ac,
                                       indexFetcher);
     principalIndexers.put(docType + "\t" +
@@ -505,7 +505,6 @@ public abstract class CalintfBase implements Logged, Calintf {
     if (idx == null) {
       idx = BwIndexerFactory.getPublicIndexer(configs,
                                               docType,
-                                              currentMode,
                                               ac,
                                               indexFetcher);
       publicIndexers.put(docType, idx);
@@ -531,7 +530,6 @@ public abstract class CalintfBase implements Logged, Calintf {
     return BwIndexerFactory.getIndexerForReindex(configs,
                                                  docType,
                                                  principalHref,
-                                                 currentMode,
                                                  ac,
                                                  indexFetcher,
                                                  indexName);
