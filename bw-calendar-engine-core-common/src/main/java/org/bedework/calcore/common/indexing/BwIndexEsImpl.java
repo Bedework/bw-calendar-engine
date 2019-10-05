@@ -110,7 +110,6 @@ import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
@@ -2911,11 +2910,16 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       if (kval == null) {
         throw new CalFacadeException("org.bedework.index.noitemkey");
       }
+      Map<String, Object> map = hit.getSourceAsMap();
 
-      final DocumentField hrefField = hit
-              .field(ESQueryFilter.hrefJname);
+      final Object field = map.get(ESQueryFilter.hrefJname);
 
-      hrefs.add(hrefField.getValue());
+      if (field == null) {
+        warn("Unable to get field " + ESQueryFilter.hrefJname +
+                " from " + map);
+      } else {
+        hrefs.add(field.toString());
+      }
     }
 
     final int batchSize = (int)hits.getTotalHits().value * 100;
