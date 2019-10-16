@@ -94,6 +94,7 @@ import java.io.StringReader;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -414,8 +415,7 @@ class Events extends CalSvcDb implements EventsI {
     Collection<BwCalendar> cals = null;
 
     if (cal != null) {
-      cals = new ArrayList<BwCalendar>();
-      cals.add(cal);
+      cals = Collections.singleton(cal);
     }
 
     Collection<EventInfo> res =  getMatching(cals, filter, startDate, endDate,
@@ -1431,17 +1431,22 @@ class Events extends CalSvcDb implements EventsI {
     }
   }
 
-  /** Method which allows us to flag it as a scheduling action
+  /** Method which allows us to flag this as a scheduling action
+   * Return the events for the current user within the given date and time
+   * range. If retrieveList is supplied only those fields (and a few required
+   * fields) will be returned.
    *
-   * @param cals
-   * @param filter
-   * @param startDate
-   * @param endDate
-   * @param retrieveList
-   * @param recurRetrieval
-   * @param freeBusy
-   * @return Collection of matching events
-   * @throws CalFacadeException
+   * @param cals         BwCalendar objects - non-null means limit to
+   *                     given calendar set
+   *                     null is limit to current user
+   * @param filter       BwFilter object restricting search or null.
+   * @param startDate    BwDateTime start - may be null
+   * @param endDate      BwDateTime end - may be null.
+   * @param retrieveList List of properties to retrieve or null for a full event.
+   * @param recurRetrieval How recurring event is returned.
+   * @param freeBusy      true for a freebusy request
+   * @return Collection  populated matching event value objects
+   * @throws CalFacadeException on fatal error
    */
   Collection<EventInfo> getMatching(final Collection<BwCalendar> cals,
                                     final FilterBase filter,
@@ -1450,7 +1455,7 @@ class Events extends CalSvcDb implements EventsI {
                                     final DeletedState delState,
                                     final RecurringRetrievalMode recurRetrieval,
                                     final boolean freeBusy) throws CalFacadeException {
-    TreeSet<EventInfo> ts = new TreeSet<EventInfo>();
+    TreeSet<EventInfo> ts = new TreeSet<>();
 
     if ((filter != null) && (filter.equals(BooleanFilter.falseFilter))) {
       return ts;
@@ -1806,192 +1811,196 @@ class Events extends CalSvcDb implements EventsI {
     final String curPrincipal = getSvc().getPrincipal().getPrincipalRef();
     final Directories dirs = getSvc().getDirectories();
 
+    /* Check organizer property to see if it is us.
+     */
     AccessPrincipal evPrincipal =
       dirs.caladdrToPrincipal(org.getOrganizerUri());
 
-    if ((evPrincipal != null) &&
-        (evPrincipal.getPrincipalRef().equals(curPrincipal))) {
-      ev.setOrganizerSchedulingObject(true);
+    var weAreOrganizer = (evPrincipal != null) &&
+        (evPrincipal.getPrincipalRef().equals(curPrincipal));
 
-      /* If we are expanding groups do so here */
+    if (!weAreOrganizer) {
+      /* Go through the attendees and see if at least one is us.
+          If so this is an attendee-scheduling-object.
+       */
+      for (final BwAttendee att: atts) {
+        evPrincipal = getSvc().getDirectories().caladdrToPrincipal(att.getAttendeeUri());
+        if ((evPrincipal != null) &&
+                (evPrincipal.getPrincipalRef().equals(curPrincipal))) {
+          ev.setAttendeeSchedulingObject(true);
 
-      final ChangeTable chg = ev.getChangeset(getPrincipalHref());
-      final Set<BwAttendee> groups = new TreeSet<>();
-
-      if (!schedulingInbox) {
-        final ChangeTableEntry cte = chg
-                .getEntry(PropertyInfoIndex.ATTENDEE);
-
-        checkAttendees:
-        for (final BwAttendee att : atts) {
-          if (CuType.GROUP.getValue().equals(att.getCuType())) {
-            groups.add(att);
-          }
-
-          final AccessPrincipal attPrincipal =
-                  getSvc().getDirectories().
-                          caladdrToPrincipal(att.getAttendeeUri());
-          if ((attPrincipal != null) &&
-                  (attPrincipal.getPrincipalRef()
-                               .equals(curPrincipal))) {
-            // It's us 
-            continue;
-          }
-
-          if (att.getPartstat()
-                 .equals(IcalDefs.partstatValNeedsAction)) {
-            continue;
-          }
-
-          if (adding) {
-            // Can't add an event with attendees set to accepted
-            att.setPartstat(IcalDefs.partstatValNeedsAction);
-            continue;
-          }
-
-          // Not adding event. Did we add attendee?
-          if ((cte != null) &&
-                  !Util.isEmpty(cte.getAddedValues())) {
-            for (final Object o : cte.getAddedValues()) {
-              final BwAttendee chgAtt = (BwAttendee)o;
-
-              if (chgAtt.getCn().equals(att.getCn())) {
-                att.setPartstat(IcalDefs.partstatValNeedsAction);
-                continue checkAttendees;
-              }
-            }
-          }
+          break;
         }
       }
 
-      try {
-        /* If this is a vpoll we need the vvoters as we are going to
+      return;
+    }
+
+    // We are the organizer for this entity */
+
+    ev.setOrganizerSchedulingObject(true);
+
+    /* If we are expanding groups do so here */
+
+    final ChangeTable chg = ev.getChangeset(getPrincipalHref());
+    final Set<BwAttendee> groups = new TreeSet<>();
+
+    if (!schedulingInbox) {
+      final ChangeTableEntry cte = chg
+              .getEntry(PropertyInfoIndex.ATTENDEE);
+
+      checkAttendees:
+      for (final BwAttendee att : atts) {
+        if (CuType.GROUP.getValue().equals(att.getCuType())) {
+          groups.add(att);
+        }
+
+        final AccessPrincipal attPrincipal =
+                getSvc().getDirectories().
+                        caladdrToPrincipal(att.getAttendeeUri());
+        if ((attPrincipal != null) &&
+                (attPrincipal.getPrincipalRef()
+                             .equals(curPrincipal))) {
+          // It's us
+          continue checkAttendees;
+        }
+
+        if (att.getPartstat()
+               .equals(IcalDefs.partstatValNeedsAction)) {
+          continue checkAttendees;
+        }
+
+        if (adding) {
+          // Can't add an event with attendees set to accepted
+          att.setPartstat(IcalDefs.partstatValNeedsAction);
+          continue checkAttendees;
+        }
+
+        // Not adding event. Did we add attendee?
+        if ((cte != null) &&
+                !Util.isEmpty(cte.getAddedValues())) {
+          for (final Object o : cte.getAddedValues()) {
+            final BwAttendee chgAtt = (BwAttendee)o;
+
+            if (chgAtt.getCn().equals(att.getCn())) {
+              att.setPartstat(IcalDefs.partstatValNeedsAction);
+              continue checkAttendees;
+            }
+          }
+        }
+      } // checkAttendees
+    }
+
+    try {
+      /* If this is a vpoll we need the vvoters as we are going to
            have to remove the group vvoter entry and clone it for the
            attendees we add.
 
            I think this will work for any poll mode - if not we may
            have to rethink this approach.
          */
-        Map<String, VVoter> voters = null;
-        final boolean vpoll;
+      Map<String, VVoter> voters = null;
+      final var vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
 
-        if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
-          voters = IcalUtil.parseVpollVvoters(ev);
-          ev.clearVvoters(); // We'll add them all back
-          vpoll = true;
-        } else {
-          vpoll = false;
-        }
+      if (vpoll) {
+        voters = IcalUtil.parseVpollVvoters(ev);
+        ev.clearVvoters(); // We'll add them all back
+      }
 
-        for (final BwAttendee att : groups) {
-          /* If the group is in one of our domains we can try to expand it.
+      for (final BwAttendee att : groups) {
+        /* If the group is in one of our domains we can try to expand it.
            * We should leave it if it's an external id.
            */
 
-          final Holder<Boolean> trunc = new Holder<>();
-          final List<BwPrincipalInfo> groupPis =
-                  dirs.find(att.getAttendeeUri(),
-                            att.getCuType(),
-                            true,  // expand
-                            trunc);
+        final Holder<Boolean> trunc = new Holder<>();
+        final List<BwPrincipalInfo> groupPis =
+                dirs.find(att.getAttendeeUri(),
+                          att.getCuType(),
+                          true,  // expand
+                          trunc);
 
-          if ((groupPis == null) || (groupPis.size() != 1)) {
-            continue;
-          }
-
-          final BwPrincipalInfo pi = groupPis.get(0);
-
-          if (pi.getMembers() == null) {
-            continue;
-          }
-
-          VVoter groupVvoter = null;
-          Voter groupVoter = null;
-          PropertyList pl = null;
-
-          if (vpoll) {
-            groupVvoter = voters.get(att.getAttendeeUri());
-
-            if (groupVvoter == null) {
-              if (debug()) {
-                warn("No vvoter found for " + att.getAttendeeUri());
-              }
-              continue;
-            }
-
-            voters.remove(att.getAttendeeUri());
-            groupVoter = groupVvoter.getVoter();
-            pl = groupVvoter.getProperties();
-          }
-
-          ev.removeAttendee(att); // Remove the group
-
-          chg.changed(PropertyInfoIndex.ATTENDEE, att, null);
-
-          for (final BwPrincipalInfo mbrPi : pi.getMembers()) {
-            if (mbrPi.getCaladruri() == null) {
-              continue;
-            }
-
-            final BwAttendee mbrAtt = new BwAttendee();
-
-            mbrAtt.setType(att.getType());
-            mbrAtt.setAttendeeUri(mbrPi.getCaladruri());
-            mbrAtt.setCn(mbrPi.getEmail());
-            mbrAtt.setCuType(mbrPi.getKind());
-            mbrAtt.setMember(att.getAttendeeUri());
-
-            ev.addAttendee(mbrAtt);
-            chg.addValue(PropertyInfoIndex.ATTENDEE, mbrAtt);
-
-            if (vpoll) {
-              pl.remove(groupVoter);
-
-              groupVoter = IcalUtil.setVoter(mbrAtt);
-
-              pl.add(groupVoter);
-
-              ev.addVvoter(groupVvoter.toString());
-            }
-          }
+        if ((groupPis == null) || (groupPis.size() != 1)) {
+          continue;
         }
+
+        final BwPrincipalInfo pi = groupPis.get(0);
+
+        if (pi.getMembers() == null) {
+          continue;
+        }
+
+        VVoter groupVvoter = null;
+        Voter groupVoter = null;
+        PropertyList pl = null;
 
         if (vpoll) {
-          // Add back any remaining vvoters
-          for (VVoter vv: voters.values()) {
-            ev.addVvoter(vv.toString());
+          groupVvoter = voters.get(att.getAttendeeUri());
+
+          if (groupVvoter == null) {
+            if (debug()) {
+              warn("No vvoter found for " + att.getAttendeeUri());
+            }
+            continue;
+          }
+
+          voters.remove(att.getAttendeeUri());
+          groupVoter = groupVvoter.getVoter();
+          pl = groupVvoter.getProperties();
+        }
+
+        ev.removeAttendee(att); // Remove the group
+
+        chg.changed(PropertyInfoIndex.ATTENDEE, att, null);
+
+        for (final BwPrincipalInfo mbrPi : pi.getMembers()) {
+          if (mbrPi.getCaladruri() == null) {
+            continue;
+          }
+
+          final BwAttendee mbrAtt = new BwAttendee();
+
+          mbrAtt.setType(att.getType());
+          mbrAtt.setAttendeeUri(mbrPi.getCaladruri());
+          mbrAtt.setCn(mbrPi.getEmail());
+          mbrAtt.setCuType(mbrPi.getKind());
+          mbrAtt.setMember(att.getAttendeeUri());
+
+          ev.addAttendee(mbrAtt);
+          chg.addValue(PropertyInfoIndex.ATTENDEE, mbrAtt);
+
+          if (vpoll) {
+            pl.remove(groupVoter);
+
+            groupVoter = IcalUtil.setVoter(mbrAtt);
+
+            pl.add(groupVoter);
+
+            ev.addVvoter(groupVvoter.toString());
           }
         }
-      } catch (final CalFacadeException cfe) {
-        throw cfe;
-      } catch (final Throwable t) {
-        throw new CalFacadeException(t);
       }
 
-      if (ev instanceof BwEventProxy) {
-        // Only add x-property to master
-        return;
+      if (vpoll) {
+        // Add back any remaining vvoters
+        for (VVoter vv: voters.values()) {
+          ev.addVvoter(vv.toString());
+        }
       }
+    } catch (final CalFacadeException cfe) {
+      throw cfe;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
 
-      if (CalFacadeDefs.jasigSchedulingAssistant.equals(getPars().getClientId())) {
-        ev.addXproperty(new BwXproperty(BwXproperty.bedeworkSchedAssist,
-                                        null,
-                                        "true"));
-      }
-
+    if (ev instanceof BwEventProxy) {
+      // Only add x-property to master
       return;
     }
 
-    for (final BwAttendee att: atts) {
-      /* See if at least one attendee is us */
-
-      evPrincipal = getSvc().getDirectories().caladdrToPrincipal(att.getAttendeeUri());
-      if ((evPrincipal != null) &&
-          (evPrincipal.getPrincipalRef().equals(curPrincipal))) {
-        ev.setAttendeeSchedulingObject(true);
-
-        break;
-      }
+    if (CalFacadeDefs.jasigSchedulingAssistant.equals(getPars().getClientId())) {
+      ev.addXproperty(new BwXproperty(BwXproperty.bedeworkSchedAssist,
+                                      null,
+                                      "true"));
     }
   }
 
