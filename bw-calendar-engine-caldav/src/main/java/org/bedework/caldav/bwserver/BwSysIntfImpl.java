@@ -2605,6 +2605,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         clientIdent = clientId;
       }
 
+      var authenticated = (account != null);
+
       final CalSvcIPars pars =
               CalSvcIPars.getCaldavPars("bwcaldav",
                                         account,
@@ -2613,7 +2615,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                         possibleSuperUser,   // allow SuperUser
                                         service,publicAdmin,
                                         allowCreateEprops,
-                                        readonly);
+                                        false);   // readonly);
       svci = new CalSvcFactoryDefault().getSvc(pars);
 
       svci.open();
