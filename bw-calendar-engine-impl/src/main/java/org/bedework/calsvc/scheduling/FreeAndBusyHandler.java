@@ -53,6 +53,7 @@ import net.fortuna.ical4j.model.Period;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.TreeSet;
 
@@ -139,7 +140,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       throw new CalFacadeAccessException();
     }
 
-    BwEvent fb = new BwEventObj();
+    final var fb = new BwEventObj();
 
     fb.setEntityType(IcalDefs.entityTypeFreeAndBusy);
     fb.setOwnerHref(who.getPrincipalRef());
@@ -163,7 +164,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
 
     fb.setOrganizer((BwOrganizer)org.clone());
 
-    Collection<EventInfo> events = new TreeSet<EventInfo>();
+    Collection<EventInfo> events = new TreeSet<>();
     /* Only events and freebusy for freebusy reports. */
     FilterBase filter = new OrFilter();
     try {
@@ -189,10 +190,9 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
 
       RecurringRetrievalMode rrm = new RecurringRetrievalMode(
                               Rmode.expanded, start, end);
-      Collection<BwCalendar> cs = new ArrayList<BwCalendar>();
-      cs.add(c);
 
-      Collection<EventInfo> evs = getEvents(cs, filter, start, end,
+      Collection<EventInfo> evs = getEvents(Collections.singleton(c),
+                                            filter, start, end,
                                             null, // retrieveList
                                             rrm, true);
 
@@ -318,7 +318,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
    */
   @Override
   public Collection<BwCalendar> getFreebusySet() throws CalFacadeException {
-    Collection<BwCalendar> fbset = new ArrayList<BwCalendar>();
+    Collection<BwCalendar> fbset = new ArrayList<>();
 
     fbset.add(getSvc().getCalendarsHandler().getHome());
 
@@ -329,7 +329,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
                                                   final Collection<BwCalendar> fbset) throws CalFacadeException {
     Collection<BwCalendar> resCals;
     if (cals == null) {
-      resCals = new ArrayList<BwCalendar>();
+      resCals = new ArrayList<>();
     } else {
       resCals = cals;
     }
@@ -356,9 +356,6 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     return resCals;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SchedulingI#aggregateFreeBusy(org.bedework.calfacade.ScheduleResult, org.bedework.calfacade.BwDateTime, org.bedework.calfacade.BwDateTime, org.bedework.calfacade.BwDuration)
-   */
   @Override
   public FbResponses aggregateFreeBusy(final ScheduleResult sr,
                                        final BwDateTime start, final BwDateTime end,
@@ -369,7 +366,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       throw new CalFacadeException(CalFacadeException.schedulingBadGranulatorDt);
     }
 
-    resps.setResponses(new ArrayList<FbGranulatedResponse>());
+    resps.setResponses(new ArrayList<>());
 
     /* Combine the responses into one big collection */
     FbGranulatedResponse allResponses = new FbGranulatedResponse();
@@ -502,7 +499,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     fbresp.setStart(start);
     fbresp.setEnd(end);
 
-    Collection<EventPeriod> periods = new ArrayList<EventPeriod>();
+    Collection<EventPeriod> periods = new ArrayList<>();
 
     if (fb.getFreeBusyPeriods() != null) {
       for (BwFreeBusyComponent fbcomp: fb.getFreeBusyPeriods()) {
@@ -530,15 +527,13 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       }
     }
 
-    GetPeriodsPars gpp = new GetPeriodsPars();
+    final var gpp = new GetPeriodsPars();
 
     gpp.periods = periods;
     gpp.startDt = start;
     gpp.dur = granularity;
 
-    BwDateTime bwend = end;
-
-    Collection<EventPeriod> respeps = new ArrayList<EventPeriod>();
+    Collection<EventPeriod> respeps = new ArrayList<>();
     fbresp.eps = respeps;
 
     int limit = 10000; // XXX do this better
@@ -546,7 +541,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     /* endDt is null first time through, then represents end of last
      * segment.
      */
-    while ((gpp.endDt == null) || (gpp.endDt.before(bwend))) {
+    while ((gpp.endDt == null) || (gpp.endDt.before(end))) {
       //if (debug()) {
       //  debug("gpp.startDt=" + gpp.startDt + " end=" + end);
       //}
