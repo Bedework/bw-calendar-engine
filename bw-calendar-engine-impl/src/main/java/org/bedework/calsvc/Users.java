@@ -289,10 +289,9 @@ class Users extends CalSvcDb implements UsersI {
 
     /* Ensure we have a polls collection. 
     I think this was a short-term fix that hung around. 
-    It's not a good idea. Makes session start inefficient.
-    getSvc().getCal().getSpecialCalendar(val, BwCalendar.calTypePoll,
+    It's not a good idea. Makes session start inefficient. */
+    getSvc().getCal().getSpecialCalendar(null, val, BwCalendar.calTypePoll,
                                          true, PrivilegeDefs.privAny);
-                                         */
   }
 
   /*
