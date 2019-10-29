@@ -615,7 +615,7 @@ class CoreCalendars extends CalintfHelper
     cal.setCalType(BwCalendar.calTypeCalendarCollection);
     cal.setAffectsFreeBusy(true);
 
-    final BwLastMod lm = usercal.getLastmod();
+    final BwLastMod lm = cal.getLastmod();
     lm.updateLastmod(getCurrentTimestamp());
 
     dao.saveCollection(cal);
