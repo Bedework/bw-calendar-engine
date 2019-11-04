@@ -18,10 +18,10 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-calws-soap:4.0.9" level="project" />
     <orderEntry type="library" name="Maven: javax.jws:javax.jws-api:1.1" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.9" level="project" />
-    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.8" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.10.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util2-vcard:4.0.5" level="project" />
-    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.8" level="project" />
-    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.8" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.10.0" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.10.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-http:4.0.26" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-config:4.0.26" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-jmx:4.0.26" level="project" />
