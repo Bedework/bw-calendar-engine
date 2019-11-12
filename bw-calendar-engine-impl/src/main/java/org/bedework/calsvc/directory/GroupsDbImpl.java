@@ -59,9 +59,6 @@ public class GroupsDbImpl extends AbstractDirImpl {
     return allGroups;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Groups#getGroupMaintOK()
-   */
   @Override
   public boolean getGroupMaintOK() {
     return true;
@@ -87,9 +84,6 @@ public class GroupsDbImpl extends AbstractDirImpl {
     group.setGroupMembers(cb.getMembers(group, false));
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Groups#addGroup(org.bedework.calfacade.BwGroup)
-   */
   @Override
   public void addGroup(final BwGroup group) throws CalFacadeException {
     if (findGroup(group.getAccount()) != null) {
@@ -98,17 +92,11 @@ public class GroupsDbImpl extends AbstractDirImpl {
     cb.updateGroup(group, false);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#findGroup(java.lang.String)
-   */
   @Override
-  public BwGroup findGroup(final String name) throws CalFacadeException {
+  public BwGroup findGroup(final String name) {
     return cb.findGroup(name, false);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Groups#addMember(org.bedework.calfacade.BwGroup, org.bedework.calfacade.BwPrincipal)
-   */
   @Override
   public void addMember(final BwGroup group,
                         final BwPrincipal val) throws CalFacadeException {

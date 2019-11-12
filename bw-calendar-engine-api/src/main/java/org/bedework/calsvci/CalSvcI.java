@@ -44,7 +44,7 @@ import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
-import org.bedework.icalendar.IcalCallback;
+import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.sysevents.events.SysEventBase;
 
 import java.io.Serializable;
@@ -76,9 +76,9 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** (Re)initialise the object for a particular use.
    *
    * @param pars        Defines the global parameters for the object
-   * @throws CalFacadeException
+   * @throws RuntimeException on fatal errors
    */
-  public abstract void init(CalSvcIPars pars) throws CalFacadeException;
+  public abstract void init(CalSvcIPars pars);
 
   /** Return basic properties about the system.
    *

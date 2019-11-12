@@ -56,7 +56,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   private static DirectoryInfo dirInfo;
 
   @Override
-  public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
+  public BwPrincipal getPrincipal(final String href) {
     if (dirInfo == null) {
       dirInfo = getDirectoryInfo();
     }
@@ -166,10 +166,10 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
    *
    * @param  name             String group name
    * @return AdminGroupVO   group object
-   * @exception CalFacadeException If there's a problem
+   * @exception RuntimeException If there's a problem
    */
   @Override
-  public BwGroup findGroup(final String name) throws CalFacadeException {
+  public BwGroup findGroup(final String name) {
     return cb.findGroup(name, true);
   }
 

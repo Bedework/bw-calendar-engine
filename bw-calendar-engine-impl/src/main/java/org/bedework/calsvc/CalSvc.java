@@ -99,7 +99,7 @@ import org.bedework.calsvci.SysparsI;
 import org.bedework.calsvci.TimeZonesStoreI;
 import org.bedework.calsvci.UsersI;
 import org.bedework.calsvci.ViewsI;
-import org.bedework.icalendar.IcalCallback;
+import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.caching.FlushMap;
@@ -247,12 +247,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   private IcalCallback icalcb;
 
   @Override
-  public void init(final CalSvcIPars parsParam) throws CalFacadeException {
+  public void init(final CalSvcIPars parsParam) {
     init(parsParam, false);
   }
 
   private void init(final CalSvcIPars parsParam,
-                    final boolean creating) throws CalFacadeException {
+                    final boolean creating) {
     pars = (CalSvcIPars)parsParam.clone();
 
     this.creating = creating;
@@ -332,14 +332,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
         SysEvent.makePrincipalEvent(SysEvent.SysCode.USER_SVCINIT,
                                                       getPrincipal(),
                                                       System.currentTimeMillis() - start));
-    } catch (final CalFacadeException cfe) {
-      rollbackTransaction();
-      cfe.printStackTrace();
-      throw cfe;
     } catch (final Throwable t) {
-      rollbackTransaction();
+      try {
+        rollbackTransaction();
+      } catch (final Throwable ignored) {}
       t.printStackTrace();
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     } finally {
       try {
         endTransaction();
@@ -970,7 +968,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public Directories getDirectories() throws CalFacadeException {
+  public Directories getDirectories() {
     if (isPublicAdmin() || isPublicAuth()) {
       return getAdminDirectories();
     }
@@ -979,7 +977,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public Directories getUserDirectories() throws CalFacadeException {
+  public Directories getUserDirectories() {
     if (userGroups != null) {
       return userGroups;
     }
@@ -989,14 +987,14 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       userGroups.init(getGroupsCallBack(),
                       configs);
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
 
     return userGroups;
   }
 
   @Override
-  public Directories getAdminDirectories() throws CalFacadeException {
+  public Directories getAdminDirectories() {
     if (adminGroups != null) {
       return adminGroups;
     }
@@ -1006,7 +1004,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       adminGroups.init(getGroupsCallBack(),
                        configs);
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
 
     return adminGroups;
@@ -1751,7 +1749,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     @Override
-    public void setStrictness(final int val) throws CalFacadeException {
+    public void setStrictness(final int val) {
       strictness = val;
     }
 
@@ -1761,12 +1759,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     @Override
-    public BwPrincipal getPrincipal() throws CalFacadeException {
+    public BwPrincipal getPrincipal() {
       return CalSvc.this.getPrincipal();
     }
 
     @Override
-    public BwPrincipal getOwner() throws CalFacadeException {
+    public BwPrincipal getOwner() {
       if (isPublicAdmin()) {
         return getUsersHandler().getPublicUser();
       }
@@ -1775,7 +1773,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     @Override
-    public String getCaladdr(final String val) throws CalFacadeException {
+    public String getCaladdr(final String val) {
       return getDirectories().userToCaladdr(val);
     }
 
@@ -1842,8 +1840,8 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     @Override
-    public Collection getEvent(final String colPath,
-                               final String guid)
+    public Collection<EventInfo> getEvent(final String colPath,
+                                          final String guid)
             throws CalFacadeException {
       return getEventsHandler().getByUid(colPath, guid,
                                          null,

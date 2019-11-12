@@ -20,7 +20,6 @@
 package org.bedework.calsvci;
 
 import org.bedework.calfacade.configs.Configurations;
-import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
 
@@ -33,19 +32,16 @@ public interface CalSvcFactory extends Serializable {
    *
    * @param pars
    * @return initialised CalSvcI instance
-   * @throws CalFacadeException
    */
-  CalSvcI getSvc(CalSvcIPars pars) throws CalFacadeException;
+  CalSvcI getSvc(CalSvcIPars pars);
 
   /**
    * @return schema builder
-   * @throws CalFacadeException
    */
-  SchemaBuilder getSchemaBuilder() throws CalFacadeException;
+  SchemaBuilder getSchemaBuilder();
 
   /**
    * @return a system config class.
-   * @throws CalFacadeException
    */
-  Configurations getSystemConfig() throws CalFacadeException;
+  Configurations getSystemConfig();
 }

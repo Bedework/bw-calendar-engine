@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.icalendar;
+package org.bedework.calfacade.ifs;
 
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -40,9 +40,8 @@ public interface IcalCallback extends Serializable {
   /** Set the conformance
    *
    * @param val
-   * @throws CalFacadeException
    */
-  void setStrictness(int val) throws CalFacadeException;
+  void setStrictness(int val);
 
   /** Get the conformance level. This relates to handling itip etc.
    * Should we be extra picky, just complain or let it all through.
@@ -53,9 +52,8 @@ public interface IcalCallback extends Serializable {
    * can be more relaxed about things.
    *
    * @return int level of conformance.
-   * @throws CalFacadeException
    */
-  int getStrictness() throws CalFacadeException;
+  int getStrictness();
 
   // ENUM
   /** */
@@ -70,25 +68,22 @@ public interface IcalCallback extends Serializable {
   /** Get the current principal
    *
    * @return BwPrincipal object
-   * @throws CalFacadeException
    */
-  BwPrincipal getPrincipal() throws CalFacadeException;
+  BwPrincipal getPrincipal();
 
   /** Get the current principal to set as owner
    *
    * @return BwPrincipal object
-   * @throws CalFacadeException
    */
-  BwPrincipal getOwner() throws CalFacadeException;
+  BwPrincipal getOwner();
 
   /** Return a calendar user address corresponding to the supplied value. We may
    * have been supplied with a user principal.
    *
-   * @param val
+   * @param val user account or principal
    * @return caladdr of form mailto:x@y we hope.
-   * @throws CalFacadeException
    */
-  String getCaladdr(String val) throws CalFacadeException;
+  String getCaladdr(String val);
 
   /** Look for the given category for this user. Return null for not found.
    * This returns a persistent object and is only for use when

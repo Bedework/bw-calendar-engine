@@ -23,7 +23,7 @@ import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTableEntry;
-import org.bedework.icalendar.IcalCallback;
+import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.XcalUtil.TzGetter;
 import org.bedework.webdav.servlet.shared.WebdavException;

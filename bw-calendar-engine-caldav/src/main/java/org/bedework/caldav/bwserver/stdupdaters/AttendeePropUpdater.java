@@ -24,7 +24,6 @@ import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwOrganizer;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.misc.Util;
 import org.bedework.webdav.servlet.shared.WebdavException;
@@ -43,99 +42,95 @@ import java.util.Set;
  */
 public class AttendeePropUpdater implements PropertyUpdater {
   public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
-    try {
-      ChangeTableEntry cte = ui.getCte();
-      BwEvent ev = ui.getEvent();
+    ChangeTableEntry cte = ui.getCte();
+    BwEvent ev = ui.getEvent();
 
-      Set<BwAttendee> atts = ev.getAttendees();
+    Set<BwAttendee> atts = ev.getAttendees();
 
-      AttendeePropType pr = (AttendeePropType)ui.getProp();
+    AttendeePropType pr = (AttendeePropType)ui.getProp();
 
-      String attUri = ui.getIcalCallback().getCaladdr(
-           ui.getIcalCallback().getPrincipal().getPrincipalRef());
+    String attUri = ui.getIcalCallback().getCaladdr(
+            ui.getIcalCallback().getPrincipal().getPrincipalRef());
 
-      /* Must have an organizer propery */
-      BwOrganizer org = ev.getOrganizer();
+    /* Must have an organizer propery */
+    BwOrganizer org = ev.getOrganizer();
 
-      if (org == null) {
-        return new UpdateResult("No organizer for attendee update");
+    if (org == null) {
+      return new UpdateResult("No organizer for attendee update");
+    }
+
+    boolean isOrganizer = attUri.equals(org.getOrganizerUri());
+
+    if (!isOrganizer) {
+      /* Options are pretty limited here - change partstat only to our own entry
+       */
+      if (!pr.getCalAddress().equals(attUri)) {
+        return new UpdateResult("Cannot update other attendees");
       }
 
-      boolean isOrganizer = attUri.equals(org.getOrganizerUri());
+      if (ui.isAdd() || ui.isRemove()) {
+        return new UpdateResult("Cannot add or remove attendees");
+      }
 
-      if (!isOrganizer) {
-        /* Options are pretty limited here - change partstat only to our own entry
-         */
-        if (!pr.getCalAddress().equals(attUri)) {
-          return new UpdateResult("Cannot update other attendees");
-        }
-
-        if (ui.isAdd() || ui.isRemove()) {
-          return new UpdateResult("Cannot add or remove attendees");
-        }
-
-        if (!ui.isChange()) {
-          // Nothing to do
-          return UpdateResult.getOkResult();
-        }
+      if (!ui.isChange()) {
+        // Nothing to do
+        return UpdateResult.getOkResult();
+      }
 
 //        return new UpdateResult("unimplemented - attendee update");
-        throw new WebdavException("Unimplemented - attendees update");
-      }
+      throw new WebdavException("Unimplemented - attendees update");
+    }
 
-      /* This is the organizer */
+    /* This is the organizer */
 
-      if (ui.isAdd()) {
-        if (!Util.isEmpty(atts)) {
-          for (BwAttendee att: atts) {
-            if (att.getAttendeeUri().equals(pr.getCalAddress())) {
-              // Already there
-              return UpdateResult.getOkResult();
-            }
-          }
-        }
-
-        BwAttendee newAtt = makeAttendee(pr);
-        ev.addAttendee(newAtt);
-        cte.addAddedValue(newAtt);
-
-        return UpdateResult.getOkResult();
-      }
-
-      if (ui.isRemove()) {
-        if (Util.isEmpty(atts)) {
-          // Nothing to remove
-          return UpdateResult.getOkResult();
-        }
-
-        BwAttendee remAtt = makeAttendee(pr);
-        if (ev.removeAttendee(remAtt)) {
-          cte.addRemovedValue(remAtt);
-        }
-
-        return UpdateResult.getOkResult();
-      }
-
-      if (ui.isChange()) {
-        // Change a value
-        if (Util.isEmpty(atts)) {
-          // Nothing to change
-          return new UpdateResult("No comment to change");
-        }
-
+    if (ui.isAdd()) {
+      if (!Util.isEmpty(atts)) {
         for (BwAttendee att: atts) {
           if (att.getAttendeeUri().equals(pr.getCalAddress())) {
-            // Found
-            throw new WebdavException("Unimplemented - attendees update");
-            //return UpdateResult.getOkResult();
+            // Already there
+            return UpdateResult.getOkResult();
           }
         }
+      }
+
+      BwAttendee newAtt = makeAttendee(pr);
+      ev.addAttendee(newAtt);
+      cte.addAddedValue(newAtt);
+
+      return UpdateResult.getOkResult();
+    }
+
+    if (ui.isRemove()) {
+      if (Util.isEmpty(atts)) {
+        // Nothing to remove
+        return UpdateResult.getOkResult();
+      }
+
+      BwAttendee remAtt = makeAttendee(pr);
+      if (ev.removeAttendee(remAtt)) {
+        cte.addRemovedValue(remAtt);
       }
 
       return UpdateResult.getOkResult();
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
     }
+
+    if (ui.isChange()) {
+      // Change a value
+      if (Util.isEmpty(atts)) {
+        // Nothing to change
+        return new UpdateResult("No comment to change");
+      }
+
+      for (BwAttendee att: atts) {
+        if (att.getAttendeeUri().equals(pr.getCalAddress())) {
+          // Found
+          throw new WebdavException("Unimplemented - attendees update");
+          //return UpdateResult.getOkResult();
+        }
+      }
+    }
+
+    return UpdateResult.getOkResult();
   }
 
   private BwAttendee makeAttendee(final AttendeePropType pr) {

@@ -48,7 +48,7 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
   }
   
   @Override
-  public CalSvcI getSvc(final CalSvcIPars pars) throws CalFacadeException {
+  public CalSvcI getSvc(final CalSvcIPars pars) {
     final CalSvcI svc = 
             (CalSvcI)loadInstance(defaultSvciClass,
                                   CalSvcI.class);
@@ -59,13 +59,13 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
   }
 
   @Override
-  public SchemaBuilder getSchemaBuilder() throws CalFacadeException {
+  public SchemaBuilder getSchemaBuilder() {
     return (SchemaBuilder)loadInstance(schemaBuilderClass,
                                        SchemaBuilder.class);
   }
 
   @Override
-  public Configurations getSystemConfig() throws CalFacadeException {
+  public Configurations getSystemConfig() {
     if (conf != null) {
       return conf;
     }
@@ -82,7 +82,7 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
     }
   }
 
-  public static Properties getPr() throws CalFacadeException {
+  public static Properties getPr() {
     try {
       final SystemProperties sysProps = 
               CalSvcFactoryDefault.getSystemProperties();
@@ -108,11 +108,9 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
       pr.load(new StringReader(sb.toString()));
 
       return pr;
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
     } catch (final Throwable t) {
       //Logger.getLogger(CalSvcFactoryDefault.class.getName()).throwing(CalSvcFactory.class, t);
-      throw new CalFacadeException(t.getMessage());
+      throw new RuntimeException(t);
     }
   }
 

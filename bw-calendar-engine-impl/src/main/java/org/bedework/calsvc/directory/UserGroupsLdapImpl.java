@@ -147,20 +147,11 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
     throw new CalFacadeUnimplementedException();
   }
 
-  /** Find a group given its name
-   *
-   * @param  name             String group name
-   * @return AdminGroupVO   group object
-   * @exception CalFacadeException If there's a problem
-   */
   @Override
-  public BwGroup findGroup(final String name) throws CalFacadeException {
+  public BwGroup findGroup(final String name) {
     return findGroup(getProps(), name);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.svc.AdminGroups#addMember(org.bedework.calfacade.BwGroup, org.bedework.calfacade.BwPrincipal)
-   */
   @Override
   public void addMember(final BwGroup group, final BwPrincipal val) throws CalFacadeException {
     BwGroup ag = findGroup(group.getAccount());
@@ -371,8 +362,8 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
   /* Search for a group to ensure it exists
    *
    */
-  private BwGroup findGroup(final DirConfigProperties dirProps, final String groupName)
-          throws CalFacadeException {
+  private BwGroup findGroup(final DirConfigProperties dirProps,
+                            final String groupName) {
     LdapConfigProperties props = (LdapConfigProperties)dirProps;
     InitialLdapContext ctx = null;
 
@@ -406,7 +397,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
       if (debug()) {
         error(t);
       }
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     } finally {
       // Close the context to release the connection
       if (ctx != null) {

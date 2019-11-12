@@ -265,7 +265,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
     return false;
   }
-  public static BwPrincipal makePrincipal(final String href) throws CalFacadeException {
+  public static BwPrincipal makePrincipal(final String href) {
     try {
       if (href.startsWith(calsuitePrincipalRoot)) {
         return new BwCalSuitePrincipal();
@@ -326,10 +326,8 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
       }
 
       throw new CalFacadeException(CalFacadeException.principalNotFound);
-    } catch (CalFacadeException cfe) {
-      throw cfe;
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 

@@ -24,6 +24,7 @@ import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwFreeBusyComponent;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.util.calendar.IcalDefs;

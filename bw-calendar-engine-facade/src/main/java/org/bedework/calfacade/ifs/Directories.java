@@ -58,42 +58,38 @@ public interface Directories extends Serializable {
      * </ul>
      *
      * @return String    globally unique system identifier.
-     * @throws CalFacadeException
      */
-    public abstract String getSysid() throws CalFacadeException;
+    public abstract String getSysid();
 
     /**
      * @return BwUser representing current user
-     * @throws CalFacadeException
      */
-    public abstract BwPrincipal getCurrentUser() throws CalFacadeException;
+    public abstract BwPrincipal getCurrentUser();
 
     /** Find a group given its account name
      *
      * @param  account           String group name
      * @param admin          true for an admin group
      * @return BwGroup        group object
-     * @exception CalFacadeException If there's a problem
+     * @exception RuntimeException If there's a problem
      */
     public abstract BwGroup findGroup(final String account,
-                                      boolean admin) throws CalFacadeException;
+                                      boolean admin);
 
     /**
      * @param group
      * @param admin          true for an admin group
      * @return Collection
-     * @throws CalFacadeException
      */
     public abstract Collection<BwGroup> findGroupParents(final BwGroup group,
-                                                         boolean admin) throws CalFacadeException;
+                                                         boolean admin);
 
     /**
      * @param group
      * @param admin          true for an admin group
-     * @throws CalFacadeException
      */
     public abstract void updateGroup(final BwGroup group,
-                                     boolean admin) throws CalFacadeException;
+                                     boolean admin);
 
     /** Delete a group
      *
@@ -175,9 +171,8 @@ public interface Directories extends Serializable {
   /** Get application visible directory information.
    *
    * @return DirectoryInfo
-   * @throws CalFacadeException
    */
-  DirectoryInfo getDirectoryInfo() throws CalFacadeException;
+  DirectoryInfo getDirectoryInfo();
 
   /** Test for a valid principal in the directory. This may have a number of
    * uses. For example, when organizing meetings we may want to send an
@@ -197,9 +192,8 @@ public interface Directories extends Serializable {
    *
    * @param val
    * @return true if it's a (possible) principal
-   * @throws CalFacadeException
    */
-  boolean isPrincipal(String val) throws CalFacadeException;
+  boolean isPrincipal(String val);
 
   /** If this is a valid user principal return the account.
    *
@@ -287,9 +281,9 @@ public interface Directories extends Serializable {
    *
    * @param val        account
    * @return caladdr for this system
-   * @throws CalFacadeException  for errors
+   * @throws RuntimeException  for errors
    */
-  String userToCaladdr(String val) throws CalFacadeException;
+  String userToCaladdr(String val);
 
   /** Given a calendar address return the associated calendar account.
    * For example, we might have a calendar address<br/>
@@ -426,9 +420,9 @@ public interface Directories extends Serializable {
    *
    * @param  name           String group name
    * @return BwGroup        group object
-   * @exception CalFacadeException If there's a problem
+   * @exception RuntimeException If there's a problem
    */
-  BwGroup findGroup(String name) throws CalFacadeException;
+  BwGroup findGroup(String name);
 
   /** Add a principal to a group
    *

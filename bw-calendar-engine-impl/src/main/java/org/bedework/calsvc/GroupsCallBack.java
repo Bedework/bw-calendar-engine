@@ -36,31 +36,43 @@ public class GroupsCallBack extends Directories.CallBack {
   }
 
   @Override
-  public String getSysid() throws CalFacadeException {
+  public String getSysid() {
     return svci.getSystemProperties().getSystemid();
   }
 
   @Override
-  public BwPrincipal getCurrentUser() throws CalFacadeException {
+  public BwPrincipal getCurrentUser() {
     return svci.getPrincipal();
   }
 
   @Override
   public BwGroup findGroup(final String account,
-                           final boolean admin) throws CalFacadeException {
-    return svci.getCal().findGroup(account, admin);
+                           final boolean admin) {
+    try {
+      return svci.getCal().findGroup(account, admin);
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 
   @Override
   public Collection<BwGroup> findGroupParents(final BwGroup group,
-                                              final boolean admin) throws CalFacadeException {
-    return svci.getCal().findGroupParents(group, admin);
+                                              final boolean admin) {
+    try {
+      return svci.getCal().findGroupParents(group, admin);
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 
   @Override
   public void updateGroup(final BwGroup group,
-                          final boolean admin) throws CalFacadeException {
-    svci.getCal().updateGroup(group, admin);
+                          final boolean admin) {
+    try {
+      svci.getCal().updateGroup(group, admin);
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 
   @Override

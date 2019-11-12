@@ -224,7 +224,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public DirectoryInfo getDirectoryInfo() throws CalFacadeException {
+  public DirectoryInfo getDirectoryInfo() {
     final DirectoryInfo info = new DirectoryInfo();
 
     info.setPrincipalRoot(BwPrincipal.principalRoot);
@@ -239,9 +239,6 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     return info;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#validPrincipal(java.lang.String)
-   */
   @Override
   public synchronized boolean validPrincipal(final String href) throws CalFacadeException {
     // XXX Not sure how we might use this for admin users.
@@ -634,7 +631,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public boolean isPrincipal(final String val) throws CalFacadeException {
+  public boolean isPrincipal(final String val) {
     return BwPrincipal.isPrincipal(val);
   }
 
@@ -660,7 +657,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
+  public BwPrincipal getPrincipal(final String href) {
     return BwPrincipal.makePrincipal(href);
   }
 
@@ -774,7 +771,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
    * @see org.bedework.calfacade.ifs.Directories#userToCaladdr(java.lang.String)
    */
   @Override
-  public String userToCaladdr(final String val) throws CalFacadeException {
+  public String userToCaladdr(final String val) {
     /* Override this to do directory lookups or query vcard. The following
      * transforms may be insufficient
      */
@@ -832,10 +829,8 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       userToCalAddrMap.put(val, ca);
 
       return ca;
-    } catch (CalFacadeException cfe) {
-      throw cfe;
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -1035,11 +1030,11 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     validPrincipals.put(href, href);
   }
 
-  protected DirConfigProperties getProps() throws CalFacadeException {
+  protected DirConfigProperties getProps() {
     return dirProps;
   }
 
-  protected BasicSystemProperties getSystemRoots() throws CalFacadeException {
+  protected BasicSystemProperties getSystemRoots() {
     if (sysRoots != null) {
       return sysRoots;
     }

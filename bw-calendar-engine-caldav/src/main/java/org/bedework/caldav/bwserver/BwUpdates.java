@@ -30,7 +30,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
-import org.bedework.icalendar.IcalCallback;
+import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.icalendar.IcalTranslator;
 import org.bedework.icalendar.Xalarms;
 import org.bedework.util.calendar.IcalDefs;

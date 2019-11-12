@@ -16,11 +16,6 @@
 			<artifactId>bw-calendar-engine-facade</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-calendar-engine-api</artifactId>
-			<version>${project.version}</version>
-		</dependency>
 
     <dependency>
       <groupId>org.bedework</groupId>

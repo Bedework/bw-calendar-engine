@@ -30,6 +30,7 @@ import org.bedework.calfacade.base.AbbreviatedValue;
 import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.base.TypedUrl;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.ChangeTable;
