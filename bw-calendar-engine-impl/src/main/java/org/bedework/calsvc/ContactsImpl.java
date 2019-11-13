@@ -46,7 +46,6 @@ public class ContactsImpl
     super(svci);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void init(final boolean adminCanEditAllPublic) {
     super.init(BwContact.class.getCanonicalName(),
@@ -83,8 +82,15 @@ public class ContactsImpl
   }
 
   @Override
-  public boolean exists(final BwContact val) throws CalFacadeException {
-    return findPersistent(val.getFinderKeyValue(), val.getOwnerHref()) != null;
+  public boolean exists(final Response resp,
+                        final BwContact val) {
+    try {
+      return findPersistent(val.getFinderKeyValue(),
+                                     val.getOwnerHref()) != null;
+    } catch (final Throwable t) {
+      Response.error(resp, t);
+      return false;
+    }
   }
 
   @Override

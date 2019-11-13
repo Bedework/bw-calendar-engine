@@ -30,7 +30,6 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.timezones.Timezones;
-import org.bedework.util.timezones.TimezonesException;
 
 import ietf.params.xml.ns.icalendar_2.DateDatetimePropertyType;
 import net.fortuna.ical4j.model.Date;
@@ -50,6 +49,8 @@ import net.fortuna.ical4j.model.property.Due;
 import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Comparator;
+
+import static org.bedework.calfacade.exc.CalFacadeException.badDate;
 
 /** Class to represent an RFC2445 date and datetime type. These are not stored
  * in separate tables but as components of the including class.
@@ -95,7 +96,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Constructor
    */
-  private BwDateTime() {
+  public BwDateTime() {
   }
 
   /** Constructor
@@ -104,15 +105,14 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * @param date
    * @param tzid
    * @return initialised BwDateTime
-   * @throws CalFacadeException
    */
   public static BwDateTime makeBwDateTime(final boolean dateType,
                                           final String date,
-                                          final String tzid) throws CalFacadeException {
+                                          final String tzid) {
     try {
       if (dateType) {
         if (!DateTimeUtil.isISODate(date)) {
-          throw new CalFacadeException("org.bedework.datetime.expect.dateonly");
+          throw new RuntimeException("org.bedework.datetime.expect.dateonly");
         }
       }
 
@@ -133,15 +133,10 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       }
 
       return bwd;
-    } catch (TimezonesException tze) {
-      if (tze.getMessage().equals(TimezonesException.unknownTimezone)) {
-        throw new CalFacadeException(CalFacadeException.unknownTimezone,
-                                     tze.getExtra());
-      } else {
-        throw new CalFacadeBadDateException();
-      }
+    } catch (RuntimeException rte) {
+      throw rte;
     } catch (Throwable t) {
-      throw new CalFacadeBadDateException();
+      throw new RuntimeException(t);
     }
   }
 
@@ -186,9 +181,8 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    *
    * @param val
    * @return BwDateTime
-   * @throws CalFacadeException
    */
-  public static BwDateTime makeBwDateTime(final DateProperty val) throws CalFacadeException {
+  public static BwDateTime makeBwDateTime(final DateProperty val) {
     Parameter par = getIcalParameter(val, "VALUE");
 
     BwDateTime bwdt = makeBwDateTime((par != null) && (par.equals(Value.DATE)),
@@ -208,9 +202,8 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    *
    * @param val
    * @return BwDateTime
-   * @throws CalFacadeException
    */
-  public static BwDateTime makeBwDateTime(final DateDatetimePropertyType val) throws CalFacadeException {
+  public static BwDateTime makeBwDateTime(final DateDatetimePropertyType val) {
     XcalUtil.DtTzid dtTzid = XcalUtil.getDtTzid(val);
 
     BwDateTime bwdt = makeBwDateTime(dtTzid.dateOnly,
@@ -225,10 +218,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * @param val
    * @param tzid
    * @return BwDateTime
-   * @throws CalFacadeException
    */
   public static BwDateTime makeBwDateTime(final DateDatetimePropertyType val,
-                                          final String tzid) throws CalFacadeException {
+                                          final String tzid) {
     XcalUtil.DtTzid dtTzid = XcalUtil.getDtTzid(val);
 
     BwDateTime bwdt = makeBwDateTime(dtTzid.dateOnly,
@@ -241,9 +233,8 @@ public class BwDateTime extends DumpEntity<BwDateTime>
   /**
    * @param val
    * @return initialised BwDateTime
-   * @throws CalFacadeException
    */
-  public static BwDateTime makeBwDateTime(final Date val) throws CalFacadeException {
+  public static BwDateTime makeBwDateTime(final Date val) {
     String tzid = null;
     boolean dateType = true;
 
@@ -264,11 +255,10 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * @param dateOnly
    * @param dur
    * @return BwDateTime
-   * @throws CalFacadeException
    */
   public static BwDateTime makeDateTime(final DateProperty dtStart,
                                         final boolean dateOnly,
-                                        final Dur dur) throws CalFacadeException {
+                                        final Dur dur) {
     DtEnd dtEnd;
     java.util.Date endDt = dur.getTime(dtStart.getDate());
 
@@ -306,15 +296,15 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Create from utc time
    *
-   * @param dateType
-   * @param date
+   * @param dateType true for date only
+   * @param date the UTC value
    * @return initialised BwDateTime
-   * @throws CalFacadeException
+   * @throws RuntimeException on bad date
    */
   public static BwDateTime fromUTC(final boolean dateType,
-                                   final String date) throws CalFacadeException {
+                                   final String date) {
     if (!dateType && !date.endsWith("Z")) {
-      throw new CalFacadeBadDateException();
+      throw new RuntimeException(badDate);
     }
 
     BwDateTime bwd = new BwDateTime();
@@ -655,11 +645,10 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * breaking a collection of events up into days.
    *
    * @return BwDateTime tomorrow
-   * @throws CalFacadeException
    */
-  public BwDateTime getNextDay() throws CalFacadeException {
+  public BwDateTime getNextDay() {
     if (!getDateType()) {
-      throw new CalFacadeException("org.bedework.datetime.expect.dateonly");
+      throw new RuntimeException("org.bedework.datetime.expect.dateonly");
     }
 
     try {
@@ -674,10 +663,8 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       }
 
       return makeBwDateTime(dt);
-    } catch (CalFacadeException cfe) {
-      throw cfe;
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 

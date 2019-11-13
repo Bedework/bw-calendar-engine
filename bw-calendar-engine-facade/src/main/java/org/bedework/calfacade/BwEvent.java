@@ -2374,17 +2374,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     endType = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.StartEndComponent#getEndType()
-   */
   @Override
   public char getEndType() {
     return endType;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.StartEndComponent#setDuration(java.lang.String)
-   */
   @Override
   @NoProxy
   @IcalProperty(pindex = PropertyInfoIndex.DURATION,
@@ -2398,9 +2392,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    duration = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.StartEndComponent#getDuration()
-   */
   @Override
   public String getDuration() {
     return duration;
@@ -2732,12 +2723,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   /** Find an attendee entry for the given uri (calendar address).
    *
-   * @param uri
+   * @param uri to find
    * @return BwAttendee or null if none exists
-   * @throws CalFacadeException
    */
   @NoProxy
-  public BwAttendee findAttendee(final String uri) throws CalFacadeException {
+  public BwAttendee findAttendee(final String uri) {
     if (getNumAttendees() == 0) {
       return null;
     }
@@ -2787,9 +2777,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#setRecipients(java.util.Set)
-   */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.RECIPIENT,
                 jname = "recipient",
@@ -2802,18 +2789,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     recipients = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#getRecipients()
-   */
   @Override
   @Dump(collectionElementName = "recipient")
   public Set<String> getRecipients() {
     return recipients;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#getNumRecipients()
-   */
   @Override
   @NoProxy
   @NoDump
@@ -2826,9 +2807,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return rs.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#addRecipient(java.lang.String)
-   */
   @Override
   @NoProxy
   public void addRecipient(final String val) {
@@ -3940,11 +3918,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param userHref
    * @param val
    * @return non-null if x-prop is added for this user
-   * @throws CalFacadeException
    */
   @NoProxy
   public BwXproperty setPeruserTransparency(final String userHref,
-                                            final String val) throws CalFacadeException {
+                                            final String val) {
     if (userHref.equals(getOwnerHref())) {
       setTransparency(val);
       return null;
@@ -3969,16 +3946,16 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param userHref or null
    *
    * @return String   the event's transparency
-   * @throws CalFacadeException
    */
   @NoProxy
-  public String getPeruserTransparency(final String userHref) throws CalFacadeException {
+  public String getPeruserTransparency(final String userHref) {
     if ((userHref == null) ||
             userHref.equals(getOwnerHref())) {
       return getTransparency();
     }
 
-    final BwXproperty pu = findPeruserXprop(userHref, BwXproperty.peruserPropTransp);
+    final BwXproperty pu = findPeruserXprop(userHref,
+                                            BwXproperty.peruserPropTransp);
 
     if (pu == null) {
       return getTransparency();
@@ -3991,11 +3968,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    * @param userHref of user who owns property
    * @param name of property
    * @return x-prop for this user if found
-   * @throws CalFacadeException
    */
   @NoProxy
   public BwXproperty findPeruserXprop(final String userHref,
-                                      final String name) throws CalFacadeException {
+                                      final String name) {
     final List<BwXproperty> pus = getXproperties(name);
 
     for (final BwXproperty pu: pus) {

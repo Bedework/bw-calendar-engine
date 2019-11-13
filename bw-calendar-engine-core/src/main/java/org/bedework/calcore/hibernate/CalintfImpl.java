@@ -237,18 +237,18 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public boolean getDbStatsEnabled() throws CalFacadeException {
+  public boolean getDbStatsEnabled() {
     return dbStats != null && dbStats.isStatisticsEnabled();
 
   }
 
   @Override
-  public void dumpDbStats() throws CalFacadeException {
+  public void dumpDbStats() {
     DbStatistics.dumpStats(dbStats);
   }
 
   @Override
-  public Collection<StatsEntry> getDbStats() throws CalFacadeException {
+  public Collection<StatsEntry> getDbStats() {
     return DbStatistics.getStats(dbStats);
   }
 
@@ -329,7 +329,7 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public synchronized void close() throws CalFacadeException {
+  public synchronized void close() {
     closeIndexers();
 
     if (killed) {
@@ -432,14 +432,22 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public void rollbackTransaction() throws CalFacadeException {
+  public void rollbackTransaction() {
     try {
       if (killed) {
         return;
       }
 
-      checkOpen();
-      sess.rollback();
+      try {
+        checkOpen();
+      } catch (final Throwable ignored) {
+        return;
+      }
+
+      try {
+        sess.rollback();
+      } catch (final Throwable ignored) {
+      }
     } finally {
       clearNotifications();
       synchronized (openIfs) {

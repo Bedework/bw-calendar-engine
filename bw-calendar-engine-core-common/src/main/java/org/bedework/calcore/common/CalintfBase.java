@@ -71,6 +71,7 @@ import java.util.concurrent.LinkedTransferQueue;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeCategory;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeContact;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
+import static org.bedework.calfacade.responses.Response.Status.failed;
 
 /** Base Implementation of CalIntf which throws exceptions for most methods.
 *
@@ -273,7 +274,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   }
 
   @Override
-  public String getCalendarNameFromType(final int calType) throws CalFacadeException {
+  public String getCalendarNameFromType(final int calType) {
     final String name;
     final BasicSystemProperties sys = getSyspars();
 
@@ -662,7 +663,7 @@ public abstract class CalintfBase implements Logged, Calintf {
    * ==================================================================== */
 
   @Override
-  public void postNotification(final SysEventBase ev) throws CalFacadeException {
+  public void postNotification(final SysEventBase ev) {
     if (!isOpen) {
       try {
         NotificationsHandlerFactory.post(ev);
@@ -678,7 +679,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   }
 
   @Override
-  public void flushNotifications() throws CalFacadeException {
+  public void flushNotifications() {
     try {
       while (!queuedNotifications.isEmpty()) {
         SysEventBase ev = null;
@@ -705,7 +706,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   }
 
   @Override
-  public void clearNotifications() throws CalFacadeException {
+  public void clearNotifications() {
     queuedNotifications.clear();
   }
 
@@ -737,6 +738,16 @@ public abstract class CalintfBase implements Logged, Calintf {
     if (!killed && !isOpen) {
       throw new CalFacadeException("Calintf call when closed");
     }
+  }
+
+  protected boolean checkOpen(final Response resp) {
+    if (!killed && !isOpen) {
+      resp.setStatus(failed);
+      resp.setMessage("Calintf call when closed");
+      return false;
+    }
+
+    return true;
   }
 
   /*

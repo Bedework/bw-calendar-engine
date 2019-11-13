@@ -265,9 +265,8 @@ public interface Directories extends Serializable {
    *
    * @param val        principal
    * @return caladdr
-   * @throws CalFacadeException  for errors
    */
-  String principalToCaladdr(BwPrincipal val) throws CalFacadeException;
+  String principalToCaladdr(BwPrincipal val);
 
   /** Given a user account return a calendar address.
    * For example, we might have an account<br/>

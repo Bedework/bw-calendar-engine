@@ -23,6 +23,7 @@ import org.bedework.util.misc.ToString;
 import java.io.Serializable;
 
 import static org.bedework.calfacade.responses.Response.Status.failed;
+import static org.bedework.calfacade.responses.Response.Status.notFound;
 import static org.bedework.calfacade.responses.Response.Status.ok;
 import static org.bedework.calfacade.responses.Response.Status.validationError;
 
@@ -45,6 +46,9 @@ public class Response implements Serializable {
     exists,
 
     noAccess,
+
+    /** message will contain a CalFacadeException constant **/
+    limitExceeded,
 
     failed
   }
@@ -85,11 +89,31 @@ public class Response implements Serializable {
    * @return a message or null
    */
   public String getMessage() {
-    return message;
+    if (message != null) {
+      return message;
+    }
+
+    if (exception != null) {
+      return exception.getMessage();
+    }
+
+    return null;
   }
   
   public boolean isOk() {
     return status == ok;
+  }
+
+  public boolean isNotFound() {
+    return status == notFound;
+  }
+
+  /**
+   *
+   * @return true for !ok and !notFound
+   */
+  public boolean isError() {
+    return !isOk() && !isNotFound();
   }
 
   /**
@@ -126,10 +150,24 @@ public class Response implements Serializable {
     return ok(new Response(), null);
   }
 
+  public static <T extends Response> T ok(final T resp) {
+    resp.setStatus(ok);
+    resp.setMessage(null);
+
+    return resp;
+  }
+
   public static <T extends Response> T ok(final T resp,
                                           final String msg) {
     resp.setStatus(ok);
     resp.setMessage(msg);
+
+    return resp;
+  }
+
+  public static <T extends Response> T notFound(final T resp) {
+    resp.setStatus(notFound);
+    resp.setMessage(null);
 
     return resp;
   }
@@ -147,11 +185,12 @@ public class Response implements Serializable {
                                                     final Response from) {
     resp.setStatus(from.getStatus());
     resp.setMessage(from.getMessage());
+    resp.setException(from.getException());
 
     return resp;
   }
 
-  public static <T extends Response> T error(final T resp, 
+  public static <T extends Response> T error(final T resp,
                                              final String msg) {
     return notOk(resp, failed, msg);
   }

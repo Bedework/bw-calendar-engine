@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
@@ -30,8 +31,6 @@ import org.bedework.calsvc.CalSvcDb;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
-
-import java.util.Collection;
 
 /** Abstract class to support processing of inbox scheduling messages.
  *
@@ -75,12 +74,13 @@ public abstract class InProcessor extends CalSvcDb {
    * @param inboxOwnerHref href of
    * @param attendeeAccepting - is this the result of a REPLY with PARTSTAT accept?
    * @param forceDelete - it's inbox noise, delete it
-   * @throws CalFacadeException on fatal error
+   * @return status
    */
-  public void pendingToInbox(final EventInfo ei,
-                             final String inboxOwnerHref,
-                             final boolean attendeeAccepting,
-                             final boolean forceDelete) throws CalFacadeException {
+  public Response pendingToInbox(final EventInfo ei,
+                                 final String inboxOwnerHref,
+                                 final boolean attendeeAccepting,
+                                 final boolean forceDelete) {
+    var resp = new Response();
     boolean delete = forceDelete;
 
     if (!delete) {
@@ -111,54 +111,70 @@ public abstract class InProcessor extends CalSvcDb {
       if (debug()) {
         debug("Delete event - don't move to inbox");
       }
-      getSvc().getEventsHandler().delete(ei, false);
-      return;
+
+      var delResp = deleteEvent(ei, false, false);
+      if (!delResp.isError()) {
+        return resp;
+      }
+
+      return Response.fromResponse(resp, delResp);
     }
 
-    final BwCalendar inbox = getSvc().getCalendarsHandler().
-            getSpecial(BwCalendar.calTypeInbox, false);
-    if (inbox == null) {
-      return;
-    }
+    try {
+      final BwCalendar inbox = getSvc().getCalendarsHandler().
+              getSpecial(BwCalendar.calTypeInbox, false);
+      if (inbox == null) {
+        return resp;
+      }
 
 //      if (vpoll) {
-        /* Delete other notifications for the same event
-         * NOTE: DON'T for non-vpoll - this was deleting changes that had to
-         * be processed. Still an opportunity to improve this though.
-         */
+      /* Delete other notifications for the same event
+       * NOTE: DON'T for non-vpoll - this was deleting changes that had to
+       * be processed. Still an opportunity to improve this though.
+       */
 
-    final Collection<EventInfo> inevs = getEventsByUid(inbox.getPath(),
-                                                       ev.getUid());
+      final var inevs = getEventsByUid(inbox.getPath(),
+                                       ev.getUid());
 
-    for (final EventInfo inei : inevs) {
-      final BwEvent inev = inei.getEvent();
-
-      if (inev.getScheduleState() != BwEvent.scheduleStateProcessed) {
-        continue;
+      if (inevs.isError()) {
+        return Response.fromResponse(resp, inevs);
       }
 
-          /* Discard the earlier message */
+      for (final EventInfo inei : inevs.getEntities()) {
+        final BwEvent inev = inei.getEvent();
 
-      if (debug()) {
-        debug("delete earlier? event from inbox: " + inev
-                .getName());
+        if (inev.getScheduleState() != BwEvent.scheduleStateProcessed) {
+          continue;
+        }
+
+        /* Discard the earlier message */
+
+        if (debug()) {
+          debug("delete earlier? event from inbox: " + inev
+                  .getName());
+        }
+        deleteEvent(inei, true, false);
       }
-      deleteEvent(inei, true, false);
-    }
 //      }
 
-    if (debug()) {
-      debug("set event to scheduleStateProcessed: " + ev.getName());
+      if (debug()) {
+        debug("set event to scheduleStateProcessed: " + ev.getName());
+      }
+
+      final ChangeTable chg = ei.getChangeset(inboxOwnerHref);
+
+      chg.changed(PropertyIndex.PropertyInfoIndex.SCHEDULE_STATE,
+                  ev.getScheduleState(),
+                  BwEvent.scheduleStateProcessed);
+      ev.setScheduleState(BwEvent.scheduleStateProcessed);
+      chg.changed(PropertyIndex.PropertyInfoIndex.COLPATH,
+                  ev.getColPath(), inbox.getPath());
+      ev.setColPath(inbox.getPath());
+      getSvc().getEventsHandler().update(ei, true, null);
+    } catch (final CalFacadeException cfe) {
+      return Response.error(resp, cfe);
     }
 
-    final ChangeTable chg = ei.getChangeset(inboxOwnerHref);
-
-    chg.changed(PropertyIndex.PropertyInfoIndex.SCHEDULE_STATE,
-                ev.getScheduleState(), BwEvent.scheduleStateProcessed);
-    ev.setScheduleState(BwEvent.scheduleStateProcessed);
-    chg.changed(PropertyIndex.PropertyInfoIndex.COLPATH,
-                ev.getColPath(), inbox.getPath());
-    ev.setColPath(inbox.getPath());
-    getSvc().getEventsHandler().update(ei, true, null);
+    return resp;
   }
 }

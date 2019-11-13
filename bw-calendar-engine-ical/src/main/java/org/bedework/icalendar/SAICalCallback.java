@@ -24,9 +24,9 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.ifs.IcalCallback;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.GetEntityResponse;
-
-import java.util.Collection;
+import org.bedework.calfacade.svc.EventInfo;
 
 /** Class to allow icaltranslator to be used from a standalone non-bedework
  * caldav server.
@@ -75,7 +75,7 @@ public class SAICalCallback implements IcalCallback {
   }
 
   @Override
-  public BwCategory findCategory(final BwString val) {
+  public GetEntityResponse<BwCategory> findCategory(final BwString val) {
     return null;
   }
 
@@ -84,12 +84,12 @@ public class SAICalCallback implements IcalCallback {
   }
 
   @Override
-  public BwContact getContact(final String uid) {
+  public GetEntityResponse<BwContact> getContact(final String uid) {
     return null;
   }
 
   @Override
-  public BwContact findContact(final BwString val) {
+  public GetEntityResponse<BwContact> findContact(final BwString val) {
     return null;
   }
 
@@ -98,12 +98,7 @@ public class SAICalCallback implements IcalCallback {
   }
 
   @Override
-  public BwLocation getLocation(final String uid) {
-    return null;
-  }
-
-  @Override
-  public BwLocation getLocation(final BwString address) {
+  public GetEntityResponse<BwLocation> getLocation(final String uid) {
     return null;
   }
 
@@ -115,7 +110,7 @@ public class SAICalCallback implements IcalCallback {
   }
 
   @Override
-  public BwLocation findLocation(final BwString address) {
+  public GetEntityResponse<BwLocation> findLocation(final BwString address) {
     return null;
   }
 
@@ -130,9 +125,8 @@ public class SAICalCallback implements IcalCallback {
   }
 
   @Override
-  public Collection getEvent(final String colPath,
-                             final String guid)
-          {
+  public GetEntitiesResponse<EventInfo> getEvent(final String colPath,
+                                                 final String guid) {
     return null;
   }
 

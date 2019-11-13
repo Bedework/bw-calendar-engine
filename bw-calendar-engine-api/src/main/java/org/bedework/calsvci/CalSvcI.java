@@ -203,16 +203,14 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /**
    *
    * @return info for this interface
-   * @throws CalFacadeException on fatal error
    */
-  public abstract IfInfo getIfInfo() throws CalFacadeException;
+  public abstract IfInfo getIfInfo();
 
   /**
    *
    * @return list of info about open interfaces
-   * @throws CalFacadeException
    */
-  public abstract List<IfInfo> getActiveIfInfos() throws CalFacadeException;
+  public abstract List<IfInfo> getActiveIfInfos();
 
   /** Kill an errant interface.
    *
@@ -223,9 +221,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /**
    *
    * @param val a hopefully informative message
-   * @throws CalFacadeException
    */
-  public abstract void setState(String val) throws CalFacadeException;
+  public abstract void setState(String val);
 
   /** Send a notification event
    *
@@ -300,16 +297,14 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
 
   /** Call if there has been an error during an update process.
    *
-   * @throws CalFacadeException
    */
-  public abstract void rollbackTransaction() throws CalFacadeException;
+  public abstract void rollbackTransaction();
 
   /** Only valid during a transaction.
    *
    * @return a timestamp from the db
-   * @throws CalFacadeException
    */
-  public abstract Timestamp getCurrentTimestamp() throws CalFacadeException;
+  public abstract Timestamp getCurrentTimestamp();
 
   /**
    * @return a blob
@@ -366,30 +361,26 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Obtain an object which handles system parameters
    *
    * @return SysparsI handler
-   * @throws CalFacadeException
    */
-  public abstract SysparsI getSysparsHandler() throws CalFacadeException;
+  public abstract SysparsI getSysparsHandler();
 
   /** Get currently configured mailer.
    *
    * @return MailerIntf object of class in config
-   * @throws CalFacadeException
    */
-  public abstract MailerIntf getMailer() throws CalFacadeException;
+  public abstract MailerIntf getMailer();
 
   /** Obtain an object which handles user preferences
    *
    * @return PreferencesI   preferences handler
-   * @throws CalFacadeException
    */
-  public abstract PreferencesI getPrefsHandler() throws CalFacadeException;
+  public abstract PreferencesI getPrefsHandler();
 
   /** Obtain an object which handles admin functions
    *
    * @return AdminI   admin handler
-   * @throws CalFacadeException
    */
-  public abstract AdminI getAdminHandler() throws CalFacadeException;
+  public abstract AdminI getAdminHandler();
 
   /** Obtain an object which handles events
    *
@@ -406,16 +397,14 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Obtain an object which handles calendars
   *
   * @return CalendarsI   calendars handler
-  * @throws CalFacadeException
   */
-  public abstract CalendarsI getCalendarsHandler() throws CalFacadeException;
+  public abstract CalendarsI getCalendarsHandler();
 
   /** Obtain an object which handles calendar suites
    *
    * @return CalSuitesI handler
-   * @throws CalFacadeException
    */
-  public abstract CalSuitesI getCalSuitesHandler() throws CalFacadeException;
+  public abstract CalSuitesI getCalSuitesHandler();
 
   /**
    * @param publick true for public index
@@ -450,37 +439,32 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Obtain an object which handles notifications
    *
    * @return NotificationsI   notifications handler
-   * @throws CalFacadeException
    */
-  public abstract NotificationsI getNotificationsHandler() throws CalFacadeException;
+  public abstract NotificationsI getNotificationsHandler();
 
   /** Obtain an object which handles resources
    *
    * @return ResourcesI   resources handler
-   * @throws CalFacadeException
    */
-  public abstract ResourcesI getResourcesHandler() throws CalFacadeException;
+  public abstract ResourcesI getResourcesHandler();
 
   /** Get an object which implements scheduling methods.
    *
    * @return SchedulingI object
-   * @throws CalFacadeException
    */
-  public abstract SchedulingI getScheduler() throws CalFacadeException;
+  public abstract SchedulingI getScheduler();
 
   /** Obtain an object which handles sharing
    *
    * @return SharingI   sharing handler
-   * @throws CalFacadeException
    */
-  public abstract SharingI getSharingHandler() throws CalFacadeException;
+  public abstract SharingI getSharingHandler();
 
   /** Get an object which interacts with the synch engine.
    *
    * @return SynchI object
-   * @throws CalFacadeException
    */
-  public abstract SynchI getSynch() throws CalFacadeException;
+  public abstract SynchI getSynch();
 
   /** Obtain an object which handles user objects
    *
@@ -491,32 +475,28 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Obtain an object which handles views
    *
    * @return ViewsI handler
-   * @throws CalFacadeException
    */
-  public abstract ViewsI getViewsHandler() throws CalFacadeException;
+  public abstract ViewsI getViewsHandler();
 
   /** Return an object to handle directory information. This will be the default
    * object for the current usage, i.e. admin or user.
    *
    * @return Directories
-   * @throws CalFacadeException
    */
-  public abstract Directories getDirectories() throws CalFacadeException;
+  public abstract Directories getDirectories();
 
   /** Get a Groups object for non-admin users.
    *
    * @return Groups    implementation.
-   * @throws CalFacadeException
    */
-  public abstract Directories getUserDirectories() throws CalFacadeException;
+  public abstract Directories getUserDirectories();
 
   /** Get a Groups object for administrators. This allows the admin client to
    * display or manipulate administrator groups.
    *
    * @return Groups    implementation.
-   * @throws CalFacadeException
    */
-  public abstract Directories getAdminDirectories() throws CalFacadeException;
+  public abstract Directories getAdminDirectories();
 
   /* ====================================================================
    *                   Event Properties Factories
@@ -582,9 +562,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    *
    * @param href          String principal hierarchy path
    * @return BwPrincipal  representing the principal or null if not there
-   * @throws CalFacadeException
    */
-  public abstract BwPrincipal getPrincipal(final String href) throws CalFacadeException;
+  public abstract BwPrincipal getPrincipal(final String href);
 
   /** Get an initialised UserAuth object for the current user.
    *

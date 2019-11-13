@@ -94,11 +94,7 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
   }
 
   protected void rollback(final CalSvcI svci) {
-    try {
-      svci.rollbackTransaction();
-    } catch (final Throwable ignored) {
-      // Pretty much screwed  now
-    }
+    svci.rollbackTransaction();
   }
 
   protected void closeSvci(final CalSvcI svci) throws CalFacadeException {

@@ -34,6 +34,7 @@ import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
@@ -203,14 +204,16 @@ public class InRequest extends InProcessor {
     if (adding) {
       final String namePrefix = ourCopy.getEvent().getUid();
 
-      pr.sr.errorCode = sched.addEvent(ourCopy, namePrefix,
-                                       BwCalendar.calTypeCalendarCollection,
+      Response resp = sched.addEvent(ourCopy, namePrefix,
+                                     BwCalendar.calTypeCalendarCollection,
                                        noInvites);
-      if (pr.sr.errorCode != null) {
+      if (!resp.isOk()) {
         if (debug()) {
-          debug("Schedule - error " + pr.sr.errorCode +
+          debug("Schedule - error " + resp +
                 " adding event for " + owner);
         }
+
+        pr.sr.errorCode = resp.getMessage();
 
         return pr;
       }

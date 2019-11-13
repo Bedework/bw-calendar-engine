@@ -22,7 +22,7 @@ package org.bedework.caldav.bwserver.stdupdaters;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
 /**
@@ -34,41 +34,43 @@ public class CategoryPropUpdater extends LangTextListPropUpdater {
   protected void addValue(final BwEvent ev,
                           final BwString val,
                           final UpdateInfo ui) throws WebdavException {
-    try {
-      BwCategory cat = null;
-
-      if (ev.getNumCategories() == 0) {
-        // Nothing to do
-        return;
-      }
-
-      for (BwCategory evcat: ev.getCategories()) {
-        if (evcat.getWord().equals(val)) {
-          // Found the category attached to the event.
-          cat = evcat;
-          break;
-        }
-      }
-
-      if (cat != null) {
-        // Nothing to do
-        return;
-      }
-
-      cat = ui.getIcalCallback().findCategory(val);
-
-      if (cat == null) {
-        cat = BwCategory.makeCategory();
-        cat.setWord(val);
-
-        ui.getIcalCallback().addCategory(cat);
-      }
-
-      ev.addCategory(cat);
-      ui.getCte().addAddedValue(cat);
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    if (ev.getNumCategories() == 0) {
+      // Nothing to do
+      return;
     }
+
+    BwCategory cat = null;
+
+    for (BwCategory evcat: ev.getCategories()) {
+      if (evcat.getWord().equals(val)) {
+        // Found the category attached to the event.
+        cat = evcat;
+        break;
+      }
+    }
+
+    if (cat != null) {
+      // Nothing to do
+      return;
+    }
+
+    var resp = ui.getIcalCallback().findCategory(val);
+
+    if (resp.getStatus() == Response.Status.notFound) {
+      cat = BwCategory.makeCategory();
+      cat.setWord(val);
+
+      ui.getIcalCallback().addCategory(cat);
+    } else if (resp.isOk()) {
+      cat = resp.getEntity();
+    } else {
+      throw new WebdavException(ui.getPropName().toString() +
+                                        ": failed. Status: " + resp.getStatus() +
+                                        ", msg: " + resp.getMessage());
+    }
+
+    ev.addCategory(cat);
+    ui.getCte().addAddedValue(cat);
   }
 
   @Override

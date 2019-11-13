@@ -36,7 +36,9 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IcalCallback;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.GetEntityResponse;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.icalendar.Icalendar.TimeZoneInfo;
@@ -99,6 +101,7 @@ import java.util.TreeSet;
 
 import javax.xml.ws.Holder;
 
+import static org.bedework.calfacade.responses.Response.Status.failed;
 import static org.bedework.calfacade.responses.Response.Status.ok;
 
 /** Class to provide utility methods for translating to BwEvent from ical4j classes
@@ -145,16 +148,18 @@ public class BwEventUtil extends IcalUtil {
    * @param diff        True if we should assume we are updating existing events.
    * @param mergeAttendees True if we should only update our own attendee.
    * @return EventInfo  object representing new entry or updated entry
-   * @throws CalFacadeException on fatal error
    */
-  public static EventInfo toEvent(final IcalCallback cb,
-                                  final BwCalendar cal,
-                                  final Icalendar ical,
-                                  final Component val,
-                                  final boolean diff,
-                                  final boolean mergeAttendees) throws CalFacadeException {
+  public static GetEntityResponse<EventInfo> toEvent(
+          final IcalCallback cb,
+          final BwCalendar cal,
+          final Icalendar ical,
+          final Component val,
+          final boolean diff,
+          final boolean mergeAttendees) {
+    var resp = new GetEntityResponse<EventInfo>();
+
     if (val == null) {
-      return null;
+      return Response.notOk(resp, failed, "No component supplied");
     }
 
     String currentPrincipal = null;
@@ -210,8 +215,8 @@ public class BwEventUtil extends IcalUtil {
         entityType = IcalDefs.entityTypeVpoll;
         vpoll = true;
       } else {
-        throw new CalFacadeException("org.bedework.invalid.component.type",
-                                     val.getName());
+        return Response.error(resp, "org.bedework.invalid.component.type: " +
+                val.getName());
       }
 
       Property prop;
@@ -230,7 +235,7 @@ public class BwEventUtil extends IcalUtil {
         /* XXX A guid is required - but are there devices out there without a
          *       guid - and if so how do we handle it?
          */
-        throw new CalFacadeException(CalFacadeException.noGuid);
+        throw new RuntimeException(CalFacadeException.noGuid);
       }
 
       /* See if we have a recurrence id */
@@ -332,13 +337,18 @@ public class BwEventUtil extends IcalUtil {
           logger.debug("TRANS-TO_EVENT: try to fetch event with guid=" + guid);
         }
 
-        final Collection<EventInfo> eis = cb.getEvent(colPath, guid);
-        if (Util.isEmpty(eis)) {
-          // do nothing
-        } else if (eis.size() > 1) {
-          // DORECUR - wrong again
-          throw new CalFacadeException("More than one event returned for guid.");
-        } else {
+        final GetEntitiesResponse<EventInfo> eisResp =
+                cb.getEvent(colPath, guid);
+        if (eisResp.isError()) {
+          return Response.fromResponse(resp, eisResp);
+        }
+
+        var eis = eisResp.getEntities();
+        if (!Util.isEmpty(eis)) {
+          if (eis.size() > 1) {
+            // DORECUR - wrong again
+            throw new RuntimeException("More than one event returned for guid.");
+          }
           evinfo = eis.iterator().next();
         }
 
@@ -405,8 +415,9 @@ public class BwEventUtil extends IcalUtil {
       if (evinfo == null) {
         evinfo = makeNewEvent(cb, entityType, guid, colPath);
       } else if (evinfo.getEvent().getEntityType() != entityType) {
-        throw new CalFacadeException("org.bedework.mismatched.entity.type",
-                                     val.toString());
+        throw new RuntimeException(
+                "org.bedework.mismatched.entity.type: " +
+                        val.toString());
       }
 
       final ChangeTable chg = evinfo.getChangeset(cb.getPrincipal().getPrincipalRef());
@@ -491,7 +502,7 @@ public class BwEventUtil extends IcalUtil {
 
             if (methodType == ScheduleMethods.methodTypePublish) {
               if (cb.getStrictness() == IcalCallback.conformanceStrict) {
-                throw new CalFacadeException(
+                throw new RuntimeException(
                         CalFacadeException.attendeesInPublish);
               }
 
@@ -567,13 +578,20 @@ public class BwEventUtil extends IcalUtil {
 
                 BwString key = new BwString(lang, wd);
 
-                BwCategory cat = cb.findCategory(key);
+                var fcResp = cb.findCategory(key);
+                final BwCategory cat;
 
-                if (cat == null) {
+                if (fcResp.isError()) {
+                  return Response.fromResponse(resp, fcResp);
+                }
+
+                if (fcResp.isNotFound()) {
                   cat = BwCategory.makeCategory();
                   cat.setWord(key);
 
                   cb.addCategory(cat);
+                } else {
+                  cat = fcResp.getEntity();
                 }
 
                 chg.addValue(pi, cat);
@@ -619,11 +637,26 @@ public class BwEventUtil extends IcalUtil {
             BwContact contact = null;
 
             if (uid != null) {
-              contact = cb.getContact(uid);
+              var fcResp = cb.getContact(uid);
+
+              if (fcResp.isError()) {
+                return Response.fromResponse(resp, fcResp);
+              }
+
+              if (fcResp.isOk()) {
+                contact = fcResp.getEntity();
+              }
             }
 
             if (contact == null) {
-              contact = cb.findContact(nm);
+              var fcResp = cb.findContact(nm);
+              if (fcResp.isError()) {
+                return Response.fromResponse(resp, fcResp);
+              }
+
+              if (fcResp.isOk()) {
+                contact = fcResp.getEntity();
+              }
             }
 
             if (contact == null) {
@@ -723,8 +756,8 @@ public class BwEventUtil extends IcalUtil {
                 logger.debug("Unsupported parameter " + par.getName());
               }
 
-              throw new IcalMalformedException(
-                      "parameter " + par.getName());
+              throw new RuntimeException(
+                      "Unsupported parameter " + par.getName());
             }
 
             BwFreeBusyComponent fbc = new BwFreeBusyComponent();
@@ -777,7 +810,15 @@ public class BwEventUtil extends IcalUtil {
             if (pval != null) {
               if (loc == null) {
                 addr = new BwString(lang, pval);
-                loc = cb.findLocation(addr);
+
+                var fcResp = cb.findLocation(addr);
+                if (fcResp.isError()) {
+                  return Response.fromResponse(resp, fcResp);
+                }
+
+                if (fcResp.isOk()) {
+                  loc = fcResp.getEntity();
+                }
               }
 
               if (loc == null) {
@@ -1065,7 +1106,11 @@ public class BwEventUtil extends IcalUtil {
       }
 
       if (val instanceof VAvailability) {
-        processAvailable(cb, cal, ical, (VAvailability)val, evinfo);
+        var avlResp = processAvailable(cb, cal, ical,
+                                       (VAvailability)val, evinfo);
+        if (!avlResp.isOk()) {
+          return Response.fromResponse(resp, avlResp);
+        }
       } else if (!(val instanceof Available)) {
         VAlarmUtil.processComponentAlarms(cb, val, ev, currentPrincipal, chg);
         if (val instanceof VPoll) {
@@ -1143,17 +1188,18 @@ public class BwEventUtil extends IcalUtil {
         return null;
       }
 
-      return evinfo;
+      resp.setEntity(evinfo);
+      return resp;
     } catch (CalFacadeException cfe) {
       if (logger.debug()) {
         logger.error(cfe);
       }
-      throw cfe;
+      return Response.error(resp, cfe);
     } catch (Throwable t) {
       if (logger.debug()) {
         logger.error(t);
       }
-      throw new CalFacadeException(t);
+      return Response.error(resp, t);
     }
   }
 
@@ -1164,13 +1210,19 @@ public class BwEventUtil extends IcalUtil {
                                        final ChangeTable chg,
                                        final BwEvent ev,
                                        final String lang,
-                                       final String val) throws CalFacadeException {
+                                       final String val) {
     final BwString sval = new BwString(lang, val);
 
-    final BwCategory cat = cb.findCategory(sval);
+    var resp = cb.findCategory(sval);
 
-    if (cat == null) {
+    if (resp.getStatus() == Response.Status.notFound) {
       return false;
+    }
+
+    if (!resp.isOk()) {
+      throw new RuntimeException(
+              "Failed. Status: " + resp.getStatus() +
+                      ", msg: " + resp.getMessage());
     }
 
     final Set<BwCategory> cats = ev.getCategories();
@@ -1183,6 +1235,8 @@ public class BwEventUtil extends IcalUtil {
         }
       }
     }
+
+    var cat = resp.getEntity();
 
     ev.addCategory(cat);
 
@@ -1198,7 +1252,7 @@ public class BwEventUtil extends IcalUtil {
   private static boolean checkLocation(final IcalCallback cb,
                                        final ChangeTable chg,
                                        final BwEvent ev,
-                                       final Property prop) throws CalFacadeException {
+                                       final Property prop) {
     final Parameter keyName =
             prop.getParameter(XcalTags.xBedeworkLocationKey.getLocalPart());
     final String val = prop.getValue();
@@ -1233,15 +1287,24 @@ public class BwEventUtil extends IcalUtil {
                                       final ChangeTable chg,
                                       final BwEvent ev,
                                       final String lang,
-                                      final String val) throws CalFacadeException {
+                                      final String val) {
     final BwString sval = new BwString(lang, val);
-    final BwContact c = cb.findContact(sval);
 
-    if (c == null) {
+    var resp = cb.findContact(sval);
+
+    if (resp.getStatus() == Response.Status.notFound) {
       return false;
     }
 
+    if (!resp.isOk()) {
+      throw new RuntimeException(
+              "Failed. Status: " + resp.getStatus() +
+                      ", msg: " + resp.getMessage());
+    }
+
     final Set<BwContact> cs = ev.getContacts();
+
+    var c = resp.getEntity();
 
     if (cs != null) {
       for (final BwContact c1 : cs) {
@@ -1311,38 +1374,41 @@ public class BwEventUtil extends IcalUtil {
     }
   }
 
-  private static void processAvailable(final IcalCallback cb,
-                                       final BwCalendar cal,
-                                       final Icalendar ical,
-                                       final VAvailability val,
-                                       final EventInfo vavail) throws CalFacadeException {
+  private static Response processAvailable(final IcalCallback cb,
+                                           final BwCalendar cal,
+                                           final Icalendar ical,
+                                           final VAvailability val,
+                                           final EventInfo vavail) {
+    var resp = new Response();
 
-    try {
-      final ComponentList avls = val.getAvailable();
+    final ComponentList avls = val.getAvailable();
 
-      if ((avls == null) || avls.isEmpty()) {
-        return;
-      }
-
-      for (final Object o : avls) {
-        if (!(o instanceof Available)) {
-          throw new IcalMalformedException("Invalid available list");
-        }
-
-        final EventInfo availi = toEvent(cb, cal, ical, (Component)o,
-                                         true,
-                                         false);
-        availi.getEvent().setOwnerHref(
-                vavail.getEvent().getOwnerHref());
-
-        vavail.addContainedItem(availi);
-        vavail.getEvent().addAvailableUid(availi.getEvent().getUid());
-      }
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+    if ((avls == null) || avls.isEmpty()) {
+      return resp;
     }
+
+    for (final Object o : avls) {
+      if (!(o instanceof Available)) {
+        return Response.error(resp, "Invalid available list");
+      }
+
+      final GetEntityResponse<EventInfo> availi =
+              toEvent(cb, cal, ical, (Component)o,
+                      true,
+                      false);
+      if (!resp.isOk()) {
+        return Response.fromResponse(resp, availi);
+      }
+
+      var ei = availi.getEntity();
+      ei.getEvent().setOwnerHref(
+              vavail.getEvent().getOwnerHref());
+
+      vavail.addContainedItem(ei);
+      vavail.getEvent().addAvailableUid(ei.getEvent().getUid());
+    }
+
+    return resp;
   }
 
   private static void processVvoters(final VPoll val,
@@ -1498,7 +1564,7 @@ public class BwEventUtil extends IcalUtil {
   private static EventInfo makeNewEvent(final IcalCallback cb,
                                         final int entityType,
                                         final String uid,
-                                        final String colPath) throws CalFacadeException {
+                                        final String colPath) {
     final BwEvent ev = new BwEventObj();
     final EventInfo evinfo = new EventInfo(ev);
 

@@ -378,7 +378,11 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       }
 
       if (!sr.externalRcs.isEmpty()) {
-        sr.errorCode = addToOutBox(ei, outBox, sr.externalRcs);
+        var addResp = addToOutBox(ei, outBox, sr.externalRcs);
+
+        if (!addResp.isOk()) {
+          sr.errorCode = addResp.getMessage();
+        }
       }
 
       return sr;

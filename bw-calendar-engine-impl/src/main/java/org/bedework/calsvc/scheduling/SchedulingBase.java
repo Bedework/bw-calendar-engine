@@ -31,6 +31,7 @@ import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvc.CalSvc;
@@ -71,11 +72,10 @@ public abstract class SchedulingBase extends CalSvcDb
   * @param inBox - true if it's an inbox event (inbound)
   * @param principalHref
   * @param eventName
-  * @throws CalFacadeException
   */
   protected void addAutoScheduleMessage(final boolean inBox,
                                         final String principalHref,
-                                        final String eventName) throws CalFacadeException {
+                                        final String eventName) {
     try {
       postNotification(
                SysEvent.makeEntityQueuedEvent(SysEvent.SysCode.SCHEDULE_QUEUED,
@@ -84,7 +84,7 @@ public abstract class SchedulingBase extends CalSvcDb
                                               inBox));
     } catch (Throwable t) {
       error(t);
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -92,9 +92,8 @@ public abstract class SchedulingBase extends CalSvcDb
    *
    * @param ei
    * @return true if something important changed
-   * @throws CalFacadeException
    */
-  protected boolean significantChange(final EventInfo ei) throws CalFacadeException {
+  protected boolean significantChange(final EventInfo ei) {
     if (ei.getNewEvent() ||
         ei.getChangeset(getPrincipalHref()).getSignificantChange()) {
       return true;
@@ -131,11 +130,10 @@ public abstract class SchedulingBase extends CalSvcDb
    * @param ei
    * @param owner
    * @return a copy of the event.
-   * @throws CalFacadeException
    */
   @Override
   public EventInfo copyEventInfo(final EventInfo ei,
-                                 final BwPrincipal owner) throws CalFacadeException {
+                                 final BwPrincipal owner) {
     return copyEventInfo(ei, false, owner);
   }
 
@@ -146,11 +144,10 @@ public abstract class SchedulingBase extends CalSvcDb
    * @param significantChangesOnly
    * @param owner
    * @return a copy of the event.
-   * @throws CalFacadeException
    */
   protected EventInfo copyEventInfo(final EventInfo ei,
                                     final boolean significantChangesOnly,
-                                    final BwPrincipal owner) throws CalFacadeException {
+                                    final BwPrincipal owner) {
     BwEvent ev = ei.getEvent();
     BwEvent newEv = copyEvent(ev, null, owner);
     StringBuilder changeInfo = new StringBuilder();
@@ -321,7 +318,7 @@ public abstract class SchedulingBase extends CalSvcDb
 
   private void addChangeInfo(final EventInfo ei,
                              final StringBuilder changeInfo,
-                             final String entity) throws CalFacadeException {
+                             final String entity) {
     if (ei.getChangeset(getPrincipalHref()).isEmpty()) {
      // Forced update?
 
@@ -381,7 +378,7 @@ public abstract class SchedulingBase extends CalSvcDb
 
   protected BwEvent copyEvent(final BwEvent origEv,
                               final BwEvent masterEv,
-                              final BwPrincipal owner) throws CalFacadeException {
+                              final BwPrincipal owner) {
     final BwEvent newEv;
     BwEventProxy proxy = null;
     final String ownerHref = owner.getPrincipalRef();
@@ -466,10 +463,10 @@ public abstract class SchedulingBase extends CalSvcDb
   private static AtomicLong suffixValue = new AtomicLong();
 
   @Override
-  public String addEvent(final EventInfo ei,
-                         final String namePrefix,
-                         final int calType,
-                         final boolean noInvites) throws CalFacadeException {
+  public Response addEvent(final EventInfo ei,
+                           final String namePrefix,
+                           final int calType,
+                           final boolean noInvites) {
     final BwEvent ev = ei.getEvent();
     String prefix = namePrefix;
 
@@ -494,32 +491,33 @@ public abstract class SchedulingBase extends CalSvcDb
     for (int i = 0; i < 100; i++) {  // Avoid malicious users
       ev.setName(prefix + ".ics");
 
-      try {
-        getSvc().getEventsHandler().add(ei, noInvites,
-                                        schedulingBox,
-                                        true,
-                                        false);
+      var resp = getSvc().getEventsHandler().add(ei, noInvites,
+                                                 schedulingBox,
+                                                 true,
+                                                 false);
 
-        return null;
-      } catch (final CalFacadeException cfe) {
-        if (CalFacadeException.duplicateName.equals(cfe.getMessage())) {
-          prefix += suffixValue.getAndIncrement();
-          continue;    // Try again
-        }
-
-        if (CalFacadeException.duplicateGuid.equals(cfe.getMessage())) {
-          getSvc().rollbackTransaction();
-          return CalFacadeException.schedulingDuplicateUid;
-        }
-
-        throw cfe;
+      if (resp.isOk()) {
+        return resp;
       }
+
+      if (CalFacadeException.duplicateName.equals(resp.getMessage())) {
+        prefix += suffixValue.getAndIncrement();
+        continue;    // Try again
+      }
+
+      if (CalFacadeException.duplicateGuid.equals(resp.getMessage())) {
+        getSvc().rollbackTransaction();
+      }
+
+      return resp;
     }
 
     /* Ran out of tries. */
 
     getSvc().rollbackTransaction();
-    return CalFacadeException.duplicateName;
+
+    return Response.notOk(new Response(), Response.Status.failed,
+                          CalFacadeException.duplicateName);
   }
 
   /** Find the attendee in this event which corresponds to the current user

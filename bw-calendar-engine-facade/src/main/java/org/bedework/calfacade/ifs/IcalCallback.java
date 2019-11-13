@@ -23,12 +23,11 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.svc.EventInfo;
 
 import java.io.Serializable;
-import java.util.Collection;
 
 /** Allow the translation process to retrieve objects and information it might
  * need from the system.
@@ -57,13 +56,13 @@ public interface IcalCallback extends Serializable {
 
   // ENUM
   /** */
-  final static int conformanceRelaxed = 0;
+  int conformanceRelaxed = 0;
 
   /** */
-  final static int conformanceWarn = 1;
+  int conformanceWarn = 1;
 
   /** */
-  final static int conformanceStrict = 2;
+  int conformanceStrict = 2;
 
   /** Get the current principal
    *
@@ -89,56 +88,42 @@ public interface IcalCallback extends Serializable {
    * This returns a persistent object and is only for use when
    * reconstructing events from a calendar input stream.
    *
-   * @param val
-   * @return Category object
-   * @throws CalFacadeException
+   * @param val identifying category
+   * @return Response with Category object
    */
-  BwCategory findCategory(BwString val) throws CalFacadeException;
+  GetEntityResponse<BwCategory> findCategory(BwString val);
 
   /** Add the given category.
    *
    * @param val
-   * @throws CalFacadeException
    */
-  void addCategory(BwCategory val) throws CalFacadeException;
+  void addCategory(BwCategory val);
 
   /** Get the contact with the given uid.
    *
    * @param uid
    * @return contact object
-   * @throws CalFacadeException
    */
-  BwContact getContact(String uid) throws CalFacadeException;
+  GetEntityResponse<BwContact> getContact(String uid);
 
   /** Find the contact.
    *
-   * @param val
-   * @return contact object
-   * @throws CalFacadeException
+   * @param val identifying contact
+   * @return response with contact object
    */
-  BwContact findContact(BwString val) throws CalFacadeException;
+  GetEntityResponse<BwContact> findContact(BwString val);
 
   /** Add the contact
    * @param val
-   * @throws CalFacadeException
    */
-  void addContact(BwContact val) throws CalFacadeException;
+  void addContact(BwContact val);
 
   /** Get the location with the given uid.
    *
    * @param uid
-   * @return Location object
-   * @throws CalFacadeException
+   * @return status and Location object
    */
-  BwLocation getLocation(String uid) throws CalFacadeException;
-
-  /** Get the location with the given address.
-   *
-   * @param address to find
-   * @return Location object or null if not found
-   * @throws CalFacadeException on fatal error
-   */
-  BwLocation getLocation(BwString address) throws CalFacadeException;
+  GetEntityResponse<BwLocation> getLocation(String uid);
 
   /** Find a location owned by the current user which has a named
    * key field which matches the value.
@@ -161,10 +146,9 @@ public interface IcalCallback extends Serializable {
    * Use the combined value as a key and use the findLocationByCombined
    *
    * @param address
-   * @return Location object
-   * @throws CalFacadeException
+   * @return Response with status and Location object
    */
-  BwLocation findLocation(BwString address) throws CalFacadeException;
+  GetEntityResponse<BwLocation> findLocation(BwString address);
 
   /** Find the location given the combined address values.
    *
@@ -177,25 +161,21 @@ public interface IcalCallback extends Serializable {
 
   /** Add the location
    * @param val
-   * @throws CalFacadeException
    */
-  void addLocation(BwLocation val) throws CalFacadeException;
+  void addLocation(BwLocation val);
 
   /** Return a Collection of EventInfo objects. There should only be
    * one returned.
    *
    * @param colPath of collection to search
-   * @param guid
+   * @param guid of entity
    * @return Collection of EventInfo
-   * @throws CalFacadeException
    */
-  Collection<EventInfo> getEvent(String colPath, String guid)
-          throws CalFacadeException;
+  GetEntitiesResponse<EventInfo> getEvent(String colPath, String guid);
 
   /**
    * @return true if we are not including the full tz specification
-   * @throws CalFacadeException
    */
-  boolean getTimezonesByReference() throws CalFacadeException;
+  boolean getTimezonesByReference();
 }
 

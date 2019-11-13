@@ -24,7 +24,7 @@ import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.misc.Util;
 import org.bedework.webdav.servlet.shared.WebdavException;
@@ -63,18 +63,25 @@ public class ContactPropUpdater implements PropertyUpdater {
         }
 
         // Add it
-        BwContact cnct = ui.getIcalCallback().findContact(nm);
+        var resp = ui.getIcalCallback().findContact(nm);
+        final BwContact cct;
 
-        if (cnct == null) {
-          cnct = BwContact.makeContact();
-          cnct.setCn(nm);
-          cnct.setLink(altrep);
+        if (resp.getStatus() == Response.Status.notFound) {
+          cct = BwContact.makeContact();
+          cct.setCn(nm);
+          cct.setLink(altrep);
 
-          ui.getIcalCallback().addContact(cnct);
+          ui.getIcalCallback().addContact(cct);
+        } else if (resp.isOk()) {
+          cct = resp.getEntity();
+        } else {
+          return new UpdateResult(ui.getPropName().toString() +
+                                          ": failed. Status: " + resp.getStatus() +
+                                          ", msg: " + resp.getMessage());
         }
 
-        ev.addContact(cnct);
-        cte.addAddedValue(cnct);
+        ev.addContact(cct);
+        cte.addAddedValue(cct);
 
         return UpdateResult.getOkResult();
       }
@@ -112,14 +119,21 @@ public class ContactPropUpdater implements PropertyUpdater {
                     new BwString(UpdaterUtil.getLang(ui.getUpdprop()),
                                  ((TextPropertyType)ui.getUpdprop()).getText());
 
-            BwContact cnct = ui.getIcalCallback().findContact(newnm);
+            var resp = ui.getIcalCallback().findContact(newnm);
+            final BwContact cnct;
 
-            if (cnct == null) {
+            if (resp.getStatus() == Response.Status.notFound) {
               cnct = new BwContact();
               cnct.setCn(newnm);
               cnct.setLink(altrep);
 
               ui.getIcalCallback().addContact(cnct);
+            } else if (resp.isOk()) {
+              cnct = resp.getEntity();
+            } else {
+              return new UpdateResult(ui.getPropName().toString() +
+                                              ": failed. Status: " + resp.getStatus() +
+                                              ", msg: " + resp.getMessage());
             }
 
             if (ev.removeContact(evcnct)) {
@@ -135,8 +149,8 @@ public class ContactPropUpdater implements PropertyUpdater {
       }
 
       return UpdateResult.getOkResult();
-    } catch (final CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    } catch (final Throwable t) {
+      throw new WebdavException(t);
     }
   }
 }

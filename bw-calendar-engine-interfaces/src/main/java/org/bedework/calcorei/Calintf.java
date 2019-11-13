@@ -243,9 +243,8 @@ public interface Calintf
 
   /** Call if there has been an error during an update process.
    *
-   * @throws CalFacadeException
    */
-  void rollbackTransaction() throws CalFacadeException;
+  void rollbackTransaction();
 
   /**
    * @return boolean true if open and rolled back
@@ -360,23 +359,19 @@ public interface Calintf
    * should only receive notifications when the actual data has been written.
    *
    * @param ev
-   * @throws CalFacadeException
    */
-  void postNotification(final SysEventBase ev) throws CalFacadeException;
+  void postNotification(final SysEventBase ev);
 
   /** Called to flush any queued notifications. Called by the commit
    * process.
    *
-   * @throws CalFacadeException
    */
-  void flushNotifications() throws CalFacadeException;
+  void flushNotifications();
 
   /** Clear any queued notifications without posting. Called by the commit
    * process.
-   *
-   * @throws CalFacadeException
    */
-  void clearNotifications() throws CalFacadeException;
+  void clearNotifications();
 
   /* ====================================================================
    *                   Access

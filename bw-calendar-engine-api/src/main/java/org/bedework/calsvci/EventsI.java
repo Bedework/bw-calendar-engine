@@ -185,14 +185,13 @@ public interface EventsI extends Serializable {
    *                     access.
    * @param autoCreateCollection - true if we should add a missing collection
    * @param rollbackOnError true to roll back if we get an error
-   * @return UpdateResult Counts of changes.
-   * @throws CalFacadeException on error
+   * @return UpdateResult Status and counts of changes.
    */
   UpdateResult add(EventInfo ei,
                           boolean noInvites,
                           boolean scheduling,
                           boolean autoCreateCollection,
-                          boolean rollbackOnError) throws CalFacadeException;
+                          boolean rollbackOnError);
 
   /** Reindex an event.
    *
@@ -235,12 +234,11 @@ public interface EventsI extends Serializable {
    * @param fromAttUri   attendee responding
    * @param alwaysWrite  write and reindex whatever changetable says
    * @return UpdateResult Counts of changes.
-   * @throws CalFacadeException on error
    */
   UpdateResult update(final EventInfo ei,
                       final boolean noInvites,
                       String fromAttUri,
-                      boolean alwaysWrite) throws CalFacadeException;
+                      boolean alwaysWrite);
 
   /** For an event to which we have write access we simply mark it deleted.
    *

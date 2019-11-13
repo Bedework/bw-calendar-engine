@@ -97,7 +97,7 @@ public class BwFreeBusyComponent extends BwDbentity {
   /**
    * @return String representation of list
    */
-  public String getValue() throws CalFacadeException {
+  public String getValue() {
     if (value == null) {
       if ((periods == null) || periods.isEmpty()) {
         return null;
@@ -118,18 +118,17 @@ public class BwFreeBusyComponent extends BwDbentity {
   /** Get the free busy periods
    *
    * @return Collection    of Period
-   * @throws CalFacadeException
    */
-  public Collection<Period> getPeriods() throws CalFacadeException {
+  public Collection<Period> getPeriods() {
       if (periods == null) {
         periods = new TreeSet<Period>();
 
         if (getValue() != null) {
-          PeriodList pl;
+          final PeriodList pl;
           try {
             pl = new PeriodList(getValue());
           } catch (Throwable t) {
-            throw new CalFacadeException(t);
+            throw new RuntimeException(t);
           }
           Iterator perit = pl.iterator();
 
@@ -152,7 +151,7 @@ public class BwFreeBusyComponent extends BwDbentity {
    * @param val
    * @throws CalFacadeException
    */
-  public void addPeriod(final Period val) throws CalFacadeException {
+  public void addPeriod(final Period val) {
     getPeriods().add(val);
     value = null;
   }

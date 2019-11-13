@@ -45,7 +45,6 @@ import org.bedework.calfacade.EventListEntry;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.CategorisedEntity;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.filter.RetrieveList;
@@ -57,6 +56,7 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.requests.GetInstancesRequest;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.InstancesResponse;
 import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -107,7 +107,9 @@ import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
 import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
-import static org.bedework.calfacade.responses.Response.Status.ok;
+import static org.bedework.calfacade.responses.Response.Status.failed;
+import static org.bedework.calfacade.responses.Response.Status.limitExceeded;
+import static org.bedework.calfacade.responses.Response.Status.noAccess;
 import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 
 /** This acts as an interface to the database for subscriptions.
@@ -444,13 +446,15 @@ class Events extends CalSvcDb implements EventsI {
                           final boolean noInvites,
                           final boolean schedulingInbox,
                           final boolean autoCreateCollection,
-                          final boolean rollbackOnError) throws CalFacadeException {
+                          final boolean rollbackOnError) {
+    final UpdateResult updResult = ei.getUpdResult();
+
     try {
       if (getPrincipalInfo().getSubscriptionsOnly()) {
-        throw new CalFacadeForbidden("User has read only access");
+        return Response.notOk(updResult, noAccess,
+                              "User has read only access");
       }
       
-      final UpdateResult updResult = ei.getUpdResult();
       updResult.adding = true;
       updResult.hasChanged = true;
 
@@ -460,24 +464,29 @@ class Events extends CalSvcDb implements EventsI {
 
       final BwPreferences prefs = getSvc().getPrefsHandler().get();
       if (prefs != null) {
-        final Collection<BwCategory> cats = getSvc().getCategoriesHandler().
+        final GetEntitiesResponse<BwCategory> resp =
+                getSvc().getCategoriesHandler().
                 getByUids(prefs.getDefaultCategoryUids());
 
-        for (final BwCategory cat: cats) {
-          event.addCategory(cat);
+        if (resp.isOk()) {
+          for (final BwCategory cat : resp.getEntities()) {
+            event.addCategory(cat);
+          }
+        } else {
+          return Response.fromResponse(updResult, resp);
         }
       }
 
       final RealiasResult raResp = reAlias(event);
-      if (raResp.getStatus() != ok) {
-        throw new CalFacadeException(CalFacadeException.badRequest,
-                                     "Status: " + raResp.getStatus() +
-                                             " message: " + raResp.getMessage());
+      if (!raResp.isOk()) {
+        return Response.fromResponse(updResult, raResp);
       }
 
       assignGuid(event); // Or just validate?
 
-      updateEntities(updResult, event);
+      if (!updateEntities(updResult, event)) {
+        return updResult;
+      }
 
       BwCalendar cal = validate(event, true, schedulingInbox, 
                                 autoCreateCollection);
@@ -533,7 +542,7 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       if (!cal.getCalendarCollection()) {
-        throw new CalFacadeAccessException();
+        return Response.notOk(updResult, noAccess, null);
       }
 
       if (!event.getPublick() && Util.isEmpty(event.getAlarms())) {
@@ -554,12 +563,15 @@ class Events extends CalSvcDb implements EventsI {
       if ((maxAttendees != null) &&
               !Util.isEmpty(event.getAttendees()) &&
               (event.getAttendees().size() > maxAttendees)) {
-        throw new CalFacadeException(CalFacadeException.schedulingTooManyAttendees);
+        return Response.notOk(updResult, limitExceeded,
+                              CalFacadeException.schedulingTooManyAttendees);
       }
 
-      event.setDtstamps(getCurrentTimestamp());
+      var currentTimestamp = getCurrentTimestamp();
+
+      event.setDtstamps(currentTimestamp);
       if (schedulingObject) {
-        event.updateStag(getCurrentTimestamp());
+        event.updateStag(currentTimestamp);
       }
 
       /* All Overrides go in same calendar and have same name */
@@ -572,10 +584,11 @@ class Events extends CalSvcDb implements EventsI {
           if ((maxAttendees != null) &&
                   !Util.isEmpty(ovei.getAttendees()) &&
                   (ovei.getAttendees().size() > maxAttendees)) {
-            throw new CalFacadeException(CalFacadeException.schedulingTooManyAttendees);
+            return Response.notOk(updResult, limitExceeded,
+                                  CalFacadeException.schedulingTooManyAttendees);
           }
 
-          ovei.setDtstamps(getCurrentTimestamp());
+          ovei.setDtstamps(currentTimestamp);
 
           if (cal.getCollectionInfo().scheduling &&
               (ovei.getOrganizerSchedulingObject() ||
@@ -584,7 +597,7 @@ class Events extends CalSvcDb implements EventsI {
           }
 
           if (schedulingObject) {
-            ovei.updateStag(getCurrentTimestamp());
+            ovei.updateStag(currentTimestamp);
           }
 
           final BwEventAnnotation ann = ovei.getRef();
@@ -596,7 +609,7 @@ class Events extends CalSvcDb implements EventsI {
       if (event.getOrganizerSchedulingObject()) {
         // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
         for (final BwAttendee att: event.getAttendees()) {
-          if (att.getPartstat() == IcalDefs.partstatValNeedsAction) {
+          if (att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
             att.setRsvp(true);
           }
         }
@@ -613,7 +626,8 @@ class Events extends CalSvcDb implements EventsI {
                   getCal().addEvent(oei,
                                     schedulingInbox, rollbackOnError);
           if (auer.errorCode != null) {
-            //?
+            return Response.notOk(updResult, failed,
+                                  "Status " + auer.errorCode + " from addEvent");
           }
         }
       }
@@ -650,11 +664,8 @@ class Events extends CalSvcDb implements EventsI {
       }
       getSvc().rollbackTransaction();
       reindex(ei);
-      if (t instanceof CalFacadeException) {
-        throw (CalFacadeException)t;
-      }
 
-      throw new CalFacadeException(t);
+      return Response.error(updResult, t);
     }
   }
 
@@ -684,22 +695,22 @@ class Events extends CalSvcDb implements EventsI {
   public UpdateResult update(final EventInfo ei,
                              final boolean noInvites,
                              final String fromAttUri,
-                             final boolean alwaysWrite) throws CalFacadeException {
+                             final boolean alwaysWrite) {
+    final UpdateResult updResult = ei.getUpdResult();
+
     try {
       final BwEvent event = ei.getEvent();
 
-      final UpdateResult updResult = ei.getUpdResult();
-
-      updateEntities(updResult, event);
+      if (!updateEntities(updResult, event)) {
+        return updResult;
+      }
 
       final BwCalendar cal = validate(event, false, false, false);
       adjustEntities(ei);
 
       final RealiasResult raResp = reAlias(event);
-      if (raResp.getStatus() != ok) {
-        throw new CalFacadeException(CalFacadeException.badRequest,
-                                     "Status: " + raResp.getStatus() +
-                                             " message: " + raResp.getMessage());
+      if (!raResp.isOk()) {
+        return Response.fromResponse(updResult, raResp);
       }
 
       boolean organizerSchedulingObject = false;
@@ -848,12 +859,13 @@ class Events extends CalSvcDb implements EventsI {
 
       return updResult;
     } catch (final Throwable t) {
-      getSvc().rollbackTransaction();
-      if (t instanceof CalFacadeException) {
-        throw (CalFacadeException)t;
+      if (debug()) {
+        error(t);
       }
+      getSvc().rollbackTransaction();
+      reindex(ei);
 
-      throw new CalFacadeException(t);
+      return Response.error(updResult, t);
     }
   }
 
@@ -1370,8 +1382,8 @@ class Events extends CalSvcDb implements EventsI {
    *                   Package private methods
    * ==================================================================== */
 
-  void updateEntities(final UpdateResult updResult,
-                      final BwEvent event) throws CalFacadeException {
+  boolean updateEntities(final UpdateResult updResult,
+                         final BwEvent event) {
     final EventProperties<BwCategory> cathdlr = getSvc().getCategoriesHandler();
 
     final Set<BwCategory> cats = event.getCategories();
@@ -1385,9 +1397,12 @@ class Events extends CalSvcDb implements EventsI {
                   cathdlr.ensureExists(cat, event.getOwnerHref());
 
           removeCats.add(cat);
-          if (eeer.entity != null) {
-            addCats.add(eeer.entity);
+          if (!eeer.isOk()) {
+            Response.fromResponse(updResult, eeer);
+            return false;
           }
+
+          addCats.add(eeer.getEntity());
         }
       }
 
@@ -1407,12 +1422,17 @@ class Events extends CalSvcDb implements EventsI {
         getSvc().getContactsHandler().ensureExists(ct,
                                                    ct.getOwnerHref());
 
+      if (!eeers.isOk()) {
+        Response.fromResponse(updResult, eeers);
+        return false;
+      }
+
       if (eeers.added) {
         updResult.contactsAdded++;
       }
 
       // XXX only do this if we know it changed
-      event.setContact(eeers.entity);
+      event.setContact(eeers.getEntity());
     }
 
     final BwLocation loc = event.getLocation();
@@ -1422,13 +1442,20 @@ class Events extends CalSvcDb implements EventsI {
               getSvc().getLocationsHandler().ensureExists(loc,
                                                           loc.getOwnerHref());
 
+      if (!eeerl.isOk()) {
+        Response.fromResponse(updResult, eeerl);
+        return false;
+      }
+
       if (eeerl.added) {
         updResult.locationsAdded++;
       }
 
       // XXX only do this if we know it changed
-      event.setLocation(eeerl.entity);
+      event.setLocation(eeerl.getEntity());
     }
+
+    return true;
   }
 
   /** Method which allows us to flag this as a scheduling action

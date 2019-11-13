@@ -20,6 +20,7 @@ package org.bedework.calsvc.scheduling;
 
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.SchedulingI;
 
@@ -76,10 +77,9 @@ public interface SchedulingIntf extends SchedulingI {
    * @param calType
    * @param noInvites
    * @return null if added, error code otherwise
-   * @throws CalFacadeException
    */
-  String addEvent(EventInfo ei,
-                  String namePrefix,
-                  int calType,
-                  boolean noInvites) throws CalFacadeException;
+  Response addEvent(EventInfo ei,
+                    String namePrefix,
+                    int calType,
+                    boolean noInvites);
 }

@@ -444,12 +444,10 @@ public class BwEventProxy extends BwEvent implements ChangeFlag {
    * @param ownerHref
    * @param forInstance      true if this is an overrride or a recurrence instance
    * @return BwEventProxy object
-   * @throws CalFacadeException
    */
   public static BwEventProxy makeAnnotation(BwEvent ev,
                                             String ownerHref,
-                                            boolean forInstance)
-          throws CalFacadeException {
+                                            boolean forInstance) {
     BwEventAnnotation ann = new BwEventAnnotation();
 
     initAnnotation(ann, ev, ownerHref, forInstance);
@@ -463,13 +461,11 @@ public class BwEventProxy extends BwEvent implements ChangeFlag {
    * @param ev  BwEvent object to annotate
    * @param ownerHref  if null event owner is used
    * @param forInstance      true if this is an overrride or a recurrence instance
-   * @throws CalFacadeException
    */
   public static void initAnnotation(BwEventAnnotation ann,
                                     BwEvent ev,
                                     String ownerHref,
-                                    boolean forInstance)
-          throws CalFacadeException {
+                                    boolean forInstance) {
     ann.setTarget(ev);
 
     /* XXX This should be a parameter */

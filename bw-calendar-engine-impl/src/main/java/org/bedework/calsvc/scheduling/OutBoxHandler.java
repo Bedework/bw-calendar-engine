@@ -20,7 +20,7 @@ package org.bedework.calsvc.scheduling;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.util.misc.Uid;
@@ -43,8 +43,8 @@ public abstract class OutBoxHandler extends SchedulingBase {
     super(svci);
   }
 
-  protected String addToOutBox(final EventInfo ei, final BwCalendar outBox,
-                               final Set<String> externalRcs) throws CalFacadeException {
+  protected Response addToOutBox(final EventInfo ei, final BwCalendar outBox,
+                                 final Set<String> externalRcs) {
     // We have external recipients. Put in the outbox for mailing
     EventInfo outEi = copyEventInfo(ei, getPrincipal());
 
@@ -53,19 +53,19 @@ public abstract class OutBoxHandler extends SchedulingBase {
     event.setRecipients(externalRcs);
     event.setColPath(outBox.getPath());
 
-    String ecode = addEvent(outEi,
-                            "Out-" + Uid.getUid() + "-" + event.getDtstamp(),
-                            BwCalendar.calTypeOutbox,
-                            true);
+    final var addResp = addEvent(outEi,
+                                 "Out-" + Uid.getUid() + "-" + event.getDtstamp(),
+                                 BwCalendar.calTypeOutbox,
+                                 true);
 
-    if (ecode != null) {
-      return ecode;
+    if (!addResp.isOk()) {
+      return addResp;
     }
 
     addAutoScheduleMessage(false,
                            outBox.getOwnerHref(),
                            event.getName());
 
-    return null;
+    return addResp;
   }
 }

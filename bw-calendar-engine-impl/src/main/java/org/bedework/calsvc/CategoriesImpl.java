@@ -46,7 +46,6 @@ public class CategoriesImpl
     super(svci);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void init(final boolean adminCanEditAllPublic) {
     super.init(BwCategory.class.getCanonicalName(),
@@ -83,8 +82,15 @@ public class CategoriesImpl
   }
 
   @Override
-  public boolean exists(final BwCategory cat) throws CalFacadeException {
-    return findPersistent(cat.getWord(), cat.getOwnerHref()) != null;
+  public boolean exists(final Response resp,
+                        final BwCategory cat) {
+    try {
+      return findPersistent(cat.getWord(),
+                            cat.getOwnerHref()) != null;
+    } catch (final Throwable t) {
+      Response.error(resp, t);
+      return false;
+    }
   }
 
   @Override

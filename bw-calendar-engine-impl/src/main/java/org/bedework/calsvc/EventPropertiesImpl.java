@@ -28,6 +28,9 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
+import org.bedework.calfacade.responses.GetEntityResponse;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
@@ -92,10 +95,9 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   /** Check for existence
    *
    * @param val the entity
-   * @return true if exists
-   * @throws CalFacadeException
+   * @return true if exists, false for error
    */
-  abstract boolean exists(T val) throws CalFacadeException;
+  abstract boolean exists(Response resp, T val);
 
   /** Constructor
   *
@@ -125,8 +127,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     return get(true, null);
   }
 
-  Collection<T> filterDeleted(final Collection<T> ents)
-          throws CalFacadeException {
+  Collection<T> filterDeleted(final Collection<T> ents) {
     if (isSuper()) {
       return ents;
     }
@@ -154,48 +155,60 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     return get(true, getPrincipal().getPrincipalRef());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public T getByUid(final String uid) throws CalFacadeException {
+  public GetEntityResponse<T> getByUid(final String uid) {
+    final var resp = new GetEntityResponse<T>();
     T ent = getCachedByUid(uid);
 
     if (ent != null) {
-      return ent;
+      resp.setEntity(ent);
+      return resp;
     }
 
-    ent = fetchIndexedByUid(uid);
+    try {
+      ent = fetchIndexedByUid(uid);
 
-    if (ent == null) {
-      return null;
+      if (ent == null) {
+        return Response.notFound(resp);
+      }
+
+      putCachedByUid(uid, ent);
+
+      resp.setEntity(ent);
+      return resp;
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
     }
-
-    putCachedByUid(uid, ent);
-
-    return ent;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public T get(final String href) throws CalFacadeException {
     return fetchIndexed(href);
   }
 
   @Override
-  public Collection<T> getByUids(final Collection<String> uids) throws CalFacadeException {
-    final Collection<T> ents = new ArrayList<>();
+  public GetEntitiesResponse<T> getByUids(final Collection<String> uids)  {
+    final GetEntitiesResponse<T> resp = new GetEntitiesResponse<>();
 
     if (Util.isEmpty(uids)) {
-      return ents;
+      return resp;
     }
 
     for (final String uid: uids) {
-      final T ent = getByUid(uid);
-      if (ent != null) {
-        ents.add(ent);
+      final GetEntityResponse<T> ent = getByUid(uid);
+      if (ent.isOk()) {
+        resp.addEntity(ent.getEntity());
+        continue;
       }
+
+      if (ent.isNotFound()) {
+        continue;
+      }
+
+      return Response.fromResponse(resp, ent);
     }
 
-    return ents;
+    return resp;
   }
 
   @Override
@@ -204,25 +217,35 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   }
 
   @Override
-  public T findPersistent(final BwString val) throws CalFacadeException {
-    BwPrincipal owner;
+  public GetEntityResponse<T> findPersistent(final BwString val) {
+    final var resp = new GetEntityResponse<T>();
+    final BwPrincipal owner;
     if (!isPublicAdmin()) {
       owner = getPrincipal();
     } else {
       owner = getPublicUser();
     }
 
-    return coreHdlr.find(val, owner.getPrincipalRef());
+    try {
+      resp.setEntity(coreHdlr.find(val, owner.getPrincipalRef()));
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
+
+    return Response.ok(resp, null);
   }
 
   @Override
-  public boolean add(final T val) throws CalFacadeException {
+  public Response add(final T val) {
+    final Response resp = new Response();
     setupSharableEntity(val, getPrincipal().getPrincipalRef());
 
-    updateOK(val);
+    if (!updateOK(resp, val)) {
+      return resp;
+    }
 
-    if (exists(val)) {
-      return false;
+    if (!exists(resp, val)) {
+      return resp;
     }
 
     if (debug()) {
@@ -231,25 +254,31 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     if ((val.getCreatorHref() == null) ||
         (val.getOwnerHref() == null)) {
-      throw new CalFacadeException("Owner and creator must be set");
+      return Response.error(resp, "Owner and creator must be set");
     }
 
-    getCal().saveOrUpdate(val);
-    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false, val);
+    try {
+      getCal().saveOrUpdate(val);
+      ((Preferences)getSvc().getPrefsHandler())
+              .updateAdminPrefs(false, val);
 
-    coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
+      coreHdlr.checkUnique(val.getFinderKeyValue(),
+                           val.getOwnerHref());
 
-    getSvc().getIndexer(val).indexEntity(val);
+      getSvc().getIndexer(val).indexEntity(val);
 
-    // Update cached
-    final Collection<T> ents = get();
-    if (ents != null) {
-      ents.add(val);
+      // Update cached
+      final Collection<T> ents = get();
+      if (ents != null) {
+        ents.add(val);
+      }
+
+      putCachedByUid(val.getUid(), val);
+
+      return resp;
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
     }
-
-    putCachedByUid(val.getUid(), val);
-
-    return true;
   }
 
   @Override
@@ -289,7 +318,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     deleteOK(ent);
 
-    /** Only allow delete if not in use
+    /* Only allow delete if not in use
      */
     if (coreHdlr.getRefsCount(ent) != 0) {
       return 2;
@@ -326,36 +355,45 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
   @Override
   public EnsureEntityExistsResult<T> ensureExists(final T val,
-                                                  final String ownerHref)
-          throws CalFacadeException {
-    final EnsureEntityExistsResult<T> eeer = new EnsureEntityExistsResult<T>();
+                                                  final String ownerHref) {
+    final EnsureEntityExistsResult<T> eeer = new EnsureEntityExistsResult<>();
 
     if (!val.unsaved()) {
       // Exists
-      eeer.entity = val;
+      eeer.setEntity(val);
       return eeer;
     }
 
-    String oh;
+    final String oh;
     if (ownerHref == null) {
       oh = getPrincipal().getPrincipalRef();
     } else {
       oh = ownerHref;
     }
 
-    eeer.entity = findPersistent(val, oh);
+    try {
+      var entity = findPersistent(val, oh);
 
-    if (eeer.entity != null) {
-      // Exists
+      if (entity != null) {
+        // Exists
+        eeer.setEntity(entity);
+        return eeer;
+      }
+
+      // doesn't exist at this point, so we add it to db table
+      setupSharableEntity(val, ownerHref);
+      var addResp = add(val);
+
+      if (!addResp.isOk()) {
+        return Response.fromResponse(eeer, addResp);
+      }
+      eeer.added = true;
+      eeer.setEntity(val);
+
       return eeer;
+    } catch (final Throwable t) {
+      return Response.error(eeer, t);
     }
-
-    // doesn't exist at this point, so we add it to db table
-    setupSharableEntity(val, ownerHref);
-    eeer.added = add(val);
-    eeer.entity = val;
-
-    return eeer;
   }
 
   @Override
@@ -406,45 +444,49 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   }
 
   /**
-   * @return true if indexed data changed
-   * @throws CalFacadeException
+   * @return true if indexed data changed or error occurred
    */
-  protected boolean indexChanged() throws CalFacadeException {
-    final String token = getIndexer().currentChangeToken();
+  protected boolean indexChanged() {
+    try {
+      final String token = getIndexer().currentChangeToken();
 
-    final boolean changed = lastChangeToken == null ||
-        !lastChangeToken.equals(token);
+      final boolean changed = lastChangeToken == null ||
+              !lastChangeToken.equals(token);
 
-    lastChangeToken = token;
+      lastChangeToken = token;
 
-    return changed;
+      return changed;
+    } catch (final Throwable t) {
+      error(t);
+      return true;
+    }
   }
 
-  protected Collection<T> getCached(final String ownerHref) throws CalFacadeException {
+  protected Collection<T> getCached(final String ownerHref)  {
     checkChache();
     return cached.get(ownerHref);
   }
 
   protected void putCached(final String ownerHref,
-                           final Collection<T> vals) throws CalFacadeException {
+                           final Collection<T> vals) {
     cached.put(ownerHref, vals);
   }
 
-  protected void removeCached(final String ownerHref) throws CalFacadeException {
+  protected void removeCached(final String ownerHref) {
     cached.remove(ownerHref);
   }
 
-  protected T getCachedByUid(final String uid) throws CalFacadeException {
+  protected T getCachedByUid(final String uid) {
     checkChache();
     return cachedByUid.get(uid);
   }
 
   protected void putCachedByUid(final String uid,
-                                final T val) throws CalFacadeException {
+                                final T val) {
     cachedByUid.put(uid, val);
   }
 
-  protected void removeCachedByUid(final String uid) throws CalFacadeException {
+  protected void removeCachedByUid(final String uid) {
     cachedByUid.remove(uid);
   }
 
@@ -457,7 +499,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
    *                   Private methods
    * ==================================================================== */
 
-  private void checkChache() throws CalFacadeException {
+  private void checkChache() {
     if (indexChanged()) {
       cached.clear();
       cachedByUid.clear();
@@ -506,7 +548,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     return filterDeleted(someEnts);
   }
 
-  private String checkHref(final String ownerHref) throws CalFacadeException {
+  private String checkHref(final String ownerHref) {
     if (ownerHref != null) {
       return ownerHref;
     }
@@ -515,7 +557,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     return BwPrincipal.publicUserHref;
   }
 
-  private T check(final T ent) throws CalFacadeException {
+  private T check(final T ent) {
     if (ent == null) {
       return null;
     }
@@ -561,33 +603,37 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
    * admin users. It is applied in addition to the normal access checks
    * applied at the lower levels.
    */
-  private void updateOK(final Object o) throws CalFacadeException {
+  private boolean updateOK(final Response resp,
+                           final Object o) {
     if (isGuest()) {
-      throw new CalFacadeAccessException();
+      resp.setStatus(Response.Status.noAccess);
+      return false;
     }
 
     if (isSuper()) {
       // Always ok
-      return;
+      return true;
     }
 
     if (!(o instanceof BwShareableDbentity)) {
-      throw new CalFacadeAccessException();
+      resp.setStatus(Response.Status.noAccess);
+      return false;
     }
 
     if (!isPublicAdmin()) {
       // Normal access checks apply
-      return;
+      return true;
     }
 
     BwShareableDbentity ent = (BwShareableDbentity)o;
 
     if (adminCanEditAllPublic ||
             ent.getCreatorHref().equals(getPrincipal().getPrincipalRef())) {
-      return;
+      return true;
     }
 
-    throw new CalFacadeAccessException();
+    resp.setStatus(Response.Status.noAccess);
+    return false;
   }
 }
 

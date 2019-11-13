@@ -33,16 +33,12 @@ import java.util.Collection;
 public class Admin extends CalSvcDb implements AdminI {
   /** Constructor
   *
-  * @param svci
-  * @throws CalFacadeException
+  * @param svci for interactions.
   */
- Admin(final CalSvc svci) throws CalFacadeException {
+ Admin(final CalSvc svci) {
    super(svci);
  }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.AdminI#getChildCollections(java.lang.String, int, int)
-   */
   @Override
   public Collection<String> getChildCollections(final String parentPath,
                                                 final int start,
@@ -50,9 +46,6 @@ public class Admin extends CalSvcDb implements AdminI {
     return getCal().getChildCollections(parentPath, start, count);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.AdminI#getChildEntities(java.lang.String, int, int)
-   */
   @Override
   public Collection<String> getChildEntities(final String parentPath,
                                              final int start,
@@ -64,18 +57,12 @@ public class Admin extends CalSvcDb implements AdminI {
    *                   Alarms
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.AdminI#getUnexpiredAlarms(long)
-   */
   @Override
   public Collection<BwAlarm> getUnexpiredAlarms(final long triggerTime)
           throws CalFacadeException {
     return getCal().getUnexpiredAlarms(triggerTime);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.AdminI#getEventsByAlarm(org.bedework.calfacade.BwAlarm)
-   */
   @Override
   public Collection<BwEvent> getEventsByAlarm(final BwAlarm alarm)
           throws CalFacadeException {

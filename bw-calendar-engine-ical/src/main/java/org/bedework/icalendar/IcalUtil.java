@@ -353,9 +353,8 @@ public class IcalUtil {
   /**
    * @param attProp
    * @return BwAttachment
-   * @throws Throwable
    */
-  public static BwAttachment getAttachment(final Attach attProp) throws Throwable {
+  public static BwAttachment getAttachment(final Attach attProp) {
     BwAttachment att = new BwAttachment();
 
     ParameterList pars = attProp.getParameters();
@@ -745,11 +744,10 @@ public class IcalUtil {
   /**
    * @param val
    * @return Collection
-   * @throws Throwable
    */
-  public static Collection<BwDateTime> makeDateTimes(final DateListProperty val) throws Throwable {
+  public static Collection<BwDateTime> makeDateTimes(final DateListProperty val) {
     DateList dl = val.getDates();
-    TreeSet<BwDateTime> ts = new TreeSet<BwDateTime>();
+    TreeSet<BwDateTime> ts = new TreeSet<>();
     Parameter par = getParameter(val, "VALUE");
     boolean isDateType = (par != null) && (par.equals(Value.DATE));
     String tzidval = null;
@@ -927,9 +925,8 @@ public class IcalUtil {
    * @param pl
    * @param name
    * @return String
-   * @throws Throwable
    */
-  public static String getOptStr(final ParameterList pl, final String name) throws Throwable {
+  public static String getOptStr(final ParameterList pl, final String name) {
     Parameter par = pl.getParameter(name);
     if (par == null) {
       return null;
@@ -1031,7 +1028,7 @@ public class IcalUtil {
         }
       }
 
-      /** If we were given a duration store it in the event and calculate
+      /* If we were given a duration store it in the event and calculate
           an end to the event - which we should not have been given.
        */
       if (duration != null) {

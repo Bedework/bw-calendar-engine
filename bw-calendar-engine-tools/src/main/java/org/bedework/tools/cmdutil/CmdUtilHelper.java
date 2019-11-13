@@ -28,6 +28,8 @@ import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.responses.GetEntityResponse;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -113,11 +115,11 @@ public abstract class CmdUtilHelper implements Logged {
     }
   }
 
-  public BwIndexer getIndexer(final String docType) throws CalFacadeException {
+  public BwIndexer getIndexer(final String docType) {
     return getSvci().getIndexer(true, docType);
   }
 
-  public FilterBase parseQuery(final String query) throws CalFacadeException {
+  public FilterBase parseQuery(final String query) {
     final SimpleFilterParser.ParseResult pr = getSvci().getFilterParser().parse(query, false, null);
 
     if (pr.ok) {
@@ -373,9 +375,12 @@ public abstract class CmdUtilHelper implements Logged {
       /* Now we have the owner find or add the categories */
 
       for (final String catStr : catuids) {
-        BwCategory cat = getCatPersistent(ownerHref, catStr);
+        final GetEntityResponse<BwCategory> resp =
+                getCatPersistent(ownerHref, catStr);
 
-        if (cat == null) {
+        final BwCategory cat;
+
+        if (resp.getStatus() == Response.Status.notFound) {
           cat = BwCategory.makeCategory();
 
           cat.setPublick(true);
@@ -383,6 +388,12 @@ public abstract class CmdUtilHelper implements Logged {
           //cat.setOwner(svci.getUser());
 
           getSvci().getCategoriesHandler().add(cat);
+        } else if (resp.isOk()) {
+          cat = resp.getEntity();
+        } else {
+          error("get cat: Status: " + resp.getStatus() +
+                        " message: " + resp.getMessage());
+          throw new RuntimeException("Unable to fetch category");
         }
 
         cal.addCategory(cat);
@@ -602,18 +613,11 @@ public abstract class CmdUtilHelper implements Logged {
     return cat;
   }
 
-  protected BwCategory getCatPersistent(final String ownerHref,
-                                        final String catVal) throws Throwable {
-    final BwCategory cat =
-            getSvci().getCategoriesHandler().findPersistent(new BwString(null,
-                                                                         catWd(catVal)));
-
-    if (cat == null) {
-      error("Unable to access category " + catVal +
-                    " for owner " + ownerHref);
-    }
-
-    return cat;
+  protected GetEntityResponse<BwCategory> getCatPersistent(final String ownerHref,
+                                                           final String catVal) {
+    return getSvci().getCategoriesHandler().
+            findPersistent(new BwString(null,
+                                        catWd(catVal)));
   }
 
   @SuppressWarnings("unused")

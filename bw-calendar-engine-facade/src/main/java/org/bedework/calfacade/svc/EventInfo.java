@@ -27,7 +27,7 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.ScheduleResult;
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
@@ -51,7 +51,7 @@ public class EventInfo
   /** This class allows add and update event to signal changes back to the
    * caller.
    */
-  public static class UpdateResult {
+  public static class UpdateResult extends Response {
     /** False if the update method(s) could find no changes */
     public boolean hasChanged;
 
@@ -628,10 +628,8 @@ public class EventInfo
   /**
    * @param userHref
    * @return Collection of deleted override proxy events or null
-   * @throws CalFacadeException
    */
-  public Collection<BwEventProxy> getDeletedOverrideProxies(final String userHref)
-      throws CalFacadeException {
+  public Collection<BwEventProxy> getDeletedOverrideProxies(final String userHref) {
     TreeSet<BwEventProxy> proxies = new TreeSet<>();
 
     if ((retrievedOverrides == null) || instanceOnly) {
@@ -710,9 +708,8 @@ public class EventInfo
    *
    * @param rid
    * @return EventInfo for override
-   * @throws CalFacadeException
    */
-  public EventInfo findOverride(final String rid) throws CalFacadeException {
+  public EventInfo findOverride(final String rid) {
     return findOverride(rid, true);
   }
 
@@ -722,10 +719,9 @@ public class EventInfo
    * @param rid
    * @param create - true to creat emissing override.
    * @return EventInfo for override
-   * @throws CalFacadeException
    */
   public EventInfo findOverride(final String rid,
-                                final boolean create) throws CalFacadeException {
+                                final boolean create) {
     if (overrides != null) {
       for (EventOverride eo: overrides) {
         if (eo.getEvent().getRecurrenceId().equals(rid)) {
@@ -750,7 +746,7 @@ public class EventInfo
     return oei;
   }
   
-  public boolean removeOverride(final String rid) throws CalFacadeException {
+  public boolean removeOverride(final String rid) {
     EventOverride ov = null;
     if (Util.isEmpty(overrides)) {
       return false;
@@ -806,10 +802,9 @@ public class EventInfo
    *
    * @param outEi - destined for somebodies inbox
    * @param attUri - the attendee URI
-   * @throws CalFacadeException on error
    */
   public void setOnlyAttendee(final EventInfo outEi,
-                              final String attUri) throws CalFacadeException {
+                              final String attUri) {
     if (!getEvent().getSuppressed()) {
       final BwEvent ev = getEvent();
       final BwEvent outEv = outEi.getEvent();

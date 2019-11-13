@@ -53,15 +53,17 @@ import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SystemProperties;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeConstraintViolationException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
+import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.mail.MailerIntf;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.GetEntityResponse;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -99,7 +101,6 @@ import org.bedework.calsvci.SysparsI;
 import org.bedework.calsvci.TimeZonesStoreI;
 import org.bedework.calsvci.UsersI;
 import org.bedework.calsvci.ViewsI;
-import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.events.SysEventBase;
 import org.bedework.util.caching.FlushMap;
@@ -333,9 +334,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                                                       getPrincipal(),
                                                       System.currentTimeMillis() - start));
     } catch (final Throwable t) {
-      try {
-        rollbackTransaction();
-      } catch (final Throwable ignored) {}
+      rollbackTransaction();
       t.printStackTrace();
       throw new RuntimeException(t);
     } finally {
@@ -480,12 +479,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public IfInfo getIfInfo() throws CalFacadeException {
+  public IfInfo getIfInfo() {
     return getCal().getIfInfo();
   }
 
   @Override
-  public List<IfInfo> getActiveIfInfos() throws CalFacadeException {
+  public List<IfInfo> getActiveIfInfos() {
     final List<IfInfo> ifs = new ArrayList<>();
 
     for (final Calintf ci: getCal().active()) {
@@ -516,7 +515,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public void setState(final String val) throws CalFacadeException {
+  public void setState(final String val) {
     getCal().setState(val);
   }
 
@@ -588,12 +587,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public void rollbackTransaction() throws CalFacadeException {
+  public void rollbackTransaction() {
     getCal().rollbackTransaction();
   }
 
   @Override
-  public Timestamp getCurrentTimestamp() throws CalFacadeException {
+  public Timestamp getCurrentTimestamp() {
     return getCal().getCurrentTimestamp();
   }
 
@@ -601,9 +600,6 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     return getCal().getBlob(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#reAttach(org.bedework.calfacade.base.BwDbentity)
-   */
   @Override
   public void reAttach(final BwDbentity val) throws CalFacadeException {
     getCal().reAttach(val);
@@ -706,7 +702,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     @Override
-    public BwCategory getCategoryByUid(final String uid) throws CalFacadeException {
+    public GetEntityResponse<BwCategory> getCategoryByUid(final String uid)  {
       return getCategoriesHandler().getByUid(uid);
     }
 
@@ -723,7 +719,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     @Override
-    public SimpleFilterParser getParser() throws CalFacadeException {
+    public SimpleFilterParser getParser() {
       return new SvcSimpleFilterParser();
     }
   }
@@ -734,7 +730,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public SysparsI getSysparsHandler() throws CalFacadeException {
+  public SysparsI getSysparsHandler() {
     if (sysparsHandler == null) {
       sysparsHandler = new Syspars(this);
       handlers.add((CalSvcDb)sysparsHandler);
@@ -744,7 +740,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public MailerIntf getMailer() throws CalFacadeException {
+  public MailerIntf getMailer() {
     /*
     if (mailer != null) {
       return mailer;
@@ -758,15 +754,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
       return mailer;
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getPrefsHandler()
-   */
   @Override
-  public PreferencesI getPrefsHandler() throws CalFacadeException {
+  public PreferencesI getPrefsHandler() {
     if (prefsHandler == null) {
       prefsHandler = new Preferences(this);
       handlers.add((CalSvcDb)prefsHandler);
@@ -776,9 +769,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public AdminI getAdminHandler() throws CalFacadeException {
+  public AdminI getAdminHandler() {
     if (!isPublicAdmin()) {
-      throw new CalFacadeAccessException();
+      throw new RuntimeException("Attempt to get admin handler " +
+                                         "when not public admin");
     }
 
     if (adminHandler == null) {
@@ -810,7 +804,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public CalendarsI getCalendarsHandler() throws CalFacadeException {
+  public CalendarsI getCalendarsHandler() {
     if (calendarsHandler == null) {
       calendarsHandler = new Calendars(this);
       handlers.add((CalSvcDb)calendarsHandler);
@@ -820,7 +814,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public CalSuitesI getCalSuitesHandler() throws CalFacadeException {
+  public CalSuitesI getCalSuitesHandler() {
     if (calSuitesHandler == null) {
       calSuitesHandler = new CalSuites(this);
       handlers.add((CalSvcDb)calSuitesHandler);
@@ -830,71 +824,51 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   public BwIndexer getIndexer(final String docType) {
-    try {
-      return getCal().getIndexer(docType);
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
-    }
+    return getCal().getIndexer(docType);
   }
 
   @Override
   public BwIndexer getIndexer(final boolean publick,
                               final String docType) {
-    try {
-      return getCal().getIndexer(publick, docType);
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
-    }
+    return getCal().getIndexer(publick, docType);
   }
 
   @Override
   public BwIndexer getIndexer(final BwOwnedDbentity entity) {
-    try {
-      return getCal().getIndexer(entity);
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
-    }
+    return getCal().getIndexer(entity);
   }
 
   @Override
   public BwIndexer getIndexer(final String principal,
                               final String docType) {
-    try {
-      final String prHref;
+    final String prHref;
 
-      if (principal == null) {
-        prHref = getPrincipal().getPrincipalRef();
-      } else {
-        prHref = principal;
-      }
-
-      return getCal().getIndexer(prHref, docType);
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
+    if (principal == null) {
+      prHref = getPrincipal().getPrincipalRef();
+    } else {
+      prHref = principal;
     }
+
+    return getCal().getIndexer(prHref, docType);
   }
 
   @Override
   public BwIndexer getIndexerForReindex(final String principal,
                                         final String docType,
                                         final String indexName) {
-    try {
-      final String prHref;
+    final String prHref;
 
-      if (principal == null) {
-        prHref = getPrincipal().getPrincipalRef();
-      } else {
-        prHref = principal;
-      }
-
-      return getCal().getIndexerForReindex(prHref, docType, indexName);
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
+    if (principal == null) {
+      prHref = getPrincipal().getPrincipalRef();
+    } else {
+      prHref = principal;
     }
+
+    return getCal().getIndexerForReindex(prHref, docType, indexName);
   }
 
   @Override
-  public NotificationsI getNotificationsHandler() throws CalFacadeException {
+  public NotificationsI getNotificationsHandler() {
     if (notificationsHandler == null) {
       notificationsHandler = new Notifications(this);
       handlers.add((CalSvcDb)notificationsHandler);
@@ -904,7 +878,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public ResourcesI getResourcesHandler() throws CalFacadeException {
+  public ResourcesI getResourcesHandler() {
     if (resourcesHandler == null) {
       resourcesHandler = new ResourcesImpl(this);
       handlers.add((CalSvcDb)resourcesHandler);
@@ -914,7 +888,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public SchedulingI getScheduler() throws CalFacadeException {
+  public SchedulingI getScheduler() {
     if (sched == null) {
       sched = new Scheduling(this);
       handlers.add((CalSvcDb)sched);
@@ -924,7 +898,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public SharingI getSharingHandler() throws CalFacadeException {
+  public SharingI getSharingHandler() {
     if (sharingHandler == null) {
       sharingHandler = new Sharing(this);
       handlers.add((CalSvcDb)sharingHandler);
@@ -934,14 +908,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public SynchI getSynch() throws CalFacadeException {
+  public SynchI getSynch() {
     if (synch == null) {
-      try {
-        synch = new Synch(this, configs.getSynchConfig());
-        handlers.add((CalSvcDb)synch);
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
-      }
+      synch = new Synch(this, configs.getSynchConfig());
+      handlers.add((CalSvcDb)synch);
     }
 
     return synch;
@@ -958,7 +928,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public ViewsI getViewsHandler() throws CalFacadeException {
+  public ViewsI getViewsHandler() {
     if (viewsHandler == null) {
       viewsHandler = new Views(this);
       handlers.add((CalSvcDb)viewsHandler);
@@ -1052,29 +1022,17 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
   @Override
   public <T>  Iterator<T> getObjectIterator(Class<T> cl) {
-    try {
-      return getCal().getObjectIterator(cl);
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
-    }
+    return getCal().getObjectIterator(cl);
   }
 
   @Override
   public <T> Iterator<T> getPrincipalObjectIterator(final Class<T> cl) {
-    try {
-      return getCal().getPrincipalObjectIterator(cl);
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
-    }
+    return getCal().getPrincipalObjectIterator(cl);
   }
 
   @Override
   public <T> Iterator<T> getPublicObjectIterator(Class<T> cl) {
-    try {
-      return getCal().getPublicObjectIterator(cl);
-    } catch (final CalFacadeException cfe) {
-      throw new RuntimeException(cfe);
-    }
+    return getCal().getPublicObjectIterator(cl);
   }
 
   /* ====================================================================
@@ -1087,8 +1045,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public BwPrincipal getPrincipal(final String href) throws CalFacadeException {
-    return getCal().getPrincipal(href);
+  public BwPrincipal getPrincipal(final String href) {
+    try {
+      return getCal().getPrincipal(href);
+    } catch (CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
+    }
   }
 
   @Override
@@ -1269,7 +1231,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
   /* This will get a calintf based on the supplied collection object.
    */
-  Calintf getCal(final BwCalendar cal) throws CalFacadeException {
+  Calintf getCal(final BwCalendar cal) {
     return getCal();
   }
 
@@ -1286,7 +1248,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   /* Currently this gets a local calintf only. Later we need to use a par to
    * get calintf from a table.
    */
-  Calintf getCal() throws CalFacadeException {
+  Calintf getCal() {
     if (cali != null) {
       return cali;
     }
@@ -1612,16 +1574,17 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
       return cali;
       //}
-    } catch (final CalFacadeException cfe) {
-      error(cfe);
-      throw cfe;
     } catch (final Throwable t) {
       error(t);
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     } finally {
       if (cali != null) {
-        cali.endTransaction();
-        cali.close();
+        try {
+          cali.endTransaction();
+        } catch (final Throwable ignored) {}
+        try {
+          cali.close();
+        } catch (final Throwable ignored) {}
         //cali.flushAll();
       }
     }
@@ -1778,38 +1741,33 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     @Override
-    public BwCategory findCategory(final BwString val) throws CalFacadeException {
+    public GetEntityResponse<BwCategory> findCategory(final BwString val) {
       return getCategoriesHandler().findPersistent(val);
     }
 
     @Override
-    public void addCategory(final BwCategory val) throws CalFacadeException {
+    public void addCategory(final BwCategory val) {
       getCategoriesHandler().add(val);
     }
 
     @Override
-    public BwContact getContact(final String uid) throws CalFacadeException {
+    public GetEntityResponse<BwContact> getContact(final String uid) {
       return getContactsHandler().getByUid(uid);
     }
 
     @Override
-    public BwContact findContact(final BwString val) throws CalFacadeException {
+    public GetEntityResponse<BwContact> findContact(final BwString val) {
       return getContactsHandler().findPersistent(val);
     }
 
     @Override
-    public void addContact(final BwContact val) throws CalFacadeException {
+    public void addContact(final BwContact val) {
       getContactsHandler().add(val);
     }
 
     @Override
-    public BwLocation getLocation(final String uid) throws CalFacadeException {
+    public GetEntityResponse<BwLocation> getLocation(final String uid) {
       return getLocationsHandler().getByUid(uid);
-    }
-
-    @Override
-    public BwLocation getLocation(final BwString address) throws CalFacadeException {
-      return getLocationsHandler().findPersistent(address);
     }
 
     @Override
@@ -1820,12 +1778,8 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     @Override
-    public BwLocation findLocation(final BwString address) throws CalFacadeException {
-      final BwLocation loc = BwLocation.makeLocation();
-      loc.setAddress(address);
-
-      return getLocationsHandler().ensureExists(loc,
-                                                getOwner().getPrincipalRef()).entity;
+    public GetEntityResponse<BwLocation> findLocation(final BwString address) {
+      return getLocationsHandler().findPersistent(address);
     }
 
     @Override
@@ -1835,21 +1789,34 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     @Override
-    public void addLocation(final BwLocation val) throws CalFacadeException {
+    public void addLocation(final BwLocation val) {
       getLocationsHandler().add(val);
     }
 
     @Override
-    public Collection<EventInfo> getEvent(final String colPath,
-                                          final String guid)
-            throws CalFacadeException {
-      return getEventsHandler().getByUid(colPath, guid,
-                                         null,
-                                         RecurringRetrievalMode.overrides);
+    public GetEntitiesResponse<EventInfo> getEvent(final String colPath,
+                                                   final String guid) {
+      final GetEntitiesResponse<EventInfo> resp = new GetEntitiesResponse<>();
+
+      try {
+        var ents =
+                getEventsHandler().getByUid(colPath, guid,
+                                            null,
+                                            RecurringRetrievalMode.overrides);
+        if (Util.isEmpty(ents)) {
+          resp.setStatus(Response.Status.notFound);
+        } else {
+          resp.setEntities(ents);
+        }
+
+        return resp;
+      } catch (final Throwable t) {
+        return Response.error(resp, t);
+      }
     }
 
     @Override
-    public boolean getTimezonesByReference() throws CalFacadeException {
+    public boolean getTimezonesByReference() {
       if (timezonesByReference != null) {
         return timezonesByReference;
       }

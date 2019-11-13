@@ -763,7 +763,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
    * @see org.bedework.calfacade.ifs.Directories#principalToCaladdr(org.bedework.calfacade.BwPrincipal)
    */
   @Override
-  public String principalToCaladdr(final BwPrincipal val) throws CalFacadeException {
+  public String principalToCaladdr(final BwPrincipal val) {
     return userToCaladdr(val.getAccount());
   }
 

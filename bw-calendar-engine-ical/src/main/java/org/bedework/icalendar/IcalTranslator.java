@@ -25,6 +25,7 @@ import org.bedework.calfacade.BwVersion;
 import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IcalCallback;
+import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.icalendar.Icalendar.TimeZoneInfo;
 import org.bedework.util.calendar.IcalDefs;
@@ -857,23 +858,29 @@ public class IcalTranslator implements Logged, Serializable {
 
       Collection<CalendarComponent> clist = orderedComponents(cal.getComponents());
       for (CalendarComponent comp: clist) {
-        if (comp instanceof VFreeBusy) {
-          EventInfo ei = BwEventUtil.toEvent(cb, col, ic, comp, diff, mergeAttendees);
-
-          if (ei != null) {
-            ic.addComponent(ei);
-          }
-        } else if (comp instanceof VTimeZone) {
+        if (comp instanceof VTimeZone) {
           ic.addTimeZone(doTimeZone((VTimeZone)comp));
-        } else if ((comp instanceof VEvent) ||
-                   (comp instanceof VToDo) ||
-                   (comp instanceof VPoll) ||
-                   (comp instanceof VAvailability)) {
-          EventInfo ei = BwEventUtil.toEvent(cb, col, ic, comp, diff,
-                                             mergeAttendees);
+          continue;
+        }
 
-          if (ei != null) {
-            ic.addComponent(ei);
+        if ((comp instanceof VFreeBusy) ||
+                (comp instanceof VEvent) ||
+                (comp instanceof VToDo) ||
+                (comp instanceof VPoll) ||
+                (comp instanceof VAvailability)) {
+          final GetEntityResponse<EventInfo> eiResp =
+                  BwEventUtil.toEvent(cb, col, ic, comp, diff,
+                                      mergeAttendees);
+
+          if (eiResp.isError()) {
+            if (eiResp.getException() != null) {
+              throw eiResp.getException();
+            }
+            throw new CalFacadeException(eiResp.toString());
+          }
+
+          if (eiResp.isOk()) {
+            ic.addComponent(eiResp.getEntity());
           }
         }
       }

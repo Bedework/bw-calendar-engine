@@ -50,9 +50,8 @@ public interface UsersI extends Serializable {
    *
    * @param val           String principal hierarchy path
    * @return BwPrincipal  representing the principal or null if not there
-   * @throws CalFacadeException
    */
-  public BwPrincipal getPrincipal(final String val) throws CalFacadeException;
+  public BwPrincipal getPrincipal(final String val);
 
   /** Add an entry for the user.
    *

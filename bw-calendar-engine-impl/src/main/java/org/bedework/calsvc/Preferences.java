@@ -115,8 +115,12 @@ class Preferences extends CalSvcDb implements PreferencesI {
   }
 
   @Override
-  public BwPreferences get(final BwPrincipal principal) throws CalFacadeException {
-    return fetch(principal);
+  public BwPreferences get(final BwPrincipal principal) {
+    try {
+      return fetch(principal);
+    } catch (CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
+    }
   }
 
   @Override

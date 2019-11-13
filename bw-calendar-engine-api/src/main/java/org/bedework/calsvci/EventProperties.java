@@ -24,6 +24,8 @@ import org.bedework.calfacade.EventPropertiesReference;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.responses.GetEntitiesResponse;
+import org.bedework.calfacade.responses.GetEntityResponse;
+import org.bedework.calfacade.responses.Response;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -77,11 +79,11 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * be out of date. The cache entries will be refreshed fairly frequently.
    *
    * @param uid       String uid
-   * @return BwEventProperty object representing the entity in question
-   *                     null if it doesn't exist.
-   * @throws CalFacadeException on fatal error
+   * @return Response containing status and BwEventProperty object
+   *                   if it exists.
+   * @throws RuntimeException on fatal error
    */
-  T getByUid(String uid) throws CalFacadeException;
+  GetEntityResponse<T> getByUid(String uid);
 
   /** Return a non-persistent version of the entity given the href - if the user has access
    *
@@ -122,11 +124,11 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * be out of date. The cache entries will be refreshed fairly frequently.
    *
    * @param uids       Collection of String uids
-   * @return BwEventProperty objects representing the entities in question
-   *                     never null.
-   * @throws CalFacadeException on fatal error
+   * @return response containing status and non-null but possibly
+   *                  empty collection of BwEventProperty objects.
+   *                  Never returns notFound
    */
-  Collection<T> getByUids(Collection<String> uids) throws CalFacadeException;
+  GetEntitiesResponse<T> getByUids(Collection<String> uids);
 
   /** Return one or more entities matching the given BwString and
    * owned by the current principal.
@@ -137,10 +139,9 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    * uid does not.
    *
    * @param val          BwString value
-   * @return matching BwEventProperty object
-   * @throws CalFacadeException on fatal error
+   * @return Response with status and matching BwEventProperty object
    */
-  T findPersistent(final BwString val) throws CalFacadeException;
+  GetEntityResponse<T> findPersistent(final BwString val);
 
   /** Return an entity matching the given BwString to which the
    * user has access.
@@ -171,9 +172,8 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    *
    * @param val   BwEventProperty object to be added
    * @return boolean true for added, false for already exists
-   * @throws CalFacadeException on fatal error
    */
-  boolean add(T val) throws CalFacadeException;
+  Response add(T val);
 
   /** Update an entity in the database.
    *
@@ -204,11 +204,9 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    *
    * @param <T>
    */
-  class EnsureEntityExistsResult<T> {
+  class EnsureEntityExistsResult<T> extends GetEntityResponse<T> {
     /** Was added */
     public boolean added;
-    /** */
-    public T entity;
   }
 
   /** Ensure an entity exists. If it already does returns the object.
@@ -218,11 +216,9 @@ public interface EventProperties <T extends BwEventProperty> extends Serializabl
    *                we assume the check was made previously.
    * @param ownerHref   String principal href, null for current user
    * @return EnsureEntityExistsResult  with entity set to actual object.
-   * @throws CalFacadeException on fatal error
    */
   EnsureEntityExistsResult<T> ensureExists(final T val,
-                                           final String ownerHref)
-          throws CalFacadeException;
+                                           final String ownerHref);
 
   /** Reindex current users entities
    *

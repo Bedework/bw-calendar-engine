@@ -41,9 +41,8 @@ public interface PreferencesI extends Serializable {
    *
    * @param principal - representing a principal
    * @return BwPreferences   prefs for the given user
-   * @throws CalFacadeException
    */
-  BwPreferences get(BwPrincipal principal) throws CalFacadeException;
+  BwPreferences get(BwPrincipal principal);
 
   /** Update the current user preferences.
    *

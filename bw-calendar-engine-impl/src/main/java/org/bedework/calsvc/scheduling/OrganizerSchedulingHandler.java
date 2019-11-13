@@ -134,7 +134,11 @@ public abstract class OrganizerSchedulingHandler extends OutboundSchedulingHandl
       if (!iSchedule &&
           (outBox != null) &&  // We have something to mail
           (!Util.isEmpty(sr.externalRcs))) {
-        sr.errorCode = addToOutBox(ei, outBox, sr.externalRcs);
+        var addResp = addToOutBox(ei, outBox, sr.externalRcs);
+
+        if (!addResp.isOk()) {
+          sr.errorCode = addResp.getMessage();
+        }
       }
 
       return sr;

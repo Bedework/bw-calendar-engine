@@ -25,7 +25,7 @@ import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.misc.Util;
 import org.bedework.webdav.servlet.shared.WebdavException;
@@ -96,14 +96,22 @@ public class LocationPropUpdater implements PropertyUpdater {
       }
 
       if (val == null) {
-        cte.setDeleted(ev.getLocation());
+        cte.addRemovedValue(ev.getLocation());
         ev.setLocation(null);
       } else if (Util.cmpObjval(val, evVal) != 0) {
-        BwLocation loc = ui.getIcalCallback().findLocation(val);
-        if (loc == null) {
+        var resp = ui.getIcalCallback().findLocation(val);
+        final BwLocation loc;
+
+        if (resp.getStatus() == Response.Status.notFound) {
           loc = BwLocation.makeLocation();
           loc.setAddress(val);
           ui.getIcalCallback().addLocation(loc);
+        } else if (resp.isOk()) {
+          loc = resp.getEntity();
+        } else {
+          return new UpdateResult(ui.getPropName().toString() +
+                                          ": failed. Status: " + resp.getStatus() +
+                                          ", msg: " + resp.getMessage());
         }
 
         if (cte.setChanged(evLoc, loc)) {
@@ -112,8 +120,8 @@ public class LocationPropUpdater implements PropertyUpdater {
       }
 
       return UpdateResult.getOkResult();
-    } catch (final CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    } catch (final Throwable t) {
+      throw new WebdavException(t);
     }
   }
 }

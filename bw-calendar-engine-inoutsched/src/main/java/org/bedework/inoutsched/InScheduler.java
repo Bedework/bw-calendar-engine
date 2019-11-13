@@ -207,7 +207,9 @@ public class InScheduler extends AbstractScheduler {
       }
 
       if (proc == null) {
-        deleteEvent(ei, false, false);
+        if (deleteEvent(ei, false, false).isError()) {
+          return ProcessMessageResult.FAILED;
+        }
         return ProcessMessageResult.PROCESSED;
       }
 
@@ -218,9 +220,11 @@ public class InScheduler extends AbstractScheduler {
       }
 
       if (!pr.noInboxChange) {
-        proc.pendingToInbox(ei, ev.getOwnerHref(),
-                            pr.attendeeAccepting,
-                            pr.removeInboxEntry);
+        if (proc.pendingToInbox(ei, ev.getOwnerHref(),
+                                pr.attendeeAccepting,
+                                pr.removeInboxEntry).isError()) {
+          return ProcessMessageResult.FAILED;
+        }
       }
 
       //deleteEvent(ei, false, false);

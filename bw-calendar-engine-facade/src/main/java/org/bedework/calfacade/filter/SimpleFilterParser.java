@@ -31,6 +31,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
+import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.logging.BwLogger;
@@ -270,10 +271,9 @@ public abstract class SimpleFilterParser implements Logged {
    * construct where the list members must ALL be present.
    *
    * @param uid of the category
-   * @return category entity or null.
-   * @throws CalFacadeException on error
+   * @return status and possible category entity.
    */
-  public abstract BwCategory getCategoryByUid(String uid) throws CalFacadeException;
+  public abstract GetEntityResponse<BwCategory> getCategoryByUid(String uid);
 
   /** Get the view given the path.
    *
@@ -303,9 +303,8 @@ public abstract class SimpleFilterParser implements Logged {
   /**
    *
    * @return a parser so we can parse out sub-filters
-   * @throws CalFacadeException on error
    */
-  public abstract SimpleFilterParser getParser() throws CalFacadeException;
+  public abstract SimpleFilterParser getParser();
 
   /** Parse the given expression into a filter. The explicitSelection
    * flag determines whether or not we skip certain collections. For
@@ -410,7 +409,7 @@ public abstract class SimpleFilterParser implements Logged {
 
           if (tkn != StreamTokenizer.TT_WORD) {
             throw parseResult.fail("Expected Asc Desc: " +
-                                           String.valueOf(tkn) +
+                                           tkn +
                                            " source: " + source);
           }
 
@@ -420,15 +419,14 @@ public abstract class SimpleFilterParser implements Logged {
             ascending = false;
           } else {
             throw parseResult.fail("Expected Asc Desc: " +
-                                           String.valueOf(tkn) +
+                                           tkn +
                                            " source: " + source);
           }
         } else if (tkn == StreamTokenizer.TT_EOF) {
           tokenizer.pushBack();
         } else if (tkn != ',') {
           throw parseResult.fail("Bad sort: " +
-                                         String.valueOf(
-                                                 tkn) + " from " + sexpr +
+                                         tkn + " from " + sexpr +
                                          " source: " + source);
         }
 
@@ -628,7 +626,7 @@ public abstract class SimpleFilterParser implements Logged {
     for (;;) {
       if (tkn != StreamTokenizer.TT_WORD) {
         throw parseResult.fail("Expected Property Name: " +
-                                       String.valueOf(tkn) +
+                                       tkn +
                                        " source: " + source);
       }
 
@@ -658,7 +656,7 @@ public abstract class SimpleFilterParser implements Logged {
       if (tkn == '[') {
         if (pis.size() > 0) {
           throw parseResult.fail("Unimplemented - indexing of nested fields: found" +
-                                         String.valueOf(tkn) +
+                                         tkn +
                                          " source: " + source);
         }
         // Expect an index or a quoted string 
@@ -668,7 +666,7 @@ public abstract class SimpleFilterParser implements Logged {
           intIndex = (int)tokenizer.nval;
         } else if ((tkn != '"') && (tkn != '\'')) {
           throw parseResult.fail("Expected number or quoted string: found" +
-                                         String.valueOf(tkn) +
+                                         tkn +
                                          " source: " + source);
         } else {
           strIndex = tokenizer.sval;
@@ -677,7 +675,7 @@ public abstract class SimpleFilterParser implements Logged {
         tkn = nextToken("end-getProperty(index)");
         if (tkn != ']') {
           throw parseResult.fail("Expected ']': found" +
-                                         String.valueOf(tkn) +
+                                         tkn +
                                          " source: " + source);
         }
 
@@ -763,7 +761,7 @@ public abstract class SimpleFilterParser implements Logged {
 
       if ((tkn != '"') && (tkn != '\'')) {
         throw parseResult.fail("Expected quoted string: found" +
-                                       String.valueOf(tkn) +
+                                       tkn +
                                        " source: " + source);
       }
 
@@ -773,7 +771,7 @@ public abstract class SimpleFilterParser implements Logged {
 
       if (tkn == ',') {
         if (!paren) {
-          throw parseResult.fail("Bad list: " + String.valueOf(tkn) +
+          throw parseResult.fail("Bad list: " + tkn +
                                          " source: " + source);
         }
         continue;
@@ -876,15 +874,19 @@ public abstract class SimpleFilterParser implements Logged {
         final ArrayList<String> uids = doWordList();
 
         for (final String uid: uids) {
-          final BwCategory cat = callGetCategory(uid);
+          final GetEntityResponse<BwCategory> cat = callGetCategory(uid);
 
-          if (cat == null) {
+          if (cat.isNotFound()) {
             // Deleted category?
             throw parseResult.fail("Category uid references missing category: " + uid +
                                            " Filter will always fail to match");
           }
 
-          final ObjectFilter<String> f = new ObjectFilter<String>(null, 
+          if (!cat.isOk()) {
+            throw parseResult.fail(cat.toString());
+          }
+
+          final ObjectFilter<String> f = new ObjectFilter<String>(null,
                                                                   pixs);
 
           f.setEntity(uid);
@@ -1550,12 +1552,8 @@ public abstract class SimpleFilterParser implements Logged {
     }
   }
 
-  private BwCategory callGetCategory(final String uid) throws ParseFailed {
-    try {
-      return getCategoryByUid(uid);
-    } catch (final CalFacadeException cfe) {
-      throw parseResult.setCfe(cfe);
-    }
+  private GetEntityResponse<BwCategory> callGetCategory(final String uid) {
+    return getCategoryByUid(uid);
   }
 
   private BwView callGetView(final String path) throws ParseFailed {
@@ -1575,12 +1573,8 @@ public abstract class SimpleFilterParser implements Logged {
     }
   }
 
-  private SimpleFilterParser callGetParser() throws ParseFailed {
-    try {
-      return getParser();
-    } catch (final CalFacadeException cfe) {
-      throw parseResult.setCfe(cfe);
-    }
+  private SimpleFilterParser callGetParser() {
+    return getParser();
   }
 
   /* ====================================================================

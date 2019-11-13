@@ -327,7 +327,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void rollbackTransaction() throws CalFacadeException {
+  public void rollbackTransaction() {
   }
 
   @Override

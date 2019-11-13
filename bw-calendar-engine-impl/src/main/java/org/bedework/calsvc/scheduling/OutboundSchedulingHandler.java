@@ -29,6 +29,7 @@ import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvc.scheduling.hosts.BwHosts;
@@ -131,7 +132,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
             ui.setStatus(ScheduleStates.scheduleOk);
           } else if (!ui.principal.getPrincipalRef().equals(getPrincipal().getPrincipalRef())) {
             if (addToInbox(ui.inboxPath, ui.principal, ei,
-                           fromOrganizer) == null) {
+                           fromOrganizer).isOk()) {
               ui.setStatus(ScheduleStates.scheduleOk);
               deliveryStatus = IcalDefs.deliveryStatusDelivered;
             } else {
@@ -176,13 +177,13 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
    * @param attPrincipal - attendees principal
    * @param senderEi the event
    * @param fromOrganizer - true if it's coming from the organizer
-   * @return null for ok, errorcode otherwise
-   * @throws CalFacadeException
+   * @return status
    */
-  private String addToInbox(final String inboxPath,
-                            final BwPrincipal attPrincipal,
-                            final EventInfo senderEi,
-                            final boolean fromOrganizer) throws CalFacadeException {
+  private Response addToInbox(final String inboxPath,
+                              final BwPrincipal attPrincipal,
+                              final EventInfo senderEi,
+                              final boolean fromOrganizer) {
+    final var resp = new Response();
     final EventInfo ei = copyEventInfo(senderEi, fromOrganizer, attPrincipal);
     final BwEvent ev = ei.getEvent();
 
@@ -241,10 +242,14 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     final int smethod = ev.getScheduleMethod();
 
     if (Icalendar.itipRequestMethodType(smethod)) {
-      final Collection<EventInfo> inevs = getEventsByUid(inboxPath,
-                                                         ev.getUid());
+      final var inevs = getEventsByUid(inboxPath,
+                                       ev.getUid());
 
-      for (final EventInfo inei: inevs) {
+      if (inevs.isError()) {
+        return Response.fromResponse(resp, inevs);
+      }
+
+      for (final EventInfo inei: inevs.getEntities()) {
         final BwEvent inev = inei.getEvent();
 
         final int cres = evDtstamp.compareTo(inev.getDtstamp());
@@ -262,18 +267,21 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
          * Probably need to handle stale-state exceptions at the other end.
          */
 
-        deleteEvent(inei, true, false);
+        var delResp = deleteEvent(ei, true, false);
+        if (delResp.isError()) {
+          return Response.fromResponse(resp, delResp);
+        }
       }
     }
 
     /* Add it and post to the autoscheduler */
-    final String ecode = addEvent(ei,
-                                  "In-" + Uid.getUid() + "-" + evDtstamp,
-                                  BwCalendar.calTypePendingInbox,
-                                  true);
+    final var addResp = addEvent(ei,
+                                 "In-" + Uid.getUid() + "-" + evDtstamp,
+                                 BwCalendar.calTypePendingInbox,
+                                 true);
 
-    if (ecode != null) {
-      return ecode;
+    if (!addResp.isOk()) {
+      return Response.fromResponse(resp, addResp);
     }
 
     if (debug()) {
@@ -286,7 +294,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
                            attPrincipal.getPrincipalRef(),
                            ev.getName());
 
-    return null;
+    return resp;
   }
 
   /* Get the inbox for the recipient from the search result. If there is

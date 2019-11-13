@@ -552,10 +552,9 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
   /**
    * @return List of parameters split out at the delimiter
-   * @throws CalFacadeException
    */
   @NoDump
-  public List<Xpar> getParameters() throws CalFacadeException {
+  public List<Xpar> getParameters() {
     if (getPars() == null) {
       return null;
     }
@@ -572,10 +571,9 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   /**
    * @param name
    * @return Value of named parameter or null
-   * @throws CalFacadeException
    */
   @NoDump
-  public String getParam(final String name) throws CalFacadeException {
+  public String getParam(final String name) {
     List<Xpar> params = getParameters();
     if (params == null) {
       return null;
@@ -591,11 +589,11 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   }
 
   /**
-   * @param val
+   * @param val to parse
    * @return List<Xpar>
-   * @throws CalFacadeException
+   * @throws RuntimeException on fatal error
    */
-  public static List<Xpar> parseParameters(String val) throws CalFacadeException {
+  public static List<Xpar> parseParameters(String val) {
     /* Code copied shamelessly from ical4j.
      * Better approach would be to make these parsing methods available to
      * applications.
@@ -636,7 +634,7 @@ public class BwXproperty extends BwDbentity<BwXproperty>
         parseParameter(tokeniser, pars);
       }
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
 
     return pars;

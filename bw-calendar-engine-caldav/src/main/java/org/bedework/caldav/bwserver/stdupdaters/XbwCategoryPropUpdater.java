@@ -26,6 +26,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.misc.Util;
@@ -206,10 +207,16 @@ public class XbwCategoryPropUpdater implements PropertyUpdater {
                                 final String val) throws CalFacadeException {
     final BwString sval = new BwString(lang, val);
 
-    final BwCategory cat = ui.getIcalCallback().findCategory(sval);
+    var resp = ui.getIcalCallback().findCategory(sval);
 
-    if (cat == null) {
+    if (resp.getStatus() == Response.Status.notFound) {
       return false;
+    }
+
+    if (!resp.isOk()) {
+      throw new RuntimeException(
+              "Failed. Status: " + resp.getStatus() +
+                      ", msg: " + resp.getMessage());
     }
 
     for (final BwCategory c: cats) {
@@ -218,6 +225,8 @@ public class XbwCategoryPropUpdater implements PropertyUpdater {
         return true;
       }
     }
+
+    var cat = resp.getEntity();
 
     ev.addCategory(cat);
 

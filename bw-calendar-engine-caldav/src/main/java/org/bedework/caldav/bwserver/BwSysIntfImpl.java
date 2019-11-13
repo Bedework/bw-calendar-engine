@@ -74,6 +74,7 @@ import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
+import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
@@ -1127,43 +1128,56 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       /* Is the event a scheduling object? */
 
       final EventInfo ei = getEvinfo(ev);
-      final Collection<BwEventProxy> bwevs =
-             getSvci().getEventsHandler().add(ei, noInvites,
-                                              false,  // scheduling - inbox
-                                              false,  // autocreate
-                                              rollbackOnError).failedOverrides;
+      final EventInfo.UpdateResult resp =
+              getSvci().getEventsHandler().add(ei, noInvites,
+                                               false,  // scheduling - inbox
+                                               false,  // autocreate
+                                               rollbackOnError);
 
-      if (bwevs == null) {
-        return null;
+      if (resp.isOk()) {
+        final Collection<BwEventProxy> bwevs = resp.failedOverrides;
+
+        if (bwevs == null) {
+          return null;
+        }
+
+        final Collection<CalDAVEvent> evs = new ArrayList<>();
+
+        for (final BwEvent bwev : bwevs) {
+          evs.add(new BwCalDAVEvent(this, new EventInfo(bwev)));
+        }
+
+        return evs;
       }
 
-      final Collection<CalDAVEvent> evs = new ArrayList<>();
-
-      for (final BwEvent bwev: bwevs) {
-        evs.add(new BwCalDAVEvent(this, new EventInfo(bwev)));
+      if (resp.getStatus() == Response.Status.noAccess) {
+        throw new WebdavForbidden();
       }
 
-      return evs;
-    } catch (final CalFacadeAccessException cfae) {
-      throw new WebdavForbidden();
-    } catch (final CalFacadeException cfe) {
-      if (CalFacadeException.schedulingTooManyAttendees.equals(cfe.getDetailMessage())) {
-        throw new WebdavForbidden(CaldavTags.maxAttendeesPerInstance,
-                                  ev.getParentPath() + "/" + cfe.getExtra());
+      if (resp.getStatus() == Response.Status.limitExceeded) {
+        if (CalFacadeException.schedulingTooManyAttendees
+                .equals(resp.getMessage())) {
+          throw new WebdavForbidden(
+                  CaldavTags.maxAttendeesPerInstance,
+                  ev.getParentPath());
+        }
+        if (CalFacadeException.invalidOverride
+                .equals(resp.getMessage())) {
+          throw new WebdavForbidden(CaldavTags.validCalendarData,
+                                    ev.getParentPath());
+        }
+        throw new WebdavForbidden(resp.getMessage());
       }
-      if (CalFacadeException.invalidOverride.equals(cfe.getDetailMessage())) {
-        throw new WebdavForbidden(CaldavTags.validCalendarData,
-                                  ev.getParentPath() + "/" + cfe.getExtra());
-      }
-      if (CalFacadeException.duplicateGuid.equals(cfe.getDetailMessage())) {
+
+      if (CalFacadeException.duplicateGuid.equals(resp.getMessage())) {
         throw new WebdavForbidden(CaldavTags.noUidConflict,
-                                  ev.getParentPath() + "/" + cfe.getExtra());
+                                  ev.getParentPath());
       }
-      if (CalFacadeException.duplicateName.equals(cfe.getDetailMessage())) {
+      if (CalFacadeException.duplicateName.equals(resp.getMessage())) {
         throw new WebdavForbidden(CaldavTags.noUidConflict,
-                                  ev.getParentPath() + "/" + ev.getName());
+                                  ev.getParentPath());
       }
-      throw new WebdavException(cfe);
+      throw new WebdavForbidden(resp.toString());
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
@@ -2255,10 +2269,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                 t.getMessage());
     } finally {
       if (rollback) {
-        try {
-          getSvci().rollbackTransaction();
-        } catch (final Throwable ignored) {
-        }
+        getSvci().rollbackTransaction();
       }
     }
   }
@@ -2311,10 +2322,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                 t.getMessage());
     } finally {
       if (rollback) {
-        try {
-          getSvci().rollbackTransaction();
-        } catch (final Throwable ignored) {
-        }
+        getSvci().rollbackTransaction();
       }
     }
   }
@@ -2413,10 +2421,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
   @Override
   public void rollback() {
-    try {
-      svci.rollbackTransaction();
-    } catch (final Throwable ignored) {
-    }
+    svci.rollbackTransaction();
   }
 
   @Override

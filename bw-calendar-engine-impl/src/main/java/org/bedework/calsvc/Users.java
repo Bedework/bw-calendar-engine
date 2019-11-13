@@ -56,7 +56,7 @@ class Users extends CalSvcDb implements UsersI {
   @Override
   public BwPrincipal getUser(final String account) throws CalFacadeException {
     if (account == null) {
-      return null;
+      throw new RuntimeException("getUser: Account cannot be null");
     }
 
     setRoots(getSvc());
@@ -102,7 +102,7 @@ class Users extends CalSvcDb implements UsersI {
 //  private static int userPrincipalRootLen;
   private static int groupPrincipalRootLen;
 
-  private static void setRoots(final CalSvcI svc) throws CalFacadeException {
+  private static void setRoots(final CalSvcI svc) {
     if (principalRoot != null) {
       return;
     }
@@ -130,9 +130,9 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public BwPrincipal getPrincipal(final String val) throws CalFacadeException {
+  public BwPrincipal getPrincipal(final String val) {
     if (val == null) {
-      return null;
+      throw new RuntimeException("getPrincipal: param cannot be null");
     }
 
     final String href;

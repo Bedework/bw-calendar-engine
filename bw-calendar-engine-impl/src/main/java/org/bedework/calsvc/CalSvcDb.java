@@ -36,6 +36,7 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
@@ -50,6 +51,7 @@ import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Uid;
+import org.bedework.util.misc.Util;
 import org.bedework.util.security.PwEncryptionIntf;
 
 import org.apache.commons.codec.binary.Base64;
@@ -61,7 +63,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.noDeleted;
-import static org.bedework.calfacade.responses.Response.Status.failed;
 
 /** This acts as an interface to the database for more client oriented
  * bedework objects. CalIntf is a more general calendar specific interface.
@@ -112,7 +113,7 @@ public class CalSvcDb implements Logged, Serializable {
     getSvc().touchCalendar(col);
   }
 
-  protected Timestamp getCurrentTimestamp() throws CalFacadeException {
+  protected Timestamp getCurrentTimestamp() {
     return getSvc().getCurrentTimestamp();
   }
 
@@ -170,17 +171,28 @@ public class CalSvcDb implements Logged, Serializable {
    *
    * @param colPath path for collection
    * @param guid uid of event(s)
-   * @return Collection<EventInfo> - collection as there may be more than
+   * @return response with status and Collection<EventInfo> -
+   *                collection as there may be more than
    *                one with this uid in the inbox.
-   * @throws CalFacadeException
    */
-  protected Collection<EventInfo> getEventsByUid(final String colPath,
-                                                 final String guid)
-                            throws CalFacadeException {
+  protected GetEntitiesResponse<EventInfo> getEventsByUid(final String colPath,
+                                                          final String guid) {
     final Events events = (Events)getSvc().getEventsHandler();
+    final GetEntitiesResponse<EventInfo> resp = new GetEntitiesResponse<>();
 
-    return events.getByUid(colPath, guid, null,
-                           RecurringRetrievalMode.overrides);
+    try {
+      var ents = events.getByUid(colPath, guid, null,
+                                 RecurringRetrievalMode.overrides);
+      if (Util.isEmpty(ents)) {
+        resp.setStatus(Response.Status.notFound);
+      } else {
+        resp.setEntities(ents);
+      }
+
+      return resp;
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
   }
 
   /** Method which allows us to flag it as a scheduling action
@@ -188,15 +200,24 @@ public class CalSvcDb implements Logged, Serializable {
    * @param ei event info
    * @param scheduling true for scheduling
    * @param sendSchedulingReply true if we need a reply
-   * @return boolean
-   * @throws CalFacadeException
+   * @return Response with status
    */
-  protected boolean deleteEvent(final EventInfo ei,
-                                final boolean scheduling,
-                                final boolean sendSchedulingReply) throws CalFacadeException {
+  protected Response deleteEvent(final EventInfo ei,
+                                 final boolean scheduling,
+                                 final boolean sendSchedulingReply) {
     final Events events = (Events)getSvc().getEventsHandler();
+    var resp = new Response();
 
-    return events.delete(ei, scheduling, sendSchedulingReply);
+    try {
+      var deleted = events.delete(ei, scheduling, sendSchedulingReply);
+      if (!deleted) {
+        resp.setStatus(Response.Status.notFound);
+      }
+
+      return resp;
+    } catch (CalFacadeException cfe) {
+      return Response.error(resp, cfe);
+    }
   }
 
   protected BwCalendar getSpecialCalendar(final BwPrincipal owner,
@@ -302,7 +323,7 @@ public class CalSvcDb implements Logged, Serializable {
 
   /* See if current authorised user has super user access.
    */
-  protected boolean isSuper() throws CalFacadeException {
+  protected boolean isSuper() {
     return pars.getPublicAdmin() && svci.getSuperUser();
   }
 
@@ -332,7 +353,7 @@ public class CalSvcDb implements Logged, Serializable {
     return svci.getPrincipal().getPrincipalRef();
   }
 
-  protected String getOwnerHref() throws CalFacadeException {
+  protected String getOwnerHref() {
     if (getSvc().getPars().getPublicAdmin() ||
             getPrincipal().getUnauthenticated()) {
       return getUsers().getPublicUser().getPrincipalRef();
@@ -354,7 +375,7 @@ public class CalSvcDb implements Logged, Serializable {
     return svci.getUsersHandler().getPrincipal(href);
   }
 
-  protected PrincipalInfo getPrincipalInfo() throws CalFacadeException {
+  protected PrincipalInfo getPrincipalInfo() {
     return svci.getPrincipalInfo();
   }
 
@@ -377,24 +398,28 @@ public class CalSvcDb implements Logged, Serializable {
     return svci;
   }
 
-  protected CalendarsI getCols() throws CalFacadeException {
+  protected CalendarsI getCols() {
     return svci.getCalendarsHandler();
   }
 
-  protected NotificationsI getNotes() throws CalFacadeException {
+  protected NotificationsI getNotes() {
     return svci.getNotificationsHandler();
   }
 
-  protected ResourcesI getRess() throws CalFacadeException {
+  protected ResourcesI getRess() {
     return svci.getResourcesHandler();
   }
 
-  protected UsersI getUsers() throws CalFacadeException {
+  protected UsersI getUsers() {
     return svci.getUsersHandler();
   }
 
-  protected Calintf getCal() throws CalFacadeException {
-    return svci.getCal();
+  protected Calintf getCal() {
+    try {
+      return svci.getCal();
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 
   protected Calintf getCal(final BwCalendar cal) throws CalFacadeException {
@@ -413,9 +438,8 @@ public class CalSvcDb implements Logged, Serializable {
   /** Assign a guid to an event. A noop if this event already has a guid.
    *
    * @param val      BwEvent object
-   * @throws CalFacadeException
    */
-  protected void assignGuid(final BwEvent val) throws CalFacadeException {
+  protected void assignGuid(final BwEvent val) {
     if (val == null) {
       return;
     }
@@ -474,11 +498,9 @@ public class CalSvcDb implements Logged, Serializable {
    *
    * @param entity shareable entity
    * @param ownerHref - new owner
-   * @throws CalFacadeException
    */
   protected void setupSharableEntity(final BwShareableDbentity entity,
-                                     final String ownerHref)
-          throws CalFacadeException {
+                                     final String ownerHref) {
     if (entity.getCreatorHref() == null) {
       entity.setCreatorHref(ownerHref);
     }
@@ -490,11 +512,9 @@ public class CalSvcDb implements Logged, Serializable {
    *
    * @param entity owned entity
    * @param ownerHref - new owner
-   * @throws CalFacadeException
    */
   protected void setupOwnedEntity(final BwOwnedDbentity entity,
-                                  final String ownerHref)
-          throws CalFacadeException {
+                                  final String ownerHref) {
     entity.setPublick(isPublicAdmin());
 
     if (entity.getOwnerHref() == null) {
@@ -531,7 +551,7 @@ public class CalSvcDb implements Logged, Serializable {
     return getSvc().getSystemProperties();
   }
 
-  protected BwCalendar unwrap(final BwCalendar val) throws CalFacadeException {
+  protected BwCalendar unwrap(final BwCalendar val) {
     if (val == null) {
       return null;
     }
@@ -575,33 +595,6 @@ public class CalSvcDb implements Logged, Serializable {
     }
 
     return new SplitResult(uri.substring(0, pos), uri.substring(pos + 1, end));
-  }
-
-  /* ====================================================================
-   *                   Private methods
-   * ==================================================================== */
-
-  private <T extends Response> T errorReturn(final T resp,
-                                             final Throwable t) {
-    return errorReturn(resp, t, failed);
-  }
-
-  private <T extends Response> T errorReturn(final T resp,
-                                             final Throwable t,
-                                             final Response.Status st) {
-    if (debug()) {
-      error(t);
-    }
-    return errorReturn(resp, t.getLocalizedMessage(), st);
-  }
-
-  private <T extends Response> T errorReturn(final T resp,
-                                             final String msg,
-                                             final Response.Status st) {
-    resp.setMessage(msg);
-    resp.setStatus(st);
-
-    return resp;
   }
 
   /* ====================================================================

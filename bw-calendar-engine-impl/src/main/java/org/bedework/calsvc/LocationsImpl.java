@@ -30,7 +30,6 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 
 import java.util.Collection;
 
-import static org.bedework.calfacade.indexing.BwIndexer.docTypeCategory;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
 
 /** Class which handles manipulation of Locations.
@@ -119,8 +118,15 @@ public class LocationsImpl
   }
 
   @Override
-  public boolean exists(final BwLocation val) throws CalFacadeException {
-    return findPersistent(val.getFinderKeyValue(), val.getOwnerHref()) != null;
+  public boolean exists(Response resp,
+                        final BwLocation val) {
+    try {
+      return findPersistent(val.getFinderKeyValue(),
+                            val.getOwnerHref()) != null;
+    } catch (final Throwable t) {
+      Response.error(resp, t);
+      return false;
+    }
   }
 
   @Override
