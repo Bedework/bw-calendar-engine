@@ -112,21 +112,23 @@ public class LocationsImpl
   }
 
   @Override
-  BwLocation findPersistent(final BwLocation val,
-                            final String ownerHref) throws CalFacadeException {
+  GetEntityResponse<BwLocation> findPersistent(final BwLocation val,
+                                               final String ownerHref) {
     return findPersistent(val.getAddress(), ownerHref);
   }
 
   @Override
   public boolean exists(Response resp,
                         final BwLocation val) {
-    try {
-      return findPersistent(val.getFinderKeyValue(),
-                            val.getOwnerHref()) != null;
-    } catch (final Throwable t) {
-      Response.error(resp, t);
+    var getResp = findPersistent(val.getFinderKeyValue(),
+                            val.getOwnerHref());
+
+    if (getResp.isError()) {
+      Response.fromResponse(resp, getResp);
       return false;
     }
+
+    return getResp.isOk();
   }
 
   @Override

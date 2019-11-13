@@ -24,6 +24,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.IcalDefs.IcalComponentType;
 import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.misc.ToString;
 import org.bedework.util.timezones.Timezones;
 
 import net.fortuna.ical4j.model.TimeZone;
@@ -71,11 +72,13 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
     public String tzSpec;
 
     /** Constructor
-     * @param tzid
-     * @param tz
-     * @param tzSpec
+     * @param tzid the id
+     * @param tz it's internal representation
+     * @param tzSpec the string form
      */
-    public TimeZoneInfo(final String tzid, final TimeZone tz, final String tzSpec) {
+    public TimeZoneInfo(final String tzid,
+                        final TimeZone tz,
+                        final String tzSpec) {
       this.tzid = tzid;
       this.tz = tz;
       this.tzSpec = tzSpec;
@@ -89,7 +92,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   private IcalComponentType componentType = IcalComponentType.none;
 
   /**
-   * @param val
+   * @param val product id
    */
   public void setProdid(final String val) {
     prodid = val;
@@ -103,7 +106,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   }
 
   /**
-   * @param val
+   * @param val version
    */
   public void setVersion(final String val) {
     version = val;
@@ -117,7 +120,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   }
 
   /**
-   * @param val
+   * @param val cal scale
    */
   public void setCalscale(final String val) {
     calscale = val;
@@ -131,7 +134,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   }
 
   /**
-   * @param val
+   * @param val method
    */
   public void setMethod(final String val) {
     method = val;
@@ -145,11 +148,11 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   }
 
   /**
-   * @return Collection
+   * @return Collection of timezone info
    */
   public Collection<TimeZoneInfo> getTimeZones() {
     if (timeZones == null) {
-      timeZones = new ArrayList<TimeZoneInfo>();
+      timeZones = new ArrayList<>();
     }
     return timeZones;
   }
@@ -163,7 +166,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   }
 
   /**
-   * @param val
+   * @param val collection of components
    */
   public void setComponents(final Collection<Object> val) {
     components = val;
@@ -174,13 +177,13 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
    */
   public Collection<Object> getComponents() {
     if (components == null) {
-      components = new ArrayList<Object>();
+      components = new ArrayList<>();
     }
     return components;
   }
 
   /**
-   * @param val
+   * @param val component type for the collection
    */
   public void setComponentType(final IcalComponentType val) {
     if ((componentType == IcalComponentType.none) ||
@@ -199,7 +202,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   }
 
   /**
-   * @param val
+   * @param val method type
    */
   public void setMethodType(final int val) {
     if (val == methodTypeNone) {
@@ -236,7 +239,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   }
 
   /**
-   * @param mt
+   * @param mt method index
    * @return A string value for the method
    */
   public static String getMethodName(final int mt) {
@@ -360,16 +363,12 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
    * @return boolean
    */
   public static boolean itipRequestMethodType(final int mt) {
-    if ((mt == methodTypeAdd) ||
-        (mt == methodTypeCancel) ||
-        (mt == methodTypeDeclineCounter) ||
-        (mt == methodTypePublish) ||
-        (mt == methodTypePollStatus) ||
-        (mt == methodTypeRequest)) {
-      return true;
-    }
-
-    return false;
+    return (mt == methodTypeAdd) ||
+            (mt == methodTypeCancel) ||
+            (mt == methodTypeDeclineCounter) ||
+            (mt == methodTypePublish) ||
+            (mt == methodTypePollStatus) ||
+            (mt == methodTypeRequest);
   }
 
   /** True for itip reply type method
@@ -378,13 +377,9 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
    * @return boolean
    */
   public static boolean itipReplyMethodType(final int mt) {
-    if ((mt == methodTypeCounter) ||
-        (mt == methodTypeRefresh) ||
-        (mt == methodTypeReply)) {
-      return true;
-    }
-
-    return false;
+    return (mt == methodTypeCounter) ||
+            (mt == methodTypeRefresh) ||
+            (mt == methodTypeReply);
   }
 
   /** True for valid itip method
@@ -401,11 +396,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
       return false;
     }
 
-    if (val >= methods.length) {
-      return false;
-    }
-
-    return true;
+    return val < methods.length;
   }
 
   /** True for valid itip method for given component type
@@ -433,13 +424,9 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
     }
 
     if (type == IcalComponentType.freebusy) {
-      if ((val == methodTypePublish) ||
-          (val == Icalendar.methodTypeRequest) ||
-          (val == Icalendar.methodTypeReply)) {
-        return true;
-      }
-
-      return false;
+      return (val == methodTypePublish) ||
+              (val == Icalendar.methodTypeRequest) ||
+              (val == Icalendar.methodTypeReply);
     }
 
 
@@ -482,7 +469,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
       }
 
       if (localTzs == null) {
-        localTzs = new HashMap<String, TimeZone>();
+        localTzs = new HashMap<>();
       }
 
       localTzs.put(timezone.getID(), timezone);
@@ -533,20 +520,14 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
 
   @Override
   public String toString() {
-    StringBuffer sb = new StringBuffer("Icalendar{prodid=");
-    sb.append(getProdid());
-    sb.append(", version=");
-    sb.append(getVersion());
+    final ToString ts = new ToString(this);
+    ts.append("prodid", getProdid());
+    ts.append("version", getVersion());
+    ts.newLine();
+    ts.append("method", String.valueOf(getMethod()));
+    ts.append("methodType", getMethodType());
+    ts.append("componentType", getComponentType());
 
-    sb.append("\n, method=");
-    sb.append(String.valueOf(getMethod()));
-    sb.append(", methodType=");
-    sb.append(getMethodType());
-    sb.append(", componentType=");
-    sb.append(getComponentType());
-
-    sb.append("}");
-
-    return sb.toString();
+    return ts.toString();
   }
 }

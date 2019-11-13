@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.responses.GetEntitiesResponse;
+import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.responses.Response;
 import org.bedework.calsvci.Categories;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -76,21 +77,23 @@ public class CategoriesImpl
   }
 
   @Override
-  BwCategory findPersistent(final BwCategory val,
-                            final String ownerHref) throws CalFacadeException {
+  GetEntityResponse<BwCategory> findPersistent(final BwCategory val,
+                                               final String ownerHref) {
     return findPersistent(val.getWord(), ownerHref);
   }
 
   @Override
   public boolean exists(final Response resp,
                         final BwCategory cat) {
-    try {
-      return findPersistent(cat.getWord(),
-                            cat.getOwnerHref()) != null;
-    } catch (final Throwable t) {
-      Response.error(resp, t);
+    var getResp = findPersistent(cat.getWord(),
+                                 cat.getOwnerHref());
+
+    if (getResp.isError()) {
+      Response.fromResponse(resp, getResp);
       return false;
     }
+
+    return getResp.isOk();
   }
 
   @Override

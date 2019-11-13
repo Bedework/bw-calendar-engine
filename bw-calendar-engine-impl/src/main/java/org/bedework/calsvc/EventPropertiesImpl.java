@@ -86,11 +86,10 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
    *
    * @param val the non-persistent form
    * @param ownerHref principal href
-   * @return T or null
-   * @throws CalFacadeException
+   * @return Status and possible T
    */
-  abstract T findPersistent(final T val,
-                            final String ownerHref) throws CalFacadeException;
+  abstract GetEntityResponse<T> findPersistent(final T val,
+                                               final String ownerHref);
 
   /** Check for existence
    *
@@ -244,7 +243,13 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
       return resp;
     }
 
-    if (!exists(resp, val)) {
+    var exists = exists(resp, val);
+    if (resp.isError()) {
+      return resp;
+    }
+
+    if (exists) {
+      resp.setStatus(Response.Status.exists);
       return resp;
     }
 
@@ -372,11 +377,16 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     }
 
     try {
-      var entity = findPersistent(val, oh);
+      var resp = findPersistent(val, oh);
 
-      if (entity != null) {
+      if (resp.isError()) {
+        Response.fromResponse(eeer, resp);
+        return eeer;
+      }
+
+      if (resp.isOk()) {
         // Exists
-        eeer.setEntity(entity);
+        eeer.setEntity(resp.getEntity());
         return eeer;
       }
 
@@ -490,9 +500,22 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     cachedByUid.remove(uid);
   }
 
-  protected T findPersistent(final BwString val,
-                             final String ownerHref) throws CalFacadeException {
-    return coreHdlr.find(val, ownerHref);
+  protected GetEntityResponse<T> findPersistent(final BwString val,
+                                                final String ownerHref) {
+    var resp = new GetEntityResponse<T>();
+
+    try {
+      final T ent = coreHdlr.find(val, ownerHref);
+      if (ent == null) {
+        resp.setStatus(Response.Status.notFound);
+      } else {
+        resp.setEntity(ent);
+      }
+
+      return resp;
+    } catch (CalFacadeException cfe) {
+      return Response.error(resp, cfe);
+    }
   }
 
   /* ====================================================================

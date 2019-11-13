@@ -105,6 +105,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * @param date
    * @param tzid
    * @return initialised BwDateTime
+   * @throws RuntimeException on bad date
    */
   public static BwDateTime makeBwDateTime(final boolean dateType,
                                           final String date,
@@ -148,17 +149,17 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * @param tzid
    * @param floating
    * @return initialised BwDateTime
-   * @throws CalFacadeException
+   * @throws RuntimeException on bad date
    */
   public static BwDateTime makeBwDateTime(final boolean dateType,
                                           final String date,
                                           final String utcDate,
                                           final String tzid,
-                                          final boolean floating) throws CalFacadeException {
+                                          final boolean floating) {
     try {
       if (dateType) {
         if (!DateTimeUtil.isISODate(date)) {
-          throw new CalFacadeException("org.bedework.datetime.expect.dateonly");
+          throw new RuntimeException("org.bedework.datetime.expect.dateonly");
         }
       }
 
@@ -170,10 +171,10 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       bwd.setFloatFlag(floating);
 
       return bwd;
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
-    } catch (final Throwable t) {
-      throw new CalFacadeBadDateException();
+    } catch (RuntimeException rte) {
+      throw rte;
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
     }
   }
 

@@ -553,15 +553,15 @@ public class EntityBuilder extends EntityBuilderBase {
    *                   private methods
    * ======================================================================== */
 
-  private boolean pushFields(final PropertyInfoIndex pi) throws CalFacadeException {
+  private boolean pushFields(final PropertyInfoIndex pi) {
     try {
       return pushFields(getFirstValue(pi));
     } catch (final IndexException ie) {
-      throw new CalFacadeException(ie);
+      throw new RuntimeException(ie);
     }
   }
 
-  private BwGeo restoreGeo() throws CalFacadeException {
+  private BwGeo restoreGeo() {
     if (!pushFields(PropertyInfoIndex.GEO)) {
       return null;
     }
@@ -861,8 +861,8 @@ public class EntityBuilder extends EntityBuilderBase {
                                                         floating);
 
         tms.add(tm);
-      } catch (final IndexException ie) {
-        throw new CalFacadeException(ie);
+      } catch (final Throwable t) {
+        throw new CalFacadeException(t);
       } finally {
         popFields();
       }
@@ -1073,7 +1073,6 @@ public class EntityBuilder extends EntityBuilderBase {
     return hrefs;
   }
 
-  @SuppressWarnings("unchecked")
   private List<Object> getFieldValues(final PropertyInfoIndex id) {
     return getFieldValues(getJname(id));
   }
@@ -1213,7 +1212,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return (String)getFirstValue(id);
   }
 
-  private BwDateTime unindexDate(final PropertyInfoIndex pi) throws CalFacadeException {
+  private BwDateTime unindexDate(final PropertyInfoIndex pi) {
     String utc;
     String local;
     String tzid;

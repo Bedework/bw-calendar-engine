@@ -27,10 +27,10 @@ public class BwVersion {
   public static final int bedeworkMajorVersion = 3;
 
   /** When this changes - schema and api usually have significant changes */
-  public static final int bedeworkMinorVersion = 11;
+  public static final int bedeworkMinorVersion = 13;
 
   /** Minor functional updates */
-  public static final int bedeworkUpdateVersion = 1;
+  public static final int bedeworkUpdateVersion = 2;
 
   /** Patches which might introduce schema incompatibility if needed.
    * Essentially a bug fix

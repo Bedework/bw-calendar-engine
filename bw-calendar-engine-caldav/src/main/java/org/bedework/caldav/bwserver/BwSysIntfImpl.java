@@ -2284,7 +2284,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     try {
       BwCalendar bwcol = null;
       if (col != null) {
-        bwcol = unwrap((CalDAVCollection)col.resolveAlias(true));
+        bwcol = unwrap(col.resolveAlias(true));
       }
 
       Icalendar ic = trans.fromIcal(bwcol,

@@ -23,6 +23,7 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.responses.GetEntitiesResponse;
+import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.responses.Response;
 import org.bedework.calsvci.Contacts;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -76,21 +77,23 @@ public class ContactsImpl
   }
 
   @Override
-  BwContact findPersistent(final BwContact val,
-                           final String ownerHref) throws CalFacadeException {
+  GetEntityResponse<BwContact> findPersistent(final BwContact val,
+                                              final String ownerHref) {
     return findPersistent(val.getFinderKeyValue(), ownerHref);
   }
 
   @Override
   public boolean exists(final Response resp,
                         final BwContact val) {
-    try {
-      return findPersistent(val.getFinderKeyValue(),
-                                     val.getOwnerHref()) != null;
-    } catch (final Throwable t) {
-      Response.error(resp, t);
+    var getResp = findPersistent(val.getFinderKeyValue(),
+                                 val.getOwnerHref());
+
+    if (getResp.isError()) {
+      Response.fromResponse(resp, getResp);
       return false;
     }
+
+    return getResp.isOk();
   }
 
   @Override
