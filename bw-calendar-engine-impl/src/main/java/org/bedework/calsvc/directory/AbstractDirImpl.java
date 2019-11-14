@@ -240,7 +240,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public synchronized boolean validPrincipal(final String href) throws CalFacadeException {
+  public synchronized boolean validPrincipal(final String href) {
     // XXX Not sure how we might use this for admin users.
     if (href == null) {
       return false;
@@ -663,7 +663,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
   @Override
   public String makePrincipalUri(final String id,
-                                 final int whoType) throws CalFacadeException {
+                                 final int whoType) {
     if (isPrincipal(id)) {
       return id;
     }
@@ -671,7 +671,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     final String root = fromWho.get(whoType);
 
     if (root == null) {
-      throw new CalFacadeException(CalFacadeException.unknownPrincipalType);
+      throw new RuntimeException(CalFacadeException.unknownPrincipalType);
     }
 
     return Util.buildPath(colPathEndsWithSlash, root, "/", id);
@@ -708,7 +708,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
    * @see org.bedework.calfacade.ifs.Directories#uriToCaladdr(java.lang.String)
    */
   @Override
-  public String uriToCaladdr(final String val) throws CalFacadeException {
+  public String uriToCaladdr(final String val) {
     /* Override this to do directory lookups or query vcard. The following
      * transforms may be insufficient
      */
@@ -767,9 +767,6 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     return userToCaladdr(val.getAccount());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#userToCaladdr(java.lang.String)
-   */
   @Override
   public String userToCaladdr(final String val) {
     /* Override this to do directory lookups or query vcard. The following
@@ -834,14 +831,11 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#caladdrToPrincipal(java.lang.String)
-   */
   @Override
-  public BwPrincipal caladdrToPrincipal(final String caladdr) throws CalFacadeException {
-    try {
+  public BwPrincipal caladdrToPrincipal(final String caladdr) {
+    //try {
       if (caladdr == null) {
-        throw new CalFacadeException(CalFacadeException.nullCalendarUserAddr);
+        throw new RuntimeException(CalFacadeException.nullCalendarUserAddr);
       }
 
       BwPrincipal p = calAddrToPrincipalMap.get(caladdr);
@@ -911,12 +905,12 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       p = getPrincipal(makePrincipalUri(acc, whoType));
       calAddrToPrincipalMap.put(caladdr, p);
 
-      return p;
+      return p;/*
     } catch (CalFacadeException cfe) {
       throw cfe;
     } catch (Throwable t) {
       throw new CalFacadeException(t);
-    }
+    }*/
   }
 
   private static class CalAddr {
@@ -1044,11 +1038,11 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     return sysRoots;
   }
 
-  protected CalAddrPrefixes getCaPrefixes() throws CalFacadeException {
+  protected CalAddrPrefixes getCaPrefixes() {
     return caPrefixes;
   }
 
-  protected Collection<CAPrefixInfo> getCaPrefixInfo() throws CalFacadeException {
+  protected Collection<CAPrefixInfo> getCaPrefixInfo() {
     if (caPrefixInfo != null) {
       return caPrefixInfo;
     }
@@ -1080,7 +1074,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     capInfo.add(new CAPrefixInfo(prefix, type));
   }
 
-  protected CardDavInfo getCardDavInfo(final boolean auth) throws CalFacadeException {
+  protected CardDavInfo getCardDavInfo(final boolean auth) {
     if (auth) {
       return authCdinfo;
     }
@@ -1449,8 +1443,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       }
 
       return new ResponseHolder(URLDecoder.decode(XmlUtil.getElementContent(
-                      (Element)hrefEl),
-                                StandardCharsets.UTF_8)); // href should be escaped
+              hrefEl), StandardCharsets.UTF_8)); // href should be escaped
     } catch (final Throwable t) {
       return new ResponseHolder(t);
     }

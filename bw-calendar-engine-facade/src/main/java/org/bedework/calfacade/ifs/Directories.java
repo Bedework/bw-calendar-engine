@@ -184,9 +184,8 @@ public interface Directories extends Serializable {
    *
    * @param href
    * @return true if it's a valid principal
-   * @throws CalFacadeException
    */
-  boolean validPrincipal(String href) throws CalFacadeException;
+  boolean validPrincipal(String href);
 
   /** Does the value appear to represent a valid principal?
    *
@@ -257,9 +256,8 @@ public interface Directories extends Serializable {
    *
    * @param val        uri
    * @return caladdr for this system or null for an invalid uri
-   * @throws CalFacadeException  for errors
    */
-  String uriToCaladdr(String val) throws CalFacadeException;
+  String uriToCaladdr(String val);
 
   /** Given a user principal return a calendar address.
    *

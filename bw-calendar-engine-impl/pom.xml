@@ -28,7 +28,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-calendar-engine-ical</artifactId>
+			<artifactId>bw-calendar-engine-convert</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

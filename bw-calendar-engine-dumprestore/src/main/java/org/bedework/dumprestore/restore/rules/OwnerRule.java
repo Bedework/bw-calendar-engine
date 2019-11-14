@@ -26,7 +26,7 @@ import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.dumprestore.restore.OwnerUidKey;
 import org.bedework.dumprestore.restore.RestoreGlobals;
-import org.bedework.icalendar.IcalTranslator.SkipThis;
+import org.bedework.convert.IcalTranslator.SkipThis;
 
 /** Retrieve an owner and leave on the stack.
  *

@@ -27,7 +27,7 @@ import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.icalendar.IcalTranslator;
+import org.bedework.convert.IcalTranslator;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.XmlEmit;

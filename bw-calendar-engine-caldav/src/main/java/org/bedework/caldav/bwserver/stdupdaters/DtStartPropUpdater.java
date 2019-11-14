@@ -22,7 +22,6 @@ package org.bedework.caldav.bwserver.stdupdaters;
 import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
@@ -39,61 +38,57 @@ import javax.xml.ws.Holder;
 public class DtStartPropUpdater extends DateDatetimePropUpdater {
   @Override
   public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
-    try {
-      BwEvent ev = ui.getEvent();
-      boolean scheduleReply = ev.getScheduleMethod() == ScheduleMethods.methodTypeReply;
-      // No dates valid for reply
+    BwEvent ev = ui.getEvent();
+    boolean scheduleReply = ev.getScheduleMethod() == ScheduleMethods.methodTypeReply;
+    // No dates valid for reply
 
-      DtstartPropType dt = (DtstartPropType)ui.getProp();
+    DtstartPropType dt = (DtstartPropType)ui.getProp();
 
-      DatesState ds = (DatesState)ui.getState(DatesState.stateName);
-      if (ds == null) {
-        ds = new DatesState(ev);
-        ui.saveState(DatesState.stateName, ds);
-      }
-
-      ChangeTableEntry cte = ui.getCte();
-      if (ui.isRemove()) {
-        if (!scheduleReply &&
-            (ev.getEntityType() != IcalDefs.entityTypeTodo)) {
-          return new UpdateResult("Entity requires start date");
-        }
-
-        cte.setDeleted(ev.getDtstart());
-        ds.start = null;
-        return UpdateResult.getOkResult();
-      }
-
-      if (ui.isAdd()) {
-        if (!ev.getNoStart()) {
-          return new UpdateResult("Entity already has start date - cannot add");
-        }
-
-        ds.start = BwDateTime.makeBwDateTime(dt);
-        cte.setAdded(ds.start);
-        return UpdateResult.getOkResult();
-      }
-
-      /* Changing dtstart - either value or parameters */
-      if (ev.getNoStart()) {
-        return new UpdateResult("Entity has no start date - cannot change");
-      }
-
-      Holder<BwDateTime> resdt = new Holder<BwDateTime>();
-
-      UpdateResult ur = makeDt(ev.getDtstart(), resdt, ui);
-      if (!ur.getOk()) {
-        return ur;
-      }
-
-      if (resdt.value != null) {
-        cte.setChanged(ev.getDtstart(), resdt.value);
-        ds.start = resdt.value;
-      }
-
-      return UpdateResult.getOkResult();
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
+    DatesState ds = (DatesState)ui.getState(DatesState.stateName);
+    if (ds == null) {
+      ds = new DatesState(ev);
+      ui.saveState(DatesState.stateName, ds);
     }
+
+    ChangeTableEntry cte = ui.getCte();
+    if (ui.isRemove()) {
+      if (!scheduleReply &&
+              (ev.getEntityType() != IcalDefs.entityTypeTodo)) {
+        return new UpdateResult("Entity requires start date");
+      }
+
+      cte.setDeleted(ev.getDtstart());
+      ds.start = null;
+      return UpdateResult.getOkResult();
+    }
+
+    if (ui.isAdd()) {
+      if (!ev.getNoStart()) {
+        return new UpdateResult("Entity already has start date - cannot add");
+      }
+
+      ds.start = BwDateTime.makeBwDateTime(dt);
+      cte.setAdded(ds.start);
+      return UpdateResult.getOkResult();
+    }
+
+    /* Changing dtstart - either value or parameters */
+    if (ev.getNoStart()) {
+      return new UpdateResult("Entity has no start date - cannot change");
+    }
+
+    Holder<BwDateTime> resdt = new Holder<BwDateTime>();
+
+    UpdateResult ur = makeDt(ev.getDtstart(), resdt, ui);
+    if (!ur.getOk()) {
+      return ur;
+    }
+
+    if (resdt.value != null) {
+      cte.setChanged(ev.getDtstart(), resdt.value);
+      ds.start = resdt.value;
+    }
+
+    return UpdateResult.getOkResult();
   }
 }

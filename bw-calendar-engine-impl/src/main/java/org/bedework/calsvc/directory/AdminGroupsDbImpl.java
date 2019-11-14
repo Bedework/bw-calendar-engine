@@ -76,13 +76,13 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   }
 
   @Override
-  public boolean validPrincipal(final String account) throws CalFacadeException {
+  public boolean validPrincipal(final String account) {
     // XXX Not sure how we might use this for admin users.
     return true;
   }
 
   @Override
-  public BwPrincipalInfo getDirInfo(final BwPrincipal p) throws CalFacadeException {
+  public BwPrincipalInfo getDirInfo(final BwPrincipal p) {
     /* Was never previously called - getUserInfo is not defined as a query
     HibSession sess = getSess();
 
@@ -243,12 +243,12 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   } */
 
   @Override
-  public void updateGroup(final BwGroup group) throws CalFacadeException {
+  public void updateGroup(final BwGroup group) {
     cb.updateGroup(group, true);
   }
 
   @Override
-  public Collection<BwGroup> findGroupParents(final BwGroup group) throws CalFacadeException {
+  public Collection<BwGroup> findGroupParents(final BwGroup group) {
     return cb.findGroupParents(group, true);
   }
 
@@ -260,7 +260,7 @@ public class AdminGroupsDbImpl extends AbstractDirImpl implements AdminGroups {
   }
 
   private boolean checkPathForSelf(final BwGroup group,
-                                   final BwPrincipal val) throws CalFacadeException {
+                                   final BwPrincipal val) {
     if (group.equals(val)) {
       return false;
     }

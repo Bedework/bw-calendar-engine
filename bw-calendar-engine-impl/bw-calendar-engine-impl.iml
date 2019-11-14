@@ -22,7 +22,7 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.9" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-caldav-server:4.0.8" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
-    <orderEntry type="module" module-name="bw-calendar-engine-ical" />
+    <orderEntry type="module" module-name="bw-calendar-engine-convert" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.9" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.glassfish.jaxb:jaxb-runtime:2.3.2" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: jakarta.xml.bind:jakarta.xml.bind-api:2.3.2" level="project" />

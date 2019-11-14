@@ -23,7 +23,6 @@ import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.base.StartEndComponent;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.webdav.servlet.shared.WebdavException;
@@ -43,69 +42,65 @@ public class DtEndDuePropUpdater extends DateDatetimePropUpdater {
     /* For start, end and duration we have to finish up at the end after all
      * changes are made.
      */
-    try {
-      BwEvent ev = ui.getEvent();
+    BwEvent ev = ui.getEvent();
 
-      DateDatetimePropertyType dt = (DateDatetimePropertyType)ui.getProp();
+    DateDatetimePropertyType dt = (DateDatetimePropertyType)ui.getProp();
 
-      if (dt instanceof DuePropType) {
-        if (ev.getEntityType() != IcalDefs.entityTypeTodo) {
-          return new UpdateResult("DUE only valid for tasks");
-        }
-      } else {
-        if (ev.getEntityType() == IcalDefs.entityTypeTodo) {
-          return new UpdateResult("DUE required for tasks");
-        }
+    if (dt instanceof DuePropType) {
+      if (ev.getEntityType() != IcalDefs.entityTypeTodo) {
+        return new UpdateResult("DUE only valid for tasks");
       }
-
-      DatesState ds = (DatesState)ui.getState(DatesState.stateName);
-      if (ds == null) {
-        ds = new DatesState(ev);
-        ui.saveState(DatesState.stateName, ds);
+    } else {
+      if (ev.getEntityType() == IcalDefs.entityTypeTodo) {
+        return new UpdateResult("DUE required for tasks");
       }
+    }
 
-      ChangeTableEntry cte = ui.getCte();
-      if (ui.isRemove()) {
-        if (ev.getEndType() != StartEndComponent.endTypeDate) {
-          return new UpdateResult("Entity has no end date - cannot remove");
-        }
-        cte.setDeleted(ev.getDtend());
-        ds.end = null;
-        // Finish off later
+    DatesState ds = (DatesState)ui.getState(DatesState.stateName);
+    if (ds == null) {
+      ds = new DatesState(ev);
+      ui.saveState(DatesState.stateName, ds);
+    }
 
-        return UpdateResult.getOkResult();
-      }
-
-      if (ui.isAdd()) {
-        if (ev.getEndType() == StartEndComponent.endTypeDate) {
-          return new UpdateResult("Entity already has end date - cannot add");
-        }
-
-        ds.end = BwDateTime.makeBwDateTime(dt);
-        cte.setAdded(ds.end);
-        return UpdateResult.getOkResult();
-      }
-
-      /* Changing dtend - either value or parameters */
+    ChangeTableEntry cte = ui.getCte();
+    if (ui.isRemove()) {
       if (ev.getEndType() != StartEndComponent.endTypeDate) {
-        return new UpdateResult("Entity has no end date - cannot change");
+        return new UpdateResult("Entity has no end date - cannot remove");
       }
-
-      Holder<BwDateTime> resdt = new Holder<BwDateTime>();
-
-      UpdateResult ur = makeDt(ev.getDtend(), resdt, ui);
-      if (!ur.getOk()) {
-        return ur;
-      }
-
-      if (resdt.value != null) {
-        cte.setChanged(ev.getDtend(), resdt.value);
-        ds.end = resdt.value;
-      }
+      cte.setDeleted(ev.getDtend());
+      ds.end = null;
+      // Finish off later
 
       return UpdateResult.getOkResult();
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
     }
+
+    if (ui.isAdd()) {
+      if (ev.getEndType() == StartEndComponent.endTypeDate) {
+        return new UpdateResult("Entity already has end date - cannot add");
+      }
+
+      ds.end = BwDateTime.makeBwDateTime(dt);
+      cte.setAdded(ds.end);
+      return UpdateResult.getOkResult();
+    }
+
+    /* Changing dtend - either value or parameters */
+    if (ev.getEndType() != StartEndComponent.endTypeDate) {
+      return new UpdateResult("Entity has no end date - cannot change");
+    }
+
+    Holder<BwDateTime> resdt = new Holder<BwDateTime>();
+
+    UpdateResult ur = makeDt(ev.getDtend(), resdt, ui);
+    if (!ur.getOk()) {
+      return ur;
+    }
+
+    if (resdt.value != null) {
+      cte.setChanged(ev.getDtend(), resdt.value);
+      ds.end = resdt.value;
+    }
+
+    return UpdateResult.getOkResult();
   }
 }

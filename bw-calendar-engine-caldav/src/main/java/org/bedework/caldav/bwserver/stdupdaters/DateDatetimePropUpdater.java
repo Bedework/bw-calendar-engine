@@ -23,7 +23,6 @@ import org.bedework.caldav.bwserver.ParameterUpdater;
 import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.misc.Util;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
@@ -69,73 +68,69 @@ public abstract class DateDatetimePropUpdater extends AlarmPropUpdater {
   protected UpdateResult makeDt(final BwDateTime evdt,
                                 final Holder<BwDateTime> resdt,
                                 final UpdateInfo ui) throws WebdavException {
-    try {
-      String tzid = evdt.getTzid();
-      String dtval = evdt.getDtval();
-      boolean dateOnly = evdt.getDateType();
+    String tzid = evdt.getTzid();
+    String dtval = evdt.getDtval();
+    boolean dateOnly = evdt.getDateType();
 
-      BwDateTime newdt = null;
+    BwDateTime newdt = null;
 
-      /* New or changed tzid? */
-      for (ParameterUpdater.UpdateInfo parui: ui.getParamUpdates()) {
-        if (parui.getParam() instanceof TzidParamType) {
-          if (parui.isRemove()) {
-            tzid = null;
-            break;
-          }
-
-          if (parui.isAdd()) {
-            if (tzid != null) {
-              return new UpdateResult(ui.getPropName().toString() +
-                                      " already has tzid");
-            }
-
-            tzid = ((TzidParamType)parui.getParam()).getText();
-            break;
-          }
-
-          if (tzid == null) {
-            return new UpdateResult(ui.getPropName().toString() +
-                                    " has no tzid to change");
-          }
-
-          tzid = ((TzidParamType)parui.getUpdparam()).getText();
+    /* New or changed tzid? */
+    for (ParameterUpdater.UpdateInfo parui: ui.getParamUpdates()) {
+      if (parui.getParam() instanceof TzidParamType) {
+        if (parui.isRemove()) {
+          tzid = null;
           break;
         }
-      }
 
-      if (ui.getUpdprop() != null) {
-        // Has new value
-        DateDatetimePropertyType newdts = (DateDatetimePropertyType)ui.getUpdprop();
+        if (parui.isAdd()) {
+          if (tzid != null) {
+            return new UpdateResult(ui.getPropName().toString() +
+                                            " already has tzid");
+          }
 
-        dateOnly = newdts.getDate() != null;
-
-        newdt = BwDateTime.makeBwDateTime(newdts, tzid);
-      }
-
-      if ((newdt == null) && (!Util.equalsString(tzid, evdt.getTzid()))) {
-        // Tzid changed
-        newdt = BwDateTime.makeBwDateTime(dateOnly, dtval, tzid);
-      }
-
-      if (newdt != null) {
-        // Validate
-        int res = newdt.validate();
-
-        if (res == BwDateTime.dtBadDtval) {
-          return new UpdateResult("Bad date value for " + ui.getPropName());
+          tzid = ((TzidParamType)parui.getParam()).getText();
+          break;
         }
 
-        if (res == BwDateTime.dtBadTz) {
-          return new UpdateResult("Bad tzid for " + ui.getPropName());
+        if (tzid == null) {
+          return new UpdateResult(ui.getPropName().toString() +
+                                          " has no tzid to change");
         }
+
+        tzid = ((TzidParamType)parui.getUpdparam()).getText();
+        break;
       }
-
-      resdt.value = newdt;
-
-      return UpdateResult.getOkResult();
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
     }
+
+    if (ui.getUpdprop() != null) {
+      // Has new value
+      DateDatetimePropertyType newdts = (DateDatetimePropertyType)ui.getUpdprop();
+
+      dateOnly = newdts.getDate() != null;
+
+      newdt = BwDateTime.makeBwDateTime(newdts, tzid);
+    }
+
+    if ((newdt == null) && (!Util.equalsString(tzid, evdt.getTzid()))) {
+      // Tzid changed
+      newdt = BwDateTime.makeBwDateTime(dateOnly, dtval, tzid);
+    }
+
+    if (newdt != null) {
+      // Validate
+      int res = newdt.validate();
+
+      if (res == BwDateTime.dtBadDtval) {
+        return new UpdateResult("Bad date value for " + ui.getPropName());
+      }
+
+      if (res == BwDateTime.dtBadTz) {
+        return new UpdateResult("Bad tzid for " + ui.getPropName());
+      }
+    }
+
+    resdt.value = newdt;
+
+    return UpdateResult.getOkResult();
   }
 }

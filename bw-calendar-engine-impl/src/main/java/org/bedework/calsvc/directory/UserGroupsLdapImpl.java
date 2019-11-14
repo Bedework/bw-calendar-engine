@@ -53,7 +53,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
    *  =================================================================== */
 
   @Override
-  public boolean validPrincipal(final String href) throws CalFacadeException {
+  public boolean validPrincipal(final String href) {
     // XXX Not sure how we might use this for admin users.
     if (href == null) {
       return false;
@@ -517,7 +517,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
         beenHere = true;
 
         Attribute membersAttr = attrs.get(props.getGroupMemberAttr());
-        mbrs = new ArrayList<String>();
+        mbrs = new ArrayList<>();
 
         for (int m = 0; m < membersAttr.size(); m ++) {
           mbrs.add(membersAttr.get(m).toString());
@@ -635,7 +635,7 @@ public class UserGroupsLdapImpl extends AbstractDirImpl {
     if (ctx != null) {
       try {
         ctx.close();
-      } catch (Throwable t) {}
+      } catch (final Throwable ignored) {}
     }
   }
 }

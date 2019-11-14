@@ -84,11 +84,11 @@
 		<module>bw-calendar-engine-api</module>
 		<module>bw-calendar-engine-core</module>
 		<module>bw-calendar-engine-caldav</module>
+    <module>bw-calendar-engine-convert</module>
 		<module>bw-calendar-engine-impl</module>
 		<module>bw-calendar-engine-facade</module>
 		<module>bw-calendar-engine-chgnote</module>
 		<module>bw-calendar-engine-dumprestore</module>
-		<module>bw-calendar-engine-ical</module>
 		<module>bw-calendar-engine-indexer</module>
 		<module>bw-calendar-engine-inoutsched</module>
 		<module>bw-calendar-engine-interfaces</module>

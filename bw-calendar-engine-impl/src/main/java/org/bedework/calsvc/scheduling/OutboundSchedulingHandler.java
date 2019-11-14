@@ -33,7 +33,7 @@ import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvc.scheduling.hosts.BwHosts;
-import org.bedework.icalendar.Icalendar;
+import org.bedework.convert.Icalendar;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleStates;
 import org.bedework.util.misc.Uid;

@@ -31,7 +31,7 @@ import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
-import org.bedework.icalendar.IcalUtil;
+import org.bedework.convert.ical.IcalUtil;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.ScheduleMethods;

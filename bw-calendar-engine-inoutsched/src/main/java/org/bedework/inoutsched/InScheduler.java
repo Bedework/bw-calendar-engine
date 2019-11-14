@@ -26,7 +26,7 @@ import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.AbstractScheduler;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.icalendar.Icalendar;
+import org.bedework.convert.Icalendar;
 import org.bedework.inoutsched.processors.InCancel;
 import org.bedework.inoutsched.processors.InProcessor;
 import org.bedework.inoutsched.processors.InProcessor.ProcessResult;

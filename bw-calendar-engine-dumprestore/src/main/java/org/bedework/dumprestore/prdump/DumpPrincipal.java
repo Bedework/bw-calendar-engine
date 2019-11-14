@@ -29,7 +29,7 @@ import org.bedework.calsvci.CalendarsI;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.Utils;
 import org.bedework.dumprestore.dump.DumpGlobals;
-import org.bedework.icalendar.IcalTranslator;
+import org.bedework.convert.IcalTranslator;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 

@@ -27,7 +27,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.AbstractScheduler;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.icalendar.IcalTranslator;
+import org.bedework.convert.IcalTranslator;
 import org.bedework.sysevents.events.EntityQueuedEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.misc.Util;

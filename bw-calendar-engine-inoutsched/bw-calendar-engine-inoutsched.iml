@@ -48,7 +48,7 @@
     <orderEntry type="library" name="Maven: javax.jms:jms-api:1.1-rev-1" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-impl" />
     <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
-    <orderEntry type="module" module-name="bw-calendar-engine-ical" />
+    <orderEntry type="module" module-name="bw-calendar-engine-convert" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-caching:4.0.26" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-dav:4.0.26" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:apache-jdkim-library:0.4" level="project" />

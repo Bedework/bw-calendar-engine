@@ -60,7 +60,7 @@ public class CardDAVDirImpl extends AbstractDirImpl {
    *  =================================================================== */
 
   @Override
-  public boolean validPrincipal(final String href) throws CalFacadeException {
+  public boolean validPrincipal(final String href) {
     // XXX Not sure how we might use this for admin users.
     if (href == null) {
       return false;

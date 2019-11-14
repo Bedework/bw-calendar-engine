@@ -31,8 +31,8 @@ import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calfacade.ifs.IcalCallback;
-import org.bedework.icalendar.IcalTranslator;
-import org.bedework.icalendar.Xalarms;
+import org.bedework.convert.IcalTranslator;
+import org.bedework.convert.xcal.Xalarms;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
@@ -227,7 +227,7 @@ public class BwUpdates implements Logged {
         return new UpdateResult("No matching entity");
       }
 
-      List<EventInfo> entities = new ArrayList<EventInfo>();
+      List<EventInfo> entities = new ArrayList<>();
 
       entities.add(ei);
       entities.addAll(ei.getOverrides());
@@ -384,11 +384,11 @@ public class BwUpdates implements Logged {
           cs.recurrenceId = BwDateTime.makeBwDateTime(dtTzid.dateOnly,
                                                       dtTzid.dt,
                                                       dtTzid.tzid);
-        } catch (CalFacadeException cfe) {
+        } catch (RuntimeException cfe) {
           throw new WebdavException(cfe);
         }
 
-        if ((cs.uid != null) && (cs.recurrenceId != null)) {
+        if (cs.uid != null) {
           return cs;
         }
 

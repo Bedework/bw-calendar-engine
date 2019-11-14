@@ -30,7 +30,7 @@ import org.bedework.calsvc.scheduling.hosts.HostInfo;
 import org.bedework.calsvc.scheduling.hosts.IscheduleClient;
 import org.bedework.calsvc.scheduling.hosts.Response;
 import org.bedework.calsvc.scheduling.hosts.Response.ResponseElement;
-import org.bedework.icalendar.IcalTranslator;
+import org.bedework.convert.IcalTranslator;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleStates;
 

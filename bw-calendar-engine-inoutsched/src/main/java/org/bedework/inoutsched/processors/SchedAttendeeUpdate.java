@@ -26,7 +26,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.icalendar.Icalendar;
+import org.bedework.convert.Icalendar;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.misc.Util;
 
