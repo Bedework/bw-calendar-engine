@@ -226,12 +226,17 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     }
 
     try {
-      resp.setEntity(coreHdlr.find(val, owner.getPrincipalRef()));
+      final T ent = coreHdlr.find(val, owner.getPrincipalRef());
+
+      if (ent == null) {
+        return Response.notFound(resp);
+      }
+      resp.setEntity(ent);
+
+      return Response.ok(resp, null);
     } catch (final Throwable t) {
       return Response.error(resp, t);
     }
-
-    return Response.ok(resp, null);
   }
 
   @Override
