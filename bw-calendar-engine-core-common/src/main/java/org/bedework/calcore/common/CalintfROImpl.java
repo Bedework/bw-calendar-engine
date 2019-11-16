@@ -1520,9 +1520,8 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public <T extends BwEventProperty> CoreEventPropertiesI<T> getEvPropsHandler(
-          final Class<T> cl) throws CalFacadeException {
-    return null;
-    //throw new RuntimeException("Read only version");
+          final Class<T> cl) {
+    throw new RuntimeException("Read only version");
   }
 
   /* ====================================================================

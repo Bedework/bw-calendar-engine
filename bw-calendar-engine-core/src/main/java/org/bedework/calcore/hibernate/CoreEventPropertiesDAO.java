@@ -136,11 +136,9 @@ public class CoreEventPropertiesDAO extends DAOBase {
    *
    * @param sess the session
    * @param className of class we act for
-   * @throws CalFacadeException on fatal error
    */
   public CoreEventPropertiesDAO(final HibSession sess,
-                                final String className) 
-          throws CalFacadeException {
+                                final String className) {
     super(sess);
 
     this.className = className;

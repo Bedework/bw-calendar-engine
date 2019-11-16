@@ -1306,8 +1306,7 @@ public class CalintfImpl extends CalintfROImpl {
 
   @SuppressWarnings("unchecked")
   @Override
-  public <T extends BwEventProperty> CoreEventPropertiesI<T> getEvPropsHandler(final Class<T> cl)
-        throws CalFacadeException {
+  public <T extends BwEventProperty> CoreEventPropertiesI<T> getEvPropsHandler(final Class<T> cl) {
     if (cl.equals(BwCategory.class)) {
       if (categoriesHandler == null) {
         categoriesHandler =

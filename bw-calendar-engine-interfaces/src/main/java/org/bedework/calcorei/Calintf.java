@@ -796,12 +796,10 @@ public interface Calintf
 
   /** Return an event properties handler.
    *
-   * @param cl
+   * @param cl the event properties class
    * @return EventProperties
-   * @throws CalFacadeException
    */
-  <T extends BwEventProperty> CoreEventPropertiesI<T>  getEvPropsHandler(final Class<T> cl)
-          throws CalFacadeException;
+  <T extends BwEventProperty> CoreEventPropertiesI<T>  getEvPropsHandler(final Class<T> cl);
 
    /* ====================================================================
     *                       resources

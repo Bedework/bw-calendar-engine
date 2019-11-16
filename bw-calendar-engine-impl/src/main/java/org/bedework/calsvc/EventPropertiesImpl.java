@@ -114,7 +114,6 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     try {
       ourClass = (Class<T>)Class.forName(className);
-      coreHdlr = getCal().getEvPropsHandler(ourClass);
     } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
@@ -212,7 +211,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
   @Override
   public T getPersistent(final String uid) throws CalFacadeException {
-    return coreHdlr.get(uid);
+    return getCoreHdlr().get(uid);
   }
 
   @Override
@@ -226,7 +225,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     }
 
     try {
-      final T ent = coreHdlr.find(val, owner.getPrincipalRef());
+      final T ent = getCoreHdlr().find(val, owner.getPrincipalRef());
 
       if (ent == null) {
         return Response.notFound(resp);
@@ -272,7 +271,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
       ((Preferences)getSvc().getPrefsHandler())
               .updateAdminPrefs(false, val);
 
-      coreHdlr.checkUnique(val.getFinderKeyValue(),
+      getCoreHdlr().checkUnique(val.getFinderKeyValue(),
                            val.getOwnerHref());
 
       getSvc().getIndexer(val).indexEntity(val);
@@ -305,7 +304,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     getCal().saveOrUpdate(val);
     ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(false, val);
 
-    coreHdlr.checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
+    getCoreHdlr().checkUnique(val.getFinderKeyValue(), val.getOwnerHref());
 
     // Update cached
     final Collection<T> ents = get();
@@ -330,7 +329,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
 
     /* Only allow delete if not in use
      */
-    if (coreHdlr.getRefsCount(ent) != 0) {
+    if (getCoreHdlr().getRefsCount(ent) != 0) {
       return 2;
     }
 
@@ -338,7 +337,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true,
                                                                ent);
 
-    coreHdlr.deleteProp(ent);
+    getCoreHdlr().deleteProp(ent);
 
     getSvc().getIndexer(ent).unindexEntity(ent);
 
@@ -360,7 +359,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     if (persistent == null) {
       return null;
     }
-    return coreHdlr.getRefs(persistent);
+    return getCoreHdlr().getRefs(persistent);
   }
 
   @Override
@@ -420,7 +419,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
       owner = getPublicUser();
     }
 
-    Collection<T> ents = coreHdlr.getAll(owner.getPrincipalRef());
+    Collection<T> ents = getCoreHdlr().getAll(owner.getPrincipalRef());
     if (Util.isEmpty(ents)) {
       return 0;
     }
@@ -456,6 +455,14 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     }
 
     return getSvc().getIndexer(href, getDocType());
+  }
+
+  protected CoreEventPropertiesI<T> getCoreHdlr() {
+    if (coreHdlr == null) {
+      coreHdlr = getCal().getEvPropsHandler(ourClass);
+    }
+
+    return coreHdlr;
   }
 
   /**
@@ -510,7 +517,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
     var resp = new GetEntityResponse<T>();
 
     try {
-      final T ent = coreHdlr.find(val, ownerHref);
+      final T ent = getCoreHdlr().find(val, ownerHref);
       if (ent == null) {
         resp.setStatus(Response.Status.notFound);
       } else {
