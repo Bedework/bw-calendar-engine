@@ -20,6 +20,7 @@
     <bw-caldav.version>4.0.8</bw-caldav.version>
 		<bw-util.version>4.0.26</bw-util.version>
     <bw-util-hibernate.version>4.0.22</bw-util-hibernate.version>
+    <bw-util-index.version>4.1.0-SNAPSHOT</bw-util-index.version>
     <bw-util-logging.version>4.0.4</bw-util-logging.version>
     <bw-util-security.version>4.1.0-SNAPSHOT</bw-util-security.version>
     <bw-util-tz.version>4.1.0-SNAPSHOT</bw-util-tz.version>
@@ -165,7 +166,7 @@
       <dependency>
         <groupId>org.bedework</groupId>
         <artifactId>bw-util-elasticsearch</artifactId>
-        <version>${bw-util.version}</version>
+        <version>${bw-util-index.version}</version>
       </dependency>
 
       <dependency>
@@ -183,7 +184,7 @@
       <dependency>
         <groupId>org.bedework</groupId>
         <artifactId>bw-util-indexing</artifactId>
-        <version>${bw-util.version}</version>
+        <version>${bw-util-index.version}</version>
       </dependency>
 
       <dependency>

@@ -41,10 +41,10 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.4" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-dav:${bw-util-network.version}" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-http:${bw-util-network.version}" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-indexing:4.0.26" level="project" />
+    <orderEntry type="module" module-name="bw-util-indexing" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-misc:4.0.26" level="project" />
     <orderEntry type="module" module-name="bw-util-security" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-config:4.1.0-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="bw-util-config" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-jmx:4.0.26" level="project" />
     <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.5" level="project" />
     <orderEntry type="module" module-name="bw-util-tz" />
