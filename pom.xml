@@ -24,6 +24,7 @@
     <bw-util-hibernate.version>4.0.22</bw-util-hibernate.version>
     <bw-util-index.version>4.1.0-SNAPSHOT</bw-util-index.version>
     <bw-util-logging.version>4.0.4</bw-util-logging.version>
+    <bw-util-network.version>4.1.0-SNAPSHOT</bw-util-network.version>
     <bw-util-security.version>4.1.0-SNAPSHOT</bw-util-security.version>
     <bw-util-tz.version>4.1.0-SNAPSHOT</bw-util-tz.version>
     <bw-util2.version>4.0.5</bw-util2.version>
