@@ -75,6 +75,7 @@ import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.parameter.XParameter;
 import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Attendee;
+import net.fortuna.ical4j.model.property.CalendarAddress;
 import net.fortuna.ical4j.model.property.Categories;
 import net.fortuna.ical4j.model.property.DateListProperty;
 import net.fortuna.ical4j.model.property.DateProperty;
@@ -93,7 +94,6 @@ import net.fortuna.ical4j.model.property.RelatedTo;
 import net.fortuna.ical4j.model.property.RequestStatus;
 import net.fortuna.ical4j.model.property.Resources;
 import net.fortuna.ical4j.model.property.Sequence;
-import net.fortuna.ical4j.model.property.Voter;
 import net.fortuna.ical4j.model.property.XProperty;
 
 import java.util.Collection;
@@ -103,6 +103,7 @@ import java.util.TreeSet;
 
 import javax.xml.ws.Holder;
 
+import static net.fortuna.ical4j.model.Property.CALENDAR_ADDRESS;
 import static org.bedework.calfacade.responses.Response.Status.failed;
 import static org.bedework.calfacade.responses.Response.Status.ok;
 
@@ -1117,7 +1118,7 @@ public class BwEventUtil extends IcalUtil {
       } else if (!(val instanceof Available)) {
         VAlarmUtil.processComponentAlarms(cb, val, ev, currentPrincipal, chg);
         if (val instanceof VPoll) {
-          processVvoters((VPoll)val, evinfo, cb, chg, mergeAttendees);
+          processVoters((VPoll)val, evinfo, cb, chg, mergeAttendees);
           processCandidates((VPoll)val, evinfo, chg);
         }
       }
@@ -1414,11 +1415,11 @@ public class BwEventUtil extends IcalUtil {
     return resp;
   }
 
-  private static void processVvoters(final VPoll val,
-                                     final EventInfo vpoll,
-                                     final IcalCallback cb,
-                                     final ChangeTable changes,
-                                     final boolean mergeAttendees) throws CalFacadeException {
+  private static void processVoters(final VPoll val,
+                                    final EventInfo vpoll,
+                                    final IcalCallback cb,
+                                    final ChangeTable changes,
+                                    final boolean mergeAttendees) throws CalFacadeException {
 
     try {
       final ComponentList voters = val.getVoters();
@@ -1431,31 +1432,31 @@ public class BwEventUtil extends IcalUtil {
       final Set<String> vcuas = new TreeSet<>();
       final BwEvent event = vpoll.getEvent();
 
-      if (!Util.isEmpty(event.getVvoters())) {
-        event.clearVvoters();
+      if (!Util.isEmpty(event.getVoters())) {
+        event.clearVoters();
       }
 
       while (it.hasNext()) {
         final Component comp = (Component)it.next();
 
-        final String vvoter = comp.toString();
-        event.addVvoter(vvoter);
+        final String voter = comp.toString();
+        event.addVoter(voter);
 
-        changes.addValue(PropertyInfoIndex.VVOTER, vvoter);
+        changes.addValue(PropertyInfoIndex.VOTER, voter);
 
-        final Property p = comp.getProperty(Property.VOTER);
+        final Property p = comp.getProperty(CALENDAR_ADDRESS);
 
         if (p == null) {
-          throw new CalFacadeException("XXX - no voter");
+          throw new CalFacadeException("XXX - no calendar address");
         }
 
         final String vcua = p.getValue();
 
         if (vcuas.contains(vcua)) {
-          throw new CalFacadeException("XXX - duplicate VVOTER for " + vcua);
+          throw new CalFacadeException("XXX - duplicate VOTER for " + vcua);
         }
 
-        processVoter((Voter)p, vpoll, cb, changes, mergeAttendees);
+        processVoter((CalendarAddress)p, vpoll, cb, changes, mergeAttendees);
         vcuas.add(vcua);
       }
     } catch (final CalFacadeException cfe) {
@@ -1465,7 +1466,7 @@ public class BwEventUtil extends IcalUtil {
     }
   }
 
-  private static void processVoter(final Voter vPr,
+  private static void processVoter(final CalendarAddress ca,
                                    final EventInfo vpoll,
                                    final IcalCallback cb,
                                    final ChangeTable chg,
@@ -1485,11 +1486,11 @@ public class BwEventUtil extends IcalUtil {
     */
 
     if (vpoll.getNewEvent() || !mergeAttendees) {
-      chg.addValue(PropertyInfoIndex.VOTER, IcalUtil.getVoter(cb, vPr));
+      chg.addValue(PropertyInfoIndex.VOTER, IcalUtil.getVoter(cb, ca));
       return;
     }
 
-    final String pUri = cb.getCaladdr(vPr.getValue());
+    final String pUri = cb.getCaladdr(ca.getValue());
 
     if (pUri.equals(cb.getCaladdr(cb.getPrincipal().getPrincipalRef()))) {
       /* Only update for our own attendee
@@ -1497,7 +1498,7 @@ public class BwEventUtil extends IcalUtil {
                  * response. We don't allow them to change other voters
                * whatever the PUT content says.
                */
-      chg.addValue(PropertyInfoIndex.VOTER, IcalUtil.getVoter(cb, vPr));
+      chg.addValue(PropertyInfoIndex.VOTER, IcalUtil.getVoter(cb, ca));
       return;
     }
 

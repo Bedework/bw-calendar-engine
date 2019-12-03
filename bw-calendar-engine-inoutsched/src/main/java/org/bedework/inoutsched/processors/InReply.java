@@ -41,7 +41,7 @@ import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.TimeZone;
-import net.fortuna.ical4j.model.component.VVoter;
+import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.property.DtStart;
 
 import java.util.Collection;
@@ -174,22 +174,22 @@ public class InReply extends InProcessor {
     /* First parse out the poll items */
     try {
       final BwEvent colEv = colEi.getEvent();
-      final Map<String, VVoter> votes = IcalUtil.parseVpollVvoters(
+      final Map<String, Participant> votes = IcalUtil.parseVpollVoters(
               colEv);
 
-      colEv.clearVvoters();  // We'll add them back
+      colEv.clearVoters();  // We'll add them back
 
       final BwEvent inEv = inBoxEi.getEvent();
 
-      final Map<String, VVoter> invote = IcalUtil.parseVpollVvoters(inEv);
+      final Map<String, Participant> invote = IcalUtil.parseVpollVoters(inEv);
 
-      /* Should only be one VVoter for this attendee */
+      /* Should only be one Participant for this attendee */
 
       if (invote.size() != 1) {
         return true; // Ignore it.
       }
 
-      final VVoter vote = invote.get(attUri);
+      final Participant vote = invote.get(attUri);
 
       if (vote == null) {
         return true; // Ignore it.
@@ -197,8 +197,8 @@ public class InReply extends InProcessor {
 
       votes.put(attUri, vote);
 
-      for (final VVoter vv: votes.values()) {
-        colEv.addVvoter(vv.toString());
+      for (final Participant v: votes.values()) {
+        colEv.addVoter(v.toString());
       }
     } catch (final CalFacadeException cfe) {
       throw cfe;

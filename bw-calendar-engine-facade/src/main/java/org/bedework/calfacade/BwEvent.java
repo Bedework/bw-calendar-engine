@@ -3766,7 +3766,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                 vpollProperty = true
   )
   @NoProxy
-  public Set<String> getVvoters() {
+  public Set<String> getVoters() {
     final List<BwXproperty> props = getXproperties(BwXproperty.pollVoter);
 
     if (Util.isEmpty(props)) {
@@ -3786,7 +3786,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *
    */
   @NoProxy
-  public void clearVvoters() {
+  public void clearVoters() {
     final List<BwXproperty> props = getXproperties(BwXproperty.pollVoter);
 
     if (Util.isEmpty(props)) {
@@ -3798,15 +3798,15 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
   }
 
-  /** Add vpoll vvoter
+  /** Add vpoll voter
    *
    * @param val the item
    */
   @NoProxy
-  public void addVvoter(final String val) {
-    final Set<String> vvs = getVvoters();
+  public void addVoter(final String val) {
+    final Set<String> vs = getVoters();
 
-    if ((vvs == null) || !vvs.contains(val)) {
+    if ((vs == null) || !vs.contains(val)) {
       final BwXproperty xp = new BwXproperty(BwXproperty.pollVoter, null, val);
       addXproperty(xp);
 

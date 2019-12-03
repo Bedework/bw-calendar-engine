@@ -15,10 +15,10 @@
     <orderEntry type="module" module-name="bw-calendar-engine-annotations" />
     <orderEntry type="library" name="Maven: org.bedework:bw-access:4.0.7" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-caching:4.0.26" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-calendar:4.0.5" level="project" />
+    <orderEntry type="module" module-name="bw-util2-calendar" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-calws-soap:4.0.9" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.10.0" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-vcard:4.0.5" level="project" />
+    <orderEntry type="module" module-name="bw-util2-vcard" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.10.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.10.0" level="project" />
     <orderEntry type="module" module-name="bw-util-http" />
@@ -46,7 +46,7 @@
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.8.2" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-caldav-server:4.0.8" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.soap:javax.xml.soap-api:1.4.0" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:2.0.11" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:2.0.12" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.10" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-collections4:4.0" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.groovy:groovy-all:2.3.2" level="project" />

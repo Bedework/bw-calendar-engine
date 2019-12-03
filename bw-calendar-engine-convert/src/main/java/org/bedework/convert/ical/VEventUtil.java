@@ -59,13 +59,13 @@ import net.fortuna.ical4j.model.TextList;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.component.Available;
+import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.component.VAvailability;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VFreeBusy;
 import net.fortuna.ical4j.model.component.VJournal;
 import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.component.VToDo;
-import net.fortuna.ical4j.model.component.VVoter;
 import net.fortuna.ical4j.model.parameter.AltRep;
 import net.fortuna.ical4j.model.parameter.FbType;
 import net.fortuna.ical4j.model.parameter.RelType;
@@ -696,10 +696,10 @@ public class VEventUtil extends IcalUtil {
           pl.add(new PollProperties(strval));
         }
 
-        final Map<String, VVoter> vvoters = parseVpollVvoters(val);
+        final Map<String, Participant> voters = parseVpollVoters(val);
 
-        for (final VVoter vv: vvoters.values()) {
-          ((VPoll)comp).getVoters().add(vv);
+        for (final Participant v: voters.values()) {
+          ((VPoll)comp).getVoters().add(v);
         }
 
         final Map<Integer, Component> comps = parseVpollCandidates(val);

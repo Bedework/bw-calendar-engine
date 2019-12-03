@@ -31,13 +31,13 @@ import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
-import org.bedework.convert.ical.IcalUtil;
 import org.bedework.convert.Icalendar;
+import org.bedework.convert.ical.IcalUtil;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
-import net.fortuna.ical4j.model.component.VVoter;
+import net.fortuna.ical4j.model.component.Participant;
 
 import java.util.Map;
 
@@ -474,16 +474,16 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
     final BwEvent outEv = outEi.getEvent();
 
     try {
-      final Map<String, VVoter> voters = IcalUtil.parseVpollVvoters(ev);
-      outEv.clearVvoters();
+      final Map<String, Participant> voters = IcalUtil.parseVpollVoters(ev);
+      outEv.clearVoters();
 
-      final VVoter vv = voters.get(attUri);
-      if (vv == null) {
-        warn("No Vvoter element for " + attUri);
+      final Participant v = voters.get(attUri);
+      if (v == null) {
+        warn("No participant element for " + attUri);
         return;
       }
 
-      outEv.addVvoter(vv.toString());
+      outEv.addVoter(v.toString());
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }

@@ -706,7 +706,7 @@ public class EventInfo
   /** See if the master event has an override with the given recurrence id.
    * If not create one.
    *
-   * @param rid
+   * @param rid recurrence id to find
    * @return EventInfo for override
    */
   public EventInfo findOverride(final String rid) {
@@ -716,8 +716,8 @@ public class EventInfo
   /** See if the master event has an override with the given recurrence id.
    * If not optionally create one.
    *
-   * @param rid
-   * @param create - true to creat emissing override.
+   * @param rid recurrence id to find
+   * @param create - true to create missing override.
    * @return EventInfo for override
    */
   public EventInfo findOverride(final String rid,
@@ -735,7 +735,7 @@ public class EventInfo
     }
 
     BwEventProxy proxy = BwEventProxy.makeAnnotation(getEvent(), null, true);
-    proxy.setRecurring(new Boolean(false));
+    proxy.setRecurring(Boolean.FALSE);
     EventInfo oei = new EventInfo(proxy);
     proxy.setRecurrenceId(rid);
 

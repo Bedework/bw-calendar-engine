@@ -37,11 +37,11 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.component.VAvailability;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.component.VToDo;
-import net.fortuna.ical4j.model.component.VVoter;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Version;
@@ -220,8 +220,8 @@ public class JcalHandler implements Serializable {
       //} else if (comp instanceof Available) {
       } else if (comp instanceof VPoll) {
         cl = ((VPoll)comp).getVoters();
-      } else if (comp instanceof VVoter) {
-        cl = ((VVoter)comp).getVotes();
+      } else if (comp instanceof Participant) {
+        cl = comp.getComponents();
       }
 
       if (cl != null) {

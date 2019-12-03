@@ -27,7 +27,7 @@
     <bw-util-network.version>4.1.0-SNAPSHOT</bw-util-network.version>
     <bw-util-security.version>4.1.0-SNAPSHOT</bw-util-security.version>
     <bw-util-tz.version>4.1.0-SNAPSHOT</bw-util-tz.version>
-    <bw-util2.version>4.0.5</bw-util2.version>
+    <bw-util2.version>4.0.6-SNAPSHOT</bw-util2.version>
 		<bw-webdav.version>4.0.8</bw-webdav.version>
     <bw-xml.version>4.0.9</bw-xml.version>
 
@@ -40,7 +40,7 @@
 
     <ical4j.groupId>org.bedework.ical4j</ical4j.groupId>
     <ical4j.artifactId>ical4j</ical4j.artifactId>
-    <ical4j.version>2.0.11</ical4j.version>
+    <ical4j.version>2.0.12</ical4j.version>
     <!--
     <ical4j.groupId>org.bedework.ical4j</ical4j.groupId>
     <ical4j.artifactId>ical4j</ical4j.artifactId>

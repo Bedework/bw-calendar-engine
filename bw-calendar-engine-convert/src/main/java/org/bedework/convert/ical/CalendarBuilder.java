@@ -74,14 +74,13 @@ import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.component.Available;
 import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.Observance;
+import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.component.VAlarm;
 import net.fortuna.ical4j.model.component.VAvailability;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.component.VToDo;
-import net.fortuna.ical4j.model.component.VVoter;
-import net.fortuna.ical4j.model.component.Vote;
 import net.fortuna.ical4j.model.parameter.TzId;
 import net.fortuna.ical4j.model.property.DateListProperty;
 import net.fortuna.ical4j.model.property.DateProperty;
@@ -118,56 +117,56 @@ import java.util.List;
  */
 public class CalendarBuilder implements Logged {
 
-    private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+  private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 
-    private final CalendarParser parser;
+  private final CalendarParser parser;
 
-    private final ContentHandler contentHandler;
+  private final ContentHandler contentHandler;
 
-    private final TimeZoneRegistry tzRegistry;
+  private final TimeZoneRegistry tzRegistry;
 
-    private List datesMissingTimezones;
+  private List datesMissingTimezones;
 
-    /**
-     * The calendar instance created by the builder.
-     */
-    protected Calendar calendar;
+  /**
+   * The calendar instance created by the builder.
+   */
+  protected Calendar calendar;
 
   /**
    * The current component instances created by the builder.
    */
   private LinkedList<Component> components = new LinkedList<>();
 
-    /**
-     * The current property instance created by the builder.
-     */
-    protected Property property;
+  /**
+   * The current property instance created by the builder.
+   */
+  protected Property property;
 
-    /**
-     * Default constructor.
-     */
-    public CalendarBuilder() {
-        this(CalendarParserFactory.getInstance().createParser(), new PropertyFactoryRegistry(),
-                new ParameterFactoryRegistry(), TimeZoneRegistryFactory.getInstance().createRegistry());
-    }
+  /**
+   * Default constructor.
+   */
+  public CalendarBuilder() {
+    this(CalendarParserFactory.getInstance().createParser(), new PropertyFactoryRegistry(),
+         new ParameterFactoryRegistry(), TimeZoneRegistryFactory.getInstance().createRegistry());
+  }
 
-    /**
-     * Constructs a new calendar builder using the specified calendar parser.
-     * @param parser a calendar parser used to parse calendar files
-     */
-    public CalendarBuilder(final CalendarParser parser) {
-        this(parser, new PropertyFactoryRegistry(), new ParameterFactoryRegistry(),
-                TimeZoneRegistryFactory.getInstance().createRegistry());
-    }
+  /**
+   * Constructs a new calendar builder using the specified calendar parser.
+   * @param parser a calendar parser used to parse calendar files
+   */
+  public CalendarBuilder(final CalendarParser parser) {
+    this(parser, new PropertyFactoryRegistry(), new ParameterFactoryRegistry(),
+         TimeZoneRegistryFactory.getInstance().createRegistry());
+  }
 
-    /**
-     * Constructs a new calendar builder using the specified timezone registry.
-     * @param tzRegistry a timezone registry to populate with discovered timezones
-     */
-    public CalendarBuilder(final TimeZoneRegistry tzRegistry) {
-        this(CalendarParserFactory.getInstance().createParser(), new PropertyFactoryRegistry(),
-                new ParameterFactoryRegistry(), tzRegistry);
-    }
+  /**
+   * Constructs a new calendar builder using the specified timezone registry.
+   * @param tzRegistry a timezone registry to populate with discovered timezones
+   */
+  public CalendarBuilder(final TimeZoneRegistry tzRegistry) {
+    this(CalendarParserFactory.getInstance().createParser(), new PropertyFactoryRegistry(),
+         new ParameterFactoryRegistry(), tzRegistry);
+  }
 
   public Component getComponent() {
     if (components.size() == 0) {
@@ -184,314 +183,314 @@ public class CalendarBuilder implements Logged {
     components.pop();
   }
 
-    /**
-     * Constructs a new instance using the specified parser and registry.
-     * @param parser a calendar parser used to construct the calendar
-     * @param tzRegistry a timezone registry used to retrieve {@link TimeZone}s and
-     *  register additional timezone information found
-     * in the calendar
-     */
-    public CalendarBuilder(final CalendarParser parser, final TimeZoneRegistry tzRegistry) {
-        this(parser, new PropertyFactoryRegistry(), new ParameterFactoryRegistry(), tzRegistry);
+  /**
+   * Constructs a new instance using the specified parser and registry.
+   * @param parser a calendar parser used to construct the calendar
+   * @param tzRegistry a timezone registry used to retrieve {@link TimeZone}s and
+   *  register additional timezone information found
+   * in the calendar
+   */
+  public CalendarBuilder(final CalendarParser parser, final TimeZoneRegistry tzRegistry) {
+    this(parser, new PropertyFactoryRegistry(), new ParameterFactoryRegistry(), tzRegistry);
+  }
+
+  /**
+   * @param parser a custom calendar parser
+   * @param propertyFactoryRegistry registry for non-standard property factories
+   * @param parameterFactoryRegistry registry for non-standard parameter factories
+   * @param tzRegistry a custom timezone registry
+   */
+  public CalendarBuilder(final CalendarParser parser, final PropertyFactoryRegistry propertyFactoryRegistry,
+                         final ParameterFactoryRegistry parameterFactoryRegistry, final TimeZoneRegistry tzRegistry) {
+
+    this.parser = parser;
+    this.tzRegistry = tzRegistry;
+    contentHandler = new ContentHandlerImpl(propertyFactoryRegistry, parameterFactoryRegistry);
+  }
+
+  /**
+   * Builds an iCalendar model from the specified input stream.
+   * @param in an input stream to read calendar data from
+   * @return a calendar parsed from the specified input stream
+   * @throws IOException where an error occurs reading data from the specified stream
+   * @throws ParserException where an error occurs parsing data from the stream
+   */
+  public Calendar build(final InputStream in) throws IOException,
+          ParserException {
+    return build(new InputStreamReader(in, DEFAULT_CHARSET));
+  }
+
+  /**
+   * Builds an iCalendar model from the specified reader. An <code>UnfoldingReader</code> is applied to the
+   * specified reader to ensure the data stream is correctly unfolded where appropriate.
+   * @param in a reader to read calendar data from
+   * @return a calendar parsed from the specified reader
+   * @throws IOException where an error occurs reading data from the specified reader
+   * @throws ParserException where an error occurs parsing data from the reader
+   */
+  public Calendar build(final Reader in) throws IOException, ParserException {
+    return build(new UnfoldingReader(in));
+  }
+
+  /**
+   * Build an iCalendar model by parsing data from the specified reader.
+   * @param uin an unfolding reader to read data from
+   * @return a calendar parsed from the specified reader
+   * @throws IOException where an error occurs reading data from the specified reader
+   * @throws ParserException where an error occurs parsing data from the reader
+   */
+  public Calendar build(final UnfoldingReader uin) throws IOException,
+          ParserException {
+    // re-initialise..
+    calendar = null;
+    components.clear();
+    property = null;
+    datesMissingTimezones = new ArrayList();
+
+    parser.parse(uin, contentHandler);
+
+    if ((datesMissingTimezones.size() > 0) && (tzRegistry != null)) {
+      resolveTimezones();
     }
 
-    /**
-     * @param parser a custom calendar parser
-     * @param propertyFactoryRegistry registry for non-standard property factories
-     * @param parameterFactoryRegistry registry for non-standard parameter factories
-     * @param tzRegistry a custom timezone registry
-     */
-    public CalendarBuilder(final CalendarParser parser, final PropertyFactoryRegistry propertyFactoryRegistry,
-            final ParameterFactoryRegistry parameterFactoryRegistry, final TimeZoneRegistry tzRegistry) {
+    return calendar;
+  }
 
-        this.parser = parser;
-        this.tzRegistry = tzRegistry;
-        contentHandler = new ContentHandlerImpl(propertyFactoryRegistry, parameterFactoryRegistry);
+  private class ContentHandlerImpl implements ContentHandler {
+
+    private final ComponentFactoryImpl componentFactory;
+
+    private final PropertyFactoryRegistry propertyFactory;
+
+    private final ParameterFactoryRegistry parameterFactory;
+
+    public ContentHandlerImpl(final PropertyFactoryRegistry propertyFactory,
+                              final ParameterFactoryRegistry parameterFactory) {
+
+      this.componentFactory = ComponentFactoryImpl.getInstance();
+      this.propertyFactory = propertyFactory;
+      this.parameterFactory = parameterFactory;
     }
 
-    /**
-     * Builds an iCalendar model from the specified input stream.
-     * @param in an input stream to read calendar data from
-     * @return a calendar parsed from the specified input stream
-     * @throws IOException where an error occurs reading data from the specified stream
-     * @throws ParserException where an error occurs parsing data from the stream
-     */
-    public Calendar build(final InputStream in) throws IOException,
-            ParserException {
-        return build(new InputStreamReader(in, DEFAULT_CHARSET));
+    @Override
+    public void endCalendar() {
+      // do nothing..
     }
 
-    /**
-     * Builds an iCalendar model from the specified reader. An <code>UnfoldingReader</code> is applied to the
-     * specified reader to ensure the data stream is correctly unfolded where appropriate.
-     * @param in a reader to read calendar data from
-     * @return a calendar parsed from the specified reader
-     * @throws IOException where an error occurs reading data from the specified reader
-     * @throws ParserException where an error occurs parsing data from the reader
-     */
-    public Calendar build(final Reader in) throws IOException, ParserException {
-        return build(new UnfoldingReader(in));
-    }
+    @Override
+    public void endComponent(final String name) {
+      assertComponent(getComponent());
 
-    /**
-     * Build an iCalendar model by parsing data from the specified reader.
-     * @param uin an unfolding reader to read data from
-     * @return a calendar parsed from the specified reader
-     * @throws IOException where an error occurs reading data from the specified reader
-     * @throws ParserException where an error occurs parsing data from the reader
-     */
-    public Calendar build(final UnfoldingReader uin) throws IOException,
-            ParserException {
-        // re-initialise..
-        calendar = null;
-        components.clear();
-        property = null;
-        datesMissingTimezones = new ArrayList();
+      final Component component = getComponent();
 
-        parser.parse(uin, contentHandler);
+      CalendarBuilder.this.endComponent();
 
-        if ((datesMissingTimezones.size() > 0) && (tzRegistry != null)) {
-            resolveTimezones();
-        }
+      final Component parent = getComponent();
 
-        return calendar;
-    }
-
-    private class ContentHandlerImpl implements ContentHandler {
-
-        private final ComponentFactoryImpl componentFactory;
-
-        private final PropertyFactoryRegistry propertyFactory;
-
-        private final ParameterFactoryRegistry parameterFactory;
-
-        public ContentHandlerImpl(final PropertyFactoryRegistry propertyFactory,
-                final ParameterFactoryRegistry parameterFactory) {
-
-            this.componentFactory = ComponentFactoryImpl.getInstance();
-            this.propertyFactory = propertyFactory;
-            this.parameterFactory = parameterFactory;
-        }
-
-        @Override
-        public void endCalendar() {
-            // do nothing..
-        }
-
-        @Override
-        public void endComponent(final String name) {
-          assertComponent(getComponent());
-
-          final Component component = getComponent();
-
-          CalendarBuilder.this.endComponent();
-
-          final Component parent = getComponent();
-
-          if (parent != null) {
-            // This is a sub-component of another component
-            if (parent instanceof VTimeZone) {
-        ((VTimeZone)parent).getObservances().add((Observance)component);
-            } else if (parent instanceof VEvent) {
-        ((VEvent)parent).getAlarms().add((VAlarm) component);
-            } else if (parent instanceof VToDo) {
-        ((VToDo)parent).getAlarms().add((VAlarm) component);
-            } else if (parent instanceof VAvailability) {
-        ((VAvailability)parent).getAvailable().add((Available)component);
-            } else if (parent instanceof VVoter) {
-        ((VVoter) parent).getVotes().add((Vote) component);
-            } else if (parent instanceof VPoll) {
-              if (component instanceof VAlarm) {
-          ((VPoll)parent).getAlarms().add((VAlarm) component);
-              } else if (component instanceof VVoter) {
-          ((VPoll)parent).getVoters().add((VVoter) component);
-              } else {
-                ((VPoll)parent).getCandidates().add(component);
-              }
-            }
+      if (parent != null) {
+        // This is a sub-component of another component
+        if (parent instanceof VTimeZone) {
+          ((VTimeZone)parent).getObservances().add((Observance)component);
+        } else if (parent instanceof VEvent) {
+          ((VEvent)parent).getAlarms().add((VAlarm) component);
+        } else if (parent instanceof VToDo) {
+          ((VToDo)parent).getAlarms().add((VAlarm) component);
+        } else if (parent instanceof VAvailability) {
+          ((VAvailability)parent).getAvailable().add((Available)component);
+        } else if (parent instanceof Participant) {
+          ((Participant) parent).getComponents().add(component);
+        } else if (parent instanceof VPoll) {
+          if (component instanceof VAlarm) {
+            ((VPoll)parent).getAlarms().add((VAlarm) component);
+          } else if (component instanceof Participant) {
+            ((VPoll)parent).getVoters().add((Participant)component);
           } else {
-            calendar.getComponents().add((CalendarComponent)component);
-            if ((component instanceof VTimeZone) && (tzRegistry != null)) {
-              // register the timezone for use with iCalendar objects..
-              tzRegistry.register(new TimeZone((VTimeZone) component));
-            }
+            ((VPoll)parent).getCandidates().add(component);
           }
         }
-
-        @Override
-        public void endProperty(final String name) {
-            assertProperty(property);
-
-            // replace with a constant instance if applicable..
-            property = Constants.forProperty(property);
-            if (getComponent() != null) {
-              getComponent().getProperties().add(property);
-            }
-            else if (calendar != null) {
-                calendar.getProperties().add(property);
-            }
-
-            property = null;
+      } else {
+        calendar.getComponents().add((CalendarComponent)component);
+        if ((component instanceof VTimeZone) && (tzRegistry != null)) {
+          // register the timezone for use with iCalendar objects..
+          tzRegistry.register(new TimeZone((VTimeZone) component));
         }
-
-        @Override
-        public void parameter(final String name, final String value) throws URISyntaxException {
-            assertProperty(property);
-
-            // parameter names are case-insensitive, but convert to upper case to simplify further processing
-            final Parameter param = parameterFactory.createParameter(name.toUpperCase(), value);
-            property.getParameters().add(param);
-            if ((param instanceof TzId) && (tzRegistry != null) && !(property instanceof XProperty)) {
-                final TimeZone timezone = tzRegistry.getTimeZone(param.getValue());
-                if (timezone != null) {
-                    updateTimeZone(property, timezone);
-
-                    /* Bedework - for the moment switch ids if they differ */
-
-                    if (!timezone.getID().equals(param.getValue())) {
-                      /* Fetched timezone has a different id */
-
-                      ParameterList pl = property.getParameters();
-
-                      pl.replace(ParameterFactoryImpl.getInstance().
-                                 createParameter(Parameter.TZID, timezone.getID()));
-                    }
-                } else {
-                    // VTIMEZONE may be defined later, so so keep
-                    // track of dates until all components have been
-                    // parsed, and then try again later
-                    datesMissingTimezones.add(property);
-                }
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void propertyValue(final String value) throws URISyntaxException,
-                ParseException, IOException {
-
-            assertProperty(property);
-
-            if (property instanceof Escapable) {
-                property.setValue(Strings.unescape(value));
-            }
-            else {
-                property.setValue(value);
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void startCalendar() {
-            calendar = new Calendar();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void startComponent(final String name) {
-          CalendarBuilder.this.startComponent(componentFactory.createComponent(name));
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void startProperty(final String name) {
-            // property names are case-insensitive, but convert to upper case to simplify further processing
-            property = propertyFactory.createProperty(name.toUpperCase());
-        }
+      }
     }
 
-    private void assertComponent(final Component component) {
-        if (component == null) {
-            throw new CalendarException("Expected component not initialised");
-        }
+    @Override
+    public void endProperty(final String name) {
+      assertProperty(property);
+
+      // replace with a constant instance if applicable..
+      property = Constants.forProperty(property);
+      if (getComponent() != null) {
+        getComponent().getProperties().add(property);
+      }
+      else if (calendar != null) {
+        calendar.getProperties().add(property);
+      }
+
+      property = null;
     }
 
-    private void assertProperty(final Property property) {
-        if (property == null) {
-            throw new CalendarException("Expected property not initialised");
+    @Override
+    public void parameter(final String name, final String value) throws URISyntaxException {
+      assertProperty(property);
+
+      // parameter names are case-insensitive, but convert to upper case to simplify further processing
+      final Parameter param = parameterFactory.createParameter(name.toUpperCase(), value);
+      property.getParameters().add(param);
+      if ((param instanceof TzId) && (tzRegistry != null) && !(property instanceof XProperty)) {
+        final TimeZone timezone = tzRegistry.getTimeZone(param.getValue());
+        if (timezone != null) {
+          updateTimeZone(property, timezone);
+
+          /* Bedework - for the moment switch ids if they differ */
+
+          if (!timezone.getID().equals(param.getValue())) {
+            /* Fetched timezone has a different id */
+
+            ParameterList pl = property.getParameters();
+
+            pl.replace(ParameterFactoryImpl.getInstance().
+                    createParameter(Parameter.TZID, timezone.getID()));
+          }
+        } else {
+          // VTIMEZONE may be defined later, so so keep
+          // track of dates until all components have been
+          // parsed, and then try again later
+          datesMissingTimezones.add(property);
         }
+      }
     }
 
     /**
-     * Returns the timezone registry used in the construction of calendars.
-     * @return a timezone registry
+     * {@inheritDoc}
      */
-    public final TimeZoneRegistry getRegistry() {
-        return tzRegistry;
+    @Override
+    public void propertyValue(final String value) throws URISyntaxException,
+            ParseException, IOException {
+
+      assertProperty(property);
+
+      if (property instanceof Escapable) {
+        property.setValue(Strings.unescape(value));
+      }
+      else {
+        property.setValue(value);
+      }
     }
 
-    private void updateTimeZone(final Property property, final TimeZone timezone) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void startCalendar() {
+      calendar = new Calendar();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void startComponent(final String name) {
+      CalendarBuilder.this.startComponent(componentFactory.createComponent(name));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void startProperty(final String name) {
+      // property names are case-insensitive, but convert to upper case to simplify further processing
+      property = propertyFactory.createProperty(name.toUpperCase());
+    }
+  }
+
+  private void assertComponent(final Component component) {
+    if (component == null) {
+      throw new CalendarException("Expected component not initialised");
+    }
+  }
+
+  private void assertProperty(final Property property) {
+    if (property == null) {
+      throw new CalendarException("Expected property not initialised");
+    }
+  }
+
+  /**
+   * Returns the timezone registry used in the construction of calendars.
+   * @return a timezone registry
+   */
+  public final TimeZoneRegistry getRegistry() {
+    return tzRegistry;
+  }
+
+  private void updateTimeZone(final Property property, final TimeZone timezone) {
+    try {
+      ((DateProperty) property).setTimeZone(timezone);
+    }
+    catch (ClassCastException e) {
+      try {
+        ((DateListProperty) property).setTimeZone(timezone);
+      }
+      catch (ClassCastException e2) {
+        if (CompatibilityHints.isHintEnabled(CompatibilityHints.KEY_RELAXED_PARSING)) {
+          error("Error setting timezone [" + timezone.getID()
+                        + "] on property [" + property.getName()
+                        + "]", e);
+        }
+        else {
+          throw e2;
+        }
+      }
+    }
+  }
+
+  private void resolveTimezones()
+          throws IOException {
+
+    // Go through each property and try to resolve the TZID.
+    for (final Iterator it = datesMissingTimezones.iterator();it.hasNext();) {
+      final Property property = (Property) it.next();
+      final Parameter tzParam = property.getParameter(Parameter.TZID);
+
+      // tzParam might be null:
+      if (tzParam == null) {
+        continue;
+      }
+
+      //lookup timezone
+      final TimeZone timezone = tzRegistry.getTimeZone(tzParam.getValue());
+
+      // If timezone found, then update date property
+      if (timezone != null) {
+        // Get the String representation of date(s) as
+        // we will need this after changing the timezone
+        final String strDate = property.getValue();
+
+        // Change the timezone
+        if(property instanceof DateProperty) {
+          ((DateProperty) property).setTimeZone(timezone);
+        }
+        else if(property instanceof DateListProperty) {
+          ((DateListProperty) property).setTimeZone(timezone);
+        }
+
+        // Reset value
         try {
-            ((DateProperty) property).setTimeZone(timezone);
+          property.setValue(strDate);
+        } catch (ParseException e) {
+          // shouldn't happen as its already been parsed
+          throw new CalendarException(e);
+        } catch (URISyntaxException e) {
+          // shouldn't happen as its already been parsed
+          throw new CalendarException(e);
         }
-        catch (ClassCastException e) {
-            try {
-                ((DateListProperty) property).setTimeZone(timezone);
-            }
-            catch (ClassCastException e2) {
-                if (CompatibilityHints.isHintEnabled(CompatibilityHints.KEY_RELAXED_PARSING)) {
-                    error("Error setting timezone [" + timezone.getID()
-                            + "] on property [" + property.getName()
-                            + "]", e);
-                }
-                else {
-                    throw e2;
-                }
-            }
-        }
+      }
     }
-
-    private void resolveTimezones()
-        throws IOException {
-
-        // Go through each property and try to resolve the TZID.
-        for (final Iterator it = datesMissingTimezones.iterator();it.hasNext();) {
-            final Property property = (Property) it.next();
-            final Parameter tzParam = property.getParameter(Parameter.TZID);
-
-            // tzParam might be null:
-            if (tzParam == null) {
-                continue;
-            }
-
-            //lookup timezone
-            final TimeZone timezone = tzRegistry.getTimeZone(tzParam.getValue());
-
-            // If timezone found, then update date property
-            if (timezone != null) {
-                // Get the String representation of date(s) as
-                // we will need this after changing the timezone
-                final String strDate = property.getValue();
-
-                // Change the timezone
-                if(property instanceof DateProperty) {
-                    ((DateProperty) property).setTimeZone(timezone);
-                }
-                else if(property instanceof DateListProperty) {
-                    ((DateListProperty) property).setTimeZone(timezone);
-                }
-
-                // Reset value
-                try {
-                    property.setValue(strDate);
-                } catch (ParseException e) {
-                    // shouldn't happen as its already been parsed
-                    throw new CalendarException(e);
-                } catch (URISyntaxException e) {
-                    // shouldn't happen as its already been parsed
-                    throw new CalendarException(e);
-                }
-            }
-        }
-    }
+  }
 
   /* ====================================================================
    *                   Logged methods

@@ -69,11 +69,11 @@ import org.bedework.calsvci.EventProperties;
 import org.bedework.calsvci.EventProperties.EnsureEntityExistsResult;
 import org.bedework.calsvci.EventsI;
 import org.bedework.convert.IcalTranslator;
-import org.bedework.convert.ical.IcalUtil;
 import org.bedework.convert.Icalendar;
 import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
 import org.bedework.convert.RecurUtil.Recurrence;
+import org.bedework.convert.ical.IcalUtil;
 import org.bedework.sysevents.events.EntityFetchEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
 import org.bedework.util.calendar.IcalDefs;
@@ -85,10 +85,10 @@ import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.PropertyList;
-import net.fortuna.ical4j.model.component.VVoter;
+import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.parameter.CuType;
+import net.fortuna.ical4j.model.property.CalendarAddress;
 import net.fortuna.ical4j.model.property.DtStart;
-import net.fortuna.ical4j.model.property.Voter;
 
 import java.io.StringReader;
 import java.text.ParseException;
@@ -106,6 +106,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
 
+import static net.fortuna.ical4j.model.Property.CALENDAR_ADDRESS;
 import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
 import static org.bedework.calfacade.responses.Response.Status.failed;
 import static org.bedework.calfacade.responses.Response.Status.limitExceeded;
@@ -1919,19 +1920,19 @@ class Events extends CalSvcDb implements EventsI {
     }
 
     try {
-      /* If this is a vpoll we need the vvoters as we are going to
-           have to remove the group vvoter entry and clone it for the
+      /* If this is a vpoll we need the voters as we are going to
+           have to remove the group voter entry and clone it for the
            attendees we add.
 
            I think this will work for any poll mode - if not we may
            have to rethink this approach.
          */
-      Map<String, VVoter> voters = null;
+      Map<String, Participant> voters = null;
       final var vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
 
       if (vpoll) {
-        voters = IcalUtil.parseVpollVvoters(ev);
-        ev.clearVvoters(); // We'll add them all back
+        voters = IcalUtil.parseVpollVoters(ev);
+        ev.clearVoters(); // We'll add them all back
       }
 
       for (final BwAttendee att : groups) {
@@ -1956,23 +1957,23 @@ class Events extends CalSvcDb implements EventsI {
           continue;
         }
 
-        VVoter groupVvoter = null;
-        Voter groupVoter = null;
+        Participant groupVoter = null;
+        CalendarAddress groupVoterCa = null;
         PropertyList pl = null;
 
         if (vpoll) {
-          groupVvoter = voters.get(att.getAttendeeUri());
+          groupVoter = voters.get(att.getAttendeeUri());
 
-          if (groupVvoter == null) {
+          if (groupVoter == null) {
             if (debug()) {
-              warn("No vvoter found for " + att.getAttendeeUri());
+              warn("No voter found for " + att.getAttendeeUri());
             }
             continue;
           }
 
           voters.remove(att.getAttendeeUri());
-          groupVoter = groupVvoter.getVoter();
-          pl = groupVvoter.getProperties();
+          pl = groupVoter.getProperties();
+          groupVoterCa = (CalendarAddress)groupVoter.getProperty(CALENDAR_ADDRESS);
         }
 
         ev.removeAttendee(att); // Remove the group
@@ -1996,21 +1997,17 @@ class Events extends CalSvcDb implements EventsI {
           chg.addValue(PropertyInfoIndex.ATTENDEE, mbrAtt);
 
           if (vpoll) {
-            pl.remove(groupVoter);
+            Participant voter = IcalUtil.setVoter(mbrAtt);
 
-            groupVoter = IcalUtil.setVoter(mbrAtt);
-
-            pl.add(groupVoter);
-
-            ev.addVvoter(groupVvoter.toString());
+            ev.addVoter(voter.toString());
           }
         }
       }
 
       if (vpoll) {
         // Add back any remaining vvoters
-        for (VVoter vv: voters.values()) {
-          ev.addVvoter(vv.toString());
+        for (Participant v: voters.values()) {
+          ev.addVoter(v.toString());
         }
       }
     } catch (final CalFacadeException cfe) {

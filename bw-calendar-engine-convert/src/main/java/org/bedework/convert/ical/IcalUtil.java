@@ -56,8 +56,8 @@ import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.component.CalendarComponent;
+import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.component.VPoll;
-import net.fortuna.ical4j.model.component.VVoter;
 import net.fortuna.ical4j.model.parameter.AltRep;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.CuType;
@@ -77,6 +77,7 @@ import net.fortuna.ical4j.model.parameter.StayInformed;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Attendee;
+import net.fortuna.ical4j.model.property.CalendarAddress;
 import net.fortuna.ical4j.model.property.DateListProperty;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
@@ -86,7 +87,6 @@ import net.fortuna.ical4j.model.property.PollItemId;
 import net.fortuna.ical4j.model.property.Repeat;
 import net.fortuna.ical4j.model.property.Trigger;
 import net.fortuna.ical4j.model.property.Uid;
-import net.fortuna.ical4j.model.property.Voter;
 import net.fortuna.ical4j.model.property.XProperty;
 
 import java.io.StringReader;
@@ -403,10 +403,15 @@ public class IcalUtil {
    * @return Attendee
    * @throws Throwable
    */
-  public static Voter setVoter(final BwAttendee val) throws Throwable {
-    final Voter prop = new Voter(val.getAttendeeUri());
+  public static Participant setVoter(final BwAttendee val) throws Throwable {
+    final Participant part = new Participant();
 
-    final ParameterList pars = prop.getParameters();
+    final PropertyList props = part.getProperties();
+
+    final CalendarAddress ca = new CalendarAddress(val.getAttendeeUri());
+    props.add(ca);
+
+    final ParameterList pars = ca.getParameters();
 
     setAttendeeVoter(val, pars);
 
@@ -419,15 +424,15 @@ public class IcalUtil {
       pars.add(new PartStat(temp));
     }*/
 
-    return prop;
+    return part;
   }
 
   /**
    * @param poll the poll entity
-   * @return Parsed VVOTER components map - key is voter cua.
+   * @return Parsed PARTICPANT components map - key is voter cua.
    * @throws Throwable
    */
-  public static Map<String, VVoter> parseVpollVvoters(final BwEvent poll) throws Throwable {
+  public static Map<String, Participant> parseVpollVoters(final BwEvent poll) throws Throwable {
     final StringBuilder sb = new StringBuilder();
 
     // Better if ical4j supported sub-component parsing
@@ -438,8 +443,8 @@ public class IcalUtil {
     sb.append("BEGIN:VPOLL\n");
     sb.append("UID:0123\n");
 
-    if (!Util.isEmpty(poll.getVvoters())) {
-      for (final String s: poll.getVvoters()) {
+    if (!Util.isEmpty(poll.getVoters())) {
+      for (final String s: poll.getVoters()) {
         sb.append(s);
       }
     }
@@ -458,20 +463,21 @@ public class IcalUtil {
 
       final Calendar ical = bldr.build(ufrdr);
 
-      final Map<String, VVoter> voters = new HashMap<>();
+      final Map<String, Participant> voters = new HashMap<>();
 
       /* Should be one vpoll object */
 
       final VPoll vpoll = (VPoll)ical.getComponent(Component.VPOLL);
       for (final Object o: vpoll.getVoters()) {
-        final VVoter vvoter = (VVoter)o;
+        final Participant voter = (Participant)o;
 
-        final Voter v = (Voter)vvoter.getProperty(Property.VOTER);
-        if (v == null) {
+        final CalendarAddress ca =
+                (CalendarAddress)voter.getProperty(Property.CALENDAR_ADDRESS);
+        if (ca == null) {
           continue;
         }
 
-        voters.put(v.getValue(), vvoter);
+        voters.put(ca.getValue(), voter);
       }
 
       return voters;
@@ -538,56 +544,59 @@ public class IcalUtil {
    *
    * @param val
    * @return Attendee
-   * @throws Throwable
    */
   private static void setAttendeeVoter(final BwAttendee val,
-                                       final ParameterList pars) throws Throwable {
-    if (val.getRsvp()) {
-      pars.add(Rsvp.TRUE);
-    }
+                                       final ParameterList pars) {
+    try {
+      if (val.getRsvp()) {
+        pars.add(Rsvp.TRUE);
+      }
 
-    String temp = val.getCn();
-    if (temp != null) {
-      pars.add(new Cn(temp));
-    }
+      String temp = val.getCn();
+      if (temp != null) {
+        pars.add(new Cn(temp));
+      }
 
-    temp = val.getScheduleStatus();
-    if (temp != null) {
-      pars.add(new ScheduleStatus(temp));
-    }
+      temp = val.getScheduleStatus();
+      if (temp != null) {
+        pars.add(new ScheduleStatus(temp));
+      }
 
-    temp = val.getCuType();
-    if (temp != null) {
-      pars.add(new CuType(temp));
-    }
-    temp = val.getDelegatedFrom();
-    if (temp != null) {
-      pars.add(new DelegatedFrom(temp));
-    }
-    temp = val.getDelegatedTo();
-    if (temp != null) {
-      pars.add(new DelegatedTo(temp));
-    }
-    temp = val.getDir();
-    if (temp != null) {
-      pars.add(new Dir(temp));
-    }
-    temp = val.getLanguage();
-    if (temp != null) {
-      pars.add(new Language(temp));
-    }
-    temp = val.getMember();
-    if (temp != null) {
-      pars.add(new Member(temp));
-    }
-    temp = val.getRole();
-    if (temp != null) {
-      pars.add(new Role(temp));
-    }
+      temp = val.getCuType();
+      if (temp != null) {
+        pars.add(new CuType(temp));
+      }
+      temp = val.getDelegatedFrom();
+      if (temp != null) {
+        pars.add(new DelegatedFrom(temp));
+      }
+      temp = val.getDelegatedTo();
+      if (temp != null) {
+        pars.add(new DelegatedTo(temp));
+      }
+      temp = val.getDir();
+      if (temp != null) {
+        pars.add(new Dir(temp));
+      }
+      temp = val.getLanguage();
+      if (temp != null) {
+        pars.add(new Language(temp));
+      }
+      temp = val.getMember();
+      if (temp != null) {
+        pars.add(new Member(temp));
+      }
+      temp = val.getRole();
+      if (temp != null) {
+        pars.add(new Role(temp));
+      }
 
-    temp = val.getSentBy();
-    if (temp != null) {
-      pars.add(new SentBy(temp));
+      temp = val.getSentBy();
+      if (temp != null) {
+        pars.add(new SentBy(temp));
+      }
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
     }
   }
 
@@ -616,15 +625,15 @@ public class IcalUtil {
 
   /**
    * @param cb          IcalCallback object
-   * @param vProp
+   * @param ca - identifies the voter
    * @return BwAttendee
    * @throws Throwable
    */
   public static BwAttendee getVoter(final IcalCallback cb,
-                                    final Voter vProp) throws Throwable {
-    ParameterList pars = vProp.getParameters();
+                                    final CalendarAddress ca) throws Throwable {
+    ParameterList pars = ca.getParameters();
 
-    BwAttendee att = initAttendeeVoter(cb, vProp.getValue(),
+    BwAttendee att = initAttendeeVoter(cb, ca.getValue(),
                                        pars);
 
     att.setType(BwAttendee.typeVoter);
