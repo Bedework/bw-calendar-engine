@@ -197,7 +197,7 @@ public class BwEventUtil extends IcalUtil {
 
       if (pl == null) {
         // Empty component
-        return null;
+        return Response.notOk(resp, failed, "Empty component");
       }
 
       final int entityType;
@@ -238,7 +238,7 @@ public class BwEventUtil extends IcalUtil {
         /* XXX A guid is required - but are there devices out there without a
          *       guid - and if so how do we handle it?
          */
-        throw new RuntimeException(CalFacadeException.noGuid);
+        return Response.notOk(resp, failed, CalFacadeException.noGuid);
       }
 
       /* See if we have a recurrence id */
@@ -350,7 +350,8 @@ public class BwEventUtil extends IcalUtil {
         if (!Util.isEmpty(eis)) {
           if (eis.size() > 1) {
             // DORECUR - wrong again
-            throw new RuntimeException("More than one event returned for guid.");
+            return Response.notOk(resp, failed,
+                                  "More than one event returned for guid.");
           }
           evinfo = eis.iterator().next();
         }
@@ -418,9 +419,9 @@ public class BwEventUtil extends IcalUtil {
       if (evinfo == null) {
         evinfo = makeNewEvent(cb, entityType, guid, colPath);
       } else if (evinfo.getEvent().getEntityType() != entityType) {
-        throw new RuntimeException(
-                "org.bedework.mismatched.entity.type: " +
-                        val.toString());
+        return Response.notOk(resp, failed,
+                              "org.bedework.mismatched.entity.type: " +
+                                      val.toString());
       }
 
       final ChangeTable chg = evinfo.getChangeset(cb.getPrincipal().getPrincipalRef());
@@ -505,8 +506,8 @@ public class BwEventUtil extends IcalUtil {
 
             if (methodType == ScheduleMethods.methodTypePublish) {
               if (cb.getStrictness() == IcalCallback.conformanceStrict) {
-                throw new RuntimeException(
-                        CalFacadeException.attendeesInPublish);
+                return Response.notOk(resp, failed,
+                                      CalFacadeException.attendeesInPublish);
               }
 
               if (cb.getStrictness() == IcalCallback.conformanceWarn) {
@@ -760,8 +761,9 @@ public class BwEventUtil extends IcalUtil {
                 logger.debug("Unsupported parameter " + par.getName());
               }
 
-              throw new RuntimeException(
-                      "Unsupported parameter " + par.getName());
+              return Response.notOk(resp, failed,
+                                    "Unsupported parameter " +
+                                            par.getName());
             }
 
             BwFreeBusyComponent fbc = new BwFreeBusyComponent();
@@ -1188,8 +1190,8 @@ public class BwEventUtil extends IcalUtil {
       }
 
       if (masterEI != null) {
-        // Just return null as this event is on its override list
-        return null;
+        // Just return notfound as this event is on its override list
+        return Response.notFound(resp);
       }
 
       resp.setEntity(evinfo);

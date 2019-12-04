@@ -23,9 +23,8 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-webdav:4.0.8" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.0.25" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-xml:4.0.26" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-util:4.0.8" level="project" />
+    <orderEntry type="module" module-name="bw-caldav-util" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.9" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-timezones:4.0.25" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:apache-jdkim-library:0.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.specs:geronimo-activation_1.1_spec:1.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.javamail:geronimo-javamail_1.4_mail:1.6" level="project" />
@@ -36,7 +35,7 @@
     <orderEntry type="library" scope="RUNTIME" name="Maven: log4j:log4j:1.2.16" level="project" />
     <orderEntry type="library" name="Maven: dnsjava:dnsjava:2.1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.8.2" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-server:4.0.8" level="project" />
+    <orderEntry type="module" module-name="bw-caldav-server" />
     <orderEntry type="library" name="Maven: javax.xml.soap:javax.xml.soap-api:1.4.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-ical4j-vcard:1.0.4" level="project" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.0.1" level="project" />

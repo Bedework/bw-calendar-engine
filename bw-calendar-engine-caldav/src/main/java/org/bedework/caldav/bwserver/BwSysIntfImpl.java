@@ -194,7 +194,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   private final static Set<String> readOnlyMethods =
           new TreeSet<>(roMethods);
 
-  private class HttpReqInfo {
+  private static class HttpReqInfo {
     private final HttpServletRequest req;
 
     HttpReqInfo(final HttpServletRequest req) {
@@ -337,11 +337,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
         for (final String val: vals) {
           if (val.startsWith("public-admin=")) {
-            publicAdmin = Boolean.valueOf(val.substring(13));
+            publicAdmin = Boolean.parseBoolean(val.substring(13));
             continue;
           }
           if (val.startsWith("adminCreateEprops=")) {
-            adminCreateEprops = Boolean.valueOf(val.substring(18));
+            adminCreateEprops = Boolean.parseBoolean(val.substring(18));
           }
         }
       }
@@ -506,7 +506,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   }
 
   @Override
-  public PropertyHandler getPropertyHandler(final PropertyType ptype) throws WebdavException {
+  public PropertyHandler getPropertyHandler(final PropertyType ptype) {
     return new MyPropertyHandler();
   }
 
@@ -515,23 +515,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     return urlHandler;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#getUrlPrefix()
-   * /
-  public String getUrlPrefix() {
-    return urlPrefix;
-  }
-
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#getRelativeUrls()
-   * /
-  public boolean getRelativeUrls() {
-    return relativeUrls;
-  }*/
-
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#isPrincipal(java.lang.String)
-   */
   @Override
   public boolean isPrincipal(final String val) throws WebdavException {
     try {
@@ -1489,8 +1472,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       EventInfo ei = new EventInfo(fb);
       return new BwCalDAVEvent(this, ei);
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
     } catch (WebdavException wde) {
       throw wde;
     } catch (Throwable t) {
@@ -1543,7 +1524,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
   @Override
   public CalDAVCollection newCollectionObject(final boolean isCalendarCollection,
-                                              final String parentPath) throws WebdavException {
+                                              final String parentPath) {
     final BwCalendar col = new BwCalendar();
 
     if (isCalendarCollection) {
@@ -1775,7 +1756,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         }
 
         if (isUserHome && !c.getAlias()) {
-          provisionedTypes.remove(new Integer(c.getCalType()));
+          provisionedTypes.remove(Integer.valueOf(c.getCalType()));
         }
       }
 
@@ -2034,8 +2015,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       throw new WebdavForbidden();
     } catch (final CalFacadeInvalidSynctoken cist) {
       throw new WebdavBadRequest(WebdavTags.validSyncToken);
-    } catch (final CalFacadeException cfe) {
-      throw new WebdavException(cfe);
     } catch (final WebdavException we) {
       throw we;
     } catch (final Throwable t) {
@@ -2043,9 +2022,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.sysinterface.SysIntf#toCalendar(org.bedework.caldav.server.CalDAVEvent, boolean)
-   */
   @Override
   public Calendar toCalendar(final CalDAVEvent ev,
                              final boolean incSchedMethod) throws WebdavException {
@@ -2195,9 +2171,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.sysinterface.SysIntf#fromIcal(org.bedework.caldav.server.CalDAVCollection, java.io.Reader, java.lang.String, org.bedework.caldav.server.sysinterface.SysIntf.IcalResultType, boolean)
-   */
   @Override
   public SysiIcalendar fromIcal(final CalDAVCollection col,
                                 final Reader rdr,
@@ -2248,6 +2221,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       return sic;
     } catch (final IcalMalformedException ime) {
+      if (debug()) {
+        error(ime);
+      }
       throw new WebdavForbidden(CaldavTags.validCalendarData,
                                 ime.getMessage());
     } catch (final CalFacadeException cfe) {
@@ -2256,9 +2232,15 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         throw new WebdavForbidden(CaldavTags.validTimezone,
                                   cfe.getMessage());
       }
+      if (debug()) {
+        error(cfe);
+      }
       throw new WebdavForbidden(CaldavTags.validCalendarObjectResource,
                                 cfe.getMessage());
     } catch (final WebdavException wde) {
+      if (debug()) {
+        error(wde);
+      }
       throw wde;
     } catch (final Throwable t) {
       if (debug()) {
@@ -2488,7 +2470,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       return;
     }
 
-    bedeworkExtensionsEnabled = Boolean.valueOf(hdr);
+    bedeworkExtensionsEnabled = Boolean.parseBoolean(hdr);
   }
 
   /**
@@ -2785,7 +2767,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     @Override
-    public CalDAVEvent getEvent() throws WebdavException {
+    public CalDAVEvent getEvent() {
       //if ((size() != 1) || (getComponentType() != ComponentType.event)) {
       //  throw new RuntimeException("org.bedework.icalendar.component.not.event");
       //}

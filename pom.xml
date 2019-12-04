@@ -17,7 +17,7 @@
 		<!-- Bedework Versions -->
 
     <bw-access.version>4.0.7</bw-access.version>
-    <bw-caldav.version>4.0.8</bw-caldav.version>
+    <bw-caldav.version>4.0.9-SNAPSHOT</bw-caldav.version>
     <bw-cliutil.version>4.1.0-SNAPSHOT</bw-cliutil.version>
 		<bw-util.version>4.0.26</bw-util.version>
     <bw-util-conf.version>4.1.0-SNAPSHOT</bw-util-conf.version>
