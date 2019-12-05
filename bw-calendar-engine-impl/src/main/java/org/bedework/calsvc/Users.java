@@ -56,7 +56,7 @@ class Users extends CalSvcDb implements UsersI {
   @Override
   public BwPrincipal getUser(final String account) throws CalFacadeException {
     if (account == null) {
-      throw new RuntimeException("getUser: Account cannot be null");
+      return null;
     }
 
     setRoots(getSvc());
