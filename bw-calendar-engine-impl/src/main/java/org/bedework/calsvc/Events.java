@@ -1714,7 +1714,8 @@ class Events extends CalSvcDb implements EventsI {
                                    "recurring");
     }
 
-    if (ev.getSummary() == null) {
+    if ((ev.getEntityType() != IcalDefs.entityTypeFreeAndBusy) &&
+            (ev.getSummary() == null)) {
       throw new CalFacadeException(CalFacadeException.missingEventProperty,
                                    "summary");
     }
