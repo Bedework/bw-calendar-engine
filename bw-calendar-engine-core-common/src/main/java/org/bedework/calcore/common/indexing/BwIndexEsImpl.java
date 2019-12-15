@@ -1729,24 +1729,22 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   @Override
   public void unindexEntity(final BwEventProperty val)
           throws CalFacadeException {
-    unindexEntity(docTypeFromClass(val.getClass()),
-                  getDocBuilder().getHref(val));
+    unindexEntity(getDocBuilder().getHref(val));
   }
 
   @Override
-  public void unindexEntity(final String docType,
-                            final String href)
+  public void unindexEntity(final String href)
           throws CalFacadeException {
     try {
       final DeleteByQueryRequest dqr =
               new DeleteByQueryRequest(targetIndex);
 
-      dqr.setConflicts("proceed");
-      QueryBuilder fb = getFilters(null)
+      final QueryBuilder qb = getFilters(null)
               .singleEntityQuery(href,
                                  PropertyInfoIndex.HREF);
 
-      dqr.setQuery(fb);
+      dqr.setConflicts("proceed");
+      dqr.setQuery(qb);
 
       BulkByScrollResponse bulkResponse =
               getClient().deleteByQuery(dqr, RequestOptions.DEFAULT);
@@ -3353,8 +3351,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                           ItemKind.master,
                           ev.getDtstart(),
                           ev.getDtend(),
-                          null, //ev.getRecurrenceId(),
-                          null);
+                          null); //ev.getRecurrenceId(),
       }
 
       if (ev.getRecurrenceId() != null) {
@@ -3372,130 +3369,30 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       deleteEvent(ei);
 
-      /* Create a list of all instance date/times before overrides. */
-
-      final int maxYears;
-      final int maxInstances;
       final DateLimits dl = new DateLimits();
 
-      if (ev.getPublick()) {
-        maxYears = unauthpars.getMaxYears();
-        maxInstances = unauthpars.getMaxInstances();
-      } else {
-        maxYears = authpars.getMaxYears();
-        maxInstances = authpars.getMaxInstances();
-      }
-
-      final RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
-
-      if (rp.instances.isEmpty()) {
-        // No instances for an alleged recurring event.
+      if (!makeEventInstances(ei, dl, ev.getTombstoned())) {
         return null;
-        //throw new CalFacadeException(CalFacadeException.noRecurrenceInstances);
       }
 
-      final String stzid = ev.getDtstart().getTzid();
-
-      int instanceCt = maxInstances;
-
-      final boolean dateOnly = ev.getDtstart().getDateType();
-
-      /* First build a table of overrides so we can skip these later
-       */
-      final Map<String, String> overrides = new HashMap<>();
-
-      /*
-      if (!Util.isEmpty(ei.getOverrideProxies())) {
-        for (BwEvent ov: ei.getOverrideProxies()) {
-          overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
-        }
-      }
-      */
-      final IndexResponse iresp;
-
-      if (!Util.isEmpty(ei.getOverrides())) {
-        for (final EventInfo oei: ei.getOverrides()) {
-          final BwEvent ov = oei.getEvent();
-          overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
-
-          final String start;
-          if (ov.getDtstart().getDateType()) {
-            start = ov.getRecurrenceId().substring(0, 8);
-          } else {
-            start = ov.getRecurrenceId();
-          }
-          final BwDateTime rstart =
-                  BwDateTime.makeBwDateTime(ov.getDtstart().getDateType(),
-                                            start,
-                                            stzid);
-          final BwDateTime rend =
-                  rstart.addDuration(BwDuration.makeDuration(ov.getDuration()));
-
-          /*iresp = */indexEvent(oei,
-                                 ItemKind.override,
-                                 rstart,
-                                 rend,
-                                 ov.getRecurrenceId(),
-                                 dl);
-
-          instanceCt--;
-        }
-      }
-
-      //<editor-fold desc="Emit all instances that aren't overridden">
-
-      for (final Period p: rp.instances) {
-        String dtval = p.getStart().toString();
-        if (dateOnly) {
-          dtval = dtval.substring(0, 8);
-        }
-
-        final BwDateTime rstart =
-                BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
-
-        if (overrides.get(rstart.getDate()) != null) {
-          // Overrides indexed separately - skip this instance.
-          continue;
-        }
-
-        final String recurrenceId = rstart.getDate();
-
-        dtval = p.getEnd().toString();
-        if (dateOnly) {
-          dtval = dtval.substring(0, 8);
-        }
-
-        final BwDateTime rend =
-                BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
-
-        /*iresp = */indexEvent(ei,
-                               entity,
-                               rstart,
-                               rend,
-                               recurrenceId,
-                               dl);
-
-        instanceCt--;
-        if (instanceCt == 0) {
-          // That's all you're getting from me
-          break;
-        }
-      }
       //</editor-fold>
 
       //<editor-fold desc="Emit the master event with a date range covering the entire period.">
+
+      final String stzid = ev.getDtstart().getTzid();
+      final boolean dateOnly = ev.getDtstart().getDateType();
+
       final BwDateTime start =
               BwDateTime.makeBwDateTime(dateOnly,
                                         dl.minStart, stzid);
       final BwDateTime end =
               BwDateTime.makeBwDateTime(dateOnly,
                                         dl.maxEnd, stzid);
-      iresp = indexEvent(ei,
-                         ItemKind.master,
-                         start,
-                         end,
-                         null,
-                         null);
+      final IndexResponse iresp = indexEvent(ei,
+                                             ItemKind.master,
+                                             start,
+                                             end,
+                                             null);
       //</editor-fold>
 
       return iresp;
@@ -3504,6 +3401,130 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
+  }
+
+  private boolean makeEventInstances(final EventInfo ei,
+                                     final DateLimits dl,
+                                     final boolean noIndex) throws CalFacadeException {
+    final BwEvent ev = ei.getEvent();
+
+    /* Create a list of all instance date/times before overrides. */
+
+    final int maxYears;
+    final int maxInstances;
+
+    if (ev.getPublick()) {
+      maxYears = unauthpars.getMaxYears();
+      maxInstances = unauthpars.getMaxInstances();
+    } else {
+      maxYears = authpars.getMaxYears();
+      maxInstances = authpars.getMaxInstances();
+    }
+
+    final RecurPeriods rp = RecurUtil.getPeriods(ev, maxYears, maxInstances);
+
+    if (rp.instances.isEmpty()) {
+      // No instances for an alleged recurring event.
+      return false;
+      //throw new CalFacadeException(CalFacadeException.noRecurrenceInstances);
+    }
+
+    int instanceCt = maxInstances;
+
+    final String stzid = ev.getDtstart().getTzid();
+    final boolean dateOnly = ev.getDtstart().getDateType();
+
+    /* First build a table of overrides so we can skip these later
+     */
+    final Map<String, String> overrides = new HashMap<>();
+
+      /*
+      if (!Util.isEmpty(ei.getOverrideProxies())) {
+        for (BwEvent ov: ei.getOverrideProxies()) {
+          overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
+        }
+      }
+      */
+    if (!Util.isEmpty(ei.getOverrides())) {
+      for (final EventInfo oei: ei.getOverrides()) {
+        final BwEvent ov = oei.getEvent();
+        overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
+
+        final String start;
+        if (ov.getDtstart().getDateType()) {
+          start = ov.getRecurrenceId().substring(0, 8);
+        } else {
+          start = ov.getRecurrenceId();
+        }
+        final BwDateTime rstart =
+                BwDateTime.makeBwDateTime(ov.getDtstart().getDateType(),
+                                          start,
+                                          stzid);
+        final BwDateTime rend =
+                rstart.addDuration(BwDuration.makeDuration(ov.getDuration()));
+
+        dl.checkMin(rstart);
+        dl.checkMax(rend);
+
+        if (!noIndex) {
+          /*iresp = */
+          indexEvent(oei,
+                     ItemKind.override,
+                     rstart,
+                     rend,
+                     ov.getRecurrenceId());
+        }
+
+        instanceCt--;
+      }
+    }
+
+    //<editor-fold desc="Emit all instances that aren't overridden">
+
+    for (final Period p: rp.instances) {
+      String dtval = p.getStart().toString();
+      if (dateOnly) {
+        dtval = dtval.substring(0, 8);
+      }
+
+      final BwDateTime rstart =
+              BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+
+      if (overrides.get(rstart.getDate()) != null) {
+        // Overrides indexed separately - skip this instance.
+        continue;
+      }
+
+      final String recurrenceId = rstart.getDate();
+
+      dtval = p.getEnd().toString();
+      if (dateOnly) {
+        dtval = dtval.substring(0, 8);
+      }
+
+      final BwDateTime rend =
+              BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+
+      dl.checkMin(rstart);
+      dl.checkMax(rend);
+
+      if (!noIndex) {
+        /*iresp = */
+        indexEvent(ei,
+                   entity,
+                   rstart,
+                   rend,
+                   recurrenceId);
+      }
+
+      instanceCt--;
+      if (instanceCt == 0) {
+        // That's all you're getting from me
+        break;
+      }
+    }
+
+    return true;
   }
 
   private boolean deleteEvent(final EventInfo ei) throws CalFacadeException {
@@ -3516,12 +3537,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     final ESQueryFilter esq = getFilters(null);
 
-    final QueryBuilder qb = esq.addTerm(PropertyInfoIndex.HREF,
-                                         href);
+    final QueryBuilder qb = getFilters(null)
+            .addTerm(PropertyInfoIndex.HREF,
+                     href);
 
     delQreq.setConflicts("proceed");
-
     delQreq.setQuery(qb);
+
     boolean ok = true;
 
     try {
@@ -3545,8 +3567,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                    final ItemKind kind,
                                    final BwDateTime start,
                                    final BwDateTime end,
-                                   final String recurid,
-                                   final DateLimits dl) throws CalFacadeException {
+                                   final String recurid) throws CalFacadeException {
     try {
       final DocBuilder db = getDocBuilder();
       final EsDocInfo di = db.makeDoc(ei,
@@ -3554,11 +3575,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                       start,
                                       end,
                                       recurid);
-
-      if (dl != null) {
-        dl.checkMin(start);
-        dl.checkMax(end);
-      }
 
       return indexDoc(di, false);
     } catch (final CalFacadeException cfe) {

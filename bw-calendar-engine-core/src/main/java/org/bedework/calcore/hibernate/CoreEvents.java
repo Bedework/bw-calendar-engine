@@ -69,7 +69,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.indexing.BwIndexer.DeletedState;
-import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
 
 /** Class to encapsulate most of what we do with events.
  *
@@ -1054,7 +1053,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       return;
     }
 
-    getIndexer(ev).unindexEntity(docTypeEvent, ev.getHref());
+    getIndexer(ev).unindexEntity(ev.getHref());
   }
 
   @Override

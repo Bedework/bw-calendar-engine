@@ -150,8 +150,7 @@ public class MessageProcessor extends CalSys {
           debug("Missing event: " + ece.getHref());
         }
         getIndexer(bw.getSvci(), null,
-                   docTypeEvent).unindexEntity(docTypeEvent,
-                                               ece.getHref());
+                   docTypeEvent).unindexEntity(ece.getHref());
       } else {
         getIndexer(bw.getSvci(), val,
                    docTypeEvent).indexEntity(val);

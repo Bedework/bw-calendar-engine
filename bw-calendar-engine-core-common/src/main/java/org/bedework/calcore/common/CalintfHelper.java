@@ -35,7 +35,6 @@ import org.bedework.calfacade.base.CommentedEntity;
 import org.bedework.calfacade.base.ContactedEntity;
 import org.bedework.calfacade.base.DescriptionEntity;
 import org.bedework.calfacade.base.PropertiesEntity;
-import org.bedework.calfacade.base.RecurrenceEntity;
 import org.bedework.calfacade.base.ResourcedEntity;
 import org.bedework.calfacade.base.SummaryEntity;
 import org.bedework.calfacade.configs.AuthProperties;
@@ -120,7 +119,7 @@ public abstract class CalintfHelper
    * @param desiredAccess
    * @param alwaysReturn
    * @return BwCalendar
-   * @throws org.bedework.calfacade.exc.CalFacadeException
+   * @throws CalFacadeException
    */
   public BwCalendar getCollection(String path,
                                      int desiredAccess,
@@ -129,10 +128,10 @@ public abstract class CalintfHelper
                             alwaysReturn);
   }
 
-  protected BasicSystemProperties getSyspars() throws CalFacadeException {
+  protected BasicSystemProperties getSyspars() {
     return intf.getSyspars();
   }
-  protected BwPrincipal getAuthenticatedPrincipal() throws CalFacadeException {
+  protected BwPrincipal getAuthenticatedPrincipal() {
     if ((intf == null) || (intf.getPrincipalInfo() == null)) {
       return null;
     }
@@ -140,7 +139,7 @@ public abstract class CalintfHelper
     return intf.getPrincipalInfo().getAuthPrincipal();
   }
 
-  protected BwPrincipal getPrincipal() throws CalFacadeException {
+  protected BwPrincipal getPrincipal() {
     if ((intf == null) || (intf.getPrincipalInfo() == null)) {
       return null;
     }
@@ -169,9 +168,8 @@ public abstract class CalintfHelper
   /** Only valid during a transaction.
    *
    * @return a timestamp from the db
-   * @throws CalFacadeException
    */
-  public Timestamp getCurrentTimestamp() throws CalFacadeException {
+  public Timestamp getCurrentTimestamp() {
     return intf.getCurrentTimestamp();
   }
 
@@ -271,21 +269,20 @@ public abstract class CalintfHelper
   }
 
   protected void unindex(final BwCalendar col) throws CalFacadeException {
-    getIndexer(col).unindexEntity(BwIndexer.docTypeCollection, col.getHref());
+    getIndexer(col).unindexEntity(col.getHref());
   }
 
   /** Called to notify container that an event occurred. This method should
    * queue up notifications until after transaction commit as consumers
    * should only receive notifications when the actual data has been written.
    *
-   * @param ev
-   * @throws CalFacadeException on fatal error
+   * @param ev the system event
    */
-  public void postNotification(final SysEvent ev) throws CalFacadeException {
+  public void postNotification(final SysEvent ev) {
     intf.postNotification(ev);
   }
 
-  protected BwCalendar unwrap(final BwCalendar val) throws CalFacadeException {
+  protected BwCalendar unwrap(final BwCalendar val) {
     if (val == null) {
       return null;
     }
@@ -381,6 +378,7 @@ public abstract class CalintfHelper
       clearCollection(((DescriptionEntity)val).getDescriptions());
     }
 
+    /*
     if (val instanceof RecurrenceEntity) {
       RecurrenceEntity re = (RecurrenceEntity)val;
 
@@ -390,6 +388,7 @@ public abstract class CalintfHelper
       clearCollection(re.getRdates());
       clearCollection(re.getRrules());
     }
+     */
 
     if (val instanceof ResourcedEntity) {
       clearCollection(((ResourcedEntity)val).getResources());
@@ -416,7 +415,7 @@ public abstract class CalintfHelper
     return Util.buildPath(colPathEndsWithSlash, path);
   }
 
-  protected AuthProperties getAuthprops() throws CalFacadeException {
+  protected AuthProperties getAuthprops() {
     if (authprops == null) {
       authprops = new CalSvcFactoryDefault().getSystemConfig().getAuthProperties(guestMode);
     }
@@ -424,7 +423,7 @@ public abstract class CalintfHelper
     return authprops;
   }
 
-  protected SystemProperties getSysprops() throws CalFacadeException {
+  protected SystemProperties getSysprops() {
     if (sysprops == null) {
       sysprops = new CalSvcFactoryDefault().getSystemConfig().getSystemProperties();
     }
@@ -451,7 +450,7 @@ public abstract class CalintfHelper
       code = SysEvent.SysCode.ENTITY_DELETED;
     } else {
       code = SysEvent.SysCode.ENTITY_TOMBSTONED;
-    };
+    }
 
     String note = getChanges(code, val);
     if (note == null) {

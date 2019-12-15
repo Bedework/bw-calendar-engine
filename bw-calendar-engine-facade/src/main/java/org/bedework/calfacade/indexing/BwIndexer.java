@@ -305,12 +305,10 @@ public interface BwIndexer extends Serializable {
 
   /** Called to unindex an entity
    *
-   * @param docType type of document
    * @param href     the entities href
    * @throws CalFacadeException on error
    */
-  void unindexEntity(String docType,
-                     String href) throws CalFacadeException;
+  void unindexEntity(String href) throws CalFacadeException;
 
   /** Called to index a record
    *

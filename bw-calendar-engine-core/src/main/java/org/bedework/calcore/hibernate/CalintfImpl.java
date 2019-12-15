@@ -84,7 +84,6 @@ import java.util.Set;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePreferences;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
-import static org.bedework.calfacade.indexing.BwIndexer.docTypeResource;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeResourceContent;
 
 /** Implementation of CalIntf which uses hibernate as its persistance engine.
@@ -1171,7 +1170,7 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public void delete(final BwPreferences val) throws CalFacadeException {
     entityDao.delete(val);
-    getIndexer(docTypePreferences).unindexEntity(docTypePreferences, val.getHref());
+    getIndexer(docTypePreferences).unindexEntity(val.getHref());
   }
 
   /* ====================================================================
@@ -1210,7 +1209,7 @@ public class CalintfImpl extends CalintfROImpl {
   public void removeGroup(final BwGroup group,
                           final boolean admin) throws CalFacadeException {
     principalsAndPrefs.removeGroup(group, admin);
-    getIndexer(docTypePrincipal).unindexEntity(docTypePrincipal, group.getHref());
+    getIndexer(docTypePrincipal).unindexEntity(group.getHref());
   }
 
   @Override
@@ -1287,7 +1286,7 @@ public class CalintfImpl extends CalintfROImpl {
   public void delete(final BwCalSuite val) throws CalFacadeException {
     entityDao.delete(val);
     BwCalSuitePrincipal csp = BwCalSuitePrincipal.from(val);
-    getIndexer(docTypePrincipal).unindexEntity(docTypePrincipal, csp.getHref());
+    getIndexer(docTypePrincipal).unindexEntity(csp.getHref());
   }
 
   /* ====================================================================
@@ -1425,14 +1424,14 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public void delete(final BwResource val) throws CalFacadeException {
     entityDao.delete(val);
-    getIndexer(val).unindexEntity(docTypeResource, val.getHref());
+    getIndexer(val).unindexEntity(val.getHref());
   }
 
   @Override
   public void deleteContent(final BwResource r,
                             final BwResourceContent val) throws CalFacadeException {
     entityDao.delete(val);
-    getIndexer(docTypeResourceContent).unindexEntity(docTypeResourceContent, val.getHref());
+    getIndexer(docTypeResourceContent).unindexEntity(val.getHref());
   }
 
   /* ====================================================================

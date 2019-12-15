@@ -273,7 +273,7 @@ class Users extends CalSvcDb implements UsersI {
     /* Remove preferences */
     getSvc().getPrefsHandler().delete(prefs);
 
-    getCal().getIndexer(docTypePrincipal).unindexEntity(docTypePrincipal, pr.getHref());
+    getCal().getIndexer(docTypePrincipal).unindexEntity(pr.getHref());
   }
 
   @Override

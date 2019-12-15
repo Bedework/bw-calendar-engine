@@ -51,7 +51,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
-import static org.bedework.calfacade.indexing.BwIndexer.docTypeCollection;
 import static org.bedework.calfacade.responses.Response.Status.noAccess;
 import static org.bedework.calfacade.responses.Response.Status.notFound;
 import static org.bedework.calfacade.responses.Response.Status.ok;
@@ -333,8 +332,7 @@ class CoreCalendars extends CalintfHelper
 
     /* Remove any tombstoned collection with the same name */
     dao.removeTombstonedVersion(val);
-    getIndexer(val).unindexEntity(docTypeCollection,
-                                  Util.buildPath(colPathEndsWithSlash,
+    getIndexer(val).unindexEntity(Util.buildPath(colPathEndsWithSlash,
                                                  parentPath,
                                                  "/",
                                                  val.getName()));
@@ -501,7 +499,7 @@ class CoreCalendars extends CalintfHelper
 
     if (reallyDelete) {
       dao.deleteCalendar(unwrapped);
-      getIndexer(val).unindexEntity(docTypeCollection, path);
+      getIndexer(val).unindexEntity(path);
     } else {
       tombstoneEntity(unwrapped);
       unwrapped.tombstone();
