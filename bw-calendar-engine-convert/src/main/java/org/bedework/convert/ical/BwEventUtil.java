@@ -407,6 +407,7 @@ public class BwEventUtil extends IcalUtil {
                             masterEI, mdtStart, null, null);
           e.setRecurring(true);
 //          e.addRdate(ridObj);
+          e.setSummary(pl.getProperty(Property.SUMMARY).getValue());
           e.setSuppressed(true);
 
           ical.addComponent(masterEI);
