@@ -24,6 +24,8 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.sysevents.listeners.JmsSysEventListener;
 
+import static java.lang.String.format;
+
 /** Listener class which handles change system events sent via JMS.
  *
  * <p>JMS messages are delivered to the appropriate service so we don't check
@@ -97,7 +99,14 @@ public class ChgProc extends JmsSysEventListener implements Runnable {
           counts.maxRetries = ct - 1;
         }
 
+        final long before = System.currentTimeMillis();
+
         final ProcessMessageResult pmr = handler.processMessage(ev);
+        if (trace()) {
+          trace(format("handler.processMessage; result %s, took %s",
+                       pmr,
+                       System.currentTimeMillis() - before));
+        }
 
         if (pmr == ProcessMessageResult.PROCESSED) {
           counts.processed++;

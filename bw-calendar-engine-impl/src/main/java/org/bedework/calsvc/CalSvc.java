@@ -124,6 +124,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static java.lang.String.format;
+
 /** This is an implementation of the service level interface to the calendar
  * suite.
  *
@@ -270,6 +272,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
       open();
       beginTransaction();
+      if (trace()) {
+        trace(format("svc after beginTransaction %s",
+                     System.currentTimeMillis() - start));
+      }
 
       if (userGroups != null) {
         userGroups.init(getGroupsCallBack(),
@@ -322,6 +328,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       //                                true, PrivilegeDefs.privAny);
         }
       }
+      if (trace()) {
+        trace(format("svc after tzs %s",
+                     System.currentTimeMillis() - start));
+      }
 
       if ((pars.getPublicAdmin() || pars.getAllowSuperUser()) &&
           (pars.getAuthUser() != null)) {
@@ -344,6 +354,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       try {
         close();
       } catch (final Throwable ignored) {}
+    }
+    if (trace()) {
+      trace(format("svc about to exit %s",
+                   System.currentTimeMillis() - start));
     }
   }
 

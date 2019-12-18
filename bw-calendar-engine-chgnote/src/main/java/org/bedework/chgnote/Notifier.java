@@ -56,6 +56,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static java.lang.String.format;
+
 /** Handles processing of the notification messages.
  *
  * <p>We assume that delays are introduced elsewhere - probably in message queues.
@@ -361,8 +363,14 @@ public class Notifier extends AbstractScheduler {
 
   private ProcessMessageResult doChangeNotification(final OwnedHrefEvent msg,
                                                     final NotificationType note) throws CalFacadeException {
+    var before = System.currentTimeMillis();
     try {
       getSvci(msg.getOwnerHref(), "notifier-chg");
+      if (trace()) {
+        var after = System.currentTimeMillis();
+        trace(format("Getsvci took %s", after - before));
+        before = after;
+      }
 
       // Normalized
       final String ownerHref = getPrincipalHref();
@@ -378,6 +386,12 @@ public class Notifier extends AbstractScheduler {
 
       final AliasesInfo ai = getCols().getAliasesInfo(split[0],
                                                       split[1]);
+      if (trace()) {
+        var after = System.currentTimeMillis();
+        trace(format("getAliasesInfo took %s", after - before));
+        before = after;
+      }
+
       if (ai == null) {
         // path pointing to non-existent collection
         return ProcessMessageResult.PROCESSED;
@@ -400,7 +414,14 @@ public class Notifier extends AbstractScheduler {
         return ProcessMessageResult.PROCESSED;
       }
       
-      if (processAliasInfo(ai, msg.getAuthPrincipalHref(), rc)) {
+      var processed = processAliasInfo(ai, msg.getAuthPrincipalHref(), rc);
+      if (trace()) {
+        var after = System.currentTimeMillis();
+        trace(format("processAliasInfo took %s", after - before));
+        before = after;
+      }
+
+      if (processed) {
         return ProcessMessageResult.PROCESSED;
       }
 

@@ -23,6 +23,8 @@ import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalSvcIPars;
 
+import static java.lang.String.format;
+
 /** Handles a queue of sysevents messages.
  *
  * In general we need to delay processing until after the initiating request is
@@ -84,11 +86,22 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
                                        false,   // publicAdmin
                                        "/principals/users/root".equals(principalHref));  // allow SuperUser
 
+    var before = System.currentTimeMillis();
     svci = new CalSvcFactoryDefault().getSvc(runAsPars);
     setSvc(svci);
+    if (trace()) {
+      var after = System.currentTimeMillis();
+      trace(format("Getsvc took %s", after - before));
+      before = after;
+    }
 
     svci.open();
     svci.beginTransaction();
+    if (trace()) {
+      var after = System.currentTimeMillis();
+      trace(format("open + beginTransaction took %s", after - before));
+      before = after;
+    }
 
     return svci;
   }
