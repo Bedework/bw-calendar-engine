@@ -2899,7 +2899,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     
     /* We may get many more entries than the hits we got for the first search.
        Each href may have many entries that don't match the original search term
-       We need to keep fetching until nothign is returned
+       We need to keep fetching until nothing is returned
      */
 
     for (final SearchHit hit : hits) {
@@ -2920,57 +2920,67 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
     }
 
-    final int batchSize = (int)hits.getTotalHits().value * 100;
-    int start = 0;
+    final int batchSize = 1000;
     final List<SearchHit> res = new ArrayList<>();
 
-    while (true) {
-      final SearchSourceBuilder ssb =
-              new SearchSourceBuilder()
-                      .from(start)
-                      .size(batchSize)
-                      .query(getFilters(null).multiHref(hrefs, rmode));
+    final SearchSourceBuilder ssb =
+            new SearchSourceBuilder()
+                    .size(batchSize)
+                    .query(getFilters(null).multiHref(hrefs, rmode));
 
-      final SearchRequest req = new SearchRequest(searchIndexes)
-              .searchType(SearchType.QUERY_THEN_FETCH)
-              .source(ssb);
+    final SearchRequest req = new SearchRequest(searchIndexes)
+            .searchType(SearchType.QUERY_THEN_FETCH)
+            .source(ssb)
+            .scroll(TimeValue.timeValueMinutes(1L));
 
-      if (debug()) {
-        debug("MultiFetch: targetIndex=" + targetIndex +
-                      "; ssb=" + ssb);
-      }
+    if (debug()) {
+      debug("MultiFetch: targetIndex=" + targetIndex +
+                    "; ssb=" + ssb);
+    }
 
-      final SearchResponse resp;
-      try {
-        resp = getClient().search(req, RequestOptions.DEFAULT);
-      } catch (final Throwable t) {
-        throw new CalFacadeException(t);
-      }
+    try {
+      SearchResponse resp = getClient().search(req, RequestOptions.DEFAULT);
 
-      if (resp.status() != RestStatus.OK) {
-        if (debug()) {
-          debug("Search returned status " + resp.status());
+      int tries = 0;
+
+      for (; ; ) {
+        if (tries > absoluteMaxTries) {
+          // huge count or we screwed up
+          warn("Indexer: too many tries");
+          break;
         }
 
-        return null;
+        if (resp.status() != RestStatus.OK) {
+          if (debug()) {
+            debug("Search returned status " + resp.status());
+          }
+
+          return null;
+        }
+
+        final SearchHit[] hits2 = resp.getHits().getHits();
+
+        if ((hits2 == null) ||
+                (hits2.length == 0)) {
+          // No more data - we're done
+          break;
+        }
+
+        res.addAll(Arrays.asList(hits2));
+
+        tries++;
+
+        SearchScrollRequest scrollRequest =
+                new SearchScrollRequest(resp.getScrollId());
+        scrollRequest.scroll(new TimeValue(60000));
+        resp = getClient().scroll(scrollRequest,
+                                  RequestOptions.DEFAULT);
+
       }
 
-      final SearchHit[] hits2 = resp.getHits().getHits();
-
-      if ((hits2 == null) ||
-              (hits2.length == 0)) {
-        // No more data - we're done
-        return res;
-      }
-
-      res.addAll(Arrays.asList(hits2));
-
-      if (hits2.length < batchSize) {
-        // All remaining in this batch - we're done
-        return res;
-      }
-
-      start += batchSize;
+      return res;
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
     }
   }
 
