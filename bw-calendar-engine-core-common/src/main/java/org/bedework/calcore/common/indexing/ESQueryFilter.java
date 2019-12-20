@@ -1292,10 +1292,10 @@ public class ESQueryFilter extends ESQueryFilterBase
     if (pf instanceof EntityTypeFilter) {
       final EntityTypeFilter etf = (EntityTypeFilter)pf;
 
-      return new MatchAllQueryBuilder();
-      //return new TermOrTermsQuery("_type",
-      //                            etf.getEntity(),
-      //                            pf.getNot());
+      //return new MatchAllQueryBuilder();
+      return new TermOrTermsQuery(entityTypeJname,
+                                  IcalDefs.entityTypeNames[etf.getEntity()],
+                                  pf.getNot());
     }
 
     if (f instanceof PresenceFilter) {
