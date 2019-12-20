@@ -580,7 +580,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final UpdateRequest req = new UpdateRequest(targetIndex,
                                                 updateTrackerId);
     req.retryOnConflict(20)
-       .setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL)
+//       .setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL)
        .script(new Script("ctx._source.esUpdateCount += 1"));
 
     try {
