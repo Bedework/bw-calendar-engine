@@ -81,6 +81,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import static java.lang.String.format;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePreferences;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
@@ -267,9 +268,14 @@ public class CalintfImpl extends CalintfROImpl {
                                 final boolean publicSubmission,
                                 final boolean sessionless,
                                 final boolean dontKill) throws CalFacadeException {
+    final long start = System.currentTimeMillis();
     super.open(filterParserFetcher, logId, configs, webMode,
                forRestore, indexRebuild,
                publicAdmin, publicAuth, publicSubmission, sessionless, dontKill);
+    if (trace()) {
+      trace(format("CalintfImpl.open after super.open() %s",
+                   System.currentTimeMillis() - start));
+    }
     readOnlyMode = false;
 
     if (publicAdmin) {
@@ -397,19 +403,36 @@ public class CalintfImpl extends CalintfROImpl {
 
   @Override
   public void endTransaction() throws CalFacadeException {
+    final long start = System.currentTimeMillis();
     super.endTransaction();
+    if (trace()) {
+      trace(format("CalintImpl.endTransaction after super.endTransaction() %s",
+                   System.currentTimeMillis() - start));
+    }
 
     try {
       if (calendars != null) {
         calendars.endTransaction();
+        if (trace()) {
+          trace(format("CalintImpl.endTransaction after calendars.endTransaction() %s",
+                       System.currentTimeMillis() - start));
+        }
       }
 
       if (!sess.rolledback()) {
         sess.commit();
+        if (trace()) {
+          trace(format("CalintImpl.endTransaction after sess.commit() %s",
+                       System.currentTimeMillis() - start));
+        }
       }
 
       if (!indexRebuild) {
         getIndexer(docTypeEvent).markTransaction();
+        if (trace()) {
+          trace(format("CalintImpl.endTransaction after indexer.markTransaction() %s",
+                       System.currentTimeMillis() - start));
+        }
       }
     } catch (final CalFacadeException cfe) {
       if (sess != null) {
@@ -426,6 +449,10 @@ public class CalintfImpl extends CalintfROImpl {
     } finally {
       synchronized (openIfs) {
         openIfs.remove(objKey);
+      }
+      if (trace()) {
+        trace(format("CalintImpl.endTransaction after openIfs removed %s",
+                     System.currentTimeMillis() - start));
       }
     }
   }

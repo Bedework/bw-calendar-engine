@@ -271,6 +271,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       }
 
       open();
+      if (trace()) {
+        trace(format("svc after open %s",
+                     System.currentTimeMillis() - start));
+      }
       beginTransaction();
       if (trace()) {
         trace(format("svc after beginTransaction %s",
@@ -552,6 +556,8 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     open = true;
+    final long start = System.currentTimeMillis();
+
     getCal().open(this,
                   pars.getLogId(),
                   configs,
@@ -563,9 +569,23 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                   pars.getPublicSubmission(),
                   pars.getSessionsless(),
                   pars.getDontKill());
+    if (trace()) {
+      trace(format("svc.open after getCal() %s",
+                   System.currentTimeMillis() - start));
+    }
 
     for (final CalSvcDb handler: handlers) {
+      if (trace()) {
+        trace(format("svc.open about to open %s after %s",
+                     handler.getClass(),
+                     System.currentTimeMillis() - start));
+      }
       handler.open();
+    }
+
+    if (trace()) {
+      trace(format("svc.open after open handlers %s",
+                   System.currentTimeMillis() - start));
     }
   }
 
@@ -1271,6 +1291,9 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
     try {
       final long beforeGetIntf = System.currentTimeMillis() - start;
+      if (trace()) {
+        trace(format("getCal: beforeGetIntf=%s", beforeGetIntf));
+      }
 
       String authenticatedUser = pars.getAuthUser();
 
@@ -1285,6 +1308,9 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       }
 
       final long afterGetIntf = System.currentTimeMillis() - start;
+      if (trace()) {
+        trace(format("getCal: afterGetIntf=%s", afterGetIntf));
+      }
 
       cali.open(this,
                 pars.getLogId(),
@@ -1307,12 +1333,20 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       postNotification(
               SysEvent.makeTimedEvent("Login: intf opened",
                                       System.currentTimeMillis() - start));
+      if (trace()) {
+        trace(format("getCal: intf opened=%s",
+                     System.currentTimeMillis() - start));
+      }
 
       cali.beginTransaction();
 
       postNotification(
               SysEvent.makeTimedEvent("Login: transaction started",
                                       System.currentTimeMillis() - start));
+      if (trace()) {
+        trace(format("getCal: transaction started=%s",
+                     System.currentTimeMillis() - start));
+      }
 
       String runAsUser = pars.getUser();
 
@@ -1344,6 +1378,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       postNotification(
               SysEvent.makeTimedEvent("Login: before get dirs",
                                       System.currentTimeMillis() - start));
+      if (trace()) {
+        trace(format("getCal: before get dirs=%s",
+                     System.currentTimeMillis() - start));
+      }
 
       final Directories dir = getDirectories();
 
@@ -1370,6 +1408,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       postNotification(
               SysEvent.makeTimedEvent("Login: before user fetch",
                                       System.currentTimeMillis() - start));
+      if (trace()) {
+        trace(format("getCal: before user fetch=%s",
+                     System.currentTimeMillis() - start));
+      }
 
       //synchronized (synchlock) {
       final Users users = (Users)getUsersHandler();
@@ -1478,6 +1520,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
         postNotification(
                 SysEvent.makeTimedEvent("Login: after get Groups",
                                         System.currentTimeMillis() - start));
+        if (trace()) {
+          trace(format("getCal: after get groups=%s",
+                       System.currentTimeMillis() - start));
+        }
 
         if (pars.getService()) {
           subscriptionsOnly = false;
@@ -1494,6 +1540,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
           postNotification(
                   SysEvent.makeTimedEvent("Login: got Dirinfo",
                                           System.currentTimeMillis() - start));
+          if (trace()) {
+            trace(format("getCal: got dirinfo=%s",
+                         System.currentTimeMillis() - start));
+          }
         }
       }
 
@@ -1584,6 +1634,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
           }
 
            */
+      }
+      if (trace()) {
+        trace(format("getCal: return=%s",
+                     System.currentTimeMillis() - start));
       }
 
       return cali;
