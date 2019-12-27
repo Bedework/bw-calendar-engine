@@ -216,7 +216,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   @Override
-  public void throwException(final CalFacadeException cfe)
+  public <T> T throwException(final CalFacadeException cfe)
           throws CalFacadeException {
     dao.rollback();
     throw cfe;

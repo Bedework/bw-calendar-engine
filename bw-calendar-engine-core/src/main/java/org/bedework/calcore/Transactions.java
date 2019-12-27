@@ -52,6 +52,6 @@ public interface Transactions {
    * @param cfe the error
    * @throws CalFacadeException always
    */
-  void throwException(final CalFacadeException cfe)
+  <T> T throwException(final CalFacadeException cfe)
           throws CalFacadeException;
 }

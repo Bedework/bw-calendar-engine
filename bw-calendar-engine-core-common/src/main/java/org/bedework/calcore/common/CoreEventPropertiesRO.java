@@ -60,7 +60,7 @@ public class CoreEventPropertiesRO<T extends BwEventProperty>
   }
 
   @Override
-  public void throwException(final CalFacadeException cfe)
+  public <T> T throwException(final CalFacadeException cfe)
           throws CalFacadeException {
     throw cfe;
   }

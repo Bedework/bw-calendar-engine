@@ -99,18 +99,18 @@ public abstract class CalintfHelper
     collectTimeStats = isMetricsDebugEnabled();
   }
 
-  public abstract void throwException(final CalFacadeException cfe)
+  public abstract <T> T throwException(final CalFacadeException cfe)
           throws CalFacadeException;
 
-  public void throwException(final String err)
+  public <T> T throwException(final String err)
           throws CalFacadeException {
-    throwException(new CalFacadeException(err));
+    return throwException(new CalFacadeException(err));
   }
 
-  public void throwException(final String err,
+  public <T> T throwException(final String err,
                              final String extra)
           throws CalFacadeException {
-    throwException(new CalFacadeException(err, extra));
+    return throwException(new CalFacadeException(err, extra));
   }
 
   /** Used to fetch a calendar from the cache
