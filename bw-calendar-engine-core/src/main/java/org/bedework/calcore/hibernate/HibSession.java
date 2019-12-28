@@ -30,7 +30,6 @@ import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
 /** Interface to do hibernate interactions.
@@ -162,14 +161,6 @@ public interface HibSession extends Serializable {
    * @throws CalFacadeException
    */
   public void setString(String parName, String parVal) throws CalFacadeException;
-
-  /** Set the named parameter with the given value
-   *
-   * @param parName     String parameter name
-   * @param parVal      Date parameter value
-   * @throws CalFacadeException
-   */
-  public void setDate(String parName, Date parVal) throws CalFacadeException;
 
   /** Set the named parameter with the given value
    *

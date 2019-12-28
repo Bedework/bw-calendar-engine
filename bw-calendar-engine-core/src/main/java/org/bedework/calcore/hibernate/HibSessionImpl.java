@@ -47,7 +47,6 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
 /** Convenience class to do the actual hibernate interaction. Intended for
@@ -387,29 +386,6 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q.setString(parName, parVal);
-    } catch (Throwable t) {
-      handleException(t);
-    }
-  }
-
-  /** Set the named parameter with the given value
-   *
-   * @param parName     String parameter name
-   * @param parVal      Date parameter value
-   * @throws CalFacadeException
-   */
-  @Override
-  public void setDate(final String parName, final Date parVal) throws CalFacadeException {
-    if (exc != null) {
-      // Didn't hear me last time?
-      throw new CalFacadeException(exc);
-    }
-
-    try {
-      // Remove any time component
-      synchronized (dateFormatter) {
-        q.setDate(parName, java.sql.Date.valueOf(dateFormatter.format(parVal)));
-      }
     } catch (Throwable t) {
       handleException(t);
     }
