@@ -609,12 +609,13 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           }
 
           setupDependentEntities(ov);
-          addOverride(ov, ri);
+          addOverride(ov, val, ri);
+          dao.save(ri);
           recurids.remove(rid);
         }
       }
 
-      dao.save(ri);
+//      dao.save(ri);
       maxInstances--;
       if (maxInstances == 0) {
         // That's all you're getting from me
@@ -781,16 +782,16 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           /* Is this a deleted instance? */
 
           if (ue.deleted != null) {
-            for (final BwRecurrenceInstance ri: ue.deleted) {
-              if (ri.getRecurrenceId().equals(ann.getRecurrenceId())) {
+            for (final String rid: ue.deleted) {
+              if (rid.equals(ann.getRecurrenceId())) {
                 continue updateOverrides;
               }
             }
           }
 
           if (ue.added != null) {
-            for (final BwRecurrenceInstance ri: ue.added) {
-              if (ri.getRecurrenceId().equals(ann.getRecurrenceId())) {
+            for (final String rid: ue.added) {
+              if (rid.equals(ann.getRecurrenceId())) {
                 continue updateOverrides;
               }
             }
@@ -1418,13 +1419,14 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   /* Called when adding an event with overrides
    */
   private void addOverride(final BwEventProxy proxy,
+                           final BwEvent master,
                            final BwRecurrenceInstance inst) throws CalFacadeException {
     final BwEventAnnotation override = proxy.getRef();
     if (override.getOwnerHref() == null) {
-      override.setOwnerHref(inst.getMaster().getOwnerHref());
+      override.setOwnerHref(master.getOwnerHref());
     }
-    override.setMaster(inst.getMaster());
-    override.setTarget(inst.getMaster());
+    override.setMaster(master);
+    override.setTarget(master);
     override.setOverride(true);
     override.setTombstoned(false);
 
@@ -1508,13 +1510,13 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
         if (ent.getRemovedValues() != null) {
           // exdates removed - add the instances.
-          addInstances(val, uc, overrides, ent.getRemovedValues(), shared);
+//          addInstances(val, uc, overrides, ent.getRemovedValues(), shared);
         }
 
         ent = changes.getEntry(PropertyInfoIndex.RDATE);
         if (ent.getAddedValues() != null) {
           // rdates added - add the instances.
-          addInstances(val, uc, overrides, ent.getAddedValues(), shared);
+//          addInstances(val, uc, overrides, ent.getAddedValues(), shared);
         }
 
         if (ent.getRemovedValues() != null) {
@@ -1591,16 +1593,17 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     final List<BwRecurrenceInstance> current = dao.getInstances(val);
 
     for (final BwRecurrenceInstance ri: current) {
-      final BwRecurrenceInstance updri = updated.get(ri.getRecurrenceId());
+      final String rid = ri.getRecurrenceId();
+      final BwRecurrenceInstance updri = updated.get(rid);
 
       if (updri == null) {
         // Not in the new instance set - delete from db
-        ei.removeOverride(ri.getRecurrenceId());
+        ei.removeOverride(rid);
+        uc.addDeleted(rid);
         dao.delete(ri);
-        uc.addDeleted(ri);
 
         notifyInstanceChange(SysEvent.SysCode.ENTITY_DELETED, val, shared,
-                             ri.getRecurrenceId());
+                             rid);
         continue;
       }
         
@@ -1612,24 +1615,24 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         ri.setDtend(updri.getDtend());
 
         dao.update(ri);
-        uc.addUpdated(ri);
+        uc.addUpdated(rid);
 
         notifyInstanceChange(SysEvent.SysCode.ENTITY_UPDATED, val, shared,
-                             ri.getRecurrenceId());
+                             rid);
       }
 
       // Remove the entry - we've processed it.
-      updated.remove(ri.getRecurrenceId());
+      updated.remove(rid);
     }
 
     /* updated only contains recurrence ids that don't exist */
 
-    for (final BwRecurrenceInstance ri: updated.values()) {
-      dao.save(ri);
-      uc.addAdded(ri);
+    for (final String rid: updated.keySet()) {
+      //dao.save(ri);
+      uc.addAdded(rid);
 
       notifyInstanceChange(SysEvent.SysCode.ENTITY_ADDED, val, shared,
-                           ri.getRecurrenceId());
+                           rid);
     }
   }
 
@@ -1667,6 +1670,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     notifyInstanceChange(SysEvent.SysCode.ENTITY_DELETED, master, shared, rid);
 
     if (overrides != null) {
+      BwEventProxy prToRemove = null;
       for (final BwEventProxy pr: overrides) {
         if (pr.getRecurrenceId() == null) {
           throw new NullPointerException();
@@ -1674,21 +1678,25 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
         if (pr.getRecurrenceId().equals(rid)) {
           // This one is being deleted
-          overrides.remove(pr);
+          prToRemove = pr;
           break;
         }
+      }
+
+      if (prToRemove != null) {
+        overrides.remove(prToRemove);
       }
     }
 
     final BwRecurrenceInstance inst = dao.getInstance(master, rid);
     if (inst != null) {
       dao.delete(inst);
-      uc.addDeleted(inst);
+      uc.addDeleted(rid);
     }
   }
 
   /* Add instances identified by the Collection of recurrence ids
-   */
+   *  /
   private void addInstances(final BwEvent master,
                             final UpdateEventResult uc,
                             final Collection<BwEventProxy> overrides,
@@ -1741,6 +1749,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       uc.addAdded(ri);
     }
   }
+   */
 
   private void fixReferringAnnotations(final BwEvent val) throws CalFacadeException {
     /* We may have annotations to annotations so we hunt them all down deleting

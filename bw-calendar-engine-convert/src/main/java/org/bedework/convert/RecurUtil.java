@@ -19,9 +19,7 @@
 package org.bedework.convert;
 
 import org.bedework.calfacade.BwDateTime;
-import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.ical.VEventUtil;
@@ -510,37 +508,6 @@ public class RecurUtil {
       this.recurrenceId = recurrenceId;
       this.override = override;
     }
-  }
-
-  /** Generate a recurrence instance for the given master event
-   * based on the recurrenceId and the date/time info in the master.
-   *
-   * @param master event
-   * @param recurrenceId for the instance.
-   * @return instance object filled in.
-   * @throws CalFacadeException
-   */
-  public static BwRecurrenceInstance fromRecurrencId(final BwEvent master,
-                                                     String recurrenceId)
-          throws CalFacadeException {
-    final String stzid = master.getDtstart().getTzid();
-    final boolean dateOnly = master.getDtstart().getDateType();
-
-    final BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly,
-                                                        recurrenceId,
-                                                        stzid);
-    final BwDateTime rend = rstart.addDuration(
-            BwDuration.makeDuration(master.getDuration()));
-
-
-    final BwRecurrenceInstance ri = new BwRecurrenceInstance();
-
-    ri.setDtstart(rstart);
-    ri.setDtend(rend);
-    ri.setRecurrenceId(ri.getDtstart().getDate());
-    ri.setMaster(master);
-
-    return ri;
   }
 
   /**

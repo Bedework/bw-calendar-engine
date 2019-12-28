@@ -791,8 +791,6 @@ class Events extends CalSvcDb implements EventsI {
 
       final UpdateEventResult uer = getCal().updateEvent(ei);
 
-      updResult.addedInstances = uer.added;
-      updResult.updatedInstances = uer.updated;
       updResult.deletedInstances = uer.deleted;
 
       updResult.fromAttUri = fromAttUri;
@@ -922,7 +920,6 @@ class Events extends CalSvcDb implements EventsI {
 
       if (pi.equals(PropertyInfoIndex.ATTENDEE) ||
               pi.equals(PropertyInfoIndex.VOTER)) {
-        updResult.addedAttendees = cte.getAddedValues();
         updResult.deletedAttendees = cte.getRemovedValues();
 
         if (attendeeSchedulingObject) {

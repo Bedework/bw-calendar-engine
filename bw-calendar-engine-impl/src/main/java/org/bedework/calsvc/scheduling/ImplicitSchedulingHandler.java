@@ -23,7 +23,6 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwOrganizer;
-import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.ScheduleResult;
@@ -36,9 +35,6 @@ import org.bedework.calsvci.EventsI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
-
-import java.util.Collection;
-import java.util.List;
 
 /** Rather than have a single class steering calls to a number of smaller classes
  * we will build up a full implementation by progressively implementing abstract
@@ -61,10 +57,6 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
                                final boolean noInvites) throws CalFacadeException {
     UpdateResult uer = ei.getUpdResult();
 
-    if (debug()) {
-      dump(uer);
-    }
-
     BwEvent ev = ei.getEvent();
 
     boolean organizerSchedulingObject = ev.getOrganizerSchedulingObject();
@@ -74,9 +66,6 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
       if (!Util.isEmpty(ei.getOverrides())) {
         for (EventInfo oei: ei.getOverrides()) {
           uer = oei.getUpdResult();
-          if (debug()) {
-            dump(uer);
-          }
           BwEvent oev = oei.getEvent();
 
           if (oev.getOrganizerSchedulingObject()) {
@@ -252,48 +241,5 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
     outEv.setScheduleState(BwEvent.scheduleStateProcessed);
 
     return sr;
-  }
-
-  private void dump(final UpdateResult uer) {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append("UpdateResult {");
-
-    sb.append("adding = ");
-    sb.append(uer.adding);
-    sb.append(", ");
-
-    trace(sb.toString());
-
-    if (!uer.adding) {
-      dump(uer.updatedInstances, "updatedInstances");
-      dump(uer.deletedInstances, "deletedInstances");
-      dump(uer.addedInstances, "addedInstances");
-
-      dump(uer.addedAttendees, "addedAttendees");
-      dump(uer.deletedAttendees, "deletedAttendees");
-    }
-  }
-
-  private void dump(final List<BwRecurrenceInstance> val, final String name) {
-    trace(name);
-    if (Util.isEmpty(val)) {
-      return;
-    }
-
-    for (BwRecurrenceInstance ri: val) {
-      debug("  " + ri.getRecurrenceId());
-    }
-  }
-
-  private void dump(final Collection<BwAttendee> val, final String name) {
-    trace(name);
-    if (Util.isEmpty(val)) {
-      return;
-    }
-
-    for (BwAttendee att: val) {
-      debug("  " + att.getAttendeeUri());
-    }
   }
 }

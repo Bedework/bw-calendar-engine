@@ -24,7 +24,6 @@ import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
-import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.responses.Response;
@@ -89,17 +88,8 @@ public class EventInfo
     /** null or overrides that didn't get added */
     public Collection<BwEventProxy> failedOverrides;
 
-    /** These have been changed in some way */
-    public List<BwRecurrenceInstance> updatedInstances;
-
-    /** These have been deleted */
-    public List<BwRecurrenceInstance> deletedInstances;
-
-    /** These have been added */
-    public List<BwRecurrenceInstance> addedInstances;
-
-    /** */
-    public Collection<BwAttendee> addedAttendees;
+    /** Recurrence ids of deleted instances */
+    public List<String> deletedInstances;
 
     /** */
     public Collection<BwAttendee> deletedAttendees;

@@ -27,7 +27,6 @@ import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
@@ -227,8 +226,8 @@ public abstract class SchedulingBase extends CalSvcDb
       if (!Util.isEmpty(ei.getUpdResult().deletedInstances)) {
         deletedRecurids = new ArrayList<>();
 
-        for (BwRecurrenceInstance ri: ei.getUpdResult().deletedInstances) {
-          deletedRecurids.add(ri.getRecurrenceId());
+        for (final String rid: ei.getUpdResult().deletedInstances) {
+          deletedRecurids.add(rid);
         }
       }
 
@@ -558,7 +557,7 @@ public abstract class SchedulingBase extends CalSvcDb
 
     /* Set the PARTSTAT to needs action for all attendees - except us */
     for (BwAttendee att: event.getAttendees()) {
-      if ((userAttendee != null) && att.equals(userAttendee)) {
+      if (att.equals(userAttendee)) {
         continue;
       }
 
@@ -569,7 +568,7 @@ public abstract class SchedulingBase extends CalSvcDb
 
   protected boolean initScheduleEvent(final EventInfo ei,
                                       final boolean response,
-                                      final boolean iSchedule) throws CalFacadeException {
+                                      final boolean iSchedule) {
     BwEvent event = ei.getEvent();
 
     if (!iSchedule) {

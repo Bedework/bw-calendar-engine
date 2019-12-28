@@ -23,7 +23,6 @@ import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
-import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
@@ -312,9 +311,6 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
   }
   */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SchedulingI#scheduleResponse(org.bedework.calfacade.BwEvent)
-   */
   @Override
   public ScheduleResult scheduleResponse(final EventInfo ei) throws CalFacadeException {
     /* As an attendee, respond to a scheduling request.
@@ -393,62 +389,6 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       }
       throw new CalFacadeException(t);
     }
-  }
-
-  protected EventInfo makeReplyEventInfo(final EventInfo ei,
-                                         final String owner) throws CalFacadeException {
-    BwEvent newEv = makeReplyEvent(ei.getEvent(), owner);
-    EventInfo newEi = new EventInfo(newEv);
-
-    /* I think for a reply type message this is sufficient. iTip only
-     * requires that we either duplicate or omit most properties.
-     *
-     * However, it's possible a client could send an update that simultaneously
-     * changed the PARTSTAT differently on different overrrides. Can't deal with
-     * that this way.
-     */
-
-    return newEi;
-  }
-
-  protected BwEvent makeReplyEvent(final BwEvent origEv,
-                                   final String ownerHref) throws CalFacadeException {
-    BwEvent newEv = new BwEventObj();
-
-    if (origEv instanceof BwEventProxy) {
-      getSvc().reAttach(((BwEventProxy)origEv).getRef());
-
-      /* we are being asked to copy an instance of a recurring event - rather than
-       * a complete recurring event + all overrides - clone the master
-       */
-    } else {
-      getSvc().reAttach(origEv);
-    }
-
-    newEv.setUid(origEv.getUid());
-    newEv.setOrganizer(origEv.getOrganizer());
-    newEv.setRecurrenceId(origEv.getRecurrenceId());
-    newEv.setSequence(origEv.getSequence());
-
-    // Attendee and DTSTAMP set by caller?
-
-    newEv.setOwnerHref(ownerHref);
-    newEv.setCreatorHref(ownerHref);
-    newEv.setDtstamps(getCurrentTimestamp());
-
-    // These to get past validation
-    newEv.setDtstart(origEv.getDtstart());
-    newEv.setDtend(origEv.getDtend());
-    newEv.setEndType(origEv.getEndType());
-    newEv.setDuration(origEv.getDuration());
-    newEv.setNoStart(origEv.getNoStart());
-    newEv.setRecurring(false);
-
-    // XXX Temp set summary so we have something to display - this may not be
-    // the case for incoming events from outside
-    newEv.setSummary(origEv.getSummary());
-
-    return newEv;
   }
 
   /** Set the poll response for the given voter in the output event

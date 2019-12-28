@@ -24,7 +24,6 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
-import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
@@ -121,42 +120,42 @@ public interface CoreEventsI extends Serializable {
     public Collection<BwEventProxy> failedOverrides;
 
     /** These have had start or end changed in some way */
-    public List<BwRecurrenceInstance> updated;
+    public List<String> updated;
 
-    /** These have been deleted */
-    public List<BwRecurrenceInstance> deleted;
+    /** recurrence ids of deleted instances */
+    public List<String> deleted;
 
     /** These have been added */
-    public List<BwRecurrenceInstance> added;
+    public List<String> added;
 
     /**
-     * @param val the instance
+     * @param recurrenceId the instance id
      */
-    public void addUpdated(final BwRecurrenceInstance val) {
+    public void addUpdated(final String recurrenceId) {
       if (updated == null) {
         updated = new ArrayList<>();
       }
-      updated.add(val);
+      updated.add(recurrenceId);
     }
 
     /**
-     * @param val the instance
+     * @param recurrenceId the instance id
      */
-    public void addDeleted(final BwRecurrenceInstance val) {
+    public void addDeleted(final String recurrenceId) {
       if (deleted == null) {
         deleted = new ArrayList<>();
       }
-      deleted.add(val);
+      deleted.add(recurrenceId);
     }
 
     /**
-     * @param val the instance
+     * @param recurrenceId the instance id
      */
-    public void addAdded(final BwRecurrenceInstance val) {
+    public void addAdded(final String recurrenceId) {
       if (added == null) {
         added = new ArrayList<>();
       }
-      added.add(val);
+      added.add(recurrenceId);
     }
   }
 
