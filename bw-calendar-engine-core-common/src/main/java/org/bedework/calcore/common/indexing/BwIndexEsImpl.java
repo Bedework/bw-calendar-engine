@@ -1744,6 +1744,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                  PropertyInfoIndex.HREF);
 
       dqr.setConflicts("proceed");
+      dqr.setRefresh(true);
       dqr.setQuery(qb);
 
       BulkByScrollResponse bulkResponse =
@@ -3586,7 +3587,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                       end,
                                       recurid);
 
-      return indexDoc(di, false);
+      return indexDoc(di, ei.getEvent().getTombstoned());
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final VersionConflictEngineException vcee) {
