@@ -276,11 +276,6 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
         trace(format("svc after open %s",
                      System.currentTimeMillis() - start));
       }
-      beginTransaction();
-      if (trace()) {
-        trace(format("svc after beginTransaction %s",
-                     System.currentTimeMillis() - start));
-      }
 
       if (userGroups != null) {
         userGroups.init(getGroupsCallBack(),
@@ -349,8 +344,6 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                                                       getPrincipal(),
                                                       System.currentTimeMillis() - start));
     } catch (final Throwable t) {
-      rollbackTransaction();
-
       if ((t instanceof RuntimeException) &&
               t.getMessage().equals(upgradeToReadWriteMessage)) {
         throw (RuntimeException)t;
@@ -364,9 +357,6 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
       throw new RuntimeException(t);
     } finally {
-      try {
-        endTransaction();
-      } catch (final Throwable ignored) {}
       try {
         close();
       } catch (final Throwable ignored) {}
