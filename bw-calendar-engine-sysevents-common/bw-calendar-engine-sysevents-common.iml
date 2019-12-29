@@ -76,6 +76,6 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.4" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-access:4.0.7" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-caching:4.0.26" level="project" />
-    <orderEntry type="library" name="Maven: javax.jms:jms-api:1.1-rev-1" level="project" />
+    <orderEntry type="library" name="Maven: javax.jms:javax.jms-api:2.0" level="project" />
   </component>
 </module>

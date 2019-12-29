@@ -1643,12 +1643,17 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
            */
       }
       if (trace()) {
-        trace(format("getCal: return=%s",
+        trace(format("getCal: return %s",
                      System.currentTimeMillis() - start));
       }
 
       return cali;
       //}
+    } catch (final RuntimeException t) {
+      if (!t.getMessage().equals(upgradeToReadWriteMessage)) {
+        error(t);
+      }
+      throw t;
     } catch (final Throwable t) {
       error(t);
       throw new RuntimeException(t);
@@ -1656,9 +1661,17 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       if (cali != null) {
         try {
           cali.endTransaction();
+          if (trace()) {
+            trace(format("getCal: after endTransaction %s",
+                         System.currentTimeMillis() - start));
+          }
         } catch (final Throwable ignored) {}
         try {
           cali.close();
+          if (trace()) {
+            trace(format("getCal: after close %s",
+                         System.currentTimeMillis() - start));
+          }
         } catch (final Throwable ignored) {}
         //cali.flushAll();
       }

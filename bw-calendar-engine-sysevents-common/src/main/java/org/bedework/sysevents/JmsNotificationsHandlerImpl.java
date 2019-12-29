@@ -27,7 +27,9 @@ import org.bedework.sysevents.events.SysEventBase.Attribute;
 import org.bedework.sysevents.events.TimedEvent;
 import org.bedework.sysevents.listeners.SysEventListener;
 
+import javax.jms.CompletionListener;
 import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 
@@ -38,27 +40,37 @@ import javax.jms.ObjectMessage;
  * @author Mike Douglass douglm - rpi.edu
  */
 class JmsNotificationsHandlerImpl extends NotificationsHandler implements
-    JmsDefs {
-  /* Tried camel to multiplex but ran into many problems. We'll just open 
+    JmsDefs, CompletionListener {
+  /* Tried camel to multiplex but ran into many problems. We'll just open
      multiple connections for the moment.
    */
   
   /* Default sysevents queue - everything goes here */
 
   static class JmsConn {
-    private JmsConnectionHandler conn;
+    private final JmsConnectionHandler conn;
 
-    private MessageProducer sender;
+    private final MessageProducer sender;
+
+    private final CompletionListener cl;
     
-    JmsConn(final String queueName) throws NotificationException {
-      conn = new JmsConnectionHandler();
+    JmsConn(final String queueName,
+            final CompletionListener cl)  {
+      try {
+        this.cl = cl;
 
-      conn.open(queueName);
+        conn = new JmsConnectionHandler();
 
-      sender = conn.getProducer();
+        conn.open(queueName);
+
+        sender = conn.getProducer();
+        sender.setDisableMessageID(true);
+      } catch (final Throwable t) {
+        throw new RuntimeException(t);
+      }
     }
     
-    public void post(final SysEventBase ev) throws NotificationException {
+    public void post(final SysEventBase ev) {
       try {
         final ObjectMessage msg = conn.getSession().createObjectMessage();
 
@@ -69,11 +81,11 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
         }
 
         long start = System.currentTimeMillis();
-        sender.send(msg);
+        sender.send(msg, cl);
         sends++;
         sendTime += System.currentTimeMillis() - start;
       } catch (final JMSException je) {
-        throw new NotificationException(je);
+        throw new RuntimeException(je);
       }
     }
     
@@ -95,23 +107,32 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
    */
 
   JmsNotificationsHandlerImpl() {
-    try {
-      syslog = new JmsConn(syseventsLogQueueName);
-      monitor = new JmsConn(monitorQueueName);
-      changes = new JmsConn(changesQueueName);
-      indexer = new JmsConn(crawlerQueueName);
-      scheduleIn = new JmsConn(schedulerInQueueName);
-      scheduleOut = new JmsConn(schedulerOutQueueName);
-    } catch (final Throwable t) {
-      throw new RuntimeException(t);
+    syslog = new JmsConn(syseventsLogQueueName, this);
+    monitor = new JmsConn(monitorQueueName, this);
+    changes = new JmsConn(changesQueueName, this);
+    indexer = new JmsConn(crawlerQueueName, this);
+    scheduleIn = new JmsConn(schedulerInQueueName, this);
+    scheduleOut = new JmsConn(schedulerOutQueueName, this);
+  }
+
+  @Override
+  public void onCompletion(final Message message) {
+    if (debug()) {
+      debug("Completion message ");
     }
+  }
+
+  @Override
+  public void onException(final Message message, final Exception e) {
+    warn("Exception " + e.getMessage() +
+                 " for message: " + message);
   }
 
   private static long sends = 0;
   private static long sendTime = 0;
 
   @Override
-  public void post(final SysEventBase ev) throws NotificationException {
+  public void post(final SysEventBase ev) {
     if (debug()) {
       debug(ev.toString());
     }
@@ -136,7 +157,7 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
           continue;
         }
         
-        changeEvent = Boolean.valueOf(attr.value);
+        changeEvent = Boolean.parseBoolean(attr.value);
         break;
       }
       
@@ -150,8 +171,6 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
       }
       
       if (ev instanceof EntityQueuedEvent) {
-        final EntityQueuedEvent eqe = (EntityQueuedEvent)ev;
-        
         if (((EntityQueuedEvent)ev).getInBox()) {
           scheduleIn.post(ev);
         } else {
@@ -175,14 +194,12 @@ class JmsNotificationsHandlerImpl extends NotificationsHandler implements
 
   @Override
   public void registerListener(final SysEventListener l,
-                               final boolean persistent)
-          throws NotificationException {
+                               final boolean persistent) {
 
   }
 
   @Override
-  public void removeListener(final SysEventListener l)
-          throws NotificationException {
+  public void removeListener(final SysEventListener l) {
 
   }
 

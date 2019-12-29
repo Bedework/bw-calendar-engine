@@ -31,7 +31,7 @@ class NotificationsHandlerImpl extends NotificationsHandler {
   }
 
   @Override
-  public void post(final SysEventBase ev) throws NotificationException {
+  public void post(final SysEventBase ev) {
     if (debug()) {
       debug(ev.toString());
     }
@@ -39,14 +39,12 @@ class NotificationsHandlerImpl extends NotificationsHandler {
 
   @Override
   public void registerListener(final SysEventListener l,
-                               final boolean persistent)
-                                                        throws NotificationException {
+                               final boolean persistent) {
 
   }
 
   @Override
-  public void removeListener(final SysEventListener l)
-                                                      throws NotificationException {
+  public void removeListener(final SysEventListener l) {
 
   }
 

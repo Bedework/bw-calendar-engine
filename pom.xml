@@ -56,6 +56,7 @@
     <javax.mail.version>1.5.4</javax.mail.version>
     <java.jaxb.api.version>2.3.0</java.jaxb.api.version>
     <jaxws-api.version>2.3.1</jaxws-api.version>
+    <jms.version>2.0</jms.version>
 		<junit.version>4.8.2</junit.version>
 		<servlet-api.version>4.0.0</servlet-api.version>
 		<apache-jdkim-library.version>0.4</apache-jdkim-library.version>
@@ -381,8 +382,8 @@
 
       <dependency>
         <groupId>javax.jms</groupId>
-        <artifactId>jms-api</artifactId>
-        <version>1.1-rev-1</version>
+        <artifactId>javax.jms-api</artifactId>
+        <version>${jms.version}</version>
       </dependency>
 
       <dependency>

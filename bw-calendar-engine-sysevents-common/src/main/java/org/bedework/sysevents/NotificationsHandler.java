@@ -37,30 +37,30 @@ public abstract class NotificationsHandler implements Logged {
   /**
    * Called to notify container that an event occurred.
    * 
-   * @param ev
-   * @throws NotificationException
+   * @param ev system event
+   * @throws RuntimeException on fatal error
    */
-  public abstract void post(SysEventBase ev) throws NotificationException;
+  public abstract void post(SysEventBase ev);
 
   /**
    * Register a listener.
    * 
-   * @param l
+   * @param l the listener
    * @param persistent
    *          true if this listener is to be stored in the database and
    *          reregistered at each system startup.
-   * @throws NotificationException
+   * @throws RuntimeException on fatal error
    */
-  public abstract void registerListener(SysEventListener l, boolean persistent)
-                                                                               throws NotificationException;
+  public abstract void registerListener(SysEventListener l,
+                                        boolean persistent);
 
   /**
    * Remove a listener. If persistent it will be deleted from the database.
    * 
    * @param l the listener
-   * @throws NotificationException on serious error
+   * @throws RuntimeException on fatal error
    */
-  public abstract void removeListener(SysEventListener l) throws NotificationException;
+  public abstract void removeListener(SysEventListener l);
 
   /**
    * Does its best to close.

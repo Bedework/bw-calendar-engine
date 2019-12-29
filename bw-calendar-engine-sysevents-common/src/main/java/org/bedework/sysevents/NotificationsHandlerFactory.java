@@ -20,6 +20,8 @@ package org.bedework.sysevents;
 
 import org.bedework.sysevents.events.SysEventBase;
 
+import static java.lang.ThreadLocal.*;
+
 /**
  * Return a single instance of a notifications handler.
  *
@@ -27,12 +29,7 @@ import org.bedework.sysevents.events.SysEventBase;
  */
 public class NotificationsHandlerFactory {
   private static ThreadLocal<NotificationsHandler> threadLocal =
-          new ThreadLocal<NotificationsHandler>() {
-            @Override
-            protected NotificationsHandler initialValue() {
-              return new JmsNotificationsHandlerImpl();
-            }
-          };
+          withInitial(JmsNotificationsHandlerImpl::new);
 
   /**
    * Return a handler for the system event
@@ -57,10 +54,10 @@ public class NotificationsHandlerFactory {
    * not be called directly as consumers may receive the messages immediately,
    * perhaps before the referenced data has been written.
    *
-   * @param ev
-   * @throws NotificationException
+   * @param ev system event
+   * @throws RuntimeException on fatal error
    */
-  public static void post(final SysEventBase ev) throws NotificationException {
+  public static void post(final SysEventBase ev) {
     getHandler().post(ev);
   }
 }
