@@ -303,7 +303,7 @@ public class CalSvcIPars implements Serializable {
   /**
    * @param val String calSuite
    */
-  public void setCalSuite(final String  val) {
+  public void setCalSuite(final String val) {
     calSuite = val;
   }
 
@@ -317,7 +317,7 @@ public class CalSvcIPars implements Serializable {
   /**
    * @param val String clientId
    */
-  public void setClientId(final String  val) {
+  public void setClientId(final String val) {
     clientId = val;
   }
 
@@ -331,7 +331,7 @@ public class CalSvcIPars implements Serializable {
   /**
    * @param val String logId
    */
-  public void setLogId(final String  val) {
+  public void setLogId(final String val) {
     logId = val;
   }
 
@@ -414,6 +414,13 @@ public class CalSvcIPars implements Serializable {
    */
   public boolean getWebMode() {
     return webMode;
+  }
+
+  /**
+   * @param val readonly flag
+   */
+  public void setReadonly(final Boolean val) {
+    readonly = val;
   }
 
   /**

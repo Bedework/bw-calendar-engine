@@ -257,17 +257,17 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public synchronized void open(final FilterParserFetcher filterParserFetcher,
-                                final String logId,
-                                final Configurations configs,
-                                final boolean webMode,
-                                final boolean forRestore,
-                                final boolean indexRebuild,
-                                final boolean publicAdmin,
-                                final boolean publicAuth,
-                                final boolean publicSubmission,
-                                final boolean sessionless,
-                                final boolean dontKill) throws CalFacadeException {
+  public void open(final FilterParserFetcher filterParserFetcher,
+                   final String logId,
+                   final Configurations configs,
+                   final boolean webMode,
+                   final boolean forRestore,
+                   final boolean indexRebuild,
+                   final boolean publicAdmin,
+                   final boolean publicAuth,
+                   final boolean publicSubmission,
+                   final boolean sessionless,
+                   final boolean dontKill) throws CalFacadeException {
     final long start = System.currentTimeMillis();
     super.open(filterParserFetcher, logId, configs, webMode,
                forRestore, indexRebuild,

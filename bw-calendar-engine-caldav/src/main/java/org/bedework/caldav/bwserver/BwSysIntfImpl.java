@@ -2602,7 +2602,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                         possibleSuperUser,   // allow SuperUser
                                         service,publicAdmin,
                                         allowCreateEprops,
-                                        false);   // readonly);
+                                        readonly);
       svci = new CalSvcFactoryDefault().getSvc(pars);
 
       svci.open();

@@ -215,17 +215,17 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public synchronized void open(final FilterParserFetcher filterParserFetcher,
-                                final String logId,
-                                final Configurations configs,
-                                final boolean webMode,
-                                final boolean forRestore,
-                                final boolean indexRebuild,
-                                final boolean publicAdmin,
-                                final boolean publicAuth,
-                                final boolean publicSubmission,
-                                final boolean sessionless,
-                                final boolean dontKill) throws CalFacadeException {
+  public void open(final FilterParserFetcher filterParserFetcher,
+                   final String logId,
+                   final Configurations configs,
+                   final boolean webMode,
+                   final boolean forRestore,
+                   final boolean indexRebuild,
+                   final boolean publicAdmin,
+                   final boolean publicAuth,
+                   final boolean publicSubmission,
+                   final boolean sessionless,
+                   final boolean dontKill) throws CalFacadeException {
     if (isOpen) {
       throw new CalFacadeException("Already open");
     }
@@ -254,7 +254,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public synchronized void close() throws CalFacadeException {
+  public void close() throws CalFacadeException {
     closeIndexers();
 
     if (killed) {

@@ -271,6 +271,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       }
 
       open();
+
       if (trace()) {
         trace(format("svc after open %s",
                      System.currentTimeMillis() - start));
@@ -349,7 +350,18 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                                                       System.currentTimeMillis() - start));
     } catch (final Throwable t) {
       rollbackTransaction();
+
+      if ((t instanceof RuntimeException) &&
+              t.getMessage().equals(upgradeToReadWriteMessage)) {
+        throw (RuntimeException)t;
+      }
+
       t.printStackTrace();
+
+      if (t instanceof RuntimeException) {
+        throw (RuntimeException)t;
+      }
+
       throw new RuntimeException(t);
     } finally {
       try {
@@ -1465,6 +1477,11 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
         }
 
         if (currentPrincipal == null) {
+          if (pars.getReadonly()) {
+            // We need read-write
+            throw new RuntimeException(upgradeToReadWriteMessage);
+          }
+
           /* Add the user to the database. Presumably this is first logon
              */
           getLogger().debug("Add new user " + authenticatedUser);

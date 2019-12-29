@@ -64,7 +64,7 @@ public class EntityCaches {
     // Don't have docTypeUpdateTracker, docTypeUnknown, docTypeEvent
   }
 
-  synchronized <T extends BwUnversionedDbentity> void put(final T val) {
+  <T extends BwUnversionedDbentity> void put(final T val) {
     final Class cl;
 
     if (val instanceof BwPrincipal) {
@@ -73,12 +73,10 @@ public class EntityCaches {
       cl = val.getClass();
     }
 
-    EntityCache cache = getCache(cl);
-
-    cache.put(val);
+    getCache(cl).put(val);
   }
 
-  synchronized <T extends BwUnversionedDbentity> void put(final T val,
+  <T extends BwUnversionedDbentity> void put(final T val,
                                                           final int desiredAccess) {
     final Class cl;
 
@@ -88,33 +86,29 @@ public class EntityCaches {
       cl = val.getClass();
     }
 
-    EntityCache cache = getCache(cl);
-
-    cache.put(val, desiredAccess);
+    getCache(cl).put(val, desiredAccess);
   }
 
-  synchronized <T extends BwUnversionedDbentity> T get(final String href,
+  <T extends BwUnversionedDbentity> T get(final String href,
                                                        final Class<T> resultType) {
     EntityCache cache = getCache(resultType);
 
     return (T)cache.get(href);
   }
 
-  synchronized <T extends BwUnversionedDbentity> T get(final String href,
+  <T extends BwUnversionedDbentity> T get(final String href,
                                                        final int desiredAccess,
                                                        final Class<T> resultType) {
-    EntityCache cache = getCache(resultType);
-
-    return (T)cache.get(href, desiredAccess);
+    return (T)getCache(resultType).get(href, desiredAccess);
   }
 
-  synchronized void clear() {
+  void clear() {
     for (final EntityCache cache: caches.values()) {
       cache.clear();
     }
   }
 
-  synchronized void markUpdate(final String docType) {
+  void markUpdate(final String docType) {
     final Class cl = docTypeToClass.get(docType);
     if (cl == null) {
       return;
@@ -128,7 +122,7 @@ public class EntityCaches {
     }
   }
 
-  synchronized boolean testResetUpdate() {
+  boolean testResetUpdate() {
     final boolean res = updated;
 
     updated = false;

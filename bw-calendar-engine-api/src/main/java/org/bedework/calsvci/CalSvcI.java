@@ -73,6 +73,11 @@ import java.util.List;
  * @author Mike Douglass       douglm rpi.edu
  */
 public abstract class CalSvcI implements AutoCloseable, Serializable {
+  /** init may throw an exception with this message if read/write is needed
+   */
+  public static String upgradeToReadWriteMessage =
+          "Upgrade to read/write";
+
   /** (Re)initialise the object for a particular use.
    *
    * @param pars        Defines the global parameters for the object

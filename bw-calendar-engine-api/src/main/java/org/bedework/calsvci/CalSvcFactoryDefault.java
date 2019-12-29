@@ -27,6 +27,8 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Properties;
 
+import static org.bedework.calsvci.CalSvcI.upgradeToReadWriteMessage;
+
 /** Default svc factory - just gets an instance of the default class.
  *
  * @author Mike Douglass       douglm@rpi.edu
@@ -40,7 +42,12 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
   private static final String systemConfigClass =
       "org.bedework.calsvc.jmx.ConfigurationsImpl";
 
-  private static Configurations conf;
+  private static class ConfigHolder {
+    final static Configurations conf =
+            (Configurations)loadInstance(systemConfigClass,
+                                         Configurations.class);
+  }
+
 
   public static SystemProperties getSystemProperties() throws CalFacadeException {
     return new CalSvcFactoryDefault().getSystemConfig()
@@ -49,11 +56,23 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
   
   @Override
   public CalSvcI getSvc(final CalSvcIPars pars) {
-    final CalSvcI svc = 
+    CalSvcI svc =
             (CalSvcI)loadInstance(defaultSvciClass,
                                   CalSvcI.class);
 
-    svc.init(pars);
+    try {
+      svc.init(pars);
+    } catch (final RuntimeException t) {
+      if (t.getMessage().equals(upgradeToReadWriteMessage)) {
+        var clonedPars = (CalSvcIPars)pars.clone();
+        clonedPars.setReadonly(false);
+
+        svc = (CalSvcI)loadInstance(defaultSvciClass,
+                                    CalSvcI.class);
+
+        svc.init(clonedPars);
+      }
+    }
 
     return svc;
   }
@@ -66,20 +85,7 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
 
   @Override
   public Configurations getSystemConfig() {
-    if (conf != null) {
-      return conf;
-    }
-
-    synchronized (defaultSvciClass) {
-      if (conf != null) {
-        return conf;
-      }
-
-      conf = (Configurations)loadInstance(systemConfigClass,
-                                          Configurations.class);
-
-      return conf;
-    }
+    return ConfigHolder.conf;
   }
 
   public static Properties getPr() {
