@@ -83,10 +83,10 @@ public interface UsersI extends Serializable {
 
   /** Set up collections and principal home.
    *
-   * @param principal
-   * @throws CalFacadeException
+   * @param principal to init
+   * @throws RuntimeException on fatal error
    */
-  public void initPrincipal(BwPrincipal principal) throws CalFacadeException;
+  public void initPrincipal(BwPrincipal principal);
 
   /**
    * @return public entity owner

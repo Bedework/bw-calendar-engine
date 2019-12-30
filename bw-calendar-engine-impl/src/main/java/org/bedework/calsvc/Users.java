@@ -256,11 +256,11 @@ class Users extends CalSvcDb implements UsersI {
     }
 
     /* Set default calendar to null so we don't get blocked. */
-    final BwPreferences prefs = getSvc().getPrefsHandler().get(pr);
+    final BwPreferences prefs = getPrefs(pr);
 
     if (prefs != null) {
       prefs.setDefaultCalendarPath(null);
-      getSvc().getPrefsHandler().update(prefs);
+      update(prefs);
     }
 
     /* collections and user home */
@@ -300,16 +300,13 @@ class Users extends CalSvcDb implements UsersI {
     throw new CalFacadeException("Unimplemented");
   }*/
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.UsersI#initPrincipal(org.bedework.calfacade.BwPrincipal)
-   */
   @Override
-  public void initPrincipal(final BwPrincipal principal) throws CalFacadeException {
+  public void initPrincipal(final BwPrincipal principal) {
     initPrincipal(principal, getSvc());
   }
 
   private void initPrincipal(final BwPrincipal principal,
-                             final CalSvc svc) throws CalFacadeException {
+                             final CalSvc svc) {
     // Add preferences
     final BwPreferences prefs = new BwPreferences();
 
@@ -339,7 +336,7 @@ class Users extends CalSvcDb implements UsersI {
 
     prefs.setScheduleAutoRespond(principal.getKind() == WhoDefs.whoTypeResource);
 
-    svc.getPrefsHandler().update(prefs);
+    update(prefs);
   }
 
   @Override

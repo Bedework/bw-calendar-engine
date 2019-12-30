@@ -33,23 +33,24 @@ public interface PreferencesI extends Serializable {
   /** Returns the current user preferences.
    *
    * @return BwPreferences   prefs for the current user
-   * @throws CalFacadeException
+   * @throws RuntimeException on fatal error
    */
-  BwPreferences get() throws CalFacadeException;
+  BwPreferences get();
 
   /** Returns the given user preferences.
    *
    * @param principal - representing a principal
    * @return BwPreferences   prefs for the given user
+   * @throws RuntimeException on fatal error
    */
   BwPreferences get(BwPrincipal principal);
 
   /** Update the current user preferences.
    *
    * @param  val     BwPreferences prefs for the current user
-   * @throws CalFacadeException
+   * @throws RuntimeException on fatal error
    */
-  void update(BwPreferences val) throws CalFacadeException;
+  void update(BwPreferences val);
 
   /** delete a preferences object
    *
@@ -68,7 +69,7 @@ public interface PreferencesI extends Serializable {
   /** Set the path to the attachments directory
    *
    * @param val  String path.
-   * @throws CalFacadeException
+   * @throws RuntimeException on fatal error
    */
-  void setAttachmentsPath(String val) throws CalFacadeException;
+  void setAttachmentsPath(String val);
 }

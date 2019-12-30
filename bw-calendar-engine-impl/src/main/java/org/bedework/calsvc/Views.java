@@ -37,9 +37,6 @@ class Views extends CalSvcDb implements ViewsI {
     super(svci);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ViewsI#add(org.bedework.calfacade.svc.BwView, boolean)
-   */
   @Override
   public boolean add(final BwView val,
                      final boolean makeDefault) throws CalFacadeException {
@@ -47,7 +44,7 @@ class Views extends CalSvcDb implements ViewsI {
       return false;
     }
 
-    BwPreferences prefs = getSvc().getPrefsHandler().get();
+    BwPreferences prefs = getPrefs();
     checkOwnerOrSuper(prefs);
 
     if (!prefs.addView(val)) {
@@ -58,21 +55,18 @@ class Views extends CalSvcDb implements ViewsI {
       prefs.setPreferredView(val.getName());
     }
 
-    getSvc().getPrefsHandler().update(prefs);
+    update(prefs);
 
     return true;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ViewsI#remove(org.bedework.calfacade.svc.BwView)
-   */
   @Override
   public boolean remove(final BwView val) throws CalFacadeException{
     if (val == null) {
       return false;
     }
 
-    BwPreferences prefs = getSvc().getPrefsHandler().get();
+    BwPreferences prefs = getPrefs();
     checkOwnerOrSuper(prefs);
 
     //setupOwnedEntity(val, getUser());
@@ -90,7 +84,7 @@ class Views extends CalSvcDb implements ViewsI {
       prefs.setPreferredView(null);
     }
 
-    getSvc().getPrefsHandler().update(prefs);
+    update(prefs);
 
     return true;
   }
@@ -98,7 +92,7 @@ class Views extends CalSvcDb implements ViewsI {
   @Override
   public BwView find(String val) throws CalFacadeException {
     if (val == null) {
-      BwPreferences prefs = getSvc().getPrefsHandler().get();
+      BwPreferences prefs = getPrefs();
 
       val = prefs.getPreferredView();
       if (val == null) {
@@ -161,13 +155,10 @@ class Views extends CalSvcDb implements ViewsI {
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ViewsI#addCollection(java.lang.String, java.lang.String)
-   */
   @Override
   public boolean addCollection(final String name,
                                final String path) throws CalFacadeException {
-    BwPreferences prefs = getSvc().getPrefsHandler().get();
+    BwPreferences prefs = getPrefs();
     checkOwnerOrSuper(prefs);
 
     BwView view = find(name);
@@ -178,18 +169,15 @@ class Views extends CalSvcDb implements ViewsI {
 
     view.addCollectionPath(path);
 
-    getSvc().getPrefsHandler().update(prefs);
+    update(prefs);
 
     return true;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ViewsI#removeCollection(java.lang.String, java.lang.String)
-   */
   @Override
   public boolean removeCollection(final String name,
                                   final String path) throws CalFacadeException {
-    BwPreferences prefs = getSvc().getPrefsHandler().get(getPrincipal());
+    BwPreferences prefs = getPrefs(getPrincipal());
     checkOwnerOrSuper(prefs);
 
     BwView view = find(name);
@@ -200,28 +188,25 @@ class Views extends CalSvcDb implements ViewsI {
 
     view.removeCollectionPath(path);
 
-    getSvc().getPrefsHandler().update(prefs);
+    update(prefs);
 
     return true;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.ViewsI#getAll()
-   */
   @Override
-  public Collection<BwView> getAll() throws CalFacadeException {
-    Collection<BwView> c = getSvc().getPrefsHandler().get().getViews();
+  public Collection<BwView> getAll() {
+    Collection<BwView> c = getPrefs().getViews();
     if (c == null) {
-      c = new TreeSet<BwView>();
+      c = new TreeSet<>();
     }
     return c;
   }
 
   @Override
-  public Collection<BwView> getAll(final BwPrincipal pr) throws CalFacadeException {
-    Collection<BwView> c = getSvc().getPrefsHandler().get(pr).getViews();
+  public Collection<BwView> getAll(final BwPrincipal pr) {
+    Collection<BwView> c = getPrefs(pr).getViews();
     if (c == null) {
-      c = new TreeSet<BwView>();
+      c = new TreeSet<>();
     }
     return c;
   }

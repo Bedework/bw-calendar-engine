@@ -418,9 +418,11 @@ class Notifications extends CalSvcDb implements NotificationsI {
           throws CalFacadeException {
     try {
       pushPrincipal(principalHref);
-      final BwPreferences prefs = getSvc().getPrefsHandler().get();
+      final BwPreferences prefs = getPrefs();
 
       prefs.setNotificationToken(UUID.randomUUID().toString());
+      update(prefs);
+
       getNoteClient().subscribe(principalHref, emails,
                                 prefs.getNotificationToken());
     } finally {
@@ -431,9 +433,11 @@ class Notifications extends CalSvcDb implements NotificationsI {
   public void subscribe(final BwPrincipal principal,
                         final List<String> emails)
           throws CalFacadeException {
-      final BwPreferences prefs = getSvc().getPrefsHandler().get(principal);
+      final BwPreferences prefs = getPrefs(principal);
 
       prefs.setNotificationToken(UUID.randomUUID().toString());
+      update(prefs);
+
       getNoteClient().subscribe(principal.getPrincipalRef(), emails,
                                 prefs.getNotificationToken());
   }

@@ -50,7 +50,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
   private BwPreferences prefs;
 
   /**
-   * @param svci
+   * @param svci interface
    */
   Preferences(final CalSvc svci) {
     super(svci);
@@ -74,13 +74,8 @@ class Preferences extends CalSvcDb implements PreferencesI {
     prefs = null;
   }
 
-  /** Get the preferences for the current user
-   *
-   * @return the preferences for the current user
-   * @throws CalFacadeException
-   */
   @Override
-  public BwPreferences get() throws CalFacadeException {
+  public BwPreferences get() {
     if (prefs != null) {
       if (prefs.getOwnerHref() == null) {
         if (getPrincipal().getUnauthenticated()) {
@@ -91,27 +86,31 @@ class Preferences extends CalSvcDb implements PreferencesI {
       }
     }
 
-    prefs = fetch();
+    try {
+      prefs = fetch();
 
-    if (prefs == null) {
-      // An uninitialised user?
+      if (prefs == null) {
+        // An uninitialised user?
 
-      if (getPrincipal().getUnauthenticated()) {
-        prefs = new BwPreferences();
-        return prefs;
+        if (getPrincipal().getUnauthenticated()) {
+          prefs = new BwPreferences();
+          return prefs;
+        }
+
+        getSvc().getUsersHandler().initPrincipal(getPrincipal());
+
+        prefs = fetch();
       }
 
-      getSvc().getUsersHandler().initPrincipal(getPrincipal());
+      if (prefs == null) {
+        throw new RuntimeException(
+                "org.bedework.unable.to.initialise");
+      }
 
-      prefs = fetch();
+      return prefs;
+    } catch (CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
     }
-
-    if (prefs == null) {
-      throw new CalFacadeException("org.bedework.unable.to.initialise",
-                                   getPrincipal().getAccount());
-    }
-
-    return prefs;
   }
 
   @Override
@@ -124,12 +123,16 @@ class Preferences extends CalSvcDb implements PreferencesI {
   }
 
   @Override
-  public void update(final BwPreferences val) throws CalFacadeException {
+  public void update(final BwPreferences val) {
     if (val.getPublick() == null) {
       // Fix the data
       val.setPublick(val.getOwnerHref().equals(BwPrincipal.publicUserHref));
     }
-    getCal().saveOrUpdate(val);
+    try {
+      getCal().saveOrUpdate(val);
+    } catch (CalFacadeException cfe) {
+      throw new RuntimeException(cfe);
+    }
   }
 
   @Override
@@ -229,9 +232,6 @@ class Preferences extends CalSvcDb implements PreferencesI {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.PreferencesI#getAttachmentsPath()
-   */
   @Override
   public String getAttachmentsPath() throws CalFacadeException {
     String path = get().getAttachmentsPath();
@@ -248,11 +248,8 @@ class Preferences extends CalSvcDb implements PreferencesI {
     return path;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.PreferencesI#setAttachmentsPath(java.lang.String)
-   */
   @Override
-  public void setAttachmentsPath(final String val) throws CalFacadeException {
+  public void setAttachmentsPath(final String val) {
     if (val == null) {
       return;
     }

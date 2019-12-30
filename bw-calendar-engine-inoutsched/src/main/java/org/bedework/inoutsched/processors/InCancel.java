@@ -60,7 +60,7 @@ public class InCancel extends InProcessor {
         break check;
       }
 
-      final BwPreferences prefs = getSvc().getPrefsHandler().get();
+      final BwPreferences prefs = getPrefs();
       final EventInfo colEi = sched.getStoredMeeting(ei.getEvent());
 
       if (colEi == null) {

@@ -90,7 +90,7 @@ public abstract class InProcessor extends CalSvcDb {
       if (principal == null) {
         delete = true;
       } else {
-        final BwPreferences prefs = getSvc().getPrefsHandler().get(principal);
+        final BwPreferences prefs = getPrefs(principal);
 
         final int sapr = prefs.getScheduleAutoProcessResponses();
 

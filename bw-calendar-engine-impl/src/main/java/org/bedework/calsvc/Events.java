@@ -463,7 +463,7 @@ class Events extends CalSvcDb implements EventsI {
 
       adjustEntities(ei);
 
-      final BwPreferences prefs = getSvc().getPrefsHandler().get();
+      final BwPreferences prefs = getPrefs();
       if (prefs != null) {
         final GetEntitiesResponse<BwCategory> resp =
                 getSvc().getCategoriesHandler().

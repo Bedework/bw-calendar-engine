@@ -195,7 +195,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
     final String home = getSvc().getPrincipalInfo().getCalendarHomePath(eventsOwner);
 
-    final BwPreferences prefs = getSvc().getPrefsHandler().get(eventsOwner);
+    final BwPreferences prefs = getPrefs(eventsOwner);
 
     String col = null;
 

@@ -436,8 +436,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
   @Override
   public void setPreferred(final BwCalendar val)
           throws CalFacadeException {
-    getSvc().getPrefsHandler().get()
-            .setDefaultCalendarPath(val.getPath());
+    final BwPreferences prefs = getPrefs();
+    prefs.setDefaultCalendarPath(val.getPath());
+    update(prefs);
   }
 
   @Override
@@ -447,8 +448,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     switch (entityType) {
       case Component.VEVENT:
-        final String path = getSvc().getPrefsHandler().get()
-                                    .getDefaultCalendarPath();
+        final String path = getPrefs().getDefaultCalendarPath();
 
         if (path != null) {
           return path;
@@ -775,8 +775,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
       }
     }
 
-    final BwPreferences prefs = getSvc().getPrefsHandler().get(
-             getSvc().getUsersHandler().getPrincipal(val.getOwnerHref()));
+    final BwPreferences prefs =
+            getPrefs(getPrincipal(val.getOwnerHref()));
     if (val.getPath().equals(prefs.getDefaultCalendarPath())) {
       throw new CalFacadeException(CalFacadeException.cannotDeleteDefaultCalendar);
     }

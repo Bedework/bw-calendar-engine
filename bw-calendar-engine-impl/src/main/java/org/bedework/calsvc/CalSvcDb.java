@@ -38,6 +38,7 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.Response;
+import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
@@ -408,6 +409,18 @@ public class CalSvcDb implements Logged, Serializable {
 
   protected ResourcesI getRess() {
     return svci.getResourcesHandler();
+  }
+
+  protected BwPreferences getPrefs() {
+    return svci.getPrefsHandler().get();
+  }
+
+  protected BwPreferences getPrefs(final BwPrincipal principal) {
+    return svci.getPrefsHandler().get(principal);
+  }
+
+  protected void update(final BwPreferences prefs) {
+    svci.getPrefsHandler().update(prefs);
   }
 
   protected UsersI getUsers() {
