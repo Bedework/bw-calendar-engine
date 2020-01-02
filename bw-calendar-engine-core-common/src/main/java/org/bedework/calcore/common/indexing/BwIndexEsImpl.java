@@ -144,6 +144,7 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import static java.lang.String.format;
 import static org.bedework.access.PrivilegeDefs.privRead;
 import static org.bedework.calcore.common.indexing.DocBuilder.ItemKind.entity;
 import static org.bedework.calfacade.indexing.BwIndexer.IndexedType.unreachableEntities;
@@ -2067,6 +2068,29 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
+  public List<EventInfo> fetchEvents(final String path,
+                                     final String lastmod,
+                                     final int lastmodSeq,
+                                     final int count)
+          throws CalFacadeException {
+    final QueryBuilder qb =
+            getFilters(null).syncFilter(path, lastmod,
+                                        lastmodSeq);
+
+    return fetchEntities(docTypeEvent,
+                         new BuildEntity<EventInfo>() {
+                           @Override
+                           EventInfo make(final EntityBuilder eb,
+                                          final String id)
+                                   throws CalFacadeException {
+                             return eb.makeEvent(id, false);
+                           }
+                         },
+                         qb,
+                         count);
+  }
+
+  @Override
   public BwCategory fetchCat(final String val,
                              final PropertyInfoIndex... index)
           throws CalFacadeException {
@@ -2198,7 +2222,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             fetchEntities(docTypeCollection,
                              new BuildEntity<BwCalendar>() {
                                @Override
-                               BwCalendar make(final EntityBuilder eb)
+                               BwCalendar make(final EntityBuilder eb,
+                                               final String id)
                                        throws CalFacadeException {
                                  return accessCheck.checkAccess(
                                          makeCollection(eb));
@@ -2233,13 +2258,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       Collection<BwCalendar> subcols = fetchChildren(col.getHref());
 
       if (Util.isEmpty(subcols)) {
-        return cols;
+        continue;
       }
 
       res.addAll(subcols);
     }
 
-    return new TreeSet<>(cols); // Sort the result
+    return new TreeSet<>(res); // Sort the result
   }
 
   @Override
@@ -2309,7 +2334,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       resp.setEntities(fetchEntities(docTypePrincipal,
                                      new BuildEntity<BwGroup>() {
                                        @Override
-                                       BwGroup make(final EntityBuilder eb)
+                                       BwGroup make(final EntityBuilder eb,
+                                                    final String id)
                                                throws CalFacadeException {
                                          return (BwGroup)eb.makePrincipal();
                                        }
@@ -2335,7 +2361,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       resp.setEntities(fetchEntities(docTypePrincipal,
                                      new BuildEntity<BwGroup>() {
                                        @Override
-                                       BwGroup make(final EntityBuilder eb)
+                                       BwGroup make(final EntityBuilder eb,
+                                                    final String id)
                                                throws CalFacadeException {
                                          return (BwGroup)eb.makePrincipal();
                                        }
@@ -2419,7 +2446,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return fetchEntities(docTypeFilter,
                          new BuildEntity<BwFilterDef>() {
                            @Override
-                           BwFilterDef make(final EntityBuilder eb)
+                           BwFilterDef make(final EntityBuilder eb,
+                                            final String id)
                                    throws CalFacadeException {
                              return eb.makefilter();
                            }
@@ -2461,12 +2489,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                          final int count)
           throws CalFacadeException {
     final QueryBuilder qb =
-            getFilters(null).resources(path, lastmod, lastmodSeq);
+            getFilters(null).syncFilter(path, lastmod, lastmodSeq);
 
     return fetchEntities(docTypeResource,
                          new BuildEntity<BwResource>() {
                            @Override
-                           BwResource make(final EntityBuilder eb)
+                           BwResource make(final EntityBuilder eb,
+                                           final String id)
                                    throws CalFacadeException {
                              return eb.makeResource();
                            }
@@ -2595,7 +2624,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return fetchEntities(docTypeCategory,
                          new BuildEntity<BwCategory>() {
                            @Override
-                           BwCategory make(final EntityBuilder eb)
+                           BwCategory make(final EntityBuilder eb,
+                                           final String id)
                                    throws CalFacadeException {
                              return eb.makeCat();
                            }
@@ -2609,7 +2639,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return fetchEntities(docTypeContact,
                          new BuildEntity<BwContact>() {
                            @Override
-                           BwContact make(final EntityBuilder eb)
+                           BwContact make(final EntityBuilder eb,
+                                          final String id)
                                    throws CalFacadeException {
                              return eb.makeContact();
                            }
@@ -2623,7 +2654,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return fetchEntities(docTypeLocation,
                          new BuildEntity<BwLocation>() {
                            @Override
-                           BwLocation make(final EntityBuilder eb)
+                           BwLocation make(final EntityBuilder eb,
+                                           final String id)
                                    throws CalFacadeException {
                              return eb.makeLocation();
                            }
@@ -2999,7 +3031,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   private static abstract class BuildEntity<T> {
-    abstract T make(EntityBuilder eb) throws CalFacadeException;
+    abstract T make(final EntityBuilder eb,
+                    final String id) throws CalFacadeException;
   }
 
   private <T> List<T> fetchEntities(final String docType,
@@ -3019,7 +3052,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     requireDocType(docType);
 
     if (debug()) {
-      debug("fetchAllEntities");
+      debug("fetchEntities");
     }
 
     int tries = 0;
@@ -3075,7 +3108,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         for (final SearchHit hit : hits) {
           //Handle the hit...
           final T ent = be
-                  .make(getEntityBuilder(hit.getSourceAsMap()));
+                  .make(getEntityBuilder(hit.getSourceAsMap()),
+                                         hit.getId());
           if (ent == null) {
             // No access
             continue;
@@ -3356,6 +3390,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       /* If it's not recurring or a stand-alone instance index it */
 
       final BwEvent ev = ei.getEvent();
+      if (ev.getTombstoned()) {
+        // cleanup.
+        deleteEvent(ei);
+      }
 
       if (!ev.testRecurring() && (ev.getRecurrenceId() == null)) {
         return indexEvent(ei,
@@ -3539,18 +3577,16 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   private boolean deleteEvent(final EventInfo ei) throws CalFacadeException {
-    return deleteEvent(ei.getEvent().getHref());
-  }
-
-  private boolean deleteEvent(final String href) throws CalFacadeException {
     final DeleteByQueryRequest delQreq =
             new DeleteByQueryRequest(targetIndex);
+
+    final var path = ei.getEvent().getColPath();
+    final var href = ei.getEvent().getHref();
 
     final ESQueryFilter esq = getFilters(null);
 
     final QueryBuilder qb = getFilters(null)
-            .addTerm(PropertyInfoIndex.HREF,
-                     href);
+            .allInstances(path, href);
 
     delQreq.setConflicts("proceed");
     delQreq.setQuery(qb);
@@ -3562,8 +3598,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
               getClient().deleteByQuery(delQreq, RequestOptions.DEFAULT);
 
       for (final BulkItemResponse.Failure f: bulkResponse.getBulkFailures()) {
-        warn("Failing shards for delete href: " + href +
-                     " index: " + f.getIndex());
+        warn(format("Failing shards for delete - " +
+                            "path: %s, href: %s, index: %s",
+                    path, href, f.getIndex()));
 
         ok = false;
       }

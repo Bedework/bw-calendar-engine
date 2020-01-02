@@ -60,6 +60,7 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
+import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.BwCollectionFilter;
 import org.bedework.calfacade.filter.SortTerm;
@@ -707,7 +708,7 @@ public class CalintfROImpl extends CalintfBase
     for (final BwCalendar col: icols) {
       if (token != null) {
         final String lastmod = token.substring(0, 16);
-        final Integer seq = Integer.parseInt(token.substring(17), 16);
+        final int seq = Integer.parseInt(token.substring(17), 16);
 
         if (col.getLastmod().getTimestamp().compareTo(lastmod) < 0) {
           continue;
@@ -743,8 +744,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public boolean testSynchCol(final BwCalendar col,
-                              final String token)
-          throws CalFacadeException {
+                              final String token) {
     if (token == null) {
       return true;
     }
@@ -1153,16 +1153,44 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Set<CoreEventInfo> getSynchEvents(final String path,
-                                           final String lastmod) throws CalFacadeException {
-    throw new RuntimeException("Read only version");
+                                           final String token) throws CalFacadeException {
+    if (path == null) {
+      throw new CalFacadeBadRequest("Missing path");
+    }
 
-    // TODO - this needs to work return events.getSynchEvents(path, lastmod);
+    final String fpath = fixPath(path);
+
+    final BwCalendar col = getCollection(fpath);
+    ac.checkAccess(col, privAny, false);
+    String lastmod = null;
+    int seq = 0;
+
+    if (token != null) {
+      lastmod = token.substring(0, 16);
+      seq = Integer.parseInt(token.substring(17), 16);
+    }
+
+    final List<EventInfo> eis =
+            getIndexer(BwIndexer.docTypeEvent).fetchEvents(path,
+                                                           lastmod,
+                                                           seq,
+                                                           -1);
+
+
+    final Set<CoreEventInfo> res = new TreeSet<>();
+
+    for (final EventInfo ei: eis) {
+      final CurrentAccess ca = new CurrentAccess(true);
+
+      res.add(new CoreEventInfo(ei.getEvent(), ca));
+    }
+
+    return res;
   }
 
   @Override
   public CoreEventInfo getEvent(final String href)
           throws CalFacadeException {
-    checkOpen();
     checkOpen();
     final GetEntityResponse<EventInfo> ger =
             getEvIndexer().fetchEvent(href);

@@ -258,28 +258,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     return anded;
   }
 
-  /** Build a filter for a single location identified by the key with
-   * the given name and value.
-   *
-   * @param name - of key field
-   * @param val - expected full value
-   * @return a filter builder
-   */
-  public QueryBuilder locationKeyFilter(final String name,
-                                         final String val) throws CalFacadeException {
-    final ObjectFilter<String> kf =
-            new ObjectFilter<>(null,
-                               PropertyInfoIndex.LOC_KEYS_FLD,
-                               null,
-                               name);
-    kf.setEntity(val);
-    kf.setExact(true);
-    kf.setCaseless(false);
-
-    return buildQuery(kf);
-  }
-
-  /** Build a filter for resources in a collection possibly limited by
+  /** Build a filter for entities in a collection possibly limited by
    * lastmod + seq
    *
    * @param path - to resources
@@ -287,9 +266,9 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @param lastmodSeq - if lastmod non-null use for sync check
    * @return a filter builder
    */
-  public QueryBuilder resources(final String path,
-                                final String lastmod,
-                                final int lastmodSeq) throws CalFacadeException {
+  public QueryBuilder syncFilter(final String path,
+                                 final String lastmod,
+                                 final int lastmodSeq) throws CalFacadeException {
     final BwCollectionFilter cf =
             new BwCollectionFilter(null, path);
 
@@ -315,6 +294,27 @@ public class ESQueryFilter extends ESQueryFilterBase
                lmeq);
 
     return principalQuery(and(fb, lmor, "lmor"));
+  }
+
+  /** Build a filter for a single location identified by the key with
+   * the given name and value.
+   *
+   * @param name - of key field
+   * @param val - expected full value
+   * @return a filter builder
+   */
+  public QueryBuilder locationKeyFilter(final String name,
+                                         final String val) throws CalFacadeException {
+    final ObjectFilter<String> kf =
+            new ObjectFilter<>(null,
+                               PropertyInfoIndex.LOC_KEYS_FLD,
+                               null,
+                               name);
+    kf.setEntity(val);
+    kf.setExact(true);
+    kf.setCaseless(false);
+
+    return buildQuery(kf);
   }
 
   public QueryBuilder allGroupsQuery(final boolean admin) {
@@ -634,7 +634,13 @@ public class ESQueryFilter extends ESQueryFilterBase
                null);
 
   }
-  
+
+  final QueryBuilder allInstances(final String path,
+                                  final String uid) {
+    QueryBuilder qb = addTerm(PropertyInfoIndex.UID, uid);
+    return and(qb, addTerm(PropertyInfoIndex.COLPATH, path), null);
+  }
+
   final QueryBuilder overridesOnly(final String uid) {
     QueryBuilder qb = addTerm(PropertyInfoIndex.UID, uid);
     return and(qb, addTerm(PropertyInfoIndex.OVERRIDE, "true"), null);

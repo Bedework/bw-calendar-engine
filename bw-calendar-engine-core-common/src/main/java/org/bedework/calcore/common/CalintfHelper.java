@@ -35,6 +35,7 @@ import org.bedework.calfacade.base.CommentedEntity;
 import org.bedework.calfacade.base.ContactedEntity;
 import org.bedework.calfacade.base.DescriptionEntity;
 import org.bedework.calfacade.base.PropertiesEntity;
+import org.bedework.calfacade.base.RecurrenceEntity;
 import org.bedework.calfacade.base.ResourcedEntity;
 import org.bedework.calfacade.base.SummaryEntity;
 import org.bedework.calfacade.configs.AuthProperties;
@@ -378,7 +379,6 @@ public abstract class CalintfHelper
       clearCollection(((DescriptionEntity)val).getDescriptions());
     }
 
-    /*
     if (val instanceof RecurrenceEntity) {
       RecurrenceEntity re = (RecurrenceEntity)val;
 
@@ -388,7 +388,6 @@ public abstract class CalintfHelper
       clearCollection(re.getRdates());
       clearCollection(re.getRrules());
     }
-     */
 
     if (val instanceof ResourcedEntity) {
       clearCollection(((ResourcedEntity)val).getResources());
