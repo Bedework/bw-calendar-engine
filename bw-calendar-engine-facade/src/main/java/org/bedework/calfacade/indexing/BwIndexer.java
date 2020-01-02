@@ -442,6 +442,21 @@ public interface BwIndexer extends Serializable {
   GetEntityResponse<EventInfo> fetchEvent(String colPath,
                                           String guid) throws CalFacadeException;
 
+  /** Return all or first count events
+   *
+   * @param path - to events
+   * @param lastmod - if non-null use for sync check
+   * @param lastmodSeq - if lastmod non-null use for sync check
+   * @param count - <0 for all
+   * @return events for owner
+   * @throws CalFacadeException on error
+   */
+  List<EventInfo> fetchEvents(final String path,
+                              final String lastmod,
+                              final int lastmodSeq,
+                              final int count)
+          throws CalFacadeException;
+
   /** Find a category owned by the current user which has a named
    * field which matches the value.
    *
@@ -517,7 +532,7 @@ public interface BwIndexer extends Serializable {
   /** Fetch all groups of which href is a member.
    *
    * @param admin - true for admin groups
-   * @param href - of member
+   * @param memberHref - of member
    * @return status and List of groups
    */
   GetEntitiesResponse<BwGroup> fetchGroups(boolean admin,
