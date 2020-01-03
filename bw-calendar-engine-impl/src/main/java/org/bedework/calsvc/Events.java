@@ -681,14 +681,14 @@ class Events extends CalSvcDb implements EventsI {
 
   @Override
   public UpdateResult update(final EventInfo ei,
-                             final boolean noInvites) throws CalFacadeException {
+                             final boolean noInvites) {
     return update(ei, noInvites, null, false);
   }
 
   @Override
   public UpdateResult update(final EventInfo ei,
                              final boolean noInvites,
-                             final String fromAttUri) throws CalFacadeException {
+                             final String fromAttUri) {
     return update(ei, noInvites, fromAttUri, false);
   }
 

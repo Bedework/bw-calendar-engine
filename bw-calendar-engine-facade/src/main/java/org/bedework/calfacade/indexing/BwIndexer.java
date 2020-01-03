@@ -301,7 +301,7 @@ public interface BwIndexer extends Serializable {
    * @param   val     an event property
    * @throws CalFacadeException on error
    */
-  void unindexEntity(BwEventProperty val) throws CalFacadeException;
+  void unindexEntity(BwEventProperty<?> val) throws CalFacadeException;
 
   /** Called to unindex an entity
    *
@@ -334,14 +334,12 @@ public interface BwIndexer extends Serializable {
 
   /** Called at the end of a batch of updates.
    *
-   * @throws CalFacadeException on error
    */
-  void endBwBatch() throws CalFacadeException;
+  void endBwBatch();
 
   /** Flush any batched entities.
-   * @throws CalFacadeException on error
    */
-  void flush() throws CalFacadeException;
+  void flush();
 
   /** create a new index for current doctype and start using it.
    *
@@ -395,7 +393,6 @@ public interface BwIndexer extends Serializable {
       aliases.add(val);
     }
 
-    @SuppressWarnings("NullableProblems")
     @Override
     public int compareTo(final IndexInfo o) {
       return getIndexName().compareTo(o.getIndexName());

@@ -204,10 +204,9 @@ public interface EventsI extends Serializable {
    * @param ei           EventInfo object to be added
    * @param noInvites    True for don't send invitations.
    * @return UpdateResult Counts of changes.
-   * @throws CalFacadeException on error
    */
   UpdateResult update(EventInfo ei,
-                      boolean noInvites) throws CalFacadeException;
+                      boolean noInvites);
 
   /** Update an event in response to an attendee. Exactly as normal update if
    * fromAtt is null. Otherwise no status update is sent to the given attendee
@@ -218,11 +217,10 @@ public interface EventsI extends Serializable {
    * @param noInvites    True for don't send invitations.
    * @param fromAttUri   attendee responding
    * @return UpdateResult Counts of changes.
-   * @throws CalFacadeException on error
    */
   UpdateResult update(final EventInfo ei,
                              final boolean noInvites,
-                             String fromAttUri) throws CalFacadeException;
+                             String fromAttUri);
 
   /** Update an event in response to an attendee. Exactly as normal update if
    * fromAtt is null. Otherwise no status update is sent to the given attendee

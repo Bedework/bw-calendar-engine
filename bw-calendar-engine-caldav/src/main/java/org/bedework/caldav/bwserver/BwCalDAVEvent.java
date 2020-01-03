@@ -58,9 +58,8 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   /**
    * @param intf
    * @param evi
-   * @throws WebdavException
    */
-  BwCalDAVEvent(final BwSysIntfImpl intf, final EventInfo evi) throws WebdavException {
+  BwCalDAVEvent(final BwSysIntfImpl intf, final EventInfo evi) {
     this.intf = intf;
     this.evi = evi;
 

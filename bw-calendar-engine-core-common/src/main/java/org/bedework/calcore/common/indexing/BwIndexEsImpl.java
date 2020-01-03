@@ -481,14 +481,14 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public void endBwBatch() throws CalFacadeException {
+  public void endBwBatch() {
   }
 
   @Override
-  public void flush() throws CalFacadeException {
+  public void flush() {
   }
 
-  private class EsSearchResult implements SearchResult {
+  private static class EsSearchResult implements SearchResult {
     private final BwIndexer indexer;
 
     private long found;
@@ -756,7 +756,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           }
 
           if (entity instanceof BwShareableDbentity) {
-            final BwShareableDbentity ent = (BwShareableDbentity)entity;
+            final BwShareableDbentity<?> ent =
+                    (BwShareableDbentity<?>)entity;
 
             principalHref = ent.getOwnerHref();
           }
@@ -801,7 +802,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             bulkProcessor.add(request);
 
             if (entity instanceof BwEventProperty) {
-              caches.put((BwEventProperty)entity);
+              caches.put((BwEventProperty<?>)entity);
             }
           }
         }
@@ -1728,7 +1729,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public void unindexEntity(final BwEventProperty val)
+  public void unindexEntity(final BwEventProperty<?> val)
           throws CalFacadeException {
     unindexEntity(getDocBuilder().getHref(val));
   }
@@ -2138,6 +2139,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       entity = getCached(val, desiredAccess, CalendarWrapper.class);
 
       if (entity != null) {
+        if (entity.getTombstoned()) {
+          resp.setStatus(notFound);
+          return resp;
+        }
         resp.setEntity(entity);
 
         return Response.ok(resp, null);
@@ -2332,7 +2337,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     try {
 
       resp.setEntities(fetchEntities(docTypePrincipal,
-                                     new BuildEntity<BwGroup>() {
+                                     new BuildEntity<>() {
                                        @Override
                                        BwGroup make(final EntityBuilder eb,
                                                     final String id)
@@ -2359,7 +2364,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     try {
 
       resp.setEntities(fetchEntities(docTypePrincipal,
-                                     new BuildEntity<BwGroup>() {
+                                     new BuildEntity<>() {
                                        @Override
                                        BwGroup make(final EntityBuilder eb,
                                                     final String id)
@@ -2444,7 +2449,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     return fetchEntities(docTypeFilter,
-                         new BuildEntity<BwFilterDef>() {
+                         new BuildEntity<>() {
                            @Override
                            BwFilterDef make(final EntityBuilder eb,
                                             final String id)
@@ -2492,7 +2497,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             getFilters(null).syncFilter(path, lastmod, lastmodSeq);
 
     return fetchEntities(docTypeResource,
-                         new BuildEntity<BwResource>() {
+                         new BuildEntity<>() {
                            @Override
                            BwResource make(final EntityBuilder eb,
                                            final String id)
@@ -2622,7 +2627,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   @Override
   public List<BwCategory> fetchAllCats() throws CalFacadeException {
     return fetchEntities(docTypeCategory,
-                         new BuildEntity<BwCategory>() {
+                         new BuildEntity<>() {
                            @Override
                            BwCategory make(final EntityBuilder eb,
                                            final String id)
@@ -2637,7 +2642,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   public List<BwContact> fetchAllContacts()
           throws CalFacadeException {
     return fetchEntities(docTypeContact,
-                         new BuildEntity<BwContact>() {
+                         new BuildEntity<>() {
                            @Override
                            BwContact make(final EntityBuilder eb,
                                           final String id)
@@ -2652,7 +2657,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   public List<BwLocation> fetchAllLocations()
           throws CalFacadeException {
     return fetchEntities(docTypeLocation,
-                         new BuildEntity<BwLocation>() {
+                         new BuildEntity<>() {
                            @Override
                            BwLocation make(final EntityBuilder eb,
                                            final String id)
@@ -2683,11 +2688,11 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return findEvProperty(filter, from, size, BwCategory.class);
   }
 
-  private <T extends BwEventProperty>
-  GetEntitiesResponse<T> findEvProperty(final FilterBase filter,
-                                        final int from,
-                                        final int size,
-                                        final Class<T> cl) {
+  private <T extends BwEventProperty<?>> GetEntitiesResponse<T>
+              findEvProperty(final FilterBase filter,
+                             final int from,
+                             final int size,
+                             final Class<T> cl) {
     final GetEntitiesResponse<T> resp = new GetEntitiesResponse<>();
 
     try {
@@ -2720,19 +2725,15 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
 
       for (final SearchHit hit : sresp.getHits().getHits()) {
-        final Object entity = makeEntity(resp, hit, null);
-        if (!resp.isOk()) {
-          return resp;
-        }
-
-        final BwEventProperty evp = (BwEventProperty)entity;
-        if (evp == null) {
+        final BwEventProperty<?> evp =
+                (BwEventProperty<?>)makeEntity(resp, hit, null);
+        if (!resp.isOk() || (evp == null)) {
           return resp;
         }
 
         evp.setScore(hit.getScore());
 
-        resp.addEntity((T)entity);
+        resp.addEntity((T)evp);
       }
 
       return resp;
@@ -2773,7 +2774,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return false;
   }
 
-  synchronized <T extends BwUnversionedDbentity> T getCached(final String href,
+  synchronized <T extends BwUnversionedDbentity<?>> T getCached(final String href,
                                                              final Class<T> resultType)
           throws CalFacadeException {
     if (!checkCache()) {
@@ -2783,7 +2784,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return caches.get(href, resultType);
   }
 
-  synchronized <T extends BwUnversionedDbentity> T getCached(final String href,
+  synchronized <T extends BwUnversionedDbentity<?>> T getCached(final String href,
                                                              final int desiredAccess,
                                                              final Class<T> resultType)
           throws CalFacadeException {
@@ -3778,26 +3779,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return suffix.toString();
   }
 
-  private static Map<Class, String> classToDoctype = new HashMap<>();
-  static {
-    classToDoctype.put(BwPrincipal.class, docTypePrincipal);
-    classToDoctype.put(BwCalendar.class, docTypeCollection);
-    classToDoctype.put(BwEvent.class, docTypeEvent);
-    classToDoctype.put(BwCategory.class, docTypeCategory);
-    classToDoctype.put(BwContact.class, docTypeContact);
-    classToDoctype.put(BwLocation.class, docTypeLocation);
-  }
-
-  private String docTypeFromClass(final Class cl) {
-    final String docType = classToDoctype.get(cl);
-
-    if (docType != null) {
-      return docType;
-    }
-
-    return docTypeUnknown;
-  }
-
   private Object makeEntity(final Response resp,
                             final SearchHit hit,
                             final RecurringRetrievalMode rrm) {
@@ -3922,7 +3903,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
+  private void restoreCategories(final CategorisedEntity ce) {
     if ((ce == null) || (indexFetcher == null)) {
       return;
     }
