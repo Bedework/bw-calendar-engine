@@ -19,7 +19,7 @@
 package org.bedework.calsvci;
 
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.responses.GetEntityResponse;
+import org.bedework.util.misc.response.GetEntityResponse;
 
 /** Interface which handles manipulation of location entities.
  *

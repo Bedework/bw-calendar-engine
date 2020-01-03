@@ -56,9 +56,7 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.requests.GetInstancesRequest;
-import org.bedework.calfacade.responses.GetEntitiesResponse;
 import org.bedework.calfacade.responses.InstancesResponse;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
@@ -79,6 +77,8 @@ import org.bedework.sysevents.events.SysEventBase.SysCode;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.GetEntitiesResponse;
+import org.bedework.util.misc.response.Response;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.NamespaceAbbrevs;
 
@@ -108,9 +108,9 @@ import javax.xml.ws.Holder;
 
 import static net.fortuna.ical4j.model.Property.CALENDAR_ADDRESS;
 import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
-import static org.bedework.calfacade.responses.Response.Status.failed;
-import static org.bedework.calfacade.responses.Response.Status.limitExceeded;
-import static org.bedework.calfacade.responses.Response.Status.noAccess;
+import static org.bedework.util.misc.response.Response.Status.failed;
+import static org.bedework.util.misc.response.Response.Status.limitExceeded;
+import static org.bedework.util.misc.response.Response.Status.noAccess;
 import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 
 /** This acts as an interface to the database for subscriptions.
@@ -543,7 +543,7 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       if (!cal.getCalendarCollection()) {
-        return Response.notOk(updResult, noAccess, null);
+        return Response.notOk(updResult, noAccess);
       }
 
       if (!event.getPublick() && Util.isEmpty(event.getAlarms())) {

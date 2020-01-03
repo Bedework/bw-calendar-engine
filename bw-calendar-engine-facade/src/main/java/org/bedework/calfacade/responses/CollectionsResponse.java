@@ -20,6 +20,7 @@ package org.bedework.calfacade.responses;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.response.Response;
 
 /** Container for fetching collections, e.g. calendars, virtual collections etc.
  *

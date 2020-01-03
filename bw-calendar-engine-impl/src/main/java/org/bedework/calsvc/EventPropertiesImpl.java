@@ -28,12 +28,12 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
-import org.bedework.calfacade.responses.GetEntitiesResponse;
-import org.bedework.calfacade.responses.GetEntityResponse;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.GetEntitiesResponse;
+import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.util.misc.response.Response;
 
 import java.util.ArrayList;
 import java.util.Collection;

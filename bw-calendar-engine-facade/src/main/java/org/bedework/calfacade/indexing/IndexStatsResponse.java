@@ -3,8 +3,8 @@
 */
 package org.bedework.calfacade.indexing;
 
-import org.bedework.calfacade.responses.Response;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.response.Response;
 
 /**
  * User: mike Date: 10/7/17 Time: 13:27

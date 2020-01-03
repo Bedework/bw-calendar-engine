@@ -37,12 +37,12 @@ import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
-import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.GetEntityResponse;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,9 +51,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
-import static org.bedework.calfacade.responses.Response.Status.noAccess;
-import static org.bedework.calfacade.responses.Response.Status.notFound;
-import static org.bedework.calfacade.responses.Response.Status.ok;
+import static org.bedework.util.misc.response.Response.Status.noAccess;
+import static org.bedework.util.misc.response.Response.Status.notFound;
+import static org.bedework.util.misc.response.Response.Status.ok;
 
 /** Class to encapsulate most of what we do with collections
  *

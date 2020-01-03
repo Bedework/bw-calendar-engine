@@ -41,7 +41,7 @@ public interface AccessChecker extends Serializable {
    * @return CurrentAccess
    * @throws CalFacadeException if returnResult false and no access
    */
-  CurrentAccess checkAccess(BwShareableDbentity ent,
+  CurrentAccess checkAccess(BwShareableDbentity<?> ent,
                             int desiredAccess,
                             boolean returnResult)
           throws CalFacadeException;

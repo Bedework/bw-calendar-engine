@@ -74,7 +74,6 @@ import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
@@ -85,10 +84,10 @@ import org.bedework.calsvci.EventsI.CopyMoveStatus;
 import org.bedework.calsvci.SharingI.ReplyResult;
 import org.bedework.calsvci.SynchReport;
 import org.bedework.calsvci.SynchReportItem;
-import org.bedework.convert.ical.IcalMalformedException;
 import org.bedework.convert.IcalTranslator;
 import org.bedework.convert.Icalendar;
 import org.bedework.convert.Icalendar.TimeZoneInfo;
+import org.bedework.convert.ical.IcalMalformedException;
 import org.bedework.convert.ical.VFreeUtil;
 import org.bedework.sysevents.events.HttpEvent;
 import org.bedework.sysevents.events.HttpOutEvent;
@@ -144,6 +143,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 import javax.xml.ws.Holder;
+
+import static org.bedework.util.misc.response.Response.Status.limitExceeded;
+import static org.bedework.util.misc.response.Response.Status.noAccess;
+import static org.bedework.util.misc.response.Response.Status.ok;
 
 /** Bedework implementation of SysIntf.
  *
@@ -1134,11 +1137,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         return evs;
       }
 
-      if (resp.getStatus() == Response.Status.noAccess) {
+      if (resp.getStatus() == noAccess) {
         throw new WebdavForbidden();
       }
 
-      if (resp.getStatus() == Response.Status.limitExceeded) {
+      if (resp.getStatus() == limitExceeded) {
         if (CalFacadeException.schedulingTooManyAttendees
                 .equals(resp.getMessage())) {
           throw new WebdavForbidden(
@@ -1183,16 +1186,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     try {
       EventInfo ei = getEvinfo(event);
 
-      getSvci().getEventsHandler().update(ei, false);
-    } catch (CalFacadeAccessException cfae) {
-      throw new WebdavForbidden();
-    } catch (CalFacadeForbidden cff) {
-      throw new WebdavForbidden(cff.getQname(), cff.getMessage());
-    } catch (CalFacadeException cfe) {
-      if (CalFacadeException.duplicateGuid.equals(cfe.getMessage())) {
-        throw new WebdavBadRequest("Duplicate-guid");
-      }
-      throw new WebdavException(cfe);
+      handleUpdateResult(getSvci().getEventsHandler().update(ei, false));
+    } catch (WebdavException we) {
+      throw we;
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
@@ -1212,24 +1208,44 @@ public class BwSysIntfImpl implements Logged, SysIntf {
               ei, updates,
               getSvci().getIcalCallback());
       if (!ur.getOk()) {
-        getSvci().rollbackTransaction();
         return ur;
       }
 
-      getSvci().getEventsHandler().update(ei, false);
+      handleUpdateResult(getSvci().getEventsHandler().update(ei, false));
       return ur;
-    } catch (CalFacadeAccessException cfae) {
-      throw new WebdavForbidden();
-    } catch (CalFacadeForbidden cff) {
-      throw new WebdavForbidden(cff.getQname(), cff.getMessage());
-    } catch (CalFacadeException cfe) {
-      if (CalFacadeException.duplicateGuid.equals(cfe.getMessage())) {
-        throw new WebdavBadRequest("Duplicate-guid");
-      }
-      throw new WebdavException(cfe);
+    } catch (WebdavException we) {
+      throw we;
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
+  }
+
+  private void handleUpdateResult(final EventInfo.UpdateResult ur) throws WebdavException {
+    if (ur.getStatus() == ok) {
+      return;
+    }
+
+    if (ur.getStatus() == noAccess) {
+      throw new WebdavForbidden();
+    }
+
+    if (ur.getException() != null) {
+      if (ur.getException() instanceof CalFacadeException) {
+        CalFacadeException cfe = (CalFacadeException)ur
+                .getException();
+        if (CalFacadeException.duplicateGuid
+                .equals(cfe.getMessage())) {
+          throw new WebdavBadRequest("Duplicate-guid");
+        }
+        if (cfe instanceof CalFacadeForbidden) {
+          CalFacadeForbidden cff = (CalFacadeForbidden)cfe;
+          throw new WebdavForbidden(cff.getQname(), cff.getMessage());
+        }
+      }
+      throw new WebdavException(ur.getException());
+    }
+
+    throw new WebdavException(ur.getMessage());
   }
 
   @Override
@@ -1849,13 +1865,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   }
 
   @Override
-  public void getFileContent(final CalDAVResource<?> val) throws WebdavException {
+  public void getFileContent(final CalDAVResource<?> val) {
     try {
       getSvci().getResourcesHandler().getContent(getRsrc(val));
-    } catch (CalFacadeAccessException cfae) {
-      throw new WebdavForbidden();
     } catch (Throwable t) {
-      throw new WebdavException(t);
+      throw new RuntimeException(t);
     }
   }
 

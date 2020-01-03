@@ -30,10 +30,10 @@ import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.requests.GetInstancesRequest;
 import org.bedework.calfacade.responses.InstancesResponse;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
 import org.bedework.calfacade.util.ChangeTable;
+import org.bedework.util.misc.response.Response;
 
 import java.io.Serializable;
 import java.util.Collection;

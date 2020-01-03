@@ -26,10 +26,10 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.Response;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
 import ietf.params.xml.ns.icalendar_2.BasePropertyType;

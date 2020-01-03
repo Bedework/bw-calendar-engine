@@ -36,9 +36,6 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IcalCallback;
-import org.bedework.calfacade.responses.GetEntitiesResponse;
-import org.bedework.calfacade.responses.GetEntityResponse;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.convert.EventTimeZonesRegistry;
@@ -50,6 +47,9 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.GetEntitiesResponse;
+import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.util.misc.response.Response;
 import org.bedework.util.xml.tagdefs.XcalTags;
 
 import net.fortuna.ical4j.model.Component;
@@ -104,8 +104,8 @@ import java.util.TreeSet;
 import javax.xml.ws.Holder;
 
 import static net.fortuna.ical4j.model.Property.CALENDAR_ADDRESS;
-import static org.bedework.calfacade.responses.Response.Status.failed;
-import static org.bedework.calfacade.responses.Response.Status.ok;
+import static org.bedework.util.misc.response.Response.Status.failed;
+import static org.bedework.util.misc.response.Response.Status.ok;
 
 /** Class to provide utility methods for translating to BwEvent from ical4j classes
  *

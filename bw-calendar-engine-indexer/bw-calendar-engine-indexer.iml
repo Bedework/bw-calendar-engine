@@ -38,7 +38,7 @@
     <orderEntry type="module" module-name="bw-util-tz" />
     <orderEntry type="module" module-name="bw-webdav" />
     <orderEntry type="module" module-name="bw-util-servlet" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-xml:4.0.26" level="project" />
+    <orderEntry type="module" module-name="bw-util-xml" />
     <orderEntry type="module" module-name="bw-caldav-util" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.9" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.9" level="project" />
@@ -63,7 +63,7 @@
     <orderEntry type="module" module-name="bw-calendar-engine-impl" />
     <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
     <orderEntry type="module" module-name="bw-calendar-engine-convert" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-caching:4.0.26" level="project" />
+    <orderEntry type="module" module-name="bw-util-caching" />
     <orderEntry type="module" module-name="bw-util-dav" />
     <orderEntry type="library" name="Maven: org.bedework:apache-jdkim-library:0.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.james:apache-mailet-base:1.1" level="project" />
@@ -79,7 +79,7 @@
     <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.3.0" level="project" />
     <orderEntry type="library" name="Maven: javax.servlet:javax.servlet-api:4.0.0" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-misc:4.0.26" level="project" />
+    <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.4" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.10.0" level="project" />
   </component>

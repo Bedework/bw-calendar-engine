@@ -22,11 +22,11 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
-import org.bedework.calfacade.responses.GetEntitiesResponse;
-import org.bedework.calfacade.responses.GetEntityResponse;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calsvci.Locations;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
+import org.bedework.util.misc.response.GetEntitiesResponse;
+import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.util.misc.response.Response;
 
 import java.util.Collection;
 
@@ -47,7 +47,6 @@ public class LocationsImpl
     super(svci);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void init(final boolean adminCanEditAllPublic) {
     super.init(BwLocation.class.getCanonicalName(),
@@ -61,7 +60,7 @@ public class LocationsImpl
 
   @Override
   public GetEntityResponse<BwLocation> fetchLocationByKey(final String keyName,
-                                       final String keyVal) {
+                                                          final String keyVal) {
     return getIndexer().fetchLocationByKey(keyName, keyVal);
   }
 
@@ -78,7 +77,7 @@ public class LocationsImpl
                                      PropertyInfoIndex.LOC_COMBINED_VALUES);
 
       if (loc == null) {
-        return Response.notOk(resp, Response.Status.notFound, null);
+        return Response.notOk(resp, Response.Status.notFound);
       }
 
       if (!persisted) {

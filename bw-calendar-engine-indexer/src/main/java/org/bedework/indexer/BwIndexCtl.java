@@ -35,7 +35,7 @@ import java.util.Set;
 
 import javax.naming.NameNotFoundException;
 
-import static org.bedework.calfacade.responses.Response.Status.failed;
+import static org.bedework.util.misc.response.Response.Status.failed;
 
 /**
  * @author douglm

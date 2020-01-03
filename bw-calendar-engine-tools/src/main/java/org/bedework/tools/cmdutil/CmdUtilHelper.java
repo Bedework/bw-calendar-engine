@@ -28,8 +28,6 @@ import org.bedework.calfacade.DirectoryInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.indexing.BwIndexer;
-import org.bedework.calfacade.responses.GetEntityResponse;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -40,6 +38,8 @@ import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.EventsI;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
+import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.util.misc.response.Response;
 
 import java.io.StreamTokenizer;
 import java.util.List;

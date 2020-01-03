@@ -73,41 +73,41 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
    * ==================================================================== */
 
   @Override
-  public boolean getCanShare() throws WebdavException {
+  public boolean getCanShare() {
     return false;
   }
 
   @Override
-  public boolean getCanPublish() throws WebdavException {
+  public boolean getCanPublish() {
     return false;
   }
 
   @Override
-  public boolean isAlias() throws WebdavException {
+  public boolean isAlias() {
     return false;
   }
 
   @Override
-  public String getAliasUri() throws WebdavException {
+  public String getAliasUri() {
     return null;
   }
 
   @Override
-  public BwCalDAVEvent resolveAlias(final boolean resolveSubAlias) throws WebdavException {
+  public BwCalDAVEvent resolveAlias(final boolean resolveSubAlias) {
     return this;
   }
 
   @Override
-  public void setProperty(final QName name, final String val) throws WebdavException {
+  public void setProperty(final QName name, final String val) {
   }
 
   @Override
-  public String getProperty(final QName name) throws WebdavException {
+  public String getProperty(final QName name) {
     return null;
   }
 
   @Override
-  public boolean getDeleted() throws WebdavException {
+  public boolean getDeleted() {
     return getEv().getDeleted() || getEv().getTombstoned();
   }
 
@@ -115,7 +115,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
    * @see org.bedework.caldav.server.CalDAVEvent#getScheduleTag()
    */
   @Override
-  public String getScheduleTag() throws WebdavException {
+  public String getScheduleTag() {
     return getEv().getStag();
   }
 
@@ -123,49 +123,37 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
    * @see org.bedework.caldav.server.CalDAVEvent#getPrevScheduleTag()
    */
   @Override
-  public String getPrevScheduleTag() throws WebdavException {
+  public String getPrevScheduleTag() {
     return getEvinfo().getPrevStag();
   }
 
   @Override
-  public boolean getOrganizerSchedulingObject() throws WebdavException {
+  public boolean getOrganizerSchedulingObject() {
     return getEv().getOrganizerSchedulingObject();
   }
 
   @Override
-  public boolean getAttendeeSchedulingObject() throws WebdavException {
+  public boolean getAttendeeSchedulingObject() {
     return getEv().getAttendeeSchedulingObject();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVEvent#getSummary()
-   */
   @Override
-  public String getSummary() throws WebdavException {
+  public String getSummary() {
     return getEv().getSummary();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVEvent#getNewEvent()
-   */
   @Override
-  public boolean isNew() throws WebdavException {
+  public boolean isNew() {
     return getEvinfo().getNewEvent();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVEvent#getEntityType()
-   */
   @Override
-  public int getEntityType() throws WebdavException {
+  public int getEntityType() {
     return getEv().getEntityType();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.CalDAVEvent#setOrganizer(org.bedework.caldav.server.Organizer)
-   */
   @Override
-  public void setOrganizer(final Organizer val) throws WebdavException {
+  public void setOrganizer(final Organizer val) {
     BwOrganizer org = new BwOrganizer();
 
     org.setCn(val.getCn());
@@ -178,24 +166,22 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   @Override
-  public Organizer getOrganizer() throws WebdavException {
+  public Organizer getOrganizer() {
     BwOrganizer bworg = getEv().getOrganizer();
-    Organizer org = new Organizer(bworg.getCn(),
-                                  bworg.getDir(),
-                                  bworg.getLanguage(),
-                                  bworg.getSentBy(),
-                                  bworg.getOrganizerUri());
-
-    return org;
+    return new Organizer(bworg.getCn(),
+                         bworg.getDir(),
+                         bworg.getLanguage(),
+                         bworg.getSentBy(),
+                         bworg.getOrganizerUri());
   }
 
   @Override
-  public void setOriginator(final String val) throws WebdavException {
+  public void setOriginator(final String val) {
     getEv().setOriginator(val);
   }
 
   @Override
-  public void setRecipients(final Set<String> val) throws WebdavException {
+  public void setRecipients(final Set<String> val) {
     if (getEv().getRecipients() == null) {
       getEv().setRecipients(val);
     } else {
@@ -204,17 +190,17 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   @Override
-  public Set<String> getRecipients() throws WebdavException {
+  public Set<String> getRecipients() {
     return getEv().getRecipients();
   }
 
   @Override
-  public void addRecipient(final String val) throws WebdavException {
+  public void addRecipient(final String val) {
     getEv().addRecipient(val);
   }
 
   @Override
-  public Set<String> getAttendeeUris() throws WebdavException {
+  public Set<String> getAttendeeUris() {
     Set<String> uris = new TreeSet<>();
 
     for (BwAttendee att: getEv().getAttendees()) {
@@ -225,12 +211,12 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   @Override
-  public void setScheduleMethod(final int val) throws WebdavException {
+  public void setScheduleMethod(final int val) {
     getEv().setScheduleMethod(val);
   }
 
   @Override
-  public int getScheduleMethod() throws WebdavException {
+  public int getScheduleMethod() {
     return getEv().getScheduleMethod();
   }
 
@@ -238,13 +224,13 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
    * @see org.bedework.caldav.server.CalDAVEvent#getUid()
    */
   @Override
-  public String getUid() throws WebdavException {
+  public String getUid() {
     return getEv().getUid();
   }
 
   @Override
   public boolean generatePropertyValue(final QName tag,
-                                       final XmlEmit xml) throws WebdavException {
+                                       final XmlEmit xml) {
     try {
       BwEvent ev = getEv();
 
@@ -496,21 +482,11 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
      }*/
 
       if (tag.equals(ICalTags.lastModified)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.lastModified)) {
         xml.property(tag, ev.getLastmod());
         return true;
       }
 
       if (tag.equals(ICalTags.location)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.organizer)) {
         // PROPTODO
         return true;
       }
@@ -537,11 +513,6 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
       }
 
       if (tag.equals(ICalTags.rdate)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.recurrenceId)) {
         // PROPTODO
         return true;
       }
@@ -627,16 +598,14 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
       }
 
       return false;
-    } catch (WebdavException wde) {
-      throw wde;
     } catch (Throwable t) {
-      throw new WebdavException(t);
+      throw new RuntimeException(t);
     }
   }
 
   @Override
   public String toIcalString(final int methodType,
-                             final String contentType) throws WebdavException {
+                             final String contentType) {
     try {
       if (contentType.equals("text/calendar")) {
         return IcalTranslator.toIcalString(methodType, getEv());
@@ -647,9 +616,9 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
                            methodType != ScheduleMethods.methodTypeNone, null);
       }
 
-      throw new WebdavException("Unhandled content type" + contentType);
+      throw new RuntimeException("Unhandled content type" + contentType);
     } catch (Throwable t) {
-      throw new WebdavException(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -658,77 +627,81 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
    * ==================================================================== */
 
   @Override
-  public void setName(final String val) throws WebdavException {
+  public void setName(final String val) {
     getEv().setName(val);
   }
 
   @Override
-  public String getName() throws WebdavException {
+  public String getName() {
     return getEv().getName();
   }
 
   @Override
-  public void setDisplayName(final String val) throws WebdavException {
+  public void setDisplayName(final String val) {
     // No display name
   }
 
   @Override
-  public String getDisplayName() throws WebdavException {
+  public String getDisplayName() {
     return getEv().getSummary();
   }
 
   @Override
-  public void setPath(final String val) throws WebdavException {
+  public void setPath(final String val) {
     // Not actually saved
   }
 
   @Override
-  public String getPath() throws WebdavException {
+  public String getPath() {
     return getEv().getColPath() + "/" + getEv().getName();
   }
 
   @Override
-  public void setParentPath(final String val) throws WebdavException {
+  public void setParentPath(final String val) {
     getEv().setColPath(val);
   }
 
   @Override
-  public String getParentPath() throws WebdavException {
+  public String getParentPath() {
     return getEv().getColPath();
   }
 
   @Override
-  public void setOwner(final AccessPrincipal val) throws WebdavException {
+  public void setOwner(final AccessPrincipal val) {
     getEv().setOwnerHref(val.getPrincipalRef());
   }
 
   @Override
-  public AccessPrincipal getOwner() throws WebdavException {
-    return intf.getPrincipal(getEv().getOwnerHref());
+  public AccessPrincipal getOwner() {
+    try {
+      return intf.getPrincipal(getEv().getOwnerHref());
+    } catch (WebdavException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
-  public void setCreated(final String val) throws WebdavException {
+  public void setCreated(final String val) {
     getEv().setCreated(val);
   }
 
   @Override
-  public String getCreated() throws WebdavException {
+  public String getCreated() {
     return getEv().getCreated();
   }
 
   @Override
-  public void setLastmod(final String val) throws WebdavException {
+  public void setLastmod(final String val) {
     getEv().setLastmod(val);
   }
 
   @Override
-  public String getLastmod() throws WebdavException {
+  public String getLastmod() {
     return getEv().getLastmod();
   }
 
   @Override
-  public String getEtag() throws WebdavException {
+  public String getEtag() {
     return "\"" + getEv().getCtoken() +  "\"";
 //    return "\"" + getEv().getLastmod() + "-" +
   //         "0" + //  < Should be a sequence - needs to be in event and saved
@@ -736,17 +709,17 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   }
 
   @Override
-  public String getPreviousEtag() throws WebdavException {
+  public String getPreviousEtag() {
     return "\"" + getEvinfo().getPrevCtoken() + "\"";
   }
 
   @Override
-  public void setDescription(final String val) throws WebdavException {
+  public void setDescription(final String val) {
     getEv().setDescription(val);
   }
 
   @Override
-  public String getDescription() throws WebdavException {
+  public String getDescription() {
     return getEv().getDescription();
   }
 
@@ -772,7 +745,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
    *                      Private methods
    * ==================================================================== */
 
-  EventInfo getEvinfo() throws WebdavException {
+  EventInfo getEvinfo() {
     if (evi == null) {
       evi = new EventInfo(new BwEventObj());
       ev = evi.getEvent();
@@ -781,7 +754,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
     return evi;
   }
 
-  BwEvent getEv() throws WebdavException {
+  BwEvent getEv() {
     getEvinfo();
 
     return ev;

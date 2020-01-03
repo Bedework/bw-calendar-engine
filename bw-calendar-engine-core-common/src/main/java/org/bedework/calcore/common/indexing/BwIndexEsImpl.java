@@ -55,9 +55,6 @@ import org.bedework.calfacade.indexing.IndexStatsResponse;
 import org.bedework.calfacade.indexing.ReindexResponse;
 import org.bedework.calfacade.indexing.SearchResult;
 import org.bedework.calfacade.indexing.SearchResultEntry;
-import org.bedework.calfacade.responses.GetEntitiesResponse;
-import org.bedework.calfacade.responses.GetEntityResponse;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuitePrincipal;
 import org.bedework.calfacade.svc.BwPreferences;
@@ -75,6 +72,9 @@ import org.bedework.util.indexing.IndexException;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.GetEntitiesResponse;
+import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.util.misc.response.Response;
 import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Period;
@@ -148,11 +148,11 @@ import static java.lang.String.format;
 import static org.bedework.access.PrivilegeDefs.privRead;
 import static org.bedework.calcore.common.indexing.DocBuilder.ItemKind.entity;
 import static org.bedework.calfacade.indexing.BwIndexer.IndexedType.unreachableEntities;
-import static org.bedework.calfacade.responses.Response.Status.failed;
-import static org.bedework.calfacade.responses.Response.Status.noAccess;
-import static org.bedework.calfacade.responses.Response.Status.notFound;
-import static org.bedework.calfacade.responses.Response.Status.ok;
-import static org.bedework.calfacade.responses.Response.Status.processing;
+import static org.bedework.util.misc.response.Response.Status.failed;
+import static org.bedework.util.misc.response.Response.Status.noAccess;
+import static org.bedework.util.misc.response.Response.Status.notFound;
+import static org.bedework.util.misc.response.Response.Status.ok;
+import static org.bedework.util.misc.response.Response.Status.processing;
 import static org.bedework.util.elasticsearch.DocBuilderBase.updateTrackerId;
 
 /** Implementation of indexer for ElasticSearch
@@ -341,7 +341,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       this.accessCheck = accessCheck;
     }
 
-    public CurrentAccess checkAccess(BwShareableDbentity ent,
+    public CurrentAccess checkAccess(BwShareableDbentity<?> ent,
                                      int desiredAccess,
                                      boolean returnResult)
             throws CalFacadeException {
@@ -877,7 +877,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       }
 
       //Scroll until no hits are returned
-      while (true) {
+      do {
         for (final SearchHit hit : scrollResp.getHits().getHits()) {
           resp.incProcessed();
 
@@ -922,10 +922,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                         RequestOptions.DEFAULT);
 
         //Break condition: No hits are returned
-        if (scrollResp.getHits().getHits().length == 0) {
-          break;
-        }
-      }
+      } while (scrollResp.getHits().getHits().length != 0);
     } catch (final Throwable t) {
       errorReturn(resp, t);
     }
@@ -2130,7 +2127,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     BwCalendar entity;
 
     if ((val == null) || (val.length() == 0)) {
-      return Response.notOk(resp, notFound, null);
+      return Response.notOk(resp, notFound);
     }
 
     if ((index.length == 1) &&
@@ -2190,7 +2187,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       if (debug()) {
         debug("No access");
       }
-      return Response.notOk(resp, noAccess, null);
+      return Response.notOk(resp, noAccess);
     }
     caches.put(entity, desiredAccess);
     resp.setEntity(entity);

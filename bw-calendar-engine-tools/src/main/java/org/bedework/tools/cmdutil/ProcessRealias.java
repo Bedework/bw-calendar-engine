@@ -37,7 +37,7 @@ import java.util.Set;
 
 import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.includeDeleted;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
-import static org.bedework.calfacade.responses.Response.Status.ok;
+import static org.bedework.util.misc.response.Response.Status.ok;
 
 /** Reakias events
  * <pre>

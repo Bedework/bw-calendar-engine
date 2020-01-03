@@ -31,12 +31,12 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
-import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.response.GetEntityResponse;
 
 import ietf.params.xml.ns.caldav.TextMatchType;
 import net.fortuna.ical4j.model.DateTime;

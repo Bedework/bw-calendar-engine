@@ -22,7 +22,6 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwXproperty;
-import org.bedework.calfacade.exc.CalFacadeDupNameException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.misc.Util;
 
@@ -251,12 +250,11 @@ public class ProcessMove extends CmdUtilHelper {
       }
     }
 
-    try {
-      getSvci().getEventsHandler().update(ei, false, null);
-    } catch (final CalFacadeDupNameException cdne) {
-      pstate.addError("Duplicate name " + ev.getName() +
+    EventInfo.UpdateResult ur = getSvci().getEventsHandler().update(ei, false, null);
+    if (!ur.isOk()) {
+      pstate.addError("Failed to update " + ev.getName() +
                            " uid: " + ev.getUid() +
-                           " from: " + fromPath);
+                           " from: " + fromPath + "\n" + ur);
     }
 
   }

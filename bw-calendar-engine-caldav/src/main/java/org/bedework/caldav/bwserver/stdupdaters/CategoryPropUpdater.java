@@ -22,7 +22,7 @@ package org.bedework.caldav.bwserver.stdupdaters;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
-import org.bedework.calfacade.responses.Response;
+import org.bedework.util.misc.response.Response;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
 /**

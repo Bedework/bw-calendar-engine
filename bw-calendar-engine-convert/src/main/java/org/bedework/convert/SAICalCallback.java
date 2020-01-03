@@ -24,9 +24,9 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.ifs.IcalCallback;
-import org.bedework.calfacade.responses.GetEntitiesResponse;
-import org.bedework.calfacade.responses.GetEntityResponse;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.util.misc.response.GetEntitiesResponse;
+import org.bedework.util.misc.response.GetEntityResponse;
 
 /** Class to allow icaltranslator to be used from a standalone non-bedework
  * caldav server.

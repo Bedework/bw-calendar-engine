@@ -18,8 +18,8 @@
 */
 package org.bedework.calfacade.requests;
 
-import org.bedework.calfacade.responses.Response;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.response.Response;
 
 /** Request base object. 
  * 

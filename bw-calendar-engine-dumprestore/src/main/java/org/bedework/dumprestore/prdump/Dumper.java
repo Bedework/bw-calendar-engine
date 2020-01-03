@@ -23,8 +23,6 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.responses.Response;
-import org.bedework.calfacade.responses.Response.Status;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.DumpIntf;
 import org.bedework.dumprestore.AliasInfo;
@@ -32,6 +30,7 @@ import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.dump.DumpGlobals;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
+import org.bedework.util.misc.response.Response;
 
 import java.io.File;
 import java.nio.file.FileSystems;
@@ -40,6 +39,8 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
+
+import static org.bedework.util.misc.response.Response.*;
 
 /** Base class for dumping. Provides logging and useful methods.
  *
@@ -234,7 +235,7 @@ public class Dumper implements Logged {
         if (pushDup) {
           pushPath(p.toString());
         }
-        return Response.notOk(resp, Status.exists,
+        return notOk(resp, Status.exists,
                               "Path " + p + " already exists.");
       }
 

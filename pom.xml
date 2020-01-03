@@ -19,7 +19,7 @@
     <bw-access.version>4.0.7</bw-access.version>
     <bw-caldav.version>4.0.9-SNAPSHOT</bw-caldav.version>
     <bw-cliutil.version>4.1.0-SNAPSHOT</bw-cliutil.version>
-		<bw-util.version>4.0.26</bw-util.version>
+		<bw-util.version>4.0.27-SNAPSHOT</bw-util.version>
     <bw-util-conf.version>4.1.0-SNAPSHOT</bw-util-conf.version>
     <bw-util-hibernate.version>4.0.22</bw-util-hibernate.version>
     <bw-util-index.version>4.1.0-SNAPSHOT</bw-util-index.version>

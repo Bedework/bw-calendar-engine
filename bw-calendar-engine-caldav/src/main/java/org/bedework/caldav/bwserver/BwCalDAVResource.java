@@ -53,10 +53,9 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
   /**
    * @param intf
    * @param rsrc
-   * @throws WebdavException
    */
   BwCalDAVResource(final BwSysIntfImpl intf,
-                   final BwResource rsrc) throws WebdavException {
+                   final BwResource rsrc) {
     this.intf = intf;
     this.rsrc = rsrc;
 
@@ -71,37 +70,37 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
    * ==================================================================== */
 
   @Override
-  public boolean getCanShare() throws WebdavException {
+  public boolean getCanShare() {
     return false;
   }
 
   @Override
-  public boolean getCanPublish() throws WebdavException {
+  public boolean getCanPublish() {
     return false;
   }
 
   @Override
-  public boolean isAlias() throws WebdavException {
+  public boolean isAlias() {
     return false;
   }
 
   @Override
-  public String getAliasUri() throws WebdavException {
+  public String getAliasUri() {
     return null;
   }
 
   @Override
-  public BwCalDAVResource resolveAlias(final boolean resolveSubAlias) throws WebdavException {
+  public BwCalDAVResource resolveAlias(final boolean resolveSubAlias) {
     return this;
   }
 
   @Override
   public void setProperty(final QName name,
-                          final String val) throws WebdavException {
+                          final String val) {
   }
 
   @Override
-  public String getProperty(final QName name) throws WebdavException {
+  public String getProperty(final QName name) {
     return null;
   }
 
@@ -109,17 +108,17 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
    * @see org.bedework.caldav.server.CalDAVEvent#getNewEvent()
    */
   @Override
-  public boolean isNew() throws WebdavException {
+  public boolean isNew() {
     return getRsrc().unsaved();
   }
 
   @Override
-  public boolean getDeleted() throws WebdavException {
+  public boolean getDeleted() {
     return getRsrc().getTombstoned();
   }
 
   @Override
-  public void setBinaryContent(final InputStream val) throws WebdavException {
+  public void setBinaryContent(final InputStream val) {
     BwResource r = getRsrc();
 
     BwResourceContent rc = r.getContent();
@@ -181,10 +180,8 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
         throw new WebdavForbidden(WebdavTags.quotaNotExceeded);
       }
 
-    } catch (WebdavException wde) {
-      throw wde;
     } catch (Throwable t) {
-      throw new WebdavException(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -192,7 +189,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
    * @see org.bedework.caldav.server.CalDAVResource#getBinaryContent()
    */
   @Override
-  public InputStream getBinaryContent() throws WebdavException {
+  public InputStream getBinaryContent() {
     if (!isNotification()) {
       return getBinaryStream();
     }
@@ -204,7 +201,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
     return new ByteArrayInputStream(xmlNote.getBytes());
   }
 
-  private InputStream getBinaryStream() throws WebdavException {
+  private InputStream getBinaryStream() {
     if (rsrc == null) {
       return null;
     }
@@ -222,11 +219,11 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
     try {
       return bwrc.getBinaryStream();
     } catch (final Throwable t) {
-      throw new WebdavException(t);
+      throw new RuntimeException(t);
     }
   }
 
-  private NotificationType getNotification() throws WebdavException {
+  private NotificationType getNotification() {
     try {
       note = Parser.fromXml(getBinaryStream());
 
@@ -240,7 +237,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
 
       return note;
     } catch (final Throwable t) {
-      throw new WebdavException(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -248,7 +245,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
    * @see org.bedework.caldav.server.CalDAVResource#getContentLen()
    */
   @Override
-  public long getContentLen() throws WebdavException {
+  public long getContentLen() {
     if (rsrc == null) {
       return 0;
     }
@@ -265,7 +262,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
   }
 
   @Override
-  public long getQuotaSize() throws WebdavException {
+  public long getQuotaSize() {
     if (rsrc == null) {
       return 0;
     }
@@ -277,7 +274,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
    * @see org.bedework.caldav.server.CalDAVResource#setContentType(java.lang.String)
    */
   @Override
-  public void setContentType(final String val) throws WebdavException {
+  public void setContentType(final String val) {
     getRsrc().setContentType(val);
   }
 
@@ -285,7 +282,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
    * @see org.bedework.caldav.server.CalDAVResource#getContentType()
    */
   @Override
-  public String getContentType() throws WebdavException {
+  public String getContentType() {
     if (rsrc == null) {
       return null;
     }
@@ -304,7 +301,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
   }
 
   @Override
-  public NotificationInfo getNotificationType() throws WebdavException {
+  public NotificationInfo getNotificationType() {
     return NotificationType.fromContentType(rsrc.getContentType());
   }
 
@@ -313,12 +310,12 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
    * ==================================================================== */
 
   @Override
-  public void setName(final String val) throws WebdavException {
+  public void setName(final String val) {
     getRsrc().setName(val);
   }
 
   @Override
-  public String getName() throws WebdavException {
+  public String getName() {
     String n = getRsrc().getName();
 
     if (!n.endsWith(BwResource.tombstonedSuffix)) {
@@ -329,84 +326,88 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
   }
 
   @Override
-  public void setDisplayName(final String val) throws WebdavException {
+  public void setDisplayName(final String val) {
     // No display name
   }
 
   @Override
-  public String getDisplayName() throws WebdavException {
+  public String getDisplayName() {
     return getRsrc().getName();
   }
 
   @Override
-  public void setPath(final String val) throws WebdavException {
+  public void setPath(final String val) {
     // Not actually saved
   }
 
   @Override
-  public String getPath() throws WebdavException {
+  public String getPath() {
     return Util.buildPath(false, getRsrc().getColPath(), "/",
                           getRsrc().getName());
   }
 
   @Override
-  public void setParentPath(final String val) throws WebdavException {
+  public void setParentPath(final String val) {
     getRsrc().setColPath(val);
   }
 
   @Override
-  public String getParentPath() throws WebdavException {
+  public String getParentPath() {
     return getRsrc().getColPath();
   }
 
   @Override
-  public void setOwner(final AccessPrincipal val) throws WebdavException {
+  public void setOwner(final AccessPrincipal val) {
     super.setOwner(val);
     getRsrc().setOwnerHref(val.getPrincipalRef());
   }
 
   @Override
-  public AccessPrincipal getOwner() throws WebdavException {
-    return intf.getPrincipal(getRsrc().getOwnerHref());
+  public AccessPrincipal getOwner() {
+    try {
+      return intf.getPrincipal(getRsrc().getOwnerHref());
+    } catch (WebdavException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
-  public void setCreated(final String val) throws WebdavException {
+  public void setCreated(final String val) {
     getRsrc().setCreated(val);
   }
 
   @Override
-  public String getCreated() throws WebdavException {
+  public String getCreated() {
     return getRsrc().getCreated();
   }
 
   @Override
-  public void setLastmod(final String val) throws WebdavException {
+  public void setLastmod(final String val) {
     getRsrc().setLastmod(val);
   }
 
   @Override
-  public String getLastmod() throws WebdavException {
+  public String getLastmod() {
     return getRsrc().getLastmod();
   }
 
   @Override
-  public String getEtag() throws WebdavException {
+  public String getEtag() {
     return getRsrc().getEtag();
   }
 
   @Override
-  public String getPreviousEtag() throws WebdavException {
+  public String getPreviousEtag() {
     return getRsrc().getPreviousEtag();
   }
 
   @Override
-  public void setDescription(final String val) throws WebdavException {
+  public void setDescription(final String val) {
     // No description
   }
 
   @Override
-  public String getDescription() throws WebdavException {
+  public String getDescription() {
     return getRsrc().getName();
   }
 
@@ -414,7 +415,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
    *                      Package methods
    * ==================================================================== */
 
-  BwResource getRsrc() throws WebdavException {
+  BwResource getRsrc() {
     if (rsrc == null) {
       rsrc = new BwResource();
     }
@@ -426,7 +427,7 @@ public class BwCalDAVResource extends CalDAVResource<BwCalDAVResource> {
    *                      Private methods
    * ==================================================================== */
 
-  private boolean isNotification() throws WebdavException {
+  private boolean isNotification() {
     if (rsrc == null) {
       return false;
     }

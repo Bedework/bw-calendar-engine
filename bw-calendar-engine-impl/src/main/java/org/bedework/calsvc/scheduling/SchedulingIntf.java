@@ -20,9 +20,9 @@ package org.bedework.calsvc.scheduling;
 
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.SchedulingI;
+import org.bedework.util.misc.response.Response;
 
 /**
  * @author douglm

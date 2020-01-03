@@ -20,6 +20,7 @@ package org.bedework.calfacade.responses;
 
 import org.bedework.calfacade.BwCategory;
 import org.bedework.util.misc.ToString;
+import org.bedework.util.misc.response.Response;
 
 import java.util.Collection;
 

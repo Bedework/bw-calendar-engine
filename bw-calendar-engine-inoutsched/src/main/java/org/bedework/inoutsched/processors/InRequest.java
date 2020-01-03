@@ -34,7 +34,6 @@ import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
@@ -49,6 +48,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.Response;
 import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Dur;
@@ -206,7 +206,7 @@ public class InRequest extends InProcessor {
 
       Response resp = sched.addEvent(ourCopy, namePrefix,
                                      BwCalendar.calTypeCalendarCollection,
-                                       noInvites);
+                                     noInvites);
       if (!resp.isOk()) {
         if (debug()) {
           debug("Schedule - error " + resp +

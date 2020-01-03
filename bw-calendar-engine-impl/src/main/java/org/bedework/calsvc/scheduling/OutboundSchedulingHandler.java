@@ -29,7 +29,6 @@ import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.ScheduleResult.ScheduleRecipientResult;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvc.scheduling.hosts.BwHosts;
@@ -38,6 +37,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleStates;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.Response;
 
 import java.util.ArrayList;
 import java.util.Collection;

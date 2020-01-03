@@ -22,16 +22,16 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalendarsI;
+import org.bedework.convert.IcalTranslator;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.Utils;
 import org.bedework.dumprestore.dump.DumpGlobals;
-import org.bedework.convert.IcalTranslator;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.Response;
 
 import net.fortuna.ical4j.model.Calendar;
 
@@ -44,9 +44,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
-import static org.bedework.calfacade.responses.Response.Status.exists;
-import static org.bedework.calfacade.responses.Response.Status.failed;
-import static org.bedework.calfacade.responses.Response.Status.ok;
+import static org.bedework.util.misc.response.Response.Status.exists;
+import static org.bedework.util.misc.response.Response.Status.failed;
+import static org.bedework.util.misc.response.Response.Status.ok;
 
 /** Dump all calendar data for the supplied principal.
  *

@@ -54,27 +54,27 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
    * ==================================================================== */
 
   @Override
-  public boolean getCanShare() throws WebdavException {
+  public boolean getCanShare() {
     return getCol().getCanAlias();
   }
 
   @Override
-  public boolean getCanPublish() throws WebdavException {
+  public boolean getCanPublish() {
     return getCol().getCanAlias();
   }
 
   @Override
-  public boolean isAlias() throws WebdavException {
+  public boolean isAlias() {
     return getCol().getInternalAlias();
   }
 
   @Override
-  public void setAliasUri(String val) throws WebdavException {
+  public void setAliasUri(String val) {
     getCol().setAliasUri(val);
   }
 
   @Override
-  public String getAliasUri() throws WebdavException {
+  public String getAliasUri() {
     if (!isAlias()) {
       return null;
     }
@@ -82,29 +82,38 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
     String s = getCol().getInternalAliasPath();
 
     if (s != null) {
-      return intf.getUrlHandler().prefix(Util.buildPath(true, s));
+      try {
+        return intf.getUrlHandler().prefix(Util.buildPath(true, s));
+      } catch (WebdavException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     return getCol().getAliasUri();
   }
 
   @Override
-  public void setRefreshRate(final int val) throws WebdavException {
+  public void setRefreshRate(final int val) {
     getCol().setRefreshRate(Math.max(BwCalendar.minRefreshRateSeconds, val));
   }
 
   @Override
-  public int getRefreshRate() throws WebdavException {
+  public int getRefreshRate() {
     return getCol().getRefreshRate();
   }
 
   @Override
-  public BwCalDAVCollection resolveAlias(final boolean resolveSubAlias) throws WebdavException {
+  public BwCalDAVCollection resolveAlias(final boolean resolveSubAlias) {
     if (!col.getInternalAlias()) {
       return this;
     }
 
-    final BwCalendar c = intf.resolveAlias(col, resolveSubAlias);
+    final BwCalendar c;
+    try {
+      c = intf.resolveAlias(col, resolveSubAlias);
+    } catch (WebdavException e) {
+      throw new RuntimeException(e);
+    }
     if (c == null) {
       return null;
     }
@@ -113,12 +122,12 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
-  public void setProperty(final QName name, final String val) throws WebdavException {
+  public void setProperty(final QName name, final String val) {
     getCol().setProperty(NamespaceAbbrevs.prefixed(name), val);
   }
 
   @Override
-  public String getProperty(final QName name) throws WebdavException {
+  public String getProperty(final QName name) {
     return getCol().getProperty(NamespaceAbbrevs.prefixed(name));
   }
 
@@ -126,17 +135,21 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
    * @see org.bedework.caldav.server.CalDAVCollection#setCalType(int)
    */
   @Override
-  public void setCalType(final int val) throws WebdavException {
+  public void setCalType(final int val) {
     getCol().setCalType(val);
   }
 
   @Override
-  public int getCalType() throws WebdavException {
+  public int getCalType() {
     final int calType;
     BwCalendar c = getCol();
 
     if (isAlias()) {
-      c = intf.resolveAlias(col, true);
+      try {
+        c = intf.resolveAlias(col, true);
+      } catch (WebdavException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     if (c == null) {
@@ -183,94 +196,94 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
-  public boolean freebusyAllowed() throws WebdavException {
+  public boolean freebusyAllowed() {
     return getCol().getCollectionInfo().allowFreeBusy;
   }
 
   @Override
-  public boolean getDeleted() throws WebdavException {
+  public boolean getDeleted() {
     return getCol().getTombstoned();
   }
 
   @Override
-  public boolean entitiesAllowed() throws WebdavException {
+  public boolean entitiesAllowed() {
     return getCol().getCollectionInfo().onlyCalEntities;
   }
 
   @Override
-  public void setAffectsFreeBusy(final boolean val) throws WebdavException {
+  public void setAffectsFreeBusy(final boolean val) {
     getCol().setAffectsFreeBusy(val);
   }
 
   @Override
-  public boolean getAffectsFreeBusy() throws WebdavException {
+  public boolean getAffectsFreeBusy() {
     return getCol().getAffectsFreeBusy();
   }
 
   @Override
-  public void setTimezone(final String val) throws WebdavException {
+  public void setTimezone(final String val) {
     getCol().setTimezone(val);
   }
 
   @Override
-  public String getTimezone() throws WebdavException {
+  public String getTimezone() {
     return getCol().getTimezone();
   }
 
   @Override
-  public void setColor(final String val) throws WebdavException {
+  public void setColor(final String val) {
     getCol().setColor(val);
   }
 
   @Override
-  public String getColor() throws WebdavException {
+  public String getColor() {
     return getCol().getColor();
   }
 
   @Override
   public void setSupportedComponents(final List<String> val)
-          throws WebdavException {
+          {
     getCol().setSupportedComponents(val);
   }
 
   @Override
-  public List<String> getSupportedComponents() throws WebdavException {
+  public List<String> getSupportedComponents() {
     return getCol().getSupportedComponents();
   }
 
   @Override
-  public List<String> getVpollSupportedComponents() throws WebdavException {
+  public List<String> getVpollSupportedComponents() {
     return getCol().getVpollSupportedComponents();
   }
 
   @Override
-  public void setRemoteId(String val) throws WebdavException {
+  public void setRemoteId(String val) {
     getCol().setRemoteId(val);
   }
 
   @Override
-  public String getRemoteId() throws WebdavException {
+  public String getRemoteId() {
     return getCol().getRemoteId();
   }
 
   @Override
-  public void setRemotePw(String val) throws WebdavException {
+  public void setRemotePw(String val) {
     getCol().setRemotePw(val);
   }
 
   @Override
-  public String getRemotePw() throws WebdavException {
+  public String getRemotePw() {
     return getCol().getRemotePw();
   }
 
   @Override
   public void setSynchDeleteSuppressed(final boolean val)
-          throws WebdavException {
+          {
     getCol().setSynchDeleteSuppressed(val);
   }
 
   @Override
-  public boolean getSynchDeleteSuppressed() throws WebdavException {
+  public boolean getSynchDeleteSuppressed() {
     return getCol().getSynchDeleteSuppressed();
   }
 
@@ -279,12 +292,12 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
    * ==================================================================== */
 
   @Override
-  public void setName(final String val) throws WebdavException {
+  public void setName(final String val) {
     getCol().setName(val);
   }
 
   @Override
-  public String getName() throws WebdavException {
+  public String getName() {
     String n = getCol().getName();
 
     if (!n.endsWith(BwCalendar.tombstonedSuffix)) {
@@ -295,22 +308,22 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
-  public void setDisplayName(final String val) throws WebdavException {
+  public void setDisplayName(final String val) {
     getCol().setSummary(val);
   }
 
   @Override
-  public String getDisplayName() throws WebdavException {
+  public String getDisplayName() {
     return getCol().getSummary();
   }
 
   @Override
-  public void setPath(final String val) throws WebdavException {
+  public void setPath(final String val) {
     getCol().setPath(val);
   }
 
   @Override
-  public String getPath() throws WebdavException {
+  public String getPath() {
     String p = getCol().getPath();
 
     if (!p.endsWith(BwCalendar.tombstonedSuffix)) {
@@ -321,63 +334,67 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
-  public void setParentPath(final String val) throws WebdavException {
+  public void setParentPath(final String val) {
     getCol().setColPath(val);
   }
 
   @Override
-  public String getParentPath() throws WebdavException {
+  public String getParentPath() {
     return getCol().getColPath();
   }
 
   @Override
-  public void setOwner(final AccessPrincipal val) throws WebdavException {
+  public void setOwner(final AccessPrincipal val) {
     getCol().setOwnerHref(val.getPrincipalRef());
   }
 
   @Override
-  public AccessPrincipal getOwner() throws WebdavException {
-    return intf.getPrincipal(getCol().getOwnerHref());
+  public AccessPrincipal getOwner() {
+    try {
+      return intf.getPrincipal(getCol().getOwnerHref());
+    } catch (WebdavException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
-  public void setCreated(final String val) throws WebdavException {
+  public void setCreated(final String val) {
     getCol().setCreated(val);
   }
 
   @Override
-  public String getCreated() throws WebdavException {
+  public String getCreated() {
     return getCol().getCreated();
   }
 
   @Override
-  public void setLastmod(final String val) throws WebdavException {
+  public void setLastmod(final String val) {
     getCol().getLastmod().setTimestamp(val);
   }
 
   @Override
-  public String getLastmod() throws WebdavException {
+  public String getLastmod() {
     return getCol().getLastmod().getTimestamp();
   }
 
   @Override
-  public String getEtag() throws WebdavException {
+  public String getEtag() {
     return getCol().getEtag();
   }
 
   @Override
-  public String getPreviousEtag() throws WebdavException {
+  public String getPreviousEtag() {
     return "\"" + getCol().getLastEtag() +
            "\"";
   }
 
   @Override
-  public void setDescription(final String val) throws WebdavException {
+  public void setDescription(final String val) {
     getCol().setDescription(val);
   }
 
   @Override
-  public String getDescription() throws WebdavException {
+  public String getDescription() {
     return getCol().getDescription();
   }
 
@@ -385,7 +402,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
    *                      Private methods
    * ==================================================================== */
 
-  BwCalendar getCol() throws WebdavException {
+  BwCalendar getCol() {
     if (col == null) {
       col = new BwCalendar();
     }

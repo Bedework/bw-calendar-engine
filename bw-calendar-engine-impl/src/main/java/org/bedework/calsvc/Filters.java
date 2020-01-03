@@ -26,9 +26,9 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.responses.GetFilterDefResponse;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calsvci.FiltersI;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.Response;
 
 import ietf.params.xml.ns.caldav.FilterType;
 

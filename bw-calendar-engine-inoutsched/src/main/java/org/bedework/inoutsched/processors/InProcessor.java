@@ -23,7 +23,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
@@ -31,6 +30,7 @@ import org.bedework.calsvc.CalSvcDb;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
+import org.bedework.util.misc.response.Response;
 
 /** Abstract class to support processing of inbox scheduling messages.
  *

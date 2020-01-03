@@ -46,8 +46,6 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexFetcher;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexerParams;
-import org.bedework.calfacade.responses.GetEntityResponse;
-import org.bedework.calfacade.responses.Response;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.PrincipalInfo;
@@ -60,6 +58,8 @@ import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.util.misc.response.Response;
 
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -71,7 +71,7 @@ import java.util.concurrent.LinkedTransferQueue;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeCategory;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeContact;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeLocation;
-import static org.bedework.calfacade.responses.Response.Status.failed;
+import static org.bedework.util.misc.response.Response.Status.failed;
 
 /** Base Implementation of CalIntf which throws exceptions for most methods.
 *
@@ -130,7 +130,7 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   public class CIAccessChecker implements AccessChecker {
     @Override
-    public CurrentAccess checkAccess(final BwShareableDbentity ent,
+    public CurrentAccess checkAccess(final BwShareableDbentity<?> ent,
                                          final int desiredAccess,
                                          final boolean returnResult)
             throws CalFacadeException {
@@ -338,7 +338,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   }
 
   @Override
-  public BwIndexer getIndexer(final BwOwnedDbentity entity) {
+  public BwIndexer getIndexer(final BwOwnedDbentity<?> entity) {
     final String docType = docTypeFromClass(entity);
 
     if (readOnlyMode ||
@@ -354,7 +354,7 @@ public abstract class CalintfBase implements Logged, Calintf {
     return getIndexer(getPrincipalRef(), docType);
   }
 
-  private static Map<Class, String> toDocType = new HashMap<>();
+  private static Map<Class<?>, String> toDocType = new HashMap<>();
 
   static {
     toDocType.put(BwCalendar.class, BwIndexer.docTypeCollection);
@@ -435,7 +435,8 @@ public abstract class CalintfBase implements Logged, Calintf {
                 .fetchCat(href, PropertyIndex.PropertyInfoIndex.HREF);
 
         if (ent == null) {
-          return Response.notOk(resp, Response.Status.notFound, null);
+          return Response.notOk(resp,
+                                Response.Status.notFound);
         }
 
         resp.setEntity(ent);
@@ -457,7 +458,7 @@ public abstract class CalintfBase implements Logged, Calintf {
                 .fetchContact(href, PropertyIndex.PropertyInfoIndex.HREF);
 
         if (ent == null) {
-          return Response.notOk(resp, Response.Status.notFound, null);
+          return Response.notOk(resp, Response.Status.notFound);
         }
 
         resp.setEntity(ent);
@@ -479,7 +480,7 @@ public abstract class CalintfBase implements Logged, Calintf {
                 .fetchLocation(href, PropertyIndex.PropertyInfoIndex.HREF);
 
         if (ent == null) {
-          return Response.notOk(resp, Response.Status.notFound, null);
+          return Response.notOk(resp, Response.Status.notFound);
         }
 
         resp.setEntity(ent);
@@ -590,7 +591,7 @@ public abstract class CalintfBase implements Logged, Calintf {
    * ==================================================================== */
 
   @Override
-  public Collection<CoreEventInfo> postGetEvents(final Collection evs,
+  public Collection<CoreEventInfo> postGetEvents(final Collection<?> evs,
                                                  final int desiredAccess,
                                                  final boolean nullForNoAccess,
                                                  final FiltersCommonI f)

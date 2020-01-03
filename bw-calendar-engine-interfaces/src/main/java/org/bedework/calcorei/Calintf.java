@@ -318,7 +318,7 @@ public interface Calintf
    * @param entity may influence choice of indexer
    * @return BwIndexer
    */
-  BwIndexer getIndexer(BwOwnedDbentity entity);
+  BwIndexer getIndexer(BwOwnedDbentity<?> entity);
 
   /** Return a public indexer if we're in public mode or one for the given href
    *
@@ -491,7 +491,7 @@ public interface Calintf
    *                   Events
    * ==================================================================== */
 
-  Collection<CoreEventInfo> postGetEvents(final Collection evs,
+  Collection<CoreEventInfo> postGetEvents(final Collection<?> evs,
                                           final int desiredAccess,
                                           final boolean nullForNoAccess,
                                           final FiltersCommonI f)

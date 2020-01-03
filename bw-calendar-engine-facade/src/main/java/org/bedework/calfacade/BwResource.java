@@ -121,7 +121,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
   }
 
   /**
-   * @param val
+   * @param val created date
    */
   public void setCreated(final String val) {
     created = val;
@@ -135,7 +135,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
   }
 
   /**
-   * @param val
+   * @param val lastmod date
    */
   public void setLastmod(final String val) {
     lastmod = val;
@@ -226,7 +226,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
   public String getContentTypeStripped() {
     String ct = getContentType();
 
-    if ((ct == null) || (ct.indexOf("\t") < 0)) {
+    if ((ct == null) || (!ct.contains("\t"))) {
       return ct;
     }
 
@@ -241,7 +241,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
   public String getContentTypeExtra() {
     String ct = getContentType();
 
-    if ((ct == null) || (ct.indexOf("\t") < 0)) {
+    if ((ct == null) || (!ct.contains("\t"))) {
       return null;
     }
 
@@ -250,7 +250,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
 
   /** Copy this objects values into the parameter
    *
-   * @param val
+   * @param val target resource
    */
   public void copyTo(final BwResource val) {
     super.copyTo(val);
@@ -261,7 +261,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
   }
 
   /** Update last mod fields
-   * @param val
+   * @param val timestamp
    */
   public void updateLastmod(final Timestamp val) {
     DateTime dt = new DateTime(val);
