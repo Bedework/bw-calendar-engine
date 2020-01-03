@@ -196,7 +196,10 @@ public class ESQueryFilter extends ESQueryFilterBase
    */
   public QueryBuilder singleEntityQuery(final String val,
                                         final PropertyInfoIndex... index) {
-    return termQuery(makePropertyRef(index), val);
+    return and(termQuery(makePropertyRef(index), val),
+               termQuery(makePropertyRef(PropertyInfoIndex.TOMBSTONED),
+                         false),
+               null);
   }
 
   /** Build a query for a single tombstoned entity identified by the property

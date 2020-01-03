@@ -3582,12 +3582,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             new DeleteByQueryRequest(targetIndex);
 
     final var path = ei.getEvent().getColPath();
-    final var href = ei.getEvent().getHref();
+    final var uid = ei.getEvent().getUid();
 
     final ESQueryFilter esq = getFilters(null);
 
     final QueryBuilder qb = getFilters(null)
-            .allInstances(path, href);
+            .allInstances(path, uid);
 
     delQreq.setConflicts("proceed");
     delQreq.setQuery(qb);
@@ -3600,8 +3600,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       for (final BulkItemResponse.Failure f: bulkResponse.getBulkFailures()) {
         warn(format("Failing shards for delete - " +
-                            "path: %s, href: %s, index: %s",
-                    path, href, f.getIndex()));
+                            "path: %s, uid: %s, index: %s",
+                    path, uid, f.getIndex()));
 
         ok = false;
       }
