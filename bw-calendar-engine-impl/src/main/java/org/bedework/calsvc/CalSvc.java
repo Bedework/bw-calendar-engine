@@ -1233,7 +1233,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       }
     }
 
-    if (resToken.length() == 0) {
+    if ((resToken == null) || (resToken.length() == 0)) {
       resToken = Util.icalUTCTimestamp() + "-0000";
     }
 
@@ -1933,18 +1933,21 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     final ResourcesImpl resourcesH = (ResourcesImpl)getResourcesHandler();
     final Calendars colsH = (Calendars)getCalendarsHandler();
     String newToken = "";
-    BwCalendar resolvedCol = col;
 
     if (debug()) {
-      debug("sync token: " + token + " col: " + resolvedCol.getPath());
+      debug("sync token: " + token + " col: " + col.getPath());
     }
 
     if (col.getTombstoned()) {
       return token;
     }
-    
+
+    final BwCalendar resolvedCol;
+
     if (col.getInternalAlias()) {
       resolvedCol = getCalendarsHandler().resolveAlias(col, true, false);
+    } else {
+      resolvedCol = col;
     }
     
     if (resolvedCol.getTombstoned()) {
