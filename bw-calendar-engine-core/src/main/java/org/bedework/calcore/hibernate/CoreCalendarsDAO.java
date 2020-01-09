@@ -167,7 +167,7 @@ class CoreCalendarsDAO extends DAOBase {
 
     //val = (BwCalendar)getSess().merge(val);
 
-    final BwLastMod lm = col.getLastmod();
+    final BwCollectionLastmod lm = col.getLastmod();
     lm.updateLastmod(ts);
 
     final HibSession sess = getSess();

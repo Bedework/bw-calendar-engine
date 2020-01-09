@@ -1372,22 +1372,20 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           final EntityBuilder eb = getEntityBuilder(
                   hit.getSourceAsMap());
 
-          final Object entity;
-          switch (docType) {
-            case docTypeEvent:
-              entity = makeEvent(eb, resp, kval, false);
-              final EventInfo oei = (EventInfo)entity;
-              final BwEvent oev = oei.getEvent();
+          final EventInfo entity;
+          if (docTypeEvent.equals(docType)) {
+            entity = makeEvent(eb, resp, kval, false);
+            final BwEvent oev = entity.getEvent();
 
-              if (oev instanceof BwEventAnnotation) {
-                final BwEventAnnotation ann = (BwEventAnnotation)oev;
-                final BwEvent proxy = new BwEventProxy(ann);
-                ann.setTarget(ev);
-                ann.setMaster(ev);
+            if (oev instanceof BwEventAnnotation) {
+              final BwEventAnnotation ann = (BwEventAnnotation)oev;
+              final BwEvent proxy = new BwEventProxy(ann);
+              ann.setTarget(ev);
+              ann.setMaster(ev);
 
-                ei.addOverride(new EventInfo(proxy));
-                continue;
-              }
+              ei.addOverride(new EventInfo(proxy));
+              continue;
+            }
           }
 
           // Unexpected type
@@ -1660,6 +1658,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     ui.setUpdated(true);
+    caches.clear();
   }
 
   @Override
@@ -2075,17 +2074,60 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             getFilters(null).syncFilter(path, lastmod,
                                         lastmodSeq);
 
-    return fetchEntities(docTypeEvent,
-                         new BuildEntity<EventInfo>() {
-                           @Override
-                           EventInfo make(final EntityBuilder eb,
-                                          final String id)
-                                   throws CalFacadeException {
-                             return eb.makeEvent(id, false);
-                           }
-                         },
-                         qb,
-                         count);
+    final List<EventInfo> eis =
+            fetchEntities(docTypeEvent,
+                          new BuildEntity<EventInfo>() {
+                            @Override
+                            EventInfo make(final EntityBuilder eb,
+                                           final String id)
+                                    throws CalFacadeException {
+                              return eb.makeEvent(id, false);
+                            }
+                          },
+                          qb,
+                          count);
+
+    /* we have to group all the overrides */
+
+    final Map<String, EventInfo> masters = new HashMap<>();
+
+    /* First pass - store masters or non-recurring */
+    for (final var ei: eis) {
+      final BwEvent ev = ei.getEvent();
+      if (ev.isRecurringEntity() || (ev.getRecurrenceId() == null)) {
+        masters.put(ev.getUid(), ei);
+      }
+    }
+
+    /* Now fix up any overrides */
+
+    for (final var ei: eis) {
+      final BwEvent ev = ei.getEvent();
+
+      if (!(ev instanceof BwEventAnnotation)) {
+        continue;
+      }
+
+      final EventInfo mei = masters.get(ev.getUid());
+
+      if (mei == null) {
+        warn("Missing master for " + ev.getUid());
+        continue;
+      }
+
+      final var oev = (BwEventAnnotation)ev;
+
+      oev.setTarget(mei.getEvent());
+      oev.setMaster(mei.getEvent());
+
+      final BwEvent proxy = new BwEventProxy(oev);
+
+      final EventInfo oei = new EventInfo(proxy);
+
+      mei.addOverride(oei);
+    }
+
+    return new ArrayList<>(masters.values());
   }
 
   @Override
