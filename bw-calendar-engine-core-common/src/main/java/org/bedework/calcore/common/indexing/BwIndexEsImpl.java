@@ -3182,8 +3182,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     try {
       fetchStart();
 
-      if ((index.length == 1) &&
+      if ((!docType.equals(docTypeCollection) && !docType.equals(docTypeEvent)) &&
+              (index.length == 1) &&
               (index[0] == PropertyInfoIndex.HREF)) {
+        // This path avoids the tombstone check.
         final GetRequest req = new GetRequest(targetIndex,
                                              val);
 

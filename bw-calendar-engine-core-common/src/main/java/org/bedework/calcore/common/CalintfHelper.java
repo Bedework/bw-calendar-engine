@@ -265,7 +265,8 @@ public abstract class CalintfHelper
 
   protected void indexEntity(final BwCalendar col) throws CalFacadeException {
     if (!getForRestore()) {
-      getIndexer(col).indexEntity(col);
+      // Index and wait
+      getIndexer(col).indexEntity(col, true);
     }
   }
 
