@@ -1129,7 +1129,7 @@ class CoreCalendars extends CalintfHelper
   }
 
   private void notify(final SysEvent.SysCode code,
-                      final BwCalendar val) throws CalFacadeException {
+                      final BwCalendar val) {
     final boolean indexed = true;
     if (code.equals(SysEvent.SysCode.COLLECTION_DELETED)) {
       postNotification(
@@ -1153,7 +1153,7 @@ class CoreCalendars extends CalintfHelper
 
   private void notifyMove(final SysEvent.SysCode code,
                           final String oldHref,
-                          final BwCalendar val) throws CalFacadeException {
+                          final BwCalendar val) {
     final boolean indexed = true;
 
     postNotification(

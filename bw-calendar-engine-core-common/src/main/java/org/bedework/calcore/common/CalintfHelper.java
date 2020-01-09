@@ -85,7 +85,7 @@ public abstract class CalintfHelper
   /** Initialize
    *
    * @param intf - interface for calls
-   * @param ac
+   * @param ac - access checker
    * @param guestMode true for a guest
    * @param sessionless
    */
@@ -116,9 +116,9 @@ public abstract class CalintfHelper
 
   /** Used to fetch a calendar from the cache
    *
-   * @param path
-   * @param desiredAccess
-   * @param alwaysReturn
+   * @param path to collection
+   * @param desiredAccess we need
+   * @param alwaysReturn false to throw an exception if not accessible
    * @return BwCalendar
    * @throws CalFacadeException
    */
@@ -148,7 +148,7 @@ public abstract class CalintfHelper
     return intf.getPrincipalInfo().getPrincipal();
   }
 
-  protected String authenticatedPrincipal() throws CalFacadeException {
+  protected String authenticatedPrincipal() {
     BwPrincipal p = getAuthenticatedPrincipal();
 
     if (p == null) {
@@ -158,7 +158,7 @@ public abstract class CalintfHelper
     return p.getPrincipalRef();
   }
 
-  public String currentPrincipal() throws CalFacadeException {
+  public String currentPrincipal() {
     if (getPrincipal() == null) {
       return null;
     }
@@ -238,7 +238,7 @@ public abstract class CalintfHelper
     return intf.getForRestore();
   }
 
-  protected BwIndexer getIndexer(final BwOwnedDbentity entity) {
+  protected BwIndexer getIndexer(final BwOwnedDbentity<?> entity) {
     return intf.getIndexer(entity);
   }
 
@@ -351,7 +351,7 @@ public abstract class CalintfHelper
     return cal;
   }
 
-  protected void tombstoneEntity(final BwShareableContainedDbentity val) {
+  protected void tombstoneEntity(final BwShareableContainedDbentity<?> val) {
     if (val instanceof AlarmsEntity) {
       clearCollection(((AlarmsEntity)val).getAlarms());
     }
@@ -377,7 +377,7 @@ public abstract class CalintfHelper
     }
 
     if (val instanceof DescriptionEntity) {
-      clearCollection(((DescriptionEntity)val).getDescriptions());
+      clearCollection(((DescriptionEntity<?>)val).getDescriptions());
     }
 
     if (val instanceof RecurrenceEntity) {
@@ -403,7 +403,7 @@ public abstract class CalintfHelper
     }
   }
 
-  protected void clearCollection(final Collection val) {
+  protected void clearCollection(final Collection<?> val) {
     if (val == null) {
       return;
     }
@@ -432,7 +432,7 @@ public abstract class CalintfHelper
   }
 
   protected void stat(final String name,
-                      final Long startTime) throws CalFacadeException {
+                      final Long startTime) {
     if (!collectTimeStats) {
       return;
     }
@@ -443,7 +443,7 @@ public abstract class CalintfHelper
 
   protected void notifyDelete(final boolean reallyDelete,
                               final BwEvent val,
-                              final boolean shared) throws CalFacadeException {
+                              final boolean shared) {
     SysEvent.SysCode code;
 
     if (reallyDelete) {
@@ -474,7 +474,7 @@ public abstract class CalintfHelper
 
   protected void notify(final SysEvent.SysCode code,
                         final BwEvent val,
-                        final boolean shared) throws CalFacadeException {
+                        final boolean shared) {
     final String note = getChanges(code, val);
     if (note == null) {
       return;
@@ -498,7 +498,7 @@ public abstract class CalintfHelper
                             final String oldHref,
                             final boolean oldShared,
                             final BwEvent val,
-                            final boolean shared) throws CalFacadeException {
+                            final boolean shared) {
     postNotification(
             SysEvent.makeEntityMovedEvent(code,
                                           currentPrincipal(),
@@ -513,7 +513,7 @@ public abstract class CalintfHelper
   protected void notifyInstanceChange(final SysEvent.SysCode code,
                                       final BwEvent val,
                                       final boolean shared,
-                                      final String recurrenceId) throws CalFacadeException {
+                                      final String recurrenceId) {
     final String note = getChanges(code, val);
     if (note == null) {
       return;
