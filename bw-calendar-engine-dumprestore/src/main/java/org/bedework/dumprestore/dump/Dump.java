@@ -159,54 +159,56 @@ public class Dump implements Logged, Defs {
    * @throws Throwable on error
    */
   public void doDump() throws Throwable {
-    if (newDumpFormat) {
-      // TODO - start a separate thread for public
-      final DumpPublic dumpPub = new DumpPublic(globals);
-      if (dumpPub.open()) {
-        dumpPub.doDump();
-        dumpPub.close();
-      }
-
-      final DumpSystem dumpSys = new DumpSystem(globals);
-      if (dumpSys.open()) {
-        dumpSys.doDump();
-        dumpSys.close();
-      }
-
-      final DumpPrincipal dumpPr = new DumpPrincipal(globals);
-
-      final Iterator<BwPrincipal> it = globals.di.getAllPrincipals();
-      while (it.hasNext()) {
-        final BwPrincipal pr = it.next();
-        
-        final String account = pr.getAccount().toLowerCase().trim();
-        
-        if (!account.equals(pr.getAccount())) {
-          globals.info.addLn("WARNING: Principal " + pr + 
-                                     " has possible invalid account");
-        }
-
-        boolean open = false;
-        try {
-          if (dumpPr.open(pr)) {
-            open = true;
-            dumpPr.doDump();
-          }
-        } catch (final CalFacadeException cfe) {
-          error(cfe);
-        } finally {
-          if (open) {
-            try {
-              dumpPr.close();
-            } catch (final CalFacadeException cfe){
-              error(cfe);
-            }
-          }
-        }
-      }
-    } else {
+    if (!newDumpFormat) {
       new DumpAll(globals).dumpSection(null);
       new DumpAliases(globals).dumpSection(null);
+
+      return;
+    }
+
+    // TODO - start a separate thread for public
+    final DumpPublic dumpPub = new DumpPublic(globals);
+    if (dumpPub.open()) {
+      dumpPub.doDump();
+      dumpPub.close();
+    }
+
+    final DumpSystem dumpSys = new DumpSystem(globals);
+    if (dumpSys.open()) {
+      dumpSys.doDump();
+      dumpSys.close();
+    }
+
+    final DumpPrincipal dumpPr = new DumpPrincipal(globals);
+
+    final Iterator<BwPrincipal> it = globals.di.getAllPrincipals();
+    while (it.hasNext()) {
+      final BwPrincipal pr = it.next();
+        
+      final String account = pr.getAccount().toLowerCase().trim();
+        
+      if (!account.equals(pr.getAccount())) {
+        globals.info.addLn("WARNING: Principal " + pr +
+                                   " has possible invalid account");
+      }
+
+      boolean open = false;
+      try {
+        if (dumpPr.open(pr)) {
+          open = true;
+          dumpPr.doDump();
+        }
+      } catch (final CalFacadeException cfe) {
+        error(cfe);
+      } finally {
+        if (open) {
+          try {
+            dumpPr.close();
+          } catch (final CalFacadeException cfe){
+            error(cfe);
+          }
+        }
+      }
     }
   }
 

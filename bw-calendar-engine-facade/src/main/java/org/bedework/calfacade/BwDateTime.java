@@ -23,7 +23,6 @@ import org.bedework.calfacade.annotations.ical.IcalProperties;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.BwCloneable;
 import org.bedework.calfacade.base.DumpEntity;
-import org.bedework.calfacade.exc.CalFacadeBadDateException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -47,6 +46,7 @@ import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Due;
 
 import java.io.Serializable;
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Comparator;
 
@@ -101,9 +101,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Constructor
    *
-   * @param dateType
-   * @param date
-   * @param tzid
+   * @param dateType true for date only
+   * @param date date time
+   * @param tzid timezone id
    * @return initialised BwDateTime
    * @throws RuntimeException on bad date
    */
@@ -143,11 +143,11 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Make date time based on all properties
    *
-   * @param dateType
-   * @param date
-   * @param utcDate
-   * @param tzid
-   * @param floating
+   * @param dateType true for date only
+   * @param date date time
+   * @param utcDate UTC value
+   * @param tzid timezone id
+   * @param floating true for floating
    * @return initialised BwDateTime
    * @throws RuntimeException on bad date
    */
@@ -180,7 +180,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Make date time based on ical property
    *
-   * @param val
+   * @param val ical date property
    * @return BwDateTime
    */
   public static BwDateTime makeBwDateTime(final DateProperty val) {
@@ -201,38 +201,34 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Make date time based on the xcal property
    *
-   * @param val
+   * @param val xcal date/datetime property
    * @return BwDateTime
    */
   public static BwDateTime makeBwDateTime(final DateDatetimePropertyType val) {
     XcalUtil.DtTzid dtTzid = XcalUtil.getDtTzid(val);
 
-    BwDateTime bwdt = makeBwDateTime(dtTzid.dateOnly,
-                                     dtTzid.dt,
-                                     dtTzid.tzid);
-
-    return bwdt;
+    return makeBwDateTime(dtTzid.dateOnly,
+                          dtTzid.dt,
+                          dtTzid.tzid);
   }
 
   /** Make date time based on the xcal property with tzid supplied
    *
-   * @param val
-   * @param tzid
+   * @param val xcal date/datetime property
+   * @param tzid timezone id
    * @return BwDateTime
    */
   public static BwDateTime makeBwDateTime(final DateDatetimePropertyType val,
                                           final String tzid) {
     XcalUtil.DtTzid dtTzid = XcalUtil.getDtTzid(val);
 
-    BwDateTime bwdt = makeBwDateTime(dtTzid.dateOnly,
-                                     dtTzid.dt,
-                                     tzid);
-
-    return bwdt;
+    return makeBwDateTime(dtTzid.dateOnly,
+                          dtTzid.dt,
+                          tzid);
   }
 
   /**
-   * @param val
+   * @param val Date object
    * @return initialised BwDateTime
    */
   public static BwDateTime makeBwDateTime(final Date val) {
@@ -252,9 +248,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Make a new date time value based on the dtStart value + the duration.
    *
-   * @param dtStart
-   * @param dateOnly
-   * @param dur
+   * @param dtStart date property
+   * @param dateOnly true for date only value
+   * @param dur duration to increment
    * @return BwDateTime
    */
   public static BwDateTime makeDateTime(final DateProperty dtStart,
@@ -328,13 +324,12 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * @param date the string UTC date/time or 8 character date
    * @param tzid  tzid for local time
    * @return initialised BwDateTime
-   * @throws CalFacadeException
    */
   public static BwDateTime fromUTC(final boolean dateType,
                                    final String date,
-                                   final String tzid) throws CalFacadeException {
+                                   final String tzid) {
     if (!dateType && !date.endsWith("Z")) {
-      throw new CalFacadeBadDateException();
+      throw new RuntimeException(CalFacadeException.badDate);
     }
 
     try {
@@ -359,7 +354,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
       return bwd;
     } catch (final Throwable t) {
-      throw new CalFacadeBadDateException();
+      throw new RuntimeException(CalFacadeException.badDate);
     }
   }
 
@@ -411,7 +406,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * <p>For date only values this field has a zero time appended so that simple
    * string comparisons will work.
    *
-   * @param val
+   * @param val UTC datetime value
    */
   @IcalProperty(pindex = PropertyInfoIndex.UTC,
                 jname = "utc")
@@ -444,9 +439,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * floating v non-floating.
    *
    * <p>A null value will usually not be indexed so the index will consist of
-   * only those that are flaoting time.
+   * only those that are floating time.
    *
-   * @param val
+   * @param val true for floating time
    */
   @IcalProperty(pindex = PropertyInfoIndex.FLOATING,
                 jname = "floating")
@@ -492,76 +487,61 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Make a DtEnd from this object
    *
-   * @return DtEnd
-   * @throws CalFacadeException
+   * @return DtEnd ical4j dtend object
    */
-  public DtEnd makeDtEnd() throws CalFacadeException {
+  public DtEnd makeDtEnd() {
     return makeDtEnd(Timezones.getTzRegistry());
   }
 
   /** Make a DtEnd from this object
    *
-   * @param tzreg
+   * @param tzreg timezone registry
    * @return DtEnd
-   * @throws CalFacadeException
    */
-  public DtEnd makeDtEnd(final TimeZoneRegistry tzreg) throws CalFacadeException {
-    try {
-      DtEnd dt = new DtEnd();
+  public DtEnd makeDtEnd(final TimeZoneRegistry tzreg) {
+    DtEnd dt = new DtEnd();
 
-      initDateProp(dt, tzreg);
+    initDateProp(dt, tzreg);
 
-      return dt;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    return dt;
   }
 
   /** Make a Due from this object
    *
-   * @param tzreg
+   * @param tzreg timezone registry
    * @return Due
-   * @throws CalFacadeException
    */
-  public Due makeDue(final TimeZoneRegistry tzreg) throws CalFacadeException {
-    try {
-      Due dt = new Due();
+  public Due makeDue(final TimeZoneRegistry tzreg) {
+    Due dt = new Due();
 
-      initDateProp(dt, tzreg);
+    initDateProp(dt, tzreg);
 
-      return dt;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    return dt;
   }
 
   /** Create a copy of this object
    *
    * @return BwDateTime
-   * @throws CalFacadeException
    */
-  public BwDateTime copy() throws CalFacadeException {
+  public BwDateTime copy() {
     return makeBwDateTime(makeDtEnd());
   }
 
   /** Make a DtStart from this object
    *
    * @return DtStart
-   * @throws CalFacadeException
    */
-  public DtStart makeDtStart() throws CalFacadeException {
+  public DtStart makeDtStart() {
     return makeDtStart(Timezones.getTzRegistry());
   }
 
   /** Make a DtStart from this object
    *
-   * @param tzreg
+   * @param tzreg timezone registry
    * @return DtStart
-   * @throws CalFacadeException
    */
-  public DtStart makeDtStart(final TimeZoneRegistry tzreg) throws CalFacadeException {
-    try {
-      /*
+  public DtStart makeDtStart(final TimeZoneRegistry tzreg) {
+    /*
       String tzid = null;
       ParameterList pl = new ParameterList();
 
@@ -575,31 +555,31 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       }
 
       return new DtStart(pl, getDtval());*/
-      String tzid = getTzid();
-      DtStart dt = new DtStart();
+    String tzid = getTzid();
+    DtStart dt = new DtStart();
 
-      ParameterList pl = dt.getParameters();
+    ParameterList pl = dt.getParameters();
 
-      if (getDateType()) {
-        pl.add(Value.DATE);
-      } else if (tzid != null) {
-        dt.setTimeZone(tzreg.getTimeZone(tzid));
-      }
-
-      dt.setValue(getDtval());
-
-      return dt;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    if (getDateType()) {
+      pl.add(Value.DATE);
+    } else if (tzid != null) {
+      dt.setTimeZone(tzreg.getTimeZone(tzid));
     }
+
+    try {
+      dt.setValue(getDtval());
+    } catch (final ParseException pe) {
+      throw new RuntimeException(pe);
+    }
+
+    return dt;
   }
 
   /** Return an ical DateTime or Date object
    *
    * @return Date
-   * @throws CalFacadeException
    */
-  public Date makeDate() throws CalFacadeException {
+  public Date makeDate() {
     try {
       if (getDateType()) {
         return new Date(getDtval());
@@ -610,35 +590,34 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       }
 
       return new DateTime(getDtval());
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    } catch (final Throwable t) {
+      checkRuntimeException(t);
+      throw new RuntimeException(t);
     }
   }
 
   /** Make an ical Dur from a start and end
    *
-   * @param start
-   * @param end
+   * @param start bw start object
+   * @param end bw end object
    * @return Dur
-   * @throws CalFacadeException
    */
   public static Dur makeDuration(final BwDateTime start,
-                                 final BwDateTime end) throws CalFacadeException {
+                                 final BwDateTime end) {
     return new Dur(start.makeDate(),
                    end.makeDate());
   }
 
   /** Return a value based on this value plus a duration.
    *
-   * @param val
+   * @param val bw duration object
    * @return BwDateTime
-   * @throws CalFacadeException
    */
-  public BwDateTime addDuration(final BwDuration val) throws CalFacadeException {
+  public BwDateTime addDuration(final BwDuration val) {
     return addDuration(val.makeDuration().getDuration());
   }
 
-  private static Calendar dateIncrementor =
+  private static final Calendar dateIncrementor =
       Calendar.getInstance(java.util.TimeZone.getTimeZone("GMT"));
 
   /** For a date only object returns a date 1 day in advance of this date.
@@ -673,11 +652,10 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * Used when moving between displayed and internal values.
    *
    * @return BwDateTime yesterday
-   * @throws CalFacadeException
    */
-  public BwDateTime getPreviousDay() throws CalFacadeException {
+  public BwDateTime getPreviousDay() {
     if (!getDateType()) {
-      throw new CalFacadeException("Must be a date only value");
+      throw new RuntimeException("Must be a date only value");
     }
 
     return makeDateTime(makeDtStart(Timezones.getTzRegistry()),
@@ -688,9 +666,8 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    *
    * @param d      Dur
    * @return BwDateTime
-   * @throws CalFacadeException
    */
-  public BwDateTime addDur(final Dur d) throws CalFacadeException {
+  public BwDateTime addDur(final Dur d) {
     return makeDateTime(makeDtStart(Timezones.getTzRegistry()),
                         getDateType(), d);
   }
@@ -727,12 +704,13 @@ public class BwDateTime extends DumpEntity<BwDateTime>
     }
   }
 
-  /** Add val to prop
+  /** Add parameter val to prop
    *
-   * @param prop
-   * @param val
+   * @param prop property
+   * @param val parameter
    */
-  private static void addIcalParameter(final Property prop, final Parameter val) {
+  private static void addIcalParameter(final Property prop,
+                                       final Parameter val) {
     ParameterList parl =  prop.getParameters();
 
     parl.add(val);
@@ -740,11 +718,12 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Get named parameter from prop
    *
-   * @param prop
-   * @param name
+   * @param prop property
+   * @param name parameter
    * @return Parameter
    */
-  private static Parameter getIcalParameter(final Property prop, final String name) {
+  private static Parameter getIcalParameter(final Property prop,
+                                            final String name) {
     ParameterList parl =  prop.getParameters();
 
     if (parl == null) {
@@ -756,7 +735,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Return the timezone id if it is set for the property.
    *
-   * @param val
+   * @param val date property
    * @return String tzid or null.
    */
   private static String getTzid(final DateProperty val) {
@@ -773,8 +752,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
   /* Init a date property for makeDtEnd, makeDue
    */
   private void initDateProp(final DateProperty dt,
-                            final TimeZoneRegistry tzreg) throws CalFacadeException {
-    try {
+                            final TimeZoneRegistry tzreg) {
       String tzid = getTzid();
 
       ParameterList pl = dt.getParameters();
@@ -787,13 +765,14 @@ public class BwDateTime extends DumpEntity<BwDateTime>
         dt.setTimeZone(tzreg.getTimeZone(tzid));
       }
 
+    try {
       dt.setValue(getDtval());
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    } catch (final ParseException pe) {
+      throw new RuntimeException(pe);
     }
   }
 
-  private BwDateTime addDuration(final Dur val) throws CalFacadeException {
+  private BwDateTime addDuration(final Dur val) {
     DtEnd dtEnd;
 
     java.util.Date endDt = val.getTime(makeDate());
@@ -843,7 +822,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Return true if this is before val
    *
-   * @param val
+   * @param val bw date time
    * @return boolean this before val
    */
   public boolean before(final BwDateTime val) {
@@ -852,7 +831,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Return true if this is after val
    *
-   * @param val
+   * @param val bw date time
    * @return boolean this after val
    */
   public boolean after(final BwDateTime val) {
@@ -992,5 +971,11 @@ public class BwDateTime extends DumpEntity<BwDateTime>
     sb.append("}");
 
     return sb.toString();
+  }
+
+  private void checkRuntimeException(Throwable t) {
+    if (t instanceof RuntimeException) {
+      throw (RuntimeException)t;
+    }
   }
 }

@@ -19,7 +19,6 @@
 package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 
@@ -43,12 +42,12 @@ public class BwEventObj extends BwEvent implements ScheduleMethods {
 
   /** Make a persistable freebusy request
    *
-   * @param start
-   * @param end
-   * @param organizer
-   * @param originator
-   * @param attendees
-   * @param recipients
+   * @param start bw start
+   * @param end bw end
+   * @param organizer possible organizer
+   * @param originator possible originator
+   * @param attendees possible attendees
+   * @param recipients possible recipients
    * @return event object
    */
   public static BwEvent makeFreeBusyRequest(final BwDateTime start,
@@ -86,12 +85,8 @@ public class BwEventObj extends BwEvent implements ScheduleMethods {
     fbreq.setDtstart(start);
     fbreq.setDtend(end);
     fbreq.setEndType(BwEvent.endTypeDate);
-    try {
-      fbreq.setDuration(BwDateTime.makeDuration(fbreq.getDtstart(),
-                                                fbreq.getDtend()).toString());
-    } catch (CalFacadeException e) {
-      return null;
-    }
+    fbreq.setDuration(BwDateTime.makeDuration(fbreq.getDtstart(),
+                                              fbreq.getDtend()).toString());
 
     fbreq.setEntityType(IcalDefs.entityTypeFreeAndBusy);
     fbreq.setRecipients(recipients);
@@ -107,6 +102,7 @@ public class BwEventObj extends BwEvent implements ScheduleMethods {
     return fbreq;
   }
 
+  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     final BwEventObj ev = new BwEventObj();

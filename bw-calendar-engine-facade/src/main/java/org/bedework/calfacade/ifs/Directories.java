@@ -295,9 +295,8 @@ public interface Directories extends Serializable {
    *
    * @param caladdr      calendar address
    * @return account or null if not caladdr for this system
-   * @throws CalFacadeException  for errors
    */
-  BwPrincipal caladdrToPrincipal(String caladdr) throws CalFacadeException;
+  BwPrincipal caladdrToPrincipal(String caladdr);
 
   /** Ensure we have something that looks like a valid calendar user address.
    * Could be a mailto: or a principal

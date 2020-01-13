@@ -21,7 +21,6 @@ package org.bedework.inoutsched;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calfacade.exc.CalFacadeStaleStateException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.AbstractScheduler;
@@ -40,6 +39,8 @@ import org.bedework.sysevents.events.EntityQueuedEvent;
 import org.bedework.sysevents.events.ScheduleUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.ScheduleMethods;
+
+import static org.bedework.util.misc.response.Response.Status.forbidden;
 
 /** Handles a queue of scheduling requests. We need to delay
  * processing until after the initiating request is processed. In addition,
@@ -216,7 +217,15 @@ public class InScheduler extends AbstractScheduler {
       final ProcessResult pr = proc.process(ei);
 
       if (debug()) {
-        debug("InSchedule " + pr.sr);
+        debug("InSchedule: " + pr);
+      }
+
+      if (pr.getStatus() == forbidden) {
+        try {
+          deleteEvent(ei, false, false);
+        } catch (final Throwable ignored) {
+        }
+        return ProcessMessageResult.FAILED_NORETRIES;
       }
 
       if (!pr.noInboxChange) {
@@ -229,18 +238,6 @@ public class InScheduler extends AbstractScheduler {
 
       //deleteEvent(ei, false, false);
       return ProcessMessageResult.PROCESSED;
-    } catch (final CalFacadeForbidden cff) {
-      if (debug()) {
-        debug("Forbidden exception" + cff);
-      }
-
-      if (ei != null) {
-        try {
-          deleteEvent(ei, false, false);
-        } catch (final Throwable ignored) {
-        }
-      }
-      return ProcessMessageResult.FAILED_NORETRIES;
     } catch (final CalFacadeStaleStateException csse) {
       if (debug()) {
         debug("Stale state exception");

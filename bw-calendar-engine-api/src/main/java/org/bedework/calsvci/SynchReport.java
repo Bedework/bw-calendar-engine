@@ -38,8 +38,8 @@ public class SynchReport {
   private String token;
 
   /**
-   * @param items
-   * @param token
+   * @param items set of SynchReportItem
+   * @param token sync token
    */
   public SynchReport(final Set<SynchReportItem> items,
                      final String token) {

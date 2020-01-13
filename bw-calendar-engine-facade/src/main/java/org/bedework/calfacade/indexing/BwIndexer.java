@@ -32,6 +32,7 @@ import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
+import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -526,6 +527,12 @@ public interface BwIndexer extends Serializable {
    */
   GetEntitiesResponse<BwGroup> fetchGroups(boolean admin);
 
+  /** Fetch all groups.
+   *
+   * @return status and List of groups
+   */
+  GetEntitiesResponse<BwAdminGroup> fetchAdminGroups();
+
   /** Fetch all groups of which href is a member.
    *
    * @param admin - true for admin groups
@@ -534,6 +541,13 @@ public interface BwIndexer extends Serializable {
    */
   GetEntitiesResponse<BwGroup> fetchGroups(boolean admin,
                                            String memberHref);
+
+  /** Fetch all admin groups of which href is a member.
+   *
+   * @param memberHref - of member
+   * @return status and List of groups
+   */
+  GetEntitiesResponse<BwAdminGroup> fetchAdminGroups(String memberHref);
 
   /** Find a preference owned by the given href.
    *

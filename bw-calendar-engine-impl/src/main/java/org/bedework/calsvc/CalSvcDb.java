@@ -237,9 +237,8 @@ public class CalSvcDb implements Logged, Serializable {
    * should only receive notifications when the actual data has been written.
    *
    * @param ev the event
-   * @throws CalFacadeException
    */
-  public void postNotification(final SysEvent ev) throws CalFacadeException {
+  public void postNotification(final SysEvent ev) {
     getSvc().postNotification(ev);
   }
 

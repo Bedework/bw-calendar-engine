@@ -1278,9 +1278,20 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
+  public Collection<BwAdminGroup> getAdminGroups() throws CalFacadeException {
+    return principalsAndPrefs.getAllGroups(false);
+  }
+
+  @Override
   public Collection<BwGroup> getGroups(final BwPrincipal val,
                                        final boolean admin) throws CalFacadeException {
     return principalsAndPrefs.getGroups(val, admin);
+  }
+
+  @Override
+  public Collection<BwAdminGroup> getAdminGroups(
+          final BwPrincipal val) throws CalFacadeException {
+    return principalsAndPrefs.getGroups(val, true);
   }
 
   /* ====================================================================

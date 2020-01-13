@@ -44,7 +44,7 @@ public class SchedAttendeeUpdate extends SchedProcessor {
   }
 
   @Override
-  public SchedProcResult process(final EventInfo ei) throws CalFacadeException {
+  public SchedProcResult process(final EventInfo ei) {
     final SchedProcResult pr = new SchedProcResult();
 
     pr.sr = attendeeRespond(ei, Icalendar.methodTypeReply);
@@ -52,7 +52,7 @@ public class SchedAttendeeUpdate extends SchedProcessor {
   }
 
   private ScheduleResult attendeeRespond(final EventInfo ei,
-                                         final int method) throws CalFacadeException {
+                                         final int method) {
     ScheduleResult sr = new ScheduleResult();
     final BwEvent ev = ei.getEvent();
     final SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
@@ -75,9 +75,9 @@ public class SchedAttendeeUpdate extends SchedProcessor {
 
       if (ei.getNumOverrides() > 0) {
         for (final EventInfo oei: ei.getOverrides()) {
-          att = oei.getEvent().findAttendee(attUri);
+          final BwAttendee oatt = oei.getEvent().findAttendee(attUri);
 
-          if (att == null) {
+          if (oatt == null) {
             sr.errorCode = CalFacadeException.schedulingNotAttendee;
             break check;
           }
@@ -108,11 +108,18 @@ public class SchedAttendeeUpdate extends SchedProcessor {
       //}
 
       outEv.addRecipient(outEv.getOrganizer().getOrganizerUri());
-      outEv.setOriginator(att.getAttendeeUri());
+      outEv.setOriginator(attUri);
       outEv.updateDtstamp();
       outEv.getOrganizer().setDtstamp(outEv.getDtstamp());
 
-      final String delegate = att.getDelegatedTo();
+      final String delegate;
+
+      if (att == null) {
+        delegate = null;
+      } else {
+        delegate = att.getDelegatedTo();
+      }
+
       if (delegate != null) {
         /* RFC 2446 4.2.5 - Delegating an event
          *
@@ -165,18 +172,25 @@ public class SchedAttendeeUpdate extends SchedProcessor {
         att.setDelegatedTo(delegate);
 
         // XXX Not sure if this is correct
-        sched.schedule(delegateEi, 
-                       null, null, false);
+        try {
+          sched.schedule(delegateEi,
+                         null, null, false);
+        } catch (CalFacadeException cfe) {
+          if (sr.errorCode == null) {
+            sr.errorCode = cfe.getMessage();
+          }
+          return sr;
+        }
       } else if (method == Icalendar.methodTypeReply) {
         // Only attendee should be us
 
-        ei.setOnlyAttendee(outEi, att.getAttendeeUri());
+        ei.setOnlyAttendee(outEi, attUri);
 
         outEv.setScheduleMethod(Icalendar.methodTypeReply);
       } else if (method == Icalendar.methodTypeCounter) {
         // Only attendee should be us
 
-        ei.setOnlyAttendee(outEi, att.getAttendeeUri());
+        ei.setOnlyAttendee(outEi, attUri);
 
         /* Not sure how much we can change - at least times of the meeting.
          */
@@ -187,7 +201,14 @@ public class SchedAttendeeUpdate extends SchedProcessor {
 
       outEv.addRequestStatus(new BwRequestStatus(IcalDefs.requestStatusSuccess.getCode(),
                                                  IcalDefs.requestStatusSuccess.getDescription()));
-      sr = sched.scheduleResponse(outEi);
+      try {
+        sr = sched.scheduleResponse(outEi);
+      } catch (CalFacadeException cfe) {
+        if (sr.errorCode == null) {
+          sr.errorCode = cfe.getMessage();
+        }
+        return sr;
+      }
       outEv.setScheduleState(BwEvent.scheduleStateProcessed);
       ev.getOrganizer().setScheduleStatus(IcalDefs.deliveryStatusDelivered);
     }

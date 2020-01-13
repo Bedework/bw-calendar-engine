@@ -19,7 +19,6 @@
 package org.bedework.inoutsched.processors;
 
 import org.bedework.calfacade.ScheduleResult;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.CalSvcDb;
 import org.bedework.calsvci.CalSvcI;
@@ -30,7 +29,7 @@ import org.bedework.calsvci.CalSvcI;
  */
 public abstract class SchedProcessor extends CalSvcDb {
   /**
-   * @param svci
+   * @param svci interface
    */
   public SchedProcessor(final CalSvcI svci) {
     super(null);
@@ -56,7 +55,6 @@ public abstract class SchedProcessor extends CalSvcDb {
   /**
    * @param ei - the originating event
    * @return ProcessResult
-   * @throws CalFacadeException
    */
-  public abstract SchedProcResult process(final EventInfo ei) throws CalFacadeException;
+  public abstract SchedProcResult process(final EventInfo ei);
 }

@@ -289,9 +289,8 @@ public interface EventsI extends Serializable {
   /** Claim ownership of this event
    *
    * @param ev  event
-   * @throws CalFacadeException on error
    */
-  void claim(BwEvent ev) throws CalFacadeException;
+  void claim(BwEvent ev);
 
   class RealiasResult extends Response {
     private final Set<BwCategory> cats;

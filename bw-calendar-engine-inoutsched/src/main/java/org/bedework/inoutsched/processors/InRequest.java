@@ -66,14 +66,14 @@ import java.util.Set;
  */
 public class InRequest extends InProcessor {
   /**
-   * @param svci
+   * @param svci interface
    */
   public InRequest(final CalSvcI svci) {
     super(svci);
   }
 
   /**
-   * @param ei
+   * @param ei request
    * @return ScheduleResult
    * @throws CalFacadeException
    */
@@ -102,7 +102,7 @@ public class InRequest extends InProcessor {
 
     String uri = getSvc().getDirectories().principalToCaladdr(getSvc().getPrincipal());
     String colPath = null;
-    EventInfo ourCopy = null;
+    EventInfo ourCopy;
     boolean adding = false;
 
     ev.setAttendeeSchedulingObject(true);
@@ -264,7 +264,7 @@ public class InRequest extends InProcessor {
     BwOrganizer org = new BwOrganizer();
     org.setOrganizerUri(uri);
 
-    BwAttendee att = null;
+    BwAttendee att;
 
     BwEvent ourEvent = ourCopy.getEvent();
 
@@ -478,7 +478,7 @@ public class InRequest extends InProcessor {
     return true;
   }
 
-  private class RecurrenceInfo {
+  private static class RecurrenceInfo {
     Recurrence r;
     boolean busy;
 
@@ -489,8 +489,8 @@ public class InRequest extends InProcessor {
     }
   }
 
-  private class RecurInfo {
-    List<RecurrenceInfo> ris = new ArrayList<RecurrenceInfo>();
+  private static class RecurInfo {
+    List<RecurrenceInfo> ris = new ArrayList<>();
     int availCt;
     int busyCt;
 
@@ -602,10 +602,11 @@ public class InRequest extends InProcessor {
     return calEi;
   }
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private boolean initAttendeeCopy(final CalSvcI svci,
                                    final String newColPath,
                                    final BwEvent ev,
-                                   final String uri) throws CalFacadeException {
+                                   final String uri) {
     ev.setColPath(newColPath);
 
     ev.setAttendeeSchedulingObject(true);
@@ -840,7 +841,7 @@ public class InRequest extends InProcessor {
   }
 
   private EventInfo findOverride(final EventInfo ei,
-                                 final String recurrenceId) throws CalFacadeException {
+                                 final String recurrenceId) {
     final EventInfo ovei = ei.findOverride(recurrenceId);
 
     if (ovei.getEvent().unsaved()) {
@@ -858,7 +859,7 @@ public class InRequest extends InProcessor {
     return ovei;
   }
 
-  private Collection<Recurrence> getRecurrences(final EventInfo ei) throws CalFacadeException {
+  private Collection<Recurrence> getRecurrences(final EventInfo ei) {
     AuthProperties authpars = getSvc().getAuthProperties();
     int maxYears = authpars.getMaxYears();
     int maxInstances = authpars.getMaxInstances();

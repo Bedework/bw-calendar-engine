@@ -31,7 +31,7 @@ import org.bedework.util.misc.ToString;
  *  @version 1.0
  */
 @Dump(elementName="authuser", keyFields={"user"})
-public class BwAuthUser extends BwDbentity {
+public class BwAuthUser extends BwDbentity<BwAuthUser> {
   protected String userHref;  // Related user entry href
 
   protected BwAuthUserPrefs prefs;  // Related user prefs entry

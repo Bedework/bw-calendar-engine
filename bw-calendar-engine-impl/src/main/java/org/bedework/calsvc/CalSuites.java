@@ -86,7 +86,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
   }
 
   @Override
-  public void set(final BwCalSuiteWrapper val) throws CalFacadeException {
+  public void set(final BwCalSuiteWrapper val) {
     currentCalSuite = val;
   }
 

@@ -40,10 +40,10 @@ public interface SchedulingIntf extends SchedulingI {
    *
    * <p>If we want to cancel we send cancels.
    *
-   * @param ei
+   * @param ei event to schedule
    * @param noInvites - suppresses the sending of invitations. Does NOT suppress the
    *               sending of CANCEL to disinvited attendees
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   void implicitSchedule(EventInfo ei,
                         boolean noInvites)
@@ -61,21 +61,20 @@ public interface SchedulingIntf extends SchedulingI {
    * <p>For the case that an attendee has been added we should remove any rules
    * and add RDATES for all instances in which the attendee is present.
    *
-   * @param ei
-   * @param owner
+   * @param ei to copy
+   * @param owner of new event
    * @return a copy of the event.
-   * @throws CalFacadeException
    */
-  public EventInfo copyEventInfo(EventInfo ei,
-                                 BwPrincipal owner) throws CalFacadeException;
+  EventInfo copyEventInfo(EventInfo ei,
+                          BwPrincipal owner);
 
   /** Save the event which is all set up except for the name. If we get a
    * conflict we add a suffix and try again
    *
-   * @param ei
-   * @param namePrefix
-   * @param calType
-   * @param noInvites
+   * @param ei to add
+   * @param namePrefix for name
+   * @param calType type
+   * @param noInvites true for send no invites
    * @return null if added, error code otherwise
    */
   Response addEvent(EventInfo ei,

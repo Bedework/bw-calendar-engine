@@ -105,12 +105,9 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
           /* Needs to be sent to an external destination. Add it
            * to the list of inboxes for that host.
            */
-          Collection<UserInbox> inboxes = hostMap.get(ui.getHost().getHostname());
-
-          if (inboxes == null) {
-            inboxes = new ArrayList<>();
-            hostMap.put(ui.getHost().getHostname(), inboxes);
-          }
+          Collection<UserInbox> inboxes = hostMap
+                  .computeIfAbsent(ui.getHost().getHostname(),
+                                   k -> new ArrayList<>());
 
           inboxes.add(ui);
 
@@ -256,7 +253,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
 
         if (cres <= 0) {
           // Discard the new one
-          return null;
+          return Response.ok();
         }
 
         /* Discard the earlier message */

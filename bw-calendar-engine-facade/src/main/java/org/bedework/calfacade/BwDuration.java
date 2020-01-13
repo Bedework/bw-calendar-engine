@@ -19,8 +19,6 @@
 
 package org.bedework.calfacade;
 
-import org.bedework.calfacade.exc.CalFacadeException;
-
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.property.Duration;
 
@@ -156,9 +154,8 @@ public class BwDuration implements Serializable {
    *
    * @param val    String
    * @return BwDuration
-   * @throws CalFacadeException
    */
-  public static BwDuration makeDuration(final String val) throws CalFacadeException {
+  public static BwDuration makeDuration(final String val) {
     BwDuration db = new BwDuration();
 
     populate(db, val);
@@ -170,9 +167,8 @@ public class BwDuration implements Serializable {
    *
    * @param db    BwDuration
    * @param val   String value
-   * @throws CalFacadeException
    */
-  public static void populate(final BwDuration db, final String val) throws CalFacadeException {
+  public static void populate(final BwDuration db, final String val) {
     try {
       if (val == null) {
         return;
@@ -192,7 +188,7 @@ public class BwDuration implements Serializable {
       db.setSeconds(d.getSeconds());
       db.setNegative(d.isNegative());
     } catch (Throwable t) {
-      throw new CalFacadeException("Invalid duration");
+      throw new RuntimeException("Invalid duration");
     }
   }
 
@@ -250,17 +246,18 @@ public class BwDuration implements Serializable {
         sb.append("D");
       }
 
-      boolean addedT = false;
-
-      addedT = addTimeComponent(sb, getHours(), "H", addedT);
+      var addedT = addTimeComponent(sb, getHours(), "H", false);
       addedT = addTimeComponent(sb, getMinutes(), "M", addedT);
-      addedT = addTimeComponent(sb, getSeconds(), "S", addedT);
+      addTimeComponent(sb, getSeconds(), "S", addedT);
     }
 
     return sb.toString();
   }
 
-  private boolean addTimeComponent(final StringBuffer sb, final int val, final String flag, boolean addedT) {
+  private boolean addTimeComponent(final StringBuffer sb,
+                                   final int val,
+                                   final String flag,
+                                   boolean addedT) {
     if (val == 0) {
       return addedT;
     }

@@ -69,27 +69,22 @@ public abstract class SchedulingBase extends CalSvcDb
   /** Add an entry to the queue
   *
   * @param inBox - true if it's an inbox event (inbound)
-  * @param principalHref
-  * @param eventName
+  * @param principalHref identify principal
+  * @param eventName name of event
   */
   protected void addAutoScheduleMessage(final boolean inBox,
                                         final String principalHref,
                                         final String eventName) {
-    try {
-      postNotification(
-               SysEvent.makeEntityQueuedEvent(SysEvent.SysCode.SCHEDULE_QUEUED,
-                                              principalHref,
-                                              eventName,
-                                              inBox));
-    } catch (Throwable t) {
-      error(t);
-      throw new RuntimeException(t);
-    }
+    postNotification(
+            SysEvent.makeEntityQueuedEvent(SysEvent.SysCode.SCHEDULE_QUEUED,
+                                           principalHref,
+                                           eventName,
+                                           inBox));
   }
 
   /** Return true if there is a significant change for the entity or any overrides
    *
-   * @param ei
+   * @param ei EventInfo
    * @return true if something important changed
    */
   protected boolean significantChange(final EventInfo ei) {
@@ -126,8 +121,8 @@ public abstract class SchedulingBase extends CalSvcDb
    * <p>For the case that an attendee has been added we should remove any rules
    * and add RDATES for all instances in which the attendee is present.
    *
-   * @param ei
-   * @param owner
+   * @param ei EventInfo
+   * @param owner BwPrincipal
    * @return a copy of the event.
    */
   @Override
@@ -139,9 +134,9 @@ public abstract class SchedulingBase extends CalSvcDb
   /** Same as copyEventInfo(EventInfo, BwPrincipal) except it only copies
    * significant changes.
    *
-   * @param ei
-   * @param significantChangesOnly
-   * @param owner
+   * @param ei event to copy
+   * @param significantChangesOnly true to copy only significant
+   * @param owner for new event
    * @return a copy of the event.
    */
   protected EventInfo copyEventInfo(final EventInfo ei,
@@ -213,7 +208,7 @@ public abstract class SchedulingBase extends CalSvcDb
      * of the master event.
      */
     boolean masterSuppressed = false;
-    boolean significant = ei.getChangeset(getPrincipalHref()).getSignificantChange();
+    boolean significant;
 
     if (fromOrganizer && !attendeeInMaster) {
       masterSuppressed = true;
@@ -224,11 +219,9 @@ public abstract class SchedulingBase extends CalSvcDb
     if (masterSuppressed) {
       // Attendee will appear in overrides. Remove rules and r/exdates
       if (!Util.isEmpty(ei.getUpdResult().deletedInstances)) {
-        deletedRecurids = new ArrayList<>();
 
-        for (final String rid: ei.getUpdResult().deletedInstances) {
-          deletedRecurids.add(rid);
-        }
+        deletedRecurids =
+                new ArrayList<>(ei.getUpdResult().deletedInstances);
       }
 
       if (newEv.getRrules() != null) {
@@ -521,11 +514,11 @@ public abstract class SchedulingBase extends CalSvcDb
 
   /** Find the attendee in this event which corresponds to the current user
    *
-   * @param ev
+   * @param ev to search
    * @return attendee or null.
    * @throws CalFacadeException
    */
-  protected BwAttendee findUserAttendee(final BwEvent ev) throws CalFacadeException {
+  protected BwAttendee findUserAttendee(final BwEvent ev) {
     Directories dir = getSvc().getDirectories();
     String thisPref = getPrincipal().getPrincipalRef();
 

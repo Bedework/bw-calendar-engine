@@ -52,7 +52,7 @@ import static org.bedework.calfacade.BwEventProperty.statusDeleted;
  *
  * @param <T> type of property, Location, contact etc.
  */
-public abstract class EventPropertiesImpl<T extends BwEventProperty>
+public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
         extends CalSvcDb implements EventProperties<T>, PrivilegeDefs {
   /* We'll cache lists of entities by principal href - flushing them
     every so often.
@@ -294,7 +294,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
   public void update(final T val) throws CalFacadeException {
     if ((val.getCreatorHref() == null) ||
         (val.getOwnerHref() == null)) {
-      throw new CalFacadeException("Owner and creator must be set");
+      throw new RuntimeException("Owner and creator must be set");
     }
 
     if (check(val) == null) {
@@ -660,7 +660,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty>
       return true;
     }
 
-    BwShareableDbentity ent = (BwShareableDbentity)o;
+    BwShareableDbentity<?> ent = (BwShareableDbentity<?>)o;
 
     if (adminCanEditAllPublic ||
             ent.getCreatorHref().equals(getPrincipal().getPrincipalRef())) {

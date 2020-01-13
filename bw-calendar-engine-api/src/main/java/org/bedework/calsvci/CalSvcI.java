@@ -157,8 +157,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    *
    *
    * <p>
-   * @param domain
-   * @param service
+   * @param domain e.g. example.org
+   * @param service name
    * @return key, empty key object or null.
    * @throws CalFacadeException
    */
@@ -232,9 +232,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Send a notification event
    *
    * @param ev - system event
-   * @throws CalFacadeException
    */
-  public abstract void postNotification(SysEventBase ev) throws CalFacadeException;
+  public abstract void postNotification(SysEventBase ev);
 
   /** Flush any backend data we may be hanging on to ready for a new
    * sequence of interactions. This is intended to help with web based
@@ -319,18 +318,18 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
 
   /** Call to reassociate an entity with the current database session
    *
-   * @param val
+   * @param val to reattach
    * @throws CalFacadeException
    */
-  public abstract void reAttach(BwDbentity val) throws CalFacadeException;
+  public abstract void reAttach(BwDbentity<?> val) throws CalFacadeException;
 
   /** Call to merge an entity with the current database session
    *
-   * @param val
+   * @param val to merge
    * @return - merged entity
    * @throws CalFacadeException
    */
-  public abstract BwUnversionedDbentity merge(BwUnversionedDbentity val) throws CalFacadeException;
+  public abstract BwUnversionedDbentity<?> merge(BwUnversionedDbentity<?> val) throws CalFacadeException;
 
   /**
    * @return IcalCallback for ical
@@ -429,12 +428,12 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * @param entity may influence choice of indexer
    * @return BwIndexer
    */
-  public abstract BwIndexer getIndexer(BwOwnedDbentity entity);
+  public abstract BwIndexer getIndexer(BwOwnedDbentity<?> entity);
 
   /** .
    *
-   * @param principal
-   * @param docType
+   * @param principal href
+   * @param docType document type
    * @return the indexer
    */
   public abstract BwIndexer getIndexerForReindex(String principal,
@@ -579,13 +578,12 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
 
   /**
    * @return System limit or user overrride - bytes.
-   * @throws CalFacadeException
    */
-  public abstract long getUserMaxEntitySize() throws CalFacadeException;
+  public abstract long getUserMaxEntitySize();
 
   /** Fetch the preferences for the given principal href.
    *
-   * @param principalHref
+   * @param principalHref href
    * @return the preferences for the principal
    * @throws CalFacadeException
    */
@@ -600,10 +598,10 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
 
   /** Remove any refs to this object
    *
-   * @param val
+   * @param val shareable entity
    * @throws CalFacadeException
    */
-  public abstract void removeFromAllPrefs(final BwShareableDbentity val) throws CalFacadeException;
+  public abstract void removeFromAllPrefs(final BwShareableDbentity<?> val) throws CalFacadeException;
 
   /* ====================================================================
    *                       groups
@@ -634,7 +632,7 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * @param replaceAll true to replace the entire access list.
    * @throws CalFacadeException
    */
-  public abstract void changeAccess(BwShareableDbentity ent,
+  public abstract void changeAccess(BwShareableDbentity<?> ent,
                                     Collection<Ace> aces,
                                     boolean replaceAll) throws CalFacadeException;
 
@@ -644,19 +642,19 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * @param who      AceWho
    * @throws CalFacadeException
    */
-  public abstract void defaultAccess(BwShareableDbentity ent,
+  public abstract void defaultAccess(BwShareableDbentity<?> ent,
                                      AceWho who) throws CalFacadeException;
 
   /** Check the access for the given entity. Returns the current access
    * or null or optionally throws a no access exception.
    *
-   * @param ent
-   * @param desiredAccess
-   * @param returnResult
+   * @param ent the entity
+   * @param desiredAccess access we want
+   * @param returnResult true to return a result even if no access
    * @return CurrentAccess
    * @throws CalFacadeException if returnResult false and no access
    */
-  public abstract CurrentAccess checkAccess(BwShareableDbentity ent,
+  public abstract CurrentAccess checkAccess(BwShareableDbentity<?> ent,
                                             int desiredAccess,
                                             boolean returnResult)
                                                 throws CalFacadeException;
@@ -666,10 +664,10 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * ==================================================================== */
 
   /**
-   * @param path
-   * @param token
+   * @param path to collection
+   * @param token from previous report or null
    * @param limit - negative for no limit on result set size
-   * @param recurse
+   * @param recurse true for effectively sync-level infinite
    * @return report
    * @throws CalFacadeException
    */

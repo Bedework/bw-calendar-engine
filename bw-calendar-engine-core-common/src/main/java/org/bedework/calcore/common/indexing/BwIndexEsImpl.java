@@ -2076,7 +2076,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     final List<EventInfo> eis =
             fetchEntities(docTypeEvent,
-                          new BuildEntity<EventInfo>() {
+                          new BuildEntity<>() {
                             @Override
                             EventInfo make(final EntityBuilder eb,
                                            final String id)
@@ -2394,6 +2394,31 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
+  public GetEntitiesResponse<BwAdminGroup> fetchAdminGroups() {
+    final QueryBuilder qb = getFilters(null).allGroupsQuery(true);
+    final GetEntitiesResponse<BwAdminGroup> resp = new GetEntitiesResponse<>();
+
+    try {
+
+      resp.setEntities(fetchEntities(docTypePrincipal,
+                                     new BuildEntity<>() {
+                                       @Override
+                                       BwAdminGroup make(final EntityBuilder eb,
+                                                    final String id)
+                                               throws CalFacadeException {
+                                         return (BwAdminGroup)eb.makePrincipal();
+                                       }
+                                     },
+                                     qb,
+                                     -1));
+
+      return Response.ok(resp, null);
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
+  }
+
+  @Override
   public GetEntitiesResponse<BwGroup> fetchGroups(final boolean admin,
                                                   final String memberHref) {
     final QueryBuilder qb = getFilters(null).allGroupsQuery(admin,
@@ -2409,6 +2434,33 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                                     final String id)
                                                throws CalFacadeException {
                                          return (BwGroup)eb.makePrincipal();
+                                       }
+                                     },
+                                     qb,
+                                     -1));
+
+      return Response.ok(resp, null);
+    } catch (final Throwable t) {
+      return Response.error(resp, t);
+    }
+  }
+
+  @Override
+  public GetEntitiesResponse<BwAdminGroup> fetchAdminGroups(final String memberHref) {
+    final QueryBuilder qb = getFilters(null).allGroupsQuery(true,
+                                                            memberHref);
+    final GetEntitiesResponse<BwAdminGroup> resp =
+            new GetEntitiesResponse<>();
+
+    try {
+
+      resp.setEntities(fetchEntities(docTypePrincipal,
+                                     new BuildEntity<>() {
+                                       @Override
+                                       BwAdminGroup make(final EntityBuilder eb,
+                                                    final String id)
+                                               throws CalFacadeException {
+                                         return (BwAdminGroup)eb.makePrincipal();
                                        }
                                      },
                                      qb,

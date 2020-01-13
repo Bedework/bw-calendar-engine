@@ -19,7 +19,6 @@
 package org.bedework.calsvc;
 
 import org.bedework.access.AccessPrincipal;
-import org.bedework.access.CurrentAccess;
 import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI.UpdateEventResult;
@@ -108,12 +107,12 @@ import javax.xml.ws.Holder;
 
 import static net.fortuna.ical4j.model.Property.CALENDAR_ADDRESS;
 import static org.bedework.calcorei.CoreCalendarsI.GetSpecialCalendarResult;
+import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 import static org.bedework.util.misc.response.Response.Status.failed;
 import static org.bedework.util.misc.response.Response.Status.limitExceeded;
 import static org.bedework.util.misc.response.Response.Status.noAccess;
-import static org.bedework.calsvci.EventsI.SetEntityCategoriesResult.success;
 
-/** This acts as an interface to the database for subscriptions.
+/** This class handles fetching and updates of events.
  *
  * @author Mike Douglass       douglm - rpi.edu
  */
@@ -131,11 +130,7 @@ class Events extends CalSvcDb implements EventsI {
     Collection<EventInfo> res = postProcess(getCal().getEvent(colPath,
                                                               guid));
 
-    int num = 0;
-
-    if (res != null) {
-      num = res.size();
-    }
+    int num = res.size();
 
     if (num == 0) {
       return res;
@@ -156,22 +151,19 @@ class Events extends CalSvcDb implements EventsI {
     }
 
     if (num > 1) {
-      throw new CalFacadeException("cannot return rid for multiple events");
+      throw new RuntimeException("cannot return rid for multiple events");
     }
 
     final Collection<EventInfo> eis = new ArrayList<>();
 
-    final EventInfo ei = makeInstance(res.iterator().next(), recurrenceId);
+    eis.add(makeInstance(res.iterator().next(),
+                         recurrenceId));
 
-    if (ei != null) {
-      eis.add(ei);
-    }
     return eis;
   }
 
   private Collection<EventInfo> processExpanded(final Collection<EventInfo> events,
-                                                final RecurringRetrievalMode recurRetrieval)
-          throws CalFacadeException {
+                                                final RecurringRetrievalMode recurRetrieval) {
     Collection<EventInfo> res = new ArrayList<>();
 
     for (EventInfo ei: events) {
@@ -182,7 +174,7 @@ class Events extends CalSvcDb implements EventsI {
         continue;
       }
 
-      CurrentAccess ca = ei.getCurrentAccess();
+      var ca = ei.getCurrentAccess();
       Set<EventInfo> oveis = ei.getOverrides();
 
       if (!Util.isEmpty(oveis)) {
@@ -226,7 +218,7 @@ class Events extends CalSvcDb implements EventsI {
         ann.setMaster(ev);
         final BwEvent proxy = new BwEventProxy(ann);
         final EventInfo oei = new EventInfo(proxy);
-        oei.setCurrentAccess(ei.getCurrentAccess());
+        oei.setCurrentAccess(ca);
         oei.setRetrievedEvent(ei);
 
         res.add(oei);
@@ -237,8 +229,7 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   private EventInfo makeInstance(final EventInfo ei,
-                                 final String recurrenceId)
-          throws CalFacadeException {
+                                 final String recurrenceId) {
     final BwEvent ev = ei.getEvent();
 
     if (!ev.getRecurring()) {
@@ -266,13 +257,11 @@ class Events extends CalSvcDb implements EventsI {
                                          recurrenceId.substring(0, 8),
                                          null);
     } else {
-      final String stzid = ev.getDtstart().getTzid();
-
-      DateTime dt = null;
+      DateTime dt;
       try {
         dt = new DateTime(recurrenceId);
       } catch (final ParseException pe) {
-        throw new CalFacadeException(pe);
+        throw new RuntimeException(pe);
       }
       final DtStart ds = ev.getDtstart().makeDtStart();
       dt.setTimeZone(ds.getTimeZone());
@@ -491,9 +480,12 @@ class Events extends CalSvcDb implements EventsI {
 
       BwCalendar cal = validate(event, true, schedulingInbox, 
                                 autoCreateCollection);
+      if (cal == null) {
+        throw new RuntimeException("No calendar for event");
+      }
 
-      BwEventProxy proxy = null;
-      BwEvent override = null;
+      BwEventProxy proxy;
+      BwEvent override;
 
       if (event instanceof BwEventProxy) {
         proxy = (BwEventProxy)event;
@@ -707,6 +699,10 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       final BwCalendar cal = validate(event, false, false, false);
+      if (cal == null) {
+        throw new RuntimeException("No calendar for event");
+      }
+
       adjustEntities(ei);
 
       final RealiasResult raResp = reAlias(event);
@@ -1137,7 +1133,7 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   @Override
-  public void claim(final BwEvent ev) throws CalFacadeException {
+  public void claim(final BwEvent ev) {
     ev.setOwnerHref(null);
     ev.setCreatorHref(null);
     setupSharableEntity(ev, getPrincipal().getPrincipalRef());
@@ -1380,6 +1376,7 @@ class Events extends CalSvcDb implements EventsI {
    *                   Package private methods
    * ==================================================================== */
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   boolean updateEntities(final UpdateResult updResult,
                          final BwEvent event) {
     final EventProperties<BwCategory> cathdlr = getSvc().getCategoriesHandler();
@@ -1491,7 +1488,7 @@ class Events extends CalSvcDb implements EventsI {
     if (cals != null) {
       /* Turn the calendar reference into a set of calendar collections
        */
-      calSet = new ArrayList<BwCalendar>();
+      calSet = new ArrayList<>();
 
       for (BwCalendar cal:cals) {
         buildCalendarSet(calSet, cal, freeBusy);
@@ -1520,9 +1517,9 @@ class Events extends CalSvcDb implements EventsI {
 
   /** Method which allows us to flag it as a scheduling action
   *
-   * @param ei
+   * @param ei event to be deleted
    * @param scheduling - true for the scheduling system deleting in/outbox events
-   * @param sendSchedulingMessage
+   * @param sendSchedulingMessage true to send invites etc
    * @return boolean
    * @throws CalFacadeException
    */
@@ -1614,10 +1611,9 @@ class Events extends CalSvcDb implements EventsI {
 
   /** Ensure that all referenced are the persistent versions.
    *
-   * @param event
-   * @throws CalFacadeException
+   * @param event in question
    */
-  private void adjustEntities(final EventInfo event) throws CalFacadeException {
+  private void adjustEntities(final EventInfo event) {
   }
 
   private void buildCalendarSet(final Collection<BwCalendar> cals,
@@ -1651,7 +1647,7 @@ class Events extends CalSvcDb implements EventsI {
 
         if (calendar == null) {
           // No access presumably
-          saveColl.setLastRefreshStatus(String.valueOf(HttpServletResponse.SC_FORBIDDEN) +
+          saveColl.setLastRefreshStatus(HttpServletResponse.SC_FORBIDDEN +
           ": Forbidden");
           return;
         }
@@ -1756,7 +1752,7 @@ class Events extends CalSvcDb implements EventsI {
           calType = BwCalendar.calTypePoll;
           break;
         default:
-          return null;
+          throw new CalFacadeException(CalFacadeException.noEventCalendar);
       }
 
       final GetSpecialCalendarResult gscr =
@@ -1764,10 +1760,14 @@ class Events extends CalSvcDb implements EventsI {
                                           true,
                                           PrivilegeDefs.privAny);
 
+      if (gscr.cal == null) {
+        throw new CalFacadeException(CalFacadeException.noEventCalendar);
+      }
+
       col = gscr.cal;
     }
 
-    Preferences prefs = null;
+    Preferences prefs;
 
     if (getPars().getPublicAdmin() && !getPars().getService()) {
       prefs = (Preferences)getSvc().getPrefsHandler();
@@ -1955,7 +1955,7 @@ class Events extends CalSvcDb implements EventsI {
           continue;
         }
 
-        Participant groupVoter = null;
+        Participant groupVoter;
         CalendarAddress groupVoterCa = null;
         PropertyList pl = null;
 
@@ -2026,8 +2026,7 @@ class Events extends CalSvcDb implements EventsI {
     }
   }
 
-  private EventInfo postProcess(final CoreEventInfo cei)
-          throws CalFacadeException {
+  private EventInfo postProcess(final CoreEventInfo cei) {
     if (cei == null) {
       return null;
     }
@@ -2068,8 +2067,7 @@ class Events extends CalSvcDb implements EventsI {
     return ei;
   }
 
-  private Set<EventInfo> postProcess(final Collection<CoreEventInfo> ceis)
-          throws CalFacadeException {
+  private Set<EventInfo> postProcess(final Collection<CoreEventInfo> ceis) {
     TreeSet<EventInfo> eis = new TreeSet<>();
 
     for (CoreEventInfo cei: ceis) {
@@ -2173,11 +2171,10 @@ class Events extends CalSvcDb implements EventsI {
 
   /** Compile an alarm component
    *
-   * @param val
+   * @param val VALARM as a string
    * @return alarms or null
-   * @throws CalFacadeException
    */
-  public Set<BwAlarm> compileAlarms(final String val) throws CalFacadeException {
+  public Set<BwAlarm> compileAlarms(final String val) {
     try {
       StringReader sr = new StringReader(ValidateAlarmPrefix +
                                          val +

@@ -540,7 +540,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public void postNotification(final SysEventBase ev) throws CalFacadeException {
+  public void postNotification(final SysEventBase ev) {
     getCal().postNotification(ev);
   }
 
@@ -637,12 +637,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public void reAttach(final BwDbentity val) throws CalFacadeException {
+  public void reAttach(final BwDbentity<?> val) throws CalFacadeException {
     getCal().reAttach(val);
   }
 
   @Override
-  public BwUnversionedDbentity merge(final BwUnversionedDbentity val) throws CalFacadeException {
+  public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) throws CalFacadeException {
     if (val instanceof CalendarWrapper) {
       final CalendarWrapper w = (CalendarWrapper)val;
       w.putEntity((BwCalendar)getCal().merge(w.fetchEntity()));
@@ -870,7 +870,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public BwIndexer getIndexer(final BwOwnedDbentity entity) {
+  public BwIndexer getIndexer(final BwOwnedDbentity<?> entity) {
     return getCal().getIndexer(entity);
   }
 
@@ -1104,7 +1104,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public long getUserMaxEntitySize() throws CalFacadeException {
+  public long getUserMaxEntitySize() {
     long max = getPrefsHandler().get().getMaxEntitySize();
 
     if (max != 0) {
@@ -1124,7 +1124,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
    * ==================================================================== */
 
   @Override
-  public void removeFromAllPrefs(final BwShareableDbentity val) throws CalFacadeException {
+  public void removeFromAllPrefs(final BwShareableDbentity<?> val) throws CalFacadeException {
     getCal().removeFromAllPrefs(val);
   }
 
@@ -1143,7 +1143,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
    * ==================================================================== */
 
   @Override
-  public void changeAccess(BwShareableDbentity ent,
+  public void changeAccess(BwShareableDbentity<?> ent,
                            final Collection<Ace> aces,
                            final boolean replaceAll) throws CalFacadeException {
     if (ent instanceof BwCalSuiteWrapper) {
@@ -1173,12 +1173,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                                          null);
     } else if (ent instanceof BwEventProperty) {
       ((Preferences)getPrefsHandler()).updateAdminPrefs(false,
-                                                        (BwEventProperty)ent);
+                                                        (BwEventProperty<?>)ent);
     }
   }
 
   @Override
-  public void defaultAccess(BwShareableDbentity ent,
+  public void defaultAccess(BwShareableDbentity<?> ent,
                             final AceWho who) throws CalFacadeException {
     if (ent instanceof BwCalSuiteWrapper) {
       ent = ((BwCalSuiteWrapper)ent).fetchEntity();
@@ -1186,18 +1186,13 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     getCal().defaultAccess(ent, who);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#checkAccess(org.bedework.calfacade.base.BwShareableDbentity, int, boolean)
-   */
   @Override
-  public CurrentAccess checkAccess(final BwShareableDbentity ent, final int desiredAccess,
+  public CurrentAccess checkAccess(final BwShareableDbentity<?> ent,
+                                   final int desiredAccess,
                                    final boolean returnResult) throws CalFacadeException {
     return getCal().checkAccess(ent, desiredAccess, returnResult);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.CalSvcI#getSynchReport(java.lang.String, java.lang.String, int, boolean)
-   */
   @Override
   public SynchReport getSynchReport(final String path,
                                     final String token,

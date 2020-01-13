@@ -1473,11 +1473,42 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
+  public Collection<BwAdminGroup> getAdminGroups() throws CalFacadeException {
+    GetEntitiesResponse<BwAdminGroup> resp =
+            getIndexer(docTypePrincipal).fetchAdminGroups();
+
+    if (!resp.isOk()) {
+      throw new CalFacadeException(resp.getException());
+    }
+
+    if (resp.getEntities() == null) {
+      return Collections.emptyList();
+    }
+    return resp.getEntities();
+  }
+
+  @Override
   public Collection<BwGroup> getGroups(final BwPrincipal val,
                                        final boolean admin) throws CalFacadeException {
     GetEntitiesResponse<BwGroup> resp =
             getIndexer(docTypePrincipal).fetchGroups(admin,
                                                      val.getHref());
+
+    if (!resp.isOk()) {
+      throw new CalFacadeException(resp.getException());
+    }
+
+    if (resp.getEntities() == null) {
+      return Collections.emptyList();
+    }
+    return resp.getEntities();
+  }
+
+  @Override
+  public Collection<BwAdminGroup> getAdminGroups(
+          final BwPrincipal val) throws CalFacadeException {
+    GetEntitiesResponse<BwAdminGroup> resp =
+            getIndexer(docTypePrincipal).fetchAdminGroups(val.getHref());
 
     if (!resp.isOk()) {
       throw new CalFacadeException(resp.getException());

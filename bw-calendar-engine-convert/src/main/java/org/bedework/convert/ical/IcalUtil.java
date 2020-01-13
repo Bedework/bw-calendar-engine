@@ -26,9 +26,7 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.BwXproperty.Xpar;
-import org.bedework.calfacade.base.AbbreviatedValue;
 import org.bedework.calfacade.base.StartEndComponent;
-import org.bedework.calfacade.base.TypedUrl;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.svc.EventInfo;
@@ -55,7 +53,6 @@ import net.fortuna.ical4j.model.ParameterFactoryImpl;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
-import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.parameter.AltRep;
@@ -89,7 +86,10 @@ import net.fortuna.ical4j.model.property.Trigger;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.XProperty;
 
+import java.io.IOException;
 import java.io.StringReader;
+import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -103,35 +103,33 @@ import java.util.TreeSet;
  * @author Mike Douglass   douglm    rpi.edu
  */
 public class IcalUtil {
-  /**
-   * @param p
+  /* *
+   * @param p ical4j Property
    * @return AbbreviatedValue
-   */
+   * /
   public static AbbreviatedValue getAbbrevVal(final Property p) {
     ParameterList pars = p.getParameters();
 
     ParameterList abbrevPars = pars.getParameters(Parameter.ABBREV);
 
-    Collection<String> abbrevs = new ArrayList<String>();
+    Collection<String> abbrevs = new ArrayList<>();
 
-    Iterator it = abbrevPars.iterator();
+    Iterator<Parameter> it = abbrevPars.iterator();
     while (it.hasNext()) {
-      Parameter par = (Parameter)it.next();
+      Parameter par = it.next();
       abbrevs.add(par.getValue());
     }
 
     return new AbbreviatedValue(abbrevs, p.getValue());
-  }
+  }*/
 
   /**
-   * @param pl
-   * @param xprops
-   * @throws Throwable
+   * @param pl ical4j property list
+   * @param xprops list of bw xprops
    */
   @SuppressWarnings("deprecation")
   public static void xpropertiesToIcal(final PropertyList pl,
-                                       final List<BwXproperty> xprops)
-      throws Throwable {
+                                       final List<BwXproperty> xprops) {
     for (BwXproperty x: xprops) {
       String xname = x.getName();
 
@@ -144,7 +142,7 @@ public class IcalUtil {
         if (params.size() == 1) {
           params = null;
         } else {
-          params = new ArrayList<Xpar>(params);
+          params = new ArrayList<>(params);
           params.remove(0);
         }
 
@@ -168,11 +166,10 @@ public class IcalUtil {
   }
 
   /**
-   * @param pars
+   * @param pars List of Xpar
    * @return par list - always non-null
-   * @throws Throwable
    */
-  public static ParameterList makeXparlist(final List<BwXproperty.Xpar> pars) throws Throwable {
+  public static ParameterList makeXparlist(final List<BwXproperty.Xpar> pars) {
     ParameterList xparl = new ParameterList();
 
     if (pars == null) {
@@ -181,40 +178,45 @@ public class IcalUtil {
 
     for (BwXproperty.Xpar xpar: pars) {
       String xval = xpar.getValue();
-      if ((xval.indexOf(":") >= 0) ||
-          (xval.indexOf(";") >= 0) ||
-          (xval.indexOf(",") >= 0)) {
+      if ((xval.contains(":")) ||
+          (xval.contains(";")) ||
+          (xval.contains(","))) {
         xval = "\"" + xval + "\"";
       }
 
-      xparl.add(ParameterFactoryImpl.getInstance().createParameter(
-                           xpar.getName().toUpperCase(), xval));
+      try {
+        xparl.add(ParameterFactoryImpl
+                          .getInstance()
+                          .createParameter(xpar.getName().toUpperCase(),
+                                           xval));
+      } catch (URISyntaxException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     return xparl;
   }
 
   /**
-   * @param pl
-   * @param name
-   * @param pars
-   * @param val
-   * @throws Throwable
+   * @param pl ical4j PropertyList
+   * @param name of xprop
+   * @param pars List of Xpar
+   * @param val new value
    */
   public static void addXproperty(final PropertyList pl,
                                   final String name,
                                   final List<BwXproperty.Xpar> pars,
-                                  final String val) throws Throwable {
+                                  final String val) {
     if (val == null) {
       return;
     }
     pl.add(new XProperty(name, makeXparlist(pars), val));
   }
 
-  /**
-   * @param p
+  /* *
+   * @param p ical4j Property
    * @return TypedUrl
-   */
+   * /
   public static TypedUrl getTypedUrl(final Property p) {
     TypedUrl tu = new TypedUrl();
 
@@ -229,10 +231,10 @@ public class IcalUtil {
     tu.setValue(p.getValue());
 
     return tu;
-  }
+  }*/
 
   /**
-   * @param p
+   * @param p ical4j Property
    * @return String
    */
   public static String getLang(final Property p) {
@@ -248,66 +250,49 @@ public class IcalUtil {
   }
 
   /**
-   * @param p
-   * @return String
-   */
-  public static String getVenue(final Property p) {
-    ParameterList pars = p.getParameters();
-
-    Parameter par = pars.getParameter(Parameter.VVENUE);
-
-    if (par == null) {
-      return null;
-    }
-
-    return par.getValue();
-  }
-
-  /**
-   * @param val
+   * @param val bw organizer object
    * @return Organizer
-   * @throws Throwable
    */
-  public static Organizer setOrganizer(final BwOrganizer val) throws Throwable {
+  public static Organizer setOrganizer(final BwOrganizer val) {
     ParameterList pars = new ParameterList();
 
-    String temp = val.getScheduleStatus();
-    if (temp != null) {
-      pars.add(new ScheduleStatus(temp));
-    }
+    try {
+      String temp = val.getScheduleStatus();
+      if (temp != null) {
+        pars.add(new ScheduleStatus(temp));
+      }
 
-    temp = val.getCn();
-    if (temp != null) {
-      pars.add(new Cn(temp));
-    }
-    temp = val.getDir();
-    if (temp != null) {
-      pars.add(new Dir(temp));
-    }
-    temp = val.getLanguage();
-    if (temp != null) {
-      pars.add(new Language(temp));
-    }
-    temp = val.getSentBy();
-    if (temp != null) {
-      pars.add(new SentBy(temp));
-    }
+      temp = val.getCn();
+      if (temp != null) {
+        pars.add(new Cn(temp));
+      }
+      temp = val.getDir();
+      if (temp != null) {
+        pars.add(new Dir(temp));
+      }
+      temp = val.getLanguage();
+      if (temp != null) {
+        pars.add(new Language(temp));
+      }
+      temp = val.getSentBy();
+      if (temp != null) {
+        pars.add(new SentBy(temp));
+      }
 
-    Organizer prop = new Organizer(pars, val.getOrganizerUri());
-
-    return prop;
+      return new Organizer(pars, val.getOrganizerUri());
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /** Make an organizer
    *
    * @param cb          IcalCallback object
-   * @param orgProp
+   * @param orgProp ical4j Organizer
    * @return BwOrganizer
-   * @throws Throwable
    */
   public static BwOrganizer getOrganizer(final IcalCallback cb,
-                                         final Organizer orgProp)
-          throws Throwable {
+                                         final Organizer orgProp) {
     BwOrganizer org = new BwOrganizer();
 
     org.setOrganizerUri(cb.getCaladdr(orgProp.getValue()));
@@ -325,11 +310,10 @@ public class IcalUtil {
 
   /** make an attachment
    *
-   * @param val
+   * @param val bw attachment object
    * @return Attendee
-   * @throws Throwable
    */
-  public static Attach setAttachment(final BwAttachment val) throws Throwable {
+  public static Attach setAttachment(final BwAttachment val) {
     ParameterList pars = new ParameterList();
 
     String temp = val.getFmtType();
@@ -338,8 +322,10 @@ public class IcalUtil {
     }
 
     temp = val.getEncoding();
+    final String uri;
+
     if (temp == null) {
-      return new Attach(pars, val.getUri());
+      uri = val.getUri();
     } else {
       pars.add(new Encoding(temp));
 
@@ -348,12 +334,17 @@ public class IcalUtil {
         pars.add(new Value(temp));
       }
 
-      return new Attach(pars, val.getValue());
+      uri = val.getValue();
+    }
+    try {
+      return new Attach(pars, uri);
+    } catch (IOException | URISyntaxException e) {
+      throw new RuntimeException(e);
     }
   }
 
   /**
-   * @param attProp
+   * @param attProp Attach
    * @return BwAttachment
    */
   public static BwAttachment getAttachment(final Attach attProp) {
@@ -378,10 +369,14 @@ public class IcalUtil {
    *
    * @param val BwAttendee to build from
    * @return Attendee
-   * @throws Throwable
    */
-  public static Attendee setAttendee(final BwAttendee val) throws Throwable {
-    final Attendee prop = new Attendee(val.getAttendeeUri());
+  public static Attendee setAttendee(final BwAttendee val) {
+    final Attendee prop;
+    try {
+      prop = new Attendee(val.getAttendeeUri());
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
 
     final ParameterList pars = prop.getParameters();
 
@@ -401,14 +396,18 @@ public class IcalUtil {
    *
    * @param val BwAttendee to build from
    * @return Attendee
-   * @throws Throwable
    */
-  public static Participant setVoter(final BwAttendee val) throws Throwable {
+  public static Participant setVoter(final BwAttendee val) {
     final Participant part = new Participant();
 
     final PropertyList props = part.getProperties();
 
-    final CalendarAddress ca = new CalendarAddress(val.getAttendeeUri());
+    final CalendarAddress ca;
+    try {
+      ca = new CalendarAddress(val.getAttendeeUri());
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
     props.add(ca);
 
     final ParameterList pars = ca.getParameters();
@@ -430,9 +429,8 @@ public class IcalUtil {
   /**
    * @param poll the poll entity
    * @return Parsed PARTICPANT components map - key is voter cua.
-   * @throws Throwable
    */
-  public static Map<String, Participant> parseVpollVoters(final BwEvent poll) throws Throwable {
+  public static Map<String, Participant> parseVpollVoters(final BwEvent poll) {
     final StringBuilder sb = new StringBuilder();
 
     // Better if ical4j supported sub-component parsing
@@ -452,48 +450,46 @@ public class IcalUtil {
     sb.append("END:VPOLL\n");
     sb.append("END:VCALENDAR\n");
 
+    final StringReader sr = new StringReader(sb.toString());
+
+    final Icalendar ic = new Icalendar();
+
+    final CalendarBuilder bldr = new CalendarBuilder(new CalendarParserImpl(), ic);
+
+    final UnfoldingReader ufrdr = new UnfoldingReader(sr, true);
+
+    final Calendar ical;
     try {
-      final StringReader sr = new StringReader(sb.toString());
+      ical = bldr.build(ufrdr);
+    } catch (IOException | ParserException e) {
+      throw new RuntimeException(e);
+    }
 
-      final Icalendar ic = new Icalendar();
+    final Map<String, Participant> voters = new HashMap<>();
 
-      final CalendarBuilder bldr = new CalendarBuilder(new CalendarParserImpl(), ic);
+    /* Should be one vpoll object */
 
-      final UnfoldingReader ufrdr = new UnfoldingReader(sr, true);
+    final VPoll vpoll = (VPoll)ical.getComponent(Component.VPOLL);
+    for (final Object o: vpoll.getVoters()) {
+      final Participant voter = (Participant)o;
 
-      final Calendar ical = bldr.build(ufrdr);
-
-      final Map<String, Participant> voters = new HashMap<>();
-
-      /* Should be one vpoll object */
-
-      final VPoll vpoll = (VPoll)ical.getComponent(Component.VPOLL);
-      for (final Object o: vpoll.getVoters()) {
-        final Participant voter = (Participant)o;
-
-        final CalendarAddress ca =
-                (CalendarAddress)voter.getProperty(Property.CALENDAR_ADDRESS);
-        if (ca == null) {
-          continue;
-        }
-
-        voters.put(ca.getValue(), voter);
+      final CalendarAddress ca =
+              (CalendarAddress)voter.getProperty(Property.CALENDAR_ADDRESS);
+      if (ca == null) {
+        continue;
       }
 
-      return voters;
-    } catch (final ParserException pe) {
-      throw new IcalMalformedException(pe.getMessage());
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      voters.put(ca.getValue(), voter);
     }
+
+    return voters;
   }
 
   /**
    * @param poll the poll entity
    * @return Parsed components.
-   * @throws Throwable
    */
-  public static Map<Integer, Component> parseVpollCandidates(final BwEvent poll) throws Throwable {
+  public static Map<Integer, Component> parseVpollCandidates(final BwEvent poll) {
     final StringBuilder sb = new StringBuilder();
 
     sb.append("BEGIN:VCALENDAR\n");
@@ -533,17 +529,14 @@ public class IcalUtil {
       }
 
       return comps;
-    } catch (final ParserException pe) {
-      throw new IcalMalformedException(pe.getMessage());
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+    } catch (final ParserException | IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
-  /** make an attendee
+  /** copy pars from attendee
    *
-   * @param val
-   * @return Attendee
+   * @param val bw attendee
    */
   private static void setAttendeeVoter(final BwAttendee val,
                                        final ParameterList pars) {
@@ -602,12 +595,11 @@ public class IcalUtil {
 
   /**
    * @param cb          IcalCallback object
-   * @param attProp
+   * @param attProp ical4j attendee
    * @return BwAttendee
-   * @throws Throwable
    */
   public static BwAttendee getAttendee(final IcalCallback cb,
-                                       final Attendee attProp) throws Throwable {
+                                       final Attendee attProp) {
     ParameterList pars = attProp.getParameters();
 
     BwAttendee att = initAttendeeVoter(cb, attProp.getValue(),
@@ -627,10 +619,9 @@ public class IcalUtil {
    * @param cb          IcalCallback object
    * @param ca - identifies the voter
    * @return BwAttendee
-   * @throws Throwable
    */
   public static BwAttendee getVoter(final IcalCallback cb,
-                                    final CalendarAddress ca) throws Throwable {
+                                    final CalendarAddress ca) {
     ParameterList pars = ca.getParameters();
 
     BwAttendee att = initAttendeeVoter(cb, ca.getValue(),
@@ -640,7 +631,7 @@ public class IcalUtil {
 
     Parameter par = pars.getParameter("STAY-INFORMED");
     if (par != null) {
-      att.setStayInformed(((StayInformed)par).getStayInformed().booleanValue());
+      att.setStayInformed(((StayInformed)par).getStayInformed());
     }
 
     return att;
@@ -648,14 +639,13 @@ public class IcalUtil {
 
   /**
    * @param cb          IcalCallback object
-   * @param val
-   * @param pars
+   * @param val        init attendee
+   * @param pars        par list
    * @return BwAttendee
-   * @throws Throwable
    */
   public static BwAttendee initAttendeeVoter(final IcalCallback cb,
                                              final String val,
-                                             final ParameterList pars) throws Throwable {
+                                             final ParameterList pars) {
     BwAttendee att = new BwAttendee();
 
     att.setAttendeeUri(cb.getCaladdr(val));
@@ -672,26 +662,25 @@ public class IcalUtil {
 
     Parameter par = pars.getParameter("RSVP");
     if (par != null) {
-      att.setRsvp(((Rsvp)par).getRsvp().booleanValue());
+      att.setRsvp(((Rsvp)par).getRsvp());
     }
 
     return att;
   }
 
   /**
-   * @param pl
+   * @param pl ical4j property list
    * @param absentOk - if true and absent returns an empty result.
    * @return TriggerVal
-   * @throws Throwable
    */
   public static TriggerVal getTrigger(final PropertyList pl,
-                                      final boolean absentOk) throws Throwable {
+                                      final boolean absentOk) {
     Trigger prop = (Trigger)pl.getProperty(Property.TRIGGER);
     TriggerVal tr = new TriggerVal();
 
     if (prop == null) {
       if (!absentOk) {
-        throw new IcalMalformedException("Invalid alarm - no trigger");
+        throw new RuntimeException("Invalid alarm - no trigger");
       }
 
       return tr;
@@ -728,11 +717,10 @@ public class IcalUtil {
 
   /** Both or none appear once only
    *
-   * @param pl
+   * @param pl ical4j property list
    * @return DurationRepeat
-   * @throws Throwable
    */
-  public static DurationRepeat getDurationRepeat(final PropertyList pl) throws Throwable {
+  public static DurationRepeat getDurationRepeat(final PropertyList pl) {
     DurationRepeat dr = new DurationRepeat();
 
     Property prop = pl.getProperty(Property.DURATION);
@@ -744,7 +732,7 @@ public class IcalUtil {
 
     prop = pl.getProperty(Property.REPEAT);
     if (prop == null) {
-      throw new IcalMalformedException("Invalid alarm - no repeat");
+      throw new RuntimeException("Invalid alarm - no repeat");
     }
 
     dr.repeat = ((Repeat)prop).getCount();
@@ -753,7 +741,7 @@ public class IcalUtil {
   }
 
   /**
-   * @param val
+   * @param val ical4j DateListProperty
    * @return Collection
    */
   public static Collection<BwDateTime> makeDateTimes(final DateListProperty val) {
@@ -767,50 +755,53 @@ public class IcalUtil {
       tzidval = tzid.getValue();
     }
 
-    Iterator it = dl.iterator();
-    while (it.hasNext()) {
-      Date dt = (Date)it.next();
-
-      ts.add(BwDateTime.makeBwDateTime(isDateType, dt.toString(), tzidval));
+    for (final Date dt : dl) {
+      ts.add(BwDateTime.makeBwDateTime(isDateType,
+                                       dt.toString(),
+                                       tzidval));
     }
 
     return ts;
   }
 
-  /**
-   * @param cal
-   * @param comp
-   */
-  public static void addComponent(final Calendar cal, final Component comp) {
+  /* *
+   * @param cal ical4j calendar
+   * @param comp ical4j Component
+   * /
+  public static void addComponent(final Calendar cal,
+                                  final Component comp) {
     cal.getComponents().add((CalendarComponent)comp);
-  }
+  }*/
 
   /**
-   * @param comp
-   * @param val
+   * @param comp ical4j Component
+   * @param val ical4j property
    */
-  public static void addProperty(final Component comp, final Property val) {
+  public static void addProperty(final Component comp,
+                                 final Property val) {
     PropertyList props =  comp.getProperties();
 
     props.add(val);
   }
 
   /**
-   * @param prop
-   * @param val
+   * @param prop ical4j property
+   * @param val ical4j parameter
    */
-  public static void addParameter(final Property prop, final Parameter val) {
+  public static void addParameter(final Property prop,
+                                  final Parameter val) {
     ParameterList parl =  prop.getParameters();
 
     parl.add(val);
   }
 
   /**
-   * @param prop
-   * @param name
+   * @param prop ical4j property
+   * @param name of property
    * @return Parameter
    */
-  public static Parameter getParameter(final Property prop, final String name) {
+  public static Parameter getParameter(final Property prop,
+                                       final String name) {
     ParameterList parl =  prop.getParameters();
 
     if (parl == null) {
@@ -821,11 +812,12 @@ public class IcalUtil {
   }
 
   /**
-   * @param prop
-   * @param name
+   * @param prop ical4j property
+   * @param name of property
    * @return Parameter value
    */
-  public static String getParameterVal(final Property prop, final String name) {
+  public static String getParameterVal(final Property prop,
+                                       final String name) {
     ParameterList parl =  prop.getParameters();
 
     if (parl == null) {
@@ -842,26 +834,28 @@ public class IcalUtil {
   }
 
   /**
-   * @param comp
-   * @param name
+   * @param comp ical4j Component
+   * @param name of property
    * @return Property
    */
-  public static Property getProperty(final Component comp, final String name) {
+  public static Property getProperty(final Component comp,
+                                     final String name) {
     PropertyList props =  comp.getProperties();
 
     return props.getProperty(name);
   }
 
   /**
-   * @param comp
-   * @param name
+   * @param comp ical4j Component
+   * @param name of property
    * @return PropertyList
    */
-  public static PropertyList getProperties(final Component comp, final String name) {
+  public static PropertyList getProperties(final Component comp,
+                                           final String name) {
     PropertyList props =  comp.getProperties();
 
     props = props.getProperties(name);
-    if ((props != null) && (props.size() == 0)) {
+    if (props.size() == 0) {
       return null;
     }
 
@@ -870,16 +864,16 @@ public class IcalUtil {
 
   /** Return an Iterator over required String attributes
    *
-   * @param pl
-   * @param name
+   * @param pl ical4j property list
+   * @param name of property
    * @return Iterator over required String attributes
-   * @throws Throwable
    */
-  public static Iterator<?> getReqStrs(final PropertyList pl, final String name) throws Throwable {
+  public static Iterator<?> getReqStrs(final PropertyList pl,
+                                       final String name) {
    PropertyList props = pl.getProperties(name);
 
-   if ((props == null) || props.isEmpty()) {
-      throw new IcalMalformedException("Missing required property " + name);
+   if (props.isEmpty()) {
+      throw new RuntimeException("Missing required property " + name);
     }
 
     return props.iterator();
@@ -887,15 +881,15 @@ public class IcalUtil {
 
   /** Return required string property
    *
-   * @param pl
-   * @param name
+   * @param pl ical4j property list
+   * @param name of property
    * @return String
-   * @throws Throwable
    */
-  public static String getReqStr(final PropertyList pl, final String name) throws Throwable {
+  public static String getReqStr(final PropertyList pl,
+                                 final String name) {
     Property prop = pl.getProperty(name);
     if (prop == null) {
-      throw new IcalMalformedException("Missing required property " + name);
+      throw new RuntimeException("Missing required property " + name);
     }
 
     return prop.getValue();
@@ -903,12 +897,12 @@ public class IcalUtil {
 
   /** Return optional string property
    *
-   * @param pl
-   * @param name
+   * @param pl ical4j property list
+   * @param name of property
    * @return String or null
-   * @throws Throwable
    */
-  public static String getOptStr(final PropertyList pl, final String name) throws Throwable {
+  public static String getOptStr(final PropertyList pl,
+                                 final String name) {
     Property prop = pl.getProperty(name);
     if (prop == null) {
       return null;
@@ -917,27 +911,29 @@ public class IcalUtil {
     return prop.getValue();
   }
 
-  /**
-   * @param comp
-   * @param name
+  /* *
+   * @param comp ical4j Component
+   * @param name of property
    * @return String
-   */
-  public static String getPropertyVal(final Component comp, final String name) {
+   * /
+  public static String getPropertyVal(final Component comp,
+                                      final String name) {
     Property prop =  getProperty(comp, name);
     if (prop == null) {
       return null;
     }
 
     return prop.getValue();
-  }
+  }*/
 
   /** Return optional string parameter
    *
-   * @param pl
-   * @param name
+   * @param pl ical4j property list
+   * @param name of property
    * @return String
    */
-  public static String getOptStr(final ParameterList pl, final String name) {
+  public static String getOptStr(final ParameterList pl,
+                                 final String name) {
     Parameter par = pl.getParameter(name);
     if (par == null) {
       return null;
@@ -948,7 +944,7 @@ public class IcalUtil {
 
   /** Return the AltRep parameter if it exists
    *
-   * @param prop
+   * @param prop ical4j property
    * @return AltRep
    */
   public static AltRep getAltRep(final Property prop) {
@@ -957,29 +953,31 @@ public class IcalUtil {
 
   /** Always return a DateTime object
    *
-   * @param dt
+   * @param dt bw date time
    * @return DateTime
-   * @throws Throwable
    */
-  public static DateTime makeDateTime(final BwDateTime dt) throws Throwable {
-    /** Ignore tzid for the moment */
-    return new DateTime(dt.getDtval());
+  public static DateTime makeDateTime(final BwDateTime dt) {
+    /* Ignore tzid for the moment */
+    try {
+      return new DateTime(dt.getDtval());
+    } catch (ParseException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /** Set the dates in an event given a start and one or none of end and
    *  duration.
    *
-   * @param userHref
-   * @param ei
-   * @param dtStart
-   * @param dtEnd
-   * @param duration
-   * @throws CalFacadeException
+   * @param userHref for changeset
+   * @param ei the event
+   * @param dtStart start
+   * @param dtEnd end
+   * @param duration duration
    */
   public static void setDates(final String userHref,
                               final EventInfo ei,
                               DtStart dtStart, DtEnd dtEnd,
-                              final Duration duration) throws CalFacadeException {
+                              final Duration duration) {
     BwEvent ev = ei.getEvent();
     ChangeTable chg = ei.getChangeset(userHref);
     boolean scheduleReply = ev.getScheduleMethod() == ScheduleMethods.methodTypeReply;
@@ -988,120 +986,120 @@ public class IcalUtil {
 
     // No dates valid for reply
 
-    try {
-      if (dtStart == null) {
-        if (!scheduleReply && !todo && !vpoll) {
-          throw new CalFacadeException("org.bedework.error.nostartdate");
-        }
+    if (dtStart == null) {
+      if (!scheduleReply && !todo && !vpoll) {
+        throw new RuntimeException("org.bedework.error.nostartdate");
+      }
 
-        /* A task or vpoll can have no date and time. set start to now, end to
+      /* A task or vpoll can have no date and time. set start to now, end to
          * many years from now and the noStart flag.
          *
          * A todo without dates has to appear only on the current day.
          */
-        if (dtEnd != null) {
+      if (dtEnd != null) {
+        try {
           dtStart = new DtStart(dtEnd.getParameters(), dtEnd.getValue());
-        } else {
-          Date now = new Date(new java.util.Date().getTime());
-          dtStart = new DtStart(now);
-          dtStart.getParameters().add(Value.DATE);
+        } catch (ParseException e) {
+          throw new RuntimeException(e);
         }
-
-        ev.setNoStart(true);
       } else {
-        ev.setNoStart(false);
-      }
-
-      if (dtStart != null) {
-        BwDateTime bwDtStart = BwDateTime.makeBwDateTime(dtStart);
-        if (!CalFacadeUtil.eqObjval(ev.getDtstart(), bwDtStart)) {
-          chg.changed(PropertyInfoIndex.DTSTART, ev.getDtstart(), bwDtStart);
-          ev.setDtstart(bwDtStart);
-        }
-      }
-
-      char endType = StartEndComponent.endTypeNone;
-
-      if (dtEnd != null) {
-        endType = StartEndComponent.endTypeDate;
-      } else if (scheduleReply || todo || vpoll) {
-        Dur years = new Dur(520); // about 10 years
         Date now = new Date(new java.util.Date().getTime());
-        dtEnd = new DtEnd(new Date(years.getTime(now)));
-        dtEnd.getParameters().add(Value.DATE);
+        dtStart = new DtStart(now);
+        dtStart.getParameters().add(Value.DATE);
       }
 
-      if (dtEnd != null) {
-        BwDateTime bwDtEnd = BwDateTime.makeBwDateTime(dtEnd);
-        if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
-          chg.changed(PropertyInfoIndex.DTEND, ev.getDtend(), bwDtEnd);
-          ev.setDtend(bwDtEnd);
-        }
-      }
+      ev.setNoStart(true);
+    } else {
+      ev.setNoStart(false);
+    }
 
-      /* If we were given a duration store it in the event and calculate
+    BwDateTime bwDtStart = BwDateTime.makeBwDateTime(dtStart);
+    if (!CalFacadeUtil.eqObjval(ev.getDtstart(), bwDtStart)) {
+      chg.changed(PropertyInfoIndex.DTSTART, ev.getDtstart(), bwDtStart);
+      ev.setDtstart(bwDtStart);
+    }
+
+    char endType = StartEndComponent.endTypeNone;
+
+    if (dtEnd != null) {
+      endType = StartEndComponent.endTypeDate;
+    } else if (scheduleReply || todo || vpoll) {
+      Dur years = new Dur(520); // about 10 years
+      Date now = new Date(new java.util.Date().getTime());
+      dtEnd = new DtEnd(new Date(years.getTime(now)));
+      dtEnd.getParameters().add(Value.DATE);
+    }
+
+    if (dtEnd != null) {
+      BwDateTime bwDtEnd = BwDateTime.makeBwDateTime(dtEnd);
+      if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
+        chg.changed(PropertyInfoIndex.DTEND, ev.getDtend(), bwDtEnd);
+        ev.setDtend(bwDtEnd);
+      }
+    }
+
+    /* If we were given a duration store it in the event and calculate
           an end to the event - which we should not have been given.
        */
-      if (duration != null) {
-        if (endType != StartEndComponent.endTypeNone) {
-          if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
-            // Apple is sending both - duration indicates the minimum
-            // freebusy duration. Ignore for now.
-          } else {
-            throw new CalFacadeException(CalFacadeException.endAndDuration);
-          }
+    if (duration != null) {
+      if (endType != StartEndComponent.endTypeNone) {
+        if (ev.getEntityType() != IcalDefs.entityTypeFreeAndBusy) {
+          // Apple is sending both - duration indicates the minimum
+          // freebusy duration. Ignore for now.
+          throw new RuntimeException(CalFacadeException.endAndDuration);
         }
+      }
 
-        endType = StartEndComponent.endTypeDuration;
-        String durVal = duration.getValue();
-        if (!durVal.equals(ev.getDuration())) {
-          chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), durVal);
-          ev.setDuration(durVal);
-        }
+      endType = StartEndComponent.endTypeDuration;
+      String durVal = duration.getValue();
+      if (!durVal.equals(ev.getDuration())) {
+        chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), durVal);
+        ev.setDuration(durVal);
+      }
 
-        Dur dur = duration.getDuration();
+      Dur dur = duration.getDuration();
 
-        ev.setDtend(BwDateTime.makeDateTime(dtStart,
-                                            ev.getDtstart().getDateType(),
-                                            dur));
-      } else if (!scheduleReply &&
-                 (endType == StartEndComponent.endTypeNone) && !todo) {
-        /* No duration and no end specified.
+      ev.setDtend(BwDateTime.makeDateTime(dtStart,
+                                          ev.getDtstart().getDateType(),
+                                          dur));
+    } else if (!scheduleReply &&
+            (endType == StartEndComponent.endTypeNone) && !todo) {
+      /* No duration and no end specified.
          * Set the end values to the start values + 1 for dates
          */
-        boolean dateOnly = ev.getDtstart().getDateType();
-        Dur dur;
+      boolean dateOnly = ev.getDtstart().getDateType();
+      Dur dur;
 
-        if (dateOnly) {
-          dur = new Dur(1, 0, 0, 0); // 1 day
-        } else {
-          dur = new Dur(0, 0, 0, 0); // No duration
-        }
-        BwDateTime bwDtEnd = BwDateTime.makeDateTime(dtStart, dateOnly, dur);
-        if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
-          chg.changed(PropertyInfoIndex.DTEND, ev.getDtend(), bwDtEnd);
-          ev.setDtend(bwDtEnd);
-        }
+      if (dateOnly) {
+        dur = new Dur(1, 0, 0, 0); // 1 day
+      } else {
+        dur = new Dur(0, 0, 0, 0); // No duration
       }
-
-      if ((endType != StartEndComponent.endTypeDuration) &&
-          (ev.getDtstart() != null) &&
-          (ev.getDtend() != null)) {
-        // Calculate a duration
-        String durVal = BwDateTime.makeDuration(ev.getDtstart(),
-                                                ev.getDtend()).toString();
-        if (!durVal.equals(ev.getDuration())) {
-          chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), durVal);
-          ev.setDuration(durVal);
-        }
+      BwDateTime bwDtEnd = BwDateTime.makeDateTime(dtStart, dateOnly, dur);
+      if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
+        chg.changed(PropertyInfoIndex.DTEND, ev.getDtend(), bwDtEnd);
+        ev.setDtend(bwDtEnd);
       }
-
-      ev.setEndType(endType);
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
     }
+
+    if ((endType != StartEndComponent.endTypeDuration) &&
+            (ev.getDtstart() != null) &&
+            (ev.getDtend() != null)) {
+      // Calculate a duration
+      String durVal = BwDateTime.makeDuration(ev.getDtstart(),
+                                              ev.getDtend()).toString();
+      if (!durVal.equals(ev.getDuration())) {
+        chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), durVal);
+        ev.setDuration(durVal);
+      }
+    }
+
+    ev.setEndType(endType);
+//    } catch (CalFacadeException cfe) {
+//      throw cfe;
+//    } catch (Throwable t) {
+//      throw new CalFacadeException(t);
+//    }
   }
 }
 

@@ -47,9 +47,8 @@ public interface CalendarsI extends Serializable {
   /** Returns the href of the root of the public calendars tree.
    *
    * @return String   root path
-   * @throws CalFacadeException
    */
-  String getPublicCalendarsRootPath() throws CalFacadeException;
+  String getPublicCalendarsRootPath();
 
   /** Returns the root of the tree of public calendars. This is NOT a
    * live hibernate object.
@@ -217,9 +216,8 @@ public interface CalendarsI extends Serializable {
   /** set the default calendar for the current user.
    *
    * @param  val    BwCalendar
-   * @throws CalFacadeException
    */
-  void setPreferred(BwCalendar  val) throws CalFacadeException;
+  void setPreferred(BwCalendar  val);
 
   /** Get the default calendar for the current user for the given entity type.
    *
@@ -290,11 +288,10 @@ public interface CalendarsI extends Serializable {
 
   /** Return true if cal != null and it represents a (local) user root
    *
-   * @param cal
+   * @param cal the collection
    * @return boolean
-   * @throws CalFacadeException
    */
-  boolean isUserRoot(BwCalendar cal) throws CalFacadeException;
+  boolean isUserRoot(BwCalendar cal);
 
   /** Attempt to get calendar referenced by the alias. For an internal alias
    * the result will also be set in the aliasTarget property of the parameter.

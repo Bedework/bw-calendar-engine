@@ -113,6 +113,7 @@ import net.fortuna.ical4j.model.property.Version;
 
 import java.io.StringReader;
 import java.net.URI;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -721,10 +722,10 @@ public class VEventUtil extends IcalUtil {
    *
    * @param val event
    * @param pl properties
-   * @throws CalFacadeException on fatal error
+   * @throws RuntimeException for bad date values
    */
   public static void doRecurring(final BwEvent val,
-                                 final PropertyList pl) throws CalFacadeException {
+                                 final PropertyList pl) {
     try {
       if (val.hasRrules()) {
         for(String s: val.getRrules()) {
@@ -747,10 +748,8 @@ public class VEventUtil extends IcalUtil {
       makeDlp(val, false, val.getRdates(), pl);
 
       makeDlp(val, true, val.getExdates(), pl);
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    } catch (final ParseException pe) {
+      throw new RuntimeException(pe);
     }
   }
 
@@ -798,12 +797,11 @@ public class VEventUtil extends IcalUtil {
       return;
     }
 
-
     ParameterList params = from.getParameters();
 
-    Iterator parit = params.iterator();
+    final Iterator<Parameter> parit = params.iterator();
     while (parit.hasNext()) {
-      Parameter param = (Parameter)parit.next();
+      Parameter param = parit.next();
 
       if (!(param instanceof XParameter)) {
         continue;
@@ -840,7 +838,7 @@ public class VEventUtil extends IcalUtil {
   private static void makeDlp(final BwEvent val,
                               final boolean exdt,
                               final Collection<BwDateTime> dts,
-                              final PropertyList pl) throws Throwable {
+                              final PropertyList pl) throws ParseException {
     if ((dts == null) || (dts.isEmpty())) {
       return;
     }
@@ -905,13 +903,13 @@ public class VEventUtil extends IcalUtil {
                                   final String dtval) throws Throwable {
     BwDateTime dtstart = val.getDtstart();
 
-    Date dt = new DateTime(dtval);
+    DateTime dt = new DateTime(dtval);
 
     if (dtstart.getDateType()) {
       // RECUR - fix all day recurrences sometime
       if (dtval.length() > 8) {
         // Try to fix up bad all day recurrence ids. - assume a local timezone
-        ((DateTime)dt).setTimeZone(null);
+        dt.setTimeZone(null);
         return new Date(dt.toString().substring(0, 8));
       }
 
@@ -922,9 +920,9 @@ public class VEventUtil extends IcalUtil {
       return dt;
     }
 
-    if ((dtstart != null) && !dtstart.isUTC()) {
+    if (!dtstart.isUTC()) {
       DtStart ds = dtstart.makeDtStart();
-      ((DateTime)dt).setTimeZone(ds.getTimeZone());
+      dt.setTimeZone(ds.getTimeZone());
     }
 
     return dt;

@@ -28,10 +28,12 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwSystem;
+import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.dump.DumpGlobals;
 
 import java.util.ArrayList;
@@ -48,15 +50,12 @@ import javax.xml.namespace.QName;
 public class DumpAll extends Dumpling {
   /** Constructor
    *
-   * @param globals
+   * @param globals the dump globals
    */
   public DumpAll(final DumpGlobals globals) {
     super(globals, new QName(dumpTag), -1, globals.xml);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.dumprestore.dump.dumpling.Dumpling#dumpSection(java.util.Iterator)
-   */
   @Override
   public void dumpSection(final Iterator it) throws Throwable {
     tagStart(sectionTag);
@@ -69,42 +68,42 @@ public class DumpAll extends Dumpling {
     syspars.add(globals.svci.getSysparsHandler().get());
     new Dumpling<BwSystem>(globals,
                            new QName(sectionSyspars),
-                           globals.syspars,
+                           Counters.syspars,
                            xml).dumpSection(syspars.iterator());
     close();
 
     open();
     new Dumpling<BwPrincipal>(globals,
                          new QName(sectionUsers),
-                         globals.users,
+                              Counters.users,
                          xml).dumpSection(globals.di.getAllPrincipals());
     close();
 
     open();
     new Dumpling<BwCategory>(globals,
                              new QName(sectionCategories),
-                             globals.categories,
+                             Counters.categories,
                              xml).dumpSection(globals.di.getCategories());
     close();
 
     open();
     new Dumpling<BwCalendar>(globals,
                              new QName(sectionCollections),
-                             globals.collections,
+                             Counters.collections,
                              xml).dumpSection(globals.di.getCalendars());
     close();
 
     open();
     new Dumpling<BwLocation>(globals,
                              new QName(sectionLocations),
-                             globals.locations,
+                             Counters.locations,
                              xml).dumpSection(globals.di.getLocations());
     close();
 
     open();
     new Dumpling<BwContact>(globals,
                             new QName(sectionContacts),
-                            globals.contacts,
+                            Counters.contacts,
                             xml).dumpSection(globals.di.getContacts());
     close();
 
@@ -113,67 +112,67 @@ public class DumpAll extends Dumpling {
     open();
     new Dumpling<BwAuthUser>(globals,
                              new QName(sectionAuthUsers),
-                             globals.authusers,
+                             Counters.authusers,
                              xml).dumpSection(globals.di.getAuthUsers());
     close();
 
     open();
     new Dumpling<BwEvent>(globals,
                           new QName(sectionEvents),
-                          globals.events,
+                          Counters.events,
                           xml).dumpSection(globals.di.getEvents());
     close();
 
     open();
     new Dumpling<BwEventAnnotation>(globals,
                                     new QName(sectionEventAnnotations),
-                                    globals.eventAnnotations,
+                                    Counters.eventAnnotations,
                                     xml).dumpSection(globals.di.getEventAnnotations());
     close();
 
     open();
     new Dumpling<BwFilterDef>(globals,
                               new QName(sectionFilters),
-                              globals.filters,
+                              Counters.filters,
                               xml).dumpSection(globals.di.getFilters());
     close();
 
     open();
     new Dumpling<BwAdminGroup>(globals,
                                new QName(sectionAdminGroups),
-                               globals.adminGroups,
+                               Counters.adminGroups,
                                xml).dumpSection(globals.di.getAdminGroups());
     close();
 
     open();
     new Dumpling<BwPreferences>(globals,
                                 new QName(sectionUserPrefs),
-                                globals.userPrefs,
+                                Counters.userPrefs,
                                 xml).dumpSection(globals.di.getPreferences());
     close();
 
     open();
     new Dumpling<BwResource>(globals,
                              new QName(sectionResources),
-                             globals.resources,
+                             Counters.resources,
                              xml).dumpSection(globals.di.getResources());
     close();
 
     open();
     new Dumpling<BwCalSuite>(globals,
                              new QName(sectionCalSuites),
-                             globals.calSuites,
+                             Counters.calSuites,
                              xml).dumpSection(globals.di.getCalSuites());
     close();
 
     tagEnd(sectionTag);
   }
 
-  private void open() throws Throwable {
+  private void open() throws CalFacadeException {
     globals.svci.beginTransaction();
   }
 
-  private void close() throws Throwable {
+  private void close() throws CalFacadeException {
     globals.svci.endTransaction();
   }
 }

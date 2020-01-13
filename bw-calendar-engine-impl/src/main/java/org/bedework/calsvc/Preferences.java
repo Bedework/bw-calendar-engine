@@ -143,7 +143,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
   }
 
   public void updateAdminPrefs(final boolean remove,
-                               final BwEventProperty ent) throws CalFacadeException {
+                               final BwEventProperty<?> ent) throws CalFacadeException {
     if (ent instanceof BwCategory) {
       updateAdminPrefs(remove, null, 
                        Collections.singletonList((BwCategory)ent), 

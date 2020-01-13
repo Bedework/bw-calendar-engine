@@ -23,7 +23,6 @@ import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.PropertiesEntity;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
@@ -41,7 +40,7 @@ import java.util.TreeSet;
  *  @version 1.0
  */
 @Dump(elementName="preferences", keyFields={"ownerHref"}, firstFields={"ownerHref"})
-public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
+public class BwPreferences extends BwOwnedDbentity<BwPreferences> implements PropertiesEntity {
   /** Collection of BwView
    */
   protected Collection<BwView> views;
@@ -344,7 +343,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   }
 
   /**
-   * @param val
+   * @param val day number for start of week
    */
   public void setWorkdayStart(final int val) {
     workdayStart = val;
@@ -358,7 +357,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   }
 
   /**
-   * @param val
+   * @param val day number for end of week
    */
   public void setWorkdayEnd(final int val) {
     workdayEnd = val;
@@ -372,7 +371,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   }
 
   /**
-   * @param val
+   * @param val preferred end type
    */
   public void setPreferredEndType(final String val) {
     preferredEndType = val;
@@ -386,7 +385,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   }
 
   /**
-   * @param val
+   * @param val user mode code
    */
   public void setUserMode(final int val) {
     userMode = val;
@@ -400,7 +399,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   }
 
   /**
-   * @param val
+   * @param val true for 24 hour
    */
   public void setHour24(final boolean val) {
     hour24 = val;
@@ -414,7 +413,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   }
 
   /**
-   * @param val
+   * @param val true for auto respond
    */
   public void setScheduleAutoRespond(final boolean val) {
     scheduleAutoRespond = val;
@@ -428,7 +427,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   }
 
   /**
-   * @param val
+   * @param val auto cancel action code
    */
   public void setScheduleAutoCancelAction(final int val) {
     scheduleAutoCancelAction = val;
@@ -442,7 +441,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   }
 
   /**
-   * @param val
+   * @param val true if double booking allowed
    */
   public void setScheduleDoubleBook(final boolean val) {
     scheduleDoubleBook = val;
@@ -456,7 +455,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   }
 
   /**
-   * @param val
+   * @param val response action code
    */
   public void setScheduleAutoProcessResponses(final int val) {
     scheduleAutoProcessResponses = val;
@@ -517,7 +516,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   @Override
   @NoDump
   public int getNumProperties() {
-    Set p = getProperties();
+    Set<BwProperty> p = getProperties();
     if (p == null) {
       return 0;
     }
@@ -525,9 +524,6 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     return p.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#findProperty(java.lang.String)
-   */
   @Override
   public BwProperty findProperty(final String name) {
     Collection<BwProperty> props = getProperties();
@@ -553,9 +549,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
       setProperties(c);
     }
 
-    if (!c.contains(val)) {
-      c.add(val);
-    }
+    c.add(val);
   }
 
   private boolean removeProperty(final String name) {
@@ -577,27 +571,15 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     return c.remove(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#copyProperties()
-   */
   @Override
   public Set<BwProperty> copyProperties() {
     if (getNumProperties() == 0) {
       return null;
     }
 
-    TreeSet<BwProperty> ts = new TreeSet<BwProperty>();
-
-    for (BwProperty p: getProperties()) {
-      ts.add(p);
-    }
-
-    return ts;
+    return new TreeSet<>(getProperties());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#cloneProperties()
-   */
   @Override
   public Set<BwProperty> cloneProperties() {
     if (getNumProperties() == 0) {
@@ -904,7 +886,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
       return false;
     }
 
-    return Boolean.valueOf(s);
+    return Boolean.parseBoolean(s);
   }
 
   /* ====================================================================
@@ -932,7 +914,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   public boolean addView(final BwView val) {
     Collection<BwView> c = getViews();
     if (c == null) {
-      c = new TreeSet<BwView>();
+      c = new TreeSet<>();
       setViews(c);
     }
     if (c.contains(val)) {
@@ -946,9 +928,8 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   /** Set the workday start minutes from a String time value
    *
    * @param val  String time value
-   * @throws CalFacadeException
    */
-  public void setWorkdayStartTime(final String val) throws CalFacadeException{
+  public void setWorkdayStartTime(final String val) {
     setWorkdayStart(makeMinutesFromTime(val));
   }
 
@@ -964,9 +945,8 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
   /** Set the workday end minutes from a String time value
    *
    * @param val  String time value
-   * @throws CalFacadeException
    */
-  public void setWorkdayEndTime(final String val) throws CalFacadeException{
+  public void setWorkdayEndTime(final String val) {
     setWorkdayEnd(makeMinutesFromTime(val));
   }
 
@@ -985,24 +965,18 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
 
   /** Comapre this view and an object
    *
-   * @param  o    object to compare.
+   * @param  that    object to compare.
    * @return int -1, 0, 1
    */
   @Override
-  public int compareTo(final Object o) {
-    if (o == this) {
+  public int compareTo(final BwPreferences that) {
+    if (that == this) {
       return 0;
     }
 
-    if (o == null) {
+    if (that == null) {
       return -1;
     }
-
-    if (!(o instanceof BwPreferences)) {
-      return -1;
-    }
-
-    final BwPreferences that = (BwPreferences)o;
 
     return getOwnerHref().compareTo(that.getOwnerHref());
   }
@@ -1022,7 +996,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
       return true;
     }
 
-    return compareTo(obj) == 0;
+    return compareTo((BwPreferences)obj) == 0;
   }
 
   @Override
@@ -1086,9 +1060,8 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
    *
    * @param val  String time value
    * @return int minutes
-   * @throws CalFacadeException
    */
-  private int makeMinutesFromTime(final String val) throws CalFacadeException{
+  private int makeMinutesFromTime(final String val) {
     boolean badval = false;
     int minutes = 0;
 
@@ -1107,7 +1080,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
     }
 
     if (badval) {
-      throw new CalFacadeException("org.bedework.prefs.badvalue", val);
+      throw new RuntimeException("org.bedework.prefs.badvalue: " + val);
     }
 
     return minutes;
@@ -1142,7 +1115,7 @@ public class BwPreferences extends BwOwnedDbentity implements PropertiesEntity {
       return 0;
     }
 
-    return Long.valueOf(prop.getValue());
+    return Long.parseLong(prop.getValue());
   }
 
 

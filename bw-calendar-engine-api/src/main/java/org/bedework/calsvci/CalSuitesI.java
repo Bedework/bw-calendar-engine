@@ -51,9 +51,8 @@ public interface CalSuitesI extends Serializable {
   /** Set the current calendar suite.
    *
    * @param val   BwCalSuiteWrapper
-   * @throws CalFacadeException
    */
-  void set(BwCalSuiteWrapper val) throws CalFacadeException;
+  void set(BwCalSuiteWrapper val);
 
   /** Get the current calendar suite.
    *

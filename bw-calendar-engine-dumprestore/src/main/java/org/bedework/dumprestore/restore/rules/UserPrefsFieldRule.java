@@ -35,7 +35,7 @@ public class UserPrefsFieldRule extends EntityFieldRule {
   private static Collection<String> skippedNames;
 
   static {
-    skippedNames = new ArrayList<String>();
+    skippedNames = new ArrayList<>();
 
     skippedNames.add("properties");
     skippedNames.add("views");
@@ -91,48 +91,69 @@ public class UserPrefsFieldRule extends EntityFieldRule {
         return;
       }
 
-      if (name.equals("email")) {
-        p.setEmail(stringFld());
-      } else if (name.equals("default-calendar-path")) {  // PRE3.5
-        p.setDefaultCalendarPath(stringFld());
-      } else if (name.equals("defaultCalendarPath")) {
-        p.setDefaultCalendarPath(stringFld());
-      } else if (name.equals("skinName")) {
-        p.setSkinName(stringFld());
-      } else if (name.equals("skinStyle")) {
-        p.setSkinStyle(stringFld());
-      } else if (name.equals("preferredView")) {
-        p.setPreferredView(stringFld());
-      } else if (name.equals("preferredViewPeriod")) {
-        p.setPreferredViewPeriod(stringFld());
-      } else if (name.equals("workDays")) {
-        p.setWorkDays(stringFld());
-      } else if (name.equals("workdayStart")) {
-        p.setWorkdayStart(intFld());
-      } else if (name.equals("workdayEnd")) {
-        p.setWorkdayEnd(intFld());
-      } else if (name.equals("preferredEndType")) {
-        p.setPreferredEndType(stringFld());
-      } else if (name.equals("userMode")) {
-        p.setUserMode(intFld());
-      } else if (name.equals("pageSize")) {
-        p.setPageSize(intFld());
-      } else if (name.equals("hour24")) {
-        p.setHour24(booleanFld());
-      } else if (name.equals("scheduleAutoRespond")) {
-        p.setScheduleAutoRespond(booleanFld());
-      } else if (name.equals("scheduleAutoCancelAction")) {
-        p.setScheduleAutoCancelAction(intFld());
-      } else if (name.equals("scheduleDoubleBook")) {
-        p.setScheduleDoubleBook(booleanFld());
-      } else if (name.equals("scheduleAutoProcessResponses")) {
-        p.setScheduleAutoProcessResponses(intFld());
+      switch (name) {
+        case "email":
+          p.setEmail(stringFld());
+          break;
+        case "default-calendar-path":   // PRE3.5
+          p.setDefaultCalendarPath(stringFld());
+          break;
+        case "defaultCalendarPath":
+          p.setDefaultCalendarPath(stringFld());
+          break;
+        case "skinName":
+          p.setSkinName(stringFld());
+          break;
+        case "skinStyle":
+          p.setSkinStyle(stringFld());
+          break;
+        case "preferredView":
+          p.setPreferredView(stringFld());
+          break;
+        case "preferredViewPeriod":
+          p.setPreferredViewPeriod(stringFld());
+          break;
+        case "workDays":
+          p.setWorkDays(stringFld());
+          break;
+        case "workdayStart":
+          p.setWorkdayStart(intFld());
+          break;
+        case "workdayEnd":
+          p.setWorkdayEnd(intFld());
+          break;
+        case "preferredEndType":
+          p.setPreferredEndType(stringFld());
+          break;
+        case "userMode":
+          p.setUserMode(intFld());
+          break;
+        case "pageSize":
+          p.setPageSize(intFld());
+          break;
+        case "hour24":
+          p.setHour24(booleanFld());
+          break;
+        case "scheduleAutoRespond":
+          p.setScheduleAutoRespond(booleanFld());
+          break;
+        case "scheduleAutoCancelAction":
+          p.setScheduleAutoCancelAction(intFld());
+          break;
+        case "scheduleDoubleBook":
+          p.setScheduleDoubleBook(booleanFld());
+          break;
+        case "scheduleAutoProcessResponses":
+          p.setScheduleAutoProcessResponses(intFld());
 
-      } else if (name.equals("byteSize")) {
-        p.setByteSize(intFld());
+          break;
+        case "byteSize":
+          p.setByteSize(intFld());
 
-      } else {
-        unknownTag(name);
+          break;
+        default:
+          unknownTag(name);
+          break;
       }
     } catch (Throwable t) {
       error("Exception setting prefs " + p);

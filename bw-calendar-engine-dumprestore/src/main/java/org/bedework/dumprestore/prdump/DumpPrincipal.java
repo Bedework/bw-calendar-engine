@@ -74,7 +74,7 @@ import static org.bedework.util.misc.response.Response.Status.ok;
  * <p>Many of these need to be accompanied by meta-data for the restore. These
  * will be output as XML meta-data files with the same name as the resource but
  * within a meta subdirectory. Each meta data file has a name with a prefix
- * indicating the type of file - either "file-" or "dir-". Some directorieshave
+ * indicating the type of file - either "file-" or "dir-". Some directories have
  * associated meta-data, for example shared calendars.
  *
  * <p>We build a directory structure under the dump-home. Within the dump-home we
@@ -89,7 +89,7 @@ import static org.bedework.util.misc.response.Response.Status.ok;
  * of the principals calendar home. In general we do not dump the contents of
  * shared calendars. For a full dump they are saved elsewhere. We will allow
  * users to optionally include the shared calendars - though this could result
- * in a vary large dump.
+ * in a very large dump.
  *
  * @author Mike Douglass   douglm @ bedework.edu
  * @version 4.0

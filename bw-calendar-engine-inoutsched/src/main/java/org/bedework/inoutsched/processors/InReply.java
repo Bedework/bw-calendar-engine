@@ -36,6 +36,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.timezones.Timezones;
+import org.bedework.util.timezones.TimezonesException;
 
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
@@ -44,6 +45,7 @@ import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.property.DtStart;
 
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.Map;
 
@@ -52,7 +54,7 @@ import java.util.Map;
  * @author Mike Douglass
  */
 public class InReply extends InProcessor {
-  private static final String acceptPartstat = 
+  private static final String acceptPartstat =
           IcalDefs.partstats[IcalDefs.partstatAccepted];
 
   /**
@@ -166,44 +168,38 @@ public class InReply extends InProcessor {
   private boolean updateOrganizerPollCopy(final EventInfo colEi,
                                           final EventInfo inBoxEi,
                                           final String attUri,
-                                          @SuppressWarnings("UnusedParameters") final ScheduleResult sr) throws CalFacadeException {
+                                          @SuppressWarnings("UnusedParameters") final ScheduleResult sr) {
     /* We have a single voter and their responses to each item.
        Replace the VVOTER component for that respondee.
      */
 
     /* First parse out the poll items */
-    try {
-      final BwEvent colEv = colEi.getEvent();
-      final Map<String, Participant> votes = IcalUtil.parseVpollVoters(
-              colEv);
+    final BwEvent colEv = colEi.getEvent();
+    final Map<String, Participant> votes = IcalUtil.parseVpollVoters(
+            colEv);
 
-      colEv.clearVoters();  // We'll add them back
+    colEv.clearVoters();  // We'll add them back
 
-      final BwEvent inEv = inBoxEi.getEvent();
+    final BwEvent inEv = inBoxEi.getEvent();
 
-      final Map<String, Participant> invote = IcalUtil.parseVpollVoters(inEv);
+    final Map<String, Participant> invote = IcalUtil.parseVpollVoters(inEv);
 
-      /* Should only be one Participant for this attendee */
+    /* Should only be one Participant for this attendee */
 
-      if (invote.size() != 1) {
-        return true; // Ignore it.
-      }
+    if (invote.size() != 1) {
+      return true; // Ignore it.
+    }
 
-      final Participant vote = invote.get(attUri);
+    final Participant vote = invote.get(attUri);
 
-      if (vote == null) {
-        return true; // Ignore it.
-      }
+    if (vote == null) {
+      return true; // Ignore it.
+    }
 
-      votes.put(attUri, vote);
+    votes.put(attUri, vote);
 
-      for (final Participant v: votes.values()) {
-        colEv.addVoter(v.toString());
-      }
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+    for (final Participant v: votes.values()) {
+      colEv.addVoter(v.toString());
     }
 
     getSvc().getEventsHandler().update(colEi, false, attUri);
@@ -214,7 +210,7 @@ public class InReply extends InProcessor {
   private boolean updateOrganizerCopy(final EventInfo colEi,
                                       final EventInfo inBoxEi,
                                       final String attUri,
-                                      final ScheduleResult sr) throws CalFacadeException {
+                                      final ScheduleResult sr) {
     final BwEvent inBoxEv = inBoxEi.getEvent();
     final BwEvent calEv = colEi.getEvent();
     final ChangeTable chg = calEv.getChangeset(getPrincipalHref());
@@ -328,10 +324,8 @@ public class InReply extends InProcessor {
             ocalEv.setDtstart(BwDateTime.makeBwDateTime(st));
             ocalEv.setDuration(calEv.getDuration());
             ocalEv.setDtend(ocalEv.getDtstart().addDur(new Dur(calEv.getDuration())));
-          } catch (final CalFacadeException cfe) {
-            throw cfe;
-          } catch (final Throwable t) {
-            throw new CalFacadeException(t);
+          } catch (final ParseException | TimezonesException e) {
+            throw new RuntimeException(e);
           }
         }
 
@@ -342,7 +336,7 @@ public class InReply extends InProcessor {
           // Organizer must have removed the attendee.
           if (debug()) {
             debug("Skipping override " + attUri +
-                  " is not attending");
+                          " is not attending");
           }
           continue;
         }

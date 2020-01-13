@@ -27,6 +27,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
+import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.dump.DumpGlobals;
 import org.bedework.util.logging.BwLogger;
@@ -35,6 +36,7 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.xml.XmlEmit;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -47,7 +49,7 @@ import javax.xml.namespace.QName;
  *
  * @param <T> class we are dumping
  */
-public class Dumpling<T extends DumpEntity>
+public class Dumpling<T extends DumpEntity<?>>
         implements Defs, Logged {
   protected DumpGlobals globals;
 
@@ -86,7 +88,9 @@ public class Dumpling<T extends DumpEntity>
 
     tagStart(sectionTag);
 
-    dumpCollection(it);
+    if (it != null) {
+      dumpCollection(it);
+    }
 
     tagEnd(sectionTag);
   }
@@ -113,7 +117,7 @@ public class Dumpling<T extends DumpEntity>
 
   private void dumpCollection(final Iterator<T> it) throws Throwable {
     while (it.hasNext()) {
-      final DumpEntity d = unwrap(it.next());
+      final T d = unwrap(it.next());
 
       globals.counts[countIndex]++;
 
@@ -174,11 +178,11 @@ public class Dumpling<T extends DumpEntity>
         globals.aliasInfo.put(target, ae);
       }
       ae.getAliases().add(ai);
-      globals.counts[globals.aliases]++;
+      globals.counts[Counters.aliases]++;
     }
 
     if (col.getExternalSub() && !col.getTombstoned()) {
-      globals.counts[globals.externalSubscriptions]++;
+      globals.counts[Counters.externalSubscriptions]++;
       globals.externalSubs.add(AliasInfo.getExternalSubInfo(col.getPath(),
                                                             col.getAliasUri(),
                                                             col.getPublick(),
@@ -198,11 +202,11 @@ public class Dumpling<T extends DumpEntity>
     ev.dump(xml);
 
     if (ev.getOverrides() != null) {
-      globals.counts[globals.eventOverrides] += ev.getOverrides().size();
+      globals.counts[Counters.eventOverrides] += ev.getOverrides().size();
     }
   }
 
-  private DumpEntity unwrap(final DumpEntity val) throws CalFacadeException {
+  private T unwrap(final T val) throws CalFacadeException {
     if (val == null) {
       return null;
     }
@@ -211,15 +215,23 @@ public class Dumpling<T extends DumpEntity>
       return val;
     }
 
-    return ((CalendarWrapper)val).fetchEntity();
+    return (T)((CalendarWrapper)val).fetchEntity();
   }
 
-  protected void tagStart(final QName tag) throws Throwable {
-    xml.openTag(tag);
+  protected void tagStart(final QName tag) {
+    try {
+      xml.openTag(tag);
+    } catch (IOException ie) {
+      throw new RuntimeException(ie);
+    }
   }
 
-  protected void tagEnd(final QName tag) throws Throwable {
-    xml.closeTag(tag);
+  protected void tagEnd(final QName tag) {
+    try {
+      xml.closeTag(tag);
+    } catch (IOException ie) {
+      throw new RuntimeException(ie);
+    }
   }
 
   public void info(final String msg) {

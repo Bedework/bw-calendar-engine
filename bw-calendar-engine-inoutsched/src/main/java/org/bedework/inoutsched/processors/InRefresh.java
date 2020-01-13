@@ -34,7 +34,7 @@ import java.util.Collection;
  */
 public class InRefresh extends InProcessor {
   /**
-   * @param svci
+   * @param svci interface
    */
   public InRefresh(final CalSvcI svci) {
     super(svci);
@@ -71,7 +71,6 @@ public class InRefresh extends InProcessor {
     if (calEi == null) {
       return null;
     }
-
 
     calEi.getEvent().setScheduleMethod(ScheduleMethods.methodTypeRequest);
 

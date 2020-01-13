@@ -346,7 +346,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "order by g.account";
 
   @SuppressWarnings("unchecked")
-  public Collection<BwGroup> getAllGroups(final boolean admin) throws CalFacadeException {
+  public <T extends BwGroup> Collection<T> getAllGroups(final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
 
     if (admin) {
@@ -373,7 +373,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
                   "where g.memberId=:entId and g.memberIsGroup=:isgroup";
 
   @SuppressWarnings("unchecked")
-  public Collection<BwGroup> getGroups(final BwPrincipal val,
+  public <T extends BwGroup> Collection<T> getGroups(final BwPrincipal val,
                                        final boolean admin) throws CalFacadeException {
     final HibSession sess = getSess();
 
@@ -394,7 +394,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
       sess.setString("isgroup", "F");
     }
 
-    final Set<BwGroup> gs = new TreeSet<>(sess.getList());
+    final Set<BwGroup> gs = new TreeSet<BwGroup>(sess.getList());
 
     if (admin && (val.getKind() == WhoDefs.whoTypeUser)) {
       /* Event owner for group is implicit member of group. */
@@ -405,7 +405,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
       gs.addAll(sess.getList());
     }
 
-    return gs;
+    return (Collection<T>)gs;
   }
 
   /* ====================================================================

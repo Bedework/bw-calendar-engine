@@ -49,6 +49,7 @@ import net.fortuna.ical4j.model.Component;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -82,7 +83,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public String getPublicCalendarsRootPath() throws CalFacadeException {
+  public String getPublicCalendarsRootPath() {
     return publicCalendarRootPath;
   }
 
@@ -434,8 +435,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public void setPreferred(final BwCalendar val)
-          throws CalFacadeException {
+  public void setPreferred(final BwCalendar val) {
     final BwPreferences prefs = getPrefs();
     prefs.setDefaultCalendarPath(val.getPath());
     update(prefs);
@@ -552,7 +552,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   }
 
   @Override
-  public boolean isUserRoot(final BwCalendar cal) throws CalFacadeException {
+  public boolean isUserRoot(final BwCalendar cal) {
     if ((cal == null) || (cal.getPath() == null)) {
       return false;
     }
@@ -884,7 +884,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
     final String collectionHref = col.getPath();
 
     final boolean defaultEnabled =
-            !Boolean.valueOf(System.getProperty("org.bedework.nochangenote", "false")) &&
+            !Boolean.parseBoolean(
+                    System.getProperty("org.bedework.nochangenote", "false")) &&
             getAuthpars().getDefaultChangesNotifications();
 
     if (notificationsEnabled(col, defaultEnabled)) {
@@ -968,7 +969,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return defaultEnabled;
     }
 
-    return Boolean.valueOf(enabledVal);
+    return Boolean.parseBoolean(enabledVal);
   }
 
   private AliasesInfo updateAliasInfoMap(final AliasesInfo ai) {
@@ -1075,7 +1076,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       return;
     }
 
-    final BwShareableDbentity ent = (BwShareableDbentity)o;
+    final var ent = (BwShareableDbentity<?>)o;
 
     if (getPars().getAdminCanEditAllPublicContacts() ||
         ent.getCreatorHref().equals(getPrincipal().getPrincipalRef())) {
@@ -1085,14 +1086,18 @@ class Calendars extends CalSvcDb implements CalendarsI {
     throw new CalFacadeAccessException();
   }
 
-  private String normalizeUri(String uri) throws CalFacadeException {
+  private String normalizeUri(String uri) {
     /*Remove all "." and ".." components */
     try {
       uri = new URI(null, null, uri, null).toString();
 
-      uri = new URI(URLEncoder.encode(uri, "UTF-8")).normalize().getPath();
+      uri = new URI(URLEncoder.encode(uri, StandardCharsets.UTF_8))
+              .normalize()
+              .getPath();
 
-      uri = Util.buildPath(colPathEndsWithSlash, URLDecoder.decode(uri, "UTF-8"));
+      uri = Util.buildPath(colPathEndsWithSlash,
+                           URLDecoder.decode(uri,
+                                             StandardCharsets.UTF_8));
 
       if (debug()) {
         debug("Normalized uri=" + uri);
@@ -1103,7 +1108,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       if (debug()) {
         error(t);
       }
-      throw new CalFacadeException("Bad uri: " + uri);
+      throw new RuntimeException("Bad uri: " + uri);
     }
   }
 }

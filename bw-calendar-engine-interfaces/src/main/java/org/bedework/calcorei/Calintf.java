@@ -751,6 +751,13 @@ public interface Calintf
    */
   Collection<BwGroup> getAllGroups(boolean admin) throws CalFacadeException;
 
+  /** Return all admin groups to which this user has some access. Never returns null.
+   *
+   * @return Collection    of BwAdminGroup
+   * @throws CalFacadeException
+   */
+  Collection<BwAdminGroup> getAdminGroups() throws CalFacadeException;
+
   /** Return all groups of which the given principal is a member. Never returns null.
    *
    * <p>Does not check the returned groups for membership of other groups.
@@ -762,6 +769,17 @@ public interface Calintf
    */
   Collection<BwGroup> getGroups(BwPrincipal val,
                                 boolean admin) throws CalFacadeException;
+
+  /** Return all admin groups of which the given principal is a member. Never returns null.
+   *
+   * <p>Does not check the returned groups for membership of other groups.
+   *
+   * @param val            a principal
+   * @return Collection    of BwGroup
+   * @throws CalFacadeException
+   */
+  Collection<BwAdminGroup> getAdminGroups(
+          BwPrincipal val) throws CalFacadeException;
 
   /* ====================================================================
    *                       calendar suites

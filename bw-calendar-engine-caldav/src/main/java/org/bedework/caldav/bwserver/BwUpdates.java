@@ -98,7 +98,7 @@ public class BwUpdates implements Logged {
     this.userHref = userHref;
   }
 
-  private static Map<Class, Integer> entTypes = new HashMap<Class, Integer>();
+  private static Map<Class<?>, Integer> entTypes = new HashMap<>();
 
   static {
     entTypes.put(ValarmType.class, IcalDefs.entityTypeAlarm);
@@ -118,7 +118,7 @@ public class BwUpdates implements Logged {
    * @param cl
    * @param updCl
    */
-  public static void registerUpdater(final Class cl,
+  public static void registerUpdater(final Class<?> cl,
                                      final String updCl) {
     PropertyUpdaterRegistry.registerStandardUpdater(cl, updCl);
   }
@@ -128,7 +128,7 @@ public class BwUpdates implements Logged {
    * @param cl
    * @param updCl
    */
-  public void registerInstanceUpdater(final Class cl,
+  public void registerInstanceUpdater(final Class<?> cl,
                                       final String updCl) {
     propUpdaterRegistry.registerUpdater(cl, updCl);
   }
@@ -308,7 +308,7 @@ public class BwUpdates implements Logged {
   private List<EventInfo> match(final List<EventInfo> eis,
 //                                final SelectElementType sel,
                                 final BaseComponentType selComp) throws WebdavException {
-    List<EventInfo> matched = new ArrayList<EventInfo>();
+    List<EventInfo> matched = new ArrayList<>();
 
     CompSelector cs = getCompSelector(selComp);
 
@@ -411,7 +411,7 @@ public class BwUpdates implements Logged {
   }
 
   private UpdateResult removeOverride(final EventInfo ei,
-                              final ComponentReferenceType sel) throws WebdavException {
+                              final ComponentReferenceType sel) {
     return new UpdateResult("unimplemented - remove override");
   }
 
@@ -568,7 +568,7 @@ public class BwUpdates implements Logged {
                                                      subComponent,
                                                      state,
                                                      userHref);
-      UpdateResult ur = null;
+      UpdateResult ur;
       /* There is possibly no change - for example we are changing the tzid for
        * the dtstart
        */
@@ -626,7 +626,7 @@ public class BwUpdates implements Logged {
     return UpdateResult.getOkResult();
   }
 
-  private UpdateResult validateDates(final EventInfo ei) throws WebdavException {
+  private UpdateResult validateDates(final EventInfo ei) {
     DatesState ds = (DatesState)state.get(DatesState.stateName);
     if (ds == null) {
       return UpdateResult.getOkResult();
@@ -647,125 +647,121 @@ public class BwUpdates implements Logged {
      * the other.
      */
 
-    try {
-      boolean scheduleReply = ev.getScheduleMethod() == ScheduleMethods.methodTypeReply;
-      // No dates valid for reply
+    boolean scheduleReply = ev.getScheduleMethod() == ScheduleMethods.methodTypeReply;
+    // No dates valid for reply
 
-      if (ds.start == null) {
-        if (!scheduleReply && !task) {
-          return new UpdateResult("org.bedework.error.nostartdate");
-        }
+    if (ds.start == null) {
+      if (!scheduleReply && !task) {
+        return new UpdateResult("org.bedework.error.nostartdate");
+      }
 
-        /* A todo can have no date and time. set start to now, end to
+      /* A todo can have no date and time. set start to now, end to
          * many years from now and the noStart flag.
          *
          * Such an entry has to appear only on the current day.
          */
-        if (ds.end != null) {
-          ds.start = ds.end;
-        } else {
-          Date now = new Date(new java.util.Date().getTime());
-          DtStart dtStart = new DtStart(now);
-          dtStart.getParameters().add(Value.DATE);
-          ds.start = BwDateTime.makeBwDateTime(dtStart);
-        }
-
-        if (!ev.getNoStart() ||
-            !CalFacadeUtil.eqObjval(ev.getDtstart(), ds.start)) {
-          chg.changed(PropertyInfoIndex.DTSTART, ev.getDtstart(), null);
-          ev.setDtstart(ds.start);
-          ev.setNoStart(true);
-        }
-      } else if (ev.getNoStart() || !ds.start.equals(ev.getDtstart())) {
-        chg.changed(PropertyInfoIndex.DTSTART, ev.getDtstart(), ds.start);
-        ev.setNoStart(false);
-        ev.setDtstart(ds.start);
-      }
-
-      char endType = StartEndComponent.endTypeNone;
-
       if (ds.end != null) {
-        if ((ev.getEndType() != StartEndComponent.endTypeDate) ||
-            !CalFacadeUtil.eqObjval(ev.getDtend(), ds.end)) {
-          chg.changed(endPi, ev.getDtend(), ds.end);
-          endType = StartEndComponent.endTypeDate;
-          ev.setDtend(ds.end);
-        }
-      } else if (scheduleReply || task) {
-        Dur years = new Dur(520); // about 10 years
+        ds.start = ds.end;
+      } else {
         Date now = new Date(new java.util.Date().getTime());
-        DtEnd dtEnd = new DtEnd(new Date(years.getTime(now)));
-        dtEnd.getParameters().add(Value.DATE);
-        ds.end = BwDateTime.makeBwDateTime(dtEnd);
-        if (!CalFacadeUtil.eqObjval(ev.getDtend(), ds.end)) {
-          chg.changed(endPi, ev.getDtend(), ds.end);
-          ev.setDtend(ds.end);
+        DtStart dtStart = new DtStart(now);
+        dtStart.getParameters().add(Value.DATE);
+        ds.start = BwDateTime.makeBwDateTime(dtStart);
+      }
+
+      if (!ev.getNoStart() ||
+              !CalFacadeUtil.eqObjval(ev.getDtstart(), ds.start)) {
+        chg.changed(PropertyInfoIndex.DTSTART, ev.getDtstart(), null);
+        ev.setDtstart(ds.start);
+        ev.setNoStart(true);
+      }
+    } else if (ev.getNoStart() || !ds.start.equals(ev.getDtstart())) {
+      chg.changed(PropertyInfoIndex.DTSTART, ev.getDtstart(), ds.start);
+      ev.setNoStart(false);
+      ev.setDtstart(ds.start);
+    }
+
+    char endType = StartEndComponent.endTypeNone;
+
+    if (ds.end != null) {
+      if ((ev.getEndType() != StartEndComponent.endTypeDate) ||
+              !CalFacadeUtil.eqObjval(ev.getDtend(), ds.end)) {
+        chg.changed(endPi, ev.getDtend(), ds.end);
+        endType = StartEndComponent.endTypeDate;
+        ev.setDtend(ds.end);
+      }
+    } else if (scheduleReply || task) {
+      Dur years = new Dur(520); // about 10 years
+      Date now = new Date(new java.util.Date().getTime());
+      DtEnd dtEnd = new DtEnd(new Date(years.getTime(now)));
+      dtEnd.getParameters().add(Value.DATE);
+      ds.end = BwDateTime.makeBwDateTime(dtEnd);
+      if (!CalFacadeUtil.eqObjval(ev.getDtend(), ds.end)) {
+        chg.changed(endPi, ev.getDtend(), ds.end);
+        ev.setDtend(ds.end);
+      }
+    }
+
+    /* If we were given a duration store it in the event and calculate
+     an end to the event - which we should not have been given.
+     */
+    if (ds.duration != null) {
+      if (endType != StartEndComponent.endTypeNone) {
+        if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
+          // Apple is sending both - duration indicates the minimum
+          // freebusy duration. Ignore for now.
+        } else {
+          return new UpdateResult(CalFacadeException.endAndDuration);
         }
       }
 
-      /** If we were given a duration store it in the event and calculate
-          an end to the event - which we should not have been given.
-       */
-      if (ds.duration != null) {
-        if (endType != StartEndComponent.endTypeNone) {
-          if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
-            // Apple is sending both - duration indicates the minimum
-            // freebusy duration. Ignore for now.
-          } else {
-            return new UpdateResult(CalFacadeException.endAndDuration);
-          }
-        }
+      endType = StartEndComponent.endTypeDuration;
 
-        endType = StartEndComponent.endTypeDuration;
+      if (!ds.duration.equals(ev.getDuration())) {
+        chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), ds.duration);
+        ev.setDuration(ds.duration);
+      }
 
-        if (!ds.duration.equals(ev.getDuration())) {
-          chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), ds.duration);
-          ev.setDuration(ds.duration);
-        }
-
-        ev.setDtend(BwDateTime.makeDateTime(ev.getDtstart().makeDtStart(),
-                                            ev.getDtstart().getDateType(),
-                                            new Dur(ds.duration)));
-      } else if (!scheduleReply &&
-                 (endType == StartEndComponent.endTypeNone) &&
-                 !task) {
-        /* No duration and no end specified.
+      ev.setDtend(BwDateTime.makeDateTime(ev.getDtstart().makeDtStart(),
+                                          ev.getDtstart().getDateType(),
+                                          new Dur(ds.duration)));
+    } else if (!scheduleReply &&
+            (endType == StartEndComponent.endTypeNone) &&
+            !task) {
+      /* No duration and no end specified.
          * Set the end values to the start values + 1 for dates
          */
-        boolean dateOnly = ev.getDtstart().getDateType();
-        Dur dur;
+      boolean dateOnly = ev.getDtstart().getDateType();
+      Dur dur;
 
-        if (dateOnly) {
-          dur = new Dur(1, 0, 0, 0); // 1 day
-        } else {
-          dur = new Dur(0, 0, 0, 0); // No duration
-        }
-        BwDateTime bwDtEnd = BwDateTime.makeDateTime(ev.getDtstart().makeDtStart(),
-                                                     dateOnly, dur);
-        if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
-          chg.changed(endPi, ev.getDtend(), bwDtEnd);
-          ev.setDtend(bwDtEnd);
-        }
+      if (dateOnly) {
+        dur = new Dur(1, 0, 0, 0); // 1 day
+      } else {
+        dur = new Dur(0, 0, 0, 0); // No duration
       }
-
-      if ((endType != StartEndComponent.endTypeDuration) &&
-          (ev.getDtstart() != null) &&
-          (ev.getDtend() != null)) {
-        // Calculate a duration
-        String durVal = BwDateTime.makeDuration(ev.getDtstart(),
-                                                ev.getDtend()).toString();
-        if (!durVal.equals(ev.getDuration())) {
-          chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), durVal);
-          ev.setDuration(durVal);
-        }
+      BwDateTime bwDtEnd = BwDateTime.makeDateTime(ev.getDtstart().makeDtStart(),
+                                                   dateOnly, dur);
+      if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
+        chg.changed(endPi, ev.getDtend(), bwDtEnd);
+        ev.setDtend(bwDtEnd);
       }
-
-      ev.setEndType(endType);
-
-      return UpdateResult.getOkResult();
-    } catch (CalFacadeException cfe) {
-      throw new WebdavException(cfe);
     }
+
+    if ((endType != StartEndComponent.endTypeDuration) &&
+            (ev.getDtstart() != null) &&
+            (ev.getDtend() != null)) {
+      // Calculate a duration
+      String durVal = BwDateTime.makeDuration(ev.getDtstart(),
+                                              ev.getDtend()).toString();
+      if (!durVal.equals(ev.getDuration())) {
+        chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), durVal);
+        ev.setDuration(durVal);
+      }
+    }
+
+    ev.setEndType(endType);
+
+    return UpdateResult.getOkResult();
   }
 
   private UpdateResult addRemove(final EventInfo ei,
@@ -867,7 +863,7 @@ public class BwUpdates implements Logged {
     private boolean change;
     private boolean remove;
 
-    private TzGetter tzs = id -> Timezones.getTz(id);
+    private TzGetter tzs = Timezones::getTz;
 
     private BasePropertyType prop;
 

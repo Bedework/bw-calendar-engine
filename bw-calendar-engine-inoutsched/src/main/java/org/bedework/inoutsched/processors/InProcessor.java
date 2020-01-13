@@ -30,6 +30,7 @@ import org.bedework.calsvc.CalSvcDb;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
+import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.response.Response;
 
 /** Abstract class to support processing of inbox scheduling messages.
@@ -46,7 +47,7 @@ public abstract class InProcessor extends CalSvcDb {
   }
 
   /** Result from processing */
-  public static class ProcessResult {
+  public static class ProcessResult extends Response {
     /** Result of the scheduling operations */
     public ScheduleResult sr = new ScheduleResult();
 
@@ -58,6 +59,12 @@ public abstract class InProcessor extends CalSvcDb {
 
     /** Update was just attendee accepting */
     public boolean attendeeAccepting;
+
+    public void toStringSegment(final ToString ts) {
+      super.toStringSegment(ts);
+
+      ts.append("sr", sr);
+    }
   }
 
   /**
