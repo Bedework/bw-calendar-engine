@@ -4109,7 +4109,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoDump
   @NoWrap
   public boolean isSchedulingAssistant() {
-    return Boolean.valueOf(getXproperty(BwXproperty.bedeworkSchedAssist));
+    return Boolean.parseBoolean(getXproperty(BwXproperty.bedeworkSchedAssist));
   }
 
   /**

@@ -189,7 +189,6 @@ public class InRequest extends InProcessor {
     boolean noInvites = true;
 
     boolean doAutoRespond = !pr.removeInboxEntry &&
-                            !schedAssistant &&
                             prefs.getScheduleAutoRespond();
 
     if (doAutoRespond) {

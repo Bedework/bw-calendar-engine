@@ -23,7 +23,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwVersion;
 import org.bedework.calfacade.base.DumpEntity;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.dumprestore.AliasEntry;
 import org.bedework.dumprestore.AliasInfo;
@@ -206,7 +205,7 @@ public class Dumpling<T extends DumpEntity<?>>
     }
   }
 
-  private T unwrap(final T val) throws CalFacadeException {
+  private T unwrap(final T val) {
     if (val == null) {
       return null;
     }
