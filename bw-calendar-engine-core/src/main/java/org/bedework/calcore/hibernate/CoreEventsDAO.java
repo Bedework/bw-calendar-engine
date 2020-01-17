@@ -24,7 +24,6 @@ import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwRecurrenceInstance;
-import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.util.Collection;
@@ -441,13 +440,11 @@ public class CoreEventsDAO extends DAOBase {
     return anns;
   }
 
-  protected List eventQuery(final Class cl,
+  protected <T extends BwEvent> List<T> eventQuery(final Class<T> cl,
                             final String colPath,
                             final String guid,
-                            final String rid,
                             final BwEvent master,
-                            final Boolean overrides,
-                            final RecurringRetrievalMode recurRetrieval) throws CalFacadeException {
+                            final Boolean overrides) throws CalFacadeException {
     final HibSession sess = getSess();
     final EventQueryBuilder qb = new EventQueryBuilder();
     final String qevName = "ev";
@@ -458,11 +455,6 @@ public class CoreEventsDAO extends DAOBase {
     qb.from();
     qb.addClass(cl, qevName);
     qb.where();
-
-    if (recurRetrieval != null) {
-      startDate = recurRetrieval.start;
-      endDate = recurRetrieval.end;
-    }
 
     /* SEG:   (<date-ranges>) and */
     if (qb.appendDateTerms(qevName, startDate, endDate, false, false)) {
@@ -484,13 +476,6 @@ public class CoreEventsDAO extends DAOBase {
       qb.append(" and ev.override=:override ");
     }
 
-    /*
-    if (masterOnly) {
-      sb.append(" and ev.recurrenceId is null ");
-    } else */if (rid != null) {
-      qb.append(" and ev.recurrenceId=:rid ");
-    }
-
     qb.createQuery(sess);
 
     qb.setDateTermValues(startDate, endDate);
@@ -506,11 +491,6 @@ public class CoreEventsDAO extends DAOBase {
 
     if (overrides != null) {
       sess.setBool("override", overrides);
-    }
-
-    //if (!masterOnly && (rid != null)) {
-    if (rid != null) {
-      sess.setString("rid", rid);
     }
 
     //debug("Try query " + sb.toString());

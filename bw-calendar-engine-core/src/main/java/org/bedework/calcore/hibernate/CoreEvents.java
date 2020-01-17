@@ -20,7 +20,6 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.access.CurrentAccess;
 import org.bedework.calcore.common.CalintfHelper;
-import org.bedework.calcore.hibernate.EventQueryBuilder.EventsQueryResult;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventsI;
 import org.bedework.caldav.util.filter.FilterBase;
@@ -34,7 +33,6 @@ import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeDupNameException;
@@ -61,7 +59,6 @@ import net.fortuna.ical4j.model.TimeZone;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -256,11 +253,10 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
      */
 
     // First look in the events table for the master(s).
-    Collection evs = 
+    Collection<? extends BwEvent> evs =
             dao.eventQuery(BwEventObj.class, colPath, uid,
-                           null, null,
-                           null,  // overrides
-                           null); //recurRetrieval);
+                           null,
+                           null);  // overrides
 
     /* The uid and recurrence id is a unique key for calendar collections
      * other than some special ones, Inbox and Outbox.
@@ -274,9 +270,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
        */
       evs = dao.eventQuery(BwEventAnnotation.class, 
                            colPath, uid, /*null*/
-                           null, null,
-                           false,  // overrides
-                           null); //recurRetrieval);
+                           null,
+                           false);  // overrides
     }
 
     if (Util.isEmpty(evs)) {
@@ -296,10 +291,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
      * otherwise just retrieve the instance.
      */
 
-    final EventsQueryResult eqr = new EventsQueryResult();
-    eqr.flt = new Filters(intf, null);
-    eqr.addColPath(colPath);
-
     for (final CoreEventInfo cei: ceis) {
       final BwEvent master = cei.getEvent();
 
@@ -316,7 +307,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       } else if (!master.testRecurring()) {
         ts.add(cei);
       } else {
-        doRecurrence(cei, null);
+        getOverrides(cei);
 
         ts.add(cei);
       }
@@ -394,7 +385,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           }
 
           if (aev.testRecurring()) {
-            doRecurrence(acei, RecurringRetrievalMode.overrides);
+            getOverrides(acei);
           }
 
           cei.addContainedItem(acei);
@@ -402,7 +393,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       } else {
         ev = cei.getEvent();
         if (ev.testRecurring()) {
-          doRecurrence(cei, RecurringRetrievalMode.overrides);
+          getOverrides(cei);
         }
       }
     }
@@ -1259,119 +1250,27 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     proxy.setChangeFlag(false);
   }
 
-  /* Retrieves the overides for a recurring event and if required,
-   * retrieves the instances.
-   *
-   * The overrides we retrieve are optionally limited by date.
-   *
-   * The CalDAV spec requires that we retrieve all overrides which fall within
-   * the given date range AND all instances in that date range including
-   * overriden instances that WOULD have fallen in that range had they not been
-   * overriden.
-   *
-   * Thus we need to search both overrides and instances - unless no date range
-   * is given in which case all overrides will appear along with the instances.
-   *
-   * If the calendars parameter is non-null, as it usually will be for a call
-   * from getEvents, we limit the result to instances that appear within that
-   * set of calendars. This handles the case of an overriden instance moved to a
-   * different calendar, for example the trash.
+  /* Retrieves the overrides for a recurring event.
    */
-  @SuppressWarnings("unchecked")
-  private void doRecurrence(final CoreEventInfo cei,
-                            final RecurringRetrievalMode recurRetrieval)
+  private void getOverrides(final CoreEventInfo cei)
           throws CalFacadeException {
     final BwEvent master = cei.getEvent();
-    final Set<String> overrides = new HashSet<>();
     final CurrentAccess ca = cei.getCurrentAccess();
 
-    // Always fetch all overrides
     final Collection<BwEventAnnotation> ovs =
-            dao.eventQuery(BwEventAnnotation.class, null, null, null, master,
-                           true,  // overrides
-                           null); //recurRetrieval);
+            dao.eventQuery(BwEventAnnotation.class,
+                           null,
+                           null,
+                           master,
+                           true);  // overrides
 
     if (ovs != null) {
       for (final BwEventAnnotation override: ovs) {
         final CoreEventInfo ocei = makeOverrideProxy(override, ca);
 
         cei.addOverride(ocei);
-
-        overrides.add(ocei.getEvent().getRecurrenceId());
       }
     }
-
-    /* If we are asking for full expansion generate all the instances (within
-     * the given date range if supplied)
-     */
-
-    if ((recurRetrieval == null) ||
-        (recurRetrieval.mode != Rmode.expanded)) {
-      return;
-    }
-
-    /* Create a list of all instance date/times before overrides. */
-
-    final int maxYears;
-    final int maxInstances;
-
-    maxYears = getAuthprops().getMaxYears();
-    maxInstances = getAuthprops().getMaxInstances();
-
-    final RecurPeriods rp = RecurUtil.getPeriods(master, maxYears, maxInstances);
-
-    if (rp.instances.isEmpty()) {
-      // No instances for an alleged recurring event.
-      return;
-      //throw new CalFacadeException(CalFacadeException.noRecurrenceInstances);
-    }
-
-    final String stzid = master.getDtstart().getTzid();
-
-    final boolean dateOnly = master.getDtstart().getDateType();
-
-    /* Emit all instances that aren't overridden. */
-
-    final TreeSet<CoreEventInfo> ceis = new TreeSet<>();
-
-    for (final Period p: rp.instances) {
-      String dtval = p.getStart().toString();
-      if (dateOnly) {
-        dtval = dtval.substring(0, 8);
-      }
-
-      final BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
-
-      if (overrides.contains(rstart.getDate())) {
-        // Overrides built separately - skip this instance.
-        continue;
-      }
-
-      final String recurrenceId = rstart.getDate();
-
-      dtval = p.getEnd().toString();
-      if (dateOnly) {
-        dtval = dtval.substring(0, 8);
-      }
-
-      final BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
-
-      final BwRecurrenceInstance inst = new BwRecurrenceInstance(rstart,
-                                                                 rend,
-                                                                 recurrenceId,
-                                                                 master,
-                                                                 null);
-
-      final CoreEventInfo instcei = makeInstanceProxy(inst, ca);
-      if (instcei != null) {
-        //if (debug()) {
-        //  debug("Ev: " + proxy);
-        //}
-        ceis.add(instcei);
-      }
-    }
-
-    cei.setInstances(ceis);
   }
 
   /* XXX This needs more work, OK until we allow modification of annotations - which
