@@ -87,8 +87,13 @@ public interface EventsI extends Serializable {
                        String name) throws CalFacadeException;
 
   /** Get events given the calendar and String name. Return null for not
-   * found. There should be only one event or none. For recurring, the
-   * overrides and possibly the instances will be attached.
+   * found. There should be only one event or none.
+   *
+   * <p>For a recurring event and no supplied recurrence id the
+   * overrides will be attached.
+   *
+   * <p>For a recurring event and a supplied recurrence id the
+   * expanded instance only will be returned.
    *
    * NOTE: this does not provide alias filtering. 
    *
@@ -335,6 +340,10 @@ public interface EventsI extends Serializable {
   /** Return the instances for a given combination of start date, rrule,
    * exdates and rdates. A date/time window may be supplied to limit the
    * result.
+   *
+   * Note: this is currently unused but I believe the intent was to
+   * allow a web client to request a range of instances from the server
+   * to avoid the necessity of calculating them locally.
    *
    * @param req parameters for the method
    * @return instances or error response
