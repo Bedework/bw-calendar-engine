@@ -649,7 +649,7 @@ public class ESQueryFilter extends ESQueryFilterBase
     return and(qb, addTerm(PropertyInfoIndex.OVERRIDE, "true"), null);
   }
   
-  final QueryBuilder recurTerms() throws CalFacadeException {
+  final QueryBuilder recurTerms() {
     /* If the search is for expanded events we want instances or
        overrides or non-recurring masters only.
 
