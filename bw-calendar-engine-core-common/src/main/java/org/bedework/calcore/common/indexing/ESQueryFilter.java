@@ -218,29 +218,13 @@ public class ESQueryFilter extends ESQueryFilterBase
                null);
   }
 
-  /** Build a filter for a single event identified by the href
-   * and recurrenceid. If recurrenceId is null we target a master only
-   * otherwise we target an instance only.
+  /** Build a filter for a single event identified by the href.
    *
    * @param href  of event
-   * @param recurrenceId of instance
-   * @return a filter builder
+   * @return a query builder
    */
-  public QueryBuilder singleEventFilter(final String href,
-                                          final String recurrenceId) {
-    QueryBuilder anded = termQuery(hrefRef, href);
-
-    if (recurrenceId == null) {
-      anded = and(anded, addTerm(PropertyInfoIndex.MASTER, "true"), null);
-    } else {
-      anded = and(anded, addTerm(PropertyInfoIndex.INSTANCE, "true"),
-                  null);
-      anded = and(anded, addTerm(PropertyInfoIndex.RECURRENCE_ID,
-                                 recurrenceId),
-                  null);
-    }
-
-    return anded;
+  public QueryBuilder singleEventFilter(final String href) {
+    return termQuery(hrefRef, href);
   }
 
   /** Build a filter for a single event identified by the colPath
@@ -248,15 +232,15 @@ public class ESQueryFilter extends ESQueryFilterBase
    *
    * @param colPath to event
    * @param guid of event
-   * @return a filter builder
+   * @return a query builder
    */
-  public QueryBuilder singleEventFilterGuid(final String colPath,
-                                             final String guid) {
+  public QueryBuilder eventFilterGuid(final String colPath,
+                                      final String guid) {
     QueryBuilder anded = termQuery(colPathRef, colPath);
 
     anded = and(anded, termQuery(uidRef, guid),
                 null);
-    anded = and(anded, addTerm(PropertyInfoIndex.MASTER, "true"), null);
+    //anded = and(anded, addTerm(PropertyInfoIndex.MASTER, "true"), null);
 
     return anded;
   }
@@ -750,14 +734,6 @@ public class ESQueryFilter extends ESQueryFilterBase
   public boolean requiresSecondaryFetch() {
     return (recurRetrieval.mode != Rmode.expanded) &&
             queryFiltered;
-  }
-
-  /**
-   *
-   * @return true if we are fetching expanded.
-   */
-  public boolean canPage() {
-    return recurRetrieval.mode == Rmode.expanded;
   }
 
   /** Add date range terms to query. The actual terms depend on

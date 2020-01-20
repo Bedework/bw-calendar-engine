@@ -224,7 +224,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                                             final String uid)
           throws CalFacadeException {
     final TreeSet<CoreEventInfo> ts = new TreeSet<>();
-    final int desiredAccess = privRead;
 
     /*
     if (colPath != null) {
@@ -279,16 +278,14 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     }
 
     final Collection<CoreEventInfo> ceis =
-            intf.postGetEvents(evs, desiredAccess,
-                               returnResultAlways,
-                               null);
+            intf.postGetEvents(evs, privRead,
+                               returnResultAlways);
 
     if (ceis.isEmpty()) {
       return ceis;
     }
 
-    /* If the recurrence id is null, do recurrences for each retrieved event,
-     * otherwise just retrieve the instance.
+    /* If the recurrence id is null, do overrides for each retrieved event,
      */
 
     for (final CoreEventInfo cei: ceis) {
@@ -368,8 +365,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
     final CoreEventInfo cei = intf.postGetEvent(ev,
                                                 privRead,
-                                                returnResultAlways,
-                                                null);
+                                                returnResultAlways);
 
     if (cei != null)  {
       // Access was not denied
@@ -379,7 +375,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           final CoreEventInfo acei = 
                   intf.postGetEvent(aev,
                                     privRead,
-                                    returnResultAlways, null);
+                                    returnResultAlways);
           if (acei == null) {
             continue;
           }
@@ -601,11 +597,13 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
           setupDependentEntities(ov);
           addOverride(ov, val, ri);
+//        For the moment save the instance
           dao.save(ri);
           recurids.remove(rid);
         }
       }
 
+//      Not saving instances that don't have an override
 //      dao.save(ri);
       maxInstances--;
       if (maxInstances == 0) {

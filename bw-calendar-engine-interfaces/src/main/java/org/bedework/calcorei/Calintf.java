@@ -493,22 +493,19 @@ public interface Calintf
 
   Collection<CoreEventInfo> postGetEvents(final Collection<?> evs,
                                           final int desiredAccess,
-                                          final boolean nullForNoAccess,
-                                          final FiltersCommonI f)
+                                          final boolean nullForNoAccess)
           throws CalFacadeException;
 
   /* Post processing of event access has been checked
    */
   CoreEventInfo postGetEvent(BwEvent ev,
-                             FiltersCommonI f,
                              CurrentAccess ca) throws CalFacadeException;
 
   /* Post processing of event. Return null or throw exception for no access
    */
   CoreEventInfo postGetEvent(BwEvent ev,
                              int desiredAccess,
-                             boolean nullForNoAccess,
-                             FiltersCommonI f) throws CalFacadeException;
+                             boolean nullForNoAccess) throws CalFacadeException;
 
   /* ====================================================================
    *                       Restore methods

@@ -25,7 +25,6 @@ import org.bedework.calcore.common.indexing.BwIndexerFactory;
 import org.bedework.calcorei.Calintf;
 import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CoreEventInfo;
-import org.bedework.calcorei.FiltersCommonI;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
@@ -587,14 +586,13 @@ public abstract class CalintfBase implements Logged, Calintf {
   }
 
   /* ====================================================================
-   *                   Eventss
+   *                   Events
    * ==================================================================== */
 
   @Override
   public Collection<CoreEventInfo> postGetEvents(final Collection<?> evs,
                                                  final int desiredAccess,
-                                                 final boolean nullForNoAccess,
-                                                 final FiltersCommonI f)
+                                                 final boolean nullForNoAccess)
           throws CalFacadeException {
     final TreeSet<CoreEventInfo> outevs = new TreeSet<>();
 
@@ -602,7 +600,7 @@ public abstract class CalintfBase implements Logged, Calintf {
       final BwEvent ev = (BwEvent)ev1;
 
       final CoreEventInfo cei = postGetEvent(ev, desiredAccess,
-                                             nullForNoAccess, f);
+                                             nullForNoAccess);
 
       if (cei == null) {
         continue;
@@ -616,7 +614,6 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   @Override
   public CoreEventInfo postGetEvent(final BwEvent ev,
-                                    final FiltersCommonI f,
                                     final CurrentAccess ca) throws CalFacadeException {
     /* XXX-ALARM
     if (currentMode == userMode) {
@@ -628,10 +625,6 @@ public abstract class CalintfBase implements Logged, Calintf {
 
     if (ev instanceof BwEventAnnotation) {
       event = new BwEventProxy((BwEventAnnotation)ev);
-
-      if ((f != null) && !f.postFilter(ev, getPrincipalRef())) {
-        return null;
-      }
     } else {
       event = ev;
     }
@@ -642,21 +635,20 @@ public abstract class CalintfBase implements Logged, Calintf {
   @Override
   public CoreEventInfo postGetEvent(final BwEvent ev,
                                     final int desiredAccess,
-                                    final boolean nullForNoAccess,
-                                    final FiltersCommonI f) throws CalFacadeException {
+                                    final boolean nullForNoAccess) throws CalFacadeException {
     if (ev == null) {
       return null;
     }
 
     final CurrentAccess ca = ac.checkAccess(ev,
-                                                desiredAccess,
-                                                nullForNoAccess);
+                                            desiredAccess,
+                                            nullForNoAccess);
 
     if (!ca.getAccessAllowed()) {
       return null;
     }
 
-    return postGetEvent(ev, f, ca);
+    return postGetEvent(ev, ca);
   }
 
   /* ====================================================================

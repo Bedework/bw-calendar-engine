@@ -422,23 +422,23 @@ public interface BwIndexer extends Serializable {
    */
   int setAlias(String index) throws CalFacadeException;
 
-  /** Href of event with possible anchor tag for recurrence id.
+  /** Href of event with possible anchor tag for recurrence id. This
+   * returns the master + overrides if there is no recurrence id or
+   * a fully populated instance otherwise.
    *
    * @param href of event
    * @return entity is EventInfo with overrides if present
-   * @throws CalFacadeException on fatal error
    */
-  GetEntityResponse<EventInfo> fetchEvent(String href) throws CalFacadeException;
+  GetEntityResponse<EventInfo> fetchEvent(String href);
 
-  /** Colpath and guid supplied.
+  /** Colpath and guid supplied. May be multiple results for inbox
    *
-   * @param colPath to event
+   * @param colPath to event collection
    * @param guid of event
-   * @return entity is EventInfo with overrides if present
-   * @throws CalFacadeException on fatal error
+   * @return entities are EventInfo objects with overrides if present
    */
-  GetEntityResponse<EventInfo> fetchEvent(String colPath,
-                                          String guid) throws CalFacadeException;
+  GetEntitiesResponse<EventInfo> fetchEvent(String colPath,
+                                            String guid);
 
   /** Return all or first count events
    *

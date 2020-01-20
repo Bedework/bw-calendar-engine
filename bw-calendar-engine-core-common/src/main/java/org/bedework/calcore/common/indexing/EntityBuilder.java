@@ -58,7 +58,6 @@ import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.elasticsearch.DocBuilderBase;
 import org.bedework.util.elasticsearch.EntityBuilderBase;
-import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.property.RequestStatus;
@@ -85,11 +84,9 @@ public class EntityBuilder extends EntityBuilderBase {
   /** Constructor - 1 use per entity
    *
    * @param fields map of fields from index
-   * @throws IndexException on fatal error
    */
   EntityBuilder(final boolean publick,
-                final Map<String, ?> fields)
-          throws IndexException {
+                final Map<String, ?> fields) {
     super(fields, 0);
     this.publick = publick;
     pushFields(fields);
@@ -108,7 +105,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return new DocBuilderBase.UpdateInfo(l);
   }
 
-  BwPrincipal makePrincipal() throws CalFacadeException {
+  BwPrincipal makePrincipal() {
     final String href = getString(PropertyInfoIndex.HREF);
 
     final BwPrincipal pr = BwPrincipal.makePrincipal(href);
@@ -153,7 +150,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return pr;
   }
 
-  BwPreferences makePreferences() throws CalFacadeException {
+  BwPreferences makePreferences() {
     final BwPreferences ent = new BwPreferences();
 
     ent.setOwnerHref(getString(PropertyInfoIndex.OWNER));
@@ -183,7 +180,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return ent;
   }
 
-  BwFilterDef makefilter() throws CalFacadeException {
+  BwFilterDef makefilter() {
     final BwFilterDef ent = new BwFilterDef();
 
     restoreSharedEntity(ent);
@@ -199,7 +196,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return ent;
   }
 
-  BwResource makeResource() throws CalFacadeException {
+  BwResource makeResource() {
     final BwResource ent = new BwResource();
 
     restoreSharedEntity(ent);
@@ -228,7 +225,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return ent;
   }
 
-  BwCategory makeCat() throws CalFacadeException {
+  BwCategory makeCat() {
     final BwCategory cat = new BwCategory();
 
     restoreSharedEntity(cat);
@@ -244,7 +241,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return cat;
   }
 
-  BwContact makeContact() throws CalFacadeException {
+  BwContact makeContact() {
     final BwContact ent = new BwContact();
 
     restoreSharedEntity(ent);
@@ -260,7 +257,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return ent;
   }
 
-  BwLocation makeLocation() throws CalFacadeException {
+  BwLocation makeLocation() {
     final BwLocation ent = new BwLocation();
 
     restoreSharedEntity(ent);
@@ -277,7 +274,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return ent;
   }
 
-  BwCalendar makeCollection() throws CalFacadeException {
+  BwCalendar makeCollection() {
     final BwCalendar col = new BwCalendar();
 
     restoreSharedEntity(col);
@@ -554,11 +551,7 @@ public class EntityBuilder extends EntityBuilderBase {
    * ======================================================================== */
 
   private boolean pushFields(final PropertyInfoIndex pi) {
-    try {
-      return pushFields(getFirstValue(pi));
-    } catch (final IndexException ie) {
-      throw new RuntimeException(ie);
-    }
+    return pushFields(getFirstValue(pi));
   }
 
   private BwGeo restoreGeo() {
@@ -578,7 +571,7 @@ public class EntityBuilder extends EntityBuilderBase {
     }
   }
 
-  private BwOrganizer restoreOrganizer() throws CalFacadeException {
+  private BwOrganizer restoreOrganizer() {
     if (!pushFields(PropertyInfoIndex.ORGANIZER)) {
       return null;
     }
@@ -606,7 +599,7 @@ public class EntityBuilder extends EntityBuilderBase {
     }
   }
 
-  private Set<BwAttendee> restoreAttendees(final boolean vpoll) throws CalFacadeException {
+  private Set<BwAttendee> restoreAttendees(final boolean vpoll) {
     final PropertyInfoIndex pi;
 
     if (vpoll) {
@@ -654,8 +647,6 @@ public class EntityBuilder extends EntityBuilderBase {
         att.setAttendeeUri(getString(PropertyInfoIndex.URI));
 
         atts.add(att);
-      } catch (final IndexException ie) {
-        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -664,7 +655,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return atts;
   }
 
-  private BwRelatedTo restoreRelatedTo() throws CalFacadeException {
+  private BwRelatedTo restoreRelatedTo() {
     if (!pushFields(PropertyInfoIndex.RELATED_TO)) {
       return null;
     }
@@ -681,7 +672,7 @@ public class EntityBuilder extends EntityBuilderBase {
     }
   }
 
-  private List<BwXproperty> restoreXprops() throws CalFacadeException {
+  private List<BwXproperty> restoreXprops() {
     /* Convert our special fields back to xprops */
     final Set<String> xpnames = DocBuilder.interestingXprops.keySet();
 
@@ -690,8 +681,8 @@ public class EntityBuilder extends EntityBuilderBase {
     if (!Util.isEmpty(xpnames)) {
       for (final String xpname: xpnames) {
         @SuppressWarnings("unchecked")
-        final Collection<String> xvals =
-                (Collection)getFieldValues(DocBuilder.interestingXprops.get(xpname));
+        final List<String> xvals =
+                (List)getFieldValues(DocBuilder.interestingXprops.get(xpname));
 
         if (!Util.isEmpty(xvals)) {
           for (final String xval: xvals) {
@@ -728,8 +719,6 @@ public class EntityBuilder extends EntityBuilderBase {
         xp.setValue(getString(PropertyInfoIndex.VALUE));
 
         xprops.add(xp);
-      } catch (final IndexException ie) {
-        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -739,7 +728,7 @@ public class EntityBuilder extends EntityBuilderBase {
   }
 
   @SuppressWarnings("unchecked")
-  private void restoreReqStat(final BwEvent ev) throws CalFacadeException {
+  private void restoreReqStat(final BwEvent ev) {
     final Collection<String> vals =
             (Collection)getFieldValues(PropertyInfoIndex.REQUEST_STATUS);
     if (Util.isEmpty(vals)) {
@@ -754,7 +743,7 @@ public class EntityBuilder extends EntityBuilderBase {
   }
 
   private <T extends BwStringBase> T restoreBwStringValue(final PropertyInfoIndex pi,
-                                                     final Class<T> resultType) throws CalFacadeException {
+                                                     final Class<T> resultType) {
     final String val = getString(pi);
     if (val == null) {
       return null;
@@ -763,7 +752,7 @@ public class EntityBuilder extends EntityBuilderBase {
     try {
       sb = resultType.newInstance();
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
 
     sb.setLang(null);
@@ -773,7 +762,7 @@ public class EntityBuilder extends EntityBuilderBase {
   }
 
   private <T extends BwStringBase> T restoreBwString(final PropertyInfoIndex pi,
-                                       final Class<T> resultType) throws CalFacadeException {
+                                       final Class<T> resultType) {
     if (!pushFields(pi)) {
       return null;
     }
@@ -787,15 +776,13 @@ public class EntityBuilder extends EntityBuilderBase {
 
   private <T extends BwStringBase> Set<T> restoreBwStringSet(
           final PropertyInfoIndex pi,
-          final Class<T> resultType)
-          throws CalFacadeException {
+          final Class<T> resultType) {
     return restoreBwStringSet(getJname(pi), resultType);
   }
 
   private <T extends BwStringBase> Set<T> restoreBwStringSet(
           final String name,
-          final Class<T> resultType)
-          throws CalFacadeException {
+          final Class<T> resultType) {
     final List<Object> vals = getFieldValues(name);
 
     if (Util.isEmpty(vals)) {
@@ -809,8 +796,6 @@ public class EntityBuilder extends EntityBuilderBase {
         pushFields(o);
 
         ss.add(restoreBwString(resultType));
-      } catch (final IndexException ie) {
-        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -819,13 +804,12 @@ public class EntityBuilder extends EntityBuilderBase {
     return ss;
   }
 
-  private <T extends BwStringBase> T restoreBwString(final Class<T> resultType)
-          throws CalFacadeException {
+  private <T extends BwStringBase> T restoreBwString(final Class<T> resultType) {
     final T sb;
     try {
       sb = resultType.getDeclaredConstructor().newInstance();
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
 
     sb.setLang(getString(PropertyInfoIndex.LANG));
@@ -871,7 +855,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return tms;
   }
 
-  private Set<BwAlarm> restoreAlarms() throws CalFacadeException {
+  private Set<BwAlarm> restoreAlarms() {
     final List<Object> vals = getFieldValues(PropertyInfoIndex.VALARM);
 
     if (Util.isEmpty(vals)) {
@@ -945,8 +929,6 @@ public class EntityBuilder extends EntityBuilderBase {
         alarm.setXproperties(restoreXprops());
 
         alarms.add(alarm);
-      } catch (final IndexException ie) {
-        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -969,7 +951,7 @@ public class EntityBuilder extends EntityBuilderBase {
     entitytypeMap.put("vpoll", IcalDefs.entityTypeVpoll);
   }
 
-  private int makeEntityType(final String val) throws CalFacadeException {
+  private int makeEntityType(final String val) {
     final Integer i = entitytypeMap.get(val);
 
     if (i == null) {
@@ -979,7 +961,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return i;
   }
 
-  private void restoreSharedEntity(final BwShareableContainedDbentity ent) {
+  private void restoreSharedEntity(final BwShareableContainedDbentity<?> ent) {
     ent.setCreatorHref(getString(PropertyInfoIndex.CREATOR));
     ent.setOwnerHref(getString(PropertyInfoIndex.OWNER));
     ent.setColPath(getString(PropertyInfoIndex.COLLECTION));
@@ -987,7 +969,7 @@ public class EntityBuilder extends EntityBuilderBase {
     ent.setPublick(getBooleanNotNull(PropertyInfoIndex.PUBLIC));
   }
 
-  private Set<BwView> restoreViews() throws CalFacadeException {
+  private Set<BwView> restoreViews() {
     final Collection<Object> vals = getFieldValues("views");
     if (Util.isEmpty(vals)) {
       return null;
@@ -1009,8 +991,6 @@ public class EntityBuilder extends EntityBuilderBase {
         }
 
         views.add(view);
-      } catch (final IndexException ie) {
-        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -1019,7 +999,7 @@ public class EntityBuilder extends EntityBuilderBase {
     return views;
   }
 
-  private Set<BwProperty> restoreProperties(final String name) throws CalFacadeException {
+  private Set<BwProperty> restoreProperties(final String name) {
     final Collection<Object> vals = getFieldValues(name);
     if (Util.isEmpty(vals)) {
       return null;
@@ -1033,8 +1013,6 @@ public class EntityBuilder extends EntityBuilderBase {
         final String pname = getString(PropertyInfoIndex.NAME);
         final String val = getString(PropertyInfoIndex.VALUE);
         props.add(new BwProperty(pname, val));
-      } catch (final IndexException ie) {
-        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }
@@ -1043,15 +1021,15 @@ public class EntityBuilder extends EntityBuilderBase {
     return props;
   }
 
-  private void restoreContacts(final BwEvent ev) throws CalFacadeException {
+  private void restoreContacts(final BwEvent ev) {
     ev.setContactHrefs(getHrefs(getFieldValues(PropertyInfoIndex.CONTACT)));
   }
 
-  private void restoreCategories(final CategorisedEntity ce) throws CalFacadeException {
+  private void restoreCategories(final CategorisedEntity ce) {
     ce.setCategoryHrefs(getHrefs(getFieldValues(PropertyInfoIndex.CATEGORIES)));
   }
 
-  private Set<String> getHrefs(final List<Object> vals) throws CalFacadeException {
+  private Set<String> getHrefs(final List<Object> vals) {
     if (Util.isEmpty(vals)) {
       return null;
     }
@@ -1063,8 +1041,6 @@ public class EntityBuilder extends EntityBuilderBase {
         pushFields(o);
         final String uid = getString(PropertyInfoIndex.HREF);
         hrefs.add(uid);
-      } catch (final IndexException ie) {
-        throw new CalFacadeException(ie);
       } finally {
         popFields();
       }

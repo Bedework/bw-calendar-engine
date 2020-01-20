@@ -1041,7 +1041,7 @@ public class CalintfROImpl extends CalintfBase
       final EventInfo ei = (EventInfo)o;
       final BwEvent ev = ei.getEvent();
 
-      final CoreEventInfo cei = postGetEvent(ev, null, ei.getCurrentAccess());
+      final CoreEventInfo cei = postGetEvent(ev, ei.getCurrentAccess());
 
       if (cei == null) {
         continue;
@@ -1060,7 +1060,7 @@ public class CalintfROImpl extends CalintfBase
     final List<CoreEventInfo> res = new ArrayList<>(1);
 
     checkOpen();
-    final GetEntityResponse<EventInfo> ger =
+    final GetEntitiesResponse<EventInfo> ger =
             getEvIndexer().fetchEvent(colPath, guid);
 
     if (ger.getStatus() == notFound) {
@@ -1068,23 +1068,20 @@ public class CalintfROImpl extends CalintfBase
     }
 
     if (ger.getStatus() != Response.Status.ok) {
-      throw new CalFacadeException("Unable to retrieve event: " + ger.getStatus());
+      throw new CalFacadeException("Unable to retrieve event: " +
+                                           ger.getStatus());
     }
 
-    final EventInfo ei = ger.getEntity();
-
-    if (ei == null) {
-      return res;
+    for (final var ei: ger.getEntities()) {
+      res.add(postGetEvent(ei));
     }
-
-    res.add(postGetEvent(ei));
 
     return res;
   }
 
   /* Post processing of event from indexer. Access already checked
    */
-  protected CoreEventInfo postGetEvent(final EventInfo ei) throws CalFacadeException {
+  protected CoreEventInfo postGetEvent(final EventInfo ei)  {
     if (ei == null) {
       return null;
     }

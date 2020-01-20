@@ -129,8 +129,7 @@ public class DocBuilder extends DocBuilderBase {
    *
    * @param basicSysprops -  Only used for fixNames calls
    */
-  DocBuilder(final BasicSystemProperties basicSysprops)
-          throws IndexException {
+  DocBuilder(final BasicSystemProperties basicSysprops) {
     super();
     this.basicSysprops = basicSysprops;
   }

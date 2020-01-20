@@ -148,12 +148,12 @@ import static java.lang.String.format;
 import static org.bedework.access.PrivilegeDefs.privRead;
 import static org.bedework.calcore.common.indexing.DocBuilder.ItemKind.entity;
 import static org.bedework.calfacade.indexing.BwIndexer.IndexedType.unreachableEntities;
+import static org.bedework.util.elasticsearch.DocBuilderBase.updateTrackerId;
 import static org.bedework.util.misc.response.Response.Status.failed;
 import static org.bedework.util.misc.response.Response.Status.noAccess;
 import static org.bedework.util.misc.response.Response.Status.notFound;
 import static org.bedework.util.misc.response.Response.Status.ok;
 import static org.bedework.util.misc.response.Response.Status.processing;
-import static org.bedework.util.elasticsearch.DocBuilderBase.updateTrackerId;
 
 /** Implementation of indexer for ElasticSearch
  *
@@ -254,7 +254,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           new TreeSet<>();
 
   static {
-    for (final String type: allDocTypes) {
+    for (final String type : allDocTypes) {
       knownTypesLowered.add(type.toLowerCase());
     }
   }
@@ -320,16 +320,16 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                       ", fetchTime: " + fetchTime +
                       ", fetcAccessTime: " + fetchAccessTime);
       }
-    } else if (fetchDepth > 0){
+    } else if (fetchDepth > 0) {
       fetchDepth--;
     }
   }
 
   private void fetchAccessEnd() {
-    if ((fetchAccessDepth <= 0) && (fetchAccessStart != 0)){
+    if ((fetchAccessDepth <= 0) && (fetchAccessStart != 0)) {
       fetchAccessTime += (System.currentTimeMillis() - fetchAccessStart);
       fetchAccessStart = 0;
-    } else if (fetchAccessDepth > 0){
+    } else if (fetchAccessDepth > 0) {
       fetchAccessDepth--;
     }
   }
@@ -401,15 +401,15 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   /**
    * Constructor
    *
-   * @param configs     - the configurations object
-   * @param docType type of entity
-   * @param publick     - if false we add an owner term to the
-   *                    searches
-   * @param principalHref   - who is doing the searching - only for
-   *                    non-public
-   * @param superUser   - true if the principal is a superuser.
-   * @param accessCheck - required - lets us check access
-   * @param indexName   - explicitly specified
+   * @param configs       - the configurations object
+   * @param docType       type of entity
+   * @param publick       - if false we add an owner term to the
+   *                      searches
+   * @param principalHref - who is doing the searching - only for
+   *                      non-public
+   * @param superUser     - true if the principal is a superuser.
+   * @param accessCheck   - required - lets us check access
+   * @param indexName     - explicitly specified
    */
   public BwIndexEsImpl(final Configurations configs,
                        final String docType,
@@ -596,7 +596,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     UpdateInfo ui;
     try {
       final GetRequest req = new GetRequest(targetIndex,
-                                           updateTrackerId).
+                                            updateTrackerId).
                       storedFields("esUpdateCount");
 
       final GetResponse resp = getClient().get(req, RequestOptions.DEFAULT);
@@ -611,7 +611,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       synchronized (updateInfo) {
         final UpdateInfo fromTbl = updateInfo.get(targetIndex);
 
-        if ((fromTbl == null) || (fromTbl.getCount() < ui.getCount())) {
+        if ((fromTbl == null) ||
+                (fromTbl.getCount() < ui.getCount())) {
           updateInfo.put(targetIndex, ui);
         } else {
           ui = fromTbl;
@@ -690,7 +691,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     BulkProcessor.Builder builder = BulkProcessor.builder(
             (request, bulkListener) ->
-                    cl.bulkAsync(request, RequestOptions.DEFAULT, bulkListener),
+                    cl.bulkAsync(request, RequestOptions.DEFAULT,
+                                 bulkListener),
             listener);
 
     final BulkProcessor bulkProcessor =
@@ -776,7 +778,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                               hit,
                               ei,
                               bulkProcessor)) {
-              warn("Unable to iondex event " + hit.getSourceAsString());
+              warn("Unable to index event " + hit.getSourceAsString());
               resp.incTotalFailed();
               if (resp.getTotalFailed() < 50) {
                 resp.addFailure(hitResp);
@@ -1115,10 +1117,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       final Collection<EventInfo> masters = new TreeSet<>();
 
       EntityBuilder.checkFlushCache(currentChangeToken());
-      
-    /* If we are retrieving events with a time range query and we are asking for the 
-     * master + overrides then we need to check that the master really has an 
-     * instance in the given time range */
+
+      /* If we are retrieving events with a time range query and we are asking for the
+       * master + overrides then we need to check that the master really has an
+       * instance in the given time range */
       final boolean checkTimeRange =
               (res.recurRetrieval.mode == Rmode.overrides) &&
                       ((res.latestStart != null) ||
@@ -1136,7 +1138,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                   "org.bedework.index.noitemkey");
         }
 
-        final EntityBuilder eb = getEntityBuilder(hit.getSourceAsMap());
+        final EntityBuilder eb =
+                getEntityBuilder(hit.getSourceAsMap());
 
         Object entity = null;
         switch (docType) {
@@ -1240,13 +1243,15 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public void indexEntity(final Object rec) throws CalFacadeException {
+  public void indexEntity(final Object rec)
+          throws CalFacadeException {
     indexEntity(rec, false);
   }
 
   @Override
   public void indexEntity(final Object rec,
-                          final boolean waitForIt) throws CalFacadeException {
+                          final boolean waitForIt)
+          throws CalFacadeException {
     try {
       /* XXX later with batch
       XmlEmit xml;
@@ -1701,7 +1706,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       dqr.setConflicts("proceed");
       QueryBuilder fb = getFilters(null)
               .singleTombstonedEntityQuery(href,
-                                 PropertyInfoIndex.HREF);
+                                           PropertyInfoIndex.HREF);
 
       dqr.setQuery(fb);
 
@@ -1784,7 +1789,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       info("Attempt to create index " + newName);
 
       final CreateIndexResponse resp =
-              getClient().indices().create(req, RequestOptions.DEFAULT);
+              getClient().indices()
+                         .create(req, RequestOptions.DEFAULT);
 
       info("Index " + newName + " created");
 
@@ -1809,11 +1815,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       GetAliasesRequest req = new GetAliasesRequest();
 
       final GetAliasesResponse resp =
-              getClient().indices().getAlias(req, RequestOptions.DEFAULT);
+              getClient().indices()
+                         .getAlias(req, RequestOptions.DEFAULT);
 
       Map<String, Set<AliasMetaData>> aliases = resp.getAliases();
 
-      for (final String inm: aliases.keySet()) {
+      for (final String inm : aliases.keySet()) {
         final IndexInfo ii = new IndexInfo(inm);
         res.add(ii);
 
@@ -1823,7 +1830,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           continue;
         }
 
-        for (final AliasMetaData amd: amds) {
+        for (final AliasMetaData amd : amds) {
           ii.addAlias(amd.alias());
         }
       }
@@ -1875,7 +1882,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     // Make the alias
     String alias = null;
 
-    for (final String type: knownTypesLowered) {
+    for (final String type : knownTypesLowered) {
       if (index.startsWith("bw" + type + "2")) {
         alias = "bw" + type;
         break;
@@ -1894,7 +1901,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       GetAliasesRequest req = new GetAliasesRequest(alias);
 
       final GetAliasesResponse resp =
-              getClient().indices().getAlias(req, RequestOptions.DEFAULT);
+              getClient().indices()
+                         .getAlias(req, RequestOptions.DEFAULT);
 
       if (resp.status() == RestStatus.OK) {
         final Map<String, Set<AliasMetaData>> aliases =
@@ -1930,7 +1938,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                       .alias(alias);
       ireq.addAliasAction(addAction);
       AcknowledgedResponse ack =
-              getClient().indices().updateAliases(ireq, RequestOptions.DEFAULT);
+              getClient().indices()
+                         .updateAliases(ireq, RequestOptions.DEFAULT);
 
       return 0;
     } catch (final ElasticsearchException ese) {
@@ -1947,13 +1956,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   private BwSystem cachedBwSystem;
 
   @Override
-  public GetEntityResponse<EventInfo> fetchEvent(final String href)
-          throws CalFacadeException {
+  public GetEntityResponse<EventInfo> fetchEvent(final String href) {
+    final GetEntityResponse<EventInfo> resp = new GetEntityResponse<>();
+
     try {
       fetchStart();
 
-      final GetEntityResponse<EventInfo> resp = new GetEntityResponse<>();
-      final String recurrenceId;
       final String hrefNorid;
 
       // Check validity
@@ -1966,99 +1974,53 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       if (fragPos < pos) {
         hrefNorid = href;
-        recurrenceId = null;
       } else {
         hrefNorid = href.substring(0, fragPos);
-        recurrenceId = href.substring(fragPos + 1);
       }
 
       final QueryBuilder qb =
-              getFilters(null).singleEventFilter(href,
-                                                 recurrenceId);
+              getFilters(null).singleEventFilter(hrefNorid);
 
-      final SearchHit hit = fetchEntity(docTypeEvent, qb);
+      List<EventInfo> eis = fetchEvents(qb, -1, privRead);
 
-      if (hit == null) {
+      if (eis.size() > 1) {
+        return Response.invalid(resp, "More than one event returned");
+      }
+
+      if (eis.isEmpty()) {
         return notFound(resp);
       }
 
-      final EntityBuilder eb = getEntityBuilder(hit.getSourceAsMap());
-
-      final EventInfo ei = makeEvent(eb, resp, hit.getId(), false);
-      if (ei == null) {
-        return notFound(resp);
-      }
-
-      final BwEvent ev = ei.getEvent();
-
-      final CurrentAccess ca =
-              accessCheck.checkAccess(ev, privRead, true);
-
-      if ((ca == null) || !ca.getAccessAllowed()) {
-        return notFound(resp);
-      }
-
-      ei.setCurrentAccess(ca);
-      resp.setEntity(ei);
-
-      if (ev.getRecurrenceId() != null) {
-        // Single instance
-        return resp;
-      }
-
-      addOverrides(resp, ei);
+      resp.setEntity(eis.get(0));
 
       return resp;
+    } catch (final Throwable t) {
+      return errorReturn(resp, t);
     } finally {
       fetchEnd();
     }
   }
 
   @Override
-  public GetEntityResponse<EventInfo> fetchEvent(String colPath,
-                                                 String guid)
-          throws CalFacadeException {
+  public GetEntitiesResponse<EventInfo> fetchEvent(String colPath,
+                                                   String guid) {
+    final GetEntitiesResponse<EventInfo> resp =
+            new GetEntitiesResponse<>();
+
     try {
       fetchStart();
 
-      final GetEntityResponse<EventInfo> resp = new GetEntityResponse<>();
-
       final QueryBuilder qb =
-              getFilters(null).singleEventFilterGuid(colPath, guid);
+              getFilters(null).eventFilterGuid(colPath, guid);
 
-      final SearchHit hit = fetchEntity(docTypeEvent, qb);
-
-      if (hit == null) {
-        return notFound(resp);
+      resp.setEntities(fetchEvents(qb, -1, privRead));
+      if (resp.getEntities() == null) {
+        resp.setStatus(notFound);
       }
-
-      final EntityBuilder eb = getEntityBuilder(hit.getSourceAsMap());
-
-      final EventInfo ei = makeEvent(eb, resp, hit.getId(), false);
-      if (ei == null) {
-        return notFound(resp);
-      }
-
-      final BwEvent ev = ei.getEvent();
-
-      final CurrentAccess ca =
-              accessCheck.checkAccess(ev, privRead, true);
-
-      if ((ca == null) || !ca.getAccessAllowed()) {
-        return notFound(resp);
-      }
-
-      ei.setCurrentAccess(ca);
-      resp.setEntity(ei);
-
-      if (ev.getRecurrenceId() != null) {
-        // Single instance
-        return resp;
-      }
-
-      addOverrides(resp, ei);
 
       return resp;
+    } catch (final Throwable t) {
+      return errorReturn(resp, t);
     } finally {
       fetchEnd();
     }
@@ -2074,60 +2036,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             getFilters(null).syncFilter(path, lastmod,
                                         lastmodSeq);
 
-    final List<EventInfo> eis =
-            fetchEntities(docTypeEvent,
-                          new BuildEntity<>() {
-                            @Override
-                            EventInfo make(final EntityBuilder eb,
-                                           final String id)
-                                    throws CalFacadeException {
-                              return eb.makeEvent(id, false);
-                            }
-                          },
-                          qb,
-                          count);
-
-    /* we have to group all the overrides */
-
-    final Map<String, EventInfo> masters = new HashMap<>();
-
-    /* First pass - store masters or non-recurring */
-    for (final var ei: eis) {
-      final BwEvent ev = ei.getEvent();
-      if (ev.isRecurringEntity() || (ev.getRecurrenceId() == null)) {
-        masters.put(ev.getUid(), ei);
-      }
-    }
-
-    /* Now fix up any overrides */
-
-    for (final var ei: eis) {
-      final BwEvent ev = ei.getEvent();
-
-      if (!(ev instanceof BwEventAnnotation)) {
-        continue;
-      }
-
-      final EventInfo mei = masters.get(ev.getUid());
-
-      if (mei == null) {
-        warn("Missing master for " + ev.getUid());
-        continue;
-      }
-
-      final var oev = (BwEventAnnotation)ev;
-
-      oev.setTarget(mei.getEvent());
-      oev.setMaster(mei.getEvent());
-
-      final BwEvent proxy = new BwEventProxy(oev);
-
-      final EventInfo oei = new EventInfo(proxy);
-
-      mei.addOverride(oei);
-    }
-
-    return new ArrayList<>(masters.values());
+    return fetchEvents(qb, count, privRead);
   }
 
   @Override
@@ -2379,8 +2288,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                      new BuildEntity<>() {
                                        @Override
                                        BwGroup make(final EntityBuilder eb,
-                                                    final String id)
-                                               throws CalFacadeException {
+                                                    final String id) {
                                          return (BwGroup)eb.makePrincipal();
                                        }
                                      },
@@ -2404,8 +2312,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                      new BuildEntity<>() {
                                        @Override
                                        BwAdminGroup make(final EntityBuilder eb,
-                                                    final String id)
-                                               throws CalFacadeException {
+                                                    final String id) {
                                          return (BwAdminGroup)eb.makePrincipal();
                                        }
                                      },
@@ -2431,8 +2338,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                      new BuildEntity<>() {
                                        @Override
                                        BwGroup make(final EntityBuilder eb,
-                                                    final String id)
-                                               throws CalFacadeException {
+                                                    final String id) {
                                          return (BwGroup)eb.makePrincipal();
                                        }
                                      },
@@ -2458,8 +2364,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                      new BuildEntity<>() {
                                        @Override
                                        BwAdminGroup make(final EntityBuilder eb,
-                                                    final String id)
-                                               throws CalFacadeException {
+                                                    final String id) {
                                          return (BwAdminGroup)eb.makePrincipal();
                                        }
                                      },
@@ -2543,8 +2448,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                          new BuildEntity<>() {
                            @Override
                            BwFilterDef make(final EntityBuilder eb,
-                                            final String id)
-                                   throws CalFacadeException {
+                                            final String id) {
                              return eb.makefilter();
                            }
                          },
@@ -2591,8 +2495,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                          new BuildEntity<>() {
                            @Override
                            BwResource make(final EntityBuilder eb,
-                                           final String id)
-                                   throws CalFacadeException {
+                                           final String id) {
                              return eb.makeResource();
                            }
                          },
@@ -2721,8 +2624,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                          new BuildEntity<>() {
                            @Override
                            BwCategory make(final EntityBuilder eb,
-                                           final String id)
-                                   throws CalFacadeException {
+                                           final String id) {
                              return eb.makeCat();
                            }
                          },
@@ -2736,8 +2638,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                          new BuildEntity<>() {
                            @Override
                            BwContact make(final EntityBuilder eb,
-                                          final String id)
-                                   throws CalFacadeException {
+                                          final String id) {
                              return eb.makeContact();
                            }
                          },
@@ -2751,8 +2652,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                          new BuildEntity<>() {
                            @Override
                            BwLocation make(final EntityBuilder eb,
-                                           final String id)
-                                   throws CalFacadeException {
+                                           final String id) {
                              return eb.makeLocation();
                            }
                          }, -1);
@@ -3113,7 +3013,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           throws CalFacadeException {
     try {
       final DeleteIndexRequest request =
-              new DeleteIndexRequest(names.toArray(new String[names.size()]));
+              new DeleteIndexRequest(names.toArray(new String[0]));
 
       final AcknowledgedResponse deleteIndexResponse =
               getClient().indices().delete(request, RequestOptions.DEFAULT);
@@ -3514,6 +3414,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       final DateLimits dl = new DateLimits();
 
+      /* As a side-effect the call to makeInstances updates dl for use
+         later. For tombstoned events we don't index.
+       */
       if (!makeEventInstances(ei, dl, ev.getTombstoned())) {
         return null;
       }
@@ -3545,6 +3448,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       throw new CalFacadeException(t);
     }
   }
+
+  private final static long bulkSize = 5 * 1024 * 1024;
 
   private boolean makeEventInstances(final EventInfo ei,
                                      final DateLimits dl,
@@ -3581,7 +3486,17 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
      */
     final Map<String, String> overrides = new HashMap<>();
 
-      /*
+    BulkRequest bulkReq = null;
+
+    if (!noIndex) {
+      bulkReq = new BulkRequest();
+    }
+
+    if (debug()) {
+      debug("Start makeInstances");
+    }
+
+    /*
       if (!Util.isEmpty(ei.getOverrideProxies())) {
         for (BwEvent ov: ei.getOverrideProxies()) {
           overrides.put(ov.getRecurrenceId(), ov.getRecurrenceId());
@@ -3609,13 +3524,14 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         dl.checkMin(rstart);
         dl.checkMax(rend);
 
-        if (!noIndex) {
+        if (bulkReq != null) {
           /*iresp = */
-          indexEvent(oei,
-                     ItemKind.override,
-                     rstart,
-                     rend,
-                     ov.getRecurrenceId());
+          bulkReq = addToBulk(bulkReq,
+                              oei,
+                              ItemKind.override,
+                              rstart,
+                              rend,
+                              ov.getRecurrenceId());
         }
 
         instanceCt--;
@@ -3651,13 +3567,14 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       dl.checkMin(rstart);
       dl.checkMax(rend);
 
-      if (!noIndex) {
+      if (bulkReq != null) {
         /*iresp = */
-        indexEvent(ei,
-                   entity,
-                   rstart,
-                   rend,
-                   recurrenceId);
+        bulkReq = addToBulk(bulkReq,
+                            ei,
+                            entity,
+                            rstart,
+                            rend,
+                            recurrenceId);
       }
 
       instanceCt--;
@@ -3666,6 +3583,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         break;
       }
     }
+
+    if ((bulkReq != null) && (bulkReq.estimatedSizeInBytes() > 0)) {
+      flushBulkReq(bulkReq);
+    }
+
+
 
     return true;
   }
@@ -3703,6 +3626,67 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     return ok;
+  }
+
+  private BulkRequest addToBulk(final BulkRequest bulkReq,
+                                final EventInfo ei,
+                                final ItemKind kind,
+                                final BwDateTime start,
+                                final BwDateTime end,
+                                final String recurid) throws CalFacadeException {
+    bulkReq.add(makeRequest(ei, kind, start, end, recurid));
+
+    if (bulkReq.estimatedSizeInBytes() <= bulkSize) {
+      return bulkReq;
+    }
+
+    return flushBulkReq(bulkReq);
+  }
+
+  private BulkRequest flushBulkReq(final BulkRequest bulkReq) throws CalFacadeException {
+    try {
+      final BulkResponse bresp = getClient()
+              .bulk(bulkReq, RequestOptions.DEFAULT);
+
+      if (bresp.hasFailures()) {
+        throw new CalFacadeException("Failed bulk index: " + bresp.buildFailureMessage());
+      }
+
+      if (debug()) {
+        debug(format("bulk update %s entries, %s size took %s",
+                     bulkReq.numberOfActions(),
+                     bulkReq.estimatedSizeInBytes(),
+                     bresp.getTook().toString()));
+      }
+
+      return new BulkRequest();
+    } catch (final Throwable t) {
+      throw new CalFacadeException(t);
+    }
+  }
+
+  private IndexRequest makeRequest(final EventInfo ei,
+                                   final ItemKind kind,
+                                   final BwDateTime start,
+                                   final BwDateTime end,
+                                   final String recurid) throws CalFacadeException {
+    final DocBuilder db = getDocBuilder();
+    final EsDocInfo di = db.makeDoc(ei,
+                                    kind,
+                                    start,
+                                    end,
+                                    recurid);
+
+    final IndexRequest req = new IndexRequest(targetIndex);
+
+    req.id(di.getId());
+    req.source(di.getSource());
+
+    if (di.getVersion() != 0) {
+      req.version(di.getVersion()).versionType(VersionType.EXTERNAL);
+    }
+
+    return req;
   }
 
   private IndexResponse indexEvent(final EventInfo ei,
@@ -3762,6 +3746,132 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     return getClient().index(req, RequestOptions.DEFAULT);
+  }
+
+  private EventInfo checkAccess(final EventInfo ei,
+                                final int desiredAccess) {
+    if (ei == null) {
+      return null;
+    }
+
+    final BwEvent ev = ei.getEvent();
+
+    final CurrentAccess ca;
+    try {
+      ca = accessCheck.checkAccess(ev, desiredAccess, true);
+    } catch (CalFacadeException e) {
+      return null;
+    }
+
+    if ((ca == null) || !ca.getAccessAllowed()) {
+      return null;
+    }
+
+    ei.setCurrentAccess(ca);
+    return ei;
+  }
+
+  private List<EventInfo> fetchEvents(final QueryBuilder qb,
+                                      final int count,
+                                      final int desiredAccess)
+          throws CalFacadeException  {
+    final List<EventInfo> eis =
+            fetchEntities(docTypeEvent,
+                          new BuildEntity<>() {
+                            @Override
+                            EventInfo make(final EntityBuilder eb,
+                                           final String id)
+                                    throws CalFacadeException {
+                              return eb.makeEvent(id, false);
+                            }
+                          },
+                          qb,
+                          count);
+
+    return new EventGroups(eis, desiredAccess).finalise();
+  }
+
+  private static class EventGroup {
+    EventInfo master;
+    boolean noAccess;
+    List<BwEventAnnotation> overrides = new ArrayList<>();
+  }
+
+  private class EventGroups extends HashMap<String, EventGroup> {
+    EventGroups(final List<EventInfo> eis,
+                final int desiredAccess) {
+      for (final var ei : eis) {
+        final BwEvent ev = ei.getEvent();
+        final String href = ev.getHref();
+
+        final EventGroup eg = computeIfAbsent(href,
+                                              k -> new EventGroup());
+
+        if (eg.noAccess) {
+          continue;
+        }
+
+        if (ev.getRecurrenceId() == null) {
+          if (eg.master != null) {
+            warn("Duplicate hrefs: " + href);
+            continue;
+          }
+
+          eg.master = checkAccess(ei, desiredAccess);
+
+          if (eg.master == null) {
+            eg.noAccess = true;
+          }
+
+          continue;
+        }
+
+        if (!(ev instanceof BwEventAnnotation)) {
+          warn("Expected an annotation for " + href);
+          continue;
+        }
+
+        eg.overrides.add((BwEventAnnotation)ev);
+      }
+    }
+
+    List<EventInfo> finalise() {
+      final List<EventInfo> res = new ArrayList<>();
+
+      for (final var href: keySet()) {
+        final var eg = get(href);
+
+        if (eg.noAccess) {
+          continue;
+        }
+
+        final var mei = eg.master;
+
+        if (mei == null) {
+          warn("Missing master for " + href);
+          continue;
+        }
+
+        res.add(mei);
+
+        if (Util.isEmpty(eg.overrides)) {
+          continue;
+        }
+
+        for (final var oev: eg.overrides) {
+          oev.setTarget(mei.getEvent());
+          oev.setMaster(mei.getEvent());
+
+          final BwEvent proxy = new BwEventProxy(oev);
+
+          final EventInfo oei = new EventInfo(proxy);
+
+          mei.addOverride(oei);
+        }
+      }
+
+      return res;
+    }
   }
 
   private RestHighLevelClient getClient(final Response resp) {
@@ -3911,7 +4021,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private BwCalendar makeCollection(final EntityBuilder eb) throws CalFacadeException {
+  private BwCalendar makeCollection(final EntityBuilder eb) {
     final BwCalendar entity = eb.makeCollection();
 
     if (entity != null) {
@@ -4024,20 +4134,12 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private EntityBuilder getEntityBuilder(final Map<String, ?> fields) throws CalFacadeException {
-    try {
-      return new EntityBuilder(publick, fields);
-    } catch (final IndexException ie) {
-      throw new CalFacadeException(ie);
-    }
+  private EntityBuilder getEntityBuilder(final Map<String, ?> fields) {
+    return new EntityBuilder(publick, fields);
   }
 
-  private DocBuilder getDocBuilder() throws CalFacadeException {
-    try {
-      return new DocBuilder(basicSysprops);
-    } catch (final IndexException ie) {
-      throw new CalFacadeException(ie);
-    }
+  private DocBuilder getDocBuilder() {
+    return new DocBuilder(basicSysprops);
   }
 
   private <T extends Response> T errorReturn(final T resp,
