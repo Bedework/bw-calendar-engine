@@ -336,7 +336,31 @@ class Users extends CalSvcDb implements UsersI {
 
     prefs.setScheduleAutoRespond(principal.getKind() == WhoDefs.whoTypeResource);
 
+    if (isTestUser(principal)) {
+      prefs.setScheduleAutoProcessResponses(
+              BwPreferences.scheduleAutoProcessResponsesNotifyAll);
+    }
+
     update(prefs);
+  }
+
+  private boolean isTestUser(final BwPrincipal pr) {
+    if (pr.getKind() != WhoDefs.whoTypeUser) {
+      return false;
+    }
+
+    var account = pr.getAccount();
+
+    if (!account.startsWith("user")) {
+      return false;
+    }
+
+    try {
+      Integer.parseInt(account.substring(4));
+      return true;
+    } catch (final Throwable ignored) {
+      return false;
+    }
   }
 
   @Override
