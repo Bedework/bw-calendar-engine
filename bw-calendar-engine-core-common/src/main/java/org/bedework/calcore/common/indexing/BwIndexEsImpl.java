@@ -3702,7 +3702,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                       end,
                                       recurid);
 
-      return indexDoc(di, ei.getEvent().getTombstoned());
+      return indexDoc(di, true); //ei.getEvent().getTombstoned());
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final VersionConflictEngineException vcee) {
