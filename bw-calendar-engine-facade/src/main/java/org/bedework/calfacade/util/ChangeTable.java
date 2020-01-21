@@ -18,9 +18,16 @@
 */
 package org.bedework.calfacade.util;
 
+import org.bedework.calfacade.BwAlarm;
+import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwAttendee;
+import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwContact;
+import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.BwRequestStatus;
+import org.bedework.calfacade.BwString;
+import org.bedework.calfacade.BwXproperty;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.logging.BwLogger;
@@ -236,13 +243,15 @@ public class ChangeTable implements Logged, Serializable {
    * replacement approach. Do NOT call for the patch or selective update
    * approach as found in e.g. SOAP.
    *
-   * @param ev
+   * @param ev to update
    * @param update
-   * @throws CalFacadeException
+   * @param attendeeFromOrganizer true if we are updating an attendee
+   *                              from the organizer message
    */
   @SuppressWarnings("unchecked")
   public void processChanges(final BwEvent ev,
-                             final boolean update) throws CalFacadeException {
+                             final boolean update,
+                             final boolean attendeeFromOrganizer) {
     HashMap<PropertyInfoIndex, ChangeTableEntry> fullmap =
       new HashMap<>(map);
 
@@ -614,13 +623,13 @@ public class ChangeTable implements Logged, Serializable {
         continue;
       }
 
-      Collection originalVals;
+      Collection<?> originalVals;
 
       switch (ent.getIndex()) {
       case ATTACH:
         originalVals = ev.getAttachments();
         if (checkMulti(ent, originalVals, update)) {
-          ev.setAttachments((Set)ent.getAddedValues());
+          ev.setAttachments((Set<BwAttachment>)ent.getAddedValues());
         }
         break;
 
@@ -650,35 +659,35 @@ public class ChangeTable implements Logged, Serializable {
           ev.setAttendees((Set)ent.getAddedValues());
         }*/
         if (checkMulti(ent, originalVals, update)) {
-          ev.setAttendees((Set)ent.getAddedValues());
+          ev.setAttendees((Set<BwAttendee>)ent.getAddedValues());
         }
         break;
 
       case CATEGORIES:
         originalVals = ev.getCategories();
         if (checkMulti(ent, originalVals, update)) {
-          ev.setCategories((Set)ent.getAddedValues());
+          ev.setCategories((Set<BwCategory>)ent.getAddedValues());
         }
         break;
 
       case COMMENT:
         originalVals = ev.getComments();
         if (checkMulti(ent, originalVals, update)) {
-          ev.setComments((Set)ent.getAddedValues());
+          ev.setComments((Set<BwString>)ent.getAddedValues());
         }
         break;
 
       case CONTACT:
         originalVals = ev.getContacts();
         if (checkMulti(ent, originalVals, update)) {
-          ev.setContacts((Set)ent.getAddedValues());
+          ev.setContacts((Set<BwContact>)ent.getAddedValues());
         }
         break;
 
       case REQUEST_STATUS:
         originalVals = ev.getRequestStatuses();
         if (checkMulti(ent, originalVals, update)) {
-          ev.setRequestStatuses((Set)ent.getAddedValues());
+          ev.setRequestStatuses((Set<BwRequestStatus>)ent.getAddedValues());
         }
         break;
 
@@ -688,21 +697,25 @@ public class ChangeTable implements Logged, Serializable {
       case RESOURCES:
         originalVals = ev.getResources();
         if (checkMulti(ent, originalVals, update)) {
-          ev.setResources((Set)ent.getAddedValues());
+          ev.setResources((Set<BwString>)ent.getAddedValues());
         }
         break;
 
       case VALARM:
+        if (attendeeFromOrganizer) {
+          // Don't touch
+          break;
+        }
         originalVals = ev.getAlarms();
         if (checkMulti(ent, originalVals, update)) {
-          ev.setAlarms((Set)ent.getAddedValues());
+          ev.setAlarms((Set<BwAlarm>)ent.getAddedValues());
         }
         break;
 
       case XPROP:
         originalVals = ev.getXproperties();
         if (checkMulti(ent, originalVals, update)) {
-          ev.setXproperties((List)ent.getAddedValues());
+          ev.setXproperties((List<BwXproperty>)ent.getAddedValues());
         }
         break;
 
@@ -712,7 +725,7 @@ public class ChangeTable implements Logged, Serializable {
         if (ev.getRecurrenceId() == null) {
           originalVals = ev.getExdates();
           if (checkMulti(ent, originalVals, update)) {
-            ev.setExdates((Set)ent.getAddedValues());
+            ev.setExdates((Set<BwDateTime>)ent.getAddedValues());
           }
         }
         break;
@@ -721,7 +734,7 @@ public class ChangeTable implements Logged, Serializable {
         if (ev.getRecurrenceId() == null) {
           originalVals = ev.getExrules();
           if (checkMulti(ent, originalVals, update)) {
-            ev.setExrules((Set)ent.getAddedValues());
+            ev.setExrules((Set<String>)ent.getAddedValues());
           }
         }
         break;
@@ -730,7 +743,7 @@ public class ChangeTable implements Logged, Serializable {
         if (ev.getRecurrenceId() == null) {
           originalVals = ev.getRdates();
           if (checkMulti(ent, originalVals, update)) {
-            ev.setRdates((Set)ent.getAddedValues());
+            ev.setRdates((Set<BwDateTime>)ent.getAddedValues());
           }
         }
         break;
@@ -739,7 +752,7 @@ public class ChangeTable implements Logged, Serializable {
         if (ev.getRecurrenceId() == null) {
           originalVals = ev.getRrules();
           if (checkMulti(ent, originalVals, update)) {
-            ev.setRrules((Set)ent.getAddedValues());
+            ev.setRrules((Set<String>)ent.getAddedValues());
           }
         }
         break;
@@ -752,7 +765,7 @@ public class ChangeTable implements Logged, Serializable {
         originalVals = ev.getAttendees();
 
         if (checkMulti(ent, originalVals, update)) {
-          ev.setAttendees((Set)ent.getAddedValues());
+          ev.setAttendees((Set<BwAttendee>)ent.getAddedValues());
         }
         break;
 

@@ -992,8 +992,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       return svci.getSharingHandler().share(unwrap(col), share);
     } catch (CalFacadeForbidden cf) {
       throw new WebdavForbidden(cf.getMessage());
-    } catch (WebdavException we) {
-      throw we;
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
@@ -1818,7 +1816,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
    * ==================================================================== */
 
   @Override
-  public CalDAVResource<?> newResourceObject(final String parentPath) throws WebdavException {
+  public CalDAVResource<?> newResourceObject(final String parentPath) {
     final CalDAVResource<?> r = new BwCalDAVResource(this,
                                                      null);
 
@@ -2526,7 +2524,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     throw new WebdavForbidden(sr.errorCode);
   }
 
-  private BwCalendar unwrap(final CalDAVCollection<?> col) throws WebdavException {
+  private BwCalendar unwrap(final CalDAVCollection<?> col) {
     if (col == null) {
       return null;
     }
@@ -2539,7 +2537,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     return ((BwCalDAVCollection)col).getCol();
   }
 
-  private EventInfo getEvinfo(final CalDAVEvent<?> ev) throws WebdavException {
+  private EventInfo getEvinfo(final CalDAVEvent<?> ev) {
     if (ev == null) {
       return null;
     }
@@ -2547,7 +2545,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     return ((BwCalDAVEvent)ev).getEvinfo();
   }
 
-  private BwEvent getEvent(final CalDAVEvent<?> ev) throws WebdavException {
+  private BwEvent getEvent(final CalDAVEvent<?> ev) {
     if (ev == null) {
       return null;
     }
@@ -2555,7 +2553,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     return ((BwCalDAVEvent)ev).getEv();
   }
 
-  private BwResource getRsrc(final CalDAVResource<?> rsrc) throws WebdavException {
+  private BwResource getRsrc(final CalDAVResource<?> rsrc) {
     if (rsrc == null) {
       return null;
     }

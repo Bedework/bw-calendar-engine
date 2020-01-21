@@ -1181,7 +1181,7 @@ public class BwEventUtil extends IcalUtil {
                                      valCopy.toString()));
       }
 
-      chg.processChanges(ev, true);
+      chg.processChanges(ev, true, false);
 
       ev.setRecurring(ev.isRecurringEntity());
 

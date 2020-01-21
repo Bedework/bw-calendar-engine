@@ -373,7 +373,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void reAttach(BwDbentity val) throws CalFacadeException {
+  public void reAttach(BwDbentity<?> val) throws CalFacadeException {
   }
 
   /* ====================================================================
@@ -381,7 +381,7 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void changeAccess(final BwShareableDbentity ent,
+  public void changeAccess(final BwShareableDbentity<?> ent,
                            final Collection<Ace> aces,
                            final boolean replaceAll) throws CalFacadeException {
     throw new RuntimeException("Read only version");
@@ -395,7 +395,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void defaultAccess(final BwShareableDbentity ent,
+  public void defaultAccess(final BwShareableDbentity<?> ent,
                             final AceWho who) throws CalFacadeException {
     throw new RuntimeException("Read only version");
   }
@@ -1214,7 +1214,7 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void saveOrUpdate(final BwUnversionedDbentity val) throws CalFacadeException {
+  public void saveOrUpdate(final BwUnversionedDbentity<?> val) throws CalFacadeException {
     throw new RuntimeException("Read only version");
   }
 
@@ -1223,12 +1223,12 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void saveOrUpdate(final BwEventProperty val) throws CalFacadeException {
+  public void saveOrUpdate(final BwEventProperty<?> val) throws CalFacadeException {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public BwUnversionedDbentity merge(final BwUnversionedDbentity val) throws CalFacadeException {
+  public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) throws CalFacadeException {
     throw new RuntimeException("Read only version");
   }
 
@@ -1379,7 +1379,7 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
   
   @Override
-  public void removeFromAllPrefs(final BwShareableDbentity val) throws CalFacadeException {
+  public void removeFromAllPrefs(final BwShareableDbentity<?> val) throws CalFacadeException {
     throw new RuntimeException("Read only version");
   }
 
@@ -1575,7 +1575,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public <T extends BwEventProperty> CoreEventPropertiesI<T> getEvPropsHandler(
+  public <T extends BwEventProperty<?>> CoreEventPropertiesI<T> getEvPropsHandler(
           final Class<T> cl) {
     throw new RuntimeException("Read only version");
   }

@@ -538,7 +538,7 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public void reAttach(BwDbentity val) throws CalFacadeException {
+  public void reAttach(BwDbentity<?> val) throws CalFacadeException {
     if (val instanceof CalendarWrapper) {
       final CalendarWrapper ccw = (CalendarWrapper)val;
       val = ccw.fetchEntity();
@@ -551,7 +551,7 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public void changeAccess(final BwShareableDbentity ent,
+  public void changeAccess(final BwShareableDbentity<?> ent,
                            final Collection<Ace> aces,
                            final boolean replaceAll) throws CalFacadeException {
     if (ent instanceof BwCalendar) {
@@ -572,7 +572,7 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public void defaultAccess(final BwShareableDbentity ent,
+  public void defaultAccess(final BwShareableDbentity<?> ent,
                             final AceWho who) throws CalFacadeException {
     if (ent instanceof BwCalendar) {
       defaultAccess((BwCalendar)ent, who);
@@ -852,7 +852,7 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public void saveOrUpdate(final BwUnversionedDbentity val) throws CalFacadeException {
+  public void saveOrUpdate(final BwUnversionedDbentity<?> val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
   }
 
@@ -861,7 +861,7 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public BwUnversionedDbentity merge(final BwUnversionedDbentity val) throws CalFacadeException {
+  public BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) throws CalFacadeException {
     return entityDao.merge(val);
   }
 
@@ -1205,7 +1205,7 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
   
   @Override
-  public void removeFromAllPrefs(final BwShareableDbentity val) throws CalFacadeException {
+  public void removeFromAllPrefs(final BwShareableDbentity<?> val) throws CalFacadeException {
     principalsAndPrefs.removeFromAllPrefs(val);
   }
 
@@ -1332,7 +1332,7 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public void saveOrUpdate(final BwEventProperty val) throws CalFacadeException {
+  public void saveOrUpdate(final BwEventProperty<?> val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
     getIndexer(val).indexEntity(val);
   }
@@ -1343,7 +1343,7 @@ public class CalintfImpl extends CalintfROImpl {
 
   @SuppressWarnings("unchecked")
   @Override
-  public <T extends BwEventProperty> CoreEventPropertiesI<T> getEvPropsHandler(final Class<T> cl) {
+  public <T extends BwEventProperty<?>> CoreEventPropertiesI<T> getEvPropsHandler(final Class<T> cl) {
     if (cl.equals(BwCategory.class)) {
       if (categoriesHandler == null) {
         categoriesHandler =
@@ -1502,12 +1502,11 @@ public class CalintfImpl extends CalintfROImpl {
        * application resource hibernate.cfg.xml together with some run time values
        */
       try {
-        final DbConfig dbConf = CoreConfigurations.getConfigs().getDbConfig();
+        final DbConfig<?> dbConf = CoreConfigurations.getConfigs().getDbConfig();
         final Configuration conf = new Configuration();
 
         final StringBuilder sb = new StringBuilder();
 
-        @SuppressWarnings("unchecked")
         final List<String> ps = dbConf.getHibernateProperties();
 
         for (final String p: ps) {

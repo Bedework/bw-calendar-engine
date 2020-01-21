@@ -1300,7 +1300,7 @@ public class InRequest extends InProcessor {
       //                             null, "TRUE"));
     }
 
-    chg.processChanges(ourEv, true);
+    chg.processChanges(ourEv, true, true);
 
     if (debug()) {
       trace(chg.toString());

@@ -161,7 +161,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * @param description   String description
    * @param summary       String summary (email)
    * @param attendees     Set of attendees
-   * @throws CalFacadeException
    */
   private BwAlarm(final BwEvent event,
                   final String owner,
@@ -174,7 +173,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
                   final String attach,
                   final String description,
                   final String summary,
-                  final Set<BwAttendee> attendees) throws CalFacadeException {
+                  final Set<BwAttendee> attendees) {
     super();
     setOwnerHref(owner);
     setPublick(false);
@@ -418,9 +417,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return attendees;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#getNumAttendees()
-   */
   @Override
   @NoDump
   public int getNumAttendees() {
@@ -432,25 +428,17 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return as.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#addAttendee(org.bedework.calfacade.BwAttendee)
-   */
   @Override
   public void addAttendee(final BwAttendee val) {
     Set<BwAttendee> as = getAttendees();
     if (as == null) {
-      as = new TreeSet<BwAttendee>();
+      as = new TreeSet<>();
       setAttendees(as);
     }
 
-    if (!as.contains(val)) {
-      as.add(val);
-    }
+    as.add(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#removeAttendee(org.bedework.calfacade.BwAttendee)
-   */
   @Override
   public boolean removeAttendee(final BwAttendee val) {
     Set<BwAttendee> as = getAttendees();
@@ -461,32 +449,21 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return as.remove(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#copyAttendees()
-   */
   @Override
   public Set<BwAttendee> copyAttendees() {
     if (getNumAttendees() == 0) {
       return null;
     }
-    TreeSet<BwAttendee> ts = new TreeSet<BwAttendee>();
 
-    for (BwAttendee att: getAttendees()) {
-      ts.add(att);
-    }
-
-    return ts;
+    return new TreeSet<>(getAttendees());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#cloneAttendees()
-   */
   @Override
   public Set<BwAttendee> cloneAttendees() {
     if (getNumAttendees() == 0) {
       return null;
     }
-    TreeSet<BwAttendee> ts = new TreeSet<BwAttendee>();
+    TreeSet<BwAttendee> ts = new TreeSet<>();
 
     for (BwAttendee att: getAttendees()) {
       ts.add((BwAttendee)att.clone());
@@ -495,40 +472,25 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return ts;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#setRecipients(java.util.Set)
-   */
   @Override
   public void setRecipients(final Set<String> val) {
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#getRecipients()
-   */
   @Override
   public Set<String> getRecipients() {
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#getNumRecipients()
-   */
   @Override
   @NoDump
   public int getNumRecipients() {
     return 0;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#addRecipient(java.lang.String)
-   */
   @Override
   public void addRecipient(final String val) {
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#removeRecipient(java.lang.String)
-   */
   @Override
   public boolean removeRecipient(final String val) {
     return false;
@@ -538,9 +500,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    *               DescriptionEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#setDescriptions(java.util.Set)
-   */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.DESCRIPTION,
                 jname = "description",
@@ -550,18 +509,12 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     descriptions = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#getDescriptions()
-   */
   @Override
   @Dump(collectionElementName = "description")
   public Set<BwString> getDescriptions() {
     return descriptions;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#getNumDescriptions()
-   */
   @Override
   @NoDump
   public int getNumDescriptions() {
@@ -573,33 +526,22 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return rs.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#addDescription(java.lang.String, java.lang.String)
-   */
   @Override
   public void addDescription(final String lang, final String val) {
     addDescription(new BwString(lang, val));
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#addDescription(org.bedework.calfacade.BwString)
-   */
   @Override
   public void addDescription(final BwString val) {
     Set<BwString> rs = getDescriptions();
     if (rs == null) {
-      rs = new TreeSet<BwString>();
+      rs = new TreeSet<>();
       setDescriptions(rs);
     }
 
-    if (!rs.contains(val)) {
-      rs.add(val);
-    }
+    rs.add(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#removeDescription(org.bedework.calfacade.BwString)
-   */
   @Override
   public boolean removeDescription(final BwString val) {
     Set<BwString> rs = getDescriptions();
@@ -610,9 +552,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return rs.remove(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#updateDescriptions(java.lang.String, java.lang.String)
-   */
   @Override
   public void updateDescriptions(final String lang, final String val) {
     BwString s = findDescription(lang);
@@ -632,25 +571,16 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#findDescription(java.lang.String)
-   */
   @Override
   public BwString findDescription(final String lang) {
     return BwString.findLang(lang, getDescriptions());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#setDescription(java.lang.String)
-   */
   @Override
   public void setDescription(final String val) {
     updateDescriptions(null, val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#getDescription()
-   */
   @Override
   @NoDump
   public String getDescription() {
@@ -665,26 +595,17 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    *               SummaryEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.SummaryEntity#setSummaries(java.util.Set)
-   */
   @Override
   public void setSummaries(final Set<BwString> val) {
     summaries = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.SummaryEntity#getSummaries()
-   */
   @Override
   @Dump(collectionElementName = "summary")
   public Set<BwString> getSummaries() {
     return summaries;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.SummaryEntity#getNumSummaries()
-   */
   @Override
   @NoDump
   public int getNumSummaries() {
@@ -696,25 +617,17 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return rs.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.SummaryEntity#addSummary(org.bedework.calfacade.BwString)
-   */
   @Override
   public void addSummary(final BwString val) {
     Set<BwString> rs = getSummaries();
     if (rs == null) {
-      rs = new TreeSet<BwString>();
+      rs = new TreeSet<>();
       setSummaries(rs);
     }
 
-    if (!rs.contains(val)) {
-      rs.add(val);
-    }
+    rs.add(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.SummaryEntity#removeSummary(org.bedework.calfacade.BwString)
-   */
   @Override
   public boolean removeSummary(final BwString val) {
     Set<BwString> c = getSummaries();
@@ -725,9 +638,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     return c.remove(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.SummaryEntity#updateSummaries(java.lang.String, java.lang.String)
-   */
   @Override
   public void updateSummaries(final String lang, final String val) {
     BwString s = findSummary(lang);
@@ -747,25 +657,16 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.SummaryEntity#findSummary(java.lang.String)
-   */
   @Override
   public BwString findSummary(final String lang) {
     return BwString.findLang(lang, getSummaries());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.SummaryEntity#setSummary(java.lang.String)
-   */
   @Override
   public void setSummary(final String val) {
     updateSummaries(null, val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.SummaryEntity#getSummary()
-   */
   @Override
   @NoProxy
   @NoDump
@@ -782,7 +683,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val list of x-props
    */
   @IcalProperty(pindex = PropertyInfoIndex.XPROP,
                 jname = "xprop",
@@ -828,7 +729,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @NoProxy
   @NoDump
   public List<BwXproperty> getXproperties(final String val) {
-    List<BwXproperty> res = new ArrayList<BwXproperty>();
+    List<BwXproperty> res = new ArrayList<>();
     List<BwXproperty> xs = getXproperties();
     if (xs == null) {
       return res;
@@ -847,11 +748,10 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    *
    * @param val - name to match
    * @return list of matching properties - never null
-   *  @throws CalFacadeException
    */
   @NoProxy
   @NoDump
-  public List<BwXproperty> getXicalProperties(final String val) throws CalFacadeException {
+  public List<BwXproperty> getXicalProperties(final String val) {
     List<BwXproperty> res = new ArrayList<>();
     List<BwXproperty> xs = getXproperties();
     if (xs == null) {
@@ -894,13 +794,13 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   }
 
   /**
-   * @param val
+   * @param val an x-prop
    */
   @NoProxy
   public void addXproperty(final BwXproperty val) {
     List<BwXproperty> c = getXproperties();
     if (c == null) {
-      c = new ArrayList<BwXproperty>();
+      c = new ArrayList<>();
       setXproperties(c);
     }
 
@@ -910,7 +810,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   }
 
   /**
-   * @param val
+   * @param val an x-prop
    */
   @NoProxy
   public void removeXproperty(final BwXproperty val) {
@@ -930,7 +830,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     if (getNumXproperties() == 0) {
       return null;
     }
-    ArrayList<BwXproperty> xs = new ArrayList<BwXproperty>();
+    ArrayList<BwXproperty> xs = new ArrayList<>();
 
     for (BwXproperty x: getXproperties()) {
       xs.add((BwXproperty)x.clone());
@@ -1008,7 +908,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
         final Dur dur = tr.getDuration();
 
         if (start == null) {
-          throw new CalFacadeException("No start date for alarm " + this);
+          throw new RuntimeException("No start date for alarm " + this);
         }
 
         dt = dur.getTime(BwDateTimeUtil.getDate(start));
@@ -1030,13 +930,12 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make an audio alarm
    *
-   * @param event
-   * @param owner
-   * @param trigger
-   * @param duration
-   * @param repeat
-   * @param attach
-   * @throws CalFacadeException
+   * @param event which will contain the alarm
+   * @param owner the href
+   * @param trigger a TriggerVal
+   * @param duration String dur value
+   * @param repeat count
+   * @param attach attachment
    * @return BwEventAlarm
    */
   public static BwAlarm audioAlarm(final BwEvent event,
@@ -1044,7 +943,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
                                    final TriggerVal trigger,
                                    final String duration,
                                    final int repeat,
-                                   final String attach) throws CalFacadeException {
+                                   final String attach) {
     return new BwAlarm(event, owner, alarmTypeAudio,
                        trigger,
                        duration, repeat,
@@ -1055,13 +954,12 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make a display alarm
    *
-   * @param event
-   * @param owner
-   * @param trigger
-   * @param duration
-   * @param repeat
-   * @param description
-   * @throws CalFacadeException
+   * @param event which will contain the alarm
+   * @param owner the href
+   * @param trigger a TriggerVal
+   * @param duration String dur value
+   * @param repeat count
+   * @param description text
    * @return BwEventAlarm
    */
   public static BwAlarm displayAlarm(final BwEvent event,
@@ -1069,7 +967,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
                                      final TriggerVal trigger,
                                      final String duration,
                                      final int repeat,
-                                     final String description) throws CalFacadeException {
+                                     final String description) {
     return new BwAlarm(event, owner, alarmTypeDisplay,
                        trigger,
                        duration, repeat,
@@ -1079,16 +977,15 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make an email alarm
    *
-   * @param event
-   * @param owner
-   * @param trigger
-   * @param duration
-   * @param repeat
-   * @param attach
-   * @param description
-   * @param summary
-   * @param attendees
-   * @throws CalFacadeException
+   * @param event which will contain the alarm
+   * @param owner the href
+   * @param trigger a TriggerVal
+   * @param duration String dur value
+   * @param repeat count
+   * @param attach to send
+   * @param description text
+   * @param summary text
+   * @param attendees recipients
    * @return BwEventAlarm
    */
   public static BwAlarm emailAlarm(final BwEvent event,
@@ -1099,7 +996,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
                                    final String attach,
                                    final String description,
                                    final String summary,
-                                   final Set<BwAttendee> attendees) throws CalFacadeException {
+                                   final Set<BwAttendee> attendees) {
     return new BwAlarm(event, owner, alarmTypeEmail,
                        trigger,
                        duration, repeat,
@@ -1110,14 +1007,13 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make a procedure alarm
    *
-   * @param event
-   * @param owner
-   * @param trigger
-   * @param duration
-   * @param repeat
-   * @param attach
-   * @param description
-   * @throws CalFacadeException
+   * @param event which will contain the alarm
+   * @param owner the href
+   * @param trigger a TriggerVal
+   * @param duration String dur value
+   * @param repeat count
+   * @param attach to send
+   * @param description text
    * @return BwEventAlarm
    */
   public static BwAlarm procedureAlarm(final BwEvent event,
@@ -1126,7 +1022,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
                                        final String duration,
                                        final int repeat,
                                        final String attach,
-                                       final String description) throws CalFacadeException {
+                                       final String description) {
     return new BwAlarm(event, owner, alarmTypeProcedure,
                        trigger,
                        duration, repeat,
@@ -1137,13 +1033,12 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make a "ACTION:NONE" alarm
    *
-   * @param event
-   * @param owner
-   * @param trigger
-   * @param duration
-   * @param repeat
-   * @param description
-   * @throws CalFacadeException
+   * @param event which will contain the alarm
+   * @param owner the href
+   * @param trigger a TriggerVal
+   * @param duration String dur value
+   * @param repeat count
+   * @param description text
    * @return BwEventAlarm
    */
   public static BwAlarm noneAlarm(final BwEvent event,
@@ -1151,7 +1046,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
                                   final TriggerVal trigger,
                                   final String duration,
                                   final int repeat,
-                                  final String description) throws CalFacadeException {
+                                  final String description) {
     return new BwAlarm(event, owner, alarmTypeNone,
                        trigger,
                        duration, repeat,
@@ -1162,14 +1057,12 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make an alarm for an unrecognizd action
    *
-   * @param event
-   * @param owner
-   * @param action
-   * @param trigger
-   * @param duration
-   * @param repeat
-   * @param description
-   * @throws CalFacadeException
+   * @param event which will contain the alarm
+   * @param owner the href
+   * @param trigger a TriggerVal
+   * @param duration String dur value
+   * @param repeat count
+   * @param description text
    * @return BwEventAlarm
    */
   public static BwAlarm otherAlarm(final BwEvent event,
@@ -1178,7 +1071,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
                                    final TriggerVal trigger,
                                    final String duration,
                                    final int repeat,
-                                   final String description) throws CalFacadeException {
+                                   final String description) {
     BwAlarm al = new BwAlarm(event, owner, alarmTypeOther,
                              trigger,
                              duration, repeat,
@@ -1272,7 +1165,7 @@ Example
    * <p>The absence of duration and repeat in the pattern is a problem if there
    * is one in the event set that has no duration/repeat and one that does.
    *
-   * @param that
+   * @param that alarm to match
    * @return true if it matches.
    */
   public boolean matches(final BwAlarm that)  {
@@ -1311,14 +1204,13 @@ Example
    *
    * <p>However, we also need to know if a particular alarm has been changed.
    *
-   * @param that
+   * @param that alarm to check
    * @return boolean true if this alarm is changed with respect to that
    */
   public boolean changed(final BwAlarm that)  {
     if (compareEqFields(that) != 0) {
       return true;
     }
-
 
     if (CalFacadeUtil.cmpObjval(getTrigger(), that.getTrigger()) != 0) {
       return true;
@@ -1341,14 +1233,14 @@ Example
     }
 
     if (getAlarmType() == alarmTypeAudio) {
-      if (CalFacadeUtil.cmpObjval(getAttach(), that.getAttach()) != 0) {
-        return true;
-      }
-    } else if (getAlarmType() == alarmTypeDisplay) {
-      if (CalFacadeUtil.cmpObjval(getDescription(), that.getDescription()) != 0) {
-        return true;
-      }
-    } else if (getAlarmType() == alarmTypeEmail) {
+      return CalFacadeUtil.cmpObjval(getAttach(), that.getAttach()) != 0;
+    }
+
+    if (getAlarmType() == alarmTypeDisplay) {
+      return CalFacadeUtil.cmpObjval(getDescription(), that.getDescription()) != 0;
+    }
+
+    if (getAlarmType() == alarmTypeEmail) {
       if (CalFacadeUtil.cmpObjval(getDescription(), that.getDescription()) != 0) {
         return true;
       }
@@ -1361,17 +1253,15 @@ Example
         return true;
       }
 
-      if (CalFacadeUtil.cmpObjval(getAttach(), that.getAttach()) != 0) {
-        return true;
-      }
-    } else if (getAlarmType() == alarmTypeProcedure) {
+      return CalFacadeUtil.cmpObjval(getAttach(), that.getAttach()) != 0;
+    }
+
+    if (getAlarmType() == alarmTypeProcedure) {
       if (CalFacadeUtil.cmpObjval(getAttach(), that.getAttach()) != 0) {
         return true;
       }
 
-      if (CalFacadeUtil.cmpObjval(getDescription(), that.getDescription()) != 0) {
-        return true;
-      }
+      return CalFacadeUtil.cmpObjval(getDescription(), that.getDescription()) != 0;
     }
 
     return false;
@@ -1379,7 +1269,7 @@ Example
 
   /** Compare fields that define equality
    *
-   * @param that
+   * @param that alarm to compare
    * @return int
    */
   public int compareEqFields(final BwAlarm that)  {
@@ -1451,24 +1341,6 @@ Example
     }
 
     return hc;
-  }
-
-  /** Compare two possibly null obects
-   *
-   * @param o1
-   * @param o2
-   * @return boolean true for equal
-   */
-  public boolean eqObj(final Object o1, final Object o2) {
-    if (o1 == null) {
-      return o2 == null;
-    }
-
-    if (o2 == null) {
-      return false;
-    }
-
-    return o1.equals(o2);
   }
 
   @Override

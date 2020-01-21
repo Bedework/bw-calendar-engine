@@ -32,7 +32,7 @@ public final class CoreConfigurations extends ConfBase {
   /* Name of the property holding the location of the config data */
   static final String confuriPname = "org.bedework.bwcore.confuri";
 
-  private static volatile Object lock = new Object();
+  private static final Object lock = new Object();
 
   private static DbConfig dbConfig;
 
@@ -40,7 +40,6 @@ public final class CoreConfigurations extends ConfBase {
 
   /**
    * @return a configs object
-   * @throws CalFacadeException
    */
   public static CoreConfigurations getConfigs() {
     if (configs != null) {
@@ -86,9 +85,8 @@ public final class CoreConfigurations extends ConfBase {
 
   /**
    * @return db config.
-   * @throws CalFacadeException
    */
-  public DbConfig getDbConfig() throws CalFacadeException {
+  public DbConfig getDbConfig() {
     return dbConfig;
   }
 

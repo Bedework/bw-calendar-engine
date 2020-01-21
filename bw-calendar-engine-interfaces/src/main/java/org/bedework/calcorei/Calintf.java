@@ -295,10 +295,10 @@ public interface Calintf
 
   /** Call to reassociate an entity with the current database session
    *
-   * @param val
+   * @param val the entity
    * @throws CalFacadeException
    */
-  void reAttach(BwDbentity val) throws CalFacadeException;
+  void reAttach(BwDbentity<?> val) throws CalFacadeException;
 
   /** Get the current system pars
    *
@@ -384,7 +384,7 @@ public interface Calintf
    * @param replaceAll true to replace the entire access list.
    * @throws CalFacadeException
    */
-  void changeAccess(BwShareableDbentity ent,
+  void changeAccess(BwShareableDbentity<?> ent,
                     Collection<Ace> aces,
                     boolean replaceAll) throws CalFacadeException;
 
@@ -394,7 +394,7 @@ public interface Calintf
    * @param who      AceWho
    * @throws CalFacadeException
    */
-  void defaultAccess(BwShareableDbentity ent,
+  void defaultAccess(BwShareableDbentity<?> ent,
                      AceWho who) throws CalFacadeException;
 
   /** Return a Collection of the objects after checking access
@@ -499,7 +499,7 @@ public interface Calintf
   /* Post processing of event access has been checked
    */
   CoreEventInfo postGetEvent(BwEvent ev,
-                             CurrentAccess ca) throws CalFacadeException;
+                             CurrentAccess ca);
 
   /* Post processing of event. Return null or throw exception for no access
    */
@@ -515,7 +515,7 @@ public interface Calintf
    * @param val an entity to restore
    * @throws CalFacadeException on fatal error
    */
-  void saveOrUpdate(final BwUnversionedDbentity val) throws CalFacadeException;
+  void saveOrUpdate(final BwUnversionedDbentity<?> val) throws CalFacadeException;
 
   /* ====================================================================
    *                       General db methods
@@ -531,7 +531,7 @@ public interface Calintf
    * @param val the event property
    * @throws CalFacadeException on fatal error
    */
-  void saveOrUpdate(final BwEventProperty val) throws CalFacadeException;
+  void saveOrUpdate(final BwEventProperty<?> val) throws CalFacadeException;
 
   /**
    * @param val the preferences
@@ -564,11 +564,11 @@ public interface Calintf
   void delete(final BwCalSuite val) throws CalFacadeException;
 
   /**
-   * @param val
+   * @param val the entity
    * @return - merged entity
    * @throws CalFacadeException on fatal error
    */
-  BwUnversionedDbentity merge(final BwUnversionedDbentity val) throws CalFacadeException;
+  BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) throws CalFacadeException;
 
   /**
    * @return a blob
@@ -659,10 +659,10 @@ public interface Calintf
 
   /** Remove any refs to this object
    *
-   * @param val
+   * @param val the entity
    * @throws CalFacadeException
    */
-  void removeFromAllPrefs(final BwShareableDbentity val) throws CalFacadeException;
+  void removeFromAllPrefs(final BwShareableDbentity<?> val) throws CalFacadeException;
 
   /* ====================================================================
    *                       groups
@@ -814,7 +814,7 @@ public interface Calintf
    * @param cl the event properties class
    * @return EventProperties
    */
-  <T extends BwEventProperty> CoreEventPropertiesI<T>  getEvPropsHandler(final Class<T> cl);
+  <T extends BwEventProperty<?>> CoreEventPropertiesI<T>  getEvPropsHandler(final Class<T> cl);
 
    /* ====================================================================
     *                       resources

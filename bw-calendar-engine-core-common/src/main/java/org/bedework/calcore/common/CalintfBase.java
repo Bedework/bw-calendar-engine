@@ -614,7 +614,7 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   @Override
   public CoreEventInfo postGetEvent(final BwEvent ev,
-                                    final CurrentAccess ca) throws CalFacadeException {
+                                    final CurrentAccess ca) {
     /* XXX-ALARM
     if (currentMode == userMode) {
       ev.setAlarms(getAlarms(ev, user));
@@ -677,6 +677,10 @@ public abstract class CalintfBase implements Logged, Calintf {
       SysEventBase ev = null;
       try {
         ev = queuedNotifications.take();
+        if (debug() &&
+                ev.getSysCode().equals(SysEventBase.SysCode.SCHEDULE_QUEUED)) {
+          debug("Post scheduling message: " + ev);
+        }
         NotificationsHandlerFactory.post(ev);
       } catch (final Throwable t) {
         /* This could be a real issue as we are currently relying on jms

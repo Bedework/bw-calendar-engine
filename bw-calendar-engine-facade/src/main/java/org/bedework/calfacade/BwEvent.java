@@ -2606,9 +2606,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *                   AttendeesEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#setAttendees(java.util.Set)
-   */
   @Override
   @IcalProperties({
     @IcalProperty(pindex = PropertyInfoIndex.ATTENDEE,
@@ -2637,14 +2634,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return attendees;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#getNumAttendees()
-   */
   @Override
   @NoProxy
   @NoDump
   public int getNumAttendees() {
-    Set as = getAttendees();
+    Set<BwAttendee> as = getAttendees();
     if (as == null) {
       return 0;
     }
@@ -2652,30 +2646,22 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return as.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#addAttendee(org.bedework.calfacade.BwAttendee)
-   */
   @Override
   @NoProxy
   public void addAttendee(final BwAttendee val) {
     Set<BwAttendee> as = getAttendees();
     if (as == null) {
-      as = new TreeSet<BwAttendee>();
+      as = new TreeSet<>();
       setAttendees(as);
     }
 
-    if (!as.contains(val)) {
-      as.add(val);
-    }
+    as.add(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#removeAttendee(org.bedework.calfacade.BwAttendee)
-   */
   @Override
   @NoProxy
   public boolean removeAttendee(final BwAttendee val) {
-    Set as = getAttendees();
+    Set<BwAttendee> as = getAttendees();
     if (as == null) {
       return false;
     }
@@ -2683,34 +2669,23 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return as.remove(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#copyAttendees()
-   */
   @Override
   @NoProxy
   public Set<BwAttendee> copyAttendees() {
     if (getNumAttendees() == 0) {
       return null;
     }
-    TreeSet<BwAttendee> ts = new TreeSet<BwAttendee>();
 
-    for (BwAttendee att: getAttendees()) {
-      ts.add(att);
-    }
-
-    return ts;
+    return new TreeSet<>(getAttendees());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#cloneAttendees()
-   */
   @Override
   @NoProxy
   public Set<BwAttendee> cloneAttendees() {
     if (getNumAttendees() == 0) {
       return null;
     }
-    TreeSet<BwAttendee> ts = new TreeSet<BwAttendee>();
+    TreeSet<BwAttendee> ts = new TreeSet<>();
 
     for (BwAttendee att: getAttendees()) {
       ts.add((BwAttendee)att.clone());
@@ -2916,7 +2891,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumCategories() == 0) {
       return null;
     }
-    TreeSet<BwCategory> ts = new TreeSet<BwCategory>();
+    TreeSet<BwCategory> ts = new TreeSet<>();
 
     for (BwCategory cat: getCategories()) {
       ts.add(cat);
@@ -2931,7 +2906,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumCategories() == 0) {
       return null;
     }
-    TreeSet<BwCategory> ts = new TreeSet<BwCategory>();
+    TreeSet<BwCategory> ts = new TreeSet<>();
 
     for (BwCategory cat: getCategories()) {
       ts.add((BwCategory)cat.clone());
@@ -4817,6 +4792,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
     if (getRelatedTo() != null) {
       ts.append("relatedTo", getRelatedTo());
+    }
+
+    if (getNumAlarms() > 0) {
+      ts.newLine();
+      ts.append("alarms", getAlarms(), true);
     }
 
     ts.append("pollItemId", getPollItemId());

@@ -511,12 +511,12 @@ public class ChangeTableEntry {
    * @param orig
    * @return an empty collection of the same type as the original
    */
-  private Collection getCollection(final Collection orig) {
+  private <T extends Collection<?>> T getCollection(final T orig) {
     if (orig instanceof List) {
-      return new ArrayList();
+      return (T)new ArrayList();
     }
 
-    return new TreeSet();
+    return (T)new TreeSet();
   }
 
   @SuppressWarnings("unchecked")
