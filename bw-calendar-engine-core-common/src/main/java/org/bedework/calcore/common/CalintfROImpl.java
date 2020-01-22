@@ -96,7 +96,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -301,7 +300,7 @@ public class CalintfROImpl extends CalintfBase
       }
     }
 
-    curTimestamp = new Timestamp(new Date().getTime());
+    curTimestamp = new Timestamp(System.currentTimeMillis());
   }
 
   @Override
@@ -360,14 +359,30 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public Timestamp getCurrentTimestamp() {
-    // Inc nanos to guarantee different
-    int nanos = curTimestamp.getNanos() + 1;
-    if (nanos > 999999999) {
-      nanos = 0;
-    }
+  public synchronized Timestamp getCurrentTimestamp() {
+    var oldTime = curTimestamp.getTime();
+    var oldNanos = curTimestamp.getNanos();
 
-    curTimestamp.setNanos(nanos);
+    while (true) {
+      curTimestamp.setTime(System.currentTimeMillis());
+      if (curTimestamp.getTime() > oldTime) {
+        break;
+      }
+
+      if (curTimestamp.getNanos() > oldNanos) {
+        break;
+      }
+
+      if (debug()) {
+        debug("retry get timestamp");
+      }
+
+      try {
+        Thread.sleep(1);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
 
     return curTimestamp;
   }
@@ -471,7 +486,7 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
-  public void principalChanged() throws CalFacadeException {
+  public void principalChanged() {
     colCache.clear();
   }
 
