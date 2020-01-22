@@ -148,7 +148,7 @@ public class VAlarmUtil extends IcalUtil {
         DurationRepeat dr = getDurationRepeat(pl);
 
         if ("EMAIL".equals(actionStr)) {
-          al = BwAlarm.emailAlarm(ev, ev.getCreatorHref(),
+          al = BwAlarm.emailAlarm(ev.getCreatorHref(),
                                   tr,
                                   dr.duration, dr.repeat,
                                   getOptStr(pl, "ATTACH"),
@@ -162,28 +162,28 @@ public class VAlarmUtil extends IcalUtil {
             al.addAttendee(getAttendee(cb, (Attendee)atts.next()));
           }
         } else if ("AUDIO".equals(actionStr)) {
-          al = BwAlarm.audioAlarm(ev, ev.getCreatorHref(),
+          al = BwAlarm.audioAlarm(ev.getCreatorHref(),
                                   tr,
                                   dr.duration, dr.repeat,
                                   getOptStr(pl, "ATTACH"));
         } else if ("DISPLAY".equals(actionStr)) {
-          al = BwAlarm.displayAlarm(ev, ev.getCreatorHref(),
+          al = BwAlarm.displayAlarm(ev.getCreatorHref(),
                                     tr,
                                     dr.duration, dr.repeat,
                                     getReqStr(pl, "DESCRIPTION"));
         } else if ("PROCEDURE".equals(actionStr)) {
-          al = BwAlarm.procedureAlarm(ev, ev.getCreatorHref(),
+          al = BwAlarm.procedureAlarm(ev.getCreatorHref(),
                                       tr,
                                       dr.duration, dr.repeat,
                                       getReqStr(pl, "ATTACH"),
                                       getOptStr(pl, "DESCRIPTION"));
         } else if ("NONE".equals(actionStr)) {
-          al = BwAlarm.noneAlarm(ev, ev.getCreatorHref(),
+          al = BwAlarm.noneAlarm(ev.getCreatorHref(),
                                  tr,
                                  dr.duration, dr.repeat,
                                  getOptStr(pl, "DESCRIPTION"));
         } else {
-          al = BwAlarm.otherAlarm(ev, ev.getCreatorHref(),
+          al = BwAlarm.otherAlarm(ev.getCreatorHref(),
                                   actionStr,
                                   tr,
                                   dr.duration, dr.repeat,
@@ -247,7 +247,6 @@ public class VAlarmUtil extends IcalUtil {
           }
         }
 
-        al.setEvent(ev);
         al.setOwnerHref(currentPrincipal);
         chg.addValue(PropertyInfoIndex.VALARM, al);
       }
@@ -260,8 +259,8 @@ public class VAlarmUtil extends IcalUtil {
 
   /** Process any alarms.
    *
-   * @param ev
-   * @param comp
+   * @param ev the event
+   * @param comp representing the event
    * @param currentPrincipal - href for current authenticated user
    * @throws CalFacadeException
    */
@@ -285,7 +284,7 @@ public class VAlarmUtil extends IcalUtil {
     } else if (comp instanceof VToDo) {
       vals = ((VToDo)comp).getAlarms();
     } else {
-      throw new CalFacadeException("org.bedework.invalid.component.type",
+      throw new RuntimeException("org.bedework.invalid.component.type " +
                                    comp.getName());
     }
 

@@ -69,10 +69,6 @@ import java.util.TreeSet;
 public class BwAlarm extends BwOwnedDbentity<BwAlarm>
         implements AttendeesEntity, DescriptionEntity<BwString>, SummaryEntity,
                    Differable<BwAlarm>, XpropsEntity, Serializable {
-  /** The event or todo this refers to.
-   */
-  private BwEvent event;
-
   /** audio */
   public final static int alarmTypeAudio = 0;
 
@@ -149,7 +145,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Constructor for all fields
    *
-   * @param event         BwEvent for this alarm
    * @param owner         Owner of alarm
    * @param alarmType     type of alarm
    * @param trigger       Trigger info
@@ -162,8 +157,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * @param summary       String summary (email)
    * @param attendees     Set of attendees
    */
-  private BwAlarm(final BwEvent event,
-                  final String owner,
+  private BwAlarm(final String owner,
                   final int alarmType,
                   final TriggerVal trigger,
                   final String duration,
@@ -177,7 +171,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     super();
     setOwnerHref(owner);
     setPublick(false);
-    setEvent(event);
     this.alarmType = alarmType;
     this.trigger = trigger.trigger;
     this.triggerStart = trigger.triggerStart;
@@ -195,22 +188,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   /* ====================================================================
    *                      Bean methods
    * ==================================================================== */
-
-  /** set the event
-   *
-   * @param val  BwEvent event
-   */
-  public void setEvent(final BwEvent val) {
-    event = val;
-  }
-
-  /** Get the event
-   *
-   * @return BwEvent     event
-   */
-  public BwEvent getEvent() {
-    return event;
-  }
 
   /** Set the alarmType for this event
    *
@@ -930,7 +907,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make an audio alarm
    *
-   * @param event which will contain the alarm
    * @param owner the href
    * @param trigger a TriggerVal
    * @param duration String dur value
@@ -938,13 +914,12 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * @param attach attachment
    * @return BwEventAlarm
    */
-  public static BwAlarm audioAlarm(final BwEvent event,
-                                   final String owner,
+  public static BwAlarm audioAlarm(final String owner,
                                    final TriggerVal trigger,
                                    final String duration,
                                    final int repeat,
                                    final String attach) {
-    return new BwAlarm(event, owner, alarmTypeAudio,
+    return new BwAlarm(owner, alarmTypeAudio,
                        trigger,
                        duration, repeat,
                        0, false,
@@ -954,7 +929,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make a display alarm
    *
-   * @param event which will contain the alarm
    * @param owner the href
    * @param trigger a TriggerVal
    * @param duration String dur value
@@ -962,13 +936,12 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * @param description text
    * @return BwEventAlarm
    */
-  public static BwAlarm displayAlarm(final BwEvent event,
-                                     final String owner,
+  public static BwAlarm displayAlarm(final String owner,
                                      final TriggerVal trigger,
                                      final String duration,
                                      final int repeat,
                                      final String description) {
-    return new BwAlarm(event, owner, alarmTypeDisplay,
+    return new BwAlarm(owner, alarmTypeDisplay,
                        trigger,
                        duration, repeat,
                        0, false,
@@ -977,7 +950,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make an email alarm
    *
-   * @param event which will contain the alarm
    * @param owner the href
    * @param trigger a TriggerVal
    * @param duration String dur value
@@ -988,8 +960,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * @param attendees recipients
    * @return BwEventAlarm
    */
-  public static BwAlarm emailAlarm(final BwEvent event,
-                                   final String owner,
+  public static BwAlarm emailAlarm(final String owner,
                                    final TriggerVal trigger,
                                    final String duration,
                                    final int repeat,
@@ -997,7 +968,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
                                    final String description,
                                    final String summary,
                                    final Set<BwAttendee> attendees) {
-    return new BwAlarm(event, owner, alarmTypeEmail,
+    return new BwAlarm(owner, alarmTypeEmail,
                        trigger,
                        duration, repeat,
                        0, false,
@@ -1007,7 +978,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make a procedure alarm
    *
-   * @param event which will contain the alarm
    * @param owner the href
    * @param trigger a TriggerVal
    * @param duration String dur value
@@ -1016,14 +986,13 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * @param description text
    * @return BwEventAlarm
    */
-  public static BwAlarm procedureAlarm(final BwEvent event,
-                                       final String owner,
+  public static BwAlarm procedureAlarm(final String owner,
                                        final TriggerVal trigger,
                                        final String duration,
                                        final int repeat,
                                        final String attach,
                                        final String description) {
-    return new BwAlarm(event, owner, alarmTypeProcedure,
+    return new BwAlarm(owner, alarmTypeProcedure,
                        trigger,
                        duration, repeat,
                        0, false,
@@ -1033,7 +1002,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make a "ACTION:NONE" alarm
    *
-   * @param event which will contain the alarm
    * @param owner the href
    * @param trigger a TriggerVal
    * @param duration String dur value
@@ -1041,13 +1009,12 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * @param description text
    * @return BwEventAlarm
    */
-  public static BwAlarm noneAlarm(final BwEvent event,
-                                  final String owner,
+  public static BwAlarm noneAlarm(final String owner,
                                   final TriggerVal trigger,
                                   final String duration,
                                   final int repeat,
                                   final String description) {
-    return new BwAlarm(event, owner, alarmTypeNone,
+    return new BwAlarm(owner, alarmTypeNone,
                        trigger,
                        duration, repeat,
                        0, false,
@@ -1057,7 +1024,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   /** Make an alarm for an unrecognizd action
    *
-   * @param event which will contain the alarm
    * @param owner the href
    * @param trigger a TriggerVal
    * @param duration String dur value
@@ -1065,14 +1031,13 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * @param description text
    * @return BwEventAlarm
    */
-  public static BwAlarm otherAlarm(final BwEvent event,
-                                   final String owner,
+  public static BwAlarm otherAlarm(final String owner,
                                    final String action,
                                    final TriggerVal trigger,
                                    final String duration,
                                    final int repeat,
                                    final String description) {
-    BwAlarm al = new BwAlarm(event, owner, alarmTypeOther,
+    BwAlarm al = new BwAlarm(owner, alarmTypeOther,
                              trigger,
                              duration, repeat,
                              0, false,
@@ -1123,10 +1088,6 @@ Example
   @Override
   protected void toStringSegment(final ToString ts) {
     super.toStringSegment(ts);
-
-    if (getEvent() != null) {
-      ts.append("eventid", getEvent().getId());
-    }
 
     ts.append("type", alarmTypes[getAlarmType()]);
 
@@ -1327,10 +1288,6 @@ Example
   public int hashCode() {
     int hc = 31 * getAlarmType();
 
-    if (getEvent() != null) {
-      hc *= getEvent().hashCode();
-    }
-
     if (getOwnerHref() != null) {
       hc *= getOwnerHref().hashCode();
     }
@@ -1360,8 +1317,7 @@ Example
       trigger.triggerStart = getTriggerStart();
       trigger.triggerDateTime = getTriggerDateTime();
 
-      final BwAlarm a = new BwAlarm(null,  //event
-                                    null, // user
+      final BwAlarm a = new BwAlarm(null, // user
                                     getAlarmType(),
                                     trigger,
                                     getDuration(),

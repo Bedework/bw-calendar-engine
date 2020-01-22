@@ -22,6 +22,7 @@ package org.bedework.dumprestore.restore.rules;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.restore.RestoreGlobals;
 
 /**
@@ -31,7 +32,7 @@ import org.bedework.dumprestore.restore.RestoreGlobals;
 public class AlarmRule extends EntityRule {
   /** Constructor
    *
-   * @param globals
+   * @param globals for restore
    */
   public AlarmRule(RestoreGlobals globals) {
     super(globals);
@@ -39,7 +40,7 @@ public class AlarmRule extends EntityRule {
 
   public void end(String ns, String name) throws Exception {
     BwAlarm entity = (BwAlarm)pop();
-    globals.counts[globals.valarms]++;
+    globals.counts[Counters.valarms]++;
 
     if (!(top() instanceof EventInfo)) {
       warn("Expected an event info object: found " + top());
@@ -52,7 +53,6 @@ public class AlarmRule extends EntityRule {
       entity.setOwnerHref(ev.getOwnerHref());
     }
 
-    entity.setEvent(ev);
     ev.addAlarm(entity);
   }
 }

@@ -1966,7 +1966,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   /** Set the change token
    *
-   * @param val
+   * @param val change token
    */
   @IcalProperties({
     @IcalProperty(pindex = PropertyInfoIndex.CTOKEN,
@@ -2207,43 +2207,32 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return !isEmpty(getExrules());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.RecurrenceEntity#addExrule(java.lang.String)
-   */
   @Override
   @NoProxy
   public void addExrule(final String val) {
     Set<String> c = getExrules();
 
     if (c == null) {
-      c = new TreeSet<String>();
+      c = new TreeSet<>();
       setExrules(c);
     }
 
-    if (!c.contains(val)) {
-      c.add(val);
-    }
+    c.add(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.RecurrenceEntity#hasRdates()
-   */
   @Override
   @NoProxy
   public boolean hasRdates() {
     return !isEmpty(getRdates());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.RecurrenceEntity#addRdate(org.bedework.calfacade.BwDateTime)
-   */
   @Override
   @NoProxy
   public void addRdate(final BwDateTime val) {
     Set<BwDateTime> c = getRdates();
 
     if (c == null) {
-      c = new TreeSet<BwDateTime>();
+      c = new TreeSet<>();
       setRdates(c);
     }
 
@@ -2253,31 +2242,23 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.RecurrenceEntity#hasExdates()
-   */
   @Override
   @NoProxy
   public boolean hasExdates() {
     return !isEmpty(getExdates());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.RecurrenceEntity#addExdate(org.bedework.calfacade.BwDateTime)
-   */
   @Override
   @NoProxy
   public void addExdate(final BwDateTime val) {
     Set<BwDateTime> c = getExdates();
 
     if (c == null) {
-      c = new TreeSet<BwDateTime>();
+      c = new TreeSet<>();
       setExdates(c);
     }
 
-    if (!c.contains(val)) {
-      c.add(val);
-    }
+    c.add(val);
   }
 
   /* ====================================================================
@@ -2315,17 +2296,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     dtstart = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.StartEndComponent#getDtstart()
-   */
   @Override
   public BwDateTime getDtstart() {
     return dtstart;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.StartEndComponent#setDtend(org.bedework.calfacade.BwDateTime)
-   */
   @Override
   @IcalProperties({
     @IcalProperty(pindex = PropertyInfoIndex.DTEND,
@@ -2351,17 +2326,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     dtend = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.StartEndComponent#getDtend()
-   */
   @Override
   public BwDateTime getDtend() {
     return dtend;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.StartEndComponent#setEndType(char)
-   */
   @Override
   @NoProxy
   @IcalProperty(pindex = PropertyInfoIndex.END_TYPE,
@@ -2397,9 +2366,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return duration;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.StartEndComponent#setNoStart(java.lang.Boolean)
-   */
   @Override
   @NoProxy
   @IcalProperty(pindex = PropertyInfoIndex.NO_START,
@@ -2412,9 +2378,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     noStart = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.StartEndComponent#getNoStart()
-   */
   @Override
   public Boolean getNoStart() {
     return noStart;
@@ -2424,9 +2387,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *               AlarmsEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AlarmsEntity#setAlarms(java.util.Set)
-   */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.VALARM,
           jname = "alarm",
@@ -2437,18 +2397,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     alarms = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AlarmsEntity#getAlarms()
-   */
   @Override
   @Dump(collectionElementName = "alarm", compound = true)
   public Set<BwAlarm> getAlarms() {
     return alarms;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AlarmsEntity#getNumAlarms()
-   */
   @Override
   @NoProxy
   @NoDump
@@ -2461,28 +2415,18 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return c.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AlarmsEntity#addAlarm(java.lang.String)
-   */
   @Override
   @NoProxy
   public void addAlarm(final BwAlarm val) {
     Set<BwAlarm> rs = getAlarms();
     if (rs == null) {
-      rs = new TreeSet<BwAlarm>();
+      rs = new TreeSet<>();
       setAlarms(rs);
     }
 
-    val.setEvent(this);
-
-    if (!rs.contains(val)) {
-      rs.add(val);
-    }
+    rs.add(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AlarmsEntity#removeAlarm(java.lang.String)
-   */
   @Override
   @NoProxy
   public boolean removeAlarm(final BwAlarm val) {
@@ -2506,7 +2450,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       return null;
     }
 
-    Set<BwAlarm> nrs = new TreeSet<BwAlarm>();
+    Set<BwAlarm> nrs = new TreeSet<>();
 
     for (BwAlarm al: rs) {
       nrs.add((BwAlarm)al.clone());
@@ -2539,7 +2483,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumAttachments() {
-    Set as = getAttachments();
+    Set<BwAttachment> as = getAttachments();
     if (as == null) {
       return 0;
     }
@@ -2552,19 +2496,17 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   public void addAttachment(final BwAttachment val) {
     Set<BwAttachment> as = getAttachments();
     if (as == null) {
-      as = new TreeSet<BwAttachment>();
+      as = new TreeSet<>();
       setAttachments(as);
     }
 
-    if (!as.contains(val)) {
-      as.add(val);
-    }
+    as.add(val);
   }
 
   @Override
   @NoProxy
   public boolean removeAttachment(final BwAttachment val) {
-    Set as = getAttachments();
+    Set<BwAttachment> as = getAttachments();
     if (as == null) {
       return false;
     }
@@ -2578,13 +2520,8 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumAttachments() == 0) {
       return null;
     }
-    TreeSet<BwAttachment> ts = new TreeSet<BwAttachment>();
 
-    for (BwAttachment att: getAttachments()) {
-      ts.add(att);
-    }
-
-    return ts;
+    return new TreeSet<>(getAttachments());
   }
 
   @Override
@@ -2593,7 +2530,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumAttachments() == 0) {
       return null;
     }
-    TreeSet<BwAttachment> ts = new TreeSet<BwAttachment>();
+    TreeSet<BwAttachment> ts = new TreeSet<>();
 
     for (BwAttachment att: getAttachments()) {
       ts.add((BwAttachment)att.clone());
@@ -2791,9 +2728,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       setRecipients(rs);
     }
 
-    if (!rs.contains(val)) {
-      rs.add(val);
-    }
+    rs.add(val);
   }
 
   /* (non-Javadoc)
@@ -2866,7 +2801,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean removeCategory(final BwCategory val) {
-    Set cats = getCategories();
+    Set<BwCategory> cats = getCategories();
     if (cats == null) {
       return false;
     }
@@ -2877,7 +2812,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean hasCategory(final BwCategory val) {
-    Set cats = getCategories();
+    Set<BwCategory> cats = getCategories();
     if (cats == null) {
       return false;
     }
@@ -2891,13 +2826,8 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumCategories() == 0) {
       return null;
     }
-    TreeSet<BwCategory> ts = new TreeSet<>();
 
-    for (BwCategory cat: getCategories()) {
-      ts.add(cat);
-    }
-
-    return ts;
+    return new TreeSet<>(getCategories());
   }
 
   @Override
@@ -2919,9 +2849,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    *               CommentedEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CommentedEntity#setComments(java.util.Set)
-   */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.COMMENT,
                 adderName = "comment",
@@ -2935,22 +2862,16 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     comments = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CommentedEntity#getComments()
-   */
   @Override
   public Set<BwString> getComments() {
     return comments;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CommentedEntity#getNumComments()
-   */
   @Override
   @NoProxy
   @NoDump
   public int getNumComments() {
-    Set rs = getComments();
+    Set<BwString> rs = getComments();
     if (rs == null) {
       return 0;
     }
@@ -2958,39 +2879,28 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return rs.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CommentedEntity#addComment(java.lang.String, java.lang.String)
-   */
   @Override
   @NoProxy
   public void addComment(final String lang, final String val) {
     addComment(new BwString(lang, val));
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CommentedEntity#addComment(org.bedework.calfacade.BwString)
-   */
   @Override
   @NoProxy
   public void addComment(final BwString val) {
     Set<BwString> rs = getComments();
     if (rs == null) {
-      rs = new TreeSet<BwString>();
+      rs = new TreeSet<>();
       setComments(rs);
     }
 
-    if (!rs.contains(val)) {
-      rs.add(val);
-    }
+    rs.add(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CommentedEntity#removeComment(org.bedework.calfacade.BwString)
-   */
   @Override
   @NoProxy
   public boolean removeComment(final BwString val) {
-    Set rs = getComments();
+    Set<BwString> rs = getComments();
     if (rs == null) {
       return false;
     }
@@ -3004,7 +2914,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
   /** Transition method - replace Set with single value.
    *
-   * @param val
+   * @param val a contact
    */
   @NoProxy
   public void setContact(final BwContact val) {
@@ -3033,9 +2943,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return c.iterator().next();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CategorisedEntity#setContacts(java.util.Set)
-   */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.CONTACT,
                 adderName = "contact",
@@ -3047,17 +2954,11 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     contacts = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CategorisedEntity#getContacts()
-   */
   @Override
   public Set<BwContact> getContacts() {
     return contacts;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CategorisedEntity#getNumContacts()
-   */
   @Override
   @NoProxy
   @NoDump
@@ -3078,22 +2979,17 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   public void addContact(final BwContact val) {
     Set<BwContact> cs = getContacts();
     if (cs == null) {
-      cs = new TreeSet<BwContact>();
+      cs = new TreeSet<>();
       setContacts(cs);
     }
 
-    if (!cs.contains(val)) {
-      cs.add(val);
-    }
+    cs.add(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CategorisedEntity#removeContact(org.bedework.calfacade.BwContact)
-   */
   @Override
   @NoProxy
   public boolean removeContact(final BwContact val) {
-    Set cs = getContacts();
+    Set<BwContact> cs = getContacts();
     if (cs == null) {
       return false;
     }
@@ -3101,13 +2997,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return cs.remove(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CategorisedEntity#hasContact(org.bedework.calfacade.BwContact)
-   */
   @Override
   @NoProxy
   public boolean hasContact(final BwContact val) {
-    Set cs = getContacts();
+    Set<BwContact> cs = getContacts();
     if (cs == null) {
       return false;
     }
@@ -3115,34 +3008,23 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return cs.contains(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CategorisedEntity#copyContacts()
-   */
   @Override
   @NoProxy
   public Set<BwContact> copyContacts() {
     if (getNumContacts() == 0) {
       return null;
     }
-    TreeSet<BwContact> ts = new TreeSet<BwContact>();
 
-    for (BwContact cat: getContacts()) {
-      ts.add(cat);
-    }
-
-    return ts;
+    return new TreeSet<>(getContacts());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.CategorisedEntity#cloneContacts()
-   */
   @Override
   @NoProxy
   public Set<BwContact> cloneContacts() {
     if (getNumContacts() == 0) {
       return null;
     }
-    TreeSet<BwContact> ts = new TreeSet<BwContact>();
+    TreeSet<BwContact> ts = new TreeSet<>();
 
     for (BwContact cat: getContacts()) {
       ts.add((BwContact)cat.clone());
@@ -3196,19 +3078,17 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   public void addDescription(final BwLongString val) {
     Set<BwLongString> rs = getDescriptions();
     if (rs == null) {
-      rs = new TreeSet<BwLongString>();
+      rs = new TreeSet<>();
       setDescriptions(rs);
     }
 
-    if (!rs.contains(val)) {
-      rs.add(val);
-    }
+    rs.add(val);
   }
 
   @Override
   @NoProxy
   public boolean removeDescription(final BwLongString val) {
-    Set rs = getDescriptions();
+    Set<BwLongString> rs = getDescriptions();
     if (rs == null) {
       return false;
     }
@@ -3248,9 +3128,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     updateDescriptions(null, val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#getDescription()
-   */
   @Override
   @NoProxy
   @NoDump
@@ -3276,22 +3153,16 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     resources = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.ResourcedEntity#getResources()
-   */
   @Override
   public Set<BwString> getResources() {
     return resources;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.ResourcedEntity#getNumResources()
-   */
   @Override
   @NoProxy
   @NoDump
   public int getNumResources() {
-    Set rs = getResources();
+    Set<BwString> rs = getResources();
     if (rs == null) {
       return 0;
     }
@@ -3299,18 +3170,12 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return rs.size();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.ResourcedEntity#addResource(java.lang.String, java.lang.String)
-   */
   @Override
   @NoProxy
   public void addResource(final String lang, final String val) {
     addResource(new BwString(lang, val));
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.ResourcedEntity#addResource(org.bedework.calfacade.BwString)
-   */
   @Override
   @NoProxy
   public void addResource(final BwString val) {
@@ -3320,18 +3185,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       setResources(rs);
     }
 
-    if (!rs.contains(val)) {
-      rs.add(val);
-    }
+    rs.add(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.ResourcedEntity#removeResource(org.bedework.calfacade.BwString)
-   */
   @Override
   @NoProxy
   public boolean removeResource(final BwString val) {
-    Set rs = getResources();
+    Set<BwString> rs = getResources();
     if (rs == null) {
       return false;
     }

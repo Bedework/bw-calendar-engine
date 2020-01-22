@@ -1179,7 +1179,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     // Ensure collections in reasonable state.
     if (val.getAlarms() != null) {
       for (final BwAlarm alarm: val.getAlarms()) {
-        alarm.setEvent(val);
         alarm.setOwnerHref(getPrincipal().getPrincipalRef());
       }
     }

@@ -459,6 +459,7 @@ public class ChangeTableEntry {
     if (newVals == null) {
       return collectionSetChanged;
     }
+    
 
     if (Util.isEmpty(originalVals)) {
       // Add everything
