@@ -34,7 +34,6 @@ import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.base.BwDbentity;
-import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
@@ -264,11 +263,12 @@ public interface Calintf
    */
   void clear() throws CalFacadeException;
 
-  /** Replace session with a clean one - probably need to flush first.
+  /* * Replace session with a clean one - probably need to flush first.
    *
    * @throws CalFacadeException on hibernate error
    * /
   void replaceSession() throws CalFacadeException;
+  */
 
   /**
    * Get the set of active transactions
@@ -315,10 +315,10 @@ public interface Calintf
   BwIndexer getIndexer(String docType);
 
   /**
-   * @param entity may influence choice of indexer
+   * @param entity to select indexer
    * @return BwIndexer
    */
-  BwIndexer getIndexer(BwOwnedDbentity<?> entity);
+  BwIndexer getIndexer(Object entity);
 
   /** Return a public indexer if we're in public mode or one for the given href
    *
@@ -339,6 +339,11 @@ public interface Calintf
    * @return the [public] indexer
    */
   BwIndexer getIndexer(boolean publick, String docType);
+
+  /**
+   * @param entity to index
+   */
+  void indexEntity(BwUnversionedDbentity<?> entity);
 
   /** Method for reindexing.
    *

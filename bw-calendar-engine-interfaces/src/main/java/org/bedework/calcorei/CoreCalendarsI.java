@@ -54,10 +54,8 @@ public interface CoreCalendarsI extends Serializable {
 
   /** Called whenever we start running under a new principal. May require a
    * flush of some cached information.
-   *
-   * @throws CalFacadeException on error
    */
-  void principalChanged() throws CalFacadeException;
+  void principalChanged();
 
   /**
    * @param path to collection

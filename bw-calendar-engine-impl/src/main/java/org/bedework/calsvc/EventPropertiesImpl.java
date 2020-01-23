@@ -274,7 +274,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       getCoreHdlr().checkUnique(val.getFinderKeyValue(),
                            val.getOwnerHref());
 
-      getSvc().getIndexer(val).indexEntity(val);
+      getCal().indexEntity(val);
 
       // Update cached
       final Collection<T> ents = get();

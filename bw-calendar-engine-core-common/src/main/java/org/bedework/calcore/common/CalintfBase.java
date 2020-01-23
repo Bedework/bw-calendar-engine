@@ -33,20 +33,25 @@ import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwFilterDef;
+import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexFetcher;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexerParams;
+import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
+import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.AccessUtilI;
@@ -179,6 +184,31 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   protected FilterParserFetcher filterParserFetcher;
 
+  static class IndexEntry {
+    final BwIndexer indexer;
+    final BwUnversionedDbentity<?> entity;
+
+    IndexEntry(final BwIndexer indexer,
+               final BwUnversionedDbentity<?> entity) {
+      this.indexer = indexer;
+      this.entity = entity;
+    }
+
+    public int hashCode() {
+      return entity.getHref().hashCode();
+    }
+
+    public boolean equals(final Object o) {
+      if (!(o instanceof IndexEntry)) {
+        return false;
+      }
+
+      return entity.getHref().equals(((IndexEntry)o).entity.getHref());
+    }
+  }
+
+  protected Map<String, IndexEntry> awaitingIndex = new HashMap<>();
+
   /* ====================================================================
    *                   initialisation
    * ==================================================================== */
@@ -197,6 +227,29 @@ public abstract class CalintfBase implements Logged, Calintf {
   }
 
   public void closeIndexers() {
+    if (!awaitingIndex.isEmpty()) {
+      final var vals = awaitingIndex.values();
+      final var sz = vals.size();
+      var ct = 1;
+
+      try {
+        for (final IndexEntry ie : vals) {
+          try {
+            ie.indexer.indexEntity(ie.entity,
+                                   ct == sz); // wait
+            ct++;
+          } catch (final CalFacadeException cfe) {
+            if (debug()) {
+              error(cfe);
+            }
+            throw new RuntimeException(cfe);
+          }
+        }
+      } finally {
+        awaitingIndex.clear();
+      }
+    }
+
     for (final BwIndexer idx: publicIndexers.values()) {
       idx.close();
     }
@@ -337,7 +390,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   }
 
   @Override
-  public BwIndexer getIndexer(final BwOwnedDbentity<?> entity) {
+  public BwIndexer getIndexer(final Object entity) {
     final String docType = docTypeFromClass(entity);
 
     if (readOnlyMode ||
@@ -346,29 +399,47 @@ public abstract class CalintfBase implements Logged, Calintf {
       return getPublicIndexer(docType);
     }
 
-    if ((entity != null) && entity.getPublick()) {
+    if ((entity instanceof BwOwnedDbentity) &&
+            ((BwOwnedDbentity<?>)entity).getPublick()) {
       return getPublicIndexer(docType);
     }
 
     return getIndexer(getPrincipalRef(), docType);
   }
 
+  @Override
+  public void indexEntity(final BwUnversionedDbentity<?> entity) {
+    indexEntity(getIndexer(entity), entity);
+  }
+
+  public void indexEntity(final BwIndexer indexer,
+                          final BwUnversionedDbentity<?> entity) {
+    //indexer.indexEntity(entity, wait);
+
+    var ie = new IndexEntry(indexer, entity);
+    awaitingIndex.put(entity.getHref(), ie);
+  }
+
   private static Map<Class<?>, String> toDocType = new HashMap<>();
 
   static {
-    toDocType.put(BwCalendar.class, BwIndexer.docTypeCollection);
-    toDocType.put(CalendarWrapper.class, BwIndexer.docTypeCollection);
-    toDocType.put(BwCategory.class, docTypeCategory);
-    toDocType.put(BwPrincipal.class, BwIndexer.docTypePrincipal);
-    toDocType.put(BwPreferences.class, BwIndexer.docTypePreferences);
+    toDocType.put(BwAdminGroup.class, BwIndexer.docTypePrincipal);
     toDocType.put(BwAuthUser.class, BwIndexer.docTypePrincipal);
-    toDocType.put(BwLocation.class, BwIndexer.docTypeLocation);
+    toDocType.put(BwCalendar.class, BwIndexer.docTypeCollection);
+    toDocType.put(BwCalSuite.class, BwIndexer.docTypePrincipal);
+    toDocType.put(BwCategory.class, docTypeCategory);
     toDocType.put(BwContact.class, BwIndexer.docTypeContact);
-    toDocType.put(BwFilterDef.class, BwIndexer.docTypeFilter);
     toDocType.put(BwEvent.class, BwIndexer.docTypeEvent);
     toDocType.put(BwEventObj.class, BwIndexer.docTypeEvent);
+    toDocType.put(BwFilterDef.class, BwIndexer.docTypeFilter);
+    toDocType.put(BwGroup.class, BwIndexer.docTypePrincipal);
+    toDocType.put(BwLocation.class, BwIndexer.docTypeLocation);
+    toDocType.put(BwPreferences.class, BwIndexer.docTypePreferences);
+    toDocType.put(BwPrincipal.class, BwIndexer.docTypePrincipal);
     toDocType.put(BwResource.class, BwIndexer.docTypeResource);
     toDocType.put(BwResourceContent.class, BwIndexer.docTypeResourceContent);
+    toDocType.put(CalendarWrapper.class, BwIndexer.docTypeCollection);
+    toDocType.put(EventInfo.class, BwIndexer.docTypeEvent);
   }
 
   public String docTypeFromClass(final Object entity) {

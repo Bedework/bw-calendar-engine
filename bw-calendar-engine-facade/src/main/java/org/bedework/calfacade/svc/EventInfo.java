@@ -26,11 +26,14 @@ import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.ScheduleResult;
+import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 import org.bedework.util.misc.response.Response;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -45,7 +48,7 @@ import java.util.TreeSet;
  *
  * @author Mike Douglass       douglm  rpi.edu
  */
-public class EventInfo
+public class EventInfo extends BwUnversionedDbentity<EventInfo>
       implements Comparable<EventInfo>, Comparator<EventInfo>, Serializable {
   /** This class allows add and update event to signal changes back to the
    * caller.
@@ -223,6 +226,27 @@ public class EventInfo
     }
 
     retrievedOverrides = new TreeSet<>(this.overrides);
+  }
+
+  @Override
+  public void setId(final int val) {
+    getEvent().setId(val);
+  }
+
+  @Override
+  @JsonIgnore
+  public int getId() {
+    return getEvent().getId();
+  }
+
+  @Override
+  public void setHref(final String val) {
+    getEvent().setHref(val);
+  }
+
+  @Override
+  public String getHref() {
+    return getEvent().getHref();
   }
 
   /**

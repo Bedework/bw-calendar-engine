@@ -251,7 +251,7 @@ public abstract class CalintfHelper
     return ((BwIndexEsImpl)getIndexer()).getFilters();
   }*/
 
-  protected void indexEntity(final EventInfo ei) throws CalFacadeException {
+  protected void indexEntity(final EventInfo ei) {
     if (ei.getEvent().getRecurrenceId() != null) {
       // Cannot index single instance
       warn("Tried to index a recurrence instance");
@@ -259,14 +259,14 @@ public abstract class CalintfHelper
     }
 
     if (!getForRestore()) {
-      getIndexer(ei.getEvent()).indexEntity(ei);
+      intf.indexEntity(ei);
     }
   }
 
-  protected void indexEntity(final BwCalendar col) throws CalFacadeException {
+  protected void indexEntity(final BwCalendar col) {
     if (!getForRestore()) {
       // Index and wait
-      getIndexer(col).indexEntity(col, true);
+      intf.indexEntity(col);
     }
   }
 

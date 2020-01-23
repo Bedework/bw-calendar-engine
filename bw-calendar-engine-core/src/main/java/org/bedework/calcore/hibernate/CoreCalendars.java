@@ -29,6 +29,7 @@ import org.bedework.calcore.common.CalintfHelper;
 import org.bedework.calcore.common.CollectionCache;
 import org.bedework.calcorei.CoreCalendarsI;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.CollectionSynchInfo;
@@ -100,12 +101,12 @@ class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  public void startTransaction() throws CalFacadeException {
+  public void startTransaction() {
     intf.colCache.flush();  // Just in case
   }
 
   @Override
-  public void endTransaction() throws CalFacadeException {
+  public void endTransaction() {
     intf.colCache.flush();
   }
 
@@ -185,7 +186,7 @@ class CoreCalendars extends CalintfHelper
    * ==================================================================== */
 
   @Override
-  public void principalChanged() throws CalFacadeException {
+  public void principalChanged() {
     intf.colCache.clear();
   }
 
@@ -443,7 +444,7 @@ class CoreCalendars extends CalintfHelper
     ac.getAccessUtil().defaultAccess(cal, who);
     dao.saveOrUpdateCollection(unwrap(cal));
 
-    getIndexer(cal).indexEntity(cal);
+    indexEntity(cal);
 
     intf.colCache.flush();
 
@@ -565,12 +566,12 @@ class CoreCalendars extends CalintfHelper
         usercal.setPath(path);
         usercal.setColPath(parentCal.getPath());
 
-        final BwLastMod lm = usercal.getLastmod();
+        final BwCollectionLastmod lm = usercal.getLastmod();
         lm.updateLastmod(getCurrentTimestamp());
 
         dao.saveCollection(usercal);
 
-        getIndexer(usercal).indexEntity(usercal, true);
+        indexEntity(usercal);
 
         notify(SysEvent.SysCode.COLLECTION_ADDED, usercal);
       } else if (usercal == null) {
@@ -585,12 +586,12 @@ class CoreCalendars extends CalintfHelper
         usercal.setPath(path);
         usercal.setColPath(parentCal.getPath());
 
-        final BwLastMod lm = usercal.getLastmod();
+        final BwCollectionLastmod lm = usercal.getLastmod();
         lm.updateLastmod(getCurrentTimestamp());
 
         dao.saveCollection(usercal);
 
-        getIndexer(usercal).indexEntity(usercal, true);
+        indexEntity(usercal);
 
         notify(SysEvent.SysCode.COLLECTION_ADDED, usercal);
       }
@@ -613,12 +614,12 @@ class CoreCalendars extends CalintfHelper
     cal.setCalType(BwCalendar.calTypeCalendarCollection);
     cal.setAffectsFreeBusy(true);
 
-    final BwLastMod lm = cal.getLastmod();
+    final BwCollectionLastmod lm = cal.getLastmod();
     lm.updateLastmod(getCurrentTimestamp());
 
     dao.saveCollection(cal);
 
-    getIndexer(cal).indexEntity(cal, true);
+    indexEntity(cal);
     notify(SysEvent.SysCode.COLLECTION_ADDED, cal);
   }
 
@@ -917,7 +918,7 @@ class CoreCalendars extends CalintfHelper
       val.updateLastmod(getCurrentTimestamp());
       dao.updateCollection(unwrap(val));
 
-      getIndexer(val).indexEntity(val);
+      indexEntity(val);
       //touchCalendar(val.getPath());
 
       notify(SysEvent.SysCode.COLLECTION_UPDATED, val);

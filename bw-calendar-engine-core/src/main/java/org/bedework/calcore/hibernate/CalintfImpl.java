@@ -403,6 +403,8 @@ public class CalintfImpl extends CalintfROImpl {
 
   @Override
   public void endTransaction() throws CalFacadeException {
+    var endedOk = false;
+
     final long start = System.currentTimeMillis();
     super.endTransaction();
     if (trace()) {
@@ -434,6 +436,8 @@ public class CalintfImpl extends CalintfROImpl {
                        System.currentTimeMillis() - start));
         }
       }
+
+      endedOk = true;
     } catch (final CalFacadeException cfe) {
       if (sess != null) {
         sess.rollback();
@@ -447,6 +451,10 @@ public class CalintfImpl extends CalintfROImpl {
 
       throw new CalFacadeException(t);
     } finally {
+      if (!endedOk) {
+        awaitingIndex.clear();
+      }
+
       synchronized (openIfs) {
         openIfs.remove(objKey);
       }
@@ -460,6 +468,8 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public void rollbackTransaction() {
     try {
+      awaitingIndex.clear();
+
       if (killed) {
         return;
       }
@@ -616,7 +626,7 @@ public class CalintfImpl extends CalintfROImpl {
    * ==================================================================== */
 
   @Override
-  public void principalChanged() throws CalFacadeException {
+  public void principalChanged() {
     calendars.principalChanged();
   }
 
@@ -1191,7 +1201,7 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public void saveOrUpdate(final BwPreferences val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
-    getIndexer(val).indexEntity(val);
+    indexEntity(val);
   }
 
   @Override
@@ -1229,7 +1239,7 @@ public class CalintfImpl extends CalintfROImpl {
   public void updateGroup(final BwGroup group,
                           final boolean admin) throws CalFacadeException {
     principalsAndPrefs.saveOrUpdate(group);
-    getIndexer(docTypePrincipal).indexEntity(group);
+    indexEntity(group);
   }
 
   @Override
@@ -1255,7 +1265,7 @@ public class CalintfImpl extends CalintfROImpl {
     ent.setMember(val);
 
     principalsAndPrefs.saveOrUpdate(ent);
-    getIndexer(docTypePrincipal).indexEntity(group);
+    indexEntity(group);
   }
 
   @Override
@@ -1263,7 +1273,7 @@ public class CalintfImpl extends CalintfROImpl {
                            final BwPrincipal val,
                            final boolean admin) throws CalFacadeException {
     principalsAndPrefs.removeMember(group, val, admin);
-    getIndexer(docTypePrincipal).indexEntity(group);
+    indexEntity(group);
   }
 
   @Override
@@ -1317,7 +1327,7 @@ public class CalintfImpl extends CalintfROImpl {
   public void saveOrUpdate(final BwCalSuite val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
     BwCalSuitePrincipal csp = BwCalSuitePrincipal.from(val);
-    getIndexer(docTypePrincipal).indexEntity(csp);
+    indexEntity(csp);
   }
 
   @Override
@@ -1334,7 +1344,7 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public void saveOrUpdate(final BwEventProperty<?> val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
-    getIndexer(val).indexEntity(val);
+    indexEntity(val);
   }
 
   /* ====================================================================
@@ -1435,7 +1445,7 @@ public class CalintfImpl extends CalintfROImpl {
   public void add(final BwResource val) throws CalFacadeException {
     entityDao.save(val);
 
-    getIndexer(val).indexEntity(val);
+    indexEntity(val);
   }
 
   @Override
@@ -1443,20 +1453,20 @@ public class CalintfImpl extends CalintfROImpl {
                          final BwResourceContent rc) throws CalFacadeException {
     entityDao.save(rc);
 
-    getIndexer(docTypeResourceContent).indexEntity(rc);
+    indexEntity(rc);
   }
 
   @Override
   public void saveOrUpdate(final BwResource val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
-    getIndexer(val).indexEntity(val);
+    indexEntity(val);
   }
 
   @Override
   public void saveOrUpdateContent(final BwResource r,
                                   final BwResourceContent val) throws CalFacadeException {
     entityDao.saveOrUpdate(val);
-    getIndexer(docTypeResourceContent).indexEntity(val);
+    indexEntity(val);
   }
 
   @Override
