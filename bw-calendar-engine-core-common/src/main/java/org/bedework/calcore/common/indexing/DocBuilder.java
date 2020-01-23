@@ -755,7 +755,7 @@ public class DocBuilder extends DocBuilderBase {
    *                   private methods
    * ======================================================================== */
 
-  String getHref(final BwUnversionedDbentity val) {
+  String getHref(final BwUnversionedDbentity<?> val) {
     if (val instanceof FixNamesEntity) {
       final FixNamesEntity ent = (FixNamesEntity)val;
 
@@ -769,25 +769,25 @@ public class DocBuilder extends DocBuilderBase {
     return val.getHref();
   }
 
-  void makeHref(final BwUnversionedDbentity val) throws CalFacadeException {
+  void makeHref(final BwUnversionedDbentity<?> val) throws CalFacadeException {
     makeField(PropertyInfoIndex.HREF, getHref(val));
   }
 
-  private void makeOwned(final BwOwnedDbentity ent)
+  private void makeOwned(final BwOwnedDbentity<?> ent)
           throws Throwable {
     makeHref(ent);
     makeField(PropertyInfoIndex.OWNER, ent.getOwnerHref());
     makeField(PropertyInfoIndex.PUBLIC, ent.getPublick());
   }
 
-  private void makeShareable(final BwShareableDbentity ent)
+  private void makeShareable(final BwShareableDbentity<?> ent)
           throws Throwable {
     makeOwned(ent);
     makeField(PropertyInfoIndex.CREATOR, ent.getCreatorHref());
     makeField(PropertyInfoIndex.ACL, ent.getAccess());
   }
 
-  private void makeShareableContained(final BwShareableContainedDbentity ent)
+  private void makeShareableContained(final BwShareableContainedDbentity<?> ent)
           throws Throwable {
     makeShareable(ent);
 
