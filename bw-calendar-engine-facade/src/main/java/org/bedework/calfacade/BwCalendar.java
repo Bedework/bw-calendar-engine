@@ -207,7 +207,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     ci(calTypeNotifications,      T, f, f, f, f, f, f, f, f, f, T),
     ci(calTypeEventList,          T, f, T, T, T, T, f, T, f, f, f),
     ci(calTypePoll,               f, T, T, T, T, T, T, T, T, T, T),
-    ci(calTypePendingInbox,       T, f, T, f, f, f, f, T, f, f, f),
+    ci(calTypePendingInbox,       T, f, T, f, f, f, f, T, f, f, T),
     ci(calTypeAttachments,        T, f, T, f, f, f, f, f, f, f, f),
     ci(calTypeTasks,              f, T, T, T, T, T, T, T, T, T, T),
   };
