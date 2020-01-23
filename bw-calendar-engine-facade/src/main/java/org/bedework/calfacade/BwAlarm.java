@@ -1234,27 +1234,22 @@ Example
    * @return int
    */
   public int compareEqFields(final BwAlarm that)  {
-    int /*res = CalFacadeUtil.cmpObjval(getEvent(), that.getEvent());
-    if (res != 0) {
-      return res;
-    }*/
-
-    res = CalFacadeUtil.cmpObjval(getOwnerHref(), that.getOwnerHref());
+    int res = CalFacadeUtil.cmpObjval(getOwnerHref(), that.getOwnerHref());
     if (res != 0) {
       return res;
     }
 
-    res = CalFacadeUtil.cmpIntval(getAlarmType(), getAlarmType());
+    res = CalFacadeUtil.cmpIntval(getAlarmType(), that.getAlarmType());
     if (res != 0) {
       return res;
     }
 
-    res = CalFacadeUtil.cmpObjval(getTrigger(), getTrigger());
+    res = CalFacadeUtil.cmpObjval(getTrigger(), that.getTrigger());
     if (res != 0) {
       return res;
     }
 
-    res = CalFacadeUtil.cmpBoolval(getTriggerDateTime(), getTriggerDateTime());
+    res = CalFacadeUtil.cmpBoolval(getTriggerDateTime(), that.getTriggerDateTime());
     if (res != 0) {
       return res;
     }
