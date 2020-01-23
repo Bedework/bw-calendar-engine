@@ -64,10 +64,9 @@ public class DumpEntity<T> implements Logged {
    * up.
    *
    * @return boolean true to continue with dump.
-   * @throws CalFacadeException
    */
   @NoWrap
-  public boolean hasDumpValue() throws CalFacadeException {
+  public boolean hasDumpValue() {
     return true;
   }
 

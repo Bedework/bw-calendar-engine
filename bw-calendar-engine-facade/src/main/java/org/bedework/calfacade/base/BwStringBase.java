@@ -19,7 +19,6 @@
 package org.bedework.calfacade.base;
 
 import org.bedework.calfacade.annotations.ical.IcalProperty;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.locale.BwLocale;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.QuotaUtil;
@@ -120,7 +119,7 @@ public class BwStringBase extends BwDbentity<BwStringBase>
    * @see org.bedework.calfacade.base.DumpEntity#hasDumpValue()
    */
   @Override
-  public boolean hasDumpValue() throws CalFacadeException {
+  public boolean hasDumpValue() {
     return (getValue() != null) && (getValue().length() > 0);
   }
 

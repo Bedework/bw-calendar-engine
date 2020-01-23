@@ -413,9 +413,9 @@ public class ChangeTableEntry {
   /** Compare the original and new collections. Update the removed and added
    * collections to reflect the changes that need to be made.
    *
-   * <p>Alarms are the only peruser class we have to deal with.
+   * <p>Alarms are the only per user class we have to deal with.
    *
-   * @param originalVals
+   * @param originalVals the original contents
    * @return true if collection set changed - that is, members were added or
    *              removed.
    */
