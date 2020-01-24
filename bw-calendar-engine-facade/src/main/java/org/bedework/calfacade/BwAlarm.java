@@ -1190,7 +1190,7 @@ Example
       return true;
     }
 
-    if (CalFacadeUtil.cmpIntval(getRepeat(), getRepeat()) != 0) {
+    if (getRepeat() != that.getRepeat()) {
       return true;
     }
 
@@ -1240,7 +1240,7 @@ Example
       return res;
     }
 
-    res = CalFacadeUtil.cmpIntval(getAlarmType(), that.getAlarmType());
+    res = Integer.compare(getAlarmType(), that.getAlarmType());
     if (res != 0) {
       return res;
     }
