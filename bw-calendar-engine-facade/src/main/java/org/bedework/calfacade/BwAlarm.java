@@ -726,6 +726,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    * @param val - name to match
    * @return list of matching properties - never null
    */
+  @Override
   @NoProxy
   @NoDump
   public List<BwXproperty> getXicalProperties(final String val) {

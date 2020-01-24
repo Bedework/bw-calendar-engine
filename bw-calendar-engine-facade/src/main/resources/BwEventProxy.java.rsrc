@@ -500,7 +500,7 @@ public class BwEventProxy extends BwEvent implements ChangeFlag {
    *                   Recurrence update and query methods
    * ==================================================================== */
 
-  public BwDuration makeDurationBean() throws CalFacadeException {
+  public BwDuration makeDurationBean() {
     String duration = ref.getDuration();
     if (duration == null) {
       duration = getTarget().getDuration();

@@ -19,7 +19,6 @@
 package org.bedework.calfacade.base;
 
 import org.bedework.calfacade.BwXproperty;
-import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.util.List;
 
@@ -55,9 +54,8 @@ public interface XpropsEntity {
    *
    * @param val - name to match
    * @return list of matching properties - never null
-   *  @throws org.bedework.calfacade.exc.CalFacadeException
    */
-  List<BwXproperty> getXicalProperties(final String val) throws CalFacadeException;
+  List<BwXproperty> getXicalProperties(final String val);
 
   /** Remove all instances of the named property.
    *
