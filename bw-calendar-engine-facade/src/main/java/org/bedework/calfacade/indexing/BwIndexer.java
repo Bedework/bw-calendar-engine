@@ -322,10 +322,12 @@ public interface BwIndexer extends Serializable {
    *
    * @param rec an indexable object
    * @param waitForIt true if we wait for it to appear in the index
+   * @param forTouch true if we ignore versioning exceptions - will return null
    * @throws CalFacadeException on error
    */
   void indexEntity(Object rec,
-                   final boolean waitForIt) throws CalFacadeException;
+                   boolean waitForIt,
+                   boolean forTouch) throws CalFacadeException;
 
   /** Set to > 1 to enable batching
    *
@@ -341,6 +343,8 @@ public interface BwIndexer extends Serializable {
   /** Flush any batched entities.
    */
   void flush();
+
+  String getDocType();
 
   /** create a new index for current doctype and start using it.
    *

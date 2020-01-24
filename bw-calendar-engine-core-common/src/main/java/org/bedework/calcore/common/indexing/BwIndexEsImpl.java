@@ -488,6 +488,11 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   public void flush() {
   }
 
+  @Override
+  public String getDocType() {
+    return docType;
+  }
+
   private static class EsSearchResult implements SearchResult {
     private final BwIndexer indexer;
 
@@ -1245,12 +1250,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   @Override
   public void indexEntity(final Object rec)
           throws CalFacadeException {
-    indexEntity(rec, false);
+    indexEntity(rec, false, false);
   }
 
   @Override
   public void indexEntity(final Object rec,
-                          final boolean waitForIt)
+                          final boolean waitForIt,
+                          final boolean forTouch)
           throws CalFacadeException {
     try {
       /* XXX later with batch
@@ -1288,7 +1294,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       markUpdated();
 
-      final IndexResponse resp = index(rec, waitForIt);
+      final IndexResponse resp = index(rec, waitForIt, forTouch);
 
       if (debug()) {
         if (resp == null) {
@@ -3257,7 +3263,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
   /* Return the response after indexing */
   private IndexResponse index(final Object rec,
-                              final boolean waitForIt) throws CalFacadeException {
+                              final boolean waitForIt,
+                              final boolean forTouch) throws CalFacadeException {
     EsDocInfo di = null;
 
     try {
@@ -3323,6 +3330,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final VersionConflictEngineException vcee) {
+      if (forTouch) {
+        // Ignore - already touched
+        return null;
+      }
       error(vcee);
       throw new CalFacadeException(vcee);
       /* Can't do this any more

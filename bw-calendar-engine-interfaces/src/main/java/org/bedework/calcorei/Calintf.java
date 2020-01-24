@@ -345,6 +345,11 @@ public interface Calintf
    */
   void indexEntity(BwUnversionedDbentity<?> entity);
 
+  /**
+   * @param entity to index
+   */
+  void indexEntityForTouch(BwCalendar entity);
+
   /** Method for reindexing.
    *
    * @param principalHref if we're not public

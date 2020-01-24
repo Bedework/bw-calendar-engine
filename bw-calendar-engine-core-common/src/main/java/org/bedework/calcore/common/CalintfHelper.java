@@ -265,8 +265,13 @@ public abstract class CalintfHelper
 
   protected void indexEntity(final BwCalendar col) {
     if (!getForRestore()) {
-      // Index and wait
       intf.indexEntity(col);
+    }
+  }
+
+  protected void indexEntityForTouch(final BwCalendar col) {
+    if (!getForRestore()) {
+      intf.indexEntityForTouch(col);
     }
   }
 

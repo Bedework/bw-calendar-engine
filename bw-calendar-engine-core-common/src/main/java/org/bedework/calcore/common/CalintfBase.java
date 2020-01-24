@@ -187,11 +187,18 @@ public abstract class CalintfBase implements Logged, Calintf {
   static class IndexEntry {
     final BwIndexer indexer;
     final BwUnversionedDbentity<?> entity;
+    boolean forTouch;
 
     IndexEntry(final BwIndexer indexer,
-               final BwUnversionedDbentity<?> entity) {
+               final BwUnversionedDbentity<?> entity,
+               final boolean forTouch) {
       this.indexer = indexer;
       this.entity = entity;
+      this.forTouch = forTouch;
+    }
+
+    public String getKey() {
+      return indexer.getDocType() + "-" + entity.getHref();
     }
 
     public int hashCode() {
@@ -236,7 +243,8 @@ public abstract class CalintfBase implements Logged, Calintf {
         for (final IndexEntry ie : vals) {
           try {
             ie.indexer.indexEntity(ie.entity,
-                                   ct == sz); // wait
+                                   ct == sz,
+                                   ie.forTouch); // wait
             ct++;
           } catch (final CalFacadeException cfe) {
             if (debug()) {
@@ -376,6 +384,28 @@ public abstract class CalintfBase implements Logged, Calintf {
     return principalInfo.getSuperUser();
   }
 
+  @Override
+  public void indexEntity(final BwUnversionedDbentity<?> entity) {
+    indexEntity(getIndexer(entity), entity, false);
+  }
+
+  @Override
+  public void indexEntityForTouch(final BwCalendar entity) {
+    indexEntity(getIndexer(entity), entity, true);
+  }
+
+  public void indexEntity(final BwIndexer indexer,
+                          final BwUnversionedDbentity<?> entity,
+                          final boolean forTouch) {
+    //indexer.indexEntity(entity, wait);
+
+    var ie = new IndexEntry(indexer, entity, forTouch);
+    var prevEntry = awaitingIndex.put(ie.getKey(), ie);
+    if (forTouch && (prevEntry != null) && !prevEntry.forTouch) {
+      ie.forTouch = false;
+    }
+  }
+
   private Map<String, BwIndexer> publicIndexers = new HashMap<>();
   private Map<String, BwIndexer> principalIndexers =
           new HashMap<>();
@@ -405,52 +435,6 @@ public abstract class CalintfBase implements Logged, Calintf {
     }
 
     return getIndexer(getPrincipalRef(), docType);
-  }
-
-  @Override
-  public void indexEntity(final BwUnversionedDbentity<?> entity) {
-    indexEntity(getIndexer(entity), entity);
-  }
-
-  public void indexEntity(final BwIndexer indexer,
-                          final BwUnversionedDbentity<?> entity) {
-    //indexer.indexEntity(entity, wait);
-
-    var ie = new IndexEntry(indexer, entity);
-    awaitingIndex.put(entity.getHref(), ie);
-  }
-
-  private static Map<Class<?>, String> toDocType = new HashMap<>();
-
-  static {
-    toDocType.put(BwAdminGroup.class, BwIndexer.docTypePrincipal);
-    toDocType.put(BwAuthUser.class, BwIndexer.docTypePrincipal);
-    toDocType.put(BwCalendar.class, BwIndexer.docTypeCollection);
-    toDocType.put(BwCalSuite.class, BwIndexer.docTypePrincipal);
-    toDocType.put(BwCategory.class, docTypeCategory);
-    toDocType.put(BwContact.class, BwIndexer.docTypeContact);
-    toDocType.put(BwEvent.class, BwIndexer.docTypeEvent);
-    toDocType.put(BwEventObj.class, BwIndexer.docTypeEvent);
-    toDocType.put(BwFilterDef.class, BwIndexer.docTypeFilter);
-    toDocType.put(BwGroup.class, BwIndexer.docTypePrincipal);
-    toDocType.put(BwLocation.class, BwIndexer.docTypeLocation);
-    toDocType.put(BwPreferences.class, BwIndexer.docTypePreferences);
-    toDocType.put(BwPrincipal.class, BwIndexer.docTypePrincipal);
-    toDocType.put(BwResource.class, BwIndexer.docTypeResource);
-    toDocType.put(BwResourceContent.class, BwIndexer.docTypeResourceContent);
-    toDocType.put(CalendarWrapper.class, BwIndexer.docTypeCollection);
-    toDocType.put(EventInfo.class, BwIndexer.docTypeEvent);
-  }
-
-  public String docTypeFromClass(final Object entity) {
-    final String docType = toDocType.get(entity.getClass());
-
-    if (docType == null) {
-      throw new RuntimeException("Unable to get docType for class " +
-                                         entity.getClass());
-    }
-
-    return docType;
   }
 
   public BwIndexer getIndexer(final BwIndexer indexer,
@@ -491,6 +475,54 @@ public abstract class CalintfBase implements Logged, Calintf {
     principalIndexers.put(docType + "\t" +
                                   principalHref, idx);
     return idx;
+  }
+
+  @Override
+  public BwIndexer getPublicIndexer(final String docType) {
+    BwIndexer idx = publicIndexers.get(docType);
+    if (idx == null) {
+      idx = BwIndexerFactory.getPublicIndexer(configs,
+                                              docType,
+                                              ac,
+                                              indexFetcher);
+      publicIndexers.put(docType, idx);
+    }
+
+    return idx;
+  }
+
+  @Override
+  public BwIndexer getIndexer(final boolean publick,
+                              final String docType) {
+    if (publick) {
+      return getPublicIndexer(docType);
+    }
+
+    return getIndexer(getPrincipal().getPrincipalRef(), docType);
+  }
+
+  @Override
+  public BwIndexer getIndexerForReindex(final String principalHref,
+                                        final String docType,
+                                        final String indexName) {
+    return BwIndexerFactory.getIndexerForReindex(configs,
+                                                 docType,
+                                                 principalHref,
+                                                 ac,
+                                                 indexFetcher,
+                                                 indexName);
+  }
+
+  protected BwIndexer getEvIndexer() {
+    return getIndexer(BwIndexer.docTypeEvent);
+  }
+
+  protected BwIndexer getColIndexer() {
+    return getIndexer(BwIndexer.docTypeCollection);
+  }
+
+  protected BwIndexer getColIndexer(final BwIndexer indexer) {
+    return getIndexer(indexer, BwIndexer.docTypeCollection);
   }
 
   private class BwIndexFetcherImpl implements BwIndexFetcher {
@@ -560,63 +592,15 @@ public abstract class CalintfBase implements Logged, Calintf {
         return Response.error(resp, t);
       }
     }
-  }
 
-  public BwIndexer getIndexer(final BwIndexerParams params,
-                              final String docType) {
-    if (params.publick) {
-      return getPublicIndexer(docType);
+    private BwIndexer getIndexer(final BwIndexerParams params,
+                                 final String docType) {
+      if (params.publick) {
+        return getPublicIndexer(docType);
+      }
+
+      return CalintfBase.this.getIndexer(params.principalHref, docType);
     }
-
-    return getIndexer(params.principalHref, docType);
-  }
-
-  @Override
-  public BwIndexer getPublicIndexer(final String docType) {
-    BwIndexer idx = publicIndexers.get(docType);
-    if (idx == null) {
-      idx = BwIndexerFactory.getPublicIndexer(configs,
-                                              docType,
-                                              ac,
-                                              indexFetcher);
-      publicIndexers.put(docType, idx);
-    }
-
-    return idx;
-  }
-
-  @Override
-  public BwIndexer getIndexer(final boolean publick,
-                              final String docType) {
-    if (publick) {
-      return getPublicIndexer(docType);
-    }
-
-    return getIndexer(getPrincipal().getPrincipalRef(), docType);
-  }
-
-  @Override
-  public BwIndexer getIndexerForReindex(final String principalHref,
-                                        final String docType,
-                                        final String indexName) {
-    return BwIndexerFactory.getIndexerForReindex(configs,
-                                                 docType,
-                                                 principalHref,
-                                                 ac,
-                                                 indexFetcher,
-                                                 indexName);
-  }
-
-  protected BwIndexer getEvIndexer() {
-    return getIndexer(BwIndexer.docTypeEvent);
-  }
-
-  protected BwIndexer getColIndexer() {
-    return getIndexer(BwIndexer.docTypeCollection);
-  }
-
-  protected BwIndexer getColIndexer(final BwIndexer indexer) {
-    return getIndexer(indexer, BwIndexer.docTypeCollection);
   }
 
   protected String makeHref(final BwPrincipal principal,
@@ -819,6 +803,38 @@ public abstract class CalintfBase implements Logged, Calintf {
     personalModified.add(user);
   }*/
 
+  private static Map<Class<?>, String> toDocType = new HashMap<>();
+
+  static {
+    toDocType.put(BwAdminGroup.class, BwIndexer.docTypePrincipal);
+    toDocType.put(BwAuthUser.class, BwIndexer.docTypePrincipal);
+    toDocType.put(BwCalendar.class, BwIndexer.docTypeCollection);
+    toDocType.put(BwCalSuite.class, BwIndexer.docTypePrincipal);
+    toDocType.put(BwCategory.class, docTypeCategory);
+    toDocType.put(BwContact.class, BwIndexer.docTypeContact);
+    toDocType.put(BwEvent.class, BwIndexer.docTypeEvent);
+    toDocType.put(BwEventObj.class, BwIndexer.docTypeEvent);
+    toDocType.put(BwFilterDef.class, BwIndexer.docTypeFilter);
+    toDocType.put(BwGroup.class, BwIndexer.docTypePrincipal);
+    toDocType.put(BwLocation.class, BwIndexer.docTypeLocation);
+    toDocType.put(BwPreferences.class, BwIndexer.docTypePreferences);
+    toDocType.put(BwPrincipal.class, BwIndexer.docTypePrincipal);
+    toDocType.put(BwResource.class, BwIndexer.docTypeResource);
+    toDocType.put(BwResourceContent.class, BwIndexer.docTypeResourceContent);
+    toDocType.put(CalendarWrapper.class, BwIndexer.docTypeCollection);
+    toDocType.put(EventInfo.class, BwIndexer.docTypeEvent);
+  }
+
+  private String docTypeFromClass(final Object entity) {
+    final String docType = toDocType.get(entity.getClass());
+
+    if (docType == null) {
+      throw new RuntimeException("Unable to get docType for class " +
+                                         entity.getClass());
+    }
+
+    return docType;
+  }
 
   /* ====================================================================
    *                   Logged methods
