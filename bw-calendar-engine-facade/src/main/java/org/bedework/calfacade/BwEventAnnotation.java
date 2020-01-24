@@ -236,6 +236,7 @@ public class BwEventAnnotation extends BwEvent {
     return ts.toString();
   }
 
+  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     final BwEventAnnotation ev = new BwEventAnnotation();

@@ -65,12 +65,12 @@ public interface XpropsEntity {
   int removeXproperties(final String val);
 
   /**
-   * @param val
+   * @param val an x-prop
    */
   void addXproperty(final BwXproperty val);
 
   /**
-   * @param val
+   * @param val an x-prop
    */
   void removeXproperty(final BwXproperty val);
 

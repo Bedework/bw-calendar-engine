@@ -444,7 +444,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public BwStats getStats() throws CalFacadeException {
+  public BwStats getStats() {
     final BwStats stats = getCal().getStats();
 
     if (timezones != null) {
@@ -470,12 +470,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public boolean getDbStatsEnabled() throws CalFacadeException {
+  public boolean getDbStatsEnabled() {
     return getCal().getDbStatsEnabled();
   }
 
   @Override
-  public void dumpDbStats() throws CalFacadeException {
+  public void dumpDbStats() {
     //if (!pars.getPublicAdmin()) {
     //  throw new CalFacadeAccessException();
     //}
@@ -485,7 +485,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public Collection<StatsEntry> getDbStats() throws CalFacadeException {
+  public Collection<StatsEntry> getDbStats() {
     //if (!pars.getPublicAdmin()) {
     //  throw new CalFacadeAccessException();
     //}
@@ -494,7 +494,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public void logStats() throws CalFacadeException {
+  public void logStats() {
     info(getStats().toString());
   }
 
@@ -603,7 +603,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public void close() throws CalFacadeException {
+  public void close() {
     open = false;
     getCal().close();
 
@@ -1661,14 +1661,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                          System.currentTimeMillis() - start));
           }
         } catch (final Throwable ignored) {}
-        try {
-          cali.close();
-          if (trace()) {
-            trace(format("getCal: after close %s",
-                         System.currentTimeMillis() - start));
-          }
-        } catch (final Throwable ignored) {}
-        //cali.flushAll();
+
+        cali.close();
+        if (trace()) {
+          trace(format("getCal: after close %s",
+                       System.currentTimeMillis() - start));
+        }
       }
     }
   }

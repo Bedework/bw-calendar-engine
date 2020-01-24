@@ -147,9 +147,8 @@ public interface Calintf
   /** Get the current system (not db) stats
    *
    * @return BwStats object
-   * @throws CalFacadeException if not admin
    */
-  BwStats getStats() throws CalFacadeException;
+  BwStats getStats();
 
   /** Enable/disable db statistics
    *
@@ -161,29 +160,25 @@ public interface Calintf
   /**
    *
    * @return boolean true if statistics collection enabled
-   * @throws CalFacadeException if not admin
    */
-  boolean getDbStatsEnabled() throws CalFacadeException;
+  boolean getDbStatsEnabled();
 
   /** Dump db statistics
    *
-   * @throws CalFacadeException if not admin
    */
-  void dumpDbStats() throws CalFacadeException;
+  void dumpDbStats();
 
   /** Get db statistics
    *
    * @return Collection of BwStats.StatsEntry objects
-   * @throws CalFacadeException if not admin
    */
-  Collection<StatsEntry> getDbStats() throws CalFacadeException;
+  Collection<StatsEntry> getDbStats();
 
   /** Get information about this interface
    *
    * @return CalintfInfo
-   * @throws CalFacadeException on error
    */
-  CalintfInfo getInfo() throws CalFacadeException;
+  CalintfInfo getInfo();
 
   /** Signal the start of a sequence of operations. These overlap transactions
    * in that there may be 0 to many transactions started and ended within an
@@ -219,9 +214,8 @@ public interface Calintf
 
   /** Call on the way out after handling a request..
    *
-   * @throws CalFacadeException on error
    */
-  void close() throws CalFacadeException;
+  void close();
 
   /** Start a (possibly long-running) transaction. In the web environment
    * this might do nothing. The endTransaction method should in some way
@@ -424,13 +418,13 @@ public interface Calintf
   /** Check the access for the given entity. Returns the current access
    * or null or optionally throws a no access exception.
    *
-   * @param ent
-   * @param desiredAccess
-   * @param returnResult
+   * @param ent a shareable entity
+   * @param desiredAccess access we want
+   * @param returnResult true to return rather than throw exception
    * @return CurrentAccess
    * @throws CalFacadeException if returnResult false and no access
    */
-  CurrentAccess checkAccess(BwShareableDbentity ent,
+  CurrentAccess checkAccess(BwShareableDbentity<?> ent,
                             int desiredAccess,
                             boolean returnResult)
           throws CalFacadeException;

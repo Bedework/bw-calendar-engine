@@ -168,9 +168,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /** Get the current stats
    *
    * @return BwStats object
-   * @throws CalFacadeException if not admin
    */
-  public abstract BwStats getStats() throws CalFacadeException;
+  public abstract BwStats getStats();
 
   /** Enable/disable db statistics
    *
@@ -182,9 +181,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
   /**
    *
    * @return boolean true if statistics collection enabled
-   * @throws CalFacadeException if not admin
    */
-  public abstract boolean getDbStatsEnabled() throws CalFacadeException;
+  public abstract boolean getDbStatsEnabled();
 
   /** Dump db statistics
    *

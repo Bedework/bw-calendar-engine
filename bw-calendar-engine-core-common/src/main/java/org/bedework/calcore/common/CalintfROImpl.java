@@ -177,11 +177,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public BwStats getStats() throws CalFacadeException {
-    if (stats == null) {
-      return null;
-    }
-
+  public BwStats getStats() {
     return stats;
   }
 
@@ -191,22 +187,22 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public boolean getDbStatsEnabled() throws CalFacadeException {
+  public boolean getDbStatsEnabled() {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public void dumpDbStats() throws CalFacadeException {
+  public void dumpDbStats() {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public Collection<StatsEntry> getDbStats() throws CalFacadeException {
+  public Collection<StatsEntry> getDbStats() {
     throw new RuntimeException("Read only version");
   }
 
   @Override
-  public CalintfInfo getInfo() throws CalFacadeException {
+  public CalintfInfo getInfo() {
     return info;
   }
 
@@ -254,7 +250,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void close() throws CalFacadeException {
+  public void close() {
     closeIndexers();
 
     if (killed) {
@@ -431,7 +427,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public CurrentAccess checkAccess(final BwShareableDbentity ent,
+  public CurrentAccess checkAccess(final BwShareableDbentity<?> ent,
                                    final int desiredAccess,
                                    final boolean returnResult)
           throws CalFacadeException {
@@ -799,7 +795,6 @@ public class CalintfROImpl extends CalintfBase
     final String fpath = fixPath(path); // Removes "/"
     final String fpathSlash = fpath + "/";
 
-    @SuppressWarnings("unchecked")
     final Collection<BwCalendar> cols = getColIndexer().fetchChildrenDeep(fpath);
 
     String token = thisCol.getLastmod().getTagValue();
@@ -1706,8 +1701,8 @@ public class CalintfROImpl extends CalintfBase
     return newval;
   }
 
-  private Collection<CoreEventInfo> buildVavail(final Collection<CoreEventInfo> ceis)
-          throws CalFacadeException {
+  private Collection<CoreEventInfo> buildVavail(
+          final Collection<CoreEventInfo> ceis) {
     final TreeSet<CoreEventInfo> outevs = new TreeSet<>();
 
     final Map<String, CoreEventInfo> vavails = new HashMap<>();

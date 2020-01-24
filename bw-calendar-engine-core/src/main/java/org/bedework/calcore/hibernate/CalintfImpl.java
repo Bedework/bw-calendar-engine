@@ -290,14 +290,7 @@ public class CalintfImpl extends CalintfROImpl {
 
     if ((sess != null) && !webMode) {
       warn("Session is not null. Will close");
-      try {
-        close();
-      } catch (final Throwable t) {
-        if (debug()) {
-          warn("Ignoring the following error");
-          error(t);
-        }
-      }
+      close();
     }
 
     if (sess == null) {
@@ -538,11 +531,7 @@ public class CalintfImpl extends CalintfROImpl {
       warn("Exception on rollback for kill: " + t.getMessage());
     }
     
-    try {
-      close();
-    } catch (final Throwable t) {
-      warn("Exception on close for kill: " + t.getMessage());
-    }
+    close();
 
     super.kill();
   }

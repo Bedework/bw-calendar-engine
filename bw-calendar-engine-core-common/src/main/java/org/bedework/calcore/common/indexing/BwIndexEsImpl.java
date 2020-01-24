@@ -597,7 +597,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public String currentChangeToken() throws CalFacadeException {
+  public String currentChangeToken() {
     UpdateInfo ui;
     try {
       final GetRequest req = new GetRequest(targetIndex,
@@ -1952,8 +1952,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       // Failed somehow
       error(ese);
       return -1;
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -2743,7 +2741,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
    *                   private methods
    * ======================================================================== */
 
-  private boolean checkCache() throws CalFacadeException {
+  private boolean checkCache() {
     // 1. Have we only just checked? If so then ok
     final long now = System.currentTimeMillis();
 
@@ -2771,9 +2769,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return false;
   }
 
-  synchronized <T extends BwUnversionedDbentity<?>> T getCached(final String href,
-                                                             final Class<T> resultType)
-          throws CalFacadeException {
+  synchronized <T extends BwUnversionedDbentity<?>> T getCached(
+          final String href,
+          final Class<T> resultType) {
     if (!checkCache()) {
       return null;
     }
@@ -2781,10 +2779,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return caches.get(href, resultType);
   }
 
-  synchronized <T extends BwUnversionedDbentity<?>> T getCached(final String href,
-                                                             final int desiredAccess,
-                                                             final Class<T> resultType)
-          throws CalFacadeException {
+  synchronized <T extends BwUnversionedDbentity<?>> T getCached(
+          final String href,
+          final int desiredAccess,
+          final Class<T> resultType) {
     if (!checkCache()) {
       return null;
     }
@@ -3888,14 +3886,14 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   private RestHighLevelClient getClient(final Response resp) {
     try {
       return getClient();
-    } catch (final CalFacadeException cfe) {
+    } catch (final RuntimeException cfe) {
       resp.setStatus(failed);
       resp.setMessage(cfe.getLocalizedMessage());
       return null;
     }
   }
 
-  public RestHighLevelClient getClient() throws CalFacadeException {
+  public RestHighLevelClient getClient() {
     if (theClient != null) {
       return theClient;
     }
@@ -3949,9 +3947,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
           Thread.sleep(1000);
         } catch(final InterruptedException ex) {
-          throw new CalFacadeException("Interrupted out of getClient");
+          throw new RuntimeException("Interrupted out of getClient");
         } catch (final Throwable t) {
-          throw new CalFacadeException(t);
+          throw new RuntimeException(t);
         }
       }
 
