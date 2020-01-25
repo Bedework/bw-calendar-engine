@@ -44,7 +44,7 @@ public class DummyMailer implements Logged, MailerIntf {
   private MailConfigProperties config;
 
   @Override
-  public void init(final MailConfigProperties config) throws CalFacadeException {
+  public void init(final MailConfigProperties config) {
     this.config = config;
   }
 

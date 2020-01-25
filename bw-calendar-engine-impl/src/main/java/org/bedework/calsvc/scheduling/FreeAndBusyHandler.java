@@ -41,7 +41,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.EventPeriods;
 import org.bedework.calfacade.util.Granulator;
-import org.bedework.calfacade.util.Granulator.EventPeriod;
+import org.bedework.calfacade.util.EventPeriod;
 import org.bedework.calfacade.util.Granulator.GetPeriodsPars;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvci.CalendarsI;
@@ -483,7 +483,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       startDt = new DateTime(start.getDate());
       endDt = new DateTime(end.getDate());
     } catch (ParseException pe) {
-      throw new CalFacadeException(pe);
+      throw new RuntimeException(pe);
     }
 
     if (fb.getDtstart().after(start)) {
@@ -576,7 +576,8 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     }
   }
 
-  private void setFreeBusyType(final EventPeriod ep, final Collection<?> periodEvents) {
+  private void setFreeBusyType(final EventPeriod ep,
+                               final Collection<?> periodEvents) {
     int fbtype = BwFreeBusyComponent.typeFree;
     int busy = 0;
     int tentative = 0;

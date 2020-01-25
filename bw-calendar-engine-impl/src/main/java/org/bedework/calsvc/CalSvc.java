@@ -782,16 +782,12 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       return mailer;
     }*/
 
-    try {
-      final MailerIntf mailer =
-              (MailerIntf)CalFacadeUtil.getObject(getSystemProperties().getMailerClass(),
-                                                  MailerIntf.class);
-      mailer.init(configs.getMailConfigProperties());
+    final MailerIntf mailer =
+            (MailerIntf)CalFacadeUtil.getObject(getSystemProperties().getMailerClass(),
+                                                MailerIntf.class);
+    mailer.init(configs.getMailConfigProperties());
 
-      return mailer;
-    } catch (final Throwable t) {
-      throw new RuntimeException(t);
-    }
+    return mailer;
   }
 
   @Override

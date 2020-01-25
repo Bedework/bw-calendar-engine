@@ -21,16 +21,13 @@ package org.bedework.calfacade.util;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwDuration;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 
-import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
 /** Select periods in the Collection of periods which fall within a given
  * time period. By incrementing that time period we can break up the given
@@ -59,7 +56,7 @@ public class Granulator {
    * non-null on entry it will be used to set the startDt.
    */
   public static class GetPeriodsPars implements Serializable {
-    boolean debug = false;
+    //boolean debug = false;
 
     /** Event Info or EventPeriod or Period objects to extract from */
     public Collection<?> periods;
@@ -77,14 +74,13 @@ public class Granulator {
    *
    * @param   pars      GetPeriodsPars object
    * @return  Collection of EventInfo being one days events or empty for no events.
-   * @throws CalFacadeException
    */
-  public static Collection<?> getPeriodsEvents(GetPeriodsPars pars) throws CalFacadeException {
-    ArrayList<Object> al = new ArrayList<Object>();
-    long millis = 0;
-    if (pars.debug) {
-      millis = System.currentTimeMillis();
-    }
+  public static Collection<?> getPeriodsEvents(GetPeriodsPars pars) {
+    ArrayList<Object> al = new ArrayList<>();
+    //long millis = 0;
+    //if (pars.debug) {
+    //  millis = System.currentTimeMillis();
+    //}
 
     if (pars.endDt != null) {
       pars.startDt = pars.endDt.copy();
@@ -94,9 +90,8 @@ public class Granulator {
     String end = pars.endDt.getDate();
 
     EntityRange er = new EntityRange();
-    Iterator<?> it = pars.periods.iterator();
-    while (it.hasNext()) {
-      er.setEntity(it.next());
+    for (final Object o : pars.periods) {
+      er.setEntity(o);
 
       /* Period is within range if:
              ((evstart < end) and ((evend > start) or
@@ -111,7 +106,7 @@ public class Granulator {
         int evendSt = er.end.compareTo(start);
 
         if ((evendSt > 0) ||
-            (er.start.equals(er.end) && (evendSt >= 0))) {
+                (er.start.equals(er.end) && (evendSt >= 0))) {
           // Passed the tests.
           //if (debug()) {
           //  debug("Event passed range " + start + "-" + end +
@@ -132,7 +127,7 @@ public class Granulator {
     String start;
     String end;
 
-    void setEntity(Object o) throws CalFacadeException {
+    void setEntity(Object o) {
       entity = o;
 
       if (o instanceof EventInfo) {
@@ -165,129 +160,6 @@ public class Granulator {
 
       start = null;
       end = null;
-    }
-  }
-
-  /**
-   *
-   */
-  public static class EventPeriod implements Comparable<EventPeriod>,
-                                             Serializable {
-    private DateTime start;
-    private DateTime end;
-    private int type;  // from BwFreeBusyComponent
-
-    /* Number of busy entries this period - for the free/busy aggregator */
-    private int numBusy;
-
-    /* Number of tentative entries this period - for the free/busy aggregator */
-    private int numTentative;
-
-    /** Constructor
-     *
-     * @param start
-     * @param end
-     * @param type
-     */
-    public EventPeriod(DateTime start, DateTime end, int type) {
-      this.start = start;
-      this.end = end;
-      this.type = type;
-    }
-
-    /**
-     * @return DateTime
-     */
-    public DateTime getStart() {
-      return start;
-    }
-
-    /**
-     * @return DateTime
-     */
-    public DateTime getEnd() {
-      return end;
-    }
-
-    /**
-     * @param val int
-     */
-    public void setType(int val) {
-      type = val;
-    }
-
-    /**
-     * @return int
-     */
-    public int getType() {
-      return type;
-    }
-
-    public int compareTo(EventPeriod that) {
-      /* Sort by type first */
-      if (type < that.type) {
-        return -1;
-      }
-
-      if (type > that.type) {
-        return 1;
-      }
-
-      int res = start.compareTo(that.start);
-      if (res != 0) {
-        return res;
-      }
-
-      return end.compareTo(that.end);
-    }
-
-    /**
-     * @param val
-     */
-    public void setNumBusy(int val) {
-      numBusy = val;
-    }
-
-    /**
-     * @return int
-     */
-    public int getNumBusy() {
-      return numBusy;
-    }
-
-    /**
-     * @param val
-     */
-    public void setNumTentative(int val) {
-      numTentative = val;
-    }
-
-    /**
-     * @return int
-     */
-    public int getNumTentative() {
-      return numTentative;
-    }
-
-    public boolean equals(Object o) {
-      return compareTo((EventPeriod)o) == 0;
-    }
-
-    public int hashCode() {
-      return 7 * (type + 1) * (start.hashCode() + 1) * (end.hashCode() + 1);
-    }
-
-    public String toString() {
-      StringBuffer sb = new StringBuffer("EventPeriod{start=");
-
-      sb.append(start);
-      sb.append(", end=");
-      sb.append(end);
-      sb.append(", type=");
-      sb.append(type);
-      sb.append("}");
-
-      return sb.toString();
     }
   }
 }

@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Objects;
 
 /** A few helpers.
  *
@@ -37,12 +38,12 @@ public class CalFacadeUtil implements Serializable {
   private CalFacadeUtil() {
   }
 
-  /** Remove any suspicious characters from the input string to produce a
+  /* * Remove any suspicious characters from the input string to produce a
    * name-worthy result.
    *
    * @param name
    * @return fixed name
-   */
+   * /
   public static String fixName(final String name) {
     StringBuilder sb = new StringBuilder();
 
@@ -59,6 +60,7 @@ public class CalFacadeUtil implements Serializable {
 
     return sb.toString();
   }
+   */
 
   /** Update the to Collection with from elements. This is used to
    * add or remove members from a Collection managed by hibernate for example
@@ -66,13 +68,14 @@ public class CalFacadeUtil implements Serializable {
    *
    * @param <T>   class of Collections
    * @param cloned - true if we must clone entities before adding
-   * @param from
-   * @param to
+   * @param from source of elements
+   * @param to where they go
    * @return boolean true if changed
    */
-  public static <T extends BwCloneable> boolean updateCollection(final boolean cloned,
-                                                                 final Collection<T> from,
-                                                                 final Collection<T> to) {
+  public static <T extends BwCloneable> boolean updateCollection(
+          final boolean cloned,
+          final Collection<T> from,
+          final Collection<T> to) {
     return updateCollection(cloned, from, to, null, null);
   }
 
@@ -82,18 +85,19 @@ public class CalFacadeUtil implements Serializable {
    *
    * @param <T>   class of Collections
    * @param cloned - true if we must clone entities before adding
-   * @param from
-   * @param to
+   * @param from source of elements
+   * @param to where they go
    * @param added - may be null - updated with added entries
    * @param removed - may be null - updated with removed entries
    * @return boolean true if changed
    */
   @SuppressWarnings("unchecked")
-  public static <T extends BwCloneable> boolean updateCollection(final boolean cloned,
-                                                                 final Collection<T> from,
-                                                                 final Collection<T> to,
-                                                                 final Collection<T> added,
-                                                                 final Collection<T> removed) {
+  public static <T extends BwCloneable> boolean updateCollection(
+          final boolean cloned,
+          final Collection<T> from,
+          final Collection<T> to,
+          final Collection<T> added,
+          final Collection<T> removed) {
     boolean changed = false;
 
     if (from != null) {
@@ -116,11 +120,7 @@ public class CalFacadeUtil implements Serializable {
     /* Make set of objects to remove to avoid concurrent update exceptions. */
     Collection<T> deleted;
 
-    if (removed != null) {
-      deleted = removed;
-    } else {
-      deleted = new ArrayList<T>();
-    }
+    deleted = Objects.requireNonNullElseGet(removed, ArrayList::new);
 
     for (T o: to) {
       if ((from == null) || !from.contains(o)) {
@@ -170,8 +170,8 @@ public class CalFacadeUtil implements Serializable {
 
   /** Compare two possibly null objects for equality
    *
-   * @param thisone
-   * @param thatone
+   * @param thisone first object
+   * @param thatone second object
    * @return boolean true if both null or equal
    */
   public static boolean eqObjval(final Object thisone, final Object thatone) {
@@ -188,12 +188,13 @@ public class CalFacadeUtil implements Serializable {
 
   /** Compare two possibly null objects
    *
-   * @param thisone
-   * @param thatone
+   * @param thisone first object
+   * @param thatone second object
    * @return int -1, 0, 1,
    */
-  @SuppressWarnings("unchecked")
-  public static int cmpObjval(final Comparable thisone, final Comparable thatone) {
+  public static <T extends Comparable<T>> int cmpObjval(
+          final T thisone,
+          final T thatone) {
     if (thisone == null) {
       if (thatone == null) {
         return 0;
@@ -211,12 +212,13 @@ public class CalFacadeUtil implements Serializable {
 
   /** Compare two possibly null objects
    *
-   * @param thisone
-   * @param thatone
+   * @param thisone first object
+   * @param thatone second object
    * @return int -1, 0, 1,
    */
-  public static int cmpObjval(final Collection<? extends Comparable> thisone,
-                              final Collection<? extends Comparable> thatone) {
+  public static <T extends Comparable<T>> int cmpObjval(
+          final Collection<T> thisone,
+          final Collection<T> thatone) {
     if (thisone == null) {
       if (thatone == null) {
         return 0;
@@ -232,13 +234,13 @@ public class CalFacadeUtil implements Serializable {
     int thisLen = thisone.size();
     int thatLen = thatone.size();
 
-    int res = cmpIntval(thisLen, thatLen);
+    int res = Integer.compare(thisLen, thatLen);
     if (res != 0) {
       return res;
     }
 
-    Iterator<? extends Comparable> thatIt = thatone.iterator();
-    for (Comparable c: thisone) {
+    Iterator<T> thatIt = thatone.iterator();
+    for (T c: thisone) {
       res = cmpObjval(c, thatIt.next());
 
       if (res != 0) {
@@ -249,42 +251,6 @@ public class CalFacadeUtil implements Serializable {
     return 0;
   }
 
-  /** Compare two boolean objects
-  *
-  * @param thisone
-  * @param thatone
-  * @return int -1, 0, 1,
-  */
-  public static int cmpBoolval(final boolean thisone, final boolean thatone) {
-    if (thisone == thatone) {
-      return 0;
-    }
-
-    if (!thisone) {
-      return -1;
-    }
-
-    return 1;
-  }
-
-  /** Compare two int objects
-  *
-  * @param thisone
-  * @param thatone
-  * @return int -1, 0, 1,
-  */
-  public static int cmpIntval(final int thisone, final int thatone) {
-    if (thisone == thatone) {
-      return 0;
-    }
-
-    if (thisone < thatone) {
-      return -1;
-    }
-
-    return 1;
-  }
-
   /** Given a class name return an object of that class.
    * The class parameter is used to check that the
    * named class is an instance of that class.
@@ -292,15 +258,12 @@ public class CalFacadeUtil implements Serializable {
    * @param className String class name
    * @param cl   Class expected
    * @return     Object checked to be an instance of that class
-   * @throws CalFacadeException
+   * @throws RuntimeException on fatal error
    */
-  public static Object getObject(final String className, final Class cl) throws CalFacadeException {
+  public static Object getObject(final String className,
+                                 final Class<?> cl) {
     try {
-      Object o = Class.forName(className).newInstance();
-
-      if (o == null) {
-        throw new CalFacadeException("Class " + className + " not found");
-      }
+      Object o = Class.forName(className).getDeclaredConstructor().newInstance();
 
       if (!cl.isInstance(o)) {
         throw new CalFacadeException("Class " + className +
@@ -309,10 +272,8 @@ public class CalFacadeUtil implements Serializable {
       }
 
       return o;
-    } catch (CalFacadeException ce) {
-      throw ce;
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -326,7 +287,7 @@ public class CalFacadeUtil implements Serializable {
   }
 
   /** Return String value of par padded to 2 digits.
-   * @param val
+   * @param val to pad
    * @return String
    */
   private static String pad2(final int val) {
@@ -334,6 +295,6 @@ public class CalFacadeUtil implements Serializable {
       return String.valueOf(val);
     }
 
-    return "0" + String.valueOf(val);
+    return "0" + val;
   }
 }

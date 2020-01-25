@@ -1178,11 +1178,11 @@ Example
       return true;
     }
 
-    if (CalFacadeUtil.cmpBoolval(getTriggerStart(), that.getTriggerStart()) != 0) {
+    if (Boolean.compare(getTriggerStart(), that.getTriggerStart()) != 0) {
       return true;
     }
 
-    if (CalFacadeUtil.cmpBoolval(getTriggerDateTime(), that.getTriggerDateTime()) != 0) {
+    if (Boolean.compare(getTriggerDateTime(), that.getTriggerDateTime()) != 0) {
       return true;
     }
 
@@ -1250,12 +1250,12 @@ Example
       return res;
     }
 
-    res = CalFacadeUtil.cmpBoolval(getTriggerDateTime(), that.getTriggerDateTime());
+    res = Boolean.compare(getTriggerDateTime(), that.getTriggerDateTime());
     if (res != 0) {
       return res;
     }
 
-    return CalFacadeUtil.cmpBoolval(getTriggerStart(), that.getTriggerStart());
+    return Boolean.compare(getTriggerStart(), that.getTriggerStart());
   }
 
   /* ====================================================================

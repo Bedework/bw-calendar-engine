@@ -63,10 +63,9 @@ import java.util.Collection;
  */
 public interface MailerIntf extends Serializable {
   /**
-   * @param config
-   * @throws CalFacadeException
+   * @param config MailConfigProperties object
    */
-  void init(MailConfigProperties config) throws CalFacadeException;
+  void init(MailConfigProperties config);
 
   /** Mail the given calendar object to the given list of recipients
    *

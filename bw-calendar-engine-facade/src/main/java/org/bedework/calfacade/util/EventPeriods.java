@@ -20,7 +20,6 @@ package org.bedework.calfacade.util;
 
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwFreeBusyComponent;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.timezones.Timezones;
@@ -46,12 +45,11 @@ public class EventPeriods implements Logged {
   private Object[] periods = new Object[4];
 
   /**
-   * @param start
-   * @param end
-   * @throws CalFacadeException
+   * @param start bw date/time
+   * @param end bw date/time
    */
   public EventPeriods(final BwDateTime start,
-                      final BwDateTime end) throws CalFacadeException {
+                      final BwDateTime end) {
     this.start = start;
     this.end = end;
 
@@ -63,7 +61,7 @@ public class EventPeriods implements Logged {
                                               startTzid));
       dtend = new DateTime(Timezones.getUtc(end.getDtval(), endTzid));
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
 
     dtstart.setUtc(true);
@@ -71,13 +69,12 @@ public class EventPeriods implements Logged {
   }
 
   /**
-   * @param pstart
-   * @param pend
-   * @param type
-   * @throws CalFacadeException
+   * @param pstart bw date/time
+   * @param pend bw date/time
+   * @param type from BwFreeBusyComponent
    */
   public void addPeriod(final BwDateTime pstart, final BwDateTime pend,
-                        final int type) throws CalFacadeException {
+                        final int type) {
     // Ignore if times were specified and this period is outside the times
 
     /* Don't report out of the requested period */
@@ -102,27 +99,30 @@ public class EventPeriods implements Logged {
       dend = pend.getDate();
     }
 
+    DateTime psdt;
+    DateTime pedt;
+
     try {
-      DateTime psdt = new DateTime(dstart);
-      DateTime pedt = new DateTime(dend);
-
-      psdt.setUtc(true);
-      pedt.setUtc(true);
-
-      add(new EventPeriod(psdt, pedt, type));
+      psdt = new DateTime(dstart);
+      pedt = new DateTime(dend);
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
+
+    psdt.setUtc(true);
+    pedt.setUtc(true);
+
+    add(new EventPeriod(psdt, pedt, type));
   }
 
   /**
-   * @param pstart
-   * @param pend
-   * @param type
-   * @throws CalFacadeException
+   * @param pstart bw date/time
+   * @param pend bw date/time
+   * @param type from BwFreeBusyComponent
    */
-  public void addPeriod(DateTime pstart, DateTime pend,
-                        final int type) throws CalFacadeException {
+  public void addPeriod(DateTime pstart,
+                        DateTime pend,
+                        final int type) {
     // Ignore if times were specified and this period is outside the times
 
     /* Don't report out of the requested period */
@@ -144,12 +144,11 @@ public class EventPeriods implements Logged {
   }
 
   /**
-   * @param type
+   * @param type from BwFreeBusyComponent
    * @return BwFreeBusyComponent or null for no entries
-   * @throws CalFacadeException
    */
   @SuppressWarnings("unchecked")
-  public BwFreeBusyComponent makeFreeBusyComponent(final int type) throws CalFacadeException {
+  public BwFreeBusyComponent makeFreeBusyComponent(final int type) {
     TreeSet<EventPeriod> eventPeriods = (TreeSet<EventPeriod>)periods[type];
     if (eventPeriods == null) {
       return null;
@@ -166,15 +165,15 @@ public class EventPeriods implements Logged {
       }
 
       if (p == null) {
-        p = new Period(ep.start, ep.end);
-      } else if (ep.start.after(p.getEnd())) {
+        p = new Period(ep.getStart(), ep.getEnd());
+      } else if (ep.getStart().after(p.getEnd())) {
         // Non adjacent periods
         fbc.addPeriod(p.getStart(), p.getEnd());
 
-        p = new Period(ep.start, ep.end);
-      } else if (ep.end.after(p.getEnd())) {
+        p = new Period(ep.getStart(), ep.getEnd());
+      } else if (ep.getEnd().after(p.getEnd())) {
         // Extend the current period
-        p = new Period(p.getStart(), ep.end);
+        p = new Period(p.getStart(), ep.getEnd());
       } // else it falls within the existing period
     }
 
@@ -187,10 +186,11 @@ public class EventPeriods implements Logged {
 
   @SuppressWarnings("unchecked")
   private void add(final EventPeriod p) {
-    TreeSet<EventPeriod> eps = (TreeSet<EventPeriod>)periods[p.type];
+    TreeSet<EventPeriod> eps =
+            (TreeSet<EventPeriod>)periods[p.getType()];
     if (eps == null) {
-      eps = new TreeSet<EventPeriod>();
-      periods[p.type] = eps;
+      eps = new TreeSet<>();
+      periods[p.getType()] = eps;
     }
     eps.add(p);
   }

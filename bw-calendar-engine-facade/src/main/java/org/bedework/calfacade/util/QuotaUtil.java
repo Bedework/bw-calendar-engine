@@ -29,8 +29,8 @@ import java.util.Collection;
 public class QuotaUtil {
   /** Return the size change for the given object
    *
-   * @param fromVal
-   * @param toVal
+   * @param fromVal as it was
+   * @param toVal as it is
    * @return int chage
    */
   public static int getSizeChange(SizedEntity fromVal, SizedEntity toVal) {
@@ -39,8 +39,8 @@ public class QuotaUtil {
 
   /** Return the size change for the given object
    *
-   * @param fromVal
-   * @param toVal
+   * @param fromVal as it was
+   * @param toVal as it is
    * @return int chage
    */
   public static int getSizeChange(String fromVal, String toVal) {
@@ -48,7 +48,7 @@ public class QuotaUtil {
   }
 
   /**
-   * @param val
+   * @param val sized entity
    * @return int size
    */
   public static int size(SizedEntity val) {
@@ -62,7 +62,7 @@ public class QuotaUtil {
   /** This actually returns character size - not byte size. Getting byte size
    * might slow things up.
    *
-   * @param val
+   * @param val string
    * @return int
    */
   public static int size(String val) {
@@ -75,10 +75,10 @@ public class QuotaUtil {
 
 
   /**
-   * @param c
+   * @param c a collection
    * @return int size
    */
-  public static int collectionSize(Collection c) {
+  public static int collectionSize(Collection<?> c) {
     if (c == null) {
       return 0;
     }

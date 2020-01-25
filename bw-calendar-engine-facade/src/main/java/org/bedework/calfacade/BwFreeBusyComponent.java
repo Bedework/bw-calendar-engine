@@ -19,7 +19,6 @@
 package org.bedework.calfacade;
 
 import org.bedework.calfacade.base.BwDbentity;
-import org.bedework.calfacade.exc.CalFacadeException;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
@@ -121,7 +120,7 @@ public class BwFreeBusyComponent extends BwDbentity {
    */
   public Collection<Period> getPeriods() {
       if (periods == null) {
-        periods = new TreeSet<Period>();
+        periods = new TreeSet<>();
 
         if (getValue() != null) {
           final PeriodList pl;
@@ -149,7 +148,6 @@ public class BwFreeBusyComponent extends BwDbentity {
   /** Merge in a period
    *
    * @param val
-   * @throws CalFacadeException
    */
   public void addPeriod(final Period val) {
     getPeriods().add(val);
@@ -158,11 +156,10 @@ public class BwFreeBusyComponent extends BwDbentity {
 
   /** Merge in a period
    *
-   * @param start
-   * @param end
-   * @throws CalFacadeException
+   * @param start ical4j DateTime
+   * @param end ical4j DateTime
    */
-  public void addPeriod(final DateTime start, final DateTime end) throws CalFacadeException {
+  public void addPeriod(final DateTime start, final DateTime end) {
     Period p;
 
     if (emitDurations) {
@@ -176,9 +173,8 @@ public class BwFreeBusyComponent extends BwDbentity {
 
   /**
    * @return boolean true for empty
-   * @throws CalFacadeException
    */
-  public boolean getEmpty() throws CalFacadeException {
+  public boolean getEmpty() {
     return (getPeriods().size() == 0);
   }
 

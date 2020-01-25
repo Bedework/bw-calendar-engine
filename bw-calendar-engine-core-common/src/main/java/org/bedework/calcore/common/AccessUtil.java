@@ -124,25 +124,18 @@ public class AccessUtil implements Logged, AccessUtilI {
    *                   Access control
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.AccessUtilI#getDefaultPublicAccess()
-   */
+  /*
   @Override
   public String getDefaultPublicAccess() {
     return Access.getDefaultPublicAccess();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.AccessUtilI#getDefaultPersonalAccess()
-   */
   @Override
   public String getDefaultPersonalAccess() {
     return Access.getDefaultPersonalAccess();
   }
-
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.AccessUtilI#changeAccess(org.bedework.calfacade.base.BwShareableDbentity, java.util.Collection, boolean)
    */
+
   @Override
   public void changeAccess(final BwShareableDbentity<?> ent,
                            final Collection<Ace> aces,
@@ -189,9 +182,6 @@ public class AccessUtil implements Logged, AccessUtilI {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.AccessUtilI#checkAccess(java.util.Collection, int, boolean)
-   */
   @Override
   public Collection<? extends BwShareableDbentity<?>>
                 checkAccess(final Collection<? extends BwShareableDbentity<?>> ents,

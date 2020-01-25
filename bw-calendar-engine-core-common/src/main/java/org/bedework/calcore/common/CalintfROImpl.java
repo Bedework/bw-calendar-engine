@@ -77,7 +77,7 @@ import org.bedework.calfacade.svc.BwCalSuitePrincipal;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
-import org.bedework.calfacade.util.Granulator.EventPeriod;
+import org.bedework.calfacade.util.EventPeriod;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.sysevents.events.EntityEvent;
 import org.bedework.sysevents.events.SysEventBase;

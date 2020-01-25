@@ -70,23 +70,25 @@ public class BwDateTimeUtil {
   /** Get a java.util.Date object from the value
    * XXX - this will neeed to be supplied with a tz repository
    *
-   * @param val
+   * @param val bw date time object
    * @return Date object representing the date
-   * @throws CalFacadeException
+   * @throws CalFacadeBadDateException on bad date
    */
-  public static Date getDate(final BwDateTime val) throws CalFacadeException {
+  public static Date getDate(final BwDateTime val)
+          throws CalFacadeBadDateException {
     return getDate(val, Timezones.getTzRegistry());
   }
 
   /** Get a java.util.Date object from the value
    *
-   * @param val
-   * @param tzreg
+   * @param val bw date time object
+   * @param tzreg registry
    * @return Date object representing the date
-   * @throws CalFacadeException
+   * @throws CalFacadeBadDateException on bad date
    */
   public static Date getDate(final BwDateTime val,
-                             final TimeZoneRegistry tzreg) throws CalFacadeException {
+                             final TimeZoneRegistry tzreg)
+          throws CalFacadeBadDateException {
     String dtval = val.getDtval();
 
     try {
@@ -114,21 +116,25 @@ public class BwDateTimeUtil {
    *
    * @param date       Java Date object
    * @return BwDateTime object representing the date
-   * @throws CalFacadeException
    */
-  public static BwDateTime getDateTime(final Date date) throws CalFacadeException {
+  public static BwDateTime getDateTime(final Date date) {
     String dtval = DateTimeUtil.isoDateTime(date);
-    return getDateTime(dtval, false, false, null);
+    try {
+      return getDateTime(dtval, false, false, null);
+    } catch (CalFacadeException e) {
+      // Shoudl never happen
+      throw new RuntimeException(e);
+    }
   }
 
   /** Get a date object representing the given date and flags
    *
    * @param date       String iso date or date/time
-   * @param dateOnly
+   * @param dateOnly   true for date-only value
    * @param floating    boolean true if this is a floating time
    * @param tzid - String tzid or null for default, UTC or floating.
    * @return Date object representing the date
-   * @throws CalFacadeException
+   * @throws CalFacadeException on timezone error or bad date
    */
   public static BwDateTime getDateTime(String date, final boolean dateOnly,
                                        final boolean floating,
@@ -170,30 +176,31 @@ public class BwDateTimeUtil {
 
   /** Get a date object representing the given String UTC date/time
    *
-   * @param date
+   * @param date UTC date time value
    * @return BwDateTime object representing the date
-   * @throws CalFacadeException
    */
-  public static BwDateTime getDateTimeUTC(final String date) throws CalFacadeException {
+  public static BwDateTime getDateTimeUTC(final String date) {
     return BwDateTime.fromUTC(false, date);
   }
 
   /** Get a date/time range given by the rfc formatted parameters and limited to
    * the given max range
    *
-   * @param start
-   * @param end
-   * @param defaultField
-   * @param defaultVal
-   * @param maxField
+   * @param start date or date/time
+   * @param end date or date/time
+   * @param defaultField Calendar field id
+   * @param defaultVal value for field
+   * @param maxField Calendar field id
    * @param maxVal - 0 for no max
    * @return TimeRange or null for bad request
-   * @throws CalFacadeException
+   * @throws CalFacadeException on bad date
    */
-  public static BwTimeRange getPeriod(final String start, final String end,
-                                    final int defaultField, final int defaultVal,
-                                    final int maxField,
-                                    final int maxVal) throws CalFacadeException {
+  public static BwTimeRange getPeriod(final String start,
+                                      final String end,
+                                      final int defaultField,
+                                      final int defaultVal,
+                                      final int maxField,
+                                      final int maxVal) throws CalFacadeException {
     Locale loc = BwLocale.getLocale();
     Calendar startCal = Calendar.getInstance(loc);
     startCal.set(Calendar.HOUR_OF_DAY, 0);
@@ -227,7 +234,7 @@ public class BwDateTimeUtil {
       }
     }
 
-    BwTimeRange tr = new BwTimeRange(
+    return new BwTimeRange(
         BwDateTimeUtil.getDateTime(
                DateTimeUtil.isoDateTime(startCal.getTime()),
                                         false,
@@ -238,41 +245,23 @@ public class BwDateTimeUtil {
                                       false,
                                       false,   // floating
                                       null));   // tzid
-
-    return tr;
   }
 
   private static Date fromDate(final String dt) throws CalFacadeException {
     try {
-      if (dt == null) {
-        return null;
+      if (dt.contains("T")) {
+        if (!dt.contains("-")) {
+          return DateTimeUtil.fromISODateTimeUTC(dt);
+        }
+
+        return DateTimeUtil.fromRfcDateTimeUTC(dt);
       }
 
-      if (dt.indexOf("T") > 0) {
-        return fromDateTime(dt);
-      }
-
-      if (dt.indexOf("-") < 0) {
+      if (!dt.contains("-")) {
         return DateTimeUtil.fromISODate(dt);
       }
 
       return DateTimeUtil.fromRfcDate(dt);
-    } catch (Throwable t) {
-      throw new CalFacadeBadDateException();
-    }
-  }
-
-  private static Date fromDateTime(final String dt) throws CalFacadeException {
-    try {
-      if (dt == null) {
-        return null;
-      }
-
-      if (dt.indexOf("-") < 0) {
-        return DateTimeUtil.fromISODateTimeUTC(dt);
-      }
-
-      return DateTimeUtil.fromRfcDateTimeUTC(dt);
     } catch (Throwable t) {
       throw new CalFacadeBadDateException();
     }

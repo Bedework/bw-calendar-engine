@@ -50,7 +50,7 @@ public interface AccessChecker extends Serializable {
    * 
    * @param val to be checked
    * @return null if no access
-   * @throws CalFacadeException
+   * @throws CalFacadeException if returnResult false and no access
    */
   CalendarWrapper checkAccess(final BwCalendar val)
           throws CalFacadeException;
@@ -60,11 +60,11 @@ public interface AccessChecker extends Serializable {
    * @param val to be checked
    * @param desiredAccess access we want
    * @return null if no access
-   * @throws CalFacadeException
+   * @throws CalFacadeException if returnResult false and no access
    */
   CalendarWrapper checkAccess(final BwCalendar val,
                               int desiredAccess)
           throws CalFacadeException;
 
-    AccessUtilI getAccessUtil();
+  AccessUtilI getAccessUtil();
 }

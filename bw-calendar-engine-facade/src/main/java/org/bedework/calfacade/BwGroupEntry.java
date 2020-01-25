@@ -19,7 +19,6 @@
 
 package org.bedework.calfacade;
 
-import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
 
 import java.io.Serializable;
@@ -163,12 +162,12 @@ public class BwGroupEntry implements Serializable {
       return res;
     }
 
-    res = CalFacadeUtil.cmpIntval(getMemberId(), that.getMemberId());
+    res = Integer.compare(getMemberId(), that.getMemberId());
     if(res != 0) {
       return res;
     }
 
-    return CalFacadeUtil.cmpBoolval(getMemberIsGroup(), that.getMemberIsGroup());
+    return Boolean.compare(getMemberIsGroup(), that.getMemberIsGroup());
   }
 
   @Override

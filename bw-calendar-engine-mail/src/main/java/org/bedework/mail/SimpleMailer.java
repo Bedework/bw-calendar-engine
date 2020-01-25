@@ -61,7 +61,7 @@ public class SimpleMailer implements Logged, MailerIntf {
   private Session sess;
 
   @Override
-  public void init(final MailConfigProperties config) throws CalFacadeException {
+  public void init(final MailConfigProperties config) {
     this.config = config;
 
     final Properties props = new Properties();
@@ -287,9 +287,9 @@ public class SimpleMailer implements Logged, MailerIntf {
 
   private void setNonNull(final Properties props,
                           final String name,
-                          final String val) throws CalFacadeException {
+                          final String val) {
     if (val == null) {
-      throw new CalFacadeException("Null property value for " + name);
+      throw new RuntimeException("Null property value for " + name);
     }
 
     props.setProperty(name, val);

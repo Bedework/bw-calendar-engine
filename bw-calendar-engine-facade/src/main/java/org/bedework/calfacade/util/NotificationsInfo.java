@@ -34,7 +34,6 @@ import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwLongString;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
@@ -53,51 +52,40 @@ import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
  */
 public class NotificationsInfo {
   /**
-   * @param currentAuth
-   * @param ev
+   * @param currentAuth authenticated principal
+   * @param ev the event
    * @return Info for single added event.
-   * @throws CalFacadeException
    */
   public static String added(final String currentAuth,
-                             final BwEvent ev) throws CalFacadeException {
+                             final BwEvent ev) {
     NotificationType note = getNotification();
 
     note.setNotification(getAdded(currentAuth, ev));
 
-    try {
-      return note.toXml(true);
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    return note.toXml(true);
   }
 
   /**
-   * @param currentAuth
-   * @param ev
+   * @param currentAuth authenticated principal
+   * @param ev the event
    * @return Info for single deleted event.
-   * @throws CalFacadeException
    */
   public static String deleted(final String currentAuth,
-                               final BwEvent ev) throws CalFacadeException {
+                               final BwEvent ev) {
     NotificationType note = getNotification();
 
     note.setNotification(getDeleted(currentAuth, ev));
 
-    try {
-      return note.toXml(true);
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    return note.toXml(true);
   }
 
   /**
-   * @param currentAuth
-   * @param ev
+   * @param currentAuth authenticated principal
+   * @param ev the event
    * @return Info for single updated event.
-   * @throws CalFacadeException
    */
   public static String updated(final String currentAuth,
-                               final BwEvent ev) throws CalFacadeException {
+                               final BwEvent ev) {
     ResourceChangeType rc = getUpdated(currentAuth, ev);
 
     if (rc == null) {
@@ -108,23 +96,17 @@ public class NotificationsInfo {
 
     note.setNotification(rc);
 
-    try {
-      return note.toXml(true);
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    return note.toXml(true);
   }
 
   /** Call for a deleted event
    *
-   * @param currentAuth
-   * @param ev
+   * @param currentAuth authenticated principal
+   * @param ev the event
    * @return resource deleted notification.
-   * @throws CalFacadeException
    */
   public static ResourceChangeType getDeleted(final String currentAuth,
-                                              final BwEvent ev) throws CalFacadeException {
-    try {
+                                              final BwEvent ev) {
       ResourceChangeType rc = new ResourceChangeType();
 
       DeletedType del = new DeletedType();
@@ -137,12 +119,12 @@ public class NotificationsInfo {
 
       dd.setDeletedComponent(getType(ev));
       dd.setDeletedSummary(ev.getSummary());
-      if (ev.isRecurringEntity()) {
+      //if (ev.isRecurringEntity()) {
           // TODO: Set these correctly.
           //dd.setDeletedNextInstance(val);
           //dd.setDeletedNextInstanceTzid(val);
           //dd.setDeletedHadMoreInstances(val);
-      }
+      //}
         
       if (ev.getDtstart() != null) {
         ChangedPropertyType start = new ChangedPropertyType();
@@ -184,69 +166,57 @@ public class NotificationsInfo {
       rc.setDeleted(del);
 
       return rc;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
   }
 
   /** Call for an added event
    *
-   * @param currentAuth
-   * @param ev
+   * @param currentAuth authenticated principal
+   * @param ev the event
    * @return resource created notification.
-   * @throws CalFacadeException
    */
   public static ResourceChangeType getAdded(final String currentAuth,
-                                            final BwEvent ev) throws CalFacadeException {
-    try {
-      ResourceChangeType rc = new ResourceChangeType();
+                                            final BwEvent ev) {
+    ResourceChangeType rc = new ResourceChangeType();
 
-      CreatedType cre = new CreatedType();
+    CreatedType cre = new CreatedType();
 
-      cre.setHref(getHref(ev));
+    cre.setHref(getHref(ev));
 
-      cre.setChangedBy(getChangedBy(currentAuth));
+    cre.setChangedBy(getChangedBy(currentAuth));
 
-      rc.setCreated(cre);
+    rc.setCreated(cre);
 
-      return rc;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    return rc;
   }
 
   /** Call for an updated event.
    *
-   * @param currentAuth
-   * @param ev
+   * @param currentAuth authenticated principal
+   * @param ev the event
    * @return resource updated notification.
-   * @throws CalFacadeException
    */
-  public static ResourceChangeType getUpdated(final String currentAuth,
-                                              final BwEvent ev) throws CalFacadeException {
-    try {
-      ChangeTable changes = ev.getChangeset(currentAuth);
+  public static ResourceChangeType getUpdated(
+          final String currentAuth,
+          final BwEvent ev) {
+    ChangeTable changes = ev.getChangeset(currentAuth);
 
-      if (changes.isEmpty()) {
-        return null;
-      }
-
-      ResourceChangeType rc = new ResourceChangeType();
-
-      UpdatedType upd = new UpdatedType();
-
-      upd.setHref(getHref(ev));
-
-      upd.setChangedBy(getChangedBy(currentAuth));
-
-      upd.getCalendarChanges().add(instanceChanges(currentAuth, ev));
-
-      rc.addUpdate(upd);
-
-      return rc;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    if (changes.isEmpty()) {
+      return null;
     }
+
+    ResourceChangeType rc = new ResourceChangeType();
+
+    UpdatedType upd = new UpdatedType();
+
+    upd.setHref(getHref(ev));
+
+    upd.setChangedBy(getChangedBy(currentAuth));
+
+    upd.getCalendarChanges().add(instanceChanges(currentAuth, ev));
+
+    rc.addUpdate(upd);
+
+    return rc;
   }
 
   /* ====================================================================
@@ -274,8 +244,9 @@ public class NotificationsInfo {
     return note;
   }
 
-  private static CalendarChangesType instanceChanges(final String currentAuth,
-                                                     final BwEvent ev) throws Throwable {
+  private static CalendarChangesType instanceChanges(
+          final String currentAuth,
+          final BwEvent ev) {
     CalendarChangesType cc = new CalendarChangesType();
 
     RecurrenceType r = new RecurrenceType();
@@ -374,7 +345,7 @@ public class NotificationsInfo {
 
 
 
-  private static String getType(final BwEvent ev) throws Throwable {
+  private static String getType(final BwEvent ev) {
     try {
       return IcalDefs.entityTypeIcalNames[ev.getEntityType()];
     } catch (Throwable t) {
@@ -382,7 +353,7 @@ public class NotificationsInfo {
     }
   }
 
-  private static String getHref(final BwEvent ev) throws Throwable {
+  private static String getHref(final BwEvent ev) {
     return Util.buildPath(false, ev.getColPath(), "/", ev.getName());
   }
 }

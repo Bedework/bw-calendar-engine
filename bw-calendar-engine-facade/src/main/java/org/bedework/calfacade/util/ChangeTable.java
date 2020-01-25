@@ -36,9 +36,7 @@ import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -75,34 +73,29 @@ public class ChangeTable implements Logged, Serializable {
   private static final List<PropertyInfoIndex> schedulingSequenceChangeProperties;
 
   static {
-    final List<PropertyInfoIndex> sip = new ArrayList<>();
 
-    sip.add(PropertyInfoIndex.CLASS);
-    sip.add(PropertyInfoIndex.CREATED);
-    sip.add(PropertyInfoIndex.DTSTAMP);
-    sip.add(PropertyInfoIndex.LAST_MODIFIED);
-    sip.add(PropertyInfoIndex.SEQUENCE);
-    sip.add(PropertyInfoIndex.REQUEST_STATUS);
+    schedulingInsignificantProperties = List.of(
+            PropertyInfoIndex.CLASS,
+            PropertyInfoIndex.CREATED,
+            PropertyInfoIndex.DTSTAMP,
+            PropertyInfoIndex.LAST_MODIFIED,
+            PropertyInfoIndex.SEQUENCE,
+            PropertyInfoIndex.REQUEST_STATUS,
 
-    /* non ical */
-    sip.add(PropertyInfoIndex.CREATOR);
-    sip.add(PropertyInfoIndex.OWNER);
-    sip.add(PropertyInfoIndex.COST);
+            /* non ical */
+            PropertyInfoIndex.CREATOR,
+            PropertyInfoIndex.OWNER,
+            PropertyInfoIndex.COST);
 
-    schedulingInsignificantProperties = Collections.unmodifiableList(sip);
-
-    final List<PropertyInfoIndex> sscp = new ArrayList<>();
-
-    sscp.add(PropertyInfoIndex.DTSTART);
-    sscp.add(PropertyInfoIndex.DTEND);
-    sscp.add(PropertyInfoIndex.DURATION);
-    sscp.add(PropertyInfoIndex.DUE);
-    sscp.add(PropertyInfoIndex.RRULE);
-    sscp.add(PropertyInfoIndex.RDATE);
-    sscp.add(PropertyInfoIndex.EXDATE);
-    sscp.add(PropertyInfoIndex.STATUS);
-
-    schedulingSequenceChangeProperties = Collections.unmodifiableList(sscp);
+    schedulingSequenceChangeProperties = List.of(
+            PropertyInfoIndex.DTSTART,
+            PropertyInfoIndex.DTEND,
+            PropertyInfoIndex.DURATION,
+            PropertyInfoIndex.DUE,
+            PropertyInfoIndex.RRULE,
+            PropertyInfoIndex.RDATE,
+            PropertyInfoIndex.EXDATE,
+            PropertyInfoIndex.STATUS);
   }
 
   /** Constructor
@@ -158,7 +151,7 @@ public class ChangeTable implements Logged, Serializable {
 
   /** Set the present flag on the named entry.
    *
-   * @param index
+   * @param index of property
    * @return boolean false if entry not found
    */
   public boolean present(final PropertyInfoIndex index) {
@@ -175,8 +168,8 @@ public class ChangeTable implements Logged, Serializable {
   /** Return true if from is not the same as to and set the entry changed flag.
    *
    * @param index - the property index
-   * @param from
-   * @param to
+   * @param from old value
+   * @param to new value
    * @return boolean true if changed
    */
   public boolean changed(final PropertyInfoIndex index,
@@ -186,8 +179,8 @@ public class ChangeTable implements Logged, Serializable {
   }
 
   /**
-   * @param index
-   * @param val
+   * @param index - the property index
+   * @param val to add
    */
   public void addValue(final PropertyInfoIndex index,
                        final Object val) {
@@ -201,11 +194,11 @@ public class ChangeTable implements Logged, Serializable {
   }
 
   /**
-   * @param index
-   * @param val
+   * @param index - the property index
+   * @param val to add
    */
   public void addValues(final PropertyInfoIndex index,
-                        final Collection val) {
+                        final Collection<?> val) {
     ChangeTableEntry ent = getEntry(index);
 
     if (ent == null) {
@@ -217,7 +210,7 @@ public class ChangeTable implements Logged, Serializable {
 
   /** Get the indexed entry
    *
-   * @param index
+   * @param index - the property index
    * @return Entry null if not found
    */
   public ChangeTableEntry getEntry(final PropertyInfoIndex index) {
@@ -244,7 +237,7 @@ public class ChangeTable implements Logged, Serializable {
    * approach as found in e.g. SOAP.
    *
    * @param ev to update
-   * @param update
+   * @param update true to do update
    * @param attendeeFromOrganizer true if we are updating an attendee
    *                              from the organizer message
    */
@@ -270,234 +263,202 @@ public class ChangeTable implements Logged, Serializable {
       }
 
       switch (ev.getEntityType()) {
-      case IcalDefs.entityTypeEvent:
-        if (!ent.getEventProperty()) {
+        case IcalDefs.entityTypeEvent:
+          if (!ent.getEventProperty()) {
+            continue;
+          }
+          break;
+
+        case IcalDefs.entityTypeTodo:
+          if (!ent.getTodoProperty()) {
+            continue;
+          }
+          break;
+
+        //case CalFacadeDefs.entityTypeJournal:
+
+        case IcalDefs.entityTypeFreeAndBusy:
+          if (!ent.getFreebusyProperty()) {
+            continue;
+          }
+          break;
+
+        case IcalDefs.entityTypeVavailability:
+          // XXX Fake this one for the moment
+          if (!ent.getEventProperty()) {
+            continue;
+          }
+          break;
+
+        case IcalDefs.entityTypeAvailable:
+          // XXX Fake this one for the moment
+          if (!ent.getEventProperty()) {
+            continue;
+          }
+          break;
+
+        case IcalDefs.entityTypeVpoll:
+          if (!ent.getVpollProperty()) {
+            continue;
+          }
+          break;
+
+        default:
+          warn("Unsupported entity type: " + ev.getEntityType());
           continue;
-        }
-        break;
-
-      case IcalDefs.entityTypeTodo:
-        if (!ent.getTodoProperty()) {
-          continue;
-        }
-        break;
-
-      //case CalFacadeDefs.entityTypeJournal:
-
-      case IcalDefs.entityTypeFreeAndBusy:
-        if (!ent.getFreebusyProperty()) {
-          continue;
-        }
-        break;
-
-      case IcalDefs.entityTypeVavailability:
-        // XXX Fake this one for the moment
-        if (!ent.getEventProperty()) {
-          continue;
-        }
-        break;
-
-      case IcalDefs.entityTypeAvailable:
-        // XXX Fake this one for the moment
-        if (!ent.getEventProperty()) {
-          continue;
-        }
-        break;
-
-      case IcalDefs.entityTypeVpoll:
-        if (!ent.getVpollProperty()) {
-          continue;
-        }
-        break;
-
-      default:
-        warn("Unsupported entity type: " + ev.getEntityType());
-        continue;
       }
 
       switch (ent.getIndex()) {
-      case ACCEPT_RESPONSE:
-        if (ev.getPollAcceptResponse() != null) {
-          ent.setDeleted(ev.getPollAcceptResponse());
-          if (update) {
-            ev.setPollAcceptResponse(null);
+        case ACCEPT_RESPONSE:
+          if (ev.getPollAcceptResponse() != null) {
+            ent.setDeleted(ev.getPollAcceptResponse());
+            if (update) {
+              ev.setPollAcceptResponse(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case CLASS:
-        if (ev.getClassification() != null) {
-          ent.setDeleted(ev.getClassification());
-          if (update) {
-            ev.setClassification(null);
+        case CLASS:
+          if (ev.getClassification() != null) {
+            ent.setDeleted(ev.getClassification());
+            if (update) {
+              ev.setClassification(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case COMPLETED:
-        if (ev.getCompleted() != null) {
-          ent.setDeleted(ev.getCompleted());
-          if (update) {
-            ev.setCompleted(null);
+        case COMPLETED:
+          if (ev.getCompleted() != null) {
+            ent.setDeleted(ev.getCompleted());
+            if (update) {
+              ev.setCompleted(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case CREATED:
-        // Leave
-        break;
-
-      case DESCRIPTION:
-        if (ev.getDescription() != null) {
-          ent.setDeleted(ev.getDescription());
-          if (update) {
-            ev.setDescription(null);
+        case DESCRIPTION:
+          if (ev.getDescription() != null) {
+            ent.setDeleted(ev.getDescription());
+            if (update) {
+              ev.setDescription(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case DTSTAMP:
-        // Leave
-        break;
-
-      case DTSTART:
-        // XXX Check this is handled elsewhere
-        break;
-
-      case DURATION:
-        // XXX Check this is handled elsewhere
-        break;
-
-      case GEO:
-        if (ev.getGeo() != null) {
-          ent.setDeleted(ev.getGeo());
-          if (update) {
-            ev.setGeo(null);
+        case GEO:
+          if (ev.getGeo() != null) {
+            ent.setDeleted(ev.getGeo());
+            if (update) {
+              ev.setGeo(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case LAST_MODIFIED:
-        // Leave
-        break;
-
-      case LOCATION:
-        if (ev.getLocation() != null) {
-          ent.setDeleted(ev.getLocation());
-          if (update) {
-            ev.setLocation(null);
+        case LOCATION:
+          if (ev.getLocation() != null) {
+            ent.setDeleted(ev.getLocation());
+            if (update) {
+              ev.setLocation(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case ORGANIZER:
-        if (ev.getOrganizer() != null) {
-          ent.setDeleted(ev.getOrganizer());
-          if (update) {
-            ev.setOrganizer(null);
+        case ORGANIZER:
+          if (ev.getOrganizer() != null) {
+            ent.setDeleted(ev.getOrganizer());
+            if (update) {
+              ev.setOrganizer(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case PERCENT_COMPLETE:
-        if (ev.getPercentComplete() != null) {
-          ent.setDeleted(ev.getPercentComplete());
-          if (update) {
-            ev.setPercentComplete(null);
+        case PERCENT_COMPLETE:
+          if (ev.getPercentComplete() != null) {
+            ent.setDeleted(ev.getPercentComplete());
+            if (update) {
+              ev.setPercentComplete(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case POLL_ITEM_ID:
-        if (ev.getPollItemId() != null) {
-          ent.setDeleted(ev.getPollItemId());
-          if (update) {
-            ev.setPollItemId(null);
+        case POLL_ITEM_ID:
+          if (ev.getPollItemId() != null) {
+            ent.setDeleted(ev.getPollItemId());
+            if (update) {
+              ev.setPollItemId(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case POLL_MODE:
-        if (ev.getPollMode() != null) {
-          ent.setDeleted(ev.getPollMode());
-          if (update) {
-            ev.setPollMode(null);
+        case POLL_MODE:
+          if (ev.getPollMode() != null) {
+            ent.setDeleted(ev.getPollMode());
+            if (update) {
+              ev.setPollMode(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case POLL_PROPERTIES:
-        if (ev.getPollProperties() != null) {
-          ent.setDeleted(ev.getPollProperties());
-          if (update) {
-            ev.setPollProperties(null);
+        case POLL_PROPERTIES:
+          if (ev.getPollProperties() != null) {
+            ent.setDeleted(ev.getPollProperties());
+            if (update) {
+              ev.setPollProperties(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case PRIORITY:
-        if (ev.getPriority() != null) {
-          ent.setDeleted(ev.getPriority());
-          if (update) {
-            ev.setPriority(null);
+        case PRIORITY:
+          if (ev.getPriority() != null) {
+            ent.setDeleted(ev.getPriority());
+            if (update) {
+              ev.setPriority(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case RECURRENCE_ID:
-        // XXX Handled elsewhere?
-        break;
-
-      case RELATED_TO:
-        if (ev.getRelatedTo() != null) {
-          ent.setDeleted(ev.getRelatedTo());
-          if (update) {
-            ev.setRelatedTo(null);
+        case RELATED_TO:
+          if (ev.getRelatedTo() != null) {
+            ent.setDeleted(ev.getRelatedTo());
+            if (update) {
+              ev.setRelatedTo(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case SEQUENCE:
-        // XXX Handled elsewhere?
-        break;
+        case SEQUENCE:
+          // XXX Handled elsewhere?
+          break;
 
-      case STATUS:
-        if (ev.getStatus() != null) {
-          ent.setDeleted(ev.getStatus());
-          if (update) {
-            ev.setStatus(null);
+        case STATUS:
+          if (ev.getStatus() != null) {
+            ent.setDeleted(ev.getStatus());
+            if (update) {
+              ev.setStatus(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case SUMMARY:
-        if (ev.getSummary() != null) {
-          ent.setDeleted(ev.getSummary());
-          if (update) {
-            ev.setSummary(null);
+        case SUMMARY:
+          if (ev.getSummary() != null) {
+            ent.setDeleted(ev.getSummary());
+            if (update) {
+              ev.setSummary(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case UID:
-        // Leave
-        break;
-
-      case URL:
-        if (ev.getLink() != null) {
-          ent.setDeleted(ev.getLink());
-          if (update) {
-            ev.setLink(null);
+        case URL:
+          if (ev.getLink() != null) {
+            ent.setDeleted(ev.getLink());
+            if (update) {
+              ev.setLink(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case DTEND:
-        // XXX Handled elsewhere?
-        break;
-
-      case TRANSP:
-        /*
+        case TRANSP:
+          /*
         if (ev.getPeruserTransparency(userHref) != null) {
           ent.setDeleted(ev.getPeruserTransparency(userHref));
           if (update) {
@@ -505,106 +466,141 @@ public class ChangeTable implements Logged, Serializable {
           }
         }
         */
-        if (ev.getTransparency() != null) {
-          ent.setDeleted(ev.getTransparency());
-          if (update) {
-            ev.setTransparency(null);
+          if (ev.getTransparency() != null) {
+            ent.setDeleted(ev.getTransparency());
+            if (update) {
+              ev.setTransparency(null);
+            }
           }
-        }
-        break;
+          break;
 
-      case ACTION:
-        break;
-      case BUSYTYPE:
-        break;
-      case COLLECTION:
-        break;
-      case COST:
-        break;
-      case DELETED:
-        break;
-      case DUE:
-        break;
-      case END_TYPE:
-        break;
-      case FREEBUSY:
-        break;
-      case HREF:
-        break;
-      case LANG:
-        break;
-      case REPEAT:
-        break;
-      case TRIGGER:
-        break;
-      case UNKNOWN_PROPERTY:
-        break;
-      case VALARM:
-        break;
-      case XBEDEWORK_COST:
-        break;
+          /*
+        case ACTION:
+          break;
+        case BUSYTYPE:
+          break;
+        case COLLECTION:
+          break;
+        case COST:
+          break;
+        case CREATED:
+          // Leave
+          break;
+
+        case DTSTAMP:
+          // Leave
+          break;
+
+        case DTSTART:
+          // XXX Check this is handled elsewhere
+          break;
+
+        case DURATION:
+          // XXX Check this is handled elsewhere
+          break;
+
+        case LAST_MODIFIED:
+          // Leave
+          break;
+
+        case RECURRENCE_ID:
+          // XXX Handled elsewhere?
+          break;
+
+        case DELETED:
+          break;
+        case DTEND:
+          // XXX Handled elsewhere?
+          break;
+
+        case DUE:
+          break;
+        case END_TYPE:
+          break;
+        case FREEBUSY:
+          break;
+        case HREF:
+          break;
+        case LANG:
+          break;
+        case REPEAT:
+          break;
+        case TRIGGER:
+          break;
+        case UID:
+          // Leave
+          break;
+        case UNKNOWN_PROPERTY:
+          break;
+        case VALARM:
+          break;
+        case XBEDEWORK_COST:
+          break;
 
         // following are multi
-      case ATTACH:
-        break;
-      case ATTENDEE:
-        break;
-      case CATEGORIES:
-        break;
-      case COMMENT:
-        break;
-      case CONTACT:
-        break;
-      case EXDATE:
-        break;
-      case EXRULE:
-        break;
-      case RDATE:
-        break;
-      case REQUEST_STATUS:
-        break;
-      case RESOURCES:
-        break;
-      case RRULE:
-        break;
-      case VOTER:
-        break;
-      case XPROP:
-        break;
+        case ATTACH:
+          break;
+        case ATTENDEE:
+          break;
+        case CATEGORIES:
+          break;
+        case COMMENT:
+          break;
+        case CONTACT:
+          break;
+        case EXDATE:
+          break;
+        case EXRULE:
+          break;
+        case RDATE:
+          break;
+        case REQUEST_STATUS:
+          break;
+        case RESOURCES:
+          break;
+        case RRULE:
+          break;
+        case VOTER:
+          break;
+        case XPROP:
+          break;
 
         // following are Timezones - ignored
-      case TZID:
-        break;
-      case TZIDPAR:
-        break;
-      case TZNAME:
-        break;
-      case TZOFFSETFROM:
-        break;
-      case TZOFFSETTO:
-        break;
-      case TZURL:
-        break;
+        case TZID:
+          break;
+        case TZIDPAR:
+          break;
+        case TZNAME:
+          break;
+        case TZOFFSETFROM:
+          break;
+        case TZOFFSETTO:
+          break;
+        case TZURL:
+          break;
 
         // following are ignored
-      case CALSCALE:
-        break;
-      case CREATOR:
-        break;
-      case CTAG:
-        break;
-      case ENTITY_TYPE:
-        break;
-      case ETAG:
-        break;
-      case METHOD:
-        break;
-      case OWNER:
-        break;
-      case PRODID:
-        break;
-      case VERSION:
-        break;
+        case CALSCALE:
+          break;
+        case CREATOR:
+          break;
+        case CTAG:
+          break;
+        case ENTITY_TYPE:
+          break;
+        case ETAG:
+          break;
+        case METHOD:
+          break;
+        case OWNER:
+          break;
+        case PRODID:
+          break;
+        case VERSION:
+          break;
+           */
+        default:
+          break;
       }
     }
 
@@ -769,6 +765,7 @@ public class ChangeTable implements Logged, Serializable {
         }
         break;
 
+        /*
       case ACCEPT_RESPONSE:
         break;
       case ACTION:
@@ -877,6 +874,7 @@ public class ChangeTable implements Logged, Serializable {
         break;
       case XBEDEWORK_COST:
         break;
+         */
       default:
         break;
       }
@@ -986,7 +984,7 @@ public class ChangeTable implements Logged, Serializable {
 
     /* Any changes? */
     if (ent.getChangedValues() != null) {
-      for (Object o: ent.getChangedValues()) {
+      for (var o: ent.getChangedValues()) {
         Object orig = originalVals.remove(o);
 
         // XXX This should be an object method
