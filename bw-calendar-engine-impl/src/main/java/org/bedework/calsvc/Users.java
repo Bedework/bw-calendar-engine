@@ -54,7 +54,7 @@ class Users extends CalSvcDb implements UsersI {
   }
 
   @Override
-  public BwPrincipal getUser(final String account) throws CalFacadeException {
+  public BwPrincipal getUser(final String account) {
     if (account == null) {
       return null;
     }
@@ -366,13 +366,7 @@ class Users extends CalSvcDb implements UsersI {
   @Override
   public BwPrincipal getPublicUser() {
     if (publicUser == null) {
-      try {
-        publicUser = getUser(BwPrincipal.publicUser);
-      } catch (Throwable t) {
-        error(t);
-        throw new RuntimeException(
-                "Unable to get publicUser for " + BwPrincipal.publicUser);
-      }
+      publicUser = getUser(BwPrincipal.publicUser);
     }
 
     if (publicUser == null) {

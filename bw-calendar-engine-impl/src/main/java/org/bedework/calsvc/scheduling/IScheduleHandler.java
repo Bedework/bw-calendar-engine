@@ -109,8 +109,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
   /* External iSchedule requests */
   protected void sendExternalRequest(final ScheduleResult sr,
                                      final EventInfo ei,
-                                     final Collection<UserInbox> inboxes)
-      throws CalFacadeException {
+                                     final Collection<UserInbox> inboxes) {
     /* Each entry in inboxes should have the same hostinfo */
 
     HostInfo hi = null;
@@ -230,7 +229,7 @@ public abstract class IScheduleHandler extends FreeAndBusyHandler {
     }
   }
 
-  private IscheduleClient getCalDavClient() throws CalFacadeException {
+  private IscheduleClient getCalDavClient() {
     class PrivateKeysGetter extends IscheduleClient.PrivateKeys {
       @Override
       public PrivateKey getKey(final String domain,

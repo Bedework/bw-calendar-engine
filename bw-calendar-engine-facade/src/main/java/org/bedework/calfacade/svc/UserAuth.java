@@ -68,9 +68,8 @@ public interface UserAuth extends Serializable {
     /**
      * @param account the href
      * @return BwPrincipal represented by account
-     * @throws CalFacadeException
      */
-    public abstract BwPrincipal getPrincipal(String account) throws CalFacadeException;
+    public abstract BwPrincipal getPrincipal(String account);
 
     /** Allows this class to be passed to other admin classes
      *
@@ -133,7 +132,7 @@ public interface UserAuth extends Serializable {
    */
   void initialise(CallBack cb) throws CalFacadeException;
 
-  /** ===================================================================
+  /* ===================================================================
    *  The following should not change the state of the current users
    *  access which is set and retrieved with the above methods.
    *  =================================================================== */
@@ -151,14 +150,14 @@ public interface UserAuth extends Serializable {
 
   /** Add the user entry
    *
-   * @param  val      AuthUserVO users entry
+   * @param  val      users entry
    * @throws CalFacadeException
    */
   void addUser(BwAuthUser val) throws CalFacadeException;
 
   /** Update the user entry
    *
-   * @param  val      AuthUserVO users entry
+   * @param  val      users entry
    * @throws CalFacadeException
    */
   void updateUser(BwAuthUser val) throws CalFacadeException;

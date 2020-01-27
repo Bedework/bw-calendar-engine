@@ -748,7 +748,6 @@ public class BwLocation extends BwEventProperty<BwLocation>
     return ts.toString();
   }
 
-  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     final BwLocation loc = new BwLocation();

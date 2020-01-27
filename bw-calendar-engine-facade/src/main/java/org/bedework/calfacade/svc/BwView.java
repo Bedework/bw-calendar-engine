@@ -101,12 +101,12 @@ public class BwView extends BwDbentity<BwView> {
 
   /** Add a collection path
    *
-   * @param val
+   * @param val a collection path
    */
   public void addCollectionPath(final String val) {
     List<String> c = getCollectionPaths();
     if (c == null) {
-      c = new ArrayList<String>();
+      c = new ArrayList<>();
       setCollectionPaths(c);
     }
     c.add(val);
@@ -114,7 +114,7 @@ public class BwView extends BwDbentity<BwView> {
 
   /** Remove a collection path
    *
-   * @param val
+   * @param val a collection path
    */
   public void removeCollectionPath(final String val) {
     List<String> c = getCollectionPaths();
@@ -127,9 +127,9 @@ public class BwView extends BwDbentity<BwView> {
    *                   Non db methods
    * ==================================================================== */
 
-  /** true if we AND the expressions for each path
+  /**
    *
-   * @param val
+   * @param val true if we AND the expressions for each path
    */
   public void setConjunction(final boolean val) {
     conjunction = val;
@@ -145,7 +145,7 @@ public class BwView extends BwDbentity<BwView> {
 
   /**
    *
-   * @param val
+   * @param val the filter or null
    */
   public void setFilter(final FilterBase val) {
     filter = val;

@@ -553,24 +553,14 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#makeHref(java.lang.String, boolean)
-   */
   @Override
   public String makeHref(final String id, final int whoType) throws WebdavException {
-    try {
-      return getUrlHandler().prefix(
-              getSvci().getDirectories().makePrincipalUri(id,
-                                                          whoType));
+    return getUrlHandler().prefix(
+            getSvci().getDirectories().makePrincipalUri(id,
+                                                        whoType));
 //      return getUrlPrefix() + getSvci().getDirectories().makePrincipalUri(id, whoType);
-    } catch (Throwable t) {
-      throw new WebdavException(t);
-    }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#getGroups(java.lang.String, java.lang.String)
-   */
   @Override
   public Collection<String>getGroups(final String rootUrl,
                                      final String principalUrl) throws WebdavException {
@@ -582,9 +572,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.caldav.server.SysIntf#caladdrToUser(java.lang.String)
-   */
   @Override
   public AccessPrincipal caladdrToPrincipal(final String caladdr) throws WebdavException {
     try {

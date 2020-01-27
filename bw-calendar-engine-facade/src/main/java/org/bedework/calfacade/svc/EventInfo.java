@@ -215,7 +215,7 @@ public class EventInfo extends BwUnversionedDbentity<EventInfo>
                    final Set<EventInfo> overrides) {
     setEvent(event);
 
-    this.overrides = new TreeSet<EventOverride>();
+    this.overrides = new TreeSet<>();
 
     for (EventInfo oei: overrides) {
       if (oei.getEvent().getRecurrenceId() == null) {
@@ -279,7 +279,7 @@ public class EventInfo extends BwUnversionedDbentity<EventInfo>
    *
    * XXX - not applicable in a shared world?
    *
-   * @param val
+   * @param val true if object is considered editable
    */
   public void setEditable(final boolean val) {
     editable = val;
@@ -301,7 +301,7 @@ public class EventInfo extends BwUnversionedDbentity<EventInfo>
   }
 
   /**
-   * @param val
+   * @param val int kind of event
    */
   public void setKind(final int val) {
     kind = val;
@@ -531,7 +531,7 @@ public class EventInfo extends BwUnversionedDbentity<EventInfo>
   public void addAlarm(final BwAlarm val) {
     Collection<BwAlarm> as = getAlarms();
     if (as == null) {
-      as = new TreeSet<BwAlarm>();
+      as = new TreeSet<>();
     }
 
     if (!as.contains(val)) {
@@ -873,7 +873,7 @@ public class EventInfo extends BwUnversionedDbentity<EventInfo>
     Set<EventInfo> cis = getContainedItems();
 
     if (cis == null) {
-      cis = new TreeSet<EventInfo>();
+      cis = new TreeSet<>();
       setContainedItems(cis);
     }
 

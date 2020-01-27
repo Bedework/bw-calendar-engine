@@ -149,7 +149,6 @@ public class GetInstancesRequest extends RequestBase {
     return end;
   }
 
-  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean validate(final Response resp) {
     if (getStartDt() == null) {

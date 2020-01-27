@@ -19,6 +19,8 @@
 
 package org.bedework.calfacade.svc.prefs;
 
+import org.bedework.util.misc.ToString;
+
 import java.io.Serializable;
 /** A class just to allow me to delete all entries referring to a given entity
  * Hibernate doesn't seem to allow this any other way (though 3.1 might)
@@ -35,7 +37,7 @@ public class BwAuthUserPrefsCalendar implements Serializable {
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val id
    */
   public void setId(int val) {
     id = val;
@@ -49,7 +51,7 @@ public class BwAuthUserPrefsCalendar implements Serializable {
   }
 
   /**
-   * @param val
+   * @param val calendar id
    */
   public void setCalendarid(int val) {
     calendarid = val;
@@ -86,14 +88,11 @@ public class BwAuthUserPrefsCalendar implements Serializable {
   }
 
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    final ToString ts = new ToString(this);
 
-    sb.append("BwAuthUserPrefsCalendar{id=");
-    sb.append(getId());
-    sb.append(", calendarid=");
-    sb.append(getCalendarid());
-    sb.append("}");
+    ts.append("id", getId());
+    ts.append("calendarid", getCalendarid());
 
-    return sb.toString();
+    return ts.toString();
   }
 }

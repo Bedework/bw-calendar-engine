@@ -33,7 +33,7 @@ import java.util.TreeSet;
  *
  * @param <T> Type of element in the collection
  */
-public class CollectionPref<T> extends DumpEntity implements Serializable {
+public class CollectionPref<T extends Comparable<T>> extends DumpEntity<T> implements Serializable {
   /** If true automatically add preference to the preferred list
    */
   protected boolean autoAdd = true;
@@ -154,7 +154,7 @@ public class CollectionPref<T> extends DumpEntity implements Serializable {
     return ts.toString();
   }
 
-  @SuppressWarnings("CloneDoesntDeclareCloneNotSupportedException")
+  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     final CollectionPref<T> cp = new CollectionPref<>();
@@ -164,12 +164,7 @@ public class CollectionPref<T> extends DumpEntity implements Serializable {
     final Collection<T> c = getPreferred();
 
     if (c != null) {
-      final TreeSet<T> nc = new TreeSet<>();
-      for (final T el: c) {
-        nc.add(el);
-      }
-
-      cp.setPreferred(nc);
+      cp.setPreferred(new TreeSet<>(c));
     }
 
     return cp;

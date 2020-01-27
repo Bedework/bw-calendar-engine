@@ -64,10 +64,10 @@ public class ScheduleMessage extends BwDbentity<ScheduleMessage> {
 
   /** Constructor
    *
-   * @param inBox
-   * @param principalHref
-   * @param eventName
-   * @param rid
+   * @param inBox true for inbox event
+   * @param principalHref principal reference
+   * @param eventName  name
+   * @param rid recurrence id
    */
   public ScheduleMessage(final boolean inBox,
                          final String principalHref,
@@ -88,14 +88,14 @@ public class ScheduleMessage extends BwDbentity<ScheduleMessage> {
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val timestamp
    */
   public void setTimestamp(final String val) {
     timestamp = val;
   }
 
   /**
-   * @return String lastmod
+   * @return String timestamp
    */
   public String getTimestamp() {
     return timestamp;
@@ -118,7 +118,7 @@ public class ScheduleMessage extends BwDbentity<ScheduleMessage> {
   }
 
   /**
-   * @param val
+   * @param val last processed
    */
   public void setLastProcessed(final String val) {
     lastProcessed = val;
@@ -146,7 +146,7 @@ public class ScheduleMessage extends BwDbentity<ScheduleMessage> {
   }
 
   /**
-   * @param val
+   * @param val principal reference
    */
   public void setPrincipalHref(final String val) {
     principalHref = val;
@@ -227,15 +227,7 @@ public class ScheduleMessage extends BwDbentity<ScheduleMessage> {
       return res;
     }
 
-    if (getSequence() < that.getSequence()) {
-      return -1;
-    }
-
-    if (getSequence() > that.getSequence()) {
-      return 1;
-    }
-
-    return 0;
+    return Integer.compare(getSequence(), that.getSequence());
   }
 
   @Override
@@ -256,7 +248,7 @@ public class ScheduleMessage extends BwDbentity<ScheduleMessage> {
 
     ts.newLine();
     ts.append("inBox", getInBox());
-    ts.append("  principalHref", getPrincipalHref());
+    ts.append("principalHref", getPrincipalHref());
     ts.append("eventName", getEventName());
     ts.append("rid", getRid());
 

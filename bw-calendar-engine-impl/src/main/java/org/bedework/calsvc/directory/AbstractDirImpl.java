@@ -206,7 +206,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
   @Override
   public void init(final CallBack cb,
-                   final Configurations configs) throws CalFacadeException {
+                   final Configurations configs) {
     this.cb = cb;
     this.caPrefixes = configs.getBasicSystemProperties().getCalAddrPrefixes();
     this.authCdinfo = configs.getCardDavInfo(true);
@@ -636,7 +636,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public String accountFromPrincipal(final String val) throws CalFacadeException {
+  public String accountFromPrincipal(final String val) {
     String userProot = fromWho.get(WhoDefs.whoTypeUser);
 
     if (!val.startsWith(userProot)) {
@@ -796,121 +796,111 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
     getProps(); // Ensure all set up
 
-    try {
-      int atPos = val.indexOf("@");
+    int atPos = val.indexOf("@");
 
-      boolean hasMailto = val.toLowerCase().startsWith("mailto:");
+    boolean hasMailto = val.toLowerCase().startsWith("mailto:");
 
-      if (atPos > 0) {
-        if (hasMailto) {
-          // ensure lower case (helps with some tests)
-          return "mailto:" + val.substring(7);
-        }
-
-        ca = "mailto:" + val;
-        userToCalAddrMap.put(val, ca);
-
-        return ca;
+    if (atPos > 0) {
+      if (hasMailto) {
+        // ensure lower case (helps with some tests)
+        return "mailto:" + val.substring(7);
       }
 
-      StringBuilder sb = new StringBuilder();
-      if (!hasMailto) {
-        sb.append("mailto:");
-      }
-
-      sb.append(val);
-      sb.append("@");
-      sb.append(getDefaultDomain());
-
-      ca = sb.toString();
+      ca = "mailto:" + val;
       userToCalAddrMap.put(val, ca);
 
       return ca;
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
     }
+
+    StringBuilder sb = new StringBuilder();
+    if (!hasMailto) {
+      sb.append("mailto:");
+    }
+
+    sb.append(val);
+    sb.append("@");
+    sb.append(getDefaultDomain());
+
+    ca = sb.toString();
+    userToCalAddrMap.put(val, ca);
+
+    return ca;
   }
 
   @Override
   public BwPrincipal caladdrToPrincipal(final String caladdr) {
-    //try {
-      if (caladdr == null) {
-        throw new RuntimeException(CalFacadeException.nullCalendarUserAddr);
+    if (caladdr == null) {
+      throw new RuntimeException(CalFacadeException.nullCalendarUserAddr);
+    }
+
+    BwPrincipal p = calAddrToPrincipalMap.get(caladdr);
+    if (p != null) {
+      return p;
+    }
+
+    getProps(); // Ensure all set up
+
+    if (isPrincipal(caladdr)) {
+      p = getPrincipal(caladdr);
+      calAddrToPrincipalMap.put(caladdr, p);
+
+      return p;
+    }
+
+    String acc = null;
+    String ca = caladdr;
+    final int atPos = ca.indexOf("@");
+
+    if (atPos > 0) {
+      ca = ca.toLowerCase();
+    }
+
+    if (onlyDomain != null) {
+      if (atPos < 0) {
+        acc = ca;
       }
 
-      BwPrincipal p = calAddrToPrincipalMap.get(caladdr);
-      if (p != null) {
-        return p;
+      if (onlyDomain.matches(ca, atPos)) {
+        acc = ca.substring(0, atPos);
       }
-
-      getProps(); // Ensure all set up
-
-      if (isPrincipal(caladdr)) {
-        p = getPrincipal(caladdr);
-        calAddrToPrincipalMap.put(caladdr, p);
-
-        return p;
-      }
-
-      String acc = null;
-      String ca = caladdr;
-      final int atPos = ca.indexOf("@");
-
-      if (atPos > 0) {
-        ca = ca.toLowerCase();
-      }
-
-      if (onlyDomain != null) {
-        if (atPos < 0) {
+    } else if (atPos < 0) {
+      // Assume default domain?
+      acc = ca;
+    } else if (anyDomain) {
+      acc = ca;
+    } else {
+      for (final DomainMatcher dm: domains) {
+        if (dm.matches(ca, atPos)) {
           acc = ca;
-        }
-
-        if (onlyDomain.matches(ca, atPos)) {
-          acc = ca.substring(0, atPos);
-        }
-      } else if (atPos < 0) {
-        // Assume default domain?
-        acc = ca;
-      } else if (anyDomain) {
-        acc = ca;
-      } else {
-        for (final DomainMatcher dm: domains) {
-          if (dm.matches(ca, atPos)) {
-            acc = ca;
-            break;
-          }
-        }
-      }
-
-      if (acc == null) {
-        // Not ours
-        return null;
-      }
-
-      if (acc.toLowerCase().startsWith("mailto:")) {
-        acc = acc.substring("mailto:".length());
-      }
-
-      //XXX -at this point we should validate the account
-
-      int whoType = WhoDefs.whoTypeUser;
-
-      for (CAPrefixInfo c: getCaPrefixInfo()) {
-        if (acc.startsWith(c.getPrefix())) {
-          whoType = c.getType();
           break;
         }
       }
+    }
 
-      p = getPrincipal(makePrincipalUri(acc, whoType));
-      calAddrToPrincipalMap.put(caladdr, p);
+    if (acc == null) {
+      // Not ours
+      return null;
+    }
 
-      return p;/*
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }*/
+    if (acc.toLowerCase().startsWith("mailto:")) {
+      acc = acc.substring("mailto:".length());
+    }
+
+    //XXX -at this point we should validate the account
+
+    int whoType = WhoDefs.whoTypeUser;
+
+    for (CAPrefixInfo c: getCaPrefixInfo()) {
+      if (acc.startsWith(c.getPrefix())) {
+        whoType = c.getType();
+        break;
+      }
+    }
+
+    p = getPrincipal(makePrincipalUri(acc, whoType));
+    calAddrToPrincipalMap.put(caladdr, p);
+
+    return p;
   }
 
   private static class CalAddr {
@@ -957,9 +947,6 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.ifs.Directories#fixCalAddr(java.lang.String)
-   */
   @Override
   public String normalizeCua(final String val) throws CalFacadeException {
     if (val == null) {
@@ -989,9 +976,9 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public String getDefaultDomain() throws CalFacadeException {
+  public String getDefaultDomain() {
     if (defaultDomain == null) {
-      throw new CalFacadeException(CalFacadeException.noDefaultDomain);
+      throw new RuntimeException(CalFacadeException.noDefaultDomain);
     }
 
     return defaultDomain;

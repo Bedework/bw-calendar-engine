@@ -20,6 +20,7 @@ package org.bedework.calfacade.svc.prefs;
 
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.base.DumpEntity;
+import org.bedework.util.misc.ToString;
 
 /** Value object to represent authorized calendar user preferences.
  * These should really be in the same table.
@@ -132,21 +133,17 @@ public class BwAuthUserPrefs extends DumpEntity<BwAuthUserPrefs>
    * ==================================================================== */
 
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    final ToString ts = new ToString(this);
 
-    sb.append("BwAuthUserPrefs{categoryPrefs=");
-    sb.append(getCategoryPrefs());
-    sb.append("\nlocationPrefs=");
-    sb.append(getLocationPrefs());
-    sb.append("\nsponsorPrefs=");
-    sb.append(getContactPrefs());
-    sb.append("\ncalendarPrefs=");
-    sb.append(getCalendarPrefs());
-    sb.append("}");
+    ts.append("categoryPrefs", getCategoryPrefs());
+    ts.newLine().append("locationPrefs", getLocationPrefs());
+    ts.newLine().append("sponsorPrefs", getContactPrefs());
+    ts.newLine().append("calendarPrefs", getCalendarPrefs());
 
-    return sb.toString();
+    return ts.toString();
   }
 
+  @SuppressWarnings("MethodDoesntCallSuperMethod")
   public Object clone() {
     BwAuthUserPrefs aup = new BwAuthUserPrefs();
 

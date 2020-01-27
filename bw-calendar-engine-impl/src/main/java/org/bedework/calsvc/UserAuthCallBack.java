@@ -36,7 +36,7 @@ public class UserAuthCallBack extends UserAuth.CallBack {
   }
 
   @Override
-  public BwPrincipal getPrincipal(final String account) throws CalFacadeException {
+  public BwPrincipal getPrincipal(final String account) {
     return svci.getUsersHandler().getUser(account);
   }
 

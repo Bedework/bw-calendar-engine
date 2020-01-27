@@ -34,9 +34,8 @@ public interface UsersI extends Serializable {
    *
    * @param val           String user id
    * @return User principal or null if not there
-   * @throws CalFacadeException
    */
-  public BwPrincipal getUser(final String val) throws CalFacadeException;
+  public BwPrincipal getUser(final String val);
 
   /** Find the user with the given account name. Create if not there.
    *

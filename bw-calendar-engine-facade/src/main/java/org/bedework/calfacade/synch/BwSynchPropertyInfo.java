@@ -28,7 +28,7 @@ import org.bedework.util.misc.ToString;
  */
 public class BwSynchPropertyInfo extends SynchPropertyInfoType {
   /**
-   * @param val
+   * @param val XML SynchPropertyInfoType
    * @return one of these initialized from the parameter
    */
   public static BwSynchPropertyInfo copy(final SynchPropertyInfoType val) {

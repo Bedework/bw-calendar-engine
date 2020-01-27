@@ -40,7 +40,8 @@ import java.util.TreeSet;
  *  @version 1.0
  */
 @Dump(elementName="preferences", keyFields={"ownerHref"}, firstFields={"ownerHref"})
-public class BwPreferences extends BwOwnedDbentity<BwPreferences> implements PropertiesEntity {
+public class BwPreferences extends BwOwnedDbentity<BwPreferences>
+        implements PropertiesEntity {
   /** Collection of BwView
    */
   protected Collection<BwView> views;
@@ -228,7 +229,7 @@ public class BwPreferences extends BwOwnedDbentity<BwPreferences> implements Pro
   }
 
   /**
-   * @param val
+   * @param val String email
    */
   public void setEmail(final String val) {
     email = val;
@@ -242,7 +243,7 @@ public class BwPreferences extends BwOwnedDbentity<BwPreferences> implements Pro
   }
 
   /**
-   * @param val
+   * @param val default calendar path
    */
   public void setDefaultCalendarPath(final String val) {
     defaultCalendarPath = val;
@@ -256,7 +257,7 @@ public class BwPreferences extends BwOwnedDbentity<BwPreferences> implements Pro
   }
 
   /**
-   * @param val
+   * @param val skin name
    */
   public void setSkinName(final String val) {
     skinName = val;
@@ -270,7 +271,7 @@ public class BwPreferences extends BwOwnedDbentity<BwPreferences> implements Pro
   }
 
   /**
-   * @param val
+   * @param val skin style
    */
   public void setSkinStyle(final String val) {
     skinStyle = val;
@@ -284,7 +285,7 @@ public class BwPreferences extends BwOwnedDbentity<BwPreferences> implements Pro
   }
 
   /**
-   * @param val
+   * @param val preferred view
    */
   public void setPreferredView(final String val) {
     preferredView = val;
@@ -301,7 +302,7 @@ public class BwPreferences extends BwOwnedDbentity<BwPreferences> implements Pro
    * "today", "day", "week", "month", "year". The user interface can present
    * language appropriate labels.
    *
-   * @param val
+   * @param val preferred view period
    */
   public void setPreferredViewPeriod(final String val) {
     preferredViewPeriod = val;
@@ -314,8 +315,8 @@ public class BwPreferences extends BwOwnedDbentity<BwPreferences> implements Pro
     return preferredViewPeriod;
   }
 
-  /** Set number of results in search result page
-   * @param val
+  /**
+   * @param val number of results in search result page
    */
   public void setPageSize(final int val) {
     pageSize = val;
@@ -329,7 +330,7 @@ public class BwPreferences extends BwOwnedDbentity<BwPreferences> implements Pro
   }
 
   /**
-   * @param val
+   * @param val work days
    */
   public void setWorkDays(final String val) {
     workDays = val;
@@ -586,7 +587,7 @@ public class BwPreferences extends BwOwnedDbentity<BwPreferences> implements Pro
       return null;
     }
 
-    TreeSet<BwProperty> ts = new TreeSet<BwProperty>();
+    TreeSet<BwProperty> ts = new TreeSet<>();
 
     for (BwProperty p: getProperties()) {
       ts.add((BwProperty)p.clone());

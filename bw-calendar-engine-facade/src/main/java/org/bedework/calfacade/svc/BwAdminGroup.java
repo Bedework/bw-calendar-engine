@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @Dump(elementName="adminGroup", keyFields={"account"},
       firstFields = {"account","principalRef"})
 @JsonIgnoreProperties({"aclAccount"})
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, property="@class")
 public class BwAdminGroup extends BwGroup {
   private String groupOwnerHref;
 
@@ -117,6 +117,7 @@ public class BwAdminGroup extends BwGroup {
     return ts.toString();
   }
 
+  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     final BwAdminGroup ag = new BwAdminGroup();

@@ -324,7 +324,6 @@ public class BwContact extends BwEventProperty<BwContact>
     return ts.toString();
   }
 
-  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     final BwContact sp = new BwContact();

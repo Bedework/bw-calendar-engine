@@ -27,44 +27,44 @@ import java.io.Serializable;
  */
 public interface BwCommonUserPrefs extends Serializable {
   /**
-   * @param val
+   * @param val Set of preferred categories
    */
-  public void setCategoryPrefs(CategoryPref val);
+  void setCategoryPrefs(CategoryPref val);
 
   /**
    * @return Set of preferred categories
    */
-  public CategoryPref getCategoryPrefs();
+  CategoryPref getCategoryPrefs();
 
   /** Set locations preferences object
    *
-   * @param val
+   * @param val locations preferences object
    */
-  public void setLocationPrefs(LocationPref val);
+  void setLocationPrefs(LocationPref val);
 
   /** Get locations preferences object
    *
    * @return locations preferences object
    */
-  public LocationPref getLocationPrefs();
+  LocationPref getLocationPrefs();
 
   /**
-   * @param val
+   * @param val Set of preferred contacts
    */
-  public void setContactPrefs(ContactPref val);
+  void setContactPrefs(ContactPref val);
 
   /**
    * @return Set of preferred contacts
    */
-  public ContactPref getContactPrefs();
+  ContactPref getContactPrefs();
 
   /**
-   * @param val
+   * @param val Set of preferred contacts
    */
-  public void setCalendarPrefs(CalendarPref val);
+  void setCalendarPrefs(CalendarPref val);
 
   /**
    * @return Set of preferred calendars
    */
-  public CalendarPref getCalendarPrefs();
+  CalendarPref getCalendarPrefs();
 }

@@ -28,17 +28,18 @@ import java.util.List;
  *
  */
 public interface BwSysMonitorMBean extends ConfBaseMBean {
-  static final String serviceName = "org.bedework.bwengine:service=BwSysMonitor";
+  String serviceName = "org.bedework.bwengine:service=BwSysMonitor";
 
   /** Display the current counts and values
    *
    * @return List of String
    */
-  public List<String> showValues();
+  @SuppressWarnings("unused")
+  List<String> showValues();
 
   /** Get the current stats
    *
    * @return List of MonitorStat
    */
-  public List<MonitorStat> getStats();
+  List<MonitorStat> getStats();
 }

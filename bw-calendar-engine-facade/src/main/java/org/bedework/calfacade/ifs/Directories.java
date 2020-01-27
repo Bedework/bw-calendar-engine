@@ -49,7 +49,7 @@ public interface Directories extends Serializable {
 
   /** Class to be implemented by caller and passed during init.
    */
-  public static abstract class CallBack implements Serializable {
+  abstract class CallBack implements Serializable {
     /** Get a name uniquely.identifying this system. This should take the form <br/>
      *   name@host
      * <br/>where<ul>
@@ -77,15 +77,16 @@ public interface Directories extends Serializable {
                                       boolean admin);
 
     /**
-     * @param group
+     * @param  group           BwGroup group object
      * @param admin          true for an admin group
      * @return Collection
      */
-    public abstract Collection<BwGroup> findGroupParents(final BwGroup group,
-                                                         boolean admin);
+    public abstract Collection<BwGroup> findGroupParents(
+            final BwGroup group,
+            boolean admin);
 
     /**
-     * @param group
+     * @param  group           BwGroup group object to update
      * @param admin          true for an admin group
      */
     public abstract void updateGroup(final BwGroup group,
@@ -129,8 +130,9 @@ public interface Directories extends Serializable {
      * @return list of members
      * @throws CalFacadeException
      */
-    public abstract Collection<BwPrincipal> getMembers(BwGroup group,
-                                                       boolean admin) throws CalFacadeException;
+    public abstract Collection<BwPrincipal> getMembers(
+            BwGroup group,
+            boolean admin) throws CalFacadeException;
 
     /** Return all groups to which this user has some access. Never returns null.
      *
@@ -155,12 +157,11 @@ public interface Directories extends Serializable {
 
   /** Provide the callback object
    *
-   * @param cb
-   * @param configs
-   * @throws CalFacadeException
+   * @param cb callback
+   * @param configs Configuratiosn object
    */
   void init(CallBack cb,
-            final Configurations configs) throws CalFacadeException;
+            final Configurations configs);
 
   /** Return the name of the configuration properties for the module,
    * e.g "module.user-ldap-group" or "module.dir-config"
@@ -182,29 +183,28 @@ public interface Directories extends Serializable {
    * <p>Sites may wish to override this method to check their directory to see
    * if the principal exists.
    *
-   * @param href
+   * @param href of principal
    * @return true if it's a valid principal
    */
   boolean validPrincipal(String href);
 
   /** Does the value appear to represent a valid principal?
    *
-   * @param val
+   * @param val href of principal
    * @return true if it's a (possible) principal
    */
   boolean isPrincipal(String val);
 
   /** If this is a valid user principal return the account.
    *
-   * @param val
+   * @param val href of principal
    * @return account or null if not valid user principal
-   * @throws CalFacadeException
    */
-  String accountFromPrincipal(String val) throws CalFacadeException;
+  String accountFromPrincipal(String val);
 
   /** Return principal for the given href.
    *
-   * @param href
+   * @param href ofprincipal
    * @return Principal
    * @throws CalFacadeException
    */
@@ -213,9 +213,8 @@ public interface Directories extends Serializable {
   /** Needed for the ischedule service
    *
    * @return the default domain for the service.
-   * @throws CalFacadeException
    */
-  String getDefaultDomain() throws CalFacadeException;
+  String getDefaultDomain();
 
   /** The urls should be principal urls. principalUrl can null for the current user.
    * The result is a collection of principal urls of which the given url is a
@@ -233,13 +232,12 @@ public interface Directories extends Serializable {
                               String principalUrl) throws CalFacadeException;
 
   /**
-   * @param id
+   * @param id account
    * @param whoType - from WhoDefs
    * @return String principal uri
-   * @throws CalFacadeException
    */
   String makePrincipalUri(String id,
-                          int whoType) throws CalFacadeException;
+                          int whoType);
 
   /** Given a uri return a calendar address.
    * This should handle actions such as turning<br/>

@@ -32,10 +32,10 @@ import java.util.List;
  *  @version 1.0
  */
 public class BwSynchConnectorInfo extends SynchConnectorInfoType {
-  List<BwSynchPropertyInfo> props = new ArrayList<BwSynchPropertyInfo>();
+  List<BwSynchPropertyInfo> props = new ArrayList<>();
 
   /**
-   * @param val
+   * @param val XML synch connector info
    * @return one of these initialized from the parameter
    */
   public static BwSynchConnectorInfo copy(final SynchConnectorInfoType val) {
