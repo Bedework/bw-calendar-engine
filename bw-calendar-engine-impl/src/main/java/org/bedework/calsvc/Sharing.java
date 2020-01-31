@@ -364,7 +364,8 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   @Override
-  public void delete(final BwCalendar col) throws CalFacadeException {
+  public void delete(final BwCalendar col,
+                     final boolean sendNotifications) throws CalFacadeException {
     final InviteType invite = getInviteStatus(col);
 
     for (final UserType u: invite.getUsers()) {
@@ -382,7 +383,8 @@ public class Sharing extends CalSvcDb implements SharingI {
             deleteInvite(pr, n);
           }
         }
-      } else if (u.getInviteStatus().equals(Parser.inviteAcceptedTag)) {
+      } else if (sendNotifications &&
+              u.getInviteStatus().equals(Parser.inviteAcceptedTag)) {
         /* Send a notification indicating we deleted/uninvited and remove their
          * alias.
          */
@@ -407,7 +409,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       /* Now we need to remove the alias - in theory we shouldn't have any
        * but do this anyway to clean up */
 
-      removeAlias(col, u.getHref(), true);
+      removeAlias(col, u.getHref(), sendNotifications, true);
     }
   }
 
@@ -791,7 +793,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     note.setPreviousStatus(uentry.getInviteStatus());
 
-    removeAlias(col, uentry.getHref(), false);
+    removeAlias(col, uentry.getHref(), true, false);
 
     return note;
   }
@@ -1157,6 +1159,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
   private void removeAlias(final BwCalendar col,
                            final String shareeHref,
+                           final boolean sendNotifications,
                            final boolean unsubscribe) throws CalFacadeException {
     if (!pushPrincipalReturn(shareeHref)) {
       // Ignore this - it's a bad href
@@ -1169,7 +1172,9 @@ public class Sharing extends CalSvcDb implements SharingI {
 
       if (!Util.isEmpty(cols)) {
         for (final BwCalendar alias: cols) {
-          ((Calendars)getCols()).delete(alias, false, false, true, unsubscribe);
+          ((Calendars)getCols()).delete(alias, false, false,
+                                        sendNotifications,
+                                        unsubscribe);
         }
       }
     } finally {

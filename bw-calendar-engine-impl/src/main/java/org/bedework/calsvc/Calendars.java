@@ -783,7 +783,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     /* Remove any sharing */
     if (val.getCanAlias()) {
-      getSvc().getSharingHandler().delete(val);
+      getSvc().getSharingHandler().delete(val, sendSchedulingMessage);
     }
 
     if (unsubscribe) {
@@ -792,12 +792,14 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     getSvc().getSynch().unsubscribe(val, true);
 
-    /* Remove from preferences */
-    ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true,
-                                                               val,
-                                                               null,
-                                                               null,
-                                                               null);
+    if (!val.getSpecial()) {
+      /* Remove from preferences */
+      ((Preferences)getSvc().getPrefsHandler()).updateAdminPrefs(true,
+                                                                 val,
+                                                                 null,
+                                                                 null,
+                                                                 null);
+    }
 
     /* If it's an alias we just delete it - otherwise we might need to empty it.
      */
@@ -830,6 +832,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
                                        cal.getPath());
         }
       }
+    }
+
+    if (val.getSpecial()) {
+      // Pretend we did but don't
+      return true;
     }
 
     val.getProperties().clear();

@@ -52,9 +52,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -228,7 +226,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    */
 
   private static final List<CollectionInfo> roCollectionInfo =
-     Collections.unmodifiableList(Arrays.asList(collectionInfo));
+          List.of(collectionInfo);
 
   /* Certain collections should be initialised so that they
      restrict the entity types that can be added to them. The
@@ -238,19 +236,13 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   public final static Map<Integer, List<String>> entityTypes;
 
   static {
-    final Map<Integer, List<String>> et = new HashMap<>();
 
-    et.put(calTypeCalendarCollection,
-           Collections.unmodifiableList(
-                   Collections.singletonList("VEVENT")));
-    et.put(calTypePoll,
-           Collections.unmodifiableList(
-                   Collections.singletonList("VPOLL")));
-    et.put(calTypeTasks,
-           Collections.unmodifiableList(
-                   Collections.singletonList("VTODO")));
+    entityTypes = Map.of(
+            calTypeCalendarCollection, List.of("VEVENT"),
 
-    entityTypes = Collections.unmodifiableMap(et);
+            calTypePoll, List.of("VPOLL"),
+
+            calTypeTasks, List.of("VTODO"));
   }
 
   public final static String internalAliasUriPrefix = "bwcal://";

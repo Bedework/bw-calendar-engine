@@ -132,9 +132,11 @@ public interface SharingI extends Serializable {
   /** Do any cleanup necessary for a collection delete.
    *
    * @param col to delete
+   * @param sendNotifications true to notify sharees
    * @throws CalFacadeException on fatal error
    */
-  void delete(final BwCalendar col) throws CalFacadeException;
+  void delete(final BwCalendar col,
+              final boolean sendNotifications) throws CalFacadeException;
 
   /** Publish the collection - that is make it available for subscriptions.
    *
