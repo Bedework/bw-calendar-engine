@@ -126,26 +126,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       // Otherwise we just swallow it
     }
 
-    /* Remove any previous tombstoned version */
-    final BwResource tr = getCal().getResource(r.getHref() + BwResource.tombstonedSuffix,
-                                               PrivilegeDefs.privUnbind);
-
-    if (tr != null) {
-      // Just deleet resource - content was deleted when tombstoned
-      getCal().delete(tr);
-    }
-
-    final BwResourceContent rc = r.getContent();
-
-    r.setContent(null);
-    r.tombstone();
-    r.updateLastmod(getCurrentTimestamp());
-
-    getCal().saveOrUpdate(r);
-
-    if (rc != null) {
-      getCal().deleteContent(r, rc);
-    }
+    getCal().delete(r);
 
     touchCalendar(r.getColPath());
   }
@@ -234,30 +215,12 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       }
 
       if (!copy) {
-        // Delete (tombstone) the old one
+        // Delete the old one
 
         final BwCalendar collFrom = getCols().get(val.getColPath());
         checkAccess(collFrom, PrivilegeDefs.privUnbind, false);
 
-        final BwResourceContent rc = val.getContent();
-
-        getCal().deleteContent(val, rc);
-
-        /* Remove any previous tombstoned version */
-        final BwResource tr =
-                getCal().getResource(val.getHref() +
-                                             BwResource.tombstonedSuffix,
-                                     PrivilegeDefs.privUnbind);
-
-        if (tr != null) {
-          getCal().delete(tr);
-        }
-
-        val.setContent(null);
-        val.tombstone();
-        val.updateLastmod(getCurrentTimestamp());
-
-        getCal().saveOrUpdate(val);
+        getCal().delete(val);
         touchCalendar(val.getColPath());
       }
 

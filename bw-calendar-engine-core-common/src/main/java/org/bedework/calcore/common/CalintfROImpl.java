@@ -220,6 +220,7 @@ public class CalintfROImpl extends CalintfBase
                    final boolean publicAdmin,
                    final boolean publicAuth,
                    final boolean publicSubmission,
+                   final boolean authenticated,
                    final boolean sessionless,
                    final boolean dontKill) throws CalFacadeException {
     if (isOpen) {
@@ -241,12 +242,21 @@ public class CalintfROImpl extends CalintfBase
 
     ac = new CIAccessChecker();
 
-    if (publicAuth) {
+    publicMode = true;
+
+    if (publicAdmin) {
+      currentMode = CalintfDefs.publicAdminMode;
+    } else if (publicAuth) {
       currentMode = CalintfDefs.publicAuthMode;
+    } else if (publicSubmission) {
+      currentMode = CalintfDefs.publicUserMode;
+    } else if (authenticated) {
+      currentMode = CalintfDefs.userMode;
+      publicMode = false;
     } else {
       currentMode = CalintfDefs.guestMode;
-      readOnlyMode = true;
     }
+
   }
 
   @Override

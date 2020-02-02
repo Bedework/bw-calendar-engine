@@ -569,6 +569,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                   pars.getPublicAdmin(),
                   pars.getPublicAuth(),
                   pars.getPublicSubmission(),
+                  authenticated,
                   pars.getSessionsless(),
                   pars.getDontKill());
     if (trace()) {
@@ -1314,6 +1315,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
                 pars.getPublicAdmin(),
                 pars.getPublicAuth(),
                 pars.getPublicSubmission(),
+                authenticated,
                 pars.getSessionsless(),
                 pars.getDontKill()); // Just for the user interactions
 

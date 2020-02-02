@@ -3047,10 +3047,6 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           throws CalFacadeException {
     requireDocType(docType);
 
-    if (debug()) {
-      debug("fetchEntities");
-    }
-
     int tries = 0;
     final int ourCount;
 
@@ -3068,6 +3064,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final SearchRequest sr = new SearchRequest(targetIndex)
             .source(ssb)
             .scroll(new TimeValue(60000));
+
+    if (debug()) {
+      debug("fetchEntities: " + sr);
+    }
 
     final List<T> res = new ArrayList<>();
 

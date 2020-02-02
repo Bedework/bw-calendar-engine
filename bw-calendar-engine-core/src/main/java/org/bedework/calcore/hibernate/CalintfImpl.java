@@ -20,10 +20,7 @@ package org.bedework.calcore.hibernate;
 
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
-import org.bedework.access.CurrentAccess;
-import org.bedework.access.PrivilegeDefs;
 import org.bedework.calcore.common.CalintfROImpl;
-import org.bedework.calcorei.CalintfDefs;
 import org.bedework.calcorei.CalintfInfo;
 import org.bedework.calcorei.CoreEventInfo;
 import org.bedework.calcorei.CoreEventPropertiesI;
@@ -72,7 +69,6 @@ import org.hibernate.stat.Statistics;
 import java.io.StringReader;
 import java.sql.Blob;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -85,7 +81,6 @@ import static java.lang.String.format;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeEvent;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePreferences;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypePrincipal;
-import static org.bedework.calfacade.indexing.BwIndexer.docTypeResourceContent;
 
 /** Implementation of CalIntf which uses hibernate as its persistance engine.
  *
@@ -136,6 +131,8 @@ public class CalintfImpl extends CalintfROImpl {
   private CoreEvents events;
 
   private CoreCalendars calendars;
+
+  private CoreResources resources;
 
   private FilterDefsDAO filterDefs;
 
@@ -191,6 +188,9 @@ public class CalintfImpl extends CalintfROImpl {
                             ac, readOnlyMode, sessionless);
 
     calendars = new CoreCalendars(sess, this,
+                                  ac, readOnlyMode, sessionless);
+
+    resources = new CoreResources(sess, this,
                                   ac, readOnlyMode, sessionless);
 
     access.setCollectionGetter(calendars);
@@ -266,26 +266,17 @@ public class CalintfImpl extends CalintfROImpl {
                    final boolean publicAdmin,
                    final boolean publicAuth,
                    final boolean publicSubmission,
+                   final boolean authenticated,
                    final boolean sessionless,
                    final boolean dontKill) throws CalFacadeException {
     final long start = System.currentTimeMillis();
     super.open(filterParserFetcher, logId, configs, webMode,
                forRestore, indexRebuild,
-               publicAdmin, publicAuth, publicSubmission, sessionless, dontKill);
+               publicAdmin, publicAuth, publicSubmission,
+               authenticated, sessionless, dontKill);
     if (trace()) {
       trace(format("CalintfImpl.open after super.open() %s",
                    System.currentTimeMillis() - start));
-    }
-    readOnlyMode = false;
-
-    if (publicAdmin) {
-      currentMode = CalintfDefs.publicAdminMode;
-    } else if (publicAuth) {
-      currentMode = CalintfDefs.publicAuthMode;
-    } else if (publicSubmission) {
-      currentMode = CalintfDefs.publicUserMode;
-    } else {
-      currentMode = CalintfDefs.userMode;
     }
 
     if ((sess != null) && !webMode) {
@@ -1387,36 +1378,12 @@ public class CalintfImpl extends CalintfROImpl {
   public BwResource getResource(final String href,
                                 final int desiredAccess)
           throws CalFacadeException {
-    final int pos = href.lastIndexOf("/");
-    if (pos <= 0) {
-      throw new RuntimeException("Bad href: " + href);
-    }
-
-    final String name = href.substring(pos + 1);
-
-    final String colPath = href.substring(0, pos);
-
-    if (debug()) {
-      debug("Get resource " + colPath + " -> " + name);
-    }
-    final BwResource res = entityDao.getResource(name, colPath,
-                                                 desiredAccess);
-    if (res == null) {
-      return null;
-    }
-
-    final CurrentAccess ca = checkAccess(res, desiredAccess, true);
-
-    if (!ca.getAccessAllowed()) {
-      return null;
-    }
-
-    return res;
+    return resources.getResource(href, desiredAccess);
   }
 
   @Override
   public void getResourceContent(final BwResource val) throws CalFacadeException {
-    entityDao.getResourceContent(val);
+    resources.getResourceContent(val);
   }
 
   @Override
@@ -1424,68 +1391,48 @@ public class CalintfImpl extends CalintfROImpl {
                                        final boolean forSynch,
                                        final String token,
                                        final int count) throws CalFacadeException {
-    return postProcess(entityDao.getAllResources(path,
-                                                 forSynch,
-                                                 token,
-                                                 count));
+    return resources.getResources(path,
+                                  forSynch,
+                                  token,
+                                  count);
   }
 
   @Override
   public void add(final BwResource val) throws CalFacadeException {
-    entityDao.save(val);
-
-    indexEntity(val);
+    resources.add(val);
   }
 
   @Override
   public void addContent(final BwResource r,
                          final BwResourceContent rc) throws CalFacadeException {
-    entityDao.save(rc);
-
-    indexEntity(rc);
+    resources.addContent(r, rc);
   }
 
   @Override
   public void saveOrUpdate(final BwResource val) throws CalFacadeException {
-    entityDao.saveOrUpdate(val);
-    indexEntity(val);
+    resources.saveOrUpdate(val);
   }
 
   @Override
   public void saveOrUpdateContent(final BwResource r,
                                   final BwResourceContent val) throws CalFacadeException {
-    entityDao.saveOrUpdate(val);
-    indexEntity(val);
+    resources.saveOrUpdateContent(r, val);
   }
 
   @Override
-  public void delete(final BwResource val) throws CalFacadeException {
-    entityDao.delete(val);
-    getIndexer(val).unindexEntity(val.getHref());
+  public void delete(final BwResource r) throws CalFacadeException {
+    resources.delete(r);
   }
 
   @Override
   public void deleteContent(final BwResource r,
                             final BwResourceContent val) throws CalFacadeException {
-    entityDao.delete(val);
-    getIndexer(docTypeResourceContent).unindexEntity(val.getHref());
+    resources.deleteContent(r, val);
   }
 
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
-
-  private List<BwResource> postProcess(final Collection<BwResource> ress) throws CalFacadeException {
-    final List<BwResource> resChecked = new ArrayList<>();
-
-    for (final BwResource res: ress) {
-      if (checkAccess(res, PrivilegeDefs.privRead, true).getAccessAllowed()) {
-        resChecked.add(res);
-      }
-    }
-
-    return resChecked;
-  }
 
   private SessionFactory getSessionFactory() throws CalFacadeException {
     if (sessionFactory != null) {

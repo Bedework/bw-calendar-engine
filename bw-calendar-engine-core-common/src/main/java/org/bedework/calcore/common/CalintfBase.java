@@ -90,8 +90,6 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   protected boolean dontKill;
 
-  protected boolean authenticated;
-
   protected boolean forRestore;
 
   protected boolean indexRebuild;
@@ -116,6 +114,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   //protected BwUser user;
 
   protected int currentMode = CalintfDefs.guestMode;
+  protected boolean publicMode;
   protected boolean readOnlyMode;
 
   /** Ensure we don't open while open
@@ -411,8 +410,7 @@ public abstract class CalintfBase implements Logged, Calintf {
           new HashMap<>();
 
   public BwIndexer getIndexer(final String docType) {
-    if (currentMode == CalintfDefs.publicAdminMode ||
-            readOnlyMode) {
+    if (publicMode) {
       return getPublicIndexer(docType);
     }
 
@@ -423,9 +421,7 @@ public abstract class CalintfBase implements Logged, Calintf {
   public BwIndexer getIndexer(final Object entity) {
     final String docType = docTypeFromClass(entity);
 
-    if (readOnlyMode ||
-            (currentMode == CalintfDefs.publicUserMode) ||
-            (currentMode == CalintfDefs.publicAdminMode)) {
+    if (publicMode) {
       return getPublicIndexer(docType);
     }
 
@@ -442,9 +438,7 @@ public abstract class CalintfBase implements Logged, Calintf {
     if (indexer != null) {
       return indexer;
     }
-    if ((currentMode == CalintfDefs.publicAdminMode) ||
-            (currentMode == CalintfDefs.publicUserMode) ||
-            readOnlyMode) {
+    if (publicMode) {
       return getPublicIndexer(docType);
     }
 
@@ -453,10 +447,8 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   public BwIndexer getIndexer(final String principalHref,
                               final String docType) {
-    if ((currentMode == CalintfDefs.publicAdminMode) ||
-            (currentMode == CalintfDefs.publicUserMode) ||
-            readOnlyMode ||
-            BwPrincipal.publicUserHref.equals(principalHref)) {
+    if (publicMode) {
+// ?????            BwPrincipal.publicUserHref.equals(principalHref)) {
       return getPublicIndexer(docType);
     }
 

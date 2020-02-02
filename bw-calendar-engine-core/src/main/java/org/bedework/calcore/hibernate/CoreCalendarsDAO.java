@@ -43,10 +43,8 @@ class CoreCalendarsDAO extends DAOBase {
   /** Constructor
    *
    * @param sess the session
-   * @throws CalFacadeException on fatal error
    */
-  CoreCalendarsDAO(final HibSession sess)
-          throws CalFacadeException {
+  CoreCalendarsDAO(final HibSession sess) {
     super(sess);
   }
 

@@ -260,10 +260,9 @@ public class ESQueryFilter extends ESQueryFilterBase
             new BwCollectionFilter(null, path);
 
     QueryBuilder fb = buildQuery(cf);
+    QueryBuilder fb1;
 
-    if (lastmod == null) {
-      return fb;
-    }
+    if (lastmod != null) {
 
     /* filter is
        fb AND (lastmod>"lastmod" or
@@ -271,16 +270,24 @@ public class ESQueryFilter extends ESQueryFilterBase
 
      */
 
-    QueryBuilder lmeq =
-            and(termQuery(lastModJname, lastmod),
-                new RangeQueryBuilder(lastModSeqJname).gt(lastmodSeq),
-                null);
+      QueryBuilder lmeq =
+              and(termQuery(lastModJname, lastmod),
+                  new RangeQueryBuilder(lastModSeqJname)
+                          .gt(lastmodSeq),
+                  null);
 
-    QueryBuilder lmor =
-            or(new RangeQueryBuilder(lastModJname).gt(lastmod),
+      fb1 = or(new RangeQueryBuilder(lastModJname).gt(lastmod),
                lmeq);
 
-    return principalQuery(and(fb, lmor, "lmor"));
+      fb = and(fb, fb1, "fb1");
+    } else {
+      // Exclude tombstoned
+
+      fb = termFilter(fb, PropertyInfoIndex.TOMBSTONED,
+                      "false");
+    }
+
+    return principalQuery(fb);
   }
 
   /** Build a filter for a single location identified by the key with
@@ -536,7 +543,7 @@ public class ESQueryFilter extends ESQueryFilterBase
                                  final FilterBase defaultFilterContext,
                                  final DeletedState delState,
                                  final boolean forEvents) throws CalFacadeException {
-    if ((q != null) && (q instanceof MatchNoneQueryBuilder)) {
+    if (q instanceof MatchNoneQueryBuilder) {
       return q;
     }
     
