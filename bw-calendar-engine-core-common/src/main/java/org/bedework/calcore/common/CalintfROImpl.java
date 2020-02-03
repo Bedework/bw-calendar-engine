@@ -1605,6 +1605,32 @@ public class CalintfROImpl extends CalintfBase
    * ==================================================================== */
 
   @Override
+  public GetEntityResponse<BwResource> fetchResource(final String href,
+                                                     final int desiredAccess) {
+    final GetEntityResponse<BwResource> resp = new GetEntityResponse<>();
+
+    try {
+      final BwResource res =
+              getIndexer(BwIndexer.docTypeResource)
+                      .fetchResource(href);
+      if (res == null) {
+        return Response.notFound(resp);
+      }
+
+      final CurrentAccess ca = checkAccess(res, desiredAccess, true);
+
+      if (!ca.getAccessAllowed()) {
+        return Response.notOk(resp, Response.Status.forbidden);
+      }
+
+      resp.setEntity(res);
+      return resp;
+    } catch (final CalFacadeException cfe) {
+      return Response.error(resp, cfe);
+    }
+  }
+
+  @Override
   public BwResource getResource(final String href,
                                 final int desiredAccess) throws CalFacadeException {
     final BwResource res = getIndexer(BwIndexer.docTypeResource).fetchResource(href);
@@ -1662,6 +1688,11 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public void saveOrUpdateContent(final BwResource r,
                                   final BwResourceContent val) throws CalFacadeException {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void deleteResource(final String href) {
     throw new RuntimeException("Read only version");
   }
 

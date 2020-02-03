@@ -108,27 +108,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
   @Override
   public void delete(final String path) throws CalFacadeException {
-    final BwResource r = getCal().getResource(path,
-                                              PrivilegeDefs.privUnbind);
-
-    if (r == null) {
-      throw new CalFacadeException(CalFacadeException.unknownResource, path);
-    }
-
-    try {
-      getContent(r);
-    } catch (final CalFacadeException cfe) {
-      if (!cfe.getMessage().equals(CalFacadeException.missingResourceContent)) {
-        getSvc().rollbackTransaction();
-        throw cfe;
-      }
-
-      // Otherwise we just swallow it
-    }
-
-    getCal().delete(r);
-
-    touchCalendar(r.getColPath());
+    getCal().deleteResource(path);
   }
 
   @Override

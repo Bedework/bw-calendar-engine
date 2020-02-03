@@ -3,6 +3,7 @@ package org.bedework.calcorei;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.misc.response.GetEntityResponse;
 
 import java.util.List;
 
@@ -19,6 +20,15 @@ public interface CoreResourcesI {
    */
   BwResource getResource(final String href,
                          final int desiredAccess) throws CalFacadeException;
+
+  /** Fetch a resource object.
+   *
+   * @param href of resource
+   * @param desiredAccess we need
+   * @return response with status and possible BwResource object
+   */
+  GetEntityResponse<BwResource> fetchResource(final String href,
+                                              final int desiredAccess);
 
   /** Get resource content given the resource. It will be set in the resource
    * object
@@ -69,6 +79,12 @@ public interface CoreResourcesI {
    */
   void saveOrUpdateContent(BwResource r,
                            BwResourceContent val) throws CalFacadeException;
+
+  /**
+   * @param href of resource to delete
+   * @throws RuntimeException on fatal error
+   */
+  void deleteResource(final String href);
 
   /**
    * @param val resource to delete

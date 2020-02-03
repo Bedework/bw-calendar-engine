@@ -11,11 +11,14 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.AccessChecker;
+import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.util.misc.response.Response;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static org.bedework.calfacade.indexing.BwIndexer.docTypeResource;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeResourceContent;
 
 /**
@@ -84,6 +87,46 @@ public class CoreResources extends CalintfHelper
   }
 
   @Override
+  public GetEntityResponse<BwResource> fetchResource(final String href,
+                                                     final int desiredAccess) {
+    final int pos = href.lastIndexOf("/");
+    if (pos <= 0) {
+      throw new RuntimeException("Bad href: " + href);
+    }
+
+    final String name = href.substring(pos + 1);
+
+    final String colPath = href.substring(0, pos);
+
+    if (debug()) {
+      debug("Get resource " + colPath + " -> " + name);
+    }
+
+    final GetEntityResponse<BwResource> resp = new GetEntityResponse<>();
+
+    try {
+      final BwResource res = entityDao.getResource(name, colPath,
+                                                   desiredAccess);
+      if (res == null) {
+        return Response.notFound(resp);
+      }
+
+      final CurrentAccess ca =
+              getAccessChecker()
+                      .checkAccess(res, desiredAccess, true);
+
+      if (!ca.getAccessAllowed()) {
+        return Response.notOk(resp, Response.Status.forbidden);
+      }
+
+      resp.setEntity(res);
+      return resp;
+    } catch (final CalFacadeException cfe) {
+      return Response.error(resp, cfe);
+    }
+  }
+
+  @Override
   public void getResourceContent(final BwResource val) throws CalFacadeException {
     entityDao.getResourceContent(val);
   }
@@ -130,6 +173,41 @@ public class CoreResources extends CalintfHelper
   }
 
   @Override
+  public void deleteResource(final String href) {
+    // if it exists we'll try to delete.
+    // If not we'll try to unindex.
+    final GetEntityResponse<BwResource> ger =
+            fetchResource(href, PrivilegeDefs.privUnbind);
+
+    if (ger.isOk()) {
+      try {
+        delete(ger.getEntity());
+      } catch (final CalFacadeException cfe) {
+        // ignore - we'll probably fail later
+      }
+
+      return;
+    }
+
+    if (ger.getStatus() != Response.Status.notFound) {
+      return; // ignore
+    }
+
+    /* It's not in the db. It might be in the index if there was some
+       previous error. We will have reported it for e.g. a propfind
+       Unindex it.
+     */
+
+    try {
+      intf.getIndexer(docTypeResource).unindexEntity(href);
+      intf.getIndexer(docTypeResourceContent).unindexEntity(href);
+    } catch (final CalFacadeException cfe) {
+      error(cfe);
+      return;
+    }
+  }
+
+  @Override
   public void delete(final BwResource r) throws CalFacadeException {
     removeTombstoned(r);
 
@@ -146,6 +224,7 @@ public class CoreResources extends CalintfHelper
     }
 
     intf.indexEntity(r);
+    intf.touchCalendar(r.getColPath());
   }
 
   @Override

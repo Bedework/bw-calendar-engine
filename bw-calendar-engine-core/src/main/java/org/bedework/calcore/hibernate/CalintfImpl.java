@@ -1420,6 +1420,11 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
+  public void deleteResource(final String href) {
+    resources.deleteResource(href);
+  }
+
+  @Override
   public void delete(final BwResource r) throws CalFacadeException {
     resources.delete(r);
   }
