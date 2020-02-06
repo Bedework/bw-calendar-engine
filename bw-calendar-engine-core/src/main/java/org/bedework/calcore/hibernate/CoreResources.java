@@ -203,13 +203,15 @@ public class CoreResources extends CalintfHelper
       intf.getIndexer(docTypeResourceContent).unindexEntity(href);
     } catch (final CalFacadeException cfe) {
       error(cfe);
-      return;
     }
   }
 
   @Override
   public void delete(final BwResource r) throws CalFacadeException {
     removeTombstoned(r);
+
+    // Have to unindex - the name gets changed with a suffix.
+    intf.getIndexer(docTypeResource).unindexEntity(r.getHref());
 
     final BwResourceContent rc = r.getContent();
 
