@@ -45,6 +45,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.SharingI;
+import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Uid;
 import org.bedework.util.misc.Util;
 import org.bedework.util.xml.tagdefs.AppleServerTags;
@@ -110,6 +111,14 @@ public class Sharing extends CalSvcDb implements SharingI {
                          final boolean forRead) {
       this.pr = pr;
       this.forRead = forRead;
+    }
+
+    public String toString() {
+      final ToString ts = new ToString(this);
+      ts.append("pr", pr.getHref())
+        .append("foRead", forRead);
+
+      return ts.toString();
     }
   }
 
@@ -186,6 +195,9 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     if (!addedSharee && !removedSharee) {
       // Nothing changed
+      if (debug()) {
+        debug("No changes to sharing status");
+      }
       return sr;
     }
 
@@ -268,6 +280,9 @@ public class Sharing extends CalSvcDb implements SharingI {
       }
 
       for (final AddPrincipal ap: addPrincipals) {
+        if (debug()) {
+          debug("Set col access for " + ap);
+        }
         setAccess(col, ap);
       }
     } catch (final CalFacadeException cfe) {
@@ -943,6 +958,9 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     if (uentry != null) {
       if (uentry.getInviteStatus().equals(Parser.inviteNoresponseTag)) {
+        if (debug()) {
+          debug("Invite found for " + sh.href);
+        }
         // Already an outstanding invitation
         final NotificationType n = findInvite(sh.pr, col.getPath());
 
@@ -952,10 +970,16 @@ public class Sharing extends CalSvcDb implements SharingI {
 
           if (in.getAccess().equals(s.getAccess())) {
             // In their collection - no need to resend.
+            if (debug()) {
+              debug("Invite already there for " + sh.href);
+            }
             return null;
           }
 
           /* Delete the old notification - we're changing the access */
+          if (debug()) {
+            debug("Delete invite for " + sh.href);
+          }
           deleteInvite(sh.pr, n);
         }
       }
@@ -988,6 +1012,9 @@ public class Sharing extends CalSvcDb implements SharingI {
       uentry.setInviteStatus(in.getInviteStatus());
       uentry.setAccess(in.getAccess());
     } else {
+      if (debug()) {
+        debug("Add new uentry for " + sh.href);
+      }
       uentry = new UserType();
 
       uentry.setHref(sh.href);
