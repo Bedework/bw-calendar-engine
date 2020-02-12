@@ -89,7 +89,7 @@ public class PublicProcessor extends Crawler {
   }
 
   @Override
-  public void process() throws CalFacadeException {
+  public void process() {
     try (BwSvc bw = getBw()) {
       final CalSvcI svc = bw.getSvci();
 
@@ -169,6 +169,8 @@ public class PublicProcessor extends Crawler {
                          svc.getFiltersHandler().reindex(getIndexer(svc, principal,
                                                                     docTypeFilter)));
       }
+    } catch (final Throwable t) {
+      error(t);
     }
   }
 

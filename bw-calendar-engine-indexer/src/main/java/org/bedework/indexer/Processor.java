@@ -40,13 +40,13 @@ public interface Processor {
    *
    * @throws CalFacadeException on fatal error
    */
-  public void start() throws CalFacadeException;
+  void start() throws CalFacadeException;
 
   /** Wait for any processes to stop.
    *
    * @throws CalFacadeException on fatal error
    */
-  public void join() throws CalFacadeException;
+  void join() throws CalFacadeException;
 
   /** Stop processing entries. A call to start will start from the beginning. A
    * call to restart will restart with the last entry being processed. A call to
@@ -54,23 +54,22 @@ public interface Processor {
    *
    * @throws CalFacadeException on fatal error
    */
-  public void stop() throws CalFacadeException;
+  void stop() throws CalFacadeException;
 
   /** Start from where we left off
    *
    * @throws CalFacadeException on fatal error
    */
-  public void restart() throws CalFacadeException;
+  void restart() throws CalFacadeException;
 
   /** Start with the next entry on the list
    * @throws CalFacadeException on fatal error
    */
-  public void restartNext() throws CalFacadeException;
+  void restartNext() throws CalFacadeException;
 
   /** Do whatever this processor is supposed to do. usually called from a
    * Thread object.
    *
-   * @throws CalFacadeException on fatal error
    */
-  public void process() throws CalFacadeException;
+  void process();
 }

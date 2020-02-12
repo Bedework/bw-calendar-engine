@@ -18,7 +18,6 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calfacade.svc.EventInfo;
@@ -49,7 +48,6 @@ public class EntityProcessor extends Crawler {
    * @param path for collection
    * @param entityNames paths to index
    * @param indexNames - where we build the index
-   * @throws CalFacadeException
    */
   public EntityProcessor(final CrawlStatus status,
                          final String name,
@@ -58,51 +56,46 @@ public class EntityProcessor extends Crawler {
                          final long entityDelay,
                          final String path,
                          final Collection<String> entityNames,
-                         final Map<String, String> indexNames) throws CalFacadeException {
+                         final Map<String, String> indexNames) {
     super(status, name, adminAccount,
           principal, 0, entityDelay, null, indexNames);
     this.path = path;
     this.entityNames = entityNames;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Thread#run()
-   */
   @Override
-  public void process() throws CalFacadeException {
-    try {
-      try (BwSvc bw = getBw()) {
-        final CalSvcI svci = bw.getSvci();
+  public void process() {
+    try (BwSvc bw = getBw()) {
+      final CalSvcI svci = bw.getSvci();
 
-        final BwIndexer entIndexer = getIndexer(svci,
-                                                principal,
-                                                BwIndexer.docTypeEvent);
+      final BwIndexer entIndexer = getIndexer(svci,
+                                              principal,
+                                              BwIndexer.docTypeEvent);
 
-        for (final String name: entityNames) {
-          try {
-            if (debug()) {
-              debug("Indexing collection " + path +
-                       " entity " + name);
-            }
+      for (final String name: entityNames) {
+        try {
+          if (debug()) {
+            debug("Indexing collection " + path +
+                          " entity " + name);
+          }
 
-            status.stats.inc(IndexedType.events);
-            final EventInfo ent =
-                    svci.getEventsHandler().get(path, name);
+          status.stats.inc(IndexedType.events);
+          final EventInfo ent =
+                  svci.getEventsHandler().get(path, name);
 
-            if (ent == null) {
-              status.stats.inc(IndexedType.unreachableEntities);
-              continue;
-            }
-            entIndexer.indexEntity(ent);
-          } catch (final Throwable t) {
-            error(t);
+          if (ent == null) {
+            status.stats.inc(IndexedType.unreachableEntities);
+            continue;
+          }
+          entIndexer.indexEntity(ent);
+        } catch (final Throwable t) {
+          error(t);
 
-            errors++;
+          errors++;
 
-            if (errors > maxErrors) {
-              error("Too many errors (" + errors + "): terminating");
-              break;
-            }
+          if (errors > maxErrors) {
+            error("Too many errors (" + errors + "): terminating");
+            break;
           }
         }
       }

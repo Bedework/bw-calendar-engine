@@ -18,7 +18,6 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
@@ -35,11 +34,10 @@ public class IndexerThread extends Thread implements Logged {
    * @param name
    * @param tpool
    * @param proc
-   * @throws CalFacadeException
    */
   public IndexerThread(final String name,
                        final ThreadPool tpool,
-                       final Processor proc) throws CalFacadeException {
+                       final Processor proc) {
     super(tpool.getThreadGroup(), name);
     this.proc = proc;
     this.tpool = tpool;
@@ -49,8 +47,6 @@ public class IndexerThread extends Thread implements Logged {
   public void run() {
     try {
       proc.process();
-    } catch (Throwable t) {
-      error(t);
     } finally {
       tpool.completed(this);
     }

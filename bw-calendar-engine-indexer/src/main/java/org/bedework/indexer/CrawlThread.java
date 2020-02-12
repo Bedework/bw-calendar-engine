@@ -37,12 +37,7 @@ public class CrawlThread extends Thread implements Logged {
 
   @Override
   public void run() {
-    try {
-      proc.process();
-    } catch (Throwable t) {
-      error(t);
-    } finally {
-    }
+    proc.process();
   }
 
   /* ====================================================================

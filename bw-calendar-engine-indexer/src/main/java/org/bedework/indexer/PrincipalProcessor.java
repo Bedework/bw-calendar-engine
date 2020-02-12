@@ -20,7 +20,6 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calsvci.CalSvcI;
@@ -65,7 +64,6 @@ public class PrincipalProcessor extends Crawler {
    * @param indexNames - where we build the index
    * @param docType - if non-null only index this type. Cannot
    *                    be collection or events types
-   * @throws CalFacadeException on fatal error
    */
   public PrincipalProcessor(final CrawlStatus status,
                             final String name,
@@ -75,7 +73,7 @@ public class PrincipalProcessor extends Crawler {
                             final long entityDelay,
                             final List<String> skipPaths,
                             final Map<String, String> indexNames,
-                            final String docType) throws CalFacadeException {
+                            final String docType) {
     super(status, name, adminAccount,
           principal, batchDelay, entityDelay, skipPaths, indexNames);
 
@@ -83,7 +81,7 @@ public class PrincipalProcessor extends Crawler {
   }
 
   @Override
-  public void process() throws CalFacadeException {
+  public void process() {
     /* Index the current principal
      */
 
@@ -166,6 +164,8 @@ public class PrincipalProcessor extends Crawler {
                          svc.getFiltersHandler().reindex(getIndexer(svc, principal,
                                                                     docTypeFilter)));
       }
+    } catch (final Throwable t) {
+      error(t);
     }
   }
 

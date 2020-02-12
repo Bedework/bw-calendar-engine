@@ -21,7 +21,6 @@ package org.bedework.indexer;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calsvci.CalSvcI;
@@ -139,13 +138,13 @@ public abstract class ProcessorBase extends CalSys
   }
 
   protected void indexCollection(final CalSvcI svci,
-                                 final String path) throws CalFacadeException {
+                                 final String path) {
     indexCollection(svci, path, true);
   }
 
   protected void indexCollection(final CalSvcI svci,
                                  final String path,
-                                 final boolean doChildren) throws CalFacadeException {
+                                 final boolean doChildren) {
     if (skipThis(path)) {
       if (debug()) {
         debug("Skipping " + path);
