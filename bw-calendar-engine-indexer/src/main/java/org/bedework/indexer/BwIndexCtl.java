@@ -79,6 +79,7 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       try {
         is = app.getIndexInfo();
       } catch (final Throwable t) {
+        error(t);
         info(" * Exception getting index info:");
         info(" * " + t.getLocalizedMessage());
       }
