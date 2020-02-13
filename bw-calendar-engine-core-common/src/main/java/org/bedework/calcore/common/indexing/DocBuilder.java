@@ -850,11 +850,14 @@ public class DocBuilder extends DocBuilderBase {
       }
 
       if (ent instanceof BwEvent) {
+        /*
+          Index suggested to so we can search for them. Does not need
+          special treatment restoring it.
+         */
         final List<SuggestedTo> suggs = ((BwEvent)ent).getSuggested();
 
         if (!Util.isEmpty(suggs)) {
-          startArray(interestingXprops.get(getJname(
-                  PropertyInfoIndex.SUGGESTED_TO)));
+          startArray(getJname(PropertyInfoIndex.SUGGESTED_TO));
 
           for (final SuggestedTo sugg: suggs) {
             value(String.valueOf(sugg.getStatus()) +

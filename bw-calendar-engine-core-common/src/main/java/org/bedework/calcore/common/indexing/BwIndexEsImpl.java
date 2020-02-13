@@ -3268,7 +3268,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     try {
       if (rec instanceof EventInfo) {
         mustBe(docTypeEvent);
-        return indexEvent((EventInfo)rec);
+        return indexEvent((EventInfo)rec, waitForIt);
       }
 
       final DocBuilder db = getDocBuilder();
@@ -3387,7 +3387,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     return null;
   }
 
-  private IndexResponse indexEvent(final EventInfo ei) throws CalFacadeException {
+  private IndexResponse indexEvent(final EventInfo ei,
+                                   final boolean waitForIt) throws CalFacadeException {
     try {
 
       /* If it's not recurring or a stand-alone instance index it */
@@ -3403,7 +3404,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                           ItemKind.master,
                           ev.getDtstart(),
                           ev.getDtend(),
-                          null); //ev.getRecurrenceId(),
+                          null,
+                          waitForIt); //ev.getRecurrenceId(),
       }
 
       if (ev.getRecurrenceId() != null) {
@@ -3447,7 +3449,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                              ItemKind.master,
                                              start,
                                              end,
-                                             null);
+                                             null,
+                                             waitForIt);
       //</editor-fold>
 
       return iresp;
@@ -3702,7 +3705,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                    final ItemKind kind,
                                    final BwDateTime start,
                                    final BwDateTime end,
-                                   final String recurid) throws CalFacadeException {
+                                   final String recurid,
+                                   final boolean waitForIt) throws CalFacadeException {
     try {
       final DocBuilder db = getDocBuilder();
       final EsDocInfo di = db.makeDoc(ei,
@@ -3711,7 +3715,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                       end,
                                       recurid);
 
-      return indexDoc(di, true); //ei.getEvent().getTombstoned());
+      return indexDoc(di, waitForIt); //ei.getEvent().getTombstoned());
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final VersionConflictEngineException vcee) {

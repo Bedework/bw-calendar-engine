@@ -688,12 +688,16 @@ public class EntityBuilder extends EntityBuilderBase {
           for (final String xval: xvals) {
             final int pos = xval.indexOf("\t");
             String pars = null;
+            final String val;
 
             if (pos > 0) {
               pars = xval.substring(0, pos);
+              val = xval.substring(pos + 1);
+            } else {
+              val = xval;
             }
 
-            final BwXproperty xp = new BwXproperty(xpname, pars, xval.substring(pos + 1));
+            final BwXproperty xp = new BwXproperty(xpname, pars, val);
             xprops.add(xp);
           }
         }
