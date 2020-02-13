@@ -731,10 +731,9 @@ public class EntityBuilder extends EntityBuilderBase {
     return xprops;
   }
 
-  @SuppressWarnings("unchecked")
   private void restoreReqStat(final BwEvent ev) {
-    final Collection<String> vals =
-            (Collection)getFieldValues(PropertyInfoIndex.REQUEST_STATUS);
+    final List<String> vals =
+            getStringList(getJname(PropertyInfoIndex.REQUEST_STATUS));
     if (Util.isEmpty(vals)) {
       return;
     }
