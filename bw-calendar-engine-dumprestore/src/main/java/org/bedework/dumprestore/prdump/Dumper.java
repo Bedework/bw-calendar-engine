@@ -240,7 +240,8 @@ public class Dumper implements Logged {
       }
 
       if (!f.mkdirs()) {
-        throw new CalFacadeException("Unable to create directory " + p);
+        return notOk(resp, Status.failed,
+                     "Unable to create directory " + p);
       }
 
       pushPath(p.toString());

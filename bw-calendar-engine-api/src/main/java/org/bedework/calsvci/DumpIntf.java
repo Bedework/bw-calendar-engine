@@ -212,7 +212,7 @@ public interface DumpIntf {
    * @return Iterator over entities
    * @throws CalFacadeException on error
    */
-  Iterator getViews() throws CalFacadeException;
+  Iterator<?> getViews() throws CalFacadeException;
 
   /** Prepare for dumping of the given principal - used by the 
    * file dump

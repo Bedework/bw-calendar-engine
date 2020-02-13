@@ -35,6 +35,7 @@ import java.io.Writer;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.TreeSet;
 
 import javax.xml.namespace.QName;
@@ -60,7 +61,7 @@ public class DumpEntity<T> implements Logged {
   }
 
   /** Override this if we want to optionally suppress the dump based on some
-   * attributes. This allows us to skip empty objects which occassionally turn
+   * attributes. This allows us to skip empty objects which occasionally turn
    * up.
    *
    * @return boolean true to continue with dump.
@@ -138,7 +139,7 @@ public class DumpEntity<T> implements Logged {
 
   /** Dump the entire entity.
    *
-   * @param xml
+   * @param xml emitter
    * @throws CalFacadeException
    */
   @NoWrap
@@ -152,14 +153,15 @@ public class DumpEntity<T> implements Logged {
 
   /** Dump this entity as xml.
    *
-   * @param xml
+   * @param xml emitter
    * @param dtype
    * @param fromCollection  true if the value is a member of a collection
    * @throws CalFacadeException
    */
   @NoWrap
-  private void dump(final XmlEmit xml, final DumpType dtype,
-                   final boolean fromCollection) throws CalFacadeException {
+  private void dump(final XmlEmit xml,
+                    final DumpType dtype,
+                    final boolean fromCollection) throws CalFacadeException {
     if (!hasDumpValue()) {
       return;
     }
@@ -178,14 +180,12 @@ public class DumpEntity<T> implements Logged {
           return;
         }
 
-        noDumpMethods = new ArrayList<String>();
-        for (String m: ndCl.value()) {
-          noDumpMethods.add(m);
-        }
+        noDumpMethods = new ArrayList<>();
+        Collections.addAll(noDumpMethods, ndCl.value());
       }
 
       if (!dumpKeyFields && (dCl != null) && (dCl.firstFields().length != 0)) {
-        firstMethods = new ArrayList<String>();
+        firstMethods = new ArrayList<>();
         for (String f: dCl.firstFields()) {
           firstMethods.add(methodName(f));
         }
@@ -250,7 +250,8 @@ public class DumpEntity<T> implements Logged {
    *                   Private methods
    * ==================================================================== */
 
-  private boolean dumpValue(final XmlEmit xml, final Method m, final Dump d,
+  private boolean dumpValue(final XmlEmit xml,
+                            final Method m, final Dump d,
                             final Object methVal,
                             final boolean fromCollection) throws Throwable {
     /* We always open the methodName or elementName tag if this is the method
@@ -258,10 +259,10 @@ public class DumpEntity<T> implements Logged {
      *
      * If this is an element from a collection we generally don't want a tag.
      *
-     * We do open a tag if the annottaion specifies a collectionElementName
+     * We do open a tag if the annotation specifies a collectionElementName
      */
     if (methVal instanceof DumpEntity) {
-      DumpEntity de = (DumpEntity)methVal;
+      DumpEntity<?> de = (DumpEntity<?>)methVal;
 
       if (!de.hasDumpValue()) {
         return false;
@@ -288,7 +289,7 @@ public class DumpEntity<T> implements Logged {
     }
 
     if (methVal instanceof Collection) {
-      Collection c = (Collection)methVal;
+      Collection<?> c = (Collection<?>)methVal;
 
       if (c.isEmpty()) {
         return false;
@@ -298,7 +299,7 @@ public class DumpEntity<T> implements Logged {
 
       for (Object o: c) {
         if ((o instanceof DumpEntity) &&
-            (!((DumpEntity)o).hasDumpValue())) {
+            (!((DumpEntity<?>)o).hasDumpValue())) {
           continue;
         }
 
@@ -321,7 +322,9 @@ public class DumpEntity<T> implements Logged {
     return true;
   }
 
-  private QName startElement(final XmlEmit xml, final Class c, final Dump d) throws CalFacadeException {
+  private QName startElement(final XmlEmit xml,
+                             final Class<?> c,
+                             final Dump d) throws CalFacadeException {
     try {
       QName qn;
 
@@ -338,7 +341,9 @@ public class DumpEntity<T> implements Logged {
     }
   }
 
-  private QName startElement(final XmlEmit xml, final Method m, final Dump d,
+  private QName startElement(final XmlEmit xml,
+                             final Method m,
+                             final Dump d,
                              final boolean fromCollection) throws CalFacadeException {
     try {
       QName qn = getTag(m, d, fromCollection);
@@ -455,21 +460,19 @@ public class DumpEntity<T> implements Logged {
         }
 
         noDumpMethods = new ArrayList<String>();
-        for (String m: ndCl.value()) {
-          noDumpMethods.add(m);
-        }
+        Collections.addAll(noDumpMethods, ndCl.value());
       }
 
       if (!dumpKeyFields && (dCl != null) && (dCl.firstFields().length != 0)) {
-        firstMethods = new ArrayList<String>();
+        firstMethods = new ArrayList<>();
         for (String f: dCl.firstFields()) {
           firstMethods.add(methodName(f));
         }
       }
 
+      /*
       QName qn = null;
 
-      /*
       if (dtype != DumpType.compound) {
         qn = startElement(xml, getClass(), dCl);
       }
@@ -544,7 +547,7 @@ public class DumpEntity<T> implements Logged {
   private Collection<ComparableMethod> findGetters(final Dump d,
                                                    final DumpType dt) throws CalFacadeException {
     Method[] meths = getClass().getMethods();
-    Collection<ComparableMethod> getters = new TreeSet<ComparableMethod>();
+    Collection<ComparableMethod> getters = new TreeSet<>();
     Collection<String> keyMethods = null;
 
     if (dt == DumpType.reference) {
@@ -552,15 +555,13 @@ public class DumpEntity<T> implements Logged {
         error("No key fields defined for class " + getClass().getCanonicalName());
         throw new CalFacadeException(CalFacadeException.noKeyFields);
       }
-      keyMethods = new ArrayList<String>();
+      keyMethods = new ArrayList<>();
       for (String f: d.keyFields()) {
         keyMethods.add(methodName(f));
       }
     }
 
-    for (int i = 0; i < meths.length; i++) {
-      Method m = meths[i];
-
+    for (Method m : meths) {
       String mname = m.getName();
 
       if (mname.length() < 4) {
@@ -578,7 +579,7 @@ public class DumpEntity<T> implements Logged {
       }
 
       /* No parameters */
-      Class[] parClasses = m.getParameterTypes();
+      Class<?>[] parClasses = m.getParameterTypes();
       if (parClasses.length != 0) {
         continue;
       }

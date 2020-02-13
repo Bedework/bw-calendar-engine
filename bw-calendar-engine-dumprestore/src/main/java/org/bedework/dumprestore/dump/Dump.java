@@ -243,13 +243,12 @@ public class Dump implements Logged, Defs {
  }
 
   /**
-   * @throws Throwable on error
    */
-  public void getConfigProperties() throws Throwable {
+  public void getConfigProperties() {
     globals.init(new CalSvcFactoryDefault().getSystemConfig().getBasicSystemProperties());
   }
 
-  private CalSvcI getSvci() throws Throwable {
+  private CalSvcI getSvci() {
     final CalSvcIPars pars =
             new CalSvcIPars("dump",
                             adminUserAccount,

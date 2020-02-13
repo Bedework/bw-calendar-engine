@@ -48,6 +48,7 @@ import net.fortuna.ical4j.model.property.LastModified;
 import org.w3c.dom.Element;
 
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -583,7 +584,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   public boolean addCategory(final BwCategory val) {
     Set<BwCategory> cats = getCategories();
     if (cats == null) {
-      cats = new TreeSet<BwCategory>();
+      cats = new TreeSet<>();
       setCategories(cats);
     }
 
@@ -620,13 +621,8 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     if (getNumCategories() == 0) {
       return null;
     }
-    TreeSet<BwCategory> ts = new TreeSet<BwCategory>();
 
-    for (BwCategory cat: getCategories()) {
-      ts.add(cat);
-    }
-
-    return ts;
+    return new TreeSet<>(getCategories());
   }
 
   @Override
@@ -634,7 +630,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     if (getNumCategories() == 0) {
       return null;
     }
-    TreeSet<BwCategory> ts = new TreeSet<BwCategory>();
+    TreeSet<BwCategory> ts = new TreeSet<>();
 
     for (BwCategory cat: getCategories()) {
       ts.add((BwCategory)cat.clone());
@@ -751,29 +747,20 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    *                   Property methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#setProperties(java.util.Set)
-   */
   @Override
   public void setProperties(final Set<BwProperty> val) {
     properties = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#getProperties()
-   */
   @Override
   @Dump(collectionElementName = "property", compound = true)
   public Set<BwProperty> getProperties() {
     return properties;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#getProperties(java.lang.String)
-   */
   @Override
   public Set<BwProperty> getProperties(final String name) {
-    TreeSet<BwProperty> ps = new TreeSet<BwProperty>();
+    TreeSet<BwProperty> ps = new TreeSet<>();
 
     if (getNumProperties() == 0) {
       return null;
@@ -788,9 +775,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return ps;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#removeProperties(java.lang.String)
-   */
   @Override
   public void removeProperties(final String name) {
     final Set<BwProperty> ps = getProperties(name);
@@ -804,9 +788,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#getNumProperties()
-   */
   @Override
   @NoDump
   public int getNumProperties() {
@@ -839,13 +820,11 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   public void addProperty(final BwProperty val) {
     Set<BwProperty> c = getProperties();
     if (c == null) {
-      c = new TreeSet<BwProperty>();
+      c = new TreeSet<>();
       setProperties(c);
     }
 
-    if (!c.contains(val)) {
-      c.add(val);
-    }
+    c.add(val);
   }
 
   @Override
@@ -858,21 +837,13 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return c.remove(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#copyProperties()
-   */
   @Override
   public Set<BwProperty> copyProperties() {
     if (getNumProperties() == 0) {
       return null;
     }
-    final TreeSet<BwProperty> ts = new TreeSet<BwProperty>();
 
-    for (final BwProperty p: getProperties()) {
-      ts.add(p);
-    }
-
-    return ts;
+    return new TreeSet<>(getProperties());
   }
 
   @Override
@@ -880,7 +851,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     if (getNumProperties() == 0) {
       return null;
     }
-    TreeSet<BwProperty> ts = new TreeSet<BwProperty>();
+    TreeSet<BwProperty> ts = new TreeSet<>();
 
     for (BwProperty p: getProperties()) {
       ts.add((BwProperty)p.clone());
@@ -972,7 +943,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   @NoDump
   public List<String> getVpollSupportedComponents() {
     if (vpollSupportedComponents == null) {
-      vpollSupportedComponents = new ArrayList<String>();
+      vpollSupportedComponents = new ArrayList<>();
 
       if ((getCalType() != calTypePoll) &&
           (getCalType() != calTypeInbox) &&
@@ -988,9 +959,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
         //vpollSupportedComponents.add("VAVAILABILITY");
       } else {
         String[] ss = slist.split(",");
-        for (String s: ss) {
-          vpollSupportedComponents.add(s);
-        }
+        vpollSupportedComponents.addAll(Arrays.asList(ss));
       }
     }
 
@@ -999,7 +968,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /** Set the calendar color property
    *
-   * @param val
+   * @param val color
    */
   public void setColor(final String val) {
     if (Util.checkNull(val) == null) {
@@ -1023,9 +992,9 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   static final String subscriptionIdProperty = "org.bedework.subscriptionId";
 
-  /** Set the event list
+  /** Set the subscription id
    *
-   * @param val
+   * @param val subscription id
    */
   public void setSubscriptionId(final String val) {
     if (Util.checkNull(val) == null) {
@@ -1062,7 +1031,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    */
   @NoDump
   public boolean getSynchAdminCreateEprops() {
-    return Boolean.valueOf(getProperty(
+    return Boolean.parseBoolean(getProperty(
             BedeworkServerTags.synchAdminCreateEpropsProperty.getLocalPart()));
   }
 
@@ -1081,7 +1050,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    */
   @NoDump
   public boolean getSynchXlocXcontacts() {
-    return Boolean.valueOf(getProperty(
+    return Boolean.parseBoolean(getProperty(
             BedeworkServerTags.synchXlocXcontacts.getLocalPart()));
   }
 
@@ -1100,7 +1069,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    */
   @NoDump
   public boolean getSynchXcategories() {
-    return Boolean.valueOf(getProperty(
+    return Boolean.parseBoolean(getProperty(
             BedeworkServerTags.synchXcategories.getLocalPart()));
   }
 
@@ -1119,13 +1088,13 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    */
   @NoDump
   public boolean getSynchDeleteSuppressed() {
-    return Boolean.valueOf(getProperty(
+    return Boolean.parseBoolean(getProperty(
             BedeworkServerTags.synchDeleteSuppressed.getLocalPart()));
   }
 
   /** Set the calendar timezone property
    *
-   * @param val
+   * @param val calendar timezone property
    */
   public void setTimezone(final String val) {
     if (val == null) {
@@ -1216,13 +1185,13 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    */
   @NoDump
   public boolean getOrgSyncPublicOnly() {
-    return Boolean.valueOf(getQproperty(
+    return Boolean.parseBoolean(getQproperty(
             BedeworkServerTags.orgSyncPublicOnly));
   }
 
   /** Set the topical area property
    *
-   * @param val
+   * @param val topical area property
    */
   public void setIsTopicalArea(final boolean val) {
     setProperty(BedeworkServerTags.isTopicalArea.getLocalPart(),
@@ -1235,7 +1204,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    */
   @NoDump
   public boolean getIsTopicalArea() {
-    return Boolean.valueOf(getProperty(
+    return Boolean.parseBoolean(getProperty(
          BedeworkServerTags.isTopicalArea.getLocalPart()));
   }
 
@@ -1245,15 +1214,15 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    * ==================================================================== */
 
   /**
-   * @param name
-   * @param val
+   * @param name QName
+   * @param val its value
    */
   public void setQproperty(final QName name, final String val) {
     setProperty(NamespaceAbbrevs.prefixed(name), val);
   }
 
   /**
-   * @param name
+   * @param name QName
    * @return value or null
    */
   public String getQproperty(final QName name) {
@@ -1261,7 +1230,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   }
 
   /**
-   * @param name
+   * @param name QName
    */
   public void removeQproperty(final QName name) {
     BwProperty p = findProperty(NamespaceAbbrevs.prefixed(name));
@@ -1273,7 +1242,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /* ====================================================================
    *                   Event list methods
-   * We store a list of event names in as man property entities as we need.
+   * We store a list of event names in as many property entities as we need.
    * We limit the length of each entity and try to pack in a few more by
    * not duplicating paths.
    * ==================================================================== */
@@ -1283,7 +1252,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /** Set the event list property
    *
-   * @param val
+   * @param val event list
    */
   public void setEventList(final SortedSet<EventListEntry> val) {
     String currentPath = null;
@@ -1424,11 +1393,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
       var lm = getLastmod();
       var micros = new LastModified(lm.getTimestamp()).getDate().getTime();
       var seq = lm.getSequence();
-      var res = micros * 1000000 + seq;
-
-      // debug("version: " + getPath() + " " + micros + " " + seq + " " + res);
-
-      return res;
+      return micros * 1000000 + seq;
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -1519,7 +1484,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    * @throws CalFacadeException
    */
   public void setDisabled(final boolean val) throws CalFacadeException {
-    throw new CalFacadeException("org.bedework.wrapper.method.called");
+    throw new RuntimeException("org.bedework.wrapper.method.called");
   }
 
   /**
@@ -1706,12 +1671,12 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   @NoDump
   @NoWrap
   public boolean getShared() {
-    return Boolean.valueOf(getQproperty(AppleServerTags.shared));
+    return Boolean.parseBoolean(getQproperty(AppleServerTags.shared));
   }
 
   /** Mark this collection shared or unshared
    *
-   * @param val
+   * @param val true for shared
    */
   @NoProxy
   @NoDump
@@ -1732,12 +1697,12 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
   @NoDump
   @NoWrap
   public boolean getSharedWritable() {
-    return Boolean.valueOf(getQproperty(AppleServerTags.readWrite));
+    return Boolean.parseBoolean(getQproperty(AppleServerTags.readWrite));
   }
 
-  /** Mark this collection shared or unshared
+  /** Mark this collection writable
    *
-   * @param val
+   * @param val true for writable
    */
   @NoProxy
   @NoDump
@@ -1764,7 +1729,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
 
   /** Check a possible name for validity
    *
-   * @param val
+   * @param val name to check
    * @return  boolean true for valid calendar name
    */
   public static boolean checkName(final String val) {
@@ -1794,17 +1759,16 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    *
    * XXX This should not be here
    * @return String encoded url (or path)
-   * @throws CalFacadeException
    */
   @NoDump
-  public String getEncodedPath() throws CalFacadeException {
+  public String getEncodedPath() {
     if (getPath() == null) {
       return null;
     }
     try {
-      return URLEncoder.encode(getPath(), "UTF-8");
+      return URLEncoder.encode(getPath(), StandardCharsets.UTF_8);
     } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -1946,7 +1910,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
         @Override
         public boolean save(final Element el,
                             final Object theObject,
-                            final Object theValue) throws Throwable {
+                            final Object theValue) {
           if ("col-lastmod".equals(el.getTagName())) {
             ((BwCalendar)theObject).setLastmod(
                     (BwCollectionLastmod)theValue);
@@ -2041,7 +2005,6 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
     return ts.toString();
   }
 
-  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     final BwCalendar cal = shallowClone();
