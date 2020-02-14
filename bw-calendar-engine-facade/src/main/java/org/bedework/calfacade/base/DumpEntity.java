@@ -450,8 +450,8 @@ public class DumpEntity<T> implements Logged {
      */
     boolean dumpKeyFields = dtype == DumpType.reference;
 
-    ArrayList<String> noDumpMethods = null;
-    ArrayList<String> firstMethods = null;
+    ArrayList<String> noDumpMethods;
+    ArrayList<String> firstMethods;
 
     try {
       if (ndCl != null) {
