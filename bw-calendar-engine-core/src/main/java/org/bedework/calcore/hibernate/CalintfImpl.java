@@ -859,7 +859,7 @@ public class CalintfImpl extends CalintfROImpl {
     return entityDao.getBlob(val);
   }
   
-  private class ObjectIterator<T> implements Iterator {
+  private class ObjectIterator<T> implements Iterator<T> {
     protected final String className;
     protected final Class<T> cl;
     protected final String colPath;
@@ -899,13 +899,13 @@ public class CalintfImpl extends CalintfROImpl {
     }
 
     @Override
-    public synchronized Object next() {
+    public synchronized T next() {
       if (!more()) {
         return null;
       }
 
       index++;
-      return batch.get(index - 1);
+      return (T)batch.get(index - 1);
     }
 
     @Override
@@ -1039,7 +1039,7 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public <T> Iterator<T> getObjectIterator(final Class<T> cl,
                                            final String colPath) {
-    return new ObjectIterator(cl, colPath);
+    return new ObjectIterator<T>(cl, colPath);
   }
 
   @Override
