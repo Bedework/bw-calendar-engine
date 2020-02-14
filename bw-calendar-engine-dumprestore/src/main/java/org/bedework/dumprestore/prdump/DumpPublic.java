@@ -49,9 +49,8 @@ public class DumpPublic extends DumpPrincipal {
   }
 
   /**
-   * @throws CalFacadeException on error
    */
-  public void close() throws CalFacadeException {
+  public void close() {
   }
 
   /** Dump everything owned by this principal

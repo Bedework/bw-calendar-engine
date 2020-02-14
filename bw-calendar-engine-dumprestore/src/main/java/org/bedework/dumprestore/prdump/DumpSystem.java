@@ -36,9 +36,8 @@ public class DumpSystem extends DumpPrincipal {
 
   /**
    * @param globals for dump
-   * @throws CalFacadeException on error
    */
-  public DumpSystem(final DumpGlobals globals) throws CalFacadeException {
+  public DumpSystem(final DumpGlobals globals) {
     super(globals);
   }
 
@@ -48,7 +47,7 @@ public class DumpSystem extends DumpPrincipal {
   }
 
   @Override
-  public void close() throws CalFacadeException {
+  public void close() {
   }
 
   /** Dump everything owned by this principal
