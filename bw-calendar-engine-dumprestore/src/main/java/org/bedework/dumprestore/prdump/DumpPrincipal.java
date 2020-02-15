@@ -21,6 +21,7 @@ package org.bedework.dumprestore.prdump;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
@@ -237,6 +238,10 @@ public class DumpPrincipal extends Dumper {
 
       eis.forEach(new EventConsumer());
 
+      final Iterable<BwResource> ress = getDi().getResources(col.getPath());
+
+      ress.forEach(new ResourceConsumer());
+
       /* Now dump any children */
 
       if (!doChildren || !col.getCollectionInfo().childrenAllowed) {
@@ -317,6 +322,25 @@ public class DumpPrincipal extends Dumper {
         created.add(p);
       } else {
         pushPath(p);
+      }
+    }
+  }
+
+  private class ResourceConsumer implements Consumer<BwResource> {
+    @Override
+    public void accept(final BwResource res) {
+      /* dump the resource in it's native format if possible */
+
+      try {
+        final File f = makeFile(res.getName());
+        final Writer wtr = new FileWriter(f);
+
+        incCount(DumpGlobals.resources);
+        wtr.close();
+      } catch (final Throwable t) {
+        addLn(t.getLocalizedMessage());
+        error(t);
+      } finally {
       }
     }
   }

@@ -40,7 +40,6 @@ import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
-import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -183,38 +182,6 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   protected FilterParserFetcher filterParserFetcher;
 
-  static class IndexEntry {
-    final BwIndexer indexer;
-    final BwUnversionedDbentity<?> entity;
-    boolean forTouch;
-
-    IndexEntry(final BwIndexer indexer,
-               final BwUnversionedDbentity<?> entity,
-               final boolean forTouch) {
-      this.indexer = indexer;
-      this.entity = entity;
-      this.forTouch = forTouch;
-    }
-
-    public String getKey() {
-      return indexer.getDocType() + "-" + entity.getHref();
-    }
-
-    public int hashCode() {
-      return entity.getHref().hashCode();
-    }
-
-    public boolean equals(final Object o) {
-      if (!(o instanceof IndexEntry)) {
-        return false;
-      }
-
-      return entity.getHref().equals(((IndexEntry)o).entity.getHref());
-    }
-  }
-
-  protected Map<String, IndexEntry> awaitingIndex = new HashMap<>();
-
   /* ====================================================================
    *                   initialisation
    * ==================================================================== */
@@ -230,44 +197,6 @@ public abstract class CalintfBase implements Logged, Calintf {
     } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
-  }
-
-  public void closeIndexers() {
-    if (!awaitingIndex.isEmpty()) {
-      final var vals = awaitingIndex.values();
-      final var sz = vals.size();
-      var ct = 1;
-
-      try {
-        for (final IndexEntry ie : vals) {
-          try {
-            ie.indexer.indexEntity(ie.entity,
-                                   ct == sz,
-                                   ie.forTouch); // wait
-            ct++;
-          } catch (final CalFacadeException cfe) {
-            if (debug()) {
-              error(cfe);
-            }
-            throw new RuntimeException(cfe);
-          }
-        }
-      } finally {
-        awaitingIndex.clear();
-      }
-    }
-
-    for (final BwIndexer idx: publicIndexers.values()) {
-      idx.close();
-    }
-
-    publicIndexers.clear();
-
-    for (final BwIndexer idx: principalIndexers.values()) {
-      idx.close();
-    }
-
-    principalIndexers.clear();
   }
 
   @Override
@@ -383,31 +312,27 @@ public abstract class CalintfBase implements Logged, Calintf {
     return principalInfo.getSuperUser();
   }
 
-  @Override
-  public void indexEntity(final BwUnversionedDbentity<?> entity) {
-    indexEntity(getIndexer(entity), entity, false);
-  }
-
-  @Override
-  public void indexEntityForTouch(final BwCalendar entity) {
-    indexEntity(getIndexer(entity), entity, true);
-  }
-
-  public void indexEntity(final BwIndexer indexer,
-                          final BwUnversionedDbentity<?> entity,
-                          final boolean forTouch) {
-    //indexer.indexEntity(entity, wait);
-
-    var ie = new IndexEntry(indexer, entity, forTouch);
-    var prevEntry = awaitingIndex.put(ie.getKey(), ie);
-    if (forTouch && (prevEntry != null) && !prevEntry.forTouch) {
-      ie.forTouch = false;
-    }
-  }
+  /* ====================================================================
+   *                   Indexing
+   * ==================================================================== */
 
   private Map<String, BwIndexer> publicIndexers = new HashMap<>();
   private Map<String, BwIndexer> principalIndexers =
           new HashMap<>();
+
+  public void closeIndexers() {
+    for (final BwIndexer idx: publicIndexers.values()) {
+      idx.close();
+    }
+
+    publicIndexers.clear();
+
+    for (final BwIndexer idx: principalIndexers.values()) {
+      idx.close();
+    }
+
+    principalIndexers.clear();
+  }
 
   public BwIndexer getIndexer(final String docType) {
     if (publicMode) {

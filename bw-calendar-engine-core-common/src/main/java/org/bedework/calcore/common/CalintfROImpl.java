@@ -207,6 +207,26 @@ public class CalintfROImpl extends CalintfBase
   }
 
   /* ====================================================================
+   *                   Indexing
+   * ==================================================================== */
+
+  @Override
+  public void indexEntity(final BwUnversionedDbentity<?> entity) {
+    throw new RuntimeException("Read only version");
+  }
+
+  @Override
+  public void indexEntityForTouch(final BwCalendar entity) {
+    throw new RuntimeException("Read only version");
+  }
+
+  public void indexEntity(final BwIndexer indexer,
+                          final BwUnversionedDbentity<?> entity,
+                          final boolean forTouch) {
+    throw new RuntimeException("Read only version");
+  }
+
+  /* ====================================================================
    *                   Misc methods
    * ==================================================================== */
 

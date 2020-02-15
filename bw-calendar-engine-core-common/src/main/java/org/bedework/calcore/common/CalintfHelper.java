@@ -269,12 +269,6 @@ public abstract class CalintfHelper
     }
   }
 
-  protected void indexEntityForTouch(final BwCalendar col) {
-    if (!getForRestore()) {
-      intf.indexEntityForTouch(col);
-    }
-  }
-
   protected void unindex(final BwCalendar col) throws CalFacadeException {
     getIndexer(col).unindexEntity(col.getHref());
   }

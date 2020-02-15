@@ -211,6 +211,37 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     }
   }
 
+  private class ResourceIterator implements Iterator<BwResource> {
+    private final Iterator<BwResource> it;
+
+    private ResourceIterator(final Iterator<BwResource> it) {
+      this.it = it;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return it.hasNext();
+    }
+
+    @Override
+    public BwResource next() {
+      try {
+        final BwResource res = it.next();
+
+        getResourceContent(res);
+
+        return res;
+      } catch (final Throwable t) {
+        throw new RuntimeException(t);
+      }
+    }
+
+    @Override
+    public void remove() {
+      throw new RuntimeException("Forbidden");
+    }
+  }
+
   static class IterableImpl<T> implements Iterable<T> {
     private final Iterator<T> it;
 
@@ -234,6 +265,13 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   public Iterable<EventInfo> getEventInfos(final String colPath) {
     return new IterableImpl<>(new EventInfoIterator(
             getCal().getObjectIterator(BwEventObj.class,
+                                       colPath)));
+  }
+
+  @Override
+  public Iterable<BwResource> getResources(final String colPath) {
+    return new IterableImpl<>(new ResourceIterator(
+            getCal().getObjectIterator(BwResource.class,
                                        colPath)));
   }
 

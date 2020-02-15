@@ -404,7 +404,9 @@ class CoreCalendars extends CalintfHelper
     // Remove it
     intf.colCache.remove(col.getPath());
 
-    indexEntityForTouch(col);
+    if (!getForRestore()) {
+      intf.indexEntityForTouch(col);
+    }
   }
 
   @Override

@@ -138,6 +138,14 @@ public interface DumpIntf {
    */
   Iterable<EventInfo> getEventInfos(String colPath) throws CalFacadeException;
 
+  /** Will return an Iterator returning resource objects.
+   *
+   * @param colPath for resources
+   * @return Iterable - resources with content.
+   * @throws CalFacadeException on error
+   */
+  Iterable<BwResource> getResources(String colPath) throws CalFacadeException;
+
   /** Will return an Iterator over event hrefs.
    *
    * @param start - position.
