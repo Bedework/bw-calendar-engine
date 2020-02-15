@@ -91,8 +91,8 @@
     <cache name="bwpubevents.org.bedework.calfacade.BwCalendar"
         maxElementsInMemory="10000"
         eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
+        timeToIdleSeconds="1800"
+        timeToLiveSeconds="1800"
         overflowToDisk="true"
         />
 
@@ -111,6 +111,14 @@
         eternal="false"
         timeToIdleSeconds="300"
         timeToLiveSeconds="600"
+        overflowToDisk="true"
+        />
+
+    <cache name="bwpubevents.org.bedework.calfacade.BwCollectionLastmod"
+        maxElementsInMemory="10000"
+        eternal="false"
+        timeToIdleSeconds="1800"
+        timeToLiveSeconds="1800"
         overflowToDisk="true"
         />
 
@@ -149,8 +157,8 @@
     <cache name="bwpubevents.org.bedework.calfacade.BwEventObj"
         maxElementsInMemory="10000"
         eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
+        timeToIdleSeconds="1800"
+        timeToLiveSeconds="1800"
         overflowToDisk="true"
         />
 
