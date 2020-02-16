@@ -129,7 +129,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
         }
       }
 
-      if (!bwd.getFloating()) {
+      if (dateType) {
+        bwd.setDate(date + "T000000Z");
+      } else if (!bwd.getFloating()) {
         bwd.setDate(Timezones.getUtc(date, tzid));
       }
 
@@ -930,6 +932,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
     return CalFacadeUtil.eqObjval(getDtval(), that.getDtval());
   }
 
+  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     BwDateTime ndt = new BwDateTime();
