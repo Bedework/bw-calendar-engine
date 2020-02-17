@@ -76,7 +76,7 @@ public class VAlarmUtil extends IcalUtil {
                                             final String currentPrincipal,
                                             final ChangeTable chg) throws CalFacadeException {
     try {
-      ComponentList als = null;
+      ComponentList<VAlarm> als;
 
       if (val instanceof VEvent) {
         als = ((VEvent)val).getAlarms();
@@ -92,13 +92,7 @@ public class VAlarmUtil extends IcalUtil {
         return;
       }
 
-      for (Object o: als) {
-        if (!(o instanceof VAlarm)) {
-          throw new IcalMalformedException("Invalid alarm list");
-        }
-
-        VAlarm va = (VAlarm)o;
-
+      for (VAlarm va: als) {
         PropertyList pl = va.getProperties();
 
         if (pl == null) {
@@ -221,10 +215,8 @@ public class VAlarmUtil extends IcalUtil {
 
          */
 
-        Iterator it = pl.iterator();
-
-        while (it.hasNext()) {
-          prop = (Property)it.next();
+        for (final Property property: pl) {
+          prop = property;
 
           if (prop instanceof XProperty) {
             /* ------------------------- x-property --------------------------- */
@@ -232,7 +224,8 @@ public class VAlarmUtil extends IcalUtil {
             XProperty xp = (XProperty)prop;
 
             al.addXproperty(new BwXproperty(xp.getName(),
-                                            xp.getParameters().toString(),
+                                            xp.getParameters()
+                                              .toString(),
                                             xp.getValue()));
             continue;
           }
@@ -241,8 +234,9 @@ public class VAlarmUtil extends IcalUtil {
             Uid p = (Uid)prop;
 
             al.addXproperty(BwXproperty.makeIcalProperty(p.getName(),
-                                            p.getParameters().toString(),
-                                            p.getValue()));
+                                                         p.getParameters()
+                                                          .toString(),
+                                                         p.getValue()));
             continue;
           }
         }
@@ -277,7 +271,7 @@ public class VAlarmUtil extends IcalUtil {
       return;
     }
 
-    ComponentList vals = null;
+    ComponentList<VAlarm> vals;
 
     if (comp instanceof VEvent) {
       vals = ((VEvent)comp).getAlarms();
