@@ -872,7 +872,7 @@ public class InRequest extends InProcessor {
 
   private boolean updateAttendeeFields(final EventInfo ourCopy,
                                        final EventInfo inBoxEi,
-                                       final String attUri) throws CalFacadeException {
+                                       final String attUri) {
     BwEvent ourEv = ourCopy.getEvent();
     BwEvent inEv = inBoxEi.getEvent();
     boolean flagNeedsReply = false;
