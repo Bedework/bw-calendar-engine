@@ -44,6 +44,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.String.format;
+
 /** Rather than have a single class steering calls to a number of smaller classes
  * we will build up a full implementation by progressively implementing abstract
  * classes.
@@ -78,6 +80,9 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
     if (recipient != null) {
       getRecipientInbox(ei, recipient, fromAttUri, sr, freeBusyRequest);
     } else if (ev.getRecipients() == null) {
+      if (debug()) {
+        debug("No recipients for event");
+      }
       return;
     } else {
       for (final String recip: ev.getRecipients()) {
@@ -318,6 +323,9 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
                                  final boolean freeBusyRequest)
   throws CalFacadeException {
     final BwEvent ev = ei.getEvent();
+    if (debug()) {
+      debug(format("Get inbox for %s", recip));
+    }
 
     /* See if the attendee is in this event */
     final BwAttendee att = ev.findAttendee(recip);

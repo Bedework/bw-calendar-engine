@@ -589,6 +589,15 @@ class Events extends CalSvcDb implements EventsI {
             schedulingObject = true;
           }
 
+          if (ovei.getOrganizerSchedulingObject()) {
+            // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
+            for (final BwAttendee att: ovei.getAttendees()) {
+              if (att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
+                att.setRsvp(true);
+              }
+            }
+          }
+
           if (schedulingObject) {
             ovei.updateStag(currentTimestamp);
           }
@@ -636,6 +645,10 @@ class Events extends CalSvcDb implements EventsI {
         if (cal.getCollectionInfo().scheduling &&
             schedulingObject) {
           final SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
+
+          if (debug()) {
+            debug("schedule event");
+          }
 
           sched.implicitSchedule(ei,
                                  false /*noInvites*/);

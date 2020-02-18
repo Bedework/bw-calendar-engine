@@ -193,6 +193,14 @@ public abstract class SchedulingBase extends CalSvcDb
     }
 
     boolean fromOrganizer = ev.getOrganizerSchedulingObject();
+    if (!fromOrganizer && !Util.isEmpty(ei.getOverrides())) {
+      for (final var oei: ei.getOverrides()) {
+        if (oei.getEvent().getOrganizerSchedulingObject()) {
+          fromOrganizer = true;
+          break;
+        }
+      }
+    }
     boolean attendeeInMaster = false;
 
     String uri = getSvc().getDirectories().principalToCaladdr(owner);
@@ -211,6 +219,9 @@ public abstract class SchedulingBase extends CalSvcDb
     boolean significant;
 
     if (fromOrganizer && !attendeeInMaster) {
+      if (debug()) {
+        debug("Sending invite with suppressed master");
+      }
       masterSuppressed = true;
     }
 
@@ -413,6 +424,8 @@ public abstract class SchedulingBase extends CalSvcDb
 
     if (newEv.getOrganizer() != null) {
       newEv.getOrganizer().setScheduleStatus(null);
+    } else {
+      // Copy in the organizer
     }
 
     newEv.setOwnerHref(ownerHref);

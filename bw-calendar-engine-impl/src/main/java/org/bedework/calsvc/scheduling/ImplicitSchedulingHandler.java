@@ -36,6 +36,8 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 
+import static java.lang.String.format;
+
 /** Rather than have a single class steering calls to a number of smaller classes
  * we will build up a full implementation by progressively implementing abstract
  * classes.
@@ -61,20 +63,29 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
     boolean organizerSchedulingObject = ev.getOrganizerSchedulingObject();
     boolean attendeeSchedulingObject = ev.getAttendeeSchedulingObject();
+    BwOrganizer organizer = ev.getOrganizer();
 
-    if (ev.getSuppressed()) {
-      if (!Util.isEmpty(ei.getOverrides())) {
-        for (EventInfo oei: ei.getOverrides()) {
-          uer = oei.getUpdResult();
-          BwEvent oev = oei.getEvent();
+    /* We may have an event with a suppressed master (attendee invited
+       to one or more instances), or we may have an organizer sending
+       such an event - real master with no attendees but an override
+       with attendees.
+     */
 
-          if (oev.getOrganizerSchedulingObject()) {
-            organizerSchedulingObject = true;
-          }
+    if (!Util.isEmpty(ei.getOverrides())) {
+      for (EventInfo oei: ei.getOverrides()) {
+        uer = oei.getUpdResult();
+        BwEvent oev = oei.getEvent();
 
-          if (oev.getAttendeeSchedulingObject()) {
-            attendeeSchedulingObject = true;
-          }
+        if (organizer == null) {
+          organizer = oev.getOrganizer();
+        }
+
+        if (oev.getOrganizerSchedulingObject()) {
+          organizerSchedulingObject = true;
+        }
+
+        if (oev.getAttendeeSchedulingObject()) {
+          attendeeSchedulingObject = true;
         }
       }
     }
@@ -83,19 +94,20 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
         !attendeeSchedulingObject) {
       // Not a scheduling event
       if (debug()) {
-        debug("No a scheduling object: just return");
+        debug(format("Not a scheduling object: uid=\"%s\", just return",
+                     ev.getUid()));
       }
       return;
     }
 
-    if (ev.getOrganizer() == null) {
+    if (organizer == null) {
       throw new CalFacadeBadRequest(CalFacadeException.missingEventProperty);
     }
 
     // Ensure we have an originator for ischedule
 
     if (ev.getOriginator() == null) {
-      ev.setOriginator(ev.getOrganizer().getOrganizerUri());
+      ev.setOriginator(organizer.getOrganizerUri());
     }
 
     if (uer.reply) {
@@ -182,9 +194,6 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SchedulingI#sendReply(org.bedework.calfacade.svc.EventInfo, int, java.lang.String)
-   */
   @Override
   public ScheduleResult sendReply(final EventInfo ei,
                                   final int partstat,
