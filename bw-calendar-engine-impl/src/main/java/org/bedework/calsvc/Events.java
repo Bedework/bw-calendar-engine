@@ -674,21 +674,22 @@ class Events extends CalSvcDb implements EventsI {
   @Override
   public UpdateResult update(final EventInfo ei,
                              final boolean noInvites) {
-    return update(ei, noInvites, null, false);
+    return update(ei, noInvites, null, false, true);
   }
 
   @Override
   public UpdateResult update(final EventInfo ei,
                              final boolean noInvites,
                              final String fromAttUri) {
-    return update(ei, noInvites, fromAttUri, false);
+    return update(ei, noInvites, fromAttUri, false, false);
   }
 
   @Override
   public UpdateResult update(final EventInfo ei,
                              final boolean noInvites,
                              final String fromAttUri,
-                             final boolean alwaysWrite) {
+                             final boolean alwaysWrite,
+                             final boolean clientUpdate) {
     final UpdateResult updResult = ei.getUpdResult();
 
     try {
@@ -720,6 +721,19 @@ class Events extends CalSvcDb implements EventsI {
 
       boolean schedulingObject = organizerSchedulingObject ||
                                  attendeeSchedulingObject;
+
+      if (schedulingObject &&
+              clientUpdate &&
+              !event.getSignificantChange()) {
+        /* We need to figure out if this is a significant change that
+           requires we notify others.
+         */
+        final ChangeTable ct = event.getChangeset(getPrincipalHref());
+
+        if (ct != null) {
+          event.setSignificantChange(ct.getSignificantChange());
+        }
+      }
 
       if (event.getSignificantChange() && schedulingObject) {
         event.updateStag(getCurrentTimestamp());
@@ -791,46 +805,51 @@ class Events extends CalSvcDb implements EventsI {
 
       updResult.fromAttUri = fromAttUri;
 
-      if (!noInvites && schedulingObject) {
-        if (organizerSchedulingObject) {
-          // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
-          for (final BwAttendee att: event.getAttendees()) {
-            if (att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
-              att.setRsvp(true);
-            }
-          }
+      if (noInvites || !schedulingObject || !event.getSignificantChange()) {
+        if (debug() && !noInvites && schedulingObject) {
+          debug("Skipping a scheduling object with insignificant changes?");
         }
+        return updResult;
+      }
 
-        boolean sendit = organizerSchedulingObject || updResult.reply;
-
-        if (!sendit) {
-          if (!Util.isEmpty(ei.getOverrides())) {
-            for (final EventInfo oei: ei.getOverrides()) {
-              if (oei.getUpdResult().reply) {
-                sendit = true;
-                break;
-              }
-            }
+      if (organizerSchedulingObject) {
+        // Set RSVP on all attendees with PARTSTAT = NEEDS_ACTION
+        for (final BwAttendee att: event.getAttendees()) {
+          if (att.getPartstat().equals(IcalDefs.partstatValNeedsAction)) {
+            att.setRsvp(true);
           }
-        }
-
-        if (sendit) {
-          final SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
-
-          sched.implicitSchedule(ei,
-                                 false /*noInvites */);
-
-          /* We assume we don't need to update again to set attendee status
-           * Trying to do an update results in duplicate key errors.
-           *
-           * If it turns out the scgedule status is not getting persisted in the
-           * calendar entry then we need to find a way to set just that value in
-           * already persisted entity.
-           */
         }
       }
 
-      /*
+      boolean sendit = organizerSchedulingObject || updResult.reply;
+
+      if (!sendit) {
+        if (!Util.isEmpty(ei.getOverrides())) {
+          for (final EventInfo oei: ei.getOverrides()) {
+            if (oei.getUpdResult().reply) {
+              sendit = true;
+              break;
+            }
+          }
+        }
+      }
+
+      if (sendit) {
+        final SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
+
+        sched.implicitSchedule(ei,
+                               false /*noInvites */);
+
+        /* We assume we don't need to update again to set attendee status
+           * Trying to do an update results in duplicate key errors.
+           *
+           * If it turns out the schedule status is not getting persisted in the
+           * calendar entry then we need to find a way to set just that value in
+           * already persisted entity.
+           */
+      }
+
+      /* This stuff would be skipped by th eabove test.
       final boolean vpoll = event.getEntityType() == IcalDefs.entityTypeVpoll;
 
       if (vpoll && (updResult.pollWinner != null)) {

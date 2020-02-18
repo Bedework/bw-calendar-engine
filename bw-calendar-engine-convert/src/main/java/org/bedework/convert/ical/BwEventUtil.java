@@ -525,10 +525,10 @@ public class BwEventUtil extends IcalUtil {
 
               if (pUri.equals(attUri)) {
                 /* Only update for our own attendee
-               * We're doing a PUT and this must be the attendee updating their
-               * partstat. We don't allow them to change other attendees
-               * whatever the PUT content says.
-               */
+                 * We're doing a PUT and this must be the attendee updating their
+                 * partstat. We don't allow them to change other attendees
+                 * whatever the PUT content says.
+                 */
                 chg.addValue(pi, IcalUtil.getAttendee(cb, attPr));
               } else {
                 // Use the value we currently have

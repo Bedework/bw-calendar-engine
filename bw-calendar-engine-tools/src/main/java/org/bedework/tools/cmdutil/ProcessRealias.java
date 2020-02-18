@@ -317,7 +317,7 @@ public class ProcessRealias extends CmdUtilHelper {
     ei.clearChangeset();
 
     final EventInfo.UpdateResult ur =
-            getSvci().getEventsHandler().update(ei, true);
+            getSvci().getEventsHandler().update(ei, true, null);
     
     if (ur.hasChanged) {
       updated++;

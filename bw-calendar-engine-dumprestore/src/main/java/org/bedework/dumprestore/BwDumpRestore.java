@@ -709,7 +709,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
                 
                 try {
                   EventInfo.UpdateResult ur =
-                          svci.getEventsHandler().update(ei, true);
+                          svci.getEventsHandler().update(ei, true, null);
                 } catch (final Throwable t) {
                   errorCt++;
                   warn("Error updating event " + href + 

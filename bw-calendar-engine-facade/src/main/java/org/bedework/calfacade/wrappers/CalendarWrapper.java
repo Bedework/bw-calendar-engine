@@ -655,11 +655,8 @@ public class CalendarWrapper extends BwCalendar
     return getCollectionInfo(entity.getCalType());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getEncodedPath()
-   */
   @Override
-  public String getEncodedPath() throws CalFacadeException {
+  public String getEncodedPath() {
     return entity.getEncodedPath();
   }
 

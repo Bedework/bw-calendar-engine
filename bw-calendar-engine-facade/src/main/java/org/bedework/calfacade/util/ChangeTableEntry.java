@@ -105,7 +105,6 @@ public class ChangeTableEntry {
     }
 
     present = true;
-    changed = true;
     newValues.add(val);
   }
 
@@ -420,7 +419,7 @@ public class ChangeTableEntry {
    *              removed.
    */
   @SuppressWarnings("unchecked")
-  public boolean diff(final Collection originalVals) {
+  public boolean diff(final Collection<?> originalVals) {
     boolean alarms = index == PropertyInfoIndex.VALARM;
 
     Collection newVals = getNewValues();
@@ -475,11 +474,12 @@ public class ChangeTableEntry {
      * implement the Differable interface
      */
 
-    List<Differable> differList = null;
+    List<Differable<?>> differList = null;
 
     for (Object o: newVals) {
       if ((o instanceof Differable) && (differList == null)) {
-        differList = new ArrayList<Differable>(originalVals);
+        differList = new ArrayList<>(
+                (Collection<Differable<?>>)originalVals);
       }
 
       if (!originalVals.contains(o)) {

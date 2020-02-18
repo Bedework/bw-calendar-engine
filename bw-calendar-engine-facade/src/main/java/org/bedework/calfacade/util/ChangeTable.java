@@ -607,13 +607,6 @@ public class ChangeTable implements Logged, Serializable {
     /* ---------------------------- Multi valued --------------- */
 
     for (ChangeTableEntry ent: fullmap.values()) {
-      /* See if any change was significant */
-      if (!schedulingInsignificantProperties.contains(ent.getIndex())) {
-        if (ent.getAdded() || ent.getChanged() || ent.getDeleted()) {
-          significantPropertyChanged = true;
-        }
-      }
-
       /* These can be present but we still need to delete members. */
       if (!ent.getEventProperty() && !ent.getVpollProperty()) {
         continue;
@@ -879,10 +872,35 @@ public class ChangeTable implements Logged, Serializable {
         break;
       }
     }
-    /* Added any deleted items to the change table. */
+    /* Add any deleted items to the change table and check for
+       significant changes. */
     for (ChangeTableEntry ent: fullmap.values()) {
       if (ent.getDeleted()) {
         ev.getChangeset(null).changed(ent.getIndex(), ent.getOldVal(), null);
+      }
+
+      /* See if any change was significant */
+      if (!schedulingInsignificantProperties.contains(ent.getIndex())) {
+        checkSignificance:
+        {
+          if (ent.getIndex().equals(PropertyInfoIndex.VALARM)) {
+            var ov = ent.getOldVal();
+            if (!(ov instanceof BwAlarm)) {
+              break checkSignificance;
+            }
+
+            var alarm = (BwAlarm)ov;
+
+            if (alarm.getOwnerHref().equals(userHref)) {
+              break checkSignificance;
+            }
+          }
+
+          if (ent.getAdded() || ent.getChanged() || ent
+                  .getDeleted()) {
+            significantPropertyChanged = true;
+          }
+        }
       }
     }
   }

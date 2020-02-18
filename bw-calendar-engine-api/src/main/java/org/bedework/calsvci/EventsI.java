@@ -204,7 +204,9 @@ public interface EventsI extends Serializable {
    */
   void reindex(EventInfo ei);
 
-  /** Update an event. Any changeset should be embedded in the event info object.
+  /** Update an event. Any changeset should be embedded in the event
+   * info object. This method should only be used for an update by a
+   * client. Implicit scheduling etc should use the other methods.
    *
    * @param ei           EventInfo object to be added
    * @param noInvites    True for don't send invitations.
@@ -236,12 +238,14 @@ public interface EventsI extends Serializable {
    * @param noInvites    True for don't send invitations.
    * @param fromAttUri   attendee responding
    * @param alwaysWrite  write and reindex whatever changetable says
+   * @param clientUpdate true if this is a client updating the event.
    * @return UpdateResult Counts of changes.
    */
   UpdateResult update(final EventInfo ei,
                       final boolean noInvites,
                       String fromAttUri,
-                      boolean alwaysWrite);
+                      boolean alwaysWrite,
+                      boolean clientUpdate);
 
   /** For an event to which we have write access we simply mark it deleted.
    *
