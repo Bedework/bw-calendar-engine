@@ -1216,17 +1216,18 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     if (mstr.testRecurring()) {
       // A recurring event - retrieve the instance
 
-      final BwRecurrenceInstance inst =
+      BwRecurrenceInstance inst =
               dao.getInstance(mstr, 
                               override.getRecurrenceId());
       if (inst == null) {
-        if (debug()) {
-          debug("Cannot locate instance for " +
-                   mstr + "with recurrence id " + override.getRecurrenceId());
-        }
-        throwException(CalFacadeException.cannotLocateInstance,
-                       mstr + "with recurrence id " + override.getRecurrenceId());
-        return; // satisfy intellij
+        // Presumably an update - create the instance.
+
+        inst = new BwRecurrenceInstance();
+
+        inst.setDtstart(override.getDtstart());
+        inst.setDtend(override.getDtend());
+        inst.setRecurrenceId(inst.getDtstart().getDate());
+        inst.setMaster(mstr);
       }
 
       override.setOwnerHref(mstr.getOwnerHref()); // XXX Force owner????
