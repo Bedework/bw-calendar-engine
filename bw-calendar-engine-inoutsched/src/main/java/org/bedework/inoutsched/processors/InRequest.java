@@ -1190,6 +1190,13 @@ public class InRequest extends InProcessor {
           }
           break;
 
+        /* -------------- Other event/task fields ------------------ */
+        case SCHEDULE_METHOD:
+        case SCHEDULE_STATE:
+        case SCHEDULE_TAG:
+        case TRIGGER_DATE_TIME:
+        case URI:
+
         /* -------------- Other non-event, non-todo ---------------- */
 
         case FREEBUSY:
@@ -1253,7 +1260,36 @@ public class InRequest extends InProcessor {
         case LOCATION_HREF:
         case LOCATION_STR:
           break;
-        
+
+        // Internal bedework properties
+        case CALSUITE:
+        case LASTMODSEQ:
+        case MASTER:
+        case NAME:
+        case NO_START:
+        case ORGANIZER_SCHEDULING_OBJECT:
+        case ORIGINATOR:
+        case OVERRIDE:
+        case PARAMETERS:
+        case PUBLIC:
+        case RECIPIENT:
+        case REFRESH_RATE:
+        case REMOTE_ID:
+        case REMOTE_PW:
+        case SUGGESTED_TO:
+        case TAG:
+        case TARGET:
+        case THUMBIMAGE:
+        case TOMBSTONED:
+        case TOPICAL_AREA:
+        case UNREMOVEABLE:
+        case VPATH:
+        case VIEW:
+        case X_BEDEWORK_CATEGORIES:
+        case X_BEDEWORK_CONTACT:
+        case X_BEDEWORK_LOCATION:
+          break;
+
         default:
           warn("Not handling icalendar property " + ipi);
       } // switch
