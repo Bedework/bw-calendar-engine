@@ -114,6 +114,8 @@ public class EventInfo extends BwUnversionedDbentity<EventInfo>
 
   protected BwEvent event;
 
+  private SchedulingInfo schedulingInfo;
+
   /** editable is set at retrieval to indicate an event owned by the current
    * user. This only has significance for the personal calendar.
    */
@@ -332,6 +334,36 @@ public class EventInfo extends BwUnversionedDbentity<EventInfo>
    */
   public boolean getNewEvent() {
     return newEvent;
+  }
+
+  public SchedulingInfo getSchedulingInfo() {
+    if (schedulingInfo != null) {
+      return schedulingInfo;
+    }
+
+    SchedulingInfo si = new SchedulingInfo();
+    BwEvent ev = getEvent();
+
+    si.setMasterSuppressed(getEvent().getSuppressed());
+
+    if (!ev.getSuppressed()) {
+      si.setMaxAttendees(ev.getNumAttendees());
+      si.setOrganizer(ev.getOrganizer());
+    }
+
+    if (getNumOverrides() > 0) {
+      for (EventInfo oei: getOverrides()) {
+        BwEvent oev = oei.getEvent();
+        si.setMaxAttendees(Math.max(si.getMaxAttendees(),
+                                    oev.getNumAttendees()));
+        if (si.getOrganizer() == null) {
+          si.setOrganizer(oev.getOrganizer());
+        }
+      }
+    }
+
+    schedulingInfo = si;
+    return schedulingInfo;
   }
 
   /** This field is set when the organizers copy is being updated as the result

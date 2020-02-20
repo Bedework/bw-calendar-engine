@@ -206,7 +206,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
       return sr;
     }
 
-    BwAttendee att = findUserAttendee(ev);
+    BwAttendee att = findUserAttendee(ei);
 
     if (att == null) {
       sr.errorCode = CalFacadeException.schedulingNotAttendee;

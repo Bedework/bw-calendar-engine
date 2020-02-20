@@ -31,6 +31,7 @@ import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calfacade.svc.SchedulingInfo;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvc.CalSvcDb;
@@ -527,13 +528,39 @@ public abstract class SchedulingBase extends CalSvcDb
 
   /** Find the attendee in this event which corresponds to the current user
    *
-   * @param ev to search
+   * @param ei to search
    * @return attendee or null.
-   * @throws CalFacadeException
    */
-  protected BwAttendee findUserAttendee(final BwEvent ev) {
+  protected BwAttendee findUserAttendee(final EventInfo ei) {
     Directories dir = getSvc().getDirectories();
     String thisPref = getPrincipal().getPrincipalRef();
+
+    final BwEvent ev = ei.getEvent();
+
+    if (!ev.getSuppressed()) {
+      final BwAttendee att = findUserAttendee(ev, thisPref);
+      if (att != null) {
+        return att;
+      }
+    }
+
+    if (ei.getNumOverrides() > 0) {
+      for (final EventInfo oei: ei.getOverrides()) {
+        BwEvent oev = oei.getEvent();
+
+        final BwAttendee att = findUserAttendee(oev, thisPref);
+        if (att != null) {
+          return att;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private BwAttendee findUserAttendee(final BwEvent ev,
+                                      final String ourPref) {
+    Directories dir = getSvc().getDirectories();
 
     for (BwAttendee att: ev.getAttendees()) {
       BwPrincipal p = dir.caladdrToPrincipal(att.getAttendeeUri());
@@ -542,7 +569,7 @@ public abstract class SchedulingBase extends CalSvcDb
         continue;
       }
 
-      if (thisPref.equals(p.getPrincipalRef())) {
+      if (ourPref.equals(p.getPrincipalRef())) {
         return att;
       }
     }
@@ -550,14 +577,11 @@ public abstract class SchedulingBase extends CalSvcDb
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SchedulingI#setupReschedule(org.bedework.calfacade.svc.EventInfo)
-   */
   @Override
   public void setupReschedule(final EventInfo ei) throws CalFacadeException {
     BwEvent event = ei.getEvent();
 
-    BwAttendee userAttendee = findUserAttendee(event);
+    BwAttendee userAttendee = findUserAttendee(ei);
 
     //event.setSequence(event.getSequence() + 1);
 
@@ -575,6 +599,7 @@ public abstract class SchedulingBase extends CalSvcDb
   protected boolean initScheduleEvent(final EventInfo ei,
                                       final boolean response,
                                       final boolean iSchedule) {
+    final SchedulingInfo si = ei.getSchedulingInfo();
     BwEvent event = ei.getEvent();
 
     if (!iSchedule) {
@@ -586,7 +611,7 @@ public abstract class SchedulingBase extends CalSvcDb
       }
 
       if (response) {
-        event.addRecipient(event.getOrganizer().getOrganizerUri());
+        event.addRecipient(si.getOrganizer().getOrganizerUri());
       } else {
         getRecipients(event, event);
 

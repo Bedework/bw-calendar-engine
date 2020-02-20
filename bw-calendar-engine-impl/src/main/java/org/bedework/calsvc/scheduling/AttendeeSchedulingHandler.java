@@ -29,6 +29,7 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.ScheduleResult;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calfacade.svc.SchedulingInfo;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.convert.Icalendar;
 import org.bedework.convert.ical.IcalUtil;
@@ -67,7 +68,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       return sr;
     }
 
-    BwAttendee att = findUserAttendee(ev);
+    BwAttendee att = findUserAttendee(ei);
 
     if (att == null) {
       throw new CalFacadeException(CalFacadeException.schedulingNotAttendee);
@@ -109,31 +110,17 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
                                         final int method) throws CalFacadeException {
     ScheduleResult sr = new ScheduleResult();
     final BwEvent ev = ei.getEvent();
+    final SchedulingInfo si = ei.getSchedulingInfo();
 
     check: {
       /* Check that the current user is actually the only attendee of the event.
        * Note we may have a suppressed master and/or multiple overrides
        */
-      BwAttendee att = null;
+      BwAttendee att = findUserAttendee(ei);
 
-      if (!ev.getSuppressed()) {
-        att = findUserAttendee(ev);
-
-        if (att == null) {
-          sr.errorCode = CalFacadeException.schedulingNotAttendee;
-          break check;
-        }
-      }
-
-      if (ei.getNumOverrides() > 0) {
-        for (final EventInfo oei: ei.getOverrides()) {
-          att = findUserAttendee(oei.getEvent());
-
-          if (att == null) {
-            sr.errorCode = CalFacadeException.schedulingNotAttendee;
-            break check;
-          }
-        }
+      if (att == null) {
+        sr.errorCode = CalFacadeException.schedulingNotAttendee;
+        break check;
       }
 
       if (ev.getOriginator() == null) {
@@ -159,10 +146,14 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       //  outEv.addComment(null, comment);
       //}
 
-      outEv.addRecipient(outEv.getOrganizer().getOrganizerUri());
+      if (si.getOrganizer() == null) {
+        throw new RuntimeException("No organizer");
+      }
+
+      outEv.addRecipient(si.getOrganizer().getOrganizerUri());
       outEv.setOriginator(att.getAttendeeUri());
       outEv.updateDtstamp();
-      outEv.getOrganizer().setDtstamp(outEv.getDtstamp());
+      si.getOrganizer().setDtstamp(outEv.getDtstamp());
 
       String delegate = att.getDelegatedTo();
       if (delegate != null) {
@@ -244,15 +235,13 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
                                                  IcalDefs.requestStatusSuccess.getDescription()));
       sr = scheduleResponse(outEi);
       outEv.setScheduleState(BwEvent.scheduleStateProcessed);
-      ev.getOrganizer().setScheduleStatus(IcalDefs.deliveryStatusDelivered);
+      si.getOrganizer().setScheduleStatus(IcalDefs.deliveryStatusDelivered);
     }
 
     return sr;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.SchedulingI#processCancel(org.bedework.calfacade.svc.EventInfo, org.bedework.calfacade.svc.EventInfo)
-   * /
+  /*
   public ScheduleResult processCancel(final EventInfo ei) throws CalFacadeException {
     /* We, as an attendee, received a CANCEL from the organizer.
      *
@@ -339,22 +328,8 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       int outAccess = PrivilegeDefs.privScheduleReply;
 
       /* There should only be one attendee for a reply */
-      if (!ei.getEvent().getSuppressed()) {
-        BwEvent ev = ei.getEvent();
-        if (ev.getNumAttendees() != 1) {
-          sr.errorCode = CalFacadeException.schedulingBadAttendees;
-          return sr;
-        }
-      }
-
-      if (ei.getNumOverrides() > 0) {
-        for (EventInfo oei: ei.getOverrides()) {
-          BwEvent ev = oei.getEvent();
-          if (ev.getNumAttendees() != 1) {
-            sr.errorCode = CalFacadeException.schedulingBadAttendees;
-            return sr;
-          }
-        }
+      if (ei.getSchedulingInfo().getMaxAttendees() > 1) {
+        sr.errorCode = CalFacadeException.schedulingBadAttendees;
       }
 
       if (!initScheduleEvent(ei, true, false)) {

@@ -1580,9 +1580,36 @@ class Events extends CalSvcDb implements EventsI {
 
       BwCalendar cal = getCols().get(event.getColPath());
 
+      boolean schedulingObject = false;
+      boolean organizerSchedulingObject = false;
+
+      setScheduleState(event, false, false);
+      if (cal.getCollectionInfo().scheduling &&
+              (event.getOrganizerSchedulingObject() ||
+                       event.getAttendeeSchedulingObject())) {
+        schedulingObject = true;
+        organizerSchedulingObject =
+                event.getOrganizerSchedulingObject();
+      }
+
+      if (!schedulingObject && event.getRecurring() &&
+              !Util.isEmpty(ei.getOverrideProxies())) {
+        for (final BwEventProxy ove: ei.getOverrideProxies()) {
+          setScheduleState(ove, false, false);
+
+          if (cal.getCollectionInfo().scheduling &&
+                  (ove.getOrganizerSchedulingObject() ||
+                           ove.getAttendeeSchedulingObject())) {
+            schedulingObject = true;
+            organizerSchedulingObject =
+                    ove.getOrganizerSchedulingObject();
+            break;
+          }
+        }
+      }
+
       if (sendSchedulingMessage &&
-          event.getSchedulingObject() &&
-          (cal.getCollectionInfo().scheduling)) {
+          schedulingObject) {
         // Should we also only do this if it affects freebusy?
 
         /* According to CalDAV we're supposed to do this before we delete the
@@ -1593,12 +1620,12 @@ class Events extends CalSvcDb implements EventsI {
          */
         try {
           SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
-          if (event.getAttendeeSchedulingObject()) {
+          if (!organizerSchedulingObject) {
             /* Send a declined message to the organizer
              */
             sched.sendReply(ei,
                             IcalDefs.partstatDeclined, null);
-          } else if (event.getOrganizerSchedulingObject()) {
+          } else {
             // send a cancel
             UpdateResult uer = ei.getUpdResult();
             uer.deleting = true;
