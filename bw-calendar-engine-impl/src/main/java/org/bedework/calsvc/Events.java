@@ -1849,7 +1849,7 @@ class Events extends CalSvcDb implements EventsI {
     }
 
     // Normalize the line endings
-    final String s1 = val.replaceAll("(\\r|\\n|\\r\\n)+", "\\\\n");
+    final String s1 = val.replaceAll("(\\r|\\n|\\r\\n)+", "\n");
 
     boolean changed = !s1.equals(val);
 
@@ -1867,7 +1867,8 @@ class Events extends CalSvcDb implements EventsI {
     }
 
     // Put the escaped form back again
-    return s2.replaceAll("(\\r|\\n|\\r\\n)+", "\\\\n");
+    //return s2.replaceAll("(\\r|\\n|\\r\\n)+", "\\\\n");
+    return s2;
   }
 
   /* Flag this as an attendee scheduling object or an organizer scheduling object
