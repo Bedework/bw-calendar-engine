@@ -2038,7 +2038,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           throws CalFacadeException {
     final QueryBuilder qb =
             getFilters(null).syncFilter(path, lastmod,
-                                        lastmodSeq);
+                                        lastmodSeq,
+                                        true);
 
     return fetchEvents(qb, count, privRead);
   }
@@ -2493,7 +2494,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                          final int count)
           throws CalFacadeException {
     final QueryBuilder qb =
-            getFilters(null).syncFilter(path, lastmod, lastmodSeq);
+            getFilters(null).syncFilter(path, lastmod, lastmodSeq,
+                                        false);
 
     return fetchEntities(docTypeResource,
                          new BuildEntity<>() {

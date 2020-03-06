@@ -224,7 +224,10 @@ public class ESQueryFilter extends ESQueryFilterBase
    * @return a query builder
    */
   public QueryBuilder singleEventFilter(final String href) {
-    return termQuery(hrefRef, href);
+    return and(termQuery(hrefRef, href),
+               or(addTerm(PropertyInfoIndex.MASTER, "true"),
+                  addTerm(PropertyInfoIndex.OVERRIDE, "true")),
+               "noInstances");
   }
 
   /** Build a filter for a single event identified by the colPath
@@ -242,7 +245,10 @@ public class ESQueryFilter extends ESQueryFilterBase
                 null);
     //anded = and(anded, addTerm(PropertyInfoIndex.MASTER, "true"), null);
 
-    return anded;
+    return and(anded,
+               or(addTerm(PropertyInfoIndex.MASTER, "true"),
+                  addTerm(PropertyInfoIndex.OVERRIDE, "true")),
+               "noInstances");
   }
 
   /** Build a filter for entities in a collection possibly limited by
@@ -255,12 +261,20 @@ public class ESQueryFilter extends ESQueryFilterBase
    */
   public QueryBuilder syncFilter(final String path,
                                  final String lastmod,
-                                 final int lastmodSeq) throws CalFacadeException {
+                                 final int lastmodSeq,
+                                 final boolean events) throws CalFacadeException {
     final BwCollectionFilter cf =
             new BwCollectionFilter(null, path);
 
     QueryBuilder fb = buildQuery(cf);
-    QueryBuilder fb1;
+
+    if (events) {
+      // No instances
+      fb = and(fb,
+               or(addTerm(PropertyInfoIndex.MASTER, "true"),
+                  addTerm(PropertyInfoIndex.OVERRIDE, "true")),
+               "noInstances");
+    }
 
     if (lastmod != null) {
 
@@ -276,8 +290,9 @@ public class ESQueryFilter extends ESQueryFilterBase
                           .gt(lastmodSeq),
                   null);
 
-      fb1 = or(new RangeQueryBuilder(lastModJname).gt(lastmod),
-               lmeq);
+      final QueryBuilder fb1 = or(
+              new RangeQueryBuilder(lastModJname).gt(lastmod),
+              lmeq);
 
       fb = and(fb, fb1, "fb1");
     } else {
@@ -491,7 +506,7 @@ public class ESQueryFilter extends ESQueryFilterBase
   }
 
   public QueryBuilder multiHref(final Set<String> hrefs,
-                                final RecurringRetrievalMode rmode) throws CalFacadeException {
+                                final RecurringRetrievalMode rmode) {
     QueryBuilder qb = null;
 
     for (final String href: hrefs) {
