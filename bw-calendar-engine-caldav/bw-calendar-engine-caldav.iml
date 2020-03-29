@@ -13,7 +13,7 @@
     <orderEntry type="module" module-name="bw-calendar-engine-annotations" />
     <orderEntry type="library" name="Maven: org.bedework:bw-access:4.0.8" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-caching:4.0.27" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-vcard:4.0.6" level="project" />
+    <orderEntry type="module" module-name="bw-util2-vcard" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.10.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.10.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-http:4.1.0" level="project" />
@@ -72,7 +72,7 @@
     <orderEntry type="library" name="Maven: dnsjava:dnsjava:2.1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.8.2" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.soap:javax.xml.soap-api:1.4.0" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-calendar:4.0.6" level="project" />
+    <orderEntry type="module" module-name="bw-util2-calendar" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.10.0" level="project" />
     <orderEntry type="library" name="Maven: javax.servlet:javax.servlet-api:4.0.0" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.3.0" level="project" />

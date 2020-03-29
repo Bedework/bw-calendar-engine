@@ -165,7 +165,7 @@ public class ToXEvent extends Xutil {
 
       BaseComponentType comp = el.getValue();
 
-      Class masterClass = comp.getClass();
+      Class<?> masterClass = comp.getClass();
 
       comp.setProperties(new ArrayOfProperties());
       List<JAXBElement<? extends BasePropertyType>> pl = comp.getProperties().getBasePropertyOrTzid();
@@ -656,14 +656,15 @@ public class ToXEvent extends Xutil {
 
   /** Build recurring properties from event.
    *
-   * @param pattern
+   * @param pattern - if non-null limit returned components and values to those
+   *                  supplied in the pattern.
    * @param compCl - component class for pattern matching
    * @param val
    * @param pl
    * @throws CalFacadeException
    */
   public static void doRecurring(final BaseComponentType pattern,
-                                 final Class compCl,
+                                 final Class<?> compCl,
                                  final BwEvent val,
                                  final List<JAXBElement<? extends BasePropertyType>> pl) throws CalFacadeException {
     try {
@@ -768,11 +769,10 @@ public class ToXEvent extends Xutil {
 
   /** make an attendee
    *
-   * @param val
+   * @param val internal attendee value
    * @return Attendee
-   * @throws Throwable
    */
-  public static AttendeePropType makeAttendee(final BwAttendee val) throws Throwable {
+  public static AttendeePropType makeAttendee(final BwAttendee val) {
     AttendeePropType prop = new AttendeePropType();
 
     prop.setCalAddress(val.getAttendeeUri());
@@ -908,11 +908,10 @@ public class ToXEvent extends Xutil {
   }
 
   /**
-   * @param val
+   * @param val internal organizer value
    * @return Organizer
-   * @throws Throwable
    */
-  public static OrganizerPropType makeOrganizer(final BwOrganizer val) throws Throwable {
+  public static OrganizerPropType makeOrganizer(final BwOrganizer val) {
     OrganizerPropType prop = new OrganizerPropType();
 
     prop.setCalAddress(val.getOrganizerUri());
@@ -966,16 +965,16 @@ public class ToXEvent extends Xutil {
 
   /** Process any alarms.
    *
-   * @param ev
-   * @param comp
-   * @param pattern
-   * @param masterClass
-   * @throws CalFacadeException
+   * @param ev event
+   * @param comp we're building
+   * @param pattern - if non-null limit returned components and values to those
+   *                  supplied in the pattern.
+   * @param masterClass we're building
    */
   public static void processEventAlarm(final BwEvent ev,
                                        final BaseComponentType comp,
                                        final BaseComponentType pattern,
-                                       final Class masterClass) throws CalFacadeException {
+                                       final Class<?> masterClass) {
     if (!emit(pattern, masterClass, ValarmType.class)) {
       return;
     }

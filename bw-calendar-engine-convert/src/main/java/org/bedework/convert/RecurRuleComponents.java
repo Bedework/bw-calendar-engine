@@ -19,13 +19,16 @@
 package org.bedework.convert;
 
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.util.misc.response.GetEntitiesResponse;
+import org.bedework.util.misc.response.Response;
 
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.NumberList;
 import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.WeekDay;
+import net.fortuna.ical4j.model.WeekDayList;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -201,7 +204,7 @@ public class RecurRuleComponents {
   }
 
   /**
-   * @param val
+   * @param val Freq
    */
   public void setFreq(Freq val) {
     freq = val;
@@ -210,12 +213,13 @@ public class RecurRuleComponents {
   /**
    * @return Freq
    */
+  @SuppressWarnings("unused")
   public Freq getFreq() {
     return freq;
   }
 
   /**
-   * @param val
+   * @param val until Date
    */
   public void setUntil(Date val) {
     until = val;
@@ -229,7 +233,7 @@ public class RecurRuleComponents {
   }
 
   /**
-   * @param val
+   * @param val count
    */
   public void setCount(int val) {
     count = val;
@@ -243,7 +247,7 @@ public class RecurRuleComponents {
   }
 
   /**
-   * @param val
+   * @param val interval
    */
   public void setInterval(int val) {
     interval = val;
@@ -252,6 +256,7 @@ public class RecurRuleComponents {
   /**
    * @return int
    */
+  @SuppressWarnings("unused")
   public int getInterval() {
     return interval;
   }
@@ -266,6 +271,7 @@ public class RecurRuleComponents {
   /**
    * @return bySecond list or null
    */
+  @SuppressWarnings("unused")
   public Collection<Integer> getBySecond() {
     return bySecond;
   }
@@ -280,6 +286,7 @@ public class RecurRuleComponents {
   /**
    * @return byMinute list or null
    */
+  @SuppressWarnings("unused")
   public Collection<Integer> getByMinute() {
     return byMinute;
   }
@@ -294,6 +301,7 @@ public class RecurRuleComponents {
   /**
    * @return byHour list or null
    */
+  @SuppressWarnings("unused")
   public Collection<Integer> getByHour() {
     return byHour;
   }
@@ -308,6 +316,7 @@ public class RecurRuleComponents {
   /**
    * @return byDay map or null
    */
+  @SuppressWarnings("unused")
   public Collection<PosDays> getByDay() {
     return byDay;
   }
@@ -322,6 +331,7 @@ public class RecurRuleComponents {
   /**
    * @return byMonthDay list or null
    */
+  @SuppressWarnings("unused")
   public Collection<Integer> getByMonthDay() {
     return byMonthDay;
   }
@@ -336,6 +346,7 @@ public class RecurRuleComponents {
   /**
    * @return byYearDay list or null
    */
+  @SuppressWarnings("unused")
   public Collection<Integer> getByYearDay() {
     return byYearDay;
   }
@@ -350,6 +361,7 @@ public class RecurRuleComponents {
   /**
    * @return byWeekNo list or null
    */
+  @SuppressWarnings("unused")
   public Collection<Integer> getByWeekNo() {
     return byWeekNo;
   }
@@ -364,6 +376,7 @@ public class RecurRuleComponents {
   /**
    * @return byMonth list or null
    */
+  @SuppressWarnings("unused")
   public Collection<Integer> getByMonth() {
     return byMonth;
   }
@@ -378,6 +391,7 @@ public class RecurRuleComponents {
   /**
    * @return bySetPos list or null
    */
+  @SuppressWarnings("unused")
   public Collection<Integer> getBySetPos() {
     return bySetPos;
   }
@@ -392,103 +406,93 @@ public class RecurRuleComponents {
   /**
    * @return String weekstart or null
    */
+  @SuppressWarnings("unused")
   public String getWkst() {
     return wkst;
   }
 
   /** Return parsed rrules.
    *
-   * @param ev
-   * @return Collection of parsed rrules
-   * @throws CalFacadeException
+   * @param ev containing rules
+   * @return Response containing status and collection of parsed rrules
    */
-  public static Collection<RecurRuleComponents> fromEventRrules(BwEvent ev)
-            throws CalFacadeException {
-    return fromEventXrules(ev, ev.getRrules());
-  }
-
-  private static Collection<RecurRuleComponents> fromEventXrules(BwEvent ev,
-                                                                 Collection<String> rules)
-            throws CalFacadeException {
-    Collection<RecurRuleComponents> rrcs = new ArrayList<RecurRuleComponents>();
+  public static GetEntitiesResponse<RecurRuleComponents> fromEventRrules(BwEvent ev) {
+    final GetEntitiesResponse<RecurRuleComponents> resp =
+            new GetEntitiesResponse<>();
     if (!ev.isRecurringEntity()) {
-      return rrcs;
+      return Response.notFound(resp);
     }
+
+    Collection<String> rules = ev.getRrules();
 
     if (rules == null) {
-      return rrcs;
+      return Response.notFound(resp);
     }
 
-    try {
-      for (String rule: rules) {
-        RecurRuleComponents rrc = new RecurRuleComponents();
+    for (String rule: rules) {
+      RecurRuleComponents rrc = new RecurRuleComponents();
 
-        Recur recur = new Recur(rule);
-
-        rrc.setRule(rule);
-        rrc.setFreq(Freq.valueOf(recur.getFrequency()));
-
-        Date until = recur.getUntil();
-        if (until != null) {
-          rrc.setUntil(until);
-        } else {
-          rrc.setCount(recur.getCount());
-        }
-
-        rrc.setInterval(recur.getInterval());
-
-        rrc.setBySecond(checkNumList(recur.getSecondList()));
-        rrc.setByMinute(checkNumList(recur.getMinuteList()));
-        rrc.setByHour(checkNumList(recur.getHourList()));
-
-        /* Group by position */
-        Collection wds = recur.getDayList();
-        if (wds != null) {
-          HashMap<Integer, Collection<String>> hm =
-            new HashMap<Integer, Collection<String>>();
-
-          for (Object o: wds) {
-            WeekDay wd = (WeekDay)o;
-
-            Collection<String>c = hm.get(wd.getOffset());
-            if (c == null) {
-              c = new ArrayList<>();
-              hm.put(wd.getOffset(), c);
-            }
-
-            c.add(wd.getDay().name());
-          }
-
-          final Collection<PosDays> pds = new ArrayList<>();
-
-          final Set<Integer> poss = hm.keySet();
-          for (final Integer pos: poss) {
-            pds.add(new PosDays(pos, hm.get(pos)));
-          }
-
-          rrc.setByDay(pds);
-        }
-
-        rrc.setByMonthDay(checkNumList(recur.getMonthDayList()));
-        rrc.setByYearDay(checkNumList(recur.getYearDayList()));
-        rrc.setByWeekNo(checkNumList(recur.getWeekNoList()));
-        rrc.setByMonth(checkNumList(recur.getMonthList()));
-        rrc.setBySetPos(checkNumList(recur.getSetPosList()));
-
-        if (recur.getWeekStartDay() != null) {
-          rrc.setWkst(recur.getWeekStartDay().name());
-        }
-
-        rrcs.add(rrc);
+      final Recur recur;
+      try {
+        recur = new Recur(rule);
+      } catch (ParseException e) {
+        return Response.error(resp, "Invalid RRULE: " + rule);
       }
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+
+      rrc.setRule(rule);
+      rrc.setFreq(Freq.valueOf(recur.getFrequency()));
+
+      Date until = recur.getUntil();
+      if (until != null) {
+        rrc.setUntil(until);
+      } else {
+        rrc.setCount(recur.getCount());
+      }
+
+      rrc.setInterval(recur.getInterval());
+
+      rrc.setBySecond(checkNumList(recur.getSecondList()));
+      rrc.setByMinute(checkNumList(recur.getMinuteList()));
+      rrc.setByHour(checkNumList(recur.getHourList()));
+
+      /* Group by position */
+      WeekDayList wds = recur.getDayList();
+      if (wds != null) {
+        HashMap<Integer, Collection<String>> hm = new HashMap<>();
+
+        for (WeekDay wd: wds) {
+          Collection<String> c = hm.computeIfAbsent(wd.getOffset(),
+                                                    k -> new ArrayList<>());
+
+          c.add(wd.getDay().name());
+        }
+
+        final Collection<PosDays> pds = new ArrayList<>();
+
+        final Set<Integer> poss = hm.keySet();
+        for (final Integer pos: poss) {
+          pds.add(new PosDays(pos, hm.get(pos)));
+        }
+
+        rrc.setByDay(pds);
+      }
+
+      rrc.setByMonthDay(checkNumList(recur.getMonthDayList()));
+      rrc.setByYearDay(checkNumList(recur.getYearDayList()));
+      rrc.setByWeekNo(checkNumList(recur.getWeekNoList()));
+      rrc.setByMonth(checkNumList(recur.getMonthList()));
+      rrc.setBySetPos(checkNumList(recur.getSetPosList()));
+
+      if (recur.getWeekStartDay() != null) {
+        rrc.setWkst(recur.getWeekStartDay().name());
+      }
+
+      resp.addEntity(rrc);
     }
 
-    return rrcs;
+    return Response.ok(resp);
   }
 
-  @SuppressWarnings("unchecked")
   private static Collection<Integer> checkNumList(NumberList val) {
     if ((val == null) || (val.isEmpty())) {
       return null;

@@ -53,131 +53,127 @@ import javax.xml.bind.JAXBElement;
  */
 public class Xalarms extends Xutil {
   /**
-   * @param ev
-   * @param val
-   * @param pattern
-   * @param masterClass
+   * @param ev event
+   * @param val alarm
+   * @param pattern - if non-null limit returned components and values to those
+   *                  supplied in the pattern.
+   * @param masterClass we're building
    * @return ValarmType
-   * @throws CalFacadeException
    */
   public static ValarmType toXAlarm(final BwEvent ev,
                                     final BwAlarm val,
                                     final BaseComponentType pattern,
-                                    final Class masterClass) throws CalFacadeException {
-    try {
-      ValarmType alarm = new ValarmType();
+                                    final Class<?> masterClass) {
+    ValarmType alarm = new ValarmType();
 
-      int atype = val.getAlarmType();
+    int atype = val.getAlarmType();
 
-      alarm.setProperties(new ArrayOfProperties());
-      List<JAXBElement<? extends BasePropertyType>> pl = alarm.getProperties().getBasePropertyOrTzid();
+    alarm.setProperties(new ArrayOfProperties());
+    List<JAXBElement<? extends BasePropertyType>> pl = alarm.getProperties().getBasePropertyOrTzid();
 
-      if (emit(pattern, masterClass, ValarmType.class, ActionPropType.class)) {
-        ActionPropType a = new ActionPropType();
-        a.setText(BwAlarm.alarmTypes[val.getAlarmType()]);
-        pl.add(of.createAction(a));
-      }
-
-      if (emit(pattern, masterClass, ValarmType.class, TriggerPropType.class)) {
-        TriggerPropType t = new TriggerPropType();
-        if (val.getTriggerDateTime()) {
-          //t.setDateTime(val.getTrigger());
-          t.setDateTime(XcalUtil.getXMlUTCCal(val.getTrigger()));
-        } else {
-          t.setDuration(val.getTrigger());
-          if (!val.getTriggerStart()) {
-            ArrayOfParameters pars = getAop(t);
-
-            RelatedParamType r = new RelatedParamType();
-            r.setText(IcalDefs.alarmTriggerRelatedEnd);
-            JAXBElement<RelatedParamType> param = of.createRelated(r);
-            pars.getBaseParameter().add(param);
-          }
-        }
-
-        pl.add(of.createTrigger(t));
-      }
-
-      if (emit(pattern, masterClass, ValarmType.class, DurationPropType.class)) {
-        if (val.getDuration() != null) {
-          DurationPropType dur = new DurationPropType();
-          dur.setDuration(val.getDuration());
-
-          pl.add(of.createDuration(dur));
-
-          RepeatPropType rep = new RepeatPropType();
-          rep.setInteger(BigInteger.valueOf(val.getRepeat()));
-
-          pl.add(of.createRepeat(rep));
-        }
-      }
-
-      /* Description */
-      if ((atype == BwAlarm.alarmTypeDisplay) ||
-          (atype == BwAlarm.alarmTypeEmail) ||
-          (atype == BwAlarm.alarmTypeProcedure)) {
-        // Both require description
-        String desc = val.getDescription();
-        if (desc == null) {
-          if (ev != null) {
-            if (ev.getDescription() != null) {
-              desc = ev.getDescription();
-            } else {
-              desc = ev.getSummary();
-            }
-          }
-        }
-
-        if (desc == null) {
-          desc = " ";
-        }
-
-        DescriptionPropType d = new DescriptionPropType();
-        d.setText(desc);
-
-        pl.add(of.createDescription(d));
-      }
-
-      /* Summary */
-      if (atype == BwAlarm.alarmTypeEmail) {
-        SummaryPropType s = new SummaryPropType();
-        s.setText(val.getSummary());
-
-        pl.add(of.createSummary(s));
-      }
-
-      /* Attach */
-
-      if ((atype == BwAlarm.alarmTypeAudio) ||
-          (atype == BwAlarm.alarmTypeEmail) ||
-          (atype == BwAlarm.alarmTypeProcedure)) {
-        if (val.getAttach() != null) {
-          AttachPropType a = new AttachPropType();
-
-          a.setUri(val.getAttach());
-
-          pl.add(of.createAttach(a));
-        }
-      }
-
-      /* Attendees */
-      if (atype == BwAlarm.alarmTypeEmail) {
-        if (val.getNumAttendees() > 0) {
-          for (BwAttendee att: val.getAttendees()) {
-            pl.add(of.createAttendee(ToXEvent.makeAttendee(att)));
-          }
-        }
-      }
-
-      if (val.getNumXproperties() > 0) {
-        /* This alarm has x-props */
-
-      }
-
-      return alarm;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    if (emit(pattern, masterClass, ValarmType.class, ActionPropType.class)) {
+      ActionPropType a = new ActionPropType();
+      a.setText(BwAlarm.alarmTypes[val.getAlarmType()]);
+      pl.add(of.createAction(a));
     }
+
+    if (emit(pattern, masterClass, ValarmType.class, TriggerPropType.class)) {
+      TriggerPropType t = new TriggerPropType();
+      if (val.getTriggerDateTime()) {
+        //t.setDateTime(val.getTrigger());
+        t.setDateTime(XcalUtil.getXMlUTCCal(val.getTrigger()));
+      } else {
+        t.setDuration(val.getTrigger());
+        if (!val.getTriggerStart()) {
+          ArrayOfParameters pars = getAop(t);
+
+          RelatedParamType r = new RelatedParamType();
+          r.setText(IcalDefs.alarmTriggerRelatedEnd);
+          JAXBElement<RelatedParamType> param = of.createRelated(r);
+          pars.getBaseParameter().add(param);
+        }
+      }
+
+      pl.add(of.createTrigger(t));
+    }
+
+    if (emit(pattern, masterClass, ValarmType.class, DurationPropType.class)) {
+      if (val.getDuration() != null) {
+        DurationPropType dur = new DurationPropType();
+        dur.setDuration(val.getDuration());
+
+        pl.add(of.createDuration(dur));
+
+        RepeatPropType rep = new RepeatPropType();
+        rep.setInteger(BigInteger.valueOf(val.getRepeat()));
+
+        pl.add(of.createRepeat(rep));
+      }
+    }
+
+    /* Description */
+    if ((atype == BwAlarm.alarmTypeDisplay) ||
+            (atype == BwAlarm.alarmTypeEmail) ||
+            (atype == BwAlarm.alarmTypeProcedure)) {
+      // Both require description
+      String desc = val.getDescription();
+      if (desc == null) {
+        if (ev != null) {
+          if (ev.getDescription() != null) {
+            desc = ev.getDescription();
+          } else {
+            desc = ev.getSummary();
+          }
+        }
+      }
+
+      if (desc == null) {
+        desc = " ";
+      }
+
+      DescriptionPropType d = new DescriptionPropType();
+      d.setText(desc);
+
+      pl.add(of.createDescription(d));
+    }
+
+    /* Summary */
+    if (atype == BwAlarm.alarmTypeEmail) {
+      SummaryPropType s = new SummaryPropType();
+      s.setText(val.getSummary());
+
+      pl.add(of.createSummary(s));
+    }
+
+    /* Attach */
+
+    if ((atype == BwAlarm.alarmTypeAudio) ||
+            (atype == BwAlarm.alarmTypeEmail) ||
+            (atype == BwAlarm.alarmTypeProcedure)) {
+      if (val.getAttach() != null) {
+        AttachPropType a = new AttachPropType();
+
+        a.setUri(val.getAttach());
+
+        pl.add(of.createAttach(a));
+      }
+    }
+
+    /* Attendees */
+    if (atype == BwAlarm.alarmTypeEmail) {
+      if (val.getNumAttendees() > 0) {
+        for (BwAttendee att: val.getAttendees()) {
+          pl.add(of.createAttendee(ToXEvent.makeAttendee(att)));
+        }
+      }
+    }
+
+    if (val.getNumXproperties() > 0) {
+      /* This alarm has x-props */
+
+    }
+
+    return alarm;
   }
 
   /** The generated alarm may not be a valid alarm if it is being used as a

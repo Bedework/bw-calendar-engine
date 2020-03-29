@@ -102,7 +102,7 @@ public class Xutil {
     }
 
     for (Object o: nl) {
-      l.add(BigInteger.valueOf(Integer.valueOf((String)o)));
+      l.add(BigInteger.valueOf(Integer.parseInt((String)o)));
     }
   }
 
@@ -187,7 +187,7 @@ public class Xutil {
 
   protected static DateDatetimePropertyType makeDateDatetime(final DateDatetimePropertyType p,
                                                              final BwDateTime dt,
-                                                             final boolean forceUTC) throws Throwable {
+                                                             final boolean forceUTC) {
     /*
     if (forceUTC) {
       p.setDateTime(dt.getDate());
@@ -249,21 +249,19 @@ public class Xutil {
   }
 
   /**
-   * @param pl
-   * @param xprops
-   * @param pattern
-   * @param masterClass
+   * @param pl properties list
+   * @param xprops x-properties
+   * @param pattern to allow skipping
+   * @param masterClass we're building
    * @param wrapXprops wrap x-properties in bedework object - allows
    *                   us to push them through soap
-   * @throws Throwable
    */
   @SuppressWarnings("deprecation")
   public static void xpropertiesToXcal(final List<JAXBElement<? extends BasePropertyType>> pl,
                                        final List<BwXproperty> xprops,
                                        final BaseComponentType pattern,
-                                       final Class masterClass,
-                                       final boolean wrapXprops)
-      throws Throwable {
+                                       final Class<?> masterClass,
+                                       final boolean wrapXprops) {
     for (final BwXproperty x: xprops) {
       // Skip any timezone we saved in the event.
       final String xname = x.getName();
@@ -366,7 +364,7 @@ public class Xutil {
         final XBedeworkMaxTicketsPropType p =
                 new XBedeworkMaxTicketsPropType();
 
-        p.setInteger(BigInteger.valueOf(Long.valueOf(val)));
+        p.setInteger(BigInteger.valueOf(Long.parseLong(val)));
 
         pl.add(of.createXBedeworkMaxTickets(p));
         continue;
@@ -380,7 +378,7 @@ public class Xutil {
         final XBedeworkMaxTicketsPerUserPropType p =
                 new XBedeworkMaxTicketsPerUserPropType();
 
-        p.setInteger(BigInteger.valueOf(Long.valueOf(val)));
+        p.setInteger(BigInteger.valueOf(Long.parseLong(val)));
 
         pl.add(of.createXBedeworkMaxTicketsPerUser(p));
         continue;
@@ -471,10 +469,9 @@ public class Xutil {
   /** Convert a parameter
    * @param prop - parameters go here
    * @param xp - a parameter
-   * @throws Throwable
    */
   protected static void xparam(final BasePropertyType prop,
-                               final Xpar xp) throws Throwable {
+                               final Xpar xp) {
     ArrayOfParameters aop = prop.getParameters();
 
     if (aop == null) {
@@ -493,13 +490,13 @@ public class Xutil {
     if (xp.getName().equalsIgnoreCase("altrep")) {
       altrepProp(prop, xp.getValue());
 
-      return;
+      //return;
     }
   }
 
   protected static boolean emit(final BaseComponentType pattern,
-                                final Class compCl,
-                                final Class... cl) {
+                                final Class<?> compCl,
+                                final Class<?>... cl) {
     if (pattern == null) {
       return true;
     }
