@@ -3797,7 +3797,19 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                             EventInfo make(final EntityBuilder eb,
                                            final String id)
                                     throws CalFacadeException {
-                              return eb.makeEvent(id, false);
+                              final EventInfo entity = eb.makeEvent(id, false);
+
+                              if (entity == null) {
+                                return null;
+                              }
+
+                              final Response resp = new Response();
+                              restoreEvent(resp, entity);
+                              if (!resp.isOk()) {
+                                throw new CalFacadeException(resp.toString());
+                              }
+
+                              return entity;
                             }
                           },
                           qb,
