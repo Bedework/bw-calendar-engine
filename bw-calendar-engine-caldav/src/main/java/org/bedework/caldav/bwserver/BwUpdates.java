@@ -724,7 +724,7 @@ public class BwUpdates implements Logged {
 
       ev.setDtend(BwDateTime.makeDateTime(ev.getDtstart().makeDtStart(),
                                           ev.getDtstart().getDateType(),
-                                          new Dur(ds.duration)));
+                                          ds.duration));
     } else if (!scheduleReply &&
             (endType == StartEndComponent.endTypeNone) &&
             !task) {
@@ -732,12 +732,12 @@ public class BwUpdates implements Logged {
          * Set the end values to the start values + 1 for dates
          */
       boolean dateOnly = ev.getDtstart().getDateType();
-      Dur dur;
+      final String dur;
 
       if (dateOnly) {
-        dur = new Dur(1, 0, 0, 0); // 1 day
+        dur = BwDateTime.oneDayForward;
       } else {
-        dur = new Dur(0, 0, 0, 0); // No duration
+        dur = "P0D"; // No duration
       }
       BwDateTime bwDtEnd = BwDateTime.makeDateTime(ev.getDtstart().makeDtStart(),
                                                    dateOnly, dur);

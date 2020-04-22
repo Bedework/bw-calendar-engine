@@ -83,7 +83,7 @@ public class Granulator {
     //}
 
     if (pars.endDt != null) {
-      pars.startDt = pars.endDt.copy();
+      pars.startDt = (BwDateTime)pars.endDt.clone();
     }
     pars.endDt = pars.startDt.addDuration(pars.dur);
     String start = pars.startDt.getDate();

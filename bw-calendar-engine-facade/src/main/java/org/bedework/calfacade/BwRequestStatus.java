@@ -29,7 +29,7 @@ import java.io.Serializable;
  *.
  *  @version 1.0
  */
-public class BwRequestStatus implements Comparable, Serializable {
+public class BwRequestStatus implements Comparable<BwRequestStatus>, Serializable {
   private String code;
 
   private BwString description;
@@ -44,8 +44,8 @@ public class BwRequestStatus implements Comparable, Serializable {
 
   /** Constructor
    *
-   * @param code
-   * @param description
+   * @param code status
+   * @param description text
    */
   public BwRequestStatus(final String code,
                          final String description) {
@@ -54,9 +54,9 @@ public class BwRequestStatus implements Comparable, Serializable {
 
   /** Constructor
    *
-   * @param code
-   * @param description
-   * @param data
+   * @param code status
+   * @param description text
+   * @param data any required data
    */
   public BwRequestStatus(final String code,
                          final BwString description,
@@ -143,7 +143,7 @@ public class BwRequestStatus implements Comparable, Serializable {
   }
 
   /**
-   * @param val
+   * @param val copy from this one
    * @return BwRequestStatus
    */
   public static BwRequestStatus fromRequestStatus(final RequestStatus val) {
@@ -156,7 +156,7 @@ public class BwRequestStatus implements Comparable, Serializable {
   /** Figure out what's different and update it. This should reduce the number
    * of spurious changes to the db.
    *
-   * @param from
+   * @param from compare to this one
    * @return true if we changed something.
    */
   public boolean update(final BwRequestStatus from) {
@@ -188,20 +188,14 @@ public class BwRequestStatus implements Comparable, Serializable {
    *                        Object methods
    * ==================================================================== */
 
-  public int compareTo(final Object o) {
-    if (o == this) {
+  public int compareTo(final BwRequestStatus that) {
+    if (that == this) {
       return 0;
     }
 
-    if (o == null) {
+    if (that == null) {
       return -1;
     }
-
-    if (!(o instanceof BwRequestStatus)) {
-      return -1;
-    }
-
-    BwRequestStatus that = (BwRequestStatus)o;
 
     int res = CalFacadeUtil.cmpObjval(getCode(), that.getCode());
 
@@ -235,7 +229,10 @@ public class BwRequestStatus implements Comparable, Serializable {
 
   @Override
   public boolean equals(final Object o) {
-    return compareTo(o) == 0;
+    if (!(o instanceof BwRequestStatus)) {
+      return false;
+    }
+    return compareTo((BwRequestStatus)o) == 0;
   }
 
   @Override
@@ -249,6 +246,7 @@ public class BwRequestStatus implements Comparable, Serializable {
     return ts.toString();
   }
 
+  @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
     BwRequestStatus rs = new BwRequestStatus();

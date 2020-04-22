@@ -52,7 +52,6 @@ import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.TimeZone;
 
@@ -807,8 +806,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                       BwDateTime.fromUTC(ann.getRecurrenceId().length() == 8,
                                          ann.getRecurrenceId());
 
-              final Dur dur = new Dur(val.getDuration());
-              final BwDateTime end = rid.addDur(dur);
+              final BwDateTime end = rid.addDur(val.getDuration());
 
               ri = new BwRecurrenceInstance();
 

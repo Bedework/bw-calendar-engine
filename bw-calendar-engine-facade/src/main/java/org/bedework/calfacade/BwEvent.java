@@ -2493,6 +2493,16 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     return ts;
   }
 
+  @Override
+  @NoProxy
+  public void clearAttachments() {
+    if (getNumAttachments() == 0) {
+      return;
+    }
+
+    getAttachments().clear();
+  }
+
   /* ====================================================================
    *                   AttendeesEntity interface methods
    * ==================================================================== */

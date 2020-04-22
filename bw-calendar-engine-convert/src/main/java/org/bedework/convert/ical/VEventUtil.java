@@ -341,13 +341,13 @@ public class VEventUtil extends IcalUtil {
 
       if (val.getEndType() == StartEndComponent.endTypeDate) {
         if (todo) {
-          Due due = val.getDtend().makeDue(tzreg);
+          Due due = IcalUtil.makeDue(val.getDtend(), tzreg);
           if (freeBusy | val.getForceUTC()) {
             due.setUtc(true);
           }
           pl.add(due);
         } else {
-          DtEnd dtend = val.getDtend().makeDtEnd(tzreg);
+          DtEnd dtend = IcalUtil.makeDtEnd(val.getDtend(), tzreg);
           if (freeBusy | val.getForceUTC()) {
             dtend.setUtc(true);
           }

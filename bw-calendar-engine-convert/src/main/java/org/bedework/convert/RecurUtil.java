@@ -21,6 +21,7 @@ package org.bedework.convert;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.convert.ical.IcalUtil;
 import org.bedework.convert.ical.VEventUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.Util;
@@ -84,7 +85,7 @@ public class RecurUtil {
     RecurRange rr = new RecurRange();
 
     DtStart start = ev.getDtstart().makeDtStart();
-    DtEnd end = ev.getDtend().makeDtEnd();
+    DtEnd end = IcalUtil.makeDtEnd(ev.getDtend());
     Duration duration = new Duration(null, ev.getDuration());
 
     //boolean durSpecified = ev.getEndType() == BwEvent.endTypeDuration;
@@ -249,7 +250,7 @@ public class RecurUtil {
       }
     }
 
-    final DtEnd end = ev.getDtend().makeDtEnd();
+    final DtEnd end = IcalUtil.makeDtEnd(ev.getDtend());
     
     if (endRange != null) {
       try {

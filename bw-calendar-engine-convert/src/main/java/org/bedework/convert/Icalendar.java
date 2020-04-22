@@ -318,7 +318,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   /**
    * @return Iterator
    */
-  public Iterator iterator() {
+  public Iterator<?> iterator() {
     return components.iterator();
   }
 
@@ -384,7 +384,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
 
   /** True for valid itip method
    *
-   * @param val
+   * @param val itip method to test
    * @return boolean
    */
   public static boolean validItipMethodType(final int val) {
@@ -401,11 +401,12 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
 
   /** True for valid itip method for given component type
    *
-   * @param val
-   * @param type
+   * @param val itip method to test
+   * @param type component type
    * @return boolean
    */
-  public static boolean validItipMethodType(final int val, final IcalComponentType type) {
+  public static boolean validItipMethodType(final int val,
+                                            final IcalComponentType type) {
     if (val == methodTypeNone) {
       return false;
     }

@@ -53,7 +53,7 @@ import java.util.Collection;
  *.
  *  @version 1.0
  */
-public class BwStringBase extends BwDbentity<BwStringBase>
+public class BwStringBase <T extends BwStringBase> extends BwDbentity<T>
     implements SizedEntity {
   private String lang;
 
@@ -258,7 +258,7 @@ public class BwStringBase extends BwDbentity<BwStringBase>
    * ==================================================================== */
 
   @Override
-  public int compareTo(final BwStringBase that) {
+  public int compareTo(final T that) {
     if (that == this) {
       return 0;
     }

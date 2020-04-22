@@ -2054,8 +2054,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
   @Override
   public String toJcal(final CalDAVEvent<?> ev,
-                       final boolean incSchedMethod,
-                       final IcalendarType pattern) throws WebdavException {
+                       final boolean incSchedMethod) throws WebdavException {
     try {
       int meth = ScheduleMethods.methodTypeNone;
 
@@ -2063,7 +2062,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         meth = getEvent(ev).getScheduleMethod();
       }
 
-      return trans.toJcal(getEvinfo(ev), meth, pattern);
+      return trans.toJcal(getEvinfo(ev), meth);
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
@@ -2089,7 +2088,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       if (ctype.equals("application/calendar+json")) {
-        return IcalTranslator.toJcal(cal, null);
+        return IcalTranslator.toJcal(cal);
       }
 
       throw new WebdavException("Unhandled content type" + contentType);

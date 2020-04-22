@@ -356,7 +356,7 @@ public abstract class CalintfHelper
     }
 
     if (val instanceof AttachmentsEntity) {
-      clearCollection(((AttachmentsEntity)val).getAttachments());
+      ((AttachmentsEntity)val).clearAttachments();
     }
 
     if (val instanceof AttendeesEntity) {

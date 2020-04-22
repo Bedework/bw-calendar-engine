@@ -63,6 +63,7 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.TextList;
 import net.fortuna.ical4j.model.component.Available;
+import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.component.VAvailability;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VFreeBusy;
@@ -150,7 +151,7 @@ public class BwEventUtil extends IcalUtil {
    * @param val         VEvent object
    * @param diff        True if we should assume we are updating existing events.
    * @param mergeAttendees True if we should only update our own attendee.
-   * @return EventInfo  object representing new entry or updated entry
+   * @return Response with status and EventInfo object representing new entry or updated entry
    */
   public static GetEntityResponse<EventInfo> toEvent(
           final IcalCallback cb,
@@ -172,7 +173,6 @@ public class BwEventUtil extends IcalUtil {
       currentPrincipal = principal.getPrincipalRef();
     }
 
-    @SuppressWarnings("unchecked")
     final Holder<Boolean> hasXparams = new Holder<>(Boolean.FALSE);
 
     final int methodType = ical.getMethodType();
@@ -574,10 +574,10 @@ public class BwEventUtil extends IcalUtil {
             if (cl != null) {
               /* Got some categories */
 
-              Iterator cit = cl.iterator();
+              Iterator<String> cit = cl.iterator();
 
               while (cit.hasNext()) {
-                String wd = (String)cit.next();
+                String wd = cit.next();
                 if (wd == null) {
                   continue;
                 }
@@ -976,11 +976,11 @@ public class BwEventUtil extends IcalUtil {
               /* Got some resources */
               lang = IcalUtil.getLang(prop);
 
-              Iterator rit = rl.iterator();
+              Iterator<String> rit = rl.iterator();
 
               while (rit.hasNext()) {
                 BwString rsrc = new BwString(lang,
-                                             (String)rit.next());
+                                             rit.next());
                 chg.addValue(pi, rsrc);
               }
             }
@@ -1197,11 +1197,6 @@ public class BwEventUtil extends IcalUtil {
 
       resp.setEntity(evinfo);
       return resp;
-    } catch (CalFacadeException cfe) {
-      if (logger.debug()) {
-        logger.error(cfe);
-      }
-      return Response.error(resp, cfe);
     } catch (Throwable t) {
       if (logger.debug()) {
         logger.error(t);
@@ -1342,9 +1337,9 @@ public class BwEventUtil extends IcalUtil {
 
     ParameterList params = p.getParameters();
 
-    Iterator parit = params.iterator();
+    Iterator<Parameter> parit = params.iterator();
     while (parit.hasNext()) {
-      Parameter param = (Parameter)parit.next();
+      Parameter param = parit.next();
 
       if (!(param instanceof XParameter)) {
         continue;
@@ -1388,19 +1383,15 @@ public class BwEventUtil extends IcalUtil {
                                            final EventInfo vavail) {
     var resp = new Response();
 
-    final ComponentList avls = val.getAvailable();
+    final ComponentList<Available> avls = val.getAvailable();
 
-    if ((avls == null) || avls.isEmpty()) {
+    if (Util.isEmpty(avls)) {
       return resp;
     }
 
-    for (final Object o : avls) {
-      if (!(o instanceof Available)) {
-        return Response.error(resp, "Invalid available list");
-      }
-
+    for (final Available avl : avls) {
       final GetEntityResponse<EventInfo> availi =
-              toEvent(cb, cal, ical, (Component)o,
+              toEvent(cb, cal, ical, avl,
                       true,
                       false);
       if (!resp.isOk()) {
@@ -1425,13 +1416,12 @@ public class BwEventUtil extends IcalUtil {
                                     final boolean mergeAttendees) throws CalFacadeException {
 
     try {
-      final ComponentList voters = val.getVoters();
+      final ComponentList<Participant> voters = val.getVoters();
 
-      if ((voters == null) || voters.isEmpty()) {
+      if (Util.isEmpty(voters)) {
         return;
       }
 
-      final Iterator it = voters.iterator();
       final Set<String> vcuas = new TreeSet<>();
       final BwEvent event = vpoll.getEvent();
 
@@ -1439,9 +1429,7 @@ public class BwEventUtil extends IcalUtil {
         event.clearVoters();
       }
 
-      while (it.hasNext()) {
-        final Component comp = (Component)it.next();
-
+      for (final Participant comp: voters) {
         final String voter = comp.toString();
         event.addVoter(voter);
 
@@ -1473,7 +1461,7 @@ public class BwEventUtil extends IcalUtil {
                                    final EventInfo vpoll,
                                    final IcalCallback cb,
                                    final ChangeTable chg,
-                                   final boolean mergeAttendees) throws Throwable {
+                                   final boolean mergeAttendees) {
     final BwEvent ev = vpoll.getEvent();
 
     /*
@@ -1519,13 +1507,12 @@ public class BwEventUtil extends IcalUtil {
                                         final ChangeTable changes) throws CalFacadeException {
 
     try {
-      final ComponentList cands = val.getCandidates();
+      final ComponentList<?> cands = val.getCandidates();
 
-      if ((cands == null) || cands.isEmpty()) {
+      if (Util.isEmpty(cands)) {
         return;
       }
 
-      final Iterator it = cands.iterator();
       final Set<Integer> pids = new TreeSet<>();
       final BwEvent event = vpoll.getEvent();
 
@@ -1533,8 +1520,8 @@ public class BwEventUtil extends IcalUtil {
         event.clearPollItems();
       }
 
-      while (it.hasNext()) {
-        final Component comp = (Component)it.next();
+      for (final Object o: cands) {
+        final Component comp = (Component)o;
 
         final String pollItem = comp.toString();
         event.addPollItem(pollItem);
@@ -1595,7 +1582,8 @@ public class BwEventUtil extends IcalUtil {
    * we've processed for this calendar. Only called if we have an event
    * with a recurrence id
    */
-  private static EventInfo findMaster(final String guid, final Collection evs) {
+  private static EventInfo findMaster(final String guid,
+                                      final Collection<?> evs) {
     if (evs == null) {
       return null;
     }

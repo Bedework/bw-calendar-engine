@@ -33,7 +33,7 @@ import java.util.Collection;
  *  @version 1.0
  */
 @Dump(elementName="bwlongstring", keyFields={"lang", "value"})
-public class BwLongString extends BwStringBase {
+public class BwLongString extends BwStringBase<BwLongString> {
   /** Constructor
    */
   public BwLongString() {

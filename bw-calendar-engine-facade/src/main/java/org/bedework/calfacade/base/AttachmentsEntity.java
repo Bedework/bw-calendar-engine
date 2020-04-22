@@ -31,39 +31,43 @@ public interface AttachmentsEntity {
    *
    * @param val    Set of attachments
    */
-  public void setAttachments(Set<BwAttachment> val);
+  void setAttachments(Set<BwAttachment> val);
 
   /** Get the attendees
    *
    *  @return Set     attachments list
    */
-  public Set<BwAttachment> getAttachments();
+  Set<BwAttachment> getAttachments();
 
   /**
    * @return int number of attachments.
    */
-  public int getNumAttachments();
+  int getNumAttachments();
 
   /**
-   * @param val
+   * @param val an attachment
    */
-  public void addAttachment(BwAttachment val);
+  void addAttachment(BwAttachment val);
 
   /**
-   * @param val
+   * @param val an attachment
    * @return boolean true if removed.
    */
-  public boolean removeAttachment(BwAttachment val);
+  boolean removeAttachment(BwAttachment val);
 
   /** Return a copy of the Set
    *
    * @return Set of BwAttachment
    */
-  public Set<BwAttachment> copyAttachments();
+  Set<BwAttachment> copyAttachments();
 
   /** Return a clone of the Set
    *
    * @return Set of BwAttachment
    */
-  public Set<BwAttachment> cloneAttachments();
+  Set<BwAttachment> cloneAttachments();
+
+  /** Clear all attachments
+   */
+  void clearAttachments();
 }

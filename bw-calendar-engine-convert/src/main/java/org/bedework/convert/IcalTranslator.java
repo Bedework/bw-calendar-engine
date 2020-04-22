@@ -287,7 +287,7 @@ public class IcalTranslator implements Logged, Serializable {
     }
 
     JcalHandler.outJcal(wtr,
-                        vals, methodType, null,
+                        vals, methodType,
                         currentPrincipal,
                         new EventTimeZonesRegistry(this, null));
   }
@@ -1117,13 +1117,11 @@ public class IcalTranslator implements Logged, Serializable {
   /**
    * @param val event
    * @param methodType icalendar method
-   * @param pattern to control output
    * @return JSON jcal
    * @throws CalFacadeException on fatal error
    */
   public String toJcal(final EventInfo val,
-                       final int methodType,
-                       final IcalendarType pattern) throws CalFacadeException {
+                       final int methodType) throws CalFacadeException {
     String currentPrincipal = null;
     BwPrincipal principal = cb.getPrincipal();
 
@@ -1134,21 +1132,18 @@ public class IcalTranslator implements Logged, Serializable {
     List<EventInfo> eis = new ArrayList<>();
 
     eis.add(val);
-    return JcalHandler.toJcal(eis, methodType, pattern,
+    return JcalHandler.toJcal(eis, methodType,
                               currentPrincipal,
                               new EventTimeZonesRegistry(this, val.getEvent()));
   }
 
   /**
    * @param val calendar object
-   * @param pattern to limit result
    * @return JSON jcal
    * @throws CalFacadeException on fatal error
    */
-  public static String toJcal(final Calendar val,
-                              final IcalendarType pattern) throws CalFacadeException {
-    return JcalHandler.toJcal(val, pattern,
-                              null);
+  public static String toJcal(final Calendar val) throws CalFacadeException {
+    return JcalHandler.toJcal(val);
   }
 
   /* ====================================================================

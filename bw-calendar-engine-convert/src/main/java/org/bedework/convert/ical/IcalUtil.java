@@ -37,6 +37,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
+import org.bedework.util.timezones.Timezones;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.CalendarParserImpl;
@@ -53,6 +54,7 @@ import net.fortuna.ical4j.model.ParameterFactoryImpl;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
+import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.parameter.AltRep;
@@ -76,8 +78,10 @@ import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.CalendarAddress;
 import net.fortuna.ical4j.model.property.DateListProperty;
+import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
+import net.fortuna.ical4j.model.property.Due;
 import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.PollItemId;
@@ -951,6 +955,45 @@ public class IcalUtil {
     return (AltRep)prop.getParameters().getParameter("ALTREP");
   }
 
+  /** Make a DtEnd from the object
+   *
+   * @param val a BwDateTime
+   * @return DtEnd ical4j dtend object
+   */
+  public static  DtEnd makeDtEnd(final BwDateTime val) {
+    return makeDtEnd(val, Timezones.getTzRegistry());
+  }
+
+  /** Make a DtEnd from the object
+   *
+   * @param val a BwDateTime
+   * @param tzreg timezone registry
+   * @return DtEnd
+   */
+  public static  DtEnd makeDtEnd(final BwDateTime val,
+                                 final TimeZoneRegistry tzreg) {
+    DtEnd dt = new DtEnd();
+
+    initDateProp(val, dt, tzreg);
+
+    return dt;
+  }
+
+  /** Make a Due from the object
+   *
+   * @param val a BwDateTime
+   * @param tzreg timezone registry
+   * @return Due
+   */
+  public static Due makeDue(final BwDateTime val,
+                            final TimeZoneRegistry tzreg) {
+    Due dt = new Due();
+
+    initDateProp(val, dt, tzreg);
+
+    return dt;
+  }
+
   /** Always return a DateTime object
    *
    * @param dt bw date time
@@ -1057,23 +1100,21 @@ public class IcalUtil {
         ev.setDuration(durVal);
       }
 
-      Dur dur = duration.getDuration();
-
       ev.setDtend(BwDateTime.makeDateTime(dtStart,
                                           ev.getDtstart().getDateType(),
-                                          dur));
+                                          durVal));
     } else if (!scheduleReply &&
             (endType == StartEndComponent.endTypeNone) && !todo) {
       /* No duration and no end specified.
          * Set the end values to the start values + 1 for dates
          */
       boolean dateOnly = ev.getDtstart().getDateType();
-      Dur dur;
+      final String dur;
 
       if (dateOnly) {
-        dur = new Dur(1, 0, 0, 0); // 1 day
+        dur = BwDateTime.oneDayForward;
       } else {
-        dur = new Dur(0, 0, 0, 0); // No duration
+        dur = "P0D"; // No duration
       }
       BwDateTime bwDtEnd = BwDateTime.makeDateTime(dtStart, dateOnly, dur);
       if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
@@ -1100,6 +1141,30 @@ public class IcalUtil {
 //    } catch (Throwable t) {
 //      throw new CalFacadeException(t);
 //    }
+  }
+
+  /* Init a date property for makeDtEnd, makeDue
+   */
+  private static void initDateProp(final BwDateTime val,
+                                   final DateProperty dt,
+                                   final TimeZoneRegistry tzreg) {
+    String tzid = val.getTzid();
+
+    ParameterList pl = dt.getParameters();
+
+    if (val.getDateType()) {
+      pl.add(Value.DATE);
+    }
+
+    if (tzid != null) {
+      dt.setTimeZone(tzreg.getTimeZone(tzid));
+    }
+
+    try {
+      dt.setValue(val.getDtval());
+    } catch (final ParseException pe) {
+      throw new RuntimeException(pe);
+    }
   }
 }
 

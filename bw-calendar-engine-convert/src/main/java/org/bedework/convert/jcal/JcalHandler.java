@@ -32,7 +32,6 @@ import org.bedework.util.logging.BwLogger;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import ietf.params.xml.ns.icalendar_2.IcalendarType;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
@@ -65,36 +64,30 @@ public class JcalHandler implements Serializable {
   static {
     jsonFactory = new JsonFactory();
     jsonFactory.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
-    jsonFactory.configure(JsonGenerator.Feature.QUOTE_FIELD_NAMES, true);
     jsonFactory.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
   }
 
   public static String toJcal(final Collection<EventInfo> vals,
                               final int methodType,
-                              final IcalendarType pattern,
                               final String currentPrincipal,
                               final EventTimeZonesRegistry tzreg) throws CalFacadeException {
     final StringWriter sw = new StringWriter();
 
-    outJcal(sw, vals, methodType, pattern, currentPrincipal, tzreg);
+    outJcal(sw, vals, methodType, currentPrincipal, tzreg);
 
     return sw.toString();
   }
 
-  public static String toJcal(final Calendar cal,
-                              final IcalendarType pattern,
-                              final EventTimeZonesRegistry tzreg) throws CalFacadeException {
+  public static String toJcal(final Calendar cal) throws CalFacadeException {
     final StringWriter sw = new StringWriter();
 
-    outJcal(sw, cal, pattern, tzreg);
+    outJcal(sw, cal);
 
     return sw.toString();
   }
 
   public static void outJcal(final Writer wtr,
-                             final Calendar cal,
-                             final IcalendarType pattern,
-                             final EventTimeZonesRegistry tzreg) throws CalFacadeException {
+                             final Calendar cal) throws CalFacadeException {
     try {
       final JsonGenerator jgen = jsonFactory.createGenerator(wtr);
 
@@ -138,11 +131,10 @@ public class JcalHandler implements Serializable {
   public static void outJcal(final Writer wtr,
                              final Collection<EventInfo> vals,
                              final int methodType,
-                             final IcalendarType pattern,
                              final String currentPrincipal,
                              final EventTimeZonesRegistry tzreg) throws CalFacadeException {
     try {
-      final JsonGenerator jgen = jsonFactory.createJsonGenerator(wtr);
+      final JsonGenerator jgen = jsonFactory.createGenerator(wtr);
 
       if (logger.debug()) {
         jgen.useDefaultPrettyPrinter();
@@ -169,7 +161,6 @@ public class JcalHandler implements Serializable {
 
         if (ei.getNumOverrides() > 0) {
           for (final EventInfo oei: ei.getOverrides()) {
-            ev = oei.getEvent();
             outComp(jgen, VEventUtil.toIcalComponent(oei,
                                                      true,
                                                      tzreg,
@@ -208,7 +199,7 @@ public class JcalHandler implements Serializable {
        */
       jgen.writeStartArray();
 
-      ComponentList cl = null;
+      ComponentList<?> cl = null;
       if (comp instanceof VEvent) {
         cl = ((VEvent)comp).getAlarms();
       } else if (comp instanceof VToDo) {

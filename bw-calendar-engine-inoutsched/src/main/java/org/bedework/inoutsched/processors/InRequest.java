@@ -51,7 +51,6 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.misc.response.Response;
 import org.bedework.util.timezones.DateTimeUtil;
 
-import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Period;
 
 import java.util.ArrayList;
@@ -849,7 +848,7 @@ public class InRequest extends InProcessor {
                                             recurrenceId,
                                             ei.getEvent().getDtstart().getTzid());
 
-      BwDateTime end = start.addDur(new Dur(ei.getEvent().getDuration()));
+      BwDateTime end = start.addDur(ei.getEvent().getDuration());
 
       ovei.getEvent().setDtstart(start);
       ovei.getEvent().setDtend(end);

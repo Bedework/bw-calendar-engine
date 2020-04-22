@@ -40,7 +40,6 @@ import org.bedework.util.timezones.TimezonesException;
 
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.component.Participant;
 import net.fortuna.ical4j.model.property.DtStart;
@@ -323,7 +322,7 @@ public class InReply extends InProcessor {
             }
             ocalEv.setDtstart(BwDateTime.makeBwDateTime(st));
             ocalEv.setDuration(calEv.getDuration());
-            ocalEv.setDtend(ocalEv.getDtstart().addDur(new Dur(calEv.getDuration())));
+            ocalEv.setDtend(ocalEv.getDtstart().addDur(calEv.getDuration()));
           } catch (final ParseException | TimezonesException e) {
             throw new RuntimeException(e);
           }

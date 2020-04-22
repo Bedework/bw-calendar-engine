@@ -37,59 +37,53 @@ import java.util.Set;
  */
 public class ExdatePropUpdater extends DateDatetimePropUpdater {
   public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
-    try {
-      BwEvent ev = ui.getEvent();
-      ChangeTableEntry cte = ui.getCte();
+    BwEvent ev = ui.getEvent();
+    ChangeTableEntry cte = ui.getCte();
 
-      Set<BwDateTime> evDts = ev.getExdates();
-      DateDatetimePropertyType dt = (DateDatetimePropertyType)ui.getProp();
+    Set<BwDateTime> evDts = ev.getExdates();
+    DateDatetimePropertyType dt = (DateDatetimePropertyType)ui.getProp();
 
-      String dtUTC = XcalUtil.getUTC(dt, ui.getTzs());
+    String dtUTC = XcalUtil.getUTC(dt, ui.getTzs());
 
-      if (ui.isRemove()) {
-        removeDt(dtUTC, evDts, cte);
+    if (ui.isRemove()) {
+      removeDt(dtUTC, evDts, cte);
 
-        return UpdateResult.getOkResult();
-      }
+      return UpdateResult.getOkResult();
+    }
 
-      BwDateTime prdt = BwDateTime.makeBwDateTime(dt);
+    BwDateTime prdt = BwDateTime.makeBwDateTime(dt);
 
-      if (ui.isAdd()) {
-        addDt(prdt, evDts, cte);
+    if (ui.isAdd()) {
+      addDt(prdt, evDts, cte);
 
-        return UpdateResult.getOkResult();
-      }
+      return UpdateResult.getOkResult();
+    }
 
-      /* Changing exdate maybe just changing the parameters (UTC unchanged) or
+    /* Changing exdate maybe just changing the parameters (UTC unchanged) or
        * an actual value change. Second case is really a remove and add
        */
 
-      BwDateTime newdt = BwDateTime.makeBwDateTime(
-               (DateDatetimePropertyType)ui.getUpdprop());
+    BwDateTime newdt = BwDateTime.makeBwDateTime(
+            (DateDatetimePropertyType)ui.getUpdprop());
 
-      if (prdt.getDate().equals(newdt.getDate())) {
-        // tzid or date only?
-        if (prdt.getTzid().equals(newdt.getTzid()) &&
-            (prdt.getDateType() == newdt.getDateType())) {
-          // Unchanged
-          return UpdateResult.getOkResult();
-        } else {
-          evDts.remove(prdt);
-          evDts.add(newdt);
-          cte.addChangedValue(newdt);
-        }
+    if (prdt.getDate().equals(newdt.getDate())) {
+      // tzid or date only?
+      if (prdt.getTzid().equals(newdt.getTzid()) &&
+              (prdt.getDateType() == newdt.getDateType())) {
+        // Unchanged
+        return UpdateResult.getOkResult();
+      } else {
+        evDts.remove(prdt);
+        evDts.add(newdt);
+        cte.addChangedValue(newdt);
       }
-
-      /* Do remove then add */
-      removeDt(prdt.getDate(), evDts, cte);
-      addDt(newdt, evDts, cte);
-
-      return UpdateResult.getOkResult();
-    } catch (WebdavException we) {
-      throw we;
-    } catch (Throwable t) {
-      throw new WebdavException(t);
     }
+
+    /* Do remove then add */
+    removeDt(prdt.getDate(), evDts, cte);
+    addDt(newdt, evDts, cte);
+
+    return UpdateResult.getOkResult();
   }
 
   private boolean removeDt(final String dtUTC,

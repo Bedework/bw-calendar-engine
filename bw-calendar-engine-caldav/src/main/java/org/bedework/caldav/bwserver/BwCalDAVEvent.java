@@ -613,7 +613,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
 
       if (contentType.equals("application/calendar+json")) {
         return intf.toJcal(this,
-                           methodType != ScheduleMethods.methodTypeNone, null);
+                           methodType != ScheduleMethods.methodTypeNone);
       }
 
       throw new RuntimeException("Unhandled content type" + contentType);

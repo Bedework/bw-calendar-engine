@@ -79,9 +79,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
   private String range; // Only for recurrence id
 
   /**   */
-  public static Dur oneDayForward = new Dur(1, 0, 0, 0);
+  public static String oneDayForward = "P1D";
   /**   */
-  public static Dur oneDayBack = new Dur(-1, 0, 0, 0);
+  public static String oneDayBack = "-P1D";
 
   /** This is a UTC datetime value to make searching easier. There are a number of
    * complications to dates, the end date is specified as non-inclusive
@@ -257,9 +257,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    */
   public static BwDateTime makeDateTime(final DateProperty dtStart,
                                         final boolean dateOnly,
-                                        final Dur dur) {
+                                        final String dur) {
     DtEnd dtEnd;
-    java.util.Date endDt = dur.getTime(dtStart.getDate());
+    java.util.Date endDt = new Dur(dur).getTime(dtStart.getDate());
 
     Parameter tzid = getIcalParameter(dtStart, "TZID");
 
@@ -666,10 +666,10 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   /** Add a duration and return the result
    *
-   * @param d      Dur
+   * @param d      dur value
    * @return BwDateTime
    */
-  public BwDateTime addDur(final Dur d) {
+  public BwDateTime addDur(final String d) {
     return makeDateTime(makeDtStart(Timezones.getTzRegistry()),
                         getDateType(), d);
   }
