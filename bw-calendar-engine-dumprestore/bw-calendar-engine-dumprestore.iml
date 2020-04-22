@@ -10,7 +10,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-hibernate:4.0.19-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-facade" />
     <orderEntry type="module" module-name="bw-calendar-engine-annotations" />
     <orderEntry type="library" name="Maven: org.bedework:bw-access:4.0.8" level="project" />
@@ -26,7 +25,7 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-webdav:4.0.9" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-xml:4.0.27" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-util:4.0.9" level="project" />
+    <orderEntry type="module" module-name="bw-caldav-util" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:apache-jdkim-library:0.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.geronimo.specs:geronimo-activation_1.1_spec:1.0.2" level="project" />
@@ -37,7 +36,7 @@
     <orderEntry type="library" name="Maven: org.apache.james:apache-mime4j-dom:0.7" level="project" />
     <orderEntry type="library" name="Maven: dnsjava:dnsjava:2.1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.8.2" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-server:4.0.9" level="project" />
+    <orderEntry type="module" module-name="bw-caldav-server" />
     <orderEntry type="library" name="Maven: javax.xml.soap:javax.xml.soap-api:1.4.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:2.0.12" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.10" level="project" />
@@ -131,6 +130,7 @@
     <orderEntry type="library" scope="RUNTIME" name="Maven: com.sun.activation:jakarta.activation:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.10" level="project" />
     <orderEntry type="library" name="Maven: javax.jws:javax.jws-api:1.1" level="project" />
+    <orderEntry type="module" module-name="bw-jsforj" />
     <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.3.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-args:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-misc:4.0.27" level="project" />

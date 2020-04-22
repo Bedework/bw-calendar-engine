@@ -41,6 +41,11 @@
       <artifactId>bw-xml-synchws</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-jsforj</artifactId>
+    </dependency>
+
     <!-- Third Party Libraries -->
     <dependency>
       <groupId>${ical4j.groupId}</groupId>
@@ -55,6 +60,14 @@
     <dependency>
       <groupId>org.bedework.ical4j</groupId>
       <artifactId>ical4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-jsforj</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-jsforj</artifactId>
     </dependency>
   </dependencies>
 </project>
