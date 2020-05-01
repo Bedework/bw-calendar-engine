@@ -25,7 +25,6 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.locale.BwLocale;
 import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.timezones.Timezones;
-import org.bedework.util.timezones.TimezonesException;
 
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
@@ -119,12 +118,7 @@ public class BwDateTimeUtil {
    */
   public static BwDateTime getDateTime(final Date date) {
     String dtval = DateTimeUtil.isoDateTime(date);
-    try {
-      return getDateTime(dtval, false, false, null);
-    } catch (CalFacadeException e) {
-      // Shoudl never happen
-      throw new RuntimeException(e);
-    }
+    return getDateTime(dtval, false, false, null);
   }
 
   /** Get a date object representing the given date and flags
@@ -134,11 +128,11 @@ public class BwDateTimeUtil {
    * @param floating    boolean true if this is a floating time
    * @param tzid - String tzid or null for default, UTC or floating.
    * @return Date object representing the date
-   * @throws CalFacadeException on timezone error or bad date
+   * @throws RuntimeException on timezone error or bad date
    */
   public static BwDateTime getDateTime(String date, final boolean dateOnly,
                                        final boolean floating,
-                                       String tzid) throws CalFacadeException {
+                                       String tzid) {
     try {
       TimeZone tz = null;
 
@@ -165,12 +159,8 @@ public class BwDateTimeUtil {
       }
 
       return BwDateTime.makeBwDateTime(dateOnly, date, tzid);
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (TimezonesException tze) {
-      throw new CalFacadeException(tze);
     } catch (Throwable t) {
-      throw new CalFacadeBadDateException();
+      throw new RuntimeException(t);
     }
   }
 

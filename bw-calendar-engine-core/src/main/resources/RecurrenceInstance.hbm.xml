@@ -24,7 +24,7 @@
                class="org.bedework.calfacade.BwDateTime" >
       <property name="dateType" column="start_date_type" type="true_false"
                 not-null="true" />
-      <property name="tzid" column="start_tzid" type="string" />
+      <property name="timezoneId" column="start_tzid" type="string" />
       <property name="dtval" column="start_dtval" type="string" length="16"
                 not-null="true" />
       <property name="date" column="start_date" type="string" length="16"
@@ -39,7 +39,7 @@
     <component name="dtend"
                class="org.bedework.calfacade.BwDateTime" >
       <property name="dateType" column="end_date_type" type="true_false" />
-      <property name="tzid" column="end_tzid" type="string" />
+      <property name="timezoneId" column="end_tzid" type="string" />
       <property name="dtval" column="end_dtval" type="string" />
       <property name="date" column="end_date" type="string"
                 index="bwidx_recur_end" />

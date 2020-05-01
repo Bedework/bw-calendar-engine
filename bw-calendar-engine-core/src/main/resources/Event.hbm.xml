@@ -47,7 +47,7 @@
     <component name="dtstart"
                class="org.bedework.calfacade.BwDateTime" >
       <property name="dateType" column="start_date_type" type="true_false" />
-      <property name="tzid" column="start_tzid" type="string" />
+      <property name="timezoneId" column="start_tzid" type="string" />
       <property name="dtval" column="start_dtval" type="string" length="16" />
       <property name="date" column="start_date" type="string" length="16"
                 index="bwidx_event_start" />
@@ -60,7 +60,7 @@
     <component name="dtend"
                class="org.bedework.calfacade.BwDateTime" >
       <property name="dateType" column="end_date_type" type="true_false" />
-      <property name="tzid" column="end_tzid" type="string" />
+      <property name="timezoneId" column="end_tzid" type="string" />
       <property name="dtval" column="end_dtval" type="string" length="16" />
       <property name="date" column="end_date" type="string" length="16"
                 index="bwidx_event_end" />
@@ -242,7 +242,7 @@
                  class="org.bedework.calfacade.BwDateTime" >
         <property name="dateType" column="r_date_type" type="true_false"
                   not-null="true" />
-        <property name="tzid" column="r_tzid" type="string" />
+        <property name="timezoneId" column="r_tzid" type="string" />
         <property name="dtval" column="r_dtval" type="string" length="16"
                   not-null="true" />
         <property name="date" column="r_date" type="string" length="16"
@@ -268,7 +268,7 @@
                  class="org.bedework.calfacade.BwDateTime" >
         <property name="dateType" column="ex_date_type" type="true_false"
                   not-null="true" />
-        <property name="tzid" column="ex_tzid" type="string" />
+        <property name="timezoneId" column="ex_tzid" type="string" />
         <property name="dtval" column="ex_dtval" type="string" length="16"
                   not-null="true" />
         <property name="date" column="ex_date" type="string" length="16"

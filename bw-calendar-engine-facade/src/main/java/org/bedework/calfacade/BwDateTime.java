@@ -19,12 +19,14 @@
 package org.bedework.calfacade;
 
 import org.bedework.calfacade.annotations.Dump;
+import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.annotations.ical.IcalProperties;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.BwCloneable;
 import org.bedework.calfacade.base.DumpEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.calfacade.util.FieldSplitter;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.timezones.DateTimeUtil;
@@ -70,9 +72,16 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    */
   private boolean dateType;
 
-  /** Non-null if one was specified.
+  /** Non-null if one was specified. To avoid schema changes
+   * this field might be a combined tzid and fractional value.
    */
   private String tzid;
+
+  public static final String fieldDelimiter = "\t";
+  private FieldSplitter tzidSplit;
+
+  private static final int tzidIndex = 0;
+  private static final int fractionalIndex = 1;
 
   private String dtval; // rfc2445 date or datetime value
 
@@ -378,8 +387,24 @@ public class BwDateTime extends DumpEntity<BwDateTime>
                   param = true),
     @IcalProperty(pindex = PropertyInfoIndex.TZID)
                   })
-
   public String getTzid() {
+    return fetchTzidSplit().getFld(tzidIndex);
+  }
+
+  public void setFractional(final String val) {
+    assignTzidField(fractionalIndex, val);
+  }
+
+  public String getFractional() {
+    return fetchTzidSplit().getFld(fractionalIndex);
+  }
+
+  /** For hibernate
+   *
+   * @return the combined id and fractional value
+   */
+  @NoDump
+  private String getTimezoneId() {
     return tzid;
   }
 
@@ -695,6 +720,14 @@ public class BwDateTime extends DumpEntity<BwDateTime>
     tzid = val;
   }
 
+  /** For hibernate
+   *
+   * @param val combined tzid and possible fractional value
+   */
+  private void setTimezoneId(final String val) {
+    tzid = val;
+  }
+
   /** Set the dtval - the rfc2445 date or datetime value
    *
    * @param val    String dtval
@@ -974,6 +1007,20 @@ public class BwDateTime extends DumpEntity<BwDateTime>
     sb.append("}");
 
     return sb.toString();
+  }
+
+  private FieldSplitter fetchTzidSplit() {
+    if (tzidSplit == null) {
+      tzidSplit = new FieldSplitter(fieldDelimiter);
+      tzidSplit.setVal(getTimezoneId());
+    }
+
+    return tzidSplit;
+  }
+
+  private void assignTzidField(final int index, final String val) {
+    fetchTzidSplit().setFld(index, val);
+    setTimezoneId(fetchTzidSplit().getCombined());
   }
 
   private void checkRuntimeException(Throwable t) {

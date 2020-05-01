@@ -22,7 +22,6 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.base.BwEventKey;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
-import org.bedework.calfacade.base.UpdateFromTimeZonesInfo.UnknownTimezoneInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.BwDateTimeUtil;
 import org.bedework.calsvci.TimeZonesStoreI;
@@ -252,7 +251,7 @@ public class TimeZonesStoreImpl implements Logged, TimeZonesStoreI {
    */
   private BwDateTime checkDateTimeForTZ(final BwDateTime val,
                                         final BwPrincipal owner,
-                                        final UpdateFromTimeZonesInfoInternal iinfo) throws CalFacadeException {
+                                        final UpdateFromTimeZonesInfoInternal iinfo) {
     if (val.getDateType()) {
       return null;
     }
@@ -265,23 +264,15 @@ public class TimeZonesStoreImpl implements Logged, TimeZonesStoreI {
       return null;
     }
 
-    try {
-      final BwDateTime newVal = 
-              BwDateTimeUtil.getDateTime(val.getDtval(), false,
-                                         false, val.getTzid());
+    final BwDateTime newVal =
+            BwDateTimeUtil.getDateTime(val.getDtval(), false,
+                                       false, val.getTzid());
 
-      if (newVal.getDate().equals(val.getDate())) {
-        return null;
-      }
-
-      return newVal;
-    } catch (final CalFacadeException cfe) {
-      if (cfe.getMessage().equals(CalFacadeException.unknownTimezone)) {
-        iinfo.unknownTzids.add(new UnknownTimezoneInfo(owner, val.getTzid()));
-        return null;
-      }
-      throw cfe;
+    if (newVal.getDate().equals(val.getDate())) {
+      return null;
     }
+
+    return newVal;
   }
 
   /* ====================================================================
