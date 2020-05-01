@@ -19,7 +19,6 @@
 package org.bedework.convert.ical.jscal;
 
 import org.bedework.calfacade.BwAttachment;
-import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
@@ -29,13 +28,12 @@ import org.bedework.calfacade.BwGeo;
 import org.bedework.calfacade.BwLocation;
 import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwRelatedTo;
-import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.convert.DifferResult;
 import org.bedework.jsforj.impl.JSFactory;
 import org.bedework.jsforj.impl.values.JSLocalDateTimeImpl;
 import org.bedework.jsforj.model.JSCalendarObject;
@@ -43,9 +41,9 @@ import org.bedework.jsforj.model.JSProperty;
 import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.JSTypes;
 import org.bedework.jsforj.model.values.JSOverride;
-import org.bedework.jsforj.model.values.collections.JSRecurrenceOverrides;
 import org.bedework.jsforj.model.values.JSValue;
 import org.bedework.jsforj.model.values.UnsignedInteger;
+import org.bedework.jsforj.model.values.collections.JSRecurrenceOverrides;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -93,6 +91,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import static org.bedework.convert.ical.jscal.BwDiffer.differs;
 import static org.bedework.util.misc.response.Response.Status.failed;
 
 /** Class to provide utility methods for translating to VEvent ical4j classes
@@ -256,8 +255,11 @@ public class BwEvent2JsCal {
       /* ------------------- Attachments -------------------- */
 
       final Set<BwAttachment> atts = val.getAttachments();
-      if (differs(PropertyInfoIndex.ATTACH,
-                  atts, master)) {
+      final DifferResult<BwAttachment, ?> attDiff =
+              differs(BwAttachment.class,
+                      PropertyInfoIndex.ATTACH,
+                      atts, master);
+      if (attDiff.differs) {
         if ((val.getNumAttachments() == 0) &
                 (master != null)) {
           // Override removing all attachments
@@ -299,9 +301,11 @@ public class BwEvent2JsCal {
       /* ------------------- Class -------------------- */
 
       final String clazz = val.getClassification();
-      if ((clazz != null) &&
-              differs(PropertyIndex.PropertyInfoIndex.CLASS,
-                      clazz, master)) {
+      final DifferResult<String, ?> classDiff =
+              differs(String.class,
+                      PropertyIndex.PropertyInfoIndex.CLASS,
+                      clazz, master);
+      if (classDiff.differs) {
         if (clazz.equalsIgnoreCase("confidential")) {
           jsval.setProperty(JSPropertyNames.privacy, "secret");
         } else {
@@ -313,31 +317,37 @@ public class BwEvent2JsCal {
       /* ------------------- Comments -------------------- */
 
       final var comments = val.getComments();
-      if (!Util.isEmpty(comments) &&
-              differs(PropertyInfoIndex.COMMENT,
-                      comments, master)) {
+      final DifferResult<BwString, ?> commDiff =
+              differs(BwString.class,
+                      PropertyInfoIndex.COMMENT,
+                      comments, master);
+      if (commDiff.differs) {
         for (final BwString str: val.getComments()) {
           jsval.addComment(str.getValue());
         }
       }
 
       /* ------------------- Completed -------------------- */
-
-      final var completed = val.getCompleted();
-      if ((todo || vpoll) && (completed != null) &&
-              differs(PropertyInfoIndex.COMPLETED,
-                      completed, master)) {
-        jsval.setProperty(JSPropertyNames.progress, "completed");
-        jsval.setProperty(JSPropertyNames.progressUpdated,
-                          jsonDate(completed));
+      if (todo || vpoll) {
+        final var completed = val.getCompleted();
+        final DifferResult<BwString, ?> compDiff =
+                differs(BwString.class,
+                        PropertyInfoIndex.COMPLETED,
+                        completed, master);
+        if (compDiff.differs) {
+          jsval.setProperty(JSPropertyNames.progress, "completed");
+          jsval.setProperty(JSPropertyNames.progressUpdated,
+                            jsonDate(completed));
+        }
       }
-
       /* ------------------- Contact -------------------- */
 
       var contacts = val.getContacts();
-      if (!Util.isEmpty(contacts) &&
-              differs(PropertyInfoIndex.CONTACT,
-                      contacts, master)) {
+      final DifferResult<BwContact, ?> contDiff =
+              differs(BwContact.class,
+                      PropertyInfoIndex.CONTACT,
+                      contacts, master);
+      if (contDiff.differs) {
         for (final BwContact c: contacts) {
           // LANG
           prop = new Contact(c.getCn().getValue());
@@ -650,9 +660,11 @@ public class BwEvent2JsCal {
       /* ------------------- Summary -------------------- */
 
       var summary = val.getSummary();
-      if ((summary != null) &&
-              differs(PropertyInfoIndex.SUMMARY,
-                      summary, master)) {
+      final DifferResult<String, ?> sumDiff =
+              differs(String.class,
+                      PropertyInfoIndex.SUMMARY,
+                      summary, master);
+      if (sumDiff.differs) {
         jsval.setProperty(JSPropertyNames.title, summary);
       }
 
@@ -661,9 +673,11 @@ public class BwEvent2JsCal {
       if (!todo && !vpoll) {
         strval = val.getPeruserTransparency(currentPrincipal);
 
-        if ((strval != null) && (strval.length() > 0) &&
-                differs(PropertyInfoIndex.TRANSP,
-                        strval, master)) {
+        final DifferResult<String, ?> transpDiff =
+                differs(String.class,
+                        PropertyInfoIndex.TRANSP,
+                        strval, master);
+        if (transpDiff.differs) {
           if (strval.equalsIgnoreCase("opaque")) {
             jsval.setProperty(JSPropertyNames.freeBusyStatus, "busy");
           } else {
@@ -688,9 +702,11 @@ public class BwEvent2JsCal {
         strval = strval.trim();
       }
 
-      if ((strval != null) && (strval.length() > 0) &&
-              differs(PropertyInfoIndex.URL,
-                      strval, master)) {
+      final DifferResult<String, ?> urlDiff =
+              differs(String.class,
+                      PropertyInfoIndex.URL,
+                      strval, master);
+      if (urlDiff.differs) {
         URI uri = Util.validURI(strval);
         if (uri != null) {
           throw new RuntimeException("Not done");
@@ -1084,292 +1100,6 @@ public class BwEvent2JsCal {
     }
     throw new RuntimeException("Not done");
 //    pl.add(new XProperty(name, makeXparlist(pars), val));
-  }
-
-  @SuppressWarnings("unchecked")
-  private static boolean differs(final PropertyInfoIndex pi,
-                                 final Object val,
-                                 final EventInfo master) {
-    if (master == null) {
-      return true;
-    }
-
-    final BwEvent ev = master.getEvent();
-    if (ev == null) {
-      return true;
-    }
-
-    switch (pi) {
-      case UNKNOWN_PROPERTY:
-        break;
-
-      case CLASS:
-        return Util.cmpObjval((String)val, ev.getClassification()) != 0;
-
-      case COMPLETED: /* Todo only */
-        return Util.cmpObjval((String)val, ev.getCompleted()) != 0;
-
-      case CREATED:
-        break;
-
-      case DESCRIPTION:
-          /*
-          for (BwLongString s: ev.getDescriptions()) {
-            chg.addValue(Property.DESCRIPTION, s);
-          }
-          */
-        return Util.cmpObjval((String)val, ev.getDescription()) != 0;
-
-      case DTEND: /* Event only */
-      case DUE: /* Todo only */
-        BwDateTime dt = (BwDateTime)val;
-        return !CalFacadeUtil.eqObjval(ev.getDtend(), dt);
-
-      case DTSTAMP:
-        break;
-
-      case DTSTART:
-        BwDateTime dt1 = (BwDateTime)val;
-        return !CalFacadeUtil.eqObjval(ev.getDtstart(), dt1);
-
-      case DURATION:
-        return Util.cmpObjval((String)val, ev.getDuration()) != 0;
-
-      case GEO:
-        return Util.cmpObjval((BwGeo)val, ev.getGeo()) != 0;
-
-      case LAST_MODIFIED:
-        break;
-
-      case LOCATION:
-        return Util.cmpObjval((BwLocation)val, ev.getLocation()) != 0;
-
-      case ORGANIZER:
-        return Util.cmpObjval((BwOrganizer)val, ev.getOrganizer()) != 0;
-
-      case PRIORITY:
-        return Util.cmpObjval((Integer)val, ev.getPriority()) != 0;
-
-      case RECURRENCE_ID:
-        break;
-
-      case SEQUENCE:
-        return (Integer)val != ev.getSequence();
-
-      case STATUS:
-        return Util.cmpObjval((String)val, ev.getStatus()) != 0;
-
-      case SUMMARY:
-          /*
-          for (BwString s: ev.getSummaries()) {
-            chg.addValue(Property.SUMMARY, s);
-          }
-          */
-        return Util.cmpObjval((String)val, ev.getSummary()) != 0;
-
-      case PERCENT_COMPLETE: /* Todo only */
-        return Util.cmpObjval((Integer)val, ev.getPercentComplete()) != 0;
-
-      case UID:
-        break;
-
-      case URL:
-        return Util.cmpObjval((String)val, ev.getLink()) != 0;
-
-      case TRANSP:
-        return Util.cmpObjval((String)val, ev.getTransparency()) != 0;
-
-      /* ---------------------------- Multi valued --------------- */
-
-      case ATTACH:
-        return cmpObjval((Set<BwAttachment>)val, ev.getAttachments()) != 0;
-
-      case ATTENDEE :
-        return cmpObjval((Set<BwAttendee>)val, ev.getAttendees()) != 0;
-
-      case CATEGORIES:
-        return cmpObjval((Set<BwCategory>)val, ev.getCategories()) != 0;
-
-      case COMMENT:
-        return cmpObjval((Set<BwString>)val, ev.getComments()) != 0;
-
-      case CONTACT:
-        return cmpObjval((Set<BwContact>)val, ev.getContacts()) != 0;
-
-      case EXDATE:
-        return cmpObjval((Set<BwDateTime>)val, ev.getExdates()) != 0;
-
-      case EXRULE:
-        return cmpObjval((Set<String>)val, ev.getExrules()) != 0;
-
-      case REQUEST_STATUS:
-        return cmpObjval((Set<BwRequestStatus>)val, ev.getRequestStatuses()) != 0;
-
-      case RELATED_TO:
-        return Util.cmpObjval((BwRelatedTo)val, ev.getRelatedTo()) != 0;
-
-      case RESOURCES:
-        return cmpObjval((Set<BwString>)val, ev.getResources()) != 0;
-
-      case RDATE:
-        return cmpObjval((Set<BwDateTime>)val, ev.getRdates()) != 0;
-
-      case RRULE:
-        return cmpObjval((Set<String>)val, ev.getRrules()) != 0;
-
-      case XPROP:
-        return cmpObjval((List<BwXproperty>)val, ev.getXproperties()) != 0;
-
-      /* -------------- Other event/task fields ------------------ */
-      case SCHEDULE_METHOD:
-      case SCHEDULE_STATE:
-      case SCHEDULE_TAG:
-      case TRIGGER_DATE_TIME:
-      case URI:
-
-        /* -------------- Other non-event, non-todo ---------------- */
-
-      case FREEBUSY:
-      case TZID:
-      case TZNAME:
-      case TZOFFSETFROM:
-      case TZOFFSETTO:
-      case TZURL:
-      case ACTION:
-      case REPEAT:
-      case TRIGGER:
-        break;
-
-      case COLLECTION: // non ical
-      case COST: // non ical
-      case CREATOR: // non ical
-      case OWNER: // non ical
-      case ENTITY_TYPE: // non ical
-        break;
-
-      case VALARM: // Component
-        break;
-
-      case LANG: // Param
-      case TZIDPAR: // Param
-        break;
-
-      case PUBLISH_URL:
-      case POLL_ITEM_ID:
-      case END_TYPE:
-      case ETAG:
-      case HREF:
-      case XBEDEWORK_COST:
-      case CALSCALE:
-      case METHOD:
-      case PRODID:
-      case VERSION:
-      case ACL:
-      case AFFECTS_FREE_BUSY:
-      case ALIAS_URI:
-      case ATTENDEE_SCHEDULING_OBJECT:
-      case CALTYPE:
-      case COL_PROPERTIES:
-      case COLPATH:
-      case CTOKEN:
-      case DISPLAY:
-      case DOCTYPE:
-      case EVENTREG_END:
-      case EVENTREG_MAX_TICKETS:
-      case EVENTREG_MAX_TICKETS_PER_USER:
-      case EVENTREG_START:
-      case EVENTREG_WAIT_LIST_LIMIT:
-      case FILTER_EXPR:
-      case IGNORE_TRANSP:
-      case IMAGE:
-      case INDEX_END:
-      case INDEX_START:
-      case INSTANCE:
-      case LAST_REFRESH:
-      case LAST_REFRESH_STATUS:
-      case LOCATION_HREF:
-      case LOCATION_STR:
-        break;
-
-      // Internal bedework properties
-      case CALSUITE:
-      case LASTMODSEQ:
-      case MASTER:
-      case NAME:
-      case NO_START:
-      case ORGANIZER_SCHEDULING_OBJECT:
-      case ORIGINATOR:
-      case OVERRIDE:
-      case PARAMETERS:
-      case PUBLIC:
-      case RECIPIENT:
-      case REFRESH_RATE:
-      case REMOTE_ID:
-      case REMOTE_PW:
-      case SUGGESTED_TO:
-      case TAG:
-      case TARGET:
-      case THUMBIMAGE:
-      case TOMBSTONED:
-      case TOPICAL_AREA:
-      case UNREMOVEABLE:
-      case VPATH:
-      case VIEW:
-      case X_BEDEWORK_CATEGORIES:
-      case X_BEDEWORK_CONTACT:
-      case X_BEDEWORK_LOCATION:
-        break;
-
-      default:
-        logger.warn("Not handling icalendar property " + pi);
-    } // switch
-
-    return false;
-  }
-
-  public static <T extends Comparable<T>> int cmpObjval(
-          final Collection<T> thisone,
-          final Collection<T> thatone) {
-    if (thisone == null) {
-      if (thatone == null) {
-        return 0;
-      }
-
-      return -1;
-    }
-
-    if (thatone == null) {
-      return 1;
-    }
-
-    // Ensure length same
-
-    int thisLen = thisone.size();
-    int thatLen = thatone.size();
-
-    int res = Util.cmpIntval(thisLen, thatLen);
-    if (res != 0) {
-      return res;
-    }
-
-    // First look to see if every element in thisOne is in thatOne
-
-    for (T c: thisone) {
-      if (!thatone.contains(c)) {
-        return 1;
-      }
-    }
-
-    // Now we do it the other way round - because thatOne may have 2
-    // equal elements
-
-    for (T c: thatone) {
-      if (!thisone.contains(c)) {
-        return -1;
-      }
-    }
-
-    return 0;
   }
 }
 
