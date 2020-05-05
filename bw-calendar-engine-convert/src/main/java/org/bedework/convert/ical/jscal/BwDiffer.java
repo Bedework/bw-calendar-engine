@@ -52,10 +52,11 @@ public class BwDiffer {
   private static BwLogger logger =
           new BwLogger().setLoggedClass(BwDiffer.class);
 
-  static <T extends Comparable<T>> DifferResult<T, ?> diffres(
+  static <T extends Comparable<T>,
+          CT extends Collection<T>> DifferResult<T, CT> diffres(
           @SuppressWarnings("unused") final Class<T> cl,
           final boolean differs) {
-    return new DifferListResult<>(differs);
+    return (DifferResult<T, CT>)new DifferListResult<T>(differs);
   }
 
   /**
@@ -66,7 +67,8 @@ public class BwDiffer {
    * @return differ result
    */
   @SuppressWarnings("unchecked")
-  public static <T extends Comparable<T>> DifferResult<T, ?> differs(
+  public static <T extends Comparable<T>,
+          CT extends Collection<T>> DifferResult<T, CT> differs(
           final Class<T> cl,
           final PropertyInfoIndex pi,
           final Object val,
@@ -189,29 +191,29 @@ public class BwDiffer {
       /* ---------------------------- Multi valued --------------- */
 
       case ATTACH:
-        return (DifferResult<T, ?>)cmpObjval((Set<BwAttachment>)val,
+        return (DifferResult<T, CT>)cmpObjval((Set<BwAttachment>)val,
                                              ev.getAttachments());
 
       case ATTENDEE :
-        return (DifferResult<T, ?>)cmpObjval((Set<BwAttendee>)val, ev.getAttendees());
+        return (DifferResult<T, CT>)cmpObjval((Set<BwAttendee>)val, ev.getAttendees());
 
       case CATEGORIES:
-        return (DifferResult<T, ?>)cmpObjval((Set<BwCategory>)val, ev.getCategories());
+        return (DifferResult<T, CT>)cmpObjval((Set<BwCategory>)val, ev.getCategories());
 
       case COMMENT:
-        return (DifferResult<T, ?>)cmpObjval((Set<BwString>)val, ev.getComments());
+        return (DifferResult<T, CT>)cmpObjval((Set<BwString>)val, ev.getComments());
 
       case CONTACT:
-        return (DifferResult<T, ?>)cmpObjval((Set<BwContact>)val, ev.getContacts());
+        return (DifferResult<T, CT>)cmpObjval((Set<BwContact>)val, ev.getContacts());
 
       case EXDATE:
-        return (DifferResult<T, ?>)cmpObjval((Set<BwDateTime>)val, ev.getExdates());
+        return (DifferResult<T, CT>)cmpObjval((Set<BwDateTime>)val, ev.getExdates());
 
       case EXRULE:
-        return (DifferResult<T, ?>)cmpObjval((Set<String>)val, ev.getExrules());
+        return (DifferResult<T, CT>)cmpObjval((Set<String>)val, ev.getExrules());
 
       case REQUEST_STATUS:
-        return (DifferResult<T, ?>)cmpObjval((Set<BwRequestStatus>)val,
+        return (DifferResult<T, CT>)cmpObjval((Set<BwRequestStatus>)val,
                                              ev.getRequestStatuses());
 
       case RELATED_TO:
@@ -219,16 +221,16 @@ public class BwDiffer {
                                           ev.getRelatedTo()) != 0);
 
       case RESOURCES:
-        return (DifferResult<T, ?>)cmpObjval((Set<BwString>)val, ev.getResources());
+        return (DifferResult<T, CT>)cmpObjval((Set<BwString>)val, ev.getResources());
 
       case RDATE:
-        return (DifferResult<T, ?>)cmpObjval((Set<BwDateTime>)val, ev.getRdates());
+        return (DifferResult<T, CT>)cmpObjval((Set<BwDateTime>)val, ev.getRdates());
 
       case RRULE:
-        return (DifferResult<T, ?>)cmpObjval((Set<String>)val, ev.getRrules());
+        return (DifferResult<T, CT>)cmpObjval((Set<String>)val, ev.getRrules());
 
       case XPROP:
-        return (DifferResult<T, ?>)cmpObjval((List<BwXproperty>)val, ev.getXproperties());
+        return (DifferResult<T, CT>)cmpObjval((List<BwXproperty>)val, ev.getXproperties());
 
       /* -------------- Other event/task fields ------------------ */
       case SCHEDULE_METHOD:
@@ -338,7 +340,7 @@ public class BwDiffer {
   }
 
   public static <T extends Comparable<T>,
-          CT extends Collection<T>> DifferResult<T, ?> cmpObjval(
+          CT extends Collection<T>> DifferResult<T, CT> cmpObjval(
           final CT thisone,
           final CT thatone) {
     if (thisone == null) {
@@ -353,12 +355,12 @@ public class BwDiffer {
       return new DifferResult<>(false, null, true, null);
     }
 
-    DifferResult<T, ?> res;
+    DifferResult<T, CT> res;
 
     if (thisone instanceof Set<?>) {
-      res = new DifferSetResult<>();
+      res = (DifferResult<T, CT>)new DifferSetResult<T>();
     } else {
-      res = new DifferListResult<>();
+      res = (DifferResult<T, CT>)new DifferListResult<T>();
     }
 
     // First look to see if every element in thisOne is in thatOne

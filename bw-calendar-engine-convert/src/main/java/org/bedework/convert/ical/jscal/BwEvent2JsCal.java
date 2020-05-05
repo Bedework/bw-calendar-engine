@@ -43,6 +43,7 @@ import org.bedework.jsforj.model.JSTypes;
 import org.bedework.jsforj.model.values.JSOverride;
 import org.bedework.jsforj.model.values.JSValue;
 import org.bedework.jsforj.model.values.UnsignedInteger;
+import org.bedework.jsforj.model.values.collections.JSList;
 import org.bedework.jsforj.model.values.collections.JSRecurrenceOverrides;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
@@ -68,7 +69,6 @@ import net.fortuna.ical4j.model.parameter.RelType;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.parameter.XParameter;
 import net.fortuna.ical4j.model.property.Attach;
-import net.fortuna.ical4j.model.property.Categories;
 import net.fortuna.ical4j.model.property.Contact;
 import net.fortuna.ical4j.model.property.DateListProperty;
 import net.fortuna.ical4j.model.property.DtEnd;
@@ -213,7 +213,7 @@ public class BwEvent2JsCal {
                   val.getEntityType());
       }
 
-      final JSCalendarObject jsval;
+      JSCalendarObject jsval = null;
       final JSRecurrenceOverrides ovs;
       JSProperty ovprop = null;
       JSOverride override = null;
@@ -222,7 +222,6 @@ public class BwEvent2JsCal {
         jsval = (JSCalendarObject)factory.newValue(jstype);
         ovs = null;
       } else {
-        jsval = null;
         ovs = jsCalMaster.getOverrides(true);
       }
 
@@ -244,9 +243,18 @@ public class BwEvent2JsCal {
         } else {
           // Create an override.
           ovprop = ovs.makeOverride(rid.getStringValue());
+          jsval = (JSCalendarObject)ovprop.getValue();
 
           override = (JSOverride)ovprop.getValue();
         }
+      }
+
+      /* At this point jsval should be non-null. Otherwise we have a
+         badly formatted event.
+       */
+
+      if (jsval == null) {
+        return Response.error(resp, "Badly formatted component");
       }
 
       /* ------------------- Alarms -------------------- */
@@ -284,17 +292,35 @@ public class BwEvent2JsCal {
 
       /* ------------------- Categories -------------------- */
 
-      if (val.getNumCategories() > 0) {
-        /* This event has a category - do each one separately */
+      final Set<BwCategory> cats = val.getCategories();
+      final DifferResult<BwCategory, Set<BwCategory>> catDiff =
+              differs(BwCategory.class,
+                      PropertyInfoIndex.CATEGORIES,
+                      cats, master);
+      if (catDiff.differs) {
+        if ((master == null) || catDiff.addAll) {
+          // Just add to js
+          final JSList<String> jscats = jsval.getKeywords(true);
+          for (final BwCategory cat: val.getCategories()) {
+            jscats.add(cat.getWord().getValue());
+          }
+        } else if (catDiff.removeAll) {
+          jsval.setNull(JSPropertyNames.keywords);
+        } else if (!Util.isEmpty(catDiff.removed)) {
+          for (final BwCategory cat: catDiff.removed) {
+            jsval.setNull(JSPropertyNames.keywords + "/" +
+                    cat.getWord().getValue());
+          }
+        } else {
+          if (Util.isEmpty(catDiff.added)) {
+            return Response.error(resp, "Bad return from differ -" +
+                    " expected non-null added");
+          }
 
-        // LANG - filter on language - group language in one cat list?
-        for (BwCategory cat: val.getCategories()) {
-          prop = new Categories();
-          TextList cl = ((Categories)prop).getCategories();
-
-          cl.add(cat.getWord().getValue());
-
-//          pl.add(langProp(prop, cat.getWord()));
+          for (final BwCategory cat: catDiff.added) {
+            jsval.addProperty(JSPropertyNames.keywords + "/" +
+                                      cat.getWord().getValue(), true);
+          }
         }
       }
 
@@ -317,7 +343,7 @@ public class BwEvent2JsCal {
       /* ------------------- Comments -------------------- */
 
       final var comments = val.getComments();
-      final DifferResult<BwString, ?> commDiff =
+      final DifferResult<BwString, Set<BwString>> commDiff =
               differs(BwString.class,
                       PropertyInfoIndex.COMMENT,
                       comments, master);
@@ -366,8 +392,9 @@ public class BwEvent2JsCal {
       /* ------------------- Cost -------------------- */
 
       if (val.getCost() != null) {
-        addXproperty(jsval, master, BwXproperty.bedeworkCost,
-                     null, val.getCost());
+        throw new RuntimeException("Not done");
+//        addXproperty(jsval, master, BwXproperty.bedeworkCost,
+  //                   null, val.getCost());
       }
 
       /* ------------------- Created -------------------- */
@@ -381,18 +408,21 @@ public class BwEvent2JsCal {
       /* ------------------- Deleted -------------------- */
 
       if (val.getDeleted()) {
-        addXproperty(jsval, master, BwXproperty.bedeworkDeleted,
-                     null, String.valueOf(val.getDeleted()));
+        throw new RuntimeException("Not done");
+//        addXproperty(jsval, master, BwXproperty.bedeworkDeleted,
+  //                   null, String.valueOf(val.getDeleted()));
       }
 
       /* ------------------- Description -------------------- */
 
-      BwStringBase<?> bwstr = val.findDescription(null);
-      if (bwstr != null) {
-        throw new RuntimeException("Not done");
-        //pl.add(langProp(new Description(bwstr.getValue()), bwstr));
+      String descVal = val.getDescription();
+      final DifferResult<String, ?> descDiff =
+              differs(String.class,
+                      PropertyInfoIndex.DESCRIPTION,
+                      descVal, master);
+      if (descDiff.differs) {
+        jsval.setProperty(JSPropertyNames.description, descVal);
       }
-
 
       /* ------------------- DtStamp -------------------- */
       /* ------------------- LastModified -------------------- */
@@ -418,13 +448,51 @@ public class BwEvent2JsCal {
       /* ------------------- DtStart -------------------- */
 
       if (!val.getNoStart()) {
-        DtStart dtstart = val.getDtstart().makeDtStart(tzreg);
-        if (freeBusy | val.getForceUTC()) {
-          dtstart.setUtc(true);
+        final BwDateTime bdt = val.getDtstart();
+
+        final DifferResult<BwDateTime, ?> startDiff =
+                differs(BwDateTime.class,
+                        PropertyInfoIndex.DTSTART,
+                        bdt, master);
+        if (startDiff.differs) {
+          String dtval;
+          String startTimezone = bdt.getTzid();
+
+          if (bdt.isUTC()) {
+            startTimezone = "Etc/UTC";
+            dtval = bdt.getDtval().substring(0,
+                                             bdt.getDtval()
+                                                .length() - 1);
+          } else if (bdt.getDateType()) {
+            dtval = bdt.getDtval() + "T000000";
+            if (master == null) {
+              // Don't add to override
+              jsval.addProperty(JSPropertyNames.showWithoutTime,
+                                true);
+            }
+          } else {
+            dtval = bdt.getDtval();
+          }
+
+          if (master != null) {
+            final BwDateTime mbdt = master.getEvent().getDtstart();
+            if (mbdt != null) {
+              if (Util.cmpObjval(startTimezone, mbdt.getTzid()) == 0) {
+                startTimezone = null;
+              }
+            }
+          }
+
+          jsval.setProperty(JSPropertyNames.start,
+                            jsonDate(dtval));
+
+          if (startTimezone != null) {
+            jsval.setProperty(JSPropertyNames.timeZone,
+                              startTimezone);
+          }
         }
-        throw new RuntimeException("Not done");
-        //pl.add(dtstart);
       }
+
       /* ------------------- Due/DtEnd/Duration --------------------
       */
 
@@ -560,9 +628,13 @@ public class BwEvent2JsCal {
       /* ------------------- Priority -------------------- */
 
       Integer prio = val.getPriority();
-      if (prio != null) {
-        throw new RuntimeException("Not done");
-        //pl.add(new Priority(prio));
+      final DifferResult<Integer, ?> prioDiff =
+              differs(Integer.class,
+                      PropertyInfoIndex.PRIORITY,
+                      prio, master);
+      if (prioDiff.differs) {
+        jsval.setProperty(JSPropertyNames.priority,
+                          new UnsignedInteger(prio));
       }
 
       /* ------------------- RDate -below------------------- */
@@ -644,17 +716,33 @@ public class BwEvent2JsCal {
 
       /* ------------------- Sequence -------------------- */
 
-      if (val.getSequence() > 0) {
+      int seq = val.getSequence();
+      final DifferResult<Integer, ?> seqDiff =
+              differs(Integer.class,
+                      PropertyInfoIndex.SEQUENCE,
+                      seq, master);
+      if (seqDiff.differs) {
         jsval.setProperty(JSPropertyNames.sequence,
-                          new UnsignedInteger(val.getSequence()));
+                          new UnsignedInteger(seq));
       }
 
       /* ------------------- Status -------------------- */
 
       String status = val.getStatus();
       if ((status != null) && !status.equals(BwEvent.statusMasterSuppressed)) {
-        throw new RuntimeException("Not done");
-        //pl.add(new Status(status));
+        final DifferResult<String, ?> statusDiff =
+                differs(String.class,
+                        PropertyInfoIndex.STATUS,
+                        status, master);
+        if (statusDiff.differs) {
+          if (event) {
+            jsval.setProperty(JSPropertyNames.status,
+                              status.toLowerCase());
+          } else {
+            jsval.setProperty(JSPropertyNames.progress,
+                              status.toLowerCase());
+          }
+        }
       }
 
       /* ------------------- Summary -------------------- */
@@ -1090,7 +1178,7 @@ public class BwEvent2JsCal {
    * @param pars List of Xpar
    * @param val new value
    */
-  public static void addXproperty(final JSCalendarObject jscal,
+  public static void addXproperty(final JSValue jscal,
                                   final EventInfo master,
                                   final String name,
                                   final List<BwXproperty.Xpar> pars,
