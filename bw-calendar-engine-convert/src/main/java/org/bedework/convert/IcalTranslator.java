@@ -36,6 +36,10 @@ import org.bedework.convert.ical.VFreeUtil;
 import org.bedework.convert.jcal.JcalHandler;
 import org.bedework.convert.xcal.ToXEvent;
 import org.bedework.convert.xcal.Xutil;
+import org.bedework.jsforj.impl.JSFactory;
+import org.bedework.jsforj.model.JSGroup;
+import org.bedework.jsforj.model.JSPropertyNames;
+import org.bedework.jsforj.model.JSTypes;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.JsonCalendarBuilder;
 import org.bedework.util.calendar.PropertyIndex.DataType;
@@ -268,6 +272,27 @@ public class IcalTranslator implements Logged, Serializable {
     }
   }
 
+  /** Make a new JSGroup with default properties
+   *
+   * @param methodType - ical method
+   * @return JSGroup
+   */
+  public static JSGroup newJSGroup(final int methodType) {
+    final JSGroup group =
+            (JSGroup)JSFactory.getFactory()
+                              .newValue(JSTypes.typeJSGroup);
+
+    group.setProperty(JSPropertyNames.prodId, prodId);
+
+    if ((methodType > ScheduleMethods.methodTypeNone) &&
+            (methodType < ScheduleMethods.methodTypeUnknown)) {
+      group.setProperty(JSPropertyNames.method,
+                        ScheduleMethods.methods[methodType]);
+    }
+
+    return group;
+  }
+
   /** Write a collection of calendar data as json
    *
    * @param vals collection of calendar data
@@ -299,7 +324,7 @@ public class IcalTranslator implements Logged, Serializable {
    * @param xml for output
    * @throws CalFacadeException on fatal error
    */
-  public void writeXmlCalendar(final Collection vals,
+  public void writeXmlCalendar(final Collection<EventInfo> vals,
                                final int methodType,
                                final XmlEmit xml) throws CalFacadeException {
     try {
@@ -408,7 +433,7 @@ public class IcalTranslator implements Logged, Serializable {
         xml.closeTag(XcalTags.properties);
       }
 
-      ComponentList cl = null;
+      ComponentList<?> cl = null;
 
       if (val instanceof VTimeZone) {
         cl = ((VTimeZone)val).getObservances();
@@ -446,9 +471,9 @@ public class IcalTranslator implements Logged, Serializable {
       if (pl.size() > 0) {
         xml.openTag(XcalTags.parameters);
 
-        Iterator pli = pl.iterator();
+        Iterator<Parameter> pli = pl.iterator();
         while (pli.hasNext()) {
-          xmlParameter(xml, (Parameter)pli.next());
+          xmlParameter(xml, pli.next());
         }
         xml.closeTag(XcalTags.parameters);
       }
@@ -542,7 +567,7 @@ public class IcalTranslator implements Logged, Serializable {
 
   private void xmlProp(final XmlEmit xml,
                        final QName tag,
-                       final Collection val) throws CalFacadeException {
+                       final Collection<?> val) throws CalFacadeException {
     if ((val == null) || val.isEmpty()) {
       return;
     }
@@ -625,7 +650,7 @@ public class IcalTranslator implements Logged, Serializable {
    * @return Calendar
    * @throws CalFacadeException on fatal error
    */
-  public Calendar toIcal(final Collection vals,
+  public Calendar toIcal(final Collection<EventInfo> vals,
                          final int methodType) throws CalFacadeException {
     Calendar cal = newIcal(methodType);
 
@@ -1201,7 +1226,7 @@ public class IcalTranslator implements Logged, Serializable {
    * 3. Events with recurrence id
    * 4. Anything else
    */
-  private static Collection<CalendarComponent> orderedComponents(final ComponentList clist) {
+  private static Collection<CalendarComponent> orderedComponents(final ComponentList<?> clist) {
     SubList<CalendarComponent> tzs = new SubList<>();
     SubList<CalendarComponent> fbs = new SubList<>();
     SubList<CalendarComponent> instances = new SubList<>();
@@ -1281,7 +1306,7 @@ public class IcalTranslator implements Logged, Serializable {
    * and add it to the calendar.
    */
   private void addIcalTimezones(final Calendar cal,
-                                final Collection vals) {
+                                final Collection<EventInfo> vals) {
     TreeSet<String> added = new TreeSet<>();
 
     for (final Object o : vals) {
@@ -1377,7 +1402,7 @@ public class IcalTranslator implements Logged, Serializable {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {
