@@ -1,7 +1,7 @@
 /* ********************************************************************
     Appropriate copyright notice
 */
-package org.bedework.convert.ical.jscal;
+package org.bedework.convert.jscal;
 
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;

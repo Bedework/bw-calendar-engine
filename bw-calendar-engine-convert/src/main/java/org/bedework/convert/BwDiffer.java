@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.convert.ical.jscal;
+package org.bedework.convert;
 
 import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwAttendee;
@@ -33,9 +33,6 @@ import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.CalFacadeUtil;
-import org.bedework.convert.DifferListResult;
-import org.bedework.convert.DifferResult;
-import org.bedework.convert.DifferSetResult;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.Util;

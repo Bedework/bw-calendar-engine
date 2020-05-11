@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.convert.ical.jscal;
+package org.bedework.convert.jscal;
 
 import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwCategory;
@@ -40,10 +40,13 @@ import org.bedework.jsforj.model.JSCalendarObject;
 import org.bedework.jsforj.model.JSProperty;
 import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.JSTypes;
+import org.bedework.jsforj.model.values.JSLocation;
 import org.bedework.jsforj.model.values.JSOverride;
+import org.bedework.jsforj.model.values.JSRelation;
 import org.bedework.jsforj.model.values.JSValue;
 import org.bedework.jsforj.model.values.UnsignedInteger;
 import org.bedework.jsforj.model.values.collections.JSList;
+import org.bedework.jsforj.model.values.collections.JSLocations;
 import org.bedework.jsforj.model.values.collections.JSRecurrenceOverrides;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
@@ -53,6 +56,7 @@ import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.Util;
 import org.bedework.util.misc.response.GetEntityResponse;
 import org.bedework.util.misc.response.Response;
+import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
@@ -65,23 +69,18 @@ import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.TextList;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
-import net.fortuna.ical4j.model.parameter.RelType;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.parameter.XParameter;
 import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Contact;
 import net.fortuna.ical4j.model.property.DateListProperty;
-import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
-import net.fortuna.ical4j.model.property.Due;
 import net.fortuna.ical4j.model.property.ExDate;
 import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.FreeBusy;
 import net.fortuna.ical4j.model.property.Geo;
-import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
-import net.fortuna.ical4j.model.property.RelatedTo;
 import net.fortuna.ical4j.model.property.Resources;
 
 import java.net.URI;
@@ -91,7 +90,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import static org.bedework.convert.ical.jscal.BwDiffer.differs;
+import static org.bedework.convert.BwDiffer.differs;
 import static org.bedework.util.misc.response.Response.Status.failed;
 
 /** Class to provide utility methods for translating to VEvent ical4j classes
@@ -101,7 +100,7 @@ import static org.bedework.util.misc.response.Response.Status.failed;
 public class BwEvent2JsCal {
   final static JSFactory factory = JSFactory.getFactory();
 
-  private static BwLogger logger =
+  private final static BwLogger logger =
           new BwLogger().setLoggedClass(BwEvent2JsCal.class);
 
   /** Make a Jscalendar object from a BwEvent object.
@@ -113,13 +112,13 @@ public class BwEvent2JsCal {
    * @param currentPrincipal - href for current authenticated user
    * @return Response with status and EventInfo object representing new entry or updated entry
    */
-  public static GetEntityResponse<JSValue> convert(
+  public static GetEntityResponse<JSCalendarObject> convert(
           final EventInfo ei,
           final EventInfo master,
           final JSCalendarObject jsCalMaster,
           final TimeZoneRegistry tzreg,
           final String currentPrincipal) {
-    var resp = new GetEntityResponse<JSValue>();
+    var resp = new GetEntityResponse<JSCalendarObject>();
 
     if ((ei == null) || (ei.getEvent() == null)) {
       return Response.notOk(resp, failed, "No entity supplied");
@@ -233,19 +232,23 @@ public class BwEvent2JsCal {
 
       String strval = val.getRecurrenceId();
       if ((strval != null) && (strval.length() > 0)) {
-        var rid = new JSLocalDateTimeImpl(jsonDate(strval));
+        var rid = new JSLocalDateTimeImpl(
+                jsonDate(timeInZone(strval,
+                                    findZone(val.getDtstart(),
+                                             val.getDtend()),
+                                    tzreg)));
         isInstance = true;
 
         if (master == null) {
           // A standalone recurrence instance
-          jsval.addProperty(JSPropertyNames.recurrenceId,
-                            rid.getStringValue());
+          jsval.setRecurrenceId(rid);
         } else {
           // Create an override.
           ovprop = ovs.makeOverride(rid.getStringValue());
           jsval = (JSCalendarObject)ovprop.getValue();
+          jsval.setRecurrenceId(rid);
 
-          override = (JSOverride)ovprop.getValue();
+          override = (JSOverride)jsval;
         }
       }
 
@@ -379,7 +382,7 @@ public class BwEvent2JsCal {
           prop = new Contact(c.getCn().getValue());
           final String l = c.getLink();
 
-          throw new RuntimeException("Not done");
+          // throw new RuntimeException("Not done");
 /*          if (l != null) {
             prop.getParameters().add(new AltRep(l));
           }
@@ -447,44 +450,24 @@ public class BwEvent2JsCal {
 
       /* ------------------- DtStart -------------------- */
 
+      String startTimezone = null;
       if (!val.getNoStart()) {
         final BwDateTime bdt = val.getDtstart();
+        startTimezone = jscalTzid(bdt, true, master);
 
         final DifferResult<BwDateTime, ?> startDiff =
                 differs(BwDateTime.class,
                         PropertyInfoIndex.DTSTART,
                         bdt, master);
         if (startDiff.differs) {
-          String dtval;
-          String startTimezone = bdt.getTzid();
-
-          if (bdt.isUTC()) {
-            startTimezone = "Etc/UTC";
-            dtval = bdt.getDtval().substring(0,
-                                             bdt.getDtval()
-                                                .length() - 1);
-          } else if (bdt.getDateType()) {
-            dtval = bdt.getDtval() + "T000000";
-            if (master == null) {
-              // Don't add to override
-              jsval.addProperty(JSPropertyNames.showWithoutTime,
-                                true);
-            }
-          } else {
-            dtval = bdt.getDtval();
-          }
-
-          if (master != null) {
-            final BwDateTime mbdt = master.getEvent().getDtstart();
-            if (mbdt != null) {
-              if (Util.cmpObjval(startTimezone, mbdt.getTzid()) == 0) {
-                startTimezone = null;
-              }
-            }
-          }
-
           jsval.setProperty(JSPropertyNames.start,
-                            jsonDate(dtval));
+                            jscalDt(bdt));
+
+          if (bdt.getDateType() && (master == null)) {
+            // Don't add to override
+            jsval.addProperty(JSPropertyNames.showWithoutTime,
+                              true);
+          }
 
           if (startTimezone != null) {
             jsval.setProperty(JSPropertyNames.timeZone,
@@ -497,24 +480,34 @@ public class BwEvent2JsCal {
       */
 
       if (val.getEndType() == StartEndComponent.endTypeDate) {
+        final BwDateTime bdt = val.getDtend();
+        var tzid = jscalTzid(bdt, false, master);
+
+        if (val.getNoStart()) {
+          // Have to set tz from end
+          if (tzid != null) {
+            jsval.setProperty(JSPropertyNames.timeZone,
+                              tzid);
+          }
+        }
+
         if (todo) {
-          Due due = val.getDtend().makeDue(tzreg);
-          if (freeBusy | val.getForceUTC()) {
-            due.setUtc(true);
-          }
-          throw new RuntimeException("Not done");
-          //pl.add(due);
+          // TODO - adjust due if different tz
+          sameZone(val.getDtstart(), bdt);
+          jsval.setProperty(JSPropertyNames.due,
+                            jscalDt(bdt));
         } else {
-          DtEnd dtend = val.getDtend().makeDtEnd(tzreg);
-          if (freeBusy | val.getForceUTC()) {
-            dtend.setUtc(true);
+          if (Util.cmpObjval(tzid, startTimezone) != 0) {
+            // Add a location for end tz
           }
-          throw new RuntimeException("Not done");
-          //pl.add(dtend);
+
+          jsval.setProperty(JSPropertyNames.duration,
+                            BwDateTime.makeDuration(val.getDtstart(),
+                                                    bdt).toString());
         }
       } else if (val.getEndType() == StartEndComponent.endTypeDuration) {
-        throw new RuntimeException("Not done");
-        //addProperty(comp, new Duration(new Dur(val.getDuration())));
+        jsval.setProperty(JSPropertyNames.duration,
+                          val.getDuration());
       }
 
       /* ------------------- ExDate --below------------ */
@@ -571,10 +564,18 @@ public class BwEvent2JsCal {
 
       if (!vpoll) {
         final BwLocation loc = val.getLocation();
-        if (loc != null) {
-          prop = new Location(loc.getCombinedValues());
+        final DifferResult<BwLocation, ?> locDiff =
+                differs(BwLocation.class,
+                        PropertyInfoIndex.LOCATION,
+                        loc, master);
+        if (locDiff.differs) {
+          final JSLocations locs = jsval.getLocations(true);
+          final JSLocation jsloc =
+                  (JSLocation)locs.makeLocation(loc.getUid()).getValue();
 
-          throw new RuntimeException("Not done");
+          jsloc.setName(loc.getAddressField());
+          jsloc.setDescription(loc.getCombinedValues());
+
           /*
           pl.add(langProp(uidProp(prop, loc.getUid()), loc.getAddress()));
 
@@ -641,7 +642,17 @@ public class BwEvent2JsCal {
 
       /* ------------------- RelatedTo -------------------- */
 
-      /* We encode related to (maybe) as triples - reltype, value-type, value */
+      /* We encode related to (maybe) as triples -
+            reltype, value-type, value
+
+         I believe we use the x-property because we are only have a
+         single related to value in the schema.
+
+         We also apparently have a value type parameter. This is not
+         covered in the spec.
+
+         We'll ignore that for the moment.
+       */
 
       String[] info = null;
 
@@ -661,37 +672,33 @@ public class BwEvent2JsCal {
       }
 
       if (info != null) {
+        var relations = jsval.getRelations(true);
+
         int i = 0;
 
         while (i < info.length) {
-          RelatedTo irelto;
-
           String reltype = info[i];
-          String valtype = info[i + 1];
+          //String valtype = info[i + 1];
           String relval = info[i + 2];
 
-          ParameterList rtpl = null;
-          if ((reltype != null) && (reltype.length() > 0)) {
-            rtpl = new ParameterList();
-            rtpl.add(new RelType(reltype));
+          var rel = relations.makeRelation(relval);
+          JSRelation relVal = (JSRelation)rel.getValue();
+          JSList<String> rs = relVal.getRelations(true);
+          if (reltype == null) {
+            reltype = "parent";
           }
-
-          if (valtype.length() > 0) {
-            if (rtpl == null) {
-              rtpl = new ParameterList();
-            }
-            rtpl.add(new Value(valtype));
-          }
-
-          if (rtpl != null) {
-            irelto = new RelatedTo(rtpl, relval);
-          } else {
-            irelto = new RelatedTo(relval);
+          switch (reltype.toLowerCase()) {
+            case "parent":
+              rs.add("parent");
+              break;
+            case "child":
+              rs.add("child");
+              break;
+            case "sibling":
+              rs.add("next");
           }
 
           i += 3;
-          throw new RuntimeException("Not done");
-          //pl.add(irelto);
         }
       }
 
@@ -808,7 +815,7 @@ public class BwEvent2JsCal {
         /* This event has x-props */
 
         try {
-          throw new RuntimeException("Not done");
+//          throw new RuntimeException("Not done");
           //xpropertiesToIcal(pl, val.getXproperties());
         } catch (Throwable t) {
           // XXX For the moment swallow these.
@@ -908,14 +915,15 @@ public class BwEvent2JsCal {
       }
        */
 
-      throw new RuntimeException("Not done");
-      //return comp;
+//      throw new RuntimeException("Not done");
 //    } catch (final CalFacadeException cfe) {
 //      throw cfe;
+      resp.setEntity(jsval);
     } catch (final Throwable t) {
-//      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
-    throw new RuntimeException("Not done");
+  //  throw new RuntimeException("Not done");
+    return resp;
   }
 
   /** Build recurring properties from event.
@@ -956,6 +964,73 @@ public class BwEvent2JsCal {
   /* ====================================================================
                       Private methods
      ==================================================================== */
+
+  private static String jscalDt(final BwDateTime bdt) {
+    if (bdt.isUTC()) {
+      return jsonDate(bdt.getDtval()
+                         .substring(0,
+                                    bdt.getDtval().length() - 1));
+    }
+
+    if (bdt.getDateType()) {
+      return jsonDate(bdt.getDtval() + "T000000");
+    }
+
+    return jsonDate(bdt.getDtval());
+  }
+
+  private static String jscalTzid(final BwDateTime bdt,
+                                  final boolean start,
+                                  final EventInfo master) {
+    if (bdt.isUTC()) {
+      return "Etc/UTC";
+    }
+
+    if (bdt.getDateType()) {
+      return null;
+    }
+
+    // Don't set tzid if override and same as master
+    if (master != null) {
+      final BwDateTime mbdt;
+
+      if (start) {
+        mbdt = master.getEvent().getDtstart();
+      } else {
+        mbdt = master.getEvent().getDtend();
+      }
+
+      if (mbdt != null) {
+        if (Util.cmpObjval(bdt.getTzid(), mbdt.getTzid()) == 0) {
+          return null;
+        }
+      }
+    }
+
+    return bdt.getTzid();
+  }
+
+  private static String findZone(final BwDateTime start,
+                                 final BwDateTime end) {
+    if (start != null) {
+      return start.getTzid();
+    }
+
+    return end.getTzid();
+  }
+
+  private static void sameZone(final BwDateTime start,
+                               final BwDateTime due) {
+    if (start == null) {
+      return;
+    }
+
+    if ((due.isUTC() != start.isUTC()) ||
+            (due.getDateType() != start.getDateType()) ||
+            (Util.cmpObjval(due.getTzid(), start.getTzid()) != 0)) {
+      throw new RuntimeException("Start zone and due zone must be equal");
+    }
+  }
 
   private static void mergeXparams(final Property p, final Component c) {
     if (c == null) {
@@ -1188,6 +1263,24 @@ public class BwEvent2JsCal {
     }
     throw new RuntimeException("Not done");
 //    pl.add(new XProperty(name, makeXparlist(pars), val));
+  }
+
+  private static String timeInZone(final String dateTime,
+                                   final String tzid,
+                                   final TimeZoneRegistry tzreg) {
+    try {
+      final java.util.Date date;
+      if (dateTime.endsWith("Z") || (tzid == null)) {
+        date = DateTimeUtil.fromISODateTimeUTC(dateTime);
+      } else {
+        date = DateTimeUtil.fromISODateTime(dateTime,
+                                            tzreg.getTimeZone(tzid));
+      }
+
+      return DateTimeUtil.isoDateTime(date);
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 }
 

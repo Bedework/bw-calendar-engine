@@ -89,6 +89,10 @@ import org.bedework.convert.Icalendar;
 import org.bedework.convert.Icalendar.TimeZoneInfo;
 import org.bedework.convert.ical.IcalMalformedException;
 import org.bedework.convert.ical.VFreeUtil;
+import org.bedework.convert.jcal.JcalTranslator;
+import org.bedework.convert.jscal.JSCalTranslator;
+import org.bedework.convert.xcal.XmlTranslator;
+import org.bedework.jsforj.model.JSGroup;
 import org.bedework.sysevents.events.HttpEvent;
 import org.bedework.sysevents.events.HttpOutEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
@@ -167,6 +171,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   /* These two set after a call to getSvci()
    */
   private IcalTranslator trans;
+  private XmlTranslator xmlTrans;
+  private JcalTranslator jcalTrans;
+  private JSCalTranslator jscalTrans;
   private CalSvcI svci;
 
   private UrlHandler urlHandler;
@@ -2045,8 +2052,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         meth = getEvent(ev).getScheduleMethod();
       }
 
-      return trans.toXMLIcalendar(getEvinfo(ev), meth, pattern,
-                                  synchWs);
+      return getXmlTrans().toXMLIcalendar(getEvinfo(ev), meth, pattern,
+                                          synchWs);
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
@@ -2062,7 +2069,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         meth = getEvent(ev).getScheduleMethod();
       }
 
-      return trans.toJcal(getEvinfo(ev), meth);
+      return getJcalTrans().toJcal(getEvinfo(ev), meth);
     } catch (Throwable t) {
       throw new WebdavException(t);
     }
@@ -2088,7 +2095,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       if (ctype.equals("application/calendar+json")) {
-        return IcalTranslator.toJcal(cal);
+        return JcalTranslator.toJcal(cal);
       }
 
       throw new WebdavException("Unhandled content type" + contentType);
@@ -2125,6 +2132,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       if ((ctype == null) ||
           (!ctype.equals("text/calendar") &&
            !ctype.equals("application/calendar+json") &&
+           !ctype.equals("application/jscalendar+json") &&
            !ctype.equals(XcalTags.mimetype))) {
         ctype = getDefaultContentType();
       }
@@ -2140,10 +2148,21 @@ public class BwSysIntfImpl implements Logged, SysIntf {
           break;
         case "application/calendar+json":
           if (xml == null) {
-            trans.writeJcal(bwevs, meth, wtr);
+            getJcalTrans().writeJcal(bwevs, meth, wtr);
           } else {
             final StringWriter sw = new StringWriter();
-            trans.writeJcal(bwevs, meth, sw);
+            getJcalTrans().writeJcal(bwevs, meth, sw);
+            xml.cdataValue(sw.toString());
+          }
+          break;
+        case "application/jscalendar+json":
+          JSGroup grp = getJScalTrans().toJScal(bwevs, meth);
+
+          if (xml == null) {
+            JSCalTranslator.writeJSCalendar(grp, wtr);
+          } else {
+            final StringWriter sw = new StringWriter();
+            JSCalTranslator.writeJSCalendar(grp, sw);
             xml.cdataValue(sw.toString());
           }
           break;
@@ -2155,7 +2174,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
           } else {
             x = xml;
           }
-          trans.writeXmlCalendar(bwevs, meth, x);
+          getXmlTrans().writeXmlCalendar(bwevs, meth, x);
           break;
       }
 
@@ -2610,6 +2629,30 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     return svci;
+  }
+
+  private XmlTranslator getXmlTrans() {
+    if (xmlTrans == null) {
+      xmlTrans = new XmlTranslator(svci.getIcalCallback());
+    }
+
+    return xmlTrans;
+  }
+
+  private JcalTranslator getJcalTrans() {
+    if (jcalTrans == null) {
+      jcalTrans = new JcalTranslator(svci.getIcalCallback());
+    }
+
+    return jcalTrans;
+  }
+
+  private JSCalTranslator getJScalTrans() {
+    if (jscalTrans == null) {
+      jscalTrans = new JSCalTranslator(svci.getIcalCallback());
+    }
+
+    return jscalTrans;
   }
 
   private void close(final CalSvcI svci) throws WebdavException {
