@@ -156,7 +156,7 @@ public class JsCal2BwEvent {
         case JSPropertyNames.recurrenceOverrides:
           break;
 
-        case JSPropertyNames.recurrenceRule:
+        case JSPropertyNames.recurrenceRules:
           break;
 
         case JSPropertyNames.relatedTo:

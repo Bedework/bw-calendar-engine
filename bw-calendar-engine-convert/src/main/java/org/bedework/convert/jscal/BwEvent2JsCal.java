@@ -42,6 +42,7 @@ import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.JSTypes;
 import org.bedework.jsforj.model.values.JSLocation;
 import org.bedework.jsforj.model.values.JSOverride;
+import org.bedework.jsforj.model.values.JSRecurrenceRule;
 import org.bedework.jsforj.model.values.JSRelation;
 import org.bedework.jsforj.model.values.JSValue;
 import org.bedework.jsforj.model.values.UnsignedInteger;
@@ -60,31 +61,24 @@ import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
-import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.TextList;
-import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.parameter.XParameter;
 import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Contact;
-import net.fortuna.ical4j.model.property.DateListProperty;
 import net.fortuna.ical4j.model.property.DtStart;
-import net.fortuna.ical4j.model.property.ExDate;
-import net.fortuna.ical4j.model.property.ExRule;
 import net.fortuna.ical4j.model.property.FreeBusy;
 import net.fortuna.ical4j.model.property.Geo;
-import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.Resources;
 
 import java.net.URI;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -728,7 +722,9 @@ public class BwEvent2JsCal {
               differs(Integer.class,
                       PropertyInfoIndex.SEQUENCE,
                       seq, master);
-      if (seqDiff.differs) {
+      // Don't add a defaulted sequence
+      if (seqDiff.differs &&
+              ((master != null) || (seq != 0))) {
         jsval.setProperty(JSPropertyNames.sequence,
                           new UnsignedInteger(seq));
       }
@@ -825,12 +821,11 @@ public class BwEvent2JsCal {
 
       /* ------------------- Overrides -------------------- */
 
-/*
-      throw new RuntimeException("Not done");
-      if (!vpoll && !isInstance && !isOverride && val.testRecurring()) {
-        doRecurring(val, pl);
+      if (!vpoll && !isInstance &&
+              (master == null) && val.testRecurring()) {
+        doRecurring(val, jsval, tzreg);
       }
- */
+
       /* ------------------- Available -------------------- */
 
       if (vavail) {
@@ -924,41 +919,6 @@ public class BwEvent2JsCal {
     }
   //  throw new RuntimeException("Not done");
     return resp;
-  }
-
-  /** Build recurring properties from event.
-   *
-   * @param val event
-   * @param pl properties
-   * @throws RuntimeException for bad date values
-   */
-  public static void doRecurring(final BwEvent val,
-                                 final PropertyList pl) {
-    try {
-      if (val.hasRrules()) {
-        for(String s: val.getRrules()) {
-          RRule rule = new RRule();
-          rule.setValue(s);
-
-          pl.add(rule);
-        }
-      }
-
-      if (val.hasExrules()) {
-        for(String s: val.getExrules()) {
-          ExRule rule = new ExRule();
-          rule.setValue(s);
-
-          pl.add(rule);
-        }
-      }
-
-      makeDlp(val, false, val.getRdates(), pl);
-
-      makeDlp(val, true, val.getExdates(), pl);
-    } catch (final ParseException pe) {
-      throw new RuntimeException(pe);
-    }
   }
 
   /* ====================================================================
@@ -1110,67 +1070,197 @@ public class BwEvent2JsCal {
     return prop;
   }
 
-  private static void makeDlp(final BwEvent val,
-                              final boolean exdt,
-                              final Collection<BwDateTime> dts,
-                              final PropertyList pl) throws ParseException {
+  /** Build recurring properties from event.
+   *
+   * @param val event
+   * @param jsval JSCalendar object
+   * @throws RuntimeException for bad date values
+   */
+  private static void doRecurring(final BwEvent val,
+                                  final JSCalendarObject jsval,
+                                  final TimeZoneRegistry tzreg) {
+    if (val.hasRrules()) {
+      for (String rl: val.getRrules()) {
+        makeRule(val, jsval, rl, tzreg);
+      }
+    }
+
+    if (val.hasExrules()) {
+      for(String rl: val.getExrules()) {
+        var rrule = makeRule(val, jsval, rl, tzreg);
+        rrule.addProperty(JSPropertyNames.excluded,
+                          true);
+      }
+    }
+
+    makeRexdates(val, false, val.getRdates(), jsval, tzreg);
+
+    makeRexdates(val, true, val.getExdates(), jsval, tzreg);
+  }
+
+  private static JSRecurrenceRule makeRule(final BwEvent val,
+                                           final JSCalendarObject jsval,
+                                           final String iCalRule,
+                                           final TimeZoneRegistry tzreg) {
+    RRule rule = new RRule();
+    try {
+      rule.setValue(iCalRule);
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
+
+    var rrules = jsval.getRecurrenceRules(true);
+
+    JSRecurrenceRule rrule = rrules.makeRecurrenceRule();
+
+    var recur = rule.getRecur();
+
+    // FREQ - > frequency
+    if (recur.getFrequency() != null) {
+      rrule.setFrequency(recur.getFrequency().toLowerCase());
+    }
+
+    // INTERVAL -> interval
+    if (recur.getInterval() != 1) {
+      rrule.setInterval(
+              new UnsignedInteger(recur.getInterval()));
+    }
+
+    // TODO Rscale
+    // TODO Skip
+    // TODO FirstDayOfWeek
+
+    // BYDAY -> byday
+    if (!Util.isEmpty(recur.getDayList())) {
+      for (var d: recur.getDayList()) {
+        rrule.addByDayValue(d.getDay().name().toLowerCase(),
+                            d.getOffset());
+      }
+    }
+
+    // BYMONTHDAY -> byMonthDay
+    if (!Util.isEmpty(recur.getMonthDayList())) {
+      var mdl = rrule.getByMonthDay(true);
+
+      for (var md: recur.getMonthDayList()) {
+        mdl.add(md);
+      }
+    }
+
+    // BYMONTH -> byMonth
+    // This will need changing for rscale.
+    if (!Util.isEmpty(recur.getMonthList())) {
+      var mdl = rrule.getByMonth(true);
+
+      for (var md: recur.getMonthList()) {
+        mdl.add(String.valueOf(md));
+      }
+    }
+
+    // BYYEARDAY -> byYearDay
+    if (!Util.isEmpty(recur.getYearDayList())) {
+      var ydl = rrule.getByYearDay(true);
+
+      for (var yd: recur.getYearDayList()) {
+        ydl.add(yd);
+      }
+    }
+
+    // BYWEEKNO -> byWeekNo
+    if (!Util.isEmpty(recur.getWeekNoList())) {
+      var wnl = rrule.getByWeekNo(true);
+
+      for (var wn: recur.getWeekNoList()) {
+        wnl.add(wn);
+      }
+    }
+
+    // BYHOUR -> byHour
+    if (!Util.isEmpty(recur.getHourList())) {
+      var hl = rrule.getByHour(true);
+
+      for (var h: recur.getHourList()) {
+        hl.add(new UnsignedInteger(h));
+      }
+    }
+
+    // BYMINUTE -> byMinute
+    if (!Util.isEmpty(recur.getMinuteList())) {
+      var ml = rrule.getByMinute(true);
+
+      for (var m: recur.getMinuteList()) {
+        ml.add(new UnsignedInteger(m));
+      }
+    }
+
+    // BYSECOND -> bySecond
+    if (!Util.isEmpty(recur.getSecondList())) {
+      var sl = rrule.getBySecond(true);
+
+      for (var s: recur.getSecondList()) {
+        sl.add(new UnsignedInteger(s));
+      }
+    }
+
+    // BYSETPOS -> bySetPosition
+    if (!Util.isEmpty(recur.getSetPosList())) {
+      var spl = rrule.getBySetPosition(true);
+
+      for (var s: recur.getSetPosList()) {
+        spl.add(s);
+      }
+    }
+
+    if (recur.getCount() > 0) {
+      rrule.setCount(new UnsignedInteger(recur.getCount()));
+    }
+
+    if (recur.getUntil() != null) {
+      var until = new JSLocalDateTimeImpl(
+              jsonDate(timeInZone(recur.getUntil().toString(),
+                                  findZone(val.getDtstart(),
+                                           val.getDtend()),
+                                  tzreg)));
+      rrule.setUntil(until);
+    }
+
+    return rrule;
+  }
+
+  private static void makeRexdates(final BwEvent val,
+                                   final boolean exdt,
+                                   final Collection<BwDateTime> dts,
+                                   final JSCalendarObject jsval,
+                                   final TimeZoneRegistry tzreg) {
     if ((dts == null) || (dts.isEmpty())) {
       return;
     }
 
-    TimeZone tz = null;
+    String tzid = null;
     if (!val.getForceUTC()) {
       BwDateTime dtstart = val.getDtstart();
 
       if ((dtstart != null) && !dtstart.isUTC()) {
         DtStart ds = dtstart.makeDtStart();
-        tz = ds.getTimeZone();
+        tzid = ds.getTimeZone().getID();
       }
     }
 
-    /* Generate as one date per property - matches up to other vendors better */
+    /* An rdate is generated as an empty override.
+       An exdate is an override withe the property
+       "excluded": true
+     */
+
+    var overrides = jsval.getOverrides(true);
+
     for (BwDateTime dt: dts) {
-      DateList dl;
-
-      /* Always use the UTC values */
-      boolean dateType = false;
-
-      if (dt.getDateType()) {
-        dl = new DateList(Value.DATE);
-        dl.setUtc(true);
-        dateType = true;
-        dl.add(new Date(dt.getDtval()));
-      } else {
-        dl = new DateList(Value.DATE_TIME);
-
-        if (tz == null) {
-          dl.setUtc(true);
-          DateTime dtm = new DateTime(dt.getDate());
-          dtm.setUtc(true);
-          dl.add(dtm);
-        } else {
-          dl.setTimeZone(tz);
-          DateTime dtm = new DateTime(dt.getDate());
-          dtm.setTimeZone(tz);
-          dl.add(dtm);
-        }
-      }
-
-      DateListProperty dlp;
+      var rid = jsonDate(timeInZone(dt.getDtval(), tzid, tzreg));
+      var ov = overrides.makeOverride(rid);
 
       if (exdt) {
-        dlp = new ExDate(dl);
-      } else {
-        dlp = new RDate(dl);
+        ov.getValue().addProperty(JSPropertyNames.excluded,
+                                  true);
       }
-
-      if (dateType) {
-        dlp.getParameters().add(Value.DATE);
-      } else if (tz != null) {
-        dlp.setTimeZone(tz);
-      }
-
-      pl.add(dlp);
     }
   }
 
