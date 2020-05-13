@@ -66,17 +66,14 @@ import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
-import net.fortuna.ical4j.model.TextList;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.parameter.XParameter;
 import net.fortuna.ical4j.model.property.Attach;
-import net.fortuna.ical4j.model.property.Contact;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.FreeBusy;
 import net.fortuna.ical4j.model.property.Geo;
 import net.fortuna.ical4j.model.property.RRule;
-import net.fortuna.ical4j.model.property.Resources;
 
 import java.net.URI;
 import java.util.Collection;
@@ -208,7 +205,7 @@ public class BwEvent2JsCal {
 
       JSCalendarObject jsval = null;
       final JSRecurrenceOverrides ovs;
-      JSProperty ovprop = null;
+      JSProperty ovprop;
       JSOverride override = null;
 
       if (master == null) {
@@ -217,8 +214,6 @@ public class BwEvent2JsCal {
       } else {
         ovs = jsCalMaster.getOverrides(true);
       }
-
-      Property prop;
 
       /* ------------------- RecurrenceID --------------------
        * Done early to verify if this is an instance.
@@ -237,8 +232,25 @@ public class BwEvent2JsCal {
           // A standalone recurrence instance
           jsval.setRecurrenceId(rid);
         } else {
-          // Create an override.
-          ovprop = ovs.makeOverride(rid.getStringValue());
+          /* See if the override exists in the jscalendar version.
+             It may do so if we have rdates or exdates.
+             If it does exist and is an excluded date then this is an error.
+
+             If it doesn't exist then make one.
+           */
+          ovprop = ovs.getProperty(rid.getStringValue());
+          if (ovprop == null) {
+            // create
+            ovprop = ovs.makeOverride(rid.getStringValue());
+          }
+
+          final var excluded = ovprop
+                  .getValue()
+                  .getProperty(JSPropertyNames.excluded);
+          if ((excluded != null) &&
+                  excluded.getValue().getBooleanValue()) {
+            throw new RuntimeException("Cannot have override for exdate");
+          }
           jsval = (JSCalendarObject)ovprop.getValue();
           jsval.setRecurrenceId(rid);
 
@@ -373,7 +385,7 @@ public class BwEvent2JsCal {
       if (contDiff.differs) {
         for (final BwContact c: contacts) {
           // LANG
-          prop = new Contact(c.getCn().getValue());
+          //prop = new Contact(c.getCn().getValue());
           final String l = c.getLink();
 
           // throw new RuntimeException("Not done");
@@ -701,12 +713,12 @@ public class BwEvent2JsCal {
       if (val.getNumResources() > 0) {
         /* This event has a resource */
 
-        prop = new Resources();
-        TextList rl = ((Resources)prop).getResources();
+        //prop = new Resources();
+        //TextList rl = ((Resources)prop).getResources();
 
         for (BwString str: val.getResources()) {
           // LANG
-          rl.add(str.getValue());
+          //rl.add(str.getValue());
         }
 
         throw new RuntimeException("Not done");
