@@ -35,17 +35,18 @@ import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.DifferResult;
 import org.bedework.jsforj.impl.JSFactory;
-import org.bedework.jsforj.impl.values.JSLocalDateTimeImpl;
+import org.bedework.jsforj.impl.values.dataTypes.JSLocalDateTimeImpl;
+import org.bedework.jsforj.impl.values.dataTypes.JSUnsignedIntegerImpl;
 import org.bedework.jsforj.model.JSCalendarObject;
-import org.bedework.jsforj.model.JSProperty;
 import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.JSTypes;
+import org.bedework.jsforj.model.values.JSLink;
 import org.bedework.jsforj.model.values.JSLocation;
 import org.bedework.jsforj.model.values.JSOverride;
 import org.bedework.jsforj.model.values.JSRecurrenceRule;
 import org.bedework.jsforj.model.values.JSRelation;
 import org.bedework.jsforj.model.values.JSValue;
-import org.bedework.jsforj.model.values.UnsignedInteger;
+import org.bedework.jsforj.model.values.collections.JSLinks;
 import org.bedework.jsforj.model.values.collections.JSList;
 import org.bedework.jsforj.model.values.collections.JSLocations;
 import org.bedework.jsforj.model.values.collections.JSRecurrenceOverrides;
@@ -192,12 +193,13 @@ public class BwEvent2JsCal {
         case IcalDefs.entityTypeAvailable:
           jstype = JSTypes.typeJSAvailable;
           break;
+*/
 
         case IcalDefs.entityTypeVpoll:
           jstype = JSTypes.typeJSVPoll;
           vpoll = true;
           break;
-*/
+
         default:
           return Response.error(resp, "org.bedework.invalid.entity.type: " +
                   val.getEntityType());
@@ -205,8 +207,6 @@ public class BwEvent2JsCal {
 
       JSCalendarObject jsval = null;
       final JSRecurrenceOverrides ovs;
-      JSProperty ovprop;
-      JSOverride override = null;
 
       if (master == null) {
         jsval = (JSCalendarObject)factory.newValue(jstype);
@@ -238,23 +238,14 @@ public class BwEvent2JsCal {
 
              If it doesn't exist then make one.
            */
-          ovprop = ovs.getProperty(rid.getStringValue());
-          if (ovprop == null) {
-            // create
-            ovprop = ovs.makeOverride(rid.getStringValue());
-          }
+          JSOverride ov =
+                  ovs.makeEntry(rid).getValue();
 
-          final var excluded = ovprop
-                  .getValue()
-                  .getProperty(JSPropertyNames.excluded);
-          if ((excluded != null) &&
-                  excluded.getValue().getBooleanValue()) {
+          if (ov.getExcluded()) {
             throw new RuntimeException("Cannot have override for exdate");
           }
-          jsval = (JSCalendarObject)ovprop.getValue();
+          jsval = ov;
           jsval.setRecurrenceId(rid);
-
-          override = (JSOverride)jsval;
         }
       }
 
@@ -277,14 +268,22 @@ public class BwEvent2JsCal {
                       PropertyInfoIndex.ATTACH,
                       atts, master);
       if (attDiff.differs) {
-        if ((val.getNumAttachments() == 0) &
-                (master != null)) {
-          // Override removing all attachments
+        if ((master == null) || attDiff.addAll) {
+          // Just add to js
+        } else if (attDiff.removeAll) {
+          // Remove all ref enclosure from links
+          var masterLinks = jsCalMaster.getLinks(false);
+          var ovLinks = jsval.getLinks(true);
 
-        }
-      } else if (val.getNumAttachments() > 0) {
-        for (BwAttachment att : val.getAttachments()) {
-          //pl.add(setAttachment(att));
+          for (var link: masterLinks.get()) {
+
+          }
+          jsval.setNull(JSPropertyNames.keywords);
+        } else if (!Util.isEmpty(attDiff.removed)) {
+          for (final BwAttachment att: attDiff.removed) {
+//            jsval.setNull(JSPropertyNames.keywords + "/" +
+//                                  cat.getWord().getValue());
+          }
         }
       }
 
@@ -384,17 +383,21 @@ public class BwEvent2JsCal {
                       contacts, master);
       if (contDiff.differs) {
         for (final BwContact c: contacts) {
-          // LANG
-          //prop = new Contact(c.getCn().getValue());
+          final var parts = jsval.getParticipants(true);
+          final var jsContact =
+                  parts.makeEntry(c.getUid()).getValue();
+
+          var roles = jsContact.getRoles(true);
+          roles.add("contact");
+
+          jsContact.setDescription(c.getCn().getValue());
           final String l = c.getLink();
 
-          // throw new RuntimeException("Not done");
-/*          if (l != null) {
-            prop.getParameters().add(new AltRep(l));
+          if (l != null) {
+            JSLinks links = jsval.getLinks(true);
+            JSLink link = links.makeEntry(l).getValue();
+            link.setRel("alternate");
           }
-          throw new RuntimeException("Not done");
-          pl.add(langProp(uidProp(prop, c.getUid()), c.getCn()));
- */
         }
       }
 
@@ -505,6 +508,12 @@ public class BwEvent2JsCal {
         } else {
           if (Util.cmpObjval(tzid, startTimezone) != 0) {
             // Add a location for end tz
+            var locs = jsval.getLocations(true);
+            final JSLocation loc =
+                    locs.makeLocation().getValue();
+
+            loc.setTimeZone(tzid);
+            loc.setRelativeTo("end");
           }
 
           jsval.setProperty(JSPropertyNames.duration,
@@ -577,7 +586,7 @@ public class BwEvent2JsCal {
         if (locDiff.differs) {
           final JSLocations locs = jsval.getLocations(true);
           final JSLocation jsloc =
-                  (JSLocation)locs.makeLocation(loc.getUid()).getValue();
+                  locs.makeEntry(loc.getUid()).getValue();
 
           jsloc.setName(loc.getAddressField());
           jsloc.setDescription(loc.getCombinedValues());
@@ -641,7 +650,7 @@ public class BwEvent2JsCal {
                       prio, master);
       if (prioDiff.differs) {
         jsval.setProperty(JSPropertyNames.priority,
-                          new UnsignedInteger(prio));
+                          new JSUnsignedIntegerImpl(prio));
       }
 
       /* ------------------- RDate -below------------------- */
@@ -678,7 +687,7 @@ public class BwEvent2JsCal {
       }
 
       if (info != null) {
-        var relations = jsval.getRelations(true);
+        var relations = jsval.getRelatedTo(true);
 
         int i = 0;
 
@@ -687,8 +696,8 @@ public class BwEvent2JsCal {
           //String valtype = info[i + 1];
           String relval = info[i + 2];
 
-          var rel = relations.makeRelation(relval);
-          JSRelation relVal = (JSRelation)rel.getValue();
+          var rel = relations.makeEntry(relval);
+          JSRelation relVal = rel.getValue();
           JSList<String> rs = relVal.getRelations(true);
           if (reltype == null) {
             reltype = "parent";
@@ -738,7 +747,7 @@ public class BwEvent2JsCal {
       if (seqDiff.differs &&
               ((master != null) || (seq != 0))) {
         jsval.setProperty(JSPropertyNames.sequence,
-                          new UnsignedInteger(seq));
+                          new JSUnsignedIntegerImpl(seq));
       }
 
       /* ------------------- Status -------------------- */
@@ -1135,7 +1144,7 @@ public class BwEvent2JsCal {
     // INTERVAL -> interval
     if (recur.getInterval() != 1) {
       rrule.setInterval(
-              new UnsignedInteger(recur.getInterval()));
+              new JSUnsignedIntegerImpl(recur.getInterval()));
     }
 
     // TODO Rscale
@@ -1192,7 +1201,7 @@ public class BwEvent2JsCal {
       var hl = rrule.getByHour(true);
 
       for (var h: recur.getHourList()) {
-        hl.add(new UnsignedInteger(h));
+        hl.add(new JSUnsignedIntegerImpl(h));
       }
     }
 
@@ -1201,7 +1210,7 @@ public class BwEvent2JsCal {
       var ml = rrule.getByMinute(true);
 
       for (var m: recur.getMinuteList()) {
-        ml.add(new UnsignedInteger(m));
+        ml.add(new JSUnsignedIntegerImpl(m));
       }
     }
 
@@ -1210,7 +1219,7 @@ public class BwEvent2JsCal {
       var sl = rrule.getBySecond(true);
 
       for (var s: recur.getSecondList()) {
-        sl.add(new UnsignedInteger(s));
+        sl.add(new JSUnsignedIntegerImpl(s));
       }
     }
 
@@ -1224,7 +1233,7 @@ public class BwEvent2JsCal {
     }
 
     if (recur.getCount() > 0) {
-      rrule.setCount(new UnsignedInteger(recur.getCount()));
+      rrule.setCount(new JSUnsignedIntegerImpl(recur.getCount()));
     }
 
     if (recur.getUntil() != null) {
@@ -1266,12 +1275,12 @@ public class BwEvent2JsCal {
     var overrides = jsval.getOverrides(true);
 
     for (BwDateTime dt: dts) {
-      var rid = jsonDate(timeInZone(dt.getDtval(), tzid, tzreg));
-      var ov = overrides.makeOverride(rid);
+      var rid = new JSLocalDateTimeImpl(
+              jsonDate(timeInZone(dt.getDtval(), tzid, tzreg)));
+      var ov = overrides.makeEntry(rid);
 
       if (exdt) {
-        ov.getValue().addProperty(JSPropertyNames.excluded,
-                                  true);
+        ov.getValue().markExcluded();
       }
     }
   }
