@@ -338,23 +338,23 @@ public class BwDiffer {
 
   public static <T extends Comparable<T>,
           CT extends Collection<T>> DifferResult<T, CT> cmpObjval(
-          final CT thisone,
-          final CT thatone) {
-    if (thisone == null) {
-      if (thatone == null) {
+          final CT to,
+          final CT from) {
+    if (to == null) {
+      if (from == null) {
         return new DifferResult<T, CT>(false);
       }
 
-      return new DifferResult<>(true, thatone, false, null);
+      return new DifferResult<>(false, null, true, null);
     }
 
-    if (thatone == null) {
-      return new DifferResult<>(false, null, true, null);
+    if (from == null) {
+      return new DifferResult<>(true, to, false, null);
     }
 
     DifferResult<T, CT> res;
 
-    if (thisone instanceof Set<?>) {
+    if (to instanceof Set<?>) {
       res = (DifferResult<T, CT>)new DifferSetResult<T>();
     } else {
       res = (DifferResult<T, CT>)new DifferListResult<T>();
@@ -362,18 +362,18 @@ public class BwDiffer {
 
     // First look to see if every element in thisOne is in thatOne
 
-    for (T c: thisone) {
-      if (!thatone.contains(c)) {
-        res.toRemove(c);
+    for (T c: to) {
+      if (!from.contains(c)) {
+        res.toAdd(c);
       }
     }
 
     // Now we do it the other way round - because thatOne may have 2
     // equal elements
 
-    for (T c: thatone) {
-      if (!thisone.contains(c)) {
-        res.toAdd(c);
+    for (T c: from) {
+      if (!to.contains(c)) {
+        res.toRemove(c);
       }
     }
 
