@@ -27,7 +27,9 @@ import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEvent.SuggestedTo;
+import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventProperty;
+import org.bedework.calfacade.BwEventProxy;
 import org.bedework.calfacade.BwFilterDef;
 import org.bedework.calfacade.BwGeo;
 import org.bedework.calfacade.BwGroup;
@@ -592,6 +594,12 @@ public class DocBuilder extends DocBuilderBase {
       startObject();
 
       makeShareableContained(ev);
+
+      if (ev instanceof BwEventProxy) {
+        final BwEventAnnotation ann = ((BwEventProxy)ev).getRef();
+
+        makeField("emptyFlags", ann.getEmptyFlags());
+      }
 
       makeField("tombstoned", ev.getTombstoned());
       makeField(PropertyInfoIndex.DELETED, ev.getDeleted());

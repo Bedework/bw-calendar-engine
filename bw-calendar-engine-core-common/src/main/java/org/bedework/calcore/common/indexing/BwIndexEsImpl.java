@@ -3888,6 +3888,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         for (final var oev: eg.overrides) {
           oev.setTarget(mei.getEvent());
           oev.setMaster(mei.getEvent());
+          oev.setOverride(true);
+          oev.setTombstoned(false);
 
           final BwEvent proxy = new BwEventProxy(oev);
 

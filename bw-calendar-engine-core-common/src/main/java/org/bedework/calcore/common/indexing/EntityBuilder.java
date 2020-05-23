@@ -427,6 +427,7 @@ public class EntityBuilder extends EntityBuilderBase {
 
       final BwEventAnnotation ann = (BwEventAnnotation)ev;
       ann.setOverride(true);
+      ann.setEmptyFlags(getString("emptyFlags"));
     } else {
       ev= new BwEventObj();
     }
