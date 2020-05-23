@@ -19,6 +19,7 @@
 package org.bedework.calcore.common.indexing;
 
 import org.bedework.calfacade.BwAlarm;
+import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -557,10 +558,10 @@ public class DocBuilder extends DocBuilderBase {
 
   /* Return the docinfo for the indexer */
   EsDocInfo makeDoc(final EventInfo ei,
-                  final ItemKind kind,
-                  final BwDateTime start,
-                  final BwDateTime end,
-                  final String recurid) throws CalFacadeException {
+                    final ItemKind kind,
+                    final BwDateTime start,
+                    final BwDateTime end,
+                    final String recurid) throws CalFacadeException {
     try {
       final BwEvent ev = ei.getEvent();
       final long version = ev.getMicrosecsVersion();
@@ -703,13 +704,11 @@ public class DocBuilder extends DocBuilderBase {
 
       indexAlarms(start, ev.getAlarms());
 
-      /* Attachment */
+      indexAttachments(ev.getAttachments());
 
       final boolean vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
 
-      if (ev.getNumAttendees() > 0) {
-        indexAttendees(ev.getAttendees(), vpoll);
-      }
+      indexAttendees(ev.getAttendees(), vpoll);
 
       makeField(PropertyInfoIndex.RECIPIENT, ev.getRecipients());
 
@@ -1189,6 +1188,37 @@ public class DocBuilder extends DocBuilderBase {
     }
   }
 
+  private void indexAttachments(
+          final Set<BwAttachment> atts) throws CalFacadeException {
+    try {
+      if (Util.isEmpty(atts)) {
+        return;
+      }
+
+      startArray(getJname(PropertyInfoIndex.ATTACH));
+
+      for (final BwAttachment val: atts) {
+        startObject();
+
+        makeField(ParameterInfoIndex.FMTTYPE.getJname(), val.getFmtType());
+        makeField("valueType", val.getValueType());
+        makeField(ParameterInfoIndex.ENCODING.getJname(), val.getEncoding());
+
+        if (val.getEncoding() == null) {
+          makeField("value", val.getUri());
+        } else {
+          makeField("value", val.getValue());
+        }
+
+        endObject();
+      }
+
+      endArray();
+    } catch (final IndexException e) {
+      throw new CalFacadeException(e);
+    }
+  }
+
   private void indexAttendees(final Set<BwAttendee> atts,
                               final boolean vpoll) throws CalFacadeException {
     try {
@@ -1237,7 +1267,7 @@ public class DocBuilder extends DocBuilderBase {
 
         makeField(ParameterInfoIndex.DIR.getJname(), val.getDir());
 
-        makeField(ParameterInfoIndex.LANGUAGE.getJname(), 
+        makeField(ParameterInfoIndex.LANGUAGE.getJname(),
                   val.getLanguage());
 
         makeField(ParameterInfoIndex.MEMBER.getJname(), val.getMember());
@@ -1245,7 +1275,7 @@ public class DocBuilder extends DocBuilderBase {
         makeField(ParameterInfoIndex.ROLE.getJname(), val.getRole());
 
         makeField(ParameterInfoIndex.SENT_BY.getJname(), val.getSentBy());
-        
+
         endObject();
 
         makeField("uri", val.getAttendeeUri());
@@ -1284,12 +1314,12 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void indexBwStrings(final PropertyInfoIndex pi,
-                              final Collection<? extends BwStringBase> val) throws CalFacadeException {
+                              final Collection<? extends BwStringBase<?>> val) throws CalFacadeException {
     indexBwStrings(getJname(pi), val);
   }
 
   private void indexBwStrings(String name,
-                              final Collection<? extends BwStringBase> val) throws CalFacadeException {
+                              final Collection<? extends BwStringBase<?>> val) throws CalFacadeException {
     try {
       if (Util.isEmpty(val)) {
         return;
@@ -1297,7 +1327,7 @@ public class DocBuilder extends DocBuilderBase {
 
       startArray(name);
 
-      for (final BwStringBase s: val) {
+      for (final BwStringBase<?> s: val) {
         makeField((PropertyInfoIndex)null, s);
       }
 
@@ -1308,7 +1338,7 @@ public class DocBuilder extends DocBuilderBase {
   }
 
   private void makeField(final PropertyInfoIndex pi,
-                         final BwStringBase val) throws CalFacadeException {
+                         final BwStringBase<?> val) throws CalFacadeException {
     if (val == null) {
       return;
     }

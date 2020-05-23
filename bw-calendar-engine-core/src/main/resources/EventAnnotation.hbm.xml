@@ -218,6 +218,14 @@
                     foreign-key="bw_eann_alarm_fk" />
     </set>
 
+    <set name="attachments" table="bw_eventann_attachments"
+         lazy="true"
+         cascade="all-delete-orphan" >
+      <key column="eventid" foreign-key="bw_eannattach_eid_fk" />
+      <many-to-many class="org.bedework.calfacade.BwAttachment"
+                    column="attachid" foreign-key="bw_eann_attach_fk" />
+    </set>
+
     <property name="recurring" type="true_false" column="recurring"
               index="bwidx_eann_recurring" />
 

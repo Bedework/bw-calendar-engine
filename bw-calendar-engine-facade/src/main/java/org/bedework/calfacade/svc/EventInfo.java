@@ -123,6 +123,11 @@ public class EventInfo extends BwUnversionedDbentity<EventInfo>
 
   protected boolean fromRef;
 
+  /**
+   * Use this to mark an override we saw in the ical.
+   */
+  public boolean recurrenceSeen;
+
   /* ENUM
    * XXX these need changing
    */
@@ -635,9 +640,7 @@ public class EventInfo extends BwUnversionedDbentity<EventInfo>
 
     final EventOverride eo = new EventOverride(val);
 
-    if (!overrides.contains(eo)) {
-      overrides.add(eo);
-    }
+    overrides.add(eo);
   }
 
   /* *

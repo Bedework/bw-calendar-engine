@@ -328,6 +328,7 @@ public class BwEventUtil extends IcalUtil {
 
         if (masterEI != null) {
           evinfo = masterEI.findOverride(rid);
+          evinfo.recurrenceSeen = true;
         }
       }
 
@@ -370,6 +371,7 @@ public class BwEventUtil extends IcalUtil {
             masterEI = evinfo;
             masterEI.setInstanceOnly(true);
             evinfo = masterEI.findOverride(rid);
+            evinfo.recurrenceSeen = true;
             ical.addComponent(masterEI);
           } else if (methodType == ScheduleMethods.methodTypeCancel) {
             // This should never have an rid for cancel of entire event.
@@ -413,6 +415,7 @@ public class BwEventUtil extends IcalUtil {
           ical.addComponent(masterEI);
 
           evinfo = masterEI.findOverride(rid);
+          evinfo.recurrenceSeen = true;
           masterEI.setInstanceOnly(rid != null);
         }
       }
@@ -1583,13 +1586,12 @@ public class BwEventUtil extends IcalUtil {
    * with a recurrence id
    */
   private static EventInfo findMaster(final String guid,
-                                      final Collection<?> evs) {
+                                      final Collection<EventInfo> evs) {
     if (evs == null) {
       return null;
     }
 
-    for (final Object ev1 : evs) {
-      EventInfo ei = (EventInfo)ev1;
+    for (final EventInfo ei: evs) {
       BwEvent ev = ei.getEvent();
 
       if ((ev.getRecurrenceId() == null) &&

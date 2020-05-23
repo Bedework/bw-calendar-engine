@@ -38,6 +38,7 @@ import org.bedework.jsforj.impl.JSFactory;
 import org.bedework.jsforj.impl.values.dataTypes.JSLocalDateTimeImpl;
 import org.bedework.jsforj.impl.values.dataTypes.JSUnsignedIntegerImpl;
 import org.bedework.jsforj.model.JSCalendarObject;
+import org.bedework.jsforj.model.JSProperty;
 import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.JSTypes;
 import org.bedework.jsforj.model.values.JSLink;
@@ -81,6 +82,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.bedework.convert.BwDiffer.differs;
 import static org.bedework.util.misc.response.Response.Status.failed;
@@ -270,19 +272,41 @@ public class BwEvent2JsCal {
       if (attDiff.differs) {
         if ((master == null) || attDiff.addAll) {
           // Just add to js
-        } else if (attDiff.removeAll) {
-          // Remove all ref enclosure from links
-          var masterLinks = jsCalMaster.getLinks(false);
-          var ovLinks = jsval.getLinks(true);
-
-          for (var link: masterLinks.get()) {
-
+          var links = jsval.getLinks(true);
+          for (final BwAttachment att: atts) {
+            makeAttachment(links, att);
           }
-          jsval.setNull(JSPropertyNames.keywords);
-        } else if (!Util.isEmpty(attDiff.removed)) {
-          for (final BwAttachment att: attDiff.removed) {
-//            jsval.setNull(JSPropertyNames.keywords + "/" +
-//                                  cat.getWord().getValue());
+        } else if (attDiff.removeAll) {
+          // Remove all ref="enclosure" from links
+          var masterLinks = jsCalMaster.getLinks(false);
+
+          if (masterLinks != null) {
+            for (var linkp : masterLinks.get()) {
+              var link = linkp.getValue();
+              if ("enclosure".equals(link.getRel())) {
+                jsval.setNull(JSPropertyNames.links,
+                              linkp.getName());
+              }
+            }
+          }
+        } else {
+          if (!Util.isEmpty(attDiff.removed)) {
+            for (final BwAttachment att: attDiff.removed) {
+              var masterLinks = jsCalMaster.getLinks(false);
+
+              for (var linkp: masterLinks.get()) {
+                var link = linkp.getValue();
+                if (compareAttachment(att, linkp)) {
+                  jsval.setNull(JSPropertyNames.links,
+                                linkp.getName());
+                }
+              }
+            }
+          }
+          if (!Util.isEmpty(attDiff.added)) {
+            for (final BwAttachment att: attDiff.added) {
+              makeAttachmentOverride(jsval, att);
+            }
           }
         }
       }
@@ -1142,7 +1166,7 @@ public class BwEvent2JsCal {
     }
 
     // INTERVAL -> interval
-    if (recur.getInterval() != 1) {
+    if (recur.getInterval() != -1) {
       rrule.setInterval(
               new JSUnsignedIntegerImpl(recur.getInterval()));
     }
@@ -1283,6 +1307,88 @@ public class BwEvent2JsCal {
         ov.getValue().markExcluded();
       }
     }
+  }
+
+  private static final String dataUriPrefix =
+          "data:text/plain;base64,";
+  private static final int dataUriPrefixLen =
+          dataUriPrefix.length();
+
+  private static void makeAttachment(final JSLinks links,
+                                     final BwAttachment att) {
+    setLink(links.makeLink().getValue(), att);
+  }
+
+  private static void makeAttachmentOverride(final JSCalendarObject jsval,
+                                             final BwAttachment att) {
+    final JSProperty<JSLink> linkp =
+            (JSProperty<JSLink>)jsval.makeProperty(
+                    makePath(JSPropertyNames.links,
+                             UUID.randomUUID().toString()),
+                    JSTypes.typeLink);
+    setLink(linkp.getValue(), att);
+  }
+
+  private static void setLink(final JSLink link,
+                              final BwAttachment att) {
+    link.setRel("enclosure");
+
+    String temp = att.getFmtType();
+    if (temp != null) {
+      link.setContentType(temp);
+    }
+
+    if (att.getEncoding() == null) {
+      // uri type
+      link.setHref(att.getUri());
+    } else {
+      // Binary - make a data uri
+      link.setHref(dataUriPrefix + att.getValue());
+    }
+  }
+
+  public static boolean compareAttachment(
+          final BwAttachment att,
+          final JSProperty<JSLink> linkp) {
+    var link = linkp.getValue();
+
+    if (!"enclosure".equals(link.getRel())) {
+      return false;
+    }
+
+    if (Util.cmpObjval(att.getFmtType(),
+                       link.getContentType()) != 0) {
+      return false;
+    }
+
+    if (att.getEncoding() == null) {
+      return Util.cmpObjval(att.getUri(),
+                            link.getHref()) == 0;
+    }
+
+    if (att.getValue() == null) {
+      return false;
+    }
+
+    return att.getValue().regionMatches(
+            0, link.getHref(),
+            dataUriPrefixLen,
+            link.getHref().length());
+  }
+
+  private static String makePath(final String... name) {
+    if ((name == null) || (name.length == 0)) {
+      throw new RuntimeException("Empty path");
+    }
+    final var pathsb = new StringBuilder();
+    for (var n : name) {
+      if (pathsb.length() != 0) {
+        pathsb.append("/");
+      }
+      pathsb.append(n);
+    }
+
+    return pathsb.toString();
   }
 
   private static Date makeZonedDt(final BwEvent val,

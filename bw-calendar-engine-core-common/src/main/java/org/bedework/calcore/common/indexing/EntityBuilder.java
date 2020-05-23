@@ -19,6 +19,7 @@
 package org.bedework.calcore.common.indexing;
 
 import org.bedework.calfacade.BwAlarm;
+import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
@@ -511,7 +512,7 @@ public class EntityBuilder extends EntityBuilderBase {
     ev.setDuration(getString(PropertyInfoIndex.DURATION));
 
     ev.setAlarms(restoreAlarms());
-    /* uuu Attachment */
+    ev.setAttachments(restoreAttachments());
 
     final boolean vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
 
@@ -597,6 +598,42 @@ public class EntityBuilder extends EntityBuilderBase {
     } finally {
       popFields();
     }
+  }
+
+  private Set<BwAttachment> restoreAttachments() {
+    final PropertyInfoIndex pi;
+
+    final List<Object> vals = getFieldValues(PropertyInfoIndex.ATTACH);
+
+    if (Util.isEmpty(vals)) {
+      return null;
+    }
+
+    final Set<BwAttachment> atts = new TreeSet<>();
+
+    for (final Object o: vals) {
+      try {
+        pushFields(o);
+
+        final BwAttachment att = new BwAttachment();
+
+        att.setFmtType(getString(ParameterInfoIndex.FMTTYPE));
+        att.setValueType(getString("valueType"));
+        att.setEncoding(getString(ParameterInfoIndex.ENCODING));
+
+        if (att.getEncoding() == null) {
+          att.setUri(getString("value"));
+        } else {
+          att.setValue(getString("value"));
+        }
+
+        atts.add(att);
+      } finally {
+        popFields();
+      }
+    }
+
+    return atts;
   }
 
   private Set<BwAttendee> restoreAttendees(final boolean vpoll) {

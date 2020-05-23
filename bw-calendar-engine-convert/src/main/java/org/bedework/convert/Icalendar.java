@@ -87,7 +87,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
 
   private Collection<TimeZoneInfo> timeZones;
 
-  private Collection<Object> components;
+  private Collection<EventInfo> components;
 
   private IcalComponentType componentType = IcalComponentType.none;
 
@@ -166,16 +166,9 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   }
 
   /**
-   * @param val collection of components
-   */
-  public void setComponents(final Collection<Object> val) {
-    components = val;
-  }
-
-  /**
    * @return Collection
    */
-  public Collection<Object> getComponents() {
+  public Collection<EventInfo> getComponents() {
     if (components == null) {
       components = new ArrayList<>();
     }
@@ -291,27 +284,27 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
   /**
    * @param val the (possible) event object
    */
-  public void addComponent(final Object val) {
-    if (val instanceof EventInfo) {
-      final BwEvent ev = ((EventInfo)val).getEvent();
-      if (ev.getEntityType() == IcalDefs.entityTypeEvent) {
-        setComponentType(IcalComponentType.event);
-      } else if (ev.getEntityType() == IcalDefs.entityTypeTodo) {
-        setComponentType(IcalComponentType.todo);
-      } else if (ev.getEntityType() == IcalDefs.entityTypeJournal) {
-        setComponentType(IcalComponentType.journal);
-      } else if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
-        setComponentType(IcalComponentType.freebusy);
-      } else if (ev.getEntityType() == IcalDefs.entityTypeVavailability) {
-        setComponentType(IcalComponentType.vavailability);
-      } else if (ev.getEntityType() == IcalDefs.entityTypeAvailable) {
-        setComponentType(IcalComponentType.available);
-      } else if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
-        setComponentType(IcalComponentType.vpoll);
-      } else {
-        throw new RuntimeException("org.bedework.bad.entitytype");
-      }
+  public void addComponent(final EventInfo val) {
+    final BwEvent ev = val.getEvent();
+
+    if (ev.getEntityType() == IcalDefs.entityTypeEvent) {
+      setComponentType(IcalComponentType.event);
+    } else if (ev.getEntityType() == IcalDefs.entityTypeTodo) {
+      setComponentType(IcalComponentType.todo);
+    } else if (ev.getEntityType() == IcalDefs.entityTypeJournal) {
+      setComponentType(IcalComponentType.journal);
+    } else if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
+      setComponentType(IcalComponentType.freebusy);
+    } else if (ev.getEntityType() == IcalDefs.entityTypeVavailability) {
+      setComponentType(IcalComponentType.vavailability);
+    } else if (ev.getEntityType() == IcalDefs.entityTypeAvailable) {
+      setComponentType(IcalComponentType.available);
+    } else if (ev.getEntityType() == IcalDefs.entityTypeVpoll) {
+      setComponentType(IcalComponentType.vpoll);
+    } else {
+      throw new RuntimeException("org.bedework.bad.entitytype");
     }
+
     getComponents().add(val);
   }
 

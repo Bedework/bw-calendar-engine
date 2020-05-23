@@ -40,6 +40,7 @@ import org.bedework.util.calendar.WsXMLTranslator;
 import org.bedework.util.calendar.XmlCalendarBuilder;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
+import org.bedework.util.misc.Util;
 import org.bedework.util.misc.response.GetEntityResponse;
 import org.bedework.util.timezones.Timezones;
 
@@ -500,7 +501,8 @@ public class IcalTranslator implements Logged, Serializable {
         ic.setCalscale(prop.getValue());
       }
 
-      Collection<CalendarComponent> clist = orderedComponents(cal.getComponents());
+      Collection<CalendarComponent> clist =
+              orderedComponents(cal.getComponents());
       for (CalendarComponent comp: clist) {
         if (comp instanceof VTimeZone) {
           ic.addTimeZone(doTimeZone((VTimeZone)comp));
@@ -525,6 +527,17 @@ public class IcalTranslator implements Logged, Serializable {
 
           if (eiResp.isOk()) {
             ic.addComponent(eiResp.getEntity());
+          }
+        }
+      }
+
+      /* Prune out any overrides we didn't see */
+      for (final EventInfo ei: ic.getComponents()) {
+        if (!Util.isEmpty(ei.getOverrides())) {
+          for (final EventInfo rei: ei.getOverrides()) {
+            if (!rei.recurrenceSeen) {
+              ei.removeOverride(rei.getRecurrenceId());
+            }
           }
         }
       }

@@ -2222,10 +2222,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         if (ic.getComponents().size() != 1) {
           throw new WebdavForbidden(CaldavTags.validCalendarObjectResource);
         }
-
-        if (!(ic.getComponents().iterator().next() instanceof EventInfo)) {
-          throw new WebdavForbidden(CaldavTags.validCalendarObjectResource);
-        }
       } else if (rtype == IcalResultType.TimeZone) {
         if (ic.getTimeZones().size() != 1) {
           throw new WebdavForbidden("Expected one timezone");
@@ -2290,10 +2286,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       if (rtype == IcalResultType.OneComponent) {
         if (ic.getComponents().size() != 1) {
-          throw new WebdavBadRequest(CaldavTags.validCalendarObjectResource);
-        }
-
-        if (!(ic.getComponents().iterator().next() instanceof EventInfo)) {
           throw new WebdavBadRequest(CaldavTags.validCalendarObjectResource);
         }
       } else if (rtype == IcalResultType.TimeZone) {
@@ -2767,7 +2759,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     @Override
-    public Collection<Object> getComponents() {
+    public Collection<?> getComponents() {
       return ic.getComponents();
     }
 

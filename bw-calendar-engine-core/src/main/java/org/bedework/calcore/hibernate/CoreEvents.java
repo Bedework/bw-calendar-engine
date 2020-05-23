@@ -708,7 +708,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       }
     }
 
-    if (!(val instanceof BwEventProxy)) {
+    if (proxy == null) {
       dao.update(val);
 
       final Collection<BwDbentity<?>> deleted = val.getDeletedEntities();
