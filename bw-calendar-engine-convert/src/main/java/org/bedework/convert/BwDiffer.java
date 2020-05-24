@@ -340,15 +340,15 @@ public class BwDiffer {
           CT extends Collection<T>> DifferResult<T, CT> cmpObjval(
           final CT to,
           final CT from) {
-    if (to == null) {
-      if (from == null) {
+    if (Util.isEmpty(to)) {
+      if (Util.isEmpty(from)) {
         return new DifferResult<T, CT>(false);
       }
 
       return new DifferResult<>(false, null, true, null);
     }
 
-    if (from == null) {
+    if (Util.isEmpty(from)) {
       return new DifferResult<>(true, to, false, null);
     }
 
