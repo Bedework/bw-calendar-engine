@@ -51,6 +51,7 @@ import org.bedework.jsforj.model.values.collections.JSLinks;
 import org.bedework.jsforj.model.values.collections.JSList;
 import org.bedework.jsforj.model.values.collections.JSLocations;
 import org.bedework.jsforj.model.values.collections.JSRecurrenceOverrides;
+import org.bedework.jsforj.model.values.dataTypes.JSLocalDateTime;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -222,8 +223,9 @@ public class BwEvent2JsCal {
        */
 
       String strval = val.getRecurrenceId();
+      JSLocalDateTime rid = null;
       if ((strval != null) && (strval.length() > 0)) {
-        var rid = new JSLocalDateTimeImpl(
+        rid = new JSLocalDateTimeImpl(
                 jsonDate(timeInZone(strval,
                                     findZone(val.getDtstart(),
                                              val.getDtend()),
@@ -487,14 +489,15 @@ public class BwEvent2JsCal {
       if (!val.getNoStart()) {
         final BwDateTime bdt = val.getDtstart();
         startTimezone = jscalTzid(bdt, true, master);
+        final String jsStart = jscalDt(bdt);
 
-        final DifferResult<BwDateTime, ?> startDiff =
-                differs(BwDateTime.class,
-                        PropertyInfoIndex.DTSTART,
-                        bdt, master);
-        if (startDiff.differs) {
+        /* We only emit start if it differs from the recurrence id
+         */
+
+        if ((rid == null) ||
+                !jsStart.equals(rid.getStringValue())) {
           jsval.setProperty(JSPropertyNames.start,
-                            jscalDt(bdt));
+                            jsStart);
 
           if (bdt.getDateType() && (master == null)) {
             // Don't add to override
@@ -526,6 +529,7 @@ public class BwEvent2JsCal {
 
         if (todo) {
           // TODO - adjust due if different tz
+          // TODO - test to see if this shoudl be output
           sameZone(val.getDtstart(), bdt);
           jsval.setProperty(JSPropertyNames.due,
                             jscalDt(bdt));
@@ -540,13 +544,27 @@ public class BwEvent2JsCal {
             loc.setRelativeTo("end");
           }
 
-          jsval.setProperty(JSPropertyNames.duration,
-                            BwDateTime.makeDuration(val.getDtstart(),
-                                                    bdt).toString());
+          final String durVal =
+                  BwDateTime.makeDuration(val.getDtstart(),
+                                          bdt).toString();
+          final DifferResult<String, ?> durDiff =
+                  differs(String.class,
+                          PropertyInfoIndex.DURATION,
+                          durVal, master);
+          if (durDiff.differs) {
+            jsval.setProperty(JSPropertyNames.duration,
+                              durVal);
+          }
         }
       } else if (val.getEndType() == StartEndComponent.endTypeDuration) {
-        jsval.setProperty(JSPropertyNames.duration,
-                          val.getDuration());
+        final var durVal = val.getDuration();
+        final DifferResult<String, ?> durDiff =
+                differs(String.class,
+                        PropertyInfoIndex.DURATION,
+                        durVal, master);
+        if (durDiff.differs) {
+          jsval.setProperty(JSPropertyNames.duration, durVal);
+        }
       }
 
       /* ------------------- ExDate --below------------ */
