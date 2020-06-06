@@ -29,6 +29,7 @@ import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.FieldSplitter;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.XcalUtil;
+import org.bedework.util.misc.ToString;
 import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.timezones.Timezones;
 
@@ -126,7 +127,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
         }
       }
 
-      BwDateTime bwd = new BwDateTime();
+      final BwDateTime bwd = new BwDateTime();
       bwd.setDateType(dateType);
       bwd.setDtval(date);
       bwd.setTzid(tzid);
@@ -145,9 +146,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       }
 
       return bwd;
-    } catch (RuntimeException rte) {
+    } catch (final RuntimeException rte) {
       throw rte;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }
@@ -174,7 +175,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
         }
       }
 
-      BwDateTime bwd = new BwDateTime();
+      final BwDateTime bwd = new BwDateTime();
       bwd.setDateType(dateType);
       bwd.setDtval(date);
       bwd.setDate(utcDate);
@@ -182,9 +183,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       bwd.setFloatFlag(floating);
 
       return bwd;
-    } catch (RuntimeException rte) {
+    } catch (final RuntimeException rte) {
       throw rte;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }
@@ -197,9 +198,10 @@ public class BwDateTime extends DumpEntity<BwDateTime>
   public static BwDateTime makeBwDateTime(final DateProperty val) {
     Parameter par = getIcalParameter(val, "VALUE");
 
-    BwDateTime bwdt = makeBwDateTime((par != null) && (par.equals(Value.DATE)),
-                                     val.getValue(),
-                                     getTzid(val));
+    final BwDateTime bwdt =
+            makeBwDateTime((par != null) && (par.equals(Value.DATE)),
+                           val.getValue(),
+                           getTzid(val));
 
     par = getIcalParameter(val, "RANGE");
     if (par != null) {
@@ -216,7 +218,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * @return BwDateTime
    */
   public static BwDateTime makeBwDateTime(final DateDatetimePropertyType val) {
-    XcalUtil.DtTzid dtTzid = XcalUtil.getDtTzid(val);
+    final XcalUtil.DtTzid dtTzid = XcalUtil.getDtTzid(val);
 
     return makeBwDateTime(dtTzid.dateOnly,
                           dtTzid.dt,
@@ -231,7 +233,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    */
   public static BwDateTime makeBwDateTime(final DateDatetimePropertyType val,
                                           final String tzid) {
-    XcalUtil.DtTzid dtTzid = XcalUtil.getDtTzid(val);
+    final XcalUtil.DtTzid dtTzid = XcalUtil.getDtTzid(val);
 
     return makeBwDateTime(dtTzid.dateOnly,
                           dtTzid.dt,
@@ -248,7 +250,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
     if (val instanceof DateTime) {
       dateType = false;
-      TimeZone tz = ((DateTime)val).getTimeZone();
+      final TimeZone tz = ((DateTime)val).getTimeZone();
       if (tz != null) {
         tzid = tz.getID();
       }
@@ -267,14 +269,14 @@ public class BwDateTime extends DumpEntity<BwDateTime>
   public static BwDateTime makeDateTime(final DateProperty dtStart,
                                         final boolean dateOnly,
                                         final String dur) {
-    DtEnd dtEnd;
-    java.util.Date endDt = new Dur(dur).getTime(dtStart.getDate());
+    final DtEnd dtEnd;
+    final java.util.Date endDt = new Dur(dur).getTime(dtStart.getDate());
 
-    Parameter tzid = getIcalParameter(dtStart, "TZID");
+    final Parameter tzid = getIcalParameter(dtStart, "TZID");
 
     if (dateOnly) {
       //dtEnd = new DtEnd(new Date(endDt));
-      ParameterList parl =  new ParameterList();
+      final ParameterList parl =  new ParameterList();
 
       parl.add(Value.DATE);
 
@@ -284,9 +286,9 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       //  addIcalParameter(dtEnd, tzid);
       //}
     } else {
-      DateTime d = new DateTime(endDt);
+      final DateTime d = new DateTime(endDt);
       if (tzid != null) {
-        DateTime sd = (DateTime)dtStart.getDate();
+        final DateTime sd = (DateTime)dtStart.getDate();
 
         d.setTimeZone(sd.getTimeZone());
       }
@@ -315,7 +317,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       throw new RuntimeException(badDate);
     }
 
-    BwDateTime bwd = new BwDateTime();
+    final BwDateTime bwd = new BwDateTime();
     bwd.setDateType(dateType);
     bwd.setDtval(date);
     bwd.setTzid(null);
@@ -507,7 +509,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
     try {
       return DateTimeUtil.isISODateTimeUTC(getDtval());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       return false;
     }
   }
@@ -526,7 +528,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * @return DtEnd
    */
   public DtEnd makeDtEnd(final TimeZoneRegistry tzreg) {
-    DtEnd dt = new DtEnd();
+    final DtEnd dt = new DtEnd();
 
     initDateProp(dt, tzreg);
 
@@ -539,7 +541,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * @return Due
    */
   public Due makeDue(final TimeZoneRegistry tzreg) {
-    Due dt = new Due();
+    final Due dt = new Due();
 
     initDateProp(dt, tzreg);
 
@@ -582,10 +584,10 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       }
 
       return new DtStart(pl, getDtval());*/
-    String tzid = getTzid();
-    DtStart dt = new DtStart();
+    final String tzid = getTzid();
+    final DtStart dt = new DtStart();
 
-    ParameterList pl = dt.getParameters();
+    final ParameterList pl = dt.getParameters();
 
     if (getDateType()) {
       pl.add(Value.DATE);
@@ -670,7 +672,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       }
 
       return makeBwDateTime(dt);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }
@@ -746,7 +748,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    */
   private static void addIcalParameter(final Property prop,
                                        final Parameter val) {
-    ParameterList parl =  prop.getParameters();
+    final ParameterList parl =  prop.getParameters();
 
     parl.add(val);
   }
@@ -759,7 +761,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    */
   private static Parameter getIcalParameter(final Property prop,
                                             final String name) {
-    ParameterList parl =  prop.getParameters();
+    final ParameterList parl =  prop.getParameters();
 
     if (parl == null) {
       return null;
@@ -774,7 +776,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    * @return String tzid or null.
    */
   private static String getTzid(final DateProperty val) {
-    Parameter tzidPar = getIcalParameter(val, "TZID");
+    final Parameter tzidPar = getIcalParameter(val, "TZID");
 
     String tzid = null;
     if (tzidPar != null) {
@@ -788,17 +790,16 @@ public class BwDateTime extends DumpEntity<BwDateTime>
    */
   private void initDateProp(final DateProperty dt,
                             final TimeZoneRegistry tzreg) {
-      String tzid = getTzid();
+    final String tzid = getTzid();
+    final ParameterList pl = dt.getParameters();
 
-      ParameterList pl = dt.getParameters();
+    if (getDateType()) {
+      pl.add(Value.DATE);
+    }
 
-      if (getDateType()) {
-        pl.add(Value.DATE);
-      }
-
-      if (tzid != null) {
-        dt.setTimeZone(tzreg.getTimeZone(tzid));
-      }
+    if (tzid != null) {
+      dt.setTimeZone(tzreg.getTimeZone(tzid));
+    }
 
     try {
       dt.setValue(getDtval());
@@ -808,20 +809,20 @@ public class BwDateTime extends DumpEntity<BwDateTime>
   }
 
   private BwDateTime addDuration(final Dur val) {
-    DtEnd dtEnd;
+    final DtEnd dtEnd;
 
-    java.util.Date endDt = val.getTime(makeDate());
-    DtStart dtStart = makeDtStart(Timezones.getTzRegistry());
+    final java.util.Date endDt = val.getTime(makeDate());
+    final DtStart dtStart = makeDtStart(Timezones.getTzRegistry());
 
     if (getDateType()) {
       dtEnd = new DtEnd(new Date(endDt));
       addIcalParameter(dtEnd, Value.DATE);
     } else {
-      DateTime d = new DateTime(endDt);
+      final DateTime d = new DateTime(endDt);
 
-      Parameter tzid = getIcalParameter(dtStart, "TZID");
+      final Parameter tzid = getIcalParameter(dtStart, "TZID");
       if (tzid != null) {
-        DateTime sd = (DateTime)dtStart.getDate();
+        final DateTime sd = (DateTime)dtStart.getDate();
 
         d.setTimeZone(sd.getTimeZone());
       }
@@ -952,7 +953,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
       return false;
     }
 
-    BwDateTime that = (BwDateTime)obj;
+    final BwDateTime that = (BwDateTime)obj;
 
     if (getDateType() != that.getDateType()) {
       return false;
@@ -968,7 +969,7 @@ public class BwDateTime extends DumpEntity<BwDateTime>
   @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
-    BwDateTime ndt = new BwDateTime();
+    final BwDateTime ndt = new BwDateTime();
 
     ndt.setDateType(getDateType());
     ndt.setTzid(getTzid());
@@ -981,32 +982,27 @@ public class BwDateTime extends DumpEntity<BwDateTime>
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    final ToString ts = new ToString(this);
 
-    sb.append("BwDateTime{");
     if (getDateType()) {
-      sb.append("DATE");
+      ts.append("DATE");
     } else {
-      sb.append("DATETIME");
+      ts.append("DATETIME");
     }
     if (getTzid() != null) {
-      sb.append(", tzid=");
-      sb.append(getTzid());
+      ts.append("tzid", getTzid());
     }
-    sb.append(", dtval=");
-    sb.append(getDtval());
+    ts.append("dtval", getDtval());
 
     if (getFloating()) {
-      sb.append(", floating");
+      ts.append("floating");
     } else if (isUTC()) {
-      sb.append(", UTC");
+      ts.append("UTC");
     } else {
-      sb.append(", UTC=");
-      sb.append(getDate());
+      ts.append("UTC", getDate());
     }
-    sb.append("}");
 
-    return sb.toString();
+    return ts.toString();
   }
 
   private FieldSplitter fetchTzidSplit() {
@@ -1018,12 +1014,13 @@ public class BwDateTime extends DumpEntity<BwDateTime>
     return tzidSplit;
   }
 
-  private void assignTzidField(final int index, final String val) {
+  private void assignTzidField(final int index,
+                               final String val) {
     fetchTzidSplit().setFld(index, val);
     setTimezoneId(fetchTzidSplit().getCombined());
   }
 
-  private void checkRuntimeException(Throwable t) {
+  private void checkRuntimeException(final Throwable t) {
     if (t instanceof RuntimeException) {
       throw (RuntimeException)t;
     }
