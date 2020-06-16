@@ -51,7 +51,7 @@
 		<!-- Third Party Library Versions -->
     <elasticsearch.version>7.2.0</elasticsearch.version>
     <hibernate.version>5.2.5.Final</hibernate.version>
-    <hibernate-validator.version>5.3.4.Final</hibernate-validator.version>
+    <hibernate-validator.version>5.3.5.Final</hibernate-validator.version>
 		<ical4j-vcard.version>1.0.4</ical4j-vcard.version>
     <jackson.version>2.10.0</jackson.version>
     <javax.mail.version>1.5.4</javax.mail.version>
