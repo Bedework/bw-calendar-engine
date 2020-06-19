@@ -46,7 +46,7 @@ import java.util.Set;
  * @author Mike Douglass
  */
 public class BwDiffer {
-  private static BwLogger logger =
+  private final static BwLogger logger =
           new BwLogger().setLoggedClass(BwDiffer.class);
 
   static <T extends Comparable<T>,
@@ -105,7 +105,7 @@ public class BwDiffer {
 
       case DTEND: /* Event only */
       case DUE: /* Todo only */
-        BwDateTime dt = (BwDateTime)val;
+        final BwDateTime dt = (BwDateTime)val;
         return diffres(cl,
                        !CalFacadeUtil.eqObjval(ev.getDtend(), dt));
 
@@ -113,7 +113,7 @@ public class BwDiffer {
         break;
 
       case DTSTART:
-        BwDateTime dt1 = (BwDateTime)val;
+        final BwDateTime dt1 = (BwDateTime)val;
         return diffres(cl,
                        !CalFacadeUtil.eqObjval(ev.getDtstart(), dt1));
 
@@ -342,7 +342,7 @@ public class BwDiffer {
           final CT from) {
     if (Util.isEmpty(to)) {
       if (Util.isEmpty(from)) {
-        return new DifferResult<T, CT>(false);
+        return new DifferResult<>(false);
       }
 
       return new DifferResult<>(false, null, true, null);
@@ -352,7 +352,7 @@ public class BwDiffer {
       return new DifferResult<>(true, to, false, null);
     }
 
-    DifferResult<T, CT> res;
+    final DifferResult<T, CT> res;
 
     if (to instanceof Set<?>) {
       res = (DifferResult<T, CT>)new DifferSetResult<T>();
@@ -362,7 +362,7 @@ public class BwDiffer {
 
     // First look to see if every element in thisOne is in thatOne
 
-    for (T c: to) {
+    for (final T c: to) {
       if (!from.contains(c)) {
         res.toAdd(c);
       }
@@ -371,7 +371,7 @@ public class BwDiffer {
     // Now we do it the other way round - because thatOne may have 2
     // equal elements
 
-    for (T c: from) {
+    for (final T c: from) {
       if (!to.contains(c)) {
         res.toRemove(c);
       }

@@ -35,15 +35,10 @@ import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.convert.Icalendar;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.Util;
 
-import net.fortuna.ical4j.data.CalendarBuilder;
-import net.fortuna.ical4j.data.CalendarParserImpl;
-import net.fortuna.ical4j.data.UnfoldingReader;
-import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateList;
@@ -109,9 +104,7 @@ import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Transp;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Url;
-import net.fortuna.ical4j.model.property.Version;
 
-import java.io.StringReader;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Collection;
@@ -124,7 +117,7 @@ import java.util.Map;
  * @author Mike Douglass   douglm  rpi.edu
  */
 public class VEventUtil extends IcalUtil {
-  private static BwLogger logger =
+  private final static BwLogger logger =
           new BwLogger().setLoggedClass(VEventUtil.class);
 
   /** Make an Icalendar component from a BwEvent object. This may produce a
@@ -150,41 +143,6 @@ public class VEventUtil extends IcalUtil {
     boolean isInstance = false;
 
     try {
-      Component xcomp = null;
-      Calendar cal = null;
-
-      final List<BwXproperty> xcompProps = val.getXproperties(BwXproperty.bedeworkIcal);
-      if (!Util.isEmpty(xcompProps)) {
-        final BwXproperty xcompProp = xcompProps.get(0);
-        final String xcompPropVal = xcompProp.getValue();
-
-        if (xcompPropVal != null) {
-          final StringBuilder sb = new StringBuilder();
-          final Icalendar ic = new Icalendar();
-
-          try {
-            sb.append("BEGIN:VCALENDAR\n");
-            sb.append(Version.VERSION_2_0.toString());
-            sb.append("\n");
-            sb.append(xcompPropVal);
-            if (!xcompPropVal.endsWith("\n")) {
-              sb.append("\n");
-            }
-            sb.append("END:VCALENDAR\n");
-
-            CalendarBuilder bldr = new CalendarBuilder(new CalendarParserImpl(), ic);
-
-            UnfoldingReader ufrdr = new UnfoldingReader(new StringReader(sb.toString()),
-                                                        true);
-
-            cal = bldr.build(ufrdr);
-          } catch (Throwable t) {
-            logger.error(t);
-            logger.error("Trying to parse:\n" + xcompPropVal);
-          }
-        }
-      }
-
       Component comp;
       PropertyList pl = new PropertyList();
       boolean freeBusy = false;
@@ -218,9 +176,7 @@ public class VEventUtil extends IcalUtil {
                                      String.valueOf(entityType));
       }
 
-      if (cal != null) {
-        xcomp = cal.getComponent(comp.getName());
-      }
+      final Component xcomp = IcalUtil.getXcomp(val, comp.getName());
 
       Property prop;
 
@@ -331,7 +287,7 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Description -------------------- */
 
-      BwStringBase bwstr = val.findDescription(null);
+      BwStringBase<?> bwstr = val.findDescription(null);
       if (bwstr != null) {
         pl.add(langProp(new Description(bwstr.getValue()), bwstr));
       }
@@ -825,7 +781,8 @@ public class VEventUtil extends IcalUtil {
     return prop;
   }
 
-  private static Property langProp(final Property prop, final BwStringBase s) {
+  private static Property langProp(final Property prop,
+                                   final BwStringBase<?> s) {
     Parameter par = s.getLangPar();
 
     if (par != null) {

@@ -19,6 +19,7 @@
 package org.bedework.convert.jscal;
 
 import org.bedework.calfacade.BwAttachment;
+import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
@@ -274,17 +275,17 @@ public class BwEvent2JsCal {
       if (attDiff.differs) {
         if ((master == null) || attDiff.addAll) {
           // Just add to js
-          var links = jsval.getLinks(true);
+          final var links = jsval.getLinks(true);
           for (final BwAttachment att: atts) {
             makeAttachment(links, att);
           }
         } else if (attDiff.removeAll) {
           // Remove all ref="enclosure" from links
-          var masterLinks = jsCalMaster.getLinks(false);
+          final var masterLinks = jsCalMaster.getLinks(false);
 
           if (masterLinks != null) {
-            for (var linkp : masterLinks.get()) {
-              var link = linkp.getValue();
+            for (final var linkp: masterLinks.get()) {
+              final var link = linkp.getValue();
               if ("enclosure".equals(link.getRel())) {
                 jsval.setNull(JSPropertyNames.links,
                               linkp.getName());
@@ -294,10 +295,10 @@ public class BwEvent2JsCal {
         } else {
           if (!Util.isEmpty(attDiff.removed)) {
             for (final BwAttachment att: attDiff.removed) {
-              var masterLinks = jsCalMaster.getLinks(false);
+              final var masterLinks = jsCalMaster.getLinks(false);
 
-              for (var linkp: masterLinks.get()) {
-                var link = linkp.getValue();
+              for (final var linkp: masterLinks.get()) {
+                final var link = linkp.getValue();
                 if (compareAttachment(att, linkp)) {
                   jsval.setNull(JSPropertyNames.links,
                                 linkp.getName());
@@ -314,15 +315,59 @@ public class BwEvent2JsCal {
       }
 
       /* ------------------- Attendees -------------------- */
-      /*
       if (!vpoll && (val.getNumAttendees() > 0)) {
-        for (BwAttendee att: val.getAttendees()) {
+        final Set<BwAttendee> attendees = val.getAttendees();
+        final DifferResult<BwAttendee, Set<BwAttendee>> partDiff =
+                differs(BwAttendee.class,
+                        PropertyInfoIndex.ATTENDEE,
+                        attendees, master);
+        if (partDiff.differs) {
+          if ((master == null) || partDiff.addAll) {
+            // Just add to js
+            final var participants = jsval.getParticipants(true);
+            for (final BwAttendee att: attendees) {
+              makeAttendee(participants, att);
+            }
+          } else if (partDiff.removeAll) {
+            // Remove all ref="enclosure" from participants
+            final var masterLinks = jsCalMaster.getLinks(false);
+
+            if (masterLinks != null) {
+              for (final var linkp: masterLinks.get()) {
+                final var link = linkp.getValue();
+                if ("enclosure".equals(link.getRel())) {
+                  jsval.setNull(JSPropertyNames.links,
+                                linkp.getName());
+                }
+              }
+            }
+          } else {
+            if (!Util.isEmpty(partDiff.removed)) {
+              for (final BwAttendee att: partDiff.removed) {
+                final var masterLinks = jsCalMaster.getLinks(false);
+
+                for (final var linkp: masterLinks.get()) {
+                  final var link = linkp.getValue();
+                  if (compareAttachment(att, linkp)) {
+                    jsval.setNull(JSPropertyNames.links,
+                                  linkp.getName());
+                  }
+                }
+              }
+            }
+            if (!Util.isEmpty(partDiff.added)) {
+              for (final BwAttendee att: partDiff.added) {
+                makeAttachmentOverride(jsval, att);
+              }
+            }
+          }
+        }
+        for (final BwAttendee att: val.getAttendees()) {
           prop = setAttendee(att);
           mergeXparams(prop, xcomp);
           pl.add(prop);
         }
       }
-       */
 
       /* ------------------- Categories -------------------- */
 
@@ -402,7 +447,7 @@ public class BwEvent2JsCal {
       }
       /* ------------------- Contact -------------------- */
 
-      var contacts = val.getContacts();
+      final var contacts = val.getContacts();
       final DifferResult<BwContact, ?> contDiff =
               differs(BwContact.class,
                       PropertyInfoIndex.CONTACT,
@@ -413,15 +458,15 @@ public class BwEvent2JsCal {
           final var jsContact =
                   parts.makeEntry(c.getUid()).getValue();
 
-          var roles = jsContact.getRoles(true);
+          final var roles = jsContact.getRoles(true);
           roles.add("contact");
 
           jsContact.setDescription(c.getCn().getValue());
           final String l = c.getLink();
 
           if (l != null) {
-            JSLinks links = jsval.getLinks(true);
-            JSLink link = links.makeEntry(l).getValue();
+            final JSLinks links = jsval.getLinks(true);
+            final JSLink link = links.makeEntry(l).getValue();
             link.setRel("alternate");
           }
         }
@@ -453,7 +498,7 @@ public class BwEvent2JsCal {
 
       /* ------------------- Description -------------------- */
 
-      String descVal = val.getDescription();
+      final String descVal = val.getDescription();
       final DifferResult<String, ?> descDiff =
               differs(String.class,
                       PropertyInfoIndex.DESCRIPTION,
@@ -466,11 +511,11 @@ public class BwEvent2JsCal {
       /* ------------------- LastModified -------------------- */
 
       if (master == null) {
-        var dtstamp = val.getDtstamp();
-        var lastMod = val.getLastmod();
+        final var dtstamp = val.getDtstamp();
+        final var lastMod = val.getLastmod();
         final String updatedVal;
 
-        var updCmp = Util.cmpObjval(dtstamp, lastMod);
+        final var updCmp = Util.cmpObjval(dtstamp, lastMod);
         if (updCmp <= 0) {
           updatedVal = dtstamp;
         } else {
@@ -517,7 +562,7 @@ public class BwEvent2JsCal {
 
       if (val.getEndType() == StartEndComponent.endTypeDate) {
         final BwDateTime bdt = val.getDtend();
-        var tzid = jscalTzid(bdt, false, master);
+        final var tzid = jscalTzid(bdt, false, master);
 
         if (val.getNoStart()) {
           // Have to set tz from end
@@ -1055,7 +1100,8 @@ public class BwEvent2JsCal {
     }
   }
 
-  private static void mergeXparams(final Property p, final Component c) {
+  private static void mergeXparams(final Property p,
+                                   final Component c) {
     if (c == null) {
       return;
     }
@@ -1222,18 +1268,18 @@ public class BwEvent2JsCal {
 
     // BYYEARDAY -> byYearDay
     if (!Util.isEmpty(recur.getYearDayList())) {
-      var ydl = rrule.getByYearDay(true);
+      final var ydl = rrule.getByYearDay(true);
 
-      for (var yd: recur.getYearDayList()) {
+      for (final var yd: recur.getYearDayList()) {
         ydl.add(yd);
       }
     }
 
     // BYWEEKNO -> byWeekNo
     if (!Util.isEmpty(recur.getWeekNoList())) {
-      var wnl = rrule.getByWeekNo(true);
+      final var wnl = rrule.getByWeekNo(true);
 
-      for (var wn: recur.getWeekNoList()) {
+      for (final var wn: recur.getWeekNoList()) {
         wnl.add(wn);
       }
     }

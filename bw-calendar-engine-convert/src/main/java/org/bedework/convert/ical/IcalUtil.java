@@ -36,6 +36,7 @@ import org.bedework.convert.Icalendar;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.Timezones;
 
@@ -88,6 +89,7 @@ import net.fortuna.ical4j.model.property.PollItemId;
 import net.fortuna.ical4j.model.property.Repeat;
 import net.fortuna.ical4j.model.property.Trigger;
 import net.fortuna.ical4j.model.property.Uid;
+import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.model.property.XProperty;
 
 import java.io.IOException;
@@ -107,6 +109,9 @@ import java.util.TreeSet;
  * @author Mike Douglass   douglm    rpi.edu
  */
 public class IcalUtil {
+  private final static BwLogger logger =
+          new BwLogger().setLoggedClass(IcalUtil.class);
+
   /* *
    * @param p ical4j Property
    * @return AbbreviatedValue
@@ -126,6 +131,63 @@ public class IcalUtil {
 
     return new AbbreviatedValue(abbrevs, p.getValue());
   }*/
+
+  /** This is used to extract the full iCalendar representation from
+   * the x-properties. This is used to avoid extending the schema to
+   * preserve extra properties specifically on attendee and attachments.
+   *
+   * @param ev with possible xprops
+   * @param compName we want
+   * @return the Component or null
+   */
+  public static Component getXcomp(final BwEvent ev,
+                                   final String compName) {
+    final List<BwXproperty> xcompProps =
+            ev.getXproperties(BwXproperty.bedeworkIcal);
+
+    if (Util.isEmpty(xcompProps)) {
+      return null;
+    }
+
+    final BwXproperty xcompProp = xcompProps.get(0);
+    final String xcompPropVal = xcompProp.getValue();
+
+    if (xcompPropVal == null) {
+      return null;
+    }
+
+    final StringBuilder sb = new StringBuilder();
+    final Icalendar ic = new Icalendar();
+
+    try {
+      sb.append("BEGIN:VCALENDAR\n");
+      sb.append(Version.VERSION_2_0.toString());
+      sb.append("\n");
+      sb.append(xcompPropVal);
+      if (!xcompPropVal.endsWith("\n")) {
+        sb.append("\n");
+      }
+      sb.append("END:VCALENDAR\n");
+
+      final CalendarBuilder bldr =
+              new CalendarBuilder(new CalendarParserImpl(), ic);
+
+      final UnfoldingReader ufrdr =
+              new UnfoldingReader(new StringReader(sb.toString()),
+                                  true);
+
+      final Calendar cal = bldr.build(ufrdr);
+
+      if (cal != null) {
+        return cal.getComponent(compName);
+      }
+    } catch (Throwable t) {
+      logger.error(t);
+      logger.error("Trying to parse:\n" + xcompPropVal);
+    }
+
+    return null;
+  }
 
   /**
    * @param pl ical4j property list
