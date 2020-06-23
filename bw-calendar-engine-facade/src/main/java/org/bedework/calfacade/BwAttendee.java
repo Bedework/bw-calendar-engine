@@ -511,8 +511,8 @@ public class BwAttendee extends BwDbentity<BwAttendee>
       return 0;
     }
 
-    return Integer.valueOf(sb.substring(2,
-                                        sb.indexOf(":", 2)));
+    return Integer.parseInt(sb.substring(2,
+                                         sb.indexOf(":", 2)));
   }
 
   /**
