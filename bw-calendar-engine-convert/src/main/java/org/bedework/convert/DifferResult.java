@@ -21,6 +21,13 @@ public class DifferResult<T extends Comparable<T>,
   public boolean removeAll;
   public CT removed;
 
+  /* If the elements are subtypes of Differable then they may pass the
+     equals test but not be the same - i.e. some non-key field has changed.
+
+     This will contain those elements that differ in some way
+   */
+  public CT differ;
+
   public DifferResult() {
   }
 
@@ -53,6 +60,15 @@ public class DifferResult<T extends Comparable<T>,
     }
 
     removed.add(val);
+    differs = true;
+  }
+
+  public void doesDiffer(final T val) {
+    if (differ == null) {
+      differ = newCollection();
+    }
+
+    differ.add(val);
     differs = true;
   }
 

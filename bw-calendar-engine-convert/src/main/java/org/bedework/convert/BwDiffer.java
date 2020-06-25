@@ -31,6 +31,7 @@ import org.bedework.calfacade.BwRelatedTo;
 import org.bedework.calfacade.BwRequestStatus;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.base.Differable;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -371,9 +372,28 @@ public class BwDiffer {
     // Now we do it the other way round - because thatOne may have 2
     // equal elements
 
+    boolean differable = false;
+
     for (final T c: from) {
       if (!to.contains(c)) {
         res.toRemove(c);
+        continue;
+      }
+
+      if (differable || (c instanceof Differable)) {
+        final Differable<T> fromC = (Differable<T>)c;
+
+        // Could probably figure this out through reflection
+        differable = true; // avoid check
+        for (final T toC: to) {
+          if (!c.equals(toC)) {
+            continue;
+          }
+
+          if (fromC.differsFrom(toC)) {
+            res.doesDiffer(toC);
+          }
+        }
       }
     }
 
