@@ -225,9 +225,10 @@ public interface EventsI extends Serializable {
    * @param fromAttUri   attendee responding
    * @return UpdateResult Counts of changes.
    */
-  UpdateResult update(final EventInfo ei,
-                             final boolean noInvites,
-                             String fromAttUri);
+  UpdateResult update(EventInfo ei,
+                      boolean noInvites,
+                      String fromAttUri,
+                      boolean autoCreateCollection);
 
   /** Update an event in response to an attendee. Exactly as normal update if
    * fromAtt is null. Otherwise no status update is sent to the given attendee
@@ -241,11 +242,12 @@ public interface EventsI extends Serializable {
    * @param clientUpdate true if this is a client updating the event.
    * @return UpdateResult Counts of changes.
    */
-  UpdateResult update(final EventInfo ei,
-                      final boolean noInvites,
+  UpdateResult update(EventInfo ei,
+                      boolean noInvites,
                       String fromAttUri,
                       boolean alwaysWrite,
-                      boolean clientUpdate);
+                      boolean clientUpdate,
+                      boolean autoCreateCollection);
 
   /** For an event to which we have write access we simply mark it deleted.
    *

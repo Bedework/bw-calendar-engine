@@ -497,10 +497,11 @@ public abstract class SchedulingBase extends CalSvcDb
     for (int i = 0; i < 100; i++) {  // Avoid malicious users
       ev.setName(prefix + ".ics");
 
-      var resp = getSvc().getEventsHandler().add(ei, noInvites,
-                                                 schedulingBox,
-                                                 true,
-                                                 false);
+      final var resp = getSvc().getEventsHandler()
+                               .add(ei, noInvites,
+                                    schedulingBox,
+                                    true,
+                                    false);
 
       if (resp.isOk()) {
         return resp;

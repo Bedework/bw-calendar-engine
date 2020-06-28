@@ -322,7 +322,7 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public void indexEntityForTouch(final BwCalendar entity) {
+  public void indexEntityNow(final BwCalendar entity) {
     indexEntity(getIndexer(entity), entity, true);
   }
 
@@ -858,7 +858,7 @@ public class CalintfImpl extends CalintfROImpl {
             events.addEvent(ei, scheduling,
                             rollbackOnError);
 
-    if (!forRestore) {
+    if (!forRestore && uer.addedUpdated) {
       calendars.touchCalendar(ei.getEvent().getColPath());
     }
 

@@ -405,7 +405,7 @@ class CoreCalendars extends CalintfHelper
     intf.colCache.remove(col.getPath());
 
     if (!getForRestore()) {
-      intf.indexEntityForTouch(col);
+      intf.indexEntityNow(col);
     }
   }
 
@@ -556,7 +556,8 @@ class CoreCalendars extends CalintfHelper
       usercal = dao.getCollection(path);
       if (i == (upath.length - 1)) {
         if (usercal != null) {
-          throw new CalFacadeException("User calendar already exists at " + path);
+          throw new RuntimeException(
+                  "User calendar already exists at " + path);
         }
 
         /* Create a folder for the user */
@@ -573,7 +574,7 @@ class CoreCalendars extends CalintfHelper
 
         dao.saveCollection(usercal);
 
-        indexEntity(usercal);
+        indexEntityNow(usercal);
 
         notify(SysEvent.SysCode.COLLECTION_ADDED, usercal);
       } else if (usercal == null) {
@@ -593,7 +594,7 @@ class CoreCalendars extends CalintfHelper
 
         dao.saveCollection(usercal);
 
-        indexEntity(usercal);
+        indexEntityNow(usercal);
 
         notify(SysEvent.SysCode.COLLECTION_ADDED, usercal);
       }
@@ -602,7 +603,7 @@ class CoreCalendars extends CalintfHelper
     }
 
     if (usercal == null) {
-      throw new CalFacadeException("Invalid user " + user);
+      throw new RuntimeException("Invalid user " + user);
     }
 
     /* Create a default calendar */
@@ -1042,7 +1043,7 @@ class CoreCalendars extends CalintfHelper
       touchCalendar(parent);
     }
 
-    indexEntity(val);
+    indexEntityNow(val);
 
     notify(SysEvent.SysCode.COLLECTION_ADDED, val);
 

@@ -201,7 +201,8 @@ public class InReply extends InProcessor {
       colEv.addVoter(v.toString());
     }
 
-    getSvc().getEventsHandler().update(colEi, false, attUri);
+    getSvc().getEventsHandler().update(colEi, false, attUri,
+                                       false); // autocreate
 
     return true;
   }
@@ -361,27 +362,28 @@ public class InReply extends InProcessor {
     /* Update the organizer copy. This will broadcast the changes tp all
      * attendees
      */
-    getSvc().getEventsHandler().update(colEi, noinvites, attUri);
+    getSvc().getEventsHandler().update(colEi, noinvites, attUri,
+                                       false); // autocreate
 
     return changed;
   }
 
   private String getRstat(final BwEvent ev) {
-    String rstat = null;
+    StringBuilder rstat = null;
 
     for (final BwRequestStatus bwrstat: ev.getRequestStatuses()) {
       if (rstat != null) {
-        rstat += ",";
-        rstat += bwrstat.getCode();
+        rstat.append(",");
+        rstat.append(bwrstat.getCode());
       } else {
-        rstat = bwrstat.getCode();
+        rstat = new StringBuilder(bwrstat.getCode());
       }
     }
 
     if (rstat == null) {
-      rstat = IcalDefs.deliveryStatusSuccess;
+      rstat = new StringBuilder(IcalDefs.deliveryStatusSuccess);
     }
 
-    return rstat;
+    return rstat.toString();
   }
 }

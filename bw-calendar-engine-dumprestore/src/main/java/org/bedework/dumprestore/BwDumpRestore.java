@@ -708,8 +708,10 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
                 changedCt++;
                 
                 try {
-                  EventInfo.UpdateResult ur =
-                          svci.getEventsHandler().update(ei, true, null);
+                  final EventInfo.UpdateResult ur =
+                          svci.getEventsHandler().update(ei, true,
+                                                         null,
+                                                         false); // autocreate
                 } catch (final Throwable t) {
                   errorCt++;
                   warn("Error updating event " + href + 
@@ -745,12 +747,13 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
     }
     
     private List<String> hrefBatch() {
-      List<String> hrefs = new ArrayList<>(hrefBatchSize);
+      final List<String> hrefs = new ArrayList<>(hrefBatchSize);
       
       try {
         svci = getSvci("public-user", true);
         
-        Iterator<String> hrefi = svci.getDumpHandler().getEventHrefs(hrefBatchPos);
+        final Iterator<String> hrefi =
+                svci.getDumpHandler().getEventHrefs(hrefBatchPos);
         
         for (int i = 0; i < hrefBatchSize; i++) {
           hrefBatchPos++;
@@ -792,7 +795,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
           break updateEv;
         }
 
-        String yaleLocId = yaleLoc.getValue();
+        final String yaleLocId = yaleLoc.getValue();
 
         if (yaleLocId == null) {
           noLocCt++;

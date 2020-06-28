@@ -83,7 +83,8 @@ public class InCancel extends InProcessor {
           colEv.setStatus(BwEvent.statusCancelled);
           colEv.setSequence(ev.getSequence());
         }
-        getSvc().getEventsHandler().update(colEi, true, null);
+        getSvc().getEventsHandler().update(colEi, true, null,
+                                           false); // autocreate
       } else {
         getSvc().getEventsHandler().delete(colEi, false);
       }

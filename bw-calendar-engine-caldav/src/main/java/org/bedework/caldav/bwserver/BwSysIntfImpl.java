@@ -1176,12 +1176,12 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public void updateEvent(final CalDAVEvent<?> event) throws WebdavException {
     try {
-      EventInfo ei = getEvinfo(event);
+      final EventInfo ei = getEvinfo(event);
 
       handleUpdateResult(getSvci().getEventsHandler().update(ei, false));
-    } catch (WebdavException we) {
+    } catch (final WebdavException we) {
       throw we;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new WebdavException(t);
     }
   }

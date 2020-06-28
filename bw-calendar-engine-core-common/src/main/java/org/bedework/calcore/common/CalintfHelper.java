@@ -100,7 +100,7 @@ public abstract class CalintfHelper
     collectTimeStats = isMetricsDebugEnabled();
   }
 
-  public abstract <T> T throwException(final CalFacadeException cfe)
+  public abstract <T> T throwException(CalFacadeException cfe)
           throws CalFacadeException;
 
   public <T> T throwException(final String err)
@@ -120,11 +120,11 @@ public abstract class CalintfHelper
    * @param desiredAccess we need
    * @param alwaysReturn false to throw an exception if not accessible
    * @return BwCalendar
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
-  public BwCalendar getCollection(String path,
-                                     int desiredAccess,
-                                     boolean alwaysReturn) throws CalFacadeException {
+  public BwCalendar getCollection(final String path,
+                                  final int desiredAccess,
+                                  final boolean alwaysReturn) throws CalFacadeException {
     return intf.getCollection(path, desiredAccess,
                             alwaysReturn);
   }
@@ -149,7 +149,7 @@ public abstract class CalintfHelper
   }
 
   protected String authenticatedPrincipal() {
-    BwPrincipal p = getAuthenticatedPrincipal();
+    final BwPrincipal p = getAuthenticatedPrincipal();
 
     if (p == null) {
       return null;
@@ -269,6 +269,10 @@ public abstract class CalintfHelper
     }
   }
 
+  protected void indexEntityNow(final BwCalendar col) {
+    intf.indexEntityNow(col);
+  }
+
   protected void unindex(final BwCalendar col) throws CalFacadeException {
     getIndexer(col).unindexEntity(col.getHref());
   }
@@ -328,7 +332,7 @@ public abstract class CalintfHelper
 
     if ((cal.getCalType() == BwCalendar.calTypeInbox) ||
         (cal.getCalType() == BwCalendar.calTypePendingInbox)) {
-      ca = access.checkAccess(cal, privScheduleDeliver, true);
+      ca = access.checkAccess(cal, privScheduleDeliver, alwaysReturn);
       if (!ca.getAccessAllowed()) {
         // try old style
         ca = access.checkAccess(cal, privScheduleRequest, alwaysReturn);
@@ -380,7 +384,7 @@ public abstract class CalintfHelper
     }
 
     if (val instanceof RecurrenceEntity) {
-      RecurrenceEntity re = (RecurrenceEntity)val;
+      final RecurrenceEntity re = (RecurrenceEntity)val;
 
       re.setRecurring(false);
       clearCollection(re.getExdates());
@@ -443,7 +447,7 @@ public abstract class CalintfHelper
   protected void notifyDelete(final boolean reallyDelete,
                               final BwEvent val,
                               final boolean shared) {
-    SysEvent.SysCode code;
+    final SysEvent.SysCode code;
 
     if (reallyDelete) {
       code = SysEvent.SysCode.ENTITY_DELETED;
@@ -451,7 +455,7 @@ public abstract class CalintfHelper
       code = SysEvent.SysCode.ENTITY_TOMBSTONED;
     }
 
-    String note = getChanges(code, val);
+    final String note = getChanges(code, val);
     if (note == null) {
       return;
     }
@@ -568,7 +572,7 @@ public abstract class CalintfHelper
       }
 
       return null;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
       return null;
     }
@@ -578,7 +582,7 @@ public abstract class CalintfHelper
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

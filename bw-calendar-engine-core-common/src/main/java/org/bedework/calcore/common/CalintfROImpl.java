@@ -216,7 +216,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void indexEntityForTouch(final BwCalendar entity) {
+  public void indexEntityNow(final BwCalendar entity) {
     throw new RuntimeException("Read only version");
   }
 

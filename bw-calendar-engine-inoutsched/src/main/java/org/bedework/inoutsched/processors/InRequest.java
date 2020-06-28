@@ -219,7 +219,8 @@ public class InRequest extends InProcessor {
       final UpdateResult ur = 
               getSvc().getEventsHandler().update(ourCopy,
                                                  noInvites,
-                                                 null);
+                                                 null,
+                                                 false); // autocreate
 
       if (debug()) {
         debug("Schedule - update result " + pr.sr +

@@ -418,10 +418,15 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     RecuridTable recurids = null;
     final UpdateEventResult uer = new UpdateEventResult();
 
-    uer.addedUpdated = true;
-
     final BwCalendar cal = getEntityCollection(val.getColPath(), privBind,
                                                scheduling, false);
+
+    if (cal == null) {
+      uer.errorCode = CalFacadeException.noEventCalendar;
+      return uer;
+    }
+
+    uer.addedUpdated = true;
 
     /* Indicate if we want sharing notifications of changes */
     final boolean shared = cal.getPublick() || cal.getShared();

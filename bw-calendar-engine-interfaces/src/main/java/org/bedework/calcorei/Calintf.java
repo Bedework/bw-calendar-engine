@@ -343,7 +343,7 @@ public interface Calintf
   /**
    * @param entity to index
    */
-  void indexEntityForTouch(BwCalendar entity);
+  void indexEntityNow(BwCalendar entity);
 
   /** Method for reindexing.
    *

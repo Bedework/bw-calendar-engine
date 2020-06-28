@@ -110,7 +110,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
           /* Needs to be sent to an external destination. Add it
            * to the list of inboxes for that host.
            */
-          Collection<UserInbox> inboxes = hostMap
+          final Collection<UserInbox> inboxes = hostMap
                   .computeIfAbsent(ui.getHost().getHostname(),
                                    k -> new ArrayList<>());
 
@@ -146,7 +146,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
             ui.setAttendeeScheduleStatus(null);
             ui.setStatus(ScheduleStates.scheduleOk);
           }
-        } catch (CalFacadeAccessException cae) {
+        } catch (final CalFacadeAccessException cae) {
           ui.setStatus(ScheduleStates.scheduleNoAccess);
           deliveryStatus = IcalDefs.deliveryStatusNoAccess;
         }
@@ -155,7 +155,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
           if (deliveryStatus != null) {
             ui.setAttendeeScheduleStatus(deliveryStatus);
           }
-        } else {
+//      } else {
 //          ev.getOrganizer().setScheduleStatus(deliveryStatus);
         }
       }
@@ -269,7 +269,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
          * Probably need to handle stale-state exceptions at the other end.
          */
 
-        var delResp = deleteEvent(ei, true, false);
+        final var delResp = deleteEvent(ei, true, false);
         if (delResp.isError()) {
           return Response.fromResponse(resp, delResp);
         }
@@ -438,7 +438,7 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
       } else {
         ui.inboxPath = inbox.getPath();
       }
-    } catch (CalFacadeAccessException cae) {
+    } catch (final CalFacadeAccessException cae) {
       ui.setStatus(ScheduleStates.scheduleNoAccess);
     }
 

@@ -177,7 +177,7 @@ public abstract class InProcessor extends CalSvcDb {
       chg.changed(PropertyIndex.PropertyInfoIndex.COLPATH,
                   ev.getColPath(), inbox.getPath());
       ev.setColPath(inbox.getPath());
-      getSvc().getEventsHandler().update(ei, true, null);
+      getSvc().getEventsHandler().update(ei, true, null, true);
     } catch (final CalFacadeException cfe) {
       return Response.error(resp, cfe);
     }

@@ -250,7 +250,9 @@ public class ProcessMove extends CmdUtilHelper {
       }
     }
 
-    EventInfo.UpdateResult ur = getSvci().getEventsHandler().update(ei, false, null);
+    final EventInfo.UpdateResult ur =
+            getSvci().getEventsHandler().update(ei, false, null,
+                                                false); // autocreate
     if (!ur.isOk()) {
       pstate.addError("Failed to update " + ev.getName() +
                            " uid: " + ev.getUid() +
