@@ -44,6 +44,7 @@ import org.bedework.jsforj.model.JSTypes;
 import org.bedework.jsforj.model.values.JSLink;
 import org.bedework.jsforj.model.values.JSLocation;
 import org.bedework.jsforj.model.values.JSOverride;
+import org.bedework.jsforj.model.values.JSParticipant;
 import org.bedework.jsforj.model.values.JSRecurrenceRule;
 import org.bedework.jsforj.model.values.JSRelation;
 import org.bedework.jsforj.model.values.JSValue;
@@ -727,11 +728,23 @@ public class BwEvent2JsCal {
 
       final BwOrganizer org = val.getOrganizer();
       if (org != null) {
-        throw new RuntimeException("Not done");
-/*        prop = setOrganizer(org);
-        mergeXparams(prop, xcomp);
-        pl.add(prop);
-        */
+        // Always add a replyTo for iMip and the organizer.
+        final var orgUri = org.getOrganizerUri();
+        jsval.getReplyTo(true).makeReplyTo("imip", orgUri);
+
+        final DifferResult<BwOrganizer, ?> orgDiff =
+                differs(BwOrganizer.class,
+                        PropertyInfoIndex.ORGANIZER,
+                        org, master);
+        if (orgDiff.differs) {
+          final var parts = jsval.getParticipants(true);
+
+          var jsOrg = parts.findParticipant(orgUri);
+          if (jsOrg == null) {
+            jsOrg = parts.makeParticipant();
+          }
+          makeOrganizer(jsOrg.getValue(), org);
+        }
       }
 
       /* ------------------- PercentComplete -------------------- */
@@ -1458,6 +1471,41 @@ public class BwEvent2JsCal {
             0, link.getHref(),
             dataUriPrefixLen,
             link.getHref().length());
+  }
+
+  private static void makeOrganizer(final JSParticipant jsOrg,
+                                    final BwOrganizer org) {
+    jsOrg.getSendTo(true).makeSendTo("imip",
+                                     org.getOrganizerUri());
+
+    jsOrg.getRoles(true).add("owner");
+
+    String temp = org.getCn();
+    if (temp != null) {
+      jsOrg.setName(temp);
+    }
+
+    temp = org.getDir();
+    if (temp != null) {
+      logger.warn("Do this - dir");
+      //pars.add(new Dir(temp));
+    }
+
+    temp = org.getLanguage();
+    if (temp != null) {
+      jsOrg.setLanguage(temp);
+    }
+
+    temp = org.getScheduleStatus();
+    if (temp != null) {
+      logger.warn("Do this - scheduleStatus");
+      //pars.add(new ScheduleStatus(temp));
+    }
+
+    temp = org.getSentBy();
+    if (temp != null) {
+      jsOrg.setInvitedBy(temp);
+    }
   }
 
   private static void makeAttendees(final JSParticipants participants,

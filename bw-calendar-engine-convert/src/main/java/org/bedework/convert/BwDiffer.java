@@ -137,9 +137,11 @@ public class BwDiffer {
                                       ev.getLocation()) != 0);
 
       case ORGANIZER:
+        final var organizer = (BwOrganizer)val;
         return diffres(cl,
-                       Util.cmpObjval((BwOrganizer)val,
-                                      ev.getOrganizer()) != 0);
+                       (Util.cmpObjval(organizer,
+                                      ev.getOrganizer()) != 0) ||
+                               organizer.differsFrom(ev.getOrganizer()));
 
       case PRIORITY:
         return diffres(cl,
