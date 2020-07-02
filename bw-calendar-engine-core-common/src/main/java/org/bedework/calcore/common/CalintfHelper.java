@@ -332,16 +332,19 @@ public abstract class CalintfHelper
 
     if ((cal.getCalType() == BwCalendar.calTypeInbox) ||
         (cal.getCalType() == BwCalendar.calTypePendingInbox)) {
-      ca = access.checkAccess(cal, privScheduleDeliver, alwaysReturn);
+      ca = access.checkAccess(cal, privScheduleDeliver,
+                              true); //alwaysReturn
       if (!ca.getAccessAllowed()) {
         // try old style
-        ca = access.checkAccess(cal, privScheduleRequest, alwaysReturn);
+        ca = access.checkAccess(cal, privScheduleRequest,
+                                true); //alwaysReturn
       }
     } else if (cal.getCalType() == BwCalendar.calTypeOutbox) {
       ca = access.checkAccess(cal, privScheduleSend, true);
       if (!ca.getAccessAllowed()) {
         // try old style
-        ca = access.checkAccess(cal, privScheduleReply, alwaysReturn);
+        ca = access.checkAccess(cal, privScheduleReply,
+                                true); //alwaysReturn
       }
     } else {
       throw new CalFacadeAccessException();
