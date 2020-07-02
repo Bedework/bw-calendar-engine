@@ -241,7 +241,7 @@ public class BwEvent2JsCal {
             throw new RuntimeException("Cannot have override for exdate");
           }
           jsval = ov;
-          jsval.setRecurrenceId(rid);
+          //jsval.setRecurrenceId(rid);
         }
       }
 
@@ -728,9 +728,7 @@ public class BwEvent2JsCal {
 
       final BwOrganizer org = val.getOrganizer();
       if (org != null) {
-        // Always add a replyTo for iMip and the organizer.
         final var orgUri = org.getOrganizerUri();
-        jsval.getReplyTo(true).makeReplyTo("imip", orgUri);
 
         final DifferResult<BwOrganizer, ?> orgDiff =
                 differs(BwOrganizer.class,
@@ -743,6 +741,22 @@ public class BwEvent2JsCal {
           if (jsOrg == null) {
             jsOrg = parts.makeParticipant();
           }
+          /* For the master always add a replyTo for iMip and the
+             organizer.
+
+             For an override - only if the reply to has changed
+           */
+
+          if (master == null) {
+            jsval.getReplyTo(true).makeReplyTo("imip", orgUri);
+          } else {
+            final var morg = master.getEvent().getOrganizer();
+            if ((morg == null) ||
+                    !morg.getOrganizerUri().equals(orgUri)) {
+              jsval.getReplyTo(true).makeReplyTo("imip", orgUri);
+            }
+          }
+
           makeOrganizer(jsOrg.getValue(), org);
         }
       }
