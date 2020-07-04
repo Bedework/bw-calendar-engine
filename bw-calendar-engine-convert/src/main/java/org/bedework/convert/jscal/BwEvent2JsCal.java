@@ -315,8 +315,9 @@ public class BwEvent2JsCal {
         if (partDiff.differs) {
           if ((master == null) || partDiff.addAll) {
             // Just add to js
-            makeAttendees(jsval.getParticipants(true),
+            makeAttendees(jsval,
                           jsCalMaster,
+                          jsval.getParticipants(true),
                           attendees);
           } else if (partDiff.removeAll) {
             // Remove all from participants - use sendTo to identify an attendee
@@ -349,8 +350,9 @@ public class BwEvent2JsCal {
               }
             }
             if (!Util.isEmpty(partDiff.added)) {
-              makeAttendees(jsval.getParticipants(true),
+              makeAttendees(jsval,
                             jsCalMaster,
+                            jsval.getParticipants(true),
                             partDiff.added);
             }
             if (!Util.isEmpty(partDiff.differ)) {
@@ -757,7 +759,7 @@ public class BwEvent2JsCal {
             }
           }
 
-          makeOrganizer(jsOrg.getValue(), org);
+          makeOrganizer(jsval, jsCalMaster, jsOrg.getValue(), org);
         }
       }
 
@@ -1487,10 +1489,16 @@ public class BwEvent2JsCal {
             link.getHref().length());
   }
 
-  private static void makeOrganizer(final JSParticipant jsOrg,
+  private static void makeOrganizer(final JSCalendarObject jsval,
+                                    final JSCalendarObject master,
+                                    final JSParticipant jsOrg,
                                     final BwOrganizer org) {
-    jsOrg.getSendTo(true).makeSendTo("imip",
-                                     org.getOrganizerUri());
+    // We may already have a sendTo if this is also an attendee
+    final var sendTos = jsOrg.getSendTo(true);
+    if (sendTos.get("imip") == null) {
+      sendTos.makeSendTo("imip",
+                         org.getOrganizerUri());
+    }
 
     jsOrg.getRoles(true).add("owner");
 
@@ -1499,11 +1507,7 @@ public class BwEvent2JsCal {
       jsOrg.setName(temp);
     }
 
-    temp = org.getDir();
-    if (temp != null) {
-      logger.warn("Do this - dir");
-      //pars.add(new Dir(temp));
-    }
+    addLinkId(jsval, master, jsOrg, org.getDir());
 
     temp = org.getLanguage();
     if (temp != null) {
@@ -1522,8 +1526,9 @@ public class BwEvent2JsCal {
     }
   }
 
-  private static void makeAttendees(final JSParticipants participants,
+  private static void makeAttendees(final JSCalendarObject jsval,
                                     final JSCalendarObject master,
+                                    final JSParticipants participants,
                                     final Set<BwAttendee> attendees) {
     /* Note below we add participants in two passes - groups first
        then the rest. This is because an attendee with a MEMBER
@@ -1534,14 +1539,14 @@ public class BwEvent2JsCal {
       if (!"group".equalsIgnoreCase(att.getCuType())) {
         continue;
       }
-      makeAttendee(participants, master, att);
+      makeAttendee(jsval, master, participants, att);
     }
 
     for (final BwAttendee att: attendees) {
       if ("group".equalsIgnoreCase(att.getCuType())) {
         continue;
       }
-      makeAttendee(participants, master, att);
+      makeAttendee(jsval, master, participants, att);
     }
   }
 
@@ -1551,17 +1556,20 @@ public class BwEvent2JsCal {
    * @param master - needed to locate group participants
    * @param att attendee
    */
-  private static void makeAttendee(final JSParticipants participants,
+  private static void makeAttendee(final JSCalendarObject jsval,
                                    final JSCalendarObject master,
+                                   final JSParticipants participants,
                                    final BwAttendee att) {
     final var part = participants.makeParticipant().getValue();
 
+    // We do attendee before organizer so this should be fine.
     part.getSendTo(true).makeSendTo("imip",
                                     att.getAttendeeUri());
 
     final String partStat = att.getPartstat();
 
-    if ((partStat != null) && !partStat.equals(IcalDefs.partstatValNeedsAction)) {
+    if ((partStat != null) &&
+            !partStat.equals(IcalDefs.partstatValNeedsAction)) {
       // Not default value.
       part.setParticipationStatus(partStat.toLowerCase());
     }
@@ -1598,11 +1606,7 @@ public class BwEvent2JsCal {
       }
     }
 
-    temp = att.getDir();
-    if (temp != null) {
-      logger.warn("Do this - dir");
-      //pars.add(new Dir(temp));
-    }
+    addLinkId(jsval, master, part, att.getDir());
 
     temp = att.getLanguage();
     if (temp != null) {
@@ -1627,15 +1631,16 @@ public class BwEvent2JsCal {
       }
     }
 
-    temp = att.getRole();
+    jsCalRole(part.getRoles(true), att.getRole());
+
+    temp = scheduleAgent(att.getScheduleAgent());
     if (temp != null) {
-      jsCalRole(part.getRoles(true), temp);
+      part.setScheduleAgent(temp);
     }
 
     temp = att.getScheduleStatus();
     if (temp != null) {
-      logger.warn("Do this - scheduleStatus");
-      //pars.add(new ScheduleStatus(temp));
+      part.setScheduleStatus(temp);
     }
 
     temp = att.getSentBy();
@@ -1708,13 +1713,35 @@ public class BwEvent2JsCal {
         part.getDelegatedTo(true).add(s);
       }
     }
-
-    temp = att.getDir();
-    if (temp != null) {
-      logger.warn("Do this - dir");
-      //pars.add(new Dir(temp));
-    }
     */
+
+    final var dir = attendee.getDir();
+    final var mdir = masterAttendee.getDir();
+    if (dir == null) {
+      if (mdir != null) {
+        final var links = master.getLinks(false);
+        if (links != null) {
+          final var linkp = links.findLink(mdir);
+          if (linkp != null) {
+            jsval.setNull(JSPropertyNames.participants,
+                          partId,
+                          JSPropertyNames.linkIds,
+                          linkp.getName());
+          }
+        }
+      }
+    } else if (!dir.equalsIgnoreCase(mdir)) {
+      // First an override link
+      final var linkp = jsval.getLinks(true).makeLink();
+      final var link = linkp.getValue();
+      link.setRel("alternate");
+      link.setHref(dir);
+
+      jsval.setProperty(makePath(JSPropertyNames.participants,
+                                 partId,
+                                 JSPropertyNames.linkIds),
+                                 linkp.getName());
+    }
 
     makeAttendeeOverrideVal(jsval,
                             attendee.getLanguage(),
@@ -1742,15 +1769,9 @@ public class BwEvent2JsCal {
     }
      */
 
-    final String attVal = attendee.getRole();
-    final String mattVal = masterAttendee.getRole();
-    if (attVal == null) {
-      if (mattVal != null) {
-        jsval.setNull(JSPropertyNames.participants,
-                      partId,
-                      JSPropertyNames.roles);
-      }
-    } else if (!attVal.equalsIgnoreCase(mattVal)) {
+    final String attVal = icalRole(attendee.getRole());
+    final String mattVal = icalRole(masterAttendee.getRole());
+    if (!attVal.equalsIgnoreCase(mattVal)) {
       final JSProperty<JSList<String>> roles =
               jsval.makeProperty(new TypeReference<>() {},
               makePath(JSPropertyNames.participants,
@@ -1760,13 +1781,17 @@ public class BwEvent2JsCal {
       jsCalRole(roles.getValue(), attVal);
     }
 
-    /*
-    temp = att.getScheduleStatus();
-    if (temp != null) {
-      logger.warn("Do this - scheduleStatus");
-      //pars.add(new ScheduleStatus(temp));
-    }
-     */
+    makeAttendeeOverrideVal(jsval,
+                            scheduleAgent(attendee.getScheduleAgent()),
+                            scheduleAgent(masterAttendee.getScheduleAgent()),
+                            partId,
+                            JSPropertyNames.scheduleAgent);
+
+    makeAttendeeOverrideVal(jsval,
+                            attendee.getScheduleStatus(),
+                            masterAttendee.getScheduleStatus(),
+                            partId,
+                            JSPropertyNames.scheduleStatus);
 
     makeAttendeeOverrideVal(jsval,
                             attendee.getSentBy(),
@@ -1775,6 +1800,59 @@ public class BwEvent2JsCal {
                             JSPropertyNames.kind);
   }
 
+  private static String scheduleAgent(final int sagent) {
+    if (sagent == IcalDefs.scheduleAgentServer) {
+      return null;
+    }
+
+    return "client";
+  }
+
+  private static JSProperty<JSLink> findLink(final JSCalendarObject jsval,
+                                             final JSCalendarObject master,
+                                             final String href) {
+    var links = jsval.getLinks(false);
+
+    if (links != null) {
+      final var prop = links.findLink(href);
+      if (prop != null) {
+        return prop;
+      }
+    }
+
+    if (master == null) {
+      return null;
+    }
+
+    links = jsval.getLinks(false);
+
+    if (links == null) {
+      return null;
+    }
+
+    return links.findLink(href);
+  }
+
+  private static void addLinkId(final JSCalendarObject jsval,
+                                final JSCalendarObject master,
+                                final JSParticipant part,
+                                final String href) {
+    if (href == null) {
+      return;
+    }
+
+    var linkp = findLink(jsval, master, href);
+    if (linkp == null) {
+      final var links = jsval.getLinks(true);
+      linkp = links.makeLink();
+      final var link = linkp.getValue();
+
+      link.setHref(href);
+      link.setRel("alternate");
+    }
+
+    part.getLinkIds(true).add(linkp.getName());
+  }
   private static String lower(final String val) {
     if (val == null) {
       return null;
@@ -1819,9 +1897,18 @@ public class BwEvent2JsCal {
     return icalCutype.toLowerCase();
   }
 
+  private static String icalRole(final String role) {
+    if (role == null) {
+      return "REQ-PARTICIPANT";
+    }
+
+    return role;
+  }
+
   private static void jsCalRole(final JSList<String> roles,
                                   final String icalRole) {
     if (icalRole == null) {
+      roles.add("attendee");
       return;
     }
 
