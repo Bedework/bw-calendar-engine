@@ -481,13 +481,7 @@ public class BwEvent2JsCal {
           roles.add("contact");
 
           jsContact.setDescription(c.getCn().getValue());
-          final String l = c.getLink();
-
-          if (l != null) {
-            final JSLinks links = jsval.getLinks(true);
-            final JSLink link = links.makeEntry(l).getValue();
-            link.setRel("alternate");
-          }
+          addLinkId(jsval, jsCalMaster, jsContact, c.getLink());
         }
       }
 
@@ -1920,6 +1914,7 @@ public class BwEvent2JsCal {
      */
 
     if (icalRole.equalsIgnoreCase("chair")) {
+      roles.add("attendee");
       roles.add("chair");
     } else if (icalRole.equalsIgnoreCase("REQ-PARTICIPANT")) {
       roles.add("attendee");
