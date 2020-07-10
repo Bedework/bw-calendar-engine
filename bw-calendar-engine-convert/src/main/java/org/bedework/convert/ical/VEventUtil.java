@@ -143,15 +143,15 @@ public class VEventUtil extends IcalUtil {
     boolean isInstance = false;
 
     try {
-      Component comp;
-      PropertyList pl = new PropertyList();
+      final Component comp;
+      final PropertyList pl = new PropertyList();
       boolean freeBusy = false;
       boolean vavail = false;
       boolean todo = false;
       boolean event = false;
       boolean vpoll = false;
 
-      int entityType = val.getEntityType();
+      final int entityType = val.getEntityType();
       if (entityType == IcalDefs.entityTypeEvent) {
         comp = new VEvent(pl);
         event = true;
@@ -196,14 +196,14 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Attachments -------------------- */
       if (val.getNumAttachments() > 0) {
-        for (BwAttachment att: val.getAttachments()) {
+        for (final BwAttachment att: val.getAttachments()) {
           pl.add(setAttachment(att));
         }
       }
 
       /* ------------------- Attendees -------------------- */
       if (!vpoll && (val.getNumAttendees() > 0)) {
-        for (BwAttendee att: val.getAttendees()) {
+        for (final BwAttendee att: val.getAttendees()) {
           prop = setAttendee(att);
           mergeXparams(prop, xcomp);
           pl.add(prop);
@@ -216,9 +216,9 @@ public class VEventUtil extends IcalUtil {
         /* This event has a category - do each one separately */
 
         // LANG - filter on language - group language in one cat list?
-        for (BwCategory cat: val.getCategories()) {
+        for (final BwCategory cat: val.getCategories()) {
           prop = new Categories();
-          TextList cl = ((Categories)prop).getCategories();
+          final TextList cl = ((Categories)prop).getCategories();
 
           cl.add(cat.getWord().getValue());
 
@@ -297,13 +297,13 @@ public class VEventUtil extends IcalUtil {
 
       if (val.getEndType() == StartEndComponent.endTypeDate) {
         if (todo) {
-          Due due = IcalUtil.makeDue(val.getDtend(), tzreg);
+          final Due due = IcalUtil.makeDue(val.getDtend(), tzreg);
           if (freeBusy | val.getForceUTC()) {
             due.setUtc(true);
           }
           pl.add(due);
         } else {
-          DtEnd dtend = IcalUtil.makeDtEnd(val.getDtend(), tzreg);
+          final DtEnd dtend = IcalUtil.makeDtEnd(val.getDtend(), tzreg);
           if (freeBusy | val.getForceUTC()) {
             dtend.setUtc(true);
           }
@@ -324,7 +324,7 @@ public class VEventUtil extends IcalUtil {
       /* ------------------- DtStart -------------------- */
 
       if (!val.getNoStart()) {
-        DtStart dtstart = val.getDtstart().makeDtStart(tzreg);
+        final DtStart dtstart = val.getDtstart().makeDtStart(tzreg);
         if (freeBusy | val.getForceUTC()) {
           dtstart.setUtc(true);
         }
@@ -335,13 +335,14 @@ public class VEventUtil extends IcalUtil {
       /* ------------------- ExRule --below------------- */
 
       if (freeBusy) {
-        Collection<BwFreeBusyComponent> fbps = val.getFreeBusyPeriods();
+        final Collection<BwFreeBusyComponent> fbps =
+                val.getFreeBusyPeriods();
 
         if (fbps != null) {
-          for (BwFreeBusyComponent fbc: fbps) {
-            FreeBusy fb = new FreeBusy();
+          for (final BwFreeBusyComponent fbc: fbps) {
+            final FreeBusy fb = new FreeBusy();
 
-            int type = fbc.getType();
+            final int type = fbc.getType();
             if (type == BwFreeBusyComponent.typeBusy) {
               addParameter(fb, FbType.BUSY);
             } else if (type == BwFreeBusyComponent.typeFree) {
@@ -354,11 +355,11 @@ public class VEventUtil extends IcalUtil {
               throw new CalFacadeException("Bad free-busy type " + type);
             }
 
-            PeriodList pdl =  fb.getPeriods();
+            final PeriodList pdl =  fb.getPeriods();
 
-            for (Period p: fbc.getPeriods()) {
+            for (final Period p: fbc.getPeriods()) {
               // XXX inverse.ca plugin cannot handle durations.
-              Period np = new Period(p.getStart(), p.getEnd());
+              final Period np = new Period(p.getStart(), p.getEnd());
               pdl.add(np);
             }
 
@@ -371,10 +372,9 @@ public class VEventUtil extends IcalUtil {
       /* ------------------- Geo -------------------- */
 
       if (!vpoll) {
-        BwGeo bwgeo = val.getGeo();
+        final BwGeo bwgeo = val.getGeo();
         if (bwgeo != null) {
-          Geo geo = new Geo(bwgeo.getLatitude(), bwgeo.getLongitude());
-          pl.add(geo);
+          pl.add(new Geo(bwgeo.getLatitude(), bwgeo.getLongitude()));
         }
       }
 
@@ -423,7 +423,7 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Organizer -------------------- */
 
-      BwOrganizer org = val.getOrganizer();
+      final BwOrganizer org = val.getOrganizer();
       if (org != null) {
         prop = setOrganizer(org);
         mergeXparams(prop, xcomp);
@@ -433,7 +433,7 @@ public class VEventUtil extends IcalUtil {
       /* ------------------- PercentComplete -------------------- */
 
       if (todo) {
-        Integer pc = val.getPercentComplete();
+        final Integer pc = val.getPercentComplete();
         if (pc != null) {
           pl.add(new PercentComplete(pc));
         }
@@ -441,7 +441,7 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Priority -------------------- */
 
-      Integer prio = val.getPriority();
+      final Integer prio = val.getPriority();
       if (prio != null) {
         pl.add(new Priority(prio));
       }
@@ -454,7 +454,7 @@ public class VEventUtil extends IcalUtil {
 
       String[] info = null;
 
-      BwRelatedTo relto = val.getRelatedTo();
+      final BwRelatedTo relto = val.getRelatedTo();
       if (relto != null) {
         info = new String[3];
 
@@ -462,7 +462,7 @@ public class VEventUtil extends IcalUtil {
         info[1] = ""; // default
         info[2] = relto.getValue();
       } else {
-        String relx = val.getXproperty(BwXproperty.bedeworkRelatedTo);
+        final String relx = val.getXproperty(BwXproperty.bedeworkRelatedTo);
 
         if (relx != null) {
           info = Util.decodeArray(relx);
@@ -473,11 +473,11 @@ public class VEventUtil extends IcalUtil {
         int i = 0;
 
         while (i < info.length) {
-          RelatedTo irelto;
+          final RelatedTo irelto;
 
-          String reltype = info[i];
-          String valtype = info[i + 1];
-          String relval = info[i + 2];
+          final String reltype = info[i];
+          final String valtype = info[i + 1];
+          final String relval = info[i + 2];
 
           ParameterList rtpl = null;
           if ((reltype != null) && (reltype.length() > 0)) {
@@ -509,9 +509,9 @@ public class VEventUtil extends IcalUtil {
         /* This event has a resource */
 
         prop = new Resources();
-        TextList rl = ((Resources)prop).getResources();
+        final TextList rl = ((Resources)prop).getResources();
 
-        for (BwString str: val.getResources()) {
+        for (final BwString str: val.getResources()) {
           // LANG
           rl.add(str.getValue());
         }
@@ -529,7 +529,7 @@ public class VEventUtil extends IcalUtil {
 
       /* ------------------- Status -------------------- */
 
-      String status = val.getStatus();
+      final String status = val.getStatus();
       if ((status != null) && !status.equals(BwEvent.statusMasterSuppressed)) {
         pl.add(new Status(status));
       }
@@ -565,7 +565,7 @@ public class VEventUtil extends IcalUtil {
       }
 
       if ((strval != null) && (strval.length() > 0)) {
-        URI uri = Util.validURI(strval);
+        final URI uri = Util.validURI(strval);
         if (uri != null) {
           pl.add(new Url(uri));
         }
@@ -578,7 +578,7 @@ public class VEventUtil extends IcalUtil {
 
         try {
           xpropertiesToIcal(pl, val.getXproperties());
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
           // XXX For the moment swallow these.
           logger.error(t);
         }
@@ -603,7 +603,7 @@ public class VEventUtil extends IcalUtil {
 
         /* ----------- Vavailability - busyType ----------------- */
 
-        String s = val.getBusyTypeString();
+        final String s = val.getBusyTypeString();
         if (s != null) {
           pl.add(new BusyType(s));
         }
@@ -684,8 +684,8 @@ public class VEventUtil extends IcalUtil {
                                  final PropertyList pl) {
     try {
       if (val.hasRrules()) {
-        for(String s: val.getRrules()) {
-          RRule rule = new RRule();
+        for(final String s: val.getRrules()) {
+          final RRule rule = new RRule();
           rule.setValue(s);
 
           pl.add(rule);
@@ -693,8 +693,8 @@ public class VEventUtil extends IcalUtil {
       }
 
       if (val.hasExrules()) {
-        for(String s: val.getExrules()) {
-          ExRule rule = new ExRule();
+        for(final String s: val.getExrules()) {
+          final ExRule rule = new ExRule();
           rule.setValue(s);
 
           pl.add(rule);
@@ -718,7 +718,7 @@ public class VEventUtil extends IcalUtil {
       return;
     }
 
-    PropertyList pl = c.getProperties(p.getName());
+    final PropertyList pl = c.getProperties(p.getName());
 
     if (Util.isEmpty(pl)) {
       return;
@@ -728,7 +728,7 @@ public class VEventUtil extends IcalUtil {
 
     if (p instanceof Attach) {
       // We just saved the hash for binary content
-      Value v = (Value)p.getParameter(Parameter.VALUE);
+      final Value v = (Value)p.getParameter(Parameter.VALUE);
 
       if (v != null) {
         pval = String.valueOf(pval.hashCode());
@@ -753,17 +753,17 @@ public class VEventUtil extends IcalUtil {
       return;
     }
 
-    ParameterList params = from.getParameters();
+    final ParameterList params = from.getParameters();
 
     final Iterator<Parameter> parit = params.iterator();
     while (parit.hasNext()) {
-      Parameter param = parit.next();
+      final Parameter param = parit.next();
 
       if (!(param instanceof XParameter)) {
         continue;
       }
 
-      XParameter xpar = (XParameter)param;
+      final XParameter xpar = (XParameter)param;
 
       if (xpar.getName().toUpperCase().equals(BwXproperty.xparUid)) {
         continue;
@@ -774,7 +774,7 @@ public class VEventUtil extends IcalUtil {
   }
 
   private static Property uidProp(final Property prop, final String uid) {
-    Parameter par = new XParameter(BwXproperty.xparUid, uid);
+    final Parameter par = new XParameter(BwXproperty.xparUid, uid);
 
     prop.getParameters().add(par);
 
@@ -783,7 +783,7 @@ public class VEventUtil extends IcalUtil {
 
   private static Property langProp(final Property prop,
                                    final BwStringBase<?> s) {
-    Parameter par = s.getLangPar();
+    final Parameter par = s.getLangPar();
 
     if (par != null) {
       prop.getParameters().add(par);
@@ -802,17 +802,17 @@ public class VEventUtil extends IcalUtil {
 
     TimeZone tz = null;
     if (!val.getForceUTC()) {
-      BwDateTime dtstart = val.getDtstart();
+      final BwDateTime dtstart = val.getDtstart();
 
       if ((dtstart != null) && !dtstart.isUTC()) {
-        DtStart ds = dtstart.makeDtStart();
+        final DtStart ds = dtstart.makeDtStart();
         tz = ds.getTimeZone();
       }
     }
 
     /* Generate as one date per property - matches up to other vendors better */
-    for (BwDateTime dt: dts) {
-      DateList dl;
+    for (final BwDateTime dt: dts) {
+      final DateList dl;
 
       /* Always use the UTC values */
       boolean dateType = false;
@@ -827,18 +827,18 @@ public class VEventUtil extends IcalUtil {
 
         if (tz == null) {
           dl.setUtc(true);
-          DateTime dtm = new DateTime(dt.getDate());
+          final DateTime dtm = new DateTime(dt.getDate());
           dtm.setUtc(true);
           dl.add(dtm);
         } else {
           dl.setTimeZone(tz);
-          DateTime dtm = new DateTime(dt.getDate());
+          final DateTime dtm = new DateTime(dt.getDate());
           dtm.setTimeZone(tz);
           dl.add(dtm);
         }
       }
 
-      DateListProperty dlp;
+      final DateListProperty dlp;
 
       if (exdt) {
         dlp = new ExDate(dl);
@@ -858,9 +858,9 @@ public class VEventUtil extends IcalUtil {
 
   private static Date makeZonedDt(final BwEvent val,
                                   final String dtval) throws Throwable {
-    BwDateTime dtstart = val.getDtstart();
+    final BwDateTime dtstart = val.getDtstart();
 
-    DateTime dt = new DateTime(dtval);
+    final DateTime dt = new DateTime(dtval);
 
     if (dtstart.getDateType()) {
       // RECUR - fix all day recurrences sometime
@@ -878,7 +878,7 @@ public class VEventUtil extends IcalUtil {
     }
 
     if (!dtstart.isUTC()) {
-      DtStart ds = dtstart.makeDtStart();
+      final DtStart ds = dtstart.makeDtStart();
       dt.setTimeZone(ds.getTimeZone());
     }
 

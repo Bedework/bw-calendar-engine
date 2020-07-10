@@ -570,24 +570,24 @@ public class BwEventUtil extends IcalUtil {
           case CATEGORIES:
             /* ------------------- Categories -------------------- */
 
-            Categories cats = (Categories)prop;
-            TextList cl = cats.getCategories();
+            final Categories cats = (Categories)prop;
+            final TextList cl = cats.getCategories();
             String lang = IcalUtil.getLang(cats);
 
             if (cl != null) {
               /* Got some categories */
 
-              Iterator<String> cit = cl.iterator();
+              final Iterator<String> cit = cl.iterator();
 
               while (cit.hasNext()) {
-                String wd = cit.next();
+                final String wd = cit.next();
                 if (wd == null) {
                   continue;
                 }
 
-                BwString key = new BwString(lang, wd);
+                final BwString key = new BwString(lang, wd);
 
-                var fcResp = cb.findCategory(key);
+                final var fcResp = cb.findCategory(key);
                 final BwCategory cat;
 
                 if (fcResp.isError()) {
