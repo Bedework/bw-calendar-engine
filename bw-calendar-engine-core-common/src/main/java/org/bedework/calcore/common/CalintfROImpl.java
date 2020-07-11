@@ -58,6 +58,7 @@ import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
@@ -1328,8 +1329,8 @@ public class CalintfROImpl extends CalintfBase
     return getIndexer(owner.getPrincipalRef(),
                       BwIndexer.docTypeFilter).fetchFilter(
             makeHref(owner,
-                     getSyspars().getUserCalendarRoot(),
-                     getSyspars().getBedeworkResourceDirectory(),
+                     BasicSystemProperties.userCalendarRoot,
+                     BasicSystemProperties.bedeworkResourceDirectory,
                      "filters", name));
   }
 

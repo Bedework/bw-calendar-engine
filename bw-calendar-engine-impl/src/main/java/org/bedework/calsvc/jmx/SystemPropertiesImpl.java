@@ -93,6 +93,8 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
 
   private List<String> syseventsProperties;
 
+  private boolean testMode;
+
   @Override
   public void setTzid(final String val) {
     tzid = val;
@@ -490,5 +492,15 @@ public class SystemPropertiesImpl extends ConfigBase<SystemPropertiesImpl>
                                    final String val) {
     setSyseventsProperties(setListProperty(getSyseventsProperties(),
                                            name, val));
+  }
+
+  @Override
+  public void setTestMode(final boolean val) {
+    testMode = val;
+  }
+
+  @Override
+  public boolean getTestMode() {
+    return testMode;
   }
 }

@@ -26,6 +26,7 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.DirectoryInfo;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
@@ -314,10 +315,10 @@ class Users extends CalSvcDb implements UsersI {
     prefs.setPublick(false);
 
     prefs.setDefaultCalendarPath(
-      Util.buildPath(colPathEndsWithSlash, 
+      Util.buildPath(colPathEndsWithSlash,
                      getSvc().getPrincipalInfo().getCalendarHomePath(principal),
                      "/",
-                     getBasicSyspars().getUserDefaultCalendar()));
+                     BasicSystemProperties.userDefaultCalendar));
 
     // Add a default view for the calendar home
 

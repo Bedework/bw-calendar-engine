@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc.jmx;
 
+import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.util.config.ConfInfo;
 import org.bedework.util.config.ConfigBase;
@@ -36,6 +37,8 @@ public class DirConfigPropertiesImpl extends ConfigBase<DirConfigPropertiesImpl>
 
   private String domains;
   private String defaultDomain;
+
+  private CalAddrPrefixes calAddrPrefixes;
 
   @Override
   public void setMbeanClassName(final String val) {
@@ -68,6 +71,16 @@ public class DirConfigPropertiesImpl extends ConfigBase<DirConfigPropertiesImpl>
   }
 
   @Override
+  public void setCalAddrPrefixes(final CalAddrPrefixes val) {
+    calAddrPrefixes = val;
+  }
+
+  @Override
+  public CalAddrPrefixes getCalAddrPrefixes() {
+    return calAddrPrefixes;
+  }
+
+  @Override
   public void toStringSegment(final ToString ts) {
     super.toStringSegment(ts);
 
@@ -83,7 +96,7 @@ public class DirConfigPropertiesImpl extends ConfigBase<DirConfigPropertiesImpl>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 

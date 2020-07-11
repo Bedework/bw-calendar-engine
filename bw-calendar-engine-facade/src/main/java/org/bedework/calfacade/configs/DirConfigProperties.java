@@ -31,7 +31,7 @@ public interface DirConfigProperties extends Serializable {
    *
    * @param val    String
    */
-  void setMbeanClassName(final String val);
+  void setMbeanClassName(String val);
 
   /** Class name
    *
@@ -41,9 +41,9 @@ public interface DirConfigProperties extends Serializable {
   String getMbeanClassName();
 
   /**
-   * @param val
+   * @param val Comma separated list of domains - '*' should be treated as a wildcard
    */
-  public void setDomains(final String val);
+  public void setDomains(String val);
 
   /** Comma separated list of domains - '*' should be treated as a wildcard
    *
@@ -53,9 +53,9 @@ public interface DirConfigProperties extends Serializable {
   public String getDomains();
 
   /**
-   * @param val
+   * @param val unspecified for no default or a single exactly specified domain.
    */
-  public void setDefaultDomain(final String val);
+  public void setDefaultDomain(String val);
 
   /**
    *
@@ -64,4 +64,32 @@ public interface DirConfigProperties extends Serializable {
   @MBeanInfo("defaultDomain can be left unspecified for no default or a single" +
   		" exactly specified domain.")
   public String getDefaultDomain();
+
+  /** To enable mapping of calendar addresses e.g. mailto:fred@example.org
+   *  on to principals we need to either do a directory lookup or have
+   *  some sort of pattern map.
+   *
+   * <p>Setting a caladdr prefix enables pattern mapping. By default
+   * calendar addresses are users
+   *
+   * <pre>
+   * &lt;caladdrPrefixes classname="org.bedework.calfacade.configs.CalAddrPrefixes">
+   *   &lt;!--
+   *        This would specify that any calendar user address starting with loc_
+   *        is to be treated as a location, e.g. we might get
+   *            mailto:loc_vcc315@example.org
+   *      &lt;location>loc_&lt;/location>
+   *       -->
+   *    &lt;/caladdrPrefixes>
+   * </pre>
+   *
+   * @param val the prefixes
+   */
+  void setCalAddrPrefixes(CalAddrPrefixes val);
+
+  /**
+   * @return CalAddrPrefixes or null
+   */
+  @MBeanInfo("Calendar address prefixes")
+  CalAddrPrefixes getCalAddrPrefixes();
 }

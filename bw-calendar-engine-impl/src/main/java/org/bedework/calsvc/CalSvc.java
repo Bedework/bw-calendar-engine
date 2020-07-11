@@ -368,11 +368,6 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public BasicSystemProperties getBasicSystemProperties() {
-    return configs.getBasicSystemProperties();
-  }
-
-  @Override
   public AuthProperties getAuthProperties() {
     return configs.getAuthProperties(authenticated);
   }

@@ -19,6 +19,7 @@
 package org.bedework.dumprestore.prdump;
 
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.dumprestore.Defs;
@@ -64,7 +65,8 @@ public class DumpSystem extends DumpPrincipal {
 
       final CalendarsI cols = getSvc().getCalendarsHandler();
 
-      final BwCalendar usercal = cols.get(getSysRoots().getUserCalendarRoot());
+      final BwCalendar usercal = cols.get(
+              BasicSystemProperties.userCalendarRoot);
 
       if (usercal == null) {
         warn("Unable to fetch user calendar root");

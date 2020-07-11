@@ -24,7 +24,6 @@ import org.bedework.calfacade.annotations.ical.IcalProperties;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.CollatableEntity;
 import org.bedework.calfacade.base.SizedEntity;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.QuotaUtil;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -51,8 +50,6 @@ public class BwContact extends BwEventProperty<BwContact>
   private String phone;
   private String email;
   private String link;  // The rfc altrep
-
-  private String href;
 
   /** Constructor
    *
@@ -151,24 +148,10 @@ public class BwContact extends BwEventProperty<BwContact>
    * ==================================================================== */
 
   @Override
-  public void fixNames(final BasicSystemProperties props) {
-    if (getHref() != null) {
-      return;
-    }
-
-    setColPath(props, "contacts", null);
+  void fixNames() {
+    setColPath("contacts", null);
 
     setHref(Util.buildPath(false, getColPath(), getUid()));
-  }
-
-  @Override
-  public void setHref(final String val) {
-    href = val;
-  }
-
-  @Override
-  public String getHref(){
-    return href;
   }
 
   public void setStatus(final String val) {

@@ -22,7 +22,6 @@ import org.bedework.access.AccessException;
 import org.bedework.access.AccessPrincipal;
 import org.bedework.access.PrivilegeSet;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.PrincipalInfo;
 
@@ -65,11 +64,6 @@ final class SvciPrincipalInfo extends PrincipalInfo {
   @Override
   public AccessPrincipal getPrincipal(final String href) throws CalFacadeException {
     return svci.getUsersHandler().getPrincipal(href);
-  }
-
-  @Override
-  public BasicSystemProperties getSyspars() {
-    return svci.getBasicSystemProperties();
   }
 
   void setPrincipal(final BwPrincipal principal) {

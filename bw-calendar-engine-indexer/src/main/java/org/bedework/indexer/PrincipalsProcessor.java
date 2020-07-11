@@ -77,14 +77,14 @@ public class PrincipalsProcessor extends Crawler {
     Refs refs = null;
 
     /* First index the user collection root */
-    try (BwSvc bw = getBw()) {
+    try (final BwSvc bw = getBw()) {
       final CalSvcI svc = bw.getSvci();
 
       if (docType == null) {
         indexCollection(svc, Util.buildPath(
                 BasicSystemProperties.colPathEndsWithSlash,
                 "/",
-                getUserCalendarRoot()));
+                BasicSystemProperties.userCalendarRoot));
       }
     } catch (final Throwable t) {
       error(t);

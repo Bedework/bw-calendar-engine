@@ -245,7 +245,6 @@ public class Dump implements Logged, Defs {
   /**
    */
   public void getConfigProperties() {
-    globals.init(new CalSvcFactoryDefault().getSystemConfig().getBasicSystemProperties());
   }
 
   private CalSvcI getSvci() {
@@ -272,7 +271,7 @@ public class Dump implements Logged, Defs {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

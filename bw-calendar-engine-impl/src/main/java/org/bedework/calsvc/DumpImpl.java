@@ -57,8 +57,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
-
 /** Class which implements the functions needed to dump the
  * calendar using a jdbc connection.
  *
@@ -68,8 +66,6 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
 @SuppressWarnings("unchecked")
 public class DumpImpl extends CalSvcDb implements DumpIntf {
   //DumpPrincipalInfo pinfo;
-
-  private BasicSystemProperties sysRoots;
 
   /* *
    * @param sysRoots
@@ -105,12 +101,10 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
     final Collection<BwCalendar> cols = new ArrayList<>();
 
     cols.add(getCal().getCalendar(
-            Util.buildPath(colPathEndsWithSlash, "/",
-                           getBasicSyspars().getPublicCalendarRoot()),
+            BasicSystemProperties.publicCalendarRootPath,
             PrivilegeDefs.privAny, false));
     cols.add(getCal().getCalendar(
-            Util.buildPath(colPathEndsWithSlash, "/",
-                           getBasicSyspars().getUserCalendarRoot()),
+            BasicSystemProperties.userCalendarRootPath,
             PrivilegeDefs.privAny, false));
 
     return cols.iterator();
@@ -403,12 +397,6 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
 
       return p;
       //return svci.getUsersHandler().getPrincipal(href);
-    }
-
-    @Override
-    public BasicSystemProperties getSyspars() {
-      //return svci.getSysparsHandler().get();
-      return dump.getBasicSyspars();
     }
 
     void setPrincipal(final BwPrincipal principal) {

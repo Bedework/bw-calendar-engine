@@ -24,8 +24,6 @@ import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.DescriptionEntity;
 import org.bedework.calfacade.base.DisplayNameEntity;
-import org.bedework.calfacade.base.FixNamesEntity;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
@@ -56,7 +54,7 @@ import java.util.TreeSet;
 @Dump(elementName="filter", keyFields={"owner", "name"})
 public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
         implements DescriptionEntity<BwLongString>,
-        DisplayNameEntity, FixNamesEntity, Comparator<BwFilterDef> {
+        DisplayNameEntity, Comparator<BwFilterDef> {
   /** The internal name of the filter
    */
   private String name;
@@ -150,7 +148,7 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
   @Override
   @NoDump
   public int getNumDisplayNames() {
-    Collection<BwString> rs = getDisplayNames();
+    final Collection<BwString> rs = getDisplayNames();
     if (rs == null) {
       return 0;
     }
@@ -167,7 +165,7 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
   public void addDisplayName(final BwString val) {
     Collection<BwString> rs = getDisplayNames();
     if (rs == null) {
-      rs = new TreeSet<BwString>();
+      rs = new TreeSet<>();
       setDisplayNames(rs);
     }
 
@@ -176,12 +174,9 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DisplayNameEntity#removeDisplayName(org.bedework.calfacade.BwString)
-   */
   @Override
   public boolean removeDisplayName(final BwString val) {
-    Collection<BwString> rs = getDisplayNames();
+    final Collection<BwString> rs = getDisplayNames();
     if (rs == null) {
       return false;
     }
@@ -189,12 +184,9 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
     return rs.remove(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DisplayNameEntity#updateDisplayNames(java.lang.String, java.lang.String)
-   */
   @Override
   public void updateDisplayNames(final String lang, final String val) {
-    BwString s = findDisplayName(lang);
+    final BwString s = findDisplayName(lang);
     if (val == null) {
       // Removing
       if (s!= null) {
@@ -211,29 +203,20 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DisplayNameEntity#findDisplayName(java.lang.String)
-   */
   @Override
   public BwString findDisplayName(final String lang) {
     return BwString.findLang(lang, getDisplayNames());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DisplayNameEntity#setDisplayName(java.lang.String)
-   */
   @Override
   public void setDisplayName(final String val) {
     updateDisplayNames(null, val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DisplayNameEntity#getDisplayName()
-   */
   @Override
   @NoDump
   public String getDisplayName() {
-    BwString s = findDisplayName(null);
+    final BwString s = findDisplayName(null);
     if (s == null) {
       return null;
     }
@@ -244,30 +227,21 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
    *               DescriptionEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#setDescriptions(java.util.Collection)
-   */
   @Override
   public void setDescriptions(final Set<BwLongString> val) {
     descriptions = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#getDescriptions()
-   */
   @Override
   @Dump(collectionElementName = "description")
   public Set<BwLongString> getDescriptions() {
     return descriptions;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#getNumDescriptions()
-   */
   @Override
   @NoDump
   public int getNumDescriptions() {
-    Collection<BwLongString> rs = getDescriptions();
+    final Collection<BwLongString> rs = getDescriptions();
     if (rs == null) {
       return 0;
     }
@@ -290,13 +264,11 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
   public void addDescription(final BwLongString val) {
     Set<BwLongString> rs = getDescriptions();
     if (rs == null) {
-      rs = new TreeSet<BwLongString>();
+      rs = new TreeSet<>();
       setDescriptions(rs);
     }
 
-    if (!rs.contains(val)) {
-      rs.add(val);
-    }
+    rs.add(val);
   }
 
   /* (non-Javadoc)
@@ -304,7 +276,7 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
    */
   @Override
   public boolean removeDescription(final BwLongString val) {
-    Collection<BwLongString> rs = getDescriptions();
+    final Collection<BwLongString> rs = getDescriptions();
     if (rs == null) {
       return false;
     }
@@ -317,7 +289,7 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
    */
   @Override
   public void updateDescriptions(final String lang, final String val) {
-    BwLongString s = findDescription(lang);
+    final BwLongString s = findDescription(lang);
     if (val == null) {
       // Removing
       if (s!= null) {
@@ -334,9 +306,6 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.DescriptionEntity#findDescription(java.lang.String)
-   */
   @Override
   public BwLongString findDescription(final String lang) {
     return BwLongString.findLang(lang, getDescriptions());
@@ -350,7 +319,7 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
   @Override
   @NoDump
   public String getDescription() {
-    BwLongString s = findDescription(null);
+    final BwLongString s = findDescription(null);
     if (s == null) {
       return null;
     }
@@ -361,15 +330,26 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
    *                   FixNamesEntity methods
    * ==================================================================== */
 
-  @Override
-  public void fixNames(final BasicSystemProperties props) {
-    if (getHref() != null) {
-      return;
-    }
-
-    setColPath(props, "filters", null);
+  void fixNames() {
+    setColPath("filters", null);
 
     setHref(Util.buildPath(false, getColPath(), getName()));
+  }
+
+  @Override
+  public String getColPath(){
+    if (super.getColPath() == null) {
+      fixNames();
+    }
+    return super.getColPath();
+  }
+
+  @Override
+  public String getHref(){
+    if (super.getHref() == null) {
+      fixNames();
+    }
+    return super.getHref();
   }
 
   /** Add our stuff to the StringBuilder
@@ -395,7 +375,8 @@ public class BwFilterDef extends BwShareableContainedDbentity<BwFilterDef>
 
   @Override
   public int compareTo(final BwFilterDef that) {
-    int cmp = CalFacadeUtil.cmpObjval(getOwnerHref(), that.getOwnerHref());
+    final int cmp = CalFacadeUtil.cmpObjval(getOwnerHref(),
+                                            that.getOwnerHref());
     if (cmp != 0) {
       return cmp;
     }

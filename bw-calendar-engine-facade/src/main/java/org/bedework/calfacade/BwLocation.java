@@ -24,7 +24,6 @@ import org.bedework.calfacade.annotations.ical.IcalProperties;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.CollatableEntity;
 import org.bedework.calfacade.base.SizedEntity;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.FieldSplitter;
 import org.bedework.calfacade.util.QuotaUtil;
@@ -595,12 +594,8 @@ public class BwLocation extends BwEventProperty<BwLocation>
    * ==================================================================== */
 
   @Override
-  public void fixNames(final BasicSystemProperties props) {
-    if (getHref() != null) {
-      return;
-    }
-
-    setColPath(props, "locations", null);
+  void fixNames() {
+    setColPath("locations", null);
 
     setHref(Util.buildPath(false, getColPath(), getUid()));
   }

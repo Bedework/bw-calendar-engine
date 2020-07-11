@@ -20,7 +20,6 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
@@ -46,14 +45,6 @@ public abstract class CalSys implements Logged {
   protected String adminPrincipal;
 
   protected String principal;
-
-  private String publicCalendarRoot;
-  private String userCalendarRoot;
-
-  //private AuthProperties authpars;
-  //private AuthProperties unauthpars;
-  //private IndexProperties idxpars;
-  private BasicSystemProperties basicSyspars;
 
   private int collectionBatchSize = 10;
 
@@ -254,32 +245,6 @@ public abstract class CalSys implements Logged {
    */
   public BwSvc getAdminBw() throws CalFacadeException {
     return new BwSvc(adminAccount);
-  }
-
-  protected String getPublicCalendarRoot() throws CalFacadeException {
-    if (publicCalendarRoot == null) {
-      publicCalendarRoot = getBasicSyspars().getPublicCalendarRoot();
-    }
-
-    return publicCalendarRoot;
-  }
-
-  protected String getUserCalendarRoot() throws CalFacadeException {
-    if (userCalendarRoot == null) {
-      userCalendarRoot = getBasicSyspars().getUserCalendarRoot();
-    }
-
-    return userCalendarRoot;
-  }
-
-  protected BasicSystemProperties getBasicSyspars() throws CalFacadeException {
-    if (basicSyspars == null) {
-      try (BwSvc bw = getAdminBw()) {
-        basicSyspars = bw.getSvci().getBasicSystemProperties();
-      }
-    }
-
-    return basicSyspars;
   }
 
   protected boolean hasAccess(final BwCalendar col) throws CalFacadeException {

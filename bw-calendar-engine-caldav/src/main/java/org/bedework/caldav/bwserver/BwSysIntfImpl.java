@@ -180,8 +180,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
   private AuthProperties authProperties;
 
-  private BasicSystemProperties basicSysProperties;
-
   private SystemProperties sysProperties;
 
   private long reqInTime;
@@ -366,7 +364,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       authProperties = svci.getAuthProperties();
       sysProperties = configs.getSystemProperties();
-      basicSysProperties = configs.getBasicSystemProperties();
       svci.postNotification(new HttpEvent(SysCode.CALDAV_IN));
       reqInTime = System.currentTimeMillis();
 
@@ -396,7 +393,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
   @Override
   public boolean testMode() {
-    return basicSysProperties.getTestMode();
+    return sysProperties.getTestMode();
   }
 
   @Override
@@ -444,16 +441,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
     /* This must be a collection which is either a user home or below. */
 
-    String uhome = basicSysProperties.getUserCalendarRoot();
-
-    if (uhome.endsWith("/")) {
-      uhome = uhome.substring(0, uhome.length() - 1);
-    }
-
-    if (uhome.startsWith("/")) {
-      uhome = uhome.substring(1);
-    }
-
     final String[] els = bwcol.getPath().split("/");
 
     // First element should be "" for the leading "/"
@@ -466,7 +453,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       return false;
     }
 
-    return els[1].equals(uhome);
+    return els[1].equals(BasicSystemProperties.userCalendarRoot);
   }
 
   @Override
@@ -662,17 +649,17 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                                  getSvci().getPrincipalInfo().getCalendarHomePath(p));
 
       final String defaultCalendarPath =
-              Util.buildPath(true, userHomePath +
-                      basicSysProperties.getUserDefaultCalendar());
+              Util.buildPath(true, userHomePath, "/",
+                      BasicSystemProperties.userDefaultCalendar);
       final String inboxPath =
               Util.buildPath(true, userHomePath, "/",
-                             basicSysProperties.getUserInbox());
+                             BasicSystemProperties.userInbox);
       final String outboxPath =
               Util.buildPath(true, userHomePath, "/",
-                             basicSysProperties.getUserOutbox());
+                             BasicSystemProperties.userOutbox);
       final String notificationsPath =
               Util.buildPath(true, userHomePath, "/",
-                             basicSysProperties.getDefaultNotificationsName());
+                             BasicSystemProperties.defaultNotificationsName);
 
       final CalPrincipalInfo pi =
               new CalPrincipalInfo(p,
@@ -700,7 +687,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       // SCHEDULE - just get home path and get default cal from user prefs.
 
       String userHomePath = Util.buildPath(false, "/",
-                                           basicSysProperties.getUserCalendarRoot());
+                                           BasicSystemProperties.userCalendarRoot);
       if (pi.getPrincipalHref() == null) {
         return new CalPrincipalInfo(null,
                                     pi.getCard(),
@@ -726,17 +713,17 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       final String defaultCalendarPath =
-              Util.buildPath(true, userHomePath +
-                      basicSysProperties.getUserDefaultCalendar());
+              Util.buildPath(true, userHomePath, "/",
+                      BasicSystemProperties.userDefaultCalendar);
       final String inboxPath =
               Util.buildPath(true, userHomePath, "/",
-                             basicSysProperties.getUserInbox());
+                             BasicSystemProperties.userInbox);
       final String outboxPath =
               Util.buildPath(true, userHomePath, "/",
-                             basicSysProperties.getUserOutbox());
+                             BasicSystemProperties.userOutbox);
       final String notificationsPath =
               Util.buildPath(true, userHomePath, "/",
-                             basicSysProperties.getDefaultNotificationsName());
+                             BasicSystemProperties.defaultNotificationsName);
 
       return new CalPrincipalInfo(p,
                                   pi.getCard(),
@@ -2914,7 +2901,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

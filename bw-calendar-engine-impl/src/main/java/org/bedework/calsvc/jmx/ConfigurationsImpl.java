@@ -18,8 +18,8 @@
 */
 package org.bedework.calsvc.jmx;
 
+import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.CmdUtilProperties;
 import org.bedework.calfacade.configs.Configurations;
@@ -31,15 +31,20 @@ import org.bedework.calfacade.configs.SynchConfig;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.mail.MailConfigProperties;
+import org.bedework.calsvc.sysmon.BwSysMonitor;
+import org.bedework.calsvci.CalSvcFactoryDefault;
+import org.bedework.calsvci.CalSvcI;
+import org.bedework.calsvci.CalSvcIPars;
 import org.bedework.indexer.BwIndexCtlMBean;
 import org.bedework.sysevents.listeners.BwSysevLogger;
-import org.bedework.calsvc.sysmon.BwSysMonitor;
+import org.bedework.util.config.ConfInfo;
 import org.bedework.util.config.ConfigBase;
 import org.bedework.util.config.ConfigurationStore;
 import org.bedework.util.http.service.HttpConfig;
 import org.bedework.util.http.service.HttpOut;
 import org.bedework.util.jmx.BaseMBean;
 import org.bedework.util.jmx.ConfBase;
+import org.bedework.util.jmx.ConfigHolder;
 import org.bedework.util.security.keys.GenKeys;
 import org.bedework.util.servlet.io.PooledBuffers;
 
@@ -52,17 +57,21 @@ import javax.management.ObjectName;
 /** All the configuration objects used by CalSvc and its callers.
  *
  */
-public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl>
-        implements Configurations {
+public final class ConfigurationsImpl
+        extends ConfBase<SystemPropertiesImpl>
+        implements Configurations, SystemConfMBean,
+        ConfigHolder<SystemPropertiesImpl> {
+  private AutoKiller autoKiller;
+
+  private String rootUser;
+
   private static boolean configured;
 
-  private static BasicSystemProperties basicProps;
+  private static SystemProperties sysProperties;
 
   private static AuthProperties authProperties;
 
   private static AuthProperties unAuthProperties;
-
-  private static SystemProperties sysProperties;
 
   private static MailConfigProperties mailProps;
 
@@ -86,7 +95,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   private static final String dumpRestoreClass =
           "org.bedework.dumprestore.BwDumpRestore";
 
-  private static ConfBase dumpRestore;
+  private static ConfBase<?> dumpRestore;
 
   private static CmdUtilProperties cmdUtilProperties;
 
@@ -105,16 +114,19 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   private static final String inoutClass =
           "org.bedework.inoutsched.BwInoutSched";
 
+  /** Name of the property holding the location of the config data */
+  public static final String confuriPname = "org.bedework.bwengine.confuri";
+
   /**
    * @throws CalFacadeException on error
    */
   public ConfigurationsImpl() throws CalFacadeException {
     super("org.bedework.bwengine:service=Conf");
 
-    /* This class acts as the mbean for the basic properties */
+    /* This class acts as the mbean for the system properties */
 
-    setConfigName(basicPropsNamePart);
-    setConfigPname(SystemConf.confuriPname);
+    setConfigName(systemPropsNamePart);
+    setConfigPname(confuriPname);
 
     try {
       checkMbeansInstalled();
@@ -122,8 +134,6 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       authProperties = new ROAuthProperties(getAuthProps(true));
 
       unAuthProperties = new ROAuthProperties(getAuthProps(false));
-
-      sysProperties = new ROSystemProperties(getSystemProps());
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
@@ -134,11 +144,6 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   @Override
   public String loadConfig() {
     return null;
-  }
-
-  @Override
-  public BasicSystemProperties getBasicSystemProperties() {
-    return basicProps;
   }
 
   @Override
@@ -199,12 +204,20 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
   }
 
   /**
+   * @param name of config
+   * @return service name for the mbean with this name
+   */
+  public static String getServiceName(final String name) {
+    return "org.bedework.bwengine:service=" + name;
+  }
+
+  /**
    * @return name for unauthenticated properties mbean
    * @throws CalFacadeException on error
    */
   public static ObjectName getUnauthpropsName() throws CalFacadeException {
     try {
-      return new ObjectName(SystemConf.getServiceName(unauthPropsNamePart));
+      return new ObjectName(getServiceName(unauthPropsNamePart));
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -216,8 +229,8 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
    */
   public static ObjectName getAuthpropsName() throws CalFacadeException {
     try {
-      return new ObjectName(SystemConf.getServiceName(authPropsNamePart));
-    } catch (Throwable t) {
+      return new ObjectName(getServiceName(authPropsNamePart));
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -228,7 +241,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
    */
   public static ObjectName getSyspropsName() throws CalFacadeException {
     try {
-      return new ObjectName(SystemConf.getServiceName(systemPropsNamePart));
+      return new ObjectName(getServiceName(systemPropsNamePart));
     } catch (Throwable t) {
       throw new CalFacadeException(t);
     }
@@ -240,13 +253,16 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
     }
 
     try {
-      /* ------------- Basic system properties -------------------- */
+      /* ------------- System properties -------------------- */
       getManagementContext().start();
+      register(getSyspropsName(), this);
 
-      loadConfig(BasicSystemPropertiesImpl.class);
+      loadConfig(SystemPropertiesImpl.class);
 
       cfg.setTestMode(Boolean.getBoolean("org.bedework.testmode"));
-      basicProps = new ROBasicSystemProperties(cfg);
+
+      sysProperties = new ROSystemProperties(cfg);
+      getRootUser();
 
       /* ------------- Auth properties -------------------- */
       AuthConf conf = new AuthConf(unauthPropsNamePart);
@@ -258,9 +274,9 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       conf.loadConfig();
 
       /* ------------- System properties -------------------- */
-      final SystemConf sconf = new SystemConf(systemPropsNamePart);
-      register(getSyspropsName(), sconf);
-      sconf.loadConfig();
+      //final SystemConf sconf = new SystemConf(systemPropsNamePart);
+      //register(getSyspropsName(), sconf);
+      //sconf.loadConfig();
 
       /* ------------- Notification properties -------------------- */
       final NotificationConf nc = new NotificationConf();
@@ -330,7 +346,10 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
       /* ------------- InoutSched --------------------------------- */
       startScheduling();
-    } catch (Throwable t) {
+
+      /* ------------- Autokiller --------------------------------- */
+      startAutoKiller();
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     } finally {
       if (!configured) {
@@ -373,8 +392,18 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
     load(loadInstance(inoutClass), true);
   }
 
-  private ConfigBase load(final ConfBase cb,
-                          final boolean start) throws Throwable {
+  private void startAutoKiller() {
+    try {
+      autoKiller = new AutoKiller(getSystemProps());
+      autoKiller.start();
+    } catch (final Throwable t) {
+      error(t);
+      error("Unable to start autokill process");
+    }
+  }
+
+  private ConfigBase<?> load(final ConfBase<?> cb,
+                             final boolean start) throws Throwable {
     register(new ObjectName(cb.getServiceName()), cb);
 
     cb.loadConfig();
@@ -425,7 +454,7 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
   private AuthProperties getAuthProps(final boolean auth) throws CalFacadeException {
     try {
-      ObjectName mbeanName;
+      final ObjectName mbeanName;
 
       if (!auth) {
         mbeanName = getUnauthpropsName();
@@ -434,54 +463,46 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
       }
 
       return (AuthProperties)getManagementContext().getAttribute(mbeanName, "Config");
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
-  private static ConfBase loadInstance(final String cname) {
+  private static ConfBase<?> loadInstance(final String cname) {
     try {
-      ClassLoader loader = Thread.currentThread().getContextClassLoader();
-      Class cl = loader.loadClass(cname);
+      final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      final Class<?> cl = loader.loadClass(cname);
 
       if (cl == null) {
         throw new CalFacadeException("Class " + cname + " not found");
       }
 
-      Object o = cl.newInstance();
+      final Object o = cl.newInstance();
 
       if (o == null) {
         throw new CalFacadeException("Unable to instantiate class " + cname);
       }
 
       return (ConfBase)o;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       t.printStackTrace();
       throw new RuntimeException(t);
     }
   }
 
   private SystemProperties getSystemProps() throws CalFacadeException {
-    try {
-      ObjectName mbeanName = getSyspropsName();
-
-      return (SystemProperties)getManagementContext().getAttribute(mbeanName, "Config");
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    return sysProperties;
   }
 
   @Override
   public void stop() {
-    for (Object o: getRegisteredMBeans()) {
+    for (final Object o: getRegisteredMBeans()) {
       if (o instanceof BaseMBean) {
         try {
           ((BaseMBean)o).stop();
-        } catch (Throwable t){
+        } catch (final Throwable t){
           t.printStackTrace();
         }
       }
@@ -489,8 +510,520 @@ public final class ConfigurationsImpl extends ConfBase<BasicSystemPropertiesImpl
 
     try {
       getManagementContext().stop();
-    } catch (Throwable t){
+    } catch (final Throwable t){
       t.printStackTrace();
     }
+  }
+
+  private void getRootUser() {
+    final String[] rootUsers = getSystemProperties()
+            .getRootUsers()
+            .split(",");
+
+    if ((rootUsers.length > 0) && (rootUsers[0] != null)) {
+      rootUser = rootUsers[0];
+    }
+  }
+
+  /* ===============================================================
+      SystemProperties attributes
+   */
+
+  @Override
+  public void setTzid(final String val) {
+    getConfig().setTzid(val);
+  }
+
+  @Override
+  public String getTzid() {
+    return getConfig().getTzid();
+  }
+
+  @Override
+  public void setTzServeruri(final String val) {
+    getConfig().setTzServeruri(val);
+  }
+
+  @Override
+  public String getTzServeruri() {
+    return getConfig().getTzServeruri();
+  }
+
+  @Override
+  public void setSystemid(final String val) {
+    getConfig().setSystemid(val);
+  }
+
+  @Override
+  public String getSystemid() {
+    return getConfig().getSystemid();
+  }
+
+  @Override
+  public void setRootUsers(final String val) {
+    getConfig().setRootUsers(val);
+  }
+
+  @Override
+  public String getRootUsers() {
+    return getConfig().getRootUsers();
+  }
+
+  @Override
+  public void setFeatureFlags(final String val) {
+    getConfig().setFeatureFlags(val);
+  }
+
+  @Override
+  public String getFeatureFlags() {
+    return getConfig().getFeatureFlags();
+  }
+
+  @Override
+  public void setAdminContact(final String val) {
+    getConfig().setAdminContact(val);
+  }
+
+  @Override
+  public String getAdminContact() {
+    return getConfig().getAdminContact();
+  }
+
+  @Override
+  public void setIscheduleURI(final String val) {
+    getConfig().setIscheduleURI(val);
+  }
+
+  @Override
+  public String getIscheduleURI() {
+    return getConfig().getIscheduleURI();
+  }
+
+  @Override
+  public void setFburlServiceURI(final String val) {
+    getConfig().setFburlServiceURI(val);
+  }
+
+  @Override
+  public String getFburlServiceURI() {
+    return getConfig().getFburlServiceURI();
+  }
+
+  /** Set the web calendar service uri - null for no web calendar service
+   *
+   * @param val    String
+   */
+  @Override
+  public void setWebcalServiceURI(final String val) {
+    getConfig().setWebcalServiceURI(val);
+  }
+
+  /** get the web calendar service uri - null for no web calendar service
+   *
+   * @return String
+   */
+  @Override
+  public String getWebcalServiceURI() {
+    return getConfig().getWebcalServiceURI();
+  }
+
+  /** Set the calws soap web service uri - null for no service
+   *
+   * @param val    String
+   */
+  @Override
+  public void setCalSoapWsURI(final String val) {
+    getConfig().setCalSoapWsURI(val);
+  }
+
+  /** Get the calws soap web service uri - null for no service
+   *
+   * @return String
+   */
+  @Override
+  public String getCalSoapWsURI() {
+    return getConfig().getCalSoapWsURI();
+  }
+
+  /** Set the calws soap web service WSDL uri - null for no service
+   *
+   * @param val    String
+   */
+  @Override
+  public void setCalSoapWsWSDLURI(final String val) {
+    getConfig().setCalSoapWsWSDLURI(val);
+  }
+
+  @Override
+  public String getCalSoapWsWSDLURI() {
+    return getConfig().getCalSoapWsWSDLURI();
+  }
+
+  @Override
+  public void setTimezonesByReference(final boolean val) {
+    getConfig().setTimezonesByReference(val);
+  }
+
+  @Override
+  public boolean getTimezonesByReference() {
+    return getConfig().getTimezonesByReference();
+  }
+
+  @Override
+  public void setUserauthClass(final String val) {
+    getConfig().setUserauthClass(val);
+  }
+
+  @Override
+  public String getUserauthClass() {
+    return getConfig().getUserauthClass();
+  }
+
+  @Override
+  public void setMailerClass(final String val) {
+    getConfig().setMailerClass(val);
+  }
+
+  /**
+   *
+   * @return String
+   */
+  @Override
+  public String getMailerClass() {
+    return getConfig().getMailerClass();
+  }
+
+  /** Set the admingroups class
+   *
+   * @param val    String admingroups class
+   */
+  @Override
+  public void setAdmingroupsClass(final String val) {
+    getConfig().setAdmingroupsClass(val);
+  }
+
+  @Override
+  public String getAdmingroupsClass() {
+    return getConfig().getAdmingroupsClass();
+  }
+
+  @Override
+  public void setUsergroupsClass(final String val) {
+    getConfig().setUsergroupsClass(val);
+  }
+
+  @Override
+  public String getUsergroupsClass() {
+    return getConfig().getUsergroupsClass();
+  }
+
+  @Override
+  public void setLocaleList(final String val) {
+    getConfig().setLocaleList(val);
+  }
+
+  @Override
+  public String getLocaleList() {
+    return getConfig().getLocaleList();
+  }
+
+  @Override
+  public void setSocketToken(final String val) {
+    getConfig().setSocketToken(val);
+  }
+
+  @Override
+  public String getSocketToken() {
+    return getConfig().getSocketToken();
+  }
+
+  @Override
+  public void setEventregAdminToken(final String val) {
+    getConfig().setEventregAdminToken(val);
+  }
+
+  @Override
+  public String getEventregAdminToken() {
+    return getConfig().getEventregAdminToken();
+  }
+
+  @Override
+  public void setEventregUrl(final String val) {
+    getConfig().setEventregUrl(val);
+  }
+
+  @Override
+  public String getEventregUrl() {
+    return getConfig().getEventregUrl();
+  }
+
+  @Override
+  public void setCacheUrlPrefix(final String val) {
+    getConfig().setCacheUrlPrefix(val);
+  }
+
+  @Override
+  public String getCacheUrlPrefix() {
+    return getConfig().getCacheUrlPrefix();
+  }
+
+  @Override
+  public void setAutoKillMinutes(final int val) {
+    getConfig().setAutoKillMinutes(val);
+  }
+
+  @Override
+  public int getAutoKillMinutes() {
+    return getConfig().getAutoKillMinutes();
+  }
+
+  @Override
+  public void setSuggestionEnabled(final boolean val) {
+    getConfig().setSuggestionEnabled(val);
+  }
+
+  @Override
+  public boolean getSuggestionEnabled() {
+    return getConfig().getSuggestionEnabled();
+  }
+
+  @Override
+  public void setWorkflowEnabled(final boolean val) {
+    getConfig().setWorkflowEnabled(val);
+  }
+
+  @Override
+  public boolean getWorkflowEnabled() {
+    return getConfig().getWorkflowEnabled();
+  }
+
+  @Override
+  public void setWorkflowRoot(final String val) {
+    getConfig().setWorkflowRoot(val);
+  }
+
+  @Override
+  public String getWorkflowRoot() {
+    return getConfig().getWorkflowRoot();
+  }
+
+  @Override
+  public void setUserSubscriptionsOnly(final boolean val) {
+    getConfig().setUserSubscriptionsOnly(val);
+  }
+
+  @Override
+  public boolean getUserSubscriptionsOnly() {
+    return getConfig().getUserSubscriptionsOnly();
+  }
+
+  @Override
+  public int getAutoKillTerminated() {
+    return autoKiller.getTerminated();
+  }
+
+  @Override
+  public int getAutoKillFailedTerminations() {
+    return autoKiller.getFailedTerminations();
+  }
+
+  @Override
+  public void setVpollMaxItems(final Integer val) {
+    getConfig().setVpollMaxItems(val);
+  }
+
+  @Override
+  public Integer getVpollMaxItems() {
+    return getConfig().getVpollMaxItems();
+  }
+
+  @Override
+  public void setVpollMaxActive(final Integer val) {
+    getConfig().setVpollMaxActive(val);
+  }
+
+  @Override
+  public Integer getVpollMaxActive() {
+    return getConfig().getVpollMaxActive();
+  }
+
+  @Override
+  public void setVpollMaxVoters(final Integer val) {
+    getConfig().setVpollMaxVoters(val);
+  }
+
+  @Override
+  public Integer getVpollMaxVoters() {
+    return getConfig().getVpollMaxVoters();
+  }
+
+  @Override
+  public void setSyseventsProperties(final List<String> val) {
+    getConfig().setSyseventsProperties(val);
+  }
+
+  @Override
+  @ConfInfo(collectionElementName = "syseventsProperty" ,
+          elementType = "java.lang.String")
+  public List<String> getSyseventsProperties() {
+    return getConfig().getSyseventsProperties();
+  }
+
+  @Override
+  public void addSyseventsProperty(final String name,
+                                   final String val) {
+    getConfig().addSyseventsProperty(name, val);
+  }
+
+  @Override
+  public String getSyseventsProperty(final String name) {
+    return getConfig().getSyseventsProperty(name);
+  }
+
+  @Override
+  public void removeSyseventsProperty(final String name) {
+    getConfig().removeSyseventsProperty(name);
+  }
+
+  @Override
+  public void setSyseventsProperty(final String name,
+                                   final String val) {
+    getConfig().setSyseventsProperty(name, val);
+  }
+
+  @Override
+  public void setTestMode(final boolean val) {
+    getConfig().setTestMode(val);
+  }
+
+  @Override
+  public boolean getTestMode() {
+    return getConfig().getTestMode();
+  }
+
+  @Override
+  public void setDbStatsEnabled(final boolean enable) {
+    try {
+      getSvci();
+
+      if (svci != null) {
+        svci.setDbStatsEnabled(enable);
+      }
+    } catch (final Throwable t) {
+      error(t);
+    } finally {
+      closeSvci();
+    }
+  }
+
+  @Override
+  public boolean getDbStatsEnabled() {
+    try {
+      getSvci();
+
+      return svci != null && svci.getDbStatsEnabled();
+    } catch (final Throwable t) {
+      error(t);
+      return false;
+    } finally {
+      closeSvci();
+    }
+  }
+
+  /* ========================================================================
+   * Operations
+   * ======================================================================== */
+
+  @Override
+  public BwStats getStats()  {
+    try {
+      getSvci();
+
+      if (svci == null) {
+        return null;
+      }
+
+      return svci.getStats();
+    } catch (final Throwable t) {
+      error(t);
+      return null;
+    } finally {
+      closeSvci();
+    }
+  }
+
+  @Override
+  public void dumpDbStats() {
+    try {
+      getSvci();
+
+      if (svci != null) {
+        svci.dumpDbStats();
+      }
+    } catch (final Throwable t) {
+      error(t);
+    } finally {
+      closeSvci();
+    }
+  }
+
+  @Override
+  public String listOpenIfs() {
+    return autoKiller.listOpenIfs();
+  }
+
+  private CalSvcI svci;
+
+  private CalSvcI getSvci() throws CalFacadeException {
+    if (getConfig() == null) {
+      return null;
+    }
+
+    if ((svci != null) && svci.isOpen()) {
+      return svci;
+    }
+
+    final CalSvcIPars pars = CalSvcIPars.getServicePars(getServiceName(),
+                                                        rootUser,
+                                                        true,// publicAdmin
+                                                        true);   // Allow super user
+    svci = new CalSvcFactoryDefault().getSvc(pars);
+
+    svci.open();
+    svci.beginTransaction();
+
+    return svci;
+  }
+
+  /**
+   */
+  private void closeSvci() {
+    if ((svci == null) || !svci.isOpen()) {
+      return;
+    }
+
+    try {
+      svci.endTransaction();
+    } catch (final Throwable t) {
+      try {
+        svci.close();
+      } catch (final Throwable ignored) {
+      }
+    }
+
+    try {
+      svci.close();
+    } catch (final Throwable ignored) {
+    }
+  }
+
+  @Override
+  public void putConfig() {
+    saveConfig();
+  }
+
+  @Override
+  public SystemProperties cloneIt() {
+    return null;
   }
 }

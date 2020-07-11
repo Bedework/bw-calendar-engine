@@ -21,7 +21,6 @@ package org.bedework.dumprestore.prdump;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwLocation;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.DumpIntf;
@@ -40,7 +39,8 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 
-import static org.bedework.util.misc.response.Response.*;
+import static org.bedework.util.misc.response.Response.Status;
+import static org.bedework.util.misc.response.Response.notOk;
 
 /** Base class for dumping. Provides logging and useful methods.
  *
@@ -251,10 +251,6 @@ public class Dumper implements Logged {
     }
   }
 
-  protected BasicSystemProperties getSysRoots() {
-    return globals.getSysRoots();
-  }
-
   protected DumpIntf getDi() {
     return globals.di;
   }
@@ -267,7 +263,7 @@ public class Dumper implements Logged {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

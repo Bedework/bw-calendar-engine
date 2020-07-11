@@ -26,7 +26,6 @@ import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwCalSuitePrincipal;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.util.misc.Util;
 
 import java.util.Iterator;
 import java.util.List;
@@ -90,15 +89,13 @@ public class PublicProcessor extends Crawler {
 
   @Override
   public void process() {
-    try (BwSvc bw = getBw()) {
+    try (final BwSvc bw = getBw()) {
       final CalSvcI svc = bw.getSvci();
 
       /* First index the public collection(s) */
       if (docType == null) {
-        indexCollection(svc, Util.buildPath(
-                BasicSystemProperties.colPathEndsWithSlash,
-                "/",
-                getPublicCalendarRoot()));
+        indexCollection(svc,
+                        BasicSystemProperties.publicCalendarRootPath);
       }
 
       final BwPrincipal pr = svc.getUsersHandler().getPublicUser();

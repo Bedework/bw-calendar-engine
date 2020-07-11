@@ -72,14 +72,13 @@ public abstract class BwShareableContainedDbentity<T> extends BwShareableDbentit
    *                   Convenience methods
    * ==================================================================== */
 
-  protected void setColPath(final BasicSystemProperties props,
-                            final String dir,
+  protected void setColPath(final String dir,
                             final String namePart) {
     if (getPublick()) {
       setColPath(Util.buildPath(true,
                                 "/public",
                                 "/",
-                                props.getBedeworkResourceDirectory(),
+                                BasicSystemProperties.bedeworkResourceDirectory,
                                 "/",
                                 dir,
                                 "/",
@@ -92,7 +91,7 @@ public abstract class BwShareableContainedDbentity<T> extends BwShareableDbentit
 
     try {
       principal = BwPrincipal.makePrincipal(getOwnerHref());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
 
@@ -102,7 +101,7 @@ public abstract class BwShareableContainedDbentity<T> extends BwShareableDbentit
     }
 
     if (principal.getKind() == Ace.whoTypeUser) {
-      homeDir = props.getUserCalendarRoot();
+      homeDir = BasicSystemProperties.userCalendarRoot;
     } else {
       homeDir = Util.pathElement(1, principal.getPrincipalRef());
     }
@@ -113,7 +112,7 @@ public abstract class BwShareableContainedDbentity<T> extends BwShareableDbentit
                               "/",
                               principal.getAccount(),
                               "/",
-                              props.getBedeworkResourceDirectory(),
+                              BasicSystemProperties.bedeworkResourceDirectory,
                               "/",
                               dir,
                               "/",

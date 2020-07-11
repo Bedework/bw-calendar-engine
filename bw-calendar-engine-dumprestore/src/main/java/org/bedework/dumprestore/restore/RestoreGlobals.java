@@ -27,7 +27,6 @@ import org.bedework.calfacade.BwGroup;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwUser;
 import org.bedework.calfacade.DirectoryInfo;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -178,7 +177,6 @@ public class RestoreGlobals extends Counters {
   /** Map user with id of zero on to this id - fixes oversight */
   public static int mapUser0 = 1;
   private SystemProperties syspars;
-  private static BasicSystemProperties basicProps;
 
   /** Messages for subscriptions changed   // PRE3.5
    */
@@ -398,13 +396,6 @@ public class RestoreGlobals extends Counters {
     return syspars;
   }
 
-  /**
-   * @return basic system params
-   */
-  public static BasicSystemProperties getBasicSyspars() {
-    return basicProps;
-  }
-
   private Collection<String> rootUsers;
 
   /**
@@ -500,7 +491,6 @@ public class RestoreGlobals extends Counters {
    */
   public void init() throws Throwable {
     Configurations conf = new CalSvcFactoryDefault().getSystemConfig();
-    basicProps = conf.getBasicSystemProperties();
     syspars = conf.getSystemProperties();
   }
 
@@ -692,14 +682,6 @@ public class RestoreGlobals extends Counters {
     }
 
     @Override
-    public BasicSystemProperties getSyspars() {
-      return getBasicSyspars();
-    }
-
-    /* (non-Javadoc)
-     * @see Access.AccessCb#makeHref(java.lang.String, int)
-     */
-    @Override
     public String makeHref(final String id, final int whoType) throws AccessException {
       try {
         return getPrincipalHref(id, whoType);
@@ -728,14 +710,5 @@ public class RestoreGlobals extends Counters {
     ((RestorePrincipalInfo)principalInfo).setSuperUser(true);
 
     return principalInfo;
-  }
-
-  /**
-   * @param p
-   * @return user home path
-   * @throws Throwable
-   */
-  public String getPrincipalHome(final BwPrincipal p) throws Throwable {
-    return getPrincipalInfo(p).getUserHomePath();
   }
 }

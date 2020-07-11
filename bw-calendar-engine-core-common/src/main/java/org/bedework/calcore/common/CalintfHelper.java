@@ -39,7 +39,6 @@ import org.bedework.calfacade.base.RecurrenceEntity;
 import org.bedework.calfacade.base.ResourcedEntity;
 import org.bedework.calfacade.base.SummaryEntity;
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -129,9 +128,6 @@ public abstract class CalintfHelper
                             alwaysReturn);
   }
 
-  protected BasicSystemProperties getSyspars() {
-    return intf.getSyspars();
-  }
   protected BwPrincipal getAuthenticatedPrincipal() {
     if ((intf == null) || (intf.getPrincipalInfo() == null)) {
       return null;

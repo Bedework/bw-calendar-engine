@@ -21,7 +21,6 @@ package org.bedework.calfacade;
 import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.annotations.ical.IcalProperty;
 import org.bedework.calfacade.base.BwShareableContainedDbentity;
-import org.bedework.calfacade.base.FixNamesEntity;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Uid;
@@ -38,7 +37,7 @@ import org.bedework.util.misc.Uid;
  * @param <T>
  */
 public abstract class BwEventProperty<T> extends
-        BwShareableContainedDbentity<T> implements FixNamesEntity {
+        BwShareableContainedDbentity<T> {
   private String uid;
 
   /* Non-db fields */
@@ -56,6 +55,10 @@ public abstract class BwEventProperty<T> extends
    * @return Finder Key value from this object.
    */
   public abstract BwString getFinderKeyValue();
+
+  /** ColPath and href need to be derived
+   */
+  abstract void fixNames();
 
   public final static String statusDeleted = "deleted";
 
@@ -110,6 +113,22 @@ public abstract class BwEventProperty<T> extends
   @NoDump
   public float getScore() {
     return score;
+  }
+
+  @Override
+  public String getColPath(){
+    if (super.getColPath() == null) {
+      fixNames();
+    }
+    return super.getColPath();
+  }
+
+  @Override
+  public String getHref(){
+    if (super.getHref() == null) {
+      fixNames();
+    }
+    return super.getHref();
   }
 
   /* ====================================================================

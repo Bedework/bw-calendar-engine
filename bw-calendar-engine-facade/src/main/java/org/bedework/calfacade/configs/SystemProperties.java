@@ -323,6 +323,24 @@ public interface SystemProperties extends CalDAVSystemProperties {
    * @param val of property
    */
   @ConfInfo(dontSave = true)
-  void setSyseventsProperty(final String name,
-                            final String val);
+  void setSyseventsProperty(String name,
+                            String val);
+
+  /** True to run in test mode. This will adversely affect performance
+   * but avoids some test failures due to asynchronous behavior.
+   *
+   * <p>DO NOT run in production mode with this on</p>.
+   *
+   * @param val true for test mode
+   */
+  void setTestMode(boolean val);
+
+  /**
+   * @return CalAddrPrefixes or null
+   */
+  @MBeanInfo("True to run in test mode. This will adversely affect performance\n" +
+         "   * but avoids some test failures due to asynchronous behavior.\n" +
+         "   *\n" +
+         "   * <p>DO NOT run in production mode with this on")
+  boolean getTestMode();
 }

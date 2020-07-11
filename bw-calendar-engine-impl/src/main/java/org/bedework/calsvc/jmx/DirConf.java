@@ -18,6 +18,7 @@
 */
 package org.bedework.calsvc.jmx;
 
+import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.util.config.ConfigurationStore;
 import org.bedework.util.jmx.ConfBase;
 
@@ -86,5 +87,15 @@ public class DirConf<X extends DirConfigPropertiesImpl> extends ConfBase<X>
   @Override
   public String getDefaultDomain()  {
     return getConfig().getDefaultDomain();
+  }
+
+  @Override
+  public void setCalAddrPrefixes(final CalAddrPrefixes val) {
+    getConfig().setCalAddrPrefixes(val);
+  }
+
+  @Override
+  public CalAddrPrefixes getCalAddrPrefixes() {
+    return getConfig().getCalAddrPrefixes();
   }
 }

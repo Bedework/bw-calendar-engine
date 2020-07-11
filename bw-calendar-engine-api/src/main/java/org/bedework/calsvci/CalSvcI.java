@@ -31,20 +31,19 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.Directories;
+import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.mail.MailerIntf;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
-import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.sysevents.events.SysEventBase;
 
 import java.io.Serializable;
@@ -84,12 +83,6 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * @throws RuntimeException on fatal errors
    */
   public abstract void init(CalSvcIPars pars);
-
-  /** Return basic properties about the system.
-   *
-   * @return BasicSystemProperties object - never null.
-   */
-  public abstract BasicSystemProperties getBasicSystemProperties();
 
   /** Return properties about the system that depend on authentication state.
    *

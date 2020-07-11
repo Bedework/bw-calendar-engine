@@ -27,6 +27,7 @@ import org.bedework.access.Privileges;
 import org.bedework.access.WhoDefs;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
@@ -295,7 +296,7 @@ public class Restore implements Logged, Defs, AutoCloseable {
 
     makeCal(null, pu,
             BwCalendar.calTypeFolder,
-            RestoreGlobals.getBasicSyspars().getPublicCalendarRoot(),
+            BasicSystemProperties.publicCalendarRoot,
             new String(new Acl(aces).encode()));
 
     // Create the user root.
@@ -309,7 +310,7 @@ public class Restore implements Logged, Defs, AutoCloseable {
     final BwCalendar userRoot = 
             makeCal(null, pu,
                     BwCalendar.calTypeFolder,
-                    RestoreGlobals.getBasicSyspars().getUserCalendarRoot(),
+                    BasicSystemProperties.userCalendarRoot,
                     new String(new Acl(aces).encode()));
 
     makeUserHome(userRoot, pu);
@@ -326,7 +327,7 @@ public class Restore implements Logged, Defs, AutoCloseable {
                                         null);
     makeCal(userHome, user,
             BwCalendar.calTypeCalendarCollection,
-            RestoreGlobals.getBasicSyspars().getUserDefaultCalendar(),
+            BasicSystemProperties.userDefaultCalendar,
             null);
   }
 

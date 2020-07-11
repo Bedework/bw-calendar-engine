@@ -34,7 +34,6 @@ import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SimpleFilterParser;
@@ -294,12 +293,6 @@ public interface Calintf
    * @throws CalFacadeException
    */
   void reAttach(BwDbentity<?> val) throws CalFacadeException;
-
-  /** Get the current system pars
-   *
-   * @return SystemProperties object
-   */
-  BasicSystemProperties getSyspars();
 
   String getCalendarNameFromType(int calType) throws CalFacadeException;
 

@@ -23,7 +23,6 @@ import org.bedework.calfacade.annotations.NoDump;
 import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.CollatableEntity;
 import org.bedework.calfacade.base.SizedEntity;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.QuotaUtil;
@@ -57,7 +56,6 @@ public class BwCategory extends BwEventProperty<BwCategory>
   /* Not persisted in the db */
 
   private String name;
-  private String href;
 
   /** Constructor
    */
@@ -145,11 +143,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
    * ==================================================================== */
 
   @Override
-  public void fixNames(final BasicSystemProperties props) {
-    if (getHref() != null) {
-      return;
-    }
-
+  void fixNames() {
     String extra = getWordVal();
     final String name;
 
@@ -164,19 +158,9 @@ public class BwCategory extends BwEventProperty<BwCategory>
     }
 
     setName(name);
-    setColPath(props, "categories", extra);
+    setColPath("categories", extra);
 
     setHref(Util.buildPath(false, getColPath(), getName()));
-  }
-
-  @Override
-  public void setHref(final String val) {
-    href = val;
-  }
-
-  @Override
-  public String getHref(){
-    return href;
   }
 
   /* ====================================================================

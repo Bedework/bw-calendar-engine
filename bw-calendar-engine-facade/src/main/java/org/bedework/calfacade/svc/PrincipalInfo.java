@@ -48,8 +48,6 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
   /* Null allows all accesses according to user - otherwise restricted to this. */
   protected PrivilegeSet maxAllowedPrivs;
 
-  private String userHomePath;
-
   /**
    * @param principal the principal
    * @param authPrincipal the authenticated principal
@@ -82,17 +80,6 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
   public abstract AccessPrincipal getPrincipal(String href) throws CalFacadeException;
 
   /**
-   * @return the path for home for the current principal, e.g. /user
-   */
-  public String getUserHomePath() {
-    if (userHomePath == null) {
-      userHomePath = "/" + getSyspars().getUserCalendarRoot();
-    }
-
-    return userHomePath;
-  }
-
-  /**
    * @return the path for calendar home for the current principal, e.g. /user/douglm
    */
   public String getCalendarHomePath() {
@@ -109,12 +96,14 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
    */
   public String getCalendarHomePath(final AccessPrincipal pr) {
     if (pr.getKind() == WhoDefs.whoTypeUser) {
-      return Util.buildPath(BasicSystemProperties.colPathEndsWithSlash, 
-                            getUserHomePath(), "/", pr.getAccount());
+      return Util.buildPath(BasicSystemProperties.colPathEndsWithSlash,
+                            BasicSystemProperties.userCalendarRootPath,
+                            "/", pr.getAccount());
     }
 
-    return Util.buildPath(BasicSystemProperties.colPathEndsWithSlash, 
-                          getUserHomePath(), "/", pr.getPrincipalRef());
+    return Util.buildPath(BasicSystemProperties.colPathEndsWithSlash,
+                          BasicSystemProperties.userCalendarRootPath,
+                          "/", pr.getPrincipalRef());
   }
 
   /**
@@ -141,9 +130,4 @@ public abstract class PrincipalInfo implements AccessCb, Serializable {
   public BwPrincipal getAuthPrincipal() {
     return authPrincipal;
   }
-
-  /**
-   * @return system parameters
-   */
-  public abstract BasicSystemProperties getSyspars();
 }

@@ -26,7 +26,6 @@ import org.bedework.calfacade.BwPrincipalInfo.BooleanPrincipalProperty;
 import org.bedework.calfacade.BwPrincipalInfo.IntPrincipalProperty;
 import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.DirectoryInfo;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.CalAddrPrefixes;
 import org.bedework.calfacade.configs.CardDavInfo;
 import org.bedework.calfacade.configs.Configurations;
@@ -34,7 +33,6 @@ import org.bedework.calfacade.configs.DirConfigProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.svc.BwPreferences;
-import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.dav.DavUtil;
 import org.bedework.util.dav.DavUtil.MultiStatusResponse;
@@ -98,7 +96,6 @@ import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWi
 public abstract class AbstractDirImpl implements Logged, Directories {
   public final static int SC_MULTI_STATUS = 207; // not defined for some reason
 
-  private static BasicSystemProperties sysRoots;
   private CalAddrPrefixes caPrefixes;
   private CardDavInfo authCdinfo;
   private CardDavInfo unauthCdinfo;
@@ -208,7 +205,8 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   public void init(final CallBack cb,
                    final Configurations configs) {
     this.cb = cb;
-    this.caPrefixes = configs.getBasicSystemProperties().getCalAddrPrefixes();
+    this.caPrefixes = configs.getDirConfig(getConfigName())
+                             .getCalAddrPrefixes();
     this.authCdinfo = configs.getCardDavInfo(true);
     this.unauthCdinfo = configs.getCardDavInfo(false);
     this.dirProps = configs.getDirConfig(getConfigName());
@@ -1013,16 +1011,6 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
   protected DirConfigProperties getProps() {
     return dirProps;
-  }
-
-  protected BasicSystemProperties getSystemRoots() {
-    if (sysRoots != null) {
-      return sysRoots;
-    }
-
-    sysRoots = new CalSvcFactoryDefault().getSystemConfig().getBasicSystemProperties();
-
-    return sysRoots;
   }
 
   protected CalAddrPrefixes getCaPrefixes() {

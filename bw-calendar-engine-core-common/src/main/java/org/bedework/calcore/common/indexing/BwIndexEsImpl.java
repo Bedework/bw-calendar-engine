@@ -43,9 +43,9 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.CategorisedEntity;
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.IndexProperties;
+import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.filter.SortTerm;
 import org.bedework.calfacade.indexing.BwIndexFetcher;
@@ -245,7 +245,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   private final AuthProperties authpars;
   private final AuthProperties unauthpars;
   private final IndexProperties idxpars;
-  private final BasicSystemProperties basicSysprops;
+  private final SystemProperties sysprops;
 
   /* Indexed by index name */
   private final static Map<String, UpdateInfo> updateInfo = new HashMap<>();
@@ -435,7 +435,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     idxpars = configs.getIndexProperties();
     authpars = configs.getAuthProperties(true);
     unauthpars = configs.getAuthProperties(false);
-    basicSysprops = configs.getBasicSystemProperties();
+    sysprops = configs.getSystemProperties();
 
     final String urls = idxpars.getIndexerURL();
 
@@ -949,7 +949,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                              final DeletedState deletedState,
                              final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
-    if (basicSysprops.getTestMode()) {
+    if (sysprops.getTestMode()) {
       final long timeSinceIndex = System
               .currentTimeMillis() - lastIndexTime;
       final long waitTime = indexerDelay - timeSinceIndex;
@@ -2796,7 +2796,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                        final int pos,
                                        final int pageSize,
                                        final boolean forSecondarySearch) throws CalFacadeException {
-    if (basicSysprops.getTestMode()) {
+    if (sysprops.getTestMode()) {
       final long timeSinceIndex = System.currentTimeMillis() - lastIndexTime;
       final long waitTime = indexerDelay - timeSinceIndex;
 
@@ -4168,7 +4168,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   private DocBuilder getDocBuilder() {
-    return new DocBuilder(basicSysprops);
+    return new DocBuilder();
   }
 
   private <T extends Response> T errorReturn(final T resp,

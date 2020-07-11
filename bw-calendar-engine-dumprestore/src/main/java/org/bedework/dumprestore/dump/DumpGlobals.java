@@ -46,7 +46,6 @@
  */
 package org.bedework.dumprestore.dump;
 
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.DumpIntf;
@@ -67,9 +66,6 @@ import java.util.Map;
  *
  */
 public class DumpGlobals extends Counters {
-  /** Used to build hrefs */
-  private BasicSystemProperties sysRoots;
-
   /** Where we do new style dump */
   private String dirPath;
   
@@ -160,16 +156,5 @@ public class DumpGlobals extends Counters {
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
-  }
-
-  /**
-   * @param sysRoots the system root paths
-   */
-  public void init(final BasicSystemProperties sysRoots) {
-    this.sysRoots = sysRoots;
-  }
-
-  public BasicSystemProperties getSysRoots() {
-    return sysRoots;
   }
 }

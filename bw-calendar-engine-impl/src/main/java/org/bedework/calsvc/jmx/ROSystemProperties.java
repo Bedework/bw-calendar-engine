@@ -400,6 +400,16 @@ public final class ROSystemProperties implements SystemProperties {
   }
 
   @Override
+  public void setTestMode(final boolean val) {
+    throw new RuntimeException("Immutable");
+  }
+
+  @Override
+  public boolean getTestMode() {
+    return getConfig().getTestMode();
+  }
+
+  @Override
   public SystemProperties cloneIt() {
     return this;
   }

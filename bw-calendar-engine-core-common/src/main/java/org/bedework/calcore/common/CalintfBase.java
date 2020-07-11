@@ -128,7 +128,7 @@ public abstract class CalintfBase implements Logged, Calintf {
 
   public CollectionCache colCache;
 
-  private BwIndexFetcher indexFetcher = new BwIndexFetcherImpl();
+  private final BwIndexFetcher indexFetcher = new BwIndexFetcherImpl();
 
   public class CIAccessChecker implements AccessChecker {
     @Override
@@ -257,39 +257,30 @@ public abstract class CalintfBase implements Logged, Calintf {
   }
 
   @Override
-  public BasicSystemProperties getSyspars() {
-    return configs.getBasicSystemProperties();
-  }
-
-  @Override
   public String getCalendarNameFromType(final int calType) {
-    final String name;
-    final BasicSystemProperties sys = getSyspars();
-
-    if (calType == BwCalendar.calTypeInbox) {
-      name = sys.getUserInbox();
-    } else if (calType == BwCalendar.calTypePendingInbox) {
-      name = ".pendingInbox";// sys.getUserInbox();
-    } else if (calType == BwCalendar.calTypeOutbox) {
-      name = sys.getUserOutbox();
-    } else if (calType == BwCalendar.calTypeNotifications) {
-      name = sys.getDefaultNotificationsName();
-    } else if (calType == BwCalendar.calTypeEventList) {
-      name = sys.getDefaultReferencesName();
-    } else if (calType == BwCalendar.calTypePoll) {
-      name = sys.getUserDefaultPollsCalendar();
-    } else if (calType == BwCalendar.calTypeAttachments) {
-      name = sys.getDefaultAttachmentsName();
-    } else if (calType == BwCalendar.calTypeCalendarCollection) {
-      name = sys.getUserDefaultCalendar();
-    } else if (calType == BwCalendar.calTypeTasks) {
-      name = sys.getUserDefaultTasksCalendar();
-    } else {
-      // Not supported
-      return null;
+    switch (calType) {
+      case BwCalendar.calTypeInbox:
+        return BasicSystemProperties.userInbox;
+      case  BwCalendar.calTypePendingInbox:
+        return BasicSystemProperties.userPendingInbox;
+      case  BwCalendar.calTypeOutbox:
+        return BasicSystemProperties.userOutbox;
+      case  BwCalendar.calTypeNotifications:
+        return BasicSystemProperties.defaultNotificationsName;
+      case  BwCalendar.calTypeEventList:
+        return BasicSystemProperties.defaultReferencesName;
+      case  BwCalendar.calTypePoll:
+        return BasicSystemProperties.userDefaultPollsCalendar;
+      case  BwCalendar.calTypeAttachments:
+        return BasicSystemProperties.defaultAttachmentsName;
+      case  BwCalendar.calTypeCalendarCollection:
+        return BasicSystemProperties.userDefaultCalendar;
+      case  BwCalendar.calTypeTasks:
+        return BasicSystemProperties.userDefaultTasksCalendar;
+      default:
+        // Not supported
+        return null;
     }
-
-    return name;
   }
 
   public CalendarWrapper wrap(final BwCalendar val) {
@@ -316,8 +307,8 @@ public abstract class CalintfBase implements Logged, Calintf {
    *                   Indexing
    * ==================================================================== */
 
-  private Map<String, BwIndexer> publicIndexers = new HashMap<>();
-  private Map<String, BwIndexer> principalIndexers =
+  private final Map<String, BwIndexer> publicIndexers = new HashMap<>();
+  private final Map<String, BwIndexer> principalIndexers =
           new HashMap<>();
 
   public void closeIndexers() {
@@ -593,7 +584,7 @@ public abstract class CalintfBase implements Logged, Calintf {
     }
     */
 
-    BwEvent event;
+    final BwEvent event;
 
     if (ev instanceof BwEventAnnotation) {
       event = new BwEventProxy((BwEventAnnotation)ev);
@@ -720,7 +711,7 @@ public abstract class CalintfBase implements Logged, Calintf {
     personalModified.add(user);
   }*/
 
-  private static Map<Class<?>, String> toDocType = new HashMap<>();
+  private static final Map<Class<?>, String> toDocType = new HashMap<>();
 
   static {
     toDocType.put(BwAdminGroup.class, BwIndexer.docTypePrincipal);
@@ -757,7 +748,7 @@ public abstract class CalintfBase implements Logged, Calintf {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

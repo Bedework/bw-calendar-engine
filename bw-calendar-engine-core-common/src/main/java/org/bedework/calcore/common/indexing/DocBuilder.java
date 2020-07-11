@@ -47,9 +47,7 @@ import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
-import org.bedework.calfacade.base.FixNamesEntity;
 import org.bedework.calfacade.base.XpropsEntity;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
@@ -86,9 +84,6 @@ import java.util.TreeSet;
  *
  */
 public class DocBuilder extends DocBuilderBase {
-  // Only used for fixNames calls
-  private final BasicSystemProperties basicSysprops;
-
   private final IndexKeys keys = new IndexKeys();
 
   static Map<String, String> interestingXprops = new HashMap<>();
@@ -130,11 +125,9 @@ public class DocBuilder extends DocBuilderBase {
 
   /**
    *
-   * @param basicSysprops -  Only used for fixNames calls
    */
-  DocBuilder(final BasicSystemProperties basicSysprops) {
+  DocBuilder() {
     super();
-    this.basicSysprops = basicSysprops;
   }
 
   /* ===================================================================
@@ -320,8 +313,6 @@ public class DocBuilder extends DocBuilderBase {
          for these and try to create a real path based on them.
        */
 
-      ent.fixNames(basicSysprops);
-
       startObject();
 
       makeShareableContained(ent);
@@ -353,8 +344,6 @@ public class DocBuilder extends DocBuilderBase {
          create "/" delimited names to emulate a hierarchy. Look out
          for these and try to create a real path based on them.
        */
-
-      ent.fixNames(basicSysprops);
 
       startObject();
 
@@ -392,8 +381,6 @@ public class DocBuilder extends DocBuilderBase {
          create "/" delimited names to emulate a hierarchy. Look out
          for these and try to create a real path based on them.
        */
-
-      ent.fixNames(basicSysprops);
 
       startObject();
 
@@ -449,8 +436,6 @@ public class DocBuilder extends DocBuilderBase {
          create "/" delimited names to emulate a hierarchy. Look out
          for these and try to create a real path based on them.
        */
-
-      ent.fixNames(basicSysprops);
 
       startObject();
 
@@ -635,8 +620,6 @@ public class DocBuilder extends DocBuilderBase {
 
       final BwLocation loc = ev.getLocation();
       if (loc != null) {
-        loc.fixNames(basicSysprops);
-
         makeField(PropertyInfoIndex.LOCATION_HREF, loc.getHref());
 
         makeField(PropertyInfoIndex.LOCATION_STR,
@@ -763,12 +746,6 @@ public class DocBuilder extends DocBuilderBase {
    * ======================================================================== */
 
   String getHref(final BwUnversionedDbentity<?> val) {
-    if (val instanceof FixNamesEntity) {
-      final FixNamesEntity ent = (FixNamesEntity)val;
-
-      ent.fixNames(basicSysprops);
-    }
-
     if (val.getHref() == null) {
       warn("No href for " + val);
     }
@@ -798,7 +775,7 @@ public class DocBuilder extends DocBuilderBase {
           throws Throwable {
     makeShareable(ent);
 
-    String colPath = ent.getColPath();
+    final String colPath = ent.getColPath();
     if (colPath != null) {
       makeField(PropertyInfoIndex.COLLECTION, colPath);
     }
@@ -971,8 +948,6 @@ public class DocBuilder extends DocBuilderBase {
       for (final BwCategory cat: cats) {
         startObject();
 
-        cat.fixNames(basicSysprops);
-
         makeField(PropertyInfoIndex.UID, cat.getUid());
         makeField(PropertyInfoIndex.HREF, cat.getHref());
         startArray(getJname(PropertyInfoIndex.VALUE));
@@ -999,8 +974,6 @@ public class DocBuilder extends DocBuilderBase {
       startArray(getJname(PropertyInfoIndex.CONTACT));
 
       for (final BwContact c: val) {
-        c.fixNames(basicSysprops);
-
         startObject();
         makeField(PropertyInfoIndex.HREF, c.getHref());
         makeField(PropertyInfoIndex.CN, c.getCn());
@@ -1326,7 +1299,7 @@ public class DocBuilder extends DocBuilderBase {
     indexBwStrings(getJname(pi), val);
   }
 
-  private void indexBwStrings(String name,
+  private void indexBwStrings(final String name,
                               final Collection<? extends BwStringBase<?>> val) throws CalFacadeException {
     try {
       if (Util.isEmpty(val)) {

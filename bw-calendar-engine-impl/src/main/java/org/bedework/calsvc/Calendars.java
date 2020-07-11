@@ -31,6 +31,7 @@ import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.base.BwShareableDbentity;
+import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
@@ -59,6 +60,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+import static org.bedework.calfacade.configs.BasicSystemProperties.publicCalendarRootPath;
 import static org.bedework.calfacade.indexing.BwIndexer.docTypeCollection;
 
 /** This acts as an interface to the database for calendars.
@@ -66,9 +68,6 @@ import static org.bedework.calfacade.indexing.BwIndexer.docTypeCollection;
  * @author Mike Douglass       douglm - rpi.edu
  */
 class Calendars extends CalSvcDb implements CalendarsI {
-  private final String publicCalendarRootPath;
-  //private String userCalendarRootPath;
-
   /** Constructor
    *
    * @param svci interface
@@ -76,9 +75,6 @@ class Calendars extends CalSvcDb implements CalendarsI {
   Calendars(final CalSvc svci) {
     super(svci);
 
-    publicCalendarRootPath = Util.buildPath(colPathEndsWithSlash, "/",
-                                            getBasicSyspars()
-                                                    .getPublicCalendarRoot());
     //userCalendarRootPath = "/" + getBasicSyspars().getUserCalendarRoot();
   }
 
@@ -561,7 +557,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     final int pathLength = ss.length - 1;  // First element is empty string
 
     return (pathLength == 2) &&
-           (ss[1].equals(getBasicSyspars().getUserCalendarRoot()));
+           (ss[1].equals(BasicSystemProperties.userCalendarRoot));
   }
 
   @Override

@@ -91,8 +91,7 @@ class CoreCalendars extends CalintfHelper
 
     userCalendarRootPath = 
             Util.buildPath(colPathEndsWithSlash, 
-                           "/", getSyspars()
-                                   .getUserCalendarRoot());
+                           "/", BasicSystemProperties.userCalendarRoot);
     //groupCalendarRootPath = userCalendarRootPath + "/" + "groups";
 
     intf.colCache =
@@ -608,11 +607,12 @@ class CoreCalendars extends CalintfHelper
 
     /* Create a default calendar */
     final BwCalendar cal = new BwCalendar();
-    cal.setName(getSyspars().getUserDefaultCalendar());
+    cal.setName(BasicSystemProperties.userDefaultCalendar);
     cal.setCreatorHref(user.getPrincipalRef());
     cal.setOwnerHref(user.getPrincipalRef());
     cal.setPublick(false);
-    cal.setPath(Util.buildPath(colPathEndsWithSlash, path, "/", cal.getName()));
+    cal.setPath(Util.buildPath(colPathEndsWithSlash, path, "/",
+                               cal.getName()));
     cal.setColPath(usercal.getPath());
     cal.setCalType(BwCalendar.calTypeCalendarCollection);
     cal.setAffectsFreeBusy(true);
@@ -718,45 +718,49 @@ class CoreCalendars extends CalintfHelper
                                                 final String path) throws CalFacadeException {
     final String pathTo = intf.getPrincipalInfo().getCalendarHomePath(owner);
 
-    final BasicSystemProperties sys = getSyspars();
-
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
-                       sys.getUserInbox()).equals(path)) {
+                       BasicSystemProperties.userInbox)
+            .equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeInbox,
                                 true, false, PrivilegeDefs.privAny,
                                 null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
-                       ".pendingInbox").equals(path)) {
+                       BasicSystemProperties.userPendingInbox)
+            .equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypePendingInbox,
                                 true, false, PrivilegeDefs.privAny,
                                 null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
-                       sys.getUserOutbox()).equals(path)) {
+                       BasicSystemProperties.userOutbox)
+            .equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeOutbox,
                                 true, false, PrivilegeDefs.privAny,
                                 null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
-                       sys.getDefaultNotificationsName()).equals(path)) {
+                       BasicSystemProperties.defaultNotificationsName)
+            .equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeNotifications,
                                 true, false, PrivilegeDefs.privAny,
                                 null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
-                       sys.getDefaultReferencesName()).equals(path)) {
+                       BasicSystemProperties.defaultReferencesName)
+            .equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypeEventList,
                                 true, false, PrivilegeDefs.privAny,
                                 null);
     }
 
     if (Util.buildPath(colPathEndsWithSlash, pathTo, "/",
-                       sys.getUserDefaultPollsCalendar()).equals(path)) {
+                       BasicSystemProperties.userDefaultPollsCalendar)
+            .equals(path)) {
       return getSpecialCalendar(owner, BwCalendar.calTypePoll,
                                 true, false, PrivilegeDefs.privAny,
                                 null);
@@ -935,19 +939,17 @@ class CoreCalendars extends CalintfHelper
                                     final BwCalendar parent) throws CalFacadeException {
     // XXX This should be accessible to all implementations.
     if (!special) {
-      final BasicSystemProperties sys = getSyspars();
-
       /* Ensure the name isn't reserved */
 
-      if (name.equals(sys.getUserInbox())) {
+      if (name.equals(BasicSystemProperties.userInbox)) {
         throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
       }
 
-      if (name.equals(sys.getUserOutbox())) {
+      if (name.equals(BasicSystemProperties.userOutbox)) {
         throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
       }
 
-      if (name.equals(sys.getDefaultNotificationsName())) {
+      if (name.equals(BasicSystemProperties.defaultNotificationsName)) {
         throw new CalFacadeException(CalFacadeException.illegalCalendarCreation);
       }
     }

@@ -115,23 +115,22 @@ class Views extends CalSvcDb implements ViewsI {
       return null;
     }
 
-    /* Other user - we expect a path of th eform
+    /* Other user - we expect a path of the form
      *  /user/<id>/<bedework-resource-name>/views/<view-name>
      */
 
-    String[] pathEls = val.split("/");
-
-    BasicSystemProperties bsp = getBasicSyspars();
+    final String[] pathEls = val.split("/");
 
     if ((pathEls.length != 5) ||
-            !bsp.getBedeworkResourceDirectory().equals(pathEls[2]) ||
+            !BasicSystemProperties.bedeworkResourceDirectory.equals(
+                    pathEls[2]) ||
             !"views".equals(pathEls[3])) {
       return null;
     }
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
-    if (bsp.getUserCalendarRoot().equals(pathEls[0])) {
+    if (BasicSystemProperties.userCalendarRoot.equals(pathEls[0])) {
       sb.append(BwPrincipal.userPrincipalRoot);
     } else {
       return null;
@@ -139,14 +138,14 @@ class Views extends CalSvcDb implements ViewsI {
 
     sb.append(pathEls[1]);  // user id
 
-    BwPrincipal pr = getPrincipal(sb.toString());
+    final BwPrincipal pr = getPrincipal(sb.toString());
     if (pr == null) {
       return null;
     }
 
-    Collection<BwView> views = getAll(pr);
-    String viewName = pathEls[4];
-    for (BwView view: views) {
+    final Collection<BwView> views = getAll(pr);
+    final String viewName = pathEls[4];
+    for (final BwView view: views) {
       if (view.getName().equals(viewName)) {
         return view;
       }

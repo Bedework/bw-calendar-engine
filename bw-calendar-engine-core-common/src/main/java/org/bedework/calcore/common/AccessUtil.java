@@ -299,10 +299,16 @@ public class AccessUtil implements Logged, AccessUtilI {
         }
          */
         if (!cb.getSuperUser()) {
-          if (cb.getUserHomePath().equals(path)) {
+          var userCalPath = Util.buildPath(
+                  BasicSystemProperties.colPathEndsWithSlash,
+                  "/",
+                  BasicSystemProperties.userCalendarRoot);
+
+          if (userCalPath.equals(path)) {
             ca = Acl.defaultNonOwnerAccess;
           } else if (path.equals(Util.buildPath(
-                  BasicSystemProperties.colPathEndsWithSlash, cb.getUserHomePath(),
+                  BasicSystemProperties.colPathEndsWithSlash,
+                  userCalPath,
                   "/",
                   owner.getAccount()))) {
             // Accessing user home directory
