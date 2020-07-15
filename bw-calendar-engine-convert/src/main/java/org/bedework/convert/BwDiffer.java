@@ -18,6 +18,7 @@
 */
 package org.bedework.convert;
 
+import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCategory;
@@ -229,6 +230,9 @@ public class BwDiffer {
       case RRULE:
         return (DifferResult<T, CT>)cmpObjval((Set<String>)val, ev.getRrules());
 
+      case VALARM:
+        return (DifferResult<T, CT>)cmpObjval((Set<BwAlarm>)val, ev.getAlarms());
+
       case XPROP:
         return (DifferResult<T, CT>)cmpObjval((List<BwXproperty>)val, ev.getXproperties());
 
@@ -257,9 +261,6 @@ public class BwDiffer {
       case CREATOR: // non ical
       case OWNER: // non ical
       case ENTITY_TYPE: // non ical
-        break;
-
-      case VALARM: // Component
         break;
 
       case LANG: // Param

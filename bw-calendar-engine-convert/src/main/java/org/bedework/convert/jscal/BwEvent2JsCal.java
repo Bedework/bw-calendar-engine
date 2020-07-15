@@ -18,6 +18,7 @@
 */
 package org.bedework.convert.jscal;
 
+import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwAttachment;
 import org.bedework.calfacade.BwAttendee;
 import org.bedework.calfacade.BwCategory;
@@ -36,24 +37,27 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.DifferResult;
 import org.bedework.jsforj.impl.JSFactory;
 import org.bedework.jsforj.impl.values.dataTypes.JSLocalDateTimeImpl;
+import org.bedework.jsforj.impl.values.dataTypes.JSSignedDurationImpl;
 import org.bedework.jsforj.impl.values.dataTypes.JSUnsignedIntegerImpl;
 import org.bedework.jsforj.model.JSCalendarObject;
 import org.bedework.jsforj.model.JSProperty;
 import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.JSTypes;
+import org.bedework.jsforj.model.values.JSAlert;
 import org.bedework.jsforj.model.values.JSLink;
 import org.bedework.jsforj.model.values.JSLocation;
 import org.bedework.jsforj.model.values.JSOverride;
 import org.bedework.jsforj.model.values.JSParticipant;
 import org.bedework.jsforj.model.values.JSRecurrenceRule;
 import org.bedework.jsforj.model.values.JSRelation;
-import org.bedework.jsforj.model.values.JSValue;
+import org.bedework.jsforj.model.values.collections.JSAlerts;
 import org.bedework.jsforj.model.values.collections.JSLinks;
 import org.bedework.jsforj.model.values.collections.JSList;
 import org.bedework.jsforj.model.values.collections.JSLocations;
 import org.bedework.jsforj.model.values.collections.JSParticipants;
 import org.bedework.jsforj.model.values.collections.JSRecurrenceOverrides;
 import org.bedework.jsforj.model.values.dataTypes.JSLocalDateTime;
+import org.bedework.jsforj.model.values.dataTypes.JSSignedDuration;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -254,6 +258,44 @@ public class BwEvent2JsCal {
       }
 
       /* ------------------- Alarms -------------------- */
+      final Set<BwAlarm> alarms = val.getAlarms();
+      final DifferResult<BwAlarm, ?> alarmDiff =
+              differs(BwAlarm.class,
+                      PropertyInfoIndex.VALARM,
+                      alarms, master);
+      if (alarmDiff.differs) {
+        if ((master == null) || alarmDiff.addAll) {
+          // Just add to js
+          final var alerts = jsval.getAlerts(true);
+          for (final BwAlarm alarm: alarms) {
+            makeAlarm(alerts, alarm);
+          }
+        } else if (alarmDiff.removeAll) {
+          // Remove alerts property
+          jsval.setNull(JSPropertyNames.alerts);
+        } else {
+          if (!Util.isEmpty(alarmDiff.removed)) {
+            for (final BwAlarm alarm: alarmDiff.removed) {
+              final var masterAlerts = jsCalMaster.getAlerts(false);
+
+              if (masterAlerts != null) {
+                for (final var jsalertp: masterAlerts.get()) {
+                  if (compareAlarm(alarm, jsalertp)) {
+                    jsval.setNull(JSPropertyNames.alerts,
+                                  jsalertp.getName());
+                  }
+                }
+              }
+            }
+          }
+          if (!Util.isEmpty(alarmDiff.added)) {
+            final var alerts = jsval.getAlerts(true);
+            for (final BwAlarm alarm: alarmDiff.added) {
+              makeAlarm(alerts, alarm);
+            }
+          }
+        }
+      }
       //VAlarmUtil.processEventAlarm(val, comp, currentPrincipal);
 
       /* ------------------- Attachments -------------------- */
@@ -288,11 +330,13 @@ public class BwEvent2JsCal {
             for (final BwAttachment att: attDiff.removed) {
               final var masterLinks = jsCalMaster.getLinks(false);
 
-              for (final var linkp: masterLinks.get()) {
-                final var link = linkp.getValue();
-                if (compareAttachment(att, linkp)) {
-                  jsval.setNull(JSPropertyNames.links,
-                                linkp.getName());
+              if (masterLinks != null) {
+                for (final var linkp: masterLinks.get()) {
+                  final var link = linkp.getValue();
+                  if (compareAttachment(att, linkp)) {
+                    jsval.setNull(JSPropertyNames.links,
+                                  linkp.getName());
+                  }
                 }
               }
             }
@@ -488,9 +532,8 @@ public class BwEvent2JsCal {
       /* ------------------- Cost -------------------- */
 
       if (val.getCost() != null) {
-        throw new RuntimeException("Not done");
-//        addXproperty(jsval, master, BwXproperty.bedeworkCost,
-  //                   null, val.getCost());
+        addXproperty(jsval, jsCalMaster, BwXproperty.bedeworkCost,
+                     val.getCost());
       }
 
       /* ------------------- Created -------------------- */
@@ -848,16 +891,26 @@ public class BwEvent2JsCal {
       if (val.getNumResources() > 0) {
         /* This event has a resource */
 
-        //prop = new Resources();
-        //TextList rl = ((Resources)prop).getResources();
+        final var resources = val.getResources();
+        final DifferResult<BwString, Set<BwString>> resDiff =
+                differs(BwString.class,
+                        PropertyInfoIndex.RESOURCES,
+                        resources, master);
+        if (resDiff.differs) {
+          for (final BwString bs: resources) {
+            final var parts = jsval.getParticipants(true);
+            final var jsResource =
+                    parts.makeParticipant().getValue();
 
-        for (final BwString str: val.getResources()) {
-          // LANG
-          //rl.add(str.getValue());
+            jsResource.getRoles(true).add("required");
+            jsResource.setKind("resource");
+
+            if (bs.getLang() != null) {
+              jsResource.setLanguage(bs.getLang());
+            }
+            jsResource.setName(bs.getValue());
+          }
         }
-
-        throw new RuntimeException("Not done");
-        //pl.add(prop);
       }
 
       /* ------------------- RRule -below------------------- */
@@ -1419,6 +1472,55 @@ public class BwEvent2JsCal {
           "data:text/plain;base64,";
   private static final int dataUriPrefixLen =
           dataUriPrefix.length();
+
+  private static void makeAlarm(final JSAlerts alerts,
+                                     final BwAlarm alarm) {
+    final var jsalarm = alerts.makeAlert().getValue();
+
+    jsalarm.setAction(getAction(alarm.getAlarmType()));
+
+    final JSSignedDuration offset = new JSSignedDurationImpl(
+            alarm.getTrigger());
+
+    jsalarm.setOffset(offset);
+
+    if (!alarm.getTriggerStart()) {
+      jsalarm.setRelativeTo("end");
+    }
+  }
+
+  private static String getAction(final int atype) {
+    if (atype == BwAlarm.alarmTypeEmail) {
+      return "email";
+    }
+
+    return "display";
+  }
+
+  public static boolean compareAlarm(
+          final BwAlarm alarm,
+          final JSProperty<JSAlert> alertp) {
+    final var alert = alertp.getValue();
+
+    if (!alert.getAction().equals(getAction(alarm.getAlarmType()))) {
+      return false;
+    }
+
+    if (!alert.getOffset().getStringValue().equals(alarm.getTrigger())) {
+      return false;
+    }
+
+    final var ts = alert.getRelativeTo();
+    if (alarm.getTriggerStart()) {
+      if ("end".equals(ts)) {
+        return false;
+      }
+    } else if (!"end".equals(ts)) {
+      return false;
+    }
+
+    return true;
+  }
 
   private static void makeAttachment(final JSLinks links,
                                      final BwAttachment att) {
@@ -2020,17 +2122,17 @@ public class BwEvent2JsCal {
    * @param jscal current entity
    * @param master non-null if jscal is an override
    * @param name of xprop
-   * @param pars List of Xpar
    * @param val new value
    */
-  public static void addXproperty(final JSValue jscal,
-                                  final EventInfo master,
+  public static void addXproperty(final JSCalendarObject jscal,
+                                  final JSCalendarObject master,
                                   final String name,
-                                  final List<BwXproperty.Xpar> pars,
                                   final String val) {
     if (val == null) {
       return;
     }
+
+
     throw new RuntimeException("Not done");
 //    pl.add(new XProperty(name, makeXparlist(pars), val));
   }

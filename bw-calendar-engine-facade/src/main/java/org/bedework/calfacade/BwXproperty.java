@@ -32,7 +32,9 @@ import java.io.Serializable;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -373,6 +375,147 @@ public class BwXproperty extends BwDbentity<BwXproperty>
     xskip.add(bedeworkSchedulingReplyUpdate);
 
     xskip.add(bedeworkRelatedTo);
+  }
+
+  public static class XpropInfo {
+    public final String jscalName;
+
+    // true if jscal property is a simple json type
+    public final boolean simpleType;
+
+    XpropInfo(final String jscalName, final boolean simpleType) {
+      this.jscalName = jscalName;
+      this.simpleType = simpleType;
+    }
+  }
+
+  // For icalendar
+  private static final Map<String, XpropInfo> xinfo = new HashMap<>();
+
+  private static void addXpinfo(final String xname,
+                                final String jscalName,
+                                final boolean simpleVal) {
+    xinfo.put(xname, new XpropInfo(jscalName, simpleVal));
+  }
+
+  static {
+     //                        Submissions client properties
+
+    addXpinfo(bedeworkSubmitComment, "bedework.org/SUBMIT-COMMENT",
+              true);
+    addXpinfo(bedeworkSubmitStatus, "bedework.org/SUBMIT-STATUS",
+              true);
+    addXpinfo(bedeworkSubmitAlias, "bedework.org/SUBMIT-ALIAS",
+              true);
+    addXpinfo(bedeworkSubmitterEmail, "bedework.org/SUBMITTER-EMAIL",
+              true);
+    addXpinfo(bedeworkSubmitterClaimant, "bedework.org/SUBMISSION-CLAIMANT",
+              true);
+
+    //                        Admin client properties
+
+    addXpinfo(bedeworkAlias, "bedework.org/ALIAS",
+              true);
+    addXpinfo(bedeworkDisplayName, "bedework.org/PARAM-DISPLAYNAME",
+              true);
+
+    //                        Scheduling notification properties
+
+    addXpinfo(bedeworkSchedulingEntityPath, "bedework.org/SCHED-PATH",
+              true);
+    addXpinfo(bedeworkSchedulingNew, "bedework.org/SCHED-NEW",
+              true);
+    addXpinfo(bedeworkSchedulingReschedule, "bedework.org/SCHED-RESCHED",
+              true);
+    addXpinfo(bedeworkSchedulingReplyUpdate,
+              "bedework.org/SCHED-REPLY-UPDATE", true);
+
+    //                        cal import/export
+
+    addXpinfo(bedeworkDavProp, "bedework.org/DAV-PROP", true);
+    addXpinfo(bedeworkIcal, "bedework.org/ICAL", true);
+    addXpinfo(bedeworkIcalProp, "bedework.org/ICAL-PROP", true);
+    addXpinfo(xparUid, "bedework.org/UID", true);
+    addXpinfo(bedeworkCost, "bedework.org/COST", true);
+    addXpinfo(bedeworkDeleted, "bedework.org/DELETED", true);
+    addXpinfo(bedeworkRelatedTo, "bedework.org/RELATED-TO", true);
+
+    //                        Exchange synch properties
+
+    addXpinfo(bedeworkExsynchEndtzid, "bedework.org/EXSYNCH-ENDTZID",
+              true);
+    addXpinfo(bedeworkExsynchLastmod, "bedework.org/EXSYNCH-LASTMOD",
+              true);
+    addXpinfo(bedeworkExsynchOrganizer,
+              "bedework.org/EXSYNCH-ORGANIZER",
+              true);
+    addXpinfo(bedeworkExsynchStarttzid,
+              "bedework.org/EXSYNCH-STARTTZID",
+              true);
+
+    //                        Suggested events properties
+
+    addXpinfo(bedeworkSuggestedTo, "bedework.org/SUGGESTED-TO", true);
+
+    //                        Event registration properties
+
+    addXpinfo(bedeworkEventRegMaxTickets,
+              "bedework.org/MAX-TICKETS", true);
+    addXpinfo(bedeworkEventRegMaxTicketsPerUser,
+              "bedework.org/MAX-TICKETS-PER-USER", true);
+    addXpinfo(bedeworkEventRegStart,
+              "bedework.org/REGISTRATION-START", true);
+    addXpinfo(bedeworkEventRegEnd, "bedework.org/REGISTRATION-END",
+              true);
+    addXpinfo(bedeworkEventRegForm, "bedework.org/REGISTRATION-FORM",
+              true);
+    addXpinfo(bedeworkEventRegWaitListLimit,
+              "bedework.org/WAIT-LIST-LIMIT", true);
+    addXpinfo(bedeworkEventRegInternal,
+              "bedework.org/REGISTRATION-INTERNAL", true);
+    addXpinfo(bedeworkEventRegExternal,
+              "bedework.org/REGISTRATION-EXTERNAL", true);
+
+    //                        Sharing/publishing properties
+
+    addXpinfo(bedeworkPublishUrl, "bedework.org/PUBLISH-URL", true);
+
+    //                        Synch properties
+
+    addXpinfo(xBedeworkCategories, "bedework.org/CATEGORIES", true);
+    addXpinfo(xBedeworkLocation, "bedework.org/LOCATION", true);
+    addXpinfo(xBedeworkContact, "bedework.org/CONTACT", true);
+
+    //                        location fields
+
+    addXpinfo(xBedeworkLocationAddr, "bedework.org/LOCATION-ADDR",
+              true);
+    addXpinfo(xBedeworkLocationRoom, "bedework.org/LOCATION-ROOM",
+              true);
+    addXpinfo(xBedeworkLocationAccessible,
+              "bedework.org/LOCATION-ACCESSIBLE", true);
+    addXpinfo(xBedeworkLocationSfield1,
+              "bedework.org/LOCATION-SFIELD1", true);
+    addXpinfo(xBedeworkLocationSfield2,
+              "bedework.org/LOCATION-SFIELD2", true);
+    addXpinfo(xBedeworkLocationGeo, "bedework.org/LOCATION-GEO", true);
+    addXpinfo(xBedeworkLocationStreet, "bedework.org/LOCATION-STREET",
+              true);
+    addXpinfo(xBedeworkLocationCity, "bedework.org/LOCATION-CITY",
+              true);
+    addXpinfo(xBedeworkLocationState, "bedework.org/LOCATION-STATE",
+              true);
+    addXpinfo(xBedeworkLocationZip, "bedework.org/LOCATION-ZIP", true);
+    addXpinfo(xBedeworkLocationLink, "bedework.org/LOCATION-LINK",
+              true);
+
+    //                        Misc properties
+
+    addXpinfo(bedeworkTag, "bedework.org/TAG", true);
+    addXpinfo(bedeworkCalsuite, "bedework.org/CALSUITE", true);
+    addXpinfo(bedeworkSchedAssist, "bedework.org/SCHED-ASSIST", true);
+    addXpinfo(bedeworkImage, "bedework.org/IMAGE", true);
+    addXpinfo(bedeworkThumbImage, "bedework.org/THUMB-IMAGE", true);
   }
 
   private String name;

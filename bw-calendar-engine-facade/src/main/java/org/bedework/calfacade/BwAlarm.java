@@ -373,9 +373,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    *                   AttendeesEntity interface methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#setAttendees(java.util.Set)
-   */
   @Override
   @IcalProperty(pindex = PropertyInfoIndex.ATTENDEE,
                 jname = "attendee",
@@ -385,9 +382,6 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     attendees = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.AttendeesEntity#getAttendees()
-   */
   @Override
   @Dump(collectionElementName = "attendee", compound = true)
   public Set<BwAttendee> getAttendees() {
@@ -397,7 +391,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @Override
   @NoDump
   public int getNumAttendees() {
-    Set<BwAttendee> as = getAttendees();
+    final Set<BwAttendee> as = getAttendees();
     if (as == null) {
       return 0;
     }
@@ -418,7 +412,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   @Override
   public boolean removeAttendee(final BwAttendee val) {
-    Set<BwAttendee> as = getAttendees();
+    final Set<BwAttendee> as = getAttendees();
     if (as == null) {
       return false;
     }
