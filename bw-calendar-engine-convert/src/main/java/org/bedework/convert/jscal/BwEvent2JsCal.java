@@ -258,213 +258,16 @@ public class BwEvent2JsCal {
       }
 
       /* ------------------- Alarms -------------------- */
-      final Set<BwAlarm> alarms = val.getAlarms();
-      final DifferResult<BwAlarm, ?> alarmDiff =
-              differs(BwAlarm.class,
-                      PropertyInfoIndex.VALARM,
-                      alarms, master);
-      if (alarmDiff.differs) {
-        if ((master == null) || alarmDiff.addAll) {
-          // Just add to js
-          final var alerts = jsval.getAlerts(true);
-          for (final BwAlarm alarm: alarms) {
-            makeAlarm(alerts, alarm);
-          }
-        } else if (alarmDiff.removeAll) {
-          // Remove alerts property
-          jsval.setNull(JSPropertyNames.alerts);
-        } else {
-          if (!Util.isEmpty(alarmDiff.removed)) {
-            for (final BwAlarm alarm: alarmDiff.removed) {
-              final var masterAlerts = jsCalMaster.getAlerts(false);
-
-              if (masterAlerts != null) {
-                for (final var jsalertp: masterAlerts.get()) {
-                  if (compareAlarm(alarm, jsalertp)) {
-                    jsval.setNull(JSPropertyNames.alerts,
-                                  jsalertp.getName());
-                  }
-                }
-              }
-            }
-          }
-          if (!Util.isEmpty(alarmDiff.added)) {
-            final var alerts = jsval.getAlerts(true);
-            for (final BwAlarm alarm: alarmDiff.added) {
-              makeAlarm(alerts, alarm);
-            }
-          }
-        }
-      }
-      //VAlarmUtil.processEventAlarm(val, comp, currentPrincipal);
+      doAlarms(val, master, jsval, jsCalMaster);
 
       /* ------------------- Attachments -------------------- */
-
-      final Set<BwAttachment> atts = val.getAttachments();
-      final DifferResult<BwAttachment, ?> attDiff =
-              differs(BwAttachment.class,
-                      PropertyInfoIndex.ATTACH,
-                      atts, master);
-      if (attDiff.differs) {
-        if ((master == null) || attDiff.addAll) {
-          // Just add to js
-          final var links = jsval.getLinks(true);
-          for (final BwAttachment att: atts) {
-            makeAttachment(links, att);
-          }
-        } else if (attDiff.removeAll) {
-          // Remove all ref="enclosure" from links
-          final var masterLinks = jsCalMaster.getLinks(false);
-
-          if (masterLinks != null) {
-            for (final var linkp: masterLinks.get()) {
-              final var link = linkp.getValue();
-              if ("enclosure".equals(link.getRel())) {
-                jsval.setNull(JSPropertyNames.links,
-                              linkp.getName());
-              }
-            }
-          }
-        } else {
-          if (!Util.isEmpty(attDiff.removed)) {
-            for (final BwAttachment att: attDiff.removed) {
-              final var masterLinks = jsCalMaster.getLinks(false);
-
-              if (masterLinks != null) {
-                for (final var linkp: masterLinks.get()) {
-                  final var link = linkp.getValue();
-                  if (compareAttachment(att, linkp)) {
-                    jsval.setNull(JSPropertyNames.links,
-                                  linkp.getName());
-                  }
-                }
-              }
-            }
-          }
-          if (!Util.isEmpty(attDiff.added)) {
-            for (final BwAttachment att: attDiff.added) {
-              makeAttachmentOverride(jsval, att);
-            }
-          }
-        }
-      }
+      doAttachments(val, master, jsval, jsCalMaster);
 
       /* ------------------- Attendees -------------------- */
-      if (!vpoll && (val.getNumAttendees() > 0)) {
-        final Set<BwAttendee> attendees = val.getAttendees();
-        final DifferResult<BwAttendee, Set<BwAttendee>> partDiff =
-                differs(BwAttendee.class,
-                        PropertyInfoIndex.ATTENDEE,
-                        attendees, master);
-        if (partDiff.differs) {
-          if ((master == null) || partDiff.addAll) {
-            // Just add to js
-            makeAttendees(jsval,
-                          jsCalMaster,
-                          jsval.getParticipants(true),
-                          attendees);
-          } else if (partDiff.removeAll) {
-            // Remove all from participants - use sendTo to identify an attendee
-            final var masterPart = jsCalMaster.getParticipants(false);
-
-            if (masterPart != null) {
-              for (final var partp: masterPart.get()) {
-                final var part = partp.getValue();
-                final var sendTo = part.getSendTo(false);
-                if ((sendTo != null) && (!Util.isEmpty(sendTo.get()))) {
-                  // Is an attendee
-                  jsval.setNull(JSPropertyNames.participants,
-                                partp.getName());
-                }
-              }
-            }
-          } else {
-            if (!Util.isEmpty(partDiff.removed)) {
-              final var masterPart = jsCalMaster.getParticipants(false);
-
-              if (masterPart != null) {
-                for (final BwAttendee att: partDiff.removed) {
-                  final var partp = masterPart.findParticipant(
-                          att.getAttendeeUri());
-                  if (partp != null) {
-                    jsval.setNull(JSPropertyNames.participants,
-                                  partp.getName());
-                  }
-                }
-              }
-            }
-            if (!Util.isEmpty(partDiff.added)) {
-              makeAttendees(jsval,
-                            jsCalMaster,
-                            jsval.getParticipants(true),
-                            partDiff.added);
-            }
-            if (!Util.isEmpty(partDiff.differ)) {
-              final var parts = jsval.getParticipants(true);
-
-              for (final BwAttendee att: partDiff.differ) {
-                // Find the attendee in the master and output the difference
-                for (final BwAttendee matt: master.getEvent().getAttendees()) {
-                  if (!"group".equalsIgnoreCase(att.getCuType())) {
-                    continue;
-                  }
-                  if (att.equals(matt)) {
-                    makeAttendeeOverride(jsval,
-                                         jsCalMaster,
-                                         att, matt);
-                    break;
-                  }
-                }
-                for (final BwAttendee matt: master.getEvent().getAttendees()) {
-                  if ("group".equalsIgnoreCase(att.getCuType())) {
-                    continue;
-                  }
-                  if (att.equals(matt)) {
-                    makeAttendeeOverride(jsval,
-                                         jsCalMaster,
-                                         att, matt);
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+      doAttendees(val, master, jsval, jsCalMaster);
 
       /* ------------------- Categories -------------------- */
-
-      final Set<BwCategory> cats = val.getCategories();
-      final DifferResult<BwCategory, Set<BwCategory>> catDiff =
-              differs(BwCategory.class,
-                      PropertyInfoIndex.CATEGORIES,
-                      cats, master);
-      if (catDiff.differs) {
-        if ((master == null) || catDiff.addAll) {
-          // Just add to js
-          final JSList<String> jscats = jsval.getKeywords(true);
-          for (final BwCategory cat: val.getCategories()) {
-            jscats.add(cat.getWord().getValue());
-          }
-        } else if (catDiff.removeAll) {
-          jsval.setNull(JSPropertyNames.keywords);
-        } else if (!Util.isEmpty(catDiff.removed)) {
-          for (final BwCategory cat: catDiff.removed) {
-            jsval.setNull(JSPropertyNames.keywords + "/" +
-                    cat.getWord().getValue());
-          }
-        } else {
-          if (Util.isEmpty(catDiff.added)) {
-            return Response.error(resp, "Bad return from differ -" +
-                    " expected non-null added");
-          }
-
-          for (final BwCategory cat: catDiff.added) {
-            jsval.addProperty(JSPropertyNames.keywords + "/" +
-                                      cat.getWord().getValue(), true);
-          }
-        }
-      }
+      doCategories(val, master, jsval, jsCalMaster);
 
       /* ------------------- Class -------------------- */
 
@@ -508,6 +311,7 @@ public class BwEvent2JsCal {
                             jsonDate(completed));
         }
       }
+
       /* ------------------- Contact -------------------- */
 
       final var contacts = val.getContacts();
@@ -613,8 +417,7 @@ public class BwEvent2JsCal {
         }
       }
 
-      /* ------------------- Due/DtEnd/Duration --------------------
-      */
+      /* ----------------- Due/DtEnd/Duration -------------------- */
 
       if (val.getEndType() == StartEndComponent.endTypeDate) {
         final BwDateTime bdt = val.getDtend();
@@ -764,41 +567,7 @@ public class BwEvent2JsCal {
       }
 
       /* ------------------- Organizer -------------------- */
-
-      final BwOrganizer org = val.getOrganizer();
-      if (org != null) {
-        final var orgUri = org.getOrganizerUri();
-
-        final DifferResult<BwOrganizer, ?> orgDiff =
-                differs(BwOrganizer.class,
-                        PropertyInfoIndex.ORGANIZER,
-                        org, master);
-        if (orgDiff.differs) {
-          final var parts = jsval.getParticipants(true);
-
-          var jsOrg = parts.findParticipant(orgUri);
-          if (jsOrg == null) {
-            jsOrg = parts.makeParticipant();
-          }
-          /* For the master always add a replyTo for iMip and the
-             organizer.
-
-             For an override - only if the reply to has changed
-           */
-
-          if (master == null) {
-            jsval.getReplyTo(true).makeReplyTo("imip", orgUri);
-          } else {
-            final var morg = master.getEvent().getOrganizer();
-            if ((morg == null) ||
-                    !morg.getOrganizerUri().equals(orgUri)) {
-              jsval.getReplyTo(true).makeReplyTo("imip", orgUri);
-            }
-          }
-
-          makeOrganizer(jsval, jsCalMaster, jsOrg.getValue(), org);
-        }
-      }
+      doOrganizer(val, master, jsval, jsCalMaster);
 
       /* ------------------- PercentComplete -------------------- */
 
@@ -825,66 +594,7 @@ public class BwEvent2JsCal {
       /* ------------------- RDate -below------------------- */
 
       /* ------------------- RelatedTo -------------------- */
-
-      /* We encode related to (maybe) as triples -
-            reltype, value-type, value
-
-         I believe we use the x-property because we are only have a
-         single related to value in the schema.
-
-         We also apparently have a value type parameter. This is not
-         covered in the spec.
-
-         We'll ignore that for the moment.
-       */
-
-      String[] info = null;
-
-      final BwRelatedTo relto = val.getRelatedTo();
-      if (relto != null) {
-        info = new String[3];
-
-        info[0] = relto.getRelType();
-        info[1] = ""; // default
-        info[2] = relto.getValue();
-      } else {
-        final String relx = val.getXproperty(BwXproperty.bedeworkRelatedTo);
-
-        if (relx != null) {
-          info = Util.decodeArray(relx);
-        }
-      }
-
-      if (info != null) {
-        final var relations = jsval.getRelatedTo(true);
-
-        int i = 0;
-
-        while (i < info.length) {
-          String reltype = info[i];
-          //String valtype = info[i + 1];
-          final String relval = info[i + 2];
-
-          final var rel = relations.makeEntry(relval);
-          final JSRelation relVal = rel.getValue();
-          final JSList<String> rs = relVal.getRelations(true);
-          if (reltype == null) {
-            reltype = "parent";
-          }
-          switch (reltype.toLowerCase()) {
-            case "parent":
-              rs.add("parent");
-              break;
-            case "child":
-              rs.add("child");
-              break;
-            case "sibling":
-              rs.add("next");
-          }
-
-          i += 3;
-        }
-      }
+      doRelatedTo(val, master, jsval, jsCalMaster);
 
       /* ------------------- Resources -------------------- */
 
@@ -1473,6 +1183,60 @@ public class BwEvent2JsCal {
   private static final int dataUriPrefixLen =
           dataUriPrefix.length();
 
+  /* ------------------- Alarms -------------------- */
+
+  private static void doAlarms(final BwEvent event,
+                               final EventInfo master,
+                               final JSCalendarObject jsval,
+                               final JSCalendarObject jsCalMaster) {
+    final Set<BwAlarm> alarms = event.getAlarms();
+    final DifferResult<BwAlarm, ?> alarmDiff =
+            differs(BwAlarm.class,
+                    PropertyInfoIndex.VALARM,
+                    alarms, master);
+    if (!alarmDiff.differs) {
+      return;
+    }
+
+    if ((master == null) || alarmDiff.addAll) {
+      // Just add to js
+      final var alerts = jsval.getAlerts(true);
+      for (final BwAlarm alarm: alarms) {
+        makeAlarm(alerts, alarm);
+      }
+      return;
+    }
+
+
+    if (alarmDiff.removeAll) {
+        // Remove alerts property
+        jsval.setNull(JSPropertyNames.alerts);
+      return;
+    }
+
+    if (!Util.isEmpty(alarmDiff.removed)) {
+      for (final BwAlarm alarm: alarmDiff.removed) {
+        final var masterAlerts = jsCalMaster.getAlerts(false);
+
+        if (masterAlerts != null) {
+          for (final var jsalertp: masterAlerts.get()) {
+            if (compareAlarm(alarm, jsalertp)) {
+              jsval.setNull(JSPropertyNames.alerts,
+                            jsalertp.getName());
+            }
+          }
+        }
+      }
+    }
+
+    if (!Util.isEmpty(alarmDiff.added)) {
+      final var alerts = jsval.getAlerts(true);
+      for (final BwAlarm alarm: alarmDiff.added) {
+        makeAlarm(alerts, alarm);
+      }
+    }
+  }
+
   private static void makeAlarm(final JSAlerts alerts,
                                      final BwAlarm alarm) {
     final var jsalarm = alerts.makeAlert().getValue();
@@ -1522,6 +1286,68 @@ public class BwEvent2JsCal {
     return true;
   }
 
+  /* ------------------- Attachments -------------------- */
+
+  private static void doAttachments(final BwEvent event,
+                                    final EventInfo master,
+                                    final JSCalendarObject jsval,
+                                    final JSCalendarObject jsCalMaster) {
+    final Set<BwAttachment> atts = event.getAttachments();
+    final DifferResult<BwAttachment, ?> attDiff =
+            differs(BwAttachment.class,
+                    PropertyInfoIndex.ATTACH,
+                    atts, master);
+    if (!attDiff.differs) {
+      return;
+    }
+
+    if ((master == null) || attDiff.addAll) {
+      // Just add to js
+      final var links = jsval.getLinks(true);
+      for (final BwAttachment att: atts) {
+        makeAttachment(links, att);
+      }
+      return;
+    }
+
+    if (attDiff.removeAll) {
+      // Remove all ref="enclosure" from links
+      final var masterLinks = jsCalMaster.getLinks(false);
+
+      if (masterLinks != null) {
+        for (final var linkp: masterLinks.get()) {
+          final var link = linkp.getValue();
+          if ("enclosure".equals(link.getRel())) {
+            jsval.setNull(JSPropertyNames.links,
+                          linkp.getName());
+          }
+        }
+      }
+      return;
+    }
+
+    if (!Util.isEmpty(attDiff.removed)) {
+      for (final BwAttachment att: attDiff.removed) {
+        final var masterLinks = jsCalMaster.getLinks(false);
+
+        if (masterLinks != null) {
+          for (final var linkp: masterLinks.get()) {
+            if (compareAttachment(att, linkp)) {
+              jsval.setNull(JSPropertyNames.links,
+                            linkp.getName());
+            }
+          }
+        }
+      }
+    }
+
+    if (!Util.isEmpty(attDiff.added)) {
+      for (final BwAttachment att: attDiff.added) {
+        makeAttachmentOverride(jsval, att);
+      }
+    }
+  }
+
   private static void makeAttachment(final JSLinks links,
                                      final BwAttachment att) {
     setLink(links.makeLink().getValue(), att);
@@ -1536,24 +1362,6 @@ public class BwEvent2JsCal {
                              UUID.randomUUID().toString()),
                     JSTypes.typeLink);
     setLink(linkp.getValue(), att);
-  }
-
-  private static void setLink(final JSLink link,
-                              final BwAttachment att) {
-    link.setRel("enclosure");
-
-    final String temp = att.getFmtType();
-    if (temp != null) {
-      link.setContentType(temp);
-    }
-
-    if (att.getEncoding() == null) {
-      // uri type
-      link.setHref(att.getUri());
-    } else {
-      // Binary - make a data uri
-      link.setHref(dataUriPrefix + att.getValue());
-    }
   }
 
   public static boolean compareAttachment(
@@ -1585,40 +1393,99 @@ public class BwEvent2JsCal {
             link.getHref().length());
   }
 
-  private static void makeOrganizer(final JSCalendarObject jsval,
-                                    final JSCalendarObject master,
-                                    final JSParticipant jsOrg,
-                                    final BwOrganizer org) {
-    // We may already have a sendTo if this is also an attendee
-    final var sendTos = jsOrg.getSendTo(true);
-    if (sendTos.get("imip") == null) {
-      sendTos.makeSendTo("imip",
-                         org.getOrganizerUri());
+  /* ------------------- Attendees -------------------- */
+
+  private static void doAttendees(final BwEvent event,
+                                  final EventInfo master,
+                                  final JSCalendarObject jsval,
+                                  final JSCalendarObject jsCalMaster) {
+    final Set<BwAttendee> attendees = event.getAttendees();
+    final DifferResult<BwAttendee, Set<BwAttendee>> partDiff =
+            differs(BwAttendee.class,
+                    PropertyInfoIndex.ATTENDEE,
+                    attendees, master);
+
+    if (!partDiff.differs) {
+      return;
     }
 
-    jsOrg.getRoles(true).add("owner");
-
-    String temp = org.getCn();
-    if (temp != null) {
-      jsOrg.setName(temp);
+    if ((master == null) || partDiff.addAll) {
+      // Just add to js
+      makeAttendees(jsval,
+                    jsCalMaster,
+                    jsval.getParticipants(true),
+                    attendees);
+      return;
     }
 
-    addLinkId(jsval, master, jsOrg, org.getDir());
+    if (partDiff.removeAll) {
+      // Remove all from participants - use sendTo to identify an attendee
+      final var masterPart = jsCalMaster.getParticipants(false);
 
-    temp = org.getLanguage();
-    if (temp != null) {
-      jsOrg.setLanguage(temp);
+      if (masterPart != null) {
+        for (final var partp: masterPart.get()) {
+          final var part = partp.getValue();
+          final var sendTo = part.getSendTo(false);
+          if ((sendTo != null) && (!Util.isEmpty(sendTo.get()))) {
+            // Is an attendee
+            jsval.setNull(JSPropertyNames.participants,
+                          partp.getName());
+          }
+        }
+      }
+      return;
     }
 
-    temp = org.getScheduleStatus();
-    if (temp != null) {
-      logger.warn("Do this - scheduleStatus");
-      //pars.add(new ScheduleStatus(temp));
+    if (!Util.isEmpty(partDiff.removed)) {
+      final var masterPart = jsCalMaster.getParticipants(false);
+
+      if (masterPart != null) {
+        for (final BwAttendee att: partDiff.removed) {
+          final var partp = masterPart.findParticipant(
+                  att.getAttendeeUri());
+          if (partp != null) {
+            jsval.setNull(JSPropertyNames.participants,
+                          partp.getName());
+          }
+        }
+      }
     }
 
-    temp = org.getSentBy();
-    if (temp != null) {
-      jsOrg.setInvitedBy(temp);
+    if (!Util.isEmpty(partDiff.added)) {
+      makeAttendees(jsval,
+                    jsCalMaster,
+                    jsval.getParticipants(true),
+                    partDiff.added);
+    }
+
+    if (!Util.isEmpty(partDiff.differ)) {
+      final var parts = jsval.getParticipants(true);
+
+      for (final BwAttendee att: partDiff.differ) {
+        // Find the attendee in the master and output the difference
+        for (final BwAttendee matt: master.getEvent().getAttendees()) {
+          if (!"group".equalsIgnoreCase(att.getCuType())) {
+            continue;
+          }
+          if (att.equals(matt)) {
+            makeAttendeeOverride(jsval,
+                                 jsCalMaster,
+                                 att, matt);
+            break;
+          }
+        }
+        for (final BwAttendee matt: master.getEvent().getAttendees()) {
+          if ("group".equalsIgnoreCase(att.getCuType())) {
+            continue;
+          }
+          if (att.equals(matt)) {
+            makeAttendeeOverride(jsval,
+                                 jsCalMaster,
+                                 att, matt);
+            break;
+          }
+        }
+      }
     }
   }
 
@@ -1896,6 +1763,203 @@ public class BwEvent2JsCal {
                             JSPropertyNames.kind);
   }
 
+  /* ------------------- Categories -------------------- */
+
+  private static void doCategories(final BwEvent event,
+                                   final EventInfo master,
+                                   final JSCalendarObject jsval,
+                                   final JSCalendarObject jsCalMaster) {
+    final Set<BwCategory> cats = event.getCategories();
+    final DifferResult<BwCategory, Set<BwCategory>> catDiff =
+            differs(BwCategory.class,
+                    PropertyInfoIndex.CATEGORIES,
+                    cats, master);
+
+    if (!catDiff.differs) {
+      return;
+    }
+
+    if ((master == null) || catDiff.addAll) {
+      // Just add to js
+      final JSList<String> jscats = jsval.getKeywords(true);
+      for (final BwCategory cat: cats) {
+        jscats.add(cat.getWord().getValue());
+      }
+      return;
+    }
+
+    if (catDiff.removeAll) {
+      jsval.setNull(JSPropertyNames.keywords);
+      return;
+    }
+
+    if (!Util.isEmpty(catDiff.removed)) {
+      for (final BwCategory cat: catDiff.removed) {
+        jsval.setNull(JSPropertyNames.keywords + "/" +
+                              cat.getWord().getValue());
+      }
+    }
+
+    for (final BwCategory cat: catDiff.added) {
+      jsval.addProperty(JSPropertyNames.keywords + "/" +
+                                cat.getWord().getValue(), true);
+    }
+  }
+
+  /* ------------------- Organizer -------------------- */
+
+  private static void doOrganizer(final BwEvent event,
+                                  final EventInfo master,
+                                  final JSCalendarObject jsval,
+                                  final JSCalendarObject jsCalMaster) {
+    final BwOrganizer org = event.getOrganizer();
+    if (org == null) {
+      return;
+    }
+
+    final var orgUri = org.getOrganizerUri();
+
+    final DifferResult<BwOrganizer, ?> orgDiff =
+            differs(BwOrganizer.class,
+                    PropertyInfoIndex.ORGANIZER,
+                    org, master);
+    if (!orgDiff.differs) {
+      return;
+    }
+
+    final var parts = jsval.getParticipants(true);
+
+    var jsOrg = parts.findParticipant(orgUri);
+    if (jsOrg == null) {
+      jsOrg = parts.makeParticipant();
+    }
+
+    /* For the master always add a replyTo for iMip and the
+       organizer.
+
+       For an override - only if the reply to has changed
+     */
+
+    if (master == null) {
+      jsval.getReplyTo(true).makeReplyTo("imip", orgUri);
+    } else {
+      final var morg = master.getEvent().getOrganizer();
+      if ((morg == null) ||
+              !morg.getOrganizerUri().equals(orgUri)) {
+        jsval.getReplyTo(true).makeReplyTo("imip", orgUri);
+      }
+    }
+
+    makeOrganizer(jsval, jsCalMaster, jsOrg.getValue(), org);
+  }
+
+  private static void makeOrganizer(final JSCalendarObject jsval,
+                                    final JSCalendarObject master,
+                                    final JSParticipant jsOrg,
+                                    final BwOrganizer org) {
+    // We may already have a sendTo if this is also an attendee
+    final var sendTos = jsOrg.getSendTo(true);
+    if (sendTos.get("imip") == null) {
+      sendTos.makeSendTo("imip",
+                         org.getOrganizerUri());
+    }
+
+    jsOrg.getRoles(true).add("owner");
+
+    String temp = org.getCn();
+    if (temp != null) {
+      jsOrg.setName(temp);
+    }
+
+    addLinkId(jsval, master, jsOrg, org.getDir());
+
+    temp = org.getLanguage();
+    if (temp != null) {
+      jsOrg.setLanguage(temp);
+    }
+
+    temp = org.getScheduleStatus();
+    if (temp != null) {
+      logger.warn("Do this - scheduleStatus");
+      //pars.add(new ScheduleStatus(temp));
+    }
+
+    temp = org.getSentBy();
+    if (temp != null) {
+      jsOrg.setInvitedBy(temp);
+    }
+  }
+
+  /* ------------------- RelatedTo -------------------- */
+
+  private static void doRelatedTo(final BwEvent event,
+                                  final EventInfo master,
+                                  final JSCalendarObject jsval,
+                                  final JSCalendarObject jsCalMaster) {
+    /* We encode related to (maybe) as triples -
+          reltype, value-type, value
+
+       I believe we use the x-property because we are only have a
+       single related to value in the schema.
+
+       We also apparently have a value type parameter. This is not
+       covered in the spec.
+
+       We'll ignore that for the moment.
+     */
+
+    String[] info = null;
+
+    final BwRelatedTo relto = event.getRelatedTo();
+    if (relto != null) {
+      info = new String[3];
+
+      info[0] = relto.getRelType();
+      info[1] = ""; // default
+      info[2] = relto.getValue();
+    } else {
+      final String relx =
+              event.getXproperty(BwXproperty.bedeworkRelatedTo);
+
+      if (relx != null) {
+        info = Util.decodeArray(relx);
+      }
+    }
+
+    if (info == null) {
+      return;
+    }
+
+    final var relations = jsval.getRelatedTo(true);
+
+    int i = 0;
+
+    while (i < info.length) {
+      String reltype = info[i];
+      //String valtype = info[i + 1];
+      final String relval = info[i + 2];
+
+      final var rel = relations.makeEntry(relval);
+      final JSRelation relVal = rel.getValue();
+      final JSList<String> rs = relVal.getRelations(true);
+      if (reltype == null) {
+        reltype = "parent";
+      }
+      switch (reltype.toLowerCase()) {
+        case "parent":
+          rs.add("parent");
+          break;
+        case "child":
+          rs.add("child");
+          break;
+        case "sibling":
+          rs.add("next");
+      }
+
+      i += 3;
+    }
+  }
+
   private static String scheduleAgent(final int sagent) {
     if (sagent == IcalDefs.scheduleAgentServer) {
       return null;
@@ -2152,6 +2216,24 @@ public class BwEvent2JsCal {
       return DateTimeUtil.isoDateTime(date);
     } catch (final Throwable t) {
       throw new RuntimeException(t);
+    }
+  }
+
+  private static void setLink(final JSLink link,
+                              final BwAttachment att) {
+    link.setRel("enclosure");
+
+    final String temp = att.getFmtType();
+    if (temp != null) {
+      link.setContentType(temp);
+    }
+
+    if (att.getEncoding() == null) {
+      // uri type
+      link.setHref(att.getUri());
+    } else {
+      // Binary - make a data uri
+      link.setHref(dataUriPrefix + att.getValue());
     }
   }
 }
