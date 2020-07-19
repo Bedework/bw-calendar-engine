@@ -22,7 +22,7 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.ical.IcalUtil;
-import org.bedework.convert.ical.VEventUtil;
+import org.bedework.convert.ical.BwEvent2Ical;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.Util;
 
@@ -81,7 +81,7 @@ public class RecurUtil {
   public static RecurRange getRange(final BwEvent ev,
                                     final int maxYears) {
     PropertyList evprops = new PropertyList();
-    VEventUtil.doRecurring(ev, evprops);
+    BwEvent2Ical.doRecurring(ev, evprops);
     RecurRange rr = new RecurRange();
 
     DtStart start = ev.getDtstart().makeDtStart();
@@ -185,7 +185,7 @@ public class RecurUtil {
                                         final String startRange, 
                                         final String endRange) {
     final PropertyList evprops = new PropertyList();
-    VEventUtil.doRecurring(ev, evprops);
+    BwEvent2Ical.doRecurring(ev, evprops);
     final RecurPeriods rp = new RecurPeriods();
 
     //DtStart vstart = (DtStart)IcalUtil.getProperty(comp, Property.DTSTART);

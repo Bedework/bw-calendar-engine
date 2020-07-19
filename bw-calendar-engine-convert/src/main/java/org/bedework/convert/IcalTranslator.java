@@ -31,7 +31,7 @@ import org.bedework.convert.ical.BwEventUtil;
 import org.bedework.convert.ical.CalendarBuilder;
 import org.bedework.convert.ical.IcalMalformedException;
 import org.bedework.convert.ical.IcalUtil;
-import org.bedework.convert.ical.VEventUtil;
+import org.bedework.convert.ical.BwEvent2Ical;
 import org.bedework.convert.ical.VFreeUtil;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.JsonCalendarBuilder;
@@ -690,8 +690,8 @@ public class IcalTranslator implements Logged, Serializable {
       if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
         comp = VFreeUtil.toVFreeBusy(ev);
       } else {
-        comp = VEventUtil.toIcalComponent(val, false, tzreg,
-                                          currentPrincipal);
+        comp = BwEvent2Ical.convert(val, false, tzreg,
+                                    currentPrincipal);
       }
       cal.getComponents().add((CalendarComponent)comp);
     }
@@ -699,8 +699,9 @@ public class IcalTranslator implements Logged, Serializable {
     if (val.getNumOverrides() > 0) {
       for (final EventInfo oei: val.getOverrides()) {
         cal.getComponents().add(
-                (CalendarComponent)VEventUtil.toIcalComponent(oei, true, tzreg,
-                                                           currentPrincipal));
+                (CalendarComponent)BwEvent2Ical
+                        .convert(oei, true, tzreg,
+                                 currentPrincipal));
       }
     }
   }

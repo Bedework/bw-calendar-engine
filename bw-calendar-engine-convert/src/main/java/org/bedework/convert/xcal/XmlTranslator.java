@@ -10,7 +10,7 @@ import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.EventTimeZonesRegistry;
 import org.bedework.convert.IcalTranslator;
-import org.bedework.convert.ical.VEventUtil;
+import org.bedework.convert.ical.BwEvent2Ical;
 import org.bedework.convert.ical.VFreeUtil;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
@@ -199,8 +199,8 @@ public class XmlTranslator extends IcalTranslator {
           if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
             comp = VFreeUtil.toVFreeBusy(ev);
           } else {
-            comp = VEventUtil.toIcalComponent(ei, false, tzreg,
-                                              currentPrincipal);
+            comp = BwEvent2Ical.convert(ei, false, tzreg,
+                                        currentPrincipal);
           }
 
           if (!componentsOpen) {
@@ -212,10 +212,10 @@ public class XmlTranslator extends IcalTranslator {
 
           if (ei.getNumOverrides() > 0) {
             for (final EventInfo oei : ei.getOverrides()) {
-              xmlComponent(xml, VEventUtil.toIcalComponent(oei,
-                                                           true,
-                                                           tzreg,
-                                                           currentPrincipal));
+              xmlComponent(xml, BwEvent2Ical.convert(oei,
+                                                     true,
+                                                     tzreg,
+                                                     currentPrincipal));
             }
           }
         }

@@ -116,9 +116,9 @@ import java.util.Map;
  *
  * @author Mike Douglass   douglm  rpi.edu
  */
-public class VEventUtil extends IcalUtil {
+public class BwEvent2Ical extends IcalUtil {
   private final static BwLogger logger =
-          new BwLogger().setLoggedClass(VEventUtil.class);
+          new BwLogger().setLoggedClass(BwEvent2Ical.class);
 
   /** Make an Icalendar component from a BwEvent object. This may produce a
    * VEvent, VTodo, VJournal or VPoll.
@@ -130,10 +130,10 @@ public class VEventUtil extends IcalUtil {
    * @return Component
    * @throws CalFacadeException on fatal error
    */
-  public static Component toIcalComponent(final EventInfo ei,
-                                          final boolean isOverride,
-                                          final TimeZoneRegistry tzreg,
-                                          final String currentPrincipal) throws CalFacadeException {
+  public static Component convert(final EventInfo ei,
+                                  final boolean isOverride,
+                                  final TimeZoneRegistry tzreg,
+                                  final String currentPrincipal) throws CalFacadeException {
     if ((ei == null) || (ei.getEvent() == null)) {
       return null;
     }
@@ -596,8 +596,8 @@ public class VEventUtil extends IcalUtil {
         if (ei.getNumContainedItems() > 0) {
           final VAvailability va = (VAvailability)comp;
           for (final EventInfo aei: ei.getContainedItems()) {
-            va.getAvailable().add((Available)toIcalComponent(aei, false, tzreg,
-                                                  currentPrincipal));
+            va.getAvailable().add((Available)convert(aei, false, tzreg,
+                                                     currentPrincipal));
           }
         }
 

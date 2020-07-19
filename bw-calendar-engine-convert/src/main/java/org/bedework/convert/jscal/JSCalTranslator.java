@@ -68,16 +68,16 @@ public class JSCalTranslator extends IcalTranslator {
    */
   public JSGroup toJScal(final Collection<EventInfo> vals,
                          final int methodType) {
-    JSGroup group = newJSGroup(methodType);
+    final JSGroup group = newJSGroup(methodType);
 
     if ((vals == null) || (vals.size() == 0)) {
       return group;
     }
 
-    TreeSet<String> added = new TreeSet<>();
+    final TreeSet<String> added = new TreeSet<>();
 
     for (final EventInfo ei: vals) {
-      addToGroup(group, ei, added);
+      addToGroup(group, ei, added, methodType);
     }
 
     return group;
@@ -100,17 +100,19 @@ public class JSCalTranslator extends IcalTranslator {
 
   private void addToGroup(final JSGroup group,
                           final EventInfo val,
-                          final TreeSet<String> added) {
+                          final TreeSet<String> added,
+                          final int methodType) {
     String currentPrincipal = null;
-    BwPrincipal principal = cb.getPrincipal();
+    final BwPrincipal principal = cb.getPrincipal();
 
     if (principal != null) {
       currentPrincipal = principal.getPrincipalRef();
     }
 
-    BwEvent ev = val.getEvent();
+    final BwEvent ev = val.getEvent();
 
-    EventTimeZonesRegistry tzreg = new EventTimeZonesRegistry(this, ev);
+    final EventTimeZonesRegistry tzreg =
+            new EventTimeZonesRegistry(this, ev);
 
     // Always by ref - except for custom?
     //if (!cb.getTimezonesByReference()) {
@@ -127,7 +129,9 @@ public class JSCalTranslator extends IcalTranslator {
 //      if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
   //      comp = VFreeUtil.toVFreeBusy(ev);
     //  } else {
-        res = BwEvent2JsCal.convert(val, null, null, tzreg,
+        res = BwEvent2JsCal.convert(val, null, null,
+                                    methodType,
+                                    tzreg,
                                     currentPrincipal);
       //}
       if (!res.isOk()) {
@@ -139,7 +143,9 @@ public class JSCalTranslator extends IcalTranslator {
 
     if (val.getNumOverrides() > 0) {
       for (final EventInfo oei: val.getOverrides()) {
-        res = BwEvent2JsCal.convert(oei, val, jsCalMaster, tzreg,
+        res = BwEvent2JsCal.convert(oei, val, jsCalMaster,
+                                    methodType,
+                                    tzreg,
                                     currentPrincipal);
         if (!res.isOk()) {
           throw new RuntimeException(res.toString());

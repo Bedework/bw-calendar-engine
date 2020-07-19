@@ -82,6 +82,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.bedework.convert.BwDiffer.differs;
+import static org.bedework.util.calendar.ScheduleMethods.methodTypeReply;
 import static org.bedework.util.misc.response.Response.Status.failed;
 
 /** Class to provide utility methods for translating to VEvent ical4j classes
@@ -99,6 +100,7 @@ public class BwEvent2JsCal {
    * @param ei the event or override we are converting
    * @param master - if non-null ei is an override
    * @param jsCalMaster - must be non-null if master is non-null
+   * @param method - defined in ScheduleMethods
    * @param tzreg - timezone registry
    * @param currentPrincipal - href for current authenticated user
    * @return Response with status and EventInfo object representing new entry or updated entry
@@ -107,6 +109,7 @@ public class BwEvent2JsCal {
           final EventInfo ei,
           final EventInfo master,
           final JSCalendarObject jsCalMaster,
+          final int method,
           final TimeZoneRegistry tzreg,
           final String currentPrincipal) {
     final var resp = new GetEntityResponse<JSCalendarObject>();
@@ -570,14 +573,7 @@ public class BwEvent2JsCal {
       doOrganizer(val, master, jsval, jsCalMaster);
 
       /* ------------------- PercentComplete -------------------- */
-
-      if (todo) {
-        final Integer pc = val.getPercentComplete();
-        if (pc != null) {
-          throw new RuntimeException("Not done");
-          //pl.add(new PercentComplete(pc));
-        }
-      }
+      doPercentComplete(val, master, jsval, jsCalMaster, method);
 
       /* ------------------- Priority -------------------- */
 
@@ -1888,6 +1884,86 @@ public class BwEvent2JsCal {
     if (temp != null) {
       jsOrg.setInvitedBy(temp);
     }
+  }
+
+  /* ------------------- PercentComplete -------------------- */
+
+  private static void doPercentComplete(final BwEvent event,
+                                        final EventInfo master,
+                                        final JSCalendarObject jsval,
+                                        final JSCalendarObject jsCalMaster,
+                                        final int method) {
+    final Integer pc = event.getPercentComplete();
+    if (pc == null) {
+      return;
+    }
+
+    final var jspc = new JSUnsignedIntegerImpl(pc);
+
+    // If this is a reply it goes in the only attendee
+    if (method != methodTypeReply) {
+      // Add to event
+      jsval.setProperty(JSPropertyNames.percentComplete,
+                        jspc);
+      return;
+    }
+
+    /* Should only be one attendee.
+
+       If this is an instance the attendee might be in the instance or
+       in the master.
+        * If in the master we add an update to the instance.
+        * If in the instance we add the property to the instance.
+       Be careful not to create an empty participants object in the
+       override.
+     */
+
+    // See if in current object
+    var part = findOnlyAttendee(jsval);
+    if (part != null) {
+      // Add to override value
+
+      part.getValue().setProperty(JSPropertyNames.percentComplete,
+                                  jspc);
+      return;
+    }
+
+    if (jsCalMaster == null) {
+      // Not an instance so no attendee - ignore it.
+      return;
+    }
+
+    // See if in master
+    part = findOnlyAttendee(jsCalMaster);
+    if (part == null) {
+      // An error - should be exactly one attendee in event
+      return;
+    }
+
+    // Add an override update to the current object
+
+    jsval.setProperty(makePath(JSPropertyNames.participants,
+                               part.getName(),
+                               JSPropertyNames.percentComplete),
+                      jspc);
+
+    return;
+  }
+
+  private static JSProperty<JSParticipant> findOnlyAttendee(
+          final JSCalendarObject jsval) {
+    final var parts = jsval.getParticipants(false);
+    if (parts == null) {
+      return null;
+    }
+
+    final var attendees = parts.getAttendees();
+    if (attendees.size() != 1) {
+      // An error - should only be one attendee in event
+      return null;
+    }
+
+    return attendees.get(0);
   }
 
   /* ------------------- RelatedTo -------------------- */
