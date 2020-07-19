@@ -56,6 +56,7 @@ import org.bedework.jsforj.model.values.collections.JSList;
 import org.bedework.jsforj.model.values.collections.JSLocations;
 import org.bedework.jsforj.model.values.collections.JSParticipants;
 import org.bedework.jsforj.model.values.collections.JSRecurrenceOverrides;
+import org.bedework.jsforj.model.values.collections.JSRecurrenceRules;
 import org.bedework.jsforj.model.values.dataTypes.JSLocalDateTime;
 import org.bedework.jsforj.model.values.dataTypes.JSSignedDuration;
 import org.bedework.util.calendar.IcalDefs;
@@ -991,15 +992,13 @@ public class BwEvent2JsCal {
                                   final TimeZoneRegistry tzreg) {
     if (val.hasRrules()) {
       for (final String rl: val.getRrules()) {
-        makeRule(val, jsval, rl, tzreg);
+        makeRule(true, val, jsval, rl, tzreg);
       }
     }
 
     if (val.hasExrules()) {
       for(final String rl: val.getExrules()) {
-        final var rrule = makeRule(val, jsval, rl, tzreg);
-        rrule.addProperty(JSPropertyNames.excluded,
-                          true);
+        final var rrule = makeRule(false, val, jsval, rl, tzreg);
       }
     }
 
@@ -1008,7 +1007,8 @@ public class BwEvent2JsCal {
     makeRexdates(val, true, val.getExdates(), jsval, tzreg);
   }
 
-  private static JSRecurrenceRule makeRule(final BwEvent val,
+  private static JSRecurrenceRule makeRule(final boolean rrules,
+                                           final BwEvent val,
                                            final JSCalendarObject jsval,
                                            final String iCalRule,
                                            final TimeZoneRegistry tzreg) {
@@ -1019,9 +1019,14 @@ public class BwEvent2JsCal {
       throw new RuntimeException(t);
     }
 
-    final var rrules = jsval.getRecurrenceRules(true);
+    final JSRecurrenceRules rules;
+    if (rrules) {
+      rules = jsval.getRecurrenceRules(true);
+    } else {
+      rules = jsval.getExcludedRecurrenceRules(true);
+    }
 
-    final JSRecurrenceRule rrule = rrules.makeRecurrenceRule();
+    final JSRecurrenceRule rrule = rules.makeRecurrenceRule();
 
     final var recur = rule.getRecur();
 
