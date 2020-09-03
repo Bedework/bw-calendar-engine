@@ -569,14 +569,14 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   /** Make an xproperty to hold an unknown ical property
    *
    * @param name - name of the ical property
-   * @param pars
-   * @param value
+   * @param pars - ical pars
+   * @param value - the property value
    * @return an xproperty
    */
   public static BwXproperty makeIcalProperty(final String name,
                                              final String pars,
                                              final String value) {
-    StringBuilder sb = new StringBuilder(bedeworkIcalPropPname);
+    final StringBuilder sb = new StringBuilder(bedeworkIcalPropPname);
     sb.append("=");
     sb.append(name);
 
@@ -591,7 +591,7 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   /** Make an xproperty to hold a dav property
    *
    * @param name - name of the dav property
-   * @param value
+   * @param value of property
    * @return an xproperty
    */
   public static BwXproperty makeDavProperty(final String name,
@@ -669,9 +669,9 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   /**
    */
   public static class Xpar implements Comparable<Xpar>, Serializable {
-    private String name;
+    private final String name;
 
-    private String value;
+    private final String value;
 
     public Xpar(final String name, final String value) {
       this.name = name;
@@ -729,17 +729,17 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   }
 
   /**
-   * @param name
+   * @param name of parameter
    * @return Value of named parameter or null
    */
   @NoDump
   public String getParam(final String name) {
-    List<Xpar> params = getParameters();
+    final List<Xpar> params = getParameters();
     if (params == null) {
       return null;
     }
 
-    for (Xpar param: params) {
+    for (final Xpar param: params) {
       if (param.getName().equals(name)) {
         return param.getValue();
       }
@@ -758,13 +758,10 @@ public class BwXproperty extends BwDbentity<BwXproperty>
      * Better approach would be to make these parsing methods available to
      * applications.
      */
-    int WORD_CHAR_START = 32;
-
-    int WORD_CHAR_END = 255;
-
-    int WHITESPACE_CHAR_START = 0;
-
-    int WHITESPACE_CHAR_END = 20;
+    final int WORD_CHAR_START = 32;
+    final int WORD_CHAR_END = 255;
+    final int WHITESPACE_CHAR_START = 0;
+    final int WHITESPACE_CHAR_END = 20;
 
     if ((val == null) || (val.length() == 0)) {
       return null;
@@ -774,8 +771,9 @@ public class BwXproperty extends BwDbentity<BwXproperty>
       val = ";" + val;
     }
 
-    StreamTokenizer tokeniser = new StreamTokenizer(new StringReader(val));
-    List<Xpar> pars = new ArrayList<Xpar>();
+    final StreamTokenizer tokeniser =
+            new StreamTokenizer(new StringReader(val));
+    final List<Xpar> pars = new ArrayList<>();
 
     try {
       tokeniser.resetSyntax();
@@ -793,7 +791,7 @@ public class BwXproperty extends BwDbentity<BwXproperty>
       while (tokeniser.nextToken() == ';') {
         parseParameter(tokeniser, pars);
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
 
@@ -802,26 +800,26 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
   /** Replace space with underscore.
    *
-   * @param val
+   * @param val to process
    * @return escaped name
    */
   public static String escapeName(final String val) {
-    if (val.indexOf(" ") < 0) {
+    if (!val.contains(" ")) {
       return val;
     }
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     int pos = 0;
     while (pos < val.length()) {
-      int nextPos = val.indexOf(" ", pos);
+      final int nextPos = val.indexOf(" ", pos);
 
       if (nextPos < 0) {
         sb.append(val.substring(pos));
         break;
       }
 
-      sb.append(val.substring(pos, nextPos));
+      sb.append(val, pos, nextPos);
       sb.append("_");
       pos = nextPos + 1;
     }
@@ -831,26 +829,26 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
   /** Replace semicolon with escape semicolon.
    *
-   * @param val
+   * @param val to process
    * @return escaped name
    */
   public static String escapeSemi(final String val) {
-    if (val.indexOf(";") < 0) {
+    if (!val.contains(";")) {
       return val;
     }
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     int pos = 0;
     while (pos < val.length()) {
-      int nextPos = val.indexOf(";", pos);
+      final int nextPos = val.indexOf(";", pos);
 
       if (nextPos < 0) {
         sb.append(val.substring(pos));
         break;
       }
 
-      sb.append(val.substring(pos, nextPos));
+      sb.append(val, pos, nextPos);
       sb.append("\\;");
       pos = nextPos + 1;
     }
@@ -860,26 +858,26 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
   /** Replace escaped semicolon with semicolon.
    *
-   * @param val
+   * @param val to process
    * @return escaped name
    */
   public static String unescapeSemi(final String val) {
-    if (val.indexOf("\\;") < 0) {
+    if (!val.contains("\\;")) {
       return val;
     }
 
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     int pos = 0;
     while (pos < val.length()) {
-      int nextPos = val.indexOf("\\;", pos);
+      final int nextPos = val.indexOf("\\;", pos);
 
       if (nextPos < 0) {
         sb.append(val.substring(pos));
         break;
       }
 
-      sb.append(val.substring(pos, nextPos));
+      sb.append(val, pos, nextPos);
       sb.append(";");
       pos = nextPos + 2;
     }
@@ -889,14 +887,14 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
   /** Return the position of the next unescaped semicolon
    *
-   * @param val
-   * @param start
+   * @param val to search
+   * @param start of search
    * @return int position of semicolon or -1 for no semicolon
    */
   public static int nextSemi(final String val, int start) {
     while (start < val.length()) {
-      int escPos = val.indexOf("\\;", start);
-      int sPos = val.indexOf(";", start);
+      final int escPos = val.indexOf("\\;", start);
+      final int sPos = val.indexOf(";", start);
 
       if (sPos < 0) {
         // No semicolons
@@ -1021,13 +1019,13 @@ public class BwXproperty extends BwDbentity<BwXproperty>
         throw new CalFacadeException(CalFacadeException.badRequest);
       }
 
-      String paramName = tokeniser.sval;
+      final String paramName = tokeniser.sval;
 
       if (tokeniser.nextToken() != '=') {
         throw new CalFacadeException(CalFacadeException.badRequest);
       }
 
-      StringBuilder paramValue = new StringBuilder();
+      final StringBuilder paramValue = new StringBuilder();
 
       /* Don't preserve quote chars - unlike ical4j. This is also used for
        * emitting xml
@@ -1058,13 +1056,13 @@ public class BwXproperty extends BwDbentity<BwXproperty>
       }
 
       pars.add(new Xpar(paramName, paramValue.toString()));
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
   /**
-   * @param args
+   * @param args ignored
    */
   public static void main(final String[] args) {
     testEsc("abcdefg", "Some value");
@@ -1077,7 +1075,7 @@ public class BwXproperty extends BwDbentity<BwXproperty>
   }
 
   private static void testEsc(String val1, final String val2) {
-    String svVal1 = val1;
+    final String svVal1 = val1;
 
     System.out.println("val1 = " + val1);
     System.out.println("val2 = " + val2);
@@ -1086,9 +1084,9 @@ public class BwXproperty extends BwDbentity<BwXproperty>
 
     System.out.println("esc val1 = " + val1);
 
-    String val = val1 + ";" + val2;
+    final String val = val1 + ";" + val2;
 
-    int pos = nextSemi(val, 0);
+    final int pos = nextSemi(val, 0);
     System.out.println("Semi at " + pos +
                        " in " + val);
 
