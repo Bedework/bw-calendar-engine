@@ -25,7 +25,6 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwXproperty;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.misc.Util;
@@ -53,124 +52,120 @@ import java.util.Set;
 @SuppressWarnings("UnusedDeclaration")
 public class XbwCategoryPropUpdater implements PropertyUpdater {
   public UpdateResult applyUpdate(final UpdateInfo ui) throws WebdavException {
-    try {
-      final ChangeTableEntry cte = ui.getCte();
-      final BwEvent ev = ui.getEvent();
+    final ChangeTableEntry cte = ui.getCte();
+    final BwEvent ev = ui.getEvent();
 
-      final List<BwXproperty> xcats = ev.getXproperties(
-              BwXproperty.xBedeworkCategories);
+    final List<BwXproperty> xcats = ev.getXproperties(
+            BwXproperty.xBedeworkCategories);
 
-      final Set<BwCategory> cats = ev.getCategories();
+    final Set<BwCategory> cats = ev.getCategories();
 
-      final String lang = UpdaterUtil.getLang(ui.getProp());
-      final String xval = getValue(ui.getProp());
+    final String lang = UpdaterUtil.getLang(ui.getProp());
+    final String xval = getValue(ui.getProp());
 
-      final BwString cstr = new BwString(lang, xval);
+    final BwString cstr = new BwString(lang, xval);
 
-      if (ui.isRemove()) {
-        if (Util.isEmpty(xcats)) {
-          // Nothing to remove
-          return UpdateResult.getOkResult();
-        }
+    if (ui.isRemove()) {
+      if (Util.isEmpty(xcats)) {
+        // Nothing to remove
+        return UpdateResult.getOkResult();
+      }
 
-        for (final BwXproperty xp: xcats) {
-          // Watch for null values
-          if (xp.getValue() == null) {
-            ev.removeXproperty(xp);
-            cte.addRemovedValue(xp);
-
-            if (xval != null) {
-              continue;
-            }
-
-            // We're done
-            return UpdateResult.getOkResult();
-          }
-
-          if (!xp.getValue().equals(xval)) {
-            continue;
-          }
-
-          // Found
+      for (final BwXproperty xp: xcats) {
+        // Watch for null values
+        if (xp.getValue() == null) {
           ev.removeXproperty(xp);
           cte.addRemovedValue(xp);
 
-           /* Do we have a corresponding category */
-          for (final BwCategory c: cats) {
-            if (c.getWord().equals(cstr)) {
-              ev.removeCategory(c);
-              cte.addRemovedValue(c);
-              break;
-            }
+          if (xval != null) {
+            continue;
+          }
+
+          // We're done
+          return UpdateResult.getOkResult();
+        }
+
+        if (!xp.getValue().equals(xval)) {
+          continue;
+        }
+
+        // Found
+        ev.removeXproperty(xp);
+        cte.addRemovedValue(xp);
+
+        /* Do we have a corresponding category */
+        for (final BwCategory c: cats) {
+          if (c.getWord().equals(cstr)) {
+            ev.removeCategory(c);
+            cte.addRemovedValue(c);
+            break;
+          }
+        }
+
+        return UpdateResult.getOkResult();
+      }
+
+      return UpdateResult.getOkResult();
+    }
+
+    if (xval == null) {
+      // Ignore
+      return UpdateResult.getOkResult();
+    }
+
+    if (ui.isAdd()) {
+      for (final BwXproperty xp: xcats) {
+        if (xp.getValue() == null) {
+          // Should strip it
+          continue;
+        }
+
+        if (xp.getValue().equals(xval)) {
+          return new UpdateResult(
+                  "Entity already has " + ui.getPropName() +
+                          " property with that value - cannot add");
+        }
+      }
+
+      /* Add the xprop or a category */
+      if (!checkCategory(ui, ev, cats, lang, xval)) {
+        final BwXproperty xp = makeXprop(lang, xval);
+        ev.addXproperty(xp);
+        cte.addValue(xp);
+      }
+
+      return UpdateResult.getOkResult();
+    }
+
+    if (ui.isChange()) {
+      for (final BwXproperty xp : xcats) {
+        if (xp.getValue() == null) {
+          // Should strip it
+          continue;
+        }
+
+        if (xp.getValue().equals(xval)) {
+          // Found
+
+          ev.removeXproperty(xp);
+          cte.addRemovedValue(xp);
+
+          final String nlang = UpdaterUtil
+                  .getLang(ui.getUpdprop());
+          final String nxval = getValue(ui.getUpdprop());
+
+          if (!checkCategory(ui, ev, cats, nlang, nxval)) {
+            final BwXproperty nxp = makeXprop(nlang, nxval);
+            ev.addXproperty(nxp);
+            cte.addValue(nxp);
           }
 
           return UpdateResult.getOkResult();
         }
-
-        return UpdateResult.getOkResult();
       }
-
-      if (xval == null) {
-        // Ignore
-        return UpdateResult.getOkResult();
-      }
-
-      if (ui.isAdd()) {
-        for (final BwXproperty xp: xcats) {
-          if (xp.getValue() == null) {
-            // Should strip it
-            continue;
-          }
-
-          if (xp.getValue().equals(xval)) {
-            return new UpdateResult(
-                    "Entity already has " + ui.getPropName() +
-                            " property with that value - cannot add");
-          }
-        }
-
-        /* Add the xprop or a category */
-        if (!checkCategory(ui, ev, cats, lang, xval)) {
-          final BwXproperty xp = makeXprop(lang, xval);
-          ev.addXproperty(xp);
-          cte.addValue(xp);
-        }
-
-        return UpdateResult.getOkResult();
-      }
-
-      if (ui.isChange()) {
-        for (final BwXproperty xp : xcats) {
-          if (xp.getValue() == null) {
-            // Should strip it
-            continue;
-          }
-
-          if (xp.getValue().equals(xval)) {
-            // Found
-
-            ev.removeXproperty(xp);
-            cte.addRemovedValue(xp);
-
-            final String nlang = UpdaterUtil
-                    .getLang(ui.getUpdprop());
-            final String nxval = getValue(ui.getUpdprop());
-
-            if (!checkCategory(ui, ev, cats, nlang, nxval)) {
-              final BwXproperty nxp = makeXprop(nlang, nxval);
-              ev.addXproperty(nxp);
-              cte.addValue(nxp);
-            }
-
-            return UpdateResult.getOkResult();
-          }
-        }
-      }
-
-      return UpdateResult.getOkResult();
-    } catch (final CalFacadeException cfe) {
-      throw new WebdavException(cfe);
     }
+
+    return UpdateResult.getOkResult();
   }
 
   private String getValue(final BasePropertyType bp) throws WebdavException {
@@ -204,10 +199,10 @@ public class XbwCategoryPropUpdater implements PropertyUpdater {
                                 final BwEvent ev,
                                 final Set<BwCategory> cats,
                                 final String lang,
-                                final String val) throws CalFacadeException {
+                                final String val) {
     final BwString sval = new BwString(lang, val);
 
-    var resp = ui.getIcalCallback().findCategory(sval);
+    final var resp = ui.getIcalCallback().findCategory(sval);
 
     if (resp.getStatus() == Response.Status.notFound) {
       return false;
@@ -226,7 +221,7 @@ public class XbwCategoryPropUpdater implements PropertyUpdater {
       }
     }
 
-    var cat = resp.getEntity();
+    final var cat = resp.getEntity();
 
     ev.addCategory(cat);
 
