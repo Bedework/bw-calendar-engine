@@ -2202,7 +2202,6 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       final Icalendar ic = 
               trans.fromIcal(bwcol, new SysIntfReader(rdr),
                              contentType,
-                             true,  // diff the contents
                              mergeAttendees);
 
       if (rtype == IcalResultType.OneComponent) {
@@ -2267,9 +2266,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         bwcol = unwrap(col.resolveAlias(true));
       }
 
-      Icalendar ic = trans.fromIcal(bwcol,
-                                    ical,
-                                    true);  // diff the contents
+      final Icalendar ic = trans.fromIcal(bwcol,
+                                          ical);
 
       if (rtype == IcalResultType.OneComponent) {
         if (ic.getComponents().size() != 1) {
@@ -2280,16 +2278,16 @@ public class BwSysIntfImpl implements Logged, SysIntf {
           throw new WebdavBadRequest("Expected one timezone");
         }
       }
-      SysiIcalendar sic = new MySysiIcalendar(this, ic);
+      final SysiIcalendar sic = new MySysiIcalendar(this, ic);
       rollback = false;
 
       return sic;
-    } catch (WebdavException wde) {
+    } catch (final WebdavException wde) {
       throw wde;
-    } catch (IcalMalformedException ime) {
+    } catch (final IcalMalformedException ime) {
       throw new WebdavForbidden(CaldavTags.validCalendarData,
                                 ime.getMessage());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug()) {
         error(t);
       }
