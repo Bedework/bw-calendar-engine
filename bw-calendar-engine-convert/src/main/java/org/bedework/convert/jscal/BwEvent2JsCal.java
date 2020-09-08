@@ -36,16 +36,21 @@ import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.DifferResult;
 import org.bedework.jsforj.impl.JSFactory;
+import org.bedework.jsforj.impl.JSPropertyNames;
+import org.bedework.jsforj.impl.values.dataTypes.JSDurationImpl;
 import org.bedework.jsforj.impl.values.dataTypes.JSLocalDateTimeImpl;
 import org.bedework.jsforj.impl.values.dataTypes.JSSignedDurationImpl;
+import org.bedework.jsforj.impl.values.dataTypes.JSStringImpl;
+import org.bedework.jsforj.impl.values.dataTypes.JSUTCDateTimeImpl;
 import org.bedework.jsforj.impl.values.dataTypes.JSUnsignedIntegerImpl;
 import org.bedework.jsforj.model.JSCalendarObject;
 import org.bedework.jsforj.model.JSProperty;
-import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.JSTypes;
+import org.bedework.jsforj.model.values.JSAbsoluteTrigger;
 import org.bedework.jsforj.model.values.JSAlert;
 import org.bedework.jsforj.model.values.JSLink;
 import org.bedework.jsforj.model.values.JSLocation;
+import org.bedework.jsforj.model.values.JSOffsetTrigger;
 import org.bedework.jsforj.model.values.JSOverride;
 import org.bedework.jsforj.model.values.JSParticipant;
 import org.bedework.jsforj.model.values.JSRecurrenceRule;
@@ -59,6 +64,7 @@ import org.bedework.jsforj.model.values.collections.JSRecurrenceOverrides;
 import org.bedework.jsforj.model.values.collections.JSRecurrenceRules;
 import org.bedework.jsforj.model.values.dataTypes.JSLocalDateTime;
 import org.bedework.jsforj.model.values.dataTypes.JSSignedDuration;
+import org.bedework.jsforj.model.values.dataTypes.JSUTCDateTime;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -82,7 +88,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.bedework.calfacade.BwXproperty.getXpropInfo;
+import static org.bedework.calfacade.BwXproperty.xBedeworkLocation;
 import static org.bedework.convert.BwDiffer.differs;
+import static org.bedework.convert.jscal.BwJSRegistration.typeBwLocation;
 import static org.bedework.util.calendar.ScheduleMethods.methodTypeReply;
 import static org.bedework.util.misc.response.Response.Status.failed;
 
@@ -91,7 +100,10 @@ import static org.bedework.util.misc.response.Response.Status.failed;
  * @author Mike Douglass   douglm  rpi.edu
  */
 public class BwEvent2JsCal {
-  final static JSFactory factory = JSFactory.getFactory();
+  final static JSFactory factory = BwJSFactory.getFactory();
+  static {
+    JSFactory.register(new BwJSRegistration());
+  }
 
   private final static BwLogger logger =
           new BwLogger().setLoggedClass(BwEvent2JsCal.class);
@@ -289,7 +301,7 @@ public class BwEvent2JsCal {
         }
       }
 
-      /* ------------------- Comments -------------------- */
+      /* ------------------- Comments -------------------- * /
 
       final var comments = val.getComments();
       final DifferResult<BwString, Set<BwString>> commDiff =
@@ -301,6 +313,7 @@ public class BwEvent2JsCal {
           jsval.addComment(str.getValue());
         }
       }
+       */
 
       /* ------------------- Completed -------------------- */
       if (todo || vpoll) {
@@ -349,15 +362,14 @@ public class BwEvent2JsCal {
       if ((master == null) && // Suppressed for overrides
           val.getCreated() != null) {
         jsval.setProperty(JSPropertyNames.created,
-                          jsonDate(val.getCreated()));
+                          new JSUTCDateTimeImpl(jsonDate(val.getCreated())));
       }
 
       /* ------------------- Deleted -------------------- */
 
       if (val.getDeleted()) {
-        throw new RuntimeException("Not done");
-//        addXproperty(jsval, master, BwXproperty.bedeworkDeleted,
-  //                   null, String.valueOf(val.getDeleted()));
+        addXproperty(jsval, jsCalMaster, BwXproperty.bedeworkDeleted,
+                     String.valueOf(val.getDeleted()));
       }
 
       /* ------------------- Description -------------------- */
@@ -388,7 +400,7 @@ public class BwEvent2JsCal {
 
         if (updatedVal != null) {
           jsval.setProperty(JSPropertyNames.created,
-                            jsonDate(updatedVal));
+                            new JSUTCDateTimeImpl(jsonDate(updatedVal)));
         }
       }
 
@@ -406,11 +418,11 @@ public class BwEvent2JsCal {
         if ((rid == null) ||
                 !jsStart.equals(rid.getStringValue())) {
           jsval.setProperty(JSPropertyNames.start,
-                            jsStart);
+                            new JSLocalDateTimeImpl(jsStart));
 
           if (bdt.getDateType() && (master == null)) {
             // Don't add to override
-            jsval.addProperty(JSPropertyNames.showWithoutTime,
+            jsval.setProperty(JSPropertyNames.showWithoutTime,
                               true);
           }
 
@@ -471,7 +483,8 @@ public class BwEvent2JsCal {
                         PropertyInfoIndex.DURATION,
                         durVal, master);
         if (durDiff.differs) {
-          jsval.setProperty(JSPropertyNames.duration, durVal);
+          jsval.setProperty(JSPropertyNames.duration,
+                            new JSDurationImpl(durVal));
         }
       }
 
@@ -541,32 +554,26 @@ public class BwEvent2JsCal {
           jsloc.setName(loc.getAddressField());
           jsloc.setDescription(loc.getCombinedValues());
 
-          /*
-          pl.add(langProp(uidProp(prop, loc.getUid()), loc.getAddress()));
+          final BwJSLocation bwLoc =
+                  jsval.getValue(
+                          new TypeReference<>() {},
+                          getXpropInfo(xBedeworkLocation).jscalName,
+                          true);
 
-          addXproperty(pl, BwXproperty.xBedeworkLocationAddr,
-                       null, loc.getAddressField());
-          addXproperty(pl, BwXproperty.xBedeworkLocationRoom,
-                       null, loc.getRoomField());
-          addXproperty(pl, BwXproperty.xBedeworkLocationAccessible,
-                       null, String.valueOf(loc.getAccessible()));
-          addXproperty(pl, BwXproperty.xBedeworkLocationSfield1,
-                       null, loc.getSubField1());
-          addXproperty(pl, BwXproperty.xBedeworkLocationSfield2,
-                       null, loc.getSubField2());
-          addXproperty(pl, BwXproperty.xBedeworkLocationGeo,
-                       null, loc.getGeouri());
-          addXproperty(pl, BwXproperty.xBedeworkLocationStreet,
-                       null, loc.getStreet());
-          addXproperty(pl, BwXproperty.xBedeworkLocationCity,
-                       null, loc.getCity());
-          addXproperty(pl, BwXproperty.xBedeworkLocationState,
-                       null, loc.getState());
-          addXproperty(pl, BwXproperty.xBedeworkLocationZip,
-                       null, loc.getZip());
-          addXproperty(pl, BwXproperty.xBedeworkLocationLink,
-                       null, loc.getLink());
-*/
+          bwLoc.setProperty(JSPropertyNames.type,
+                            typeBwLocation);
+          bwLoc.setUid(loc.getUid());
+          bwLoc.setAddr(loc.getAddressField());
+          bwLoc.setRoom(loc.getRoomField());
+          bwLoc.setAccessible(loc.getAccessible());
+          bwLoc.setSfield1(loc.getSubField1());
+          bwLoc.setSfield2(loc.getSubField2());
+          bwLoc.setGeo(loc.getGeouri());
+          bwLoc.setStreet(loc.getStreet());
+          bwLoc.setCity(loc.getCity());
+          bwLoc.setState(loc.getState());
+          bwLoc.setZip(loc.getZip());
+          bwLoc.setLink(loc.getLink());
         }
       }
 
@@ -720,7 +727,7 @@ public class BwEvent2JsCal {
         try {
 //          throw new RuntimeException("Not done");
           //xpropertiesToIcal(pl, val.getXproperties());
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
           // XXX For the moment swallow these.
           logger.error(t);
         }
@@ -1208,10 +1215,14 @@ public class BwEvent2JsCal {
       return;
     }
 
+    // Everything from here needs to be treated as a patch so
+    // jsVal must be an override.
+
+    final JSOverride override = (JSOverride)jsval;
 
     if (alarmDiff.removeAll) {
-        // Remove alerts property
-        jsval.setNull(JSPropertyNames.alerts);
+      // Remove alerts property
+      override.setNull(JSPropertyNames.alerts);
       return;
     }
 
@@ -1219,12 +1230,16 @@ public class BwEvent2JsCal {
       for (final BwAlarm alarm: alarmDiff.removed) {
         final var masterAlerts = jsCalMaster.getAlerts(false);
 
-        if (masterAlerts != null) {
-          for (final var jsalertp: masterAlerts.get()) {
-            if (compareAlarm(alarm, jsalertp)) {
-              jsval.setNull(JSPropertyNames.alerts,
-                            jsalertp.getName());
-            }
+        if (masterAlerts == null) {
+          throw new RuntimeException(
+                  "Bad patch - removing from missing " +
+                          "master object");
+        }
+
+        for (final var jsalertp: masterAlerts.get()) {
+          if (compareAlarm(alarm, jsalertp)) {
+            override.setNull(JSPropertyNames.alerts,
+                             jsalertp.getName());
           }
         }
       }
@@ -1242,15 +1257,26 @@ public class BwEvent2JsCal {
                                      final BwAlarm alarm) {
     final var jsalarm = alerts.makeAlert().getValue();
 
-    jsalarm.setAction(getAction(alarm.getAlarmType()));
+    final var action = getAction(alarm.getAlarmType());
+    jsalarm.setAction(action);
 
-    final JSSignedDuration offset = new JSSignedDurationImpl(
-            alarm.getTrigger());
+    if (alarm.getTriggerDateTime()) {
+      // Absolute
+      final var absT = jsalarm.makeAbsoluteTrigger();
 
-    jsalarm.setOffset(offset);
+      final JSUTCDateTime when =
+              new JSUTCDateTimeImpl(jsonDate(alarm.getTrigger()));
+      absT.setWhen(when);
+    } else {
+      // Offset
+      final var offT = jsalarm.makeOffsetTrigger();
+      final JSSignedDuration offset = new JSSignedDurationImpl(
+              alarm.getTrigger());
 
-    if (!alarm.getTriggerStart()) {
-      jsalarm.setRelativeTo("end");
+      offT.setOffset(offset);
+      if (!alarm.getTriggerStart()) {
+        offT.setRelativeTo(JSOffsetTrigger.relativeToEnd);
+      }
     }
   }
 
@@ -1271,17 +1297,29 @@ public class BwEvent2JsCal {
       return false;
     }
 
-    if (!alert.getOffset().getStringValue().equals(alarm.getTrigger())) {
-      return false;
-    }
+    final var trigger = alert.getTrigger();
+    final var dt = jsonDate(alarm.getTrigger());
 
-    final var ts = alert.getRelativeTo();
-    if (alarm.getTriggerStart()) {
-      if ("end".equals(ts)) {
+    if (trigger instanceof JSOffsetTrigger) {
+      final var offT = (JSOffsetTrigger)trigger;
+      if (!offT.getOffset().getStringValue().equals(dt)) {
         return false;
       }
-    } else if (!"end".equals(ts)) {
-      return false;
+
+      final var rel = offT.getRelativeTo();
+      if (alarm.getTriggerStart()) {
+        if (JSOffsetTrigger.relativeToEnd.equals(rel)) {
+          return false;
+        }
+      } else if (!JSOffsetTrigger.relativeToEnd.equals(rel)) {
+        return false;
+      }
+    } else {
+      final var absT = (JSAbsoluteTrigger)trigger;
+
+      if (!absT.getWhen().getStringValue().equals(dt)) {
+        return false;
+      }
     }
 
     return true;
@@ -1311,17 +1349,25 @@ public class BwEvent2JsCal {
       return;
     }
 
+    // Everything from here needs to be treated as a patch so
+    // jsVal must be an override.
+
+    final JSOverride override = (JSOverride)jsval;
+
     if (attDiff.removeAll) {
       // Remove all ref="enclosure" from links
       final var masterLinks = jsCalMaster.getLinks(false);
 
-      if (masterLinks != null) {
-        for (final var linkp: masterLinks.get()) {
-          final var link = linkp.getValue();
-          if ("enclosure".equals(link.getRel())) {
-            jsval.setNull(JSPropertyNames.links,
-                          linkp.getName());
-          }
+      if (masterLinks == null) {
+        throw new RuntimeException("Bad patch - removing from missing " +
+                                           "master object");
+      }
+
+      for (final var linkp: masterLinks.get()) {
+        final var link = linkp.getValue();
+        if ("enclosure".equals(link.getRel())) {
+          override.setNull(JSPropertyNames.links,
+                        linkp.getName());
         }
       }
       return;
@@ -1331,12 +1377,16 @@ public class BwEvent2JsCal {
       for (final BwAttachment att: attDiff.removed) {
         final var masterLinks = jsCalMaster.getLinks(false);
 
-        if (masterLinks != null) {
-          for (final var linkp: masterLinks.get()) {
-            if (compareAttachment(att, linkp)) {
-              jsval.setNull(JSPropertyNames.links,
-                            linkp.getName());
-            }
+        if (masterLinks == null) {
+          throw new RuntimeException(
+                  "Bad patch - removing from missing " +
+                          "master object");
+        }
+
+        for (final var linkp: masterLinks.get()) {
+          if (compareAttachment(att, linkp)) {
+            override.setNull(JSPropertyNames.links,
+                          linkp.getName());
           }
         }
       }
@@ -1344,7 +1394,7 @@ public class BwEvent2JsCal {
 
     if (!Util.isEmpty(attDiff.added)) {
       for (final BwAttachment att: attDiff.added) {
-        makeAttachmentOverride(jsval, att);
+        makeAttachmentOverride(override, att);
       }
     }
   }
@@ -1354,14 +1404,15 @@ public class BwEvent2JsCal {
     setLink(links.makeLink().getValue(), att);
   }
 
-  private static void makeAttachmentOverride(final JSCalendarObject jsval,
+  private static void makeAttachmentOverride(final JSOverride jsval,
                                              final BwAttachment att) {
     final JSProperty<JSLink> linkp =
-            jsval.makeProperty(
+            jsval.newOverrideProperty(
                     new TypeReference<>() {},
-                    makePath(JSPropertyNames.links,
-                             UUID.randomUUID().toString()),
-                    JSTypes.typeLink);
+                    JSTypes.typeLink,
+                    JSPropertyNames.links,
+                    UUID.randomUUID().toString());
+    jsval.setProperty(linkp);
     setLink(linkp.getValue(), att);
   }
 
@@ -1419,19 +1470,27 @@ public class BwEvent2JsCal {
       return;
     }
 
+    // Everything from here needs to be treated as a patch so
+    // jsVal must be an override.
+
+    final JSOverride override = (JSOverride)jsval;
+
     if (partDiff.removeAll) {
       // Remove all from participants - use sendTo to identify an attendee
       final var masterPart = jsCalMaster.getParticipants(false);
 
-      if (masterPart != null) {
-        for (final var partp: masterPart.get()) {
-          final var part = partp.getValue();
-          final var sendTo = part.getSendTo(false);
-          if ((sendTo != null) && (!Util.isEmpty(sendTo.get()))) {
-            // Is an attendee
-            jsval.setNull(JSPropertyNames.participants,
-                          partp.getName());
-          }
+      if (masterPart == null) {
+        throw new RuntimeException("Bad patch - removing from missing " +
+                                           "master object");
+      }
+
+      for (final var partp: masterPart.get()) {
+        final var part = partp.getValue();
+        final var sendTo = part.getSendTo(false);
+        if ((sendTo != null) && (!Util.isEmpty(sendTo.get()))) {
+          // Is an attendee
+          override.setNull(JSPropertyNames.participants,
+                           partp.getName());
         }
       }
       return;
@@ -1440,14 +1499,18 @@ public class BwEvent2JsCal {
     if (!Util.isEmpty(partDiff.removed)) {
       final var masterPart = jsCalMaster.getParticipants(false);
 
-      if (masterPart != null) {
-        for (final BwAttendee att: partDiff.removed) {
-          final var partp = masterPart.findParticipant(
-                  att.getAttendeeUri());
-          if (partp != null) {
-            jsval.setNull(JSPropertyNames.participants,
-                          partp.getName());
-          }
+      if (masterPart == null) {
+        throw new RuntimeException("Bad patch - removing from missing " +
+                                           "master object");
+      }
+
+      for (final BwAttendee att: partDiff.removed) {
+        final var partp = masterPart.findParticipant(
+                att.getAttendeeUri());
+        if (partp != null) {
+          // Master has participants - override has none.
+          override.setNull(JSPropertyNames.participants,
+                           partp.getName());
         }
       }
     }
@@ -1469,7 +1532,7 @@ public class BwEvent2JsCal {
             continue;
           }
           if (att.equals(matt)) {
-            makeAttendeeOverride(jsval,
+            makeAttendeeOverride(override,
                                  jsCalMaster,
                                  att, matt);
             break;
@@ -1480,7 +1543,7 @@ public class BwEvent2JsCal {
             continue;
           }
           if (att.equals(matt)) {
-            makeAttendeeOverride(jsval,
+            makeAttendeeOverride(override,
                                  jsCalMaster,
                                  att, matt);
             break;
@@ -1517,7 +1580,7 @@ public class BwEvent2JsCal {
   /**
    *
    * @param participants to add to
-   * @param master - needed to locate group participants
+   * @param master - needed to locate group participants and links
    * @param att attendee
    */
   private static void makeAttendee(final JSCalendarObject jsval,
@@ -1604,7 +1667,7 @@ public class BwEvent2JsCal {
 
     temp = att.getScheduleStatus();
     if (temp != null) {
-      part.setScheduleStatus(temp);
+      part.getScheduleStatus(true).add(new JSStringImpl(temp));
     }
 
     temp = att.getSentBy();
@@ -1614,7 +1677,7 @@ public class BwEvent2JsCal {
   }
 
   private static void makeAttendeeOverride(
-          final JSCalendarObject jsval,
+          final JSOverride jsval,
           final JSCalendarObject master,
           final BwAttendee attendee,
           final BwAttendee masterAttendee) {
@@ -1641,10 +1704,10 @@ public class BwEvent2JsCal {
 
     // RSVP
     if (attendee.getRsvp() != masterAttendee.getRsvp()) {
-      jsval.setProperty(makePath(JSPropertyNames.participants,
-                                 partId,
-                                 JSPropertyNames.expectReply),
-                        attendee.getRsvp());
+      jsval.setOverrideProperty(attendee.getRsvp(),
+                                JSPropertyNames.participants,
+                                partId,
+                                JSPropertyNames.expectReply);
     }
 
     makeAttendeeOverrideVal(jsval,
@@ -1701,10 +1764,11 @@ public class BwEvent2JsCal {
       link.setRel("alternate");
       link.setHref(dir);
 
-      jsval.setProperty(makePath(JSPropertyNames.participants,
-                                 partId,
-                                 JSPropertyNames.linkIds),
-                                 linkp.getName());
+      jsval.setOverrideProperty(
+              linkp.getName(),
+              JSPropertyNames.participants,
+              partId,
+              JSPropertyNames.linkIds);
     }
 
     makeAttendeeOverrideVal(jsval,
@@ -1737,11 +1801,13 @@ public class BwEvent2JsCal {
     final String mattVal = icalRole(masterAttendee.getRole());
     if (!attVal.equalsIgnoreCase(mattVal)) {
       final JSProperty<JSList<String>> roles =
-              jsval.makeProperty(new TypeReference<>() {},
-              makePath(JSPropertyNames.participants,
-                       partId,
-                       JSPropertyNames.roles),
-                                 JSTypes.typeStrings);
+              jsval.newOverrideProperty(
+                      new TypeReference<>() {},
+                      JSTypes.typeStrings,
+                      JSPropertyNames.participants,
+                      partId,
+                      JSPropertyNames.roles);
+      jsval.setProperty(roles);
       jsCalRole(roles.getValue(), attVal);
     }
 
@@ -1789,20 +1855,25 @@ public class BwEvent2JsCal {
       return;
     }
 
+    // Everything from here needs to be treated as a patch so
+    // jsVal must be an override.
+
+    final JSOverride override = (JSOverride)jsval;
+
     if (catDiff.removeAll) {
-      jsval.setNull(JSPropertyNames.keywords);
+      override.setNull(JSPropertyNames.keywords);
       return;
     }
 
     if (!Util.isEmpty(catDiff.removed)) {
       for (final BwCategory cat: catDiff.removed) {
-        jsval.setNull(JSPropertyNames.keywords + "/" +
-                              cat.getWord().getValue());
+        override.setNull(JSPropertyNames.keywords + "/" +
+                                 cat.getWord().getValue());
       }
     }
 
     for (final BwCategory cat: catDiff.added) {
-      jsval.addProperty(JSPropertyNames.keywords + "/" +
+      jsval.setProperty(JSPropertyNames.keywords + "/" +
                                 cat.getWord().getValue(), true);
     }
   }
@@ -1938,6 +2009,8 @@ public class BwEvent2JsCal {
       return;
     }
 
+    final JSOverride override = (JSOverride)jsval;
+
     // See if in master
     part = findOnlyAttendee(jsCalMaster);
     if (part == null) {
@@ -1947,10 +2020,11 @@ public class BwEvent2JsCal {
 
     // Add an override update to the current object
 
-    jsval.setProperty(makePath(JSPropertyNames.participants,
-                               part.getName(),
-                               JSPropertyNames.percentComplete),
-                      jspc);
+    override.setOverrideProperty(
+            jspc,
+            JSPropertyNames.participants,
+            part.getName(),
+            JSPropertyNames.percentComplete);
 
     return;
   }
@@ -2103,22 +2177,23 @@ public class BwEvent2JsCal {
   }
 
   private static void makeAttendeeOverrideVal(
-          final JSCalendarObject jsval,
+          final JSOverride jsval,
           final String attVal,
           final String mattVal,
           final String partId,
-          final String jstype) {
+          final String jsPropName) {
     if (attVal == null) {
       if (mattVal != null) {
         jsval.setNull(JSPropertyNames.participants,
                       partId,
-                      jstype);
+                      jsPropName);
       }
     } else if (!attVal.equalsIgnoreCase(mattVal)) {
-      jsval.setProperty(makePath(JSPropertyNames.participants,
-                                 partId,
-                                 jstype),
-                        attVal);
+      jsval.setOverrideProperty(
+              attVal,
+              JSPropertyNames.participants,
+              partId,
+              jsPropName);
     }
   }
 
@@ -2174,21 +2249,6 @@ public class BwEvent2JsCal {
     } else {
       roles.add(icalRole.toLowerCase());
     }
-  }
-
-  private static String makePath(final String... name) {
-    if ((name == null) || (name.length == 0)) {
-      throw new RuntimeException("Empty path");
-    }
-    final var pathsb = new StringBuilder();
-    for (final var n : name) {
-      if (pathsb.length() != 0) {
-        pathsb.append("/");
-      }
-      pathsb.append(n);
-    }
-
-    return pathsb.toString();
   }
 
      /*
@@ -2277,9 +2337,17 @@ public class BwEvent2JsCal {
       return;
     }
 
+    final String jname;
 
-    throw new RuntimeException("Not done");
-//    pl.add(new XProperty(name, makeXparlist(pars), val));
+    final var xpinfo = BwXproperty.getXpropInfo(name);
+
+    if (xpinfo == null) {
+      jname = name.toLowerCase();
+    } else {
+      jname = xpinfo.jscalName;
+    }
+
+    jscal.setProperty(jname, val);
   }
 
   private static String timeInZone(final String dateTime,

@@ -129,9 +129,9 @@ public class VAlarmUtil extends IcalUtil {
           throw new IcalMalformedException("Invalid alarm");
         }
 
-        String actionStr = prop.getValue();
+        final String actionStr = prop.getValue();
 
-        TriggerVal tr = getTrigger(pl, "NONE".equals(actionStr));
+        final TriggerVal tr = getTrigger(pl, "NONE".equals(actionStr));
 
         if (mozSnoozeTime != null) {
           tr.trigger = mozSnoozeTime;
@@ -139,7 +139,7 @@ public class VAlarmUtil extends IcalUtil {
           tr.triggerStart = false;
         }
 
-        DurationRepeat dr = getDurationRepeat(pl);
+        final DurationRepeat dr = getDurationRepeat(pl);
 
         if ("EMAIL".equals(actionStr)) {
           al = BwAlarm.emailAlarm(ev.getCreatorHref(),
@@ -150,7 +150,7 @@ public class VAlarmUtil extends IcalUtil {
                                   getReqStr(pl, "SUMMARY"),
                                   null);
 
-          Iterator<?> atts = getReqStrs(pl, "ATTENDEE");
+          final Iterator<?> atts = getReqStrs(pl, "ATTENDEE");
 
           while (atts.hasNext()) {
             al.addAttendee(getAttendee(cb, (Attendee)atts.next()));

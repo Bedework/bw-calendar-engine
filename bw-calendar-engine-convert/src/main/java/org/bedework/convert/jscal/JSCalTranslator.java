@@ -13,7 +13,7 @@ import org.bedework.jsforj.impl.JSFactory;
 import org.bedework.jsforj.impl.JSMapper;
 import org.bedework.jsforj.model.JSCalendarObject;
 import org.bedework.jsforj.model.JSGroup;
-import org.bedework.jsforj.model.JSPropertyNames;
+import org.bedework.jsforj.impl.JSPropertyNames;
 import org.bedework.jsforj.model.JSTypes;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.response.GetEntityResponse;
@@ -123,21 +123,20 @@ public class JSCalTranslator extends IcalTranslator {
     JSCalendarObject jsCalMaster = null;
     GetEntityResponse<JSCalendarObject> res;
 
+//      if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
+    //      comp = VFreeUtil.toVFreeBusy(ev);
+    //  } else {
+    res = BwEvent2JsCal.convert(val, null, null,
+                                methodType,
+                                tzreg,
+                                currentPrincipal);
+    //}
+    if (!res.isOk()) {
+      throw new RuntimeException(res.toString());
+    }
+    jsCalMaster = res.getEntity();
     if (!ev.getSuppressed()) {
       /* Add it to the group */
-
-//      if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
-  //      comp = VFreeUtil.toVFreeBusy(ev);
-    //  } else {
-        res = BwEvent2JsCal.convert(val, null, null,
-                                    methodType,
-                                    tzreg,
-                                    currentPrincipal);
-      //}
-      if (!res.isOk()) {
-        throw new RuntimeException(res.toString());
-      }
-      jsCalMaster = res.getEntity();
       group.addEntry(jsCalMaster);
     }
 
@@ -149,6 +148,10 @@ public class JSCalTranslator extends IcalTranslator {
                                     currentPrincipal);
         if (!res.isOk()) {
           throw new RuntimeException(res.toString());
+        }
+        if (ev.getSuppressed()) {
+          /* Add it to the group */
+          group.addEntry(res.getEntity());
         }
       }
     }

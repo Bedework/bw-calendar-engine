@@ -24,7 +24,6 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwFreeBusyComponent;
 import org.bedework.calfacade.BwGeo;
 import org.bedework.calfacade.BwLocation;
@@ -38,6 +37,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
+import org.bedework.convert.CnvUtil;
 import org.bedework.convert.EventTimeZonesRegistry;
 import org.bedework.convert.Icalendar;
 import org.bedework.convert.Icalendar.TimeZoneInfo;
@@ -112,9 +112,9 @@ import static org.bedework.util.misc.response.Response.Status.ok;
  *
  * @author Mike Douglass   douglm  rpi.edu
  */
-public class BwEventUtil extends IcalUtil {
-  private static BwLogger logger =
-          new BwLogger().setLoggedClass(BwEventUtil.class);
+public class Ical2BwEvent extends IcalUtil {
+  private final static BwLogger logger =
+          new BwLogger().setLoggedClass(Ical2BwEvent.class);
 
   /** We are going to try to construct a BwEvent object from a VEvent. This
    * may represent a new event or an update to a pre-existing event. In any
@@ -149,7 +149,6 @@ public class BwEventUtil extends IcalUtil {
    * @param ical        Icalendar we are converting. We check its events for
    *                    overrides.
    * @param val         VEvent object
-   * @param diff        True if we should assume we are updating existing events.
    * @param mergeAttendees True if we should only update our own attendee.
    * @return Response with status and EventInfo object representing new entry or updated entry
    */
@@ -158,9 +157,8 @@ public class BwEventUtil extends IcalUtil {
           final BwCalendar cal,
           final Icalendar ical,
           final Component val,
-          final boolean diff,
           final boolean mergeAttendees) {
-    var resp = new GetEntityResponse<EventInfo>();
+    final var resp = new GetEntityResponse<EventInfo>();
 
     if (val == null) {
       return Response.notOk(resp, failed, "No component supplied");
@@ -261,7 +259,7 @@ public class BwEventUtil extends IcalUtil {
 
       EventInfo masterEI = null;
       EventInfo evinfo = null;
-      BwEvent ev;
+      final BwEvent ev;
 
       /* If we have a recurrence id see if we already have the master (we should
        * get a master + all its overrides).
@@ -321,6 +319,7 @@ public class BwEventUtil extends IcalUtil {
       */
 
       /* If this is a recurrence instance see if we can find the master
+         We only need this because the master may follow the overrides.
        */
       if (rid != null) {
         // See if we have a new master event. If so create a proxy to this event.
@@ -332,7 +331,7 @@ public class BwEventUtil extends IcalUtil {
         }
       }
 
-      if (diff && (evinfo == null) &&
+      if ((evinfo == null) &&
           (cal != null) &&
           (cal.getCalType() != BwCalendar.calTypeInbox) &&
           (cal.getCalType() != BwCalendar.calTypePendingInbox) &&
@@ -347,7 +346,7 @@ public class BwEventUtil extends IcalUtil {
           return Response.fromResponse(resp, eisResp);
         }
 
-        var eis = eisResp.getEntities();
+        final var eis = eisResp.getEntities();
         if (!Util.isEmpty(eis)) {
           if (eis.size() > 1) {
             // DORECUR - wrong again
@@ -382,7 +381,7 @@ public class BwEventUtil extends IcalUtil {
           }
         } else if (rid != null) {
           /* Manufacture a master for the instance */
-          masterEI = makeNewEvent(cb, entityType, guid, colPath);
+          masterEI = CnvUtil.makeNewEvent(cb, entityType, guid, colPath);
           final BwEvent e = masterEI.getEvent();
 
           // XXX This seems bogus
@@ -401,7 +400,7 @@ public class BwEventUtil extends IcalUtil {
           } else if (dtStart.getTimeZone() == null) {
             mdtStart = new DtStart(bogusDate + bogusTime);
           } else {
-            mdtStart = new DtStart(bogusDate + bogusTime + "Z",
+            mdtStart = new DtStart(bogusDate + bogusTime,
                                    dtStart.getTimeZone());
           }
 
@@ -421,14 +420,15 @@ public class BwEventUtil extends IcalUtil {
       }
 
       if (evinfo == null) {
-        evinfo = makeNewEvent(cb, entityType, guid, colPath);
+        evinfo = CnvUtil.makeNewEvent(cb, entityType, guid, colPath);
       } else if (evinfo.getEvent().getEntityType() != entityType) {
         return Response.notOk(resp, failed,
                               "org.bedework.mismatched.entity.type: " +
                                       val.toString());
       }
 
-      final ChangeTable chg = evinfo.getChangeset(cb.getPrincipal().getPrincipalRef());
+      final ChangeTable chg = evinfo.getChangeset(
+              cb.getPrincipal().getPrincipalRef());
 
       if (rid != null) {
         final String evrid = evinfo.getEvent().getRecurrenceId();
@@ -519,7 +519,7 @@ public class BwEventUtil extends IcalUtil {
               }
             }
 
-            Attendee attPr = (Attendee)prop;
+            final Attendee attPr = (Attendee)prop;
 
             if (evinfo.getNewEvent() || !mergeAttendees) {
               chg.addValue(pi, IcalUtil.getAttendee(cb, attPr));
@@ -558,7 +558,7 @@ public class BwEventUtil extends IcalUtil {
             break;
 
           case BUSYTYPE:
-            int ibt = BwEvent.fromBusyTypeString(pval);
+            final int ibt = BwEvent.fromBusyTypeString(pval);
             if (chg.changed(pi,
                             ev.getBusyType(),
                             ibt)) {
@@ -1216,9 +1216,13 @@ public class BwEventUtil extends IcalUtil {
                                        final BwEvent ev,
                                        final String lang,
                                        final String val) {
+    if ((val == null) || (val.length() == 0)) {
+      return false;
+    }
+
     final BwString sval = new BwString(lang, val);
 
-    var resp = cb.findCategory(sval);
+    final var resp = cb.findCategory(sval);
 
     if (resp.getStatus() == Response.Status.notFound) {
       return false;
@@ -1241,7 +1245,7 @@ public class BwEventUtil extends IcalUtil {
       }
     }
 
-    var cat = resp.getEntity();
+    final var cat = resp.getEntity();
 
     ev.addCategory(cat);
 
@@ -1384,7 +1388,7 @@ public class BwEventUtil extends IcalUtil {
                                            final Icalendar ical,
                                            final VAvailability val,
                                            final EventInfo vavail) {
-    var resp = new Response();
+    final var resp = new Response();
 
     final ComponentList<Available> avls = val.getAvailable();
 
@@ -1395,13 +1399,12 @@ public class BwEventUtil extends IcalUtil {
     for (final Available avl : avls) {
       final GetEntityResponse<EventInfo> availi =
               toEvent(cb, cal, ical, avl,
-                      true,
                       false);
       if (!resp.isOk()) {
         return Response.fromResponse(resp, availi);
       }
 
-      var ei = availi.getEntity();
+      final var ei = availi.getEntity();
       ei.getEvent().setOwnerHref(
               vavail.getEvent().getOwnerHref());
 
@@ -1556,29 +1559,6 @@ public class BwEventUtil extends IcalUtil {
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
-  }
-
-  private static EventInfo makeNewEvent(final IcalCallback cb,
-                                        final int entityType,
-                                        final String uid,
-                                        final String colPath) {
-    final BwEvent ev = new BwEventObj();
-    final EventInfo evinfo = new EventInfo(ev);
-
-    //ev.setDtstamps();
-    ev.setEntityType(entityType);
-    ev.setCreatorHref(cb.getPrincipal().getPrincipalRef());
-    ev.setOwnerHref(cb.getOwner().getPrincipalRef());
-    ev.setUid(uid);
-
-    ev.setColPath(colPath);
-
-    final ChangeTable chg = evinfo.getChangeset(cb.getPrincipal().getPrincipalRef());
-    chg.changed(PropertyInfoIndex.UID, null, uid); // get that out of the way
-
-    evinfo.setNewEvent(true);
-
-    return evinfo;
   }
 
   /* See if the master event is already in the collection of events
