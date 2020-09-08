@@ -27,7 +27,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.Icalendar.TimeZoneInfo;
-import org.bedework.convert.ical.BwEventUtil;
+import org.bedework.convert.ical.Ical2BwEvent;
 import org.bedework.convert.ical.CalendarBuilder;
 import org.bedework.convert.ical.IcalMalformedException;
 import org.bedework.convert.ical.IcalUtil;
@@ -331,7 +331,6 @@ public class IcalTranslator implements Logged, Serializable {
   public Icalendar fromIcal(final BwCalendar col,
                             final Reader rdr) throws CalFacadeException {
     return fromIcal(col, rdr, null,
-                    true,  // diff the contents
                     false); // don't merge attendees
   }
 
@@ -339,27 +338,25 @@ public class IcalTranslator implements Logged, Serializable {
    *
    * @param col      collection the entities will live in - possibly null
    * @param ical     xCal icalendar object
-   * @param diff     True if we should assume we are updating existing events.
    * @return Icalendar
    * @throws CalFacadeException on fatal error
    */
   public Icalendar fromIcal(final BwCalendar col,
-                            final IcalendarType ical,
-                            final boolean diff) throws CalFacadeException {
+                            final IcalendarType ical) throws CalFacadeException {
 
-    Icalendar ic = new Icalendar();
+    final Icalendar ic = new Icalendar();
 
     setSystemProperties();
 
-    WsXMLTranslator bldr = new WsXMLTranslator(ic);
+    final WsXMLTranslator bldr = new WsXMLTranslator(ic);
 
     try {
-      Calendar cal = bldr.fromXcal(ical);
+      final Calendar cal = bldr.fromXcal(ical);
 
-      return makeIc(col, ic, cal, diff, false);
-    } catch (CalFacadeException cfe) {
+      return makeIc(col, ic, cal, false);
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -399,7 +396,6 @@ public class IcalTranslator implements Logged, Serializable {
    * @param col      collection the entities will live in - possibly null
    * @param rdr Icalendar reader
    * @param contentType "application/calendar+xml" etc
-   * @param diff     True if we should assume we are updating existing events.
    * @param mergeAttendees True if we should only update our own attendee.
    * @return Icalendar
    * @throws CalFacadeException on fatal error
@@ -407,42 +403,40 @@ public class IcalTranslator implements Logged, Serializable {
   public Icalendar fromIcal(final BwCalendar col,
                             final Reader rdr,
                             final String contentType,
-                            final boolean diff,
                             final boolean mergeAttendees) throws CalFacadeException {
     try {
-      Icalendar ic = new Icalendar();
+      final Icalendar ic = new Icalendar();
 
       setSystemProperties();
 
       Calendar cal;
 
-      if ((contentType != null) &&
-          contentType.equals("application/calendar+xml")) {
-        XmlCalendarBuilder bldr = new XmlCalendarBuilder(ic);
+      if ("application/calendar+xml".equals(contentType)) {
+        final XmlCalendarBuilder bldr = new XmlCalendarBuilder(ic);
 
         cal = bldr.build(rdr);
-      } else if ((contentType != null) &&
-              contentType.equals("application/calendar+json")) {
-        JsonCalendarBuilder bldr = new JsonCalendarBuilder(ic);
+      } else if ("application/calendar+json".equals(contentType)) {
+        final JsonCalendarBuilder bldr = new JsonCalendarBuilder(ic);
 
         cal = bldr.build(rdr);
       } else {
-        CalendarBuilder bldr = new CalendarBuilder(new CalendarParserImpl(), ic);
+        final CalendarBuilder bldr =
+                new CalendarBuilder(new CalendarParserImpl(), ic);
 
-        UnfoldingReader ufrdr = new UnfoldingReader(rdr, true);
+        final UnfoldingReader ufrdr = new UnfoldingReader(rdr, true);
 
         cal = bldr.build(ufrdr);
       }
 
-      return makeIc(col, ic, cal, diff, mergeAttendees);
-    } catch (CalFacadeException cfe) {
+      return makeIc(col, ic, cal, mergeAttendees);
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (ParserException pe) {
+    } catch (final ParserException pe) {
       if (debug()) {
         error(pe);
       }
       throw new IcalMalformedException(pe.getMessage());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -455,20 +449,21 @@ public class IcalTranslator implements Logged, Serializable {
   public void addOverride(final EventInfo ei,
                           final JAXBElement<? extends BaseComponentType> comp) throws CalFacadeException {
     try {
-      Calendar cal = new WsXMLTranslator(new Icalendar()).fromXcomp(comp);
+      final Calendar cal = new WsXMLTranslator(
+              new Icalendar()).fromXcomp(comp);
 
       if (cal == null) {
         return;
       }
 
-      Icalendar ic = new Icalendar();
+      final Icalendar ic = new Icalendar();
 
       ic.addComponent(ei);
 
-      makeIc(null, ic, cal, true, false);
-    } catch (CalFacadeException cfe) {
+      makeIc(null, ic, cal, false);
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -476,14 +471,13 @@ public class IcalTranslator implements Logged, Serializable {
   private Icalendar makeIc(final BwCalendar col,
                            final Icalendar ic,
                            final Calendar cal,
-                           final boolean diff,
                            final boolean mergeAttendees) throws CalFacadeException {
     try {
       if (cal == null) {
         return ic;
       }
 
-      PropertyList pl = cal.getProperties();
+      final PropertyList pl = cal.getProperties();
       Property prop = pl.getProperty(Property.PRODID);
       if (prop != null) {
         ic.setProdid(prop.getValue());
@@ -501,9 +495,9 @@ public class IcalTranslator implements Logged, Serializable {
         ic.setCalscale(prop.getValue());
       }
 
-      Collection<CalendarComponent> clist =
+      final Collection<CalendarComponent> clist =
               orderedComponents(cal.getComponents());
-      for (CalendarComponent comp: clist) {
+      for (final CalendarComponent comp: clist) {
         if (comp instanceof VTimeZone) {
           ic.addTimeZone(doTimeZone((VTimeZone)comp));
           continue;
@@ -515,8 +509,8 @@ public class IcalTranslator implements Logged, Serializable {
                 (comp instanceof VPoll) ||
                 (comp instanceof VAvailability)) {
           final GetEntityResponse<EventInfo> eiResp =
-                  BwEventUtil.toEvent(cb, col, ic, comp, diff,
-                                      mergeAttendees);
+                  Ical2BwEvent.toEvent(cb, col, ic, comp,
+                                       mergeAttendees);
 
           if (eiResp.isError()) {
             if (eiResp.getException() != null) {
@@ -543,9 +537,9 @@ public class IcalTranslator implements Logged, Serializable {
       }
 
       return ic;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
