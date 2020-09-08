@@ -254,15 +254,15 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
     }
 
     if (getComponentType() == IcalComponentType.event) {
-      EventInfo ei = (EventInfo)iterator().next();
+      final EventInfo ei = (EventInfo)iterator().next();
       return ei.getEvent().getOrganizer();
     }
 
     if (getComponentType() == IcalComponentType.freebusy) {
-      Object o = iterator().next();
+      final Object o = iterator().next();
 
       if (o instanceof EventInfo) {
-        EventInfo ei = (EventInfo)o;
+        final EventInfo ei = (EventInfo)o;
         return ei.getEvent().getOrganizer();
       }
     }
@@ -450,13 +450,10 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
    *                      TimeZoneRegistry methods
    * ==================================================================== */
 
-  /* (non-Javadoc)
-   * @see net.fortuna.ical4j.model.TimeZoneRegistry#register(net.fortuna.ical4j.model.TimeZone)
-   */
   @Override
   public void register(final TimeZone timezone) {
     try {
-      TimeZone tz = Timezones.getTz(timezone.getID());
+      final TimeZone tz = Timezones.getTz(timezone.getID());
       if (tz != null) {
         // Already three
         return;
@@ -467,7 +464,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
       }
 
       localTzs.put(timezone.getID(), timezone);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }
@@ -477,9 +474,6 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
     register(timezone);
   }
 
-  /* (non-Javadoc)
-   * @see net.fortuna.ical4j.model.TimeZoneRegistry#clear()
-   */
   @Override
   public void clear() {
     if (localTzs != null) {
@@ -487,13 +481,10 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
     }
   }
 
-  /* (non-Javadoc)
-   * @see net.fortuna.ical4j.model.TimeZoneRegistry#getTimeZone(java.lang.String)
-   */
   @Override
   public TimeZone getTimeZone(final String id) {
     try {
-      TimeZone tz = Timezones.getTz(id);
+      final TimeZone tz = Timezones.getTz(id);
       if (tz != null) {
         return  tz;
       }
@@ -503,7 +494,7 @@ public class Icalendar implements TimeZoneRegistry, ScheduleMethods, Serializabl
       }
 
       return localTzs.get(id);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }
