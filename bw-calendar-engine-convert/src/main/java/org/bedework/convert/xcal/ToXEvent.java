@@ -454,7 +454,7 @@ public class ToXEvent extends Xutil {
         BwLocation loc = val.getLocation();
         if (loc != null) {
           LocationPropType l = new LocationPropType();
-          l .setText(loc.getAddress().getValue());
+          l .setText(loc.getCombinedValues());
 
           pl.add(of.createLocation((LocationPropType)langProp(uidProp(l,
                                                                       loc.getUid()),
