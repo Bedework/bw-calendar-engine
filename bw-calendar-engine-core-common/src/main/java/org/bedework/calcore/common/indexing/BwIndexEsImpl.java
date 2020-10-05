@@ -1320,7 +1320,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                final EventInfo ei) {
     try {
       final BwEvent ev = ei.getEvent();
-      if (!ev.testRecurring()) {
+      if (!ev.isRecurringEntity()) {
         return true;
       }
 
@@ -1429,7 +1429,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       final BwEvent ev = ei.getEvent();
 
-      if (!ev.testRecurring() && (ev.getRecurrenceId() == null)) {
+      if (!ev.isRecurringEntity() && (ev.getRecurrenceId() == null)) {
         final EsDocInfo doc = makeDoc(resp,
                                       ei,
                                       ItemKind.master,
@@ -3401,7 +3401,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         deleteEvent(ei);
       }
 
-      if (!ev.testRecurring() && (ev.getRecurrenceId() == null)) {
+      if (!ev.isRecurringEntity() && (ev.getRecurrenceId() == null)) {
         return indexEvent(ei,
                           ItemKind.master,
                           ev.getDtstart(),
