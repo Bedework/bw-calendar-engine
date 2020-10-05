@@ -213,7 +213,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       } else {
         host = url.substring(0, pos);
         if (pos < url.length()) {
-          port = Integer.valueOf(url.substring(pos + 1));
+          port = Integer.parseInt(url.substring(pos + 1));
         }
       }
     }
@@ -231,7 +231,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   private static RestHighLevelClient theClient;
   private static final Object clientSyncher = new Object();
 
-  private String docType;
+  private final String docType;
 
   private String targetIndex;
   private final String[] searchIndexes;
@@ -316,9 +316,10 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       fetchStart = 0;
 
       if ((debug()) && ((fetches % 100) == 0)) {
-        debug("fetches: " + fetches +
-                      ", fetchTime: " + fetchTime +
-                      ", fetcAccessTime: " + fetchAccessTime);
+        debug(String.format(
+                "fetches: %d, nestedFetches: %d, " +
+                        "fetchTime: %d, fetcAccessTime: %d",
+                fetches, nestedFetches, fetchTime, fetchAccessTime));
       }
     } else if (fetchDepth > 0) {
       fetchDepth--;
@@ -335,15 +336,15 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   private class TimedAccessChecker implements AccessChecker {
-    private AccessChecker accessCheck;
+    private final AccessChecker accessCheck;
 
     TimedAccessChecker(final AccessChecker accessCheck) {
       this.accessCheck = accessCheck;
     }
 
-    public CurrentAccess checkAccess(BwShareableDbentity<?> ent,
-                                     int desiredAccess,
-                                     boolean returnResult)
+    public CurrentAccess checkAccess(final BwShareableDbentity<?> ent,
+                                     final int desiredAccess,
+                                     final boolean returnResult)
             throws CalFacadeException {
       try {
         fetchAccessStart();
@@ -367,7 +368,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
 
     public CalendarWrapper checkAccess(final BwCalendar val,
-                                       int desiredAccess)
+                                       final int desiredAccess)
             throws CalFacadeException {
       try {
         fetchAccessStart();
@@ -694,7 +695,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     final BulkListener listener = new BulkListener();
 
-    BulkProcessor.Builder builder = BulkProcessor.builder(
+    final BulkProcessor.Builder builder = BulkProcessor.builder(
             (request, bulkListener) ->
                     cl.bulkAsync(request, RequestOptions.DEFAULT,
                                  bulkListener),
@@ -814,7 +815,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           }
         }
 
-        SearchScrollRequest scrollRequest =
+        final SearchScrollRequest scrollRequest =
                 new SearchScrollRequest(scrollResp.getScrollId());
         scrollRequest.scroll(tv);
         scrollResp = getClient().scroll(scrollRequest,
@@ -922,7 +923,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
           }
         }
 
-        SearchScrollRequest scrollRequest =
+        final SearchScrollRequest scrollRequest =
                 new SearchScrollRequest(scrollResp.getScrollId());
         scrollRequest.scroll(tv);
         scrollResp = getClient().scroll(scrollRequest,
@@ -1710,13 +1711,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
               new DeleteByQueryRequest(targetIndex);
 
       dqr.setConflicts("proceed");
-      QueryBuilder fb = getFilters(null)
+      final QueryBuilder fb = getFilters(null)
               .singleTombstonedEntityQuery(href,
                                            PropertyInfoIndex.HREF);
 
       dqr.setQuery(fb);
 
-      BulkByScrollResponse bulkResponse =
+      final BulkByScrollResponse bulkResponse =
               getClient().deleteByQuery(dqr, RequestOptions.DEFAULT);
 
       markUpdated();
@@ -1818,13 +1819,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final Set<IndexInfo> res = new TreeSet<>();
 
     try {
-      GetAliasesRequest req = new GetAliasesRequest();
+      final GetAliasesRequest req = new GetAliasesRequest();
 
       final GetAliasesResponse resp =
               getClient().indices()
                          .getAlias(req, RequestOptions.DEFAULT);
 
-      Map<String, Set<AliasMetaData>> aliases = resp.getAliases();
+      final Map<String, Set<AliasMetaData>> aliases = resp.getAliases();
 
       for (final String inm : aliases.keySet()) {
         final IndexInfo ii = new IndexInfo(inm);
@@ -1904,7 +1905,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       /* Other is the alias name - index is the index we were just indexing into
        */
 
-      GetAliasesRequest req = new GetAliasesRequest(alias);
+      final GetAliasesRequest req = new GetAliasesRequest(alias);
 
       final GetAliasesResponse resp =
               getClient().indices()
@@ -1928,7 +1929,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                             .index(inm)
                             .alias(amd.alias());
             ireq.addAliasAction(removeAction);
-            AcknowledgedResponse ack =
+            final AcknowledgedResponse ack =
                     getClient().indices().updateAliases(ireq,
                                                         RequestOptions.DEFAULT);
           }
@@ -1943,7 +1944,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                       .index(index)
                       .alias(alias);
       ireq.addAliasAction(addAction);
-      AcknowledgedResponse ack =
+      final AcknowledgedResponse ack =
               getClient().indices()
                          .updateAliases(ireq, RequestOptions.DEFAULT);
 
@@ -1985,7 +1986,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       final QueryBuilder qb =
               getFilters(null).singleEventFilter(hrefNorid);
 
-      List<EventInfo> eis = fetchEvents(qb, -1, privRead);
+      final List<EventInfo> eis = fetchEvents(qb, -1, privRead);
 
       if (eis.size() > 1) {
         return Response.invalid(resp, "More than one event returned");
@@ -2006,8 +2007,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public GetEntitiesResponse<EventInfo> fetchEvent(String colPath,
-                                                   String guid) {
+  public GetEntitiesResponse<EventInfo> fetchEvent(final String colPath,
+                                                   final String guid) {
     final GetEntitiesResponse<EventInfo> resp =
             new GetEntitiesResponse<>();
 
@@ -2178,15 +2179,15 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
     final List<BwCalendar> cols =
             fetchEntities(docTypeCollection,
-                             new BuildEntity<BwCalendar>() {
-                               @Override
-                               BwCalendar make(final EntityBuilder eb,
-                                               final String id)
-                                       throws CalFacadeException {
-                                 return accessCheck.checkAccess(
-                                         makeCollection(eb));
-                               }
-                             },
+                          new BuildEntity<>() {
+                            @Override
+                            BwCalendar make(final EntityBuilder eb,
+                                            final String id)
+                                    throws CalFacadeException {
+                              return accessCheck.checkAccess(
+                                      makeCollection(eb));
+                            }
+                          },
                              qb,
                           -1);
 
@@ -2204,16 +2205,16 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       debug("fetchChildrenDeep for " + href);
     }
 
-    Collection<BwCalendar> cols = fetchChildren(href);
+    final Collection<BwCalendar> cols = fetchChildren(href);
 
     if (Util.isEmpty(cols)) {
       return cols;
     }
 
-    Collection<BwCalendar> res = new ArrayList<>(cols);
+    final Collection<BwCalendar> res = new ArrayList<>(cols);
 
     for (final BwCalendar col: cols) {
-      Collection<BwCalendar> subcols = fetchChildren(col.getHref());
+      final Collection<BwCalendar> subcols = fetchChildren(col.getHref());
 
       if (Util.isEmpty(subcols)) {
         continue;
@@ -2383,7 +2384,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public BwPreferences fetchPreferences(String href)
+  public BwPreferences fetchPreferences(final String href)
           throws CalFacadeException {
     if (href == null) {
       return null;
@@ -2412,7 +2413,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public BwFilterDef fetchFilter(String href)
+  public BwFilterDef fetchFilter(final String href)
           throws CalFacadeException {
     checkCache();
     BwFilterDef entity = getCached(href, BwFilterDef.class);
@@ -2462,7 +2463,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   @Override
-  public BwResource fetchResource(String href)
+  public BwResource fetchResource(final String href)
           throws CalFacadeException {
     checkCache();
     BwResource entity = getCached(href, BwResource.class);
@@ -2939,7 +2940,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       if (kval == null) {
         throw new CalFacadeException("org.bedework.index.noitemkey");
       }
-      Map<String, Object> map = hit.getSourceAsMap();
+      final Map<String, Object> map = hit.getSourceAsMap();
 
       final Object field = map.get(ESQueryFilter.hrefJname);
 
@@ -3001,7 +3002,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
         tries++;
 
-        SearchScrollRequest scrollRequest =
+        final SearchScrollRequest scrollRequest =
                 new SearchScrollRequest(resp.getScrollId());
         scrollRequest.scroll(new TimeValue(60000));
         resp = getClient().scroll(scrollRequest,
@@ -3029,8 +3030,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
   }
 
   private static abstract class BuildEntity<T> {
-    abstract T make(final EntityBuilder eb,
-                    final String id) throws CalFacadeException;
+    abstract T make(EntityBuilder eb,
+                    String id) throws CalFacadeException;
   }
 
   private <T> List<T> fetchEntities(final String docType,
@@ -3118,7 +3119,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
         tries++;
 
-        SearchScrollRequest scrollRequest =
+        final SearchScrollRequest scrollRequest =
                 new SearchScrollRequest(scrollResp.getScrollId());
         scrollRequest.scroll(new TimeValue(60000));
         scrollResp = getClient().scroll(scrollRequest,
@@ -3625,7 +3626,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     boolean ok = true;
 
     try {
-      BulkByScrollResponse bulkResponse =
+      final BulkByScrollResponse bulkResponse =
               getClient().deleteByQuery(delQreq, RequestOptions.DEFAULT);
 
       for (final BulkItemResponse.Failure f: bulkResponse.getBulkFailures()) {
@@ -3774,7 +3775,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final CurrentAccess ca;
     try {
       ca = accessCheck.checkAccess(ev, desiredAccess, true);
-    } catch (CalFacadeException e) {
+    } catch (final CalFacadeException e) {
       return null;
     }
 
@@ -3939,7 +3940,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       for (;;) {
         try {
-          ClusterHealthRequest request = new ClusterHealthRequest();
+          final ClusterHealthRequest request = new ClusterHealthRequest();
           final ClusterHealthResponse chr =
                   theClient.cluster().health(request, RequestOptions.DEFAULT);
 
@@ -4218,8 +4219,9 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
   private String fileToString(final String path) throws IndexException {
     final StringBuilder content = new StringBuilder();
-    try (Stream<String> stream = Files.lines(Paths.get(path),
-                                             StandardCharsets.UTF_8)) {
+    try (final Stream<String> stream =
+                 Files.lines(Paths.get(path),
+                             StandardCharsets.UTF_8)) {
       stream.forEach(s -> content.append(s).append("\n"));
     } catch (final Throwable t) {
       throw new IndexException(t);
@@ -4238,7 +4240,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {
