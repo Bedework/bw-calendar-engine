@@ -1607,7 +1607,7 @@ class Events extends CalSvcDb implements EventsI {
                 event.getOrganizerSchedulingObject();
       }
 
-      if (!schedulingObject && event.getRecurring() &&
+      if (!schedulingObject && event.isRecurringEntity() &&
               !Util.isEmpty(ei.getOverrideProxies())) {
         for (final BwEventProxy ove: ei.getOverrideProxies()) {
           setScheduleState(ove, false, false);

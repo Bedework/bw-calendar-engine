@@ -434,7 +434,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     final CollectionInfo collInf = cal.getCollectionInfo();
 
     if (!Util.isEmpty(overrides)) {
-      if (!val.testRecurring()) {
+      if (!val.isRecurringEntity()) {
         throwException(CalFacadeException.overridesForNonRecurring);
       }
 

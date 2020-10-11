@@ -908,7 +908,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
               }
             }
 
-            if (ev.getRecurring()) {
+            if (ev.isRecurringEntity()) {
               resp.incRecurring();
             }
 
@@ -1198,7 +1198,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
               continue;
             }
 
-            if (checkTimeRange && ev.getRecurring()) {
+            if (checkTimeRange && ev.isRecurringEntity()) {
               if (Util.isEmpty(RecurUtil.getPeriods(ev,
                                                     99,
                                                     1,
@@ -1223,7 +1223,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       for (final EventInfo ei : masters) {
         final BwEvent ev = ei.getEvent();
 
-        if (ev.getRecurring()) {
+        if (ev.isRecurringEntity()) {
           final Collection<BwEventAnnotation> ov = overrides
                   .get(ev.getHref());
 
