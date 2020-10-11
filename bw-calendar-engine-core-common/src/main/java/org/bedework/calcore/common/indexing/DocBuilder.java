@@ -652,7 +652,7 @@ public class DocBuilder extends DocBuilderBase {
 
       indexReqStat(ev.getRequestStatuses());
       makeField(PropertyInfoIndex.CTOKEN, ev.getCtoken());
-      makeField(PropertyInfoIndex.RECURRING, ev.getRecurring());
+      makeField(PropertyInfoIndex.RECURRING, ev.isRecurringEntity());
 
       if (recurid != null) {
         makeField(PropertyInfoIndex.RECURRENCE_ID, recurid);
