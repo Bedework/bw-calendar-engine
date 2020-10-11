@@ -586,7 +586,7 @@ public class BwEvent2Ical extends IcalUtil {
 
       /* ------------------- Overrides -------------------- */
 
-      if (!vpoll && !isInstance && !isOverride && val.testRecurring()) {
+      if (!vpoll && !isInstance && !isOverride && val.isRecurringEntity()) {
         doRecurring(val, pl);
       }
 

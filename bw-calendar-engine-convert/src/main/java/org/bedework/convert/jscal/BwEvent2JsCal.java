@@ -735,7 +735,7 @@ public class BwEvent2JsCal {
 
       /* ------------------- Overrides -------------------- */
 
-      if (!vpoll && !isInstance && val.testRecurring()) {
+      if (!vpoll && !isInstance && val.isRecurringEntity()) {
         doRecurring(val, jsval, tzreg);
       }
 

@@ -147,9 +147,8 @@ public class CnvUtil {
 
     IcalUtil.setDates(cb.getPrincipal().getPrincipalRef(),
                       re.masterEI, mdtStart, null, null);
-    e.setRecurring(true);
-//          e.addRdate(ridObj);
-    // We add the rdate later
+    // e.setRecurring(true);
+    // We add the rdate later - flags as recurring
     e.setSummary("Generated master");
     e.setSuppressed(true);
 
