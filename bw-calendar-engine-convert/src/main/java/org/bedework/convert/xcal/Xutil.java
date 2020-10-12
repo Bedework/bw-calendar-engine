@@ -364,7 +364,7 @@ public class Xutil {
         final XBedeworkMaxTicketsPropType p =
                 new XBedeworkMaxTicketsPropType();
 
-        p.setInteger(BigInteger.valueOf(Long.parseLong(val)));
+        p.setInteger(BigInteger.valueOf(Long.parseLong(val.trim())));
 
         pl.add(of.createXBedeworkMaxTickets(p));
         continue;
@@ -378,7 +378,7 @@ public class Xutil {
         final XBedeworkMaxTicketsPerUserPropType p =
                 new XBedeworkMaxTicketsPerUserPropType();
 
-        p.setInteger(BigInteger.valueOf(Long.parseLong(val)));
+        p.setInteger(BigInteger.valueOf(Long.parseLong(val.trim())));
 
         pl.add(of.createXBedeworkMaxTicketsPerUser(p));
         continue;
