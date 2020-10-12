@@ -68,7 +68,7 @@ import javax.xml.bind.JAXBElement;
  * @author Mike Douglass   douglm  rpi.edu
  */
 public class Xutil {
-  private static BwLogger logger =
+  private static final BwLogger logger =
           new BwLogger().setLoggedClass(Xutil.class);
 
   protected static ObjectFactory of = new ObjectFactory();
@@ -79,7 +79,7 @@ public class Xutil {
       return;
     }
 
-    for (Object o: nl) {
+    for (final Object o: nl) {
       l.add((String)o);
     }
   }
@@ -90,7 +90,7 @@ public class Xutil {
       return;
     }
 
-    for (Object o: nl) {
+    for (final Object o: nl) {
       l.add(Integer.valueOf((String)o));
     }
   }
@@ -101,7 +101,7 @@ public class Xutil {
       return;
     }
 
-    for (Object o: nl) {
+    for (final Object o: nl) {
       l.add(BigInteger.valueOf(Integer.parseInt((String)o)));
     }
   }
@@ -144,11 +144,11 @@ public class Xutil {
       return prop;
     }
 
-    ArrayOfParameters pars = getAop(prop);
+    final ArrayOfParameters pars = getAop(prop);
 
-    XBedeworkUidParamType x = new XBedeworkUidParamType();
+    final XBedeworkUidParamType x = new XBedeworkUidParamType();
     x.setText(uid);
-    JAXBElement<XBedeworkUidParamType> param = of.createXBedeworkUid(
+    final JAXBElement<XBedeworkUidParamType> param = of.createXBedeworkUid(
             x);
     pars.getBaseParameter().add(param);
 
@@ -157,18 +157,18 @@ public class Xutil {
 
   protected static BasePropertyType langProp(final BasePropertyType prop,
                                              final BwStringBase s) {
-    String lang = s.getLang();
+    final String lang = s.getLang();
 
     if (lang == null) {
       return prop;
     }
 
-    ArrayOfParameters pars = getAop(prop);
+    final ArrayOfParameters pars = getAop(prop);
 
-    LanguageParamType l = new LanguageParamType();
+    final LanguageParamType l = new LanguageParamType();
     l.setText(lang);
 
-    JAXBElement<LanguageParamType> param = of.createLanguage(l);
+    final JAXBElement<LanguageParamType> param = of.createLanguage(l);
     pars.getBaseParameter().add(param);
 
     return prop;
@@ -185,9 +185,10 @@ public class Xutil {
     return pars;
   }
 
-  protected static DateDatetimePropertyType makeDateDatetime(final DateDatetimePropertyType p,
-                                                             final BwDateTime dt,
-                                                             final boolean forceUTC) {
+  protected static DateDatetimePropertyType makeDateDatetime(
+          final DateDatetimePropertyType p,
+          final BwDateTime dt,
+          final boolean forceUTC) {
     /*
     if (forceUTC) {
       p.setDateTime(dt.getDate());
@@ -204,7 +205,7 @@ public class Xutil {
     tzidProp(p, dt.getTzid());
     */
 
-    String dtval;
+    final String dtval;
     if (forceUTC) {
       dtval = dt.getDate();
     } else if (!dt.getDateType()) {
@@ -220,26 +221,26 @@ public class Xutil {
 
   public static IcalendarType initCalendar(final String prodId,
                                            final int methodType) {
-    IcalendarType ical = new IcalendarType();
-    VcalendarType vcal = new VcalendarType();
+    final IcalendarType ical = new IcalendarType();
+    final VcalendarType vcal = new VcalendarType();
 
     ical.getVcalendar().add(vcal);
 
     vcal.setProperties(new ArrayOfProperties());
-    List<JAXBElement<? extends BasePropertyType>> pl =
+    final List<JAXBElement<? extends BasePropertyType>> pl =
             vcal.getProperties().getBasePropertyOrTzid();
 
-    ProdidPropType prod = new ProdidPropType();
+    final ProdidPropType prod = new ProdidPropType();
     prod.setText(prodId);
     pl.add(of.createProdid(prod));
 
-    VersionPropType vers = new VersionPropType();
+    final VersionPropType vers = new VersionPropType();
     vers.setText("2.0");
     pl.add(of.createVersion(vers));
 
     if ((methodType > ScheduleMethods.methodTypeNone) &&
             (methodType < ScheduleMethods.methodTypeUnknown)) {
-      MethodPropType m = new MethodPropType();
+      final MethodPropType m = new MethodPropType();
 
       m.setText(ScheduleMethods.methods[methodType]);
       pl.add(of.createMethod(m));
@@ -510,17 +511,17 @@ public class Xutil {
       return true;
     }
 
-    String className = cl[0].getName();
+    final String className = cl[0].getName();
 
     if (BasePropertyType.class.isAssignableFrom(cl[0])) {
       if (pattern.getProperties() == null) {
         return false;
       }
 
-      List<JAXBElement<? extends BasePropertyType>> patternProps =
+      final List<JAXBElement<? extends BasePropertyType>> patternProps =
          pattern.getProperties().getBasePropertyOrTzid();
 
-      for (JAXBElement<? extends BasePropertyType> jp: patternProps) {
+      for (final JAXBElement<? extends BasePropertyType> jp: patternProps) {
         if (jp.getValue().getClass().getName().equals(className)) {
           return true;
         }
@@ -529,7 +530,7 @@ public class Xutil {
       return false;
     }
 
-    List<JAXBElement<? extends BaseComponentType>> patternComps =
+    final List<JAXBElement<? extends BaseComponentType>> patternComps =
       XcalUtil.getComponents(pattern);
 
     if (patternComps == null) {
@@ -538,7 +539,7 @@ public class Xutil {
 
     // Check for component
 
-    for (JAXBElement<? extends BaseComponentType> jp: patternComps) {
+    for (final JAXBElement<? extends BaseComponentType> jp: patternComps) {
       if (jp.getValue().getClass().getName().equals(className)) {
         return emit(pattern, cl[0], Arrays.copyOfRange(cl, 1, cl.length - 1));
       }
