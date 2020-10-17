@@ -1656,7 +1656,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumXproperties() {
-    List<BwXproperty> c = getXproperties();
+    final List<BwXproperty> c = getXproperties();
     if (c == null) {
       return 0;
     }
@@ -1696,21 +1696,21 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public List<BwXproperty> getXicalProperties(final String val) {
-    List<BwXproperty> res = new ArrayList<>();
-    List<BwXproperty> xs = getXproperties();
+    final List<BwXproperty> res = new ArrayList<>();
+    final List<BwXproperty> xs = getXproperties();
     if (xs == null) {
       return res;
     }
 
-    for (BwXproperty x: xs) {
+    for (final BwXproperty x: xs) {
       if (x == null) {
         continue;
       }
 
       if (x.getName().equals(BwXproperty.bedeworkIcalProp)) {
-        List<Xpar> xpars = x.getParameters();
+        final List<Xpar> xpars = x.getParameters();
 
-        Xpar xp = xpars.get(0);
+        final Xpar xp = xpars.get(0);
         if (xp.getName().equals(val)) {
           res.add(x);
         }
@@ -1729,13 +1729,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int removeXproperties(final String val) {
-    List<BwXproperty> xs = getXproperties(val);
+    final List<BwXproperty> xs = getXproperties(val);
 
     if (xs.size() == 0) {
       return 0;
     }
 
-    for (BwXproperty x: xs) {
+    for (final BwXproperty x: xs) {
       removeXproperty(x);
     }
 
@@ -1761,7 +1761,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public void removeXproperty(final BwXproperty val) {
-    List<BwXproperty> c = getXproperties();
+    final List<BwXproperty> c = getXproperties();
     if (c == null) {
       return;
     }
@@ -1777,9 +1777,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumXproperties() == 0) {
       return null;
     }
-    ArrayList<BwXproperty> xs = new ArrayList<>();
+    final ArrayList<BwXproperty> xs = new ArrayList<>();
 
-    for (BwXproperty x: getXproperties()) {
+    for (final BwXproperty x: getXproperties()) {
       if (x == null) {
         continue;
       }
@@ -1799,7 +1799,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoDump
   @NoWrap
   public String getXproperty(final String name) {
-    BwXproperty prop = findXproperty(name);
+    final BwXproperty prop = findXproperty(name);
 
     if (prop == null) {
       return null;
@@ -1816,13 +1816,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoDump
   @NoWrap
   public BwXproperty findXproperty(final String name) {
-    Collection<BwXproperty> props = getXproperties();
+    final Collection<BwXproperty> props = getXproperties();
 
     if (props == null) {
       return null;
     }
 
-    for (BwXproperty prop: props) {
+    for (final BwXproperty prop: props) {
       if (prop == null) {
         continue;
       }
@@ -1846,7 +1846,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     final BwXproperty prop = findXproperty(name);
 
     if (prop == null) {
-      BwXproperty xp = new BwXproperty(name, null, val);
+      final BwXproperty xp = new BwXproperty(name, null, val);
       addXproperty(xp);
 
       if (changeSet != null) {
@@ -1868,7 +1868,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     prop.setValue(val);
 
     if (changeSet != null) {
-      BwXproperty xp = new BwXproperty(name, null, val);
+      final BwXproperty xp = new BwXproperty(name, null, val);
       changeSet.changed(PropertyInfoIndex.XPROP, prop, xp);
     }
     return true;
@@ -1907,7 +1907,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumRequestStatuses() {
-    Set<BwRequestStatus> c = getRequestStatuses();
+    final Set<BwRequestStatus> c = getRequestStatuses();
     if (c == null) {
       return 0;
     }
@@ -1935,7 +1935,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public boolean removeRequestStatus(final BwRequestStatus val) {
-    Set<BwRequestStatus> rs = getRequestStatuses();
+    final Set<BwRequestStatus> rs = getRequestStatuses();
     if (rs == null) {
       return false;
     }
@@ -1949,14 +1949,14 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public Set<BwRequestStatus> cloneRequestStatuses() {
-    Set<BwRequestStatus> rs = getRequestStatuses();
+    final Set<BwRequestStatus> rs = getRequestStatuses();
     if (rs == null) {
       return null;
     }
 
-    Set<BwRequestStatus> nrs = new TreeSet<>();
+    final Set<BwRequestStatus> nrs = new TreeSet<>();
 
-    for (BwRequestStatus o: rs) {
+    for (final BwRequestStatus o: rs) {
       nrs.add((BwRequestStatus)o.clone());
     }
 
@@ -2362,7 +2362,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumAlarms() {
-    Set<BwAlarm> c = getAlarms();
+    final Set<BwAlarm> c = getAlarms();
     if (c == null) {
       return 0;
     }
@@ -2385,7 +2385,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean removeAlarm(final BwAlarm val) {
-    Set<BwAlarm> rs = getAlarms();
+    final Set<BwAlarm> rs = getAlarms();
     if (rs == null) {
       return false;
     }
@@ -2400,14 +2400,14 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public Set<BwAlarm> cloneAlarms() {
-    Set<BwAlarm> rs = getAlarms();
+    final Set<BwAlarm> rs = getAlarms();
     if (rs == null) {
       return null;
     }
 
-    Set<BwAlarm> nrs = new TreeSet<>();
+    final Set<BwAlarm> nrs = new TreeSet<>();
 
-    for (BwAlarm al: rs) {
+    for (final BwAlarm al: rs) {
       nrs.add((BwAlarm)al.clone());
     }
 
@@ -2438,7 +2438,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumAttachments() {
-    Set<BwAttachment> as = getAttachments();
+    final Set<BwAttachment> as = getAttachments();
     if (as == null) {
       return 0;
     }
@@ -2461,7 +2461,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean removeAttachment(final BwAttachment val) {
-    Set<BwAttachment> as = getAttachments();
+    final Set<BwAttachment> as = getAttachments();
     if (as == null) {
       return false;
     }
@@ -2485,9 +2485,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumAttachments() == 0) {
       return null;
     }
-    TreeSet<BwAttachment> ts = new TreeSet<>();
+    final TreeSet<BwAttachment> ts = new TreeSet<>();
 
-    for (BwAttachment att: getAttachments()) {
+    for (final BwAttachment att: getAttachments()) {
       ts.add((BwAttachment)att.clone());
     }
 
@@ -2537,7 +2537,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumAttendees() {
-    Set<BwAttendee> as = getAttendees();
+    final Set<BwAttendee> as = getAttendees();
     if (as == null) {
       return 0;
     }
@@ -2560,7 +2560,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean removeAttendee(final BwAttendee val) {
-    Set<BwAttendee> as = getAttendees();
+    final Set<BwAttendee> as = getAttendees();
     if (as == null) {
       return false;
     }
@@ -2584,9 +2584,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumAttendees() == 0) {
       return null;
     }
-    TreeSet<BwAttendee> ts = new TreeSet<>();
+    final TreeSet<BwAttendee> ts = new TreeSet<>();
 
-    for (BwAttendee att: getAttendees()) {
+    for (final BwAttendee att: getAttendees()) {
       ts.add((BwAttendee)att.clone());
     }
 
@@ -2621,10 +2621,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       }
     }
 
-    String uriSeg = uri.substring(uriStart, uriLen);
+    final String uriSeg = uri.substring(uriStart, uriLen);
 
-    for (BwAttendee att: getAttendees()) {
-      String auri = att.getAttendeeUri();
+    for (final BwAttendee att: getAttendees()) {
+      final String auri = att.getAttendeeUri();
       int auriLen = auri.length();
       int auriStart = 0;
 
@@ -2673,7 +2673,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumRecipients() {
-    Set<String> rs = getRecipients();
+    final Set<String> rs = getRecipients();
     if (rs == null) {
       return 0;
     }
@@ -2696,7 +2696,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean removeRecipient(final String val) {
-    Set<String> rs = getRecipients();
+    final Set<String> rs = getRecipients();
     if (rs == null) {
       return false;
     }
@@ -2728,7 +2728,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumCategories() {
-    Set<BwCategory> c = getCategories();
+    final Set<BwCategory> c = getCategories();
     if (c == null) {
       return 0;
     }
@@ -2760,7 +2760,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean removeCategory(final BwCategory val) {
-    Set<BwCategory> cats = getCategories();
+    final Set<BwCategory> cats = getCategories();
     if (cats == null) {
       return false;
     }
@@ -2771,7 +2771,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean hasCategory(final BwCategory val) {
-    Set<BwCategory> cats = getCategories();
+    final Set<BwCategory> cats = getCategories();
     if (cats == null) {
       return false;
     }
@@ -2795,9 +2795,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumCategories() == 0) {
       return null;
     }
-    TreeSet<BwCategory> ts = new TreeSet<>();
+    final TreeSet<BwCategory> ts = new TreeSet<>();
 
-    for (BwCategory cat: getCategories()) {
+    for (final BwCategory cat: getCategories()) {
       ts.add((BwCategory)cat.clone());
     }
 
@@ -2830,7 +2830,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumComments() {
-    Set<BwString> rs = getComments();
+    final Set<BwString> rs = getComments();
     if (rs == null) {
       return 0;
     }
@@ -2859,7 +2859,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean removeComment(final BwString val) {
-    Set<BwString> rs = getComments();
+    final Set<BwString> rs = getComments();
     if (rs == null) {
       return false;
     }
@@ -2877,7 +2877,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public void setContact(final BwContact val) {
-    Set<BwContact> c = getContacts();
+    final Set<BwContact> c = getContacts();
     if ((c != null) && (!c.isEmpty())) {
       c.clear();
     }
@@ -2894,7 +2894,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public BwContact getContact() {
-    Set<BwContact> c = getContacts();
+    final Set<BwContact> c = getContacts();
     if ((c == null) || (c.isEmpty())) {
       return null;
     }
@@ -2922,7 +2922,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumContacts() {
-    Set<BwContact> c = getContacts();
+    final Set<BwContact> c = getContacts();
     if (c == null) {
       return 0;
     }
@@ -2945,7 +2945,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean removeContact(final BwContact val) {
-    Set<BwContact> cs = getContacts();
+    final Set<BwContact> cs = getContacts();
     if (cs == null) {
       return false;
     }
@@ -2956,7 +2956,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean hasContact(final BwContact val) {
-    Set<BwContact> cs = getContacts();
+    final Set<BwContact> cs = getContacts();
     if (cs == null) {
       return false;
     }
@@ -2980,9 +2980,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     if (getNumContacts() == 0) {
       return null;
     }
-    TreeSet<BwContact> ts = new TreeSet<>();
+    final TreeSet<BwContact> ts = new TreeSet<>();
 
-    for (BwContact cat: getContacts()) {
+    for (final BwContact cat: getContacts()) {
       ts.add((BwContact)cat.clone());
     }
 
@@ -3015,7 +3015,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumDescriptions() {
-    Set<BwLongString> rs = getDescriptions();
+    final Set<BwLongString> rs = getDescriptions();
     if (rs == null) {
       return 0;
     }
@@ -3044,7 +3044,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean removeDescription(final BwLongString val) {
-    Set<BwLongString> rs = getDescriptions();
+    final Set<BwLongString> rs = getDescriptions();
     if (rs == null) {
       return false;
     }
@@ -3055,7 +3055,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public void updateDescriptions(final String lang, final String val) {
-    BwLongString s = findDescription(lang);
+    final BwLongString s = findDescription(lang);
     if (val == null) {
       // Removing
       if (s!= null) {
@@ -3088,7 +3088,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public String getDescription() {
-    BwLongString s = findDescription(null);
+    final BwLongString s = findDescription(null);
     if (s == null) {
       return null;
     }
@@ -3118,7 +3118,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumResources() {
-    Set<BwString> rs = getResources();
+    final Set<BwString> rs = getResources();
     if (rs == null) {
       return 0;
     }
@@ -3147,7 +3147,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean removeResource(final BwString val) {
-    Set<BwString> rs = getResources();
+    final Set<BwString> rs = getResources();
     if (rs == null) {
       return false;
     }
@@ -3181,7 +3181,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public int getNumSummaries() {
-    Set<BwString> rs = getSummaries();
+    final Set<BwString> rs = getSummaries();
     if (rs == null) {
       return 0;
     }
@@ -3209,7 +3209,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public boolean removeSummary(final BwString val) {
-    Set<BwString> c = getSummaries();
+    final Set<BwString> c = getSummaries();
     if (c == null) {
       return false;
     }
@@ -3220,7 +3220,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @Override
   @NoProxy
   public void updateSummaries(final String lang, final String val) {
-    BwString s = findSummary(lang);
+    final BwString s = findSummary(lang);
     if (val == null) {
       // Removing
       if (s!= null) {
@@ -3253,7 +3253,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public String getSummary() {
-    BwString s = findSummary(null);
+    final BwString s = findSummary(null);
     if (s == null) {
       return null;
     }
@@ -3875,7 +3875,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoDump
   @NoWrap
   public String getBusyTypeString() {
-    int b = getBusyType();
+    final int b = getBusyType();
 
     if ((b < 0) || (b >= busyTypeStrings.length)) {
       return null;
@@ -3894,7 +3894,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       return;
     }
 
-    String uval = val.toUpperCase();
+    final String uval = val.toUpperCase();
 
     for (int i = 0; i < busyTypeStrings.length; i++) {
       if (uval.equals(busyTypeStrings[i])) {
@@ -3915,7 +3915,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       return BwEvent.busyTypeBusyUnavailable;
     }
 
-    String uval = val.toUpperCase();
+    final String uval = val.toUpperCase();
 
     for (int i = 0; i < BwEvent.busyTypeStrings.length; i++) {
       if (uval.equals(BwEvent.busyTypeStrings[i])) {
@@ -3941,10 +3941,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       return true;
     }
 
-    String evStart = getDtstart().getDate();
-    String evEnd = getDtend().getDate();
+    final String evStart = getDtstart().getDate();
+    final String evEnd = getDtend().getDate();
 
-    int evstSt;
+    final int evstSt;
 
     if (end == null) {
       evstSt = -1;   // < infinity
@@ -3956,7 +3956,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       return false;
     }
 
-    int evendSt;
+    final int evendSt;
 
     if (start == null) {
       evendSt = 1;   // > infinity
@@ -4224,7 +4224,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
   @NoProxy
   @NoDump
   public Set<String> getTimeZoneIds() {
-    Set<String> ids = new TreeSet<>();
+    final Set<String> ids = new TreeSet<>();
 
     BwDateTime dt = getDtstart();
     if ((dt != null) && (dt.getTzid() != null)) {
@@ -4238,7 +4238,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
     Set<BwDateTime> dts = getRdates();
     if (dts != null) {
-      for (BwDateTime rdt: dts) {
+      for (final BwDateTime rdt: dts) {
         if (rdt.getTzid() != null) {
           ids.add(rdt.getTzid());
         }
@@ -4247,17 +4247,17 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
     dts = getExdates();
     if (dts != null) {
-      for (BwDateTime rdt: dts) {
+      for (final BwDateTime rdt: dts) {
         if (rdt.getTzid() != null) {
           ids.add(rdt.getTzid());
         }
       }
     }
 
-    List<BwFreeBusyComponent> fbcs = getFreeBusyPeriods();
+    final List<BwFreeBusyComponent> fbcs = getFreeBusyPeriods();
     if (fbcs != null) {
-      for (BwFreeBusyComponent fbc: fbcs) {
-        for (Period p: fbc.getPeriods()) {
+      for (final BwFreeBusyComponent fbc: fbcs) {
+        for (final Period p: fbc.getPeriods()) {
           DateTime fdt = p.getStart();
           if (fdt.getTimeZone() != null) {
             ids.add(fdt.getTimeZone().getID());
@@ -4293,7 +4293,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public void updateStag(final Timestamp val) {
-    DateTime dt = new DateTime(val);
+    final DateTime dt = new DateTime(val);
 //    dt.setUtc(true);
 
     setStag(new LastModified(dt).getValue() + "-" +
@@ -4305,7 +4305,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public void setDtstamps(final Timestamp val) {
-    DateTime dt = new DateTime(val);
+    final DateTime dt = new DateTime(val);
     setDtstamp(new DtStamp(dt).getValue());
     setLastmod(new LastModified(dt).getValue());
     setCtoken(getLastmod() + "-" + hex4FromNanos(val.getNanos()));
@@ -4321,7 +4321,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
    */
   @NoProxy
   public BwEvent makeFreeBusyEvent() {
-    BwEvent res = new BwEvent();
+    final BwEvent res = new BwEvent();
 
     // Fields needed for comparison.
     res.setEntityType(getEntityType());
@@ -4344,7 +4344,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
 
     if (getAttendeeSchedulingObject()) {
       // XXX Need at least our attendee entry
-      for (BwAttendee att: getAttendees()) {
+      for (final BwAttendee att: getAttendees()) {
         res.addAttendee((BwAttendee)att.clone());
       }
     }
@@ -4352,10 +4352,10 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
     res.setOwnerHref(getOwnerHref());
 
     if (getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
-      List<BwFreeBusyComponent> fbcs = getFreeBusyPeriods();
-      List<BwFreeBusyComponent> newfbcs = new ArrayList<>();
+      final List<BwFreeBusyComponent> fbcs = getFreeBusyPeriods();
+      final List<BwFreeBusyComponent> newfbcs = new ArrayList<>();
 
-      for (BwFreeBusyComponent fbc: fbcs) {
+      for (final BwFreeBusyComponent fbc: fbcs) {
         newfbcs.add((BwFreeBusyComponent)fbc.clone());
       }
 
@@ -4954,6 +4954,6 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
       return null;
     }
 
-    return (T)new TreeSet<T>((Collection<T>)c);
+    return (T)new TreeSet<>((Collection<T>)c);
   }
 }

@@ -58,7 +58,7 @@ public class ChangeTable implements Logged, Serializable {
 
   private boolean significantPropertyChanged;
 
-  private String userHref;
+  private final String userHref;
 
   /** List of properties considered insignificant for scheduling. This should be
    * a system configuration option.
@@ -155,7 +155,7 @@ public class ChangeTable implements Logged, Serializable {
    * @return boolean false if entry not found
    */
   public boolean present(final PropertyInfoIndex index) {
-    ChangeTableEntry ent = getEntry(index);
+    final ChangeTableEntry ent = getEntry(index);
 
     if (ent != null) {
       ent.setPresent(true);
@@ -184,7 +184,7 @@ public class ChangeTable implements Logged, Serializable {
    */
   public void addValue(final PropertyInfoIndex index,
                        final Object val) {
-    ChangeTableEntry ent = getEntry(index);
+    final ChangeTableEntry ent = getEntry(index);
 
     if (ent == null) {
       throw new RuntimeException("org.bedework.icalendar.notmultivalued");
@@ -199,7 +199,7 @@ public class ChangeTable implements Logged, Serializable {
    */
   public void addValues(final PropertyInfoIndex index,
                         final Collection<?> val) {
-    ChangeTableEntry ent = getEntry(index);
+    final ChangeTableEntry ent = getEntry(index);
 
     if (ent == null) {
       throw new RuntimeException("org.bedework.icalendar.notmultivalued");
@@ -245,10 +245,10 @@ public class ChangeTable implements Logged, Serializable {
   public void processChanges(final BwEvent ev,
                              final boolean update,
                              final boolean attendeeFromOrganizer) {
-    HashMap<PropertyInfoIndex, ChangeTableEntry> fullmap =
+    final HashMap<PropertyInfoIndex, ChangeTableEntry> fullmap =
       new HashMap<>(map);
 
-    for (PropertyInfoIndex pii: PropertyInfoIndex.values()) {
+    for (final PropertyInfoIndex pii: PropertyInfoIndex.values()) {
       ChangeTableEntry ent = fullmap.get(pii);
       if (ent == null) {
         ent = new ChangeTableEntry(this, pii);
@@ -257,7 +257,7 @@ public class ChangeTable implements Logged, Serializable {
     }
 
     /* Single valued first */
-    for (ChangeTableEntry ent: fullmap.values()) {
+    for (final ChangeTableEntry ent: fullmap.values()) {
       if (ent.getPresent()) {
         continue;
       }
@@ -606,13 +606,13 @@ public class ChangeTable implements Logged, Serializable {
 
     /* ---------------------------- Multi valued --------------- */
 
-    for (ChangeTableEntry ent: fullmap.values()) {
+    for (final ChangeTableEntry ent: fullmap.values()) {
       /* These can be present but we still need to delete members. */
       if (!ent.getEventProperty() && !ent.getVpollProperty()) {
         continue;
       }
 
-      Collection<?> originalVals;
+      final Collection<?> originalVals;
 
       switch (ent.getIndex()) {
       case ATTACH:
@@ -874,7 +874,7 @@ public class ChangeTable implements Logged, Serializable {
     }
     /* Add any deleted items to the change table and check for
        significant changes. */
-    for (ChangeTableEntry ent: fullmap.values()) {
+    for (final ChangeTableEntry ent: fullmap.values()) {
       if (ent.getDeleted()) {
         ev.getChangeset(null).changed(ent.getIndex(), ent.getOldVal(), null);
       }
@@ -884,12 +884,12 @@ public class ChangeTable implements Logged, Serializable {
         checkSignificance:
         {
           if (ent.getIndex().equals(PropertyInfoIndex.VALARM)) {
-            var ov = ent.getOldVal();
+            final var ov = ent.getOldVal();
             if (!(ov instanceof BwAlarm)) {
               break checkSignificance;
             }
 
-            var alarm = (BwAlarm)ov;
+            final var alarm = (BwAlarm)ov;
 
             if (alarm.getOwnerHref().equals(userHref)) {
               break checkSignificance;
@@ -990,7 +990,7 @@ public class ChangeTable implements Logged, Serializable {
 
     /* We had some values - do we need to remove any? */
     if (ent.getRemovedValues() != null) {
-      for (Object o: ent.getRemovedValues()) {
+      for (final Object o: ent.getRemovedValues()) {
         originalVals.remove(o);
       }
     }
@@ -1002,8 +1002,8 @@ public class ChangeTable implements Logged, Serializable {
 
     /* Any changes? */
     if (ent.getChangedValues() != null) {
-      for (var o: ent.getChangedValues()) {
-        Object orig = originalVals.remove(o);
+      for (final var o: ent.getChangedValues()) {
+        final Object orig = originalVals.remove(o);
 
         // XXX This should be an object method
         // Don't allow cn changes - this may be a problem...
@@ -1025,9 +1025,9 @@ public class ChangeTable implements Logged, Serializable {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
-    for (ChangeTableEntry ent: map.values()) {
+    for (final ChangeTableEntry ent: map.values()) {
       if (!ent.getPresent()) {
         continue;
       }
@@ -1043,7 +1043,7 @@ public class ChangeTable implements Logged, Serializable {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

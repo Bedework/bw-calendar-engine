@@ -602,8 +602,6 @@ public class EntityBuilder extends EntityBuilderBase {
   }
 
   private Set<BwAttachment> restoreAttachments() {
-    final PropertyInfoIndex pi;
-
     final List<Object> vals = getFieldValues(PropertyInfoIndex.ATTACH);
 
     if (Util.isEmpty(vals)) {
@@ -783,8 +781,9 @@ public class EntityBuilder extends EntityBuilderBase {
     }
   }
 
-  private <T extends BwStringBase> T restoreBwStringValue(final PropertyInfoIndex pi,
-                                                     final Class<T> resultType) {
+  private <T extends BwStringBase<?>> T restoreBwStringValue(
+          final PropertyInfoIndex pi,
+          final Class<T> resultType) {
     final String val = getString(pi);
     if (val == null) {
       return null;
@@ -802,8 +801,9 @@ public class EntityBuilder extends EntityBuilderBase {
     return sb;
   }
 
-  private <T extends BwStringBase> T restoreBwString(final PropertyInfoIndex pi,
-                                       final Class<T> resultType) {
+  private <T extends BwStringBase<?>> T restoreBwString(
+          final PropertyInfoIndex pi,
+          final Class<T> resultType) {
     if (!pushFields(pi)) {
       return null;
     }
@@ -815,13 +815,13 @@ public class EntityBuilder extends EntityBuilderBase {
     }
   }
 
-  private <T extends BwStringBase> Set<T> restoreBwStringSet(
+  private <T extends BwStringBase<?>> Set<T> restoreBwStringSet(
           final PropertyInfoIndex pi,
           final Class<T> resultType) {
     return restoreBwStringSet(getJname(pi), resultType);
   }
 
-  private <T extends BwStringBase> Set<T> restoreBwStringSet(
+  private <T extends BwStringBase<?>> Set<T> restoreBwStringSet(
           final String name,
           final Class<T> resultType) {
     final List<Object> vals = getFieldValues(name);
@@ -845,7 +845,8 @@ public class EntityBuilder extends EntityBuilderBase {
     return ss;
   }
 
-  private <T extends BwStringBase> T restoreBwString(final Class<T> resultType) {
+  private <T extends BwStringBase<?>> T restoreBwString(
+          final Class<T> resultType) {
     final T sb;
     try {
       sb = resultType.getDeclaredConstructor().newInstance();

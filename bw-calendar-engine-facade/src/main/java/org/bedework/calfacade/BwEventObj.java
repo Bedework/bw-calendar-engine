@@ -56,7 +56,7 @@ public class BwEventObj extends BwEvent implements ScheduleMethods {
                                      final String originator,
                                      final Set<BwAttendee> attendees,
                                      final Set<String> recipients) {
-    BwEvent fbreq = new BwEventObj();
+    final BwEvent fbreq = new BwEventObj();
 
     if (organizer == null) {
       if (originator == null) {
@@ -72,8 +72,8 @@ public class BwEventObj extends BwEvent implements ScheduleMethods {
         return null;
       }
 
-      for (String r: recipients) {
-        BwAttendee att = new BwAttendee();
+      for (final String r: recipients) {
+        final BwAttendee att = new BwAttendee();
 
         att.setAttendeeUri(r);
         fbreq.addAttendee(att);

@@ -156,7 +156,7 @@ public class Xutil {
   }
 
   protected static BasePropertyType langProp(final BasePropertyType prop,
-                                             final BwStringBase s) {
+                                             final BwStringBase<?> s) {
     final String lang = s.getLang();
 
     if (lang == null) {
