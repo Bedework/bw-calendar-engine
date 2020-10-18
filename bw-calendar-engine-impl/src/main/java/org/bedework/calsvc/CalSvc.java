@@ -48,7 +48,6 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.configs.NotificationProperties;
@@ -715,7 +714,8 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
         return col.getChildren();
       }
 
-      Collection<BwCalendar> children = getCalendarsHandler().getChildren(col);
+      final Collection<BwCalendar> children =
+              getCalendarsHandler().getChildren(col);
 
       if (cachedCol == null) {
         cachedCol = col;
@@ -984,7 +984,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       userGroups = (Directories)CalFacadeUtil.getObject(getSystemProperties().getUsergroupsClass(), Directories.class);
       userGroups.init(getGroupsCallBack(),
                       configs);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
 
@@ -1001,7 +1001,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       adminGroups = (Directories)CalFacadeUtil.getObject(getSystemProperties().getAdmingroupsClass(), Directories.class);
       adminGroups.init(getGroupsCallBack(),
                        configs);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
 
@@ -1049,7 +1049,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
    * ==================================================================== */
 
   @Override
-  public <T>  Iterator<T> getObjectIterator(Class<T> cl) {
+  public <T>  Iterator<T> getObjectIterator(final Class<T> cl) {
     return getCal().getObjectIterator(cl);
   }
 
@@ -1059,7 +1059,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public <T> Iterator<T> getPublicObjectIterator(Class<T> cl) {
+  public <T> Iterator<T> getPublicObjectIterator(final Class<T> cl) {
     return getCal().getPublicObjectIterator(cl);
   }
 
@@ -1076,7 +1076,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   public BwPrincipal getPrincipal(final String href) {
     try {
       return getCal().getPrincipal(href);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }
   }
@@ -1097,7 +1097,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
   @Override
   public long getUserMaxEntitySize() {
-    long max = getPrefsHandler().get().getMaxEntitySize();
+    final long max = getPrefsHandler().get().getMaxEntitySize();
 
     if (max != 0) {
       return max;
@@ -1873,7 +1873,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       final GetEntitiesResponse<EventInfo> resp = new GetEntitiesResponse<>();
 
       try {
-        var ents =
+        final var ents =
                 getEventsHandler().getByUid(colPath, guid,
                                             null,
                                             RecurringRetrievalMode.overrides);
@@ -2090,7 +2090,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     }
 
     try {
-      String pwEncryptClass = "org.bedework.util.security.PwEncryptionDefault";
+      final String pwEncryptClass = "org.bedework.util.security.PwEncryptionDefault";
       //String pwEncryptClass = getSysparsHandler().get().getPwEncryptClass();
 
       pwEncrypt = (PwEncryptionIntf)CalFacadeUtil.getObject(pwEncryptClass,
@@ -2099,8 +2099,8 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       String privKeys = null;
       String pubKeys = null;
 
-      GenKeysMBean gk = (GenKeysMBean)MBeanUtil.getMBean(GenKeysMBean.class,
-                                                         GenKeysMBean.serviceName);
+      final GenKeysMBean gk = (GenKeysMBean)MBeanUtil.getMBean(GenKeysMBean.class,
+                                                               GenKeysMBean.serviceName);
       if (gk != null) {
         privKeys = gk.getPrivKeyFileName();
         pubKeys = gk.getPublicKeyFileName();
@@ -2113,10 +2113,10 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       pwEncrypt.init(privKeys, pubKeys);
 
       return pwEncrypt;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       cfe.printStackTrace();
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       t.printStackTrace();
       throw new CalFacadeException(t);
     }
@@ -2144,7 +2144,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {
