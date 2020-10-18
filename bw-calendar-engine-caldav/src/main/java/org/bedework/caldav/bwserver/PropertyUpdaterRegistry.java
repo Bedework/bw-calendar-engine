@@ -81,17 +81,17 @@ public class PropertyUpdaterRegistry {
     }
   }
 
-  private static final Map<Class, UpdaterEntry> standardUpdaters =
+  private static final Map<Class<?>, UpdaterEntry> standardUpdaters =
       new HashMap<>();
 
-  private Map<Class, UpdaterEntry> nonStandardUpdaters;
+  private Map<Class<?>, UpdaterEntry> nonStandardUpdaters;
 
   /** Register a non-standard updater. This can override standard updaters.
    *
    * @param cl - property class for which this is an updater
    * @param updCl - class name of updater
    */
-  public void registerUpdater(final Class cl,
+  public void registerUpdater(final Class<?> cl,
                               final String updCl) {
     if (nonStandardUpdaters == null) {
       nonStandardUpdaters = new HashMap<>();
@@ -100,14 +100,14 @@ public class PropertyUpdaterRegistry {
     nonStandardUpdaters.put(cl, new UpdaterEntry(updCl));
   }
 
-  static void registerStandardUpdater(final Class cl,
+  static void registerStandardUpdater(final Class<?> cl,
                                       final String updCl) {
     standardUpdaters.put(cl, new UpdaterEntry(updCl));
   }
 
   PropertyUpdater getUpdater(final Object o) {
     final PropertyUpdater pu;
-    final Class cl = o.getClass();
+    final Class<?> cl = o.getClass();
 
     if (nonStandardUpdaters != null) {
       pu = findUpdater(cl, nonStandardUpdaters);
@@ -120,9 +120,9 @@ public class PropertyUpdaterRegistry {
     return findUpdater(cl, standardUpdaters);
   }
 
-  static PropertyUpdater findUpdater(final Class cl,
-                                     final Map<Class, UpdaterEntry> updaters) {
-    Class lcl = cl;
+  static PropertyUpdater findUpdater(final Class<?> cl,
+                                     final Map<Class<?>, UpdaterEntry> updaters) {
+    Class<?> lcl = cl;
 
     while (lcl != null) {
       final UpdaterEntry ue = updaters.get(lcl);
@@ -163,17 +163,17 @@ public class PropertyUpdaterRegistry {
     return null;
   }
 
-  private static void standardPropUpdater(final Class cl,
+  private static void standardPropUpdater(final Class<?> cl,
                                           final String updCl) {
     registerStandardUpdater(cl,
                             "org.bedework.caldav.bwserver.stdupdaters." + updCl);
   }
 
-  private static void immutableProp(final Class cl) {
+  private static void immutableProp(final Class<?> cl) {
     standardPropUpdater(cl, "ImmutablePropUpdater");
   }
 
-  private static void ignoreProp(final Class cl) {
+  private static void ignoreProp(final Class<?> cl) {
     standardPropUpdater(cl, "IgnorePropUpdater");
   }
 
