@@ -2086,7 +2086,9 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
                 journalProperty = true)
   public void setRdates(final Set<BwDateTime> val) {
     rdates = val;
-    setRecurring(!Util.isEmpty(val));
+    if (!Util.isEmpty(val)) {
+      setRecurring(true);
+    }
   }
 
   @Override
