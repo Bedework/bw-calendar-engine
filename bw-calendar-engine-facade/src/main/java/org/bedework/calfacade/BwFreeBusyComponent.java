@@ -19,6 +19,7 @@
 package org.bedework.calfacade;
 
 import org.bedework.calfacade.base.BwDbentity;
+import org.bedework.util.misc.ToString;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
@@ -26,7 +27,6 @@ import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.TreeSet;
 
 /** Class representing a free busy time component. Used in icalendar objects
@@ -34,7 +34,7 @@ import java.util.TreeSet;
  * @author Mike Douglass   douglm@bedework.edu
  *  @version 1.0
  */
-public class BwFreeBusyComponent extends BwDbentity {
+public class BwFreeBusyComponent extends BwDbentity<BwFreeBusyComponent> {
   /** busy time - default */
   public static final int typeBusy = 0;
 
@@ -72,7 +72,7 @@ public class BwFreeBusyComponent extends BwDbentity {
   }
 
   /**
-   * @param val
+   * @param val type
    */
   public void setType(final int val) {
     type = val;
@@ -86,7 +86,7 @@ public class BwFreeBusyComponent extends BwDbentity {
   }
 
   /**
-   * @param val
+   * @param val value
    */
   public void setValue(final String val) {
     value = val;
@@ -102,11 +102,9 @@ public class BwFreeBusyComponent extends BwDbentity {
         return null;
       }
 
-      PeriodList pl = new PeriodList();
+      final PeriodList pl = new PeriodList();
 
-      for (Period p: getPeriods()) {
-        pl.add(p);
-      }
+      pl.addAll(getPeriods());
 
       value = pl.toString();
     }
@@ -123,18 +121,10 @@ public class BwFreeBusyComponent extends BwDbentity {
         periods = new TreeSet<>();
 
         if (getValue() != null) {
-          final PeriodList pl;
           try {
-            pl = new PeriodList(getValue());
-          } catch (Throwable t) {
+            periods.addAll(new PeriodList(getValue()));
+          } catch (final Throwable t) {
             throw new RuntimeException(t);
-          }
-          Iterator perit = pl.iterator();
-
-          while (perit.hasNext()) {
-            Period per = (Period)perit.next();
-
-            periods.add(per);
           }
         }
       }
@@ -147,7 +137,7 @@ public class BwFreeBusyComponent extends BwDbentity {
 
   /** Merge in a period
    *
-   * @param val
+   * @param val Period
    */
   public void addPeriod(final Period val) {
     getPeriods().add(val);
@@ -160,7 +150,7 @@ public class BwFreeBusyComponent extends BwDbentity {
    * @param end ical4j DateTime
    */
   public void addPeriod(final DateTime start, final DateTime end) {
-    Period p;
+    final Period p;
 
     if (emitDurations) {
       p = new Period(start, new Dur(start, end));
@@ -191,38 +181,27 @@ public class BwFreeBusyComponent extends BwDbentity {
 
   @Override
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    final var ts = new ToString(this);
 
-    sb.append("BwFreeBusyComponent{type=");
-    sb.append(getTypeVal());
-    sb.append(", ");
+    ts.append("type", getTypeVal());
 
     try {
-      for (Period p: getPeriods()) {
-        sb.append(", (");
-        sb.append(p.toString());
-        sb.append(")");
+      for (final Period p: getPeriods()) {
+        ts.append("(" + p.toString() + ")");
       }
-    } catch (Throwable t) {
-      sb.append("Exception(");
-      sb.append(t.getMessage());
-      sb.append(")");
+    } catch (final Throwable t) {
+      ts.append("Exception(" + t.getMessage() + ")");
     }
-    sb.append("}");
 
-    return sb.toString();
+    return ts.toString();
   }
 
   @Override
   public Object clone() {
-    BwFreeBusyComponent fbc = new BwFreeBusyComponent();
+    final BwFreeBusyComponent fbc = new BwFreeBusyComponent();
 
-    try {
-      fbc.setType(getType());
-      fbc.setValue(getValue());
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
-    }
+    fbc.setType(getType());
+    fbc.setValue(getValue());
 
     return fbc;
   }

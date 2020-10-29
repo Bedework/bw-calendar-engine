@@ -596,9 +596,6 @@ public class CalendarWrapper extends BwCalendar
     disabled = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.BwCalendar#getDisabled()
-   */
   @Override
   public boolean getDisabled() {
     return disabled;

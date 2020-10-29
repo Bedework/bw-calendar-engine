@@ -18,7 +18,6 @@
 */
 package org.bedework.calfacade;
 
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
@@ -30,7 +29,6 @@ import net.fortuna.ical4j.vcard.Property;
 import net.fortuna.ical4j.vcard.Property.Id;
 import net.fortuna.ical4j.vcard.VCard;
 import net.fortuna.ical4j.vcard.VCardBuilder;
-import net.fortuna.ical4j.vcard.property.AutoSchedule;
 import net.fortuna.ical4j.vcard.property.Capacity;
 import net.fortuna.ical4j.vcard.property.Categories;
 import net.fortuna.ical4j.vcard.property.Kind;
@@ -49,14 +47,6 @@ import java.util.Map;
 /** This class represent directory style information for the principal. It will be
  * retrieved from a pluggable class.
  *
- *  @author Mike Douglass douglm rpi.edu
- *  @version 1.0
- */
-/**
- * @author douglm
- *
- */
-/**
  * @author douglm
  *
  */
@@ -87,7 +77,8 @@ public class BwPrincipalInfo
    *
    * @param <T>
    */
-  public static class PrincipalProperty<T> implements Comparable<PrincipalProperty> {
+  public static class PrincipalProperty<T>
+          implements Comparable<PrincipalProperty<T>> {
     /** Name of property */
     private final String name;
     /** Value of property */
@@ -124,13 +115,13 @@ public class BwPrincipalInfo
         return 0;
       }
 
-      int ret = CalFacadeUtil.compareStrings(name, that.name);
+      final int ret = CalFacadeUtil.compareStrings(name, that.name);
       if (ret != 0) {
         return ret;
       }
 
       if (val instanceof Comparable) {
-        return ((Comparable)val).compareTo(that.val);
+        return ((Comparable<Object>)val).compareTo(that.val);
       } else {
         return -1; // Never occurs
       }
@@ -216,7 +207,7 @@ public class BwPrincipalInfo
   }
 
   /* More info */
-  private List<PrincipalProperty> properties;
+  private List<PrincipalProperty<?>> properties;
 
   /** */
   public static final int ptypeString = 0;
@@ -396,7 +387,7 @@ public class BwPrincipalInfo
   }
 
   /**
-   * @param val
+   * @param val phone
    */
   public void setPhone(final String val) {
     phone = val;
@@ -410,7 +401,7 @@ public class BwPrincipalInfo
   }
 
   /**
-   * @param val
+   * @param val email
    */
   public void setEmail(final String val) {
     email = val;
@@ -424,7 +415,7 @@ public class BwPrincipalInfo
   }
 
   /**
-   * @param val
+   * @param val department
    */
   public void setDept(final String val) {
     dept = val;
@@ -438,7 +429,7 @@ public class BwPrincipalInfo
   }
 
   /**
-   * @param val
+   * @param val kind
    */
   public void setKind(final String val) {
     kind = val;
@@ -460,7 +451,7 @@ public class BwPrincipalInfo
   }
   
   /**
-   * @param val
+   * @param val caladr uri
    */
   public void setCaladruri(final String val) {
     caladruri = val;
@@ -473,16 +464,16 @@ public class BwPrincipalInfo
   /** The properties are any other properties thought to be useful. All of type
    * PrincipalProperty.
    *
-   * @param val
+   * @param val properties
    */
-  public void setProperties(final List<PrincipalProperty> val) {
+  public void setProperties(final List<PrincipalProperty<?>> val) {
     properties = val;
   }
 
   /**
    * @return Collection of UserProperty
    */
-  public List<PrincipalProperty> getProperties() {
+  public List<PrincipalProperty<?>> getProperties() {
     return properties;
   }
 
@@ -508,10 +499,10 @@ public class BwPrincipalInfo
   /**
    * @param val the property
    */
-  public void addProperty(final PrincipalProperty val) {
-    List<PrincipalProperty> c = getProperties();
+  public void addProperty(final PrincipalProperty<?> val) {
+    List<PrincipalProperty<?>> c = getProperties();
     if (c == null) {
-      c = new ArrayList<PrincipalProperty>();
+      c = new ArrayList<>();
       setProperties(c);
     }
     if (!c.contains(val)) {
@@ -523,13 +514,13 @@ public class BwPrincipalInfo
    * @param name of property
    * @return first property found or null
    */
-  public PrincipalProperty findProperty(final String name) {
-    final List<PrincipalProperty> l = getProperties();
+  public PrincipalProperty<?> findProperty(final String name) {
+    final List<PrincipalProperty<?>> l = getProperties();
     if (l == null) {
       return null;
     }
 
-    for (final PrincipalProperty p: l) {
+    for (final PrincipalProperty<?> p: l) {
       if (name.equalsIgnoreCase(p.getName())) {
         return p;
       }
@@ -542,14 +533,14 @@ public class BwPrincipalInfo
    * @param name of property
    * @return (Possibly empty) List of PrincipalProperty values with given name
    */
-  public List<PrincipalProperty> getProperties(final String name) {
-    final List<PrincipalProperty> res = new ArrayList<>();
-    final List<PrincipalProperty> l = getProperties();
+  public List<PrincipalProperty<?>> getProperties(final String name) {
+    final List<PrincipalProperty<?>> res = new ArrayList<>();
+    final List<PrincipalProperty<?>> l = getProperties();
     if (l == null) {
       return res;
     }
 
-    for (final PrincipalProperty p: l) {
+    for (final PrincipalProperty<?> p: l) {
       if (name.equalsIgnoreCase(p.getName())) {
         res.add(p);
       }
@@ -559,20 +550,20 @@ public class BwPrincipalInfo
   }
 
   /**
-   * @param pi
-   * @param p
+   * @param pi PrincipalPropertyInfo
+   * @param p Property
    */
   public void addProperty(final PrincipalPropertyInfo pi,
                           final Property p) {
     switch (p.getId()) {
     case KIND:
       setKind(p.getValue());
-      addProperty(new PrincipalProperty<String>("kind", p.getValue()));
+      addProperty(new PrincipalProperty<>("kind", p.getValue()));
       // addPinfo(null, "principal-class", ptypeInt);    // Provide finer grained classification
       break;
 
     case FN:
-      addProperty(new PrincipalProperty<String>("fn", p.getValue()));
+      addProperty(new PrincipalProperty<>("fn", p.getValue()));
       break;
 
     case N:
@@ -589,28 +580,29 @@ public class BwPrincipalInfo
         setFirstname(split[1]);
       }
 
-      addProperty(new PrincipalProperty<String>("n", p.getValue()));
+      addProperty(new PrincipalProperty<>("n", p.getValue()));
       break;
 
     case CALADRURI:
       setCaladruri(p.getValue());
-      addProperty(new PrincipalProperty<String>("caladruri", p.getValue()));
+      addProperty(new PrincipalProperty<>("caladruri", p.getValue()));
       break;
 
     case EMAIL:
       setEmail(p.getValue());
-      addProperty(new PrincipalProperty<String>("email", p.getValue()));
+      addProperty(new PrincipalProperty<>("email", p.getValue()));
       break;
 
     case ORG:
-      addProperty(new PrincipalProperty<String>("ou", p.getValue()));
+      addProperty(new PrincipalProperty<>("ou", p.getValue()));
       break;
 
     case CATEGORIES:
-      Iterator it = ((Categories)p).getCategories().iterator();
+      final Iterator<String> it =
+              ((Categories)p).getCategories().iterator();
       while (it.hasNext()) {
-        addProperty(new PrincipalProperty<String>("category",
-                                                  (String)it.next()));
+        addProperty(new PrincipalProperty<>("category",
+                                            it.next()));
       }
       break;
 
@@ -646,8 +638,8 @@ public class BwPrincipalInfo
       break;
 */
     case AUTOSCHEDULE:
-      addProperty(new PrincipalProperty<String>("auto-schedule",
-                                               ((AutoSchedule)p).getValue()));
+      addProperty(new PrincipalProperty<>("auto-schedule",
+                                          p.getValue()));
       break;
 
  //   case APPROVALINFO:
@@ -655,7 +647,7 @@ public class BwPrincipalInfo
  //     break;
 
     case SCHEDADMININFO:
-      addProperty(new PrincipalProperty<String>("admin-url", p.getValue()));
+      addProperty(new PrincipalProperty<>("admin-url", p.getValue()));
       break;
 
     case MAXINSTANCES:
@@ -664,16 +656,19 @@ public class BwPrincipalInfo
     break;
 
     case BOOKINGWINDOWSTART:
-      addProperty(new PrincipalProperty<String>("schedule-window-start", p.getValue()));
+      addProperty(new PrincipalProperty<>("schedule-window-start",
+                                          p.getValue()));
     break;
 
                                              // Absent - no restriction
     case BOOKINGWINDOWEND:
-      addProperty(new PrincipalProperty<String>("schedule-window-end", p.getValue()));
+      addProperty(new PrincipalProperty<>("schedule-window-end",
+                                          p.getValue()));
     break;
 
     case NOCOST:
-      addProperty(new BooleanPrincipalProperty("nocost", ((NoCost)p).getBoolean()));
+      addProperty(new BooleanPrincipalProperty("nocost",
+                                               ((NoCost)p).getBoolean()));
     break;
 
     }
@@ -687,17 +682,16 @@ public class BwPrincipalInfo
   }
 
   /**
-   * @param cardStr
-   * @throws CalFacadeException
+   * @param cardStr vcard as string
    */
   public void setPropertiesFromVCard(final String cardStr,
-                                     final String addrDataCtype) throws CalFacadeException {
+                                     final String addrDataCtype) {
     if (cardStr == null) {
       return;
     }
 
     this.cardStr = cardStr;
-    addProperty(new PrincipalProperty<String>("vcard", cardStr));
+    addProperty(new PrincipalProperty<>("vcard", cardStr));
 
     try {
       if ("application/vcard+json".equals(addrDataCtype)) {
@@ -725,8 +719,9 @@ public class BwPrincipalInfo
         }
       }
 
-      for (PrincipalPropertyInfo ppi: BwPrincipalInfo.getPrincipalPropertyInfoSet()) {
-        Property.Id pname = ppi.getVcardPname();
+      for (final PrincipalPropertyInfo ppi:
+              BwPrincipalInfo.getPrincipalPropertyInfoSet()) {
+        final Property.Id pname = ppi.getVcardPname();
         if (pname == null) {
           // Not a vcard property
           continue;
@@ -734,7 +729,7 @@ public class BwPrincipalInfo
 
         if (!ppi.getMulti()) {
           // Single valued
-          Property prop = card.getProperty(pname);
+          final Property prop = card.getProperty(pname);
 
           if (prop == null) {
             continue;
@@ -742,12 +737,12 @@ public class BwPrincipalInfo
 
           addProperty(ppi, prop);
         } else {
-          List<Property> ps = card.getProperties(pname);
+          final List<Property> ps = card.getProperties(pname);
           if (Util.isEmpty(ps)) {
             continue;
           }
 
-          for (Property prop: ps) {
+          for (final Property prop: ps) {
             addProperty(ppi, prop);
           }
         }
@@ -756,7 +751,7 @@ public class BwPrincipalInfo
       if (debug()) {
         debug("CardStr was " + cardStr);
       }
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -829,7 +824,7 @@ public class BwPrincipalInfo
                                final String name,
                                final int ptype,
                                final boolean multi) {
-    String lcname = name.toLowerCase();
+    final String lcname = name.toLowerCase();
 
     pinfoMap.put(lcname, new PrincipalPropertyInfo(vcardPname,
                                                    lcname,
@@ -841,7 +836,7 @@ public class BwPrincipalInfo
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

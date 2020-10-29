@@ -434,9 +434,9 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     if (getNumAttendees() == 0) {
       return null;
     }
-    TreeSet<BwAttendee> ts = new TreeSet<>();
+    final TreeSet<BwAttendee> ts = new TreeSet<>();
 
-    for (BwAttendee att: getAttendees()) {
+    for (final BwAttendee att: getAttendees()) {
       ts.add((BwAttendee)att.clone());
     }
 
@@ -489,7 +489,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @Override
   @NoDump
   public int getNumDescriptions() {
-    Set<BwString> rs = getDescriptions();
+    final Set<BwString> rs = getDescriptions();
     if (rs == null) {
       return 0;
     }
@@ -515,7 +515,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   @Override
   public boolean removeDescription(final BwString val) {
-    Set<BwString> rs = getDescriptions();
+    final Set<BwString> rs = getDescriptions();
     if (rs == null) {
       return false;
     }
@@ -525,7 +525,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   @Override
   public void updateDescriptions(final String lang, final String val) {
-    BwString s = findDescription(lang);
+    final BwString s = findDescription(lang);
     if (val == null) {
       // Removing
       if (s!= null) {
@@ -555,7 +555,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @Override
   @NoDump
   public String getDescription() {
-    BwString s = findDescription(null);
+    final BwString s = findDescription(null);
     if (s == null) {
       return null;
     }
@@ -580,7 +580,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @Override
   @NoDump
   public int getNumSummaries() {
-    Set<BwString> rs = getSummaries();
+    final Set<BwString> rs = getSummaries();
     if (rs == null) {
       return 0;
     }
@@ -601,7 +601,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   @Override
   public boolean removeSummary(final BwString val) {
-    Set<BwString> c = getSummaries();
+    final Set<BwString> c = getSummaries();
     if (c == null) {
       return false;
     }
@@ -611,7 +611,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
   @Override
   public void updateSummaries(final String lang, final String val) {
-    BwString s = findSummary(lang);
+    final BwString s = findSummary(lang);
     if (val == null) {
       // Removing
       if (s!= null) {
@@ -642,7 +642,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @NoProxy
   @NoDump
   public String getSummary() {
-    BwString s = findSummary(null);
+    final BwString s = findSummary(null);
     if (s == null) {
       return null;
     }
@@ -684,7 +684,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @NoProxy
   @NoDump
   public int getNumXproperties() {
-    List<BwXproperty> c = getXproperties();
+    final List<BwXproperty> c = getXproperties();
     if (c == null) {
       return 0;
     }
@@ -700,13 +700,13 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @NoProxy
   @NoDump
   public List<BwXproperty> getXproperties(final String val) {
-    List<BwXproperty> res = new ArrayList<>();
-    List<BwXproperty> xs = getXproperties();
+    final List<BwXproperty> res = new ArrayList<>();
+    final List<BwXproperty> xs = getXproperties();
     if (xs == null) {
       return res;
     }
 
-    for (BwXproperty x: xs) {
+    for (final BwXproperty x: xs) {
       if (x.getName().equals(val)) {
         res.add(x);
       }
@@ -724,17 +724,17 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @NoProxy
   @NoDump
   public List<BwXproperty> getXicalProperties(final String val) {
-    List<BwXproperty> res = new ArrayList<>();
-    List<BwXproperty> xs = getXproperties();
+    final List<BwXproperty> res = new ArrayList<>();
+    final List<BwXproperty> xs = getXproperties();
     if (xs == null) {
       return res;
     }
 
-    for (BwXproperty x: xs) {
+    for (final BwXproperty x: xs) {
       if (x.getName().equals(BwXproperty.bedeworkIcalProp)) {
-        List<Xpar> xpars = x.getParameters();
+        final List<Xpar> xpars = x.getParameters();
 
-        Xpar xp = xpars.get(0);
+        final Xpar xp = xpars.get(0);
         if (xp.getName().equals(val)) {
           res.add(x);
         }
@@ -752,13 +752,13 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
   @NoProxy
   @NoDump
   public int removeXproperties(final String val) {
-    List<BwXproperty> xs = getXproperties(val);
+    final List<BwXproperty> xs = getXproperties(val);
 
     if (xs.size() == 0) {
       return 0;
     }
 
-    for (BwXproperty x: xs) {
+    for (final BwXproperty x: xs) {
       removeXproperty(x);
     }
 
@@ -786,7 +786,7 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
    */
   @NoProxy
   public void removeXproperty(final BwXproperty val) {
-    List<BwXproperty> c = getXproperties();
+    final List<BwXproperty> c = getXproperties();
     if (c == null) {
       return;
     }
@@ -802,9 +802,9 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
     if (getNumXproperties() == 0) {
       return null;
     }
-    ArrayList<BwXproperty> xs = new ArrayList<>();
+    final ArrayList<BwXproperty> xs = new ArrayList<>();
 
-    for (BwXproperty x: getXproperties()) {
+    for (final BwXproperty x: getXproperties()) {
       xs.add((BwXproperty)x.clone());
     }
 
@@ -1032,12 +1032,12 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
                                    final String duration,
                                    final int repeat,
                                    final String description) {
-    BwAlarm al = new BwAlarm(owner, alarmTypeOther,
-                             trigger,
-                             duration, repeat,
-                             0, false,
-                             null,
-                             description, null, null);
+    final BwAlarm al = new BwAlarm(owner, alarmTypeOther,
+                                   trigger,
+                                   duration, repeat,
+                                   0, false,
+                                   null,
+                                   description, null, null);
     al.addXproperty(BwXproperty.makeIcalProperty("ACTION",
                                                  null,
                                                  action));
@@ -1292,7 +1292,7 @@ Example
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 

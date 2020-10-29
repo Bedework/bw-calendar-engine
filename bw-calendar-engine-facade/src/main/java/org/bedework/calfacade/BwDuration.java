@@ -156,7 +156,7 @@ public class BwDuration implements Serializable {
    * @return BwDuration
    */
   public static BwDuration makeDuration(final String val) {
-    BwDuration db = new BwDuration();
+    final BwDuration db = new BwDuration();
 
     populate(db, val);
 
@@ -174,7 +174,7 @@ public class BwDuration implements Serializable {
         return;
       }
 
-      Dur d = new Dur(val);
+      final Dur d = new Dur(val);
 
       if (d.getWeeks() != 0) {
         db.setWeeks(d.getWeeks());
@@ -187,7 +187,7 @@ public class BwDuration implements Serializable {
       db.setMinutes(d.getMinutes());
       db.setSeconds(d.getSeconds());
       db.setNegative(d.isNegative());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException("Invalid duration");
     }
   }
@@ -197,7 +197,7 @@ public class BwDuration implements Serializable {
    * @return Duration
    */
   public Duration makeDuration() {
-    Dur d;
+    final Dur d;
 
     if (weeks != 0) {
       d = new Dur(getWeeks());
@@ -229,7 +229,7 @@ public class BwDuration implements Serializable {
 
   @Override
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    final StringBuffer sb = new StringBuffer();
 
     if (negative) {
       sb.append("-");

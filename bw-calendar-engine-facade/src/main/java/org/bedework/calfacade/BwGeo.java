@@ -21,6 +21,7 @@ package org.bedework.calfacade;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.base.DumpEntity;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.util.misc.ToString;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -30,7 +31,7 @@ import java.math.BigDecimal;
  *  @version 1.0
  */
 @Dump(elementName="geo", keyFields={"latitude", "longitude"})
-public class BwGeo extends DumpEntity
+public class BwGeo extends DumpEntity<BwGeo>
       implements Comparable<BwGeo>, Serializable {
   private BigDecimal latitude;
   private BigDecimal longitude;
@@ -42,8 +43,8 @@ public class BwGeo extends DumpEntity
   }
 
   /**
-   * @param latitude
-   * @param longitude
+   * @param latitude BigDecimal
+   * @param longitude BigDecimal
    */
   public BwGeo(final BigDecimal latitude, final BigDecimal longitude) {
     this.latitude = latitude;
@@ -95,7 +96,8 @@ public class BwGeo extends DumpEntity
       return -1;
     }
 
-    int res = CalFacadeUtil.cmpObjval(getLatitude(), that.getLatitude());
+    final int res = CalFacadeUtil.cmpObjval(getLatitude(),
+                                            that.getLatitude());
 
     if (res != 0) {
       return res;
@@ -121,20 +123,21 @@ public class BwGeo extends DumpEntity
 
   @Override
   public boolean equals(final Object o) {
+    if (!(o instanceof BwGeo)) {
+      return false;
+    }
+
     return compareTo((BwGeo)o) == 0;
   }
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("BwGeo{");
+    final var ts = new ToString(this);
 
-    sb.append(", latitude=");
-    sb.append(getLatitude());
-    sb.append(", longitude=");
-    sb.append(getLongitude());
-    sb.append("}");
+    ts.append("latitude", getLatitude());
+    ts.append("longitude", getLongitude());
 
-    return sb.toString();
+    return ts.toString();
   }
 
   @Override

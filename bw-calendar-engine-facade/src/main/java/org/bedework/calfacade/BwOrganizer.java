@@ -25,6 +25,7 @@ import org.bedework.calfacade.base.DumpEntity;
 import org.bedework.calfacade.base.SizedEntity;
 import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.util.QuotaUtil;
+import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
@@ -144,7 +145,7 @@ public class BwOrganizer extends DumpEntity<BwOrganizer>
   }
 
   /**
-   * @param val
+   * @param val datestamp
    */
   public void setDtstamp(final String val) {
     dtstamp = val;
@@ -180,10 +181,7 @@ public class BwOrganizer extends DumpEntity<BwOrganizer>
   /** Figure out what's different and update it. This should reduce the number
    * of spurious changes to the db.
    *
-   * @param from
-   */
-  /**
-   * @param from
+   * @param from organizer copy
    * @return true if we changed something.
    */
   public boolean update(final BwOrganizer from) {
@@ -273,35 +271,31 @@ public class BwOrganizer extends DumpEntity<BwOrganizer>
 
   @Override
   public boolean equals(final Object o) {
+    if (!(o instanceof BwOrganizer)) {
+      return false;
+    }
+
     return compareTo((BwOrganizer)o) == 0;
   }
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("BwOrganizer(");
+    final ToString ts = new ToString(this);
 
-    sb.append("cn=");
-    sb.append(getCn());
-    sb.append(", dir=");
-    sb.append(getDir());
-    sb.append(", language=");
-    sb.append(getLanguage());
-    sb.append(", sentBy=");
-    sb.append(getSentBy());
-    sb.append(", organizerUri=");
-    sb.append(getOrganizerUri());
-    sb.append(", dtstamp=");
-    sb.append(getDtstamp());
-    sb.append(", scheduleStatus=");
-    sb.append(getScheduleStatus());
-    sb.append("}");
+    ts.append("cn", getCn());
+    ts.append("dir", getDir());
+    ts.append("language", getLanguage());
+    ts.append("sentBy", getSentBy());
+    ts.append("organizerUri", getOrganizerUri());
+    ts.append("dtstamp", getDtstamp());
+    ts.append("scheduleStatus", getScheduleStatus());
 
-    return sb.toString();
+    return ts.toString();
   }
 
   @Override
   public Object clone() {
-    BwOrganizer nobj = new BwOrganizer();
+    final BwOrganizer nobj = new BwOrganizer();
 
     nobj.setCn(getCn());
     nobj.setDir(getDir());

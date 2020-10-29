@@ -327,7 +327,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
     return changed;
   }
 
-  public void toJson(final JsonGenerator jgen) throws CalFacadeException {
+  public void toJson(final JsonGenerator jgen) {
     try {
       jgen.writeStartObject();
 
@@ -341,7 +341,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
 
       jgen.writeEndObject(); // category
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -359,8 +359,8 @@ public class BwCategory extends BwEventProperty<BwCategory>
   }
 
   private void outJsonBwString(final String name,
-                               final BwStringBase value,
-                               final JsonGenerator jgen) throws CalFacadeException {
+                               final BwStringBase<?> value,
+                               final JsonGenerator jgen) {
     try {
       if (value == null) {
         return;
@@ -371,7 +371,7 @@ public class BwCategory extends BwEventProperty<BwCategory>
       outJsonField("value", value.getValue(), jgen);
       jgen.writeEndObject();
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 

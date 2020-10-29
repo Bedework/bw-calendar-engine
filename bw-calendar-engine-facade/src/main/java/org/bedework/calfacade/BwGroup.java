@@ -96,17 +96,18 @@ public class BwGroup extends BwPrincipal {
 
   /** Return true if the account name is in the group members.
    *
-   * @param account
+   * @param account of possible group member
    * @param group     boolean true if we're testing for a group.
    * @return true if the account name is in the group members.
    */
-  public boolean isMember(final String account, final boolean group) {
-    Collection<BwPrincipal> ms = getGroupMembers();
+  public boolean isMember(final String account,
+                          final boolean group) {
+    final Collection<BwPrincipal> ms = getGroupMembers();
     if (ms == null) {
       return false;
     }
 
-    for (BwPrincipal mbr: ms) {
+    for (final BwPrincipal mbr: ms) {
       if (mbr.getAccount().equals(account)) {
         if (group == (mbr instanceof BwGroup)) {
           return true;
@@ -126,7 +127,7 @@ public class BwGroup extends BwPrincipal {
   public boolean addGroupMember(final BwPrincipal mbr) {
     Collection<BwPrincipal> ms = getGroupMembers();
     if (ms == null) {
-      ms = new TreeSet<BwPrincipal>();
+      ms = new TreeSet<>();
       setGroupMembers(ms);
     }
 
@@ -140,7 +141,7 @@ public class BwGroup extends BwPrincipal {
    * @return boolean   true if removed
    */
   public boolean removeGroupMember(final BwPrincipal mbr) {
-    Collection<BwPrincipal> ms = getGroupMembers();
+    final Collection<BwPrincipal> ms = getGroupMembers();
     if (ms == null) {
       return false;
     }
@@ -151,11 +152,11 @@ public class BwGroup extends BwPrincipal {
   protected void toStringSegment(final ToString ts) {
     super.toStringSegment(ts);
 
-    Collection<String> refs = new ArrayList<String>();
+    final Collection<String> refs = new ArrayList<>();
 
-    Collection<BwPrincipal> ms = getGroupMembers();
+    final Collection<BwPrincipal> ms = getGroupMembers();
     if (ms != null) {
-      for (BwPrincipal mbr: ms) {
+      for (final BwPrincipal mbr: ms) {
         refs.add(mbr.getPrincipalRef());
       }
     }
@@ -174,9 +175,9 @@ public class BwGroup extends BwPrincipal {
   public void copyTo(final BwGroup val) {
     super.copyTo(val);
 
-    Collection<BwPrincipal> ms = getGroupMembers();
+    final Collection<BwPrincipal> ms = getGroupMembers();
     if (ms != null) {
-      for (BwPrincipal mbr: ms) {
+      for (final BwPrincipal mbr: ms) {
         val.addGroupMember((BwPrincipal)mbr.clone());
       }
     }
@@ -191,7 +192,7 @@ public class BwGroup extends BwPrincipal {
   }
   
   public BwGroup shallowClone() {
-    BwGroup g = new BwGroup();
+    final BwGroup g = new BwGroup();
     shallowCopyTo(g);
 
     return g;
@@ -203,7 +204,7 @@ public class BwGroup extends BwPrincipal {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
 
@@ -215,7 +216,7 @@ public class BwGroup extends BwPrincipal {
     /* We do not clone the attached subscriptions if present. These need to
        be cloned explicitly or we might set up a clone loop.
     */
-    BwGroup g = new BwGroup();
+    final BwGroup g = new BwGroup();
     copyTo(g);
 
     return g;

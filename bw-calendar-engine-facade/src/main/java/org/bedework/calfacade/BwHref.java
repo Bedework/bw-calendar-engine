@@ -27,7 +27,7 @@ public class BwHref {
 
   /** Constructor
    */
-  public BwHref(String value) {
+  public BwHref(final String value) {
     this.value = value;
   }
 
@@ -46,6 +46,6 @@ public class BwHref {
 
   @Override
   public String toString() {
-    return getValue().toString();
+    return getValue();
   }
 }

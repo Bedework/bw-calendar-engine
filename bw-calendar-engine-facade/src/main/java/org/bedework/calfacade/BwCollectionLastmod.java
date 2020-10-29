@@ -42,7 +42,7 @@ public class BwCollectionLastmod extends BwLastMod<BwCalendar, BwCollectionLastm
 
   /** No date constructor
    *
-   * @param dbEntity
+   * @param dbEntity collection
    */
   public BwCollectionLastmod(final BwCalendar dbEntity) {
     super(dbEntity);
@@ -55,8 +55,8 @@ public class BwCollectionLastmod extends BwLastMod<BwCalendar, BwCollectionLastm
   }
 
   /** Constructor to set last mod
-   * @param dbEntity
-   * @param dt
+   * @param dbEntity collection
+   * @param dt Date lastmod
    */
   public BwCollectionLastmod(final BwCalendar dbEntity, final Date dt) {
     super(dbEntity, dt);
@@ -69,8 +69,8 @@ public class BwCollectionLastmod extends BwLastMod<BwCalendar, BwCollectionLastm
   }
 
   /** Constructor to set last mod
-   * @param dbEntity
-   * @param timestamp
+   * @param dbEntity collection
+   * @param timestamp lastmod
    */
   public BwCollectionLastmod(final BwCalendar dbEntity,
                              final String timestamp) {
@@ -86,7 +86,7 @@ public class BwCollectionLastmod extends BwLastMod<BwCalendar, BwCollectionLastm
   }
 
   /**
-   * @param val
+   * @param val collection
    */
   @Override
   public void setDbEntity(final BwCalendar val) {
@@ -116,9 +116,6 @@ public class BwCollectionLastmod extends BwLastMod<BwCalendar, BwCollectionLastm
     return path;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Comparable#compareTo(java.lang.Object)
-   */
   @Override
   @NoWrap
   public int compareTo(final BwCollectionLastmod that) {
@@ -126,7 +123,7 @@ public class BwCollectionLastmod extends BwLastMod<BwCalendar, BwCollectionLastm
       return 0;
     }
 
-    int res = getTagValue().compareTo(that.getTagValue());
+    final int res = getTagValue().compareTo(that.getTagValue());
 
     if (res != 0) {
       return res;
@@ -137,7 +134,7 @@ public class BwCollectionLastmod extends BwLastMod<BwCalendar, BwCollectionLastm
 
   @Override
   public Object clone() {
-    BwCollectionLastmod lm = new BwCollectionLastmod();
+    final BwCollectionLastmod lm = new BwCollectionLastmod();
 
     lm.setPath(getPath());
     lm.setSequence(getSequence());

@@ -226,7 +226,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
      * Anything with fewer or greater elements is a collection or entity.
      */
 
-    int pos1 = href.indexOf("/", 1);
+    final int pos1 = href.indexOf("/", 1);
 
     if (pos1 < 0) {
       return false;
@@ -236,13 +236,13 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
       return false;
     }
 
-    int pos2 = href.indexOf("/", pos1 + 1);
+    final int pos2 = href.indexOf("/", pos1 + 1);
 
     if (pos2 < 0) {
       return false;
     }
 
-    for (String root: toWho.keySet()) {
+    for (final String root: toWho.keySet()) {
       if (href.startsWith(root)) {
         return !href.equals(root);
       }
@@ -280,14 +280,14 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
         return null;
       }
 
-      int start = -1;
+      final int start = -1;
 
       int end = uri.length();
       if (uri.endsWith("/")) {
         end--;
       }
 
-      for (String prefix: toWho.keySet()) {
+      for (final String prefix: toWho.keySet()) {
         if (!uri.startsWith(prefix)) {
           continue;
         }
@@ -297,8 +297,8 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
           return null;
         }
 
-        int whoType = toWho.get(prefix);
-        String who;
+        final int whoType = toWho.get(prefix);
+        final String who;
 
         if ((whoType == WhoDefs.whoTypeUser) ||
                 (whoType == WhoDefs.whoTypeGroup)) {
@@ -326,7 +326,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
       }
 
       throw new CalFacadeException(CalFacadeException.principalNotFound);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }
@@ -725,7 +725,7 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
         @Override
         public Object simpleValue(final Class cl,
-                                  final String val) throws Throwable {
+                                  final String val) {
           if (cl.getCanonicalName()
                 .equals(Timestamp.class.getCanonicalName())) {
             return Timestamp.valueOf(val);
@@ -777,6 +777,10 @@ public abstract class BwPrincipal extends BwDbentity<BwPrincipal>
 
   @Override
   public boolean equals(final Object o) {
+    if (!(o instanceof BwPrincipal)) {
+      return false;
+    }
+
     return compareTo((BwPrincipal)o) == 0;
   }
 

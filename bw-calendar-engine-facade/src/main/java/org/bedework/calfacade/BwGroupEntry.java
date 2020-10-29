@@ -155,7 +155,7 @@ public class BwGroupEntry implements Serializable {
       return -1;
     }
 
-    BwGroupEntry that = (BwGroupEntry)o;
+    final BwGroupEntry that = (BwGroupEntry)o;
 
     int res = getGrp().compareTo(that.getGrp());
     if(res != 0) {
@@ -172,7 +172,7 @@ public class BwGroupEntry implements Serializable {
 
   @Override
   public int hashCode() {
-    int hc;
+    final int hc;
 
     if (getMemberIsGroup()) {
       hc = 1;
@@ -185,12 +185,16 @@ public class BwGroupEntry implements Serializable {
 
   @Override
   public boolean equals(final Object obj) {
+    if (!(obj instanceof BwGroupEntry)) {
+      return false;
+    }
+
     return compareTo(obj) == 0;
   }
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     BwPrincipal.toStringSegment(ts, "grp=", getGrp());
     ts.append("memberId", getMemberId());

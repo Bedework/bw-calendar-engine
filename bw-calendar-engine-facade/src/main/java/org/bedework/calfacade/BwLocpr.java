@@ -68,7 +68,7 @@ public class BwLocpr extends BwPrincipal {
     /* We do not clone the attached subscriptions if present. These need to
        be cloned explicitly or we might set up a clone loop.
     */
-    BwLocpr l = new BwLocpr();
+    final BwLocpr l = new BwLocpr();
     copyTo(l);
 
     return l;
