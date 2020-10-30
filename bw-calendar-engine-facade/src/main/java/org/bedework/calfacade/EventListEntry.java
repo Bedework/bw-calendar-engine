@@ -7,28 +7,16 @@ package org.bedework.calfacade;
  * User: mike Date: 6/13/18 Time: 14:06
  */
 public class EventListEntry implements Comparable<EventListEntry> {
-  private String href;
+  private final String href;
 
   private String path;
   private String name;
 
   /**
-   * @param href
+   * @param href of event
    */
   public EventListEntry(final String href) {
     this.href = href;
-  }
-
-  /**
-   * @param path
-   * @param name
-   */
-  public EventListEntry(final String path,
-                        final String name) {
-    this.path = path;
-    this.name = name;
-
-    href = path + "/" + name;
   }
 
   /**
@@ -61,7 +49,7 @@ public class EventListEntry implements Comparable<EventListEntry> {
   }
 
   private void split() {
-    int pos = href.lastIndexOf("/");
+    final int pos = href.lastIndexOf("/");
 
     path = href.substring(0, pos );
     name = href.substring(pos + 1); // Skip the "/"

@@ -38,7 +38,7 @@ public class DirectoryInfo {
    *
    * @param val    String
    */
-  public void setPrincipalRoot(String val) {
+  public void setPrincipalRoot(final String val) {
     principalRoot = val;
   }
 
@@ -54,7 +54,7 @@ public class DirectoryInfo {
    *
    * @param val    String
    */
-  public void setUserPrincipalRoot(String val) {
+  public void setUserPrincipalRoot(final String val) {
     userPrincipalRoot = val;
   }
 
@@ -70,7 +70,7 @@ public class DirectoryInfo {
    *
    * @param val    String
    */
-  public void setGroupPrincipalRoot(String val) {
+  public void setGroupPrincipalRoot(final String val) {
     groupPrincipalRoot = val;
   }
 
@@ -86,7 +86,7 @@ public class DirectoryInfo {
    *
    * @param val    String
    */
-  public void setBwadmingroupPrincipalRoot(String val) {
+  public void setBwadmingroupPrincipalRoot(final String val) {
     bwadmingroupPrincipalRoot = val;
   }
 
@@ -102,7 +102,7 @@ public class DirectoryInfo {
    *
    * @param val    String
    */
-  public void setResourcePrincipalRoot(String val) {
+  public void setResourcePrincipalRoot(final String val) {
     resourcePrincipalRoot = val;
   }
 
@@ -118,7 +118,7 @@ public class DirectoryInfo {
    *
    * @param val    String
    */
-  public void setVenuePrincipalRoot(String val) {
+  public void setVenuePrincipalRoot(final String val) {
     venuePrincipalRoot = val;
   }
 
@@ -134,7 +134,7 @@ public class DirectoryInfo {
    *
    * @param val    String
    */
-  public void setTicketPrincipalRoot(String val) {
+  public void setTicketPrincipalRoot(final String val) {
     ticketPrincipalRoot = val;
   }
 
@@ -150,7 +150,7 @@ public class DirectoryInfo {
    *
    * @param val    String
    */
-  public void setHostPrincipalRoot(String val) {
+  public void setHostPrincipalRoot(final String val) {
     hostPrincipalRoot = val;
   }
 

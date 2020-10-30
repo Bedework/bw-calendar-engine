@@ -74,27 +74,21 @@ public class BwSystem extends BwDbentity<BwSystem>
     properties = val;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#getProperties()
-   */
   @Override
   @Dump(collectionElementName = "property", compound = true)
   public Set<BwProperty> getProperties() {
     return properties;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#getProperties(java.lang.String)
-   */
   @Override
   public Set<BwProperty> getProperties(final String name) {
-    TreeSet<BwProperty> ps = new TreeSet<BwProperty>();
+    final TreeSet<BwProperty> ps = new TreeSet<>();
 
     if (getNumProperties() == 0) {
       return null;
     }
 
-    for (BwProperty p: getProperties()) {
+    for (final BwProperty p: getProperties()) {
       if (p.getName().equals(name)) {
         ps.add(p);
       }
@@ -103,18 +97,15 @@ public class BwSystem extends BwDbentity<BwSystem>
     return ps;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#removeProperties(java.lang.String)
-   */
   @Override
   public void removeProperties(final String name) {
-    Set<BwProperty> ps = getProperties(name);
+    final Set<BwProperty> ps = getProperties(name);
 
     if (ps == null) {
       return;
     }
 
-    for (BwProperty p: ps) {
+    for (final BwProperty p: ps) {
       removeProperty(p);
     }
   }
@@ -122,7 +113,7 @@ public class BwSystem extends BwDbentity<BwSystem>
   @Override
   @NoDump
   public int getNumProperties() {
-    Collection<BwProperty> c = getProperties();
+    final Collection<BwProperty> c = getProperties();
     if (c == null) {
       return 0;
     }
@@ -132,13 +123,13 @@ public class BwSystem extends BwDbentity<BwSystem>
 
   @Override
   public BwProperty findProperty(final String name) {
-    Collection<BwProperty> props = getProperties();
+    final Collection<BwProperty> props = getProperties();
 
     if (props == null) {
       return null;
     }
 
-    for (BwProperty prop: props) {
+    for (final BwProperty prop: props) {
       if (name.equals(prop.getName())) {
         return prop;
       }
@@ -147,28 +138,20 @@ public class BwSystem extends BwDbentity<BwSystem>
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#addProperty(org.bedework.calfacade.BwProperty)
-   */
   @Override
   public void addProperty(final BwProperty val) {
     Set<BwProperty> c = getProperties();
     if (c == null) {
-      c = new TreeSet<BwProperty>();
+      c = new TreeSet<>();
       setProperties(c);
     }
 
-    if (!c.contains(val)) {
-      c.add(val);
-    }
+    c.add(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#removeProperty(org.bedework.calfacade.BwProperty)
-   */
   @Override
   public boolean removeProperty(final BwProperty val) {
-    Set<BwProperty> c = getProperties();
+    final Set<BwProperty> c = getProperties();
     if (c == null) {
       return false;
     }
@@ -176,34 +159,23 @@ public class BwSystem extends BwDbentity<BwSystem>
     return c.remove(val);
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#copyProperties()
-   */
   @Override
   public Set<BwProperty> copyProperties() {
     if (getNumProperties() == 0) {
       return null;
     }
-    TreeSet<BwProperty> ts = new TreeSet<BwProperty>();
 
-    for (BwProperty p: getProperties()) {
-      ts.add(p);
-    }
-
-    return ts;
+    return new TreeSet<>(getProperties());
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calfacade.base.PropertiesEntity#cloneProperties()
-   */
   @Override
   public Set<BwProperty> cloneProperties() {
     if (getNumProperties() == 0) {
       return null;
     }
-    TreeSet<BwProperty> ts = new TreeSet<BwProperty>();
+    final TreeSet<BwProperty> ts = new TreeSet<>();
 
-    for (BwProperty p: getProperties()) {
+    for (final BwProperty p: getProperties()) {
       ts.add((BwProperty)p.clone());
     }
 
@@ -216,10 +188,11 @@ public class BwSystem extends BwDbentity<BwSystem>
 
   /** Set the single valued named property
    *
-   * @param name
-   * @param val
+   * @param name of property
+   * @param val value
    */
-  public void setProperty(final String name, final String val) {
+  public void setProperty(final String name,
+                          final String val) {
     BwProperty prop = findProperty(name);
 
     if (prop == null) {
@@ -232,11 +205,11 @@ public class BwSystem extends BwDbentity<BwSystem>
 
   /** Get the single valued named property
    *
-   * @param name
+   * @param name of property
    * @return String calendar color
    */
   public String getProperty(final String name) {
-    BwProperty prop = findProperty(name);
+    final BwProperty prop = findProperty(name);
 
     if (prop == null) {
       return null;
@@ -250,14 +223,14 @@ public class BwSystem extends BwDbentity<BwSystem>
    */
   @NoDump
   public Set<SubContext> getContexts() {
-    Set<SubContext> cs = new TreeSet<SubContext>();
-    Set<BwProperty> cps = getProperties(bedeworkContextsPname);
+    final Set<SubContext> cs = new TreeSet<>();
+    final Set<BwProperty> cps = getProperties(bedeworkContextsPname);
 
     if (cps == null) {
       return cs;
     }
 
-    for (BwProperty cp: cps) {
+    for (final BwProperty cp: cps) {
       cs.add(new SubContext(cp));
     }
 
@@ -279,17 +252,17 @@ public class BwSystem extends BwDbentity<BwSystem>
   }
 
   /**
-   * @param name
+   * @param name of sub-context
    * @return Sub-context matching the given name or null.
    */
   public SubContext findContext(final String name) {
-    Set<BwProperty> cps = getProperties(bedeworkContextsPname);
+    final Set<BwProperty> cps = getProperties(bedeworkContextsPname);
 
     if (cps == null) {
       return null;
     }
 
-    for (BwProperty cp: cps) {
+    for (final BwProperty cp: cps) {
       if (name.equals(SubContext.extractContextName(cp.getValue()))) {
         return new SubContext(cp);
       }
@@ -304,15 +277,15 @@ public class BwSystem extends BwDbentity<BwSystem>
    * ==================================================================== */
 
   /**
-   * @param name
-   * @param val
+   * @param name of property
+   * @param val value
    */
   public void setQproperty(final QName name, final String val) {
     setProperty(NamespaceAbbrevs.prefixed(name), val);
   }
 
   /**
-   * @param name
+   * @param name of property
    * @return value or null
    */
   public String getQproperty(final QName name) {
@@ -359,7 +332,7 @@ public class BwSystem extends BwDbentity<BwSystem>
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
     ts.newLine();
@@ -372,11 +345,11 @@ public class BwSystem extends BwDbentity<BwSystem>
 
   @Override
   public Object clone() {
-    BwSystem clone = new BwSystem();
+    final BwSystem clone = new BwSystem();
 
     clone.setName(getName());
 
-    for (BwProperty p: getProperties()) {
+    for (final BwProperty p: getProperties()) {
       clone.addProperty(p);
     }
 

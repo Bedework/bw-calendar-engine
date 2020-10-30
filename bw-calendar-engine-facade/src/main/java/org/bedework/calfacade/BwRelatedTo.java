@@ -21,6 +21,7 @@ package org.bedework.calfacade;
 import org.bedework.calfacade.annotations.Dump;
 import org.bedework.calfacade.base.DumpEntity;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.util.misc.ToString;
 
 import java.io.Serializable;
 
@@ -29,7 +30,7 @@ import java.io.Serializable;
  *  @version 1.0
  */
 @Dump(elementName="relatedTo", keyFields={"relType", "value"})
-public class BwRelatedTo extends DumpEntity
+public class BwRelatedTo extends DumpEntity<BwRelatedTo>
          implements Comparable<BwRelatedTo>, Serializable {
   private String relType;
 
@@ -43,8 +44,8 @@ public class BwRelatedTo extends DumpEntity
 
   /** Constructor
    *
-   * @param relType
-   * @param value
+   * @param relType type
+   * @param value taget
    */
   public BwRelatedTo(final String relType, final String value) {
     this.relType = relType;
@@ -91,7 +92,7 @@ public class BwRelatedTo extends DumpEntity
    * @return String rfc value
    */
   public String strVal() {
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     if (getRelType() != null) {
       sb.append("RELTYPE=");
@@ -119,7 +120,7 @@ public class BwRelatedTo extends DumpEntity
       return -1;
     }
 
-    int res = CalFacadeUtil.cmpObjval(getRelType(), that.getRelType());
+    final int res = CalFacadeUtil.cmpObjval(getRelType(), that.getRelType());
 
     if (res != 0) {
       return res;
@@ -145,20 +146,21 @@ public class BwRelatedTo extends DumpEntity
 
   @Override
   public boolean equals(final Object o) {
+    if (!(o instanceof BwRelatedTo)) {
+      return false;
+    }
+
     return compareTo((BwRelatedTo)o) == 0;
   }
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("BwRelatedTo{");
+    final var ts = new ToString(this);
 
-    sb.append(", relType=");
-    sb.append(getRelType());
-    sb.append(", value=");
-    sb.append(getValue());
-    sb.append("}");
+    ts.append("relType", getRelType());
+    ts.append("value", getValue());
 
-    return sb.toString();
+    return ts.toString();
   }
 
   @Override

@@ -25,13 +25,13 @@ import java.io.Serializable;
  * @author douglm
  */
 public class MonitorStat implements Serializable {
-  private String name;
+  private final String name;
   private Long count;
-  private String value;
+  private final String value;
 
   /**
-   * @param name
-   * @param value
+   * @param name of stat
+   * @param value of stat
    */
   public MonitorStat(final String name,
                      final String value) {
@@ -40,9 +40,9 @@ public class MonitorStat implements Serializable {
   }
 
   /**
-   * @param name
-   * @param count
-   * @param value
+   * @param name of stat
+   * @param count number
+   * @param value of stat
    */
   public MonitorStat(final String name,
                      final Long count,
@@ -68,7 +68,7 @@ public class MonitorStat implements Serializable {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     sb.append(getName());
     sb.append(" = ");

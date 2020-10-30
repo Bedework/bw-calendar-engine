@@ -147,7 +147,6 @@ public class PollItmId implements Comparable<PollItmId>, Serializable {
     return (s == null) || (s.length() == 0);
   }
 
-  @SuppressWarnings("NullableProblems")
   @Override
   public int compareTo(final PollItmId  o) {
     return getId().compareTo(o.getId());

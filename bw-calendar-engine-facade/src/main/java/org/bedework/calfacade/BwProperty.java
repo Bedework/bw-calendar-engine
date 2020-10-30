@@ -98,8 +98,8 @@ public class BwProperty extends BwDbentity<BwProperty> {
    *
    * <p>We return the first one we found.
    *
-   * @param name
-   * @param c
+   * @param name of property
+   * @param c collection of properties
    * @return BwProperty or null if no strings.
    */
   public static BwProperty findName(final String name,
@@ -126,7 +126,7 @@ public class BwProperty extends BwDbentity<BwProperty> {
   /** Figure out what's different and update it. This should reduce the number
    * of spurious changes to the db.
    *
-   * @param from
+   * @param from BwProperty
    * @return true if we changed something.
    */
   public boolean update(final BwProperty from) {

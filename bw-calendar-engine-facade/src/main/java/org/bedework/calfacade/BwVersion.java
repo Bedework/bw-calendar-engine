@@ -48,7 +48,7 @@ public class BwVersion {
                                     final int minor,
                                     final int update,
                                     final String patch) {
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
     sb.append(major);
 
     if ((minor != 0) ||

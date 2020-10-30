@@ -57,7 +57,7 @@ public class BwUser extends BwPrincipal {
    * This is the id we run as for that particular instance, e.g. the campus
    * calendar, or the alumni calendar etc.
    *
-   * @param val
+   * @param val true for instance owner
    * @deprecated
    */
   @Deprecated

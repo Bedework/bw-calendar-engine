@@ -29,7 +29,8 @@ import java.io.Serializable;
  *.
  *  @version 1.0
  */
-public class BwRequestStatus implements Comparable<BwRequestStatus>, Serializable {
+public class BwRequestStatus
+        implements Comparable<BwRequestStatus>, Serializable {
   private String code;
 
   private BwString description;
@@ -122,7 +123,7 @@ public class BwRequestStatus implements Comparable<BwRequestStatus>, Serializabl
    * @return String rfc value
    */
   public String strVal() {
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     if (getCode() != null) {
       sb.append(getCode());
@@ -147,7 +148,7 @@ public class BwRequestStatus implements Comparable<BwRequestStatus>, Serializabl
    * @return BwRequestStatus
    */
   public static BwRequestStatus fromRequestStatus(final RequestStatus val) {
-    BwString str = new BwString(null, val.getDescription());
+    final BwString str = new BwString(null, val.getDescription());
     // LANG
 
      return new BwRequestStatus(val.getStatusCode(), str, val.getExData());
@@ -237,7 +238,7 @@ public class BwRequestStatus implements Comparable<BwRequestStatus>, Serializabl
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     ts.append("code", getCode());
     ts.append("description", getDescription());
@@ -249,11 +250,11 @@ public class BwRequestStatus implements Comparable<BwRequestStatus>, Serializabl
   @SuppressWarnings("MethodDoesntCallSuperMethod")
   @Override
   public Object clone() {
-    BwRequestStatus rs = new BwRequestStatus();
+    final BwRequestStatus rs = new BwRequestStatus();
 
     rs.setCode(getCode());
 
-    BwString desc = getDescription();
+    final BwString desc = getDescription();
     if (desc != null) {
       rs.setDescription((BwString)desc.clone());
     }

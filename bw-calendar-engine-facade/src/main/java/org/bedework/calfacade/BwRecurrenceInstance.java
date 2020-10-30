@@ -19,6 +19,8 @@
 
 package org.bedework.calfacade;
 
+import org.bedework.util.misc.ToString;
+
 import java.io.Serializable;
 import java.util.Comparator;
 
@@ -32,7 +34,9 @@ import java.util.Comparator;
  * @author Mike Douglass douglm@bedework.edu
  * @version 1.0
  */
-public class BwRecurrenceInstance implements Comparable, Comparator, Serializable {
+public class BwRecurrenceInstance
+        implements Comparable<BwRecurrenceInstance>,
+              Comparator<BwRecurrenceInstance>, Serializable {
   /* db version number */
   private int seq;
 
@@ -64,31 +68,11 @@ public class BwRecurrenceInstance implements Comparable, Comparator, Serializabl
   public BwRecurrenceInstance() {
   }
 
-  /** Constructor
-   *
-   * @param dtstart      BwDateTime start
-   * @param dtend        BwDateTime end
-   * @param recurrenceId
-   * @param master
-   * @param override
-   */
-  public BwRecurrenceInstance(BwDateTime dtstart,
-                              BwDateTime dtend,
-                              String recurrenceId,
-                              BwEvent master,
-                              BwEventAnnotation override) {
-    this.dtstart = dtstart;
-    this.dtend = dtend;
-    this.recurrenceId = recurrenceId;
-    this.master = master;
-    this.override = override;
-  }
-
   /** Set the seq for this entity
    *
    * @param val    int seq
    */
-  public void setSeq(int val) {
+  public void setSeq(final int val) {
     seq = val;
   }
 
@@ -104,7 +88,7 @@ public class BwRecurrenceInstance implements Comparable, Comparator, Serializabl
    *
    *  @param  val   Event's start
    */
-  public void setDtstart(BwDateTime val) {
+  public void setDtstart(final BwDateTime val) {
     dtstart = val;
   }
 
@@ -120,7 +104,7 @@ public class BwRecurrenceInstance implements Comparable, Comparator, Serializabl
    *
    *  @param  val   Event's end
    */
-  public void setDtend(BwDateTime val) {
+  public void setDtend(final BwDateTime val) {
     dtend = val;
   }
 
@@ -136,7 +120,7 @@ public class BwRecurrenceInstance implements Comparable, Comparator, Serializabl
    *
    *  @param val     recurrence id
    */
-  public void setRecurrenceId(String val) {
+  public void setRecurrenceId(final String val) {
      recurrenceId = val;
   }
 
@@ -158,7 +142,7 @@ public class BwRecurrenceInstance implements Comparable, Comparator, Serializabl
   /**
    * @param val The master to set.
    */
-  public void setMaster(BwEvent val) {
+  public void setMaster(final BwEvent val) {
     master = val;
   }
 
@@ -172,7 +156,7 @@ public class BwRecurrenceInstance implements Comparable, Comparator, Serializabl
   /**
    * @param val The override to set.
    */
-  public void setOverride(BwEventAnnotation val) {
+  public void setOverride(final BwEventAnnotation val) {
     override = val;
   }
 
@@ -180,27 +164,13 @@ public class BwRecurrenceInstance implements Comparable, Comparator, Serializabl
    *                   Object methods
    *  =================================================================== */
 
-  public int compare(Object o1, Object o2) {
-    if (o1 == o2) {
-      return 0;
-    }
-
-    if (!(o1 instanceof BwRecurrenceInstance)) {
-      return -1;
-    }
-
-    if (!(o2 instanceof BwRecurrenceInstance)) {
-      return 1;
-    }
-
-    BwRecurrenceInstance inst1 = (BwRecurrenceInstance)o1;
-    BwRecurrenceInstance inst2 = (BwRecurrenceInstance)o2;
-
+  public int compare(final BwRecurrenceInstance inst1,
+                     final BwRecurrenceInstance inst2) {
     /* Note we only check master + recurrenceid. The recurrence id is the key
      * to the entry. This does not take account of modifications to the object.
      */
 
-    int res = inst1.getMaster().compareTo(inst2.getMaster());
+    final int res = inst1.getMaster().compareTo(inst2.getMaster());
     if (res != 0) {
       return res;
     }
@@ -208,7 +178,7 @@ public class BwRecurrenceInstance implements Comparable, Comparator, Serializabl
     return inst1.getRecurrenceId().compareTo(inst2.getRecurrenceId());
   }
 
-  public int compareTo(Object o2) {
+  public int compareTo(final BwRecurrenceInstance o2) {
     return compare(this, o2);
   }
 
@@ -218,29 +188,30 @@ public class BwRecurrenceInstance implements Comparable, Comparator, Serializabl
 
   /* We always use the compareTo method
    */
-  public boolean equals(Object obj) {
+  public boolean equals(final Object obj) {
     if (this == obj) {
       return true;
     }
 
-    return compareTo(obj) == 0;
+    if (!(obj instanceof BwRecurrenceInstance)) {
+      return false;
+    }
+
+    return compareTo((BwRecurrenceInstance)obj) == 0;
   }
 
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    final var ts = new ToString(this);
 
-    sb.append("BwRecurrenceInstance{dtStart=");
-    sb.append(getDtstart());
-    sb.append(", dtEnd=");
-    sb.append(getDtend());
-    sb.append(", recurrenceId=");
-    sb.append(getRecurrenceId());
-    sb.append(", master=");
-    sb.append(getMaster().getId());
+    ts.append("dtStart", getDtstart());
+    ts.append("dtEnd", getDtend());
+    ts.append("recurrenceId", getRecurrenceId());
+    ts.append("master", getMaster().getId());
 
-    if (getOverride() != null)
-    sb.append("}");
+    if (getOverride() != null) {
+      ts.append(getOverride());
+    }
 
-    return sb.toString();
+    return ts.toString();
   }
 }

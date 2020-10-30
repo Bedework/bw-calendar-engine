@@ -164,70 +164,68 @@ public class BwResourceContent extends BwDbentity<BwResourceContent> {
 
   /**
    * @return base64 encoded value
-   * @throws CalFacadeException
    */
-  public String getEncodedContent() throws CalFacadeException {
-    Base64OutputStream b64out = null;
+  public String getEncodedContent() {
+    final Base64OutputStream b64out;
 
-    try {
-      Blob b = getValue();
-      if (b == null) {
-        return null;
-      }
-
-      int len = -1;
-      final int chunkSize = 1024;
-
-      final byte buffer[] = new byte[chunkSize];
-
-      final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      b64out = new Base64OutputStream(baos);
-      final InputStream str = b.getBinaryStream();
-
-      while((len = str.read(buffer)) != -1) {
-        b64out.write(buffer, 0, len);
-      }
-      b64out.close();
-
-      return new String(baos.toByteArray());
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    }
-  }
-
-  /**
-   * @return String value
-   * @throws CalFacadeException
-   */
-  @NoDump
-  public String getStringContent() throws CalFacadeException {
     try {
       final Blob b = getValue();
       if (b == null) {
         return null;
       }
 
-      int len = -1;
+      int len;
       final int chunkSize = 1024;
 
-      final byte buffer[] = new byte[chunkSize];
+      final byte[] buffer = new byte[chunkSize];
+
+      final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      b64out = new Base64OutputStream(baos);
+      final InputStream str = b.getBinaryStream();
+
+      while ((len = str.read(buffer)) != -1) {
+        b64out.write(buffer, 0, len);
+      }
+      b64out.close();
+
+      return new String(baos.toByteArray());
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  /**
+   * @return String value
+   */
+  @NoDump
+  public String getStringContent() {
+    try {
+      final Blob b = getValue();
+      if (b == null) {
+        return null;
+      }
+
+      int len;
+      final int chunkSize = 1024;
+
+      final byte[] buffer = new byte[chunkSize];
 
       final ByteArrayOutputStream baos = new ByteArrayOutputStream();
       final InputStream str = b.getBinaryStream();
 
-      while((len = str.read(buffer)) != -1) {
+      while ((len = str.read(buffer)) != -1) {
         baos.write(buffer, 0, len);
       }
 
       return new String(baos.toByteArray());
     } catch (final Throwable t) {
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 
   /** Copy this objects values into the parameter
    *
-   * @param val
+   * @param val resource content
    */
   public void copyTo(final BwResourceContent val) {
     val.setColPath(getColPath());

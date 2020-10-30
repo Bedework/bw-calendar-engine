@@ -95,7 +95,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
   public BwResource() {
     super();
 
-    Date dt = new Date();
+    final Date dt = new Date();
 //    setLastmod(DateTimeUtil.isoDateTimeUTC(dt));
     setCreated(DateTimeUtil.isoDateTimeUTC(dt));
   }
@@ -224,7 +224,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
    */
   @NoDump
   public String getContentTypeStripped() {
-    String ct = getContentType();
+    final String ct = getContentType();
 
     if ((ct == null) || (!ct.contains("\t"))) {
       return ct;
@@ -239,7 +239,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
    */
   @NoDump
   public String getContentTypeExtra() {
-    String ct = getContentType();
+    final String ct = getContentType();
 
     if ((ct == null) || (!ct.contains("\t"))) {
       return null;
@@ -264,7 +264,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
    * @param val timestamp
    */
   public void updateLastmod(final Timestamp val) {
-    DateTime dt = new DateTime(val);
+    final DateTime dt = new DateTime(val);
 
     setLastmod(new LastModified(dt).getValue());
 
@@ -377,7 +377,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
   @NoDump
   @NoWrap
   public boolean getTombstoned() {
-    String f = getEncoding();
+    final String f = getEncoding();
     return (f != null) && f.equals(tombstoned);
   }
 
@@ -396,7 +396,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
       return 0;
     }
 
-    int res = Util.cmpObjval(getColPath(), that.getColPath());
+    final int res = Util.cmpObjval(getColPath(), that.getColPath());
     if (res != 0) {
       return res;
     }
@@ -406,7 +406,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     toStringSegment(ts);
     ts.append("name", getName());
@@ -419,7 +419,7 @@ public class BwResource extends BwShareableContainedDbentity<BwResource> {
 
   @Override
   public Object clone() {
-    BwResource nobj = new BwResource();
+    final BwResource nobj = new BwResource();
     copyTo(nobj);
 
     return nobj;

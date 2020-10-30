@@ -42,9 +42,9 @@ public class BwStats implements Serializable {
     /** */
     public final static int statKindStat = 1;
 
-    private int statKind;
+    private final int statKind;
 
-    private String statLabel;
+    private final String statLabel;
 
     // ENUM
     /** */
@@ -61,10 +61,11 @@ public class BwStats implements Serializable {
 
     /** Constructor for an int val
      *
-     * @param label
-     * @param val
+     * @param label of val
+     * @param val value
      */
-    public StatsEntry(String label, int val) {
+    public StatsEntry(final String label,
+                      final int val) {
       statKind = statKindStat;
       statLabel = label;
       statType = statTypeInt;
@@ -73,10 +74,11 @@ public class BwStats implements Serializable {
 
     /** Constructor for a long val
      *
-     * @param label
-     * @param val
+     * @param label of val
+     * @param val value
      */
-    public StatsEntry(String label, long val) {
+    public StatsEntry(final String label,
+                      final long val) {
       statKind = statKindStat;
       statLabel = label;
       statType = statTypeLong;
@@ -85,10 +87,11 @@ public class BwStats implements Serializable {
 
     /** Constructor for a double val
      *
-     * @param label
-     * @param val
+     * @param label of val
+     * @param val value
      */
-    public StatsEntry(String label, double val) {
+    public StatsEntry(final String label,
+                      final double val) {
       statKind = statKindStat;
       statLabel = label;
       statType = statTypeDouble;
@@ -97,10 +100,11 @@ public class BwStats implements Serializable {
 
     /** Constructor for a String val
      *
-     * @param label
-     * @param val
+     * @param label of val
+     * @param val value
      */
-    public StatsEntry(String label, String val) {
+    public StatsEntry(final String label,
+                      final String val) {
       statKind = statKindStat;
       statLabel = label;
       statType = statTypeString;
@@ -109,9 +113,9 @@ public class BwStats implements Serializable {
 
     /** Constructor for a header
      *
-     * @param header
+     * @param header for output
      */
-    public StatsEntry(String header) {
+    public StatsEntry(final String header) {
       statKind = statKindHeader;
       statLabel = header;
     }
@@ -156,7 +160,7 @@ public class BwStats implements Serializable {
     protected long flushes;
     protected long refetches;
 
-    CacheStats(String name) {
+    CacheStats(final String name) {
       this.name = name;
     }
 
@@ -168,9 +172,9 @@ public class BwStats implements Serializable {
     }
 
     /**
-     * @param val
+     * @param val num cached
      */
-    public void setCached(long val) {
+    public void setCached(final long val) {
       cached = val;
     }
 
@@ -188,9 +192,9 @@ public class BwStats implements Serializable {
     }
 
     /**
-     * @param val
+     * @param val num hits
      */
-    public void setHits(long val) {
+    public void setHits(final long val) {
       hits = val;
     }
 
@@ -208,9 +212,9 @@ public class BwStats implements Serializable {
     }
 
     /**
-     * @param val
+     * @param val misses
      */
-    public void setMisses(long val) {
+    public void setMisses(final long val) {
       misses = val;
     }
 
@@ -228,9 +232,9 @@ public class BwStats implements Serializable {
     }
 
     /**
-     * @param val
+     * @param val flushes
      */
-    public void setFlushes(long val) {
+    public void setFlushes(final long val) {
       flushes = val;
     }
 
@@ -251,9 +255,9 @@ public class BwStats implements Serializable {
     }
 
     /**
-     * @param val
+     * @param val refetches
      */
-    public void setRefetches(long val) {
+    public void setRefetches(final long val) {
       refetches = val;
     }
 
@@ -348,7 +352,7 @@ public class BwStats implements Serializable {
   /**
    * @param  val  double event fetch millis.
    */
-  public void incEventFetchTime(double val) {
+  public void incEventFetchTime(final double val) {
     eventFetchTime += val;
   }
 
@@ -362,7 +366,7 @@ public class BwStats implements Serializable {
   /**
    * @param val   long event fetches.
    */
-  public void incEventFetches(long val) {
+  public void incEventFetches(final long val) {
     eventFetches += val;
   }
 
@@ -376,7 +380,7 @@ public class BwStats implements Serializable {
   /**
    * @param val access Stats
    */
-  public void setAccessStats(Collection<AccessStatsEntry> val) {
+  public void setAccessStats(final Collection<AccessStatsEntry> val) {
     accessStats = val;
   }
 
@@ -391,7 +395,7 @@ public class BwStats implements Serializable {
    * @return Collection of StatsEntry
    */
   public Collection<StatsEntry> getStats() {
-    ArrayList<StatsEntry> al = new ArrayList<StatsEntry>();
+    final ArrayList<StatsEntry> al = new ArrayList<>();
 
     al.add(new StatsEntry("Bedework statistics."));
 
@@ -409,7 +413,7 @@ public class BwStats implements Serializable {
     if (getAccessStats() != null) {
       al.add(new StatsEntry("Access statistics."));
 
-      for (AccessStatsEntry ase: getAccessStats()) {
+      for (final AccessStatsEntry ase: getAccessStats()) {
         al.add(new StatsEntry(ase.name, ase.count));
       }
     }
@@ -418,12 +422,12 @@ public class BwStats implements Serializable {
   }
 
   /**
-   * @param al
-   * @param cs
+   * @param al list of stats entries
+   * @param cs cachestats
    */
-  public void cacheStatsToString(ArrayList<StatsEntry> al,
-                                 CacheStats cs) {
-    String name = cs.getName() + " ";
+  public void cacheStatsToString(final ArrayList<StatsEntry> al,
+                                 final CacheStats cs) {
+    final String name = cs.getName() + " ";
 
     al.add(new StatsEntry(name + "cached", cs.getCached()));
     al.add(new StatsEntry(name + " hits", cs.getHits()));
@@ -437,11 +441,11 @@ public class BwStats implements Serializable {
    * @param c  Collection of StatsEntry
    * @return String formatted result.
    */
-  public static String toString(Collection<StatsEntry> c) {
-    StringBuilder sb = new StringBuilder();
+  public static String toString(final Collection<StatsEntry> c) {
+    final StringBuilder sb = new StringBuilder();
 
-    for (StatsEntry se: c) {
-      int k = se.getStatKind();
+    for (final StatsEntry se: c) {
+      final int k = se.getStatKind();
 
       if (k == StatsEntry.statKindHeader) {
         header(sb, se.getStatLabel());
@@ -466,23 +470,27 @@ public class BwStats implements Serializable {
 
   private static final int maxvalpad = 10;
 
-  private static void pad(StringBuilder sb, String val, int padlen) {
-    int len = padlen - val.length();
+  private static void pad(final StringBuilder sb,
+                          final String val, final int padlen) {
+    final int len = padlen - val.length();
 
     if (len > 0) {
-      sb.append(padder.substring(0, len));
+      sb.append(padder, 0, len);
     }
 
     sb.append(val);
   }
 
-  private static void header(StringBuilder sb, String h) {
+  private static void header(final StringBuilder sb,
+                             final String h) {
     sb.append("\n");
     pad(sb, h, padderLen);
     sb.append("\n");
   }
 
-  private static void format(StringBuilder sb, String name, String val) {
+  private static void format(final StringBuilder sb,
+                             final String name,
+                             final String val) {
     pad(sb, name, padderLen);
     sb.append(": ");
     pad(sb, val, maxvalpad);

@@ -30,11 +30,11 @@ import java.io.Serializable;
 public class EventPropertiesReference implements Serializable {
   /** True for a collection reference
    */
-  private boolean collection;
+  private final boolean collection;
 
   /** Path to the event or collection
    */
-  private String path;
+  private final String path;
 
   /** Set for a referencing event
    */
@@ -42,7 +42,7 @@ public class EventPropertiesReference implements Serializable {
 
   /** Constructor for collection
    *
-   * @param path
+   * @param path of collection
    */
   public EventPropertiesReference(final String path) {
     collection = true;
@@ -51,8 +51,8 @@ public class EventPropertiesReference implements Serializable {
 
   /** Constructor for event
    *
-   * @param path
-   * @param uid
+   * @param path of event
+   * @param uid of event
    */
   public EventPropertiesReference(final String path, final String uid) {
     collection = false;
@@ -77,8 +77,7 @@ public class EventPropertiesReference implements Serializable {
   }
 
   /** Set for a referencing event
-   */
-  /**
+   *
    * @return non-null for a referencing event
    */
   public String getUid() {
@@ -87,7 +86,7 @@ public class EventPropertiesReference implements Serializable {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     ts.append("collection", getCollection());
     ts.append("path", getPath());

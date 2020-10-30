@@ -27,16 +27,16 @@ public interface CalFacadeDefs {
 
   /** Any object with this key is considered unsaved
    */
-  public static final int unsavedItemKey = -1;
+  int unsavedItemKey = -1;
 
   /*     Some other stuff    */
 
   /** */
-  public static final String bwMimeType = "bwcal";
+  String bwMimeType = "bwcal";
 
   /** */
-  public static final String bwUriPrefix = bwMimeType + "://";
+  String bwUriPrefix = bwMimeType + "://";
 
   /** jasig scheduling assistant */
-  public static final String jasigSchedulingAssistant = "Jasig Scheduling Assistant";
+  String jasigSchedulingAssistant = "Jasig Scheduling Assistant";
 }
