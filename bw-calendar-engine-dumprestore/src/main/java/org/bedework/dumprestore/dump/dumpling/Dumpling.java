@@ -35,7 +35,6 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.xml.XmlEmit;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -80,7 +79,7 @@ public class Dumpling<T extends DumpEntity<?>>
    * either in internal tables or in the db.</li></ul>
    *
    * @param it iterator over the entities
-   * @throws Throwable
+   * @throws Throwable on fatal error
    */
   public void dumpSection(final Iterator<T> it) throws Throwable {
     info("Dumping " + sectionTag.getLocalPart());
@@ -94,7 +93,7 @@ public class Dumpling<T extends DumpEntity<?>>
     tagEnd(sectionTag);
   }
 
-  protected void versionDate() throws Throwable {
+  protected void versionDate() {
     xml.property(new QName(majorVersionTag),
                  String.valueOf(BwVersion.bedeworkMajorVersion));
     xml.property(new QName(minorVersionTag),
@@ -104,6 +103,7 @@ public class Dumpling<T extends DumpEntity<?>>
                    String.valueOf(BwVersion.bedeworkUpdateVersion));
     }
 
+    //noinspection ConstantConditions
     if (BwVersion.bedeworkPatchLevel != null) {
       xml.property(new QName(patchLevelTag),
                    BwVersion.bedeworkPatchLevel);
@@ -218,19 +218,11 @@ public class Dumpling<T extends DumpEntity<?>>
   }
 
   protected void tagStart(final QName tag) {
-    try {
-      xml.openTag(tag);
-    } catch (IOException ie) {
-      throw new RuntimeException(ie);
-    }
+    xml.openTag(tag);
   }
 
   protected void tagEnd(final QName tag) {
-    try {
-      xml.closeTag(tag);
-    } catch (IOException ie) {
-      throw new RuntimeException(ie);
-    }
+    xml.closeTag(tag);
   }
 
   public void info(final String msg) {
@@ -258,7 +250,7 @@ public class Dumpling<T extends DumpEntity<?>>
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

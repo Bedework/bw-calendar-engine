@@ -31,7 +31,9 @@ import net.fortuna.ical4j.vcard.VCard;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -74,33 +76,30 @@ public class DumpEntity<T> implements Logged {
   /** Dump the entire entity into the given file.
    *
    * @param f - the file
-   * @throws CalFacadeException
    */
   @NoWrap
-  public void dump(final File f) throws CalFacadeException {
-    Dump dCl = getClass().getAnnotation(Dump.class);
+  public void dump(final File f) {
+    final Dump dCl = getClass().getAnnotation(Dump.class);
 
     if (dCl.format() == DumpFormat.xml) {
       Writer wtr = null;
 
       try {
-        XmlEmit xml = new XmlEmit();
+        final XmlEmit xml = new XmlEmit();
         wtr = new FileWriter(f);
         xml.startEmit(wtr);
 
         dump(xml, DumpType.def, false);
         xml.flush();
         return;
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
+      } catch (final IOException e) {
+        throw new RuntimeException(e);
       } finally {
         if (wtr != null) {
           try {
             wtr.close();
-          } catch (Throwable t) {
-            throw new CalFacadeException(t);
+          } catch (final Throwable t) {
+            throw new RuntimeException(t);
           }
         }
       }
@@ -110,40 +109,37 @@ public class DumpEntity<T> implements Logged {
       Writer wtr = null;
 
       try {
-        VCard vc = new VCard();
+        final VCard vc = new VCard();
 
         dump(vc, DumpType.def);
 
-        String vcStr = vc.toString();
+        final String vcStr = vc.toString();
         wtr = new FileWriter(f);
         wtr.append(vcStr);
         return;
-      } catch (CalFacadeException cfe) {
-        throw cfe;
-      } catch (Throwable t) {
-        throw new CalFacadeException(t);
+      } catch (final Throwable t) {
+        throw new RuntimeException(t);
       } finally {
         if (wtr != null) {
           try {
             wtr.close();
-          } catch (Throwable t) {
-            throw new CalFacadeException(t);
+          } catch (final Throwable t) {
+            throw new RuntimeException(t);
           }
         }
       }
     }
 
-    throw new CalFacadeException("Unsupported dump format " + dCl.format());
+    throw new RuntimeException("Unsupported dump format " + dCl.format());
   }
 
 
   /** Dump the entire entity.
    *
    * @param xml emitter
-   * @throws CalFacadeException
    */
   @NoWrap
-  public void dump(final XmlEmit xml) throws CalFacadeException {
+  public void dump(final XmlEmit xml) {
     dump(xml, DumpType.def, false);
   }
 
@@ -156,25 +152,23 @@ public class DumpEntity<T> implements Logged {
    * @param xml emitter
    * @param dtype
    * @param fromCollection  true if the value is a member of a collection
-   * @throws CalFacadeException
    */
   @NoWrap
   private void dump(final XmlEmit xml,
                     final DumpType dtype,
-                    final boolean fromCollection) throws CalFacadeException {
+                    final boolean fromCollection) {
     if (!hasDumpValue()) {
       return;
     }
 
-    NoDump ndCl = getClass().getAnnotation(NoDump.class);
-    Dump dCl = getClass().getAnnotation(Dump.class);
+    final NoDump ndCl = getClass().getAnnotation(NoDump.class);
+    final Dump dCl = getClass().getAnnotation(Dump.class);
 
-    boolean dumpKeyFields = dtype == DumpType.reference;
+    final boolean dumpKeyFields = dtype == DumpType.reference;
 
     ArrayList<String> noDumpMethods = null;
     ArrayList<String> firstMethods = null;
 
-    try {
       if (ndCl != null) {
         if (ndCl.value().length == 0) {
           return;
@@ -186,7 +180,7 @@ public class DumpEntity<T> implements Logged {
 
       if (!dumpKeyFields && (dCl != null) && (dCl.firstFields().length != 0)) {
         firstMethods = new ArrayList<>();
-        for (String f: dCl.firstFields()) {
+        for (final String f: dCl.firstFields()) {
           firstMethods.add(methodName(f));
         }
       }
@@ -197,29 +191,36 @@ public class DumpEntity<T> implements Logged {
         qn = startElement(xml, getClass(), dCl);
       }
 
-      Collection<ComparableMethod> ms = findGetters(dCl, dtype);
+      final Collection<ComparableMethod> ms = findGetters(dCl, dtype);
 
       if (firstMethods != null) {
         doFirstMethods:
-        for (String methodName: firstMethods) {
-          for (ComparableMethod cm: ms) {
-            Method m = cm.m;
+        for (final String methodName: firstMethods) {
+          for (final ComparableMethod cm: ms) {
+            final Method m = cm.m;
 
             if (methodName.equals(m.getName())) {
-              Dump d = m.getAnnotation(Dump.class);
+              final Dump d = m.getAnnotation(Dump.class);
 
-              dumpValue(xml, m, d, m.invoke(this, (Object[])null), fromCollection);
+              try {
+                dumpValue(xml, m, d,
+                          m.invoke(this, (Object[])null), fromCollection);
+              } catch (final  IllegalAccessException
+                      | InvocationTargetException e) {
+                throw new RuntimeException(e);
+              }
 
               continue doFirstMethods;
             }
           }
 
-          error("Listed first field has no corresponding getter: " + methodName);
+          error("Listed first field has no corresponding getter: " +
+                        methodName);
         }
       }
 
-      for (ComparableMethod cm: ms) {
-        Method m = cm.m;
+      for (final ComparableMethod cm: ms) {
+        final Method m = cm.m;
 
         if ((noDumpMethods != null) &&
             noDumpMethods.contains(fieldName(m.getName()))) {
@@ -231,19 +232,20 @@ public class DumpEntity<T> implements Logged {
           continue;
         }
 
-        Dump d = m.getAnnotation(Dump.class);
+        final Dump d = m.getAnnotation(Dump.class);
 
-        dumpValue(xml, m, d, m.invoke(this, (Object[])null), fromCollection);
+        try {
+          dumpValue(xml, m, d,
+                    m.invoke(this, (Object[])null), fromCollection);
+        } catch (final  IllegalAccessException
+                | InvocationTargetException e) {
+          throw new RuntimeException(e);
+        }
       }
 
       if (qn != null) {
         closeElement(xml, qn);
       }
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
   }
 
   /* ====================================================================
@@ -253,7 +255,7 @@ public class DumpEntity<T> implements Logged {
   private boolean dumpValue(final XmlEmit xml,
                             final Method m, final Dump d,
                             final Object methVal,
-                            final boolean fromCollection) throws Throwable {
+                            final boolean fromCollection) {
     /* We always open the methodName or elementName tag if this is the method
      * value.
      *
@@ -262,17 +264,17 @@ public class DumpEntity<T> implements Logged {
      * We do open a tag if the annotation specifies a collectionElementName
      */
     if (methVal instanceof DumpEntity) {
-      DumpEntity<?> de = (DumpEntity<?>)methVal;
+      final DumpEntity<?> de = (DumpEntity<?>)methVal;
 
       if (!de.hasDumpValue()) {
         return false;
       }
 
-      boolean compound = (d!= null) && d.compound();
+      final boolean compound = (d!= null) && d.compound();
 
-      QName mqn = startElement(xml, m, d, fromCollection);
+      final QName mqn = startElement(xml, m, d, fromCollection);
 
-      DumpType dt;
+      final DumpType dt;
       if (compound) {
         dt = DumpType.compound;
       } else {
@@ -289,7 +291,7 @@ public class DumpEntity<T> implements Logged {
     }
 
     if (methVal instanceof Collection) {
-      Collection<?> c = (Collection<?>)methVal;
+      final Collection<?> c = (Collection<?>)methVal;
 
       if (c.isEmpty()) {
         return false;
@@ -297,7 +299,7 @@ public class DumpEntity<T> implements Logged {
 
       QName mqn = null;
 
-      for (Object o: c) {
+      for (final Object o: c) {
         if ((o instanceof DumpEntity) &&
             (!((DumpEntity<?>)o).hasDumpValue())) {
           continue;
@@ -324,38 +326,30 @@ public class DumpEntity<T> implements Logged {
 
   private QName startElement(final XmlEmit xml,
                              final Class<?> c,
-                             final Dump d) throws CalFacadeException {
-    try {
-      QName qn;
+                             final Dump d) {
+    final QName qn;
 
-      if (d == null) {
-        qn = new QName(c.getName());
-      } else {
-        qn = new QName(d.elementName());
-      }
-
-      xml.openTag(qn);
-      return qn;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    if (d == null) {
+      qn = new QName(c.getName());
+    } else {
+      qn = new QName(d.elementName());
     }
+
+    xml.openTag(qn);
+    return qn;
   }
 
   private QName startElement(final XmlEmit xml,
                              final Method m,
                              final Dump d,
-                             final boolean fromCollection) throws CalFacadeException {
-    try {
-      QName qn = getTag(m, d, fromCollection);
+                             final boolean fromCollection) {
+    final QName qn = getTag(m, d, fromCollection);
 
-      if (qn != null) {
-        xml.openTag(qn);
-      }
-
-      return qn;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    if (qn != null) {
+      xml.openTag(qn);
     }
+
+    return qn;
   }
 
   private QName getTag(final Method m, final Dump d,
@@ -385,12 +379,11 @@ public class DumpEntity<T> implements Logged {
 
   private void property(final XmlEmit xml, final Method m,
                         final Dump d, final Object p,
-                        final boolean fromCollection) throws CalFacadeException {
+                        final boolean fromCollection) {
     if (p == null) {
       return;
     }
 
-    try {
       QName qn = getTag(m, d, fromCollection);
 
       if (qn == null) {
@@ -398,7 +391,7 @@ public class DumpEntity<T> implements Logged {
         qn = new QName(p.getClass().getName());
       }
 
-      String sval;
+      final String sval;
 
       if (p instanceof char[]) {
         sval = new String((char[])p);
@@ -411,17 +404,11 @@ public class DumpEntity<T> implements Logged {
       } else {
         xml.cdataProperty(qn, sval);
       }
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
   }
 
-  private void closeElement(final XmlEmit xml, final QName qn) throws CalFacadeException {
-    try {
-      xml.closeTag(qn);
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+  private void closeElement(final XmlEmit xml,
+                            final QName qn) {
+    xml.closeTag(qn);
   }
 
   /* ====================================================================
@@ -432,43 +419,41 @@ public class DumpEntity<T> implements Logged {
    *
    * @param vc
    * @param dtype
-   * @throws CalFacadeException
    */
   @NoWrap
   private void dump(final VCard vc,
-                    final DumpType dtype) throws CalFacadeException {
+                    final DumpType dtype) {
     if (!hasDumpValue()) {
       return;
     }
 
-    NoDump ndCl = getClass().getAnnotation(NoDump.class);
-    Dump dCl = getClass().getAnnotation(Dump.class);
+    final NoDump ndCl = getClass().getAnnotation(NoDump.class);
+    final Dump dCl = getClass().getAnnotation(Dump.class);
 
     /* If dumpKeyFields is true we are dumping a field which is referred to by
      * a key field - for example, a principal is addressed by the principal
      * href.
      */
-    boolean dumpKeyFields = dtype == DumpType.reference;
+    final boolean dumpKeyFields = dtype == DumpType.reference;
 
-    ArrayList<String> noDumpMethods;
-    ArrayList<String> firstMethods;
+    final ArrayList<String> noDumpMethods;
+    final ArrayList<String> firstMethods;
 
-    try {
-      if (ndCl != null) {
-        if (ndCl.value().length == 0) {
-          return;
-        }
-
-        noDumpMethods = new ArrayList<String>();
-        Collections.addAll(noDumpMethods, ndCl.value());
+    if (ndCl != null) {
+      if (ndCl.value().length == 0) {
+        return;
       }
 
-      if (!dumpKeyFields && (dCl != null) && (dCl.firstFields().length != 0)) {
-        firstMethods = new ArrayList<>();
-        for (String f: dCl.firstFields()) {
-          firstMethods.add(methodName(f));
-        }
+      noDumpMethods = new ArrayList<>();
+      Collections.addAll(noDumpMethods, ndCl.value());
+    }
+
+    if (!dumpKeyFields && (dCl != null) && (dCl.firstFields().length != 0)) {
+      firstMethods = new ArrayList<>();
+      for (final String f: dCl.firstFields()) {
+        firstMethods.add(methodName(f));
       }
+    }
 
       /*
       QName qn = null;
@@ -520,11 +505,6 @@ public class DumpEntity<T> implements Logged {
         closeElement(xml, qn);
       }
       */
-//    } catch (CalFacadeException cfe) {
-//      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
   }
 
   /* ====================================================================
@@ -545,24 +525,24 @@ public class DumpEntity<T> implements Logged {
   }
 
   private Collection<ComparableMethod> findGetters(final Dump d,
-                                                   final DumpType dt) throws CalFacadeException {
-    Method[] meths = getClass().getMethods();
-    Collection<ComparableMethod> getters = new TreeSet<>();
+                                                   final DumpType dt) {
+    final Method[] meths = getClass().getMethods();
+    final Collection<ComparableMethod> getters = new TreeSet<>();
     Collection<String> keyMethods = null;
 
     if (dt == DumpType.reference) {
       if ((d == null) || (d.keyFields().length == 0)) {
         error("No key fields defined for class " + getClass().getCanonicalName());
-        throw new CalFacadeException(CalFacadeException.noKeyFields);
+        throw new RuntimeException(CalFacadeException.noKeyFields);
       }
       keyMethods = new ArrayList<>();
-      for (String f: d.keyFields()) {
+      for (final String f: d.keyFields()) {
         keyMethods.add(methodName(f));
       }
     }
 
-    for (Method m : meths) {
-      String mname = m.getName();
+    for (final Method m : meths) {
+      final String mname = m.getName();
 
       if (mname.length() < 4) {
         continue;
@@ -579,7 +559,7 @@ public class DumpEntity<T> implements Logged {
       }
 
       /* No parameters */
-      Class<?>[] parClasses = m.getParameterTypes();
+      final Class<?>[] parClasses = m.getParameterTypes();
       if (parClasses.length != 0) {
         continue;
       }
@@ -621,7 +601,7 @@ public class DumpEntity<T> implements Logged {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

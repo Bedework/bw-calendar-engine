@@ -70,8 +70,8 @@ public class XmlTranslator extends IcalTranslator {
                                       final int methodType,
                                       final IcalendarType pattern,
                                       final boolean wrapXprops) throws CalFacadeException {
-    IcalendarType ical = Xutil.initCalendar(prodId, methodType);
-    VcalendarType vcal = ical.getVcalendar().get(0);
+    final IcalendarType ical = Xutil.initCalendar(prodId, methodType);
+    final VcalendarType vcal = ical.getVcalendar().get(0);
 
     ArrayOfComponents aoc = vcal.getComponents();
 
@@ -90,7 +90,7 @@ public class XmlTranslator extends IcalTranslator {
       vc = pattern.getVcalendar().get(0);
     }
 
-    BaseComponentType bc = matches(vc, ev.getEntityType());
+    final BaseComponentType bc = matches(vc, ev.getEntityType());
     if ((vc != null) && (bc == null)) {
       return ical;
     }
@@ -111,7 +111,7 @@ public class XmlTranslator extends IcalTranslator {
       return ical;
     }
 
-    for (EventInfo oei: val.getOverrides()) {
+    for (final EventInfo oei: val.getOverrides()) {
       ev = oei.getEvent();
       el = ToXEvent.toComponent(ev, true, wrapXprops, bc);
 
@@ -121,7 +121,7 @@ public class XmlTranslator extends IcalTranslator {
     }
 
     if (val.getNumContainedItems() > 0) {
-      for (EventInfo aei: val.getContainedItems()) {
+      for (final EventInfo aei: val.getContainedItems()) {
         ev = aei.getEvent();
         el = ToXEvent.toComponent(ev, true, wrapXprops, bc);
 
@@ -144,94 +144,88 @@ public class XmlTranslator extends IcalTranslator {
   public void writeXmlCalendar(final Collection<EventInfo> vals,
                                final int methodType,
                                final XmlEmit xml) throws CalFacadeException {
-    try {
-      xml.addNs(new XmlEmit.NameSpace(XcalTags.namespace, "X"), false);
+    xml.addNs(new XmlEmit.NameSpace(XcalTags.namespace, "X"), false);
 
-      xml.openTag(XcalTags.icalendar);
-      xml.openTag(XcalTags.vcalendar);
+    xml.openTag(XcalTags.icalendar);
+    xml.openTag(XcalTags.vcalendar);
 
-      xml.openTag(XcalTags.properties);
+    xml.openTag(XcalTags.properties);
 
-      xmlProp(xml, Property.PRODID, XcalTags.textVal, prodId);
-      xmlProp(xml, Property.VERSION, XcalTags.textVal,
-              Version.VERSION_2_0.getValue());
+    xmlProp(xml, Property.PRODID, XcalTags.textVal, prodId);
+    xmlProp(xml, Property.VERSION, XcalTags.textVal,
+            Version.VERSION_2_0.getValue());
 
-      xml.closeTag(XcalTags.properties);
+    xml.closeTag(XcalTags.properties);
 
-      boolean componentsOpen = false;
+    boolean componentsOpen = false;
 
-      if (!cb.getTimezonesByReference()) {
-        Calendar cal = newIcal(methodType); // To collect timezones
+    if (!cb.getTimezonesByReference()) {
+      final Calendar cal = newIcal(methodType); // To collect timezones
 
-        addIcalTimezones(cal, vals);
+      addIcalTimezones(cal, vals);
 
-        // Emit timezones
-        for (Object o: cal.getComponents()) {
-          if (!(o instanceof VTimeZone)) {
-            continue;
-          }
-
-          if (!componentsOpen) {
-            xml.openTag(XcalTags.components);
-            componentsOpen = true;
-          }
-
-          xmlComponent(xml, (Component)o);
+      // Emit timezones
+      for (final Object o: cal.getComponents()) {
+        if (!(o instanceof VTimeZone)) {
+          continue;
         }
-      }
 
-      String currentPrincipal = null;
-      final BwPrincipal principal = cb.getPrincipal();
-
-      if (principal != null) {
-        currentPrincipal = principal.getPrincipalRef();
-      }
-
-      for (final Object o : vals) {
-        if (o instanceof EventInfo) {
-          final EventInfo ei = (EventInfo)o;
-          BwEvent ev = ei.getEvent();
-
-          final EventTimeZonesRegistry tzreg = new EventTimeZonesRegistry(
-                  this, ev);
-
-          final Component comp;
-          if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
-            comp = VFreeUtil.toVFreeBusy(ev);
-          } else {
-            comp = BwEvent2Ical.convert(ei, false, tzreg,
-                                        currentPrincipal);
-          }
-
-          if (!componentsOpen) {
-            xml.openTag(XcalTags.components);
-            componentsOpen = true;
-          }
-
-          xmlComponent(xml, comp);
-
-          if (ei.getNumOverrides() > 0) {
-            for (final EventInfo oei : ei.getOverrides()) {
-              xmlComponent(xml, BwEvent2Ical.convert(oei,
-                                                     true,
-                                                     tzreg,
-                                                     currentPrincipal));
-            }
-          }
+        if (!componentsOpen) {
+          xml.openTag(XcalTags.components);
+          componentsOpen = true;
         }
-      }
 
-      if (componentsOpen) {
-        xml.closeTag(XcalTags.components);
+        xmlComponent(xml, (Component)o);
       }
-
-      xml.closeTag(XcalTags.vcalendar);
-      xml.closeTag(XcalTags.icalendar);
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
     }
+
+    String currentPrincipal = null;
+    final BwPrincipal principal = cb.getPrincipal();
+
+    if (principal != null) {
+      currentPrincipal = principal.getPrincipalRef();
+    }
+
+    for (final Object o : vals) {
+      if (o instanceof EventInfo) {
+        final EventInfo ei = (EventInfo)o;
+        final BwEvent ev = ei.getEvent();
+
+        final EventTimeZonesRegistry tzreg = new EventTimeZonesRegistry(
+                this, ev);
+
+        final Component comp;
+        if (ev.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
+          comp = VFreeUtil.toVFreeBusy(ev);
+        } else {
+          comp = BwEvent2Ical.convert(ei, false, tzreg,
+                                      currentPrincipal);
+        }
+
+        if (!componentsOpen) {
+          xml.openTag(XcalTags.components);
+          componentsOpen = true;
+        }
+
+        xmlComponent(xml, comp);
+
+        if (ei.getNumOverrides() > 0) {
+          for (final EventInfo oei : ei.getOverrides()) {
+            xmlComponent(xml, BwEvent2Ical.convert(oei,
+                                                   true,
+                                                   tzreg,
+                                                   currentPrincipal));
+          }
+        }
+      }
+    }
+
+    if (componentsOpen) {
+      xml.closeTag(XcalTags.components);
+    }
+
+    xml.closeTag(XcalTags.vcalendar);
+    xml.closeTag(XcalTags.icalendar);
   }
 
   private BaseComponentType matches(final VcalendarType vc,
@@ -240,7 +234,7 @@ public class XmlTranslator extends IcalTranslator {
       return null;
     }
 
-    String nm;
+    final String nm;
 
     if (entityType == IcalDefs.entityTypeEvent) {
       nm = VeventType.class.getName();
@@ -255,9 +249,9 @@ public class XmlTranslator extends IcalTranslator {
                                    String.valueOf(entityType));
     }
 
-    for (JAXBElement<? extends BaseComponentType> jbc:
+    for (final JAXBElement<? extends BaseComponentType> jbc:
             vc.getComponents().getBaseComponent()) {
-      BaseComponentType bc = jbc.getValue();
+      final BaseComponentType bc = jbc.getValue();
 
       if (nm.equals(bc.getClass().getName())) {
         return bc;
@@ -269,72 +263,65 @@ public class XmlTranslator extends IcalTranslator {
 
   private void xmlComponent(final XmlEmit xml,
                             final Component val) throws CalFacadeException {
-    try {
-      QName tag = openTag(xml, val.getName());
+    final QName tag = openTag(xml, val.getName());
 
-      PropertyList pl = val.getProperties();
+    final PropertyList pl = val.getProperties();
 
-      if (pl.size() > 0) {
-        xml.openTag(XcalTags.properties);
+    if (pl.size() > 0) {
+      xml.openTag(XcalTags.properties);
 
-        for (Object po: pl) {
-          xmlProperty(xml, (Property)po);
-        }
-        xml.closeTag(XcalTags.properties);
+      for (final Object po: pl) {
+        xmlProperty(xml, (Property)po);
       }
-
-      ComponentList<?> cl = null;
-
-      if (val instanceof VTimeZone) {
-        cl = ((VTimeZone)val).getObservances();
-      } else if (val instanceof VEvent) {
-        cl = ((VEvent)val).getAlarms();
-      } else if (val instanceof VToDo) {
-        cl = ((VToDo)val).getAlarms();
-      }
-
-      if ((cl != null) && (cl.size() > 0)){
-        xml.openTag(XcalTags.components);
-
-        for (Object o: cl) {
-          xmlComponent(xml, (Component)o);
-        }
-
-        xml.closeTag(XcalTags.components);
-      }
-
-      xml.closeTag(tag);
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+      xml.closeTag(XcalTags.properties);
     }
+
+    ComponentList<?> cl = null;
+
+    if (val instanceof VTimeZone) {
+      cl = ((VTimeZone)val).getObservances();
+    } else if (val instanceof VEvent) {
+      cl = ((VEvent)val).getAlarms();
+    } else if (val instanceof VToDo) {
+      cl = ((VToDo)val).getAlarms();
+    }
+
+    if ((cl != null) && (cl.size() > 0)){
+      xml.openTag(XcalTags.components);
+
+      for (final Object o: cl) {
+        xmlComponent(xml, (Component)o);
+      }
+
+      xml.closeTag(XcalTags.components);
+    }
+
+    xml.closeTag(tag);
   }
 
   private void xmlProperty(final XmlEmit xml,
-                           final Property val) throws CalFacadeException {
-    try {
-      QName tag = openTag(xml, val.getName());
+                           final Property val) {
+      final QName tag = openTag(xml, val.getName());
 
-      ParameterList pl = val.getParameters();
+      final ParameterList pl = val.getParameters();
 
       if (pl.size() > 0) {
         xml.openTag(XcalTags.parameters);
 
-        Iterator<Parameter> pli = pl.iterator();
+        final Iterator<Parameter> pli = pl.iterator();
         while (pli.hasNext()) {
           xmlParameter(xml, pli.next());
         }
         xml.closeTag(XcalTags.parameters);
       }
 
-      PropertyIndex.PropertyInfoIndex pii = PropertyIndex.PropertyInfoIndex
-              .fromName(val.getName());
+      final PropertyIndex.PropertyInfoIndex pii =
+              PropertyIndex.PropertyInfoIndex.fromName(val.getName());
 
       QName ptype = XcalTags.textVal;
 
       if (pii != null) {
-        PropertyIndex.DataType dtype = pii.getPtype();
+        final PropertyIndex.DataType dtype = pii.getPtype();
         if (dtype != null) {
           ptype = dtype.getXcalType();
         }
@@ -351,7 +338,7 @@ public class XmlTranslator extends IcalTranslator {
 
         xml.openTag(ptype);
 
-        Recur r;
+        final Recur r;
 
         if (val instanceof ExRule) {
           r = ((ExRule)val).getRecur();
@@ -382,96 +369,70 @@ public class XmlTranslator extends IcalTranslator {
       }
 
       xml.closeTag(tag);
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
   }
 
   private void xmlProp(final XmlEmit xml,
                        final QName tag,
-                       final String val) throws CalFacadeException {
+                       final String val) {
     if (val == null) {
       return;
     }
 
-    try {
-      xml.property(tag, val);
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    xml.property(tag, val);
   }
 
   private void xmlProp(final XmlEmit xml,
                        final QName tag,
-                       final Collection<?> val) throws CalFacadeException {
+                       final Collection<?> val) {
     if ((val == null) || val.isEmpty()) {
       return;
     }
 
-    try {
-      xml.property(tag, val.toString());
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    xml.property(tag, val.toString());
   }
 
   private void xmlProp(final XmlEmit xml,
                        final String pname,
                        final QName ptype,
-                       final String val) throws CalFacadeException {
-    QName tag = new QName(XcalTags.namespace, pname.toLowerCase());
+                       final String val) {
+    final QName tag = new QName(XcalTags.namespace, pname.toLowerCase());
 
-    try {
-      xml.openTag(tag);
-      xml.property(ptype, val);
-      xml.closeTag(tag);
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    xml.openTag(tag);
+    xml.property(ptype, val);
+    xml.closeTag(tag);
   }
 
   private void xmlParameter(final XmlEmit xml,
-                            final Parameter val) throws CalFacadeException {
-    try {
-      PropertyIndex.ParameterInfoIndex pii = PropertyIndex.ParameterInfoIndex
-              .lookupPname(val.getName());
+                            final Parameter val) {
+    final PropertyIndex.ParameterInfoIndex pii =
+            PropertyIndex.ParameterInfoIndex.lookupPname(val.getName());
 
-      QName ptype = XcalTags.textVal;
+    QName ptype = XcalTags.textVal;
 
-      if (pii != null) {
-        PropertyIndex.DataType dtype = pii.getPtype();
-        if (dtype != null) {
-          ptype = dtype.getXcalType();
-        }
+    if (pii != null) {
+      final PropertyIndex.DataType dtype = pii.getPtype();
+      if (dtype != null) {
+        ptype = dtype.getXcalType();
       }
+    }
 
-      if (ptype.equals(XcalTags.textVal)) {
-        QName tag = new QName(XcalTags.namespace, val.getName().toLowerCase());
-        xml.property(tag, val.getValue());
-      } else {
-        QName tag = openTag(xml, val.getName());
-        xml.property(ptype, val.getValue());
-        xml.closeTag(tag);
-      }
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    if (ptype.equals(XcalTags.textVal)) {
+      final QName tag = new QName(XcalTags.namespace,
+                                  val.getName().toLowerCase());
+      xml.property(tag, val.getValue());
+    } else {
+      final QName tag = openTag(xml, val.getName());
+      xml.property(ptype, val.getValue());
+      xml.closeTag(tag);
     }
   }
 
   private QName openTag(final XmlEmit xml,
-                        final String name) throws CalFacadeException {
-    QName tag = new QName(XcalTags.namespace, name.toLowerCase());
+                        final String name) {
+    final QName tag = new QName(XcalTags.namespace, name.toLowerCase());
 
-    try {
-      xml.openTag(tag);
+    xml.openTag(tag);
 
-      return tag;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
-    }
+    return tag;
   }
 }

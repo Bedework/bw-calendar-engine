@@ -35,7 +35,7 @@ import javax.xml.namespace.QName;
  *
  */
 public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
-  private BwSysIntfImpl intf;
+  private final BwSysIntfImpl intf;
 
   private BwCalendar col;
 
@@ -69,7 +69,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
-  public void setAliasUri(String val) {
+  public void setAliasUri(final String val) {
     getCol().setAliasUri(val);
   }
 
@@ -79,14 +79,10 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
       return null;
     }
 
-    String s = getCol().getInternalAliasPath();
+    final String s = getCol().getInternalAliasPath();
 
     if (s != null) {
-      try {
-        return intf.getUrlHandler().prefix(Util.buildPath(true, s));
-      } catch (WebdavException e) {
-        throw new RuntimeException(e);
-      }
+      return intf.getUrlHandler().prefix(Util.buildPath(true, s));
     }
 
     return getCol().getAliasUri();
@@ -111,7 +107,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
     final BwCalendar c;
     try {
       c = intf.resolveAlias(col, resolveSubAlias);
-    } catch (WebdavException e) {
+    } catch (final WebdavException e) {
       throw new RuntimeException(e);
     }
     if (c == null) {
@@ -147,7 +143,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
     if (isAlias()) {
       try {
         c = intf.resolveAlias(col, true);
-      } catch (WebdavException e) {
+      } catch (final WebdavException e) {
         throw new RuntimeException(e);
       }
     }
@@ -257,7 +253,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
-  public void setRemoteId(String val) {
+  public void setRemoteId(final String val) {
     getCol().setRemoteId(val);
   }
 
@@ -267,7 +263,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   }
 
   @Override
-  public void setRemotePw(String val) {
+  public void setRemotePw(final String val) {
     getCol().setRemotePw(val);
   }
 
@@ -298,7 +294,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
 
   @Override
   public String getName() {
-    String n = getCol().getName();
+    final String n = getCol().getName();
 
     if (!n.endsWith(BwCalendar.tombstonedSuffix)) {
       return n;
@@ -324,7 +320,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
 
   @Override
   public String getPath() {
-    String p = getCol().getPath();
+    final String p = getCol().getPath();
 
     if (!p.endsWith(BwCalendar.tombstonedSuffix)) {
       return p;
@@ -352,7 +348,7 @@ public class BwCalDAVCollection extends CalDAVCollection<BwCalDAVCollection> {
   public AccessPrincipal getOwner() {
     try {
       return intf.getPrincipal(getCol().getOwnerHref());
-    } catch (WebdavException e) {
+    } catch (final WebdavException e) {
       throw new RuntimeException(e);
     }
   }

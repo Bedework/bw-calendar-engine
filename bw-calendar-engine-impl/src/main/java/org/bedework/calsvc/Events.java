@@ -1890,7 +1890,7 @@ class Events extends CalSvcDb implements EventsI {
    */
   private void setScheduleState(final BwEvent ev,
                                 final boolean adding,
-                                final boolean schedulingInbox) throws CalFacadeException {
+                                final boolean schedulingInbox) {
     ev.setOrganizerSchedulingObject(false);
     ev.setAttendeeSchedulingObject(false);
 
@@ -1992,102 +1992,96 @@ class Events extends CalSvcDb implements EventsI {
       } // checkAttendees
     }
 
-    try {
-      /* If this is a vpoll we need the voters as we are going to
+    /* If this is a vpoll we need the voters as we are going to
            have to remove the group voter entry and clone it for the
            attendees we add.
 
            I think this will work for any poll mode - if not we may
            have to rethink this approach.
          */
-      Map<String, Participant> voters = null;
-      final var vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
+    Map<String, Participant> voters = null;
+    final var vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
 
-      if (vpoll) {
-        voters = IcalUtil.parseVpollVoters(ev);
-        ev.clearVoters(); // We'll add them all back
-      }
+    if (vpoll) {
+      voters = IcalUtil.parseVpollVoters(ev);
+      ev.clearVoters(); // We'll add them all back
+    }
 
-      for (final BwAttendee att : groups) {
-        /* If the group is in one of our domains we can try to expand it.
+    for (final BwAttendee att : groups) {
+      /* If the group is in one of our domains we can try to expand it.
            * We should leave it if it's an external id.
            */
 
-        final Holder<Boolean> trunc = new Holder<>();
-        final List<BwPrincipalInfo> groupPis =
-                dirs.find(att.getAttendeeUri(),
-                          att.getCuType(),
-                          true,  // expand
-                          trunc);
+      final Holder<Boolean> trunc = new Holder<>();
+      final List<BwPrincipalInfo> groupPis =
+              dirs.find(att.getAttendeeUri(),
+                        att.getCuType(),
+                        true,  // expand
+                        trunc);
 
-        if ((groupPis == null) || (groupPis.size() != 1)) {
-          continue;
-        }
-
-        final BwPrincipalInfo pi = groupPis.get(0);
-
-        if (pi.getMembers() == null) {
-          continue;
-        }
-
-        final Participant groupVoter;
-        CalendarAddress groupVoterCa = null;
-        PropertyList pl = null;
-
-        if (vpoll) {
-          groupVoter = voters.get(att.getAttendeeUri());
-
-          if (groupVoter == null) {
-            if (debug()) {
-              warn("No voter found for " + att.getAttendeeUri());
-            }
-            continue;
-          }
-
-          voters.remove(att.getAttendeeUri());
-          pl = groupVoter.getProperties();
-          groupVoterCa = (CalendarAddress)groupVoter.getProperty(CALENDAR_ADDRESS);
-        }
-
-        ev.removeAttendee(att); // Remove the group
-
-        chg.changed(PropertyInfoIndex.ATTENDEE, att, null);
-
-        for (final BwPrincipalInfo mbrPi : pi.getMembers()) {
-          if (mbrPi.getCaladruri() == null) {
-            continue;
-          }
-
-          final BwAttendee mbrAtt = new BwAttendee();
-
-          mbrAtt.setType(att.getType());
-          mbrAtt.setAttendeeUri(mbrPi.getCaladruri());
-          mbrAtt.setCn(mbrPi.getEmail());
-          mbrAtt.setCuType(mbrPi.getKind());
-          mbrAtt.setMember(att.getAttendeeUri());
-
-          ev.addAttendee(mbrAtt);
-          chg.addValue(PropertyInfoIndex.ATTENDEE, mbrAtt);
-
-          if (vpoll) {
-            final Participant voter = IcalUtil.setVoter(mbrAtt);
-
-            ev.addVoter(voter.toString());
-          }
-        }
+      if ((groupPis == null) || (groupPis.size() != 1)) {
+        continue;
       }
 
+      final BwPrincipalInfo pi = groupPis.get(0);
+
+      if (pi.getMembers() == null) {
+        continue;
+      }
+
+      final Participant groupVoter;
+      CalendarAddress groupVoterCa = null;
+      PropertyList pl = null;
+
       if (vpoll) {
+        groupVoter = voters.get(att.getAttendeeUri());
+
+        if (groupVoter == null) {
+          if (debug()) {
+            warn("No voter found for " + att.getAttendeeUri());
+          }
+          continue;
+        }
+
+        voters.remove(att.getAttendeeUri());
+        pl = groupVoter.getProperties();
+        groupVoterCa = (CalendarAddress)groupVoter.getProperty(CALENDAR_ADDRESS);
+      }
+
+      ev.removeAttendee(att); // Remove the group
+
+      chg.changed(PropertyInfoIndex.ATTENDEE, att, null);
+
+      for (final BwPrincipalInfo mbrPi : pi.getMembers()) {
+        if (mbrPi.getCaladruri() == null) {
+          continue;
+        }
+
+        final BwAttendee mbrAtt = new BwAttendee();
+
+        mbrAtt.setType(att.getType());
+        mbrAtt.setAttendeeUri(mbrPi.getCaladruri());
+        mbrAtt.setCn(mbrPi.getEmail());
+        mbrAtt.setCuType(mbrPi.getKind());
+        mbrAtt.setMember(att.getAttendeeUri());
+
+        ev.addAttendee(mbrAtt);
+        chg.addValue(PropertyInfoIndex.ATTENDEE, mbrAtt);
+
+        if (vpoll) {
+          final Participant voter = IcalUtil.setVoter(mbrAtt);
+
+          ev.addVoter(voter.toString());
+        }
+      }
+    }
+
+    if (vpoll) {
         // Add back any remaining vvoters
         for (final Participant v: voters.values()) {
           ev.addVoter(v.toString());
         }
       }
-    } catch (final CalFacadeException cfe) {
-      throw cfe;
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
-    }
 
     if (ev instanceof BwEventProxy) {
       // Only add x-property to master

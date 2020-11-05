@@ -58,6 +58,7 @@ import net.fortuna.ical4j.vcard.Property;
 import net.fortuna.ical4j.vcard.Property.Id;
 import net.fortuna.ical4j.vcard.VCard;
 import net.fortuna.ical4j.vcard.property.Kind;
+import org.apache.http.HttpException;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.w3c.dom.Element;
@@ -66,6 +67,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -310,11 +312,11 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   }
 
   @Override
-  public List<BwPrincipalInfo> find(final List<WebdavProperty> props,
-                                    final List<WebdavProperty> returnProps,
-                                    final String cutype,
-                                    final Holder<Boolean> truncated)
-          throws CalFacadeException {
+  public List<BwPrincipalInfo> find(
+          final List<WebdavProperty> props,
+          final List<WebdavProperty> returnProps,
+          final String cutype,
+          final Holder<Boolean> truncated) {
     final CardDavInfo cdi = getCardDavInfo(false);
 
     if ((cdi == null) || (cdi.getUrl() == null)) {
@@ -338,7 +340,11 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     }
 
     try {
-      cdc = new PooledHttpClient(new URI(cdi.getUrl()));
+      try {
+        cdc = new PooledHttpClient(new URI(cdi.getUrl()));
+      } catch (final URISyntaxException e) {
+        throw new RuntimeException(e);
+      }
       final List<MatchResult> mrs = matching(cdc,
                                              path,
                                              addrCtype,
@@ -358,12 +364,6 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       }
 
       return pis;
-    } catch (final Throwable t) {
-      if (getLogger().isDebugEnabled()) {
-        error(t);
-      }
-
-      throw new CalFacadeException(t);
     } finally {
       if (cdc != null) {
         cdc.release();
@@ -375,7 +375,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   public List<BwPrincipalInfo> find(final String cua,
                                     final String cutype,
                                     final boolean expand,
-                                    final Holder<Boolean> truncated) throws CalFacadeException {
+                                    final Holder<Boolean> truncated) {
     final CardDavInfo cdi = getCardDavInfo(false);
 
     if ((cdi == null) || (cdi.getUrl() == null)) {
@@ -385,7 +385,11 @@ public abstract class AbstractDirImpl implements Logged, Directories {
     PooledHttpClient cdc = null;
 
     try {
-      cdc = new PooledHttpClient(new URI(cdi.getUrl()));
+      try {
+        cdc = new PooledHttpClient(new URI(cdi.getUrl()));
+      } catch (final URISyntaxException e) {
+        throw new RuntimeException(e);
+      }
 
       final List<BwPrincipalInfo> pis = find(cdc, cdi,
                                              cua, cutype);
@@ -405,16 +409,16 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
         final List<BwPrincipalInfo> memberPis = new ArrayList<>();
 
-        VCard card = pi.getCard();
+        final VCard card = pi.getCard();
 
-        List<Property> members = card.getProperties(Id.MEMBER);
+        final List<Property> members = card.getProperties(Id.MEMBER);
 
         if (members == null) {
           continue;
         }
 
         for (final Property p: members) {
-          BwPrincipalInfo memberPi = fetch(cdc, cdi, p.getValue());
+          final BwPrincipalInfo memberPi = fetch(cdc, cdi, p.getValue());
 
           if (memberPi != null) {
             memberPis.add(memberPi);
@@ -425,12 +429,6 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       }
 
       return pis;
-    } catch (final Throwable t) {
-      if (getLogger().isDebugEnabled()) {
-        error(t);
-      }
-
-      throw new CalFacadeException(t);
     } finally {
       if (cdc != null) {
         cdc.release();
@@ -440,7 +438,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
   private BwPrincipalInfo fetch(final PooledHttpClient cdc,
                                 final CardDavInfo cdi,
-                                final String uri) throws CalFacadeException {
+                                final String uri) {
     final List<BwPrincipalInfo> pis = find(cdc, cdi, uri,
                                            CuType.INDIVIDUAL.getValue());
 
@@ -454,7 +452,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   private List<BwPrincipalInfo> find(final PooledHttpClient cdc,
                                      final CardDavInfo cdi,
                                      final String cua,
-                                     final String cutype) throws CalFacadeException {
+                                     final String cutype) {
     /* Typically a group entry in a directory doesn't have a mail -
        The cua is a uri which often looks like a mailto.
      */
@@ -1092,8 +1090,7 @@ public abstract class AbstractDirImpl implements Logged, Directories {
   private List<MatchResult> matching(final PooledHttpClient cl,
                                      final String url,
                                      final String addrDataCtype,
-                                     final List<WebdavProperty> props)
-          throws CalFacadeException {
+                                     final List<WebdavProperty> props) {
     /* Try a search of the cards
 
    <?xml version="1.0" encoding="utf-8" ?>
@@ -1191,9 +1188,14 @@ public abstract class AbstractDirImpl implements Logged, Directories {
 
       final byte[] content = sw.toString().getBytes();
 
-      final ResponseHolder resp = cl.report(url, "infinity",
-                                            new String(content),
-                                            this::processMatchingResponse);
+      final ResponseHolder resp;
+      try {
+        resp = cl.report(url, "infinity",
+                                              new String(content),
+                                              this::processMatchingResponse);
+      } catch (final HttpException e) {
+        throw new RuntimeException(e);
+      }
 
       if (resp.failed) {
         if (debug()) {
@@ -1204,8 +1206,6 @@ public abstract class AbstractDirImpl implements Logged, Directories {
       }
 
       return (List<MatchResult>)resp.response;
-    } catch (final Throwable t) {
-      throw new CalFacadeException(t);
     } finally {
       try {
         cl.release();

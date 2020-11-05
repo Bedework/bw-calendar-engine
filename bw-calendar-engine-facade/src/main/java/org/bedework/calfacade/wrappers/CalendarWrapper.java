@@ -27,7 +27,6 @@ import org.bedework.calfacade.BwProperty;
 import org.bedework.calfacade.CalFacadeDefs;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.annotations.NoDump;
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.util.misc.ToString;
 
@@ -738,7 +737,7 @@ public class CalendarWrapper extends BwCalendar
     return entity.getTombstoned();
   }
 
-  public void dump(final File f) throws CalFacadeException {
+  public void dump(final File f) {
     entity.dump(f);
   }
   

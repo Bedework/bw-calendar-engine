@@ -50,14 +50,14 @@ import javax.xml.namespace.QName;
  *
  */
 public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
-  private BwSysIntfImpl intf;
+  private final BwSysIntfImpl intf;
 
   private EventInfo evi;
   private BwEvent ev;
 
   /**
-   * @param intf
-   * @param evi
+   * @param intf system interface
+   * @param evi event info
    */
   BwCalDAVEvent(final BwSysIntfImpl intf, final EventInfo evi) {
     this.intf = intf;
@@ -154,7 +154,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
 
   @Override
   public void setOrganizer(final Organizer val) {
-    BwOrganizer org = new BwOrganizer();
+    final BwOrganizer org = new BwOrganizer();
 
     org.setCn(val.getCn());
     org.setDir(val.getDir());
@@ -167,7 +167,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
 
   @Override
   public Organizer getOrganizer() {
-    BwOrganizer bworg = getEv().getOrganizer();
+    final BwOrganizer bworg = getEv().getOrganizer();
     return new Organizer(bworg.getCn(),
                          bworg.getDir(),
                          bworg.getLanguage(),
@@ -201,9 +201,9 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
 
   @Override
   public Set<String> getAttendeeUris() {
-    Set<String> uris = new TreeSet<>();
+    final Set<String> uris = new TreeSet<>();
 
-    for (BwAttendee att: getEv().getAttendees()) {
+    for (final BwAttendee att: getEv().getAttendees()) {
       uris.add(att.getAttendeeUri());
     }
 
@@ -231,10 +231,9 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   @Override
   public boolean generatePropertyValue(final QName tag,
                                        final XmlEmit xml) {
-    try {
-      BwEvent ev = getEv();
+    final BwEvent ev = getEv();
 
-      /*
+    /*
       if (tag.equals(CaldavTags.scheduleState)) {
         xml.openTag(tag);
         if (ev.getScheduleState() == BwEvent.scheduleStateNotProcessed) {
@@ -247,225 +246,226 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
       }
       */
 
-      if (tag.equals(CaldavTags.scheduleTag)) {
-        if (!ev.getOrganizerSchedulingObject() &&
-            !ev.getAttendeeSchedulingObject()) {
-          return false;
-        }
-
-        xml.property(tag, ev.getStag());
-
-        return true;
+    if (tag.equals(CaldavTags.scheduleTag)) {
+      if (!ev.getOrganizerSchedulingObject() &&
+              !ev.getAttendeeSchedulingObject()) {
+        return false;
       }
 
-      if (tag.equals(CaldavTags.originator)) {
-        if (ev.getOriginator() != null) {
-          xml.openTag(tag);
-          xml.property(WebdavTags.href, ev.getOriginator());
-          xml.closeTag(tag);
-        }
-        return true;
-      }
+      xml.property(tag, ev.getStag());
 
-      if (tag.equals(CaldavTags.recipient)) {
-        Collection<String> r = ev.getRecipients();
-        if ((r == null) || (r.isEmpty())) {
-          return true;
-        }
+      return true;
+    }
 
+    if (tag.equals(CaldavTags.originator)) {
+      if (ev.getOriginator() != null) {
         xml.openTag(tag);
-        for (String recip: r) {
-          xml.property(WebdavTags.href, recip);
-        }
+        xml.property(WebdavTags.href, ev.getOriginator());
         xml.closeTag(tag);
+      }
+      return true;
+    }
+
+    if (tag.equals(CaldavTags.recipient)) {
+      final Collection<String> r = ev.getRecipients();
+      if ((r == null) || (r.isEmpty())) {
         return true;
       }
 
-      if (tag.equals(AppleServerTags.scheduleChanges)) {
-        List<BwXproperty> xps = ev.getXproperties(BwXproperty.bedeworkChanges);
-        if (Util.isEmpty(xps)) {
-          return true;
+      xml.openTag(tag);
+      for (final String recip: r) {
+        xml.property(WebdavTags.href, recip);
+      }
+      xml.closeTag(tag);
+      return true;
+    }
+
+    if (tag.equals(AppleServerTags.scheduleChanges)) {
+      final List<BwXproperty> xps =
+              ev.getXproperties(BwXproperty.bedeworkChanges);
+      if (Util.isEmpty(xps)) {
+        return true;
+      }
+
+      final BwXproperty xp = xps.get(0);
+
+      final String[] vals = xp.getValue().split(";");
+
+      xml.openTag(tag);
+
+      xml.property(AppleServerTags.dtstamp, vals[0]);
+      xml.openTag(AppleServerTags.action);
+
+      final QName actionTag;
+
+      if ("CANCEL".equals(vals[1])) {
+        actionTag = AppleServerTags.cancel;
+      } else if ("CREATE".equals(vals[1])) {
+        actionTag = AppleServerTags.create;
+      } else if ("REPLY".equals(vals[1])) {
+        actionTag = AppleServerTags.reply;
+      } else { // "UPDATE"
+        actionTag = AppleServerTags.update;
+      }
+
+      xml.openTag(actionTag);
+
+      int i = 2;
+      while (i < vals.length) {
+        /* Next is master or rid */
+
+        xml.openTag(AppleServerTags.recurrence);
+
+        String val = vals[i];
+
+        if ("MASTER".equals(val)) {
+          xml.emptyTag(AppleServerTags.master);
+          i++;
         }
 
-        BwXproperty xp = xps.get(0);
-
-        String[] vals = xp.getValue().split(";");
-
-        xml.openTag(tag);
-
-        xml.property(AppleServerTags.dtstamp, vals[0]);
-        xml.openTag(AppleServerTags.action);
-
-        QName actionTag;
-
-        if ("CANCEL".equals(vals[1])) {
-          actionTag = AppleServerTags.cancel;
-        } else if ("CREATE".equals(vals[1])) {
-          actionTag = AppleServerTags.create;
-        } else if ("REPLY".equals(vals[1])) {
-          actionTag = AppleServerTags.reply;
-        } else { // "UPDATE"
-          actionTag = AppleServerTags.update;
+        if (val.startsWith("RID=")) {
+          xml.openTagNoNewline(AppleServerTags.recurrenceid);
+          xml.value(val);
+          xml.closeTag(AppleServerTags.recurrenceid);
+          i++;
         }
 
-        xml.openTag(actionTag);
+        if ((i < vals.length) && "CHANGES".equals(vals[i])) {
+          i++;
+          xml.openTag(AppleServerTags.changes);
 
-        int i = 2;
-        while (i < vals.length) {
-          /* Next is master or rid */
+          while (i < vals.length) {
+            val = vals[i];
 
-          xml.openTag(AppleServerTags.recurrence);
-
-          String val = vals[i];
-
-          if ("MASTER".equals(val)) {
-            xml.emptyTag(AppleServerTags.master);
-            i++;
-          }
-
-          if (val.startsWith("RID=")) {
-            xml.openTagNoNewline(AppleServerTags.recurrenceid);
-            xml.value(val);
-            xml.closeTag(AppleServerTags.recurrenceid);
-            i++;
-          }
-
-          if ((i < vals.length) && "CHANGES".equals(vals[i])) {
-            i++;
-            xml.openTag(AppleServerTags.changes);
-
-            while (i < vals.length) {
-              val = vals[i];
-
-              if ("MASTER".equals(val) ||
-                  "CHANGES".equals(val) ||
-                  val.startsWith("RID=")) {
-                break;
-              }
-
-              xml.startTag(AppleServerTags.changedProperty);
-              xml.attribute("name", val);
-              xml.endEmptyTag();
-
-              i++;
+            if ("MASTER".equals(val) ||
+                    "CHANGES".equals(val) ||
+                    val.startsWith("RID=")) {
+              break;
             }
 
-            xml.closeTag(AppleServerTags.changes);
+            xml.startTag(AppleServerTags.changedProperty);
+            xml.attribute("name", val);
+            xml.endEmptyTag();
+
+            i++;
           }
 
-          xml.closeTag(AppleServerTags.recurrence);
+          xml.closeTag(AppleServerTags.changes);
         }
 
-
-        xml.closeTag(actionTag);
-        xml.closeTag(AppleServerTags.action);
-        xml.closeTag(tag);
-
-        return true;
+        xml.closeTag(AppleServerTags.recurrence);
       }
 
-      /* =============== ICalTags follow ================= */
 
-      if (tag.equals(ICalTags.action)) {
-        // PROPTODO
-        return true;
+      xml.closeTag(actionTag);
+      xml.closeTag(AppleServerTags.action);
+      xml.closeTag(tag);
+
+      return true;
+    }
+
+    /* =============== ICalTags follow ================= */
+
+    if (tag.equals(ICalTags.action)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.attach)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.attendee)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.categories)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags._class)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.comment)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.completed)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.contact)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.created)) {
+      xml.property(tag, ev.getCreated());
+      return true;
+    }
+
+    if (tag.equals(ICalTags.description)) {
+      if (ev.getDescription() != null) {
+        xml.property(tag, ev.getDescription());
       }
+      return true;
+    }
 
-      if (tag.equals(ICalTags.attach)) {
-        // PROPTODO
-        return true;
-      }
+    if (tag.equals(ICalTags.dtend)) {
+      xml.property(tag, ev.getDtend().getDate());
+      return true;
+    }
 
-      if (tag.equals(ICalTags.attendee)) {
-        // PROPTODO
-        return true;
-      }
+    if (tag.equals(ICalTags.dtstamp)) {
+      xml.property(tag, ev.getDtstamp());
+      return true;
+    }
 
-      if (tag.equals(ICalTags.categories)) {
-        // PROPTODO
-        return true;
-      }
+    if (tag.equals(ICalTags.dtstart)) {
+      xml.property(tag, ev.getDtstart().getDate());
+      return true;
+    }
 
-      if (tag.equals(ICalTags._class)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.comment)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.completed)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.contact)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.created)) {
-        xml.property(tag, ev.getCreated());
-        return true;
-      }
-
-      if (tag.equals(ICalTags.description)) {
-        if (ev.getDescription() != null) {
-          xml.property(tag, ev.getDescription());
-        }
-        return true;
-      }
-
-      if (tag.equals(ICalTags.dtend)) {
-        xml.property(tag, ev.getDtend().getDate());
-        return true;
-      }
-
-      if (tag.equals(ICalTags.dtstamp)) {
-        xml.property(tag, ev.getDtstamp());
-        return true;
-      }
-
-      if (tag.equals(ICalTags.dtstart)) {
-        xml.property(tag, ev.getDtstart().getDate());
-        return true;
-      }
-
-      /* TODO
+    /* TODO
      if (tag.equals(ICalTags.due)) {
      pv.val = ev.
      return pv;
      }
        */
 
-      if (tag.equals(ICalTags.duration)) {
-        xml.property(tag, ev.getDuration());
-        return true;
-      }
+    if (tag.equals(ICalTags.duration)) {
+      xml.property(tag, ev.getDuration());
+      return true;
+    }
 
-      if (tag.equals(ICalTags.exdate)) {
-        // PROPTODO
-        return true;
-      }
+    if (tag.equals(ICalTags.exdate)) {
+      // PROPTODO
+      return true;
+    }
 
-      if (tag.equals(ICalTags.exrule)) {
-        // PROPTODO
-        return true;
-      }
+    if (tag.equals(ICalTags.exrule)) {
+      // PROPTODO
+      return true;
+    }
 
-      if (tag.equals(ICalTags.freebusy)) {
-        // PROPTODO
-        return true;
-      }
+    if (tag.equals(ICalTags.freebusy)) {
+      // PROPTODO
+      return true;
+    }
 
-      if (tag.equals(ICalTags.geo)) {
-        // PROPTODO
-        return true;
-      }
+    if (tag.equals(ICalTags.geo)) {
+      // PROPTODO
+      return true;
+    }
 
-      /*
+    /*
      if (tag.equals(ICalTags.hasRecurrence)) {
      pv.val = ev
      return pv;
@@ -481,126 +481,123 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
      return pv;
      }*/
 
-      if (tag.equals(ICalTags.lastModified)) {
-        xml.property(tag, ev.getLastmod());
-        return true;
+    if (tag.equals(ICalTags.lastModified)) {
+      xml.property(tag, ev.getLastmod());
+      return true;
+    }
+
+    if (tag.equals(ICalTags.location)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.organizer)) {
+      if (ev.getOrganizer() != null) {
+        xml.property(tag, ev.getOrganizer().getOrganizerUri());
+      }
+      return true;
+    }
+
+    if (tag.equals(ICalTags.percentComplete)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.priority)) {
+      final Integer val = ev.getPriority();
+      if ((val != null) && (val != 0)) {
+        xml.property(tag, String.valueOf(val));
       }
 
-      if (tag.equals(ICalTags.location)) {
-        // PROPTODO
-        return true;
+      return true;
+    }
+
+    if (tag.equals(ICalTags.rdate)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.recurrenceId)) {
+      if (ev.getRecurrenceId() != null) {
+        xml.property(tag, ev.getRecurrenceId());
       }
+      return true;
+    }
 
-      if (tag.equals(ICalTags.organizer)) {
-        if (ev.getOrganizer() != null) {
-          xml.property(tag, ev.getOrganizer().getOrganizerUri());
-        }
-        return true;
-      }
+    if (tag.equals(ICalTags.relatedTo)) {
+      // PROPTODO
+      return true;
+    }
 
-      if (tag.equals(ICalTags.percentComplete)) {
-        // PROPTODO
-        return true;
-      }
+    if (tag.equals(ICalTags.repeat)) {
+      // PROPTODO
+      return true;
+    }
 
-      if (tag.equals(ICalTags.priority)) {
-        Integer val = ev.getPriority();
-        if ((val != null) && (val != 0)) {
-          xml.property(tag, String.valueOf(val));
-        }
+    if (tag.equals(ICalTags.resources)) {
+      // PROPTODO
+      return true;
+    }
 
-        return true;
-      }
-
-      if (tag.equals(ICalTags.rdate)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.recurrenceId)) {
-        if (ev.getRecurrenceId() != null) {
-          xml.property(tag, ev.getRecurrenceId());
-        }
-        return true;
-      }
-
-      if (tag.equals(ICalTags.relatedTo)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.repeat)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.resources)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.requestStatus)) {
-        // PROPTODO
-        /*
+    if (tag.equals(ICalTags.requestStatus)) {
+      // PROPTODO
+      /*
       if (ev.getRequestStatus() != null) {
         xml.property(tag, ev.getRequestStatus().strVal());
       }
          */
-        return true;
-      }
-
-      if (tag.equals(ICalTags.rrule)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.sequence)) {
-        xml.property(tag, String.valueOf(ev.getSequence()));
-
-        return true;
-      }
-
-      if (tag.equals(ICalTags.status)) {
-        xml.property(tag, ev.getStatus());
-        return true;
-      }
-
-      if (tag.equals(ICalTags.summary)) {
-        xml.property(tag, ev.getSummary());
-        return true;
-      }
-
-      if (tag.equals(ICalTags.transp)) {
-        xml.property(tag, ev.getPeruserTransparency(intf.getPrincipal().getPrincipalRef()));
-        return true;
-      }
-
-      if (tag.equals(ICalTags.trigger)) {
-        // PROPTODO
-        return true;
-      }
-
-      if (tag.equals(ICalTags.uid)) {
-        xml.property(tag, ev.getUid());
-        return true;
-      }
-
-      if (tag.equals(ICalTags.url)) {
-        if (ev.getLink() != null) {
-          xml.property(tag, ev.getLink());
-        }
-        return true;
-      }
-
-      if (tag.equals(ICalTags.version)) {
-        // PROPTODO
-        return true;
-      }
-
-      return false;
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
+      return true;
     }
+
+    if (tag.equals(ICalTags.rrule)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.sequence)) {
+      xml.property(tag, String.valueOf(ev.getSequence()));
+
+      return true;
+    }
+
+    if (tag.equals(ICalTags.status)) {
+      xml.property(tag, ev.getStatus());
+      return true;
+    }
+
+    if (tag.equals(ICalTags.summary)) {
+      xml.property(tag, ev.getSummary());
+      return true;
+    }
+
+    if (tag.equals(ICalTags.transp)) {
+      xml.property(tag, ev.getPeruserTransparency(intf.getPrincipal().getPrincipalRef()));
+      return true;
+    }
+
+    if (tag.equals(ICalTags.trigger)) {
+      // PROPTODO
+      return true;
+    }
+
+    if (tag.equals(ICalTags.uid)) {
+      xml.property(tag, ev.getUid());
+      return true;
+    }
+
+    if (tag.equals(ICalTags.url)) {
+      if (ev.getLink() != null) {
+        xml.property(tag, ev.getLink());
+      }
+      return true;
+    }
+
+    if (tag.equals(ICalTags.version)) {
+      // PROPTODO
+      return true;
+    }
+
+    return false;
   }
 
   @Override
@@ -617,7 +614,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
       }
 
       throw new RuntimeException("Unhandled content type" + contentType);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }
@@ -675,7 +672,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
   public AccessPrincipal getOwner() {
     try {
       return intf.getPrincipal(getEv().getOwnerHref());
-    } catch (WebdavException e) {
+    } catch (final WebdavException e) {
       throw new RuntimeException(e);
     }
   }
@@ -729,11 +726,11 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("BwCalDAVEvent{");
+    final StringBuilder sb = new StringBuilder("BwCalDAVEvent{");
 
     try {
       sb.append(getEv().toString());
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       sb.append(t);
     }
 

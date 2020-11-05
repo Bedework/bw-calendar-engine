@@ -551,7 +551,6 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       ownerHref = getPrincipal().getPrincipalRef();
     }
 
-
     Collection<T> ents = getCached(ownerHref);
 
     if (ents == null) {

@@ -320,12 +320,11 @@ public interface Directories extends Serializable {
    * @param cutype    null - or type
    * @param truncated value is true if result is incomplete
    * @return BwPrincipalInfo objects that match.
-   * @throws CalFacadeException
    */
   List<BwPrincipalInfo> find(List<WebdavProperty> props,
                              List<WebdavProperty> returnProps,
                              String cutype,
-                             Holder<Boolean> truncated) throws CalFacadeException;
+                             Holder<Boolean> truncated);
 
   /** Return principals tha match the CUA.
    *
@@ -333,12 +332,11 @@ public interface Directories extends Serializable {
    * @param cutype individual, group etc (null for individual)
    * @param expand if true expand any groups so that the info contains group member info.
    * @return BwPrincipalInfo objects that match.
-   * @throws CalFacadeException
    */
   List<BwPrincipalInfo> find(String cua,
                              String cutype,
                              boolean expand,
-                             Holder<Boolean> truncated) throws CalFacadeException;
+                             Holder<Boolean> truncated);
 
   /** Uses the values in pinfo to update the supplied preferences. This may be a
    * site specific operation. It allows bedework to use directory information
