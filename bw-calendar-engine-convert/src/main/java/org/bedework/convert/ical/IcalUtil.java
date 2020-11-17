@@ -42,6 +42,7 @@ import org.bedework.util.timezones.Timezones;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.CalendarParserImpl;
+import net.fortuna.ical4j.data.DefaultParameterFactorySupplier;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.data.UnfoldingReader;
 import net.fortuna.ical4j.model.Calendar;
@@ -51,7 +52,8 @@ import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Parameter;
-import net.fortuna.ical4j.model.ParameterFactoryImpl;
+import net.fortuna.ical4j.model.ParameterBuilder;
+import net.fortuna.ical4j.model.ParameterFactory;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
@@ -103,6 +105,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.function.Supplier;
 
 /** Class to provide utility methods for ical4j classes
  *
@@ -111,6 +114,9 @@ import java.util.TreeSet;
 public class IcalUtil {
   private final static BwLogger logger =
           new BwLogger().setLoggedClass(IcalUtil.class);
+
+  private static final Supplier<List<ParameterFactory<?>>> parameterFactorySupplier =
+          new DefaultParameterFactorySupplier();
 
   /* *
    * @param p ical4j Property
@@ -181,7 +187,7 @@ public class IcalUtil {
       if (cal != null) {
         return cal.getComponent(compName);
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       logger.error(t);
       logger.error("Trying to parse:\n" + xcompPropVal);
     }
@@ -194,16 +200,16 @@ public class IcalUtil {
    * @param xprops list of bw xprops
    */
   @SuppressWarnings("deprecation")
-  public static void xpropertiesToIcal(final PropertyList pl,
+  public static void xpropertiesToIcal(final PropertyList<Property> pl,
                                        final List<BwXproperty> xprops) {
-    for (BwXproperty x: xprops) {
-      String xname = x.getName();
+    for (final BwXproperty x: xprops) {
+      final String xname = x.getName();
 
       if (xname.equals(BwXproperty.bedeworkIcalProp)) {
         // Some get squirreled away in here -mostly for alarms
         List<Xpar> params = x.getParameters();
 
-        String pname = params.get(0).getValue();
+        final String pname = params.get(0).getValue();
 
         if (params.size() == 1) {
           params = null;
@@ -236,13 +242,13 @@ public class IcalUtil {
    * @return par list - always non-null
    */
   public static ParameterList makeXparlist(final List<BwXproperty.Xpar> pars) {
-    ParameterList xparl = new ParameterList();
+    final ParameterList xparl = new ParameterList();
 
     if (pars == null) {
       return xparl;
     }
 
-    for (BwXproperty.Xpar xpar: pars) {
+    for (final BwXproperty.Xpar xpar: pars) {
       String xval = xpar.getValue();
       if ((xval.contains(":")) ||
           (xval.contains(";")) ||
@@ -251,11 +257,11 @@ public class IcalUtil {
       }
 
       try {
-        xparl.add(ParameterFactoryImpl
-                          .getInstance()
-                          .createParameter(xpar.getName().toUpperCase(),
-                                           xval));
-      } catch (URISyntaxException e) {
+        xparl.add(new ParameterBuilder()
+                .factories(parameterFactorySupplier.get())
+                .name(xpar.getName().toUpperCase()).value(xval).build());
+
+      } catch (final URISyntaxException e) {
         throw new RuntimeException(e);
       }
     }
@@ -269,7 +275,7 @@ public class IcalUtil {
    * @param pars List of Xpar
    * @param val new value
    */
-  public static void addXproperty(final PropertyList pl,
+  public static void addXproperty(final PropertyList<Property> pl,
                                   final String name,
                                   final List<BwXproperty.Xpar> pars,
                                   final String val) {
@@ -304,9 +310,9 @@ public class IcalUtil {
    * @return String
    */
   public static String getLang(final Property p) {
-    ParameterList pars = p.getParameters();
+    final ParameterList pars = p.getParameters();
 
-    Parameter par = pars.getParameter(Parameter.LANGUAGE);
+    final Parameter par = pars.getParameter(Parameter.LANGUAGE);
 
     if (par == null) {
       return null;
@@ -320,7 +326,7 @@ public class IcalUtil {
    * @return Organizer
    */
   public static Organizer setOrganizer(final BwOrganizer val) {
-    ParameterList pars = new ParameterList();
+    final ParameterList pars = new ParameterList();
 
     try {
       String temp = val.getScheduleStatus();
@@ -346,7 +352,7 @@ public class IcalUtil {
       }
 
       return new Organizer(pars, val.getOrganizerUri());
-    } catch (URISyntaxException e) {
+    } catch (final URISyntaxException e) {
       throw new RuntimeException(e);
     }
   }
@@ -359,11 +365,11 @@ public class IcalUtil {
    */
   public static BwOrganizer getOrganizer(final IcalCallback cb,
                                          final Organizer orgProp) {
-    BwOrganizer org = new BwOrganizer();
+    final BwOrganizer org = new BwOrganizer();
 
     org.setOrganizerUri(cb.getCaladdr(orgProp.getValue()));
 
-    ParameterList pars = orgProp.getParameters();
+    final ParameterList pars = orgProp.getParameters();
 
     org.setCn(IcalUtil.getOptStr(pars, "CN"));
     org.setDir(getOptStr(pars, "DIR"));
@@ -380,7 +386,7 @@ public class IcalUtil {
    * @return Attendee
    */
   public static Attach setAttachment(final BwAttachment val) {
-    ParameterList pars = new ParameterList();
+    final ParameterList pars = new ParameterList();
 
     String temp = val.getFmtType();
     if (temp != null) {
@@ -404,7 +410,7 @@ public class IcalUtil {
     }
     try {
       return new Attach(pars, uri);
-    } catch (IOException | URISyntaxException e) {
+    } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }
   }
@@ -786,8 +792,8 @@ public class IcalUtil {
    * @param pl ical4j property list
    * @return DurationRepeat
    */
-  public static DurationRepeat getDurationRepeat(final PropertyList pl) {
-    DurationRepeat dr = new DurationRepeat();
+  public static DurationRepeat getDurationRepeat(final PropertyList<Property> pl) {
+    final DurationRepeat dr = new DurationRepeat();
 
     Property prop = pl.getProperty(Property.DURATION);
     if (prop == null) {
@@ -906,7 +912,7 @@ public class IcalUtil {
    */
   public static Property getProperty(final Component comp,
                                      final String name) {
-    PropertyList props =  comp.getProperties();
+    final PropertyList<Property> props =  comp.getProperties();
 
     return props.getProperty(name);
   }
@@ -916,9 +922,10 @@ public class IcalUtil {
    * @param name of property
    * @return PropertyList
    */
-  public static PropertyList getProperties(final Component comp,
-                                           final String name) {
-    PropertyList props =  comp.getProperties();
+  public static PropertyList<Property> getProperties(
+          final Component comp,
+          final String name) {
+    PropertyList<Property> props =  comp.getProperties();
 
     props = props.getProperties(name);
     if (props.size() == 0) {
@@ -934,9 +941,9 @@ public class IcalUtil {
    * @param name of property
    * @return Iterator over required String attributes
    */
-  public static Iterator<?> getReqStrs(final PropertyList pl,
+  public static Iterator<?> getReqStrs(final PropertyList<Property> pl,
                                        final String name) {
-   PropertyList props = pl.getProperties(name);
+   final PropertyList<Property> props = pl.getProperties(name);
 
    if (props.isEmpty()) {
       throw new RuntimeException("Missing required property " + name);
@@ -951,9 +958,9 @@ public class IcalUtil {
    * @param name of property
    * @return String
    */
-  public static String getReqStr(final PropertyList pl,
+  public static String getReqStr(final PropertyList<Property> pl,
                                  final String name) {
-    Property prop = pl.getProperty(name);
+    final Property prop = pl.getProperty(name);
     if (prop == null) {
       throw new RuntimeException("Missing required property " + name);
     }
@@ -967,9 +974,9 @@ public class IcalUtil {
    * @param name of property
    * @return String or null
    */
-  public static String getOptStr(final PropertyList pl,
+  public static String getOptStr(final PropertyList<Property> pl,
                                  final String name) {
-    Property prop = pl.getProperty(name);
+    final Property prop = pl.getProperty(name);
     if (prop == null) {
       return null;
     }

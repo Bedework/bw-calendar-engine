@@ -34,7 +34,8 @@ import ietf.params.xml.ns.icalendar_2.IntegerParameterType;
 import ietf.params.xml.ns.icalendar_2.RangeParamType;
 import ietf.params.xml.ns.icalendar_2.TextParameterType;
 import ietf.params.xml.ns.icalendar_2.UriParameterType;
-import net.fortuna.ical4j.model.ParameterFactoryImpl;
+import net.fortuna.ical4j.data.DefaultParameterFactorySupplier;
+import net.fortuna.ical4j.model.ParameterBuilder;
 import net.fortuna.ical4j.model.ParameterList;
 
 import java.util.List;
@@ -157,7 +158,7 @@ public class UpdaterUtil {
 
     final ParameterList plist = new ParameterList(false);
 
-    for (JAXBElement<? extends BaseParameterType> parEl : pars
+    for (final JAXBElement<? extends BaseParameterType> parEl : pars
             .getBaseParameter()) {
       final String name = parEl.getName().getLocalPart()
                                .toUpperCase();
@@ -174,9 +175,11 @@ public class UpdaterUtil {
 
       try {
         plist.add(
-                ParameterFactoryImpl.getInstance().createParameter(
-                        parEl.getName().getLocalPart().toUpperCase(),
-                        val));
+                new ParameterBuilder()
+                        .factories(
+                                new DefaultParameterFactorySupplier()
+                                        .get())
+                                      .name(parEl.getName().getLocalPart().toUpperCase()).value(val).build());
       } catch (Throwable t) {
       }
     }

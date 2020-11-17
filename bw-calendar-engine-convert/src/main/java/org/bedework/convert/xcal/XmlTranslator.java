@@ -41,7 +41,6 @@ import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.Version;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
@@ -262,16 +261,16 @@ public class XmlTranslator extends IcalTranslator {
   }
 
   private void xmlComponent(final XmlEmit xml,
-                            final Component val) throws CalFacadeException {
+                            final Component val) {
     final QName tag = openTag(xml, val.getName());
 
-    final PropertyList pl = val.getProperties();
+    final PropertyList<Property> pl = val.getProperties();
 
     if (pl.size() > 0) {
       xml.openTag(XcalTags.properties);
 
-      for (final Object po: pl) {
-        xmlProperty(xml, (Property)po);
+      for (final Property po: pl) {
+        xmlProperty(xml, po);
       }
       xml.closeTag(XcalTags.properties);
     }
@@ -308,9 +307,8 @@ public class XmlTranslator extends IcalTranslator {
       if (pl.size() > 0) {
         xml.openTag(XcalTags.parameters);
 
-        final Iterator<Parameter> pli = pl.iterator();
-        while (pli.hasNext()) {
-          xmlParameter(xml, pli.next());
+        for (final Parameter parameter: pl) {
+          xmlParameter(xml, parameter);
         }
         xml.closeTag(XcalTags.parameters);
       }
@@ -346,7 +344,7 @@ public class XmlTranslator extends IcalTranslator {
           r = ((RRule)val).getRecur();
         }
 
-        xml.property(XcalTags.freq, r.getFrequency());
+        xml.property(XcalTags.freq, r.getFrequency().name());
         xmlProp(xml, XcalTags.wkst, r.getWeekStartDay().name());
         if (r.getUntil() != null) {
           xmlProp(xml, XcalTags.until, r.getUntil().toString());

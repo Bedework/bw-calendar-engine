@@ -95,6 +95,7 @@ import net.fortuna.ical4j.model.property.RelatedTo;
 import net.fortuna.ical4j.model.property.RequestStatus;
 import net.fortuna.ical4j.model.property.Resources;
 import net.fortuna.ical4j.model.property.Sequence;
+import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.XProperty;
 
 import java.util.Collection;
@@ -190,7 +191,7 @@ public class Ical2BwEvent extends IcalUtil {
     }
 
     try {
-      final PropertyList pl = val.getProperties();
+      final PropertyList<Property> pl = val.getProperties();
       boolean vpoll = false;
 
       if (pl == null) {
@@ -408,7 +409,8 @@ public class Ical2BwEvent extends IcalUtil {
                             masterEI, mdtStart, null, null);
           e.setRecurring(true);
 //          e.addRdate(ridObj);
-          e.setSummary(pl.getProperty(Property.SUMMARY).getValue());
+          var sum = (Summary)pl.getProperty(Property.SUMMARY);
+          e.setSummary(sum.getValue());
           e.setSuppressed(true);
 
           ical.addComponent(masterEI);

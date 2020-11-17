@@ -1095,7 +1095,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
         final Collection<CalDAVEvent<?>> evs = new ArrayList<>();
 
-        for (final BwEvent bwev : bwevs) {
+        for (final BwEvent bwev: bwevs) {
           evs.add(new BwCalDAVEvent(this, new EventInfo(bwev)));
         }
 

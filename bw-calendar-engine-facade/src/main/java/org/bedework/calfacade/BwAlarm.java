@@ -37,11 +37,12 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 
-import net.fortuna.ical4j.model.Dur;
+import net.fortuna.ical4j.model.TemporalAmountAdapter;
 import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.Trigger;
 
 import java.io.Serializable;
+import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -852,8 +853,8 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
 
     repeatCount++;
     
-    final Dur dur = new Duration(null, duration).getDuration();
-    triggerDate = dur.getTime(previousTrigger);
+    final TemporalAmount dur = new Duration(null, duration).getDuration();
+    triggerDate = new TemporalAmountAdapter(dur).getTime(previousTrigger);
     return triggerDate;
   }
 
@@ -877,13 +878,14 @@ public class BwAlarm extends BwOwnedDbentity<BwAlarm>
        */
       Date dt = tr.getDateTime();
       if (dt == null) {
-        final Dur dur = tr.getDuration();
+        final TemporalAmount dur = tr.getDuration();
 
         if (start == null) {
           throw new RuntimeException("No start date for alarm " + this);
         }
 
-        dt = dur.getTime(BwDateTimeUtil.getDate(start));
+        dt = new TemporalAmountAdapter(dur)
+                .getTime(BwDateTimeUtil.getDate(start));
       }
 
       triggerDate = dt;

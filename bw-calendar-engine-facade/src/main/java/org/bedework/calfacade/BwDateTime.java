@@ -40,6 +40,7 @@ import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.TemporalAmountAdapter;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.parameter.Value;
@@ -50,6 +51,7 @@ import net.fortuna.ical4j.model.property.Due;
 
 import java.io.Serializable;
 import java.text.ParseException;
+import java.time.temporal.TemporalAmount;
 import java.util.Calendar;
 import java.util.Comparator;
 
@@ -808,10 +810,11 @@ public class BwDateTime extends DumpEntity<BwDateTime>
     }
   }
 
-  private BwDateTime addDuration(final Dur val) {
+  private BwDateTime addDuration(final TemporalAmount val) {
     final DtEnd dtEnd;
 
-    final java.util.Date endDt = val.getTime(makeDate());
+    final java.util.Date endDt =
+            new TemporalAmountAdapter(val).getTime(makeDate());
     final DtStart dtStart = makeDtStart(Timezones.getTzRegistry());
 
     if (getDateType()) {

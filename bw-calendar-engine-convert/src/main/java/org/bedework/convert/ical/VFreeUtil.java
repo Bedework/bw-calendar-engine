@@ -46,16 +46,16 @@ import java.util.Collection;
 public class VFreeUtil extends IcalUtil {
   /** Make a VFreeBusy object from a BwFreeBusy.
    *
-   * @param val
+   * @param val event
    * @return VFreeBusy
-   * @throws CalFacadeException
+   * @throws RuntimeException on fatal error
    */
-  public static VFreeBusy toVFreeBusy(final BwEvent val) throws CalFacadeException {
+  public static VFreeBusy toVFreeBusy(final BwEvent val) {
     try {
       VFreeBusy vfb = new VFreeBusy(makeDateTime(val.getDtstart()),
                                     makeDateTime(val.getDtend()));
 
-      PropertyList pl = vfb.getProperties();
+      final PropertyList<Property> pl = vfb.getProperties();
       Property prop;
 
       /* ------------------- Attendees -------------------- */
@@ -138,10 +138,10 @@ public class VFreeUtil extends IcalUtil {
       }
 
       return vfb;
-    } catch (CalFacadeException cfe) {
-      throw cfe;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    } catch (final RuntimeException re) {
+      throw re;
+    } catch (final Throwable t) {
+      throw new RuntimeException(t);
     }
   }
 }

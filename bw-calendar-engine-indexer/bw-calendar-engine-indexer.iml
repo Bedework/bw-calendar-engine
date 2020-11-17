@@ -44,13 +44,11 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.10" level="project" />
     <orderEntry type="module" module-name="bw-caldav-server" />
     <orderEntry type="library" name="Maven: javax.xml.soap:javax.xml.soap-api:1.4.0" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:2.0.12" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.10" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.commons:commons-collections4:4.0" level="project" />
-    <orderEntry type="library" name="Maven: org.codehaus.groovy:groovy-all:2.3.2" level="project" />
-    <orderEntry type="library" name="Maven: biz.aQute.bnd:bndlib:2.3.0" level="project" />
-    <orderEntry type="library" name="Maven: org.osgi:org.osgi.core:4.3.1" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:3.0.13-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.8.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-collections4:4.1" level="project" />
+    <orderEntry type="library" name="Maven: javax.cache:cache-api:1.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-ical4j-vcard:1.0.4" level="project" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.0.1" level="project" />
     <orderEntry type="library" name="Maven: commons-lang:commons-lang:2.3" level="project" />

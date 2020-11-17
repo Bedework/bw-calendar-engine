@@ -681,7 +681,7 @@ public class ToXEvent extends Xutil {
           final Recur r = rule.getRecur();
           final RecurType rt = new RecurType();
 
-          rt.setFreq(FreqRecurType.fromValue(r.getFrequency()));
+          rt.setFreq(FreqRecurType.fromValue(r.getFrequency().name()));
           if (r.getCount() > 0) {
             rt.setCount(BigInteger.valueOf(r.getCount()));
           }

@@ -21,21 +21,21 @@ package org.bedework.convert;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.convert.ical.IcalUtil;
 import org.bedework.convert.ical.BwEvent2Ical;
+import org.bedework.convert.ical.IcalUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateList;
 import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Period;
 import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.Recur;
+import net.fortuna.ical4j.model.TemporalAmountAdapter;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.DtEnd;
@@ -45,6 +45,8 @@ import net.fortuna.ical4j.model.property.RDate;
 import net.fortuna.ical4j.model.property.RRule;
 
 import java.text.ParseException;
+import java.time.Instant;
+import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -57,7 +59,7 @@ import java.util.TreeSet;
  *  @version 1.0
  */
 public class RecurUtil {
-  private static BwLogger logger =
+  private static final BwLogger logger =
           new BwLogger().setLoggedClass(RecurUtil.class);
 
   /**
@@ -80,43 +82,40 @@ public class RecurUtil {
    */
   public static RecurRange getRange(final BwEvent ev,
                                     final int maxYears) {
-    PropertyList evprops = new PropertyList();
+    final PropertyList<Property> evprops = new PropertyList<>();
     BwEvent2Ical.doRecurring(ev, evprops);
-    RecurRange rr = new RecurRange();
+    final RecurRange rr = new RecurRange();
 
-    DtStart start = ev.getDtstart().makeDtStart();
-    DtEnd end = IcalUtil.makeDtEnd(ev.getDtend());
-    Duration duration = new Duration(null, ev.getDuration());
+    final DtStart start = ev.getDtstart().makeDtStart();
+    final DtEnd end = IcalUtil.makeDtEnd(ev.getDtend());
+    final Duration duration = new Duration(null, ev.getDuration());
 
     //boolean durSpecified = ev.getEndType() == BwEvent.endTypeDuration;
 
     rr.rangeStart = start.getDate();
 
-    for (Object o: evprops){
-      if (o instanceof RDate) {
-        RDate rd = (RDate)o;
+    for (final Property p: evprops.getProperties(Property.RDATE)) {
+      final RDate rd = (RDate)p;
 
-        for (Object o1: rd.getDates()) {
-          Date d = (Date)o1;
-
-          if (d.before(rr.rangeStart)) {
-            rr.rangeStart = d;
-          }
+      for (final Date d: rd.getDates()) {
+        if (d.before(rr.rangeStart)) {
+          rr.rangeStart = d;
         }
       }
     }
 
     /* Limit date according to system settings
      */
-    Dur dur = new Dur(maxYears * 365, 0, 0, 0);
+    final TemporalAmountAdapter dur =
+            new TemporalAmountAdapter(java.time.Period.of(maxYears, 0, 0));
 
     Date maxRangeEnd = new Date(dur.getTime(rr.rangeStart));
 
     if (ev.getParent() != null) {
-      BwDateTime pend = ev.getParent().getDtend();
+      final BwDateTime pend = ev.getParent().getDtend();
 
       if (pend != null) {
-        Date dt = pend.makeDate();
+        final Date dt = pend.makeDate();
 
         if (dt.before(maxRangeEnd)) {
           maxRangeEnd = dt;
@@ -184,7 +183,7 @@ public class RecurUtil {
                                         final int maxInstances,
                                         final String startRange, 
                                         final String endRange) {
-    final PropertyList evprops = new PropertyList();
+    final PropertyList<Property> evprops = new PropertyList<>();
     BwEvent2Ical.doRecurring(ev, evprops);
     final RecurPeriods rp = new RecurPeriods();
 
@@ -234,7 +233,8 @@ public class RecurUtil {
 
     /* Limit date according to system settings
      */
-    final Dur dur = new Dur(maxYears * 365, 0, 0, 0);
+    final TemporalAmountAdapter dur =
+            new TemporalAmountAdapter(java.time.Period.of(maxYears, 0, 0));
 
     Date maxRangeEnd = new Date(dur.getTime(rp.rangeStart));
 
@@ -269,45 +269,55 @@ public class RecurUtil {
       }
     }
     
-    Period rangePeriod = new Period(new DateTime(rp.rangeStart),
-                                    new DateTime(rp.rangeEnd));
+    final Period rangePeriod = new Period(new DateTime(rp.rangeStart),
+                                          new DateTime(rp.rangeEnd));
 
-    VEvent vev = new VEvent();
-    PropertyList vevprops = vev.getProperties();
+    final VEvent vev = new VEvent();
+    final PropertyList<Property> vevprops = vev.getProperties();
+
     vevprops.addAll(evprops);
+
     if (!ev.getSuppressed()) {
       // Allow inclusion of master start/end
       vevprops.add(start);
       vevprops.add(end);
     } else {
       // Move start/end outside of our period
-      Dur evdur = new Dur(ev.getDuration());
-      Dur setback = evdur.add(new Dur(1, 0, 0, 0)); // Ensure at least a day
+      final TemporalAmountAdapter evdur =
+              TemporalAmountAdapter.parse(ev.getDuration());
+      // Ensure at least a day
+      final TemporalAmount setback = addDays(evdur.getDuration(), 1);
 
-      boolean dateOnly = ev.getDtstart().getDateType();
-      Date adjustedEnd;
+      final boolean dateOnly = ev.getDtstart().getDateType();
+      final Date adjustedEnd;
 
       if (dateOnly) {
         adjustedEnd = new Date(rp.rangeStart);
       } else {
         adjustedEnd = new DateTime(rp.rangeStart);
       }
-      adjustedEnd.setTime(setback.negate().getTime(rp.rangeStart).getTime());
+      adjustedEnd.setTime(java.util.Date.from(Instant.from(
+              setback.subtractFrom(
+                      rp.rangeStart.toInstant()))).getTime());
       vevprops.add(new DtEnd(adjustedEnd));
 
       // End now before range - make start evdur before that
-      Date adjustedStart;
+      final Date adjustedStart;
 
       if (dateOnly) {
         adjustedStart = new Date(adjustedEnd);
       } else {
         adjustedStart = new DateTime(adjustedEnd);
       }
-      adjustedStart.setTime(evdur.negate().getTime(adjustedEnd).getTime());
+
+      adjustedStart.setTime(java.util.Date.from(Instant.from(
+              evdur.getDuration()
+                   .subtractFrom(adjustedStart.toInstant()))).getTime());
+
       vevprops.add(new DtStart(adjustedStart));
     }
 
-    PeriodList pl = vev.calculateRecurrenceSet(rangePeriod);
+    final PeriodList pl = vev.calculateRecurrenceSet(rangePeriod);
 
     /*
     PeriodList periods = new PeriodList();
@@ -462,8 +472,8 @@ public class RecurUtil {
     } else {
       rp.instances = new TreeSet<>();
 
-      for (Object o: pl) {
-        rp.instances.add((Period)o);
+      for (final var p: pl) {
+        rp.instances.add(p);
         if (rp.instances.size() == maxInstances) {
           break;
         }
@@ -537,7 +547,7 @@ public class RecurUtil {
 
       final boolean dateOnly = ev.getDtstart().getDateType();
 
-      Map<String, BwEvent> overrides = new HashMap<>();
+      final Map<String, BwEvent> overrides = new HashMap<>();
 
       if (!Util.isEmpty(ei.getOverrideProxies())) {
         for (final BwEvent ov: ei.getOverrideProxies()) {
@@ -554,7 +564,7 @@ public class RecurUtil {
         BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
         final String rid = rstart.getDate();
-        BwDateTime rend;
+        final BwDateTime rend;
         final BwEvent override = overrides.get(rid);
 
         if (override != null) {
@@ -598,7 +608,7 @@ public class RecurUtil {
                                         final String rangeEnd,
                                         final String periodStart,
                                         final String periodEnd) {
-    int evstSt;
+    final int evstSt;
 
     if (rangeEnd == null) {
       evstSt = -1;   // < infinity
@@ -610,7 +620,7 @@ public class RecurUtil {
       return false;
     }
 
-    int evendSt;
+    final int evendSt;
 
     if (rangeStart == null) {
       evendSt = 1;   // > infinity
@@ -632,22 +642,23 @@ public class RecurUtil {
    * @param maxRangeEnd max allowable
    * @return date or null for no max
    */
-  private static Date getLatestRecurrenceDate(final PropertyList evprops,
-                                              final DtStart vstart,
-                                              final DtEnd enddt,
-                                              final Duration d,
-                                              final Date maxRangeEnd) {
-    Date start = vstart.getDate();
+  private static Date getLatestRecurrenceDate(
+          final PropertyList<Property> evprops,
+          final DtStart vstart,
+          final DtEnd enddt,
+          final Duration d,
+          final Date maxRangeEnd) {
+    final Date start = vstart.getDate();
     Date until = null;
 
     /* Get the duration of the event to get us past the end
        */
-    Dur dur;
+    TemporalAmount dur;
 
     if  (d != null) {
       dur = d.getDuration();
     } else {
-      Date evend;
+      final Date evend;
 
       if (enddt == null) {
         evend = start;
@@ -655,20 +666,31 @@ public class RecurUtil {
         evend = enddt.getDate();
       }
 
-      dur = new Dur(start, evend);
+      dur = TemporalAmountAdapter.fromDateRange(start, evend).getDuration();
     }
 
     /* Make a new duration incremented a little to avoid any boundary
           conditions */
-    if  (dur.getWeeks() != 0) {
-      dur = new Dur(dur.getWeeks() + 1);
+    if (dur instanceof java.time.Period) {
+      final java.time.Period per = (java.time.Period)dur;
+      if ((per.getMonths() == 0) && (per.getYears() == 0) &&
+              (per.getDays() % 7 == 0)) {
+        // Assume weeks
+        dur = per.plusDays(7);
+      } else {
+        dur = per.plusDays(1);
+      }
     } else {
-      dur = new Dur(dur.getDays() + 1, dur.getHours(), dur.getMinutes(),
-                    dur.getSeconds());
+      final java.time.Duration jdur = (java.time.Duration)dur;
+      dur = jdur.plusDays(1);
     }
 
-    PropertyList rrules = evprops.getProperties(Property.RRULE);
-    PropertyList rdts = evprops.getProperties(Property.RDATE);
+    final TemporalAmountAdapter taa = new TemporalAmountAdapter(dur);
+
+    final PropertyList<Property> rrules =
+            evprops.getProperties(Property.RRULE);
+    final PropertyList<Property> rdts =
+            evprops.getProperties(Property.RDATE);
 
     if (Util.isEmpty(rrules) && Util.isEmpty(rdts)) {
       // Not a recurring event
@@ -676,9 +698,9 @@ public class RecurUtil {
     }
 
     for (final Property rrule: rrules) {
-      RRule r = (RRule)rrule;
+      final RRule r = (RRule)rrule;
 
-      Date nextUntil = getLastDate(r.getRecur(), start, maxRangeEnd);
+      final Date nextUntil = getLastDate(r.getRecur(), start, maxRangeEnd);
       if (nextUntil == null) {
         /* We have a rule without an end date so it's infinite.
          */
@@ -704,10 +726,10 @@ public class RecurUtil {
     // Get the latest date from each
     // XXX are these sorted?
     for (final Property rdt : rdts) {
-      RDate r = (RDate)rdt;
+      final RDate r = (RDate)rdt;
 
       if (Value.PERIOD.equals(r.getParameter(Parameter.VALUE))) {
-        PeriodList pl = r.getPeriods();
+        final PeriodList pl = r.getPeriods();
 
         for (final Period p : pl) {
           // Not sure if a single date gives a null end
@@ -723,9 +745,10 @@ public class RecurUtil {
         }
       } else {
         // date or datetime
-        DateList startDates = r.getDates();
-        for (Date startDate: startDates) {
-          Date endDate = new Date(dur.getTime(startDate));
+        final DateList startDates = r.getDates();
+
+        for (final Date startDate: startDates) {
+          final Date endDate = new Date(taa.getTime(startDate));
 
           if (endDate.after(until)) {
             until = endDate;
@@ -741,10 +764,10 @@ public class RecurUtil {
     /* Now add the duration of the event to get us past the end
        */
     if (until instanceof DateTime) {
-      until = new DateTime(dur.getTime(until));
+      until = new DateTime(taa.getTime(until));
       ((DateTime)until).setUtc(true);
     } else {
-      until = new Date(dur.getTime(until));
+      until = new Date(taa.getTime(until));
     }
 
     if (logger.debug()) {
@@ -754,31 +777,40 @@ public class RecurUtil {
     return until;
   }
 
+  private static TemporalAmount addDays(final TemporalAmount val,
+                                        final long days) {
+    if (val instanceof java.time.Period) {
+      return ((java.time.Period)val).plusDays(days);
+    }
+    return ((java.time.Duration)val).plusDays(days);
+  }
+
   /* Return the highest possible start date from this recurrence or null
    * if no count or until date specified
    */
   private static Date getLastDate(final Recur r, Date start,
                                   final Date maxRangeEnd) {
-    Date seed = start;
+    final Date seed = start;
     Date until = r.getUntil();
 
     if (until != null) {
       return until;
     }
 
-    int count = r.getCount();
+    final int count = r.getCount();
     if (count < 1) {
       return null;
     }
 
-    Dur days100 = new Dur(100, 0, 0, 0);
+    final TemporalAmountAdapter days100 =
+            new TemporalAmountAdapter(java.time.Period.ofDays(100));
     int counted = 0;
 
     while ((counted < count) && (start.before(maxRangeEnd))) {
-      Date end = new DateTime(days100.getTime(start));
-      DateList dl = r.getDates(seed, start, end, Value.DATE_TIME);
+      final Date end = new DateTime(days100.getTime(start));
+      final DateList dl = r.getDates(seed, start, end, Value.DATE_TIME);
 
-      int sz = dl.size();
+      final int sz = dl.size();
       counted += sz;
       if (sz != 0) {
         until = dl.get(sz - 1);

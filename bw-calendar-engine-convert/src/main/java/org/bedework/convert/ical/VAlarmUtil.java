@@ -92,8 +92,8 @@ public class VAlarmUtil extends IcalUtil {
         return;
       }
 
-      for (VAlarm va: als) {
-        PropertyList pl = va.getProperties();
+      for (final VAlarm va: als) {
+        final PropertyList<Property> pl = va.getProperties();
 
         if (pl == null) {
           // Empty VAlarm
@@ -101,14 +101,14 @@ public class VAlarmUtil extends IcalUtil {
         }
 
         Property prop;
-        BwAlarm al;
+        final BwAlarm al;
 
         /* XXX Handle mozilla alarm stuff in a way that might work better with other clients.
          *
          */
 
         prop = pl.getProperty("X-MOZ-LASTACK");
-        boolean mozlastAck = prop != null;
+        final boolean mozlastAck = prop != null;
 
         String mozSnoozeTime = null;
         if (mozlastAck) {

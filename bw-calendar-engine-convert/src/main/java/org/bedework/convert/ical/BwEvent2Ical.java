@@ -718,7 +718,7 @@ public class BwEvent2Ical extends IcalUtil {
       return;
     }
 
-    final PropertyList pl = c.getProperties(p.getName());
+    final PropertyList<Property> pl = c.getProperties(p.getName());
 
     if (Util.isEmpty(pl)) {
       return;

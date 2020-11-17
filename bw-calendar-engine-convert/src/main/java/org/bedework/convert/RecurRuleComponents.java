@@ -25,6 +25,7 @@ import org.bedework.util.misc.response.Response;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.NumberList;
 import net.fortuna.ical4j.model.Recur;
+import net.fortuna.ical4j.model.Recur.Frequency;
 import net.fortuna.ical4j.model.WeekDay;
 import net.fortuna.ical4j.model.WeekDayList;
 
@@ -122,27 +123,7 @@ import java.util.Set;
 public class RecurRuleComponents {
   private String rule;
 
-  /**
-   * @author douglm
-   *
-   */
-  public enum Freq {
-    /**      */
-    SECONDLY,
-    /**      */
-    MINUTELY,
-    /**      */
-    HOURLY,
-    /**      */
-    DAILY,
-    /**      */
-    WEEKLY,
-    /**      */
-    MONTHLY,
-    /**      */
-    YEARLY }
-
-  private Freq freq;
+  private Frequency freq;
 
   private Date until;
 
@@ -157,7 +138,7 @@ public class RecurRuleComponents {
     Integer pos;
     Collection<String> days;
 
-    PosDays(Integer pos, Collection<String> days) {
+    PosDays(final Integer pos, final Collection<String> days) {
       this.pos = pos;
       this.days = days;
     }
@@ -192,7 +173,7 @@ public class RecurRuleComponents {
   /**
    * @param val String rule this is derived from
    */
-  public void setRule(String val) {
+  public void setRule(final String val) {
     rule = val;
   }
 
@@ -206,7 +187,7 @@ public class RecurRuleComponents {
   /**
    * @param val Freq
    */
-  public void setFreq(Freq val) {
+  public void setFreq(final Frequency val) {
     freq = val;
   }
 
@@ -214,14 +195,14 @@ public class RecurRuleComponents {
    * @return Freq
    */
   @SuppressWarnings("unused")
-  public Freq getFreq() {
+  public Frequency getFreq() {
     return freq;
   }
 
   /**
    * @param val until Date
    */
-  public void setUntil(Date val) {
+  public void setUntil(final Date val) {
     until = val;
   }
 
@@ -235,7 +216,7 @@ public class RecurRuleComponents {
   /**
    * @param val count
    */
-  public void setCount(int val) {
+  public void setCount(final int val) {
     count = val;
   }
 
@@ -249,7 +230,7 @@ public class RecurRuleComponents {
   /**
    * @param val interval
    */
-  public void setInterval(int val) {
+  public void setInterval(final int val) {
     interval = val;
   }
 
@@ -264,7 +245,7 @@ public class RecurRuleComponents {
   /**
    * @param val bySecond list
    */
-  public void setBySecond(Collection<Integer> val) {
+  public void setBySecond(final Collection<Integer> val) {
     bySecond = val;
   }
 
@@ -279,7 +260,7 @@ public class RecurRuleComponents {
   /**
    * @param val byMinute list
    */
-  public void setByMinute(Collection<Integer> val) {
+  public void setByMinute(final Collection<Integer> val) {
     byMinute = val;
   }
 
@@ -294,7 +275,7 @@ public class RecurRuleComponents {
   /**
    * @param val byHour list
    */
-  public void setByHour(Collection<Integer> val) {
+  public void setByHour(final Collection<Integer> val) {
     byHour = val;
   }
 
@@ -309,7 +290,7 @@ public class RecurRuleComponents {
   /**
    * @param val byDay map
    */
-  public void setByDay(Collection<PosDays> val) {
+  public void setByDay(final Collection<PosDays> val) {
     byDay = val;
   }
 
@@ -324,7 +305,7 @@ public class RecurRuleComponents {
   /**
    * @param val byMonthDay list
    */
-  public void setByMonthDay(Collection<Integer> val) {
+  public void setByMonthDay(final Collection<Integer> val) {
     byMonthDay = val;
   }
 
@@ -339,7 +320,7 @@ public class RecurRuleComponents {
   /**
    * @param val byYearDay list
    */
-  public void setByYearDay(Collection<Integer> val) {
+  public void setByYearDay(final Collection<Integer> val) {
     byYearDay = val;
   }
 
@@ -354,7 +335,7 @@ public class RecurRuleComponents {
   /**
    * @param val byWeekNo list
    */
-  public void setByWeekNo(Collection<Integer> val) {
+  public void setByWeekNo(final Collection<Integer> val) {
     byWeekNo = val;
   }
 
@@ -369,7 +350,7 @@ public class RecurRuleComponents {
   /**
    * @param val byMonth list
    */
-  public void setByMonth(Collection<Integer> val) {
+  public void setByMonth(final Collection<Integer> val) {
     byMonth = val;
   }
 
@@ -384,7 +365,7 @@ public class RecurRuleComponents {
   /**
    * @param val bySetPos list
    */
-  public void setBySetPos(Collection<Integer> val) {
+  public void setBySetPos(final Collection<Integer> val) {
     bySetPos = val;
   }
 
@@ -399,7 +380,7 @@ public class RecurRuleComponents {
   /**
    * @param val String weekstart
    */
-  public void setWkst(String val) {
+  public void setWkst(final String val) {
     wkst = val;
   }
 
@@ -416,33 +397,34 @@ public class RecurRuleComponents {
    * @param ev containing rules
    * @return Response containing status and collection of parsed rrules
    */
-  public static GetEntitiesResponse<RecurRuleComponents> fromEventRrules(BwEvent ev) {
+  public static GetEntitiesResponse<RecurRuleComponents> fromEventRrules(
+          final BwEvent ev) {
     final GetEntitiesResponse<RecurRuleComponents> resp =
             new GetEntitiesResponse<>();
     if (!ev.isRecurringEntity()) {
       return Response.notFound(resp);
     }
 
-    Collection<String> rules = ev.getRrules();
+    final var rules = ev.getRrules();
 
     if (rules == null) {
       return Response.notFound(resp);
     }
 
-    for (String rule: rules) {
-      RecurRuleComponents rrc = new RecurRuleComponents();
+    for (final String rule: rules) {
+      final RecurRuleComponents rrc = new RecurRuleComponents();
 
       final Recur recur;
       try {
         recur = new Recur(rule);
-      } catch (ParseException e) {
+      } catch (final ParseException e) {
         return Response.error(resp, "Invalid RRULE: " + rule);
       }
 
       rrc.setRule(rule);
-      rrc.setFreq(Freq.valueOf(recur.getFrequency()));
+      rrc.setFreq(recur.getFrequency());
 
-      Date until = recur.getUntil();
+      final Date until = recur.getUntil();
       if (until != null) {
         rrc.setUntil(until);
       } else {
@@ -456,12 +438,12 @@ public class RecurRuleComponents {
       rrc.setByHour(checkNumList(recur.getHourList()));
 
       /* Group by position */
-      WeekDayList wds = recur.getDayList();
+      final WeekDayList wds = recur.getDayList();
       if (wds != null) {
-        HashMap<Integer, Collection<String>> hm = new HashMap<>();
+        final HashMap<Integer, Collection<String>> hm = new HashMap<>();
 
-        for (WeekDay wd: wds) {
-          Collection<String> c = hm.computeIfAbsent(wd.getOffset(),
+        for (final WeekDay wd: wds) {
+          final Collection<String> c = hm.computeIfAbsent(wd.getOffset(),
                                                     k -> new ArrayList<>());
 
           c.add(wd.getDay().name());
@@ -493,7 +475,7 @@ public class RecurRuleComponents {
     return Response.ok(resp);
   }
 
-  private static Collection<Integer> checkNumList(NumberList val) {
+  private static Collection<Integer> checkNumList(final NumberList val) {
     if ((val == null) || (val.isEmpty())) {
       return null;
     }

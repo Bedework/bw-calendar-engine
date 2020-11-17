@@ -1039,7 +1039,7 @@ public class BwEvent2JsCal {
 
     // FREQ - > frequency
     if (recur.getFrequency() != null) {
-      rrule.setFrequency(recur.getFrequency().toLowerCase());
+      rrule.setFrequency(recur.getFrequency().name().toLowerCase());
     }
 
     // INTERVAL -> interval

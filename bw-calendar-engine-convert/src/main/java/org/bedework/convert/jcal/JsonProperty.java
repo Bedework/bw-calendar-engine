@@ -49,7 +49,6 @@ import net.fortuna.ical4j.model.property.Trigger;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -202,7 +201,7 @@ public class JsonProperty implements Serializable {
       jgen.writeFieldName(name);
 
       if (val.size() == 1) {
-        jgen.writeNumber((Integer)val.iterator().next());
+        jgen.writeNumber(val.iterator().next());
         return;
       }
 
@@ -268,17 +267,17 @@ public class JsonProperty implements Serializable {
                           final DataType type) throws Throwable {
       switch (type) {
         case BOOLEAN:
-          jgen.writeBoolean(Boolean.valueOf(prop.getValue()));
+          jgen.writeBoolean(Boolean.parseBoolean(prop.getValue()));
           break;
         case DATE:
         case DATE_TIME:
           jgen.writeString(XcalUtil.getXmlFormatDateTime(prop.getValue()));
           break;
         case FLOAT:
-          jgen.writeNumber(Float.valueOf(prop.getValue()));
+          jgen.writeNumber(Float.parseFloat(prop.getValue()));
           break;
         case INTEGER:
-          jgen.writeNumber(Integer.valueOf(prop.getValue()));
+          jgen.writeNumber(Integer.parseInt(prop.getValue()));
           break;
         case PERIOD:
           // Should not get here - just write something out
@@ -395,9 +394,8 @@ public class JsonProperty implements Serializable {
       jgen.writeStartArray();
 
       final TextList cl = p.getCategories();
-      final Iterator it = cl.iterator();
-      while (it.hasNext()){
-        jgen.writeString(it.next().toString());
+      for (final String s: cl) {
+        jgen.writeString(s);
       }
 
       jgen.writeEndArray();
@@ -453,7 +451,7 @@ public class JsonProperty implements Serializable {
       jgen.writeStartObject();
 
       //noinspection ConstantConditions
-      outField(jgen, "freq", r.getFrequency());
+      outField(jgen, "freq", r.getFrequency().name());
       outField(jgen, "wkst", r.getWeekStartDay().name());
       if (r.getUntil() != null) {
         outField(jgen, "until", r.getUntil().toString());
