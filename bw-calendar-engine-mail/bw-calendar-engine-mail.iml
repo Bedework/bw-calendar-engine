@@ -41,7 +41,7 @@
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.4.8" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-indexing:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-security:4.1.0" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-tz:4.1.0" level="project" />
+    <orderEntry type="module" module-name="bw-util-tz" />
     <orderEntry type="module" module-name="bw-webdav" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.1.0" level="project" />
     <orderEntry type="module" module-name="bw-util-xml" />
