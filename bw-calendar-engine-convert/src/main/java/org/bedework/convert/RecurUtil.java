@@ -53,6 +53,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
 
+import static java.time.temporal.ChronoUnit.DAYS;
+
 /** Some help with recurrences.
  *
  * @author Mike Douglass     douglm - rpi.edu
@@ -107,7 +109,8 @@ public class RecurUtil {
     /* Limit date according to system settings
      */
     final TemporalAmountAdapter dur =
-            new TemporalAmountAdapter(java.time.Period.of(maxYears, 0, 0));
+            new TemporalAmountAdapter(
+                    java.time.Duration.of(maxYears * 365, DAYS));
 
     Date maxRangeEnd = new Date(dur.getTime(rr.rangeStart));
 
@@ -234,7 +237,8 @@ public class RecurUtil {
     /* Limit date according to system settings
      */
     final TemporalAmountAdapter dur =
-            new TemporalAmountAdapter(java.time.Period.of(maxYears, 0, 0));
+            new TemporalAmountAdapter(
+                    java.time.Duration.of(maxYears * 365, DAYS));
 
     Date maxRangeEnd = new Date(dur.getTime(rp.rangeStart));
 
