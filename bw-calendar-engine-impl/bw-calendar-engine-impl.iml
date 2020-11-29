@@ -50,7 +50,7 @@
     <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-security:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.5" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-tz:4.1.0" level="project" />
+    <orderEntry type="module" module-name="bw-util-tz" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.10.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.10.0" level="project" />
     <orderEntry type="module" module-name="bw-util2-calendar" />
