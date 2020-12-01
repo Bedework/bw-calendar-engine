@@ -84,18 +84,22 @@ public class OutScheduler extends AbstractScheduler {
       svci = getSvci(msg.getOwnerHref(), "out-scheduler");
 
       return processOutBox();
-    } catch (CalFacadeStaleStateException csse) {
+    } catch (final CalFacadeStaleStateException csse) {
       if (debug()) {
         debug("Stale state exception");
       }
 
       return ProcessMessageResult.STALE_STATE;
-    } catch (Throwable t) {
-      rollback(svci);
+    } catch (final Throwable t) {
+      if (svci != null) {
+        rollback(svci);
+      }
       error(t);
     } finally {
       try {
-        closeSvci(svci);
+        if (svci != null) {
+          closeSvci(svci);
+        }
       } catch (final Throwable ignored) {}
     }
 
@@ -106,9 +110,10 @@ public class OutScheduler extends AbstractScheduler {
    *
    */
   private ProcessMessageResult processOutBox() throws CalFacadeException {
-    IcalTranslator trans = new IcalTranslator(getSvc().getIcalCallback());
+    final IcalTranslator trans =
+            new IcalTranslator(getSvc().getIcalCallback());
 
-    Collection<EventInfo> eis = getOutboxEvents();
+    final Collection<EventInfo> eis = getOutboxEvents();
     if (eis == null) {
       return ProcessMessageResult.NO_ACTION;
     }
@@ -118,8 +123,8 @@ public class OutScheduler extends AbstractScheduler {
      */
 
     class DedupKey implements Comparable<DedupKey> {
-      private String uid;
-      private String rid;
+      private final String uid;
+      private final String rid;
 
       DedupKey(final String uid, final String rid) {
         this.uid = uid;
@@ -127,7 +132,7 @@ public class OutScheduler extends AbstractScheduler {
       }
 
       public int compareTo(final DedupKey that) {
-        int res = uid.compareTo(that.uid);
+        final int res = uid.compareTo(that.uid);
         if (res != 0) {
           return res;
         }
@@ -160,17 +165,20 @@ public class OutScheduler extends AbstractScheduler {
 
       @Override
       public boolean equals(final Object o) {
+        if (!(o instanceof DedupKey)) {
+          return false;
+        }
         return compareTo((DedupKey)o) == 0;
       }
     }
 
-    Map<DedupKey, EventInfo> deduped = new HashMap<DedupKey, EventInfo>();
+    final Map<DedupKey, EventInfo> deduped = new HashMap<>();
     int discarded = 0;
 
-    for (EventInfo ei: eis) {
-      BwEvent ev = ei.getEvent();
-      DedupKey evKey = new DedupKey(ev.getUid(), ev.getRecurrenceId());
-      EventInfo mapei = deduped.get(evKey);
+    for (final EventInfo ei: eis) {
+      final BwEvent ev = ei.getEvent();
+      final DedupKey evKey = new DedupKey(ev.getUid(), ev.getRecurrenceId());
+      final EventInfo mapei = deduped.get(evKey);
 
       if (mapei == null) {
         deduped.put(evKey, ei);
@@ -179,7 +187,7 @@ public class OutScheduler extends AbstractScheduler {
 
       // Decide which to discard
       discarded++;
-      BwEvent mapev = mapei.getEvent();
+      final BwEvent mapev = mapei.getEvent();
 
       if (mapev.getSequence() > ev.getSequence()) {
         // Ignore current
@@ -196,7 +204,7 @@ public class OutScheduler extends AbstractScheduler {
 
       // sequence is equal -- try for dtstamp.
 
-      int cmp = mapev.getDtstamp().compareTo(ev.getDtstamp());
+      final int cmp = mapev.getDtstamp().compareTo(ev.getDtstamp());
       if (cmp >= 0) {
         // Ignore current
 
@@ -212,12 +220,12 @@ public class OutScheduler extends AbstractScheduler {
 
     boolean allOk = true;
 
-    for (EventInfo ei: deduped.values()) {
-      BwEvent ev = ei.getEvent();
-      Calendar cal = trans.toIcal(ei, ev.getScheduleMethod());
+    for (final EventInfo ei: deduped.values()) {
+      final BwEvent ev = ei.getEvent();
+      final Calendar cal = trans.toIcal(ei, ev.getScheduleMethod());
 
-      Collection<String> recipients = new ArrayList<String>();
-      for (String r: ev.getRecipients()) {
+      final Collection<String> recipients = new ArrayList<>();
+      for (final String r: ev.getRecipients()) {
         if (r.toLowerCase().startsWith("mailto:")) {
           recipients.add(r.substring(7));
         } else {
@@ -239,7 +247,7 @@ public class OutScheduler extends AbstractScheduler {
            */
           getSvc().getEventsHandler().delete(ei, false);
         }
-      } catch (CalFacadeException cfe) {
+      } catch (final CalFacadeException cfe) {
         // Should count the exceptions and discard after a number of retries.
         error(cfe);
         allOk = false;
@@ -255,12 +263,14 @@ public class OutScheduler extends AbstractScheduler {
   }
 
   private Collection<EventInfo> getOutboxEvents() throws CalFacadeException {
-    BwCalendar outbox = getSvc().getCalendarsHandler().getSpecial(BwCalendar.calTypeOutbox, false);
+    final BwCalendar outbox =
+            getSvc().getCalendarsHandler()
+                    .getSpecial(BwCalendar.calTypeOutbox, false);
     if (outbox == null) {
       return null;
     }
 
-    Collection<EventInfo> eis = getSvc().getEventsHandler().
+    final Collection<EventInfo> eis = getSvc().getEventsHandler().
             getEvents(outbox, null,
                       null, null,
                       null, // retrieveList
