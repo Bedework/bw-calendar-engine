@@ -248,7 +248,6 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
    *
    * @param val - a url or an email address
    * @return HostInfo - null if no service available.
-   * @throws CalFacadeException
    */
   public static HostInfo getHostForRecipient(final String val) throws CalFacadeException {
     try {
@@ -270,6 +269,7 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
       }
 
       //  Don't iuse db at all return findClosest(domain);
+      /*
       HostInfo hi = getHostInfo(domain);
 
       if (hi != null) {
@@ -282,6 +282,8 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
       hi.setIScheduleUrl(domain);
 
       return hi;
+       */
+      return getHostInfo(domain);
     } catch (final URISyntaxException use) {
       throw new CalFacadeException(CalFacadeException.badCalendarUserAddr);
     }
