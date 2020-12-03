@@ -59,8 +59,8 @@ public interface CoreEventsI extends Serializable {
    * @return  Collection of CoreEventInfo objects representing event(s).
    * @throws CalFacadeException
    */
-  public Collection<CoreEventInfo> getEvent(String colPath,
-                                            String guid)
+  Collection<CoreEventInfo> getEvent(String colPath,
+                                     String guid)
           throws CalFacadeException;
 
   /** Get an event given href. Return null for not
@@ -71,7 +71,7 @@ public interface CoreEventsI extends Serializable {
    * @return CoreEventInfo or null
    * @throws CalFacadeException on error
    */
-  public CoreEventInfo getEvent(String href)
+  CoreEventInfo getEvent(String href)
           throws CalFacadeException;
 
   /** Return the events for the current user within the given date/time
@@ -90,13 +90,14 @@ public interface CoreEventsI extends Serializable {
    * @return Collection  of CoreEventInfo objects
    * @throws CalFacadeException
    */
-  public Collection<CoreEventInfo> getEvents(Collection <BwCalendar> calendars,
-                                             FilterBase filter,
-                                             BwDateTime startDate, BwDateTime endDate,
-                                             List<BwIcalPropertyInfoEntry> retrieveList,
-                                             DeletedState delState,
-                                             RecurringRetrievalMode recurRetrieval,
-                                             boolean freeBusy) throws CalFacadeException;
+  Collection<CoreEventInfo> getEvents(
+          Collection<BwCalendar> calendars,
+          FilterBase filter,
+          BwDateTime startDate, BwDateTime endDate,
+          List<BwIcalPropertyInfoEntry> retrieveList,
+          DeletedState delState,
+          RecurringRetrievalMode recurRetrieval,
+          boolean freeBusy) throws CalFacadeException;
 
   /** Result from add or update event
    * We need to know what instances and overrrides were added or removed for
@@ -106,7 +107,7 @@ public interface CoreEventsI extends Serializable {
    *
    * @author Mike Douglass
    */
-  public static class UpdateEventResult {
+  class UpdateEventResult {
     /** True if the event was added or updated.
      */
     public boolean addedUpdated;
@@ -168,9 +169,9 @@ public interface CoreEventsI extends Serializable {
    * @return UpdateEventResult
    * @throws CalFacadeException
    */
-  public UpdateEventResult addEvent(EventInfo ei,
-                                    boolean scheduling,
-                                    boolean rollbackOnError) throws CalFacadeException;
+  UpdateEventResult addEvent(EventInfo ei,
+                             boolean scheduling,
+                             boolean rollbackOnError) throws CalFacadeException;
 
   /** Reindex an event by sending an async notification. May be called
    * when an update fails or the system suspects there is an index
@@ -178,7 +179,7 @@ public interface CoreEventsI extends Serializable {
    *
    * @param ei           EventInfo object to be reindexed
    */
-  public void reindex(EventInfo ei);
+  void reindex(EventInfo ei);
 
   /** Update an event in the database.
    *
@@ -191,7 +192,7 @@ public interface CoreEventsI extends Serializable {
    * @exception CalFacadeException If there's a db problem or problem with
    *     the event
    */
-  public UpdateEventResult updateEvent(EventInfo ei) throws CalFacadeException;
+  UpdateEventResult updateEvent(EventInfo ei) throws CalFacadeException;
 
   /** This class allows the implementations to pass back some information
    * about what happened. If possible it should fill in the supplied fields.
@@ -200,7 +201,7 @@ public interface CoreEventsI extends Serializable {
    * happened, for example, the implementation may store elarms as part of
    * the event object and they just go as part of event deletion.
    */
-  public static class DelEventResult {
+  class DelEventResult {
     /**  false if it didn't exist
      */
     public boolean eventDeleted;
@@ -230,9 +231,9 @@ public interface CoreEventsI extends Serializable {
    * @return DelEventResult    result.
    * @exception CalFacadeException If there's a database access problem
    */
-  public DelEventResult deleteEvent(EventInfo ei,
-                                    boolean scheduling,
-                                    boolean reallyDelete) throws CalFacadeException;
+  DelEventResult deleteEvent(EventInfo ei,
+                             boolean scheduling,
+                             boolean reallyDelete) throws CalFacadeException;
 
   /** Move an event. Allows us to keep track for synch-report
    *
@@ -241,9 +242,9 @@ public interface CoreEventsI extends Serializable {
    * @param to             Where it's going
    * @exception CalFacadeException If there's a database access problem
    */
-  public void moveEvent(BwEvent val,
-                        BwCalendar from,
-                        BwCalendar to) throws CalFacadeException;
+  void moveEvent(BwEvent val,
+                 BwCalendar from,
+                 BwCalendar to) throws CalFacadeException;
 
   /** Return all events on the given path with a lastmod GREATER
    * THAN that supplied. The path may not be null. A null lastmod will
@@ -254,8 +255,8 @@ public interface CoreEventsI extends Serializable {
    * @return list of events.
    * @throws CalFacadeException
    */
-  public Set<CoreEventInfo> getSynchEvents(String path,
-                                           String lastmod) throws CalFacadeException;
+  Set<CoreEventInfo> getSynchEvents(String path,
+                                    String lastmod) throws CalFacadeException;
 
   /* ====================================================================
    *                  Admin support
@@ -271,9 +272,9 @@ public interface CoreEventsI extends Serializable {
    * @return collection of String names or null for no more
    * @throws CalFacadeException
    */
-  public Collection<String> getChildEntities(String parentPath,
-                                             int start,
-                                             int count) throws CalFacadeException;
+  Collection<String> getChildEntities(String parentPath,
+                                      int start,
+                                      int count) throws CalFacadeException;
 
   /* ====================================================================
    *                       dump/restore methods
@@ -295,5 +296,5 @@ public interface CoreEventsI extends Serializable {
    * @throws CalFacadeException on error
    * @deprecated - remove in 4.0 with new dump process
    */
-  Collection<BwEventAnnotation> getEventOverrides(final BwEvent ev) throws CalFacadeException;
+  Collection<BwEventAnnotation> getEventOverrides(BwEvent ev) throws CalFacadeException;
 }
