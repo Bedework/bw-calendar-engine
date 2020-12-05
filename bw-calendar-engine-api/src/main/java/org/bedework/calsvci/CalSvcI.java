@@ -155,8 +155,8 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    * @return key, empty key object or null.
    * @throws CalFacadeException
    */
-  public abstract byte[] getPublicKey(final String domain,
-                                      final String service) throws CalFacadeException;
+  public abstract byte[] getPublicKey(String domain,
+                                      String service) throws CalFacadeException;
 
   /** Get the current stats
    *
@@ -637,12 +637,12 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
                                      AceWho who) throws CalFacadeException;
 
   /** Check the access for the given entity. Returns the current access
-   * or null or optionally throws a no access exception.
+   * or optionally throws a no access exception.
    *
    * @param ent the entity
    * @param desiredAccess access we want
    * @param returnResult true to return a result even if no access
-   * @return CurrentAccess
+   * @return CurrentAccess never null on return
    * @throws CalFacadeException if returnResult false and no access
    */
   public abstract CurrentAccess checkAccess(BwShareableDbentity<?> ent,
