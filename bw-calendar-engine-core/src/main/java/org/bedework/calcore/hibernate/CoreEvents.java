@@ -198,14 +198,12 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
    * @param ac access checker
    * @param guestMode true for a guest
    * @param sessionless if true
-   * @throws CalFacadeException on fatal error
    */
   public CoreEvents(final HibSession sess,
                     final CalintfImpl intf,
                     final AccessChecker ac,
                     final boolean guestMode,
-                    final boolean sessionless)
-          throws CalFacadeException {
+                    final boolean sessionless) {
     dao = new CoreEventsDAO(sess);
     intf.registerDao(dao);
     super.init(intf, ac, guestMode, sessionless);
@@ -397,14 +395,15 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   @Override
-  public Collection<CoreEventInfo> getEvents(final Collection<BwCalendar> calendars,
-                                             final FilterBase filter,
-                                             final BwDateTime startDate,
-                                             final BwDateTime endDate,
-                                             final List<BwIcalPropertyInfoEntry> retrieveList,
-                                             final DeletedState delState,
-                                             RecurringRetrievalMode recurRetrieval,
-                                             final boolean freeBusy) throws CalFacadeException {
+  public Collection<CoreEventInfo> getEvents(
+          final Collection<BwCalendar> calendars,
+          final FilterBase filter,
+          final BwDateTime startDate,
+          final BwDateTime endDate,
+          final List<BwIcalPropertyInfoEntry> retrieveList,
+          final DeletedState delState,
+          final RecurringRetrievalMode recurRetrieval,
+          final boolean freeBusy) throws CalFacadeException {
     throw new CalFacadeException("Implemented in the interface class");
   }
 
@@ -718,7 +717,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
       final Collection<BwDbentity<?>> deleted = val.getDeletedEntities();
       if (deleted != null) {
-        for (final BwDbentity ent: deleted) {
+        for (final BwDbentity<?> ent: deleted) {
           dao.delete(ent);
         }
 
@@ -1054,22 +1053,32 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                         final BwCalendar from,
                         final BwCalendar to) throws CalFacadeException {
     deleteTombstoned(to.getPath(), val.getUid());
+    final var href = val.getHref();
 
-    final BwEvent tombstone = val.cloneTombstone();
-    tombstone.setDtstamps(getCurrentTimestamp());
+    // Tombstoning effectively deletes the old entity.
 
-    //tombstoneEvent(tombstone);
+    if (from.getCalType() != BwCalendar.calTypePendingInbox) {
+      final BwEvent tombstone = val.cloneTombstone();
+      tombstone.setDtstamps(getCurrentTimestamp());
 
-    dao.save(tombstone);
-    final EventInfo old = new EventInfo(tombstone);
-    indexEntity(old);
+      //tombstoneEvent(tombstone);
+
+      dao.save(tombstone);
+      final EventInfo old = new EventInfo(tombstone);
+      indexEntity(old);
+    } else {
+      // Just delete it
+      final var toDelete = new EventInfo(val);
+      deleteEvent(toDelete, true, true);
+      unindexEntity(toDelete);
+    }
 
     val.setColPath(to.getPath());
     // Don't save just yet - updates get triggered
     // TODO - this is asking for trouble if it fails
 
     notifyMove(SysEvent.SysCode.ENTITY_MOVED,
-               tombstone.getHref(),
+               href,
                from.getShared(),
                val,
                to.getShared());
@@ -1178,7 +1187,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
    *                   Private methods
    * ==================================================================== */
 
-  private void setupDependentEntities(final BwEvent val) throws CalFacadeException {
+  private void setupDependentEntities(final BwEvent val) {
     // Ensure collections in reasonable state.
     if (val.getAlarms() != null) {
       for (final BwAlarm alarm: val.getAlarms()) {
@@ -1408,17 +1417,20 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           removeInstances(val, uc, overrides, ent.getAddedValues(), shared);
         }
 
+        /*
         if (ent.getRemovedValues() != null) {
           // exdates removed - add the instances.
-//          addInstances(val, uc, overrides, ent.getRemovedValues(), shared);
+          addInstances(val, uc, overrides, ent.getRemovedValues(), shared);
         }
 
         ent = changes.getEntry(PropertyInfoIndex.RDATE);
         if (ent.getAddedValues() != null) {
           // rdates added - add the instances.
-//          addInstances(val, uc, overrides, ent.getAddedValues(), shared);
+          addInstances(val, uc, overrides, ent.getAddedValues(), shared);
         }
+        */
 
+        ent = changes.getEntry(PropertyInfoIndex.RDATE);
         if (ent.getRemovedValues() != null) {
           // rdates removed - remove the instances.
           removeInstances(val, uc, overrides, ent.getRemovedValues(), shared);
@@ -1665,6 +1677,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       // XXX fix this fixReferringAnnotations(ev);
 
       // Force a fetch of the attendees - we need to look at them later
+      //noinspection ResultOfMethodCallIgnored
       ev.getAttendees();
 
       //if (ev.getAttendees() != null) {
@@ -1676,7 +1689,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
 
   private CoreEventInfo makeOverrideProxy(final BwEventAnnotation override,
-                                          final CurrentAccess ca) throws CalFacadeException {
+                                          final CurrentAccess ca) {
     return new CoreEventInfo(new BwEventProxy(override), ca);
   }
 
@@ -1686,10 +1699,9 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
    * @param inst        the instance
    * @param ca          Checked access from master
    * @return CoreEventInfo
-   * @throws CalFacadeException on error
    */
   private CoreEventInfo makeInstanceProxy(final BwRecurrenceInstance inst,
-                                          final CurrentAccess ca) throws CalFacadeException {
+                                          final CurrentAccess ca) {
     final BwEvent mstr = inst.getMaster();
 
     /*
