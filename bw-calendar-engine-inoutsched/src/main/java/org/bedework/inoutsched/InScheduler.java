@@ -40,6 +40,7 @@ import org.bedework.sysevents.events.ScheduleUpdateEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.ScheduleMethods;
 
+import static org.bedework.sysevents.events.ScheduleUpdateEvent.ChangeType.attendeeChange;
 import static org.bedework.util.misc.response.Response.Status.forbidden;
 
 /** Handles a queue of scheduling requests. We need to delay
@@ -100,15 +101,12 @@ public class InScheduler extends AbstractScheduler {
 
       SchedProcessor proc = null;
 
-      switch (msg.getChange()) {
-        case attendeeChange: {
-          proc = new SchedAttendeeUpdate(svci);
-          break;
-        }
-
-        default:
-          warn("InSchedule: unhandled change type for " + ev.getOwnerHref() +
-               " " + msg.getChange());
+      if (msg.getChange() == attendeeChange) {
+        proc = new SchedAttendeeUpdate(svci);
+      } else {
+        warn("InSchedule: unhandled change type for " + ev
+                .getOwnerHref() +
+                     " " + msg.getChange());
       }
 
       if (proc == null) {
@@ -145,7 +143,7 @@ public class InScheduler extends AbstractScheduler {
     /* These are events that are placed in the inbox.
      */
 
-    EventInfo ei = null;
+    final EventInfo ei;
     CalSvcI svci = null;
 
     try {
