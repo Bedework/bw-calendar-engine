@@ -159,7 +159,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   
   private final long vpathFlushPeriod = 1000 * 60 * 10;
   
-  private int maxVpathCached = 250;
+  private final int maxVpathCached = 250;
 
   @Override
   public Collection<BwCalendar> decomposeVirtualPath(final String vpath) throws CalFacadeException {
@@ -737,9 +737,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
   /* ====================================================================
    *                   package private methods
    * ==================================================================== */
-  GetSpecialCalendarResult getSpecialCalendar(BwPrincipal owner,
-                                              int calType,
-                                              boolean create) throws CalFacadeException {
+  GetSpecialCalendarResult getSpecialCalendar(final BwPrincipal owner,
+                                              final int calType,
+                                              final boolean create) throws CalFacadeException {
     return getCal().getSpecialCalendar(null, owner, calType, create,
                                        PrivilegeDefs.privAny);
   }

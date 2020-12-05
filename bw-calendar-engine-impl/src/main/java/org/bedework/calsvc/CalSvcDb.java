@@ -117,11 +117,11 @@ public class CalSvcDb implements Logged, Serializable {
     return getSvc().getCurrentTimestamp();
   }
 
-  protected BwPrincipal caladdrToPrincipal(final String href) throws CalFacadeException {
+  protected BwPrincipal caladdrToPrincipal(final String href) {
     return getSvc().getDirectories().caladdrToPrincipal(href);
   }
 
-  protected String principalToCaladdr(final BwPrincipal p) throws CalFacadeException {
+  protected String principalToCaladdr(final BwPrincipal p) {
     return getSvc().getDirectories().principalToCaladdr(p);
   }
 
@@ -157,9 +157,8 @@ public class CalSvcDb implements Logged, Serializable {
 
   /** Do NOT expose this via a public interface.
    * @return encrypter
-   * @throws CalFacadeException
    */
-  protected PwEncryptionIntf getEncrypter() throws CalFacadeException {
+  protected PwEncryptionIntf getEncrypter() {
     return getSvc().getEncrypter();
   }
 
@@ -181,8 +180,8 @@ public class CalSvcDb implements Logged, Serializable {
     final GetEntitiesResponse<EventInfo> resp = new GetEntitiesResponse<>();
 
     try {
-      var ents = events.getByUid(colPath, guid, null,
-                                 RecurringRetrievalMode.overrides);
+      final var ents = events.getByUid(colPath, guid, null,
+                                       RecurringRetrievalMode.overrides);
       if (Util.isEmpty(ents)) {
         resp.setStatus(Response.Status.notFound);
       } else {
@@ -206,16 +205,16 @@ public class CalSvcDb implements Logged, Serializable {
                                  final boolean scheduling,
                                  final boolean sendSchedulingReply) {
     final Events events = (Events)getSvc().getEventsHandler();
-    var resp = new Response();
+    final var resp = new Response();
 
     try {
-      var deleted = events.delete(ei, scheduling, sendSchedulingReply);
+      final var deleted = events.delete(ei, scheduling, sendSchedulingReply);
       if (!deleted) {
         resp.setStatus(Response.Status.notFound);
       }
 
       return resp;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       return Response.error(resp, cfe);
     }
   }
@@ -224,7 +223,7 @@ public class CalSvcDb implements Logged, Serializable {
                                           final int calType,
                                           final boolean create,
                                           final int access) throws CalFacadeException {
-    return ((Calendars)getCols()).getSpecial(owner, calType, create, access);
+    return getCols().getSpecial(owner, calType, create, access);
   }
 
   /* ====================================================================
@@ -253,12 +252,13 @@ public class CalSvcDb implements Logged, Serializable {
    * @return Collection of matching events
    * @throws CalFacadeException
    */
-  protected Collection<EventInfo> getEvents(final Collection<BwCalendar> cols,
-                                            final FilterBase filter,
-                                            final BwDateTime startDate, final BwDateTime endDate,
-                                            final List<BwIcalPropertyInfoEntry> retrieveList,
-                                            final RecurringRetrievalMode recurRetrieval,
-                                            final boolean freeBusy) throws CalFacadeException {
+  protected Collection<EventInfo> getEvents(
+          final Collection<BwCalendar> cols,
+          final FilterBase filter,
+          final BwDateTime startDate, final BwDateTime endDate,
+          final List<BwIcalPropertyInfoEntry> retrieveList,
+          final RecurringRetrievalMode recurRetrieval,
+          final boolean freeBusy) throws CalFacadeException {
     final Events events = (Events)getSvc().getEventsHandler();
 
     return events.getMatching(cols, filter, startDate, endDate,
@@ -433,7 +433,7 @@ public class CalSvcDb implements Logged, Serializable {
     }
   }
 
-  protected Calintf getCal(final BwCalendar cal) throws CalFacadeException {
+  protected Calintf getCal(final BwCalendar cal) {
     return svci.getCal(cal);
   }
 
@@ -441,8 +441,9 @@ public class CalSvcDb implements Logged, Serializable {
     return getSvc().getUsersHandler().getPublicUser();
   }
 
-  protected CurrentAccess checkAccess(final BwShareableDbentity ent, final int desiredAccess,
-                                    final boolean returnResult) throws CalFacadeException {
+  protected CurrentAccess checkAccess(
+          final BwShareableDbentity<?> ent, final int desiredAccess,
+          final boolean returnResult) throws CalFacadeException {
     return svci.checkAccess(ent, desiredAccess, returnResult);
   }
 
@@ -491,7 +492,7 @@ public class CalSvcDb implements Logged, Serializable {
       throw new CalFacadeAccessException();
     }
 
-    BwOwnedDbentity ent = (BwOwnedDbentity)o;
+    final BwOwnedDbentity<?> ent = (BwOwnedDbentity<?>)o;
 
     /*if (!isPublicAdmin()) {
       // Expect a different owner - always public-user????
@@ -510,7 +511,7 @@ public class CalSvcDb implements Logged, Serializable {
    * @param entity shareable entity
    * @param ownerHref - new owner
    */
-  protected void setupSharableEntity(final BwShareableDbentity entity,
+  protected void setupSharableEntity(final BwShareableDbentity<?> entity,
                                      final String ownerHref) {
     if (entity.getCreatorHref() == null) {
       entity.setCreatorHref(ownerHref);
@@ -524,7 +525,7 @@ public class CalSvcDb implements Logged, Serializable {
    * @param entity owned entity
    * @param ownerHref - new owner
    */
-  protected void setupOwnedEntity(final BwOwnedDbentity entity,
+  protected void setupOwnedEntity(final BwOwnedDbentity<?> entity,
                                   final String ownerHref) {
     entity.setPublick(isPublicAdmin());
 
@@ -591,7 +592,7 @@ public class CalSvcDb implements Logged, Serializable {
       end--;
     }
 
-    int pos = uri.lastIndexOf("/", end);
+    final int pos = uri.lastIndexOf("/", end);
     if (pos < 0) {
       // bad uri
       throw new CalFacadeException("Invalid uri: " + uri);
@@ -608,7 +609,7 @@ public class CalSvcDb implements Logged, Serializable {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

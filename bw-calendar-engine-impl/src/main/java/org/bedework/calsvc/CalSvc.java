@@ -2088,7 +2088,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     getCal().touchCalendar(col);
   }
 
-  PwEncryptionIntf getEncrypter() throws CalFacadeException {
+  PwEncryptionIntf getEncrypter() {
     if (pwEncrypt != null) {
       return pwEncrypt;
     }
@@ -2103,26 +2103,25 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
       String privKeys = null;
       String pubKeys = null;
 
-      final GenKeysMBean gk = (GenKeysMBean)MBeanUtil.getMBean(GenKeysMBean.class,
-                                                               GenKeysMBean.serviceName);
+      final GenKeysMBean gk =
+              (GenKeysMBean)MBeanUtil.getMBean(GenKeysMBean.class,
+                                               GenKeysMBean.serviceName);
       if (gk != null) {
         privKeys = gk.getPrivKeyFileName();
         pubKeys = gk.getPublicKeyFileName();
       }
 
       if (privKeys == null) {
-        throw new CalFacadeException("Unable to get keyfile locations. Is genkeys service installed?");
+        throw new RuntimeException(
+                "Unable to get keyfile locations. Is genkeys service installed?");
       }
 
       pwEncrypt.init(privKeys, pubKeys);
 
       return pwEncrypt;
-    } catch (final CalFacadeException cfe) {
-      cfe.printStackTrace();
-      throw cfe;
     } catch (final Throwable t) {
       t.printStackTrace();
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 

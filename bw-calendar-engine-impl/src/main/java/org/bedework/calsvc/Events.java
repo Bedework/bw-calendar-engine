@@ -334,9 +334,8 @@ class Events extends CalSvcDb implements EventsI {
                        final List<String> retrieveList)
           throws CalFacadeException {
     if ((col == null) || (name == null)) {
-      throw new CalFacadeException(CalFacadeException.badRequest);
+      throw new RuntimeException(CalFacadeException.badRequest);
     }
-
 
     if (col.getInternalAlias()) {
       final String expr = 
@@ -349,7 +348,7 @@ class Events extends CalSvcDb implements EventsI {
       final SimpleFilterParser sfp = getSvc().getFilterParser();
       final ParseResult pr = sfp.parse(expr, true, null);
       if (!pr.ok) {
-        throw new CalFacadeException("Failed to parse " +
+        throw new RuntimeException("Failed to parse " +
                                            expr + ": message was " + 
                                              pr.message);
       }
@@ -369,7 +368,7 @@ class Events extends CalSvcDb implements EventsI {
         return evs.iterator().next();
       }
 
-      throw new CalFacadeException("Multiple results");
+      throw new RuntimeException("Multiple results");
     }
 
     String path = col.getPath();
@@ -399,11 +398,12 @@ class Events extends CalSvcDb implements EventsI {
   }
 
   @Override
-  public Collection<EventInfo> getEvents(final BwCalendar cal, final FilterBase filter,
-                                         final BwDateTime startDate, final BwDateTime endDate,
-                                         final List<BwIcalPropertyInfoEntry> retrieveList,
-                                         final DeletedState delState,
-                                         final RecurringRetrievalMode recurRetrieval)
+  public Collection<EventInfo> getEvents(
+          final BwCalendar cal, final FilterBase filter,
+          final BwDateTime startDate, final BwDateTime endDate,
+          final List<BwIcalPropertyInfoEntry> retrieveList,
+          final DeletedState delState,
+          final RecurringRetrievalMode recurRetrieval)
           throws CalFacadeException {
     Collection<BwCalendar> cals = null;
 
@@ -1517,13 +1517,14 @@ class Events extends CalSvcDb implements EventsI {
    * @return Collection  populated matching event value objects
    * @throws CalFacadeException on fatal error
    */
-  Collection<EventInfo> getMatching(final Collection<BwCalendar> cals,
-                                    final FilterBase filter,
-                                    final BwDateTime startDate, final BwDateTime endDate,
-                                    final List<BwIcalPropertyInfoEntry> retrieveList,
-                                    final DeletedState delState,
-                                    final RecurringRetrievalMode recurRetrieval,
-                                    final boolean freeBusy) throws CalFacadeException {
+  Collection<EventInfo> getMatching(
+          final Collection<BwCalendar> cals,
+          final FilterBase filter,
+          final BwDateTime startDate, final BwDateTime endDate,
+          final List<BwIcalPropertyInfoEntry> retrieveList,
+          final DeletedState delState,
+          final RecurringRetrievalMode recurRetrieval,
+          final boolean freeBusy) throws CalFacadeException {
     final TreeSet<EventInfo> ts = new TreeSet<>();
 
     if ((filter != null) && (filter.equals(BooleanFilter.falseFilter))) {

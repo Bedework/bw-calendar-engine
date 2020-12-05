@@ -88,8 +88,8 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
    * @param ownerHref principal href
    * @return Status and possible T
    */
-  abstract GetEntityResponse<T> findPersistent(final T val,
-                                               final String ownerHref);
+  abstract GetEntityResponse<T> findPersistent(T val,
+                                               String ownerHref);
 
   /** Check for existence
    *
@@ -247,7 +247,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       return resp;
     }
 
-    var exists = exists(resp, val);
+    final var exists = exists(resp, val);
     if (resp.isError()) {
       return resp;
     }
@@ -381,7 +381,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     }
 
     try {
-      var resp = findPersistent(val, oh);
+      final var resp = findPersistent(val, oh);
 
       if (resp.isError()) {
         Response.fromResponse(eeer, resp);
@@ -396,7 +396,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
       // doesn't exist at this point, so we add it to db table
       setupSharableEntity(val, ownerHref);
-      var addResp = add(val);
+      final var addResp = add(val);
 
       if (!addResp.isOk()) {
         return Response.fromResponse(eeer, addResp);
@@ -411,20 +411,21 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   }
 
   @Override
-  public int reindex(BwIndexer indexer) throws CalFacadeException {
-    BwPrincipal owner;
+  public int reindex(final BwIndexer indexer) throws CalFacadeException {
+    final BwPrincipal owner;
     if (!isPublicAdmin()) {
       owner = getPrincipal();
     } else {
       owner = getPublicUser();
     }
 
-    Collection<T> ents = getCoreHdlr().getAll(owner.getPrincipalRef());
+    final Collection<T> ents =
+            getCoreHdlr().getAll(owner.getPrincipalRef());
     if (Util.isEmpty(ents)) {
       return 0;
     }
 
-    for (T ent: ents) {
+    for (final T ent: ents) {
       indexer.indexEntity(ent);
     }
 
@@ -441,7 +442,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
   public BwIndexer getIndexer(final boolean getPublic,
                                  final String ownerHref) {
-    String href;
+    final String href;
     try {
       href = checkHref(ownerHref);
     } catch (final Throwable t) {
@@ -494,9 +495,11 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     cached.put(ownerHref, vals);
   }
 
+  /*
   protected void removeCached(final String ownerHref) {
     cached.remove(ownerHref);
   }
+   */
 
   protected T getCachedByUid(final String uid) {
     checkChache();
@@ -514,7 +517,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
   protected GetEntityResponse<T> findPersistent(final BwString val,
                                                 final String ownerHref) {
-    var resp = new GetEntityResponse<T>();
+    final var resp = new GetEntityResponse<T>();
 
     try {
       final T ent = getCoreHdlr().find(val, ownerHref);
@@ -525,7 +528,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       }
 
       return resp;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       return Response.error(resp, cfe);
     }
   }
@@ -659,7 +662,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       return true;
     }
 
-    BwShareableDbentity<?> ent = (BwShareableDbentity<?>)o;
+    final BwShareableDbentity<?> ent = (BwShareableDbentity<?>)o;
 
     if (adminCanEditAllPublic ||
             ent.getCreatorHref().equals(getPrincipal().getPrincipalRef())) {
