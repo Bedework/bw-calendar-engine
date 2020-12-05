@@ -72,7 +72,7 @@ public abstract class InProcessor extends CalSvcDb {
    * @return ProcessResult
    * @throws CalFacadeException on fatal error
    */
-  public abstract ProcessResult process(final EventInfo ei) throws CalFacadeException;
+  public abstract ProcessResult process(EventInfo ei) throws CalFacadeException;
 
   /** Update the inbox according to it's owners wishes (what if owner and proxy
    * have different wishes)
@@ -87,7 +87,7 @@ public abstract class InProcessor extends CalSvcDb {
                                  final String inboxOwnerHref,
                                  final boolean attendeeAccepting,
                                  final boolean forceDelete) {
-    var resp = new Response();
+    final var resp = new Response();
     boolean delete = forceDelete;
 
     if (!delete) {
@@ -119,7 +119,7 @@ public abstract class InProcessor extends CalSvcDb {
         debug("Delete event - don't move to inbox");
       }
 
-      var delResp = deleteEvent(ei, false, false);
+      final var delResp = deleteEvent(ei, false, false);
       if (!delResp.isError()) {
         return resp;
       }
@@ -176,8 +176,12 @@ public abstract class InProcessor extends CalSvcDb {
       ev.setScheduleState(BwEvent.scheduleStateProcessed);
       chg.changed(PropertyIndex.PropertyInfoIndex.COLPATH,
                   ev.getColPath(), inbox.getPath());
-      ev.setColPath(inbox.getPath());
-      getSvc().getEventsHandler().update(ei, true, null, true);
+//      ev.setColPath(inbox.getPath());
+//      getSvc().getEventsHandler().update(ei, true, null, true);
+      getSvc().getEventsHandler().copyMoveNamed(ei,
+                                                inbox,
+                                                ev.getName(),
+                                                false, false, false);
     } catch (final CalFacadeException cfe) {
       return Response.error(resp, cfe);
     }
