@@ -119,18 +119,31 @@ public class JsCal2BwEvent {
       ridObj = BwDateTime.makeBwDateTime(
               dtOnlyP,
               icalDate(jsrid.getStringValue(), dtOnlyP),
-              val.getStringProperty(JSPropertyNames.timeZone));
+              val.getStringProperty(JSPropertyNames.recurrenceIdTimeZone));
 
       rid = ridObj.getDate();
+    }
+
+    final String evStart = val.getStringProperty(JSPropertyNames.start);
+    final String icalEvstart;
+
+    if (evStart != null) {
+      icalEvstart = icalDate(
+              val.getStringProperty(JSPropertyNames.start),
+              dtOnlyP);
+    } else if (ridObj == null) {
+      // Invalid event - no start
+      return Response.notOk(resp, failed, CalFacadeException.invalidOverride);
+    } else {
+      icalEvstart = ridObj.getDtval();
     }
 
     final var ger = CnvUtil.retrieveEvent(
             cb, guid, rid,
             entityType, col,
             ical,
-            icalDate(val.getStringProperty(JSPropertyNames.start),
-                     dtOnlyP),
-            val.getStringProperty(JSPropertyNames.timeZone),
+            icalEvstart,
+            val.getStringProperty(JSPropertyNames.recurrenceIdTimeZone),
             logger);
 
     if (!ger.isOk()) {
