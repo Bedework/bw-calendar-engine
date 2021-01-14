@@ -41,6 +41,7 @@ import org.bedework.dumprestore.Counters;
 import org.bedework.dumprestore.InfoLines;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.Timezones;
+import org.bedework.util.timezones.TimezonesException;
 
 import org.apache.commons.digester.Digester;
 
@@ -347,22 +348,25 @@ public class RestoreGlobals extends Counters {
 
   /** This must be called after syspars has been initialised.
    *
-   * @throws Throwable
    */
-  public void setTimezones() throws Throwable {
+  public void setTimezones() {
     if (defaultTzid != null) {
       // Already set
       return;
     }
 
     if (syspars.getTzServeruri() == null) {
-      throw new CalFacadeException("No timezones server URI defined in syspars");
+      throw new RuntimeException("No timezones server URI defined in syspars");
     }
     if (syspars.getTzid() == null) {
-      throw new CalFacadeException("No default TZid defined in syspars");
+      throw new RuntimeException("No default TZid defined in syspars");
     }
 
-    Timezones.initTimezones(syspars.getTzServeruri());
+    try {
+      Timezones.initTimezones(syspars.getTzServeruri());
+    } catch (final TimezonesException tze) {
+      throw new RuntimeException(tze);
+    }
 
     Timezones.setSystemDefaultTzid(syspars.getTzid());
 
