@@ -3,7 +3,7 @@
 */
 package org.bedework.convert.jscal;
 
-import org.bedework.jsforj.impl.JSPropertyNames;
+import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.impl.values.JSValueImpl;
 
 import com.fasterxml.jackson.databind.JsonNode;

@@ -13,7 +13,7 @@ import org.bedework.jsforj.impl.JSFactory;
 import org.bedework.jsforj.impl.JSMapper;
 import org.bedework.jsforj.model.JSCalendarObject;
 import org.bedework.jsforj.model.JSGroup;
-import org.bedework.jsforj.impl.JSPropertyNames;
+import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.JSTypes;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.response.GetEntityResponse;

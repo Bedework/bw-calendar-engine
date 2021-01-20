@@ -36,7 +36,7 @@ import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.DifferResult;
 import org.bedework.jsforj.impl.JSFactory;
-import org.bedework.jsforj.impl.JSPropertyNames;
+import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.impl.values.dataTypes.JSDurationImpl;
 import org.bedework.jsforj.impl.values.dataTypes.JSLocalDateTimeImpl;
 import org.bedework.jsforj.impl.values.dataTypes.JSSignedDurationImpl;

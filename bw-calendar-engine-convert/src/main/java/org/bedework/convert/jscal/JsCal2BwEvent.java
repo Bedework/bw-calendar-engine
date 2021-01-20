@@ -16,7 +16,7 @@ import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.convert.CnvUtil;
 import org.bedework.convert.Icalendar;
 import org.bedework.convert.ical.Ical2BwEvent;
-import org.bedework.jsforj.impl.JSPropertyNames;
+import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.JSCalendarObject;
 import org.bedework.jsforj.model.JSProperty;
 import org.bedework.jsforj.model.values.JSAbsoluteTrigger;
