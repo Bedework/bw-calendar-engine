@@ -36,7 +36,6 @@ import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.DifferResult;
 import org.bedework.jsforj.impl.JSFactory;
-import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.impl.values.dataTypes.JSDurationImpl;
 import org.bedework.jsforj.impl.values.dataTypes.JSLocalDateTimeImpl;
 import org.bedework.jsforj.impl.values.dataTypes.JSSignedDurationImpl;
@@ -45,6 +44,7 @@ import org.bedework.jsforj.impl.values.dataTypes.JSUTCDateTimeImpl;
 import org.bedework.jsforj.impl.values.dataTypes.JSUnsignedIntegerImpl;
 import org.bedework.jsforj.model.JSCalendarObject;
 import org.bedework.jsforj.model.JSProperty;
+import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.JSTypes;
 import org.bedework.jsforj.model.values.JSAbsoluteTrigger;
 import org.bedework.jsforj.model.values.JSAlert;
@@ -88,10 +88,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.bedework.calfacade.BwXproperty.getXpropInfo;
-import static org.bedework.calfacade.BwXproperty.xBedeworkLocation;
 import static org.bedework.convert.BwDiffer.differs;
-import static org.bedework.convert.jscal.BwJSRegistration.typeBwLocation;
 import static org.bedework.util.calendar.ScheduleMethods.methodTypeReply;
 import static org.bedework.util.misc.response.Response.Status.failed;
 
@@ -540,42 +537,7 @@ public class BwEvent2JsCal {
 
       /* ------------------- Location -------------------- */
 
-      if (!vpoll) {
-        final BwLocation loc = val.getLocation();
-        final DifferResult<BwLocation, ?> locDiff =
-                differs(BwLocation.class,
-                        PropertyInfoIndex.LOCATION,
-                        loc, master);
-        if (locDiff.differs) {
-          final JSLocations locs = jsval.getLocations(true);
-          final JSLocation jsloc =
-                  locs.makeEntry(loc.getUid()).getValue();
-
-          jsloc.setName(loc.getAddressField());
-          jsloc.setDescription(loc.getCombinedValues());
-
-          final BwJSLocation bwLoc =
-                  jsval.getValue(
-                          new TypeReference<>() {},
-                          getXpropInfo(xBedeworkLocation).jscalName,
-                          true);
-
-          bwLoc.setProperty(JSPropertyNames.type,
-                            typeBwLocation);
-          bwLoc.setUid(loc.getUid());
-          bwLoc.setAddr(loc.getAddressField());
-          bwLoc.setRoom(loc.getRoomField());
-          bwLoc.setAccessible(loc.getAccessible());
-          bwLoc.setSfield1(loc.getSubField1());
-          bwLoc.setSfield2(loc.getSubField2());
-          bwLoc.setGeo(loc.getGeouri());
-          bwLoc.setStreet(loc.getStreet());
-          bwLoc.setCity(loc.getCity());
-          bwLoc.setState(loc.getState());
-          bwLoc.setZip(loc.getZip());
-          bwLoc.setLink(loc.getLink());
-        }
-      }
+      doLocation(val, master, jsval, jsCalMaster);
 
       /* ------------------- Organizer -------------------- */
       doOrganizer(val, master, jsval, jsCalMaster);
@@ -1876,6 +1838,40 @@ public class BwEvent2JsCal {
       jsval.setProperty(JSPropertyNames.keywords + "/" +
                                 cat.getWord().getValue(), true);
     }
+  }
+
+  /* ------------------- Location -------------------- */
+
+  private static void doLocation(final BwEvent event,
+                                 final EventInfo master,
+                                 final JSCalendarObject jsval,
+                                 final JSCalendarObject jsCalMaster) {
+
+    final BwLocation loc = event.getLocation();
+    final DifferResult<BwLocation, ?> locDiff =
+            differs(BwLocation.class,
+                    PropertyInfoIndex.LOCATION,
+                    loc, master);
+    if (!locDiff.differs) {
+      return;
+    }
+
+    final JSLocations locs = jsval.getLocations(true);
+    final JSLocation jsloc =
+            locs.makeLocation().getValue();
+
+    jsloc.setUid(loc.getUid());
+    jsloc.setName(loc.getAddressField());
+    jsloc.setDescription(loc.getCombinedValues());
+
+    final var links = jsloc.getLinks(true);
+    final var link = links.makeLink().getValue();
+    final var card = loc.getCard();
+    final String cardStr = card.outputJson(false, "3");
+
+    link.setContentType("application/calendar+json");
+    link.setHref(Util.makeDataUri(cardStr,
+                                  "application/calendar+json"));
   }
 
   /* ------------------- Organizer -------------------- */

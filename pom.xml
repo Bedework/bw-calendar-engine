@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.bedework.caleng</groupId>
 	<artifactId>bw-calendar-engine</artifactId>
-	<version>3.13.3-SNAPSHOT</version>
+	<version>3.14-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>bw-calendar-engine</name>
   <description>Main calendar engine code for bedework</description>
@@ -47,12 +47,12 @@
     <ical4j.artifactId>ical4j</ical4j.artifactId>
     <ical4j.version>1.1.4</ical4j.version>
     -->
+		<ical4j-vcard.version>1.0.5</ical4j-vcard.version>
 
 		<!-- Third Party Library Versions -->
     <elasticsearch.version>7.2.0</elasticsearch.version>
     <hibernate.version>5.2.5.Final</hibernate.version>
     <hibernate-validator.version>5.3.6.Final</hibernate-validator.version>
-		<ical4j-vcard.version>1.0.4</ical4j-vcard.version>
     <jackson.version>2.10.0</jackson.version>
     <javax.mail.version>1.5.4</javax.mail.version>
     <java.jaxb.api.version>2.3.0</java.jaxb.api.version>

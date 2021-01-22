@@ -30,6 +30,7 @@ import org.bedework.calfacade.util.QuotaUtil;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
+import org.bedework.util.vcard.Card;
 import org.bedework.util.xml.FromXmlCallback;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -784,6 +785,40 @@ public class BwLocation extends BwEventProperty<BwLocation>
     //}
     
     return sb.toString();
+  }
+
+  /**
+   *
+   * @return a Card object representing the location.
+   */
+  @NoDump
+  @JsonIgnore
+  public Card getCard() {
+    final Card card = new Card();
+
+    card.setName(getUid() + ".vcf");
+    card.setUid(getUid());
+
+    final StringBuilder sb = new StringBuilder(getAddressField());
+    addCombined(sb, getRoomField());
+    card.setAddress(null, sb.toString(), getStreet(), getCity(),
+                    getState(), getZip(),
+                    null);  // country
+
+    if (getLink() != null) {
+      card.setUrl(getLink());
+    }
+
+    if (getGeouri() != null) {
+      try {
+        card.setGeoUri(getGeouri());
+      } catch (final IllegalArgumentException ignored) {
+      }
+    }
+
+    card.setAccessible(getAccessible());
+
+    return card;
   }
   
   private void addCombined(final StringBuilder sb, 
