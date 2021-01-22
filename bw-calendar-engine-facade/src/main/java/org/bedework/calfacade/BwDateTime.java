@@ -141,9 +141,15 @@ public class BwDateTime extends DumpEntity<BwDateTime>
         }
       }
 
+      /* Made this change 2/16/20 - don't know why but it caused
+        problems with searches.
       if (dateType) {
         bwd.setDate(date + "T000000Z");
       } else if (!bwd.getFloating()) {
+        bwd.setDate(Timezones.getUtc(date, tzid));
+      }
+       */
+      if (!bwd.getFloating()) {
         bwd.setDate(Timezones.getUtc(date, tzid));
       }
 
