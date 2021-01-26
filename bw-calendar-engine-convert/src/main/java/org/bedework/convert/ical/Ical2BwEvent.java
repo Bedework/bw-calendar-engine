@@ -78,6 +78,7 @@ import net.fortuna.ical4j.model.property.Attach;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.CalendarAddress;
 import net.fortuna.ical4j.model.property.Categories;
+import net.fortuna.ical4j.model.property.Concept;
 import net.fortuna.ical4j.model.property.DateListProperty;
 import net.fortuna.ical4j.model.property.DateProperty;
 import net.fortuna.ical4j.model.property.DtEnd;
@@ -147,7 +148,7 @@ public class Ical2BwEvent extends IcalUtil {
    *
    * @param cb          IcalCallback object
    * @param cal         Needed so we can retrieve the event.
-   * @param ical        Icalendar we are converting. We check its events for
+   * @param ical        Icalendar we are converting into. We check its events for
    *                    overrides.
    * @param val         VEvent object
    * @param mergeAttendees True if we should only update our own attendee.
@@ -409,7 +410,7 @@ public class Ical2BwEvent extends IcalUtil {
                             masterEI, mdtStart, null, null);
           e.setRecurring(true);
 //          e.addRdate(ridObj);
-          var sum = (Summary)pl.getProperty(Property.SUMMARY);
+          final var sum = (Summary)pl.getProperty(Property.SUMMARY);
           e.setSummary(sum.getValue());
           e.setSuppressed(true);
 
@@ -579,10 +580,7 @@ public class Ical2BwEvent extends IcalUtil {
             if (cl != null) {
               /* Got some categories */
 
-              final Iterator<String> cit = cl.iterator();
-
-              while (cit.hasNext()) {
-                final String wd = cit.next();
+              for (final String wd: cl) {
                 if (wd == null) {
                   continue;
                 }
@@ -637,18 +635,50 @@ public class Ical2BwEvent extends IcalUtil {
 
             break;
 
+          case CONCEPT:
+            /* ------------------- Concept -------------------- */
+
+            final Concept c = (Concept)prop;
+            final String cval = c.getValue();
+
+            if (cval != null) {
+              /* Got a concept */
+
+              final BwString key = new BwString(null, cval);
+
+              final var fcResp = cb.findCategory(key);
+              final BwCategory cat;
+
+              if (fcResp.isError()) {
+                return Response.fromResponse(resp, fcResp);
+              }
+
+              if (fcResp.isNotFound()) {
+                cat = BwCategory.makeCategory();
+                cat.setWord(key);
+
+                cb.addCategory(cat);
+              } else {
+                cat = fcResp.getEntity();
+              }
+
+              chg.addValue(pi, cat);
+            }
+
+            break;
+
           case CONTACT:
             /* ------------------- Contact -------------------- */
 
-            String altrep = getAltRepPar(prop);
+            final String altrep = getAltRepPar(prop);
             lang = IcalUtil.getLang(prop);
-            String uid = getUidPar(prop);
-            BwString nm = new BwString(lang, pval);
+            final String uid = getUidPar(prop);
+            final BwString nm = new BwString(lang, pval);
 
             BwContact contact = null;
 
             if (uid != null) {
-              var fcResp = cb.getContact(uid);
+              final var fcResp = cb.getContact(uid);
 
               if (fcResp.isError()) {
                 return Response.fromResponse(resp, fcResp);
@@ -660,7 +690,7 @@ public class Ical2BwEvent extends IcalUtil {
             }
 
             if (contact == null) {
-              var fcResp = cb.findContact(nm);
+              final var fcResp = cb.findContact(nm);
               if (fcResp.isError()) {
                 return Response.fromResponse(resp, fcResp);
               }
@@ -747,10 +777,10 @@ public class Ical2BwEvent extends IcalUtil {
           case FREEBUSY:
             /* ------------------- freebusy -------------------- */
 
-            FreeBusy fbusy = (FreeBusy)prop;
-            PeriodList perpl = fbusy.getPeriods();
-            Parameter par = IcalUtil.getParameter(fbusy, "FBTYPE");
-            int fbtype;
+            final FreeBusy fbusy = (FreeBusy)prop;
+            final PeriodList perpl = fbusy.getPeriods();
+            final Parameter par = IcalUtil.getParameter(fbusy, "FBTYPE");
+            final int fbtype;
 
             if (par == null) {
               fbtype = BwFreeBusyComponent.typeBusy;
@@ -772,7 +802,7 @@ public class Ical2BwEvent extends IcalUtil {
                                             par.getName());
             }
 
-            BwFreeBusyComponent fbc = new BwFreeBusyComponent();
+            final BwFreeBusyComponent fbc = new BwFreeBusyComponent();
 
             fbc.setType(fbtype);
 
@@ -787,8 +817,9 @@ public class Ical2BwEvent extends IcalUtil {
           case GEO:
             /* ------------------- Geo -------------------- */
 
-            Geo g = (Geo)prop;
-            BwGeo geo = new BwGeo(g.getLatitude(), g.getLongitude());
+            final Geo g = (Geo)prop;
+            final BwGeo geo = new BwGeo(g.getLatitude(),
+                                        g.getLongitude());
             if (chg.changed(pi, ev.getGeo(), geo)) {
               ev.setGeo(geo);
             }
@@ -823,7 +854,7 @@ public class Ical2BwEvent extends IcalUtil {
               if (loc == null) {
                 addr = new BwString(lang, pval);
 
-                var fcResp = cb.findLocation(addr);
+                final var fcResp = cb.findLocation(addr);
                 if (fcResp.isError()) {
                   return Response.fromResponse(resp, fcResp);
                 }
@@ -840,15 +871,15 @@ public class Ical2BwEvent extends IcalUtil {
               }
             }
 
-            BwLocation evloc = ev.getLocation();
+            final BwLocation evloc = ev.getLocation();
 
             if (chg.changed(pi, evloc, loc)) {
               // CHGTBL - this only shows that it's a different location object
               ev.setLocation(loc);
             } else if ((loc != null) && (evloc != null)) {
               // See if the value is changed
-              String evval = evloc.getAddress().getValue();
-              String inval = loc.getAddress().getValue();
+              final String evval = evloc.getAddress().getValue();
+              final String inval = loc.getAddress().getValue();
               if (!evval.equals(inval)) {
                 chg.changed(pi, evval, inval);
                 evloc.getAddress().setValue(inval);
@@ -981,11 +1012,9 @@ public class Ical2BwEvent extends IcalUtil {
               /* Got some resources */
               lang = IcalUtil.getLang(prop);
 
-              Iterator<String> rit = rl.iterator();
-
-              while (rit.hasNext()) {
-                BwString rsrc = new BwString(lang,
-                                             rit.next());
+              for (final String s: rl) {
+                final BwString rsrc = new BwString(lang,
+                                                   s);
                 chg.addValue(pi, rsrc);
               }
             }
@@ -1002,7 +1031,7 @@ public class Ical2BwEvent extends IcalUtil {
           case SEQUENCE:
             /* ------------------- Sequence -------------------- */
 
-            int seq = ((Sequence)prop).getSequenceNo();
+            final int seq = ((Sequence)prop).getSequenceNo();
             if (seq != ev.getSequence()) {
               chg.changed(pi, ev.getSequence(), seq);
               ev.setSequence(seq);
@@ -1036,7 +1065,7 @@ public class Ical2BwEvent extends IcalUtil {
                                     cb.getPrincipal()
                                             .getPrincipalRef()),
                             pval)) {
-              BwXproperty pu = ev.setPeruserTransparency(
+              final BwXproperty pu = ev.setPeruserTransparency(
                       cb.getPrincipal().getPrincipalRef(),
                       pval);
               if (pu != null) {
@@ -1118,8 +1147,8 @@ public class Ical2BwEvent extends IcalUtil {
       }
 
       if (val instanceof VAvailability) {
-        var avlResp = processAvailable(cb, cal, ical,
-                                       (VAvailability)val, evinfo);
+        final var avlResp = processAvailable(cb, cal, ical,
+                                             (VAvailability)val, evinfo);
         if (!avlResp.isOk()) {
           return Response.fromResponse(resp, avlResp);
         }
@@ -1162,7 +1191,7 @@ public class Ical2BwEvent extends IcalUtil {
       if (hasXparams.value) {
         /* Save a text copy of the entire event as an x-property */
 
-        Component valCopy = val.copy();
+        final Component valCopy = val.copy();
 
         /* Remove potentially large values */
         prop = valCopy.getProperty(Property.DESCRIPTION);
@@ -1173,7 +1202,7 @@ public class Ical2BwEvent extends IcalUtil {
         prop = valCopy.getProperty(Property.ATTACH);
         // Don't store the entire attachment - we just need the parameters.
         if (prop != null) {
-          Value v = (Value)prop.getParameter(Parameter.VALUE);
+          final Value v = (Value)prop.getParameter(Parameter.VALUE);
 
           if (v != null) {
             prop.setValue(String.valueOf(prop.getValue().hashCode()));
@@ -1202,7 +1231,7 @@ public class Ical2BwEvent extends IcalUtil {
 
       resp.setEntity(evinfo);
       return resp;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (logger.debug()) {
         logger.error(t);
       }
