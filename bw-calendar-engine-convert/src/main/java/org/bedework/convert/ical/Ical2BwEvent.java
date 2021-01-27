@@ -643,26 +643,10 @@ public class Ical2BwEvent extends IcalUtil {
 
             if (cval != null) {
               /* Got a concept */
-
-              final BwString key = new BwString(null, cval);
-
-              final var fcResp = cb.findCategory(key);
-              final BwCategory cat;
-
-              if (fcResp.isError()) {
-                return Response.fromResponse(resp, fcResp);
-              }
-
-              if (fcResp.isNotFound()) {
-                cat = BwCategory.makeCategory();
-                cat.setWord(key);
-
-                cb.addCategory(cat);
-              } else {
-                cat = fcResp.getEntity();
-              }
-
-              chg.addValue(pi, cat);
+              chg.addValue(PropertyInfoIndex.XPROP,
+                           BwXproperty.makeIcalProperty("CONCEPT",
+                                                        null,
+                                                        cval));
             }
 
             break;

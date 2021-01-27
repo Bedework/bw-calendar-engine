@@ -108,7 +108,6 @@ import net.fortuna.ical4j.model.property.Url;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -144,7 +143,7 @@ public class BwEvent2Ical extends IcalUtil {
 
     try {
       final Component comp;
-      final PropertyList pl = new PropertyList();
+      final PropertyList<Property> pl = new PropertyList<>();
       boolean freeBusy = false;
       boolean vavail = false;
       boolean todo = false;
@@ -217,12 +216,14 @@ public class BwEvent2Ical extends IcalUtil {
 
         // LANG - filter on language - group language in one cat list?
         for (final BwCategory cat: val.getCategories()) {
+          final var catval = cat.getWord();
+
           prop = new Categories();
           final TextList cl = ((Categories)prop).getCategories();
 
-          cl.add(cat.getWord().getValue());
+          cl.add(catval.getValue());
 
-          pl.add(langProp(prop, cat.getWord()));
+          pl.add(langProp(prop, catval));
         }
       }
 
@@ -681,7 +682,7 @@ public class BwEvent2Ical extends IcalUtil {
    * @throws RuntimeException for bad date values
    */
   public static void doRecurring(final BwEvent val,
-                                 final PropertyList pl) {
+                                 final PropertyList<Property> pl) {
     try {
       if (val.hasRrules()) {
         for(final String s: val.getRrules()) {
@@ -728,7 +729,7 @@ public class BwEvent2Ical extends IcalUtil {
 
     if (p instanceof Attach) {
       // We just saved the hash for binary content
-      final Value v = (Value)p.getParameter(Parameter.VALUE);
+      final Value v = p.getParameter(Parameter.VALUE);
 
       if (v != null) {
         pval = String.valueOf(pval.hashCode());
@@ -755,17 +756,14 @@ public class BwEvent2Ical extends IcalUtil {
 
     final ParameterList params = from.getParameters();
 
-    final Iterator<Parameter> parit = params.iterator();
-    while (parit.hasNext()) {
-      final Parameter param = parit.next();
-
+    for (final Parameter param: params) {
       if (!(param instanceof XParameter)) {
         continue;
       }
 
       final XParameter xpar = (XParameter)param;
 
-      if (xpar.getName().toUpperCase().equals(BwXproperty.xparUid)) {
+      if (xpar.getName().equalsIgnoreCase(BwXproperty.xparUid)) {
         continue;
       }
 
@@ -795,7 +793,8 @@ public class BwEvent2Ical extends IcalUtil {
   private static void makeDlp(final BwEvent val,
                               final boolean exdt,
                               final Collection<BwDateTime> dts,
-                              final PropertyList pl) throws ParseException {
+                              final PropertyList<Property> pl)
+          throws ParseException {
     if ((dts == null) || (dts.isEmpty())) {
       return;
     }
