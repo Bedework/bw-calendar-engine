@@ -1846,7 +1846,6 @@ public class BwEvent2JsCal {
                                  final EventInfo master,
                                  final JSCalendarObject jsval,
                                  final JSCalendarObject jsCalMaster) {
-
     final BwLocation loc = event.getLocation();
     final DifferResult<BwLocation, ?> locDiff =
             differs(BwLocation.class,
