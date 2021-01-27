@@ -31,7 +31,7 @@ public interface XpropsEntity {
    *
    * @param val    List of x-props
    */
-  void setXproperties(final List<BwXproperty> val);
+  void setXproperties(List<BwXproperty> val);
 
   /**
    * @return List<BwXproperty>
@@ -48,31 +48,31 @@ public interface XpropsEntity {
    * @param val - name to match
    * @return list of matching properties - never null
    */
-  List<BwXproperty> getXproperties(final String val);
+  List<BwXproperty> getXproperties(String val);
 
   /** Find x-properties storing the value of the named ical property
    *
    * @param val - name to match
    * @return list of matching properties - never null
    */
-  List<BwXproperty> getXicalProperties(final String val);
+  List<BwXproperty> getXicalProperties(String val);
 
   /** Remove all instances of the named property.
    *
    * @param val - name to match
    * @return number of removed proeprties
    */
-  int removeXproperties(final String val);
+  int removeXproperties(String val);
 
   /**
    * @param val an x-prop
    */
-  void addXproperty(final BwXproperty val);
+  void addXproperty(BwXproperty val);
 
   /**
    * @param val an x-prop
    */
-  void removeXproperty(final BwXproperty val);
+  void removeXproperty(BwXproperty val);
 
   /**
    * @return List of x-properties
