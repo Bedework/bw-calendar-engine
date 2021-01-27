@@ -9,6 +9,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
+import org.bedework.calfacade.BwXproperty;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.svc.EventInfo;
@@ -16,29 +17,37 @@ import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.convert.CnvUtil;
 import org.bedework.convert.Icalendar;
 import org.bedework.convert.ical.Ical2BwEvent;
-import org.bedework.jsforj.model.JSPropertyNames;
+import org.bedework.convert.ical.IcalUtil;
+import org.bedework.jsforj.impl.values.dataTypes.JSLocalDateTimeImpl;
+import org.bedework.jsforj.impl.values.dataTypes.JSUTCDateTimeImpl;
+import org.bedework.jsforj.model.DateTimeComponents;
 import org.bedework.jsforj.model.JSCalendarObject;
 import org.bedework.jsforj.model.JSProperty;
+import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.values.JSAbsoluteTrigger;
 import org.bedework.jsforj.model.values.JSAlert;
 import org.bedework.jsforj.model.values.JSOffsetTrigger;
-import org.bedework.jsforj.model.values.JSOverride;
 import org.bedework.jsforj.model.values.JSTrigger;
 import org.bedework.jsforj.model.values.collections.JSAlerts;
 import org.bedework.jsforj.model.values.collections.JSList;
+import org.bedework.jsforj.model.values.dataTypes.JSDateTime;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.misc.response.GetEntityResponse;
 import org.bedework.util.misc.response.Response;
+import org.bedework.util.timezones.Timezones;
 
+import net.fortuna.ical4j.model.TimeZone;
+import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
+import net.fortuna.ical4j.model.property.Duration;
 
 import static org.bedework.calfacade.BwAlarm.TriggerVal;
 import static org.bedework.jsforj.model.JSTypes.typeJSEvent;
 import static org.bedework.jsforj.model.JSTypes.typeJSTask;
 import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex.CATEGORIES;
+import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex.CREATED;
 import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex.DESCRIPTION;
 import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex.SUMMARY;
 import static org.bedework.util.misc.response.Response.Status.failed;
@@ -53,9 +62,10 @@ public class JsCal2BwEvent {
   /**
    *
    * @param cb          IcalCallback object
-   * @param val         JSCalendar object
+   * @param val         JSCalendar object we are converting
    * @param col         Possible collection for event
-   * @param ical
+   * @param ical        Icalendar we are converting into. We check its events for
+   *                    overrides.
    * @return Response with status and EventInfo object representing new entry or updated entry
    */
   public static GetEntityResponse<EventInfo> toEvent(
@@ -116,9 +126,10 @@ public class JsCal2BwEvent {
     final var jsrid = val.getRecurrenceId();
 
     if (jsrid != null) {
+      final IcalDate icalDate = new IcalDate(jsrid.getStringValue());
       ridObj = BwDateTime.makeBwDateTime(
               dtOnlyP,
-              icalDate(jsrid.getStringValue(), dtOnlyP),
+              icalDate.format(dtOnlyP),
               val.getStringProperty(JSPropertyNames.recurrenceIdTimeZone));
 
       rid = ridObj.getDate();
@@ -128,9 +139,8 @@ public class JsCal2BwEvent {
     final String icalEvstart;
 
     if (evStart != null) {
-      icalEvstart = icalDate(
-              val.getStringProperty(JSPropertyNames.start),
-              dtOnlyP);
+      final IcalDate icalDate = new IcalDate(evStart);
+      icalEvstart = icalDate.format(dtOnlyP);
     } else if (ridObj == null) {
       // Invalid event - no start
       return Response.notOk(resp, failed, CalFacadeException.invalidOverride);
@@ -175,7 +185,7 @@ public class JsCal2BwEvent {
     ev.setCreatorHref(cb.getPrincipal().getPrincipalRef());
     ev.setOwnerHref(cb.getOwner().getPrincipalRef());
 
-    setValues(resp, cb, chg, evinfo, val);
+    setValues(resp, cb, chg, ridObj, evinfo, val);
 
     resp.setEntity(evinfo);
     return Response.ok(resp);
@@ -185,16 +195,33 @@ public class JsCal2BwEvent {
           final GetEntityResponse<EventInfo> resp,
           final IcalCallback cb,
           final ChangeTable chg,
+          final BwDateTime recurrenceId,
           final EventInfo ei,
           final JSCalendarObject val) {
     final BwEvent ev = ei.getEvent();
 
-    // Do some we want set in the event early
+    /* ------------------- Alarms -------------------- */
+    if (!doAlarms(resp, cb, chg, ev,
+                  val.getAlerts(false))) {
+      return;
+    }
 
-    /* ------------------- Summary -------------------- */
+    /* ------------------- Categories -------------------- */
+    if (!doCategories(resp, cb, chg, ev,
+                      val.getCategories(false))) {
+      return;
+    }
 
-    if (chg.changed(SUMMARY, ev.getSummary(), val.getTitle())) {
-      ev.setSummary(val.getTitle());
+    /* ------------------- Created -------------------- */
+    if (!doCreated(resp, cb, chg, ev,
+                      val.getStringProperty(JSPropertyNames.created))) {
+      return;
+    }
+
+    /* ------------------- Dates and duration --------------- */
+
+    if (!setDates(resp, cb, val, ei, recurrenceId)) {
+      return;
     }
 
     /* ------------------- Description -------------------- */
@@ -209,48 +236,26 @@ public class JsCal2BwEvent {
     /* ------------- Description Content type--------------- */
     // Not used
 
+    /* ------------------- keywords -------------------- */
+    if (!doKeywords(resp, cb, chg, ev,
+                      val.getKeywords(false))) {
+      return;
+    }
+
     /* ------------------- Locations ------------------------ */
 
-    /* ------------------- Dates and duration --------------- */
+    /* ------------------- Summary -------------------- */
 
-    /* ------------------- Alarms -------------------- */
-    if (val.hasProperty(JSPropertyNames.alerts) &&
-            !doAlarms(resp, cb, chg, ev,
-                      val.getAlerts(false))) {
-      return;
+    if (chg.changed(SUMMARY, ev.getSummary(), val.getTitle())) {
+      ev.setSummary(val.getTitle());
     }
 
-    /* ------------------- Categories -------------------- */
-    if (val.hasProperty(JSPropertyNames.alerts) &&
-            !doCategories(resp, cb, chg, ev,
-                          val.getKeywords(false))) {
-      return;
-    }
     for (final JSProperty<?> prop: val.getProperties()) {
       final var pname = prop.getName();
       final var pval = prop.getValue();
 
       switch (pname) {
-        case JSPropertyNames.alerts:
-          break;
-
-        case JSPropertyNames.categories:
-          if (!doCategories(resp, cb, chg, ev,
-                            (JSList<String>)pval)) {
-            return;
-          }
-          break;
-
         case JSPropertyNames.color:
-          break;
-
-        case JSPropertyNames.created:
-          break;
-
-        case JSPropertyNames.due:
-          break;
-
-        case JSPropertyNames.duration:
           break;
 
         case JSPropertyNames.entries:
@@ -263,9 +268,6 @@ public class JsCal2BwEvent {
           break;
 
         case JSPropertyNames.freeBusyStatus:
-          break;
-
-        case JSPropertyNames.keywords:
           break;
 
         case JSPropertyNames.links:
@@ -304,12 +306,6 @@ public class JsCal2BwEvent {
         case JSPropertyNames.progressUpdated:
           break;
 
-        case JSPropertyNames.recurrenceId:
-          break;
-
-        case JSPropertyNames.recurrenceOverrides:
-          break;
-
         case JSPropertyNames.recurrenceRules:
           break;
 
@@ -322,13 +318,7 @@ public class JsCal2BwEvent {
         case JSPropertyNames.sequence:
           break;
 
-        case JSPropertyNames.showWithoutTime:
-          break;
-
         case JSPropertyNames.source:
-          break;
-
-        case JSPropertyNames.start:
           break;
 
         case JSPropertyNames.status:
@@ -341,9 +331,6 @@ public class JsCal2BwEvent {
           break;
 
         case JSPropertyNames.title:
-          break;
-
-        case JSPropertyNames.uid:
           break;
 
         case JSPropertyNames.updated:
@@ -367,6 +354,10 @@ public class JsCal2BwEvent {
           final ChangeTable chg,
           final BwEvent ev,
           final JSAlerts value) {
+    if (value == null) {
+      return true;
+    }
+
     for (final var alertp: value.get()) {
       final var alert = alertp.getValue();
       final var action = alert.getAction();
@@ -403,7 +394,9 @@ public class JsCal2BwEvent {
 
     if (val instanceof JSAbsoluteTrigger) {
       final var absTrigger = (JSAbsoluteTrigger)val;
-      tr.trigger = icalDate(absTrigger.getWhen().getStringValue(), false);
+      final IcalDate icalDate =
+              new IcalDate(absTrigger.getWhen().getStringValue());
+      tr.trigger = icalDate.format(false);
       tr.triggerDateTime = true;
 
       return tr;
@@ -430,6 +423,30 @@ public class JsCal2BwEvent {
           final ChangeTable chg,
           final BwEvent ev,
           final JSList<String> value) {
+    if (value == null) {
+      return true;
+    }
+
+    for (final String cval: value.get()) {
+      chg.addValue(PropertyInfoIndex.XPROP,
+                   BwXproperty.makeIcalProperty("CONCEPT",
+                                                null,
+                                                cval));
+    }
+
+    return true;
+  }
+
+  private static boolean doKeywords(
+          final GetEntityResponse<EventInfo> resp,
+          final IcalCallback cb,
+          final ChangeTable chg,
+          final BwEvent ev,
+          final JSList<String> value) {
+    if (value == null) {
+      return true;
+    }
+
     for (final String kw: value.get()) {
       final BwString key = new BwString(null, kw);
 
@@ -456,14 +473,31 @@ public class JsCal2BwEvent {
     return true;
   }
 
+  private static boolean doCreated(
+          final GetEntityResponse<EventInfo> resp,
+          final IcalCallback cb,
+          final ChangeTable chg,
+          final BwEvent ev,
+          final String value) {
+    final IcalDate icalDate = new IcalDate(value);
+    final String dt = icalDate.format(false);
+    if (chg.changed(CREATED, ev.getCreated(), dt)) {
+      ev.setCreated(dt);
+    }
+
+    return true;
+  }
+
   /*
      If this is an override the value will have a recurrence id which
      we can use to set the date.
    */
-  private static void setDates(final JSCalendarObject master,
-                               final JSOverride val,
-                               final BwEvent ev,
-                               final BwDateTime recurrenceId) {
+  private static boolean setDates(
+          final GetEntityResponse<EventInfo> resp,
+          final IcalCallback cb,
+          final JSCalendarObject obj,
+          final EventInfo evinfo,
+          final BwDateTime recurrenceId) {
     /*
       We need the following - these values may come from overrides)
         * date or date-time - from showWithoutTimes flag
@@ -476,60 +510,139 @@ public class JsCal2BwEvent {
        If end timezone is not the same as start then we have to use a
        DTEND with timezone, otherwise duration will do
      */
-    final JSCalendarObject obj;
+    try {
+//      final JSCalendarObject obj;
 
-    if (val == null) {
-      obj = master;
-    } else {
-      obj = val;
-    }
+  //    if (val == null) {
+    //    obj = master;
+      //} else {
+       // obj = val;
+     // }
 
-    // date or date-time - from showWithoutTimes flag
-    final var dateOnly =
-            obj.getBooleanProperty(JSPropertyNames.showWithoutTime);
-    // start timezone
-    final String startTimezoneId;
-    final String endTimezoneId;
+      // date or date-time - from showWithoutTimes flag
+      final var dateOnly =
+              obj.getBooleanProperty(JSPropertyNames.showWithoutTime);
+      // start timezone
+      final String startTimezoneId;
+      final String endTimezoneId;
 
-    if (dateOnly) {
-      startTimezoneId = null;
-      endTimezoneId = null;
-    } else {
-      startTimezoneId = obj.getStringProperty(JSPropertyNames.timeZone);
-      endTimezoneId = null; // from location
-    }
-
-    final String start;
-
-    if ((val != null) &&
-            (val.hasProperty(JSPropertyNames.start))) {
-      start = val.getStringProperty(JSPropertyNames.start);
-    } else {
-      start = null;
-    }
-
-    if (start == null) {
-      final DtStart st;
-      if (recurrenceId != null) {
-        // start didn't come from an override.
-        // Get it from the recurrence id
-        st = recurrenceId.makeDtStart();
+      if (dateOnly) {
+        startTimezoneId = null;
+        endTimezoneId = null;
       } else {
-//        st = icalDate(master.getStringProperty(JSPropertyNames.start),
-  //                    dateOnly);
+        startTimezoneId = obj.getStringProperty(JSPropertyNames.timeZone);
+        endTimezoneId = null; // from location
       }
+
+      final TimeZone startTz;
+      if (startTimezoneId != null) {
+        startTz = Timezones.getTz(startTimezoneId);
+      } else {
+        startTz = null;
+      }
+
+      final String start = obj.getStringProperty(JSPropertyNames.start);
+      final DtStart st;
+
+      if (start == null) {
+        if (recurrenceId != null) {
+          // start didn't come from an override.
+          // Get it from the recurrence id
+          st = recurrenceId.makeDtStart();
+        } else {
+          resp.setMessage("Missing start");
+          resp.setStatus(failed);
+          return false;
+        }
+      } else {
+        final var icdt = new IcalDate(start);
+
+        st = new DtStart(icdt.format(dateOnly), startTz);
+      }
+
+      DtEnd de = null;
+
+      if (evinfo.getEvent().getEntityType() == IcalDefs.entityTypeTodo) {
+        final var due = obj.getStringProperty(JSPropertyNames.due);
+        if (due != null) {
+          final var icdt = new IcalDate(due);
+
+          de = new DtEnd(icdt.format(dateOnly), startTz);
+        }
+      }
+
+      final var durStr = obj.getStringProperty(JSPropertyNames.duration);
+      final Duration dur;
+      if (durStr != null) {
+        dur = new Duration(null, durStr);
+      } else {
+        dur = null;
+      }
+
+      IcalUtil.setDates(cb.getPrincipal().getPrincipalRef(),
+                        evinfo, st, de, dur);
+    } catch (final Throwable t) {
+      resp.setException(t);
+      return false;
     }
 
+    return true;
   }
 
-  private static String icalDate(final String val,
-                                 final boolean dtOnly) {
-    var dt = XcalUtil.getIcalFormatDateTime(val);
-    if (dtOnly && (dt.length() > 8)) {
-      return dt.substring(0, 8);
+  private static class IcalDate {
+    private final DateTimeComponents dtc;
+
+    IcalDate(final String val) {
+      final var utc = val.endsWith("Z");
+      final JSDateTime dt;
+
+      if (utc) {
+        dt = new JSUTCDateTimeImpl(val);
+      } else {
+        dt = new JSLocalDateTimeImpl(val);
+      }
+
+      dtc = dt.getComponents();
     }
 
-    return dt;
+    private final String utcFormat = "%4d%2d%2dT%2d%2d%2dZ";
+    private final String dateTimeFormat = "%4d%2d%2dT%2d%2d%2d";
+    private final String dateFormat = "%4d%2d%2d";
+
+    String format(final boolean dtOnly) {
+      if (dtc.isUtc()) {
+        return String.format(utcFormat,
+                             dtc.getYear(),
+                             dtc.getMonth(),
+                             dtc.getDay(),
+                             dtc.getHours(),
+                             dtc.getMinutes(),
+                             dtc.getSeconds());
+      }
+
+      if (dtOnly) {
+        return String.format(dateFormat,
+                             dtc.getYear(),
+                             dtc.getMonth(),
+                             dtc.getDay());
+      }
+
+      return String.format(dateTimeFormat,
+                           dtc.getYear(),
+                           dtc.getMonth(),
+                           dtc.getDay(),
+                           dtc.getHours(),
+                           dtc.getMinutes(),
+                           dtc.getSeconds());
+    }
+
+    long getFractions() {
+      return dtc.getFractional();
+    }
+
+    boolean isUtc() {
+      return dtc.isUtc();
+    }
   }
 
   private static boolean doLinks(final GetEntityResponse<EventInfo> resp,
