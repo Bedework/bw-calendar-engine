@@ -43,6 +43,7 @@ import org.bedework.util.timezones.Timezones;
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.CalendarParserImpl;
 import net.fortuna.ical4j.data.DefaultParameterFactorySupplier;
+import net.fortuna.ical4j.data.DefaultPropertyFactorySupplier;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.data.UnfoldingReader;
 import net.fortuna.ical4j.model.Calendar;
@@ -56,6 +57,8 @@ import net.fortuna.ical4j.model.ParameterBuilder;
 import net.fortuna.ical4j.model.ParameterFactory;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.PropertyBuilder;
+import net.fortuna.ical4j.model.PropertyFactory;
 import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.component.Participant;
@@ -90,7 +93,6 @@ import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.PollItemId;
 import net.fortuna.ical4j.model.property.Repeat;
 import net.fortuna.ical4j.model.property.Trigger;
-import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.model.property.XProperty;
 
@@ -114,6 +116,9 @@ import java.util.function.Supplier;
 public class IcalUtil {
   private final static BwLogger logger =
           new BwLogger().setLoggedClass(IcalUtil.class);
+
+  private static final Supplier<List<PropertyFactory<?>>> propertyFactorySupplier =
+          new DefaultPropertyFactorySupplier();
 
   private static final Supplier<List<ParameterFactory<?>>> parameterFactorySupplier =
           new DefaultParameterFactorySupplier();
@@ -218,10 +223,23 @@ public class IcalUtil {
           params.remove(0);
         }
 
-        // XXX Need to be able to do this in ical4j - create property by name
-        if (pname.equals("UID")) {
-          pl.add(new Uid(makeXparlist(params), x.getValue()));
+        final var propertyBuilder =
+                new PropertyBuilder().factories(
+                        propertyFactorySupplier.get()).name(pname);
+
+        final ParameterList pars = makeXparlist(params);
+        for (final Parameter par: pars) {
+          propertyBuilder.parameter(par);
         }
+
+        propertyBuilder.value(x.getValue());
+        try {
+          pl.add(propertyBuilder.build());
+        } catch (final Throwable t) {
+          throw new RuntimeException(t);
+        }
+
+        continue;
       }
 
       if (x.getSkip()) {
@@ -410,7 +428,7 @@ public class IcalUtil {
     }
     try {
       return new Attach(pars, uri);
-    } catch (URISyntaxException e) {
+    } catch (final URISyntaxException e) {
       throw new RuntimeException(e);
     }
   }
@@ -420,9 +438,9 @@ public class IcalUtil {
    * @return BwAttachment
    */
   public static BwAttachment getAttachment(final Attach attProp) {
-    BwAttachment att = new BwAttachment();
+    final BwAttachment att = new BwAttachment();
 
-    ParameterList pars = attProp.getParameters();
+    final ParameterList pars = attProp.getParameters();
 
     att.setFmtType(getOptStr(pars, "FMTTYPE"));
     att.setValueType(getOptStr(pars, "VALUE"));
@@ -446,7 +464,7 @@ public class IcalUtil {
     final Attendee prop;
     try {
       prop = new Attendee(val.getAttendeeUri());
-    } catch (URISyntaxException e) {
+    } catch (final URISyntaxException e) {
       throw new RuntimeException(e);
     }
 
@@ -472,12 +490,12 @@ public class IcalUtil {
   public static Participant setVoter(final BwAttendee val) {
     final Participant part = new Participant();
 
-    final PropertyList props = part.getProperties();
+    final PropertyList<Property> props = part.getProperties();
 
     final CalendarAddress ca;
     try {
       ca = new CalendarAddress(val.getAttendeeUri());
-    } catch (URISyntaxException e) {
+    } catch (final URISyntaxException e) {
       throw new RuntimeException(e);
     }
     props.add(ca);
@@ -533,7 +551,7 @@ public class IcalUtil {
     final Calendar ical;
     try {
       ical = bldr.build(ufrdr);
-    } catch (IOException | ParserException e) {
+    } catch (final IOException | ParserException e) {
       throw new RuntimeException(e);
     }
 
@@ -546,7 +564,7 @@ public class IcalUtil {
       final Participant voter = (Participant)o;
 
       final CalendarAddress ca =
-              (CalendarAddress)voter.getProperty(Property.CALENDAR_ADDRESS);
+              voter.getProperty(Property.CALENDAR_ADDRESS);
       if (ca == null) {
         continue;
       }
@@ -592,7 +610,7 @@ public class IcalUtil {
       for (final Object o: ical.getComponents()) {
         final Component comp = (Component)o;
 
-        final PollItemId pid = (PollItemId)comp.getProperty(Property.POLL_ITEM_ID);
+        final PollItemId pid = comp.getProperty(Property.POLL_ITEM_ID);
         if (pid == null) {
           continue;
         }
@@ -660,7 +678,7 @@ public class IcalUtil {
       if (temp != null) {
         pars.add(new SentBy(temp));
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }
@@ -672,10 +690,10 @@ public class IcalUtil {
    */
   public static BwAttendee getAttendee(final IcalCallback cb,
                                        final Attendee attProp) {
-    ParameterList pars = attProp.getParameters();
+    final ParameterList pars = attProp.getParameters();
 
-    BwAttendee att = initAttendeeVoter(cb, attProp.getValue(),
-                                       pars);
+    final BwAttendee att = initAttendeeVoter(cb, attProp.getValue(),
+                                             pars);
 
     att.setPartstat(getOptStr(pars, "PARTSTAT"));
     if (att.getPartstat() == null) {
@@ -694,14 +712,14 @@ public class IcalUtil {
    */
   public static BwAttendee getVoter(final IcalCallback cb,
                                     final CalendarAddress ca) {
-    ParameterList pars = ca.getParameters();
+    final ParameterList pars = ca.getParameters();
 
-    BwAttendee att = initAttendeeVoter(cb, ca.getValue(),
-                                       pars);
+    final BwAttendee att = initAttendeeVoter(cb, ca.getValue(),
+                                             pars);
 
     att.setType(BwAttendee.typeVoter);
 
-    Parameter par = pars.getParameter("STAY-INFORMED");
+    final Parameter par = pars.getParameter("STAY-INFORMED");
     if (par != null) {
       att.setStayInformed(((StayInformed)par).getStayInformed());
     }
@@ -718,7 +736,7 @@ public class IcalUtil {
   public static BwAttendee initAttendeeVoter(final IcalCallback cb,
                                              final String val,
                                              final ParameterList pars) {
-    BwAttendee att = new BwAttendee();
+    final BwAttendee att = new BwAttendee();
 
     att.setAttendeeUri(cb.getCaladdr(val));
 
@@ -732,7 +750,7 @@ public class IcalUtil {
     att.setScheduleStatus(getOptStr(pars, "SCHEDULE-STATUS"));
     att.setSentBy(getOptStr(pars, "SENT-BY"));
 
-    Parameter par = pars.getParameter("RSVP");
+    final Parameter par = pars.getParameter("RSVP");
     if (par != null) {
       att.setRsvp(((Rsvp)par).getRsvp());
     }
@@ -745,10 +763,10 @@ public class IcalUtil {
    * @param absentOk - if true and absent returns an empty result.
    * @return TriggerVal
    */
-  public static TriggerVal getTrigger(final PropertyList pl,
+  public static TriggerVal getTrigger(final PropertyList<Property> pl,
                                       final boolean absentOk) {
-    Trigger prop = (Trigger)pl.getProperty(Property.TRIGGER);
-    TriggerVal tr = new TriggerVal();
+    final Trigger prop = pl.getProperty(Property.TRIGGER);
+    final TriggerVal tr = new TriggerVal();
 
     if (prop == null) {
       if (!absentOk) {
@@ -765,14 +783,14 @@ public class IcalUtil {
       return tr;
     }
 
-    ParameterList pars = prop.getParameters();
+    final ParameterList pars = prop.getParameters();
 
     if (pars == null) {
       tr.triggerStart = true;
       return tr;
     }
 
-    Parameter par = pars.getParameter("RELATED");
+    final Parameter par = pars.getParameter("RELATED");
     if (par == null) {
       tr.triggerStart = true;
       return tr;
@@ -817,12 +835,12 @@ public class IcalUtil {
    * @return Collection
    */
   public static Collection<BwDateTime> makeDateTimes(final DateListProperty val) {
-    DateList dl = val.getDates();
-    TreeSet<BwDateTime> ts = new TreeSet<>();
-    Parameter par = getParameter(val, "VALUE");
-    boolean isDateType = (par != null) && (par.equals(Value.DATE));
+    final DateList dl = val.getDates();
+    final TreeSet<BwDateTime> ts = new TreeSet<>();
+    final Parameter par = getParameter(val, "VALUE");
+    final boolean isDateType = (par != null) && (par.equals(Value.DATE));
     String tzidval = null;
-    Parameter tzid = getParameter(val, "TZID");
+    final Parameter tzid = getParameter(val, "TZID");
     if (tzid != null) {
       tzidval = tzid.getValue();
     }
@@ -851,7 +869,7 @@ public class IcalUtil {
    */
   public static void addProperty(final Component comp,
                                  final Property val) {
-    PropertyList props =  comp.getProperties();
+    final PropertyList<Property> props =  comp.getProperties();
 
     props.add(val);
   }
@@ -862,7 +880,7 @@ public class IcalUtil {
    */
   public static void addParameter(final Property prop,
                                   final Parameter val) {
-    ParameterList parl =  prop.getParameters();
+    final ParameterList parl =  prop.getParameters();
 
     parl.add(val);
   }
@@ -874,7 +892,7 @@ public class IcalUtil {
    */
   public static Parameter getParameter(final Property prop,
                                        final String name) {
-    ParameterList parl =  prop.getParameters();
+    final ParameterList parl =  prop.getParameters();
 
     if (parl == null) {
       return null;
@@ -890,13 +908,13 @@ public class IcalUtil {
    */
   public static String getParameterVal(final Property prop,
                                        final String name) {
-    ParameterList parl =  prop.getParameters();
+    final ParameterList parl =  prop.getParameters();
 
     if (parl == null) {
       return null;
     }
 
-    Parameter par = parl.getParameter(name);
+    final Parameter par = parl.getParameter(name);
 
     if (par == null) {
       return null;
@@ -1007,7 +1025,7 @@ public class IcalUtil {
    */
   public static String getOptStr(final ParameterList pl,
                                  final String name) {
-    Parameter par = pl.getParameter(name);
+    final Parameter par = pl.getParameter(name);
     if (par == null) {
       return null;
     }
@@ -1021,7 +1039,7 @@ public class IcalUtil {
    * @return AltRep
    */
   public static AltRep getAltRep(final Property prop) {
-    return (AltRep)prop.getParameters().getParameter("ALTREP");
+    return prop.getParameters().getParameter("ALTREP");
   }
 
   /** Make a DtEnd from the object
@@ -1041,7 +1059,7 @@ public class IcalUtil {
    */
   public static  DtEnd makeDtEnd(final BwDateTime val,
                                  final TimeZoneRegistry tzreg) {
-    DtEnd dt = new DtEnd();
+    final DtEnd dt = new DtEnd();
 
     initDateProp(val, dt, tzreg);
 
@@ -1056,7 +1074,7 @@ public class IcalUtil {
    */
   public static Due makeDue(final BwDateTime val,
                             final TimeZoneRegistry tzreg) {
-    Due dt = new Due();
+    final Due dt = new Due();
 
     initDateProp(val, dt, tzreg);
 
@@ -1072,7 +1090,7 @@ public class IcalUtil {
     /* Ignore tzid for the moment */
     try {
       return new DateTime(dt.getDtval());
-    } catch (ParseException e) {
+    } catch (final ParseException e) {
       throw new RuntimeException(e);
     }
   }
@@ -1090,11 +1108,11 @@ public class IcalUtil {
                               final EventInfo ei,
                               DtStart dtStart, DtEnd dtEnd,
                               final Duration duration) {
-    BwEvent ev = ei.getEvent();
-    ChangeTable chg = ei.getChangeset(userHref);
-    boolean scheduleReply = ev.getScheduleMethod() == ScheduleMethods.methodTypeReply;
-    boolean todo = ev.getEntityType() == IcalDefs.entityTypeTodo;
-    boolean vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
+    final BwEvent ev = ei.getEvent();
+    final ChangeTable chg = ei.getChangeset(userHref);
+    final boolean scheduleReply = ev.getScheduleMethod() == ScheduleMethods.methodTypeReply;
+    final boolean todo = ev.getEntityType() == IcalDefs.entityTypeTodo;
+    final boolean vpoll = ev.getEntityType() == IcalDefs.entityTypeVpoll;
 
     // No dates valid for reply
 
@@ -1111,11 +1129,11 @@ public class IcalUtil {
       if (dtEnd != null) {
         try {
           dtStart = new DtStart(dtEnd.getParameters(), dtEnd.getValue());
-        } catch (ParseException e) {
+        } catch (final ParseException e) {
           throw new RuntimeException(e);
         }
       } else {
-        Date now = new Date(new java.util.Date().getTime());
+        final Date now = new Date(new java.util.Date().getTime());
         dtStart = new DtStart(now);
         dtStart.getParameters().add(Value.DATE);
       }
@@ -1125,7 +1143,7 @@ public class IcalUtil {
       ev.setNoStart(false);
     }
 
-    BwDateTime bwDtStart = BwDateTime.makeBwDateTime(dtStart);
+    final BwDateTime bwDtStart = BwDateTime.makeBwDateTime(dtStart);
     if (!CalFacadeUtil.eqObjval(ev.getDtstart(), bwDtStart)) {
       chg.changed(PropertyInfoIndex.DTSTART, ev.getDtstart(), bwDtStart);
       ev.setDtstart(bwDtStart);
@@ -1136,14 +1154,14 @@ public class IcalUtil {
     if (dtEnd != null) {
       endType = StartEndComponent.endTypeDate;
     } else if (scheduleReply || todo || vpoll) {
-      Dur years = new Dur(520); // about 10 years
-      Date now = new Date(new java.util.Date().getTime());
+      final Dur years = new Dur(520); // about 10 years
+      final Date now = new Date(new java.util.Date().getTime());
       dtEnd = new DtEnd(new Date(years.getTime(now)));
       dtEnd.getParameters().add(Value.DATE);
     }
 
     if (dtEnd != null) {
-      BwDateTime bwDtEnd = BwDateTime.makeBwDateTime(dtEnd);
+      final BwDateTime bwDtEnd = BwDateTime.makeBwDateTime(dtEnd);
       if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
         chg.changed(PropertyInfoIndex.DTEND, ev.getDtend(), bwDtEnd);
         ev.setDtend(bwDtEnd);
@@ -1163,7 +1181,7 @@ public class IcalUtil {
       }
 
       endType = StartEndComponent.endTypeDuration;
-      String durVal = duration.getValue();
+      final String durVal = duration.getValue();
       if (!durVal.equals(ev.getDuration())) {
         chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), durVal);
         ev.setDuration(durVal);
@@ -1177,7 +1195,7 @@ public class IcalUtil {
       /* No duration and no end specified.
          * Set the end values to the start values + 1 for dates
          */
-      boolean dateOnly = ev.getDtstart().getDateType();
+      final boolean dateOnly = ev.getDtstart().getDateType();
       final String dur;
 
       if (dateOnly) {
@@ -1185,7 +1203,7 @@ public class IcalUtil {
       } else {
         dur = "P0D"; // No duration
       }
-      BwDateTime bwDtEnd = BwDateTime.makeDateTime(dtStart, dateOnly, dur);
+      final BwDateTime bwDtEnd = BwDateTime.makeDateTime(dtStart, dateOnly, dur);
       if (!CalFacadeUtil.eqObjval(ev.getDtend(), bwDtEnd)) {
         chg.changed(PropertyInfoIndex.DTEND, ev.getDtend(), bwDtEnd);
         ev.setDtend(bwDtEnd);
@@ -1196,8 +1214,8 @@ public class IcalUtil {
             (ev.getDtstart() != null) &&
             (ev.getDtend() != null)) {
       // Calculate a duration
-      String durVal = BwDateTime.makeDuration(ev.getDtstart(),
-                                              ev.getDtend()).toString();
+      final String durVal = BwDateTime.makeDuration(ev.getDtstart(),
+                                                    ev.getDtend()).toString();
       if (!durVal.equals(ev.getDuration())) {
         chg.changed(PropertyInfoIndex.DURATION, ev.getDuration(), durVal);
         ev.setDuration(durVal);
@@ -1217,9 +1235,9 @@ public class IcalUtil {
   private static void initDateProp(final BwDateTime val,
                                    final DateProperty dt,
                                    final TimeZoneRegistry tzreg) {
-    String tzid = val.getTzid();
+    final String tzid = val.getTzid();
 
-    ParameterList pl = dt.getParameters();
+    final ParameterList pl = dt.getParameters();
 
     if (val.getDateType()) {
       pl.add(Value.DATE);
