@@ -740,6 +740,27 @@ public class EntityBuilder extends EntityBuilderBase {
       }
     }
 
+    /* Not needed - thjey are still there as x-props
+    final List<Object> concepts =
+            getFieldValues(PropertyInfoIndex.CONCEPT);
+
+    if (!Util.isEmpty(concepts)) {
+      for (final Object o: concepts) {
+        try {
+          pushFields(o);
+
+          xprops.add(
+                  BwXproperty.makeIcalProperty(
+                          "CONCEPT",
+                          null,
+                          getString(PropertyInfoIndex.VALUE)));
+        } finally {
+          popFields();
+        }
+      }
+    }
+     */
+
     /* Now restore the rest of the xprops */
 
     final List<Object> xpropFields = getFieldValues(PropertyInfoIndex.XPROP);

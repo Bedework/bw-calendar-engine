@@ -1417,6 +1417,13 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
             journalProperty = true,
             freeBusyProperty = true,
             timezoneProperty = true),
+    @IcalProperty(pindex = PropertyInfoIndex.CONCEPT,
+            jname = "concepts",
+            eventProperty = true,
+            todoProperty = true,
+            journalProperty = true,
+            freeBusyProperty = true,
+            timezoneProperty = false),
     @IcalProperty(pindex = PropertyInfoIndex.DISPLAY,
             jname = "display",
             eventProperty = true,
@@ -1711,7 +1718,7 @@ public class BwEvent extends BwShareableContainedDbentity<BwEvent>
         final List<Xpar> xpars = x.getParameters();
 
         final Xpar xp = xpars.get(0);
-        if (xp.getName().equals(val)) {
+        if (xp.getValue().equals(val)) {
           res.add(x);
         }
       }

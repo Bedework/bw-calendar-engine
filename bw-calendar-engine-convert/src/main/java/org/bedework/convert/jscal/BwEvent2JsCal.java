@@ -326,6 +326,9 @@ public class BwEvent2JsCal {
         }
       }
 
+      /* ------------------- Concepts -------------------- */
+      doConcepts(val, master, jsval, jsCalMaster);
+
       /* ------------------- Contact -------------------- */
 
       final var contacts = val.getContacts();
@@ -1837,6 +1840,55 @@ public class BwEvent2JsCal {
     for (final BwCategory cat: catDiff.added) {
       jsval.setProperty(JSPropertyNames.keywords + "/" +
                                 cat.getWord().getValue(), true);
+    }
+  }
+
+  /* ------------------- Concepts -------------------- */
+
+  private static void doConcepts(final BwEvent event,
+                                 final EventInfo master,
+                                 final JSCalendarObject jsval,
+                                 final JSCalendarObject jsCalMaster) {
+    final List<BwXproperty> concepts =
+            event.getXicalProperties("CONCEPT");
+    final DifferResult<BwXproperty, List<BwXproperty>> cDiff =
+            differs(BwXproperty.class,
+                    PropertyInfoIndex.CONCEPT,
+                    concepts, master);
+
+    if (!cDiff.differs) {
+      return;
+    }
+
+    if ((master == null) || cDiff.addAll) {
+      // Just add to js
+      final JSList<String> jscats = jsval.getCategories(true);
+      for (final BwXproperty xp: concepts) {
+        jscats.add(xp.getValue());
+      }
+      return;
+    }
+
+    // Everything from here needs to be treated as a patch so
+    // jsVal must be an override.
+
+    final JSOverride override = (JSOverride)jsval;
+
+    if (cDiff.removeAll) {
+      override.setNull(JSPropertyNames.categories);
+      return;
+    }
+
+    if (!Util.isEmpty(cDiff.removed)) {
+      for (final BwXproperty xp: cDiff.removed) {
+        override.setNull(JSPropertyNames.categories + "/" +
+                                 xp.getValue());
+      }
+    }
+
+    for (final BwXproperty xp: cDiff.added) {
+      jsval.setProperty(JSPropertyNames.categories + "/" +
+                                xp.getValue(), true);
     }
   }
 

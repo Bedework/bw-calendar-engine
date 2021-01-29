@@ -859,6 +859,26 @@ public class DocBuilder extends DocBuilderBase {
         return;
       }
 
+      /* concepts are buried here */
+
+      final List<BwXproperty> concepts =
+              ent.getXicalProperties("CONCEPT");
+      if (!Util.isEmpty(concepts)) {
+        startArray(getJname(PropertyInfoIndex.CONCEPT));
+
+        for (final BwXproperty xp: concepts) {
+          if (xp == null) {
+            continue;
+          }
+
+          startObject();
+          makeField(PropertyInfoIndex.VALUE, xp.getValue());
+          endObject();
+        }
+
+        endArray();
+      }
+
       startArray(getJname(PropertyInfoIndex.XPROP));
 
       for (final BwXproperty xp: ent.getXproperties()) {
