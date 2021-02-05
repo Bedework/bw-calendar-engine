@@ -6,6 +6,7 @@ package org.bedework.convert.jscal;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
+import org.bedework.calfacade.BwContact;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
@@ -26,10 +27,14 @@ import org.bedework.jsforj.model.JSProperty;
 import org.bedework.jsforj.model.JSPropertyNames;
 import org.bedework.jsforj.model.values.JSAbsoluteTrigger;
 import org.bedework.jsforj.model.values.JSAlert;
+import org.bedework.jsforj.model.values.JSLink;
 import org.bedework.jsforj.model.values.JSOffsetTrigger;
+import org.bedework.jsforj.model.values.JSParticipant;
 import org.bedework.jsforj.model.values.JSTrigger;
 import org.bedework.jsforj.model.values.collections.JSAlerts;
+import org.bedework.jsforj.model.values.collections.JSLinks;
 import org.bedework.jsforj.model.values.collections.JSList;
+import org.bedework.jsforj.model.values.collections.JSParticipants;
 import org.bedework.jsforj.model.values.dataTypes.JSDateTime;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -43,9 +48,18 @@ import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Duration;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.bedework.calfacade.BwAlarm.TriggerVal;
 import static org.bedework.jsforj.model.JSTypes.typeJSEvent;
 import static org.bedework.jsforj.model.JSTypes.typeJSTask;
+import static org.bedework.jsforj.model.values.JSLink.linkRelAlternate;
+import static org.bedework.jsforj.model.values.JSRoles.roleAttendee;
+import static org.bedework.jsforj.model.values.JSRoles.roleChair;
+import static org.bedework.jsforj.model.values.JSRoles.roleContact;
+import static org.bedework.jsforj.model.values.JSRoles.roleInformational;
+import static org.bedework.jsforj.model.values.JSRoles.roleOptional;
 import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex.CATEGORIES;
 import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex.CREATED;
 import static org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex.DESCRIPTION;
@@ -242,7 +256,19 @@ public class JsCal2BwEvent {
       return;
     }
 
+    /* ------------------- Links ------------------------ */
+    if (!doLinks(resp, cb, chg, ev,
+                 val.getLinks(false))) {
+      return;
+    }
+
     /* ------------------- Locations ------------------------ */
+
+    /* ------------------- Participants ------------------------ */
+    if (!doParticipants(resp, cb, chg, ev,
+                        val.getParticipants(false))) {
+      return;
+    }
 
     /* ------------------- Summary -------------------- */
 
@@ -270,12 +296,6 @@ public class JsCal2BwEvent {
         case JSPropertyNames.freeBusyStatus:
           break;
 
-        case JSPropertyNames.links:
-          if (!doLinks(resp, ei, prop)) {
-            return;
-          }
-          break;
-
         case JSPropertyNames.locale:
           break;
 
@@ -286,9 +306,6 @@ public class JsCal2BwEvent {
           break;
 
         case JSPropertyNames.method:
-          break;
-
-        case JSPropertyNames.participants:
           break;
 
         case JSPropertyNames.priority:
@@ -364,23 +381,26 @@ public class JsCal2BwEvent {
 
       final TriggerVal tr = getTrigger(alert.getTrigger());
 
+      final BwAlarm al;
+
       if (JSAlert.alertActionDisplay.equals(action)) {
-        ev.addAlarm(BwAlarm.displayAlarm(ev.getCreatorHref(),
+        al = BwAlarm.displayAlarm(ev.getCreatorHref(),
                                          tr,
                                          null, 0,
-                                         ev.getSummary()));
-        continue;
-      }
-
-      if (JSAlert.alertActionEmail.equals(action)) {
-        ev.addAlarm(BwAlarm.emailAlarm(ev.getCreatorHref(),
+                                         ev.getSummary());
+      } else if (JSAlert.alertActionEmail.equals(action)) {
+        al = BwAlarm.emailAlarm(ev.getCreatorHref(),
                                        tr,
                                        null, 0,
                                        null, // Attach
                                        ev.getDescription(),
                                        ev.getSummary(),
-                                       null));
+                                       null);
+      } else {
+        continue;
       }
+
+      chg.addValue(PropertyInfoIndex.VALARM, al);
     }
     return true;
   }
@@ -470,6 +490,117 @@ public class JsCal2BwEvent {
       chg.addValue(CATEGORIES, cat);
     }
 
+    return true;
+  }
+
+  private static boolean doLinks(final GetEntityResponse<EventInfo> resp,
+                                 final IcalCallback cb,
+                                 final ChangeTable chg,
+                                 final BwEvent ev,
+                                 final JSLinks value) {
+    if (value == null) {
+      return true;
+    }
+
+    return true;
+  }
+
+  private static final List<String> attendeeRoles =
+          Arrays.asList(roleAttendee,
+                        roleOptional,
+                        roleInformational,
+                        roleChair);
+
+  private static boolean doParticipants(
+          final GetEntityResponse<EventInfo> resp,
+          final IcalCallback cb,
+          final ChangeTable chg,
+          final BwEvent ev,
+          final JSParticipants value) {
+    if (value == null) {
+      return true;
+    }
+
+    for (final var partProp: value.get()) {
+      var processed = false;
+      final JSParticipant part = partProp.getValue();
+      final var roles = part.getRoles(true).get();
+
+      if (roles.contains(roleContact)) {
+        if (!doContact(resp, cb, chg, ev, part)) {
+          return false;
+        }
+        processed = true;
+      }
+
+      // Attendee?
+
+      final var isAttendee = attendeeRoles
+              .stream()
+              .anyMatch(roles::contains);
+
+      if (isAttendee) {
+        if (!doAttendee(resp, cb, chg, ev, part)) {
+          return false;
+        }
+        processed = true;
+      }
+
+    }
+
+    return true;
+  }
+
+  private static boolean doContact(
+          final GetEntityResponse<EventInfo> resp,
+          final IcalCallback cb,
+          final ChangeTable chg,
+          final BwEvent ev,
+          final JSParticipant value) {
+    final var cn = new BwString(null, value.getDescription());
+    final var cResp = cb.findContact(cn);
+    final BwContact contact;
+
+    if (cResp.isError()) {
+      Response.fromResponse(resp, cResp);
+      return false;
+    }
+
+    final var links = value.getLinks(false);
+    JSLink link = null;
+    if (links != null) {
+      for (final var linkP: links.get()) {
+        final var l = linkP.getValue();
+        if (linkRelAlternate.equals(l.getRel())) {
+          link = l;
+          break;
+        }
+      }
+    }
+
+    if (cResp.isOk()) {
+      contact = cResp.getEntity();
+    } else {
+      contact = BwContact.makeContact();
+      contact.setCn(cn);
+      cb.addContact(contact);
+    }
+
+    if (link != null) {
+      contact.setLink(link.getHref());
+    }
+
+    chg.addValue(PropertyInfoIndex.CONTACT, contact);
+
+    return true;
+  }
+
+  private static boolean doAttendee(
+          final GetEntityResponse<EventInfo> resp,
+          final IcalCallback cb,
+          final ChangeTable chg,
+          final BwEvent ev,
+          final JSParticipant value) {
     return true;
   }
 
@@ -643,11 +774,5 @@ public class JsCal2BwEvent {
     boolean isUtc() {
       return dtc.isUtc();
     }
-  }
-
-  private static boolean doLinks(final GetEntityResponse<EventInfo> resp,
-                                 final EventInfo ei,
-                                 final JSProperty prop) {
-    return true;
   }
 }
