@@ -100,7 +100,6 @@ import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.XProperty;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -282,7 +281,7 @@ public class Ical2BwEvent extends IcalUtil {
        */
 
       /* We need this in a couple of places */
-      final DtStart dtStart = (DtStart)pl.getProperty(Property.DTSTART);
+      final DtStart dtStart = pl.getProperty(Property.DTSTART);
 
       /*
       if (rid != null) {
@@ -452,20 +451,20 @@ public class Ical2BwEvent extends IcalUtil {
       DtEnd dtEnd = null;
 
       if (entityType == IcalDefs.entityTypeTodo) {
-        final Due due = (Due)pl.getProperty(Property.DUE);
+        final Due due = pl.getProperty(Property.DUE);
         if (due != null ) {
           dtEnd = new DtEnd(due.getParameters(), due.getValue());
         }
       } else {
-        dtEnd = (DtEnd)pl.getProperty(Property.DTEND);
+        dtEnd = pl.getProperty(Property.DTEND);
       }
 
-      final Duration duration = (Duration)pl.getProperty(Property.DURATION);
+      final Duration duration = pl.getProperty(Property.DURATION);
 
       IcalUtil.setDates(cb.getPrincipal().getPrincipalRef(),
                         evinfo, dtStart, dtEnd, duration);
 
-      for (final Object aPl : pl) {
+      for (final Object aPl: pl) {
         prop = (Property)aPl;
         testXparams(prop, hasXparams);
 
@@ -517,9 +516,9 @@ public class Ical2BwEvent extends IcalUtil {
                                       CalFacadeException.attendeesInPublish);
               }
 
-              if (cb.getStrictness() == IcalCallback.conformanceWarn) {
-                //warn("Had attendees for PUBLISH");
-              }
+              //if (cb.getStrictness() == IcalCallback.conformanceWarn) {
+              //  warn("Had attendees for PUBLISH");
+              //}
             }
 
             final Attendee attPr = (Attendee)prop;
@@ -1186,7 +1185,7 @@ public class Ical2BwEvent extends IcalUtil {
         prop = valCopy.getProperty(Property.ATTACH);
         // Don't store the entire attachment - we just need the parameters.
         if (prop != null) {
-          final Value v = (Value)prop.getParameter(Parameter.VALUE);
+          final Value v = prop.getParameter(Parameter.VALUE);
 
           if (v != null) {
             prop.setValue(String.valueOf(prop.getValue().hashCode()));
@@ -1314,7 +1313,7 @@ public class Ical2BwEvent extends IcalUtil {
                                       final String val) {
     final BwString sval = new BwString(lang, val);
 
-    var resp = cb.findContact(sval);
+    final var resp = cb.findContact(sval);
 
     if (resp.getStatus() == Response.Status.notFound) {
       return false;
@@ -1328,10 +1327,10 @@ public class Ical2BwEvent extends IcalUtil {
 
     final Set<BwContact> cs = ev.getContacts();
 
-    var c = resp.getEntity();
+    final var c = resp.getEntity();
 
     if (cs != null) {
-      for (final BwContact c1 : cs) {
+      for (final BwContact c1: cs) {
         if (c.getCn().equals(sval)) {
           // Already present
           return true;
@@ -1357,19 +1356,16 @@ public class Ical2BwEvent extends IcalUtil {
       return;
     }
 
-    ParameterList params = p.getParameters();
+    final ParameterList params = p.getParameters();
 
-    Iterator<Parameter> parit = params.iterator();
-    while (parit.hasNext()) {
-      Parameter param = parit.next();
-
+    for (final Parameter param: params) {
       if (!(param instanceof XParameter)) {
         continue;
       }
 
-      XParameter xpar = (XParameter)param;
+      final XParameter xpar = (XParameter)param;
 
-      if (xpar.getName().toUpperCase().equals(BwXproperty.xparUid)) {
+      if (xpar.getName().equalsIgnoreCase(BwXproperty.xparUid)) {
         continue;
       }
 
@@ -1379,7 +1375,7 @@ public class Ical2BwEvent extends IcalUtil {
   private static void processTimezones(final BwEvent ev,
                                        final Icalendar ical,
                                        final ChangeTable chg) {
-    for (TimeZoneInfo tzi: ical.getTimeZones()) {
+    for (final TimeZoneInfo tzi: ical.getTimeZones()) {
       if (tzi.tzSpec == null) {
         // System
         continue;
@@ -1587,7 +1583,7 @@ public class Ical2BwEvent extends IcalUtil {
     }
 
     for (final EventInfo ei: evs) {
-      BwEvent ev = ei.getEvent();
+      final BwEvent ev = ei.getEvent();
 
       if ((ev.getRecurrenceId() == null) &&
               guid.equals(ev.getUid()) /* &&
@@ -1600,9 +1596,9 @@ public class Ical2BwEvent extends IcalUtil {
   }
 
   private static String getUidPar(final Property p) {
-    ParameterList pars = p.getParameters();
+    final ParameterList pars = p.getParameters();
 
-    Parameter par = pars.getParameter(BwXproperty.xparUid);
+    final Parameter par = pars.getParameter(BwXproperty.xparUid);
 
     if (par == null) {
       return null;
@@ -1612,7 +1608,7 @@ public class Ical2BwEvent extends IcalUtil {
   }
 
   private static String getAltRepPar(final Property p) {
-    AltRep par = IcalUtil.getAltRep(p);
+    final AltRep par = IcalUtil.getAltRep(p);
 
     if (par == null) {
       return null;
