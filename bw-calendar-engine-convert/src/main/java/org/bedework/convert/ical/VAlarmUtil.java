@@ -76,7 +76,7 @@ public class VAlarmUtil extends IcalUtil {
                                             final String currentPrincipal,
                                             final ChangeTable chg) throws CalFacadeException {
     try {
-      ComponentList<VAlarm> als;
+      final ComponentList<VAlarm> als;
 
       if (val instanceof VEvent) {
         als = ((VEvent)val).getAlarms();
@@ -221,7 +221,7 @@ public class VAlarmUtil extends IcalUtil {
           if (prop instanceof XProperty) {
             /* ------------------------- x-property --------------------------- */
 
-            XProperty xp = (XProperty)prop;
+            final XProperty xp = (XProperty)prop;
 
             al.addXproperty(new BwXproperty(xp.getName(),
                                             xp.getParameters()
@@ -231,7 +231,7 @@ public class VAlarmUtil extends IcalUtil {
           }
 
           if (prop instanceof Uid) {
-            Uid p = (Uid)prop;
+            final Uid p = (Uid)prop;
 
             al.addXproperty(BwXproperty.makeIcalProperty(p.getName(),
                                                          p.getParameters()
@@ -244,9 +244,9 @@ public class VAlarmUtil extends IcalUtil {
         al.setOwnerHref(currentPrincipal);
         chg.addValue(PropertyInfoIndex.VALARM, al);
       }
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
