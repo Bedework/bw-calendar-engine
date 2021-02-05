@@ -73,7 +73,11 @@ public class BwDiffer {
           final Object val,
           final EventInfo master) {
     if (master == null) {
-      return diffres(cl, val != null);
+      if (!(val instanceof Collection<?>)) {
+        return diffres(cl, val != null);
+      }
+
+      return diffres(cl, !Util.isEmpty((Collection<?>)val));
     }
 
     final BwEvent ev = master.getEvent();
