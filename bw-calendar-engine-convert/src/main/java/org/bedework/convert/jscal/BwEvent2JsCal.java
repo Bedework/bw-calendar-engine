@@ -89,6 +89,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.bedework.convert.BwDiffer.differs;
+import static org.bedework.jsforj.model.values.JSLink.linkRelAlternate;
+import static org.bedework.jsforj.model.values.JSLink.linkRelAlternateDescription;
+import static org.bedework.jsforj.model.values.JSRoles.roleContact;
 import static org.bedework.util.calendar.ScheduleMethods.methodTypeReply;
 import static org.bedework.util.misc.response.Response.Status.failed;
 
@@ -343,10 +346,13 @@ public class BwEvent2JsCal {
                   parts.makeEntry(c.getUid()).getValue();
 
           final var roles = jsContact.getRoles(true);
-          roles.add("contact");
+          roles.add(roleContact);
 
+          if (c.getEmail() != null) {
+            jsContact.setEmail(c.getEmail());
+          }
           jsContact.setDescription(c.getCn().getValue());
-          addLinkId(jsval, jsCalMaster, jsContact, c.getLink());
+          addLink(jsContact, c.getLink(), linkRelAlternate);
         }
       }
 
@@ -679,8 +685,7 @@ public class BwEvent2JsCal {
       if (urlDiff.differs) {
         final URI uri = Util.validURI(strval);
         if (uri != null) {
-          throw new RuntimeException("Not done");
-          //pl.add(new Url(uri));
+          addLink(jsval, strval, linkRelAlternateDescription);
         }
       }
 
@@ -1598,7 +1603,7 @@ public class BwEvent2JsCal {
       }
     }
 
-    addLinkId(jsval, master, part, att.getDir());
+    addLink(part, att.getDir(), linkRelAlternate);
 
     temp = att.getLanguage();
     if (temp != null) {
@@ -1649,14 +1654,14 @@ public class BwEvent2JsCal {
     /* Called because the attendee is present in the master but has
        changed in some way
      */
-    final var jsMAtt = master.getParticipants(false).findParticipant(
+    final var jsMAttP = master.getParticipants(false).findParticipant(
             masterAttendee.getAttendeeUri());
-    if (jsMAtt == null) {
+    if (jsMAttP == null) {
       throw new RuntimeException("Missing master attendee " +
                                          masterAttendee.getAttendeeUri());
     }
 
-    final var partId = jsMAtt.getName();
+    final var partId = jsMAttP.getName();
 
     // sendTo - may have been added or removed
 
@@ -1709,15 +1714,16 @@ public class BwEvent2JsCal {
 
     final var dir = attendee.getDir();
     final var mdir = masterAttendee.getDir();
+    final var jsMatt = jsMAttP.getValue();
     if (dir == null) {
       if (mdir != null) {
-        final var links = master.getLinks(false);
+        final var links = jsMatt.getLinks(false);
         if (links != null) {
           final var linkp = links.findLink(mdir);
           if (linkp != null) {
             jsval.setNull(JSPropertyNames.participants,
                           partId,
-                          JSPropertyNames.linkIds,
+                          JSPropertyNames.links,
                           linkp.getName());
           }
         }
@@ -1730,10 +1736,11 @@ public class BwEvent2JsCal {
       link.setHref(dir);
 
       jsval.setOverrideProperty(
-              linkp.getName(),
+              link,
               JSPropertyNames.participants,
               partId,
-              JSPropertyNames.linkIds);
+              JSPropertyNames.links,
+              linkp.getName());
     }
 
     makeAttendeeOverrideVal(jsval,
@@ -1990,7 +1997,7 @@ public class BwEvent2JsCal {
       jsOrg.setName(temp);
     }
 
-    addLinkId(jsval, master, jsOrg, org.getDir());
+    addLink(jsOrg, org.getDir(), linkRelAlternate);
 
     temp = org.getLanguage();
     if (temp != null) {
@@ -2195,26 +2202,53 @@ public class BwEvent2JsCal {
     return links.findLink(href);
   }
 
-  private static void addLinkId(final JSCalendarObject jsval,
-                                final JSCalendarObject master,
-                                final JSParticipant part,
-                                final String href) {
+  private static void addLink(final JSParticipant part,
+                              final String href,
+                              final String rel) {
     if (href == null) {
       return;
     }
 
-    var linkp = findLink(jsval, master, href);
-    if (linkp == null) {
-      final var links = jsval.getLinks(true);
-      linkp = links.makeLink();
-      final var link = linkp.getValue();
-
-      link.setHref(href);
-      link.setRel("alternate");
+    if (findLink(part.getLinks(false), href) != null) {
+      return;
     }
 
-    part.getLinkIds(true).add(linkp.getName());
+    addLink(part.getLinks(true), href, rel);
   }
+
+  private static void addLink(final JSCalendarObject cal,
+                              final String href,
+                              final String rel) {
+    if (href == null) {
+      return;
+    }
+
+    if (findLink(cal.getLinks(false), href) != null) {
+      return;
+    }
+
+    addLink(cal.getLinks(true), href, rel);
+  }
+
+  private static JSProperty<JSLink> findLink(final JSLinks links,
+                                             final String href) {
+    if (links == null) {
+      return null;
+    }
+
+    return links.findLink(href);
+  }
+
+  private static void addLink(final JSLinks links,
+                              final String href,
+                              final String rel) {
+    final var linkp = links.makeLink();
+    final var link = linkp.getValue();
+
+    link.setHref(href);
+    link.setRel(rel);
+  }
+
   private static String lower(final String val) {
     if (val == null) {
       return null;
