@@ -247,6 +247,9 @@ public class BwEvent2JsCal {
         if (master == null) {
           // A standalone recurrence instance
           jsval.setRecurrenceId(rid);
+
+          throw new RuntimeException("Need to set recurrenceIdTimeZone");
+
         } else {
           /* See if the override exists in the jscalendar version.
              It may do so if we have rdates or exdates.
