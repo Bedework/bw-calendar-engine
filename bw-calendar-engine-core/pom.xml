@@ -66,4 +66,36 @@
       <artifactId>hibernate-core</artifactId>
     </dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.bedework</groupId>
+				<artifactId>bw-util-maven-deploy-wfmodule</artifactId>
+
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<goals>
+							<goal>bw-deploy-wfmodule</goal>
+						</goals>
+					</execution>
+				</executions>
+
+				<configuration>
+					<moduleName>org.bedework.calendar.engine.core.rw</moduleName>
+
+					<moduleDependencies>
+						<moduleDependency>
+							<name>org.bedework.calendar.engine.core.ro</name>
+						</moduleDependency>
+
+						<moduleDependency>
+							<name>org.bedework.util.hibernate</name>
+						</moduleDependency>
+					</moduleDependencies>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

@@ -15,9 +15,41 @@
 			<artifactId>bw-util2-calendar</artifactId>
 		</dependency>
 
-    <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-misc</artifactId>
-    </dependency>
+		<dependency>
+			<groupId>org.bedework</groupId>
+			<artifactId>bw-util-misc</artifactId>
+		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.bedework</groupId>
+				<artifactId>bw-util-maven-deploy-wfmodule</artifactId>
+
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<goals>
+							<goal>bw-deploy-wfmodule</goal>
+						</goals>
+					</execution>
+				</executions>
+
+				<configuration>
+					<moduleName>org.bedework.calendar.engine.annotations</moduleName>
+
+					<moduleDependencies>
+						<moduleDependency>
+							<name>org.bedework.util.misc</name>
+						</moduleDependency>
+
+						<moduleDependency>
+							<name>org.bedework.util2.calendar</name>
+						</moduleDependency>
+					</moduleDependencies>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

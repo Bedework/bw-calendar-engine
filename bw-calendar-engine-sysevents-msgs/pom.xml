@@ -20,4 +20,36 @@
       <artifactId>bw-access</artifactId>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-util-maven-deploy-wfmodule</artifactId>
+
+        <executions>
+          <execution>
+            <phase>install</phase>
+            <goals>
+              <goal>bw-deploy-wfmodule</goal>
+            </goals>
+          </execution>
+        </executions>
+
+        <configuration>
+          <moduleName>org.bedework.calendar.engine.sysevents.msgs</moduleName>
+
+          <moduleDependencies>
+            <moduleDependency>
+              <name>org.bedework.access</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util.misc</name>
+            </moduleDependency>
+          </moduleDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

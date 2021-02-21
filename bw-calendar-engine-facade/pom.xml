@@ -1,13 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.bedework.caleng</groupId>
-		<artifactId>bw-calendar-engine</artifactId>
-		<version>3.14-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
-	</parent>
-  
-	<artifactId>bw-calendar-engine-facade</artifactId>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.bedework.caleng</groupId>
+    <artifactId>bw-calendar-engine</artifactId>
+    <version>3.14-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>bw-calendar-engine-facade</artifactId>
 
   <pluginRepositories>
     <!-- THIS REPOSITORY IS NOT LONGER VALID
@@ -33,20 +33,20 @@
     </pluginRepository>
   </pluginRepositories>
 
-	<dependencies>
-		<!-- Project Dependencies -->
-		<dependency>
-			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-calendar-engine-annotations</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+  <dependencies>
+    <!-- Project Dependencies -->
+    <dependency>
+      <groupId>org.bedework.caleng</groupId>
+      <artifactId>bw-calendar-engine-annotations</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
-		<!-- Bedework Dependencies -->
+    <!-- Bedework Dependencies -->
 
-		<dependency>
-			<groupId>org.bedework</groupId>
-			<artifactId>bw-access</artifactId>
-		</dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-access</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.bedework</groupId>
@@ -79,25 +79,25 @@
       <artifactId>bw-util-tz</artifactId>
     </dependency>
 
-		<dependency>
-			<groupId>org.bedework</groupId>
-			<artifactId>bw-webdav</artifactId>
-		</dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-webdav</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-xml</artifactId>
     </dependency>
 
-		<dependency>
-			<groupId>org.bedework</groupId>
-			<artifactId>bw-caldav-util</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.bedework</groupId>
-			<artifactId>bw-caldav-server</artifactId>
-		</dependency>
-		<!-- Third Party Dependencies -->
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-caldav-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-caldav-server</artifactId>
+    </dependency>
+    <!-- Third Party Dependencies -->
 
     <dependency>
       <groupId>${ical4j.groupId}</groupId>
@@ -113,10 +113,10 @@
       <groupId>javax.xml.ws</groupId>
       <artifactId>jaxws-api</artifactId>
     </dependency>
-	</dependencies>
+  </dependencies>
 
-	<build>
-		<plugins>
+  <build>
+    <plugins>
       <!--
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -208,29 +208,111 @@
       </plugin> -->
 
       <plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
         <version>1.10</version>
-				<executions>
-					<execution>
-						<id>add-source</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>add-source</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<source>${project.build.directory}/generated-sources/apt</source>
-							</sources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/apt</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-util-maven-deploy-wfmodule</artifactId>
+
+        <executions>
+          <execution>
+            <phase>install</phase>
+            <goals>
+              <goal>bw-deploy-wfmodule</goal>
+            </goals>
+          </execution>
+        </executions>
+
+        <configuration>
+          <moduleName>org.bedework.calendar.engine.facade</moduleName>
+
+          <moduleDependencies>
+            <moduleDependency>
+              <name>org.bedework.calendar.engine.annotations</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.access</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util2.calendar</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util2.vcard</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util.http</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util.indexing</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util.misc</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util.security</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util.tz</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util.xml</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.webdav</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.caldav.server</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.ical4j</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.ical4j-vcard</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>wildflyee.api</name>
+            </moduleDependency>
+          </moduleDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+
+    <!--
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings
-					only. It has no influence on the Maven build itself. -->
+				< ! - -This plugin's configuration is used to store Eclipse m2e settings
+					only. It has no influence on the Maven build itself. - - >
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
@@ -263,5 +345,6 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
-	</build>
+		-->
+  </build>
 </project>

@@ -1,26 +1,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.bedework.caleng</groupId>
-	<artifactId>bw-calendar-engine</artifactId>
-	<version>3.14-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	<name>bw-calendar-engine</name>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.bedework.caleng</groupId>
+  <artifactId>bw-calendar-engine</artifactId>
+  <version>3.14-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>bw-calendar-engine</name>
   <description>Main calendar engine code for bedework</description>
   <url>https://github.com/Bedework/bw-calendar-engine</url>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<!-- Maven Plugin Versions -->
-		<maven.compiler.plugin.version>2.3.2</maven.compiler.plugin.version>
-		<maven.source.plugin.version>2.1.2</maven.source.plugin.version>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Maven Plugin Versions -->
+    <maven.compiler.plugin.version>2.3.2</maven.compiler.plugin.version>
+    <maven.source.plugin.version>2.1.2</maven.source.plugin.version>
 
-		<!-- Bedework Versions -->
+    <!-- Bedework Versions -->
 
     <bw-access.version>4.0.8</bw-access.version>
     <bw-caldav.version>4.0.10-SNAPSHOT</bw-caldav.version>
     <bw-cliutil.version>4.1.0</bw-cliutil.version>
-		<bw-jsforj.version>1.0.1-SNAPSHOT</bw-jsforj.version>
-		<bw-util.version>4.0.28-SNAPSHOT</bw-util.version>
+    <bw-jsforj.version>1.0.1-SNAPSHOT</bw-jsforj.version>
+    <bw-util.version>4.0.28-SNAPSHOT</bw-util.version>
     <bw-util-conf.version>4.1.0</bw-util-conf.version>
     <bw-util-hibernate.version>4.0.23</bw-util-hibernate.version>
     <bw-util-index.version>4.1.0</bw-util-index.version>
@@ -29,15 +29,15 @@
     <bw-util-security.version>4.1.0</bw-util-security.version>
     <bw-util-tz.version>4.1.1-SNAPSHOT</bw-util-tz.version>
     <bw-util2.version>4.0.7-SNAPSHOT</bw-util2.version>
-		<bw-webdav.version>4.0.10-SNAPSHOT</bw-webdav.version>
+    <bw-webdav.version>4.0.10-SNAPSHOT</bw-webdav.version>
     <bw-xml.version>4.0.10</bw-xml.version>
 
+    <bw-util-deploy.version>4.0.28-SNAPSHOT</bw-util-deploy.version>
+
     <commons.csv.version>1.2</commons.csv.version>
-    <commons.io.version>2.0.1</commons.io.version>
     <commons.text.version>1.7</commons.text.version>
 
     <digester-version>1.8</digester-version>
-    <dom4j-version>1.6.1</dom4j-version>
 
     <ical4j.groupId>org.bedework.ical4j</ical4j.groupId>
     <ical4j.artifactId>ical4j</ical4j.artifactId>
@@ -47,9 +47,9 @@
     <ical4j.artifactId>ical4j</ical4j.artifactId>
     <ical4j.version>1.1.4</ical4j.version>
     -->
-		<ical4j-vcard.version>1.0.5</ical4j-vcard.version>
+    <ical4j-vcard.version>1.0.5</ical4j-vcard.version>
 
-		<!-- Third Party Library Versions -->
+    <!-- Third Party Library Versions -->
     <elasticsearch.version>7.2.0</elasticsearch.version>
     <hibernate.version>5.2.5.Final</hibernate.version>
     <hibernate-validator.version>5.3.6.Final</hibernate-validator.version>
@@ -58,53 +58,53 @@
     <java.jaxb.api.version>2.3.0</java.jaxb.api.version>
     <jaxws-api.version>2.3.1</jaxws-api.version>
     <jms.version>2.0</jms.version>
-		<junit.version>4.13.1</junit.version>
-		<servlet-api.version>4.0.0</servlet-api.version>
-		<apache-jdkim-library.version>0.4</apache-jdkim-library.version>
-	</properties>
+    <junit.version>4.13.1</junit.version>
+    <servlet-api.version>4.0.0</servlet-api.version>
+    <apache-jdkim-library.version>0.4</apache-jdkim-library.version>
+  </properties>
 
-	<organization>
-		<name>Bedework</name>
-		<url>https://github.com/Bedework</url>
-	</organization>
+  <organization>
+    <name>Bedework</name>
+    <url>https://github.com/Bedework</url>
+  </organization>
 
-	<licenses>
-		<license>
-			<name>Apache License Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-		</license>
-	</licenses>
+  <licenses>
+    <license>
+      <name>Apache License Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+    </license>
+  </licenses>
 
-	<scm>
-		<connection>scm:git:git@github.com:Bedework/bw-calendar-engine.git</connection>
-		<developerConnection>scm:git:git@github.com:Bedework/bw-calendar-engine.git</developerConnection>
-		<url>https://github.com/Bedework/bw-calendar-engine</url>
-	  <tag>HEAD</tag>
+  <scm>
+    <connection>scm:git:git@github.com:Bedework/bw-calendar-engine.git</connection>
+    <developerConnection>scm:git:git@github.com:Bedework/bw-calendar-engine.git</developerConnection>
+    <url>https://github.com/Bedework/bw-calendar-engine</url>
+    <tag>HEAD</tag>
   </scm>
 
-	<issueManagement>
-		<system>github</system>
-		<url>https://github.com/Bedework/bw-calendar-engine/issues</url>
-	</issueManagement>
+  <issueManagement>
+    <system>github</system>
+    <url>https://github.com/Bedework/bw-calendar-engine/issues</url>
+  </issueManagement>
 
-	<modules>
-		<module>bw-calendar-engine-annotations</module>
-		<module>bw-calendar-engine-api</module>
-		<module>bw-calendar-engine-core</module>
-		<module>bw-calendar-engine-caldav</module>
+  <modules>
+    <module>bw-calendar-engine-annotations</module>
+    <module>bw-calendar-engine-api</module>
+    <module>bw-calendar-engine-core</module>
+    <module>bw-calendar-engine-caldav</module>
     <module>bw-calendar-engine-convert</module>
-		<module>bw-calendar-engine-impl</module>
-		<module>bw-calendar-engine-facade</module>
-		<module>bw-calendar-engine-chgnote</module>
-		<module>bw-calendar-engine-dumprestore</module>
-		<module>bw-calendar-engine-indexer</module>
-		<module>bw-calendar-engine-inoutsched</module>
-		<module>bw-calendar-engine-interfaces</module>
+    <module>bw-calendar-engine-impl</module>
+    <module>bw-calendar-engine-facade</module>
+    <module>bw-calendar-engine-chgnote</module>
+    <module>bw-calendar-engine-dumprestore</module>
+    <module>bw-calendar-engine-indexer</module>
+    <module>bw-calendar-engine-inoutsched</module>
+    <module>bw-calendar-engine-interfaces</module>
     <module>bw-calendar-engine-notifyws</module>
     <module>bw-calendar-engine-pubcaldav</module>
     <module>bw-calendar-engine-publicws</module>
     <module>bw-calendar-engine-synchws</module>
-		<module>bw-calendar-engine-sysevents-common</module>
+    <module>bw-calendar-engine-sysevents-common</module>
     <module>bw-calendar-engine-sysevents-msgs</module>
     <module>bw-calendar-engine-tools</module>
     <module>bw-calendar-engine-ucaldav</module>
@@ -141,13 +141,13 @@
     </repository>
   </distributionManagement>
 
-	<dependencyManagement>
-		<dependencies>
-			<!-- Bedework Project Dependencies -->
+  <dependencyManagement>
+    <dependencies>
+      <!-- Bedework Project Dependencies -->
       <dependency>
         <groupId>org.bedework</groupId>
         <artifactId>bw-util-args</artifactId>
-        <version>${bw-util-conf.version}</version>
+        <version>${bw-util.version}</version>
       </dependency>
 
       <dependency>
@@ -246,49 +246,43 @@
         <version>${bw-util2.version}</version>
       </dependency>
 
-			<dependency>
-				<groupId>org.bedework</groupId>
-				<artifactId>bw-access</artifactId>
-				<version>${bw-access.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.bedework</groupId>
-				<artifactId>bw-webdav</artifactId>
-				<version>${bw-webdav.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.bedework</groupId>
-				<artifactId>bw-caldav-util</artifactId>
-				<version>${bw-caldav.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.bedework</groupId>
-				<artifactId>bw-caldav-server</artifactId>
-				<version>${bw-caldav.version}</version>
-			</dependency>
-      
-			<!-- Bedework: XML -->
-
-			<dependency>
-				<groupId>org.bedework</groupId>
-				<artifactId>bw-xml-icalendar</artifactId>
-				<version>${bw-xml.version}</version>
-			</dependency>
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-access</artifactId>
+        <version>${bw-access.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>org.bedework</groupId>
-        <artifactId>bw-xml-bwlicense</artifactId>
+        <artifactId>bw-webdav</artifactId>
+        <version>${bw-webdav.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-caldav-util</artifactId>
+        <version>${bw-caldav.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-caldav-server</artifactId>
+        <version>${bw-caldav.version}</version>
+      </dependency>
+
+      <!-- Bedework: XML -->
+
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-xml-icalendar</artifactId>
         <version>${bw-xml.version}</version>
       </dependency>
 
-			<dependency>
-				<groupId>org.bedework</groupId>
-				<artifactId>bw-xml-tzsvr</artifactId>
-				<version>${bw-xml.version}</version>
-			</dependency>
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-xml-tzsvr</artifactId>
+        <version>${bw-xml.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>org.bedework</groupId>
@@ -296,11 +290,11 @@
         <version>${bw-xml.version}</version>
       </dependency>
 
-			<dependency>
-				<groupId>org.bedework</groupId>
-				<artifactId>bw-xml-calws-soap</artifactId>
-				<version>${bw-xml.version}</version>
-			</dependency>
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-xml-calws-soap</artifactId>
+        <version>${bw-xml.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>${ical4j.groupId}</groupId>
@@ -320,41 +314,29 @@
         <version>${bw-jsforj.version}</version>
       </dependency>
 
-			<!-- Third Party Libraries -->
-			<dependency>
-				<groupId>org.hibernate</groupId>
-				<artifactId>hibernate-core</artifactId>
-				<version>${hibernate.version}</version>
-			</dependency>
-      
-			<dependency>
-				<groupId>org.hibernate</groupId>
-				<artifactId>hibernate-validator</artifactId>
-				<version>${hibernate-validator.version}</version>
-			</dependency>
-
+      <!-- Third Party Libraries -->
       <dependency>
-        <groupId>dom4j</groupId>
-        <artifactId>dom4j</artifactId>
-        <version>${dom4j-version}</version>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-core</artifactId>
+        <version>${hibernate.version}</version>
       </dependency>
 
       <dependency>
-				<groupId>javax.servlet</groupId>
-				<artifactId>javax.servlet-api</artifactId>
-				<version>${servlet-api.version}</version>
-			</dependency>
-      
-			<dependency>
-				<groupId>org.bedework</groupId>
-				<artifactId>apache-jdkim-library</artifactId>
-				<version>${apache-jdkim-library.version}</version>
-			</dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-validator</artifactId>
+        <version>${hibernate-validator.version}</version>
+      </dependency>
 
       <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>${commons.io.version}</version>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>${servlet-api.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>apache-jdkim-library</artifactId>
+        <version>${apache-jdkim-library.version}</version>
       </dependency>
 
       <dependency>
@@ -435,106 +417,124 @@
         <version>${jaxws-api.version}</version>
       </dependency>
 
-			<!-- Test Dependencies -->
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>${junit.version}</version>
-				<scope>test</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+      <!-- Test Dependencies -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
-	<build>
-		<extensions>
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-ssh</artifactId>
-				<version>2.9</version>
-			</extension>
-		</extensions>
-		<plugins>
-			<!-- Specify the compiler options and settings -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven.compiler.plugin.version}</version>
-				<configuration>
-					<showDeprecation>false</showDeprecation>
-					<showWarnings>false</showWarnings>
-          <!-- This for up-to-date annotation processing
-          <annotationProcessors>
-            <annotationProcessor>
-              org.bedework.calfacade.annotations.BedeworkAp
-            </annotationProcessor>
-          </annotationProcessors>
-          -->
-          <compilerArgument>-proc:none</compilerArgument>
-        </configuration>
-			</plugin>
-			<!-- Produce source jars during the 'verify' phase -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>${maven.source.plugin.version}</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>jar</goal>
-							<goal>test-jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+  <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh</artifactId>
+        <version>2.9</version>
+      </extension>
+    </extensions>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.5</version>
-        <configuration>
-          <autoVersionSubmodules>true</autoVersionSubmodules>
-          <useReleaseProfile>false</useReleaseProfile>
-          <releaseProfiles>release</releaseProfiles>
-        </configuration>
-      </plugin>
+    <pluginManagement>
+      <plugins>
+        <!-- Specify the compiler options and settings -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven.compiler.plugin.version}</version>
+          <configuration>
+            <showDeprecation>false</showDeprecation>
+            <showWarnings>false</showWarnings>
+            <!-- This for up-to-date annotation processing
+            <annotationProcessors>
+              <annotationProcessor>
+                org.bedework.calfacade.annotations.BedeworkAp
+              </annotationProcessor>
+            </annotationProcessors>
+            -->
+            <compilerArgument>-proc:none</compilerArgument>
+          </configuration>
+        </plugin>
+        <!-- Produce source jars during the 'verify' phase -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>${maven.source.plugin.version}</version>
+          <executions>
+            <execution>
+              <id>attach-sources</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>jar</goal>
+                <goal>test-jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.1.1</version>
-        <configuration>
-          <additionalJOption>-Xdoclint:none</additionalJOption>
-          <failOnError>false</failOnError>
-        </configuration>
-      </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.5</version>
+          <configuration>
+            <autoVersionSubmodules>true</autoVersionSubmodules>
+            <useReleaseProfile>false</useReleaseProfile>
+            <releaseProfiles>release</releaseProfiles>
+          </configuration>
+        </plugin>
 
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <version>2.3</version>
-        <configuration>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.5</version>
-        <executions>
-          <execution>
-            <id>default-descriptor</id>
-            <phase>process-classes</phase>
-          </execution>
-        </executions>
-        <configuration>
-          <goalPrefix>bw-util-deployment</goalPrefix>
-          <!--
-          <outputDirectory>target/dir</outputDirectory>-->
-        </configuration>
-      </plugin>
-		</plugins>
-	</build>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.1.1</version>
+          <configuration>
+            <additionalJOption>-Xdoclint:none</additionalJOption>
+            <failOnError>false</failOnError>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <version>2.3</version>
+          <configuration>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-plugin-plugin</artifactId>
+          <version>3.5</version>
+          <executions>
+            <execution>
+              <id>default-descriptor</id>
+              <phase>process-classes</phase>
+            </execution>
+          </executions>
+          <configuration>
+            <goalPrefix>bw-util-deployment</goalPrefix>
+            <!--
+            <outputDirectory>target/dir</outputDirectory>-->
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.bedework</groupId>
+          <artifactId>bw-util-maven-deploy-wfmodule</artifactId>
+          <version>${bw-util-deploy.version}</version>
+
+          <executions>
+            <execution>
+              <phase>install</phase>
+              <goals>
+                <goal>bw-deploy-wfmodule</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 
 
   <profiles>

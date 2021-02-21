@@ -63,4 +63,62 @@
       <artifactId>commons-digester</artifactId>
     </dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.bedework</groupId>
+				<artifactId>bw-util-maven-deploy-wfmodule</artifactId>
+
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<goals>
+							<goal>bw-deploy-wfmodule</goal>
+						</goals>
+					</execution>
+				</executions>
+
+				<configuration>
+					<moduleName>org.bedework.calendar.engine.dumprestore</moduleName>
+
+					<jarResources>
+						<jarResource>
+							<groupId>commons-digester</groupId>
+							<artifactId>commons-digester</artifactId>
+							<version>${digester-version}</version>
+						</jarResource>
+						<jarResource>
+							<groupId>commons-beanutils</groupId>
+							<artifactId>commons-beanutils</artifactId>
+							<version>1.7.0</version>
+						</jarResource>
+					</jarResources>
+
+					<moduleDependencies>
+						<moduleDependency>
+							<name>org.bedework.calendar.engine.api</name>
+						</moduleDependency>
+
+						<moduleDependency>
+							<name>org.bedework.calendar.engine.interfaces</name>
+						</moduleDependency>
+
+						<moduleDependency>
+							<name>org.bedework.calendar.engine.convert</name>
+						</moduleDependency>
+
+						<moduleDependency>
+							<name>org.bedework.calendar.engine.core</name>
+						</moduleDependency>
+
+						<moduleDependency>
+							<!-- for digester -->
+							<name>org.apache.commons.logging</name>
+						</moduleDependency>
+					</moduleDependencies>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

@@ -106,14 +106,18 @@
         </exclusion>
       </exclusions>
     </dependency>
+
+    <!--
     <dependency>
       <groupId>com.sun.mail</groupId>
       <artifactId>javax.mail</artifactId>
     </dependency>
+    -->
 
     <dependency>
       <groupId>javax.mail</groupId>
       <artifactId>javax.mail-api</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -131,4 +135,60 @@
 			<artifactId>javax.servlet-api</artifactId>
 		</dependency>
 	</dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-util-maven-deploy-wfmodule</artifactId>
+
+        <executions>
+          <execution>
+            <phase>install</phase>
+            <goals>
+              <goal>bw-deploy-wfmodule</goal>
+            </goals>
+          </execution>
+        </executions>
+
+        <configuration>
+          <moduleName>org.bedework.calendar.engine.impl</moduleName>
+
+          <moduleDependencies>
+            <moduleDependency>
+              <name>org.bedework.calendar.engine.caldav</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.calendar.engine.convert</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.calendar.engine.interfaces</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.calendar.engine.sysevents.common</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util.caching</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util.dav</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.org.apache.jdkim.library</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>javax.mail.api</name>
+            </moduleDependency>
+          </moduleDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
