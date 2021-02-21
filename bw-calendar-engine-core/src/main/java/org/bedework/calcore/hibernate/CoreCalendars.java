@@ -74,20 +74,18 @@ class CoreCalendars extends CalintfHelper
    * @param sess persistance session
    * @param intf interface
    * @param ac access checker
-   * @param guestMode true for a guest
+   * @param readOnlyMode true for a guest
    * @param sessionless if true
-   * @throws CalFacadeException on fatal error
    */
   CoreCalendars(final HibSession sess, 
                 final CalintfImpl intf,
                 final AccessChecker ac,
-                final boolean guestMode,
-                final boolean sessionless)
-          throws CalFacadeException {
+                final boolean readOnlyMode,
+                final boolean sessionless) {
     dao = new CoreCalendarsDAO(sess);
     this.intf = intf;
     intf.registerDao(dao);
-    super.init(intf, ac, guestMode, sessionless);
+    super.init(intf, ac, sessionless);
 
     userCalendarRootPath = 
             Util.buildPath(colPathEndsWithSlash, 

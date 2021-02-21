@@ -38,7 +38,6 @@ import org.bedework.calfacade.base.PropertiesEntity;
 import org.bedework.calfacade.base.RecurrenceEntity;
 import org.bedework.calfacade.base.ResourcedEntity;
 import org.bedework.calfacade.base.SummaryEntity;
-import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -73,28 +72,21 @@ public abstract class CalintfHelper
 
   protected Calintf intf;
 
-  protected boolean guestMode;
-
   protected boolean sessionless;
 
   public SystemProperties sysprops;
-
-  public AuthProperties authprops;
 
   /** Initialize
    *
    * @param intf - interface for calls
    * @param ac - access checker
-   * @param guestMode true for a guest
    * @param sessionless
    */
   public void init(final Calintf intf,
                    final AccessChecker ac,
-                   final boolean guestMode,
                    final boolean sessionless) {
     this.intf = intf;
     this.ac = ac;
-    this.guestMode = guestMode;
     this.sessionless = sessionless;
     collectTimeStats = isMetricsDebugEnabled();
   }
@@ -417,17 +409,9 @@ public abstract class CalintfHelper
     return Util.buildPath(colPathEndsWithSlash, path);
   }
 
-  protected AuthProperties getAuthprops() {
-    if (authprops == null) {
-      authprops = new CalSvcFactoryDefault().getSystemConfig().getAuthProperties(guestMode);
-    }
-
-    return authprops;
-  }
-
   protected SystemProperties getSysprops() {
     if (sysprops == null) {
-      sysprops = new CalSvcFactoryDefault().getSystemConfig().getSystemProperties();
+      sysprops = CalSvcFactoryDefault.getSystemConfig().getSystemProperties();
     }
 
     return sysprops;

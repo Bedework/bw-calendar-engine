@@ -19,8 +19,6 @@
 
 package org.bedework.calsvci;
 
-import org.bedework.calfacade.configs.Configurations;
-
 import java.io.Serializable;
 
 /** Interface defining svc factory
@@ -39,9 +37,4 @@ public interface CalSvcFactory extends Serializable {
    * @return schema builder
    */
   SchemaBuilder getSchemaBuilder();
-
-  /**
-   * @return a system config class.
-   */
-  Configurations getSystemConfig();
 }

@@ -34,6 +34,7 @@ import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwDbentity;
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.exc.CalFacadeBadRequest;
 import org.bedework.calfacade.exc.CalFacadeDupNameException;
 import org.bedework.calfacade.exc.CalFacadeException;
@@ -43,6 +44,7 @@ import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
 import org.bedework.sysevents.events.StatsEvent;
@@ -190,23 +192,32 @@ import static org.bedework.calfacade.indexing.BwIndexer.DeletedState;
  */
 public class CoreEvents extends CalintfHelper implements CoreEventsI {
   private final CoreEventsDAO dao;
-  
+
+  private final AuthProperties authProps;
+
   /** Constructor
    *
    * @param sess persistance session
    * @param intf interface
    * @param ac access checker
-   * @param guestMode true for a guest
+   * @param readOnlyMode true for a guest
    * @param sessionless if true
    */
   public CoreEvents(final HibSession sess,
                     final CalintfImpl intf,
                     final AccessChecker ac,
-                    final boolean guestMode,
+                    final boolean readOnlyMode,
                     final boolean sessionless) {
     dao = new CoreEventsDAO(sess);
     intf.registerDao(dao);
-    super.init(intf, ac, guestMode, sessionless);
+    super.init(intf, ac, sessionless);
+    final var config = CalSvcFactoryDefault.getSystemConfig();
+
+    if (readOnlyMode) {
+      authProps = config.getUnauthenticatedAuthProperties();
+    } else {
+      authProps = config.getAuthenticatedAuthProperties();
+    }
   }
 
   @Override
@@ -503,8 +514,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
      */
 
     final RecurPeriods rp = 
-            RecurUtil.getPeriods(val, getAuthprops().getMaxYears(),
-                                 getAuthprops().getMaxInstances());
+            RecurUtil.getPeriods(val, authProps.getMaxYears(),
+                                 authProps.getMaxInstances());
 
     if (rp.instances.isEmpty()) {
       // No instances for an alleged recurring event.
@@ -539,7 +550,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       throwException(new CalFacadeException(t));
     } */
 
-    int maxInstances = getAuthprops().getMaxInstances();
+    int maxInstances = authProps.getMaxInstances();
 
     final boolean dateOnly = val.getDtstart().getDateType();
 
@@ -1449,8 +1460,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
     final RecurPeriods rp = 
             RecurUtil.getPeriods(val, 
-                                 getAuthprops().getMaxYears(),
-                                 getAuthprops().getMaxInstances());
+                                 authProps.getMaxYears(),
+                                 authProps.getMaxInstances());
 
     if (rp.instances.isEmpty()) {
       // No instances for an alleged recurring event.
@@ -1468,7 +1479,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       throwException(new CalFacadeException(t));
     } */
 
-    int maxInstances = getAuthprops().getMaxInstances();
+    int maxInstances = authProps.getMaxInstances();
 
     final boolean dateOnly = val.getDtstart().getDateType();
 

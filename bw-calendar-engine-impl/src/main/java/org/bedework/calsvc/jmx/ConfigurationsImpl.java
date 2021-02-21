@@ -147,10 +147,12 @@ public final class ConfigurationsImpl
   }
 
   @Override
-  public AuthProperties getAuthProperties(final boolean auth) {
-    if (auth) {
-      return authProperties;
-    }
+  public AuthProperties getAuthenticatedAuthProperties() {
+    return authProperties;
+  }
+
+  @Override
+  public AuthProperties getUnauthenticatedAuthProperties() {
     return unAuthProperties;
   }
 

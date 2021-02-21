@@ -14,7 +14,6 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-access:4.0.8" level="project" />
     <orderEntry type="module" module-name="bw-util2-vcard" />
     <orderEntry type="module" module-name="bw-util-json" />
-    <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.15" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-http:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-config:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-jmx:4.1.0" level="project" />
@@ -22,6 +21,7 @@
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.4.8" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-indexing:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-security:4.1.0" level="project" />
+    <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.5" level="project" />
     <orderEntry type="module" module-name="bw-webdav" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.1.0" level="project" />
     <orderEntry type="module" module-name="bw-util-xml" />

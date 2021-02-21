@@ -47,16 +47,12 @@ public class CoreEventPropertiesRO<T extends BwEventProperty>
    *
    * @param intf interface
    * @param ac access checker
-   * @param guestMode true for a guest
    * @param sessionless if true
-   * @throws CalFacadeException on fatal error
    */
   public CoreEventPropertiesRO(final Calintf intf,
                                final AccessChecker ac,
-                               final boolean guestMode,
-                               final boolean sessionless)
-          throws CalFacadeException {
-    super.init(intf, ac, guestMode, sessionless);
+                               final boolean sessionless) {
+    super.init(intf, ac, sessionless);
   }
 
   @Override

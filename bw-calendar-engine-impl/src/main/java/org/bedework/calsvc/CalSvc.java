@@ -139,7 +139,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
   static {
     try {
-      configs = new CalSvcFactoryDefault().getSystemConfig();
+      configs = CalSvcFactoryDefault.getSystemConfig();
       new SuggestParsers(); // force load
       new EventregParsers(); // force load
       new AdminNoteParsers(); // force load
@@ -266,7 +266,7 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
     try {
       if (configs == null) {
         // Try again - failed at static init?
-        configs = new CalSvcFactoryDefault().getSystemConfig();
+        configs = CalSvcFactoryDefault.getSystemConfig();
       }
 
       open();
@@ -372,12 +372,11 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
 
   @Override
   public AuthProperties getAuthProperties() {
-    return configs.getAuthProperties(authenticated);
-  }
+    if (!authenticated) {
+      return configs.getUnauthenticatedAuthProperties();
+    }
 
-  @Override
-  public AuthProperties getAuthProperties(final boolean auth) {
-    return configs.getAuthProperties(auth);
+    return configs.getAuthenticatedAuthProperties();
   }
 
   @Override

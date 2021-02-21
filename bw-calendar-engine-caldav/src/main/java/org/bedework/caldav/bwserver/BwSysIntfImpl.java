@@ -192,7 +192,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
   static {
     try {
-      configs = new CalSvcFactoryDefault().getSystemConfig();
+      configs = CalSvcFactoryDefault.getSystemConfig();
     } catch (final Throwable t) {
       t.printStackTrace();
     }

@@ -85,10 +85,14 @@ public interface Configurations extends Serializable {
   String systemMbean = systemServicePrefix + systemPropsNamePart;
 
   /**
-   * @param auth true for authenticated user
-   * @return appropriate properties
+   * @return appropriate properties for authenticated user
    */
-  AuthProperties getAuthProperties(boolean auth);
+  AuthProperties getAuthenticatedAuthProperties();
+
+  /**
+   * @return appropriate properties for guest user
+   */
+  AuthProperties getUnauthenticatedAuthProperties();
 
   /**
    * @return system properties

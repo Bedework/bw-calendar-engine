@@ -50,8 +50,8 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
 
 
   public static SystemProperties getSystemProperties() throws CalFacadeException {
-    return new CalSvcFactoryDefault().getSystemConfig()
-                                     .getSystemProperties();
+    return CalSvcFactoryDefault.getSystemConfig()
+                               .getSystemProperties();
   }
   
   @Override
@@ -64,7 +64,7 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
       svc.init(pars);
     } catch (final RuntimeException t) {
       if (t.getMessage().equals(upgradeToReadWriteMessage)) {
-        var clonedPars = (CalSvcIPars)pars.clone();
+        final var clonedPars = (CalSvcIPars)pars.clone();
         clonedPars.setReadonly(false);
 
         svc = (CalSvcI)loadInstance(defaultSvciClass,
@@ -83,8 +83,7 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
                                        SchemaBuilder.class);
   }
 
-  @Override
-  public Configurations getSystemConfig() {
+  public static Configurations getSystemConfig() {
     return ConfigHolder.conf;
   }
 
@@ -103,7 +102,6 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
       
       final StringBuilder sb = new StringBuilder();
 
-      @SuppressWarnings("unchecked")
       final List<String> ps = sysProps.getSyseventsProperties();
 
       for (final String p: ps) {
@@ -121,20 +119,16 @@ public class CalSvcFactoryDefault implements CalSvcFactory {
   }
 
   private static Object loadInstance(final String cname,
-                                     final Class interfaceClass) {
+                                     final Class<?> interfaceClass) {
     try {
       final ClassLoader loader = Thread.currentThread().getContextClassLoader();
-      final Class cl = loader.loadClass(cname);
+      final Class<?> cl = loader.loadClass(cname);
 
       if (cl == null) {
         throw new CalFacadeException("Class " + cname + " not found");
       }
 
-      final Object o = cl.newInstance();
-
-      if (o == null) {
-        throw new CalFacadeException("Unable to instantiate class " + cname);
-      }
+      final Object o = cl.getDeclaredConstructor().newInstance();
 
       if (!interfaceClass.isInstance(o)) {
         throw new CalFacadeException("Class " + cname +

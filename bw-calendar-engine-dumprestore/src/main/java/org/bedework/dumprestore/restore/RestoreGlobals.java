@@ -494,7 +494,7 @@ public class RestoreGlobals extends Counters {
    * @throws Throwable
    */
   public void init() throws Throwable {
-    Configurations conf = new CalSvcFactoryDefault().getSystemConfig();
+    Configurations conf = CalSvcFactoryDefault.getSystemConfig();
     syspars = conf.getSystemProperties();
   }
 

@@ -434,8 +434,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                                  accessCheck);
 
     idxpars = configs.getIndexProperties();
-    authpars = configs.getAuthProperties(true);
-    unauthpars = configs.getAuthProperties(false);
+    authpars = configs.getAuthenticatedAuthProperties();
+    unauthpars = configs.getUnauthenticatedAuthProperties();
     sysprops = configs.getSystemProperties();
 
     final String urls = idxpars.getIndexerURL();

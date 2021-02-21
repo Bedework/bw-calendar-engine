@@ -26,25 +26,25 @@ import static org.bedework.calfacade.indexing.BwIndexer.docTypeResourceContent;
  */
 public class CoreResources extends CalintfHelper
         implements CoreResourcesI {
-  private CoreResourcesDAO entityDao;
+  private final CoreResourcesDAO entityDao;
 
   /** Constructor
    *
    * @param sess persistance session
    * @param intf interface
    * @param ac access checker
-   * @param guestMode true for a guest
+   * @param readOnlyMode true for a guest
    * @param sessionless if true
    */
   CoreResources(final HibSession sess,
                 final CalintfImpl intf,
                 final AccessChecker ac,
-                final boolean guestMode,
+                final boolean readOnlyMode,
                 final boolean sessionless) {
     entityDao = new CoreResourcesDAO(sess);
     this.intf = intf;
     intf.registerDao(entityDao);
-    super.init(intf, ac, guestMode, sessionless);
+    super.init(intf, ac, sessionless);
   }
 
   @Override

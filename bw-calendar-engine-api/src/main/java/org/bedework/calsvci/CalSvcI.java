@@ -90,13 +90,6 @@ public abstract class CalSvcI implements AutoCloseable, Serializable {
    */
   public abstract AuthProperties getAuthProperties();
 
-  /** Return properties about the system that depend on authentication state.
-   *
-   * @param auth - true for auth proiperties false for unauth
-   * @return AuthProperties object - never null.
-   */
-  public abstract AuthProperties getAuthProperties(boolean auth);
-
   /** Return properties about the system.
    *
    * @return SystemProperties object - never null.
