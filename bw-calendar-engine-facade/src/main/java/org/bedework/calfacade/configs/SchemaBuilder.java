@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package org.bedework.calsvci;
+package org.bedework.calfacade.configs;
 
 import org.bedework.calfacade.exc.CalFacadeException;
 

@@ -19,6 +19,8 @@
 
 package org.bedework.calsvci;
 
+import org.bedework.calfacade.configs.SchemaBuilder;
+
 import java.io.Serializable;
 
 /** Interface defining svc factory

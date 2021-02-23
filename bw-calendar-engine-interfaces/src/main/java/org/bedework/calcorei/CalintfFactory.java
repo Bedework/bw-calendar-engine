@@ -46,26 +46,16 @@
  */
 package org.bedework.calcorei;
 
-import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.util.CalFacadeUtil;
 
 /** Obtain a Calintf object.
  *
  */
 public class CalintfFactory {
-  public final static Class hibernateClass;
-  public final static Class indexerOnlyClass;
-  static {
-    try {
-      /* CalIntf implemented in hibernate */
-      hibernateClass =
-            Class.forName("org.bedework.calcore.hibernate.CalintfImpl");
-
-      indexerOnlyClass =
-              Class.forName("org.bedework.calcore.common.CalintfROImpl");
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
-    }
-  }
+  private final static String hibernateClass =
+          "org.bedework.calcore.hibernate.CalintfImpl";
+  private final static String indexerOnlyClass =
+          "org.bedework.calcore.common.CalintfROImpl";
 
   /* CalIntf implemented via CalDAV */
   //public final static String caldavClass =
@@ -73,29 +63,20 @@ public class CalintfFactory {
 
   /** Obtain a calintf object.
    *
-   * @param cl the class
+   * @param readOnly true for read-only interface
    * @return Calintf
-   * @throws CalFacadeException on error
+   * @throws RuntimeException on error
    */
-  public static Calintf getIntf(final Class cl) throws CalFacadeException {
-    try {
-      Object o = cl.newInstance();
+  public static Calintf getIntf(final boolean readOnly) {
+    final String nm;
 
-      if (o == null) {
-        throw new CalFacadeException("Class " + cl + " not found");
-      }
-
-      if (!(o instanceof Calintf)) {
-        throw new CalFacadeException("Class " + cl +
-                                     " is not a subclass of " +
-                                     Calintf.class.getName());
-      }
-
-      return (Calintf)o;
-    } catch (CalFacadeException ce) {
-      throw ce;
-    } catch (Throwable t) {
-      throw new CalFacadeException(t);
+    if (readOnly) {
+      nm = indexerOnlyClass;
+    } else {
+      nm = hibernateClass;
     }
+
+    return (Calintf)CalFacadeUtil.getObject(nm,
+                                            Calintf.class);
   }
 }

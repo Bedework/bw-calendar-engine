@@ -19,7 +19,7 @@
 package org.bedework.calcore.hibernate;
 
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calsvci.SchemaBuilder;
+import org.bedework.calfacade.configs.SchemaBuilder;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;

@@ -47,7 +47,6 @@ import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.AccessUtilI;
 import org.bedework.calfacade.util.NotificationsInfo;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
-import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.logging.BwLogger;
@@ -407,14 +406,6 @@ public abstract class CalintfHelper
 
   protected String fixPath(final String path) {
     return Util.buildPath(colPathEndsWithSlash, path);
-  }
-
-  protected SystemProperties getSysprops() {
-    if (sysprops == null) {
-      sysprops = CalSvcFactoryDefault.getSystemConfig().getSystemProperties();
-    }
-
-    return sysprops;
   }
 
   protected void stat(final String name,

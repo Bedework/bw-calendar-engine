@@ -19,6 +19,7 @@
 package org.bedework.calsvci;
 
 import org.bedework.calfacade.configs.Configurations;
+import org.bedework.calfacade.configs.SchemaBuilder;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.misc.Util;

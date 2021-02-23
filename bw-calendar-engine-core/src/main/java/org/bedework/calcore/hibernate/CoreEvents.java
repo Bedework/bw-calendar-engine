@@ -44,7 +44,6 @@ import org.bedework.calfacade.util.AccessChecker;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
-import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
 import org.bedework.sysevents.events.StatsEvent;
@@ -200,24 +199,18 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
    * @param sess persistance session
    * @param intf interface
    * @param ac access checker
-   * @param readOnlyMode true for a guest
+   * @param authProps - authorisation info
    * @param sessionless if true
    */
   public CoreEvents(final HibSession sess,
                     final CalintfImpl intf,
                     final AccessChecker ac,
-                    final boolean readOnlyMode,
+                    final AuthProperties authProps,
                     final boolean sessionless) {
     dao = new CoreEventsDAO(sess);
     intf.registerDao(dao);
     super.init(intf, ac, sessionless);
-    final var config = CalSvcFactoryDefault.getSystemConfig();
-
-    if (readOnlyMode) {
-      authProps = config.getUnauthenticatedAuthProperties();
-    } else {
-      authProps = config.getAuthenticatedAuthProperties();
-    }
+    this.authProps = authProps;
   }
 
   @Override

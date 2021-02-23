@@ -75,11 +75,23 @@
 
           <moduleDependencies>
             <moduleDependency>
+              <name>org.bedework.calendar.engine.convert</name>
+            </moduleDependency>
+
+            <moduleDependency>
               <name>org.bedework.calendar.engine.interfaces</name>
             </moduleDependency>
 
             <moduleDependency>
-              <name>org.bedework.calendar.engine.convert</name>
+              <name>org.bedework.calendar.engine.sysevents.common</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util.indexing</name>
+            </moduleDependency>
+
+            <moduleDependency>
+              <name>org.bedework.util.indexing.elasticsearch</name>
             </moduleDependency>
           </moduleDependencies>
         </configuration>

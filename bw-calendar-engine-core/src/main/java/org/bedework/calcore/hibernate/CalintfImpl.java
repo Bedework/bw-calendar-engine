@@ -45,6 +45,7 @@ import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
+import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.Configurations;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IfInfo;
@@ -215,9 +216,17 @@ public class CalintfImpl extends CalintfROImpl {
   @Override
   public void initPinfo(final PrincipalInfo principalInfo) throws CalFacadeException {
     super.initPinfo(principalInfo);
-    
+
+    final AuthProperties authProps;
+
+    if (readOnlyMode) {
+      authProps = configs.getUnauthenticatedAuthProperties();
+    } else {
+      authProps = configs.getAuthenticatedAuthProperties();
+    }
+
     events = new CoreEvents(sess, this,
-                            ac, readOnlyMode, sessionless);
+                            ac, authProps, sessionless);
 
     calendars = new CoreCalendars(sess, this,
                                   ac, readOnlyMode, sessionless);

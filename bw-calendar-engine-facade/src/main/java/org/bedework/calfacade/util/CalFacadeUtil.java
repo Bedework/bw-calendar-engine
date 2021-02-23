@@ -19,7 +19,6 @@
 package org.bedework.calfacade.util;
 
 import org.bedework.calfacade.base.BwCloneable;
-import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -263,16 +262,27 @@ public class CalFacadeUtil implements Serializable {
   public static Object getObject(final String className,
                                  final Class<?> cl) {
     try {
-      Object o = Class.forName(className).getDeclaredConstructor().newInstance();
+      final ClassLoader loader = Thread.currentThread().getContextClassLoader();
+
+      final Class<?> clazz = loader.loadClass(className);
+
+      if (clazz == null) {
+        throw new RuntimeException("Class " + className + " not found");
+      }
+
+      final Object o = clazz.getDeclaredConstructor().newInstance();
 
       if (!cl.isInstance(o)) {
-        throw new CalFacadeException("Class " + className +
-                                     " is not a subclass of " +
-                                     cl.getName());
+        throw new RuntimeException(
+                "Class " + clazz +
+                        " is not a subclass of " +
+                        cl.getName());
       }
 
       return o;
-    } catch (Throwable t) {
+    } catch (final RuntimeException re) {
+      throw re;
+    } catch (final Throwable t) {
       throw new RuntimeException(t);
     }
   }

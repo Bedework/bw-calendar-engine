@@ -109,7 +109,7 @@
 						</moduleDependency>
 
 						<moduleDependency>
-							<name>org.bedework.calendar.engine.core</name>
+							<name>org.bedework.calendar.engine.core.rw</name>
 						</moduleDependency>
 
 						<moduleDependency>

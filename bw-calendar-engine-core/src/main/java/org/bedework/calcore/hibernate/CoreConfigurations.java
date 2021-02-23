@@ -24,7 +24,7 @@ import org.bedework.util.logging.BwLogger;
 
 import javax.management.ObjectName;
 
-/** All the configuration objects used by CalSvc and its callers.
+/** All the configuration objects used by calendar core and its callers.
  *
  */
 @SuppressWarnings("rawtypes")
