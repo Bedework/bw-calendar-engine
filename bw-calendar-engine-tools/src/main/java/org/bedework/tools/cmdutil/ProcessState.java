@@ -7,7 +7,7 @@ import org.bedework.calfacade.filter.SfpTokenizer;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalSvcIPars;
+import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;

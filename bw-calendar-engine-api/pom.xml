@@ -73,6 +73,10 @@
 
           <moduleDependencies>
             <moduleDependency>
+              <name>org.bedework.calendar.engine.api-ro</name>
+            </moduleDependency>
+
+            <moduleDependency>
               <name>org.bedework.calendar.engine.facade</name>
             </moduleDependency>
 

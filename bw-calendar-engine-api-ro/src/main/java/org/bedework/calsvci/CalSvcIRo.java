@@ -29,6 +29,7 @@ import org.bedework.calfacade.filter.SimpleFilterParser;
 import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
 

@@ -25,7 +25,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalSvcIPars;
+import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.util.jmx.ConfBase;
 
 /**

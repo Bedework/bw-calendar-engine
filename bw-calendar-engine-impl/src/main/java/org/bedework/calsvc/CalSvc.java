@@ -75,7 +75,7 @@ import org.bedework.calsvci.AdminI;
 import org.bedework.calsvci.CalSuitesI;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalSvcIPars;
+import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.Categories;
 import org.bedework.calsvci.Contacts;

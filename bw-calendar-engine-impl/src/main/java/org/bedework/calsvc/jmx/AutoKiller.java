@@ -8,7 +8,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IfInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalSvcIPars;
+import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 

@@ -20,6 +20,7 @@
 package org.bedework.calsvci;
 
 import org.bedework.calfacade.configs.SchemaBuilder;
+import org.bedework.calfacade.svc.CalSvcIPars;
 
 import java.io.Serializable;
 

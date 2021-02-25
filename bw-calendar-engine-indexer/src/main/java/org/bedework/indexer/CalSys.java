@@ -26,7 +26,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactory;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calsvci.CalSvcIPars;
+import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calsvci.EventsI;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
