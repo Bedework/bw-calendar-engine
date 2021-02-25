@@ -92,6 +92,7 @@
     <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
+    <orderEntry type="module" module-name="bw-calendar-engine-api-ro" />
     <orderEntry type="module" module-name="bw-calendar-engine-core" />
     <orderEntry type="module" module-name="bw-calendar-engine-core-common" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-elasticsearch:4.1.0" level="project" />

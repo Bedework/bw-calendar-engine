@@ -9,6 +9,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="bw-calendar-engine-api-ro" />
     <orderEntry type="module" module-name="bw-calendar-engine-facade" />
     <orderEntry type="module" module-name="bw-calendar-engine-annotations" />
     <orderEntry type="library" name="Maven: org.bedework:bw-access:4.0.8" level="project" />

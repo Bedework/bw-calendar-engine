@@ -84,6 +84,7 @@
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
     <orderEntry type="library" name="Maven: javax.jms:javax.jms-api:2.0" level="project" />
     <orderEntry type="module" module-name="bw-calendar-engine-impl" />
+    <orderEntry type="module" module-name="bw-calendar-engine-api-ro" />
     <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
     <orderEntry type="module" module-name="bw-calendar-engine-convert" />
     <orderEntry type="module" module-name="bw-jsforj" />

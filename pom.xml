@@ -111,6 +111,7 @@
     <module>bw-calendar-engine-userws</module>
     <module>bw-calendar-engine-mail</module>
     <module>bw-calendar-engine-core-common</module>
+    <module>bw-calendar-engine-api-ro</module>
   </modules>
 
   <developers>

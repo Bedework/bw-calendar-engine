@@ -85,16 +85,6 @@ public class Crawl extends CalSys {
 
     setThreadPools(props.getMaxEntityThreads(),
                    props.getMaxPrincipalThreads());
-
-    /*
-    try (BwSvc bw = getAdminBw()) {
-      final CalSvcI svci = bw.getSvci();
-
-      idxProps = svci.getIndexProperties();
-      authProps = svci.getAuthProperties(true);
-      unauthProps = svci.getAuthProperties(false);
-    }
-    */
   }
 
   public void setDocType(final String docType) {

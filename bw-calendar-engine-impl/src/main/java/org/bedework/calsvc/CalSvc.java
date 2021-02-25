@@ -49,7 +49,6 @@ import org.bedework.calfacade.base.BwUnversionedDbentity;
 import org.bedework.calfacade.base.UpdateFromTimeZonesInfo;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.Configurations;
-import org.bedework.calfacade.configs.IndexProperties;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeConstraintViolationException;
@@ -130,7 +129,8 @@ import static java.lang.String.format;
  *
  * @author Mike Douglass       douglm rpi.edu
  */
-public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetcher {
+public class CalSvc
+        implements CalSvcI, Logged, Calintf.FilterParserFetcher {
   //private String systemName;
 
   private CalSvcIPars pars;
@@ -390,11 +390,6 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   }
 
   @Override
-  public IndexProperties getIndexProperties() {
-    return configs.getIndexProperties();
-  }
-
-  @Override
   public void setCalSuite(final String name) throws CalFacadeException {
     final BwCalSuiteWrapper cs = getCalSuitesHandler().get(name);
 
@@ -493,11 +488,6 @@ public class CalSvc extends CalSvcI implements Logged, Calintf.FilterParserFetch
   @Override
   public void logStats() {
     info(getStats().toString());
-  }
-
-  @Override
-  public IfInfo getIfInfo() {
-    return getCal().getIfInfo();
   }
 
   @Override

@@ -25,7 +25,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import java.io.Serializable;
 import java.util.Collection;
 
-/** Methods defined here are for adminisitrative uses. They require superuser
+/** Methods defined here are for administrative uses. They require superuser
  * access and support functions that involve crawling the system or usage
  * reporting.
  *
