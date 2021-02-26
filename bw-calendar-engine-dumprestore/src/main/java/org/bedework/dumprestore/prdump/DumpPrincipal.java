@@ -30,6 +30,7 @@ import org.bedework.convert.IcalTranslator;
 import org.bedework.dumprestore.Defs;
 import org.bedework.dumprestore.Utils;
 import org.bedework.dumprestore.dump.DumpGlobals;
+import org.bedework.util.calendar.IcalendarUtil;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
 import org.bedework.util.misc.response.Response;
@@ -299,7 +300,7 @@ public class DumpPrincipal extends Dumper {
         final File f = makeFile(ev.getName());
 
         final Writer wtr = new FileWriter(f);
-        IcalTranslator.writeCalendar(cal, wtr);
+        IcalendarUtil.writeCalendar(cal, wtr);
         incCount(DumpGlobals.events);
         wtr.close();
       } catch (final Throwable t) {
@@ -340,7 +341,6 @@ public class DumpPrincipal extends Dumper {
       } catch (final Throwable t) {
         addLn(t.getLocalizedMessage());
         error(t);
-      } finally {
       }
     }
   }

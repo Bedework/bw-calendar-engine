@@ -16,21 +16,13 @@
 			<artifactId>bw-calendar-engine-facade</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-calendar-engine-interfaces</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
 			<artifactId>bw-calendar-engine-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-calendar-engine-core</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
 			<artifactId>bw-calendar-engine-convert</artifactId>
@@ -38,10 +30,10 @@
 		</dependency>
 		<!-- Bedework Dependencies -->
 
-    <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-args</artifactId>
-    </dependency>
+		<dependency>
+			<groupId>org.bedework</groupId>
+			<artifactId>bw-util-jmx</artifactId>
+		</dependency>
 
     <dependency>
       <groupId>org.bedework</groupId>
@@ -101,15 +93,11 @@
 						</moduleDependency>
 
 						<moduleDependency>
-							<name>org.bedework.calendar.engine.interfaces</name>
-						</moduleDependency>
-
-						<moduleDependency>
 							<name>org.bedework.calendar.engine.convert</name>
 						</moduleDependency>
 
 						<moduleDependency>
-							<name>org.bedework.calendar.engine.core.rw</name>
+							<name>org.bedework.util.jmx</name>
 						</moduleDependency>
 
 						<moduleDependency>

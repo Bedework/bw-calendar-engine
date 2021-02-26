@@ -21,7 +21,6 @@ package org.bedework.convert;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwVersion;
 import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ifs.IcalCallback;
@@ -33,8 +32,8 @@ import org.bedework.convert.ical.IcalMalformedException;
 import org.bedework.convert.ical.IcalUtil;
 import org.bedework.convert.ical.VFreeUtil;
 import org.bedework.util.calendar.IcalDefs;
+import org.bedework.util.calendar.IcalendarUtil;
 import org.bedework.util.calendar.JcalCalendarBuilder;
-import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.WsXMLTranslator;
 import org.bedework.util.calendar.XmlCalendarBuilder;
 import org.bedework.util.logging.BwLogger;
@@ -46,7 +45,6 @@ import org.bedework.util.timezones.Timezones;
 import ietf.params.xml.ns.icalendar_2.BaseComponentType;
 import ietf.params.xml.ns.icalendar_2.IcalendarType;
 import net.fortuna.ical4j.data.CalendarBuilder;
-import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.data.CalendarParserImpl;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.data.UnfoldingReader;
@@ -54,7 +52,6 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.component.CalendarComponent;
@@ -64,34 +61,26 @@ import net.fortuna.ical4j.model.component.VFreeBusy;
 import net.fortuna.ical4j.model.component.VPoll;
 import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.component.VToDo;
-import net.fortuna.ical4j.model.property.Method;
-import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.TzId;
-import net.fortuna.ical4j.model.property.Version;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.TreeSet;
 
 import javax.xml.bind.JAXBElement;
 
+import static org.bedework.calfacade.BwVersion.prodId;
+import static org.bedework.util.calendar.IcalendarUtil.addIcalTimezone;
+import static org.bedework.util.calendar.IcalendarUtil.newIcal;
+
 /** Object to provide translation between a bedework entity and an Icalendar format.
  *
  * @author Mike Douglass   douglm rpi.edu
  */
 public class IcalTranslator implements Logged, Serializable {
-  /** A class we use to indicate we are skipping stuff. Pushed on to teh stack.
-   *
-   */
-  public static class SkipThis {
-  }
-
   /** We'll use this to parameterize some of the behaviour
    */
   public static class Pars {
@@ -109,9 +98,6 @@ public class IcalTranslator implements Logged, Serializable {
     public boolean simpleContact = true;
   }
 
-  public static final String prodId = "//Bedework.org//BedeWork V" +
-                                         BwVersion.bedeworkVersion + "//EN";
-
   protected IcalCallback cb;
 
   protected Pars pars = new Pars();
@@ -128,27 +114,6 @@ public class IcalTranslator implements Logged, Serializable {
    *                     Translation methods
    * ==================================================================== */
 
-  /** Make a new Calendar with default properties
-   *
-   * @param methodType - ical method
-   * @return Calendar
-   */
-  public static Calendar newIcal(final int methodType) {
-    final Calendar cal = new Calendar();
-
-    final PropertyList<Property> pl = cal.getProperties();
-
-    pl.add(new ProdId(prodId));
-    pl.add(Version.VERSION_2_0);
-
-    if ((methodType > ScheduleMethods.methodTypeNone) &&
-        (methodType < ScheduleMethods.methodTypeUnknown)) {
-      pl.add(new Method(ScheduleMethods.methods[methodType]));
-    }
-
-    return cal;
-  }
-
   /** Make a new Calendar with the freebusy object
    *
    * @param methodType scheduling method
@@ -156,19 +121,10 @@ public class IcalTranslator implements Logged, Serializable {
    * @return String representation
    * @throws RuntimeException on fatal error
    */
-  public static String toIcalString(final int methodType,
-                                    final BwEvent ent) {
-    final Calendar cal = new Calendar();
-
-    final PropertyList<Property> pl = cal.getProperties();
-
-    pl.add(new ProdId(prodId));
-    pl.add(Version.VERSION_2_0);
-
-    if ((methodType > ScheduleMethods.methodTypeNone) &&
-        (methodType < ScheduleMethods.methodTypeUnknown)) {
-      pl.add(new Method(ScheduleMethods.methods[methodType]));
-    }
+  public static String freebusyToIcalString(final int methodType,
+                                            final BwEvent ent) {
+    final Calendar cal = IcalendarUtil.newIcal(methodType,
+                                               prodId);
 
     if (ent.getEntityType() == IcalDefs.entityTypeFreeAndBusy) {
       final VFreeBusy vfreeBusy = VFreeUtil.toVFreeBusy(ent);
@@ -178,46 +134,7 @@ public class IcalTranslator implements Logged, Serializable {
       throw new RuntimeException("Unexpected entity type");
     }
 
-    final CalendarOutputter co = new CalendarOutputter(false, 74);
-
-    final Writer wtr =  new StringWriter();
-    try {
-      co.output(cal, wtr);
-    } catch (final Throwable t) {
-      throw new RuntimeException(t);
-    }
-
-    return wtr.toString();
-  }
-
-  /** Convert a Calendar to it's string form
-   *
-   * @param cal Calendar to convert
-   * @return String representation
-   * @throws RuntimeException on fatal error
-   */
-  public static String toIcalString(final Calendar cal) {
-    final Writer wtr =  new StringWriter();
-    writeCalendar(cal, wtr);
-
-    return wtr.toString();
-  }
-
-  /** Write a Calendar
-   *
-   * @param cal Calendar to convert
-   * @param wtr Writer for output
-   * @throws RuntimeException on fatal error
-   */
-  public static void writeCalendar(final Calendar cal,
-                                   final Writer wtr) {
-    final CalendarOutputter co = new CalendarOutputter(false, 74);
-
-    try {
-      co.output(cal, wtr);
-    } catch (final Throwable t) {
-      throw new RuntimeException(t);
-    }
+    return IcalendarUtil.toIcalString(cal);
   }
 
   /** turn a single event with possible overrides into a calendar
@@ -234,7 +151,7 @@ public class IcalTranslator implements Logged, Serializable {
     }
 
     try {
-      final Calendar cal = newIcal(methodType);
+      final Calendar cal = newIcal(methodType, prodId);
 
       addToCalendar(cal, val, new TreeSet<>());
 
@@ -273,7 +190,7 @@ public class IcalTranslator implements Logged, Serializable {
    */
   public Calendar toIcal(final Collection<EventInfo> vals,
                          final int methodType) throws CalFacadeException {
-    final Calendar cal = newIcal(methodType);
+    final Calendar cal = newIcal(methodType, prodId);
 
     if ((vals == null) || (vals.size() == 0)) {
       return cal;
@@ -614,42 +531,6 @@ public class IcalTranslator implements Logged, Serializable {
   }
   */
 
-  /** Create a Calendar object from the named timezone
-   *
-   * @param tzid       String timezone id
-   * @return Calendar
-   */
-  public Calendar getTzCalendar(final String tzid) {
-    final Calendar cal = newIcal(ScheduleMethods.methodTypeNone);
-
-    addIcalTimezone(cal, tzid, null, Timezones.getTzRegistry());
-
-    return cal;
-  }
-
-  /** Create a Calendar object from the named timezone and convert to
-   * a String representation
-   *
-   * @param tzid       String timezone id
-   * @return String
-   * @throws RuntimeException on fatal error
-   */
-  public String toStringTzCalendar(final String tzid) {
-    final Calendar ical = getTzCalendar(tzid);
-
-    final CalendarOutputter calOut = new CalendarOutputter(true);
-
-    final StringWriter sw = new StringWriter();
-
-    try {
-      calOut.output(ical, sw);
-    } catch (final IOException e) {
-      throw new RuntimeException(e);
-    }
-
-    return sw.toString();
-  }
-
   /* ====================================================================
                       Private methods
      ==================================================================== */
@@ -828,49 +709,21 @@ public class IcalTranslator implements Logged, Serializable {
     }
 
     if (!ev.getForceUTC()) {
-      addIcalTimezone(cal, ev.getDtstart().getTzid(), added, tzreg);
+      addIcalTimezone(cal,
+                      ev.getDtstart().getTzid(),
+                      added,
+                      tzreg);
 
       if (ev.getEndType() == StartEndComponent.endTypeDate) {
-        addIcalTimezone(cal, ev.getDtend().getTzid(), added, tzreg);
+        addIcalTimezone(cal,
+                        ev.getDtend().getTzid(),
+                        added,
+                        tzreg);
       }
 
       //if (ev.getRecurrenceId() != null) {
       //  addIcalTimezone(cal, ev.getRecurrenceId().getTzid(), added, tzreg);
       //}
-    }
-  }
-
-  private void addIcalTimezone(final Calendar cal, final String tzid,
-                               final TreeSet<String> added,
-                               final TimeZoneRegistry tzreg) {
-    VTimeZone vtz = null;
-
-    if ((tzid == null) ||
-        ((added != null) && added.contains(tzid))) {
-      return;
-    }
-
-    //if (debug()) {
-    //  debug("Look for timezone with id " + tzid);
-    //}
-
-    final TimeZone tz = tzreg.getTimeZone(tzid);
-
-    if (tz != null) {
-      vtz = tz.getVTimeZone();
-    }
-
-    if (vtz != null) {
-      //if (debug()) {
-      //  debug("found timezone with id " + tzid);
-      //}
-      cal.getComponents().add(vtz);
-    } else if (debug()) {
-      debug("Didn't find timezone with id " + tzid);
-    }
-
-    if (added != null) {
-      added.add(tzid);
     }
   }
 

@@ -605,7 +605,7 @@ public class BwCalDAVEvent extends CalDAVEvent<BwCalDAVEvent> {
                              final String contentType) {
     try {
       if (contentType.equals("text/calendar")) {
-        return IcalTranslator.toIcalString(methodType, getEv());
+        return IcalTranslator.freebusyToIcalString(methodType, getEv());
       }
 
       if (contentType.equals("application/calendar+json")) {

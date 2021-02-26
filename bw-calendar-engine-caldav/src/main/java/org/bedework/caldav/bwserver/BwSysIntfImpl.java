@@ -53,6 +53,7 @@ import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.BwVersion;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
@@ -75,10 +76,10 @@ import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.EventsI.CopyMoveStatus;
 import org.bedework.calsvci.SharingI.ReplyResult;
@@ -98,6 +99,7 @@ import org.bedework.sysevents.events.HttpOutEvent;
 import org.bedework.sysevents.events.SysEventBase.SysCode;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.IcalDefs.IcalComponentType;
+import org.bedework.util.calendar.IcalendarUtil;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.logging.BwLogger;
@@ -1380,9 +1382,11 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         try {
           final VFreeBusy vfreeBusy = VFreeUtil.toVFreeBusy(rfb.getEv());
           final net.fortuna.ical4j.model.Calendar ical = 
-                  IcalTranslator.newIcal(ScheduleMethods.methodTypeReply);
+                  IcalendarUtil.newIcal(
+                          ScheduleMethods.methodTypeReply,
+                          BwVersion.prodId);
           ical.getComponents().add(vfreeBusy);
-          IcalTranslator.writeCalendar(ical, wtr);
+          IcalendarUtil.writeCalendar(ical, wtr);
         } catch (final Throwable t) {
           if (debug()) {
             error(t);
@@ -1850,14 +1854,15 @@ public class BwSysIntfImpl implements Logged, SysIntf {
         return  null;
       }
 
-      Collection<CalDAVResource<?>> rs = new ArrayList<>();
+      final Collection<CalDAVResource<?>> rs =
+              new ArrayList<>();
 
-      for (BwResource r: bwrs) {
+      for (final BwResource r: bwrs) {
         rs.add(new BwCalDAVResource(this, r));
       }
 
       return rs;
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1869,7 +1874,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                          final boolean updateContent) throws WebdavException {
     try {
       getSvci().getResourcesHandler().update(getRsrc(val), updateContent);
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1883,7 +1888,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       getSvci().getResourcesHandler().delete(Util.buildPath(false, val.getParentPath(),
                                                             "/",
                                                             val.getName()));
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1901,7 +1906,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                                       toPath, name,
                                                       copy,
                                                       overwrite);
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1911,7 +1916,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public String getSyncToken(final CalDAVCollection<?> col) throws WebdavException {
     try {
-      BwCalendar bwcol = ((BwCalDAVCollection)col).getCol();
+      final BwCalendar bwcol = ((BwCalDAVCollection)col).getCol();
       String path = col.getPath();
 
       if (bwcol.getInternalAlias()) {
@@ -1919,7 +1924,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       return "data:," + getSvci().getCalendarsHandler().getSyncToken(path);
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -2066,7 +2071,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       }
 
       if (ctype.equals("text/calendar")) {
-        return IcalTranslator.toIcalString(cal);
+        return IcalendarUtil.toIcalString(cal);
       }
 
       if (ctype.equals("application/calendar+json")) {
@@ -2114,9 +2119,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       switch (ctype) {
         case "text/calendar":
-          Calendar ical = trans.toIcal(bwevs, meth);
+          final Calendar ical = trans.toIcal(bwevs, meth);
           if (xml == null) {
-            IcalTranslator.writeCalendar(ical, wtr);
+            IcalendarUtil.writeCalendar(ical, wtr);
           } else {
             xml.cdataValue(toIcalString(ical, "text/calendar"));
           }
@@ -2131,7 +2136,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
           }
           break;
         case "application/jscalendar+json":
-          JSGroup grp = getJScalTrans().toJScal(bwevs, meth);
+          final JSGroup grp = getJScalTrans().toJScal(bwevs, meth);
 
           if (xml == null) {
             JSCalTranslator.writeJSCalendar(grp, wtr);
@@ -2142,7 +2147,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
           }
           break;
         case XcalTags.mimetype:
-          XmlEmit x;
+          final XmlEmit x;
           if (xml == null) {
             x = new XmlEmit();
             x.startEmit(wtr);
@@ -2292,7 +2297,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public String toStringTzCalendar(final String tzid) throws WebdavException {
     try {
-      return trans.toStringTzCalendar(tzid);
+      return IcalendarUtil.toStringTzCalendar(
+              tzid,
+              BwVersion.prodId);
     } catch (final Throwable t) {
       throw new WebdavException(t);
     }

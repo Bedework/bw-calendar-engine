@@ -26,7 +26,6 @@ import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.dumprestore.restore.OwnerUidKey;
 import org.bedework.dumprestore.restore.RestoreGlobals;
-import org.bedework.convert.IcalTranslator.SkipThis;
 
 /** Retrieve an owner and leave on the stack.
  *
@@ -82,7 +81,6 @@ public class OwnerRule extends CreatorRule {
         // No owner now
       } else if (top() instanceof BwView) {
         // No owner now
-      } else if (top() instanceof SkipThis) {
       } else {
         // We expect organizer in old data
         warn("top() is not BwOwnedDbentity:" + top().getClass().getCanonicalName());

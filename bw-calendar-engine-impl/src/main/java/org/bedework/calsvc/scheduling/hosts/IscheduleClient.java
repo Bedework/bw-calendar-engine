@@ -24,6 +24,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvc.scheduling.hosts.Response.ResponseElement;
 import org.bedework.convert.IcalTranslator;
 import org.bedework.convert.Icalendar;
+import org.bedework.util.calendar.IcalendarUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
@@ -575,7 +576,7 @@ public class IscheduleClient implements Logged {
                    iout.getContentBytes(),
                    iout.getContentType());
 
-        try (CloseableHttpResponse hresp = cio.execute(req)) {
+        try (final CloseableHttpResponse hresp = cio.execute(req)) {
           final int rcode = getStatus(hresp);
 
           if (rcode != HttpServletResponse.SC_OK) {
@@ -618,7 +619,7 @@ public class IscheduleClient implements Logged {
     final Calendar cal = trans.toIcal(ei, ev.getScheduleMethod());
 
     final StringWriter sw = new StringWriter();
-    IcalTranslator.writeCalendar(cal, sw);
+    IcalendarUtil.writeCalendar(cal, sw);
 
     iout.addContentLine(sw.toString());
 
@@ -656,7 +657,7 @@ public class IscheduleClient implements Logged {
     final Calendar cal = trans.toIcal(ei, ev.getScheduleMethod());
 
     final StringWriter sw = new StringWriter();
-    IcalTranslator.writeCalendar(cal, sw);
+    IcalendarUtil.writeCalendar(cal, sw);
 
     iout.addContentLine(sw.toString());
 

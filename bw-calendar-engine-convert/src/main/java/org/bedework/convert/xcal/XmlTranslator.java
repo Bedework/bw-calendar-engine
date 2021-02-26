@@ -45,6 +45,9 @@ import java.util.Collection;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
+import static org.bedework.calfacade.BwVersion.prodId;
+import static org.bedework.util.calendar.IcalendarUtil.newIcal;
+
 /**
  * User: mike Date: 5/7/20 Time: 22:43
  */
@@ -159,7 +162,8 @@ public class XmlTranslator extends IcalTranslator {
     boolean componentsOpen = false;
 
     if (!cb.getTimezonesByReference()) {
-      final Calendar cal = newIcal(methodType); // To collect timezones
+      final Calendar cal = newIcal(methodType,
+                                   prodId); // To collect timezones
 
       addIcalTimezones(cal, vals);
 

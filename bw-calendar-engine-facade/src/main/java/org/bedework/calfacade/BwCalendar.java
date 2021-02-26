@@ -1847,7 +1847,7 @@ public class BwCalendar extends BwShareableContainedDbentity<BwCalendar>
    * @param val ui open state
    */
   public void setOpen(final boolean val) {
-    throw new RuntimeException("org.bedework.wrapper.method.called");
+    // Ignore - implemented in wrapper
   }
 
   /**

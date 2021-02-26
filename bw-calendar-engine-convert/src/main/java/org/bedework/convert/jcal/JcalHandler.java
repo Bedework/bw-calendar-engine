@@ -19,10 +19,10 @@
 package org.bedework.convert.jcal;
 
 import org.bedework.calfacade.BwEvent;
+import org.bedework.calfacade.BwVersion;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.EventTimeZonesRegistry;
-import org.bedework.convert.IcalTranslator;
 import org.bedework.convert.ical.BwEvent2Ical;
 import org.bedework.convert.ical.VFreeUtil;
 import org.bedework.util.calendar.IcalDefs;
@@ -241,7 +241,7 @@ public class JcalHandler implements Serializable {
 
       jgen.writeStartArray();
 
-      JsonProperty.addFields(jgen, new ProdId(IcalTranslator.prodId));
+      JsonProperty.addFields(jgen, new ProdId(BwVersion.prodId));
       JsonProperty.addFields(jgen, Version.VERSION_2_0);
 
       if ((methodType > ScheduleMethods.methodTypeNone) &&

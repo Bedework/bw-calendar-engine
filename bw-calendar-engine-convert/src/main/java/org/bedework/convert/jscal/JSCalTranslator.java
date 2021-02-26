@@ -5,6 +5,7 @@ package org.bedework.convert.jscal;
 
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.BwVersion;
 import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.convert.EventTimeZonesRegistry;
@@ -48,7 +49,8 @@ public class JSCalTranslator extends IcalTranslator {
             (JSGroup)JSFactory.getFactory()
                               .newValue(JSTypes.typeJSGroup);
 
-    group.setProperty(JSPropertyNames.prodId, prodId);
+    group.setProperty(JSPropertyNames.prodId,
+                      BwVersion.prodId);
 
     if ((methodType > ScheduleMethods.methodTypeNone) &&
             (methodType < ScheduleMethods.methodTypeUnknown)) {

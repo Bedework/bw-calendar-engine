@@ -27,10 +27,10 @@ public class BwVersion {
   public static final int bedeworkMajorVersion = 3;
 
   /** When this changes - schema and api usually have significant changes */
-  public static final int bedeworkMinorVersion = 13;
+  public static final int bedeworkMinorVersion = 14;
 
   /** Minor functional updates */
-  public static final int bedeworkUpdateVersion = 2;
+  public static final int bedeworkUpdateVersion = 0;
 
   /** Patches which might introduce schema incompatibility if needed.
    * Essentially a bug fix
@@ -69,4 +69,9 @@ public class BwVersion {
 
     return sb.toString();
   }
+
+  public static final String prodId =
+          "//Bedework.org//BedeWork V" +
+          BwVersion.bedeworkVersion + "//EN";
+
 }
