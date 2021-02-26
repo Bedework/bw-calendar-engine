@@ -11,19 +11,18 @@
 
 	<dependencies>
 		<!-- Project Dependencies -->
-		<dependency>
-			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-calendar-engine-facade</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
     <dependency>
       <groupId>org.bedework.caleng</groupId>
       <artifactId>bw-calendar-engine-sysevents-msgs</artifactId>
       <version>${project.version}</version>
     </dependency>
 
-    <dependency>
+		<dependency>
+			<groupId>org.bedework</groupId>
+			<artifactId>bw-calendar-facade</artifactId>
+		</dependency>
+
+		<dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-caldav-util</artifactId>
     </dependency>
@@ -49,11 +48,11 @@
 
 					<moduleDependencies>
 						<moduleDependency>
-							<name>org.bedework.calendar.engine.facade</name>
+							<name>org.bedework.calendar.engine.sysevents.msgs</name>
 						</moduleDependency>
 
 						<moduleDependency>
-							<name>org.bedework.calendar.engine.sysevents.msgs</name>
+							<name>org.bedework.calendar.common.facade</name>
 						</moduleDependency>
 
 						<moduleDependency>

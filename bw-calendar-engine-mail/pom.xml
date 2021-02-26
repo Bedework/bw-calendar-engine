@@ -17,9 +17,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.bedework.caleng</groupId>
-      <artifactId>bw-calendar-engine-facade</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-calendar-facade</artifactId>
     </dependency>
 
     <dependency>
@@ -48,7 +47,7 @@
 
           <moduleDependencies>
             <moduleDependency>
-              <name>org.bedework.calendar.engine.facade</name>
+              <name>org.bedework.calendar.common.facade</name>
             </moduleDependency>
           </moduleDependencies>
         </configuration>

@@ -11,19 +11,23 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
     <orderEntry type="module" module-name="bw-calendar-engine-api-ro" />
-    <orderEntry type="module" module-name="bw-calendar-engine-facade" />
-    <orderEntry type="module" module-name="bw-calendar-engine-annotations" />
+    <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
+    <orderEntry type="module" module-name="bw-caldav-util" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.10" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.10" level="project" />
+    <orderEntry type="module" module-name="bw-calendar-engine-sysevents-common" />
     <orderEntry type="library" name="Maven: org.bedework:bw-access:4.0.8" level="project" />
+    <orderEntry type="library" name="Maven: javax.jms:javax.jms-api:2.0" level="project" />
+    <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
+    <orderEntry type="module" module-name="bw-calendar-facade" />
+    <orderEntry type="module" module-name="bw-calendar-annotations" />
     <orderEntry type="module" module-name="bw-util2-vcard" />
     <orderEntry type="module" module-name="bw-util-json" />
     <orderEntry type="module" module-name="bw-webdav" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.1.0" level="project" />
     <orderEntry type="module" module-name="bw-util-xml" />
-    <orderEntry type="module" module-name="bw-caldav-util" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.10" level="project" />
     <orderEntry type="module" module-name="bw-caldav-server" />
-    <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
-    <orderEntry type="module" module-name="bw-calendar-engine-convert" />
+    <orderEntry type="module" module-name="bw-calendar-convert" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.10" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.glassfish.jaxb:jaxb-runtime:2.3.2" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: jakarta.xml.bind:jakarta.xml.bind-api:2.3.2" level="project" />
@@ -33,12 +37,7 @@
     <orderEntry type="library" scope="RUNTIME" name="Maven: com.sun.xml.fastinfoset:FastInfoset:1.2.16" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: jakarta.activation:jakarta.activation-api:1.2.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: com.sun.activation:jakarta.activation:1.2.1" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.10" level="project" />
-    <orderEntry type="library" name="Maven: javax.jws:javax.jws-api:1.1" level="project" />
     <orderEntry type="module" module-name="bw-jsforj" />
-    <orderEntry type="module" module-name="bw-calendar-engine-sysevents-common" />
-    <orderEntry type="library" name="Maven: javax.jms:javax.jms-api:2.0" level="project" />
-    <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
     <orderEntry type="module" module-name="bw-util-caching" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.5" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-dav:4.1.0" level="project" />
@@ -59,6 +58,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.10.0" level="project" />
     <orderEntry type="module" module-name="bw-util2-calendar" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-calws-soap:4.0.10" level="project" />
+    <orderEntry type="library" name="Maven: javax.jws:javax.jws-api:1.1" level="project" />
     <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:3.0.13-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-collections4:4.1" level="project" />

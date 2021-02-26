@@ -19,6 +19,7 @@
     <bw-access.version>4.0.8</bw-access.version>
     <bw-caldav.version>4.0.10-SNAPSHOT</bw-caldav.version>
     <bw-cliutil.version>4.1.0</bw-cliutil.version>
+    <bw-common.version>4.0.0-SNAPSHOT</bw-common.version>
     <bw-jsforj.version>1.0.1-SNAPSHOT</bw-jsforj.version>
     <bw-util.version>4.0.28-SNAPSHOT</bw-util.version>
     <bw-util-conf.version>4.1.0</bw-util-conf.version>
@@ -88,13 +89,10 @@
   </issueManagement>
 
   <modules>
-    <module>bw-calendar-engine-annotations</module>
     <module>bw-calendar-engine-api</module>
     <module>bw-calendar-engine-core</module>
     <module>bw-calendar-engine-caldav</module>
-    <module>bw-calendar-engine-convert</module>
     <module>bw-calendar-engine-impl</module>
-    <module>bw-calendar-engine-facade</module>
     <module>bw-calendar-engine-chgnote</module>
     <module>bw-calendar-engine-dumprestore</module>
     <module>bw-calendar-engine-indexer</module>
@@ -295,6 +293,20 @@
         <groupId>org.bedework</groupId>
         <artifactId>bw-xml-calws-soap</artifactId>
         <version>${bw-xml.version}</version>
+      </dependency>
+
+      <!-- Bedework: Common classes -->
+
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-calendar-convert</artifactId>
+        <version>${bw-common.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-calendar-facade</artifactId>
+        <version>${bw-common.version}</version>
       </dependency>
 
       <dependency>

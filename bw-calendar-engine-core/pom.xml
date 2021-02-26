@@ -16,28 +16,30 @@
 			<artifactId>bw-calendar-engine-core-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-    <dependency>
-      <groupId>org.bedework.caleng</groupId>
-      <artifactId>bw-calendar-engine-facade</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
 			<artifactId>bw-calendar-engine-interfaces</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.bedework.caleng</groupId>
 			<artifactId>bw-calendar-engine-sysevents-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-calendar-engine-convert</artifactId>
-			<version>${project.version}</version>
-		</dependency>
 
     <!-- Bedework Dependencies -->
+
+		<dependency>
+			<groupId>org.bedework</groupId>
+			<artifactId>bw-calendar-convert</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.bedework</groupId>
+			<artifactId>bw-calendar-facade</artifactId>
+		</dependency>
 
     <dependency>
       <groupId>org.bedework.caleng</groupId>
