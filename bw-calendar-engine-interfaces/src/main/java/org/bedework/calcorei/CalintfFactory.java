@@ -46,7 +46,7 @@
  */
 package org.bedework.calcorei;
 
-import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.util.misc.Util;
 
 /** Obtain a Calintf object.
  *
@@ -76,7 +76,7 @@ public class CalintfFactory {
       nm = hibernateClass;
     }
 
-    return (Calintf)CalFacadeUtil.getObject(nm,
-                                            Calintf.class);
+    return (Calintf)Util.getObject(nm,
+                                   Calintf.class);
   }
 }

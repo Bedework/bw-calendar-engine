@@ -63,11 +63,11 @@ import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
+import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calfacade.svc.UserAuth;
 import org.bedework.calfacade.svc.wrappers.BwCalSuiteWrapper;
-import org.bedework.calfacade.util.CalFacadeUtil;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.calsvc.scheduling.Scheduling;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
@@ -75,7 +75,6 @@ import org.bedework.calsvci.AdminI;
 import org.bedework.calsvci.CalSuitesI;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.Categories;
 import org.bedework.calsvci.Contacts;
@@ -773,7 +772,7 @@ public class CalSvc
     }*/
 
     final MailerIntf mailer =
-            (MailerIntf)CalFacadeUtil.getObject(getSystemProperties().getMailerClass(),
+            (MailerIntf)Util.getObject(getSystemProperties().getMailerClass(),
                                                 MailerIntf.class);
     mailer.init(configs.getMailConfigProperties());
 
@@ -975,7 +974,7 @@ public class CalSvc
     }
 
     try {
-      userGroups = (Directories)CalFacadeUtil.getObject(getSystemProperties().getUsergroupsClass(), Directories.class);
+      userGroups = (Directories)Util.getObject(getSystemProperties().getUsergroupsClass(), Directories.class);
       userGroups.init(getGroupsCallBack(),
                       configs);
     } catch (final Throwable t) {
@@ -992,7 +991,7 @@ public class CalSvc
     }
 
     try {
-      adminGroups = (Directories)CalFacadeUtil.getObject(getSystemProperties().getAdmingroupsClass(), Directories.class);
+      adminGroups = (Directories)Util.getObject(getSystemProperties().getAdmingroupsClass(), Directories.class);
       adminGroups.init(getGroupsCallBack(),
                        configs);
     } catch (final Throwable t) {
@@ -1081,7 +1080,8 @@ public class CalSvc
       return userAuth;
     }
 
-    userAuth = (UserAuth)CalFacadeUtil.getObject(getSystemProperties().getUserauthClass(),
+    userAuth = (UserAuth)
+            Util.getObject(getSystemProperties().getUserauthClass(),
                                                  UserAuth.class);
 
     userAuth.initialise(getUserAuthCallBack());
@@ -2083,7 +2083,7 @@ public class CalSvc
       final String pwEncryptClass = "org.bedework.util.security.PwEncryptionDefault";
       //String pwEncryptClass = getSysparsHandler().get().getPwEncryptClass();
 
-      pwEncrypt = (PwEncryptionIntf)CalFacadeUtil.getObject(pwEncryptClass,
+      pwEncrypt = (PwEncryptionIntf)Util.getObject(pwEncryptClass,
                                                             PwEncryptionIntf.class);
 
       String privKeys = null;

@@ -55,7 +55,6 @@
     <hibernate.version>5.2.5.Final</hibernate.version>
     <hibernate-validator.version>5.3.6.Final</hibernate-validator.version>
     <jackson.version>2.10.0</jackson.version>
-    <javax.mail.version>1.5.4</javax.mail.version>
     <java.jaxb.api.version>2.3.0</java.jaxb.api.version>
     <jaxws-api.version>2.3.1</jaxws-api.version>
     <jms.version>2.0</jms.version>
@@ -106,7 +105,6 @@
     <module>bw-calendar-engine-tools</module>
     <module>bw-calendar-engine-ucaldav</module>
     <module>bw-calendar-engine-userws</module>
-    <module>bw-calendar-engine-mail</module>
     <module>bw-calendar-engine-core-common</module>
   </modules>
 
@@ -378,18 +376,6 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-text</artifactId>
         <version>${commons.text.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.sun.mail</groupId>
-        <artifactId>javax.mail</artifactId>
-        <version>${javax.mail.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>javax.mail</groupId>
-        <artifactId>javax.mail-api</artifactId>
-        <version>${javax.mail.version}</version>
       </dependency>
 
       <dependency>

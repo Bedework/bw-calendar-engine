@@ -117,19 +117,6 @@
       </exclusions>
     </dependency>
 
-    <!--
-    <dependency>
-      <groupId>com.sun.mail</groupId>
-      <artifactId>javax.mail</artifactId>
-    </dependency>
-    -->
-
-    <dependency>
-      <groupId>javax.mail</groupId>
-      <artifactId>javax.mail-api</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
     <dependency>
       <groupId>javax.xml.bind</groupId>
       <artifactId>jaxb-api</artifactId>
@@ -190,6 +177,10 @@
             </moduleDependency>
 
             <moduleDependency>
+              <name>org.bedework.calendar.common.mail</name>
+            </moduleDependency>
+
+            <moduleDependency>
               <name>org.bedework.util.caching</name>
             </moduleDependency>
 
@@ -199,10 +190,6 @@
 
             <moduleDependency>
               <name>org.bedework.org.apache.jdkim.library</name>
-            </moduleDependency>
-
-            <moduleDependency>
-              <name>javax.mail.api</name>
             </moduleDependency>
           </moduleDependencies>
         </configuration>
