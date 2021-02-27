@@ -21,6 +21,12 @@
 
 		<dependency>
 			<groupId>org.bedework</groupId>
+			<artifactId>bw-calendar-api</artifactId>
+			<version>${bw-common.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.bedework</groupId>
 			<artifactId>bw-calendar-convert</artifactId>
 		</dependency>
 

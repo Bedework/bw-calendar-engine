@@ -11,9 +11,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.bedework.caleng</groupId>
-      <artifactId>bw-calendar-engine-api</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-calendar-api</artifactId>
     </dependency>
 
     <dependency>
@@ -73,7 +72,7 @@
 
           <moduleDependencies>
             <moduleDependency>
-              <name>org.bedework.calendar.engine.api</name>
+              <name>org.bedework.calendar.common.api</name>
             </moduleDependency>
 
             <!--

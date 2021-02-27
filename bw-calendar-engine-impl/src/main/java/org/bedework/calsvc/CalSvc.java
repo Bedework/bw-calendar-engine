@@ -343,9 +343,10 @@ public class CalSvc
       }
 
       postNotification(
-        SysEvent.makePrincipalEvent(SysEvent.SysCode.USER_SVCINIT,
-                                                      getPrincipal(),
-                                                      System.currentTimeMillis() - start));
+        SysEvent.makePrincipalEvent(
+                SysEvent.SysCode.USER_SVCINIT,
+                getPrincipal().getPrincipalRef(),
+                System.currentTimeMillis() - start));
     } catch (final Throwable t) {
       if ((t instanceof RuntimeException) &&
               t.getMessage().equals(upgradeToReadWriteMessage)) {
@@ -1554,7 +1555,7 @@ public class CalSvc
           postNotification(
                   SysEvent.makePrincipalEvent(
                           SysEvent.SysCode.SERVICE_USER_LOGIN,
-                          currentPrincipal,
+                          currentPrincipal.getPrincipalRef(),
                           System.currentTimeMillis() - start));
         } else if (!creating) {
           users.logon(currentPrincipal);
@@ -1562,7 +1563,7 @@ public class CalSvc
           postNotification(
                   SysEvent.makePrincipalEvent(
                           SysEvent.SysCode.USER_LOGIN,
-                          currentPrincipal,
+                          currentPrincipal.getPrincipalRef(),
                           System.currentTimeMillis() - start));
         }
 

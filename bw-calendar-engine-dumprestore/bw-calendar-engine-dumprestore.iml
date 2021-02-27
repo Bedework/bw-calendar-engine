@@ -11,9 +11,10 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
-    <orderEntry type="module" module-name="bw-calendar-engine-api-ro" />
-    <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
+    <orderEntry type="module" module-name="bw-calendar-sysevents-msgs" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-indexing:4.1.0" level="project" />
+    <orderEntry type="module" module-name="bw-calendar-api" />
+    <orderEntry type="module" module-name="bw-calendar-api-ro" />
     <orderEntry type="module" module-name="bw-calendar-convert" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.10" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.glassfish.jaxb:jaxb-runtime:2.3.2" level="project" />

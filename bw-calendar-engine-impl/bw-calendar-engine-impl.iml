@@ -10,7 +10,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
-    <orderEntry type="module" module-name="bw-calendar-engine-api-ro" />
     <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
     <orderEntry type="module" module-name="bw-caldav-util" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.10" level="project" />
@@ -18,7 +17,8 @@
     <orderEntry type="module" module-name="bw-calendar-engine-sysevents-common" />
     <orderEntry type="library" name="Maven: org.bedework:bw-access:4.0.8" level="project" />
     <orderEntry type="library" name="Maven: javax.jms:javax.jms-api:2.0" level="project" />
-    <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
+    <orderEntry type="module" module-name="bw-calendar-api" />
+    <orderEntry type="module" module-name="bw-calendar-api-ro" />
     <orderEntry type="module" module-name="bw-calendar-facade" />
     <orderEntry type="module" module-name="bw-calendar-annotations" />
     <orderEntry type="module" module-name="bw-util2-vcard" />
@@ -27,6 +27,7 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.1.0" level="project" />
     <orderEntry type="module" module-name="bw-util-xml" />
     <orderEntry type="module" module-name="bw-caldav-server" />
+    <orderEntry type="module" module-name="bw-calendar-sysevents-msgs" />
     <orderEntry type="module" module-name="bw-calendar-convert" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.10" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.glassfish.jaxb:jaxb-runtime:2.3.2" level="project" />

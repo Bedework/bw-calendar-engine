@@ -11,8 +11,9 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="bw-calendar-engine-impl" />
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
-    <orderEntry type="module" module-name="bw-calendar-engine-api-ro" />
     <orderEntry type="module" module-name="bw-calendar-engine-interfaces" />
+    <orderEntry type="module" module-name="bw-calendar-api" />
+    <orderEntry type="module" module-name="bw-calendar-api-ro" />
     <orderEntry type="module" module-name="bw-calendar-convert" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-icalendar:4.0.10" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.glassfish.jaxb:jaxb-runtime:2.3.2" level="project" />
@@ -118,7 +119,7 @@
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.10" level="project" />
     <orderEntry type="module" module-name="bw-caldav-server" />
-    <orderEntry type="module" module-name="bw-calendar-engine-sysevents-msgs" />
+    <orderEntry type="module" module-name="bw-calendar-sysevents-msgs" />
     <orderEntry type="module" module-name="bw-util-caching" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:4.0.5" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.10.0" level="project" />

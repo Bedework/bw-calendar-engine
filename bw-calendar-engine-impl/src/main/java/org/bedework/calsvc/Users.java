@@ -235,8 +235,10 @@ class Users extends CalSvcDb implements UsersI {
                                   true, PrivilegeDefs.privAny);
     }
 
-    getSvc().postNotification(SysEvent.makePrincipalEvent(SysEvent.SysCode.NEW_USER,
-                                                          user, 0));
+    getSvc().postNotification(
+            SysEvent.makePrincipalEvent(SysEvent.SysCode.NEW_USER,
+                                        user.getPrincipalRef(),
+                                        0));
 
   }
 

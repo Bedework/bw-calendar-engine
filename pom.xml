@@ -103,13 +103,11 @@
     <module>bw-calendar-engine-publicws</module>
     <module>bw-calendar-engine-synchws</module>
     <module>bw-calendar-engine-sysevents-common</module>
-    <module>bw-calendar-engine-sysevents-msgs</module>
     <module>bw-calendar-engine-tools</module>
     <module>bw-calendar-engine-ucaldav</module>
     <module>bw-calendar-engine-userws</module>
     <module>bw-calendar-engine-mail</module>
     <module>bw-calendar-engine-core-common</module>
-    <module>bw-calendar-engine-api-ro</module>
   </modules>
 
   <developers>
@@ -299,6 +297,12 @@
 
       <dependency>
         <groupId>org.bedework</groupId>
+        <artifactId>bw-calendar-api</artifactId>
+        <version>${bw-common.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework</groupId>
         <artifactId>bw-calendar-convert</artifactId>
         <version>${bw-common.version}</version>
       </dependency>
@@ -306,6 +310,12 @@
       <dependency>
         <groupId>org.bedework</groupId>
         <artifactId>bw-calendar-facade</artifactId>
+        <version>${bw-common.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-calendar-sysevents-msgs</artifactId>
         <version>${bw-common.version}</version>
       </dependency>
 

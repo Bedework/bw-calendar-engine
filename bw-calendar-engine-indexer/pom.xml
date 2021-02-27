@@ -23,12 +23,6 @@
 			<version>${project.version}</version>
 		</dependency>
 
-    <dependency>
-      <groupId>org.bedework.caleng</groupId>
-      <artifactId>bw-calendar-engine-sysevents-msgs</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
     <!-- Bedework Dependencies -->
 
 		<dependency>
@@ -37,9 +31,15 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.bedework</groupId>
+			<artifactId>bw-calendar-sysevents-msgs</artifactId>
+		</dependency>
+
+		<dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-misc</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-logging</artifactId>

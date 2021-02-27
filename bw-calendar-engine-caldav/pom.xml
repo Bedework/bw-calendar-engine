@@ -10,21 +10,12 @@
 	<artifactId>bw-calendar-engine-caldav</artifactId>
   
 	<dependencies>
-		<!-- Project Dependencies -->
+		<!-- Bedework Dependencies -->
 
 		<dependency>
-			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-calendar-engine-api</artifactId>
-			<version>${project.version}</version>
+			<groupId>org.bedework</groupId>
+			<artifactId>bw-calendar-api</artifactId>
 		</dependency>
-
-    <dependency>
-      <groupId>org.bedework.caleng</groupId>
-      <artifactId>bw-calendar-engine-sysevents-msgs</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-		<!-- Bedework Dependencies -->
 
 		<dependency>
 			<groupId>org.bedework</groupId>
@@ -36,7 +27,12 @@
 			<artifactId>bw-calendar-facade</artifactId>
 		</dependency>
 
-    <dependency>
+		<dependency>
+			<groupId>org.bedework</groupId>
+			<artifactId>bw-calendar-sysevents-msgs</artifactId>
+		</dependency>
+
+		<dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-util-misc</artifactId>
     </dependency>
@@ -83,11 +79,11 @@
 
 					<moduleDependencies>
 						<moduleDependency>
-							<name>org.bedework.calendar.engine.api</name>
+							<name>org.bedework.calendar.common.api</name>
 						</moduleDependency>
 
 						<moduleDependency>
-							<name>org.bedework.calendar.engine.convert</name>
+							<name>org.bedework.calendar.common.convert</name>
 						</moduleDependency>
 					</moduleDependencies>
 				</configuration>

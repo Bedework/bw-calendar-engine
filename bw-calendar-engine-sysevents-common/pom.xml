@@ -11,20 +11,18 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.bedework.caleng</groupId>
-      <artifactId>bw-calendar-engine-sysevents-msgs</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.bedework.caleng</groupId>
-      <artifactId>bw-calendar-engine-api</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-calendar-api</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.bedework</groupId>
       <artifactId>bw-calendar-facade</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-calendar-sysevents-msgs</artifactId>
     </dependency>
 
     <dependency>
