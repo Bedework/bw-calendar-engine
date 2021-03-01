@@ -36,7 +36,7 @@ import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
 import org.bedework.calsvci.RestoreIntf.FixAliasResult;
 import org.bedework.dumprestore.dump.Dump;
 import org.bedework.dumprestore.restore.Restore;
-import org.bedework.indexer.BwIndexCtlMBean;
+import org.bedework.calfacade.indexing.BwIndexCtlMBean;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.MBeanUtil;
 import org.bedework.util.misc.Util;

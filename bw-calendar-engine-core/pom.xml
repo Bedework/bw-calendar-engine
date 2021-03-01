@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.bedework.caleng</groupId>
 		<artifactId>bw-calendar-engine</artifactId>
-		<version>3.14-SNAPSHOT</version>
+		<version>3.14.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -23,13 +23,12 @@
 			<version>${project.version}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.bedework.caleng</groupId>
-			<artifactId>bw-calendar-engine-sysevents-common</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
     <!-- Bedework Dependencies -->
+
+		<dependency>
+			<groupId>org.bedework</groupId>
+			<artifactId>bw-calendar-sysevents-common</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.bedework</groupId>

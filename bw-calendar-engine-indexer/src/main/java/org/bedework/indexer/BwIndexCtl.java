@@ -24,6 +24,7 @@ import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calfacade.indexing.IndexStatistics;
 import org.bedework.calfacade.indexing.IndexStatsResponse;
 import org.bedework.calfacade.indexing.ReindexResponse;
+import org.bedework.calfacade.indexing.BwIndexCtlMBean;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.misc.Util;

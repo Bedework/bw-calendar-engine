@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.bedework.caleng</groupId>
 		<artifactId>bw-calendar-engine</artifactId>
-		<version>3.14-SNAPSHOT</version>
+		<version>3.14.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -79,19 +79,6 @@
 				<configuration>
 					<moduleName>org.bedework.calendar.engine.dumprestore</moduleName>
 
-					<jarResources>
-						<jarResource>
-							<groupId>commons-digester</groupId>
-							<artifactId>commons-digester</artifactId>
-							<version>${digester-version}</version>
-						</jarResource>
-						<jarResource>
-							<groupId>commons-beanutils</groupId>
-							<artifactId>commons-beanutils</artifactId>
-							<version>1.7.0</version>
-						</jarResource>
-					</jarResources>
-
 					<moduleDependencies>
 						<moduleDependency>
 							<name>org.bedework.calendar.engine.api</name>
@@ -106,8 +93,7 @@
 						</moduleDependency>
 
 						<moduleDependency>
-							<!-- for digester -->
-							<name>org.apache.commons.logging</name>
+							<name>org.bedework.commons-digester</name>
 						</moduleDependency>
 					</moduleDependencies>
 				</configuration>

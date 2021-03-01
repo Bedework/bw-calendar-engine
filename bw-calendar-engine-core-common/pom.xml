@@ -3,7 +3,7 @@
   <parent>
     <artifactId>bw-calendar-engine</artifactId>
     <groupId>org.bedework.caleng</groupId>
-    <version>3.14-SNAPSHOT</version>
+    <version>3.14.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -17,9 +17,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.bedework.caleng</groupId>
-      <artifactId>bw-calendar-engine-sysevents-common</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-calendar-sysevents-common</artifactId>
     </dependency>
 
     <dependency>
@@ -77,7 +76,7 @@
             </moduleDependency>
 
             <moduleDependency>
-              <name>org.bedework.calendar.engine.sysevents.common</name>
+              <name>org.bedework.calendar.common.sysevents.common</name>
             </moduleDependency>
 
             <moduleDependency>
