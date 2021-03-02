@@ -308,7 +308,7 @@ public class CalSvc
       /* Nominate our timezone registry */
       System.setProperty(
               "net.fortuna.ical4j.timezone.registry",
-              "org.bedework.icalendar.TimeZoneRegistryFactoryImpl");
+              "org.bedework.util.timezones.TimeZoneRegistryFactoryImpl");
       System.setProperty(
               "net.fortuna.ical4j.timezone.cache.impl",
               "net.fortuna.ical4j.util.MapTimeZoneCache");
