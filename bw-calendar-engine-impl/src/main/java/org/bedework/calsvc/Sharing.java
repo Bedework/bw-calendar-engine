@@ -43,6 +43,8 @@ import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.configs.NotificationProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.exc.CalFacadeForbidden;
+import org.bedework.calfacade.svc.SharingReplyResult;
+import org.bedework.calfacade.svc.SubscribeResult;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.SharingI;
 import org.bedework.util.misc.ToString;
@@ -295,8 +297,8 @@ public class Sharing extends CalSvcDb implements SharingI {
   }
 
   @Override
-  public ReplyResult reply(final BwCalendar col,
-                           final InviteReplyType reply) throws CalFacadeException {
+  public SharingReplyResult reply(final BwCalendar col,
+                                  final InviteReplyType reply) throws CalFacadeException {
     final BwCalendar home = getCols().getHome();
 
     if (!home.getPath().equals(col.getPath())) {
@@ -338,7 +340,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       alias.setSharedWritable(sharedWritable);
       getCols().update(alias);
 
-      return ReplyResult.success(alias.getPath());
+      return SharingReplyResult.success(alias.getPath());
     }
 
     final BwCalendar alias = new BwCalendar();
@@ -358,7 +360,7 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     final BwCalendar createdAlias = getCols().add(alias, home.getPath());
 
-    return ReplyResult.success(createdAlias.getPath());
+    return SharingReplyResult.success(createdAlias.getPath());
   }
 
   @Override
@@ -508,8 +510,8 @@ public class Sharing extends CalSvcDb implements SharingI {
 
     final List<BwCalendar> aliases = findAlias(colPath);
     if (!Util.isEmpty(aliases)) {
-      sr.path = aliases.get(0).getPath();
-      sr.alreadySubscribed = true;
+      sr.setPath(aliases.get(0).getPath());
+      sr.setAlreadySubscribed(true);
 
       return sr;
     }
@@ -529,7 +531,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     alias.setShared(true);
     alias.setSharedWritable(false);
 
-    sr.path = getCols().add(alias, getCols().getHome().getPath()).getPath();
+    sr.setPath(getCols().add(alias, getCols().getHome().getPath()).getPath());
 
     return sr;
   }
@@ -577,7 +579,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       }
     }
 
-    sr.path = getCols().add(alias, getCols().getHome().getPath()).getPath();
+    sr.setPath(getCols().add(alias, getCols().getHome().getPath()).getPath());
 
     return sr;
   }

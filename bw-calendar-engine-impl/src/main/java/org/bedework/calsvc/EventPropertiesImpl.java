@@ -28,6 +28,7 @@ import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
+import org.bedework.calfacade.svc.EnsureEntityExistsResult;
 import org.bedework.calsvci.EventProperties;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
@@ -401,7 +402,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       if (!addResp.isOk()) {
         return Response.fromResponse(eeer, addResp);
       }
-      eeer.added = true;
+      eeer.setAdded(true);
       eeer.setEntity(val);
 
       return eeer;

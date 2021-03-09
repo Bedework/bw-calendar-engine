@@ -78,11 +78,11 @@ import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calfacade.svc.SharingReplyResult;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.EventsI.CopyMoveStatus;
-import org.bedework.calsvci.SharingI.ReplyResult;
 import org.bedework.calsvci.SynchReport;
 import org.bedework.calsvci.SynchReportItem;
 import org.bedework.convert.IcalTranslator;
@@ -972,8 +972,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   public String sharingReply(final CalDAVCollection<?> col,
                              final InviteReplyType reply) throws WebdavException {
     try {
-      final ReplyResult rr = svci.getSharingHandler()
-                                 .reply(unwrap(col), reply);
+      final SharingReplyResult rr = svci.getSharingHandler()
+                                        .reply(unwrap(col), reply);
 
       if ((rr == null) || !rr.getOk()) {
         return null;

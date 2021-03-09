@@ -57,13 +57,14 @@ import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.requests.GetInstancesRequest;
 import org.bedework.calfacade.responses.InstancesResponse;
 import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.calfacade.svc.EnsureEntityExistsResult;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.EventInfo.UpdateResult;
+import org.bedework.calfacade.svc.RealiasResult;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvc.scheduling.SchedulingIntf;
 import org.bedework.calsvci.EventProperties;
-import org.bedework.calsvci.EventProperties.EnsureEntityExistsResult;
 import org.bedework.calsvci.EventsI;
 import org.bedework.convert.IcalTranslator;
 import org.bedework.convert.Icalendar;
@@ -1469,7 +1470,7 @@ class Events extends CalSvcDb implements EventsI {
         return false;
       }
 
-      if (eeers.added) {
+      if (eeers.isAdded()) {
         updResult.contactsAdded++;
       }
 
@@ -1489,7 +1490,7 @@ class Events extends CalSvcDb implements EventsI {
         return false;
       }
 
-      if (eeerl.added) {
+      if (eeerl.isAdded()) {
         updResult.locationsAdded++;
       }
 

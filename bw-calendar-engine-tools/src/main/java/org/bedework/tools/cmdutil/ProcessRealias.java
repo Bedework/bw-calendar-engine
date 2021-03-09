@@ -29,7 +29,7 @@ import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.indexing.SearchResult;
 import org.bedework.calfacade.indexing.SearchResultEntry;
 import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calsvci.EventsI.RealiasResult;
+import org.bedework.calfacade.svc.RealiasResult;
 import org.bedework.util.misc.Util;
 
 import java.util.List;
