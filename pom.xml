@@ -51,7 +51,7 @@
     <ical4j-vcard.version>1.0.5</ical4j-vcard.version>
 
     <!-- Third Party Library Versions -->
-    <elasticsearch.version>7.2.0</elasticsearch.version>
+    <elasticsearch.version>7.11.2</elasticsearch.version>
     <hibernate.version>5.2.5.Final</hibernate.version>
     <hibernate-validator.version>5.3.6.Final</hibernate-validator.version>
     <jackson.version>2.10.0</jackson.version>
