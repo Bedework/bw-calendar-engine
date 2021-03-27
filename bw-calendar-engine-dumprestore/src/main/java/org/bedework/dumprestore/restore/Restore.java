@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
+import static org.bedework.calfacade.svc.CalSvcIPars.logIdRestore;
 
 /** Application to restore from an XML calendar dump..
  *
@@ -375,8 +376,11 @@ public class Restore implements Logged, Defs, AutoCloseable {
     globals.init();
   }
 
-  private CalSvcI getSvci() throws CalFacadeException {
-    final CalSvcIPars pars = CalSvcIPars.getRestorePars(adminUserAccount);
+  private CalSvcI getSvci() {
+    final CalSvcIPars pars =
+            CalSvcIPars.getDumpRestorePars(logIdRestore,
+                                           adminUserAccount,
+                                           true); // publicAdmin + superUser
     return new CalSvcFactoryDefault().getSvc(pars);
   }
 

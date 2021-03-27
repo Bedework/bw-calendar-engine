@@ -148,21 +148,8 @@ public class ProcessState implements Logged {
       return false;
     }
     
-    final CalSvcIPars pars = new CalSvcIPars("tools",
-                                             getAccount(),
-                                             getAccount(),
-                                             null,   // calsuite
-                                             true,   // publicAdmin
-                                             false,  // publicAuth
-                                             getSuperUser(),   // superUser,
-                                             true,   // service
-                                             false,// publicSubmission
-                                             true,// adminCanEditAllPublicCategories
-                                             true,// adminCanEditAllPublicLocations
-                                             true,// adminCanEditAllPublicSponsors
-                                             false, // sessionless
-                                             true, // system
-                                             false); // readonly
+    final CalSvcIPars pars = CalSvcIPars.getToolPars(getAccount(),
+                                                     getSuperUser());
     try {
       setSvci(new CalSvcFactoryDefault().getSvc(pars));
       return true;

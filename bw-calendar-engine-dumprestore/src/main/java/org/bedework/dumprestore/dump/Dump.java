@@ -43,6 +43,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static org.bedework.calfacade.svc.CalSvcIPars.logIdDump;
+
 /** Application to dump calendar data.
  *
  * @author Mike Douglass   douglm rpi.edu
@@ -249,21 +251,9 @@ public class Dump implements Logged, Defs {
 
   private CalSvcI getSvci() {
     final CalSvcIPars pars =
-            new CalSvcIPars("dump",
-                            adminUserAccount,
-                            null,    // user
-                            null,   // calsuite
-                            !newDumpFormat,   // publicAdmin
-                            false,  // publicAuth
-                            !newDumpFormat,   // superUser,
-                            true,   // service
-                            false,  // public submission
-                            true,  // adminCanEditAllPublicCategories
-                            true,  // adminCanEditAllPublicLocations
-                            true,  // adminCanEditAllPublicSponsors
-                            false, // sessionless
-                            true, // system
-                            false); // readonly
+            CalSvcIPars.getDumpRestorePars(logIdDump,
+                                           adminUserAccount,
+                                           !newDumpFormat);   // superUser,
     return new CalSvcFactoryDefault().getSvc(pars);
   }
 
