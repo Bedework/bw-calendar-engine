@@ -32,7 +32,6 @@ import org.bedework.util.misc.Util;
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
-import org.hibernate.NonUniqueResultException;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
@@ -64,13 +63,9 @@ public class HibSessionImpl implements Logged, HibSession {
   /** Exception from this session. */
   Throwable exc;
 
-  private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+  private final SimpleDateFormat dateFormatter =
+          new SimpleDateFormat("yyyy-MM-dd");
 
-  /** Set up for a hibernate interaction. Throw the object away on exception.
-   *
-   * @param sessFactory
-   * @throws CalFacadeException
-   */
   @Override
   public void init(final SessionFactory sessFactory) throws CalFacadeException {
     try {
@@ -78,7 +73,7 @@ public class HibSessionImpl implements Logged, HibSession {
       rolledBack = false;
       //sess.setFlushMode(FlushMode.COMMIT);
 //      tx = sess.beginTransaction();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       exc = t;
       tx = null;  // not even started. Should be null anyway
       close();
@@ -86,14 +81,10 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public Session getSession() throws CalFacadeException {
+  public Session getSession() {
     return sess;
   }
 
-  /**
-   * @return boolean true if open
-   * @throws CalFacadeException
-   */
   @Override
   public boolean isOpen() throws CalFacadeException {
     try {
@@ -101,7 +92,7 @@ public class HibSessionImpl implements Logged, HibSession {
         return false;
       }
       return sess.isOpen();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
       return false;
     }
@@ -112,10 +103,6 @@ public class HibSessionImpl implements Logged, HibSession {
     return exc;
   }
 
-  /** Disconnect a session
-   *
-   * @throws CalFacadeException
-   */
   @Override
   public void disconnect() throws CalFacadeException {
     if (exc != null) {
@@ -128,16 +115,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       sess.disconnect();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /** set the flushmode
-   *
-   * @param val
-   * @throws CalFacadeException
-   */
   @Override
   public void setFlushMode(final FlushMode val) throws CalFacadeException {
     if (exc != null) {
@@ -151,16 +133,12 @@ public class HibSessionImpl implements Logged, HibSession {
       }
 
       sess.setFlushMode(val);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       exc = t;
       throw new CalFacadeException(t);
     }
   }
 
-  /** Begin a transaction
-   *
-   * @throws CalFacadeException
-   */
   @Override
   public void beginTransaction() throws CalFacadeException {
     if (exc != null) {
@@ -178,28 +156,20 @@ public class HibSessionImpl implements Logged, HibSession {
       if (tx == null) {
         throw new CalFacadeException("Transaction not started");
       }
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       exc = cfe;
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       exc = t;
       throw new CalFacadeException(t);
     }
   }
 
-  /** Return true if we have a transaction started
-   *
-   * @return boolean
-   */
   @Override
   public boolean transactionStarted() {
     return tx != null;
   }
 
-  /** Commit a transaction
-   *
-   * @throws CalFacadeException
-   */
   @Override
   public void commit() throws CalFacadeException {
     if (exc != null) {
@@ -219,7 +189,7 @@ public class HibSessionImpl implements Logged, HibSession {
       }
 
       tx = null;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       exc = t;
 
       if (t instanceof StaleStateException) {
@@ -229,10 +199,6 @@ public class HibSessionImpl implements Logged, HibSession {
     }
   }
 
-  /** Rollback a transaction
-   *
-   * @throws CalFacadeException
-   */
   @Override
   public void rollback() throws CalFacadeException {
 /*    if (exc != null) {
@@ -253,7 +219,7 @@ public class HibSessionImpl implements Logged, HibSession {
         tx = null;
         sess.clear();
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       exc = t;
       throw new CalFacadeException(t);
     } finally {
@@ -262,7 +228,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   @Override
-  public boolean rolledback() throws CalFacadeException {
+  public boolean rolledback() {
     return rolledBack;
   }
 
@@ -272,21 +238,21 @@ public class HibSessionImpl implements Logged, HibSession {
   @Override
   public Timestamp getCurrentTimestamp() throws CalFacadeException {
     try {
-      List l = sess.createQuery(getCurrentTimestampQuery).list();
+      final List<?> l = sess.createQuery(getCurrentTimestampQuery).list();
 
       if (Util.isEmpty(l)) {
         return null;
       }
 
       return (Timestamp)l.get(0);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
       return null;
     }
   }
 
   @Override
-  public Blob getBlob(final byte[] val) throws CalFacadeException {
+  public Blob getBlob(final byte[] val) {
     return Hibernate.getLobCreator(sess).createBlob(val);
   }
   
@@ -299,14 +265,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       sess.evict(val);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.HibSession#createQuery(java.lang.String)
-   */
   @Override
   public void createQuery(final String s) throws CalFacadeException {
     if (exc != null) {
@@ -316,7 +279,7 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q = sess.createQuery(s);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
@@ -331,14 +294,11 @@ public class HibSessionImpl implements Logged, HibSession {
     try {
       q = sess.createQuery(s);
       q.setFlushMode(FlushMode.COMMIT);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.HibSession#getQueryString()
-   */
   @Override
   public String getQueryString() throws CalFacadeException {
     if (q == null) {
@@ -347,16 +307,12 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       return q.getQueryString();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
       return null;
     }
   }
 
-  /** Mark the query as cacheable
-   *
-   * @throws CalFacadeException
-   */
   @Override
   public void cacheableQuery() throws CalFacadeException {
     if (exc != null) {
@@ -366,17 +322,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q.setCacheable(true);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /** Set the named parameter with the given value
-   *
-   * @param parName     String parameter name
-   * @param parVal      String parameter value
-   * @throws CalFacadeException
-   */
   @Override
   public void setString(final String parName, final String parVal) throws CalFacadeException {
     if (exc != null) {
@@ -386,17 +336,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q.setString(parName, parVal);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /** Set the named parameter with the given value
-   *
-   * @param parName     String parameter name
-   * @param parVal      boolean parameter value
-   * @throws CalFacadeException
-   */
   @Override
   public void setBool(final String parName, final boolean parVal) throws CalFacadeException {
     if (exc != null) {
@@ -406,17 +350,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q.setBoolean(parName, parVal);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /** Set the named parameter with the given value
-   *
-   * @param parName     String parameter name
-   * @param parVal      int parameter value
-   * @throws CalFacadeException
-   */
   @Override
   public void setInt(final String parName, final int parVal) throws CalFacadeException {
     if (exc != null) {
@@ -426,17 +364,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q.setInteger(parName, parVal);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /** Set the named parameter with the given value
-   *
-   * @param parName     String parameter name
-   * @param parVal      long parameter value
-   * @throws CalFacadeException
-   */
   @Override
   public void setLong(final String parName, final long parVal) throws CalFacadeException {
     if (exc != null) {
@@ -446,17 +378,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q.setLong(parName, parVal);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /** Set the named parameter with the given value
-   *
-   * @param parName     String parameter name
-   * @param parVal      Object parameter value
-   * @throws CalFacadeException
-   */
   @Override
   public void setEntity(final String parName, final Object parVal) throws CalFacadeException {
     if (exc != null) {
@@ -466,14 +392,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q.setEntity(parName, parVal);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.HibSession#setParameter(java.lang.String, java.lang.Object)
-   */
   @Override
   public void setParameter(final String parName, final Object parVal) throws CalFacadeException {
     if (exc != null) {
@@ -483,16 +406,14 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q.setParameter(parName, parVal);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.HibSession#setParameterList(java.lang.String, java.util.Collection)
-   */
   @Override
-  public void setParameterList(final String parName, final Collection parVal) throws CalFacadeException {
+  public void setParameterList(final String parName,
+                               final Collection<?> parVal) throws CalFacadeException {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -500,14 +421,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q.setParameterList(parName, parVal);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.HibSession#setFirstResult(int)
-   */
   @Override
   public void setFirstResult(final int val) throws CalFacadeException {
     if (exc != null) {
@@ -517,14 +435,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q.setFirstResult(val);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.HibSession#setMaxResults(int)
-   */
   @Override
   public void setMaxResults(final int val) throws CalFacadeException {
     if (exc != null) {
@@ -534,14 +449,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       q.setMaxResults(val);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.HibSession#getUnique()
-   */
   @Override
   public Object getUnique() throws CalFacadeException {
     if (exc != null) {
@@ -551,46 +463,33 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       return q.uniqueResult();
-    } catch (NonUniqueResultException nure) {
-      // Always bad news
-      handleException(nure);
-      return null;  // Don't get here
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
       return null;  // Don't get here
     }
   }
 
-  /** Return a list resulting from the query.
-   *
-   * @return List          list from query
-   * @throws CalFacadeException
-   */
   @Override
-  public List getList() throws CalFacadeException {
+  public List<?> getList() throws CalFacadeException {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
     }
 
     try {
-      List l = q.list();
+      final List<?> l = q.list();
 
       if (l == null) {
-        return new ArrayList();
+        return new ArrayList<>();
       }
 
       return l;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
       return null;  // Don't get here
     }
   }
 
-  /**
-   * @return int number updated
-   * @throws CalFacadeException
-   */
   @Override
   public int executeUpdate() throws CalFacadeException {
     if (exc != null) {
@@ -604,18 +503,12 @@ public class HibSessionImpl implements Logged, HibSession {
       }
 
       return q.executeUpdate();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
       return 0;  // Don't get here
     }
   }
 
-  /** Update an object which may have been loaded in a previous hibernate
-   * session
-   *
-   * @param obj
-   * @throws CalFacadeException
-   */
   @Override
   public void update(final Object obj) throws CalFacadeException {
     if (exc != null) {
@@ -624,7 +517,7 @@ public class HibSessionImpl implements Logged, HibSession {
     }
 
     try {
-      Object ent = obj;
+      final Object ent = obj;
 
       beforeSave(ent);
 
@@ -635,18 +528,11 @@ public class HibSessionImpl implements Logged, HibSession {
         sess.update(ent);
  //     }
       deleteSubs(obj);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /** Merge and update an object which may have been loaded in a previous hibernate
-   * session
-   *
-   * @param obj
-   * @return Object   the persistent object
-   * @throws CalFacadeException
-   */
   @Override
   public Object merge(Object obj) throws CalFacadeException {
     if (exc != null) {
@@ -661,18 +547,12 @@ public class HibSessionImpl implements Logged, HibSession {
       deleteSubs(obj);
 
       return obj;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t, obj);
       return null;
     }
   }
 
-  /** Save a new object or update an object which may have been loaded in a
-   * previous hibernate session
-   *
-   * @param obj
-   * @throws CalFacadeException
-   */
   @Override
   public void saveOrUpdate(final Object obj) throws CalFacadeException {
     if (exc != null) {
@@ -686,28 +566,17 @@ public class HibSessionImpl implements Logged, HibSession {
       beforeSave(ent);
 
       if ((ent instanceof BwDbentity) &&
-          (((BwDbentity)ent).getId() != CalFacadeDefs.unsavedItemKey)) {
+          (((BwDbentity<?>)ent).getId() != CalFacadeDefs.unsavedItemKey)) {
         ent = sess.merge(ent);
       } else {
         sess.saveOrUpdate(ent);
       }
       deleteSubs(obj);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /** Copy the state of the given object onto the persistent object with the
-   * same identifier. If there is no persistent instance currently associated
-   * with the session, it will be loaded. Return the persistent instance.
-   * If the given instance is unsaved or does not exist in the database,
-   * save it and return it as a newly persistent instance. Otherwise, the
-   * given instance does not become associated with the session.
-   *
-   * @param obj
-   * @return Object
-   * @throws CalFacadeException
-   */
   @Override
   public Object saveOrUpdateCopy(final Object obj) throws CalFacadeException {
     if (exc != null) {
@@ -717,23 +586,15 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       return sess.merge(obj);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
       return null;  // Don't get here
     }
   }
 
-  /** Return an object of the given class with the given id if it is
-   * already associated with this session. This must be called for specific
-   * key queries or we can get a NonUniqueObjectException later.
-   *
-   * @param  cl    Class of the instance
-   * @param  id    A serializable key
-   * @return Object
-   * @throws CalFacadeException
-   */
   @Override
-  public Object get(final Class cl, final Serializable id) throws CalFacadeException {
+  public Object get(final Class<?> cl,
+                    final Serializable id) throws CalFacadeException {
     if (exc != null) {
       // Didn't hear me last time?
       throw new CalFacadeException(exc);
@@ -741,31 +602,17 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       return sess.get(cl, id);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
       return null;  // Don't get here
     }
   }
 
-  /** Return an object of the given class with the given id if it is
-   * already associated with this session. This must be called for specific
-   * key queries or we can get a NonUniqueObjectException later.
-   *
-   * @param  cl    Class of the instance
-   * @param  id    int key
-   * @return Object
-   * @throws CalFacadeException
-   */
   @Override
-  public Object get(final Class cl, final int id) throws CalFacadeException {
-    return get(cl, new Integer(id));
+  public Object get(final Class<?> cl, final int id) throws CalFacadeException {
+    return get(cl, Integer.valueOf(id));
   }
 
-  /** Save a new object.
-   *
-   * @param obj
-   * @throws CalFacadeException
-   */
   @Override
   public void save(final Object obj) throws CalFacadeException {
     if (exc != null) {
@@ -777,7 +624,7 @@ public class HibSessionImpl implements Logged, HibSession {
       beforeSave(obj);
       sess.save(obj);
       deleteSubs(obj);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
@@ -802,11 +649,6 @@ public class HibSessionImpl implements Logged, HibSession {
     }
   }*/
 
-  /** Delete an object
-   *
-   * @param obj to delete
-   * @throws CalFacadeException on fatal error
-   */
   @Override
   public void delete(final Object obj) throws CalFacadeException {
     if (exc != null) {
@@ -825,12 +667,6 @@ public class HibSessionImpl implements Logged, HibSession {
     }
   }
 
-  /** Save a new object with the given id. This should only be used for
-   * restoring the db from a save.
-   *
-   * @param obj
-   * @throws CalFacadeException
-   */
   @Override
   public void restore(final Object obj) throws CalFacadeException {
     if (exc != null) {
@@ -840,14 +676,11 @@ public class HibSessionImpl implements Logged, HibSession {
 
     try {
       sess.replicate(obj, ReplicationMode.IGNORE);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calcorei.HibSession#reAttach(org.bedework.calfacade.base.BwUnversionedDbentity)
-   */
   @Override
   public void reAttach(final BwUnversionedDbentity<?> val) throws CalFacadeException {
     if (exc != null) {
@@ -860,15 +693,11 @@ public class HibSessionImpl implements Logged, HibSession {
 //        sess.lock(val, LockMode.NONE);
         sess.buildLockRequest(LockOptions.NONE).lock(val);
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /**
-   * @param o
-   * @throws CalFacadeException
-   */
   @Override
   public void lockRead(final Object o) throws CalFacadeException {
     if (exc != null) {
@@ -879,15 +708,11 @@ public class HibSessionImpl implements Logged, HibSession {
     try {
 //      sess.lock(o, LockMode.READ);
       sess.buildLockRequest(LockOptions.READ).lock(o);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /**
-   * @param o
-   * @throws CalFacadeException
-   */
   @Override
   public void lockUpdate(final Object o) throws CalFacadeException {
     if (exc != null) {
@@ -898,14 +723,11 @@ public class HibSessionImpl implements Logged, HibSession {
     try {
 //      sess.lock(o, LockMode.UPGRADE);
       sess.buildLockRequest(LockOptions.UPGRADE).lock(o);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /**
-   * @throws CalFacadeException on hibernate error
-   */
   @Override
   public void flush() throws CalFacadeException {
     if (exc != null) {
@@ -918,14 +740,11 @@ public class HibSessionImpl implements Logged, HibSession {
     }
     try {
       sess.flush();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
 
-  /**
-   * @throws CalFacadeException on hibernate error
-   */
   @Override
   public void clear() throws CalFacadeException {
     if (exc != null) {
@@ -944,7 +763,7 @@ public class HibSessionImpl implements Logged, HibSession {
   }
 
   /**
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   @Override
   public void close() throws CalFacadeException {
@@ -960,7 +779,7 @@ public class HibSessionImpl implements Logged, HibSession {
       if ((tx != null) && !rolledback()) {
         tx.commit();
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (exc == null) {
         exc = t;
       }
@@ -1000,7 +819,7 @@ public class HibSessionImpl implements Logged, HibSession {
       if (tx != null) {
         try {
           tx.rollback();
-        } catch (Throwable t1) {
+        } catch (final Throwable t1) {
           rollbackException(t1);
         }
         tx = null;
@@ -1030,7 +849,7 @@ public class HibSessionImpl implements Logged, HibSession {
       return;
     }
 
-    BwDbentity ent = (BwDbentity)o;
+    final BwDbentity<?> ent = (BwDbentity<?>)o;
 
     ent.beforeSave();
   }
@@ -1040,7 +859,7 @@ public class HibSessionImpl implements Logged, HibSession {
       return;
     }
 
-    BwDbentity ent = (BwDbentity)o;
+    final BwDbentity<?> ent = (BwDbentity<?>)o;
 
     ent.beforeDeletion();
   }
@@ -1050,14 +869,14 @@ public class HibSessionImpl implements Logged, HibSession {
       return;
     }
 
-    BwDbentity ent = (BwDbentity)o;
+    final BwDbentity<?> ent = (BwDbentity<?>)o;
 
-    Collection<BwDbentity> subs = ent.getDeletedEntities();
+    final Collection<BwDbentity<?>> subs = ent.getDeletedEntities();
     if (subs == null) {
       return;
     }
 
-    for (BwDbentity sub: subs) {
+    for (final BwDbentity<?> sub: subs) {
       evict(sub);
       delete(sub);
     }
@@ -1076,7 +895,7 @@ public class HibSessionImpl implements Logged, HibSession {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

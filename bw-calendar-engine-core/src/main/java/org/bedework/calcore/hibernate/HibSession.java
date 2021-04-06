@@ -40,19 +40,18 @@ public interface HibSession extends Serializable {
   /** Set up for a hibernate interaction. Throw the object away on exception.
    *
    * @param sessFactory
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void init(SessionFactory sessFactory) throws CalFacadeException;
 
   /**
    * @return Session
-   * @throws CalFacadeException
    */
-  public Session getSession() throws CalFacadeException;
+  public Session getSession();
 
   /**
    * @return boolean true if open
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public boolean isOpen() throws CalFacadeException;
 
@@ -65,20 +64,20 @@ public interface HibSession extends Serializable {
 
   /** Disconnect a session
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void disconnect() throws CalFacadeException;
 
   /** set the flushmode
    *
    * @param val
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void setFlushMode(FlushMode val) throws CalFacadeException;
 
   /** Begin a transaction
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void beginTransaction() throws CalFacadeException;
 
@@ -90,46 +89,44 @@ public interface HibSession extends Serializable {
 
   /** Commit a transaction
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void commit() throws CalFacadeException;
 
   /** Rollback a transaction
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void rollback() throws CalFacadeException;
 
   /** Did we rollback the transaction?
    *
    * @return boolean
-   * @throws CalFacadeException
    */
-  public boolean rolledback() throws CalFacadeException;
+  public boolean rolledback();
 
   /**
    * @return a timestamp from the db
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public Timestamp getCurrentTimestamp() throws CalFacadeException;
 
   /**
    * @return a blob
-   * @throws CalFacadeException on fatal error
    */
-  Blob getBlob(final byte[] val) throws CalFacadeException;
+  Blob getBlob(byte[] val);
   
   /** Evict an object from the session.
    *
    * @param val          Object to evict
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void evict(Object val) throws CalFacadeException;
 
   /** Create a query ready for parameter replacement or execution.
    *
    * @param s             String hibernate query
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void createQuery(String s) throws CalFacadeException;
 
@@ -138,19 +135,19 @@ public interface HibSession extends Serializable {
    * result of the query.
    *
    * @param s             String hibernate query
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void createNoFlushQuery(String s) throws CalFacadeException;
 
   /**
    * @return query string
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public String getQueryString() throws CalFacadeException;
 
   /** Mark the query as cacheable
    *
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void cacheableQuery() throws CalFacadeException;
 
@@ -158,7 +155,7 @@ public interface HibSession extends Serializable {
    *
    * @param parName     String parameter name
    * @param parVal      String parameter value
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void setString(String parName, String parVal) throws CalFacadeException;
 
@@ -166,7 +163,7 @@ public interface HibSession extends Serializable {
    *
    * @param parName     String parameter name
    * @param parVal      boolean parameter value
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void setBool(String parName, boolean parVal) throws CalFacadeException;
 
@@ -174,7 +171,7 @@ public interface HibSession extends Serializable {
    *
    * @param parName     String parameter name
    * @param parVal      int parameter value
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void setInt(String parName, int parVal) throws CalFacadeException;
 
@@ -182,7 +179,7 @@ public interface HibSession extends Serializable {
    *
    * @param parName     String parameter name
    * @param parVal      long parameter value
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void setLong(String parName, long parVal) throws CalFacadeException;
 
@@ -190,7 +187,7 @@ public interface HibSession extends Serializable {
    *
    * @param parName     String parameter name
    * @param parVal      Object parameter value
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void setEntity(String parName, Object parVal) throws CalFacadeException;
 
@@ -198,7 +195,7 @@ public interface HibSession extends Serializable {
    *
    * @param parName     String parameter name
    * @param parVal      Object parameter value
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void setParameter(String parName, Object parVal) throws CalFacadeException ;
 
@@ -206,7 +203,7 @@ public interface HibSession extends Serializable {
    *
    * @param parName     String parameter name
    * @param parVal      Collection parameter value
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void setParameterList(String parName,
                                Collection<?> parVal) throws CalFacadeException ;
@@ -214,34 +211,34 @@ public interface HibSession extends Serializable {
   /** Set the first result for a paged batch
    *
    * @param val      int first index
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void setFirstResult(int val) throws CalFacadeException;
 
   /** Set the max number of results for a paged batch
    *
    * @param val      int max number
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void setMaxResults(int val) throws CalFacadeException;
 
   /** Return the single object resulting from the query.
    *
    * @return Object          retrieved object or null
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public Object getUnique() throws CalFacadeException;
 
   /** Return a list resulting from the query.
    *
    * @return List          list from query
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
-  public List getList() throws CalFacadeException;
+  public List<?> getList() throws CalFacadeException;
 
   /**
    * @return int number updated
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public int executeUpdate() throws CalFacadeException;
 
@@ -249,7 +246,7 @@ public interface HibSession extends Serializable {
    * session
    *
    * @param obj
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void update(Object obj) throws CalFacadeException;
 
@@ -258,7 +255,7 @@ public interface HibSession extends Serializable {
    *
    * @param obj
    * @return Object   the persiatent object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public Object merge(Object obj) throws CalFacadeException;
 
@@ -266,7 +263,7 @@ public interface HibSession extends Serializable {
    * previous hibernate session
    *
    * @param obj
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void saveOrUpdate(Object obj) throws CalFacadeException;
 
@@ -279,7 +276,7 @@ public interface HibSession extends Serializable {
    *
    * @param obj
    * @return Object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public Object saveOrUpdateCopy(Object obj) throws CalFacadeException;
 
@@ -290,9 +287,9 @@ public interface HibSession extends Serializable {
    * @param  cl    Class of the instance
    * @param  id    A serializable key
    * @return Object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
-  public Object get(Class cl, Serializable id) throws CalFacadeException;
+  public Object get(Class<?> cl, Serializable id) throws CalFacadeException;
 
   /** Return an object of the given class with the given id if it is
    * already associated with this session. This must be called for specific
@@ -301,21 +298,21 @@ public interface HibSession extends Serializable {
    * @param  cl    Class of the instance
    * @param  id    int key
    * @return Object
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
-  public Object get(Class cl, int id) throws CalFacadeException;
+  public Object get(Class<?> cl, int id) throws CalFacadeException;
 
   /** Save a new object.
    *
    * @param obj
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void save(Object obj) throws CalFacadeException;
 
   /** Delete an object
    *
    * @param obj
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void delete(Object obj) throws CalFacadeException;
 
@@ -323,25 +320,25 @@ public interface HibSession extends Serializable {
    * restoring the db from a save.
    *
    * @param obj
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void restore(Object obj) throws CalFacadeException;
 
   /**
    * @param val
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void reAttach(BwUnversionedDbentity<?> val) throws CalFacadeException;
 
   /**
    * @param o
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void lockRead(Object o) throws CalFacadeException;
 
   /**
    * @param o
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void lockUpdate(Object o) throws CalFacadeException;
 
@@ -356,7 +353,7 @@ public interface HibSession extends Serializable {
   public void clear() throws CalFacadeException;
 
   /**
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   public void close() throws CalFacadeException;
 }
