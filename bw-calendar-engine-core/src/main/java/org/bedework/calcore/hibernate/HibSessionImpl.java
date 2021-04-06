@@ -804,8 +804,8 @@ public class HibSessionImpl implements Logged, HibSession {
 
   /** Delete an object
    *
-   * @param obj
-   * @throws CalFacadeException
+   * @param obj to delete
+   * @throws CalFacadeException on fatal error
    */
   @Override
   public void delete(final Object obj) throws CalFacadeException {
@@ -817,9 +817,10 @@ public class HibSessionImpl implements Logged, HibSession {
     try {
       beforeDelete(obj);
 
-      sess.delete(obj);
+      evict(obj);
+      sess.delete(sess.merge(obj));
       deleteSubs(obj);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       handleException(t);
     }
   }
