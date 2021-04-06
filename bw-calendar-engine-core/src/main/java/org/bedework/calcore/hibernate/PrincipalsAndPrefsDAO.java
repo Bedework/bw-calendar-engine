@@ -17,8 +17,8 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwPreferences;
-import org.bedework.calfacade.svc.prefs.BwAuthUserPrefs;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCalendar;
+import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsCategory;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsContact;
 import org.bedework.calfacade.svc.prefs.BwAuthUserPrefsLocation;
 import org.bedework.util.misc.Util;
@@ -321,8 +321,8 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
     sess.setEntity("gr", group);
 
-    final Collection<BwPrincipal> ms = new TreeSet<>();
-    ms.addAll(sess.getList());
+    final Collection<BwPrincipal> ms =
+            new TreeSet<BwPrincipal>(sess.getList());
 
     if (admin) {
       sess.createQuery(getAdminGroupGroupMembersQuery);
@@ -416,13 +416,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
           "delete from " + BwAuthUserPrefsCalendar.class.getName() +
                   " where calendarid=:id";
 
-  //private static final String removeCategoryPrefForAllQuery =
-  //  "delete from " + BwAuthUserPrefsCategory.class.getName() +
-  //" where uid=:uid";
-
-  private static final String getCategoryPrefForAllQuery =
-          "from " + BwAuthUserPrefs.class.getName() +
-                  " where (:uid in categoryPrefs.preferred)";
+  private static final String removeCategoryPrefForAllQuery =
+          "delete from " + BwAuthUserPrefsCategory.class.getName() +
+                  " where categoryid=:id";
 
   private static final String removeLocationPrefForAllQuery =
           "delete from " + BwAuthUserPrefsLocation.class.getName() +
@@ -432,13 +428,13 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
           "delete from " + BwAuthUserPrefsContact.class.getName() +
                   " where contactid=:id";
 
-  public void removeFromAllPrefs(final BwShareableDbentity val) throws CalFacadeException {
+  public void removeFromAllPrefs(final BwShareableDbentity<?> val) throws CalFacadeException {
     final HibSession sess = getSess();
 
     final String q;
 
     if (val instanceof BwCategory) {
-      q = getCategoryPrefForAllQuery;
+      q = removeCategoryPrefForAllQuery;
     } else if (val instanceof BwCalendar) {
       q = removeCalendarPrefForAllQuery;
     } else if (val instanceof BwContact) {
