@@ -64,15 +64,15 @@ public class CoreEventsDAO extends DAOBase {
     "from " + BwEventObj.class.getName() + " as ev " +
       "where ev.name = :name and ev.tombstoned=false and ev.colPath = :colPath";
 
-  protected List getEventsByName(final String colPath,
-                                 final String name) throws CalFacadeException {
+  protected List<BwEvent> getEventsByName(final String colPath,
+                                          final String name) throws CalFacadeException {
     final HibSession sess = getSess();
 
     sess.createQuery(eventsByNameQuery);
     sess.setString("name", name);
     sess.setString("colPath", colPath);
 
-    return sess.getList();
+    return (List<BwEvent>)sess.getList();
   }
 
   private static final String eventAnnotationsByNameQuery =
@@ -115,14 +115,14 @@ public class CoreEventsDAO extends DAOBase {
           "from " + BwRecurrenceInstance.class.getName() + " as ev " +
                   "where master=:master";
 
-  protected List getInstances(final BwEvent ev)
+  protected List<BwRecurrenceInstance> getInstances(final BwEvent ev)
           throws CalFacadeException {
     final HibSession sess = getSess();
 
     sess.createQuery(instancesQuery);
     sess.setEntity("master", ev);
 
-    return sess.getList();
+    return (List<BwRecurrenceInstance>)sess.getList();
   }
 
   private static final String deleteInstancesQuery =
@@ -179,8 +179,8 @@ public class CoreEventsDAO extends DAOBase {
                   // No deleted events for null sync-token
                   "ev.tombstoned = false";
 
-  protected List getSynchEventObjects(final String path,
-                                      final String token) throws CalFacadeException {
+  protected List<?> getSynchEventObjects(final String path,
+                                         final String token) throws CalFacadeException {
     final HibSession sess = getSess();
     
     if (token != null) {
@@ -209,9 +209,9 @@ public class CoreEventsDAO extends DAOBase {
                   "ev.tombstoned = false " +
                   "order by ev.created";
 
-  public List getChildrenEntities(final String parentPath,
-                                             final int start,
-                                             final int count) throws CalFacadeException {
+  public List<String> getChildrenEntities(final String parentPath,
+                                          final int start,
+                                          final int count) throws CalFacadeException {
     final HibSession sess = getSess();
 
     sess.createQuery(getChildEntitiesQuery);
@@ -221,7 +221,8 @@ public class CoreEventsDAO extends DAOBase {
     sess.setFirstResult(start);
     sess.setMaxResults(count);
 
-    return sess.getList();
+    //noinspection unchecked
+    return (List<String>)sess.getList();
   }
 
   /* ====================================================================
@@ -238,7 +239,8 @@ public class CoreEventsDAO extends DAOBase {
     sess.createQuery(getEventAnnotationsQuery);
 
     @SuppressWarnings("unchecked") 
-    final Collection<BwEventAnnotation> anns = sess.getList();
+    final Collection<BwEventAnnotation> anns =
+            (Collection<BwEventAnnotation>)sess.getList();
 
     return anns.iterator();
   }
@@ -255,7 +257,7 @@ public class CoreEventsDAO extends DAOBase {
     sess.createQuery(getEventOverridesQuery);
     sess.setEntity("target", ev);
 
-    return sess.getList();
+    return (Collection<BwEventAnnotation>)sess.getList();
   }
 
   /* ====================================================================
@@ -333,7 +335,7 @@ public class CoreEventsDAO extends DAOBase {
     sess.setString("uid", val.getUid());
 
 
-    final Collection refs = sess.getList();
+    final Collection<?> refs = sess.getList();
 
     String res = null;
 
@@ -398,7 +400,7 @@ public class CoreEventsDAO extends DAOBase {
     sess.setString("colPath", val.getColPath());
     sess.setString("name", val.getName());
 
-    final Collection refs = sess.getList();
+    final Collection<?> refs = sess.getList();
 
     final Object o = refs.iterator().next();
 
@@ -429,7 +431,8 @@ public class CoreEventsDAO extends DAOBase {
     sess.setEntity("target", val);
   //  sess.setBool("override", overrides);
 
-    final Collection anns = sess.getList();
+    final Collection<BwEventAnnotation> anns =
+            (Collection<BwEventAnnotation>)sess.getList();
 
     if (debug()) {
       debug("getAnnotations for event " + val.getId() +
@@ -448,8 +451,8 @@ public class CoreEventsDAO extends DAOBase {
     final HibSession sess = getSess();
     final EventQueryBuilder qb = new EventQueryBuilder();
     final String qevName = "ev";
-    BwDateTime startDate = null;
-    BwDateTime endDate = null;
+    final BwDateTime startDate = null;
+    final BwDateTime endDate = null;
 
     /* SEG:   from Events ev where */
     qb.from();
@@ -494,6 +497,6 @@ public class CoreEventsDAO extends DAOBase {
     }
 
     //debug("Try query " + sb.toString());
-    return sess.getList();
+    return (List<T>)sess.getList();
   }
 }

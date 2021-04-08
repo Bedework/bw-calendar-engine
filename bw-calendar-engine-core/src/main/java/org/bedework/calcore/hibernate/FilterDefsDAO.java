@@ -56,7 +56,7 @@ class FilterDefsDAO extends DAOBase {
     sess.setString("ownerHref", owner.getPrincipalRef());
     sess.cacheableQuery();
 
-    return sess.getList();
+    return (Collection<BwFilterDef>)sess.getList();
   }
 
   private static final String fetchFilterDefQuery =

@@ -84,7 +84,7 @@ public class EntityDAO extends DAOBase {
 
     sess.cacheableQuery();
 
-    return sess.getList();
+    return (Collection<BwCalSuite>)sess.getList();
   }
 
   /* ====================================================================
@@ -113,7 +113,7 @@ public class EntityDAO extends DAOBase {
       sess.setString("tt", String.valueOf(triggerTime));
     }
 
-    return sess.getList();
+    return (Collection<BwAlarm>)sess.getList();
   }
 
   private static final String eventByAlarmQuery =
@@ -128,7 +128,7 @@ public class EntityDAO extends DAOBase {
     sess.createQuery(eventByAlarmQuery);
     sess.setInt("alarmId", alarm.getId());
 
-    return sess.getList();
+    return (Collection<BwEvent>)sess.getList();
   }
 
   /* ====================================================================
@@ -216,6 +216,6 @@ public class EntityDAO extends DAOBase {
 
     sess.cacheableQuery();
 
-    return sess.getList();
+    return (List<BwResource>)sess.getList();
   }
 }

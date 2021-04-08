@@ -701,7 +701,6 @@ class CoreCalendars extends CalintfHelper
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<String> getChildCollections(final String parentPath,
                                                 final int start,
                                                 final int count) throws CalFacadeException {
@@ -1172,7 +1171,6 @@ class CoreCalendars extends CalintfHelper
   }
 
   /* No access checks performed */
-  @SuppressWarnings("unchecked")
   private Collection<BwCalendar> getChildren(final BwCalendar col) throws CalFacadeException {
     final List<BwCalendar> ch;
     final List<BwCalendar> wch = new ArrayList<>();

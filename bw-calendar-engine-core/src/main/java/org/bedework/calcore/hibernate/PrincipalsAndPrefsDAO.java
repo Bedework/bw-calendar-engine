@@ -97,7 +97,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
     sess.setMaxResults(count);
 
     @SuppressWarnings("unchecked")
-    final List<String> res = sess.getList();
+    final List<String> res = (List<String>)sess.getList();
 
     if (Util.isEmpty(res)) {
       return null;
@@ -180,7 +180,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
     sess.setInt("grpid", group.getId());
 
-    return sess.getList();
+    return (Collection<BwGroup>)sess.getList();
   }
 
   private static final String removeAllAdminGroupMemberRefsQuery =
@@ -322,7 +322,8 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
     sess.setEntity("gr", group);
 
     final Collection<BwPrincipal> ms =
-            new TreeSet<BwPrincipal>(sess.getList());
+            new TreeSet<>(
+                    (Collection<? extends BwPrincipal>)sess.getList());
 
     if (admin) {
       sess.createQuery(getAdminGroupGroupMembersQuery);
@@ -332,7 +333,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
     sess.setEntity("gr", group);
 
-    ms.addAll(sess.getList());
+    ms.addAll((Collection<? extends BwPrincipal>)sess.getList());
 
     return ms;
   }
@@ -355,7 +356,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
       sess.createQuery(getAllGroupsQuery);
     }
 
-    return sess.getList();
+    return (Collection<T>)sess.getList();
   }
 
   /* Groups principal is a member of */
@@ -394,7 +395,9 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
       sess.setString("isgroup", "F");
     }
 
-    final Set<BwGroup> gs = new TreeSet<BwGroup>(sess.getList());
+    final Set<BwGroup> gs =
+            new TreeSet<>(
+                    (Collection<? extends BwGroup>)sess.getList());
 
     if (admin && (val.getKind() == WhoDefs.whoTypeUser)) {
       /* Event owner for group is implicit member of group. */
@@ -402,7 +405,7 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
       sess.createQuery(getAdminGroupsByEventOwnerQuery);
       sess.setString("ownerHref", val.getPrincipalRef());
 
-      gs.addAll(sess.getList());
+      gs.addAll((Collection<? extends BwGroup>)sess.getList());
     }
 
     return (Collection<T>)gs;
@@ -482,6 +485,6 @@ public class PrincipalsAndPrefsDAO extends DAOBase {
 
     sess.createQuery(getAllAuthUsersQuery);
 
-    return sess.getList();
+    return (List<BwAuthUser>)sess.getList();
   }
 }

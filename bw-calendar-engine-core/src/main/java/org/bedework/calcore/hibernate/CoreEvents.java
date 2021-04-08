@@ -69,6 +69,10 @@ import static org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 
 /** Class to encapsulate most of what we do with events.
  *
+ * <p>Note that the following is only partially correct now. The database
+ * handling of recurrences is getting much more simplified with elasticsearch
+ * handling the issues with instance indexing.
+ *
  * <p>There is a lot of complication surrounding recurring events. Expanding
  * events takes time so we expand them and index the instance. To save space
  * we use a table with only the times and recurrence id and references to the
@@ -315,7 +319,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public CoreEventInfo getEvent(final String href)
           throws CalFacadeException {
     final PathAndName pn = new PathAndName(href);
@@ -1140,7 +1143,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     ac.checkAccess(col, privAny, false);
 
     @SuppressWarnings("unchecked")
-    final List<BwEvent> evs = dao.getSynchEventObjects(fpath, token);
+    final List<BwEvent> evs =
+            (List<BwEvent>)dao.getSynchEventObjects(fpath, token);
 
     if (debug()) {
       debug(" ----------- number evs = " + evs.size());
@@ -1162,7 +1166,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
    * ==================================================================== */
 
   @Override
-  @SuppressWarnings("unchecked")
   public Collection<String> getChildEntities(final String parentPath,
                                              final int start,
                                              final int count) throws CalFacadeException {
@@ -1378,7 +1381,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                                final boolean shared) throws CalFacadeException {
     // First some notifications
 
-    //noinspection unchecked
     final List<BwRecurrenceInstance> current = dao.getInstances(val);
 
     for (final BwRecurrenceInstance ri: current) {

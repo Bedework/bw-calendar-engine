@@ -172,7 +172,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
     sess.setString("ownerHref", ownerHref);
 
-    return sess.getList();
+    return (List<BwEventProperty>)sess.getList();
   }
 
   private String getQuery;
@@ -262,7 +262,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
     final HibSession sess = getSess();
 
     //noinspection unchecked
-    final Collection<Long> counts = sess.getList();
+    final Collection<Long> counts = (Collection<Long>)sess.getList();
     if (counts.iterator().next() > 1) {
       sess.rollback();
       throw new CalFacadeException("org.bedework.duplicate.object");
@@ -308,7 +308,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
     sess.setEntity("ent", val);
 
     /* May get multiple counts back for events and annotations. */
-    final List<EventPropertiesReference> refs = sess.getList();
+    final List<EventPropertiesReference> refs = (List<EventPropertiesReference>)sess.getList();
 
     if (debug()) {
       debug(" ----------- count = " + refs.size());
@@ -326,7 +326,7 @@ public class CoreEventPropertiesDAO extends DAOBase {
 
     /* May get multiple counts back for events and annotations. */
     @SuppressWarnings("unchecked")
-    final Collection<Long> counts = sess.getList();
+    final Collection<Long> counts = (Collection<Long>)sess.getList();
 
     long total = 0;
 
