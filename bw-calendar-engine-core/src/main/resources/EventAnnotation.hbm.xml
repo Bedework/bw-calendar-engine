@@ -133,7 +133,8 @@
     <set name="contacts" table="bw_eventann_contacts"
          sort="natural"
          lazy="false"
-         fetch="subselect" >
+         fetch="subselect"
+         cascade="all">
       <!-- <cache usage="read-write"/> -->
       <key column="eventid" foreign-key="bw_eanncon_eid_fk" />
       <many-to-many class="org.bedework.calfacade.BwContact"
