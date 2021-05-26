@@ -127,8 +127,7 @@
 
     <set name="contacts" table="bw_event_contacts"
          sort="natural"
-         fetch="subselect"
-         cascade="all">
+         fetch="subselect">
       <!-- <cache usage="read-write"/> -->
       <key column="eventid" foreign-key="bw_eventcon_eid_fk" />
       <many-to-many class="org.bedework.calfacade.BwContact"
