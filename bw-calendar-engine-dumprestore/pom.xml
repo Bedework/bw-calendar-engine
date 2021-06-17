@@ -22,7 +22,7 @@
 		<dependency>
 			<groupId>org.bedework</groupId>
 			<artifactId>bw-calendar-api</artifactId>
-			<version>${bw-common.version}</version>
+			<version>${bw-calendar-common.version}</version>
 		</dependency>
 
 		<dependency>
@@ -60,44 +60,4 @@
       <artifactId>commons-digester</artifactId>
     </dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.bedework</groupId>
-				<artifactId>bw-util-maven-deploy-wfmodule</artifactId>
-
-				<executions>
-					<execution>
-						<phase>install</phase>
-						<goals>
-							<goal>bw-deploy-wfmodule</goal>
-						</goals>
-					</execution>
-				</executions>
-
-				<configuration>
-					<moduleName>org.bedework.calendar.engine.dumprestore</moduleName>
-
-					<moduleDependencies>
-						<moduleDependency>
-							<name>org.bedework.calendar.engine.api</name>
-						</moduleDependency>
-
-						<moduleDependency>
-							<name>org.bedework.calendar.common.convert</name>
-						</moduleDependency>
-
-						<moduleDependency>
-							<name>org.bedework.util.jmx</name>
-						</moduleDependency>
-
-						<moduleDependency>
-							<name>org.bedework.commons-digester</name>
-						</moduleDependency>
-					</moduleDependencies>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>

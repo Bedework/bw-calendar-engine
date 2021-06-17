@@ -206,7 +206,7 @@ public class ProcessUpdate extends CmdUtilHelper {
         return false;
       }
 
-      BwAuthUser au = getAuthUser(userid);
+      final BwAuthUser au = getAuthUser(userid);
 
 
       while (true) {
@@ -251,7 +251,6 @@ public class ProcessUpdate extends CmdUtilHelper {
   }
 
   private boolean setFlag(final BwAuthUser au, final String sw, final int flag) {
-    int usertype = au.getUsertype();
     if (sw.equals("false")) {
       au.setUsertype(au.getUsertype() & ~flag);
       return true;
