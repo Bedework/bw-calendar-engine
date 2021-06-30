@@ -485,7 +485,8 @@ class Events extends CalSvcDb implements EventsI {
         return fromResponse(updResult, raResp);
       }
 
-      assignGuid(event); // Or just validate?
+      event.assignGuid(getSvc().getSystemProperties()
+                               .getSystemid()); // Or just validate?
 
       if (!updateEntities(updResult, event)) {
         return updResult;
@@ -1165,7 +1166,8 @@ class Events extends CalSvcDb implements EventsI {
         if (sameCal && newGuidOK) {
           // Assign a new guid
           newEvent.setUid(null);
-          assignGuid(newEvent);
+          newEvent.assignGuid(getSvc().getSystemProperties()
+                                      .getSystemid());
         }
 
         if (destEi != null) {

@@ -149,14 +149,14 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
     fb.setEndType(StartEndComponent.endTypeDate);
 
     if (uid == null) {
-      assignGuid(fb);
+      fb.assignGuid(getSvc().getSystemProperties().getSystemid());
     } else {
       fb.setUid(uid);
     }
 
     fb.setDtstamps(getCurrentTimestamp());
 
-    String uri = getSvc().getDirectories().principalToCaladdr(who);
+    final String uri = getSvc().getDirectories().principalToCaladdr(who);
 
     BwAttendee att = new BwAttendee();
     att.setAttendeeUri(uri);
@@ -164,7 +164,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
 
     fb.setOrganizer((BwOrganizer)org.clone());
 
-    Collection<EventInfo> events = new TreeSet<>();
+    final Collection<EventInfo> events = new TreeSet<>();
     /* Only events and freebusy for freebusy reports. */
     FilterBase filter = new OrFilter();
     try {

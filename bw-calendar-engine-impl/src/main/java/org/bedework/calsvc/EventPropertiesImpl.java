@@ -417,7 +417,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     if (!isPublicAdmin()) {
       owner = getPrincipal();
     } else {
-      owner = getPublicUser();
+      owner = getSvc().getUsersHandler().getPublicUser();
     }
 
     final Collection<T> ents =
@@ -550,7 +550,9 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
     final String ownerHref;
 
     if (publick) {
-      ownerHref = getPublicUser().getPrincipalRef();
+      ownerHref = getSvc().getUsersHandler()
+                          .getPublicUser()
+                          .getPrincipalRef();
     } else {
       ownerHref = getPrincipal().getPrincipalRef();
     }

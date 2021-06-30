@@ -23,7 +23,6 @@ import org.bedework.calcorei.Calintf;
 import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwDateTime;
-import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
@@ -36,11 +35,10 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
-import org.bedework.calfacade.wrappers.CalendarWrapper;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.ResourcesI;
@@ -48,7 +46,6 @@ import org.bedework.calsvci.UsersI;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
-import org.bedework.util.misc.Uid;
 import org.bedework.util.misc.Util;
 import org.bedework.util.misc.response.GetEntitiesResponse;
 import org.bedework.util.misc.response.Response;
@@ -250,45 +247,6 @@ public class CalSvcDb implements Logged, Serializable {
                                            null);
   }
 
-  /** Result of calling getCollectionAndName with a path */
-  protected static class CollectionAndName {
-    /** The containing collection */
-    public BwCalendar coll;
-
-    /** Name of object */
-    public String name;
-  }
-
-  protected CollectionAndName getCollectionAndName(final String path) throws CalFacadeException {
-    final int end;
-
-    if (path.endsWith("/")) {
-      end = path.length() - 1;
-    } else {
-      end = path.length();
-    }
-
-    final int pos = path.substring(0, end).lastIndexOf("/");
-    if (pos < 0) {
-      throw new CalFacadeException(CalFacadeException.badRequest);
-    }
-
-    final CollectionAndName res = new CollectionAndName();
-
-    res.name = path.substring(pos + 1, end);
-    if (pos == 0) {
-      // Root
-      res.coll = null;
-    } else {
-      res.coll = getCols().get(path.substring(0, pos));
-      if (res.coll == null) {
-        throw new CalFacadeException(CalFacadeException.collectionNotFound);
-      }
-    }
-
-    return res;
-  }
-
   /* Get current parameters
    */
   protected CalSvcIPars getPars() {
@@ -311,12 +269,6 @@ public class CalSvcDb implements Logged, Serializable {
    */
   protected boolean isPublicAdmin() {
     return pars.getPublicAdmin();
-  }
-
-  /* See if is public authenticated calendar
-   */
-  protected boolean isPublicAuth() {
-    return pars.getPublicAuth();
   }
 
   protected BwPrincipal getPrincipal() {
@@ -422,33 +374,6 @@ public class CalSvcDb implements Logged, Serializable {
     return svci.checkAccess(ent, desiredAccess, returnResult);
   }
 
-  /** Assign a guid to an event. A noop if this event already has a guid.
-   *
-   * @param val      BwEvent object
-   */
-  protected void assignGuid(final BwEvent val) {
-    if (val == null) {
-      return;
-    }
-
-    if ((val.getName() != null) &&
-        (val.getUid() != null)) {
-      return;
-    }
-
-    final String guidPrefix = "CAL-" + Uid.getUid();
-
-    if (val.getName() == null) {
-      val.setName(guidPrefix + ".ics");
-    }
-
-    if (val.getUid() != null) {
-      return;
-    }
-
-    val.setUid(guidPrefix + getSvc().getSystemProperties().getSystemid());
-  }
-
   /* This checks to see if the current user has owner access based on the
    * supplied object. This is used to limit access to objects not normally
    * shared such as preferences and related objects like views and subscriptions.
@@ -532,20 +457,6 @@ public class CalSvcDb implements Logged, Serializable {
 
   protected SystemProperties getSyspars() {
     return getSvc().getSystemProperties();
-  }
-
-  protected BwCalendar unwrap(final BwCalendar val) {
-    if (val == null) {
-      return null;
-    }
-
-    if (!(val instanceof CalendarWrapper)) {
-      // We get these at the moment - getEvents at svci level
-      return val;
-      // CALWRAPPER throw new CalFacadeException("org.bedework.not.wrapped");
-    }
-
-    return ((CalendarWrapper)val).fetchEntity();
   }
 
   public static class SplitResult {

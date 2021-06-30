@@ -579,29 +579,26 @@ public abstract class SchedulingBase extends CalSvcDb
   }
 
   @Override
-  public void setupReschedule(final EventInfo ei) throws CalFacadeException {
-    BwEvent event = ei.getEvent();
+  public void setupReschedule(final EventInfo ei) {
+    final BwEvent event = ei.getEvent();
 
-    BwAttendee userAttendee = findUserAttendee(ei);
+    final BwAttendee userAttendee = findUserAttendee(ei);
 
     //event.setSequence(event.getSequence() + 1);
 
     /* Set the PARTSTAT to needs action for all attendees - except us */
-    for (BwAttendee att: event.getAttendees()) {
-      if (att.equals(userAttendee)) {
-        continue;
-      }
-
+    event.getAttendees().stream()
+         .filter(att -> !att.equals(userAttendee)).forEach(att -> {
       att.setPartstat(IcalDefs.partstatValNeedsAction);
       att.setRsvp(true);
-    }
+    });
   }
 
   protected boolean initScheduleEvent(final EventInfo ei,
                                       final boolean response,
                                       final boolean iSchedule) {
     final SchedulingInfo si = ei.getSchedulingInfo();
-    BwEvent event = ei.getEvent();
+    final BwEvent event = ei.getEvent();
 
     if (!iSchedule) {
       /* Gather together recipients from all attendees in the master + overrides
@@ -617,9 +614,8 @@ public abstract class SchedulingBase extends CalSvcDb
         getRecipients(event, event);
 
         if (ei.getNumOverrides() > 0) {
-          for (EventInfo oei: ei.getOverrides()) {
-            getRecipients(event, oei.getEvent());
-          }
+          ei.getOverrides()
+            .forEach(oei -> getRecipients(event, oei.getEvent()));
         }
       }
     }
@@ -627,11 +623,11 @@ public abstract class SchedulingBase extends CalSvcDb
     setupSharableEntity(event, getPrincipal().getPrincipalRef());
     event.setDtstamps(getCurrentTimestamp());
 
-    assignGuid(event); // no-op if already set
+    event.assignGuid(getSvc().getSystemProperties().getSystemid()); // no-op if already set
 
     /* Ensure attendees have sequence and dtstamp of event */
     if (event.getNumAttendees() > 0) {
-      for (BwAttendee att: event.getAttendees()) {
+      for (final BwAttendee att: event.getAttendees()) {
         if (att.getScheduleAgent() != IcalDefs.scheduleAgentServer) {
           continue;
         }
@@ -653,12 +649,12 @@ public abstract class SchedulingBase extends CalSvcDb
       return;
     }
 
-    for (BwAttendee att: ev.getAttendees()) {
+    for (final BwAttendee att: ev.getAttendees()) {
       if (att.getScheduleAgent() != IcalDefs.scheduleAgentServer) {
         continue;
       }
 
-      String uri = att.getAttendeeUri();
+      final String uri = att.getAttendeeUri();
       master.addRecipient(uri);
     }
   }

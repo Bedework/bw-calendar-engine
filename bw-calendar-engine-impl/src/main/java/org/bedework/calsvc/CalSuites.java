@@ -240,7 +240,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
       }
 
       return r;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       if (CalFacadeException.collectionNotFound.equals(cfe.getMessage())) {
         // Collection does not exist (yet)
 
@@ -273,7 +273,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
 
   private BwCalendar getResourcesDir(final BwCalSuite suite,
                                      final ResourceClass cl) throws CalFacadeException {
-    String path = getResourcesPath(suite, cl);
+    final String path = getResourcesPath(suite, cl);
 
     if (path == null) {
       throw new CalFacadeException(CalFacadeException.noCalsuiteResCol);
@@ -301,7 +301,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
       resCol.setOwnerHref(getPublicUser().getPrincipalRef());
     }
 
-    String parentPath = path.substring(0, path.lastIndexOf("/"));
+    final String parentPath = path.substring(0, path.lastIndexOf("/"));
 
     resCol = getCols().add(resCol, parentPath);
 
@@ -310,14 +310,14 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
      */
 
     try {
-      Collection<Privilege> readPrivs = new ArrayList<>();
+      final Collection<Privilege> readPrivs = new ArrayList<>();
       readPrivs.add(Access.read);
 
-      Collection<Ace> aces = new ArrayList<>();
+      final Collection<Ace> aces = new ArrayList<>();
       aces.add(Ace.makeAce(AceWho.all, readPrivs, null));
 
       getSvc().changeAccess(resCol, aces, true);
-    } catch (AccessException ae) {
+    } catch (final AccessException ae) {
       throw new CalFacadeException(ae);
     }
 

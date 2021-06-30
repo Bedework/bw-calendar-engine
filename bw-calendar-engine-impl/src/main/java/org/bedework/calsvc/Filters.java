@@ -134,7 +134,7 @@ class Filters extends CalSvcDb implements FiltersI {
 
   @Override
   public Collection<BwFilterDef> getAll() throws CalFacadeException {
-    BwPrincipal owner = getEntityOwner(getPrincipal()); // This can affect the query if done later
+    final BwPrincipal owner = getEntityOwner(getPrincipal()); // This can affect the query if done later
 
     return getCal().getAllFilterDefs(owner);
   }
@@ -159,8 +159,8 @@ class Filters extends CalSvcDb implements FiltersI {
   }
 
   @Override
-  public int reindex(BwIndexer indexer) throws CalFacadeException {
-    BwPrincipal owner;
+  public int reindex(final BwIndexer indexer) throws CalFacadeException {
+    final BwPrincipal owner;
     if (!isPublicAdmin()) {
       owner = getPrincipal();
     } else {
