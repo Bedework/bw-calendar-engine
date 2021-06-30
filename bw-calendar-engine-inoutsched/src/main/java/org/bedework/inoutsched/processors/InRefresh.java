@@ -25,6 +25,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
 import org.bedework.util.calendar.ScheduleMethods;
+import org.bedework.util.misc.response.Response;
 
 import java.util.Collection;
 
@@ -57,16 +58,16 @@ public class InRefresh extends InProcessor {
      */
 
     /* Should be exactly one attendee. */
-    Collection<BwAttendee> atts = ev.getAttendees();
+    final Collection<BwAttendee> atts = ev.getAttendees();
     if ((atts == null) || (atts.size() != 1)) {
       return null;
     }
 
-    BwAttendee att = atts.iterator().next();
+    final BwAttendee att = atts.iterator().next();
 
     /* We can only do this if there is an active copy */
 
-    EventInfo calEi = sched.getStoredMeeting(ev);
+    final EventInfo calEi = sched.getStoredMeeting(ev);
 
     if (calEi == null) {
       return null;
@@ -79,7 +80,12 @@ public class InRefresh extends InProcessor {
                            att.getAttendeeUri(), null, false);
 
     if (pr.sr.errorCode == null) {
-      getSvc().getEventsHandler().delete(ei, false);
+      final Response resp = getSvc().getEventsHandler()
+                                    .delete(ei, false);
+
+      if (!resp.isOk()) {
+        return Response.fromResponse(pr, resp);
+      }
     }
 
     return pr;

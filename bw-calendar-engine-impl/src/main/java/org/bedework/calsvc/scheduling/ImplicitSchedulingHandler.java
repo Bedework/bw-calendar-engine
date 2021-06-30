@@ -35,6 +35,7 @@ import org.bedework.calsvci.EventsI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.ScheduleMethods;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.Response;
 
 import static java.lang.String.format;
 
@@ -148,7 +149,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
     if (!uer.adding && !Util.isEmpty(uer.deletedAttendees)) {
       /* Send cancel to removed attendees */
-      for (BwAttendee att: uer.deletedAttendees) {
+      for (final BwAttendee att: uer.deletedAttendees) {
         if (Util.compareStrings(att.getPartstat(),
                                 IcalDefs.partstats[IcalDefs.partstatDeclined]) == 0) {
           // Already declined - send nothing
@@ -158,7 +159,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
         /* Clone is adequate here. For a CANCEL we just send either the master
          * or the particular instance.
          */
-        BwEvent cncl = (BwEvent)ev.clone();
+        final BwEvent cncl = (BwEvent)ev.clone();
 
         cncl.setAttendees(null);
         cncl.addAttendee((BwAttendee)att.clone());
@@ -170,10 +171,10 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
         cncl.setOrganizerSchedulingObject(true);
         cncl.setAttendeeSchedulingObject(false);
 
-        EventInfo cei = new EventInfo(cncl);
+        final EventInfo cei = new EventInfo(cncl);
 
-        ScheduleResult cnclr = schedule(cei,
-                                        null, null, false);
+        final ScheduleResult cnclr = schedule(cei,
+                                              null, null, false);
         if (debug()) {
           trace(cnclr.toString());
         }
@@ -182,14 +183,19 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
 
     if (ei.getInboxEventName() != null) {
       // Delete the given event from the inbox.
-      EventsI events = getSvc().getEventsHandler();
+      final EventsI events = getSvc().getEventsHandler();
 
-      BwCalendar inbox = getSvc().getCalendarsHandler().getSpecial(BwCalendar.calTypeInbox, true);
+      final BwCalendar inbox = getSvc().getCalendarsHandler()
+                                       .getSpecial(BwCalendar.calTypeInbox, true);
       final EventInfo inboxei = events.get(inbox.getPath(),
                                            ei.getInboxEventName());
 
       if (inboxei != null) {
-        events.delete(inboxei, false);
+        final Response resp = events.delete(inboxei, false);
+
+        if (!resp.isOk()) {
+          Response.fromResponse(uer, resp);
+        }
       }
     }
   }
@@ -199,7 +205,7 @@ public abstract class ImplicitSchedulingHandler extends AttendeeSchedulingHandle
                                   final int partstat,
                                   final String comment) throws CalFacadeException {
     ScheduleResult sr = new ScheduleResult();
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
 
     if (!ev.getAttendeeSchedulingObject()) {
       sr.errorCode = CalFacadeException.schedulingBadMethod;

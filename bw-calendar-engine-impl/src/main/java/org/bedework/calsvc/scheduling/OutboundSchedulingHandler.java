@@ -269,7 +269,8 @@ public abstract class OutboundSchedulingHandler extends IScheduleHandler {
          * Probably need to handle stale-state exceptions at the other end.
          */
 
-        final var delResp = deleteEvent(ei, true, false);
+        final var delResp = getSvc().getEventsHandler()
+                                    .delete(ei, true, false);
         if (delResp.isError()) {
           return Response.fromResponse(resp, delResp);
         }

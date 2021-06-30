@@ -31,6 +31,7 @@ import org.bedework.convert.IcalTranslator;
 import org.bedework.sysevents.events.EntityQueuedEvent;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.Response;
 
 import net.fortuna.ical4j.model.Calendar;
 
@@ -245,7 +246,14 @@ public class OutScheduler extends AbstractScheduler {
             ev.setScheduleState(BwEvent.scheduleStateExternalDone);
             updateEvent(ev, ei.getOverrideProxies(), null);
            */
-          getSvc().getEventsHandler().delete(ei, false);
+          final Response resp = getSvc().getEventsHandler()
+                                        .delete(ei, false);
+
+          if (!resp.isOk()) {
+            error("Unable to delete event " + ei.getHref() +
+                                    " response: " + resp);
+            allOk = false;
+          }
         }
       } catch (final CalFacadeException cfe) {
         // Should count the exceptions and discard after a number of retries.

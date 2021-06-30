@@ -109,7 +109,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
+import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
@@ -1825,19 +1825,19 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
               getClient().indices()
                          .getAlias(req, RequestOptions.DEFAULT);
 
-      final Map<String, Set<AliasMetaData>> aliases = resp.getAliases();
+      final Map<String, Set<AliasMetadata>> aliases = resp.getAliases();
 
       for (final String inm : aliases.keySet()) {
         final IndexInfo ii = new IndexInfo(inm);
         res.add(ii);
 
-        final Set<AliasMetaData> amds = aliases.get(inm);
+        final Set<AliasMetadata> amds = aliases.get(inm);
 
         if (amds == null) {
           continue;
         }
 
-        for (final AliasMetaData amd : amds) {
+        for (final AliasMetadata amd : amds) {
           ii.addAlias(amd.alias());
         }
       }
@@ -1912,16 +1912,16 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                          .getAlias(req, RequestOptions.DEFAULT);
 
       if (resp.status() == RestStatus.OK) {
-        final Map<String, Set<AliasMetaData>> aliases =
+        final Map<String, Set<AliasMetadata>> aliases =
                 resp.getAliases();
         for (final String inm : aliases.keySet()) {
-          final Set<AliasMetaData> amds = aliases.get(inm);
+          final Set<AliasMetadata> amds = aliases.get(inm);
 
           if (amds == null) {
             continue;
           }
 
-          for (final AliasMetaData amd : amds) {
+          for (final AliasMetadata amd : amds) {
             final IndicesAliasesRequest ireq = new IndicesAliasesRequest();
             final AliasActions removeAction =
                     new AliasActions(

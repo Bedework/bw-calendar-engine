@@ -88,6 +88,7 @@ public abstract class InProcessor extends CalSvcDb {
                                  final boolean attendeeAccepting,
                                  final boolean forceDelete) {
     final var resp = new Response();
+    final var events = getSvc().getEventsHandler();
     boolean delete = forceDelete;
 
     if (!delete) {
@@ -119,7 +120,7 @@ public abstract class InProcessor extends CalSvcDb {
         debug("Delete event - don't move to inbox");
       }
 
-      final var delResp = deleteEvent(ei, false, false);
+      final var delResp = events.delete(ei, false, false);
       if (!delResp.isError()) {
         return resp;
       }
@@ -160,7 +161,11 @@ public abstract class InProcessor extends CalSvcDb {
           debug("delete earlier? event from inbox: " + inev
                   .getName());
         }
-        deleteEvent(inei, true, false);
+
+        final Response delResp = events.delete(inei, true, false);
+        if (!resp.isOk()) {
+          return Response.fromResponse(resp, delResp);
+        }
       }
 //      }
 
@@ -178,10 +183,13 @@ public abstract class InProcessor extends CalSvcDb {
                   ev.getColPath(), inbox.getPath());
 //      ev.setColPath(inbox.getPath());
 //      getSvc().getEventsHandler().update(ei, true, null, true);
-      getSvc().getEventsHandler().copyMoveNamed(ei,
-                                                inbox,
-                                                ev.getName(),
-                                                false, false, false);
+      final var cmnResp = events.copyMoveNamed(ei,
+                                               inbox,
+                                               ev.getName(),
+                                               false, false, false);
+      if (!cmnResp.isOk()) {
+        return Response.fromResponse(resp, cmnResp);
+      }
     } catch (final CalFacadeException cfe) {
       return Response.error(resp, cfe);
     }

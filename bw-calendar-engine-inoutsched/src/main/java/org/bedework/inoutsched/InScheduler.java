@@ -206,7 +206,8 @@ public class InScheduler extends AbstractScheduler {
       }
 
       if (proc == null) {
-        if (deleteEvent(ei, false, false).isError()) {
+        if (svci.getEventsHandler()
+                .delete(ei, false, false).isError()) {
           return ProcessMessageResult.FAILED;
         }
         return ProcessMessageResult.PROCESSED;
@@ -219,10 +220,8 @@ public class InScheduler extends AbstractScheduler {
       }
 
       if (pr.getStatus() == forbidden) {
-        try {
-          deleteEvent(ei, false, false);
-        } catch (final Throwable ignored) {
-        }
+        svci.getEventsHandler()
+            .delete(ei, false, false);
         return ProcessMessageResult.FAILED_NORETRIES;
       }
 

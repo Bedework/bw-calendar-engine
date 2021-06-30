@@ -10,7 +10,7 @@ import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryShardContext;
+import org.elasticsearch.index.query.SearchExecutionContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -170,7 +170,7 @@ public class TermOrTermsQuery extends
 
   @Override
   protected Query doToQuery(
-          final QueryShardContext queryShardContext)
+          final SearchExecutionContext queryShardContext)
           throws IOException {
     return null;
   }

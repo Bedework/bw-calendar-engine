@@ -82,7 +82,6 @@ import org.bedework.calfacade.svc.SharingReplyResult;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalendarsI;
-import org.bedework.calsvci.EventsI.CopyMoveStatus;
 import org.bedework.calsvci.SynchReport;
 import org.bedework.calsvci.SynchReportItem;
 import org.bedework.convert.IcalTranslator;
@@ -105,6 +104,7 @@ import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.Response;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.WebdavTags;
@@ -1299,14 +1299,14 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public void deleteEvent(final CalDAVEvent<?> ev,
                           final boolean scheduleReply) throws WebdavException {
-    try {
-      if (ev == null) {
-        return;
-      }
+    if (ev == null) {
+      return;
+    }
 
-      getSvci().getEventsHandler().delete(getEvinfo(ev), scheduleReply);
-    } catch (final Throwable t) {
-      throw new WebdavException(t);
+    final Response resp = getSvci().getEventsHandler()
+                                   .delete(getEvinfo(ev), scheduleReply);
+    if (!resp.isOk()) {
+      throw new WebdavException("Failed delete:" + resp);
     }
   }
 
@@ -1314,9 +1314,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   public Collection<SchedRecipientResult> requestFreeBusy(final CalDAVEvent<?> val,
                                                           final boolean iSchedule) throws WebdavException {
     try {
-      ScheduleResult sr;
+      final ScheduleResult sr;
 
-      BwEvent ev = getEvent(val);
+      final BwEvent ev = getEvent(val);
       if (currentPrincipal != null) {
         ev.setOwnerHref(currentPrincipal.getPrincipalRef());
       }
@@ -1568,8 +1568,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                        final boolean copy,
                        final boolean overwrite) throws WebdavException {
     try {
-      BwCalendar bwFrom = unwrap(from);
-      BwCalendar bwTo = unwrap(to);
+      final BwCalendar bwFrom = unwrap(from);
+      final BwCalendar bwTo = unwrap(to);
 
       if (!copy) {
         /* Move the from collection to the new location "to".
@@ -1585,7 +1585,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
           return;
         }
       }
-    } catch (CalFacadeAccessException cfae) {
+    } catch (final CalFacadeAccessException cfae) {
       throw new WebdavForbidden();
     } catch (final Throwable t) {
       throw new WebdavException(t);
@@ -1597,44 +1597,31 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   @Override
   public boolean copyMove(final CalDAVEvent<?> from,
                           final CalDAVCollection<?> to,
-                          String name,
+                          final String name,
                           final boolean copy,
                           final boolean overwrite) throws WebdavException {
-    CopyMoveStatus cms;
-    try {
-      cms = getSvci().getEventsHandler().copyMoveNamed(getEvinfo(from),
-                                                       unwrap(to), name,
-                                                       copy, overwrite, false);
-    } catch (CalFacadeAccessException cfae) {
-      throw new WebdavForbidden();
-    } catch (final Throwable t) {
-      throw new WebdavException(t);
+    final Response resp = getSvci().getEventsHandler()
+                                   .copyMoveNamed(getEvinfo(from),
+                                                  unwrap(to), name,
+                                                  copy, overwrite, false);
+    if (resp.getException() != null) {
+      throw new WebdavException(resp.getException());
     }
 
-    if (cms == CopyMoveStatus.changedUid) {
-      throw new WebdavForbidden("Cannot change uid");
-    }
-
-    if (cms == CopyMoveStatus.duplicateUid) {
-      throw new WebdavForbidden("duplicate uid");
-    }
-
-    if (cms == CopyMoveStatus.destinationExists) {
-      if (name == null) {
-        name = from.getName();
+    if (resp.isOk()) {
+      if ("created".equals(resp.getMessage())) {
+        return true;
       }
-      throw new WebdavForbidden("Destination exists: " + name);
-    }
 
-    if (cms == CopyMoveStatus.ok) {
       return false;
     }
 
-    if (cms == CopyMoveStatus.created) {
-      return true;
+    if (resp.getStatus() == Response.Status.forbidden) {
+      throw new WebdavForbidden(resp.getMessage());
     }
 
-    throw new WebdavException("Unexpected response from copymove");
+    throw new WebdavException("Unexpected response from copymove: " +
+                                      resp);
   }
 
   @Override

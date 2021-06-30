@@ -804,10 +804,14 @@ class Calendars extends CalSvcDb implements CalendarsI {
         final Events events = ((Events)getSvc().getEventsHandler());
         for (final EventInfo ei: events.getSynchEvents(val.getPath(),
                                                        null)) {
-          events.delete(ei,
-                        false,
-                        sendSchedulingMessage,
-                        true);
+          final var delresp = events.delete(ei,
+                                      false,
+                                      sendSchedulingMessage,
+                                      true);
+          if (!delresp.isOk()) {
+            throw new CalFacadeException("Failed to delete " + ei.getHref() +
+                    " response: " + delresp);
+          }
         }
       }
 

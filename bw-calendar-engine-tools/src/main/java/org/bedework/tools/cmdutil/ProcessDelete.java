@@ -24,6 +24,7 @@ import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.svc.BwView;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.Response;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -158,7 +159,13 @@ public class ProcessDelete extends CmdUtilHelper {
         return false;
       }
 
-      getSvci().getEventsHandler().delete(ei, false);
+      final Response resp = getSvci().getEventsHandler().delete(ei, false);
+
+      if (!resp.isOk()) {
+        pstate.addError("Unable to delete event " + path + "/" + name +
+                " response: " + resp);
+        return false;
+      }
 
       return true;
     } catch (final CalFacadeAccessException cae) {

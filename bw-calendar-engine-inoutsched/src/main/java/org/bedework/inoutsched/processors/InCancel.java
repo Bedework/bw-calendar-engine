@@ -24,6 +24,7 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.SchedulingI;
+import org.bedework.util.misc.response.Response;
 
 /** Handles method CANCEL scheduling messages.
  *
@@ -86,7 +87,13 @@ public class InCancel extends InProcessor {
         getSvc().getEventsHandler().update(colEi, true, null,
                                            false); // autocreate
       } else {
-        getSvc().getEventsHandler().delete(colEi, false);
+        final Response resp = getSvc().getEventsHandler()
+                                      .delete(ei, false);
+
+        if (!resp.isOk()) {
+          pr.removeInboxEntry = false;
+          return Response.fromResponse(pr, resp);
+        }
       }
 
       pr.removeInboxEntry = false;

@@ -194,31 +194,6 @@ public class CalSvcDb implements Logged, Serializable {
     }
   }
 
-  /** Method which allows us to flag it as a scheduling action
-   *
-   * @param ei event info
-   * @param scheduling true for scheduling
-   * @param sendSchedulingReply true if we need a reply
-   * @return Response with status
-   */
-  protected Response deleteEvent(final EventInfo ei,
-                                 final boolean scheduling,
-                                 final boolean sendSchedulingReply) {
-    final Events events = (Events)getSvc().getEventsHandler();
-    final var resp = new Response();
-
-    try {
-      final var deleted = events.delete(ei, scheduling, sendSchedulingReply);
-      if (!deleted) {
-        resp.setStatus(Response.Status.notFound);
-      }
-
-      return resp;
-    } catch (final CalFacadeException cfe) {
-      return Response.error(resp, cfe);
-    }
-  }
-
   protected BwCalendar getSpecialCalendar(final BwPrincipal owner,
                                           final int calType,
                                           final boolean create,
