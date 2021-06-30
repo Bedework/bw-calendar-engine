@@ -19,7 +19,9 @@
 package org.bedework.calsvc;
 
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
+import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.BwView;
@@ -208,5 +210,37 @@ class Views extends CalSvcDb implements ViewsI {
       c = new TreeSet<>();
     }
     return c;
+  }
+
+  /* This checks to see if the current user has owner access based on the
+   * supplied object. This is used to limit access to objects not normally
+   * shared such as preferences and related objects like views and subscriptions.
+   */
+  private void checkOwnerOrSuper(final Object o) throws CalFacadeException {
+    if (isGuest()) {
+      throw new CalFacadeAccessException();
+    }
+
+    if (isSuper()) {
+      // Always ok?
+      return;
+    }
+
+    if (!(o instanceof BwOwnedDbentity)) {
+      throw new CalFacadeAccessException();
+    }
+
+    final BwOwnedDbentity<?> ent = (BwOwnedDbentity<?>)o;
+
+    /*if (!isPublicAdmin()) {
+      // Expect a different owner - always public-user????
+      return;
+    }*/
+
+    if (getPrincipal().getPrincipalRef().equals(ent.getOwnerHref())) {
+      return;
+    }
+
+    throw new CalFacadeAccessException();
   }
 }

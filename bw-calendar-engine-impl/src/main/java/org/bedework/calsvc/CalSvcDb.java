@@ -30,7 +30,6 @@ import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.configs.AuthProperties;
 import org.bedework.calfacade.configs.SystemProperties;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
@@ -374,38 +373,6 @@ public class CalSvcDb implements Logged, Serializable {
     return svci.checkAccess(ent, desiredAccess, returnResult);
   }
 
-  /* This checks to see if the current user has owner access based on the
-   * supplied object. This is used to limit access to objects not normally
-   * shared such as preferences and related objects like views and subscriptions.
-   */
-  protected void checkOwnerOrSuper(final Object o) throws CalFacadeException {
-    if (isGuest()) {
-      throw new CalFacadeAccessException();
-    }
-
-    if (isSuper()) {
-      // Always ok?
-      return;
-    }
-
-    if (!(o instanceof BwOwnedDbentity)) {
-      throw new CalFacadeAccessException();
-    }
-
-    final BwOwnedDbentity<?> ent = (BwOwnedDbentity<?>)o;
-
-    /*if (!isPublicAdmin()) {
-      // Expect a different owner - always public-user????
-      return;
-    }*/
-
-    if (getPrincipal().getPrincipalRef().equals(ent.getOwnerHref())) {
-      return;
-    }
-
-    throw new CalFacadeAccessException();
-  }
-
   /** Set the owner and creator on a shareable entity.
    *
    * @param entity shareable entity
@@ -457,38 +424,6 @@ public class CalSvcDb implements Logged, Serializable {
 
   protected SystemProperties getSyspars() {
     return getSvc().getSystemProperties();
-  }
-
-  public static class SplitResult {
-    String path;
-    String name;
-
-    SplitResult(final String path, final String name) {
-      this.path = path;
-      this.name = name;
-    }
-  }
-
-  /* Split the uri so that result.path is the path up to the name part result.name
-   *
-   */
-  public SplitResult splitUri(final String uri) throws CalFacadeException {
-    int end = uri.length();
-    if (uri.endsWith("/")) {
-      end--;
-    }
-
-    final int pos = uri.lastIndexOf("/", end);
-    if (pos < 0) {
-      // bad uri
-      throw new CalFacadeException("Invalid uri: " + uri);
-    }
-
-    if (pos == 0) {
-      return new SplitResult(uri, null);
-    }
-
-    return new SplitResult(uri.substring(0, pos), uri.substring(pos + 1, end));
   }
 
   /* ====================================================================

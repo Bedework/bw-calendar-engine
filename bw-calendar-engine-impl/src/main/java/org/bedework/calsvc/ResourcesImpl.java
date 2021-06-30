@@ -376,4 +376,37 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       throw cfe;
     }
   }
+
+  private static class SplitResult {
+    String path;
+    String name;
+
+    SplitResult(final String path, final String name) {
+      this.path = path;
+      this.name = name;
+    }
+  }
+
+  /* Split the uri so that result.path is the path up to the name part result.name
+   *
+   */
+  private SplitResult splitUri(final String uri)
+          throws CalFacadeException {
+    int end = uri.length();
+    if (uri.endsWith("/")) {
+      end--;
+    }
+
+    final int pos = uri.lastIndexOf("/", end);
+    if (pos < 0) {
+      // bad uri
+      throw new CalFacadeException("Invalid uri: " + uri);
+    }
+
+    if (pos == 0) {
+      return new SplitResult(uri, null);
+    }
+
+    return new SplitResult(uri.substring(0, pos), uri.substring(pos + 1, end));
+  }
 }
