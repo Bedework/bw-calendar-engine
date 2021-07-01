@@ -20,45 +20,25 @@ package org.bedework.calsvc;
 
 import org.bedework.access.CurrentAccess;
 import org.bedework.calcorei.Calintf;
-import org.bedework.caldav.util.filter.FilterBase;
 import org.bedework.calfacade.BwCalendar;
-import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwPrincipal;
-import org.bedework.calfacade.BwPrincipalInfo;
-import org.bedework.calfacade.RecurringRetrievalMode;
-import org.bedework.calfacade.base.BwOwnedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
-import org.bedework.calfacade.configs.AuthProperties;
-import org.bedework.calfacade.configs.SystemProperties;
 import org.bedework.calfacade.exc.CalFacadeException;
-import org.bedework.calfacade.ical.BwIcalPropertyInfo.BwIcalPropertyInfoEntry;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.CalSvcIPars;
-import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalendarsI;
 import org.bedework.calsvci.NotificationsI;
 import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.UsersI;
-import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
-import org.bedework.util.misc.response.GetEntitiesResponse;
-import org.bedework.util.misc.response.Response;
-import org.bedework.util.security.PwEncryptionIntf;
-
-import org.apache.commons.codec.binary.Base64;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
-
-import static org.bedework.calfacade.indexing.BwIndexer.DeletedState.noDeleted;
 
 /** This acts as an interface to the database for more client oriented
  * bedework objects. CalIntf is a more general calendar specific interface.
@@ -89,25 +69,17 @@ public class CalSvcDb implements Logged, Serializable {
   public void close() {
   }
 
-  /** TODO - should probably use the db timestamp - not the system time.
+  /**
    *
    * @return an encoded value for use as a unique uuid.
    */
   public static String getEncodedUuid() {
-    return new String(Base64.encodeBase64(UUID.randomUUID().toString().getBytes()));
+    return Util.toBase64(UUID.randomUUID().toString());
   }
 
-  /* ====================================================================
+  /* ===================================================
    *                   Protected methods.
-   * ==================================================================== */
-
-  void touchCalendar(final String href) throws CalFacadeException {
-    getSvc().touchCalendar(href);
-  }
-
-  void touchCalendar(final BwCalendar col) throws CalFacadeException {
-    getSvc().touchCalendar(col);
-  }
+   * ======================================================= */
 
   protected Timestamp getCurrentTimestamp() {
     return getSvc().getCurrentTimestamp();
@@ -117,134 +89,9 @@ public class CalSvcDb implements Logged, Serializable {
     return getSvc().getDirectories().caladdrToPrincipal(href);
   }
 
-  protected String principalToCaladdr(final BwPrincipal p) {
-    return getSvc().getDirectories().principalToCaladdr(p);
-  }
-
-  protected void pushPrincipal(final String href) throws CalFacadeException {
-    final BwPrincipal pr = caladdrToPrincipal(href);
-
-    if (pr == null) {
-      throw new CalFacadeException(CalFacadeException.badRequest,
-                                   "unknown principal");
-    }
-
-    getSvc().pushPrincipal(pr);
-  }
-
-  protected boolean pushPrincipalReturn(final String href) throws CalFacadeException {
-    final BwPrincipal pr = caladdrToPrincipal(href);
-
-    if (pr == null) {
-      return false;
-    }
-
-    getSvc().pushPrincipal(pr);
-    return true;
-  }
-
-  protected void pushPrincipal(final BwPrincipal pr) throws CalFacadeException {
-    getSvc().pushPrincipal(pr);
-  }
-
-  protected void popPrincipal() throws CalFacadeException {
-    getSvc().popPrincipal();
-  }
-
-  /** Do NOT expose this via a public interface.
-   * @return encrypter
-   */
-  protected PwEncryptionIntf getEncrypter() {
-    return getSvc().getEncrypter();
-  }
-
-  protected List<BwCalendar> findAlias(final String val) throws CalFacadeException {
-    return ((Calendars)getCols()).findUserAlias(val);
-  }
-
-  /** Method which allows us to flag it as a scheduling action
-   *
-   * @param colPath path for collection
-   * @param guid uid of event(s)
-   * @return response with status and Collection<EventInfo> -
-   *                collection as there may be more than
-   *                one with this uid in the inbox.
-   */
-  protected GetEntitiesResponse<EventInfo> getEventsByUid(final String colPath,
-                                                          final String guid) {
-    final Events events = (Events)getSvc().getEventsHandler();
-    final GetEntitiesResponse<EventInfo> resp = new GetEntitiesResponse<>();
-
-    try {
-      final var ents = events.getByUid(colPath, guid, null,
-                                       RecurringRetrievalMode.overrides);
-      if (Util.isEmpty(ents)) {
-        resp.setStatus(Response.Status.notFound);
-      } else {
-        resp.setEntities(ents);
-      }
-
-      return resp;
-    } catch (final Throwable t) {
-      return Response.error(resp, t);
-    }
-  }
-
-  protected BwCalendar getSpecialCalendar(final BwPrincipal owner,
-                                          final int calType,
-                                          final boolean create,
-                                          final int access) throws CalFacadeException {
-    return getCols().getSpecial(owner, calType, create, access);
-  }
-
   /* ====================================================================
    *                   Protected methods
    * ==================================================================== */
-
-  /** Called to notify container that an event occurred. This method should
-   * queue up notifications until after transaction commit as consumers
-   * should only receive notifications when the actual data has been written.
-   *
-   * @param ev the event
-   */
-  public void postNotification(final SysEvent ev) {
-    getSvc().postNotification(ev);
-  }
-
-  /** Method which allows us to flag it as a scheduling action
-   *
-   * @param cols collections
-   * @param filter a filter
-   * @param startDate start
-   * @param endDate end
-   * @param retrieveList List of properties to retrieve or null for a full event.
-   * @param recurRetrieval expanded etc
-   * @param freeBusy is this for freebusy
-   * @return Collection of matching events
-   * @throws CalFacadeException
-   */
-  protected Collection<EventInfo> getEvents(
-          final Collection<BwCalendar> cols,
-          final FilterBase filter,
-          final BwDateTime startDate, final BwDateTime endDate,
-          final List<BwIcalPropertyInfoEntry> retrieveList,
-          final RecurringRetrievalMode recurRetrieval,
-          final boolean freeBusy) throws CalFacadeException {
-    final Events events = (Events)getSvc().getEventsHandler();
-
-    return events.getMatching(cols, filter, startDate, endDate,
-                              retrieveList, noDeleted,
-                              recurRetrieval, freeBusy);
-  }
-  
-  protected EventInfo getEvent(final BwCalendar col,
-                               final String name,
-                               final String recurrenceId)
-          throws CalFacadeException {
-    return getSvc().getEventsHandler().get(col, name, 
-                                           recurrenceId,
-                                           null);
-  }
 
   /* Get current parameters
    */
@@ -278,34 +125,12 @@ public class CalSvcDb implements Logged, Serializable {
     return svci.getPrincipal().getPrincipalRef();
   }
 
-  protected String getOwnerHref() {
-    if (getSvc().getPars().getPublicAdmin() ||
-            getPrincipal().getUnauthenticated()) {
-      return getUsers().getPublicUser().getPrincipalRef();
-    }
-
-    return getPrincipal().getPrincipalRef();
-  }
-
   public BwIndexer getIndexer(final String docType) {
     return svci.getIndexer(docType);
   }
 
-  public BwIndexer getIndexer(final boolean publick,
-                              final String docType) {
-    return svci.getIndexer(publick, docType);
-  }
-
   protected BwPrincipal getPrincipal(final String href) throws CalFacadeException {
     return svci.getUsersHandler().getPrincipal(href);
-  }
-
-  protected PrincipalInfo getPrincipalInfo() {
-    return svci.getPrincipalInfo();
-  }
-
-  protected BwPrincipalInfo getBwPrincipalInfo() throws CalFacadeException {
-    return svci.getDirectories().getDirInfo(getPrincipal());
   }
 
   /**
@@ -343,10 +168,6 @@ public class CalSvcDb implements Logged, Serializable {
     return svci.getPrefsHandler().get(principal);
   }
 
-  protected void update(final BwPreferences prefs) {
-    svci.getPrefsHandler().update(prefs);
-  }
-
   protected UsersI getUsers() {
     return svci.getUsersHandler();
   }
@@ -371,59 +192,6 @@ public class CalSvcDb implements Logged, Serializable {
           final BwShareableDbentity<?> ent, final int desiredAccess,
           final boolean returnResult) throws CalFacadeException {
     return svci.checkAccess(ent, desiredAccess, returnResult);
-  }
-
-  /** Set the owner and creator on a shareable entity.
-   *
-   * @param entity shareable entity
-   * @param ownerHref - new owner
-   */
-  protected void setupSharableEntity(final BwShareableDbentity<?> entity,
-                                     final String ownerHref) {
-    if (entity.getCreatorHref() == null) {
-      entity.setCreatorHref(ownerHref);
-    }
-
-    setupOwnedEntity(entity, ownerHref);
-  }
-
-  /** Set the owner and publick on an owned entity.
-   *
-   * @param entity owned entity
-   * @param ownerHref - new owner
-   */
-  protected void setupOwnedEntity(final BwOwnedDbentity<?> entity,
-                                  final String ownerHref) {
-    entity.setPublick(isPublicAdmin());
-
-    if (entity.getOwnerHref() == null) {
-      if (entity.getPublick()) {
-        entity.setOwnerHref(getPublicUser().getPrincipalRef());
-      } else {
-        entity.setOwnerHref(ownerHref);
-      }
-    }
-  }
-
-  /** Return owner for entities
-   *
-   * @param owner - possible owner
-   * @return BwPrincipal
-   */
-  protected BwPrincipal getEntityOwner(final BwPrincipal owner) {
-    if (isPublicAdmin() || isGuest()) {
-      return getPublicUser();
-    }
-
-    return owner;
-  }
-
-  protected AuthProperties getAuthpars() {
-    return getSvc().getAuthProperties();
-  }
-
-  protected SystemProperties getSyspars() {
-    return getSvc().getSystemProperties();
   }
 
   /* ====================================================================

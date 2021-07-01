@@ -43,7 +43,7 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
   }
 
   protected String getParentPath(final String href) {
-    int pos = href.lastIndexOf("/");
+    final int pos = href.lastIndexOf("/");
 
     if (pos <= 0) {
       return null;
@@ -53,7 +53,7 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
   }
 
   protected String getName(final String href) {
-    int pos = href.lastIndexOf("/");
+    final int pos = href.lastIndexOf("/");
 
     if (pos <= 0) {
       return href;
@@ -64,6 +64,22 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
     }
 
     return href.substring(pos + 1);
+  }
+
+  /** Make popPrincipal visible to sub-classes
+   *
+   * @throws CalFacadeException on fatal error
+   */
+  protected void popPrincipal() throws CalFacadeException {
+    getSvc().popPrincipal();
+  }
+
+  /** Make pushPrincipalOrFail visible to sub-classes
+   *
+   * @param principalHref a principal href
+   */
+  protected void pushPrincipalOrFail(final String principalHref) {
+    getSvc().pushPrincipalOrFail(principalHref);
   }
 
   /** Get an svci object as a different user.
@@ -90,7 +106,7 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
     svci = new CalSvcFactoryDefault().getSvc(runAsPars);
     setSvc(svci);
     if (trace()) {
-      var after = System.currentTimeMillis();
+      final var after = System.currentTimeMillis();
       trace(format("Getsvc took %s", after - before));
       before = after;
     }
@@ -98,7 +114,7 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
     svci.open();
     svci.beginTransaction();
     if (trace()) {
-      var after = System.currentTimeMillis();
+      final var after = System.currentTimeMillis();
       trace(format("open + beginTransaction took %s", after - before));
       before = after;
     }
@@ -117,15 +133,13 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
 
     CalFacadeException exc = null;
 
-    try {
+    try (svci) {
       try {
         svci.endTransaction();
       } catch (final CalFacadeException cfe) {
         rollback(svci);
         exc = cfe;
       }
-    } finally {
-      svci.close();
     }
 
     if (exc != null) {

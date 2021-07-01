@@ -62,11 +62,11 @@ import org.bedework.util.elasticsearch.EntityBuilderBase;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.property.RequestStatus;
-import org.apache.commons.codec.binary.Base64;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -221,7 +221,7 @@ public class EntityBuilder extends EntityBuilderBase {
     ent.setName(getString(PropertyInfoIndex.NAME));
     ent.setColPath(getString(PropertyInfoIndex.COLLECTION));
 
-    ent.setByteValue(new Base64().decode(getString("content")));
+    ent.setByteValue(Base64.getDecoder().decode(getString("content")));
 
     return ent;
   }

@@ -331,13 +331,13 @@ public class DumpImpl extends CalSvcDb implements DumpIntf {
   @Override
   public void startPrincipal(final BwPrincipal val)
           throws CalFacadeException {
-    pushPrincipal(val);
+    getSvc().pushPrincipal(val);
   }
 
   @Override
   public void endPrincipal(final BwPrincipal val)
           throws CalFacadeException {
-    popPrincipal();
+    getSvc().popPrincipal();
   }
 
   private <T> Iterator<T> getObjects(final Class<?> cl) {

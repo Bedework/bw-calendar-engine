@@ -76,7 +76,7 @@ class CalSuites extends CalSvcDb implements CalSuitesI {
     cs.setName(name);
 
     setRootCol(cs, rootCollectionPath);
-    setupSharableEntity(cs, getPrincipal().getPrincipalRef());
+    getSvc().setupSharableEntity(cs, getPrincipal().getPrincipalRef());
 
     setSubmissionsCol(cs, submissionsPath);
     validateGroup(cs, adminGroupName);

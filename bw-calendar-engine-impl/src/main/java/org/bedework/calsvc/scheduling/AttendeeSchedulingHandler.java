@@ -61,21 +61,21 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
   public ScheduleResult requestRefresh(final EventInfo ei,
                                        final String comment) throws CalFacadeException {
     ScheduleResult sr = new ScheduleResult();
-    BwEvent ev = ei.getEvent();
+    final BwEvent ev = ei.getEvent();
 
     if (ev.getScheduleMethod() != ScheduleMethods.methodTypeRequest) {
       sr.errorCode = CalFacadeException.schedulingBadMethod;
       return sr;
     }
 
-    BwAttendee att = findUserAttendee(ei);
+    final BwAttendee att = findUserAttendee(ei);
 
     if (att == null) {
       throw new CalFacadeException(CalFacadeException.schedulingNotAttendee);
     }
 
-    BwEvent outEv = new BwEventObj();
-    EventInfo outEi = new EventInfo(outEv);
+    final BwEvent outEv = new BwEventObj();
+    final EventInfo outEi = new EventInfo(outEv);
 
     outEv.setScheduleMethod(ScheduleMethods.methodTypeRefresh);
 
@@ -116,7 +116,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       /* Check that the current user is actually the only attendee of the event.
        * Note we may have a suppressed master and/or multiple overrides
        */
-      BwAttendee att = findUserAttendee(ei);
+      final BwAttendee att = findUserAttendee(ei);
 
       if (att == null) {
         sr.errorCode = CalFacadeException.schedulingNotAttendee;
@@ -155,7 +155,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       outEv.updateDtstamp();
       si.getOrganizer().setDtstamp(outEv.getDtstamp());
 
-      String delegate = att.getDelegatedTo();
+      final String delegate = att.getDelegatedTo();
       if (delegate != null) {
         /* RFC 2446 4.2.5 - Delegating an event
          *
@@ -187,7 +187,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
         outEv.setScheduleMethod(ScheduleMethods.methodTypeReply);
 
         // Additional attendee
-        BwAttendee delAtt = new BwAttendee();
+        final BwAttendee delAtt = new BwAttendee();
         delAtt.setAttendeeUri(delegate);
         delAtt.setDelegatedFrom(att.getAttendeeUri());
         delAtt.setPartstat(IcalDefs.partstatValNeedsAction);
@@ -196,8 +196,8 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
         outEv.addAttendee(delAtt);
 
         // ei is 'original "REQUEST"'. */
-        EventInfo delegateEi = copyEventInfo(ei, getPrincipal());
-        BwEvent delegateEv = delegateEi.getEvent();
+        final EventInfo delegateEi = copyEventInfo(ei, getPrincipal());
+        final BwEvent delegateEv = delegateEi.getEvent();
 
         delegateEv.addRecipient(delegate);
         delegateEv.addAttendee((BwAttendee)delAtt.clone()); // Not in RFC
@@ -309,10 +309,10 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
      *    Add to organizers inbox if internal
      *    Put in outbox if external.
      */
-    ScheduleResult sr = new ScheduleResult();
+    final ScheduleResult sr = new ScheduleResult();
 
     try {
-      int smethod = ei.getEvent().getScheduleMethod();
+      final int smethod = ei.getEvent().getScheduleMethod();
 
       if (!Icalendar.itipReplyMethodType(smethod)) {
         sr.errorCode = CalFacadeException.schedulingBadMethod;
@@ -325,7 +325,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
        * mailed to the recipients.
        */
 
-      int outAccess = PrivilegeDefs.privScheduleReply;
+      final int outAccess = PrivilegeDefs.privScheduleReply;
 
       /* There should only be one attendee for a reply */
       if (ei.getSchedulingInfo().getMaxAttendees() > 1) {
@@ -338,9 +338,10 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
 
       /* Do this here to check we have access. We might need the outbox later
        */
-      BwCalendar outBox = getSpecialCalendar(getPrincipal(),
-                                             BwCalendar.calTypeOutbox,
-                                             true, outAccess);
+      final BwCalendar outBox =
+              getSpecialCalendar(getPrincipal(),
+                                 BwCalendar.calTypeOutbox,
+                                 true, outAccess);
 
       sendSchedule(sr, ei, null, null, false);
 
@@ -349,7 +350,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       }
 
       if (!sr.externalRcs.isEmpty()) {
-        var addResp = addToOutBox(ei, outBox, sr.externalRcs);
+        final var addResp = addToOutBox(ei, outBox, sr.externalRcs);
 
         if (!addResp.isOk()) {
           sr.errorCode = addResp.getMessage();
@@ -357,7 +358,7 @@ public abstract class AttendeeSchedulingHandler extends OrganizerSchedulingHandl
       }
 
       return sr;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       getSvc().rollbackTransaction();
       if (t instanceof CalFacadeException) {
         throw (CalFacadeException)t;

@@ -263,7 +263,7 @@ class Users extends CalSvcDb implements UsersI {
 
     if (prefs != null) {
       prefs.setDefaultCalendarPath(null);
-      update(prefs);
+      getSvc().getPrefsHandler().update(prefs);
     }
 
     /* collections and user home */
@@ -325,8 +325,9 @@ class Users extends CalSvcDb implements UsersI {
     // Add a default view for the calendar home
 
     final BwView view = new BwView();
+    final var authPars = getSvc().getAuthProperties();
 
-    view.setName(getAuthpars().getDefaultUserViewName());
+    view.setName(authPars.getDefaultUserViewName());
 
     // Add default subscription to the user root.
     view.addCollectionPath(svc.getPrincipalInfo().getCalendarHomePath(principal));
@@ -335,7 +336,7 @@ class Users extends CalSvcDb implements UsersI {
     prefs.setPreferredView(view.getName());
 
     prefs.setPreferredViewPeriod("week");
-    prefs.setHour24(getAuthpars().getDefaultUserHour24());
+    prefs.setHour24(authPars.getDefaultUserHour24());
 
     prefs.setScheduleAutoRespond(principal.getKind() == WhoDefs.whoTypeResource);
 
@@ -344,7 +345,7 @@ class Users extends CalSvcDb implements UsersI {
               BwPreferences.scheduleAutoProcessResponsesNotifyAll);
     }
 
-    update(prefs);
+    getSvc().getPrefsHandler().update(prefs);
   }
 
   private boolean isTestUser(final BwPrincipal pr) {
@@ -352,7 +353,7 @@ class Users extends CalSvcDb implements UsersI {
       return false;
     }
 
-    var account = pr.getAccount();
+    final var account = pr.getAccount();
 
     if (!account.startsWith("user")) {
       return false;

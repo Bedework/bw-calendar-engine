@@ -108,7 +108,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
       }
 
       return prefs;
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }
   }
@@ -117,7 +117,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
   public BwPreferences get(final BwPrincipal principal) {
     try {
       return fetch(principal);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }
   }
@@ -130,7 +130,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
     }
     try {
       getCal().saveOrUpdate(val);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw new RuntimeException(cfe);
     }
   }
@@ -180,7 +180,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
     if (cal != null) {
       if (!remove) {
         if (cal.getCalendarCollection()) {
-          CalendarPref p = prefs.getCalendarPrefs();
+          final CalendarPref p = prefs.getCalendarPrefs();
           if (p.getAutoAdd() && p.add(cal)) {
             update = true;
           }
@@ -193,7 +193,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
     if (!Util.isEmpty(cats)) {
       for (final BwCategory cat: cats) {
         if (!remove) {
-          CategoryPref p = prefs.getCategoryPrefs();
+          final CategoryPref p = prefs.getCategoryPrefs();
           if (p.getAutoAdd() && p.add(cat)) {
             update = true;
           }
@@ -205,7 +205,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
 
     if (loc != null) {
       if (!remove) {
-        LocationPref p = prefs.getLocationPrefs();
+        final LocationPref p = prefs.getLocationPrefs();
         if (p.getAutoAdd() && p.add(loc)) {
           update = true;
         }
@@ -216,7 +216,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
 
     if (ctct != null) {
       if (!remove) {
-        ContactPref p = prefs.getContactPrefs();
+        final ContactPref p = prefs.getContactPrefs();
         if (p.getAutoAdd() && p.add(ctct)) {
           update = true;
         }
@@ -242,7 +242,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
                             "/",
                             "attachments");
       get().setAttachmentsPath(path);
-      update(get());
+      getSvc().getPrefsHandler().update(get());
     }
 
     return path;
@@ -255,7 +255,7 @@ class Preferences extends CalSvcDb implements PreferencesI {
     }
 
     get().setAttachmentsPath(val);
-    update(get());
+    getSvc().getPrefsHandler().update(get());
   }
 
   /* ====================================================================
@@ -278,15 +278,15 @@ class Preferences extends CalSvcDb implements PreferencesI {
    * @throws CalFacadeException on fatal error
    */
   private BwPreferences fetch(final BwPrincipal principal) throws CalFacadeException {
-    BwPreferences prefs = getSvc().getPreferences(principal.getPrincipalRef());
+    final BwPreferences prefs = getSvc().getPreferences(principal.getPrincipalRef());
 
-    BwPrincipalInfo pinfo = principal.getPrincipalInfo();
+    final BwPrincipalInfo pinfo = principal.getPrincipalInfo();
     if (pinfo == null) {
       return prefs;
     }
 
     if (getSvc().getDirectories().mergePreferences(prefs, pinfo)) {
-      update(prefs);
+      getSvc().getPrefsHandler().update(prefs);
     }
 
     return prefs;

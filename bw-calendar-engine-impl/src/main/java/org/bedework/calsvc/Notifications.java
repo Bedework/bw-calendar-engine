@@ -67,14 +67,14 @@ class Notifications extends CalSvcDb implements NotificationsI {
                       final NotificationType val)
           throws CalFacadeException {
     try {
-      pushPrincipal(pr);
+      getSvc().pushPrincipal(pr);
       return add(val);
     } catch (final CalFacadeException cfe) {
       throw cfe;
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     } finally {
-      popPrincipal();
+      getSvc().popPrincipal();
     }
   }
 
@@ -391,10 +391,10 @@ class Notifications extends CalSvcDb implements NotificationsI {
                                             final QName type)
           throws CalFacadeException {
     try {
-      pushPrincipal(pr);
+      getSvc().pushPrincipal(pr);
       return getMatching(type);
     } finally {
-      popPrincipal();
+      getSvc().popPrincipal();
     }
   }
 
@@ -417,29 +417,29 @@ class Notifications extends CalSvcDb implements NotificationsI {
                         final List<String> emails)
           throws CalFacadeException {
     try {
-      pushPrincipal(principalHref);
+      getSvc().pushPrincipalOrFail(principalHref);
       final BwPreferences prefs = getPrefs();
 
       prefs.setNotificationToken(UUID.randomUUID().toString());
-      update(prefs);
+      getSvc().getPrefsHandler().update(prefs);
 
       getNoteClient().subscribe(principalHref, emails,
                                 prefs.getNotificationToken());
     } finally {
-      popPrincipal();
+      getSvc().popPrincipal();
     }
   }
 
   public void subscribe(final BwPrincipal principal,
                         final List<String> emails)
           throws CalFacadeException {
-      final BwPreferences prefs = getPrefs(principal);
+    final BwPreferences prefs = getPrefs(principal);
 
-      prefs.setNotificationToken(UUID.randomUUID().toString());
-      update(prefs);
+    prefs.setNotificationToken(UUID.randomUUID().toString());
+    getSvc().getPrefsHandler().update(prefs);
 
-      getNoteClient().subscribe(principal.getPrincipalRef(), emails,
-                                prefs.getNotificationToken());
+    getNoteClient().subscribe(principal.getPrincipalRef(), emails,
+                              prefs.getNotificationToken());
   }
 
   @Override
@@ -447,10 +447,10 @@ class Notifications extends CalSvcDb implements NotificationsI {
                           final List<String> emails)
           throws CalFacadeException {
     try {
-      pushPrincipal(principalHref);
+      getSvc().pushPrincipalOrFail(principalHref);
       getNoteClient().unsubscribe(principalHref, emails);
     } finally {
-      popPrincipal();
+      getSvc().popPrincipal();
     }
   }
 
@@ -458,10 +458,10 @@ class Notifications extends CalSvcDb implements NotificationsI {
               final NotificationType val)
           throws CalFacadeException {
     try {
-      pushPrincipal(pr);
+      getSvc().pushPrincipal(pr);
       remove(val);
     } finally {
-      popPrincipal();
+      getSvc().popPrincipal();
     }
   }
 

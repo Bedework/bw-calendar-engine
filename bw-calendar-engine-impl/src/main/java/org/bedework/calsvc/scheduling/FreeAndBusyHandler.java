@@ -39,9 +39,9 @@ import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calfacade.util.EventPeriod;
 import org.bedework.calfacade.util.EventPeriods;
 import org.bedework.calfacade.util.Granulator;
-import org.bedework.calfacade.util.EventPeriod;
 import org.bedework.calfacade.util.Granulator.GetPeriodsPars;
 import org.bedework.calsvc.CalSvc;
 import org.bedework.calsvci.CalendarsI;
@@ -97,7 +97,7 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
                              final String uid,
                              final String exceptUid)
           throws CalFacadeException {
-    CalendarsI colHandler = getSvc().getCalendarsHandler();
+    final CalendarsI colHandler = getSvc().getCalendarsHandler();
     Collection<BwCalendar> cals = null;
 
     if (fbset != null) {
@@ -178,9 +178,9 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       throw new CalFacadeException(t);
     }
 
-    String userHref = who.getPrincipalRef();
+    final String userHref = who.getPrincipalRef();
 
-    for (BwCalendar c: cals) {
+    for (final BwCalendar c: cals) {
       if (!c.getAffectsFreeBusy()) {
         continue;
       }
@@ -188,17 +188,16 @@ public abstract class FreeAndBusyHandler extends OutBoxHandler {
       // XXX If it's an external subscription we probably just get free busy and
       // merge it in.
 
-      RecurringRetrievalMode rrm = new RecurringRetrievalMode(
+      final RecurringRetrievalMode rrm = new RecurringRetrievalMode(
                               Rmode.expanded, start, end);
 
-      Collection<EventInfo> evs = getEvents(Collections.singleton(c),
-                                            filter, start, end,
-                                            null, // retrieveList
-                                            rrm, true);
+      final Collection<EventInfo> evs = getEvents(Collections.singleton(c),
+                                                  filter, start, end,
+                                                  rrm, true);
 
       // Filter out transparent events
-      for (EventInfo ei : evs) {
-        BwEvent ev = ei.getEvent();
+      for (final EventInfo ei : evs) {
+        final BwEvent ev = ei.getEvent();
 
         if ((exceptUid != null) &&
             exceptUid.equals(ev.getUid())) {

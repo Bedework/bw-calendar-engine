@@ -456,7 +456,7 @@ public class Notifier extends AbstractScheduler {
 
     try {
       if (doPushPrincipal) {
-        pushPrincipal(shareeHref);
+        pushPrincipalOrFail(shareeHref);
       }
 
       if (debug()) {

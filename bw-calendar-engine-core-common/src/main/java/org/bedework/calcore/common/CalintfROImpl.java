@@ -387,8 +387,8 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public synchronized Timestamp getCurrentTimestamp() {
-    var oldTime = curTimestamp.getTime();
-    var oldNanos = curTimestamp.getNanos();
+    final var oldTime = curTimestamp.getTime();
+    final var oldNanos = curTimestamp.getNanos();
 
     while (true) {
       curTimestamp.setTime(System.currentTimeMillis());
@@ -406,7 +406,7 @@ public class CalintfROImpl extends CalintfBase
 
       try {
         Thread.sleep(1);
-      } catch (InterruptedException e) {
+      } catch (final InterruptedException e) {
         throw new RuntimeException(e);
       }
     }
@@ -415,7 +415,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public void reAttach(BwDbentity<?> val) throws CalFacadeException {
+  public void reAttach(final BwDbentity<?> val) throws CalFacadeException {
   }
 
   /* ====================================================================
@@ -1497,7 +1497,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Collection<BwGroup> getAllGroups(final boolean admin) throws CalFacadeException {
-    GetEntitiesResponse<BwGroup> resp =
+    final GetEntitiesResponse<BwGroup> resp =
             getIndexer(docTypePrincipal).fetchGroups(admin);
 
     if (!resp.isOk()) {
@@ -1512,7 +1512,7 @@ public class CalintfROImpl extends CalintfBase
 
   @Override
   public Collection<BwAdminGroup> getAdminGroups() throws CalFacadeException {
-    GetEntitiesResponse<BwAdminGroup> resp =
+    final GetEntitiesResponse<BwAdminGroup> resp =
             getIndexer(docTypePrincipal).fetchAdminGroups();
 
     if (!resp.isOk()) {
@@ -1528,7 +1528,7 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public Collection<BwGroup> getGroups(final BwPrincipal val,
                                        final boolean admin) throws CalFacadeException {
-    GetEntitiesResponse<BwGroup> resp =
+    final GetEntitiesResponse<BwGroup> resp =
             getIndexer(docTypePrincipal).fetchGroups(admin,
                                                      val.getHref());
 
@@ -1545,7 +1545,7 @@ public class CalintfROImpl extends CalintfBase
   @Override
   public Collection<BwAdminGroup> getAdminGroups(
           final BwPrincipal val) throws CalFacadeException {
-    GetEntitiesResponse<BwAdminGroup> resp =
+    final GetEntitiesResponse<BwAdminGroup> resp =
             getIndexer(docTypePrincipal).fetchAdminGroups(val.getHref());
 
     if (!resp.isOk()) {

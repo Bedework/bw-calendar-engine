@@ -1658,6 +1658,51 @@ public class CalSvc
     getCal().addNewCalendars(p);
   }
 
+  /** Set the owner and creator on a shareable entity.
+   *
+   * @param entity shareable entity
+   * @param ownerHref - new owner
+   */
+  void setupSharableEntity(final BwShareableDbentity<?> entity,
+                           final String ownerHref) {
+    if (entity.getCreatorHref() == null) {
+      entity.setCreatorHref(ownerHref);
+    }
+
+    setupOwnedEntity(entity, ownerHref);
+  }
+
+  /** Set the owner and publick on an owned entity.
+   *
+   * @param entity owned entity
+   * @param ownerHref - new owner
+   */
+  void setupOwnedEntity(final BwOwnedDbentity<?> entity,
+                        final String ownerHref) {
+    entity.setPublick(isPublicAdmin());
+
+    if (entity.getOwnerHref() == null) {
+      if (entity.getPublick()) {
+        entity.setOwnerHref(getUsersHandler().getPublicUser()
+                                             .getPrincipalRef());
+      } else {
+        entity.setOwnerHref(ownerHref);
+      }
+    }
+  }
+
+  /** Return owner for entities
+   *
+   * @return BwPrincipal
+   */
+  BwPrincipal getEntityOwner() {
+    if (isPublicAdmin() || pars.isGuest()) {
+      return getUsersHandler().getPublicUser();
+    }
+
+    return getPrincipal();
+  }
+
   /** Switch to the given principal to allow us to update their stuff - for
    * example - send a notification.
    *
@@ -1668,6 +1713,25 @@ public class CalSvc
 
     if (pr == null) {
       pr = addUser(principal.getPrincipalRef());
+    }
+
+    ((SvciPrincipalInfo)principalInfo).pushPrincipal(pr);
+    getCal().principalChanged();
+  }
+
+  /** Switch to the given principal to allow us to update their stuff - for
+   * example - send a notification.
+   *
+   * @param principalHref a principal href
+   */
+  void pushPrincipalOrFail(final String principalHref) {
+    final BwPrincipal pr =
+            getDirectories()
+                    .caladdrToPrincipal(principalHref);
+
+    if (pr == null) {
+      throw new RuntimeException("Unknown Principal " +
+                                         principalHref);
     }
 
     ((SvciPrincipalInfo)principalInfo).pushPrincipal(pr);

@@ -36,12 +36,12 @@ import java.util.Collection;
 
 /** This acts as an interface to the database for filters.
  *
- * @author Mike Douglass       douglm - rpi.edu
+ * @author Mike Douglass
  */
 class Filters extends CalSvcDb implements FiltersI {
   /** Constructor
    *
-   * @param svci
+   * @param svci the interface
    */
   Filters(final CalSvc svci) {
     super(svci);
@@ -88,27 +88,22 @@ class Filters extends CalSvcDb implements FiltersI {
   }
 
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.FiltersI#validate(java.lang.String)
-   */
   @Override
   public void validate(final String val) throws CalFacadeException {
     try {
       org.bedework.caldav.util.filter.parse.Filters.parse(val);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.calsvci.FiltersI#save(org.bedework.calfacade.BwFilterDef)
-   */
   @Override
   public void save(final BwFilterDef val) throws CalFacadeException {
-    setupOwnedEntity(val, getPrincipal().getPrincipalRef());
+    getSvc().setupOwnedEntity(val,
+                              getPrincipal().getPrincipalRef());
     validate(val.getDefinition());
 
-    getCal().save(val, getEntityOwner(getPrincipal()));
+    getCal().save(val, getSvc().getEntityOwner());
   }
 
   @Override
@@ -117,7 +112,7 @@ class Filters extends CalSvcDb implements FiltersI {
 
     try {
       final BwFilterDef fdef = getCal()
-              .getFilterDef(name, getEntityOwner(getPrincipal()));
+              .getFilterDef(name, getSvc().getEntityOwner());
       if (fdef == null) {
         gfdr.setStatus(Response.Status.notFound);
       } else {
@@ -134,14 +129,15 @@ class Filters extends CalSvcDb implements FiltersI {
 
   @Override
   public Collection<BwFilterDef> getAll() throws CalFacadeException {
-    final BwPrincipal owner = getEntityOwner(getPrincipal()); // This can affect the query if done later
+    final BwPrincipal owner = getSvc().getEntityOwner(); // This can affect the query if done later
 
     return getCal().getAllFilterDefs(owner);
   }
 
   @Override
   public void update(final BwFilterDef val) throws CalFacadeException {
-    if (!getSvc().getSuperUser() && !getPrincipal().equals(val.getOwnerHref())) {
+    if (!getSvc().getSuperUser() &&
+            !getPrincipal().getPrincipalRef().equals(val.getOwnerHref())) {
       throw new CalFacadeAccessException();
     }
 
@@ -150,7 +146,7 @@ class Filters extends CalSvcDb implements FiltersI {
 
   @Override
   public void delete(final String name) throws CalFacadeException {
-    getCal().deleteFilterDef(name, getEntityOwner(getPrincipal()));
+    getCal().deleteFilterDef(name, getSvc().getEntityOwner());
   }
 
   @Override
@@ -160,13 +156,6 @@ class Filters extends CalSvcDb implements FiltersI {
 
   @Override
   public int reindex(final BwIndexer indexer) throws CalFacadeException {
-    final BwPrincipal owner;
-    if (!isPublicAdmin()) {
-      owner = getPrincipal();
-    } else {
-      owner = getPublicUser();
-    }
-
     final Collection<BwFilterDef> filters = getAll();
     if (Util.isEmpty(filters)) {
       return 0;

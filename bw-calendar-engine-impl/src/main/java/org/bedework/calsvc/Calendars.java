@@ -85,7 +85,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   @Override
   public BwCalendar getPublicCalendars() throws CalFacadeException {
-    return getCal().getCollectionIdx(getIndexer(true, docTypeCollection),
+    return getCal().getCollectionIdx(getSvc().getIndexer(true, docTypeCollection),
                                      publicCalendarRootPath,
                                      PrivilegeDefs.privRead, true);
   }
@@ -97,7 +97,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
 
     if (isPublicAdmin()) {
-      if (!getSyspars().getWorkflowEnabled()) {
+      if (!getSvc().getSystemProperties().getWorkflowEnabled()) {
         return publicCalendarRootPath;
       }
 
@@ -110,7 +110,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
       }
 
       return Util.buildPath(colPathEndsWithSlash,
-                            getSyspars().getWorkflowRoot()); // "/",
+                            getSvc().getSystemProperties().getWorkflowRoot()); // "/",
 //                            getPrincipal().getAccountNoSlash());
     }
 
@@ -131,7 +131,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
     } else {
       priv = PrivilegeDefs.privRead;
     }
-    return getCal().getCollectionIdx(getIndexer(false, docTypeCollection),
+    return getCal().getCollectionIdx(getSvc().getIndexer(false, docTypeCollection),
                                      getSvc().getPrincipalInfo().getCalendarHomePath(principal),
                                      priv, true);
   }
@@ -434,7 +434,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   public void setPreferred(final BwCalendar val) {
     final BwPreferences prefs = getPrefs();
     prefs.setDefaultCalendarPath(val.getPath());
-    update(prefs);
+    getSvc().getPrefsHandler().update(prefs);
   }
 
   @Override
@@ -472,7 +472,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
   public BwCalendar add(BwCalendar val,
                         final String parentPath)
           throws CalFacadeException {
-    if (getPrincipalInfo().getSubscriptionsOnly()) {
+    if (getSvc().getPrincipalInfo().getSubscriptionsOnly()) {
       // Only allow the creation of an alias
       if (val.getCalType() != BwCalendar.calTypeAlias) {
         throw new CalFacadeForbidden("User has read only access");
@@ -480,7 +480,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
     }
     updateOK(val);
 
-    setupSharableEntity(val, getPrincipal().getPrincipalRef());
+    getSvc().setupSharableEntity(val,
+                                 getPrincipal().getPrincipalRef());
 
     if (val.getPwNeedsEncrypt() || (val.getExternalSub() && val.getRemotePw() != null)) {
       encryptPw(val);
@@ -893,7 +894,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
     final boolean defaultEnabled =
             !Boolean.parseBoolean(
                     System.getProperty("org.bedework.nochangenote", "false")) &&
-            getAuthpars().getDefaultChangesNotifications();
+            getSvc().getAuthProperties()
+                    .getDefaultChangesNotifications();
 
     if (notificationsEnabled(col, defaultEnabled)) {
       rootAi.setNotificationsEnabled(true);
@@ -901,7 +903,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
     
     /* Handle aliases that are not a result of calendar sharing.  These could be public or private.
      */
-    for (final BwCalendar alias: findAlias(collectionHref)) {
+    for (final BwCalendar alias:
+            ((Calendars)getCols()).findUserAlias(collectionHref)) {
       final AliasesInfo ai = new AliasesInfo(getPrincipal().getPrincipalRef(),
                                              alias,
                                              null);
@@ -939,9 +942,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
       }
 
       try {
-        pushPrincipal(principal);
+        getSvc().pushPrincipal(principal);
 
-        for (final BwCalendar alias: findAlias(collectionHref)) {
+        for (final BwCalendar alias: ((Calendars)getCols()).findUserAlias(collectionHref)) {
           if (!notificationsEnabled(alias, defaultEnabled)) {
             continue;
           }
@@ -954,7 +957,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
           findAliases(alias, ai);
         }
       } finally {
-        popPrincipal();
+        getSvc().popPrincipal();
       }
     }
   }

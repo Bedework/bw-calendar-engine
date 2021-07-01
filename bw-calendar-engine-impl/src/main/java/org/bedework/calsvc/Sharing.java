@@ -92,7 +92,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     /* Switch identity to the sharer then reget the handler
      * and do the share
      */
-    pushPrincipal(principalHref);
+    getSvc().pushPrincipalOrFail(principalHref);
 
     try {
       return getSvc().getSharingHandler().share(col, share);
@@ -101,7 +101,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     } finally {
-      popPrincipal();
+      getSvc().popPrincipal();
     }
   }
 
@@ -333,7 +333,9 @@ public class Sharing extends CalSvcDb implements SharingI {
      * Otherwise we need to create an alias in the calendar home using the
      * reply summary as the display name */
 
-    final List<BwCalendar> aliases = findAlias(sharerCol.getPath());
+    final List<BwCalendar> aliases =
+            ((Calendars)getCols()).findUserAlias(
+                    sharerCol.getPath());
     if (!Util.isEmpty(aliases)) {
       final BwCalendar alias = aliases.get(0);
 
@@ -508,7 +510,8 @@ public class Sharing extends CalSvcDb implements SharingI {
      * Otherwise we need to create an alias in the calendar home using the
      * reply summary as the display name */
 
-    final List<BwCalendar> aliases = findAlias(colPath);
+    final List<BwCalendar> aliases =
+            ((Calendars)getCols()).findUserAlias(colPath);
     if (!Util.isEmpty(aliases)) {
       sr.setPath(aliases.get(0).getPath());
       sr.setAlreadySubscribed(true);
@@ -599,7 +602,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     final String sharerHref = shared.getOwnerHref();
     final BwPrincipal sharee = getSvc().getPrincipal();
 
-    pushPrincipal(sharerHref);
+    getSvc().pushPrincipalOrFail(sharerHref);
 
     try {
 
@@ -658,7 +661,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     } finally {
-      popPrincipal();
+      getSvc().popPrincipal();
     }
     /*
     final BwPrincipal pr = caladdrToPrincipal(getPrincipalHref());
@@ -700,7 +703,7 @@ public class Sharing extends CalSvcDb implements SharingI {
                                       final String path,
                                       final InviteReplyType reply,
                                       final Holder<AccessType> access) throws CalFacadeException {
-    pushPrincipal(sharerHref);
+    getSvc().pushPrincipalOrFail(sharerHref);
 
     try {
       final BwCalendar col = getCols().get(path);
@@ -779,7 +782,7 @@ public class Sharing extends CalSvcDb implements SharingI {
     } catch (final Throwable t) {
       throw new CalFacadeException(t);
     } finally {
-      popPrincipal();
+      getSvc().popPrincipal();
     }
   }
 
@@ -851,7 +854,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       /* Switch identity to the sharee then reget the handler
        * and do the share
        */
-      pushPrincipal(target.getOwnerHref());
+      getSvc().pushPrincipalOrFail(target.getOwnerHref());
 
       try {
         return removeAccess(target, principalHref);
@@ -860,7 +863,7 @@ public class Sharing extends CalSvcDb implements SharingI {
       } catch (final Throwable t) {
         throw new CalFacadeException(t);
       } finally {
-        popPrincipal();
+        getSvc().popPrincipal();
       }
     } catch (final AccessException ae) {
       throw new CalFacadeException(ae);
@@ -892,6 +895,14 @@ public class Sharing extends CalSvcDb implements SharingI {
     in.setSummary(summary);
 
     return in;
+  }
+
+  private String principalToCaladdr(final BwPrincipal p) {
+    return getSvc().getDirectories().principalToCaladdr(p);
+  }
+
+  private BwPrincipalInfo getBwPrincipalInfo() throws CalFacadeException {
+    return getSvc().getDirectories().getDirInfo(getPrincipal());
   }
 
   private NotificationProperties getNoteProps() throws CalFacadeException {
@@ -1135,8 +1146,7 @@ public class Sharing extends CalSvcDb implements SharingI {
         acl = removed;
       }
 
-      final Collection<Ace> aces = new ArrayList<>();
-      aces.addAll(acl.getAces());
+      final Collection<Ace> aces = new ArrayList<>(acl.getAces());
 
       aces.add(Ace.makeAce(who, desiredPriv, null));
 
@@ -1157,7 +1167,7 @@ public class Sharing extends CalSvcDb implements SharingI {
         /* Switch identity to the sharee then reget the handler
          * and do the share
          */
-        pushPrincipal(target.getOwnerHref());
+        getSvc().pushPrincipalOrFail(target.getOwnerHref());
         try {
           setAccess(target, ap);
         } catch (final CalFacadeException cfe) {
@@ -1165,7 +1175,7 @@ public class Sharing extends CalSvcDb implements SharingI {
         } catch (final Throwable t) {
           throw new CalFacadeException(t);
         } finally {
-          popPrincipal();
+          getSvc().popPrincipal();
         }
       }
     } catch (final AccessException ae) {
@@ -1190,14 +1200,17 @@ public class Sharing extends CalSvcDb implements SharingI {
                            final String shareeHref,
                            final boolean sendNotifications,
                            final boolean unsubscribe) throws CalFacadeException {
-    if (!pushPrincipalReturn(shareeHref)) {
+    final BwPrincipal pr = caladdrToPrincipal(shareeHref);
+    if (pr == null) {
       // Ignore this - it's a bad href
       return;
     }
 
     try {
+      getSvc().pushPrincipal(pr);
+
       final List<BwCalendar> cols =
-              findAlias(col.getPath());
+              ((Calendars)getCols()).findUserAlias(col.getPath());
 
       if (!Util.isEmpty(cols)) {
         for (final BwCalendar alias: cols) {
@@ -1207,7 +1220,7 @@ public class Sharing extends CalSvcDb implements SharingI {
         }
       }
     } finally {
-      popPrincipal();
+      getSvc().popPrincipal();
     }
   }
 

@@ -99,7 +99,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         getCal().saveOrUpdateContent(val, rc);
       }
 
-      touchCalendar(getCols().get(val.getColPath()));
+      getSvc().touchCalendar(getCols().get(val.getColPath()));
     } catch (final CalFacadeException cfe) {
       getSvc().rollbackTransaction();
       throw cfe;
@@ -118,7 +118,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
                           final boolean copy,
                           final boolean overwrite) throws CalFacadeException {
     try {
-      setupSharableEntity(val, getPrincipal().getPrincipalRef());
+      getSvc().setupSharableEntity(val, getPrincipal().getPrincipalRef());
 
       final BwCalendar collTo = getCols().get(to);
 
@@ -172,7 +172,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
         r = new BwResource();
 
-        setupSharableEntity(r, getPrincipal().getPrincipalRef());
+        getSvc().setupSharableEntity(r, getPrincipal().getPrincipalRef());
 
         r.setName(name);
         r.setColPath(collTo.getPath());
@@ -201,10 +201,10 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         checkAccess(collFrom, PrivilegeDefs.privUnbind, false);
 
         getCal().delete(val);
-        touchCalendar(val.getColPath());
+        getSvc().touchCalendar(val.getColPath());
       }
 
-      touchCalendar(to);
+      getSvc().touchCalendar(to);
 
       return createdNew;
     } catch (final CalFacadeException cfe) {
@@ -327,7 +327,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         if (coll.getCalType() != BwCalendar.calTypeNotifications) {
           throw new CalFacadeException(CalFacadeException.badRequest, path);
         }
-      } else if (getPrincipalInfo().getSubscriptionsOnly()) {
+      } else if (getSvc().getPrincipalInfo().getSubscriptionsOnly()) {
         throw new CalFacadeForbidden("User has read only access");
       }
 
@@ -349,7 +349,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         throw new CalFacadeException(CalFacadeException.missingResourceContent);
       }
 
-      setupSharableEntity(val, getPrincipal().getPrincipalRef());
+      getSvc().setupSharableEntity(val, getPrincipal().getPrincipalRef());
 
       val.setColPath(path);
 
@@ -368,7 +368,7 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
       getCal().addContent(val, rc);
 
-      touchCalendar(coll);
+      getSvc().touchCalendar(coll);
 
       return true;
     } catch (final CalFacadeException cfe) {

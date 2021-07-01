@@ -96,8 +96,8 @@ public class LocationsImpl
   Collection<BwLocation> fetchAllIndexed(final boolean publick,
                                          final String ownerHref)
           throws CalFacadeException {
-    return filterDeleted(getIndexer(publick, 
-                                    ownerHref).fetchAllLocations());
+    return filterDeleted(getSvc().getIndexer(publick,
+                                             ownerHref).fetchAllLocations());
   }
 
   @Override

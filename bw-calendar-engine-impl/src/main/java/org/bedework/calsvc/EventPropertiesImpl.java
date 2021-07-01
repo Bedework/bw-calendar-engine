@@ -218,12 +218,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   @Override
   public GetEntityResponse<T> findPersistent(final BwString val) {
     final var resp = new GetEntityResponse<T>();
-    final BwPrincipal owner;
-    if (!isPublicAdmin()) {
-      owner = getPrincipal();
-    } else {
-      owner = getPublicUser();
-    }
+    final BwPrincipal owner = getSvc().getEntityOwner();
 
     try {
       final T ent = getCoreHdlr().find(val, owner.getPrincipalRef());
@@ -242,7 +237,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
   @Override
   public Response add(final T val) {
     final Response resp = new Response();
-    setupSharableEntity(val, getPrincipal().getPrincipalRef());
+    getSvc().setupSharableEntity(val, getPrincipal().getPrincipalRef());
 
     if (!updateOK(resp, val)) {
       return resp;
@@ -396,7 +391,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
       }
 
       // doesn't exist at this point, so we add it to db table
-      setupSharableEntity(val, ownerHref);
+      getSvc().setupSharableEntity(val, ownerHref);
       final var addResp = add(val);
 
       if (!addResp.isOk()) {
@@ -413,12 +408,7 @@ public abstract class EventPropertiesImpl<T extends BwEventProperty<?>>
 
   @Override
   public int reindex(final BwIndexer indexer) throws CalFacadeException {
-    final BwPrincipal owner;
-    if (!isPublicAdmin()) {
-      owner = getPrincipal();
-    } else {
-      owner = getSvc().getUsersHandler().getPublicUser();
-    }
+    final BwPrincipal owner = getSvc().getEntityOwner();
 
     final Collection<T> ents =
             getCoreHdlr().getAll(owner.getPrincipalRef());

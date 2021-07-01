@@ -34,7 +34,7 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.SchedulingInfo;
 import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calsvc.CalSvc;
-import org.bedework.calsvc.CalSvcDb;
+import org.bedework.calsvc.CalSvcHelperRw;
 import org.bedework.sysevents.events.SysEvent;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
@@ -50,10 +50,10 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** Rather than have a single class steering calls to a number of smaller classes
- * we will build up a full implementation by progressivly implementing abstract
+ * we will build up a full implementation by progressively implementing abstract
  * classes.
  *
- * <p>That allows us to split up some rather complex code into appropriate peices.
+ * <p>That allows us to split up some rather complex code into appropriate pieces.
  *
  * <p>This piece introduces the interface and provides some commonly used
  * methods.
@@ -61,7 +61,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author douglm
  *
  */
-public abstract class SchedulingBase extends CalSvcDb
+public abstract class SchedulingBase extends CalSvcHelperRw
         implements SchedulingIntf {
   SchedulingBase(final CalSvc svci) {
     super(svci);
@@ -76,7 +76,7 @@ public abstract class SchedulingBase extends CalSvcDb
   protected void addAutoScheduleMessage(final boolean inBox,
                                         final String principalHref,
                                         final String eventName) {
-    postNotification(
+    getSvc().postNotification(
             SysEvent.makeEntityQueuedEvent(SysEvent.SysCode.SCHEDULE_QUEUED,
                                            principalHref,
                                            eventName,
@@ -94,14 +94,14 @@ public abstract class SchedulingBase extends CalSvcDb
       return true;
     }
 
-    BwEvent ev = ei.getEvent();
-    boolean override = ev instanceof BwEventProxy;
+    final BwEvent ev = ei.getEvent();
+    final boolean override = ev instanceof BwEventProxy;
 
     if (override|| (ei.getOverrides() == null)) {
       return false;
     }
 
-    for (EventInfo oei: ei.getOverrides()) {
+    for (final EventInfo oei: ei.getOverrides()) {
       if (significantChange(oei)) {
         return true;
       }
@@ -143,9 +143,9 @@ public abstract class SchedulingBase extends CalSvcDb
   protected EventInfo copyEventInfo(final EventInfo ei,
                                     final boolean significantChangesOnly,
                                     final BwPrincipal owner) {
-    BwEvent ev = ei.getEvent();
-    BwEvent newEv = copyEvent(ev, null, owner);
-    StringBuilder changeInfo = new StringBuilder();
+    final BwEvent ev = ei.getEvent();
+    final BwEvent newEv = copyEvent(ev, null, owner);
+    final StringBuilder changeInfo = new StringBuilder();
 
     changeInfo.append(ev.getDtstamp());
 
@@ -177,11 +177,11 @@ public abstract class SchedulingBase extends CalSvcDb
     if (cancel) {
       /* Collect any attendees in overrides not in the copied master */
 
-      Set<EventInfo> overrides = ei.getOverrides();
+      final Set<EventInfo> overrides = ei.getOverrides();
 
       if (overrides != null) {
-        for (EventInfo oei: overrides) {
-          for (BwAttendee ovatt: oei.getEvent().getAttendees()) {
+        for (final EventInfo oei: overrides) {
+          for (final BwAttendee ovatt: oei.getEvent().getAttendees()) {
             if (newEv.findAttendee(ovatt.getAttendeeUri()) == null) {
               newEv.addAttendee((BwAttendee)ovatt.clone());
             }
@@ -204,13 +204,14 @@ public abstract class SchedulingBase extends CalSvcDb
     }
     boolean attendeeInMaster = false;
 
-    String uri = getSvc().getDirectories().principalToCaladdr(owner);
+    final String uri = getSvc().getDirectories()
+                               .principalToCaladdr(owner);
     if (fromOrganizer) {
       attendeeInMaster = ev.findAttendee(uri) != null;
     }
 
     /* Save the status - we may change to master-suppressed */
-    String masterStatus = newEv.getStatus();
+    final String masterStatus = newEv.getStatus();
 
     /* We may suppress the master event if there is no significant change and
      * we only want significant changes or if the attendee is not an attendee
@@ -251,14 +252,15 @@ public abstract class SchedulingBase extends CalSvcDb
       newEv.setSuppressed(true);
     }
 
-    Set<EventInfo> overrides = ei.getOverrides();
-    Set<EventInfo> newovs = new TreeSet<>();
+    final Set<EventInfo> overrides = ei.getOverrides();
+    final Set<EventInfo> newovs = new TreeSet<>();
 
     if (overrides != null) {
-      for (EventInfo oei: overrides) {
-        BwEvent oev = oei.getEvent();
+      for (final EventInfo oei: overrides) {
+        final BwEvent oev = oei.getEvent();
 
-        boolean attendeeInOverride = oev.findAttendee(uri) != null;
+        final boolean attendeeInOverride =
+                oev.findAttendee(uri) != null;
 
         if (!masterSuppressed && attendeeInMaster && attendeeInOverride) {
           // Don't try to suppress this one. We need the exdate
@@ -277,16 +279,18 @@ public abstract class SchedulingBase extends CalSvcDb
             /* If the attendee is not in this override, add an exdate to the master
              */
             if (!attendeeInOverride) {
-              String rid = oev.getRecurrenceId();
-              BwDateTime bwrdt = BwDateTime.fromUTC(rid.length() == 8, rid);
+              final String rid = oev.getRecurrenceId();
+              final BwDateTime bwrdt =
+                      BwDateTime.fromUTC(rid.length() == 8, rid);
               newEv.addExdate(bwrdt);
 
               continue;
             }
           } else if (attendeeInOverride) {
             /* Add this override as an rdate */
-            String rid = oev.getRecurrenceId();
-            BwDateTime bwrdt = BwDateTime.fromUTC(rid.length() == 8, rid);
+            final String rid = oev.getRecurrenceId();
+            final BwDateTime bwrdt =
+                    BwDateTime.fromUTC(rid.length() == 8, rid);
             newEv.addRdate(bwrdt);
 
             if ((deletedRecurids != null) &&
@@ -332,9 +336,10 @@ public abstract class SchedulingBase extends CalSvcDb
 
     boolean changed = false;
 
-    Collection<ChangeTableEntry> ctes = ei.getChangeset(getPrincipalHref()).getEntries();
+    final Collection<ChangeTableEntry> ctes =
+            ei.getChangeset(getPrincipalHref()).getEntries();
 
-    for (ChangeTableEntry cte: ctes) {
+    for (final ChangeTableEntry cte: ctes) {
       if (!cte.getChanged()) {
         continue;
       }
@@ -416,7 +421,7 @@ public abstract class SchedulingBase extends CalSvcDb
     /* Remove some stuff we won't be sending */
 
     if (!Util.isEmpty(newEv.getAttendees())) {
-      for (BwAttendee att: newEv.getAttendees()) {
+      for (final BwAttendee att: newEv.getAttendees()) {
         att.setScheduleStatus(null);
       }
     }
@@ -466,7 +471,7 @@ public abstract class SchedulingBase extends CalSvcDb
     return newEv;
   }
 
-  private static AtomicLong suffixValue = new AtomicLong();
+  private static final AtomicLong suffixValue = new AtomicLong();
 
   @Override
   public Response addEvent(final EventInfo ei,
@@ -534,7 +539,7 @@ public abstract class SchedulingBase extends CalSvcDb
    */
   protected BwAttendee findUserAttendee(final EventInfo ei) {
     Directories dir = getSvc().getDirectories();
-    String thisPref = getPrincipal().getPrincipalRef();
+    final String thisPref = getPrincipal().getPrincipalRef();
 
     final BwEvent ev = ei.getEvent();
 
@@ -547,7 +552,7 @@ public abstract class SchedulingBase extends CalSvcDb
 
     if (ei.getNumOverrides() > 0) {
       for (final EventInfo oei: ei.getOverrides()) {
-        BwEvent oev = oei.getEvent();
+        final BwEvent oev = oei.getEvent();
 
         final BwAttendee att = findUserAttendee(oev, thisPref);
         if (att != null) {

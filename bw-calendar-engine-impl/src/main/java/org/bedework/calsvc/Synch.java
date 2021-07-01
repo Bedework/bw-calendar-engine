@@ -480,7 +480,7 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   private String makeOpaqueData(final BwCalendar col) throws CalFacadeException {
-    return "public-admin=" + this.isPublicAdmin() + "\t" +
+    return "public-admin=" + isPublicAdmin() + "\t" +
             "adminCreateEprops=" + col.getSynchAdminCreateEprops();
   }
 

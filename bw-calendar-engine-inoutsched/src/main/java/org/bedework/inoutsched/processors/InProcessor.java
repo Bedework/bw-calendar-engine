@@ -26,7 +26,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.ChangeTable;
-import org.bedework.calsvc.CalSvcDb;
+import org.bedework.calsvc.CalSvcHelperRw;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex;
@@ -37,7 +37,7 @@ import org.bedework.util.misc.response.Response;
  *
  * @author Mike Douglass
  */
-public abstract class InProcessor extends CalSvcDb {
+public abstract class InProcessor extends CalSvcHelperRw {
   /**
    * @param svci for this processor
    */

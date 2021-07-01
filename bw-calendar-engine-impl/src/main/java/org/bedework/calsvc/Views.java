@@ -46,7 +46,7 @@ class Views extends CalSvcDb implements ViewsI {
       return false;
     }
 
-    BwPreferences prefs = getPrefs();
+    final BwPreferences prefs = getPrefs();
     checkOwnerOrSuper(prefs);
 
     if (!prefs.addView(val)) {
@@ -57,7 +57,7 @@ class Views extends CalSvcDb implements ViewsI {
       prefs.setPreferredView(val.getName());
     }
 
-    update(prefs);
+    getSvc().getPrefsHandler().update(prefs);
 
     return true;
   }
@@ -68,17 +68,17 @@ class Views extends CalSvcDb implements ViewsI {
       return false;
     }
 
-    BwPreferences prefs = getPrefs();
+    final BwPreferences prefs = getPrefs();
     checkOwnerOrSuper(prefs);
 
     //setupOwnedEntity(val, getUser());
 
-    Collection<BwView> views = prefs.getViews();
+    final Collection<BwView> views = prefs.getViews();
     if ((views == null) || (!views.contains(val))) {
       return false;
     }
 
-    String name = val.getName();
+    final String name = val.getName();
 
     views.remove(val);
 
@@ -86,7 +86,7 @@ class Views extends CalSvcDb implements ViewsI {
       prefs.setPreferredView(null);
     }
 
-    update(prefs);
+    getSvc().getPrefsHandler().update(prefs);
 
     return true;
   }
@@ -94,7 +94,7 @@ class Views extends CalSvcDb implements ViewsI {
   @Override
   public BwView find(String val) throws CalFacadeException {
     if (val == null) {
-      BwPreferences prefs = getPrefs();
+      final BwPreferences prefs = getPrefs();
 
       val = prefs.getPreferredView();
       if (val == null) {
@@ -107,8 +107,8 @@ class Views extends CalSvcDb implements ViewsI {
      */
     if (!val.startsWith("/")) {
       // This user
-      Collection<BwView> views = getAll();
-      for (BwView view: views) {
+      final Collection<BwView> views = getAll();
+      for (final BwView view: views) {
         if (view.getName().equals(val)) {
           return view;
         }
@@ -159,10 +159,10 @@ class Views extends CalSvcDb implements ViewsI {
   @Override
   public boolean addCollection(final String name,
                                final String path) throws CalFacadeException {
-    BwPreferences prefs = getPrefs();
+    final BwPreferences prefs = getPrefs();
     checkOwnerOrSuper(prefs);
 
-    BwView view = find(name);
+    final BwView view = find(name);
 
     if (view == null) {
       return false;
@@ -170,7 +170,7 @@ class Views extends CalSvcDb implements ViewsI {
 
     view.addCollectionPath(path);
 
-    update(prefs);
+    getSvc().getPrefsHandler().update(prefs);
 
     return true;
   }
@@ -178,10 +178,10 @@ class Views extends CalSvcDb implements ViewsI {
   @Override
   public boolean removeCollection(final String name,
                                   final String path) throws CalFacadeException {
-    BwPreferences prefs = getPrefs(getPrincipal());
+    final BwPreferences prefs = getPrefs(getPrincipal());
     checkOwnerOrSuper(prefs);
 
-    BwView view = find(name);
+    final BwView view = find(name);
 
     if (view == null) {
       return false;
@@ -189,7 +189,7 @@ class Views extends CalSvcDb implements ViewsI {
 
     view.removeCollectionPath(path);
 
-    update(prefs);
+    getSvc().getPrefsHandler().update(prefs);
 
     return true;
   }

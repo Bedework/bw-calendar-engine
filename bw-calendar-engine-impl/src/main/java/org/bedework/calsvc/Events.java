@@ -193,10 +193,13 @@ class Events extends CalSvcDb implements EventsI {
       }
 
       /* Generate non-overridden instances. */
+
+      final var authPars = getSvc().getAuthProperties();
+
       final Collection<Recurrence> instances =
               RecurUtil.getRecurrences(ei,
-                                       getAuthpars().getMaxYears(),
-                                       getAuthpars().getMaxInstances(),
+                                       authPars.getMaxYears(),
+                                       authPars.getMaxInstances(),
                                        recurRetrieval.getStartDate(),
                                        recurRetrieval.getEndDate());
 
@@ -453,7 +456,7 @@ class Events extends CalSvcDb implements EventsI {
     final UpdateResult updResult = ei.getUpdResult();
 
     try {
-      if (getPrincipalInfo().getSubscriptionsOnly()) {
+      if (getSvc().getPrincipalInfo().getSubscriptionsOnly()) {
         return notOk(updResult, noAccess,
                               "User has read only access");
       }
@@ -504,17 +507,17 @@ class Events extends CalSvcDb implements EventsI {
       if (event instanceof BwEventProxy) {
         proxy = (BwEventProxy)event;
         override = proxy.getRef();
-        setupSharableEntity(override, getPrincipal().getPrincipalRef());
+        getSvc().setupSharableEntity(override, getPrincipal().getPrincipalRef());
       } else {
-        setupSharableEntity(event, getPrincipal().getPrincipalRef());
+        getSvc().setupSharableEntity(event, getPrincipal().getPrincipalRef());
 
         if (ei.getNumContainedItems() > 0) {
           for (final EventInfo aei: ei.getContainedItems()) {
             final BwEvent av = aei.getEvent();
             av.setParent(event);
 
-            setupSharableEntity(av,
-                                getPrincipal().getPrincipalRef());
+            getSvc().setupSharableEntity(av,
+                                         getPrincipal().getPrincipalRef());
           }
         }
       }
@@ -1199,7 +1202,8 @@ class Events extends CalSvcDb implements EventsI {
   public void claim(final BwEvent ev) {
     ev.setOwnerHref(null);
     ev.setCreatorHref(null);
-    setupSharableEntity(ev, getPrincipal().getPrincipalRef());
+    getSvc().setupSharableEntity(ev,
+                                 getPrincipal().getPrincipalRef());
   }
 
   @Override
@@ -1256,10 +1260,11 @@ class Events extends CalSvcDb implements EventsI {
         }
       }
 
+      final var authPars = getSvc().getAuthProperties();
       final RecurPeriods rp =
               RecurUtil.getPeriods(ev,
-                                   getAuthpars().getMaxYears(),
-                                   getAuthpars().getMaxInstances(),
+                                   authPars.getMaxYears(),
+                                   authPars.getMaxInstances(),
                                    req.getBegin(),
                                    req.getEnd());
 
@@ -1571,7 +1576,10 @@ class Events extends CalSvcDb implements EventsI {
   boolean isVisible(final BwCalendar col,
                     final String entityName) throws CalFacadeException {
     // This should do a cheap test of access - not retrieve the entire event
-    return getEvent(col, entityName, null) != null;
+    return getSvc().getEventsHandler().get(col,
+                                           entityName,
+                                           null,
+                                           null) != null;
   }
   
   Set<EventInfo> getSynchEvents(final String path,
