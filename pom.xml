@@ -17,11 +17,11 @@
     <!-- Bedework Versions -->
 
     <bw-access.version>4.0.9</bw-access.version>
-    <bw-caldav.version>4.0.13</bw-caldav.version>
+    <bw-caldav.version>4.0.14-SNAPSHOT</bw-caldav.version>
     <bw-cliutil.version>4.1.0</bw-cliutil.version>
     <bw-calendar-common.version>4.0.0-SNAPSHOT</bw-calendar-common.version>
     <bw-jsforj.version>1.0.1</bw-jsforj.version>
-    <bw-util.version>4.0.28</bw-util.version>
+    <bw-util.version>4.0.30</bw-util.version>
     <bw-util-conf.version>4.1.3</bw-util-conf.version>
     <bw-util-hibernate.version>4.0.27</bw-util-hibernate.version>
     <bw-util-index.version>4.1.2</bw-util-index.version>
@@ -47,7 +47,6 @@
     <!-- Third Party Library Versions -->
     <elasticsearch.version>7.13.0</elasticsearch.version>
     <hibernate.version>5.2.5.Final</hibernate.version>
-    <hibernate-validator.version>5.3.6.Final</hibernate-validator.version>
     <jackson.version>2.11.0</jackson.version>
     <java.jaxb.api.version>2.3.0</java.jaxb.api.version>
     <jaxws-api.version>2.3.1</jaxws-api.version>
@@ -333,12 +332,6 @@
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-core</artifactId>
         <version>${hibernate.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.hibernate</groupId>
-        <artifactId>hibernate-validator</artifactId>
-        <version>${hibernate-validator.version}</version>
       </dependency>
 
       <dependency>
