@@ -18,8 +18,6 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.calfacade.exc.CalFacadeException;
-
 import java.util.List;
 import java.util.Map;
 
@@ -42,12 +40,12 @@ public abstract class Crawler extends ProcessorBase {
    * if principal is non-null then we are processing a user/group etc
    * so we just descend through the collections indexing stuff.
    *
-   * @param status
-   * @param name
-   * @param adminAccount
+   * @param status crawl status object
+   * @param name to identify
+   * @param adminAccount admin
    * @param principal - the principal we are processing or null.
-   * @param batchDelay
-   * @param entityDelay
+   * @param batchDelay - delay between batches - milliseconds
+   * @param entityDelay - delay between entities - milliseconds
    * @param skipPaths - paths to skip
    * @param indexNames - where we build the index
    */
@@ -70,17 +68,17 @@ public abstract class Crawler extends ProcessorBase {
     try {
       thr = new CrawlThread(name, this);
       thr.start();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       getStatus().currentStatus = "Start failed with exception " + t.getLocalizedMessage();
       error(t);
     }
   }
 
   @Override
-  public void join() throws CalFacadeException {
+  public void join() {
     try {
       thr.join();
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       getStatus().currentStatus = "Join failed with exception " + t.getLocalizedMessage();
       error(t);
     }
@@ -90,17 +88,17 @@ public abstract class Crawler extends ProcessorBase {
   }
 
   @Override
-  public void stop() throws CalFacadeException {
+  public void stop() {
 
   }
 
   @Override
-  public void restart() throws CalFacadeException {
+  public void restart() {
 
   }
 
   @Override
-  public void restartNext() throws CalFacadeException {
+  public void restartNext() {
 
   }
 }

@@ -46,11 +46,11 @@ public abstract class CalSys implements Logged {
 
   protected String principal;
 
-  private int collectionBatchSize = 10;
+  private final int collectionBatchSize = 10;
 
-  private int entityBatchSize = 50;
+  private final int entityBatchSize = 50;
 
-  private int principalBatchSize = 10;
+  private final int principalBatchSize = 10;
 
   protected static ThreadPool entityThreadPool;
   protected static ThreadPool principalThreadPool;
@@ -85,19 +85,18 @@ public abstract class CalSys implements Logged {
   }
 
   /**
-   * @throws CalFacadeException
    *
    */
-  public void join() throws CalFacadeException {
+  public void join() {
     entityThreadPool.waitForProcessors();
     principalThreadPool.waitForProcessors();
   }
 
-  protected IndexerThread getEntityThread(final Processor proc) throws CalFacadeException {
+  protected IndexerThread getEntityThread(final Processor proc) {
     return entityThreadPool.getThread(proc);
   }
 
-  protected IndexerThread getPrincipalThread(final Processor proc) throws CalFacadeException {
+  protected IndexerThread getPrincipalThread(final Processor proc) {
     return principalThreadPool.getThread(proc);
   }
 
@@ -119,7 +118,7 @@ public abstract class CalSys implements Logged {
   }
 
   protected String getName(final String href) {
-    int pos = href.lastIndexOf("/");
+    final int pos = href.lastIndexOf("/");
 
     if (pos <= 0) {
       return href;
@@ -141,7 +140,7 @@ public abstract class CalSys implements Logged {
     private boolean curPublicAdmin;
 
     private String principal;
-    private String adminAccount;
+    private final String adminAccount;
 
     BwSvc(final String principal,
             final String adminAccount) {
@@ -158,7 +157,7 @@ public abstract class CalSys implements Logged {
      * object.
      *
      * @return svci object
-     * @throws CalFacadeException
+     * @throws CalFacadeException on fatal error
      */
     public CalSvcI getSvci() throws CalFacadeException {
       if ((svci != null) && svci.isOpen()) {
@@ -168,7 +167,7 @@ public abstract class CalSys implements Logged {
 
       String account = adminAccount;
       boolean publicAdmin = true;
-      String userPrincipalPrefix = "/principals/users/";
+      final String userPrincipalPrefix = "/principals/users/";
 
       if (principal != null) {
         if (principal.startsWith(userPrincipalPrefix)) {
@@ -188,8 +187,8 @@ public abstract class CalSys implements Logged {
         curAccount = account;
         curPublicAdmin = publicAdmin;
 
-        CalSvcIPars pars = CalSvcIPars.getIndexerPars(account,
-                                                      publicAdmin);   // Allow super user
+        final CalSvcIPars pars = CalSvcIPars.getIndexerPars(account,
+                                                            publicAdmin);   // Allow super user
         svci = factory.getSvc(pars);
       }
 
@@ -200,7 +199,7 @@ public abstract class CalSys implements Logged {
     }
 
     @Override
-    public void close() throws CalFacadeException {
+    public void close() {
       if ((svci == null) || !svci.isOpen()) {
         return;
       }
@@ -212,9 +211,8 @@ public abstract class CalSys implements Logged {
 
     /**
      * @param svci service interface
-     * @throws CalFacadeException
      */
-    public void close(final CalSvcI svci) throws CalFacadeException {
+    public void close(final CalSvcI svci) {
       if ((svci == null) || !svci.isOpen()) {
         return;
       }
@@ -233,21 +231,19 @@ public abstract class CalSys implements Logged {
 
   /**
    * @return Bw object for principal use
-   * @throws CalFacadeException
    */
-  public BwSvc getBw() throws CalFacadeException {
+  public BwSvc getBw() {
     return new BwSvc(principal, adminAccount);
   }
 
   /**
    * @return Bw object for admin use
-   * @throws CalFacadeException
    */
-  public BwSvc getAdminBw() throws CalFacadeException {
+  public BwSvc getAdminBw() {
     return new BwSvc(adminAccount);
   }
 
-  protected boolean hasAccess(final BwCalendar col) throws CalFacadeException {
+  protected boolean hasAccess(final BwCalendar col) {
     // XXX This should do a real access check so we can index subscriptions.
 
     if (col.getPublick()) {
@@ -266,7 +262,7 @@ public abstract class CalSys implements Logged {
     return col.getCreatorHref().equals(principal);
   }
 
-  protected boolean hasAccess(final BwEvent ent) throws CalFacadeException {
+  protected boolean hasAccess(final BwEvent ent) {
     // XXX This should do a real access check so we can index subscriptions.
 
     if (ent.getPublick()) {
@@ -324,7 +320,7 @@ public abstract class CalSys implements Logged {
    *
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   protected Refs getPrincipalHrefs(final Refs refs) throws CalFacadeException {
     Refs r = refs;
@@ -334,7 +330,7 @@ public abstract class CalSys implements Logged {
       r.batchSize = principalBatchSize;
     }
 
-    try (BwSvc bw = getAdminBw()) {
+    try (final BwSvc bw = getAdminBw()) {
       r.refs = bw.getSvci().getUsersHandler().getPrincipalHrefs(r.index, r.batchSize);
 
       if (debug()) {
@@ -361,7 +357,7 @@ public abstract class CalSys implements Logged {
    * @param path to parent
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   protected Refs getChildCollections(final String path,
                                      final Refs refs) throws CalFacadeException {
@@ -376,7 +372,7 @@ public abstract class CalSys implements Logged {
       r.batchSize = collectionBatchSize;
     }
 
-    try (BwSvc bw = getAdminBw()) {
+    try (final BwSvc bw = getAdminBw()) {
       final BwCalendar col = bw.getSvci().getCalendarsHandler().get(path);
 
       if ((col == null) || !hasAccess(col)) {
@@ -415,7 +411,7 @@ public abstract class CalSys implements Logged {
    * @param path to parent
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   protected Refs getChildEntities(final String path,
                                   final Refs refs) throws CalFacadeException {
@@ -430,7 +426,7 @@ public abstract class CalSys implements Logged {
       r.batchSize = entityBatchSize;
     }
 
-    try (BwSvc bw = getAdminBw()) {
+    try (final BwSvc bw = getAdminBw()) {
       final BwCalendar col = bw.getSvci().getCalendarsHandler().get(path);
 
       if ((col == null) || !hasAccess(col)) {
@@ -469,7 +465,7 @@ public abstract class CalSys implements Logged {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

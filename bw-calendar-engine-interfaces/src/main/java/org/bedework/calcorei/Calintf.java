@@ -241,9 +241,8 @@ public interface Calintf
 
   /**
    * @return boolean true if open and rolled back
-   * @throws CalFacadeException
    */
-  boolean isRolledback() throws CalFacadeException;
+  boolean isRolledback();
 
   /** Flush queued operations.
    *
@@ -628,7 +627,7 @@ public interface Calintf
    * @return BwPrincipal  representing the principal or null if not there
    * @throws CalFacadeException
    */
-  BwPrincipal getPrincipal(final String href) throws CalFacadeException;
+  BwPrincipal getPrincipal(String href) throws CalFacadeException;
 
   /** Get a partial list of principal hrefs.
    *
@@ -637,8 +636,8 @@ public interface Calintf
    * @return list of hrefs - null for no more
    * @throws CalFacadeException
    */
-  List<String> getPrincipalHrefs(final int start,
-                                 final int count) throws CalFacadeException;
+  List<String> getPrincipalHrefs(int start,
+                                 int count) throws CalFacadeException;
 
   /** Fetch the preferences for the given principal.
    *
@@ -646,7 +645,7 @@ public interface Calintf
    * @return the preferences for the principal
    * @throws CalFacadeException
    */
-  BwPreferences getPreferences(final String principalHref) throws CalFacadeException;
+  BwPreferences getPreferences(String principalHref) throws CalFacadeException;
 
   /* ====================================================================
    *                       adminprefs

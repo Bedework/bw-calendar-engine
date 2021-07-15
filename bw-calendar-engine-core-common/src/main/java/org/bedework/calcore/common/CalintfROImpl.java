@@ -358,7 +358,7 @@ public class CalintfROImpl extends CalintfBase
   }
 
   @Override
-  public boolean isRolledback() throws CalFacadeException {
+  public boolean isRolledback() {
     return true;
   }
 

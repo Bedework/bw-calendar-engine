@@ -340,8 +340,8 @@ public class CalintfImpl extends CalintfROImpl {
                           final boolean forTouch) {
     //indexer.indexEntity(entity, wait);
 
-    var ie = new IndexEntry(indexer, entity, forTouch);
-    var prevEntry = awaitingIndex.put(ie.getKey(), ie);
+    final var ie = new IndexEntry(indexer, entity, forTouch);
+    final var prevEntry = awaitingIndex.put(ie.getKey(), ie);
     if (forTouch && (prevEntry != null) && !prevEntry.forTouch) {
       ie.forTouch = false;
     }
@@ -572,7 +572,7 @@ public class CalintfImpl extends CalintfROImpl {
   }
 
   @Override
-  public boolean isRolledback() throws CalFacadeException {
+  public boolean isRolledback() {
     //noinspection SingleStatementInBlock
     if (killed) {
       return true;
@@ -590,6 +590,7 @@ public class CalintfImpl extends CalintfROImpl {
     if (debug()) {
       getLogger().debug("flush for " + getTraceId());
     }
+
     if (sess.isOpen()) {
       sess.flush();
     }
@@ -604,6 +605,7 @@ public class CalintfImpl extends CalintfROImpl {
     if (debug()) {
       getLogger().debug("clear for " + getTraceId());
     }
+
     if (sess.isOpen()) {
       sess.clear();
     }

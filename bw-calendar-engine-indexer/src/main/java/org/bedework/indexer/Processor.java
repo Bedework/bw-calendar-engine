@@ -44,9 +44,9 @@ public interface Processor {
 
   /** Wait for any processes to stop.
    *
-   * @throws CalFacadeException on fatal error
+   * @throws RuntimeException on fatal error
    */
-  void join() throws CalFacadeException;
+  void join();
 
   /** Stop processing entries. A call to start will start from the beginning. A
    * call to restart will restart with the last entry being processed. A call to

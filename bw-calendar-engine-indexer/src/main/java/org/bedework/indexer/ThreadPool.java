@@ -18,7 +18,6 @@
 */
 package org.bedework.indexer;
 
-import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.ToString;
@@ -32,20 +31,20 @@ import java.util.Collection;
  *
  */
 public class ThreadPool implements Logged {
-  private String name;
+  private final String name;
 
-  private int maxThreads;
+  private final int maxThreads;
 
-  private ThreadGroup tgroup;
+  private final ThreadGroup tgroup;
 
-  private Collection<IndexerThread> running = new ArrayList<IndexerThread>();
+  private final Collection<IndexerThread> running = new ArrayList<>();
   private int numWaiting;
 
   private int totalThreads;
 
   /**
-   * @param name
-   * @param maxThreads
+   * @param name to identify
+   * @param maxThreads in group
    */
   public ThreadPool(final String name,
                     final int maxThreads) {
@@ -64,7 +63,7 @@ public class ThreadPool implements Logged {
 
   /** Flag the completion of a processor.
    *
-   * @param val
+   * @param val an indexer thread
    */
   public void completed(final IndexerThread val) {
     synchronized (running) {
@@ -79,9 +78,8 @@ public class ThreadPool implements Logged {
   }
 
   /**
-   * @throws CalFacadeException
    */
-  public void waitForProcessors() throws CalFacadeException {
+  public void waitForProcessors() {
     try {
       synchronized (running) {
         while (numWaiting > 0) {
@@ -106,20 +104,19 @@ public class ThreadPool implements Logged {
       if (debug()) {
         debug("All threads terminated");
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug()) {
         debug("Exception waiting for processor: " + t);
       }
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 
   /**
-   * @param proc
+   * @param proc the processor
    * @return a thread
-   * @throws CalFacadeException
    */
-  public IndexerThread getThread(final Processor proc) throws CalFacadeException {
+  public IndexerThread getThread(final Processor proc) {
     try {
       synchronized (running) {
         while (running.size() >= maxThreads) {
@@ -132,17 +129,20 @@ public class ThreadPool implements Logged {
           numWaiting--;
         }
 
-        IndexerThread it = new IndexerThread(name + "-" + totalThreads, this,  proc);
+        final IndexerThread it =
+                new IndexerThread(name + "-" + totalThreads,
+                                  this,
+                                  proc);
         running.add(it);
         totalThreads++;
 
         return it;
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       if (debug()) {
         debug("Exception waiting for processor: " + t);
       }
-      throw new CalFacadeException(t);
+      throw new RuntimeException(t);
     }
   }
 
@@ -150,7 +150,7 @@ public class ThreadPool implements Logged {
    *
    */
   public void checkThreads() {
-    int active = tgroup.activeCount();
+    final int active = tgroup.activeCount();
 
     if (active == 0) {
       return;
@@ -158,9 +158,9 @@ public class ThreadPool implements Logged {
 
     error("Still " + active + " active " + name + " threads");
 
-    Thread[] activeThreads = new Thread[active];
+    final Thread[] activeThreads = new Thread[active];
 
-    int ret = tgroup.enumerate(activeThreads);
+    final int ret = tgroup.enumerate(activeThreads);
 
     for (int i = 0; i < ret; i++) {
       error("Thread " + activeThreads[i].getName() +
@@ -170,7 +170,7 @@ public class ThreadPool implements Logged {
 
   @Override
   public String toString() {
-    ToString ts = new ToString(this);
+    final ToString ts = new ToString(this);
 
     ts.append("name", name);
     ts.append("running", running.size());
@@ -184,7 +184,7 @@ public class ThreadPool implements Logged {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

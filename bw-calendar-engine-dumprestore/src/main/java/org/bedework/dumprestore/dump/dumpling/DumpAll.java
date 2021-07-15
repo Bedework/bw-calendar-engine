@@ -63,7 +63,7 @@ public class DumpAll extends Dumpling {
     versionDate();
 
     open();
-    Collection<BwSystem> syspars = new ArrayList<>();
+    final Collection<BwSystem> syspars = new ArrayList<>();
 
     syspars.add(globals.svci.getSysparsHandler().get());
     new Dumpling<BwSystem>(globals,

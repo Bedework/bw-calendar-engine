@@ -53,7 +53,7 @@ public abstract class ProcessorBase extends CalSys
   /**
    * @param name to identify
    * @param adminAccount admin
-   * @param principal principal
+   * @param principal - the principal we are processing or null.
    * @param batchDelay - delay between batches - milliseconds
    * @param entityDelay - delay between entities - milliseconds
    * @param skipPaths - paths to skip
