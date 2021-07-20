@@ -290,11 +290,14 @@ class Users extends CalSvcDb implements UsersI {
     getCal().saveOrUpdate(val);
     */
 
-    /* Ensure we have a polls collection. 
-    I think this was a short-term fix that hung around. 
-    It's not a good idea. Makes session start inefficient. */
-    getSvc().getCal().getSpecialCalendar(null, val, BwCalendar.calTypePoll,
-                                         true, PrivilegeDefs.privAny);
+    if (!getPars().getReadonly()) {
+      /* Ensure we have a polls collection.
+      I think this was a short-term fix that hung around.
+      It's not a good idea. Makes session start inefficient. */
+      getSvc().getCal()
+              .getSpecialCalendar(null, val, BwCalendar.calTypePoll,
+                                  true, PrivilegeDefs.privAny);
+    }
   }
 
   /*
