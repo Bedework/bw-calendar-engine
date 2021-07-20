@@ -34,10 +34,10 @@ import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.UsersI;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
-import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.Base64;
 import java.util.UUID;
 
 /** This acts as an interface to the database for more client oriented
@@ -74,7 +74,10 @@ public class CalSvcDb implements Logged, Serializable {
    * @return an encoded value for use as a unique uuid.
    */
   public static String getEncodedUuid() {
-    return Util.toBase64(UUID.randomUUID().toString());
+    return Base64.getEncoder()
+                 .encodeToString(UUID.randomUUID()
+                                     .toString()
+                                     .getBytes());
   }
 
   /* ===================================================
