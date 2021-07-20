@@ -221,7 +221,7 @@ public class EntityBuilder extends EntityBuilderBase {
     ent.setName(getString(PropertyInfoIndex.NAME));
     ent.setColPath(getString(PropertyInfoIndex.COLLECTION));
 
-    ent.setByteValue(Base64.getDecoder().decode(getString("content")));
+    ent.setByteValue(Base64.getMimeDecoder().decode(getString("content")));
 
     return ent;
   }
