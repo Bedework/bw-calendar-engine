@@ -62,8 +62,8 @@ public class ContactsImpl
   Collection<BwContact> fetchAllIndexed(final boolean publick,
                                         final String ownerHref)
           throws CalFacadeException {
-    return filterDeleted(getSvc().getIndexer(publick,
-                                             ownerHref).fetchAllContacts());
+    return filterDeleted(getIndexer(publick,
+                                    ownerHref).fetchAllContacts());
   }
 
   @Override

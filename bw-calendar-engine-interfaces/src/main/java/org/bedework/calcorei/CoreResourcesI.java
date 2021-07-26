@@ -18,8 +18,8 @@ public interface CoreResourcesI {
    * @return BwResource object or null
    * @throws CalFacadeException on fatal error
    */
-  BwResource getResource(final String href,
-                         final int desiredAccess) throws CalFacadeException;
+  BwResource getResource(String href,
+                         int desiredAccess) throws CalFacadeException;
 
   /** Fetch a resource object.
    *
@@ -27,8 +27,8 @@ public interface CoreResourcesI {
    * @param desiredAccess we need
    * @return response with status and possible BwResource object
    */
-  GetEntityResponse<BwResource> fetchResource(final String href,
-                                              final int desiredAccess);
+  GetEntityResponse<BwResource> fetchResource(String href,
+                                              int desiredAccess);
 
   /** Get resource content given the resource. It will be set in the resource
    * object
@@ -56,15 +56,15 @@ public interface CoreResourcesI {
    * @param val resource to add
    * @throws CalFacadeException on error
    */
-  void add(final BwResource val) throws CalFacadeException;
+  void add(BwResource val) throws CalFacadeException;
 
   /**
    * @param r resource owning content
    * @param rc content to add
    * @throws CalFacadeException on error
    */
-  void addContent(final BwResource r,
-                  final BwResourceContent rc) throws CalFacadeException;
+  void addContent(BwResource r,
+                  BwResourceContent rc) throws CalFacadeException;
 
   /**
    * @param val resource
@@ -84,13 +84,13 @@ public interface CoreResourcesI {
    * @param href of resource to delete
    * @throws RuntimeException on fatal error
    */
-  void deleteResource(final String href);
+  void deleteResource(String href);
 
   /**
    * @param val resource to delete
    * @throws CalFacadeException on fatal error
    */
-  void delete(final BwResource val) throws CalFacadeException;
+  void delete(BwResource val) throws CalFacadeException;
 
   /**
    * @param r resource owning content

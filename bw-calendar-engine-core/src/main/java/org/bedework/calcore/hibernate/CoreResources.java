@@ -99,7 +99,7 @@ public class CoreResources extends CalintfHelper
     final String colPath = href.substring(0, pos);
 
     if (debug()) {
-      debug("Get resource " + colPath + " -> " + name);
+      debug("Fetch resource " + colPath + " -> " + name);
     }
 
     final GetEntityResponse<BwResource> resp = new GetEntityResponse<>();

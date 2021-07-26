@@ -67,7 +67,8 @@ public class CalintfFactory {
    * @return Calintf
    * @throws RuntimeException on error
    */
-  public static Calintf getIntf(final boolean readOnly) {
+  public static Calintf getIntf(final ClassLoader loader,
+                                final boolean readOnly) {
     final String nm;
 
     if (readOnly) {
@@ -76,7 +77,8 @@ public class CalintfFactory {
       nm = hibernateClass;
     }
 
-    return (Calintf)Util.getObject(nm,
+    return (Calintf)Util.getObject(loader,
+                                   nm,
                                    Calintf.class);
   }
 }

@@ -189,7 +189,8 @@ public abstract class CalSys implements Logged {
 
         final CalSvcIPars pars = CalSvcIPars.getIndexerPars(account,
                                                             publicAdmin);   // Allow super user
-        svci = factory.getSvc(pars);
+        svci = factory.getSvc(
+                getClass().getClassLoader(), pars);
       }
 
       svci.open();

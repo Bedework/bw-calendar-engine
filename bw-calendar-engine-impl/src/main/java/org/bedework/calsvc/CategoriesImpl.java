@@ -62,8 +62,8 @@ public class CategoriesImpl
   Collection<BwCategory> fetchAllIndexed(final boolean publick,
                                          final String ownerHref)
           throws CalFacadeException {
-    return filterDeleted(getSvc().getIndexer(publick,
-                                             ownerHref).fetchAllCats());
+    return filterDeleted(getIndexer(publick,
+                                    ownerHref).fetchAllCats());
   }
 
   @Override

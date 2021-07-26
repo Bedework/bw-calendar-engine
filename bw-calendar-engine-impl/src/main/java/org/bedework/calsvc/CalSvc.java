@@ -1284,7 +1284,8 @@ public class CalSvc
               || authenticatedUser != null;
 
       cali = CalintfFactory
-              .getIntf(!authenticated || pars.getReadonly());
+              .getIntf(getClass().getClassLoader(),
+                       !authenticated || pars.getReadonly());
 
       final long afterGetIntf = System.currentTimeMillis() - start;
       if (trace()) {

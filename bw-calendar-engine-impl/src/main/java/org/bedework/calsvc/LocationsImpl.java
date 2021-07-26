@@ -87,7 +87,7 @@ public class LocationsImpl
       }
 
       return Response.ok(resp, null);
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       return Response.error(resp, cfe);
     }
   }
@@ -96,8 +96,8 @@ public class LocationsImpl
   Collection<BwLocation> fetchAllIndexed(final boolean publick,
                                          final String ownerHref)
           throws CalFacadeException {
-    return filterDeleted(getSvc().getIndexer(publick,
-                                             ownerHref).fetchAllLocations());
+    return filterDeleted(getIndexer(publick,
+                                    ownerHref).fetchAllLocations());
   }
 
   @Override
@@ -117,10 +117,10 @@ public class LocationsImpl
   }
 
   @Override
-  public boolean exists(Response resp,
+  public boolean exists(final Response resp,
                         final BwLocation val) {
-    var getResp = findPersistent(val.getFinderKeyValue(),
-                            val.getOwnerHref());
+    final var getResp = findPersistent(val.getFinderKeyValue(),
+                                       val.getOwnerHref());
 
     if (getResp.isError()) {
       Response.fromResponse(resp, getResp);

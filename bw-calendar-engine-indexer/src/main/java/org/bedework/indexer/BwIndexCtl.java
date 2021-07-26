@@ -24,7 +24,6 @@ import org.bedework.calfacade.indexing.BwIndexer.IndexedType;
 import org.bedework.calfacade.indexing.IndexStatistics;
 import org.bedework.calfacade.indexing.IndexStatsResponse;
 import org.bedework.calfacade.indexing.ReindexResponse;
-import org.bedework.calfacade.indexing.BwIndexCtlMBean;
 import org.bedework.sysevents.NotificationException;
 import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.misc.Util;
@@ -469,8 +468,8 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   @Override
   public String newIndexes() {
     try {
-      Map<String, String> indexNames = getIndexApp().newIndexes();
-      StringBuilder sb = new StringBuilder();
+      final Map<String, String> indexNames = getIndexApp().newIndexes();
+      final StringBuilder sb = new StringBuilder();
 
       for (final String type: indexNames.keySet()) {
         sb.append(type);
@@ -549,9 +548,6 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     return (processor != null) && processor.isAlive();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexCtlMBean#start()
-   */
   @Override
   public synchronized void start() {
     if (processor != null) {
@@ -564,9 +560,6 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
     processor.start();
   }
 
-  /* (non-Javadoc)
-   * @see org.bedework.indexer.BwIndexCtlMBean#stop()
-   */
   @Override
   public synchronized void stop() {
     if (processor == null) {

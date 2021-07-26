@@ -2577,7 +2577,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                         service,publicAdmin,
                                         allowCreateEprops,
                                         readonly);
-      svci = new CalSvcFactoryDefault().getSvc(pars);
+      svci = new CalSvcFactoryDefault().getSvc(
+              getClass().getClassLoader(), pars);
 
       svci.open();
       svci.beginTransaction();
