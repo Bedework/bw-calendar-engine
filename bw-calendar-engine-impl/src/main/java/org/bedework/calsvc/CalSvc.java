@@ -771,9 +771,10 @@ public class CalSvc
       return mailer;
     }*/
 
-    final MailerIntf mailer =
-            (MailerIntf)Util.getObject(getSystemProperties().getMailerClass(),
-                                                MailerIntf.class);
+    final MailerIntf mailer = (MailerIntf)Util.getObject(
+            getClass().getClassLoader(),
+            getSystemProperties().getMailerClass(),
+            MailerIntf.class);
     mailer.init(configs.getMailConfigProperties());
 
     return mailer;
@@ -974,7 +975,10 @@ public class CalSvc
     }
 
     try {
-      userGroups = (Directories)Util.getObject(getSystemProperties().getUsergroupsClass(), Directories.class);
+      userGroups = (Directories)Util.getObject(
+              getClass().getClassLoader(),
+              getSystemProperties().getUsergroupsClass(),
+              Directories.class);
       userGroups.init(getGroupsCallBack(),
                       configs);
     } catch (final Throwable t) {
@@ -991,7 +995,10 @@ public class CalSvc
     }
 
     try {
-      adminGroups = (Directories)Util.getObject(getSystemProperties().getAdmingroupsClass(), Directories.class);
+      adminGroups = (Directories)Util.getObject(
+              getClass().getClassLoader(),
+              getSystemProperties().getAdmingroupsClass(),
+              Directories.class);
       adminGroups.init(getGroupsCallBack(),
                        configs);
     } catch (final Throwable t) {
@@ -1080,9 +1087,10 @@ public class CalSvc
       return userAuth;
     }
 
-    userAuth = (UserAuth)
-            Util.getObject(getSystemProperties().getUserauthClass(),
-                                                 UserAuth.class);
+    userAuth = (UserAuth)Util.getObject(
+            getClass().getClassLoader(),
+            getSystemProperties().getUserauthClass(),
+            UserAuth.class);
 
     userAuth.initialise(getUserAuthCallBack());
 
@@ -2148,8 +2156,10 @@ public class CalSvc
       final String pwEncryptClass = "org.bedework.util.security.PwEncryptionDefault";
       //String pwEncryptClass = getSysparsHandler().get().getPwEncryptClass();
 
-      pwEncrypt = (PwEncryptionIntf)Util.getObject(pwEncryptClass,
-                                                            PwEncryptionIntf.class);
+      pwEncrypt = (PwEncryptionIntf)Util.getObject(
+              getClass().getClassLoader(),
+              pwEncryptClass,
+              PwEncryptionIntf.class);
 
       String privKeys = null;
       String pubKeys = null;
