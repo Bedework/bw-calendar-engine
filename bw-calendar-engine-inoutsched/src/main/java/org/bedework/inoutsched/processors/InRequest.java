@@ -82,13 +82,13 @@ public class InRequest extends InProcessor {
      * a first invitation or an update
      */
 
-    ProcessResult pr = new ProcessResult();
+    final ProcessResult pr = new ProcessResult();
 
-    BwPreferences prefs = getSvc().getPrefsHandler().get();
-    BwEvent ev = ei.getEvent();
-    String owner = ev.getOwnerHref();
+    final BwPreferences prefs = getSvc().getPrefsHandler().get();
+    final BwEvent ev = ei.getEvent();
+    final String owner = ev.getOwnerHref();
 
-    boolean schedAssistant = ev.isSchedulingAssistant();
+    final boolean schedAssistant = ev.isSchedulingAssistant();
 
     if (debug()) {
       debug("InSchedule schedAssistant = " + schedAssistant);
@@ -97,9 +97,10 @@ public class InRequest extends InProcessor {
     /* First we save or update the event in the users default scheduling calendar
      */
 
-    SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
+    final SchedulingIntf sched = (SchedulingIntf)getSvc().getScheduler();
 
-    String uri = getSvc().getDirectories().principalToCaladdr(getSvc().getPrincipal());
+    final String uri = getSvc().getDirectories()
+                               .principalToCaladdr(getSvc().getPrincipal());
     String colPath = null;
     EventInfo ourCopy;
     boolean adding = false;
@@ -139,8 +140,8 @@ public class InRequest extends InProcessor {
           debug("InSchedule add for " + owner);
         }
 
-        String prefSched = getSvc().getCalendarsHandler().
-                getPreferred(IcalDefs.entityTypeIcalNames[ev.getEntityType()]);
+        final String prefSched = getSvc().getCalendarsHandler().
+                                         getPreferred(IcalDefs.entityTypeIcalNames[ev.getEntityType()]);
         if (prefSched == null) {
           // SCHED - status = no default collection
           if (debug()) {
@@ -187,7 +188,7 @@ public class InRequest extends InProcessor {
 
     boolean noInvites = true;
 
-    boolean doAutoRespond = !pr.removeInboxEntry &&
+    final boolean doAutoRespond = !pr.removeInboxEntry &&
                             prefs.getScheduleAutoRespond();
 
     if (doAutoRespond) {
@@ -202,9 +203,10 @@ public class InRequest extends InProcessor {
     if (adding) {
       final String namePrefix = ourCopy.getEvent().getUid();
 
-      Response resp = sched.addEvent(ourCopy, namePrefix,
-                                     BwCalendar.calTypeCalendarCollection,
-                                     noInvites);
+      final Response resp =
+              sched.addEvent(ourCopy, namePrefix,
+                             BwCalendar.calTypeCalendarCollection,
+                             noInvites);
       if (!resp.isOk()) {
         if (debug()) {
           debug("Schedule - error " + resp +
@@ -248,8 +250,8 @@ public class InRequest extends InProcessor {
                               final EventInfo inboxEi,
                               final boolean doubleBookOk,
                               final String uri) throws CalFacadeException {
-    BwEvent inboxEv = inboxEi.getEvent();
-    String owner = inboxEv.getOwnerHref();
+    final BwEvent inboxEv = inboxEi.getEvent();
+    final String owner = inboxEv.getOwnerHref();
 
     if (ourCopy == null) {
       // Error - deleted while we did this?
@@ -260,14 +262,14 @@ public class InRequest extends InProcessor {
       return false;
     }
 
-    BwOrganizer org = new BwOrganizer();
+    final BwOrganizer org = new BwOrganizer();
     org.setOrganizerUri(uri);
 
     BwAttendee att;
 
-    BwEvent ourEvent = ourCopy.getEvent();
+    final BwEvent ourEvent = ourCopy.getEvent();
 
-    String now = DateTimeUtil.isoDateTimeUTC(new Date());
+    final String now = DateTimeUtil.isoDateTimeUTC(new Date());
 
     if (!ourEvent.getRecurring()) {
       /* Don't bother if it's in the past */
@@ -322,15 +324,16 @@ public class InRequest extends InProcessor {
 
     // Recurring event - do the above per recurrence
 
-    AuthProperties authpars = svci.getAuthProperties();
-    int maxYears = authpars.getMaxYears();
-    int maxInstances = authpars.getMaxInstances();
+    final AuthProperties authpars = svci.getAuthProperties();
+    final int maxYears = authpars.getMaxYears();
+    final int maxInstances = authpars.getMaxInstances();
 
-    Collection<Recurrence> recurrences = RecurUtil.getRecurrences(inboxEi,
-                                                                  maxYears,
-                                                                  maxInstances,
-                                                                  now,
-                                                                  null);
+    final Collection<Recurrence> recurrences =
+            RecurUtil.getRecurrences(inboxEi,
+                                     maxYears,
+                                     maxInstances,
+                                     now,
+                                     null);
 
     if (Util.isEmpty(recurrences)) {
       return false;
@@ -360,10 +363,10 @@ public class InRequest extends InProcessor {
       ourEvent.setTransparency(IcalDefs.transparencyOpaque);
     }
 
-    RecurInfo rinfo = checkBusy(svci,
-                                ourEvent.getUid(),
-                                recurrences, org,
-                                inboxEv.getUid(), doubleBookOk);
+    final RecurInfo rinfo = checkBusy(svci,
+                                      ourEvent.getUid(),
+                                      recurrences, org,
+                                      inboxEv.getUid(), doubleBookOk);
 
     /* If we have a master then we should set its status to cover the largest
      * number of overrides - if any.
@@ -373,9 +376,10 @@ public class InRequest extends InProcessor {
      * Otherwise we have to update or add overrides.
      */
 
-    boolean allAcceptedOrDeclined = (rinfo.availCt == 0) || (rinfo.busyCt == 0);
-    boolean masterAccept = rinfo.availCt >= rinfo.busyCt;
-    String masterPartStat;
+    final boolean allAcceptedOrDeclined =
+            (rinfo.availCt == 0) || (rinfo.busyCt == 0);
+    final boolean masterAccept = rinfo.availCt >= rinfo.busyCt;
+    final String masterPartStat;
 
     if (masterAccept) {
       masterPartStat = IcalDefs.partstatValAccepted;
@@ -399,8 +403,8 @@ public class InRequest extends InProcessor {
 
     if (allAcceptedOrDeclined) {
       // Ensure any overrides have the same status
-      for (EventInfo oei: ourCopy.getOverrides()) {
-        BwEvent override = oei.getEvent();
+      for (final EventInfo oei: ourCopy.getOverrides()) {
+        final BwEvent override = oei.getEvent();
 
         att = override.findAttendee(uri);
         att = (BwAttendee)att.clone();
@@ -427,23 +431,23 @@ public class InRequest extends InProcessor {
 
     /* Some accepts and some declines */
 
-    for (RecurrenceInfo ri: rinfo.ris) {
-      Recurrence r = ri.r;
+    for (final RecurrenceInfo ri: rinfo.ris) {
+      final Recurrence r = ri.r;
 
       //if (!masterSupressed && !ri.busy && (r.override == null)) {
       //  // fine
       //  continue;
       //}
 
-      boolean mustOverride = masterAccept == ri.busy;
+      final boolean mustOverride = masterAccept == ri.busy;
 
-      EventInfo oei = ourCopy.findOverride(r.recurrenceId,
-                                           mustOverride);
+      final EventInfo oei = ourCopy.findOverride(r.recurrenceId,
+                                                 mustOverride);
       if (oei == null) {
         continue;
       }
 
-      BwEvent override = oei.getEvent();
+      final BwEvent override = oei.getEvent();
 
       if (((BwEventProxy)override).getRef().unsaved()) {
         override.setDtstart(r.start);
@@ -516,9 +520,9 @@ public class InRequest extends InProcessor {
      *
      * If we don't do that we could fire off 100s of freebusy queries.
      */
-    RecurInfo res = new RecurInfo();
+    final RecurInfo res = new RecurInfo();
 
-    for (Recurrence r: recurrences) {
+    for (final Recurrence r: recurrences) {
       boolean busy = false;
 
       if (!doubleBookOk) {
@@ -543,16 +547,17 @@ public class InRequest extends InProcessor {
                             final BwDateTime end,
                             final BwOrganizer org,
                             final String uid) throws CalFacadeException {
-    BwEvent fb = svci.getScheduler().getFreeBusy(null, svci.getPrincipal(),
-                                                 start, end, org,
-                                                 uid, excludeUid);
+    final BwEvent fb = svci.getScheduler()
+                           .getFreeBusy(null, svci.getPrincipal(),
+                                        start, end, org,
+                                        uid, excludeUid);
 
-    Collection<BwFreeBusyComponent> times = fb.getFreeBusyPeriods();
+    final Collection<BwFreeBusyComponent> times = fb.getFreeBusyPeriods();
 
     if (!Util.isEmpty(times)) {
-      for (BwFreeBusyComponent fbc: times) {
+      for (final BwFreeBusyComponent fbc: times) {
         if (fbc.getType() != BwFreeBusyComponent.typeFree) {
-          Collection<Period> periods = fbc.getPeriods();
+          final Collection<Period> periods = fbc.getPeriods();
 
           if (!Util.isEmpty(periods)) {
             return true;
@@ -564,24 +569,23 @@ public class InRequest extends InProcessor {
     return false;
   }
 
-  /** Add the event to newCol from the incoming request
+  /** Make a new event for newCol from the incoming request
    *
-   * @param svci
+   * @param svci service interface
    * @param newCol - path for new copy
-   * @param inEi
+   * @param inEi incoming request
    * @param attUri - our attendee uri
    * @return event added or null if not added
-   * @throws CalFacadeException
    */
   private EventInfo newAttendeeCopy(final CalSvcI svci,
                                    final String newCol,
                                    final EventInfo inEi,
-                                   final String attUri) throws CalFacadeException {
-    SchedulingIntf sched = (SchedulingIntf)svci.getScheduler();
+                                   final String attUri) {
+    final SchedulingIntf sched = (SchedulingIntf)svci.getScheduler();
 
     // Adding a copy
-    EventInfo calEi = sched.copyEventInfo(inEi, svci.getPrincipal());
-    BwEvent calEv = calEi.getEvent();
+    final EventInfo calEi = sched.copyEventInfo(inEi, svci.getPrincipal());
+    final BwEvent calEv = calEi.getEvent();
     //String ridStr = calEv.getRecurrenceId();
 
     if (!initAttendeeCopy(svci, newCol, calEv, attUri)) {
@@ -592,7 +596,7 @@ public class InRequest extends InProcessor {
       return calEi;
     }
 
-    for (EventInfo ei: calEi.getOverrides()) {
+    for (final EventInfo ei: calEi.getOverrides()) {
       if (!initAttendeeCopy(svci, newCol, ei.getEvent(), attUri)) {
         return null;
       }
@@ -616,7 +620,7 @@ public class InRequest extends InProcessor {
       return true;
     }
 
-    BwAttendee att = ev.findAttendee(uri);
+    final BwAttendee att = ev.findAttendee(uri);
 
     if (att == null) {
       // Error?
@@ -731,11 +735,10 @@ public class InRequest extends InProcessor {
    * @param inCopy
    * @param attUri - our attendee uri
    * @return boolean true for OK
-   * @throws CalFacadeException
    */
   private boolean updateAttendeeCopy(final EventInfo ourCopy,
                                      final EventInfo inCopy,
-                                     final String attUri) throws CalFacadeException {
+                                     final String attUri) {
     /* Update from an incoming inbox event. The incoming event may be a partial
      * recurring event, that is we may have a suppressed master and an incomplete
      * set of overrides.
@@ -746,17 +749,17 @@ public class InRequest extends InProcessor {
      * an explicit CANCEL.
      */
 
-    BwEvent ourEv = ourCopy.getEvent();
-    BwEvent inEv = inCopy.getEvent();
+    final BwEvent ourEv = ourCopy.getEvent();
+    final BwEvent inEv = inCopy.getEvent();
 
-    boolean ourMaster = !(ourEv instanceof BwEventProxy);
-    boolean inMaster = !(inEv instanceof BwEventProxy);
+    final boolean ourMaster = !(ourEv instanceof BwEventProxy);
+    final boolean inMaster = !(inEv instanceof BwEventProxy);
 
     if (ourMaster != inMaster) {
-      throw new CalFacadeException("Only one master event for updateAttendeeCopy");
+      throw new RuntimeException("Only one master event for updateAttendeeCopy");
     }
 
-    boolean ourRecurMaster = ourMaster && ourEv.getRecurring();
+    final boolean ourRecurMaster = ourMaster && ourEv.getRecurring();
 
     if (!inMaster || !inEv.getSuppressed()) {
       // Not a suppressed master event
@@ -778,12 +781,12 @@ public class InRequest extends InProcessor {
 
       Collection<Recurrence> recurrences = null;
 
-      for (EventInfo inOvei: inCopy.getOverrides()) {
-        BwEvent inOv = inOvei.getEvent();
+      for (final EventInfo inOvei: inCopy.getOverrides()) {
+        final BwEvent inOv = inOvei.getEvent();
 
-        String rid = inOv.getRecurrenceId();
+        final String rid = inOv.getRecurrenceId();
 
-        EventInfo ourOvei = findOverride(ourCopy, rid);
+        final EventInfo ourOvei = findOverride(ourCopy, rid);
 
         if (ourOvei.getEvent().unsaved()) {
           // New override - add rdate if not in current recurrence set
@@ -794,7 +797,7 @@ public class InRequest extends InProcessor {
 
           Recurrence rec = null;
 
-          for (Recurrence r: recurrences) {
+          for (final Recurrence r: recurrences) {
             if (rid.equals(r.recurrenceId)) {
               rec = r;
               break;
@@ -803,7 +806,7 @@ public class InRequest extends InProcessor {
 
           if (rec == null) {
             // Not in set
-            BwDateTime bwrdt = BwDateTime.fromUTC(rid.length() == 8, rid);
+            final BwDateTime bwrdt = BwDateTime.fromUTC(rid.length() == 8, rid);
             ourEv.addRdate(bwrdt);
           }
         }
@@ -845,11 +848,11 @@ public class InRequest extends InProcessor {
 
     if (ovei.getEvent().unsaved()) {
       // New override - set start/end based on duration
-      BwDateTime start = BwDateTime.fromUTC(recurrenceId.length() == 8,
-                                            recurrenceId,
-                                            ei.getEvent().getDtstart().getTzid());
+      final BwDateTime start = BwDateTime.fromUTC(recurrenceId.length() == 8,
+                                                  recurrenceId,
+                                                  ei.getEvent().getDtstart().getTzid());
 
-      BwDateTime end = start.addDur(ei.getEvent().getDuration());
+      final BwDateTime end = start.addDur(ei.getEvent().getDuration());
 
       ovei.getEvent().setDtstart(start);
       ovei.getEvent().setDtend(end);
@@ -859,9 +862,9 @@ public class InRequest extends InProcessor {
   }
 
   private Collection<Recurrence> getRecurrences(final EventInfo ei) {
-    AuthProperties authpars = getSvc().getAuthProperties();
-    int maxYears = authpars.getMaxYears();
-    int maxInstances = authpars.getMaxInstances();
+    final AuthProperties authpars = getSvc().getAuthProperties();
+    final int maxYears = authpars.getMaxYears();
+    final int maxInstances = authpars.getMaxInstances();
 
     return RecurUtil.getRecurrences(ei,
                                     maxYears,
@@ -873,14 +876,14 @@ public class InRequest extends InProcessor {
   private boolean updateAttendeeFields(final EventInfo ourCopy,
                                        final EventInfo inBoxEi,
                                        final String attUri) {
-    BwEvent ourEv = ourCopy.getEvent();
-    BwEvent inEv = inBoxEi.getEvent();
+    final BwEvent ourEv = ourCopy.getEvent();
+    final BwEvent inEv = inBoxEi.getEvent();
     boolean flagNeedsReply = false;
 
-    ChangeTable chg = ourCopy.getChangeset(getPrincipalHref());
+    final ChangeTable chg = ourCopy.getChangeset(getPrincipalHref());
 
-    for (PropertyInfoIndex ipi: PropertyInfoIndex.values()) {
-      BwIcalPropertyInfoEntry bipie = BwIcalPropertyInfo.getPinfo(ipi);
+    for (final PropertyInfoIndex ipi: PropertyInfoIndex.values()) {
+      final BwIcalPropertyInfoEntry bipie = BwIcalPropertyInfo.getPinfo(ipi);
 
       if (bipie == null) {
         continue;
@@ -937,7 +940,7 @@ public class InRequest extends InProcessor {
             chg.changed(ipi, ourEv.getDtend(), dt);
           }
 
-          char c = inEv.getEndType();
+          final char c = inEv.getEndType();
           if (c != ourEv.getEndType()) {
             ourEv.setEndType(c);
             chg.changed(PropertyInfoIndex.END_TYPE,
@@ -1055,11 +1058,11 @@ public class InRequest extends InProcessor {
 
           BwAttendee ourAtt = null;
 
-          for (BwAttendee inAtt: inEv.getAttendees()) {
-            BwAttendee att = (BwAttendee)inAtt.clone();
+          for (final BwAttendee inAtt: inEv.getAttendees()) {
+            final BwAttendee att = (BwAttendee)inAtt.clone();
             att.setScheduleStatus(null);
-            String inAttUri = att.getAttendeeUri();
-            BwAttendee evAtt = ourEv.findAttendee(inAttUri);
+            final String inAttUri = att.getAttendeeUri();
+            final BwAttendee evAtt = ourEv.findAttendee(inAttUri);
 
             if (inAttUri.equals(attUri)) {
               // It's ours
@@ -1113,14 +1116,14 @@ public class InRequest extends InProcessor {
 
         case CATEGORIES:
           if (!Util.isEmpty(inEv.getCategories())) {
-            for (BwCategory cat: inEv.getCategories()) {
+            for (final BwCategory cat: inEv.getCategories()) {
               chg.addValue(ipi, cat);
             }
           }
           break;
 
         case COMMENT:
-          for (BwString s: inEv.getComments()) {
+          for (final BwString s: inEv.getComments()) {
             chg.addValue(ipi, s);
           }
           break;
@@ -1157,7 +1160,7 @@ public class InRequest extends InProcessor {
           break;
 
         case RESOURCES:
-          for (BwString bs: inEv.getResources()) {
+          for (final BwString bs: inEv.getResources()) {
             chg.addValue(ipi, bs);
           }
           break;
@@ -1168,7 +1171,7 @@ public class InRequest extends InProcessor {
             break;
           }
 
-          for (BwDateTime bdt: inEv.getRdates()) {
+          for (final BwDateTime bdt: inEv.getRdates()) {
             chg.addValue(ipi, bdt);
           }
           break;
@@ -1179,13 +1182,13 @@ public class InRequest extends InProcessor {
             break;
           }
 
-          for (String s: inEv.getRrules()) {
+          for (final String s: inEv.getRrules()) {
             chg.addValue(ipi, s);
           }
           break;
 
         case XPROP:
-          for (BwXproperty x: inEv.getXproperties()) {
+          for (final BwXproperty x: inEv.getXproperties()) {
             chg.addValue(ipi, x);
           }
           break;
@@ -1306,12 +1309,12 @@ public class InRequest extends InProcessor {
      * a. A property other than the attendee changed
      * b. An attendee was added or removed
      */
-    Collection<ChangeTableEntry> changes = chg.getEntries();
+    final Collection<ChangeTableEntry> changes = chg.getEntries();
     ChangeTableEntry attChanges = null;
 
     ourEv.setSignificantChange(false);
 
-    for (ChangeTableEntry cte: changes) {
+    for (final ChangeTableEntry cte: changes) {
       if (!cte.getChanged()) {
         continue;
       }
@@ -1379,7 +1382,7 @@ public class InRequest extends InProcessor {
       return false;
     }
 
-    for (EventInfo oei: ei.getOverrides()) {
+    for (final EventInfo oei: ei.getOverrides()) {
       if (oei.getEvent().getSignificantChange()) {
         return true;
       }
