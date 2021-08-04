@@ -230,7 +230,7 @@ public interface Calintf
    * this should in some way check version numbers to detect concurrent updates
    * and fail with an exception.
    *
-   * @throws CalFacadeException on error
+   * @throws CalFacadeException on error - rollback has been called
    */
   void endTransaction() throws CalFacadeException;
 
