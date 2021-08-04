@@ -248,6 +248,11 @@ public class InScheduler extends AbstractScheduler {
     } finally {
       try {
         closeSvci(svci);
+      } catch (final CalFacadeStaleStateException csse) {
+        if (debug()) {
+          debug("Stale state exception");
+        }
+        return ProcessMessageResult.STALE_STATE;
       } catch (final Throwable ignored) {}
     }
 
