@@ -131,19 +131,8 @@ public abstract class AbstractScheduler extends CalSvcDb implements MesssageHand
       return;
     }
 
-    CalFacadeException exc = null;
-
     try (svci) {
-      try {
-        svci.endTransaction();
-      } catch (final CalFacadeException cfe) {
-        rollback(svci);
-        exc = cfe;
-      }
-    }
-
-    if (exc != null) {
-      throw exc;
+      svci.endTransaction();
     }
   }
 }
