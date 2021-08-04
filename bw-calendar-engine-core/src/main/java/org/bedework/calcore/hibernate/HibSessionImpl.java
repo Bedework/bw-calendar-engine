@@ -48,6 +48,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.persistence.OptimisticLockException;
+
 /** Convenience class to do the actual hibernate interaction. Intended for
  * one use only.
  *
@@ -195,6 +197,17 @@ public class HibSessionImpl implements Logged, HibSession {
       if (t instanceof StaleStateException) {
         throw new CalFacadeStaleStateException(t);
       }
+
+      final Class<?> obj;
+      try {
+        obj = t.getClass().getClassLoader().loadClass("javax.persistence.OptimisticLockException");
+      } catch (final ClassNotFoundException cnfe) {
+        throw new RuntimeException(cnfe);
+      }
+      if (t.getClass().isAssignableFrom(obj)) {
+        throw new CalFacadeStaleStateException(t);
+      }
+
       throw new CalFacadeException(t);
     }
   }
@@ -834,6 +847,10 @@ public class HibSessionImpl implements Logged, HibSession {
     exc = t;
 
     if (t instanceof StaleStateException) {
+      throw new CalFacadeStaleStateException(t);
+    }
+
+    if (t instanceof OptimisticLockException) {
       throw new CalFacadeStaleStateException(t);
     }
 
