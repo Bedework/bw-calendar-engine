@@ -1063,6 +1063,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     final var href = val.getHref();
 
     // Tombstoning effectively deletes the old entity.
+    // No tombstone for pending inbox
 
     if (from.getCalType() != BwCalendar.calTypePendingInbox) {
       final BwEvent tombstone = val.cloneTombstone();
@@ -1073,11 +1074,11 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       dao.save(tombstone);
       final EventInfo old = new EventInfo(tombstone);
       indexEntity(old);
-    } else {
-      // Just delete it
-      final var toDelete = new EventInfo(val);
-      deleteEvent(toDelete, true, true);
-      unindexEntity(toDelete);
+//    } else {
+//      // Just delete it
+//      final var toDelete = new EventInfo(val);
+//      deleteEvent(toDelete, true, true);
+//      unindexEntity(toDelete);
     }
 
     val.setColPath(to.getPath());
