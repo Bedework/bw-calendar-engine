@@ -2198,11 +2198,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       return sic;
     } catch (final IcalMalformedException ime) {
-      if (debug()) {
-        error(ime);
-      }
-      throw new WebdavForbidden(CaldavTags.validCalendarData,
-                                ime.getMessage());
+      throw new WebdavForbidden(ime, CaldavTags.validCalendarData);
     } catch (final CalFacadeException cfe) {
       if (CalFacadeException.unknownTimezone.equals(
               cfe.getDetailMessage())) {
