@@ -1681,6 +1681,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
               new DeleteByQueryRequest(targetIndex);
 
       dqr.setConflicts("proceed");
+      dqr.setRefresh(true);
       dqr.setQuery(getFilters(null).colPathFilter(null, colPath));
 
       BulkByScrollResponse bulkResponse =
@@ -1711,6 +1712,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
               new DeleteByQueryRequest(targetIndex);
 
       dqr.setConflicts("proceed");
+      dqr.setRefresh(true);
       final QueryBuilder fb = getFilters(null)
               .singleTombstonedEntityQuery(href,
                                            PropertyInfoIndex.HREF);
@@ -3621,6 +3623,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
             .allInstances(path, uid);
 
     delQreq.setConflicts("proceed");
+    delQreq.setRefresh(true);
     delQreq.setQuery(qb);
 
     boolean ok = true;
