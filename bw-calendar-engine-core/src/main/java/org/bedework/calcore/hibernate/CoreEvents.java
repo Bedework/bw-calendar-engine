@@ -30,7 +30,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
-import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.base.BwDbentity;
@@ -61,7 +60,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -570,23 +568,29 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         edt.setTimeZone(stz);
       }
 
+      /*
       dtval = edt.toString();
       if (dateOnly) {
         dtval = dtval.substring(0, 8);
       }
 
       final BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+       */
 
+      final String rid = rstart.getDate();
+
+      /*
       final BwRecurrenceInstance ri = new BwRecurrenceInstance();
 
       ri.setDtstart(rstart);
       ri.setDtend(rend);
-      ri.setRecurrenceId(ri.getDtstart().getDate());
+      ri.setRecurrenceId(rid);
       ri.setMaster(val);
+       */
 
       if (firstRecurrenceId == null) {
-        firstRecurrenceId = ri.getRecurrenceId();
-      } else if (firstRecurrenceId.equals(ri.getRecurrenceId())) {
+        firstRecurrenceId = rid;
+      } else if (firstRecurrenceId.equals(rid)) {
         // Skip it
         if (debug()) {
           debug("Skipping duplicate recurid " + firstRecurrenceId);
@@ -597,7 +601,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
       if (recurids != null) {
         /* See if we have a recurrence */
-        final String rid = ri.getRecurrenceId();
         final BwEventProxy ov = recurids.get(rid);
 
         if (ov != null) {
@@ -606,9 +609,9 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
           }
 
           setupDependentEntities(ov);
-          addOverride(ov, val, ri);
+          addOverride(ov, val);
 //        For the moment save the instance
-          dao.save(ri);
+//          dao.save(ri);
           recurids.remove(rid);
         }
       }
@@ -808,7 +811,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
             dao.save(ann);
 
             /* See if there is an instance for this override
-             */
             BwRecurrenceInstance ri =
                     dao.getInstance(val, ann.getRecurrenceId());
 
@@ -833,6 +835,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
               dao.update(ri);
             }
+            */
           }
 
           notifyInstanceChange(SysEvent.SysCode.ENTITY_UPDATED, val, shared,
@@ -927,8 +930,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     }
 
     if (isMaster) {
-      // Master event - delete all instances and overrides.
-      deleteInstances(ev, shared);
+      // Master event - delete all overrides.
+      fixReferringAnnotations(ev, shared);
 
       notifyDelete(reallyDelete, ev, shared);
 
@@ -966,7 +969,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         master = cei.getEvent();
       }
 
-      /* Fetch the instance so we can delete it */
+      /* Fetch the instance so we can delete it
       final BwRecurrenceInstance inst =
               dao.getInstance(master,
                               ev.getRecurrenceId());
@@ -976,10 +979,11 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
         return der;
       }
+       */
 
       notifyDelete(true, ev, shared);
 
-      dao.delete(inst);
+      //dao.delete(inst);
 
       if (!ann.unsaved()) {
         //der.alarmsDeleted = deleteAlarms(ann);
@@ -988,7 +992,9 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         dao.delete(ann);
       }
 
-      final BwDateTime instDate = inst.getDtstart();
+      final BwDateTime instDate =
+              BwDateTime.fromUTC(ev.getRecurrenceId().length() == 8,
+                                 ev.getRecurrenceId());
 
       if (!master.getRdates().remove(instDate)) {
         // Wasn't an rdate event
@@ -1234,6 +1240,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
 //    if (mstr.getOwner().equals(getUser()) &&
     if (mstr.testRecurring()) {
+      /*
       // A recurring event - retrieve the instance
 
       BwRecurrenceInstance inst =
@@ -1249,14 +1256,17 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         inst.setRecurrenceId(inst.getDtstart().getDate());
         inst.setMaster(mstr);
       }
+             */
 
       override.setOwnerHref(mstr.getOwnerHref()); // XXX Force owner????
       dao.saveOrUpdate(override);
 //      sess.flush();
+      /*
       if (inst.getOverride() == null) {
         inst.setOverride(override);
         dao.save(inst);
       }
+       */
 
       /* Update the lastmod on the master event */
       mstr.setDtstamps(getCurrentTimestamp());
@@ -1336,8 +1346,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   /* Called when adding an event with overrides
    */
   private void addOverride(final BwEventProxy proxy,
-                           final BwEvent master,
-                           final BwRecurrenceInstance inst) throws CalFacadeException {
+                           final BwEvent master) throws CalFacadeException {
     final BwEventAnnotation override = proxy.getRef();
     if (override.getOwnerHref() == null) {
       override.setOwnerHref(master.getOwnerHref());
@@ -1348,7 +1357,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     override.setTombstoned(false);
 
     dao.saveOrUpdate(override);
-    inst.setOverride(override);
   }
 
   /* Delete any recurrences.
@@ -1377,7 +1385,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
     c.clear();
   }
-*/
   private void deleteInstances(final BwEvent val,
                                final boolean shared) throws CalFacadeException {
     // First some notifications
@@ -1394,6 +1401,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
     fixReferringAnnotations(val);
   }
+*/
 
   /* XXX This is a bit brute force but it will do for the moment. We have to
    * turn a set of rules into a set of changes. If we'd preserved the rules
@@ -1407,7 +1415,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   private void updateRecurrences(final EventInfo ei,
                                  final UpdateEventResult uc,
                                  final Collection<BwEventProxy> overrides,
-                                 final boolean shared) throws CalFacadeException {
+                                 final boolean shared) {
     final BwEvent val = ei.getEvent();
     final ChangeTable changes = val.getChangeset(currentPrincipal());
 
@@ -1447,7 +1455,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       }
     }
 
-    final Map<String, BwRecurrenceInstance> updated = new HashMap<>();
+    //final Map<String, BwRecurrenceInstance> updated = new HashMap<>();
+    final Set<String> updated = new TreeSet<>();
 
     /* Get all the times for this event. - this could be a problem. Need to
        limit the number. Should we do this in chunks, stepping through the
@@ -1487,21 +1496,27 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
       final BwDateTime rstart = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
 
+      /*
       dtval = p.getEnd().toString();
       if (dateOnly) {
         dtval = dtval.substring(0, 8);
       }
 
       final BwDateTime rend = BwDateTime.makeBwDateTime(dateOnly, dtval, stzid);
+       */
+      final var instid = rstart.getDate();
 
+      /*
       final BwRecurrenceInstance ri = new BwRecurrenceInstance();
 
       ri.setDtstart(rstart);
       ri.setDtend(rend);
-      ri.setRecurrenceId(ri.getDtstart().getDate());
+      ri.setRecurrenceId(instid);
       ri.setMaster(val);
 
-      updated.put(ri.getRecurrenceId(), ri);
+      updated.put(instid, ri);
+       */
+      updated.add(instid);
       maxInstances--;
       if (maxInstances == 0) {
         // That's all you're getting from me
@@ -1509,17 +1524,17 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       }
     }
 
-    final List<BwRecurrenceInstance> current = dao.getInstances(val);
+    //final List<BwRecurrenceInstance> current = dao.getInstances(val);
 
-    for (final BwRecurrenceInstance ri: current) {
-      final String rid = ri.getRecurrenceId();
-      final BwRecurrenceInstance updri = updated.get(rid);
+    //for (final BwRecurrenceInstance ri: current) {
+    for (final BwEventProxy pxy: overrides) {
+      final BwEventAnnotation ann = pxy.getRef();
+      final String rid = ann.getRecurrenceId();
 
-      if (updri == null) {
+      if (!updated.contains(rid)) {
         // Not in the new instance set - delete from db
         ei.removeOverride(rid);
         uc.addDeleted(rid);
-        dao.delete(ri);
 
         notifyInstanceChange(SysEvent.SysCode.ENTITY_DELETED, val, shared,
                              rid);
@@ -1527,7 +1542,6 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       }
         
       /* Found instance with same recurrence id. Is the start and end the same
-         */
       if (!ri.getDtstart().equals(updri.getDtstart()) ||
               !ri.getDtend().equals(updri.getDtend())) {
         ri.setDtstart(updri.getDtstart());
@@ -1539,6 +1553,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
         notifyInstanceChange(SysEvent.SysCode.ENTITY_UPDATED, val, shared,
                              rid);
       }
+         */
 
       // Remove the entry - we've processed it.
       updated.remove(rid);
@@ -1546,7 +1561,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
     /* updated only contains recurrence ids that don't exist */
 
-    for (final String rid: updated.keySet()) {
+    for (final String rid: updated) {
       //dao.save(ri);
       uc.addAdded(rid);
 
@@ -1561,7 +1576,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                                final UpdateEventResult uc,
                                final Collection<BwEventProxy> overrides,
                                final Collection<BwDateTime> rids,
-                               final boolean shared) throws CalFacadeException {
+                               final boolean shared) {
     for (final BwDateTime dt: rids) {
       removeInstance(master, uc, overrides, dt.getDate(), shared);
     }
@@ -1573,7 +1588,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                                final Collection<String> rids,
                                final UpdateEventResult uc,
                                final Collection<BwEventProxy> overrides,
-                               final boolean shared) throws CalFacadeException {
+                               final boolean shared) {
     for (final String rid: rids) {
       removeInstance(master, uc, overrides, rid, shared);
     }
@@ -1585,7 +1600,7 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
                               final UpdateEventResult uc,
                               final Collection<BwEventProxy> overrides,
                               final String rid,
-                              final boolean shared) throws CalFacadeException {
+                              final boolean shared) {
     notifyInstanceChange(SysEvent.SysCode.ENTITY_DELETED, master, shared, rid);
 
     if (overrides != null) {
@@ -1607,11 +1622,14 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       }
     }
 
+    /*
     final BwRecurrenceInstance inst = dao.getInstance(master, rid);
     if (inst != null) {
       dao.delete(inst);
       uc.addDeleted(rid);
     }
+     */
+    uc.addDeleted(rid);
   }
 
   /* Add instances identified by the Collection of recurrence ids
@@ -1670,7 +1688,8 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
   }
    */
 
-  private void fixReferringAnnotations(final BwEvent val) throws CalFacadeException {
+  private void fixReferringAnnotations(final BwEvent val,
+                                       final boolean shared) throws CalFacadeException {
     /* We may have annotations to annotations so we hunt them all down deleting
      * the leaf entries first.
      */
@@ -1691,6 +1710,9 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       //  ev.getAttendees().clear();
       //}
       dao.delete(ev);
+      notifyInstanceChange(SysEvent.SysCode.ENTITY_DELETED,
+                           val, shared,
+                           ev.getRecurrenceId());
     }
   }
 
@@ -1700,13 +1722,13 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     return new CoreEventInfo(new BwEventProxy(override), ca);
   }
 
-  /** The master has been checked for access and we now build and
+  /* * The master has been checked for access and we now build and
    * return an event proxy for an instance which has no override.
    *
    * @param inst        the instance
    * @param ca          Checked access from master
    * @return CoreEventInfo
-   */
+   * /
   private CoreEventInfo makeInstanceProxy(final BwRecurrenceInstance inst,
                                           final CurrentAccess ca) {
     final BwEvent mstr = inst.getMaster();
@@ -1734,10 +1756,10 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
 
       return new CoreEventInfo(new BwEventProxy(override), ca);
     }
-    */
+    * /
 
     /* success so now we build a proxy with the event and any override.
-     */
+     * /
 
     final BwEventAnnotation override = new BwEventAnnotation();
 
@@ -1763,12 +1785,13 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
      *
      * We can't do this before I think because we need to allow the user to
      * override the transparency on a particular instance,
-     */
+     * /
 
     final BwEvent proxy = new BwEventProxy(override);
 
     return new CoreEventInfo(proxy, ca);
   }
+     */
 
   private boolean calendarNameExists(final BwEvent val,
                                      final boolean annotation,

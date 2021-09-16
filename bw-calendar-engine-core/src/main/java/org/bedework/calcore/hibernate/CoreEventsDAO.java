@@ -23,7 +23,6 @@ import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventAnnotation;
 import org.bedework.calfacade.BwEventObj;
 import org.bedework.calfacade.BwEventProxy;
-import org.bedework.calfacade.BwRecurrenceInstance;
 import org.bedework.calfacade.exc.CalFacadeException;
 
 import java.util.Collection;
@@ -48,6 +47,7 @@ public class CoreEventsDAO extends DAOBase {
     return CoreEventsDAO.class.getName();
   }
 
+  /*
   protected void update(final BwRecurrenceInstance val) throws CalFacadeException {
     getSess().update(val);
   }
@@ -59,6 +59,7 @@ public class CoreEventsDAO extends DAOBase {
   protected void delete(final BwRecurrenceInstance val) throws CalFacadeException {
     getSess().delete(val);
   }
+   */
   
   private static final String eventsByNameQuery =
     "from " + BwEventObj.class.getName() + " as ev " +
@@ -94,6 +95,7 @@ public class CoreEventsDAO extends DAOBase {
     return (BwEventAnnotation)sess.getUnique();
   }
 
+  /*
   private static final String recurrenceInstanceQuery =
           "from " + BwRecurrenceInstance.class.getName() + " as ev " +
                   "where master=:master and " +
@@ -138,6 +140,7 @@ public class CoreEventsDAO extends DAOBase {
 
     sess.executeUpdate();
   }
+   */
 
   /* TODO - we get deadlocks (at least with mysql) when
      we try to do this. For the moment move them to a purged
