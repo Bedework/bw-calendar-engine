@@ -51,17 +51,17 @@ public class UpdaterUtil {
   /**
    * See if there is a language parameter attached to the property
    *
-   * @param p
+   * @param p BasePropertyType
    * @return String
    */
   static String getLang(final BasePropertyType p) {
-    ArrayOfParameters pars = p.getParameters();
+    final ArrayOfParameters pars = p.getParameters();
     if (pars == null) {
       return null;
     }
 
-    for (JAXBElement<? extends BaseParameterType> parEl : pars
-            .getBaseParameter()) {
+    for (final JAXBElement<? extends BaseParameterType> parEl:
+            pars.getBaseParameter()) {
       if (parEl.getName().equals(XcalTags.language)) {
         return ((TextParameterType)parEl.getValue()).getText();
       }
@@ -90,17 +90,17 @@ public class UpdaterUtil {
   /**
    * See if there is an altrep parameter attached to the property
    *
-   * @param p
+   * @param p BasePropertyType
    * @return String
    */
   static String getAltrep(final BasePropertyType p) {
-    ArrayOfParameters pars = p.getParameters();
+    final ArrayOfParameters pars = p.getParameters();
     if (pars == null) {
       return null;
     }
 
-    for (JAXBElement<? extends BaseParameterType> parEl : pars
-            .getBaseParameter()) {
+    for (final JAXBElement<? extends BaseParameterType> parEl:
+            pars.getBaseParameter()) {
       if (parEl.getName().equals(XcalTags.altrep)) {
         return ((UriParameterType)parEl.getValue()).getUri();
       }
@@ -112,12 +112,12 @@ public class UpdaterUtil {
   /**
    * See if there is a language parameter update
    *
-   * @param updates
+   * @param updates list of updates
    * @return ParameterUpdater.UpdateInfo or null
    */
   static ParameterUpdater.UpdateInfo findLangUpdate(
           final List<ParameterUpdater.UpdateInfo> updates) {
-    for (ParameterUpdater.UpdateInfo parUpd : updates) {
+    for (final ParameterUpdater.UpdateInfo parUpd: updates) {
       if (parUpd.getParamName().equals(XcalTags.language)) {
         return parUpd;
       }
@@ -129,19 +129,19 @@ public class UpdaterUtil {
   /**
    * Return named parameter attached to the property
    *
-   * @param p
-   * @param name
+   * @param p BasePropertyType
+   * @param name QName
    * @return BaseParameterType or null
    */
   static BaseParameterType getParam(final BasePropertyType p,
                                     final QName name) {
-    ArrayOfParameters pars = p.getParameters();
+    final ArrayOfParameters pars = p.getParameters();
     if (pars == null) {
       return null;
     }
 
-    for (JAXBElement<? extends BaseParameterType> parEl : pars
-            .getBaseParameter()) {
+    for (final JAXBElement<? extends BaseParameterType> parEl:
+            pars.getBaseParameter()) {
       if (parEl.getName().equals(name)) {
         return parEl.getValue();
       }
@@ -151,7 +151,7 @@ public class UpdaterUtil {
   }
 
   public static String getParams(final BasePropertyType p) {
-    ArrayOfParameters pars = p.getParameters();
+    final ArrayOfParameters pars = p.getParameters();
     if ((pars == null) || Util.isEmpty(pars.getBaseParameter())) {
       return null;
     }
@@ -174,12 +174,13 @@ public class UpdaterUtil {
       }
 
       try {
-        plist.add(
-                new ParameterBuilder()
-                        .factories(
-                                new DefaultParameterFactorySupplier()
-                                        .get())
-                                      .name(parEl.getName().getLocalPart().toUpperCase()).value(val).build());
+        plist.add(new ParameterBuilder(
+                new DefaultParameterFactorySupplier()
+                        .get())
+                          .name(parEl.getName()
+                                     .getLocalPart()
+                                     .toUpperCase())
+                          .value(val).build());
       } catch (Throwable t) {
       }
     }
