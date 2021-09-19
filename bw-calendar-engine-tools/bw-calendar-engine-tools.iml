@@ -12,10 +12,10 @@
     <orderEntry type="module" module-name="bw-calendar-api" />
     <orderEntry type="module" module-name="bw-calendar-api-ro" />
     <orderEntry type="module" module-name="bw-calendar-sysevents-msgs" />
-    <orderEntry type="module" module-name="bw-util-indexing" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util-indexing:4.1.4" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-misc:4.0.31" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-logging:5.0.0" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-calendar:4.0.10" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util2-calendar:4.0.11" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-calws-soap:4.0.10" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.glassfish.jaxb:jaxb-runtime:2.3.2" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: jakarta.xml.bind:jakarta.xml.bind-api:2.3.2" level="project" />
@@ -30,9 +30,9 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.11.0" level="project" />
     <orderEntry type="module" module-name="bw-calendar-facade" />
     <orderEntry type="module" module-name="bw-calendar-annotations" />
-    <orderEntry type="module" module-name="bw-access" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-access:4.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-caching:4.0.31" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-vcard:4.0.10" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util2-vcard:4.0.11" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-json:4.0.31" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.11.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-http:4.1.4" level="project" />
@@ -42,14 +42,14 @@
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.4.14" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-security:4.1.4" level="project" />
     <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.15" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util-tz:4.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util-tz:4.1.4" level="project" />
     <orderEntry type="library" name="Maven: com.sun.mail:javax.mail:1.6.2" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:activation:1.1" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.11.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-webdav:4.0.13" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.1.4" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-xml:4.0.31" level="project" />
-    <orderEntry type="module" module-name="bw-caldav-util" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-util:4.0.16" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:apache-jdkim-library:0.4" level="project" />
@@ -63,7 +63,7 @@
     <orderEntry type="library" name="Maven: dnsjava:dnsjava:2.1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.13.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
-    <orderEntry type="module" module-name="bw-caldav-server" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-server:4.0.16" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.soap:javax.xml.soap-api:1.4.0" level="project" />
     <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:3.0.16" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
