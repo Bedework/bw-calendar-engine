@@ -37,12 +37,12 @@ public class ResourcesPropUpdater extends LangTextListPropUpdater {
                           final UpdateInfo ui) throws WebdavException {
     Set<BwString> ress = ev.getResources();
 
-    if (Util.isEmpty(ress) || ress.contains(val)) {
+    if (!Util.isEmpty(ress) && ress.contains(val)) {
       // Nothing to do
       return;
     }
 
-    ress.add(val);
+    ev.addResource(val);
 
     ui.getCte().addAddedValue(val);
   }

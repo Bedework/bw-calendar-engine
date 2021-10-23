@@ -30,6 +30,7 @@ import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwResource;
 import org.bedework.calfacade.CalFacadeDefs;
+import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.configs.BasicSystemProperties;
 import org.bedework.calfacade.exc.CalFacadeAccessException;
@@ -43,6 +44,7 @@ import org.bedework.calsvci.ResourcesI;
 import org.bedework.calsvci.SynchI;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.GetEntityResponse;
 import org.bedework.util.xml.tagdefs.AppleServerTags;
 
 import net.fortuna.ical4j.model.Component;
@@ -568,6 +570,11 @@ class Calendars extends CalSvcDb implements CalendarsI {
           throws CalFacadeException {
     return getCal().resolveAlias(val, resolveSubAlias, freeBusy,
                                  null);
+  }
+
+  @Override
+  public GetEntityResponse<CollectionAliases> getAliasInfo(final BwCalendar val) {
+    return getCal().getAliasInfo(val);
   }
 
   @Override

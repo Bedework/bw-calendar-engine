@@ -49,6 +49,7 @@ import org.bedework.calfacade.indexing.BwIndexerParams;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwAuthUser;
 import org.bedework.calfacade.svc.BwCalSuite;
+import org.bedework.calfacade.svc.BwCalSuitePrincipal;
 import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.PrincipalInfo;
@@ -718,6 +719,7 @@ public abstract class CalintfBase implements Logged, Calintf {
     toDocType.put(BwAuthUser.class, BwIndexer.docTypePrincipal);
     toDocType.put(BwCalendar.class, BwIndexer.docTypeCollection);
     toDocType.put(BwCalSuite.class, BwIndexer.docTypePrincipal);
+    toDocType.put(BwCalSuitePrincipal.class, BwIndexer.docTypePrincipal);
     toDocType.put(BwCategory.class, docTypeCategory);
     toDocType.put(BwContact.class, BwIndexer.docTypeContact);
     toDocType.put(BwEvent.class, BwIndexer.docTypeEvent);

@@ -23,6 +23,7 @@ import org.bedework.caldav.server.soap.synch.SynchConnectionsMBean;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.configs.SynchConfig;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.BwCalSuite;
 import org.bedework.calfacade.synch.BwSynchInfo;
 import org.bedework.calsvci.CalendarsI.CheckSubscriptionResult;
 import org.bedework.calsvci.CalendarsI.SynchStatusResponse;
@@ -480,8 +481,21 @@ class Synch extends CalSvcDb implements SynchI {
   }
 
   private String makeOpaqueData(final BwCalendar col) throws CalFacadeException {
-    return "public-admin=" + isPublicAdmin() + "\t" +
+    final BwCalSuite cs = getSvc().getCalSuitesHandler().get();
+    final String csname;
+    if (cs != null) {
+      csname = cs.getName();
+    } else {
+      csname = null;
+    }
+
+    String s = "public-admin=" + isPublicAdmin() + "\t" +
             "adminCreateEprops=" + col.getSynchAdminCreateEprops();
+
+    if (csname != null) {
+      s += "\tcalsuite=" + csname;
+    }
+    return s;
   }
 
   SynchRemoteServicePortType getPort(final String uri) throws CalFacadeException {

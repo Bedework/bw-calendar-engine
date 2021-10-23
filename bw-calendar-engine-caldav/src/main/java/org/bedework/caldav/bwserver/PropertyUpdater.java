@@ -21,9 +21,10 @@ package org.bedework.caldav.bwserver;
 import org.bedework.caldav.server.sysinterface.SysIntf.UpdateResult;
 import org.bedework.calfacade.BwAlarm;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.svc.EventInfo;
-import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.calfacade.ifs.IcalCallback;
+import org.bedework.calfacade.svc.EventInfo;
+import org.bedework.calfacade.util.CategoryMapInfo;
+import org.bedework.calfacade.util.ChangeTableEntry;
 import org.bedework.util.calendar.PropertyIndex;
 import org.bedework.util.calendar.XcalUtil.TzGetter;
 import org.bedework.webdav.servlet.shared.WebdavException;
@@ -79,6 +80,11 @@ public interface PropertyUpdater {
    * @author douglm
    */
   public interface UpdateInfo {
+    /**
+     * @return mappings - null if none defined
+     */
+    CategoryMapInfo getCatMapInfo();
+
     /**
      * @return true for add property
      */

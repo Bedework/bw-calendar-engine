@@ -45,6 +45,7 @@ import org.bedework.caldav.util.sharing.ShareResultType;
 import org.bedework.caldav.util.sharing.ShareType;
 import org.bedework.caldav.util.sharing.UserType;
 import org.bedework.calfacade.BwCalendar;
+import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwEventObj;
@@ -53,7 +54,10 @@ import org.bedework.calfacade.BwOrganizer;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.BwPrincipalInfo;
 import org.bedework.calfacade.BwResource;
+import org.bedework.calfacade.BwString;
 import org.bedework.calfacade.BwVersion;
+import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
@@ -76,9 +80,12 @@ import org.bedework.calfacade.filter.SimpleFilterParser.ParseResult;
 import org.bedework.calfacade.ifs.Directories;
 import org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 import org.bedework.calfacade.svc.BwPreferences;
+import org.bedework.calfacade.svc.BwPreferences.CategoryMapping;
+import org.bedework.calfacade.svc.BwPreferences.CategoryMappings;
 import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.svc.SharingReplyResult;
+import org.bedework.calfacade.util.CategoryMapInfo;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
 import org.bedework.calsvci.CalendarsI;
@@ -104,6 +111,7 @@ import org.bedework.util.calendar.XcalUtil;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 import org.bedework.util.misc.Util;
+import org.bedework.util.misc.response.GetEntityResponse;
 import org.bedework.util.misc.response.Response;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.tagdefs.CaldavTags;
@@ -341,17 +349,30 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       boolean publicAdmin = false;
       boolean adminCreateEprops = false;
+      String calSuite = null;
 
       if (!notifyWs && (opaqueData != null)) {
         final String[] vals = opaqueData.split("\t");
 
         for (final String val: vals) {
-          if (val.startsWith("public-admin=")) {
-            publicAdmin = Boolean.parseBoolean(val.substring(13));
+          final int pos = val.indexOf("=");
+          if (pos < 0) {
             continue;
           }
+
+          final String rhs = val.substring(pos + 1);
+          if (val.startsWith("public-admin=")) {
+            publicAdmin = Boolean.parseBoolean(rhs);
+            continue;
+          }
+
           if (val.startsWith("adminCreateEprops=")) {
-            adminCreateEprops = Boolean.parseBoolean(val.substring(18));
+            adminCreateEprops = Boolean.parseBoolean(rhs);
+            continue;
+          }
+
+          if (val.startsWith("calsuite=")) {
+            calSuite = rhs;
           }
         }
       }
@@ -360,6 +381,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
               reqi.runAs(),
               service,
               publicAdmin,
+              calSuite,
               reqi.clientId(),
               adminCreateEprops,
               reqi.readOnly());
@@ -1082,6 +1104,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
       /* Is the event a scheduling object? */
 
       final EventInfo ei = getEvinfo(ev);
+      mapCategories(ei);
       final EventInfo.UpdateResult resp =
               getSvci().getEventsHandler().add(ei, noInvites,
                                                false,  // scheduling - inbox
@@ -1165,15 +1188,19 @@ public class BwSysIntfImpl implements Logged, SysIntf {
   public UpdateResult updateEvent(final CalDAVEvent<?> event,
                                   final List<ComponentSelectionType> updates) throws WebdavException {
     try {
-      EventInfo ei = getEvinfo(event);
+      final EventInfo ei = getEvinfo(event);
 
       if (updates == null) {
         return new UpdateResult("No updates");
       }
 
-      UpdateResult ur = new BwUpdates(getPrincipal().getPrincipalRef()).updateEvent(
-              ei, updates,
-              getSvci().getIcalCallback());
+      final CategoryMapInfo cm = getCatMapping();
+
+      final UpdateResult ur =
+              new BwUpdates(getPrincipal().getPrincipalRef(),
+                            cm).
+                      updateEvent(ei, updates,
+                                  getSvci().getIcalCallback());
       if (!ur.getOk()) {
         return ur;
       }
@@ -2393,6 +2420,123 @@ public class BwSysIntfImpl implements Logged, SysIntf {
    *                         Private methods
    * ==================================================================== */
 
+  private CategoryMapInfo getCatMapping() throws Throwable {
+    final BwPreferences prefs = getPrefs();
+    final CategoryMappings catMaps;
+
+    if (prefs == null) {
+      return new CategoryMapInfo(null, null);
+    }
+
+    final GetEntityResponse<CategoryMappings> ger =
+            prefs.readCategoryMappings();
+    if (!ger.isOk()) {
+      // Should emit warning
+      return new CategoryMapInfo(null, null);
+    }
+
+    catMaps = ger.getEntity();
+
+    final Set<BwCalendar> topicalAreas;
+
+    if (catMaps == null) {
+      return new CategoryMapInfo(null, null);
+    }
+
+    topicalAreas = new TreeSet<>();
+
+    // We'll need all the topical areas for the calsuite
+    final BwCalendar home =
+            getSvci().getCalendarsHandler().get(getSvci().getPrincipalInfo().getCalendarHomePath());
+    if (home == null) {
+      throw new RuntimeException("No home directory");
+    }
+
+    final Collection<BwCalendar> children = getSvci().
+            getCalendarsHandler().getChildren(home);
+    for (final BwCalendar child: children) {
+      if (!child.getIsTopicalArea()) {
+        continue;
+      }
+
+      final GetEntityResponse<CollectionAliases> geca =
+              getSvci().getCalendarsHandler().getAliasInfo(child);
+      if (!geca.isOk()) {
+        throw new RuntimeException("Failed to get alias info: " +
+                                           geca.getMessage());
+      }
+
+      final CollectionAliases ca = geca.getEntity();
+      if (ca.getInvalidAlias() != null) {
+        continue;
+      }
+
+      topicalAreas.add(child);
+    }
+
+    return new CategoryMapInfo(catMaps, topicalAreas);
+  }
+
+  private void mapCategories(final EventInfo ei) throws Throwable {
+    final CategoryMapInfo cm = getCatMapping();
+
+    if (cm.getNoMapping()) {
+      return;
+    }
+
+    final BwEvent ev = ei.getEvent();
+    final Iterator<BwCategory> catIt = ev.getCategories().iterator();
+    final List<BwCategory> toRemove = new ArrayList<>();
+
+    for (final BwCategory cat: ev.getCategories()) {
+      final CategoryMapping catMap =
+              cm.findMapping(cat.getWordVal());
+
+      if (catMap == null) {
+        // Not a candidate
+        continue;
+      }
+
+      toRemove.add(cat);
+
+      if (catMap.isTopicalArea()) {
+        final BwCalendar mapTo = cm.getTopicalArea(catMap);
+
+        if (mapTo == null) {
+          // Should warn
+          continue;
+        }
+
+        // Add an x-prop to define the alias. Categories will be added by realias.
+
+        final BwCalendar aliasTarget = mapTo.getAliasTarget();
+        final BwXproperty xp = BwXproperty.makeBwAlias(
+                mapTo.getName(),
+                mapTo.getAliasUri().substring(
+                        BwCalendar.internalAliasUriPrefix.length()),
+                aliasTarget.getPath(),
+                mapTo.getPath());
+        ev.addXproperty(xp);
+      } else {
+        // Add a category
+        final BwCategory newCat = BwCategory.makeCategory();
+        newCat.setWord(new BwString(null, catMap.getTo()));
+        getSvci().getCategoriesHandler()
+                 .ensureExists(newCat, ev.getOwnerHref());
+      }
+    }
+
+    for (final BwCategory cat: toRemove) {
+      ev.getCategories().remove(cat);
+    }
+
+    if (!Util.isEmpty(ei.getOverrides())) {
+      for (final EventInfo oei: ei.getOverrides()) {
+        mapCategories(oei);
+      }
+    }
+  }
+
   private String doNoteHeader(final String hdr,
                               final String account) throws WebdavException {
 
@@ -2543,6 +2687,7 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                           final String runAs,
                           final boolean service,
                           final boolean publicAdmin,
+                          final String calSuite,
                           final String clientId,
                           final boolean allowCreateEprops,
                           final boolean readonly) throws WebdavException {
@@ -2570,7 +2715,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
                                         runAsUser,
                                         clientIdent,
                                         possibleSuperUser,   // allow SuperUser
-                                        service,publicAdmin,
+                                        service,
+                                        publicAdmin,
+                                        calSuite,
                                         allowCreateEprops,
                                         readonly);
       svci = new CalSvcFactoryDefault().getSvc(

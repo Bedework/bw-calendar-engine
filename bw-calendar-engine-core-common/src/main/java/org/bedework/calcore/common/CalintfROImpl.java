@@ -52,6 +52,7 @@ import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.BwStats;
 import org.bedework.calfacade.BwStats.StatsEntry;
 import org.bedework.calfacade.CalFacadeDefs;
+import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.RecurringRetrievalMode;
 import org.bedework.calfacade.RecurringRetrievalMode.Rmode;
@@ -545,11 +546,28 @@ public class CalintfROImpl extends CalintfBase
     }
 
     // Create list of paths so we can detect a loop
-    final ArrayList<String> pathElements = new ArrayList<>();
-    pathElements.add(val.getPath());
+    final CollectionAliasesImpl cai = new CollectionAliasesImpl(val);
 
     return resolveAlias(val, resolveSubAlias, freeBusy,
-                        pathElements, getColIndexer(indexer));
+                        cai, getColIndexer(indexer));
+  }
+
+  @Override
+  public GetEntityResponse<CollectionAliases> getAliasInfo(
+          final BwCalendar val) {
+    final GetEntityResponse<CollectionAliases> res =
+            new GetEntityResponse<>();
+    final CollectionAliasesImpl cai = new CollectionAliasesImpl(val);
+
+    try {
+      resolveAlias(val, true, false,
+                   cai, getColIndexer());
+    } catch (final CalFacadeException cfe) {
+      return Response.error(res, cfe);
+    }
+
+    res.setEntity(cai);
+    return res;
   }
 
   @Override
@@ -1815,10 +1833,20 @@ public class CalintfROImpl extends CalintfBase
     return outevs;
   }
 
+  /** Recursively follow chain of aliases
+   *
+   * @param val to resolve
+   * @param resolveSubAlias true to continue down chain
+   * @param freeBusy true for a freebusy call (changes access)
+   * @param cai for information on chain of aliases
+   * @param indexer we use this one
+   * @return targeted collection
+   * @throws CalFacadeException on fatal error
+   */
   private BwCalendar resolveAlias(final BwCalendar val,
                                   final boolean resolveSubAlias,
                                   final boolean freeBusy,
-                                  final ArrayList<String> pathElements,
+                                  final CollectionAliasesImpl cai,
                                   final BwIndexer indexer) throws CalFacadeException {
     if ((val == null) || !val.getInternalAlias()) {
       return val;
@@ -1826,11 +1854,15 @@ public class CalintfROImpl extends CalintfBase
 
     final BwCalendar c = val.getAliasTarget();
     if (c != null) {
-      if (!resolveSubAlias) {
+      // Already fetched target
+
+      if (!cai.addCollection(c) || !resolveSubAlias) {
         return c;
       }
 
-      final BwCalendar res = resolveAlias(c, true, freeBusy, pathElements, indexer);
+      final BwCalendar res = resolveAlias(c, true,
+                                          freeBusy, cai,
+                                          indexer);
       res.setAliasOrigin(val);
 
       return res;
@@ -1845,23 +1877,12 @@ public class CalintfROImpl extends CalintfBase
       desiredAccess = privReadFreeBusy;
     }
 
-    final String path = val.getInternalAliasPath();
-
-    if (pathElements.contains(path)) {
-      val.setDisabled(true);
-      return null;
-    }
-
-    pathElements.add(path);
-
-    //if (debug()) {
-    //  debug("Search for calendar \"" + path + "\"");
-    //}
-
     BwCalendar col;
 
     try {
-      col = getCollectionIdx(indexer, path, desiredAccess, false);
+      col = getCollectionIdx(indexer,
+                             val.getInternalAliasPath(),
+                             desiredAccess, false);
     } catch (final CalFacadeAccessException cfae) {
       col = null;
     }
@@ -1874,6 +1895,12 @@ public class CalintfROImpl extends CalintfBase
         val.setDisabled(true);
       }
 
+      cai.markBad(val);
+
+      return null;
+    }
+
+    if (!cai.addCollection(col)) {
       return null;
     }
 
@@ -1884,7 +1911,9 @@ public class CalintfROImpl extends CalintfBase
       return col;
     }
 
-    final BwCalendar res = resolveAlias(col, true, freeBusy, pathElements, indexer);
+    final BwCalendar res = resolveAlias(col, true,
+                                        freeBusy,
+                                        cai, indexer);
     res.setAliasOrigin(val);
 
     return res;

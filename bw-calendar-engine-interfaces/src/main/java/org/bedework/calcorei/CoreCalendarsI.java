@@ -22,10 +22,12 @@ import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwPrincipal;
+import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.indexing.BwIndexer;
 import org.bedework.calfacade.wrappers.CalendarWrapper;
+import org.bedework.util.misc.response.GetEntityResponse;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -92,6 +94,12 @@ public interface CoreCalendarsI extends Serializable {
                           boolean resolveSubAlias,
                           boolean freeBusy,
                           BwIndexer indexer) throws CalFacadeException;
+
+  /**
+   * @param val a collection to check
+   * @return response with status and info.
+   */
+  GetEntityResponse<CollectionAliases> getAliasInfo(BwCalendar val);
 
   /** Find any aliases to the given collection.
    *

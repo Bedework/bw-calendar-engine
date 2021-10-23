@@ -26,11 +26,12 @@ import org.bedework.calfacade.BwDateTime;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.base.StartEndComponent;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calfacade.util.CalFacadeUtil;
+import org.bedework.calfacade.util.CategoryMapInfo;
 import org.bedework.calfacade.util.ChangeTable;
 import org.bedework.calfacade.util.ChangeTableEntry;
-import org.bedework.calfacade.ifs.IcalCallback;
 import org.bedework.convert.IcalTranslator;
 import org.bedework.convert.xcal.Xalarms;
 import org.bedework.util.calendar.IcalDefs;
@@ -91,11 +92,15 @@ public class BwUpdates implements Logged {
 
   private Properties state = new Properties();
 
+  private final CategoryMapInfo catMapInfo;
+
   /**
    * @param userHref
    */
-  public BwUpdates(final String userHref) {
+  public BwUpdates(final String userHref,
+                   final CategoryMapInfo catMapInfo) {
     this.userHref = userHref;
+    this.catMapInfo = catMapInfo;
   }
 
   private static Map<Class<?>, Integer> entTypes = new HashMap<>();
@@ -567,7 +572,8 @@ public class BwUpdates implements Logged {
                                                      ei,
                                                      subComponent,
                                                      state,
-                                                     userHref);
+                                                     userHref,
+                                                     catMapInfo);
       UpdateResult ur;
       /* There is possibly no change - for example we are changing the tzid for
        * the dtstart
@@ -791,7 +797,8 @@ public class BwUpdates implements Logged {
                                                      ei,
                                                      subComponent,
                                                      state,
-                                                     userHref);
+                                                     userHref,
+                                                     catMapInfo);
 
       UpdateResult ur;
 
@@ -863,6 +870,8 @@ public class BwUpdates implements Logged {
     private boolean change;
     private boolean remove;
 
+    private final CategoryMapInfo catMapInfo;
+
     private TzGetter tzs = Timezones::getTz;
 
     private BasePropertyType prop;
@@ -894,7 +903,8 @@ public class BwUpdates implements Logged {
                        final EventInfo ei,
                        final Component subComponent,
                        final Properties state,
-                       final String userHref) {
+                       final String userHref,
+                       final CategoryMapInfo catMapInfo) {
       this.prop = prop;
       propName = pname;
       this.cb = cb;
@@ -902,6 +912,7 @@ public class BwUpdates implements Logged {
       this.subComponent = subComponent;
       this.state = state;
       this.userHref = userHref;
+      this.catMapInfo = catMapInfo;
 
       if (prop instanceof XBedeworkWrapperPropType) {
         pi = PropertyInfoIndex.XPROP;
@@ -1016,6 +1027,11 @@ public class BwUpdates implements Logged {
       }
 
       return null;
+    }
+
+    @Override
+    public CategoryMapInfo getCatMapInfo() {
+      return catMapInfo;
     }
 
     @Override

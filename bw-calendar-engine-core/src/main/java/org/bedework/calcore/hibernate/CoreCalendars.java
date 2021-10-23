@@ -32,6 +32,7 @@ import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCollectionLastmod;
 import org.bedework.calfacade.BwPrincipal;
 import org.bedework.calfacade.CalFacadeDefs;
+import org.bedework.calfacade.CollectionAliases;
 import org.bedework.calfacade.CollectionSynchInfo;
 import org.bedework.calfacade.base.BwLastMod;
 import org.bedework.calfacade.configs.BasicSystemProperties;
@@ -220,6 +221,12 @@ class CoreCalendars extends CalintfHelper
 
     return resolveAlias(val, resolveSubAlias, freeBusy, 
                         pathElements, indexer);
+  }
+
+  @Override
+  public GetEntityResponse<CollectionAliases> getAliasInfo(
+          final BwCalendar val) {
+    throw new RuntimeException("Should not be called");
   }
 
   @Override

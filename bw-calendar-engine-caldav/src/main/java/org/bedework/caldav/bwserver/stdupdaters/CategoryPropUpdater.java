@@ -19,9 +19,13 @@
 
 package org.bedework.caldav.bwserver.stdupdaters;
 
+import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwCategory;
 import org.bedework.calfacade.BwEvent;
 import org.bedework.calfacade.BwString;
+import org.bedework.calfacade.BwXproperty;
+import org.bedework.calfacade.svc.BwPreferences.CategoryMapping;
+import org.bedework.util.misc.response.GetEntityResponse;
 import org.bedework.util.misc.response.Response;
 import org.bedework.webdav.servlet.shared.WebdavException;
 
@@ -34,14 +38,13 @@ public class CategoryPropUpdater extends LangTextListPropUpdater {
   protected void addValue(final BwEvent ev,
                           final BwString val,
                           final UpdateInfo ui) throws WebdavException {
-    if (ev.getNumCategories() == 0) {
-      // Nothing to do
-      return;
-    }
+    /* See if this is a value to be mapped */
+    final CategoryMapping catMap =
+            ui.getCatMapInfo().findMapping(val.getValue());
 
     BwCategory cat = null;
 
-    for (BwCategory evcat: ev.getCategories()) {
+    for (final BwCategory evcat: ev.getCategories()) {
       if (evcat.getWord().equals(val)) {
         // Found the category attached to the event.
         cat = evcat;
@@ -50,15 +53,52 @@ public class CategoryPropUpdater extends LangTextListPropUpdater {
     }
 
     if (cat != null) {
-      // Nothing to do
+      if (catMap == null) {
+        // Nothing to do
+        return;
+      }
+
+      // Delete the category - we are (now) mapping it.
+      ev.removeCategory(cat);
+      ui.getCte().addRemovedValue(cat);
+    }
+
+    if ((catMap != null) && (catMap.isTopicalArea())) {
+      final BwCalendar mapTo = ui.getCatMapInfo().getTopicalArea(catMap);
+
+      if (mapTo == null) {
+        // Should warn
+        return;
+      }
+
+      // Add an x-prop to define the alias. Categories will be added by realias.
+
+      final BwCalendar aliasTarget = mapTo.getAliasTarget();
+      final BwXproperty xp = BwXproperty.makeBwAlias(
+              mapTo.getName(),
+              mapTo.getAliasUri().substring(
+                      BwCalendar.internalAliasUriPrefix.length()),
+              aliasTarget.getPath(),
+              mapTo.getPath());
+      ev.addXproperty(xp);
+      ui.getCte().addValue(xp);
       return;
     }
 
-    var resp = ui.getIcalCallback().findCategory(val);
+    final BwString catVal;
+    if (catMap == null) {
+      catVal = val;
+    } else {
+      // Mapped to different category
+      catVal = new BwString(null, catMap.getTo());
+    }
+
+    final GetEntityResponse<BwCategory> resp =
+            ui.getIcalCallback().findCategory(catVal);
 
     if (resp.getStatus() == Response.Status.notFound) {
       cat = BwCategory.makeCategory();
-      cat.setWord(val);
+      cat.setWord(catVal);
 
       ui.getIcalCallback().addCategory(cat);
     } else if (resp.isOk()) {
