@@ -56,15 +56,15 @@
     <orderEntry type="library" name="Maven: javax.jms:javax.jms-api:2.0" level="project" />
     <orderEntry type="module" module-name="bw-calendar-facade" />
     <orderEntry type="module" module-name="bw-calendar-annotations" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-vcard:4.0.11" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util2-vcard:4.0.12" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-json:4.0.31" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-webdav:4.0.13" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-servlet:4.1.4" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-xml:4.0.31" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-util:4.0.16" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-util:4.0.17" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-synchws:4.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-caldav:4.0.10" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-server:4.0.16" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-caldav-server:4.0.17" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.0" level="project" />
     <orderEntry type="library" name="Maven: org.yaml:snakeyaml:1.26" level="project" />
     <orderEntry type="module" module-name="bw-calendar-sysevents-msgs" />
@@ -77,7 +77,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.11.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.11.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.11.0" level="project" />
-    <orderEntry type="library" name="Maven: org.bedework:bw-util2-calendar:4.0.11" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-util2-calendar:4.0.12" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-xml-calws-soap:4.0.10" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.glassfish.jaxb:jaxb-runtime:2.3.2" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: jakarta.xml.bind:jakarta.xml.bind-api:2.3.2" level="project" />
