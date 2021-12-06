@@ -24,7 +24,6 @@ import org.bedework.util.jmx.ConfBase;
 import org.bedework.util.jmx.InfoLines;
 
 import java.util.List;
-import java.util.Properties;
 
 /**
  * @author douglm
@@ -39,9 +38,10 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
   private class SchemaBuilder extends SchemaThread {
 
     SchemaBuilder(final String outFile,
-                  final boolean export,
-                  final Properties hibConfig) {
-      super(outFile, export, hibConfig);
+                  final boolean export) {
+      super(outFile, export, new HibConfig(getConfig(),
+                                           DbConf.class.getClassLoader()));
+      setContextClassLoader(DbConf.class.getClassLoader());
     }
 
     @Override
@@ -101,11 +101,8 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
   @Override
   public String schema() {
     try {
-      final HibConfig hc = new HibConfig(getConfig());
-      
       buildSchema = new SchemaBuilder(getSchemaOutFile(),
-                                      getExport(),
-                                      hc.getHibConfiguration().getProperties());
+                                      getExport());
 
       setStatus(statusRunning);
 
