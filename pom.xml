@@ -28,4 +28,11 @@
     <module>bw-calendar-engine-tools</module>
     <module>bw-calendar-engine-core-common</module>
   </modules>
+
+  <scm>
+    <connection>scm:git:git@github.com:Bedework/bw-calendar-engine.git</connection>
+    <developerConnection>scm:git:git@github.com:Bedework/bw-calendar-engine.git</developerConnection>
+    <url>https://github.com/Bedework/bw-calendar-engine</url>
+    <tag>HEAD</tag>
+  </scm>
 </project>
