@@ -68,6 +68,7 @@ import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
 import org.bedework.util.elasticsearch.DocBuilderBase.UpdateInfo;
 import org.bedework.util.elasticsearch.EsDocInfo;
+import org.bedework.util.http.Headers;
 import org.bedework.util.indexing.IndexException;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
@@ -78,6 +79,7 @@ import org.bedework.util.misc.response.Response;
 import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Period;
+import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
@@ -105,6 +107,7 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
@@ -135,6 +138,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -3934,7 +3938,26 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
         hosts[i] = new HttpHost(hp.getHost(), hp.getPort());
       }
 
-      theClient = new RestHighLevelClient(RestClient.builder(hosts));
+      final RestClientBuilder rcb = RestClient.builder(hosts);
+
+      if (idxpars.getIndexerToken() != null) {
+        final Header[] headers = new Headers().
+                add("Authorization", "Bearer " + idxpars.getIndexerToken()).
+                asArray();
+        rcb.setDefaultHeaders(headers);
+      } else if (idxpars.getIndexerUser() != null) {
+        final String ip = idxpars.getIndexerUser() + ":" +
+                idxpars.getIndexerPw();
+        final String ipb64 =
+                Base64.getEncoder()
+                      .encodeToString(ip.getBytes(StandardCharsets.UTF_8));
+        final Header[] headers = new Headers().
+                add("Authorization", "Basic " + ipb64).
+                asArray();
+        rcb.setDefaultHeaders(headers);
+      }
+
+      theClient = new RestHighLevelClient(rcb);
 
       /* Ensure status is at least yellow */
 

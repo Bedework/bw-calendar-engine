@@ -234,6 +234,36 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   }
 
   @Override
+  public void setIndexerToken(final String val) {
+    getConfig().setIndexerToken(val);
+  }
+
+  @Override
+  public String getIndexerToken() {
+    return getConfig().getIndexerToken();
+  }
+
+  @Override
+  public void setIndexerUser(final String val) {
+    getConfig().setIndexerUser(val);
+  }
+
+  @Override
+  public String getIndexerUser() {
+    return getConfig().getIndexerUser();
+  }
+
+  @Override
+  public void setIndexerPw(final String val) {
+    getConfig().setIndexerPw(val);
+  }
+
+  @Override
+  public String getIndexerPw() {
+    return getConfig().getIndexerPw();
+  }
+
+  @Override
   public void setClusterName(final String val) {
     getConfig().setClusterName(val);
   }
