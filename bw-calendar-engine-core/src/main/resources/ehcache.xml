@@ -59,9 +59,6 @@
     <!-- ===================================================================
          Public events caching - all calendar suites will share these settings
          =================================================================== -->
-<!--
-
--->
 
     <!-- UpdateTimestampsCache tracks the timestamps of the most recent updates to particular tables.
          It is important that the cache timeout of the underlying cache implementation be set to a
@@ -345,162 +342,282 @@
          Personal events caching - authenticated caldav and the personal web client
          =================================================================== -->
 
+    <!-- UpdateTimestampsCache tracks the timestamps of the most recent updates to particular tables.
+         It is important that the cache timeout of the underlying cache implementation be set to a
+         higher value than the timeouts of any of the query caches. In fact, it is recommended
+         that the the underlying cache not be configured for expiry at all.
+      -->
+
+    <cache name="calendardb.org.hibernate.cache.UpdateTimestampsCache"
+           maxElementsInMemory="5000"
+           eternal="true"
+           overflowToDisk="true"/>
+
+    <!-- System prefs cache - these almost never change and we should be able to cache all entries
+         in use
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwSystem"
+           maxElementsInMemory="10"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="false"
+    />
+
     <!-- Calendar cache - these change infrequently and we should be able to cache all entries
          in use
         -->
     <cache name="calendardb.org.bedework.calfacade.BwCalendar"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="1800"
+           timeToLiveSeconds="1800"
+           overflowToDisk="true"
+    />
 
     <cache name="calendardb.org.bedework.calfacade.BwCalendar.children"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
-
-    <!-- Strings cache -
-        -->
-    <cache name="calendardb.org.bedework.calfacade.BwString"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="120"
-        timeToLiveSeconds="300"
-        overflowToDisk="true"
-        />
-
-    <!-- Strings cache -
-        -->
-    <cache name="calendardb.org.bedework.calfacade.BwLongString"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="120"
-        timeToLiveSeconds="300"
-        overflowToDisk="true"
-        />
-
-    <!-- categories cache - these change infrequently
-        -->
-    <cache name="calendardb.org.bedework.calfacade.BwCategory"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
 
     <!-- calendar.categories cache - these change infrequently
         -->
     <cache name="calendardb.org.bedework.calfacade.BwCalendar.categories"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
+
+    <cache name="calendardb.org.bedework.calfacade.BwCollectionLastmod"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="1800"
+           timeToLiveSeconds="1800"
+           overflowToDisk="true"
+    />
+
+    <!-- Strings cache -
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwString"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="120"
+           timeToLiveSeconds="300"
+           overflowToDisk="true"
+    />
+
+    <!-- Strings cache -
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwLongString"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="120"
+           timeToLiveSeconds="300"
+           overflowToDisk="true"
+    />
+
+    <!-- categories cache - these change infrequently
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwCategory"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
+
+    <!-- event cache - these change infrequently
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwEventObj"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="1800"
+           timeToLiveSeconds="1800"
+           overflowToDisk="true"
+    />
 
     <!-- event.categories cache - these change infrequently
         -->
     <cache name="calendardb.org.bedework.calfacade.BwEventObj.categories"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
+
+    <!-- event.categories cache - these change infrequently
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwEventObj.contacts"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
+
+    <!-- event.descriptions cache - these change infrequently
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwEventObj.descriptions"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
+
+    <!-- event.summaries cache - these change infrequently
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwEventObj.summaries"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
+
+    <!-- eventAnnotation cache - these change infrequently
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwEventAnnotation"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
+
+    <!-- eventAnnotation.categories cache - these change infrequently
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwEventAnnotation.categories"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
+
+    <!-- eventAnnotation.categories cache - these change infrequently
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwEventAnnotation.contacts"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
+
+    <!-- eventAnnotation.descriptions cache - these change infrequently
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwEventAnnotation.descriptions"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
+
+    <!-- eventAnnotation.summaries cache - these change infrequently
+        -->
+    <cache name="calendardb.org.bedework.calfacade.BwEventAnnotation.summaries"
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
 
     <!-- locations cache - these change infrequently
         -->
     <cache name="calendardb.org.bedework.calfacade.BwLocation"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
 
     <!-- sponsors cache - these change infrequently
         -->
     <cache name="calendardb.org.bedework.calfacade.BwContact"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
 
     <!-- views cache - these change infrequently and we should be able to cache all entries
          in use
         -->
     <cache name="calendardb.org.bedework.calfacade.svc.BwView"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
 
     <cache name="calendardb.org.bedework.calfacade.svc.BwView.subscriptions"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
 
     <!-- preferences cache - these change infrequently and we should be able to cache all entries
          in use
         -->
     <cache name="calendardb.org.bedework.calfacade.svc.BwPreferences"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
 
     <cache name="calendardb.org.bedework.calfacade.svc.BwPreferences.subscriptions"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
 
     <cache name="calendardb.org.bedework.calfacade.svc.BwPreferences.views"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
 
     <!-- Subscription cache - these change infrequently and we should be able to cache all entries
          in use
         -->
     <cache name="calendardb.org.bedework.calfacade.svc.BwSubscription"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
 
     <!-- users cache - these change infrequently but are referenced frequently, usually many
          times a query.
         -->
 
     <cache name="calendardb.org.bedework.calfacade.BwUser"
-        maxElementsInMemory="10000"
-        eternal="false"
-        timeToIdleSeconds="300"
-        timeToLiveSeconds="600"
-        overflowToDisk="true"
-        />
+           maxElementsInMemory="10000"
+           eternal="false"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="600"
+           overflowToDisk="true"
+    />
 
 </ehcache>
