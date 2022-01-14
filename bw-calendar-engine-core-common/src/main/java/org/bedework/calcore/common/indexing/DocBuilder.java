@@ -61,8 +61,8 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.elasticsearch.DocBuilderBase;
-import org.bedework.util.elasticsearch.EsDocInfo;
+import org.bedework.util.opensearch.DocBuilderBase;
+import org.bedework.util.opensearch.EsDocInfo;
 import org.bedework.util.indexing.IndexException;
 import org.bedework.util.misc.Util;
 import org.bedework.util.timezones.DateTimeUtil;
@@ -78,7 +78,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-/** Build documents for ElasticSearch
+/** Build documents for OpenSearch
  *
  * @author Mike Douglass douglm - rpi.edu
  *

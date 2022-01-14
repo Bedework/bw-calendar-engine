@@ -4,20 +4,20 @@
 package org.bedework.calcore.common.indexing;
 
 import org.apache.lucene.search.Query;
-import org.elasticsearch.common.io.stream.StreamOutput;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.index.query.AbstractQueryBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.SearchExecutionContext;
+import org.opensearch.common.io.stream.StreamOutput;
+import org.opensearch.common.xcontent.XContentBuilder;
+import org.opensearch.index.query.AbstractQueryBuilder;
+import org.opensearch.index.query.BoolQueryBuilder;
+import org.opensearch.index.query.QueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.index.query.QueryShardContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.opensearch.index.query.QueryBuilders.termQuery;
 
 /**
  * User: mike Date: 5/9/18 Time: 17:17
@@ -170,7 +170,7 @@ public class TermOrTermsQuery extends
 
   @Override
   protected Query doToQuery(
-          final SearchExecutionContext queryShardContext)
+          final QueryShardContext queryShardContext)
           throws IOException {
     return null;
   }

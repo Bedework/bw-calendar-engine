@@ -57,8 +57,8 @@ import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.ParameterInfoIndex;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.elasticsearch.DocBuilderBase;
-import org.bedework.util.elasticsearch.EntityBuilderBase;
+import org.bedework.util.opensearch.DocBuilderBase;
+import org.bedework.util.opensearch.EntityBuilderBase;
 import org.bedework.util.misc.Util;
 
 import net.fortuna.ical4j.model.property.RequestStatus;
@@ -74,7 +74,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-/** Implementation of indexer for ElasticSearch
+/** Implementation of indexer for OpenSearch
  *
  * @author Mike Douglass douglm - rpi.edu
  *

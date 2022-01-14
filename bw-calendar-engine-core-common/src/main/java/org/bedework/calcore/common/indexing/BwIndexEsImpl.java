@@ -66,8 +66,8 @@ import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.elasticsearch.DocBuilderBase.UpdateInfo;
-import org.bedework.util.elasticsearch.EsDocInfo;
+import org.bedework.util.opensearch.DocBuilderBase.UpdateInfo;
+import org.bedework.util.opensearch.EsDocInfo;
 import org.bedework.util.http.Headers;
 import org.bedework.util.indexing.IndexException;
 import org.bedework.util.logging.BwLogger;
@@ -81,56 +81,56 @@ import org.bedework.util.timezones.DateTimeUtil;
 import net.fortuna.ical4j.model.Period;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
-import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
-import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.action.bulk.BulkProcessor;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequest;
-import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.GetAliasesResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.CreateIndexResponse;
-import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.cluster.metadata.AliasMetadata;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.core.TimeValue;
-import org.elasticsearch.index.VersionType;
-import org.elasticsearch.index.engine.VersionConflictEngineException;
-import org.elasticsearch.index.query.MatchNoneQueryBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.Operator;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.reindex.BulkByScrollResponse;
-import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.elasticsearch.rest.RestStatus;
-import org.elasticsearch.script.Script;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortOrder;
+import org.opensearch.OpenSearchException;
+import org.opensearch.action.admin.cluster.health.ClusterHealthRequest;
+import org.opensearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.opensearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.opensearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
+import org.opensearch.action.admin.indices.alias.get.GetAliasesRequest;
+import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.opensearch.action.bulk.BulkItemResponse;
+import org.opensearch.action.bulk.BulkProcessor;
+import org.opensearch.action.bulk.BulkRequest;
+import org.opensearch.action.bulk.BulkResponse;
+import org.opensearch.action.get.GetRequest;
+import org.opensearch.action.get.GetResponse;
+import org.opensearch.action.index.IndexRequest;
+import org.opensearch.action.index.IndexResponse;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
+import org.opensearch.action.search.SearchScrollRequest;
+import org.opensearch.action.search.SearchType;
+import org.opensearch.action.support.WriteRequest;
+import org.opensearch.action.support.master.AcknowledgedResponse;
+import org.opensearch.action.update.UpdateRequest;
+import org.opensearch.action.update.UpdateResponse;
+import org.opensearch.client.GetAliasesResponse;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.RestClientBuilder;
+import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.client.indices.CreateIndexRequest;
+import org.opensearch.client.indices.CreateIndexResponse;
+import org.opensearch.cluster.health.ClusterHealthStatus;
+import org.opensearch.cluster.metadata.AliasMetadata;
+import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.common.unit.TimeValue;
+import org.opensearch.index.VersionType;
+import org.opensearch.index.engine.VersionConflictEngineException;
+import org.opensearch.index.query.MatchNoneQueryBuilder;
+import org.opensearch.index.query.MatchQueryBuilder;
+import org.opensearch.index.query.Operator;
+import org.opensearch.index.query.QueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.index.reindex.BulkByScrollResponse;
+import org.opensearch.index.reindex.DeleteByQueryRequest;
+import org.opensearch.rest.RestStatus;
+import org.opensearch.script.Script;
+import org.opensearch.search.SearchHit;
+import org.opensearch.search.SearchHits;
+import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.search.sort.FieldSortBuilder;
+import org.opensearch.search.sort.SortOrder;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -152,14 +152,14 @@ import static java.lang.String.format;
 import static org.bedework.access.PrivilegeDefs.privRead;
 import static org.bedework.calcore.common.indexing.DocBuilder.ItemKind.entity;
 import static org.bedework.calfacade.indexing.BwIndexer.IndexedType.unreachableEntities;
-import static org.bedework.util.elasticsearch.DocBuilderBase.updateTrackerId;
+import static org.bedework.util.opensearch.DocBuilderBase.updateTrackerId;
 import static org.bedework.util.misc.response.Response.Status.failed;
 import static org.bedework.util.misc.response.Response.Status.noAccess;
 import static org.bedework.util.misc.response.Response.Status.notFound;
 import static org.bedework.util.misc.response.Response.Status.ok;
 import static org.bedework.util.misc.response.Response.Status.processing;
 
-/** Implementation of indexer for ElasticSearch
+/** Implementation of indexer for OpenSearch
  *
  * <p>Indexing events is complicated by the need to support CalDAV
  * time-range queries and recurring events. A recurring event will have
@@ -1694,7 +1694,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       markUpdated();
 
       // TODO check response?
-    } catch (final ElasticsearchException ese) {
+    } catch (final OpenSearchException ese) {
       // Failed somehow
       error(ese);
     } catch (final CalFacadeException cfe) {
@@ -1729,7 +1729,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       markUpdated();
 
       // TODO check response?
-    } catch (final ElasticsearchException ese) {
+    } catch (final OpenSearchException ese) {
       // Failed somehow
       error(ese);
     } catch (final CalFacadeException cfe) {
@@ -1769,7 +1769,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       markUpdated();
 
       // TODO check response?
-    } catch (final ElasticsearchException ese) {
+    } catch (final OpenSearchException ese) {
       // Failed somehow
       error(ese);
     } catch (final CalFacadeException cfe) {
@@ -1955,7 +1955,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                          .updateAliases(ireq, RequestOptions.DEFAULT);
 
       return 0;
-    } catch (final ElasticsearchException ese) {
+    } catch (final OpenSearchException ese) {
       // Failed somehow
       error(ese);
       return -1;

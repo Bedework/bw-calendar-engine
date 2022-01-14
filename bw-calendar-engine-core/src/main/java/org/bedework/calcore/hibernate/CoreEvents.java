@@ -68,7 +68,7 @@ import static org.bedework.calfacade.indexing.BwIndexer.DeletedState;
 /** Class to encapsulate most of what we do with events.
  *
  * <p>Note that the following is only partially correct now. The database
- * handling of recurrences is getting much more simplified with elasticsearch
+ * handling of recurrences is getting much more simplified with opensearch
  * handling the issues with instance indexing.
  *
  * <p>There is a lot of complication surrounding recurring events. Expanding

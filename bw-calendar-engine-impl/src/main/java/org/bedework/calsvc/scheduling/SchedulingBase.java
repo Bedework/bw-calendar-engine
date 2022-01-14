@@ -489,7 +489,7 @@ public abstract class SchedulingBase extends CalSvcHelperRw
        An event will arrive, be processed and deleted from the inbox
        only for another to arrive moments later.
 
-       This has an implication for naming - elasticsearch will ignore
+       This has an implication for naming - OpenSearch will ignore
        updates for a deleted entity for a period following the
        deletion. We need to make it look like a different entity for
        each add.
