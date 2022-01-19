@@ -66,9 +66,6 @@ import org.bedework.convert.RecurUtil;
 import org.bedework.convert.RecurUtil.RecurPeriods;
 import org.bedework.util.calendar.IcalDefs;
 import org.bedework.util.calendar.PropertyIndex.PropertyInfoIndex;
-import org.bedework.util.opensearch.DocBuilderBase.UpdateInfo;
-import org.bedework.util.opensearch.EsDocInfo;
-import org.bedework.util.http.Headers;
 import org.bedework.util.indexing.IndexException;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
@@ -76,14 +73,13 @@ import org.bedework.util.misc.Util;
 import org.bedework.util.misc.response.GetEntitiesResponse;
 import org.bedework.util.misc.response.GetEntityResponse;
 import org.bedework.util.misc.response.Response;
+import org.bedework.util.opensearch.DocBuilderBase.UpdateInfo;
+import org.bedework.util.opensearch.EsDocInfo;
+import org.bedework.util.opensearch.SearchClient;
 import org.bedework.util.timezones.DateTimeUtil;
 
 import net.fortuna.ical4j.model.Period;
-import org.apache.http.Header;
-import org.apache.http.HttpHost;
 import org.opensearch.OpenSearchException;
-import org.opensearch.action.admin.cluster.health.ClusterHealthRequest;
-import org.opensearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.opensearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.opensearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
 import org.opensearch.action.admin.indices.alias.get.GetAliasesRequest;
@@ -106,15 +102,12 @@ import org.opensearch.action.update.UpdateRequest;
 import org.opensearch.action.update.UpdateResponse;
 import org.opensearch.client.GetAliasesResponse;
 import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestClient;
-import org.opensearch.client.RestClientBuilder;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.indices.CreateIndexRequest;
 import org.opensearch.client.indices.CreateIndexResponse;
-import org.opensearch.cluster.health.ClusterHealthStatus;
 import org.opensearch.cluster.metadata.AliasMetadata;
-import org.opensearch.common.xcontent.XContentType;
 import org.opensearch.common.unit.TimeValue;
+import org.opensearch.common.xcontent.XContentType;
 import org.opensearch.index.VersionType;
 import org.opensearch.index.engine.VersionConflictEngineException;
 import org.opensearch.index.query.MatchNoneQueryBuilder;
@@ -138,7 +131,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -152,12 +144,12 @@ import static java.lang.String.format;
 import static org.bedework.access.PrivilegeDefs.privRead;
 import static org.bedework.calcore.common.indexing.DocBuilder.ItemKind.entity;
 import static org.bedework.calfacade.indexing.BwIndexer.IndexedType.unreachableEntities;
-import static org.bedework.util.opensearch.DocBuilderBase.updateTrackerId;
 import static org.bedework.util.misc.response.Response.Status.failed;
 import static org.bedework.util.misc.response.Response.Status.noAccess;
 import static org.bedework.util.misc.response.Response.Status.notFound;
 import static org.bedework.util.misc.response.Response.Status.ok;
 import static org.bedework.util.misc.response.Response.Status.processing;
+import static org.bedework.util.opensearch.DocBuilderBase.updateTrackerId;
 
 /** Implementation of indexer for OpenSearch
  *
@@ -205,35 +197,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
   private final AccessChecker accessCheck;
 
-  private static class HostPort {
-    private final String host;
-    private int port = 9300;
-
-    HostPort(final String url) {
-      final int pos = url.indexOf(":");
-
-      if (pos < 0) {
-        host = url;
-      } else {
-        host = url.substring(0, pos);
-        if (pos < url.length()) {
-          port = Integer.parseInt(url.substring(pos + 1));
-        }
-      }
-    }
-
-    String getHost() {
-      return host;
-    }
-
-    int getPort() {
-      return port;
-    }
-  }
-
-  private final List<HostPort> esHosts = new ArrayList<>();
-  private static RestHighLevelClient theClient;
-  private static final Object clientSyncher = new Object();
+  private static SearchClient sch;
 
   private final String docType;
 
@@ -442,19 +406,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     unauthpars = configs.getUnauthenticatedAuthProperties();
     sysprops = configs.getSystemProperties();
 
-    final String urls = idxpars.getIndexerURL();
-
-    if (urls == null) {
-      esHosts.add(new HostPort("localhost"));
-    } else {
-      final String[] urlsSplit = urls.split(",");
-
-      for (final String url : urlsSplit) {
-        if ((url != null) && (url.length() > 0)) {
-          esHosts.add(new HostPort(url));
-        }
-      }
-    }
+    sch = new SearchClient(idxpars);
 
     if (indexName == null) {
       targetIndex = "bw" + docType.toLowerCase();
@@ -691,11 +643,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final TimeValue tv = new TimeValue(timeoutMillis);
     final int batchSize = 100;
 
-    final RestHighLevelClient cl = getClient(resp);
+    final var clResp = sch.getClient();
 
-    if (cl == null) {
-      return resp;
+    if (!clResp.isOk()) {
+      return Response.fromResponse(resp, clResp);
     }
+
+    final var cl = clResp.getEntity();
 
     final BulkListener listener = new BulkListener();
 
@@ -863,11 +817,13 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     final TimeValue tv = new TimeValue(timeoutMillis);
     final int batchSize = 100;
 
-    final RestHighLevelClient cl = getClient(resp);
+    final var clResp = sch.getClient();
 
-    if (cl == null) {
-      return resp;
+    if (!clResp.isOk()) {
+      return Response.fromResponse(resp, clResp);
     }
+
+    final var cl = clResp.getEntity();
 
     final SearchSourceBuilder ssb =
             new SearchSourceBuilder()
@@ -1344,11 +1300,14 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
                         .size(batchSize)
                         .postFilter(flts.overridesOnly(ev.getUid()));
 
-        final RestHighLevelClient cl = getClient(resp);
+        final var clResp = sch.getClient();
 
-        if (cl == null) {
+        if (!clResp.isOk()) {
           return false;
+          //return Response.fromResponse(resp, clResp);
         }
+
+        final var cl = clResp.getEntity();
 
         final SearchRequest req = new SearchRequest(searchIndexes)
                 .searchType(SearchType.QUERY_THEN_FETCH)
@@ -1356,7 +1315,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
         final SearchResponse sres;
         try {
-          sres = getClient().search(req, RequestOptions.DEFAULT);
+          sres = cl.search(req, RequestOptions.DEFAULT);
         } catch (final Throwable t) {
           errorReturn(resp, t);
           return false;
@@ -3911,97 +3870,8 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
     }
   }
 
-  private RestHighLevelClient getClient(final Response resp) {
-    try {
-      return getClient();
-    } catch (final RuntimeException cfe) {
-      resp.setStatus(failed);
-      resp.setMessage(cfe.getLocalizedMessage());
-      return null;
-    }
-  }
-
   public RestHighLevelClient getClient() {
-    if (theClient != null) {
-      return theClient;
-    }
-
-    synchronized (clientSyncher) {
-      if (theClient != null) {
-        return theClient;
-      }
-
-      final HttpHost[] hosts = new HttpHost[esHosts.size()];
-
-      for (int i = 0; i < esHosts.size(); i++) {
-        final HostPort hp = esHosts.get(i);
-        hosts[i] = new HttpHost(hp.getHost(), hp.getPort());
-      }
-
-      final RestClientBuilder rcb = RestClient.builder(hosts);
-
-      if (idxpars.getIndexerToken() != null) {
-        final Header[] headers = new Headers().
-                add("Authorization", "Bearer " + idxpars.getIndexerToken()).
-                asArray();
-        rcb.setDefaultHeaders(headers);
-      } else if (idxpars.getIndexerUser() != null) {
-        final String ip = idxpars.getIndexerUser() + ":" +
-                idxpars.getIndexerPw();
-        final String ipb64 =
-                Base64.getEncoder()
-                      .encodeToString(ip.getBytes(StandardCharsets.UTF_8));
-        final Header[] headers = new Headers().
-                add("Authorization", "Basic " + ipb64).
-                asArray();
-        rcb.setDefaultHeaders(headers);
-      }
-
-      theClient = new RestHighLevelClient(rcb);
-
-      /* Ensure status is at least yellow */
-
-      int tries = 0;
-      int yellowTries = 0;
-
-      for (;;) {
-        try {
-          final ClusterHealthRequest request = new ClusterHealthRequest();
-          final ClusterHealthResponse chr =
-                  theClient.cluster().health(request, RequestOptions.DEFAULT);
-
-          if (chr.getStatus() == ClusterHealthStatus.GREEN) {
-            break;
-          }
-
-          if (chr.getStatus() == ClusterHealthStatus.YELLOW) {
-            yellowTries++;
-
-            if (yellowTries > 60) {
-              warn("Going ahead anyway on YELLOW status");
-            }
-
-            break;
-          }
-
-          tries++;
-
-          if (tries % 5 == 0) {
-            warn("Cluster status for " + chr.getClusterName() +
-                         " is still " + chr.getStatus() +
-                         " after " + tries + " tries");
-          }
-
-          Thread.sleep(1000);
-        } catch(final InterruptedException ex) {
-          throw new RuntimeException("Interrupted out of getClient");
-        } catch (final Throwable t) {
-          throw new RuntimeException(t);
-        }
-      }
-
-      return theClient;
-    }
+    return sch.getSearchClient();
   }
 
   /** Return a new filter builder

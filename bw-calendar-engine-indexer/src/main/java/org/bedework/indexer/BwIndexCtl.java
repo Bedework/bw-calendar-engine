@@ -284,13 +284,23 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   }
 
   @Override
-  public void setDataDir(final String val) {
-    getConfig().setDataDir(val);
+  public void setKeyStore(final String val) {
+    getConfig().setKeyStore(val);
   }
 
   @Override
-  public String getDataDir() {
-    return getConfig().getDataDir();
+  public String getKeyStore() {
+    return getConfig().getKeyStore();
+  }
+
+  @Override
+  public void setKeyStorePw(final String val) {
+    getConfig().setKeyStorePw(val);
+  }
+
+  @Override
+  public String getKeyStorePw() {
+    return getConfig().getKeyStorePw();
   }
 
   @Override

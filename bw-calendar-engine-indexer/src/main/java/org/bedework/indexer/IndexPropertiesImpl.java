@@ -50,7 +50,9 @@ public class IndexPropertiesImpl
 
   private String nodeName;
 
-  private String dataDir;
+  private String keyStore;
+
+  private String keyStorePw;
 
   private String indexerConfig;
 
@@ -129,13 +131,23 @@ public class IndexPropertiesImpl
   }
 
   @Override
-  public void setDataDir(final String val) {
-    dataDir = val;
+  public void setKeyStore(final String val) {
+    keyStore = val;
   }
 
   @Override
-  public String getDataDir() {
-    return dataDir;
+  public String getKeyStore() {
+    return keyStore;
+  }
+
+  @Override
+  public void setKeyStorePw(final String val) {
+    keyStorePw = val;
+  }
+
+  @Override
+  public String getKeyStorePw() {
+    return keyStorePw;
   }
 
   @Override
@@ -273,6 +285,8 @@ public class IndexPropertiesImpl
 
     clone.setIndexerURL(getIndexerURL());
     clone.setIndexerConfig(getIndexerConfig());
+
+    clone.setKeyStore(getKeyStore());
 
     clone.setAccount(getAccount());
     clone.setMaxEntityThreads(getMaxEntityThreads());
