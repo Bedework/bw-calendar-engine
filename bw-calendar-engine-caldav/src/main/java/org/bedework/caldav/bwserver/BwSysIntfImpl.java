@@ -2189,10 +2189,9 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     getSvci(); // Ensure open
     boolean rollback = true;
 
+    final IcalTranslator trans = getTrans(contentType);
       /* (CALDAV:supported-calendar-data) */
-    if ((contentType == null) ||
-            (!contentType.equals("text/calendar") &&
-                     !contentType.equals("application/calendar+json"))) {
+    if (trans == null) {
       if (debug()) {
         debug("Bad content type: " + contentType);
       }
@@ -2756,6 +2755,26 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     }
 
     return jscalTrans;
+  }
+
+  private IcalTranslator getTrans(final String contentType) {
+    if (contentType == null) {
+      return trans;
+    }
+
+    switch (contentType) {
+      case "text/calendar":
+        return trans;
+      case "application/calendar+json":
+        return getJcalTrans();
+      case "application/calendar+xml":
+        return getXmlTrans();
+      case "application/jscalendar+json":
+        return getJScalTrans();
+      default:
+        throw new RuntimeException("Unsupported content type: " +
+                contentType);
+    }
   }
 
   private void close(final CalSvcI svci) throws WebdavException {
