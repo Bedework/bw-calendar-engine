@@ -121,7 +121,15 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
   @Override
   public BwCalendar getHome() throws CalFacadeException {
-    return getCal().getCalendar(getHomePath(), PrivilegeDefs.privRead, true);
+    final var home = getHomePath();
+    final var cal =
+            getCal().getCalendar(home,
+                                 PrivilegeDefs.privRead, true);
+    if (cal == null) {
+      warn("No home directory: " + home);
+    }
+
+    return cal;
   }
 
   @Override
