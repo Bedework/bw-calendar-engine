@@ -11,9 +11,12 @@ import org.bedework.calfacade.BwResourceContent;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.svc.BwAdminGroup;
 import org.bedework.calfacade.svc.BwCalSuite;
+import org.bedework.util.misc.Util;
 
 import java.util.Collection;
 import java.util.List;
+
+import static org.bedework.calfacade.configs.BasicSystemProperties.colPathEndsWithSlash;
 
 /**
  * User: mike
@@ -202,7 +205,8 @@ public class EntityDAO extends DAOBase {
       sess.createQuery(getAllResourcesQuery);
     }
 
-    sess.setString("path", path);
+    sess.setString("path", Util.buildPath(colPathEndsWithSlash,
+                                          path));
 
     if (forSynch && (token != null)) {
       sess.setString("lastmod", token.substring(0, 16));
@@ -212,7 +216,10 @@ public class EntityDAO extends DAOBase {
     }
 
     sess.setFirstResult(0);
-    sess.setMaxResults(count);
+
+    if (count > 0) {
+      sess.setMaxResults(count);
+    }
 
     sess.cacheableQuery();
 
