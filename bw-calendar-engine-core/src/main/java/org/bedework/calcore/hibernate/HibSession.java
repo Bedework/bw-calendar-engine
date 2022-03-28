@@ -26,6 +26,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Timestamp;
@@ -115,7 +116,12 @@ public interface HibSession extends Serializable {
    * @return a blob
    */
   Blob getBlob(byte[] val);
-  
+
+  /**
+   * @return a blob
+   */
+  Blob getBlob(InputStream val, long length);
+
   /** Evict an object from the session.
    *
    * @param val          Object to evict

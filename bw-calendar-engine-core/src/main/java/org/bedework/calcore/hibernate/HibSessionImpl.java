@@ -40,6 +40,7 @@ import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Timestamp;
@@ -268,7 +269,11 @@ public class HibSessionImpl implements Logged, HibSession {
   public Blob getBlob(final byte[] val) {
     return Hibernate.getLobCreator(sess).createBlob(val);
   }
-  
+
+  public Blob getBlob(final InputStream val, final long length) {
+    return Hibernate.getLobCreator(sess).createBlob(val, length);
+  }
+
   @Override
   public void evict(final Object val) throws CalFacadeException {
     if (exc != null) {

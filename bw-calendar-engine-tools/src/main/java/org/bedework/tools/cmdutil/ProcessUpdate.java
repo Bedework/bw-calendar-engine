@@ -181,6 +181,13 @@ public class ProcessUpdate extends CmdUtilHelper {
             loc.delKey(name);
             break;
           }
+
+          case "geo": {
+            final String val = qstringFor("geo");
+
+            loc.setGeouri(val);
+            break;
+          }
         }
       }
 

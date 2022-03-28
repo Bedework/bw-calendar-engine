@@ -109,6 +109,7 @@ import org.bedework.util.security.PwEncryptionIntf;
 import org.bedework.util.security.keys.GenKeysMBean;
 import org.bedework.util.timezones.Timezones;
 
+import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -620,8 +621,14 @@ public class CalSvc
     return getCal().getCurrentTimestamp();
   }
 
-  public Blob getBlob(final byte[] val) throws CalFacadeException {
+  public Blob getBlob(final byte[] val) {
     return getCal().getBlob(val);
+  }
+
+  @Override
+  public Blob getBlob(final InputStream val,
+                      final long length) {
+    return getCal().getBlob(val, length);
   }
 
   @Override
@@ -1472,13 +1479,13 @@ public class CalSvc
           currentPrincipal = getFakeUser(authenticatedUser);
           addingUser = true;
         }
-
         authPrincipal = currentPrincipal;
 
         if (authenticatedUser.equals(runAsUser)) {
-          getLogger()
-                  .debug("Authenticated user " + authenticatedUser +
-                                 " logged on");
+          audit(format("Authenticated user %s logged on - " +
+                               "logid %s - admin %b",
+                       authenticatedUser, pars.getLogId(),
+                       pars.getPublicAdmin()));
         } else {
           currentPrincipal = unauthUsers.get(runAsUser);
 
@@ -1492,16 +1499,19 @@ public class CalSvc
             //              throw new CalFacadeException("User " + runAsUser + " does not exist.");
             /* Add the user to the database. Presumably this is first logon
                */
-            getLogger().debug("Add new run-as-user " + runAsUser);
+            debug("Add new run-as-user " + runAsUser);
 
             //currentPrincipal = addUser(runAsUser);
             currentPrincipal = getFakeUser(runAsUser);
             addingRunAsUser = true;
           }
 
-          getLogger()
-                  .debug("Authenticated user " + authenticatedUser +
-                                 " logged on - running as " + runAsUser);
+          audit(format("Authenticated user %s logged on - " +
+                               " - running as %s " +
+                               "logid %s - admin %b",
+                       authenticatedUser, runAsUser,
+                       pars.getLogId(),
+                       pars.getPublicAdmin()));
         }
 
         if (!userMapHit && (currentPrincipal != null)) {
@@ -2209,11 +2219,17 @@ public class CalSvc
    * ==================================================================== */
 
   private final BwLogger logger = new BwLogger();
+  private static final BwLogger authLogger = new BwLogger();
+
+  static {
+    authLogger.setLoggedName("org.bedework.authentication");
+  }
 
   @Override
   public BwLogger getLogger() {
     if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
       logger.setLoggedClass(getClass());
+      logger.enableAuditLogger();
     }
 
     return logger;

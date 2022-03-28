@@ -23,6 +23,7 @@ import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
+import java.io.InputStream;
 import java.sql.Blob;
 
 /** Class used as basis for a number of DAO classes.
@@ -78,8 +79,13 @@ public abstract class DAOBase implements Logged {
     return (BwUnversionedDbentity)sess.merge(val);
   }
 
-  public Blob getBlob(final byte[] val) throws CalFacadeException {
+  public Blob getBlob(final byte[] val) {
     return sess.getBlob(val);
+  }
+
+  public Blob getBlob(final InputStream val,
+                      final long length) {
+    return sess.getBlob(val, length);
   }
 
   protected void throwException(final CalFacadeException cfe) throws CalFacadeException {

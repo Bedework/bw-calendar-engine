@@ -2407,12 +2407,8 @@ public class BwSysIntfImpl implements Logged, SysIntf {
     close(svci);
   }
 
-  public Blob getBlob(final byte[] val) throws WebdavException {
-    try {
-      return getSvci().getBlob(val);
-    } catch (final CalFacadeException cfe) {
-      throw new WebdavException(cfe);
-    }
+  public Blob getBlob(final byte[] val) {
+    return getSvci().getBlob(val);
   }
 
   /* ====================================================================

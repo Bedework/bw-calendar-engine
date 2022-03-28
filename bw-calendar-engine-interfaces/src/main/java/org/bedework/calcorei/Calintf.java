@@ -46,6 +46,7 @@ import org.bedework.calfacade.svc.BwPreferences;
 import org.bedework.calfacade.svc.PrincipalInfo;
 import org.bedework.sysevents.events.SysEventBase;
 
+import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -565,14 +566,18 @@ public interface Calintf
    * @return - merged entity
    * @throws CalFacadeException on fatal error
    */
-  BwUnversionedDbentity<?> merge(final BwUnversionedDbentity<?> val) throws CalFacadeException;
+  BwUnversionedDbentity<?> merge(BwUnversionedDbentity<?> val) throws CalFacadeException;
 
   /**
    * @return a blob
-   * @throws CalFacadeException on fatal error
    */
-  Blob getBlob(final byte[] val) throws CalFacadeException;
-  
+  Blob getBlob(byte[] val);
+
+  /**
+   * @return a blob
+   */
+  Blob getBlob(InputStream val, long length);
+
   /* ====================================================================
    *                       dump/restore methods
    *

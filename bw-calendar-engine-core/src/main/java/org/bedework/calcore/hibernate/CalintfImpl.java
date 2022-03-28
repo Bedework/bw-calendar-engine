@@ -67,6 +67,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.Statistics;
 
+import java.io.InputStream;
 import java.io.StringReader;
 import java.sql.Blob;
 import java.sql.Timestamp;
@@ -952,10 +953,17 @@ public class CalintfImpl extends CalintfROImpl {
     return entityDao.merge(val);
   }
 
-  public Blob getBlob(final byte[] val) throws CalFacadeException {
+  @Override
+  public Blob getBlob(final byte[] val) {
     return entityDao.getBlob(val);
   }
-  
+
+  @Override
+  public Blob getBlob(final InputStream val,
+                      final long length) {
+    return entityDao.getBlob(val, length);
+  }
+
   private class ObjectIterator<T> implements Iterator<T> {
     protected final String className;
     protected final Class<T> cl;
