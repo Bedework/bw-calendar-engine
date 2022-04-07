@@ -9,9 +9,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="bw-calendar-api" />
-    <orderEntry type="module" module-name="bw-calendar-api-ro" />
-    <orderEntry type="module" module-name="bw-calendar-sysevents-msgs" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-api:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-api-ro:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-sysevents-msgs:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-util-indexing" />
     <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="module" module-name="bw-util-logging" />
@@ -20,8 +20,8 @@
     <orderEntry type="library" name="Maven: javax.jws:javax.jws-api:1.1" level="project" />
     <orderEntry type="module" module-name="bw-xml-icalendar" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.13.0" level="project" />
-    <orderEntry type="module" module-name="bw-calendar-facade" />
-    <orderEntry type="module" module-name="bw-calendar-annotations" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-facade:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-annotations:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-access" />
     <orderEntry type="module" module-name="bw-util-caching" />
     <orderEntry type="module" module-name="bw-util2-vcard" />

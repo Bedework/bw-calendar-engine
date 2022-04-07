@@ -11,18 +11,18 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="bw-calendar-engine-api" />
-    <orderEntry type="module" module-name="bw-calendar-sysevents-msgs" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-sysevents-msgs:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-util-indexing" />
-    <orderEntry type="module" module-name="bw-calendar-api" />
-    <orderEntry type="module" module-name="bw-calendar-api-ro" />
-    <orderEntry type="module" module-name="bw-calendar-convert" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-api:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-api-ro:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-convert:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-xml-icalendar" />
     <orderEntry type="module" module-name="bw-jsforj" />
     <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:3.0.16" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.3.1" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:javax.activation-api:1.2.0" level="project" />
-    <orderEntry type="module" module-name="bw-calendar-facade" />
-    <orderEntry type="module" module-name="bw-calendar-annotations" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-facade:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-annotations:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-access" />
     <orderEntry type="module" module-name="bw-util2-vcard" />
     <orderEntry type="module" module-name="bw-util-json" />

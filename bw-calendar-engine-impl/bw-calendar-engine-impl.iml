@@ -14,14 +14,14 @@
     <orderEntry type="module" module-name="bw-caldav-util" />
     <orderEntry type="module" module-name="bw-xml-synchws" />
     <orderEntry type="module" module-name="bw-xml-caldav" />
-    <orderEntry type="module" module-name="bw-calendar-sysevents-common" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-sysevents-common:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-util-logging" />
     <orderEntry type="module" module-name="bw-access" />
     <orderEntry type="library" name="Maven: javax.jms:javax.jms-api:2.0" level="project" />
-    <orderEntry type="module" module-name="bw-calendar-api" />
-    <orderEntry type="module" module-name="bw-calendar-api-ro" />
-    <orderEntry type="module" module-name="bw-calendar-facade" />
-    <orderEntry type="module" module-name="bw-calendar-annotations" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-api:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-api-ro:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-facade:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-annotations:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-util2-vcard" />
     <orderEntry type="module" module-name="bw-util-json" />
     <orderEntry type="module" module-name="bw-util-opensearch" />
@@ -70,8 +70,8 @@
     <orderEntry type="module" module-name="bw-caldav-server" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0" level="project" />
     <orderEntry type="library" name="Maven: org.yaml:snakeyaml:1.26" level="project" />
-    <orderEntry type="module" module-name="bw-calendar-sysevents-msgs" />
-    <orderEntry type="module" module-name="bw-calendar-convert" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-sysevents-msgs:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-convert:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-xml-icalendar" />
     <orderEntry type="module" module-name="bw-jsforj" />
     <orderEntry type="module" module-name="bw-util-caching" />

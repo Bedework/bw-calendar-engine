@@ -76,15 +76,15 @@
     <orderEntry type="library" name="Maven: dnsjava:dnsjava:2.1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.13.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
-    <orderEntry type="module" module-name="bw-calendar-sysevents-common" />
-    <orderEntry type="module" module-name="bw-calendar-api" />
-    <orderEntry type="module" module-name="bw-calendar-api-ro" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-sysevents-common:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-api:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-api-ro:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-util-logging" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.13.0" level="project" />
     <orderEntry type="module" module-name="bw-access" />
     <orderEntry type="module" module-name="bw-util-caching" />
     <orderEntry type="library" name="Maven: javax.jms:javax.jms-api:2.0" level="project" />
-    <orderEntry type="module" module-name="bw-calendar-convert" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-convert:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-util-tz" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.9" level="project" />
     <orderEntry type="library" name="Maven: com.sun.mail:javax.mail:1.6.2" level="project" />
@@ -95,8 +95,8 @@
     <orderEntry type="library" name="Maven: org.bedework.ical4j:ical4j:3.0.16" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.3.1" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:javax.activation-api:1.2.0" level="project" />
-    <orderEntry type="module" module-name="bw-calendar-facade" />
-    <orderEntry type="module" module-name="bw-calendar-annotations" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-facade:4.0.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-annotations:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="module" module-name="bw-util2-vcard" />
     <orderEntry type="module" module-name="bw-util-json" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-http:5.0.1-SNAPSHOT" level="project" />
@@ -119,7 +119,7 @@
     <orderEntry type="library" name="Maven: org.yaml:snakeyaml:1.26" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.ws:jaxws-api:2.3.1" level="project" />
     <orderEntry type="library" name="Maven: javax.annotation:javax.annotation-api:1.3.2" level="project" />
-    <orderEntry type="module" module-name="bw-calendar-sysevents-msgs" />
+    <orderEntry type="library" name="Maven: org.bedework:bw-calendar-sysevents-msgs:4.0.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-hibernate:5.0.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-config:5.0.2-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.bedework:bw-util-jmx:5.0.2-SNAPSHOT" level="project" />
