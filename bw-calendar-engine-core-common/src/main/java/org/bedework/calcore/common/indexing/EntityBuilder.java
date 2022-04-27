@@ -221,7 +221,11 @@ public class EntityBuilder extends EntityBuilderBase {
     ent.setName(getString(PropertyInfoIndex.NAME));
     ent.setColPath(getString(PropertyInfoIndex.COLLECTION));
 
-    ent.setByteValue(Base64.getMimeDecoder().decode(getString("content")));
+    final var content = getString("content");
+
+    if (content != null) {
+      ent.setByteValue(Base64.getMimeDecoder().decode(content));
+    }
 
     return ent;
   }
