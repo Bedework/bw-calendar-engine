@@ -1527,19 +1527,21 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
     //final List<BwRecurrenceInstance> current = dao.getInstances(val);
 
     //for (final BwRecurrenceInstance ri: current) {
-    for (final BwEventProxy pxy: overrides) {
-      final BwEventAnnotation ann = pxy.getRef();
-      final String rid = ann.getRecurrenceId();
+    if (!Util.isEmpty(overrides)) {
+      for (final BwEventProxy pxy: overrides) {
+        final BwEventAnnotation ann = pxy.getRef();
+        final String rid = ann.getRecurrenceId();
 
-      if (!updated.contains(rid)) {
-        // Not in the new instance set - delete from db
-        ei.removeOverride(rid);
-        uc.addDeleted(rid);
+        if (!updated.contains(rid)) {
+          // Not in the new instance set - delete from db
+          ei.removeOverride(rid);
+          uc.addDeleted(rid);
 
-        notifyInstanceChange(SysEvent.SysCode.ENTITY_DELETED, val, shared,
-                             rid);
-        continue;
-      }
+          notifyInstanceChange(SysEvent.SysCode.ENTITY_DELETED, val,
+                               shared,
+                               rid);
+          continue;
+        }
         
       /* Found instance with same recurrence id. Is the start and end the same
       if (!ri.getDtstart().equals(updri.getDtstart()) ||
@@ -1555,8 +1557,9 @@ public class CoreEvents extends CalintfHelper implements CoreEventsI {
       }
          */
 
-      // Remove the entry - we've processed it.
-      updated.remove(rid);
+        // Remove the entry - we've processed it.
+        updated.remove(rid);
+      }
     }
 
     /* updated only contains recurrence ids that don't exist */
