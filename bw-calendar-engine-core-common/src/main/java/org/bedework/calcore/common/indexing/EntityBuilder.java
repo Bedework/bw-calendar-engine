@@ -671,6 +671,7 @@ public class EntityBuilder extends EntityBuilderBase {
             att.setDelegatedFrom(getString(ParameterInfoIndex.DELEGATED_FROM));
             att.setDelegatedTo(getString(ParameterInfoIndex.DELEGATED_TO));
             att.setDir(getString(ParameterInfoIndex.DIR));
+            att.setEmail(getString(ParameterInfoIndex.EMAIL));
             att.setLanguage(getString(ParameterInfoIndex.LANGUAGE));
             att.setMember(getString(ParameterInfoIndex.MEMBER));
             att.setRole(getString(ParameterInfoIndex.ROLE));

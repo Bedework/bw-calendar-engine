@@ -1268,6 +1268,8 @@ public class DocBuilder extends DocBuilderBase {
 
         makeField(ParameterInfoIndex.DIR.getJname(), val.getDir());
 
+        makeField(ParameterInfoIndex.EMAIL.getJname(), val.getEmail());
+
         makeField(ParameterInfoIndex.LANGUAGE.getJname(),
                   val.getLanguage());
 
