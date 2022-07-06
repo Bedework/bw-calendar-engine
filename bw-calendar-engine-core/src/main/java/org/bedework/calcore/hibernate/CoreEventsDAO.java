@@ -73,6 +73,7 @@ public class CoreEventsDAO extends DAOBase {
     sess.setString("name", name);
     sess.setString("colPath", colPath);
 
+    //noinspection unchecked
     return (List<BwEvent>)sess.getList();
   }
 
@@ -500,6 +501,7 @@ public class CoreEventsDAO extends DAOBase {
     }
 
     //debug("Try query " + sb.toString());
+    //noinspection unchecked
     return (List<T>)sess.getList();
   }
 }
