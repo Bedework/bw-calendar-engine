@@ -61,9 +61,9 @@ public class DbConf extends ConfBase<DbConfig> implements DbConfMBean {
   /**
    */
   public DbConf() {
-    super("org.bedework.bwengine.core:service=DbConf");
-    setConfigPname(CoreConfigurations.confuriPname);
-    setConfigName("dbconfig");
+    super("org.bedework.bwengine.core:service=DbConf",
+          CoreConfigurations.confDirName,
+          "dbconfig");
   }
 
   /* ========================================================================

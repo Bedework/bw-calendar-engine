@@ -49,7 +49,7 @@ public class BwInoutSched extends ConfBase
     public void run() {
       try {
         sched.run();
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         error(t.getMessage());
       }
     }
@@ -68,7 +68,9 @@ public class BwInoutSched extends ConfBase
    *
    */
   public BwInoutSched() {
-    super("org.bedework.bwengine:service=BwInoutSched");
+    super("org.bedework.bwengine:service=BwInoutSched",
+          (String)null,
+          null);
 
     try {
       isched = new BwHosts();

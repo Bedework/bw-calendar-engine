@@ -26,8 +26,8 @@ import org.bedework.util.jmx.ConfBase;
  */
 public class BwChgNote extends ConfBase
         implements BwChgNoteMBean {
-  /* Name of the property holding the location of the config data */
-  public static final String confuriPname = "org.bedework.engine.confuri";
+  /* Name of the directory holding the config data */
+  private static final String confDirName = "engine";
 
   private class ProcessorThread extends Thread {
     private ChgProc cp;
@@ -62,11 +62,7 @@ public class BwChgNote extends ConfBase
   private final static String nm = "ChangeNotifications";
 
   public BwChgNote() {
-    super(getServiceName(nm));
-
-    setConfigName(nm);
-
-    setConfigPname(confuriPname);
+    super(getServiceName(nm), confDirName, nm);
   }
 
   /**

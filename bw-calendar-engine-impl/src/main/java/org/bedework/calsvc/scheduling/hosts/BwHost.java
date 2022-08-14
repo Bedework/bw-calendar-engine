@@ -37,10 +37,10 @@ public class BwHost extends ConfBase<HostInfo> implements BwHostMBean {
   public BwHost(final ConfigurationStore configStore,
                 final String serviceName,
                 final HostInfo info) {
-    super(serviceName);
+    super(serviceName,
+          configStore,
+          info.getHostname());
     cfg = info;
-    setConfigName(info.getHostname());
-    setStore(configStore);
   }
 
   @Override

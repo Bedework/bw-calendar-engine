@@ -29,8 +29,8 @@ import javax.management.ObjectName;
  */
 @SuppressWarnings("rawtypes")
 public final class CoreConfigurations extends ConfBase {
-  /* Name of the property holding the location of the config data */
-  static final String confuriPname = "org.bedework.bwcore.confuri";
+  /* Name of the directory holding the config data */
+  static final String confDirName = "bwcore";
 
   private static final Object lock = new Object();
 
@@ -53,7 +53,7 @@ public final class CoreConfigurations extends ConfBase {
 
       try {
         configs = new CoreConfigurations();
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         new BwLogger().setLoggedClass(CoreConfigurations.class)
                       .error("Failed to configure", t);
       }
@@ -62,18 +62,19 @@ public final class CoreConfigurations extends ConfBase {
   }
 
   /**
-   * @throws CalFacadeException
+   * @throws CalFacadeException on fatal error
    */
   private CoreConfigurations() throws CalFacadeException {
-    super("org.bedework.bwengine.core:service=Conf");
+    super("org.bedework.bwengine.core:service=Conf",
+          confDirName,
+          null);
 
     try {
-      setConfigPname(confuriPname);
 
       loadConfigs();
-    } catch (CalFacadeException cfe) {
+    } catch (final CalFacadeException cfe) {
       throw cfe;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new CalFacadeException(t);
     }
   }
@@ -92,7 +93,7 @@ public final class CoreConfigurations extends ConfBase {
 
   private void loadConfigs() throws Throwable {
     /* ------------- Db properties -------------------- */
-    DbConf dc = new DbConf();
+    final DbConf dc = new DbConf();
     register(new ObjectName(dc.getServiceName()), dc);
     dc.loadConfig();
     dbConfig = dc.getConfig();
@@ -102,7 +103,7 @@ public final class CoreConfigurations extends ConfBase {
   public void stop() {
     try {
       getManagementContext().stop();
-    } catch (Throwable t){
+    } catch (final Throwable t){
       t.printStackTrace();
     }
   }

@@ -38,8 +38,8 @@ import javax.management.ObjectName;
  *
  */
 public class BwHosts extends ConfBase implements BwHostsMBean {
-  /* Name of the property holding the location of the config data */
-  private static final String confuriPname = "org.bedework.hosts.confuri";
+  /* Name of the directory holding the config data */
+  private static final String confDirName = "hosts";
 
   private static List<HostInfo> hostInfos = new ArrayList<>();
 
@@ -48,9 +48,9 @@ public class BwHosts extends ConfBase implements BwHostsMBean {
   /**
    */
   public BwHosts() {
-    super("org.bedework.ischedule:service=Hosts");
-    setConfigName("Hosts");
-    setConfigPname(confuriPname);
+    super("org.bedework.ischedule:service=Hosts",
+          confDirName,
+          "Hosts");
   }
 
   @Override

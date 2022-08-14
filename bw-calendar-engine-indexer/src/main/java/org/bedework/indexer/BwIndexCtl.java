@@ -44,8 +44,8 @@ import static org.bedework.util.misc.response.Response.Status.failed;
 @SuppressWarnings("unused")
 public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
         implements BwIndexCtlMBean {
-  /* Name of the property holding the location of the config data */
-  public static final String confuriPname = "org.bedework.bwengine.confuri";
+  /* Name of the directory holding the config data */
+  private static final String confDirName = "bwengine";
 
   private class ProcessorThread extends Thread {
     private boolean running;
@@ -208,11 +208,8 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
   /**
    */
   public BwIndexCtl() {
-    super(getServiceName(nm));
-
-    setConfigName(nm);
-
-    setConfigPname(confuriPname);
+    super(getServiceName(nm),
+          confDirName, nm);
   }
 
   /**

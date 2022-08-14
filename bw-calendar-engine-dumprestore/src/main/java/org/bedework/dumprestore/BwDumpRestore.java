@@ -62,8 +62,8 @@ import java.util.TreeSet;
  */
 public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
         implements BwDumpRestoreMBean {
-  /* Name of the property holding the location of the config data */
-  private static final String confuriPname = "org.bedework.bwengine.confuri";
+  /* Name of the directory holding the config data */
+  private static final String confDirName = "bwengine";
 
   private List<AliasInfo> externalSubs;
 
@@ -847,11 +847,7 @@ public class BwDumpRestore extends ConfBase<DumpRestorePropertiesImpl>
   /**
    */
   public BwDumpRestore() {
-    super(getServiceName(nm));
-
-    setConfigName(nm);
-
-    setConfigPname(confuriPname);
+    super(getServiceName(nm), confDirName, nm);
   }
 
   /**
