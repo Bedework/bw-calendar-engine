@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.String.format;
+
 /** Provide a number of useful common methods for processors.
  *
  * @author douglm
@@ -146,15 +148,11 @@ public abstract class ProcessorBase extends CalSys
                                  final String path,
                                  final boolean doChildren) {
     if (skipThis(path)) {
-      if (debug()) {
-        debug("Skipping " + path);
-      }
+      info("Skipping " + path);
       return;
     }
 
-    if (debug()) {
-      debug("indexCollection(" + path + ")");
-    }
+    info("indexCollection(" + path + ")");
 
     status.currentStatus = "indexCollection(" + path + ")";
 
@@ -165,15 +163,13 @@ public abstract class ProcessorBase extends CalSys
 
       try {
         col = svci.getCalendarsHandler().get(path);
-      } catch (final CalFacadeAccessException cfe) {
-        error("No access to " + path);
-      }
-
-      if ((col == null) || !hasAccess(col)) {
-        if (debug()) {
-          debug("path " + path + " not found");
+        if (col == null) {
+          error("path " + path + " not found");
+          return;
         }
-
+      } catch (final CalFacadeAccessException cfe) {
+        error(format("No access to %s for %s",
+                     path, principal));
         return;
       }
 
@@ -190,15 +186,18 @@ public abstract class ProcessorBase extends CalSys
 
       final CollectionInfo ci = col.getCollectionInfo();
       if (!ci.childrenAllowed) {
+        info("No children allowed in collection " + path);
         return;
       }
-      
+
+      // Refs will be populated with a batch
       Refs refs = null;
 
       for (;;) {
-        refs = getChildCollections(path, refs);
+        refs = getChildCollections(col, refs);
 
         if (refs == null) {
+          // No more in collection - or error
           break;
         }
 
@@ -212,23 +211,25 @@ public abstract class ProcessorBase extends CalSys
         return;
       }
 
-      refs = null;
+      Refs crefs = null;
 
       for (;;) {
-        refs = getChildEntities(path, refs);
+        crefs = getChildEntities(col, crefs);
 
-        if (refs == null) {
+        if (crefs == null) {
           break;
         }
 
-        final EntityProcessor ep = new EntityProcessor(status,
-                                                       name + ":Entity",
-                                                       adminAccount,
-                                                       principal,
-                                                       entityDelay,
-                                                       path,
-                                                       refs.refs,
-                                                       indexNames);
+        final EntityProcessor ep =
+                new EntityProcessor(status,
+                                    name + ":Entity",
+                                    adminAccount,
+                                    principal,
+                                    entityDelay,
+                                    path,
+                                    crefs.refs,
+                                    indexNames,
+                                    crefs.index);
 
         final IndexerThread eit = getEntityThread(ep);
 

@@ -94,63 +94,83 @@ public class PublicProcessor extends Crawler {
 
       /* First index the public collection(s) */
       if (docType == null) {
+        info("PublicProcessor: index the public collection(s)");
         indexCollection(svc,
                         BasicSystemProperties.publicCalendarRootPath);
+        info("PublicProcessor: finished index of the public collection(s)");
       }
 
       final BwPrincipal pr = svc.getUsersHandler().getPublicUser();
 
       if (testType(docTypePrincipal)) {
+        info("PublicProcessor: index the public principals");
         getIndexer(svc, principal,
                    docTypePrincipal).indexEntity(pr);
         status.stats.inc(IndexedType.principals, 1);
       }
 
       if (testType(docTypePreferences)) {
+        info("PublicProcessor: index the public preferences");
         getIndexer(svc, principal,
                    docTypePreferences).indexEntity(svc.getPreferences(pr.getPrincipalRef()));
         status.stats.inc(IndexedType.preferences, 1);
       }
 
       if (testType(docTypePrincipal)) {
+        info("PublicProcessor: index the admin groups");
         final Iterator<BwAdminGroup> it = getAdminGroups(svc);
         while (it.hasNext()) {
           getIndexer(svc, principal,
                      docTypePrincipal).indexEntity(it.next());
           status.stats.inc(IndexedType.principals, 1);
         }
+
+        info("PublicProcessor: finished index of the admin groups");
       }
 
       if (testType(docTypePrincipal)) {
+        info("PublicProcessor: index the calendar suites");
         final Iterator<BwCalSuite> csit = svc.getDumpHandler()
                                              .getCalSuites();
         while (csit.hasNext()) {
+          final var cs = csit.next();
+
+          info("PublicProcessor: index calendar suite " + cs.getName());
           getIndexer(svc, principal,
-                     docTypePrincipal).indexEntity(BwCalSuitePrincipal.from(csit.next()));
+                     docTypePrincipal).indexEntity(
+                             BwCalSuitePrincipal.from(cs));
           status.stats.inc(IndexedType.principals, 1);
         }
+        info("PublicProcessor: finished index of the calendar suites");
       }
 
       if (testType(docTypeCategory)) {
+        info("PublicProcessor: index the categories");
         status.stats.inc(IndexedType.categories,
-                         svc.getCategoriesHandler().reindex(getIndexer(svc, principal,
-                                                                       docTypeCategory)));
+                         svc.getCategoriesHandler().
+                            reindex(getIndexer(svc, principal,
+                                               docTypeCategory)));
       }
 
       if (testType(docTypeContact)) {
+        info("PublicProcessor: index the contacts");
         status.stats.inc(IndexedType.contacts,
-                         svc.getContactsHandler().reindex(getIndexer(svc, principal,
-                                                                     docTypeContact)));
+                         svc.getContactsHandler().
+                            reindex(getIndexer(svc, principal,
+                                               docTypeContact)));
       }
 
       if (testType(docTypeLocation)) {
+        info("PublicProcessor: index the locations");
         status.stats.inc(IndexedType.locations,
-                         svc.getLocationsHandler().reindex(getIndexer(svc, principal,
-                                                                      docTypeLocation)));
+                         svc.getLocationsHandler().
+                            reindex(getIndexer(svc, principal,
+                                               docTypeLocation)));
       }
 
       if (testType(docTypeResource)) {
-        int[] res = svc.getResourcesHandler().reindex(
+        info("PublicProcessor: index the resources");
+        final int[] res = svc.getResourcesHandler().reindex(
                 getIndexer(svc, principal,
                            docTypeResource),
                 getIndexer(svc, principal,
@@ -162,9 +182,11 @@ public class PublicProcessor extends Crawler {
       }
 
       if (testType(docTypeFilter)) {
+        info("PublicProcessor: index the filters");
         status.stats.inc(IndexedType.filters,
-                         svc.getFiltersHandler().reindex(getIndexer(svc, principal,
-                                                                    docTypeFilter)));
+                         svc.getFiltersHandler().
+                            reindex(getIndexer(svc, principal,
+                                               docTypeFilter)));
       }
     } catch (final Throwable t) {
       error(t);

@@ -20,18 +20,19 @@ package org.bedework.indexer;
 
 import org.bedework.calfacade.BwCalendar;
 import org.bedework.calfacade.BwEvent;
-import org.bedework.calfacade.exc.CalFacadeAccessException;
 import org.bedework.calfacade.exc.CalFacadeException;
+import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calfacade.svc.EventInfo;
 import org.bedework.calsvci.CalSvcFactory;
 import org.bedework.calsvci.CalSvcFactoryDefault;
 import org.bedework.calsvci.CalSvcI;
-import org.bedework.calfacade.svc.CalSvcIPars;
 import org.bedework.calsvci.EventsI;
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
 
 import java.util.Collection;
+
+import static java.lang.String.format;
 
 /** An interface to the calendar system for the indexer.
  *
@@ -277,24 +278,6 @@ public abstract class CalSys implements Logged {
     return ent.getOwnerHref().equals(principal);
   }
 
-  protected BwCalendar getCollection(final CalSvcI svci,
-                                     final String path) throws CalFacadeException {
-    final BwCalendar col = svci.getCalendarsHandler().get(path);
-
-    if ((col == null) || !hasAccess(col)) {
-      if (debug()) {
-        if (col == null) {
-          debug("No collection");
-        } else {
-          debug("No access to " + path + " for " + showPrincipal());
-        }
-      }
-      throw new CalFacadeAccessException();
-    }
-
-    return col;
-  }
-
   private String showPrincipal() {
     if (principal != null) {
       return "principal=" + principal;
@@ -321,9 +304,8 @@ public abstract class CalSys implements Logged {
    *
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
-   * @throws CalFacadeException on fatal error
    */
-  protected Refs getPrincipalHrefs(final Refs refs) throws CalFacadeException {
+  protected Refs getPrincipalHrefs(final Refs refs) {
     Refs r = refs;
 
     if (r == null) {
@@ -334,38 +316,33 @@ public abstract class CalSys implements Logged {
     try (final BwSvc bw = getAdminBw()) {
       r.refs = bw.getSvci().getUsersHandler().getPrincipalHrefs(r.index, r.batchSize);
 
-      if (debug()) {
-        if (r.refs == null) {
-          debug("getPrincipalHrefs(" + r.index + ") found none");
-        } else {
-          debug("getPrincipalHrefs(" + r.index + ") found " +
-                   r.refs.size());
-        }
-      }
-
       if (r.refs == null) {
+        info(format("    getPrincipalHrefs(%s): Found none",
+                    principal));
         return null;
-      }
+      };
 
-      r.index += r.refs.size();
+      final var found = r.refs.size();
+      info(format("    getPrincipalHrefs(%s): Found %d",
+                  principal, found));
+
+      r.index += found;
 
       return r;
+    } catch (final CalFacadeException cfe) {
+      error(cfe);
+      return null;
     }
   }
 
   /** Get the next batch of child collection paths.
    *
-   * @param path to parent
+   * @param col - parent
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
-   * @throws CalFacadeException on fatal error
    */
-  protected Refs getChildCollections(final String path,
-                                     final Refs refs) throws CalFacadeException {
-    if (debug()) {
-      debug("getChildCollections(" + path + ")");
-    }
-
+  protected Refs getChildCollections(final BwCalendar col,
+                                     final Refs refs) {
     Refs r = refs;
 
     if (r == null) {
@@ -373,53 +350,49 @@ public abstract class CalSys implements Logged {
       r.batchSize = collectionBatchSize;
     }
 
-    try (final BwSvc bw = getAdminBw()) {
-      final BwCalendar col = bw.getSvci().getCalendarsHandler().get(path);
+    final var start = r.index;
 
-      if ((col == null) || !hasAccess(col)) {
-        if (debug()) {
-          if (col == null) {
-            debug("No collection");
-          } else {
-            debug("No access");
-          }
-        }
-        throw new CalFacadeAccessException();
+    final var path = col.getPath();
+    info(format("getChildCollections(%s): start=%d",
+                path, start));
+
+    try (final BwSvc bw = getAdminBw()) {
+      if (!hasAccess(col)) {
+        error(format("      No access to %s for %s",
+                     path, principal));
+        return null;
       }
 
       r.refs = bw.getSvci().getAdminHandler().getChildCollections(path, r.index, r.batchSize);
 
-      if (debug()) {
-        if (r.refs == null) {
-          debug("getChildCollections(" + path + ") found none");
-        } else {
-          debug("getChildCollections(" + path + ") found " + r.refs.size());
-        }
-      }
-
       if (r.refs == null) {
+        info(format("    getChildCollections(%s): Found none",
+                    path));
         return null;
-      }
+      };
 
-      r.index += r.refs.size();
+      final var found = r.refs.size();
+      info(format("    getChildCollections(%s): Found %d",
+                  path, found));
+
+      r.index += found;
 
       return r;
+    } catch (final CalFacadeException cfe) {
+      error(cfe);
+      return null;
     }
   }
 
   /** Get the next batch of child entity names.
    *
-   * @param path to parent
+   * @param col - parent
    * @param refs - null on first call.
    * @return next batch of hrefs or null for no more.
    * @throws CalFacadeException on fatal error
    */
-  protected Refs getChildEntities(final String path,
-                                  final Refs refs) throws CalFacadeException {
-    if (debug()) {
-      debug("getChildEntities(" + path + ")");
-    }
-
+  protected Refs getChildEntities(final BwCalendar col,
+                                  final Refs refs) {
     Refs r = refs;
 
     if (r == null) {
@@ -427,30 +400,38 @@ public abstract class CalSys implements Logged {
       r.batchSize = entityBatchSize;
     }
 
+    final var start = r.index;
+
+    final var path = col.getPath();
+    info(format("getChildEntities(%s): start=%d",
+                path, start));
+
     try (final BwSvc bw = getAdminBw()) {
-      final BwCalendar col = bw.getSvci().getCalendarsHandler().get(path);
-
-      if ((col == null) || !hasAccess(col)) {
-        throw new CalFacadeAccessException();
-      }
-
-      r.refs = bw.getSvci().getAdminHandler().getChildEntities(path, r.index, r.batchSize);
-
-      if (debug()) {
-        if (r.refs == null) {
-          debug("getChildEntities(" + path + ") found none");
-        } else {
-          debug("getChildEntities(" + path + ") found " + r.refs.size());
-        }
-      }
-
-      if (r.refs == null) {
+      if (!hasAccess(col)) {
+        error(format("      No access to %s for %s",
+                     path, principal));
         return null;
       }
 
-      r.index += r.refs.size();
+      r.refs = bw.getSvci().getAdminHandler().
+                 getChildEntities(path, r.index, r.batchSize);
+
+      if (r.refs == null) {
+        info(format("    getChildEntities(%s): Found none",
+                    path));
+        return null;
+      };
+
+      final var found = r.refs.size();
+      info(format("    getChildEntities(%s): Found %d",
+                  path, found));
+
+      r.index += found;
 
       return r;
+    } catch (final CalFacadeException cfe) {
+      error(cfe);
+      return null;
     }
   }
 

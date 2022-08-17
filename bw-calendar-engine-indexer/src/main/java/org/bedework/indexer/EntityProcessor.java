@@ -26,6 +26,8 @@ import org.bedework.calsvci.CalSvcI;
 import java.util.Collection;
 import java.util.Map;
 
+import static java.lang.String.format;
+
 /** Run to index entities.
  *
  * @author Mike Douglass
@@ -39,6 +41,8 @@ public class EntityProcessor extends Crawler {
   private final int maxErrors = 10;
   private int errors;
 
+  private int indexStart;
+
   /** Index a bunch of entities given the names.
    * @param status crawler status object
    * @param name to identify process
@@ -48,6 +52,7 @@ public class EntityProcessor extends Crawler {
    * @param path for collection
    * @param entityNames paths to index
    * @param indexNames - where we build the index
+   * @param indexStart where we are in the process.
    */
   public EntityProcessor(final CrawlStatus status,
                          final String name,
@@ -56,28 +61,30 @@ public class EntityProcessor extends Crawler {
                          final long entityDelay,
                          final String path,
                          final Collection<String> entityNames,
-                         final Map<String, String> indexNames) {
+                         final Map<String, String> indexNames,
+                         final int indexStart) {
     super(status, name, adminAccount,
           principal, 0, entityDelay, null, indexNames);
     this.path = path;
     this.entityNames = entityNames;
+    this.indexStart = indexStart;
   }
 
   @Override
   public void process() {
-    try (BwSvc bw = getBw()) {
+    try (final BwSvc bw = getBw()) {
       final CalSvcI svci = bw.getSvci();
 
       final BwIndexer entIndexer = getIndexer(svci,
                                               principal,
                                               BwIndexer.docTypeEvent);
 
+      var index = indexStart;
       for (final String name: entityNames) {
         try {
-          if (debug()) {
-            debug("Indexing collection " + path +
-                          " entity " + name);
-          }
+          info(format("Indexing entity(%d) %s/%s",
+                      index, path, name));
+          index++;
 
           status.stats.inc(IndexedType.events);
           final EventInfo ent =
@@ -85,6 +92,8 @@ public class EntityProcessor extends Crawler {
 
           if (ent == null) {
             status.stats.inc(IndexedType.unreachableEntities);
+            info(format("      unreachable entity(%d) %s/%s",
+                        index, path, name));
             continue;
           }
           entIndexer.indexEntity(ent);

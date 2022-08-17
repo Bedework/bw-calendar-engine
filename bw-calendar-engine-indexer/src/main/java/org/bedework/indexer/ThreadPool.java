@@ -121,9 +121,8 @@ public class ThreadPool implements Logged {
       synchronized (running) {
         while (running.size() >= maxThreads) {
           numWaiting++;
-          if (debug()) {
-            debug("Waiting for thread. Queue length: " + numWaiting);
-          }
+          info("Waiting for thread. Queue length: " +
+                       numWaiting);
 
           running.wait();
           numWaiting--;

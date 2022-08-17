@@ -96,9 +96,7 @@ public class PrincipalsProcessor extends Crawler {
         refs = getPrincipalHrefs(refs);
 
         if (refs == null) {
-          if (debug()) {
-            debug("Principals: No more");
-          }
+          info("Principals: No more");
 
           break;
         }
@@ -120,9 +118,7 @@ public class PrincipalsProcessor extends Crawler {
          */
 
         for (final String href : refs.refs) {
-          if (debug()) {
-            debug("Principals: Processing principal " + href);
-          }
+          info("Principals: Processing principal " + href);
 
           getStatus().currentStatus = "Principals: Processing principal " + href;
 
@@ -140,9 +136,7 @@ public class PrincipalsProcessor extends Crawler {
           /* This call should hang waiting for an available process */
           final IndexerThread it = getPrincipalThread(p);
 
-          if (debug()) {
-            debug("Principals: Got thread for " + href);
-          }
+          info("Principals: Got thread for " + href);
 
           it.start();
         }
