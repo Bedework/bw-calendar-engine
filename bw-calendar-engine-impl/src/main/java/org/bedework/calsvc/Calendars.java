@@ -45,6 +45,7 @@ import org.bedework.calsvci.SynchI;
 import org.bedework.util.caching.FlushMap;
 import org.bedework.util.misc.Util;
 import org.bedework.util.misc.response.GetEntityResponse;
+import org.bedework.util.timezones.DateTimeUtil;
 import org.bedework.util.xml.tagdefs.AppleServerTags;
 
 import net.fortuna.ical4j.model.Component;
@@ -55,6 +56,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -665,6 +667,50 @@ class Calendars extends CalSvcDb implements CalendarsI {
   public String getSyncToken(final String path)
           throws CalFacadeException {
     return getCal().getSyncToken(path);
+  }
+
+  @Override
+  public boolean getSyncTokenIsValid(final String token,
+                                     final String path) {
+    if (token == null) {
+      return false;
+    }
+
+    final long tokenDays;
+
+    // Ensure it's a parsable date + time.
+    try {
+      var pos = token.indexOf("-");
+      if (pos < 0) {
+        return false;
+      }
+
+      final var date = DateTimeUtil.fromISODateTimeUTC(
+              token.substring(0, pos));
+
+      if (date == null) {
+        return false;
+      }
+
+      final var maxDays = getSvc().getSystemProperties().getSynchMaxMinutes();
+      if (maxDays <= 0) {
+        // Assume valid - we have no valid max set
+        warn("No max value set for systemProperties.synchMaxMinutes");
+        return true;
+      }
+
+      final long millis = new Date().getTime() - date.getTime();
+
+      final var days = millis / 1000 / 60 / 60 / 24;
+
+      if (days > maxDays) {
+        return false;
+      }
+
+      return true;
+    } catch (final Throwable ignored) {
+      return false;
+    }
   }
 
   @Override

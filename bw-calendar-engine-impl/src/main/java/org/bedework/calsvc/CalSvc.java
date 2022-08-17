@@ -1206,7 +1206,12 @@ public class CalSvc
 
     Set<SynchReportItem> items = new TreeSet<>();
     String resToken = getSynchItems(col, path, token, items, recurse);
-    final SynchReport res = new SynchReport(items, resToken);
+    final var tokenValid = (token == null) || (resToken != null);
+    final SynchReport res = new SynchReport(items, resToken, tokenValid);
+
+    if (!tokenValid) {
+      return res;
+    }
 
     if ((limit > 0) && (res.size() >= limit)) {
       if (res.size() == limit) {
@@ -1233,7 +1238,7 @@ public class CalSvc
       resToken = Util.icalUTCTimestamp() + "-0000";
     }
 
-    return new SynchReport(items, resToken);
+    return new SynchReport(items, resToken, true);
   }
 
   private boolean canSync(final BwCalendar col) {
@@ -1985,20 +1990,21 @@ public class CalSvc
 
   private String getSynchItems(final BwCalendar col,
                                final String vpath,
-                               final String token,
+                               final String tokenPar,
                                final Set<SynchReportItem> items,
                                final boolean recurse) throws CalFacadeException {
     final Events eventsH = (Events)getEventsHandler();
     final ResourcesImpl resourcesH = (ResourcesImpl)getResourcesHandler();
     final Calendars colsH = (Calendars)getCalendarsHandler();
+    final var path = col.getPath();
     String newToken = "";
 
     if (debug()) {
-      debug("sync token: " + token + " col: " + col.getPath());
+      debug("sync token: " + tokenPar + " col: " + col.getPath());
     }
 
     if (col.getTombstoned()) {
-      return token;
+      return tokenPar;
     }
 
     final BwCalendar resolvedCol;
@@ -2010,7 +2016,7 @@ public class CalSvc
     }
     
     if (resolvedCol.getTombstoned()) {
-      return token;
+      return tokenPar;
     }
 
     /* Each collection could be:
@@ -2018,6 +2024,15 @@ public class CalSvc
      *           only need to look for events.
      *    b. Other collections. Need to look for events, resources and collections.
      */
+
+    final String token;
+    if (tokenPar == null) {
+      token = null;
+    } else if (colsH.getSyncTokenIsValid(tokenPar, path)) {
+      token = tokenPar;
+    } else {
+      return null; // Bad token
+    }
 
     final boolean eventsOnly = resolvedCol.getCollectionInfo().onlyCalEntities;
 
@@ -2136,6 +2151,11 @@ public class CalSvc
       final String t = getSynchItems(sricol,
                                      Util.buildPath(true, vpath, "/", sricol.getName()),
                                      token, items, true);
+
+      // It's possible we get a really old synch token - ignore those
+      if ((t == null) || !colsH.getSyncTokenIsValid(t, null)) {
+        continue;
+      }
 
       if (t.compareTo(newToken) > 0) {
         newToken = t;

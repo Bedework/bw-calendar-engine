@@ -1977,6 +1977,12 @@ public class BwSysIntfImpl implements Logged, SysIntf {
 
       final SynchReportData srd = new SynchReportData();
 
+      srd.tokenValid = sr.getTokenValid();
+
+      if (!sr.getTokenValid()) {
+        return srd;
+      }
+
       srd.items = new ArrayList<>();
 
       srd.token = "data:," + sr.getToken();
