@@ -211,7 +211,7 @@ public class CoreEventsDAO extends DAOBase {
                   "where ev.colPath=:colPath and " +
                   // No deleted events
                   "ev.tombstoned = false " +
-                  "order by ev.created";
+                  "order by ev.created, ev.name";
 
   public List<String> getChildrenEntities(final String parentPath,
                                           final int start,
