@@ -3689,6 +3689,7 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
       throw cfe;
     } catch (final VersionConflictEngineException vcee) {
       error(vcee);
+      error("Event was " + ei.getEvent());
       throw new CalFacadeException(vcee);
       /* Can't do this any more
       if (vcee.currentVersion() == vcee.getProvidedVersion()) {
@@ -3699,7 +3700,19 @@ public class BwIndexEsImpl implements Logged, BwIndexer {
 
       return null;
       */
+    } catch (final OpenSearchException ose) {
+      final var dmsg = ose.getDetailedMessage();
+      if ((dmsg != null) &&
+              dmsg.contains("version_conflict_engine_exception")) {
+        // Not too much noise
+        error(dmsg);
+        error("Event was " + ei.getEvent());
+        return null;
+      }
+      error("Event was " + ei.getEvent());
+      throw new CalFacadeException(ose);
     } catch (final Throwable t) {
+      error("Event was " + ei.getEvent());
       throw new CalFacadeException(t);
     }
   }
