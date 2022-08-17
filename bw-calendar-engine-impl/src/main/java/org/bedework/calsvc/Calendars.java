@@ -680,7 +680,7 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
     // Ensure it's a parsable date + time.
     try {
-      var pos = token.indexOf("-");
+      final var pos = token.indexOf("-");
       if (pos < 0) {
         return false;
       }
@@ -692,8 +692,8 @@ class Calendars extends CalSvcDb implements CalendarsI {
         return false;
       }
 
-      final var maxDays = getSvc().getSystemProperties().getSynchMaxMinutes();
-      if (maxDays <= 0) {
+      final var maxMins = getSvc().getSystemProperties().getSynchMaxMinutes();
+      if (maxMins <= 0) {
         // Assume valid - we have no valid max set
         warn("No max value set for systemProperties.synchMaxMinutes");
         return true;
@@ -701,9 +701,9 @@ class Calendars extends CalSvcDb implements CalendarsI {
 
       final long millis = new Date().getTime() - date.getTime();
 
-      final var days = millis / 1000 / 60 / 60 / 24;
+      final var mins = millis / 1000 / 60;
 
-      if (days > maxDays) {
+      if (mins > maxMins) {
         return false;
       }
 
