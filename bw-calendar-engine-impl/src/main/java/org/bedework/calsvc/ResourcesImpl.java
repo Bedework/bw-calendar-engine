@@ -234,6 +234,8 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
 
     while (ents.hasNext()) {
       final BwResource ent = ents.next();
+      info("Resources: index resource " + ent.getHref());
+
       if (!ent.getTombstoned()) {
         try {
           getContent(ent);
@@ -258,12 +260,12 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
             }
           }
         } catch (final Throwable t) {
-          if (debug()) {
-            error(t);
-          }
+          error(t);
         }
 
         if (create) {
+          info("Resources: manufacture parent for resource " + ent.getHref());
+
           final SplitResult sr = splitUri(parentPath);
           final BwCalendar parent = new BwCalendar();
 
