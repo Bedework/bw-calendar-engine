@@ -158,11 +158,13 @@ public abstract class ProcessorBase extends CalSys
 
     status.stats.inc(IndexedType.collections);
 
+    final var cols = svci.getCalendarsHandler();
+
     try {
       BwCalendar col = null;
 
       try {
-        col = svci.getCalendarsHandler().get(path);
+        col = cols.get(path);
         if (col == null) {
           error("path " + path + " not found");
           return;
@@ -171,6 +173,18 @@ public abstract class ProcessorBase extends CalSys
         error(format("No access to %s for %s",
                      path, principal));
         return;
+      }
+
+      final boolean tombstoned = col.getTombstoned();
+
+      if (tombstoned) {
+        final var token = col.getLastmod().getTagValue();
+        if (!cols.getSyncTokenIsValid(token, path)) {
+          status.skippedTombstonedCollections++;
+          info(format("      skipped tombstoned collection %s",
+                      path));
+          return;
+        }
       }
 
       final BwIndexer colIndexer = getIndexer(svci,

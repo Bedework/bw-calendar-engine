@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static java.lang.String.format;
+
 /** This acts as an interface to the database for resources.
  *
  * @author Mike Douglass       douglm - rpi.edu
@@ -217,10 +219,11 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
   }
 
   @Override
-  public int[] reindex(final BwIndexer indexer,
-                       final BwIndexer contentIndexer,
-                       final BwIndexer collectionIndexer) throws CalFacadeException {
+  public ReindexCounts reindex(final BwIndexer indexer,
+                               final BwIndexer contentIndexer,
+                               final BwIndexer collectionIndexer) throws CalFacadeException {
     final Iterator<BwResource> ents;
+    final ReindexCounts res = new ReindexCounts();
 
     if (isPublicAdmin()) {
       ents = getSvc().getPublicObjectIterator(BwResource.class);
@@ -228,15 +231,23 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       ents = getSvc().getPrincipalObjectIterator(BwResource.class);
     }
 
-    int resCt = 0;
-    int resContentCt = 0;
     final Set<String> checkedCollections = new TreeSet<>();
+    final var cols = getSvc().getCalendarsHandler();
 
     while (ents.hasNext()) {
       final BwResource ent = ents.next();
       info("Resources: index resource " + ent.getHref());
+      final String parentPath = ent.getColPath();
 
-      if (!ent.getTombstoned()) {
+      if (ent.getTombstoned()) {
+        final var token = ent.getEtagValue();
+        if (!cols.getSyncTokenIsValid(token, parentPath)) {
+          res.skippedTombstonedResources++;
+          info(format("      skipped tombstoned resource %s",
+                      ent.getHref()));
+          continue;
+        }
+      } else {
         try {
           getContent(ent);
         } catch (final Throwable t) {
@@ -245,12 +256,11 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
       }
 
       // We might have to manufacture a collection
-      final String parentPath = ent.getColPath();
       boolean create = true;
 
       if (!checkedCollections.contains(parentPath)) {
         try {
-          final BwCalendar col = getSvc().getCalendarsHandler().get(parentPath);
+          final BwCalendar col = cols.get(parentPath);
           if (col != null) {
             create = false;
 
@@ -293,14 +303,14 @@ class ResourcesImpl extends CalSvcDb implements ResourcesI {
         checkedCollections.add(parentPath);
       }
       indexer.indexEntity(ent);
-      resCt++;
+      res.resources++;
       if (ent.getContent() != null) {
         contentIndexer.indexEntity(ent.getContent());
-        resContentCt++;
+        res.resourceContents++;
       }
     }
 
-    return new int[]{resCt, resContentCt};
+    return res;
   }
 
   List<BwResource> getSynchResources(final String path,

@@ -79,7 +79,10 @@ public class EntityProcessor extends Crawler {
                                               principal,
                                               BwIndexer.docTypeEvent);
 
+      final var evs = svci.getEventsHandler();
+      final var cols = svci.getCalendarsHandler();
       var index = indexStart;
+
       for (final String name: entityNames) {
         try {
           info(format("Indexing entity(%d) %s/%s",
@@ -87,14 +90,24 @@ public class EntityProcessor extends Crawler {
           index++;
 
           status.stats.inc(IndexedType.events);
-          final EventInfo ent =
-                  svci.getEventsHandler().get(path, name);
+          final EventInfo ent = evs.get(path, name);
 
           if (ent == null) {
             status.stats.inc(IndexedType.unreachableEntities);
             info(format("      unreachable entity(%d) %s/%s",
                         index, path, name));
             continue;
+          }
+
+          final var ev = ent.getEvent();
+          if (ev.getTombstoned()) {
+            final var token = ev.getCtoken();
+            if (!cols.getSyncTokenIsValid(token, path)) {
+              status.skippedTombstonedEvents++;
+              info(format("      skipped tombstoned entity(%d) %s/%s",
+                          index, path, name));
+              continue;
+            }
           }
           entIndexer.indexEntity(ent);
         } catch (final Throwable t) {

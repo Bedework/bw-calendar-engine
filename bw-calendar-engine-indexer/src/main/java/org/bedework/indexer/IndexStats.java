@@ -66,19 +66,22 @@ public class IndexStats extends IndexStatistics implements Logged {
   private static final String blanks = "                                    ";
   private static final int paddedNmLen = 18;
 
-  private String stat(final IndexedType st) {
+  public static String makeStat(final String name,
+                                final long val) {
     final StringBuilder sb = new StringBuilder();
-    final String name = st.toString();
 
     if (name.length() < paddedNmLen) {
       sb.append(blanks.substring(0, paddedNmLen - name.length()));
     }
 
-    sb.append(name);
-    sb.append(": ");
-    sb.append(getCount(st));
+    return sb.append(name).
+             append(": ").
+             append(val).
+             toString();
+  }
 
-    return sb.toString();
+  private String stat(final IndexedType st) {
+    return makeStat(st.toString(), getCount(st));
   }
 
   /* ====================================================================

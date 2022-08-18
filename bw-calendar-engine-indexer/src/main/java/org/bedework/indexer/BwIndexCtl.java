@@ -675,6 +675,16 @@ public class BwIndexCtl extends ConfBase<IndexPropertiesImpl>
       res.addAll(status.stats.statsList());
     }
 
+    res.add(IndexStats.makeStat(
+            "skippedTombstonedEvents",
+            status.skippedTombstonedEvents));
+    res.add(IndexStats.makeStat(
+            "skippedTombstonedCollections",
+            status.skippedTombstonedCollections));
+    res.add(IndexStats.makeStat(
+            "skippedTombstonedResources",
+            status.skippedTombstonedResources));
+
     outLine(res, "");
 
     if (!status.infoLines.isEmpty()) {

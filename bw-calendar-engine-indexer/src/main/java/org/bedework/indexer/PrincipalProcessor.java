@@ -148,15 +148,17 @@ public class PrincipalProcessor extends Crawler {
       }
 
       if (testType(docTypeResource)) {
-        int[] res = svc.getResourcesHandler().reindex(
+        var res = svc.getResourcesHandler().reindex(
                 getIndexer(svc, principal,
                            docTypeResource),
                 getIndexer(svc, principal,
                            docTypeResourceContent),
                 getIndexer(svc, principal,
                            docTypeCollection));
-        status.stats.inc(IndexedType.resources, res[0]);
-        status.stats.inc(IndexedType.resourceContents, res[1]);
+        status.stats.inc(IndexedType.resources, res.resources);
+        status.stats.inc(IndexedType.resourceContents, res.resourceContents);
+        status.skippedTombstonedResources +=
+                res.skippedTombstonedResources;
       }
 
       if (testType(docTypeFilter)) {

@@ -35,6 +35,10 @@ public class CrawlStatus {
   /** */
   public IndexStats stats;
 
+  public long skippedTombstonedEvents;
+  public long skippedTombstonedCollections;
+  public long skippedTombstonedResources;
+
   /** Generated when complete */
   public List<String> infoLines = new ArrayList<>();
 
