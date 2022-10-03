@@ -745,7 +745,7 @@ public class EntityBuilder extends EntityBuilderBase {
       }
     }
 
-    /* Not needed - thjey are still there as x-props
+    /* Not needed - they are still there as x-props
     final List<Object> concepts =
             getFieldValues(PropertyInfoIndex.CONCEPT);
 

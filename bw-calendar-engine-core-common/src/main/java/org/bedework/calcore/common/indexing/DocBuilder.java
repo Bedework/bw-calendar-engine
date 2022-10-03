@@ -47,6 +47,7 @@ import org.bedework.calfacade.base.BwShareableContainedDbentity;
 import org.bedework.calfacade.base.BwShareableDbentity;
 import org.bedework.calfacade.base.BwStringBase;
 import org.bedework.calfacade.base.BwUnversionedDbentity;
+import org.bedework.calfacade.base.ConceptEntity;
 import org.bedework.calfacade.base.XpropsEntity;
 import org.bedework.calfacade.exc.CalFacadeException;
 import org.bedework.calfacade.ical.BwIcalPropertyInfo;
@@ -853,30 +854,31 @@ public class DocBuilder extends DocBuilderBase {
         }
       }
 
+      if (ent instanceof ConceptEntity) {
+        final var concepts =
+                ((ConceptEntity)ent).getConcepts();
+
+        if (!Util.isEmpty(concepts)) {
+          startArray(getJname(PropertyInfoIndex.CONCEPT));
+
+          for (final BwXproperty xp: concepts) {
+            if (xp == null) {
+              continue;
+            }
+
+            startObject();
+            makeField(PropertyInfoIndex.VALUE, xp.getValue());
+            endObject();
+          }
+
+          endArray();
+        }
+      }
+
       /* Now ones we don't know or care about */
 
       if (Util.isEmpty(ent.getXproperties())) {
         return;
-      }
-
-      /* concepts are buried here */
-
-      final List<BwXproperty> concepts =
-              ent.getXicalProperties("CONCEPT");
-      if (!Util.isEmpty(concepts)) {
-        startArray(getJname(PropertyInfoIndex.CONCEPT));
-
-        for (final BwXproperty xp: concepts) {
-          if (xp == null) {
-            continue;
-          }
-
-          startObject();
-          makeField(PropertyInfoIndex.VALUE, xp.getValue());
-          endObject();
-        }
-
-        endArray();
       }
 
       startArray(getJname(PropertyInfoIndex.XPROP));
