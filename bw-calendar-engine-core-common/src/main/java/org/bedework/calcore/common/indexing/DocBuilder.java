@@ -179,9 +179,6 @@ public class DocBuilder extends DocBuilderBase {
         makeField(PropertyInfoIndex.CREATOR, cs.getCreatorHref());
         makeField(PropertyInfoIndex.ACL, cs.getAccess());
         makeField("rootCollectionPath", cs.getRootCollectionPath());
-        makeField("description", cs.getDescription());
-        makeField("rootCollectionPath", cs.getRootCollectionPath());
-        makeField("description", cs.getDescription());
         makeField("groupHref", cs.getGroup().getHref());
 
         makeField("fields1", cs.getFields1());
